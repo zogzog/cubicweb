@@ -1,20 +1,19 @@
-Building my photos web site with |cubicweb| part V: let's make it even more user friendly
+Building my photos web site with |CubiWeb| part V: let's make it even more user friendly
 =========================================================================================
 
-We'll now see how to benefit from features introduced in 3.9 and 3.10 releases of cubicweb
+We'll now see how to benefit from features introduced in 3.9 and 3.10 releases of CubiWeb
 
 Step 1: Tired of the default look?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Ok... Now our site has most desired features. But... I would like to make it look
-somewhat like *my* website, That's not cubicweb.org after all. Let's tackle this
+OK... Now our site has its most desired features. But... I would like to make it look
+somewhat like *my* website. It is not www.cubicweb.org after all. Let's tackle this
 first!
 
 The first thing we can to is to change the logo. There are various way to achieve
 this. The easiest way is to put a `logo.png` file into the cube's `data`
-directory. As data files are looked at according to cubes order (cubicweb
-resources coming last). The first one being picked, the file will be selected
-instead of cubicweb's one.
+directory. As data files are looked at according to cubes order (CubiWeb
+resources coming last), that file will be selected instead of CubiWeb's one.
 
 .. Note::
    As the location for static resources are cached, you'll have to restart
@@ -28,14 +27,14 @@ cube's `:file:`uiprops.py`` file:
 
    LOGO = data('logo.jpg')
 
-The uiprops machinery has been introduced in `CubicWeb 3.9`_. It's used to define
-some static file resources, such as the logo, default javascript / CSS files, as
+The uiprops machinery has been introduced in `CubiWeb 3.9`_. It is used to define
+some static file resources, such as the logo, default Javascript / CSS files, as
 well as CSS properties (we'll see that later).
 
 .. Note::
    This file is imported specifically by |cubicweb|, with a predefined name space,
    containing for instance the `data` function, telling the file is somewhere
-   in a cube or cubicweb's data directory.
+   in a cube or CubiWeb's data directory.
 
    One side effect of this is that it can't be imported as a regular python
    module.
@@ -45,17 +44,17 @@ and then automatically reloaded.
 
 Now, as it's a photos web-site, I would like to have a photo of mine as background...
 After some trials I won't detail here, I've found a working recipe explained `here`_.
-All I've to do is to override some stuff of the default cubicweb user interface to
+All I've to do is to override some stuff of the default CubiWeb user interface to
 apply it as explained.
 
-The first thing to to get the "<img/>" tag as first element after the "<body>"
+The first thing to to get the ``<img/>`` tag as first element after the ``<body>``
 tag.  If you know a way to avoid this by simply specifying the image in the CSS,
 tell me!  The easiest way to do so is to override the `HTMLPageHeader` view,
-since that's the one that is directly called once the "<body>" has been written
-. How did I find this?  By looking in the `cubiweb.web.views.basetemplates`
+since that's the one that is directly called once the ``<body>`` has
+been written. How did I find this?  By looking in the `cubiweb.web.views.basetemplates`
 module, since I know that global page layouts sits there. I could also have
 grep the "body" tag in `cubicweb.web.views`... Finding this was the hardest
-part. Now all I need is to customize it to write that "img" tag, as below:
+part. Now all I need is to customize it to write that ``img`` tag, as below:
 
 .. sourcecode:: python
 
@@ -73,26 +72,26 @@ part. Now all I need is to customize it to write that "img" tag, as below:
 	vreg.register_and_replace(HTMLPageHeader, basetemplates.HTMLPageHeader)
 
 
-Besides that, as you may I've guess, my background image is in a `backgroundjpg`
-file in the cube's `data` directory, there are still some things to explain to
-newcomers here though.
+As you may have guessed, my background image is in a `backgroundjpg`
+file in the cube's `data` directory, but there are still some things to explain to
+newcomers here:
 
 * The `call` method is there the main access point of the view. It's called by
-  the view's `render` method. That's not the onlyu access point for a view, but
-  that will be detailed later.
+  the view's `render` method. It is not the only access point for a view, but
+  this will be detailed later.
 
-* Calling `self.w` write something to the output stream. Except for binary view
-  (not generating text), it *must* be an Unicode string.
+* Calling `self.w` writes something to the output stream. Except for binary views
+  (which do not generate text), it *must* be passed an Unicode string.
 
 * The proper way to get a file in `data` directory is to use the `datadir_url`
   attribute of the incoming request (e.g. `self._cw`).
 
 I won't explain again the `registration_callback` stuff, you should understand it
-know!  If not, go back to previous posts in the series :)
+now!  If not, go back to previous posts in the series :)
 
-Fine. Now all I've to do is to add a bit of CSS to get it behaves nicely (that's
-not yet the case at all). I'll put all this in a `cubes.sytweb.css` file, as usual
-in our `data` directory:
+Fine. Now all I've to do is to add a bit of CSS to get it to behave
+nicely (which is not the case at all for now). I'll put all this in a 
+`cubes.sytweb.css` file, stored as usual in our `data` directory:
 
 .. sourcecode:: css
 
@@ -131,14 +130,14 @@ in our `data` directory:
     }
 
 You can see here stuff explained in the cited page, with only a slight modification
-explained in the comments, plus some additional rules to make thing somewhat cleaner:
+explained in the comments, plus some additional rules to make things somewhat cleaner:
 
 * a bit of padding around the logo
 
 * darker metadata which appears by default below the content (the white frame in the page)
 
-To get this CSS file used everywhere in the site, I've to modify the :file:`uiprops.py` file
-we've encountered above:
+To get this CSS file used everywhere in the site, I have to modify the :file:`uiprops.py` file
+introduced above:
 
 .. sourcecode:: python
 
@@ -146,9 +145,9 @@ we've encountered above:
 
 .. Note:
    `sheet` is another predefined variable containing values defined by
-   already process `:file:`uiprops.py`` file, notably the cubicweb's one.
+   already process `:file:`uiprops.py`` file, notably the CubiWeb's one.
 
-Here we simply want our CSS additionally to cubicweb's base CSS files, so we
+Here we simply want our CSS in addition to CubiWeb's base CSS files, so we
 redefine the `STYLESHEETS` variable to existing CSS (accessed through the `sheet`
 variable) with our one added. I could also have done:
 
@@ -163,7 +162,7 @@ resized to fit the screen.
 
 .. image:: ../../images/tutos-photowebsite_background-image.png
 
-The final touch: let's customize cubicweb's CSS to get less orange... By simply adding
+The final touch: let's customize CubiWeb's CSS to get less orange... By simply adding
 
 .. sourcecode:: python
 
@@ -174,7 +173,7 @@ the orange one:
 
 .. image:: ../../images/tutos-photowebsite_grey-box.png
 
-This is because cubicweb's CSS include some variables which are
+This is because CubiWeb's CSS include some variables which are
 expanded by values defined in uiprops file. In our case we controlled the
 properties of the CSS `background` property of boxes with CSS class
 `contextualBoxTitleBg` and `incontextBoxTitleBg`.
@@ -182,7 +181,7 @@ properties of the CSS `background` property of boxes with CSS class
 
 Step 2: configuring boxes
 ~~~~~~~~~~~~~~~~~~~~~~~~~
-Boxes present to the user some ways to use the application. Lets first do a few tweaks:
+Boxes present to the user some ways to use the application. Let's first do a few tweaks:
 
 .. sourcecode:: python
 
@@ -191,8 +190,8 @@ Boxes present to the user some ways to use the application. Lets first do a few 
   from cubes.zone import views as zone
   from cubes.tag import views as tag
 
-  # change bookmarks box selector so it's only displayed on startup view
-gro  bookmark.BookmarksBox.__select__ = bookmark.BookmarksBox.__select__ & none_rset()
+  # change bookmarks box selector so it's only displayed on startup views
+  bookmark.BookmarksBox.__select__ = bookmark.BookmarksBox.__select__ & none_rset()
   # move zone box to the left instead of in the context frame and tweak its order
   zone.ZoneBox.context = 'left'
   zone.ZoneBox.order = 100
@@ -202,8 +201,8 @@ gro  bookmark.BookmarksBox.__select__ = bookmark.BookmarksBox.__select__ & none_
   # hide similarity box, not interested
   tag.SimilarityBox.visible = False
 
-The idea is to move all boxes in the left column, so we get more spaces for the
-photos.  Now, serious things: I want a box similar as the tags box but to handle
+The idea is to move all boxes in the left column, so we get more space for the
+photos.  Now, serious things: I want a box similar to the tags box but to handle
 the `Person displayed_on File` relation. We can do this simply by configuring a
 :class:`AjaxEditRelationCtxComponent` subclass as below:
 
@@ -272,13 +271,13 @@ the `Person displayed_on File` relation. We can do this simply by configuring a
 			 {'p': personeid, 'x': eid})
 
 
-You basically subclass to configure by some class attributes. The `fname_*`
-attributes gives name of methods that should be defined on the json control to
-make the AJAX part of the widget working: one to get the vocabulary, one to add a
-relation and another to delete a relation. Those methods must start by a `ks_`
-prefix and are added to the controller using the `@monkeypatch` decorator.Here
-the most complicated is the one to add a relation, since it tries to see if the
-person already exists, and else automatically create it by supposing the user
+You basically subclass to configure with some class attributes. The `fname_*`
+attributes give the name of methods that should be defined on the json control to
+make the AJAX part of the widget work: one to get the vocabulary, one to add a
+relation and another to delete a relation. These methods must start by a `js_`
+prefix and are added to the controller using the `@monkeypatch`
+decorator. In my case, the most complicated method is the one which adds a relation, since it tries to see if the
+person already exists, and else automatically create it, assuming the user
 entered "firstname surname".
 
 Let's see how it looks like on a file primary view:
@@ -286,9 +285,9 @@ Let's see how it looks like on a file primary view:
 .. image:: ../../images/tutos-photowebsite_boxes.png
 
 Great, it's now as easy for me to link my pictures to people than to tag them.
-Also, visitors get a consistent display of those two informations.
+Also, visitors get a consistent display of these two pieces of information.
 
-.. note:
+.. Note:
   The ui component system has been refactored in `CubicWeb 3.10`_, which also
   introduced the :class:`AjaxEditRelationCtxComponent` class.
 
@@ -297,13 +296,13 @@ Step 3: configuring facets
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The last feature we'll add today is facet configuration. If you access to the
-'/file' url, you'll see a set of 'facet' appearing in the left column. Facets
+'/file' url, you'll see a set of 'facets' appearing in the left column. Facets
 provide an intuitive way to build a query incrementally, by proposing to the user
-various way to restrict result set. For instance cubicweb propose a facet to
-restrict according to who's created an entity; the tag cube a facet to restrict
-according to tags. I want to propose similarly a facet to restrict according to
-people displayed on the picture. To do so, there are various classes in the
-:mod:`cubicweb.web.facet` module which you've simple to configure using class
+various way to restrict the result set. For instance CubiWeb proposes a facet to
+restrict based on who created an entity; the tag cube proposes a facet to restrict
+based on tags. In that gist, I want to propose a facet to restrict based
+on the people displayed on the picture. To do so, there are various classes in the
+:mod:`cubicweb.web.facet` module which simply have to be configured using class
 attributes as we've done for the box. In our case, we'll define a subclass of
 :class:`RelationFacet`:
 
@@ -319,8 +318,8 @@ attributes as we've done for the box. In our case, we'll define a subclass of
 	# view to use to display persons
 	label_vid = 'combobox'
 
-Let's say we also want a filter according to the `visibility` attribute. this is
-even more simple, by inheriting from the :class:`AttributeFacet` class:
+Let's say we also want to filter according to the `visibility` attribute. This is
+even simpler as we just have to derive from the :class:`AttributeFacet` class:
 
 .. sourcecode:: python
 
@@ -328,25 +327,25 @@ even more simple, by inheriting from the :class:`AttributeFacet` class:
 	__regid__ = 'visibility-facet'
 	rtype = 'visibility'
 
-Now if I search some pictures on my site, I get the following facets available:
+Now if I search for some pictures on my site, I get the following facets available:
 
 .. image:: ../../images/tutos-photowebsite_facets.png
 
 .. Note:
 
   Facets which have no choice to propose (i.e. one or less elements of
-  vocabulary) are not displayed. That's may be why you don't see yours.
+  vocabulary) are not displayed. This may be why you don't see yours.
 
 
 Conclusion
 ~~~~~~~~~~
 
 We started to see the power behind the infrastructure provided by the
-framework. Both on the pure ui (CSS, javascript) stuff as on the python side
+framework, both on the pure ui (CSS, Javascript) side and on the Python side
 (high level generic classes for components, including boxes and facets). We now
-have, by a few lines of code, a full-featured web site with a personnalized look.
+have, with a few lines of code, a full-featured web site with a personalized look.
 
-Of course we'll probably want more as the time goes, but we can now start
+Of course we'll probably want more as time goes, but we can now
 concentrate on making good pictures, publishing albums and sharing them with
 friends...
 
