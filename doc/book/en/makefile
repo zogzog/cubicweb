@@ -33,7 +33,7 @@ help:
 
 clean:
 	rm -f *.html
-	-rm -rf ${BUILDDIR}/*
+	-rm -rf ${BUILDDIR}/html ${BUILDDIR}/doctrees
 	-rm -rf ${BUILDJS}
 
 all: html

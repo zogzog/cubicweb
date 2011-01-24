@@ -4,6 +4,7 @@ Parser for Javascript comments.
 """
 from __future__ import with_statement
 
+import os.path as osp
 import sys, os, getopt, re
 
 def clean_comment(match):
@@ -71,40 +72,99 @@ def parse_js_files(args=sys.argv):
     if rst_dir is None and len(args) != 1:
         rst_dir = 'apidocs'
     js_dir = opts.get('--jspath') or opts.get('-p')
-    if not os.path.exists(os.path.join(rst_dir)):
-        os.makedirs(os.path.join(rst_dir))
+    if not osp.exists(osp.join(rst_dir)):
+        os.makedirs(osp.join(rst_dir))
 
-    f_index = open(os.path.join(rst_dir, 'index.rst'), 'wb')
-    f_index.write('''
-.. toctree::
-    :maxdepth: 1
-
-'''
-)
+    index = set()
     for js_path, js_dirs, js_files in os.walk(js_dir):
-        rst_path = re.sub('%s%s*' % (js_dir, os.path.sep), '', js_path)
+        rst_path = re.sub('%s%s*' % (js_dir, osp.sep), '', js_path)
         for js_file in js_files:
             if not js_file.endswith('.js'):
                 continue
-            if not os.path.exists(os.path.join(rst_dir, rst_path)):
-                os.makedirs(os.path.join(rst_dir, rst_path))
+            if js_file in FILES_TO_IGNORE:
+                continue
+            if not osp.exists(osp.join(rst_dir, rst_path)):
+                os.makedirs(osp.join(rst_dir, rst_path))
             rst_content =  extract_rest(js_path, js_file)
-            filename = os.path.join(rst_path, js_file[:-3])
+            filename = osp.join(rst_path, js_file[:-3])
             # add to index
-            f_index.write('    %s\n' % filename)
+            index.add(filename)
             # save rst file
-            with open(os.path.join(rst_dir, filename) + '.rst', 'wb') as f_rst:
+            with open(osp.join(rst_dir, filename) + '.rst', 'wb') as f_rst:
                 f_rst.write(rst_content)
-    f_index.close()
+    stream = open(osp.join(rst_dir, 'index.rst'), 'w')
+    stream.write('''
+.. toctree::
+    :maxdepth: 1
+
+''')
+    # first write expected files in order
+    for fileid in INDEX_IN_ORDER:
+        try:
+            index.remove(fileid)
+        except:
+            raise Exception(
+        'Bad file id %s referenced in INDEX_IN_ORDER in %s, '
+        'fix this please' % (fileid, __file__))
+        stream.write('    %s\n' % fileid)
+    # append remaining, by alphabetical order
+    for fileid in sorted(index):
+        stream.write('    %s\n' % fileid)
+    stream.close()
 
 def extract_rest(js_dir, js_file):
-    js_filepath = os.path.join(js_dir, js_file)
+    js_filepath = osp.join(js_dir, js_file)
     filecontent = open(js_filepath, 'U').read()
     comments = get_doc_comments(filecontent)
     rst = rest_title(js_file, 0)
     rst += '.. module:: %s\n\n' % js_file
     rst += '\n\n'.join(comments)
     return rst
+
+INDEX_IN_ORDER = [
+    'cubicweb',
+    'cubicweb.python',
+    'cubicweb.htmlhelpers',
+    'cubicweb.ajax',
+
+    'cubicweb.lazy',
+    'cubicweb.tabs',
+    'cubicweb.ajax.box',
+    'cubicweb.facets',
+    'cubicweb.widgets',
+    'cubicweb.image',
+    'cubicweb.flot',
+    'cubicweb.calendar',
+    'cubicweb.preferences',
+    'cubicweb.edition',
+    'cubicweb.reledit',
+    'cubicweb.iprogress',
+    'cubicweb.rhythm',
+    'cubicweb.gmap',
+    'cubicweb.timeline-ext',
+]
+
+FILES_TO_IGNORE = set([
+    'jquery.js',
+    'jquery.treeview.js',
+    'jquery.json.js',
+    'jquery.tablesorter.js',
+    'jquery.timePicker.js',
+    'jquery.flot.js',
+    'jquery.corner.js',
+    'jquery.ui.js',
+    'ui.core.js',
+    'ui.tabs.js',
+    'ui.slider.js',
+    'excanvas.js',
+    'gmap.utility.labeledmarker.js',
+
+    'cubicweb.fckcwconfig.js',
+    'cubicweb.fckcwconfig-full.js',
+    'cubicweb.goa.js',
+    'cubicweb.compat.js',
+    'cubicweb.timeline-bundle.js',
+    ])
 
 if __name__ == '__main__':
     parse_js_files()

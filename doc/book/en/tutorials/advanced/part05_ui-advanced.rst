@@ -1,9 +1,9 @@
-Building my photos web site with |cubiweb| part V: let's make it even more user friendly
+Building my photos web site with |cubicweb| part V: let's make it even more user friendly
 =========================================================================================
 
-We'll now see how to benefit from features introduced in 3.9 and 3.10 releases of CubiWeb
+We'll now see how to benefit from features introduced in 3.9 and 3.10 releases of CubicWeb
 
-Step 1: Tired of the default look?
+Step 1: tired of the default look?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 OK... Now our site has its most desired features. But... I would like to make it look
@@ -12,8 +12,8 @@ first!
 
 The first thing we can to is to change the logo. There are various way to achieve
 this. The easiest way is to put a :file:`logo.png` file into the cube's :file:`data`
-directory. As data files are looked at according to cubes order (CubiWeb
-resources coming last), that file will be selected instead of CubiWeb's one.
+directory. As data files are looked at according to cubes order (CubicWeb
+resources coming last), that file will be selected instead of CubicWeb's one.
 
 .. Note::
    As the location for static resources are cached, you'll have to restart
@@ -27,14 +27,14 @@ the cube's :file:`uiprops.py` file:
 
    LOGO = data('logo.jpg')
 
-The uiprops machinery has been introduced in `CubiWeb 3.9`_. It is used to define
+The uiprops machinery has been introduced in `CubicWeb 3.9`_. It is used to define
 some static file resources, such as the logo, default Javascript / CSS files, as
 well as CSS properties (we'll see that later).
 
 .. Note::
    This file is imported specifically by |cubicweb|, with a predefined name space,
    containing for instance the `data` function, telling the file is somewhere
-   in a cube or CubiWeb's data directory.
+   in a cube or CubicWeb's data directory.
 
    One side effect of this is that it can't be imported as a regular python
    module.
@@ -44,7 +44,7 @@ and then automatically reloaded.
 
 Now, as it's a photos web-site, I would like to have a photo of mine as background...
 After some trials I won't detail here, I've found a working recipe explained `here`_.
-All I've to do is to override some stuff of the default CubiWeb user interface to
+All I've to do is to override some stuff of the default CubicWeb user interface to
 apply it as explained.
 
 The first thing to to get the ``<img/>`` tag as first element after the
@@ -144,11 +144,11 @@ introduced above:
 
    STYLESHEETS = sheet['STYLESHEETS'] + [data('cubes.sytweb.css')]
 
-.. Note:
+.. Note::
    `sheet` is another predefined variable containing values defined by
-   already process `:file:`uiprops.py`` file, notably the CubiWeb's one.
+   already process `:file:`uiprops.py`` file, notably the CubicWeb's one.
 
-Here we simply want our CSS in addition to CubiWeb's base CSS files, so we
+Here we simply want our CSS in addition to CubicWeb's base CSS files, so we
 redefine the `STYLESHEETS` variable to existing CSS (accessed through the `sheet`
 variable) with our one added. I could also have done:
 
@@ -163,7 +163,7 @@ resized to fit the screen.
 
 .. image:: ../../images/tutos-photowebsite_background-image.png
 
-The final touch: let's customize CubiWeb's CSS to get less orange... By simply adding
+The final touch: let's customize CubicWeb's CSS to get less orange... By simply adding
 
 .. sourcecode:: python
 
@@ -174,7 +174,7 @@ the orange one:
 
 .. image:: ../../images/tutos-photowebsite_grey-box.png
 
-This is because CubiWeb's CSS include some variables which are
+This is because CubicWeb's CSS include some variables which are
 expanded by values defined in uiprops file. In our case we controlled the
 properties of the CSS `background` property of boxes with CSS class
 `contextualBoxTitleBg` and `incontextBoxTitleBg`.
@@ -290,7 +290,7 @@ Let's see how it looks like on a file primary view:
 Great, it's now as easy for me to link my pictures to people than to tag them.
 Also, visitors get a consistent display of these two pieces of information.
 
-.. Note:
+.. Note::
   The ui component system has been refactored in `CubicWeb 3.10`_, which also
   introduced the :class:`AjaxEditRelationCtxComponent` class.
 
@@ -301,7 +301,7 @@ Step 3: configuring facets
 The last feature we'll add today is facet configuration. If you access to the
 '/file' url, you'll see a set of 'facets' appearing in the left column. Facets
 provide an intuitive way to build a query incrementally, by proposing to the user
-various way to restrict the result set. For instance CubiWeb proposes a facet to
+various way to restrict the result set. For instance CubicWeb proposes a facet to
 restrict based on who created an entity; the tag cube proposes a facet to
 restrict based on tags; the zoe cube a facet to restrict based on geographical
 location, and so on. In that gist, I want to propose a facet to restrict based on
@@ -310,7 +310,7 @@ the people displayed on the picture. To do so, there are various classes in the
 attributes as we've done for the box. In our case, we'll define a subclass of
 :class:`RelationFacet`.
 
-.. Note:
+.. Note::
 
    Since that's ui stuff, we'll continue to add code below to our
    :file:`views.py` file. Though we begin to have a lot of various code their, so
@@ -348,7 +348,7 @@ Now if I search for some pictures on my site, I get the following facets availab
 
 .. image:: ../../images/tutos-photowebsite_facets.png
 
-.. Note:
+.. Note::
 
   By default a facet must be applyable to every entity in the result set and
   provide at leat two elements of vocabulary to be displayed (for instance you
@@ -370,6 +370,6 @@ friends...
 
 
 
-.. _`CubicWeb 3.10`: https://www.cubicweb.org/blogentry/1330518
+.. _`CubicWeb 3.10`: http://www.cubicweb.org/blogentry/1330518
 .. _`CubicWeb 3.9`: http://www.cubicweb.org/blogentry/1179899
 .. _`here`: http://webdesign.about.com/od/css3/f/blfaqbgsize.htm

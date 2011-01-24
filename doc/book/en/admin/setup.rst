@@ -2,7 +2,7 @@
 
 .. _SetUpEnv:
 
-Installation and set-up of a *CubicWeb* environment
+Installation and set-up of a |cubicweb| environment
 ===================================================
 
 Installation of `Cubicweb` and its dependencies
@@ -68,8 +68,8 @@ cubes.
    `cubicweb with postgresql datatabase`_ and `cubicweb-mysql-support` contains
    necessary dependency for using `cubicweb with mysql database`_ .
 
-There is also a wide variety of :ref:`cubes <Cubes>` listed on the `CubicWeb.org Forge`_
-available as debian packages and tarball.
+There is also a wide variety of :ref:`cubes <AvailableCubes>` listed on the
+`CubicWeb.org Forge`_ available as debian packages and tarball.
 
 The repositories are signed with `Logilab's gnupg key`_. To avoid warning on
 "apt-get update":

@@ -41,7 +41,7 @@ and then create your new cube using: ::
 
   cubicweb-ctl newcube --directory=~/src/cubes myblog
 
-.. Note:
+.. Note::
 
    We previously used `myblog` as the name of our *instance*. We're now creating
    a *cube* with the same name. Both are different things. We'll now try to
@@ -63,6 +63,7 @@ file:
 
 where the ``None`` means we do not depends on a particular version of the cube.
 
+.. _TutosBaseCustomizingTheApplicationDataModel:
 
 Extending the data model
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -178,6 +179,8 @@ framework.
 
 You'll then be able to redefine each of them according to your needs
 and preferences. We'll now see how to do such thing.
+
+.. _TutosBaseCustomizingTheApplicationCustomViews:
 
 Defining your views
 ~~~~~~~~~~~~~~~~~~~

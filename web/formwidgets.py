@@ -28,6 +28,7 @@ Widgets
 
 .. autoclass:: cubicweb.web.formwidgets.FieldWidget
 
+
 HTML <input> based widgets
 ''''''''''''''''''''''''''
 
@@ -37,6 +38,7 @@ HTML <input> based widgets
 .. autoclass:: cubicweb.web.formwidgets.FileInput
 .. autoclass:: cubicweb.web.formwidgets.ButtonInput
 
+
 Other standard HTML widgets
 '''''''''''''''''''''''''''
 
@@ -45,6 +47,7 @@ Other standard HTML widgets
 .. autoclass:: cubicweb.web.formwidgets.CheckBox
 .. autoclass:: cubicweb.web.formwidgets.Radio
 
+
 Date and time widgets
 '''''''''''''''''''''
 
@@ -52,6 +55,7 @@ Date and time widgets
 .. autoclass:: cubicweb.web.formwidgets.JQueryDateTimePicker
 .. autoclass:: cubicweb.web.formwidgets.JQueryDatePicker
 .. autoclass:: cubicweb.web.formwidgets.JQueryTimePicker
+
 
 Ajax / javascript widgets
 '''''''''''''''''''''''''
@@ -64,19 +68,22 @@ Ajax / javascript widgets
 .. kill or document LazyRestrictedAutoCompletionWidget
 .. kill or document RestrictedAutoCompletionWidget
 
+
 Other widgets
 '''''''''''''
+
 .. autoclass:: cubicweb.web.formwidgets.PasswordInput
 .. autoclass:: cubicweb.web.formwidgets.IntervalWidget
 .. autoclass:: cubicweb.web.formwidgets.HorizontalLayoutWidget
 .. autoclass:: cubicweb.web.formwidgets.EditableURLWidget
 
+
 Form controls
 '''''''''''''
-Those classes are not proper widget (they are not associated to
-field) but are used as form controls. Their API is similar
-to widgets except that `field` argument given to :meth:`render`
-will be `None`.
+
+Those classes are not proper widget (they are not associated to field) but are
+used as form controls. Their API is similar to widgets except that `field`
+argument given to :meth:`render` will be `None`.
 
 .. autoclass:: cubicweb.web.formwidgets.Button
 .. autoclass:: cubicweb.web.formwidgets.SubmitButton
@@ -107,15 +114,20 @@ class FieldWidget(object):
 
     :attr:`needs_js`
        list of javascript files needed by the widget.
+
     :attr:`needs_css`
        list of css files needed by the widget.
+
     :attr:`setdomid`
        flag telling if HTML DOM identifier should be set on input.
+
     :attr:`settabindex`
        flag telling if HTML tabindex attribute of inputs should be set.
+
     :attr:`suffix`
        string to use a suffix when generating input, to ease usage as a
        sub-widgets (eg widget used by another widget)
+
     :attr:`vocabulary_widget`
        flag telling if this widget expect a vocabulary
 
@@ -212,7 +224,7 @@ class FieldWidget(object):
            generating the form)
 
         4. field's typed value (returned by its
-          :meth:`~cubicweb.web.formfields.Field.typed_value` method)
+           :meth:`~cubicweb.web.formfields.Field.typed_value` method)
 
         Values found in 1. and 2. are expected te be already some 'display
         value' (eg a string) while those found in 3. and 4. are expected to be

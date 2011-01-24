@@ -1,3 +1,4 @@
+.. _AvailableCubes:
 
 Available cubes
 ---------------

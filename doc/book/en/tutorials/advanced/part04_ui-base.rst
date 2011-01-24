@@ -1,5 +1,5 @@
-Building my photos web site with CubicWeb part IV: let's make it more user friendly
-===================================================================================
+Let's make it more user friendly
+================================
 
 
 Step 0: updating code to CubicWeb 3.9 / cubicweb-file 1.9
@@ -200,12 +200,12 @@ Also, we added a title that tries to make it more evident that the visitor is
 authenticated, or not. Hopefuly people will get it now!
 
 
-.. figure:: ../../images/tutos-photowebsite_index_before.png
+.. figure:: ../../images/tutos-photowebsite_index-before.png
    :alt: default index page screenshot
 
    The default index page
 
-.. figure:: ../../images/tutos-photowebsite_index_after.png
+.. figure:: ../../images/tutos-photowebsite_index-after.png
    :alt: new index page screenshot
 
    Our simpler, less intimidating, index page (still translated in french)
