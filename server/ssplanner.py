@@ -647,15 +647,13 @@ class DeleteEntitiesStep(Step):
         results = self.execute_child()
         todelete = frozenset(typed_eid(eid) for eid, in results)
         session = self.plan.session
-        delete = session.repo.glob_delete_entity
         # mark eids as being deleted in session info and setup cache update
         # operation (register pending eids before actual deletion to avoid
-        # multiple call to glob_delete_entity)
+        # multiple call to glob_delete_entities)
         op = CleanupDeletedEidsCacheOp.get_instance(session)
         actual = todelete - op._container
         op._container |= actual
-        for eid in actual:
-            delete(session, eid)
+        session.repo.glob_delete_entities(session, actual)
         return results
 
 class DeleteRelationsStep(Step):

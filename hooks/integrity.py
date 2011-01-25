@@ -110,15 +110,32 @@ class IntegrityHook(hook.Hook):
     category = 'integrity'
 
 
-class CheckCardinalityHook(IntegrityHook):
+class CheckCardinalityHookBeforeDeleteRelation(IntegrityHook):
     """check cardinalities are satisfied"""
-    __regid__ = 'checkcard'
-    events = ('after_add_entity', 'before_delete_relation')
+    __regid__ = 'checkcard_before_delete_relation'
+    events = ('before_delete_relation',)
 
     def __call__(self):
-        getattr(self, self.event)()
+        rtype = self.rtype
+        if rtype in DONT_CHECK_RTYPES_ON_DEL:
+            return
+        session = self._cw
+        eidfrom, eidto = self.eidfrom, self.eidto
+        pendingrdefs = session.transaction_data.get('pendingrdefs', ())
+        if (session.describe(eidfrom)[0], rtype, session.describe(eidto)[0]) in pendingrdefs:
+            return
+        card = session.schema_rproperty(rtype, eidfrom, eidto, 'cardinality')
+        if card[0] in '1+' and not session.deleted_in_transaction(eidfrom):
+            _CheckSRelationOp.get_instance(self._cw).add_data((eidfrom, rtype))
+        if card[1] in '1+' and not session.deleted_in_transaction(eidto):
+            _CheckORelationOp.get_instance(self._cw).add_data((eidto, rtype))
 
-    def after_add_entity(self):
+class CheckCardinalityHookAfterAddEntity(IntegrityHook):
+    """check cardinalities are satisfied"""
+    __regid__ = 'checkcard_after_add_entity'
+    events = ('after_add_entity',)
+
+    def __call__(self):
         eid = self.entity.eid
         eschema = self.entity.e_schema
         for rschema, targetschemas, role in eschema.relation_definitions():
@@ -299,19 +316,33 @@ class _DelayedDeleteOp(hook.DataOperationMixIn, hook.Operation):
         session = self.session
         pendingeids = session.transaction_data.get('pendingeids', ())
         neweids = session.transaction_data.get('neweids', ())
+        eids_by_etype_rtype = {}
         for eid, rtype in self.get_data():
             # don't do anything if the entity is being created or deleted
             if not (eid in pendingeids or eid in neweids):
                 etype = session.describe(eid)[0]
-                session.execute(self.base_rql % (etype, rtype), {'x': eid})
+                key = (etype, rtype)
+                if key not in eids_by_etype_rtype:
+                    eids_by_etype_rtype[key] = [str(eid)]
+                else:
+                    eids_by_etype_rtype[key].append(str(eid))
+        for (etype, rtype), eids in eids_by_etype_rtype.iteritems():
+            # quite unexpectedly, not deleting too many entities at a time in
+            # this operation benefits to the exec speed (possibly on the RQL
+            # parsing side)
+            start = 0
+            incr = 500
+            while start < len(eids):
+                session.execute(self.base_rql % (etype, ','.join(eids[start:start+incr]), rtype))
+                start += incr
 
 class _DelayedDeleteSEntityOp(_DelayedDeleteOp):
     """delete orphan subject entity of a composite relation"""
-    base_rql = 'DELETE %s X WHERE X eid %%(x)s, NOT X %s Y'
+    base_rql = 'DELETE %s X WHERE X eid IN (%s), NOT X %s Y'
 
 class _DelayedDeleteOEntityOp(_DelayedDeleteOp):
     """check required object relation"""
-    base_rql = 'DELETE %s X WHERE X eid %%(x)s, NOT Y %s X'
+    base_rql = 'DELETE %s X WHERE X eid IN (%s), NOT Y %s X'
 
 
 class DeleteCompositeOrphanHook(hook.Hook):

@@ -35,6 +35,7 @@ from base64 import b64decode, b64encode
 from contextlib import contextmanager
 from os.path import abspath
 import re
+import itertools
 
 from logilab.common.compat import any
 from logilab.common.cache import Cache
@@ -547,23 +548,29 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         #    on the filesystem. To make the entity.data usage absolutely
         #    transparent, we'll have to reset entity.data to its binary
         #    value once the SQL query will be executed
-        restore_values = {}
-        etype = entity.__regid__
+        restore_values = []
+        if isinstance(entity, list):
+            entities = entity
+        else:
+            entities = [entity]
+        etype = entities[0].__regid__
         for attr, storage in self._storages.get(etype, {}).items():
-            try:
-                edited = entity.cw_edited
-            except AttributeError:
-                assert event == 'deleted'
-                getattr(storage, 'entity_deleted')(entity, attr)
-            else:
-                if attr in edited:
-                    handler = getattr(storage, 'entity_%s' % event)
-                    restore_values[attr] = handler(entity, attr)
+            for entity in entities:
+                try:
+                    edited = entity.cw_edited
+                except AttributeError:
+                    assert event == 'deleted'
+                    getattr(storage, 'entity_deleted')(entity, attr)
+                else:
+                    if attr in edited:
+                        handler = getattr(storage, 'entity_%s' % event)
+                        to_restore = handler(entity, attr)
+                        restore_values.append((entity, attr, to_restore))
         try:
             yield # 2/ execute the source's instructions
         finally:
             # 3/ restore original values
-            for attr, value in restore_values.items():
+            for entity, attr, value in restore_values:
                 entity.cw_edited.edited_attribute(attr, value)
 
     def add_entity(self, session, entity):
@@ -918,7 +925,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         * transfer it to the deleted_entities table if the entity's type is
           multi-sources
         """
-        self.fti_unindex_entity(session, entity.eid)
+        self.fti_unindex_entities(session, [entity])
         attrs = {'eid': entity.eid}
         self.doexec(session, self.sqlgen.delete('entities', attrs), attrs)
         if not entity.__regid__ in self.multisources_etypes:
@@ -929,6 +936,27 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         attrs = {'type': entity.__regid__, 'eid': entity.eid, 'extid': extid,
                  'source': uri, 'dtime': datetime.now()}
         self.doexec(session, self.sqlgen.insert('deleted_entities', attrs), attrs)
+
+    def delete_info_multi(self, session, entities, uri, extids):
+        """delete system information on deletion of an entity:
+        * update the fti
+        * remove record from the entities table
+        * transfer it to the deleted_entities table if the entity's type is
+          multi-sources
+        """
+        self.fti_unindex_entities(session, entities)
+        attrs = {'eid': '(%s)' % ','.join([str(_e.eid) for _e in entities])}
+        self.doexec(session, self.sqlgen.delete_many('entities', attrs), attrs)
+        if entities[0].__regid__ not in self.multisources_etypes:
+            return
+        attrs = {'type': entities[0].__regid__,
+                 'source': uri, 'dtime': datetime.now()}
+        for entity, extid in itertools.izip(entities, extids):
+            if extid is not None:
+                assert isinstance(extid, str), type(extid)
+                extid = b64encode(extid)
+            attrs.update({'eid': entity.eid, 'extid': extid})
+            self.doexec(session, self.sqlgen.insert('deleted_entities', attrs), attrs)
 
     def modified_entities(self, session, etypes, mtime):
         """return a 2-uple:
@@ -1297,27 +1325,32 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         """
         FTIndexEntityOp.get_instance(session).add_data(entity.eid)
 
-    def fti_unindex_entity(self, session, eid):
-        """remove text content for entity with the given eid from the full text
-        index
+    def fti_unindex_entities(self, session, entities):
+        """remove text content for entities from the full text index
         """
+        cursor = session.pool['system']
+        cursor_unindex_object = self.dbhelper.cursor_unindex_object
         try:
-            self.dbhelper.cursor_unindex_object(eid, session.pool['system'])
+            for entity in entities:
+                cursor_unindex_object(entity.eid, cursor)
         except Exception: # let KeyboardInterrupt / SystemExit propagate
-            self.exception('error while unindexing %s', eid)
+            self.exception('error while unindexing %s', entity)
 
-    def fti_index_entity(self, session, entity):
-        """add text content of a created/modified entity to the full text index
+
+    def fti_index_entities(self, session, entities):
+        """add text content of created/modified entities to the full text index
         """
-        self.debug('reindexing %r', entity.eid)
+        cursor_index_object = self.dbhelper.cursor_index_object
+        cursor = session.pool['system']
         try:
             # use cursor_index_object, not cursor_reindex_object since
             # unindexing done in the FTIndexEntityOp
-            self.dbhelper.cursor_index_object(entity.eid,
-                                              entity.cw_adapt_to('IFTIndexable'),
-                                              session.pool['system'])
+            for entity in entities:
+                cursor_index_object(entity.eid,
+                                    entity.cw_adapt_to('IFTIndexable'),
+                                    cursor)
         except Exception: # let KeyboardInterrupt / SystemExit propagate
-            self.exception('error while reindexing %s', entity)
+            self.exception('error while indexing %s', entity)
 
 
 class FTIndexEntityOp(hook.DataOperationMixIn, hook.LateOperation):
@@ -1333,17 +1366,17 @@ class FTIndexEntityOp(hook.DataOperationMixIn, hook.LateOperation):
         source = session.repo.system_source
         pendingeids = session.transaction_data.get('pendingeids', ())
         done = session.transaction_data.setdefault('indexedeids', set())
+        to_reindex = set()
         for eid in self.get_data():
             if eid in pendingeids or eid in done:
                 # entity added and deleted in the same transaction or already
                 # processed
-                return
+                continue
             done.add(eid)
             iftindexable = session.entity_from_eid(eid).cw_adapt_to('IFTIndexable')
-            for container in iftindexable.fti_containers():
-                source.fti_unindex_entity(session, container.eid)
-                source.fti_index_entity(session, container)
-
+            to_reindex |= set(iftindexable.fti_containers())
+        source.fti_unindex_entities(session, to_reindex)
+        source.fti_index_entities(session, to_reindex)
 
 def sql_schema(driver):
     helper = get_db_helper(driver)

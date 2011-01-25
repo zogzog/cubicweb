@@ -1212,11 +1212,11 @@ class UpdateFTIndexOp(hook.DataOperationMixIn, hook.SingleLastOperation):
                       len(rset), etype)
             still_fti = list(schema[etype].indexable_attributes())
             for entity in rset.entities():
-                source.fti_unindex_entity(session, entity.eid)
+                source.fti_unindex_entities(session, [entity])
                 for container in entity.cw_adapt_to('IFTIndexable').fti_containers():
                     if still_fti or container is not entity:
-                        source.fti_unindex_entity(session, container.eid)
-                        source.fti_index_entity(session, container)
+                        source.fti_unindex_entities(session, [container])
+                        source.fti_index_entities(session, [container])
         if to_reindex:
             # Transaction has already been committed
             session.pool.commit()
