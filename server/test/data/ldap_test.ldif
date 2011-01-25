@@ -1,0 +1,55 @@
+dn: dc=cubicweb,dc=test
+structuralObjectClass: organization
+objectClass: dcObject
+objectClass: organization
+o: cubicweb
+dc: cubicweb
+
+dn: ou=People,dc=cubicweb,dc=test
+objectClass: organizationalUnit
+ou: People
+structuralObjectClass: organizationalUnit
+
+dn: uid=syt,ou=People,dc=cubicweb,dc=test
+loginShell: /bin/bash
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: top
+objectClass: shadowAccount
+structuralObjectClass: inetOrgPerson
+cn: Sylvain Thenault
+sn: Thenault
+shadowMax: 99999
+gidNumber: 1004
+uid: syt
+homeDirectory: /home/syt
+shadowFlag: 134538764
+uidNumber: 1004
+givenName: Sylvain
+telephoneNumber: 106
+displayName: sthenault
+gecos: Sylvain Thenault
+mail: sylvain.thenault@logilab.fr
+mail: syt@logilab.fr
+
+dn: uid=adim,ou=People,dc=cubicweb,dc=test
+loginShell: /bin/bash
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: top
+objectClass: shadowAccount
+cn: Adrien Di Mascio
+sn: Di Mascio
+shadowMax: 99999
+gidNumber: 1006
+uid: adim
+homeDirectory: /home/adim
+uidNumber: 1006
+structuralObjectClass: inetOrgPerson
+givenName: Adrien
+telephoneNumber: 109
+displayName: adimascio
+gecos: Adrien Di Mascio
+mail: adim@logilab.fr
+mail: adrien.dimascio@logilab.fr
+

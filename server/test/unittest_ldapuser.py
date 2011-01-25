@@ -17,7 +17,12 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """cubicweb.server.sources.ldapusers unit and functional tests"""
 
-import socket
+import os
+import shutil
+import time
+from os.path import abspath, join, exists
+import subprocess
+from socket import socket, error as socketerror
 
 from logilab.common.testlib import TestCase, unittest_main, mock_object
 from cubicweb.devtools.testlib import CubicWebTC
@@ -25,29 +30,16 @@ from cubicweb.devtools.repotest import RQLGeneratorTC
 
 from cubicweb.server.sources.ldapuser import *
 
-if '17.1' in socket.gethostbyname('ldap1'):
-    SYT = 'syt'
-    SYT_EMAIL = 'Sylvain Thenault'
-    ADIM = 'adim'
-    CONFIG = u'''host=ldap1
-user-base-dn=ou=People,dc=logilab,dc=fr
+SYT = 'syt'
+SYT_EMAIL = 'Sylvain Thenault'
+ADIM = 'adim'
+CONFIG = u'''host=%s
+user-base-dn=ou=People,dc=cubicweb,dc=test
 user-scope=ONELEVEL
 user-classes=top,posixAccount
 user-login-attr=uid
 user-default-group=users
 user-attrs-map=gecos:email,uid:login
-'''
-else:
-    SYT = 'sthenault'
-    SYT_EMAIL = 'sylvain.thenault@logilab.fr'
-    ADIM = 'adimascio'
-    CONFIG = u'''host=ldap1
-user-base-dn=ou=People,dc=logilab,dc=net
-user-scope=ONELEVEL
-user-classes=top,OpenLDAPperson
-user-login-attr=uid
-user-default-group=users
-user-attrs-map=mail:email,uid:login
 '''
 
 
@@ -71,15 +63,21 @@ def nopwd_authenticate(self, session, login, password):
     return self.extid2eid(user['dn'], 'CWUser', session)
 
 def setUpModule(*args):
+    create_slapd_configuration(LDAPUserSourceTC.config)
     global repo
-    LDAPUserSourceTC._init_repo()
-    repo = LDAPUserSourceTC.repo
-    add_ldap_source(LDAPUserSourceTC.cnx)
+    try:
+        LDAPUserSourceTC._init_repo()
+        repo = LDAPUserSourceTC.repo
+        add_ldap_source(LDAPUserSourceTC.cnx)
+    except:
+        terminate_slapd()
+        raise
 
 def tearDownModule(*args):
     global repo
     repo.shutdown()
     del repo
+    terminate_slapd()
 
 def add_ldap_source(cnx):
     cnx.request().create_entity('CWSource', name=u'ldapuser', type=u'ldapuser',
@@ -93,6 +91,55 @@ def add_ldap_source(cnx):
     # check we get some users from ldap
     assert len(rset) > 1
 
+def create_slapd_configuration(config):
+    global slapd_process, CONFIG
+    basedir = join(config.apphome, "ldapdb")
+    slapdconf = join(config.apphome, "slapd.conf")
+    if not exists(basedir):
+        os.makedirs(basedir)
+        # fill ldap server with some data
+        ldiffile = join(config.apphome, "ldap_test.ldif")
+        print "Initing ldap database"
+        cmdline = "/usr/sbin/slapadd -f %s -l %s -c" % (slapdconf, ldiffile)
+        subprocess.call(cmdline, shell=True)
+
+
+    #ldapuri = 'ldapi://' + join(basedir, "ldapi").replace('/', '%2f')
+    for port in range(9000, 9100):
+        try:
+            socket().bind(('localhost', port))
+        except socketerror, e:
+            if e.errno == 98: # Address already in use
+                pass
+            else:
+                raise
+        else:
+            break
+    else:
+        raise Exception("Can't find a free TCP port on localhost")
+
+    host = 'localhost:%s' % port
+    ldapuri = 'ldap://%s' % host
+    cmdline = ["/usr/sbin/slapd", "-f",  slapdconf,  "-h",  ldapuri, "-d", "0"]
+    print "Starting slapd on", ldapuri
+    slapd_process = subprocess.Popen(cmdline)
+    time.sleep(0.2)
+    if slapd_process.poll() is None:
+        print "slapd started with pid %s" % slapd_process.pid
+    else:
+        raise EnvironmentError('Cannot start slapd with cmdline="%s" (from directory "%s")' %
+                               (" ".join(cmdline), os.getcwd()))
+    CONFIG = CONFIG % host
+
+def terminate_slapd():
+    global slapd_process
+    if slapd_process.returncode is None:
+        print "terminating slapd"
+        slapd_process.terminate()
+        slapd_process.wait()
+        print "DONE"
+
+    del slapd_process
 
 class LDAPUserSourceTC(CubicWebTC):
 
@@ -117,7 +164,8 @@ class LDAPUserSourceTC(CubicWebTC):
 
     def test_base(self):
         # check a known one
-        e = self.sexecute('CWUser X WHERE X login %(login)s', {'login': SYT}).get_entity(0, 0)
+        rset = self.sexecute('CWUser X WHERE X login %(login)s', {'login': SYT})
+        e = rset.get_entity(0, 0)
         self.assertEqual(e.login, SYT)
         e.complete()
         self.assertEqual(e.creation_date, None)

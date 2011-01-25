@@ -177,7 +177,7 @@ directory (default to once a day).',
         self.cnx_dn = source_config.get('data-cnx-dn') or ''
         self.cnx_pwd = source_config.get('data-cnx-password') or ''
         self.user_base_scope = globals()[source_config['user-scope']]
-        self.user_base_dn = source_config['user-base-dn']
+        self.user_base_dn = str(source_config['user-base-dn'])
         self.user_base_scope = globals()[source_config['user-scope']]
         self.user_classes = splitstrip(source_config['user-classes'])
         self.user_login_attr = source_config['user-login-attr']
