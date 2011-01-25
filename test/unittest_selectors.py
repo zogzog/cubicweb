@@ -249,8 +249,8 @@ class ScoreEntitySelectorTC(CubicWebTC):
 
     def test_intscore_entity_selector(self):
         req = self.request()
+        rset = req.execute('Any E WHERE E eid 1')
         selector = score_entity(lambda x: None)
-        rset = req.execute('Any E WHERE E eid 0')
         self.assertEqual(selector(None, req, rset), 0)
         selector = score_entity(lambda x: "something")
         self.assertEqual(selector(None, req, rset), 1)
