@@ -221,7 +221,6 @@ li.invisible div{
 
 table#header {
   background: %(headerBgColor)s url("banner.png") repeat-x top left;
-  text-align: left;
   width: 100%;
 }
 
@@ -231,10 +230,6 @@ table#header td {
 
 table#header a {
   color: %(defaultColor)s;
-}
-
-table#header td#headtext {
-  float: left;
 }
 
 table#header td#header-right {
@@ -253,10 +248,6 @@ span#appliName {
 }
 
 /* Popup on login box and userActionBox */
-div.popupWrapper {
-  position: relative;
-}
-
 div.popup {
   position: absolute;
   background: #fff;

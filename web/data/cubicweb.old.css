@@ -228,7 +228,6 @@ li.invisible div {
 
 table#header {
   background: #ff7700 url("banner.png") left top repeat-x;
-  text-align: left;
   width: 100%;
 }
 
@@ -238,10 +237,6 @@ table#header td {
 
 table#header a {
   color: #000;
-}
-
-table#header td#headtext {
-  float: left;
 }
 
 table#header td#header-right {
@@ -262,12 +257,16 @@ div#stateheader{
 
 /* Popup on login box and userActionBox */
 
+.popupWrapper{
+  position:relative;
+}
+
 div.popup {
   position: absolute;
   background: #fff;
   border: 1px solid black;
   text-align: left;
-  z-index:400;
+  z-index: 400;
 }
 
 div.popup ul li a {
