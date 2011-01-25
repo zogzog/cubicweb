@@ -83,13 +83,6 @@ def add_ldap_source(cnx):
     cnx.request().create_entity('CWSource', name=u'ldapuser', type=u'ldapuser',
                                 config=CONFIG)
     cnx.commit()
-    # XXX: need this first query else we get 'database is locked' from
-    # sqlite since it doesn't support multiple connections on the same
-    # database
-    # so doing, ldap inserted users don't get removed between each test
-    rset = cnx.cursor().execute('CWUser X')
-    # check we get some users from ldap
-    assert len(rset) > 1
 
 def create_slapd_configuration(config):
     global slapd_process, CONFIG
