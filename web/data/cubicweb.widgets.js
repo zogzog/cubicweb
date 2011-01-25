@@ -542,3 +542,111 @@ cw.widgets = {
         }
     }
 };
+
+
+// InOutWidget  This contains specific InOutnWidget javascript
+// IE things can not handle hide/show options on select, this cloned list solition (should propably have 2 widgets)
+
+(function ($) {
+    var defaultSettings = {
+        bindDblClick: true
+    };
+    var methods = {
+        __init__: function(fromSelect, toSelect, options) {
+            var settings = $.extend({}, defaultSettings, options);
+            var bindDblClick = settings['bindDblClick'];
+            var $fromNode = $(cw.jqNode(fromSelect));
+            var clonedSelect = $fromNode.clone();
+            var $toNode = $(cw.jqNode(toSelect));
+            var $addButton = $(this.find('.cwinoutadd')[0]);
+            var $removeButton = $(this.find('.cwinoutremove')[0]);
+            // bind buttons
+            var name = this.attr('id');
+            var instanceData = {'fromNode':fromSelect,
+                                'toNode':toSelect,
+                                'cloned':clonedSelect,
+                                'bindDblClick':bindDblClick,
+                                'name': name};
+            $addButton.bind('click', {'instanceData':instanceData}, methods.inOutWidgetAddValues);
+            $removeButton.bind('click', {'instanceData':instanceData}, methods.inOutWidgetRemoveValues);
+            if(bindDblClick){
+                $toNode.bind('dblclick', {'instanceData': instanceData}, methods.inOutWidgetRemoveValues);
+            }
+            methods.inOutWidgetRemplaceSelect($fromNode, $toNode, clonedSelect, bindDblClick, name);
+        },
+
+        inOutWidgetRemplaceSelect: function($fromNode, $toNode, clonedSelect, bindDblClick, name){
+             var $newSelect = clonedSelect.clone();
+             $toNode.find('option').each(function() {
+                 $newSelect.find('$(this)[value='+$(this).val()+']').remove();
+              });
+             var fromparent = $fromNode.parent();
+             if (bindDblClick) {
+                 //XXX jQuery live binding does not seem to work here
+                 $newSelect.bind('dblclick', {'instanceData': {'fromNode':$fromNode.attr('id'),
+                                     'toNode': $toNode.attr('id'),
+                                     'cloned':clonedSelect,
+                                     'bindDblClick':bindDblClick,
+                                     'name': name}},
+                                 methods.inOutWidgetAddValues);
+             }
+             $fromNode.remove();
+             fromparent.append($newSelect);
+        },
+
+        inOutWidgetAddValues: function(event){
+            var $fromNode = $(cw.jqNode(event.data.instanceData.fromNode));
+            var $toNode = $(cw.jqNode(event.data.instanceData.toNode));
+            $fromNode.find('option:selected').each(function() {
+                var option = $(this);
+                var newoption = OPTION({'value':option.val()},
+	 			 value=option.text());
+                $toNode.append(newoption);
+                var hiddenInput = INPUT({
+                    type: "hidden", name: event.data.instanceData.name,
+                    value:option.val()
+                });
+                $toNode.parent().append(hiddenInput);
+            });
+            methods.inOutWidgetRemplaceSelect($fromNode, $toNode, event.data.instanceData.cloned,
+                                              event.data.instanceData.bindDblClick,
+                                              event.data.instanceData.name);
+            // for ie 7 : ie does not resize correctly the select
+            if($.browser.msie && $.browser.version.substr(0,1) < 8){
+                var p = $toNode.parent();
+                var newtoNode = $toNode.clone();
+                if (event.data.instanceData.bindDblClick) {
+                    newtoNode.bind('dblclick', {'fromNode': $fromNode.attr('id'),
+                                                'toNode': $toNode.attr('id'),
+                                                'cloned': event.data.instanceData.cloned,
+                                                'bindDblClick': true,
+                                                'name': event.data.instanceData.name},
+                                   methods.inOutWidgetRemoveValues);
+                }
+                $toNode.remove();
+                p.append(newtoNode);
+            }
+        },
+
+        inOutWidgetRemoveValues: function(event){
+            var $fromNode = $(cw.jqNode(event.data.instanceData.toNode));
+            var $toNode = $(cw.jqNode(event.data.instanceData.fromNode));
+            var name = event.data.instanceData.name.replace(':', '\\:');
+            $fromNode.find('option:selected').each(function(){
+                var option = $(this);
+                var newoption = OPTION({'value':option.val()},
+	 			 value=option.text());
+                option.remove();
+                $fromNode.parent().find('input[name]='+ name).each(function() {
+                    $(this).val()==option.val()?$(this).remove():null;
+               });
+            });
+            methods.inOutWidgetRemplaceSelect($toNode, $fromNode,  event.data.instanceData.cloned,
+                                              event.data.instanceData.bindDblClick,
+                                              event.data.instanceData.name);
+        }
+    };
+    $.fn.cwinoutwidget = function(fromSelect, toSelect, options){
+        return methods.__init__.apply(this, [fromSelect, toSelect, options]);
+    };
+})(jQuery);

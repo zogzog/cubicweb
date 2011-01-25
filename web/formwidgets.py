@@ -63,6 +63,7 @@ Ajax / javascript widgets
 .. autoclass:: cubicweb.web.formwidgets.FCKEditor
 .. autoclass:: cubicweb.web.formwidgets.AjaxWidget
 .. autoclass:: cubicweb.web.formwidgets.AutoCompletionWidget
+.. autoclass:: cubicweb.web.formwidgets.InOutWidget
 
 .. kill or document StaticFileAutoCompletionWidget
 .. kill or document LazyRestrictedAutoCompletionWidget
@@ -999,3 +1000,55 @@ class ImgButton(object):
             'label': label, 'imgsrc': imgsrc,
             'domid': self.domid, 'href': self.href}
 
+class InOutWidget(Select):
+    needs_js = ('cubicweb.widgets.js', )
+    template = """
+<table id="%(widgetid)s">
+<tr><td>%(inoutinput)s</td>
+    <td><div style="margin-bottom:3px">%(addinput)s</div> <div>%(removeinput)s</div></td>
+    <td>%(resinput)s</td></tr>
+</table>
+"""
+    add_button = """<input type="button" id="cwinoutadd"  class="wdgButton cwinoutadd" value="&gt;&gt;" size="10" />"""
+    remove_button ="""<input type="button" class="wdgButton cwinoutremove" value="&lt;&lt;" size="10" />"""
+
+    def __init__(self, attrs=None):
+        super(InOutWidget, self).__init__(attrs, multiple=True)
+
+    def render_select(self, form, field, name, selected=False):
+        values, attrs = self.values_and_attributes(form, field)
+        options = []
+        inputs = []
+        for _option in field.vocabulary(form):
+            try:
+                label, value, oattrs = _option
+            except ValueError:
+                label, value = _option
+            if selected:
+                # add values
+                if value in values:
+                    options.append(tags.option(label, value=value))
+                    # add hidden inputs
+                    inputs.append(tags.input(value=value, name=field.dom_id(form), type="hidden"))
+            else:
+                options.append(tags.option(label, value=value))
+        if 'size' not in attrs:
+            attrs['size'] = 5
+        if 'id' in attrs :
+            attrs.pop('id')
+        return tags.select(name=name, multiple=self._multiple, id=name,
+                           options=options, **attrs) + '\n'.join(inputs)
+
+
+    def _render(self, form, field, renderer):
+        domid = field.dom_id(form)
+        jsnodes = {'widgetid': domid, 'from': 'from_' + domid, 'to': 'to_' + domid}
+        form._cw.add_onload(u'$(cw.jqNode("%s")).cwinoutwidget("%s", "%s");'
+                            % (jsnodes['widgetid'], jsnodes['from'], jsnodes['to']))
+        field.required=True
+        return self.template % {'widgetid': jsnodes['widgetid'],
+                                'inoutinput' : self.render_select(form, field, jsnodes['from']), # helpinfo select tag
+                                'resinput' : self.render_select(form, field, jsnodes['to'], selected=True), # select tag with resultats
+                                'addinput' : self.add_button % jsnodes,
+                                'removeinput': self.remove_button % jsnodes
+                                }
