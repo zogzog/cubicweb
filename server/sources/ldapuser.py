@@ -327,7 +327,7 @@ directory (default to once a day).',
         return None
 
     def prepare_columns(self, mainvars, rqlst):
-        """return two list describin how to build the final results
+        """return two list describing how to build the final results
         from the result of an ldap search (ie a list of dictionnary)
         """
         columns = []
@@ -531,6 +531,8 @@ directory (default to once a day).',
                 searchstr='(objectClass=*)', attrs=()):
         """make an ldap query"""
         self.debug('ldap search %s %s %s %s %s', self.uri, base, scope, searchstr, list(attrs))
+        # XXX for now, we do not have connection pool support for LDAP, so
+        # this is always self._conn
         cnx = session.pool.connection(self.uri).cnx
         try:
             res = cnx.search_s(base, scope, searchstr, attrs)
@@ -597,12 +599,13 @@ directory (default to once a day).',
             entity.cw_edited[attr] = res[self.user_rev_attrs[attr]]
         return entity
 
-    def after_entity_insertion(self, session, dn, entity):
+    def after_entity_insertion(self, session, lid, entity):
         """called by the repository after an entity stored here has been
         inserted in the system table.
         """
         self.debug('ldap after entity insertion')
-        super(LDAPUserSource, self).after_entity_insertion(session, dn, entity)
+        super(LDAPUserSource, self).after_entity_insertion(session, lid, entity)
+        dn = lid
         for group in self.user_default_groups:
             session.execute('SET X in_group G WHERE X eid %(x)s, G name %(group)s',
                             {'x': entity.eid, 'group': group})
