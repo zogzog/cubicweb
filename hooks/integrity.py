@@ -176,9 +176,9 @@ class _CheckConstraintsOp(hook.DataOperationMixIn, hook.LateOperation):
             # first check related entities have not been deleted in the same
             # transaction
             if session.deleted_in_transaction(eidfrom):
-                return
+                continue
             if session.deleted_in_transaction(eidto):
-                return
+                continue
             for constraint in constraints:
                 # XXX
                 # * lock RQLConstraint as well?
