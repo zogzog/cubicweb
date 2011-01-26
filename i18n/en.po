@@ -4140,10 +4140,10 @@ msgid "wf_info_for_object"
 msgstr "workflow history"
 
 msgid "wf_tab_info"
-msgstr ""
+msgstr "states and transitions"
 
 msgid "wfgraph"
-msgstr ""
+msgstr "graph"
 
 msgid ""
 "when multiple addresses are equivalent (such as python-projects@logilab.org "
