@@ -402,23 +402,22 @@ class ReleditTags(NoTargetRelationTagsDict):
         return super(ReleditTags, self).tag_relation(key, tag)
 
 def init_reledit_ctrl(rtag, sschema, rschema, oschema, role):
-    if rschema.final:
-        return
-    composite = rschema.rdef(sschema, oschema).composite == role
-    if role == 'subject':
-        oschema = '*'
-    else:
-        sschema = '*'
     values = rtag.get(sschema, rschema, oschema, role)
-    edittarget = values.get('edit_target')
-    if edittarget not in (None, 'rtype', 'related'):
-        rtag.warning('reledit: wrong value for edit_target on relation %s: %s',
-                     rschema, edittarget)
-        edittarget = None
-    if not edittarget:
-        edittarget = 'related' if composite else 'rtype'
-        rtag.tag_relation((sschema, rschema, oschema, role),
-                          {'edit_target': edittarget})
+    if not rschema.final:
+        composite = rschema.rdef(sschema, oschema).composite == role
+        if role == 'subject':
+            oschema = '*'
+        else:
+            sschema = '*'
+        edittarget = values.get('edit_target')
+        if edittarget not in (None, 'rtype', 'related'):
+            rtag.warning('reledit: wrong value for edit_target on relation %s: %s',
+                         rschema, edittarget)
+            edittarget = None
+        if not edittarget:
+            edittarget = 'related' if composite else 'rtype'
+            rtag.tag_relation((sschema, rschema, oschema, role),
+                              {'edit_target': edittarget})
     if not 'novalue_include_rtype' in values:
         showlabel = primaryview_display_ctrl.get(
             sschema, rschema, oschema, role).get('showlabel', True)
