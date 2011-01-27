@@ -551,6 +551,8 @@ def one_line_rset(cls, req, rset=None, row=None, **kwargs):
     """Return 1 if the result set is of size 1, or greater but a specific row in
       the result set is specified ('row' argument).
     """
+    if rset is None and 'entity' in kwargs:
+        return 1
     if rset is not None and (row is not None or rset.rowcount == 1):
         return 1
     return 0
