@@ -218,6 +218,9 @@ class NoTargetRelationTagsDict(RelationTagsDict):
     def name(self):
         return self.__class__.name
 
+    # tag_subject_of / tag_object_of issue warning if '*' is not given as target
+    # type, while tag_relation handle it silently since it may be used during
+    # initialization
     def tag_subject_of(self, key, tag):
         subj, rtype, obj = key
         if obj != '*':
@@ -234,5 +237,14 @@ class NoTargetRelationTagsDict(RelationTagsDict):
                          self.name, rtype, obj, subj, rtype, obj)
         super(NoTargetRelationTagsDict, self).tag_object_of(('*', rtype, obj), tag)
 
-
+    def tag_relation(self, key, tag):
+        if key[-1] == 'subject' and key[-2] != '*':
+            if isinstance(key, tuple):
+                key = list(key)
+            key[-2] = '*'
+        elif key[-1] == 'object' and key[0] != '*':
+            if isinstance(key, tuple):
+                key = list(key)
+            key[0] = '*'
+        super(NoTargetRelationTagsDict, self).tag_relation(key, tag)
 set_log_methods(RelationTags, logging.getLogger('cubicweb.rtags'))
