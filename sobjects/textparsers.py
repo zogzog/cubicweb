@@ -15,13 +15,13 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""hooks triggered on email entities creation:
+"""Some parsers to detect action to do from text
 
-* look for state change instruction (XXX security)
-* set email content as a comment on an entity when comments are supported and
-  linking information are found
-
+Currently only a parser to look for state change instruction is provided.
+Take care to security when you're using it, think about the user that
+will provide the text to analyze...
 """
+
 __docformat__ = "restructuredtext en"
 
 import re
@@ -29,7 +29,6 @@ import re
 from cubicweb import UnknownEid, typed_eid
 from cubicweb.view import Component
 
-        # XXX use user session if gpg signature validated
 
 class TextAnalyzer(Component):
     """analyze and extract information from plain text by calling registered
