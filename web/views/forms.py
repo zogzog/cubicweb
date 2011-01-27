@@ -286,7 +286,8 @@ class EntityFieldsForm(FieldsForm):
         super(EntityFieldsForm, self).__init__(_cw, rset, row, col, **kwargs)
         self.add_hidden('__type', self.edited_entity.__regid__, eidparam=True)
         self.add_hidden('eid', self.edited_entity.eid)
-        if kwargs.get('mainform', True): # mainform default to true in parent
+        # mainform default to true in parent, hence default to True
+        if kwargs.get('mainform', True) or kwargs.get('mainentity', False):
             self.add_hidden(u'__maineid', self.edited_entity.eid)
             # If we need to directly attach the new object to another one
             if self._cw.list_form_param('__linkto'):
