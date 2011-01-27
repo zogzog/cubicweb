@@ -1186,11 +1186,13 @@ class is_in_state(score_entity):
     """
     def __init__(self, *states):
         def score(entity, states=set(states)):
-            trinfo = entity.cw_adapt_to('IWorkflowable').latest_trinfo()
-            try:
-                return trinfo.new_state.name in states
-            except AttributeError:
-                return None
+            adapted = entity.cw_adapt_to('IWorkflowable')
+            trinfo = adapted.latest_trinfo()
+            if trinfo is None: # entity is probably in it's initial state
+                statename = adapted.state
+            else:
+                statename = trinfo.new_state.name
+            return statename in states
         super(is_in_state, self).__init__(score)
 
 

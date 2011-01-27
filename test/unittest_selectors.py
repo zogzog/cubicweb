@@ -24,9 +24,10 @@ from cubicweb import Binary
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.appobject import Selector, AndSelector, OrSelector
 from cubicweb.selectors import (is_instance, adaptable, match_user_groups,
-                                multi_lines_rset, score_entity)
+                                multi_lines_rset, score_entity, is_in_state)
 from cubicweb.interfaces import IDownloadable
 from cubicweb.web import action
+from cubicweb.server.migractions import ServerMigrationHelper
 
 class _1_(Selector):
     def __call__(self, *args, **kwargs):
@@ -136,6 +137,37 @@ class SelectorsTC(TestCase):
         selector |= _0_()
         selector |= _0_()
         self.assertEqual(selector(None), 0)
+
+class IsInStateSelectorTC(CubicWebTC):
+    def setup_database(self):
+        mh = ServerMigrationHelper(self.repo.config, None,
+                                   repo=self.repo, cnx=self.cnx,
+                                   interactive=False)
+        wf = mh.cmd_add_workflow('testwf', 'StateFull', default=True)
+        initial = wf.add_state(u'initial', initial=True)
+        final = wf.add_state(u'final')
+        wf.add_transition(u'forward', (initial,), final)
+
+    def test_initial_state(self):
+        req = self.request()
+        entity = req.create_entity('StateFull')
+        selector = is_in_state(u'initial')
+        self.commit()
+        score = selector(entity.__class__, None, entity=entity)
+        self.assertEqual(score, 1)
+
+    def test_final_state(self):
+        req = self.request()
+        entity = req.create_entity('StateFull')
+        selector = is_in_state(u'initial')
+        self.commit()
+        entity.cw_adapt_to('IWorkflowable').fire_transition(u'forward')
+        self.commit()
+        score = selector(entity.__class__, None, entity=entity)
+        self.assertEqual(score, 0)
+        selector = is_in_state(u'final')
+        score = selector(entity.__class__, None, entity=entity)
+        self.assertEqual(score, 1)
 
 
 class ImplementsSelectorTC(CubicWebTC):
