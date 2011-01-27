@@ -105,6 +105,8 @@ class RelationTags(object):
 
     def apply(self, schema, func):
         for eschema in schema.entities():
+            if eschema.final:
+                continue
             for rschema, tschemas, role in eschema.relation_definitions(True):
                 for tschema in tschemas:
                     if role == 'subject':
