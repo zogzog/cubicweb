@@ -53,7 +53,7 @@ from cubicweb import neg_role
 from cubicweb.rtags import (RelationTags, RelationTagsBool, RelationTagsSet,
                             RelationTagsDict, NoTargetRelationTagsDict,
                             register_rtag, _ensure_str_key)
-from cubicweb.schema import META_RTYPES
+from cubicweb.schema import META_RTYPES, INTERNAL_TYPES, WORKFLOW_TYPES
 
 
 # primary view configuration ##################################################
@@ -120,6 +120,8 @@ class InitializableDict(dict):
                 continue
             if eschema.schema_entity():
                 self.setdefault(eschema, 'schema')
+            elif eschema in INTERNAL_TYPES or eschema in WORKFLOW_TYPES:
+                self.setdefault(eschema, 'system')
             elif eschema.is_subobject(strict=True):
                 self.setdefault(eschema, 'subobject')
             else:
@@ -127,14 +129,9 @@ class InitializableDict(dict):
 
 indexview_etype_section = InitializableDict(
     EmailAddress='subobject',
-    # entity types in the 'system' table by default (managers only)
-    CWSource='system',
-    CWUser='system', CWGroup='system',
-    CWPermission='system',
-    CWCache='system',
-    Workflow='system',
-    ExternalUri='system',
     Bookmark='system',
+    # entity types in the 'system' table by default (managers only)
+    CWUser='system', CWGroup='system',
     )
 
 # autoform.AutomaticEntityForm configuration ##################################
