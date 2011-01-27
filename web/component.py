@@ -294,16 +294,18 @@ class CtxComponent(AppObject):
             self.call(**kwargs)
             return
         getlayout = self._cw.vreg['components'].select
+        layout = getlayout('layout', self._cw, **self.layout_select_args())
+        layout.render(w)
+
+    def layout_select_args(self):
         try:
             # XXX ensure context is given when the component is reloaded through
             # ajax
             context = self.cw_extra_kwargs['context']
         except KeyError:
             context = self.cw_propval('context')
-        layout = getlayout('layout', self._cw, rset=self.cw_rset,
-                           row=self.cw_row, col=self.cw_col,
-                           view=self, context=context)
-        layout.render(w)
+        return dict(rset=self.cw_rset, row=self.cw_row, col=self.cw_col,
+                    view=self, context=context)
 
     def init_rendering(self):
         """init rendering callback: that's the good time to check your component
@@ -387,6 +389,11 @@ class EntityCtxComponent(CtxComponent):
         except KeyError:
             entity = self.cw_rset.get_entity(self.cw_row or 0, self.cw_col or 0)
         self.entity = entity
+
+    def layout_select_args(self):
+        args = super(EntityCtxComponent, self).layout_select_args()
+        args['entity'] = self.entity
+        return args
 
     @property
     def domid(self):
