@@ -67,6 +67,8 @@ def dump_class(cls, clsname):
 
 def support_args(callable, *argnames):
     """return true if the callable support given argument names"""
+    if isinstance(callable, type):
+        callable = callable.__init__
     argspec = getargspec(callable)
     if argspec[2]:
         return True
