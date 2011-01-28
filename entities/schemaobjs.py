@@ -139,7 +139,7 @@ class CWRType(AnyEntity):
                 rtype = self.name
                 stype = rdef.stype
                 otype = rdef.otype
-                msg = self._cw._("can't set inlined=%(inlined)s, "
+                msg = self._cw._("can't set inlined=True, "
                                  "%(stype)s %(rtype)s %(otype)s "
                                  "has cardinality=%(card)s")
                 raise ValidationError(self.eid, {qname: msg % locals()})
