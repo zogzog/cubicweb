@@ -51,6 +51,7 @@ class evaluee(RelationDefinition):
     subject = 'CWUser'
     object = 'Note'
 
+
 class StateFull(WorkflowableEntityType):
     name = String()
 

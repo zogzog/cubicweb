@@ -24,10 +24,10 @@ from cubicweb import Binary
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.appobject import Selector, AndSelector, OrSelector
 from cubicweb.selectors import (is_instance, adaptable, match_user_groups,
-                                multi_lines_rset, score_entity, is_in_state)
-from cubicweb.interfaces import IDownloadable
+                                multi_lines_rset, score_entity, is_in_state,
+                                on_transition)
 from cubicweb.web import action
-from cubicweb.server.migractions import ServerMigrationHelper
+
 
 class _1_(Selector):
     def __call__(self, *args, **kwargs):
@@ -138,12 +138,10 @@ class SelectorsTC(TestCase):
         selector |= _0_()
         self.assertEqual(selector(None), 0)
 
+
 class IsInStateSelectorTC(CubicWebTC):
     def setup_database(self):
-        mh = ServerMigrationHelper(self.repo.config, None,
-                                   repo=self.repo, cnx=self.cnx,
-                                   interactive=False)
-        wf = mh.cmd_add_workflow('testwf', 'StateFull', default=True)
+        wf = self.shell().add_workflow("testwf", 'StateFull', default=True)
         initial = wf.add_state(u'initial', initial=True)
         final = wf.add_state(u'final')
         wf.add_transition(u'forward', (initial,), final)
@@ -189,6 +187,131 @@ class ImplementsSelectorTC(CubicWebTC):
         cls = self.vreg['etypes'].etype_class('Transition')
         self.assertEqual(is_instance('BaseTransition').score_class(cls, self.request()),
                           3)
+
+
+class WorkflowSelectorTC(CubicWebTC):
+    def _commit(self):
+        self.commit()
+        self.wf_entity.clear_all_caches()
+
+    def setup_database(self):
+        wf = self.shell().add_workflow("wf_test", 'StateFull', default=True)
+        created   = wf.add_state('created', initial=True)
+        validated = wf.add_state('validated')
+        abandoned = wf.add_state('abandoned')
+        wf.add_transition('validate', created, validated, ('managers',))
+        wf.add_transition('forsake', (created, validated,), abandoned, ('managers',))
+
+    def setUp(self):
+        super(WorkflowSelectorTC, self).setUp()
+        self.req = self.request()
+        self.wf_entity = self.req.create_entity('StateFull', name=u'')
+        self.rset = self.wf_entity.as_rset()
+        self.adapter = self.wf_entity.cw_adapt_to('IWorkflowable')
+        self._commit()
+        self.assertEqual(self.adapter.state, 'created')
+        # enable debug mode to state/transition validation on the fly
+        self.vreg.config.debugmode = True
+
+    def tearDown(self):
+        self.vreg.config.debugmode = False
+        super(WorkflowSelectorTC, self).tearDown()
+
+    def test_is_in_state(self):
+        for state in ('created', 'validated', 'abandoned'):
+            selector = is_in_state(state)
+            self.assertEqual(selector(None, self.req, self.rset),
+                             state=="created")
+
+        self.adapter.fire_transition('validate')
+        self._commit()
+        self.assertEqual(self.adapter.state, 'validated')
+
+        selector = is_in_state('created')
+        self.assertEqual(selector(None, self.req, self.rset), 0)
+        selector = is_in_state('validated')
+        self.assertEqual(selector(None, self.req, self.rset), 1)
+        selector = is_in_state('validated', 'abandoned')
+        self.assertEqual(selector(None, self.req, self.rset), 1)
+        selector = is_in_state('abandoned')
+        self.assertEqual(selector(None, self.req, self.rset), 0)
+
+        self.adapter.fire_transition('forsake')
+        self._commit()
+        self.assertEqual(self.adapter.state, 'abandoned')
+
+        selector = is_in_state('created')
+        self.assertEqual(selector(None, self.req, self.rset), 0)
+        selector = is_in_state('validated')
+        self.assertEqual(selector(None, self.req, self.rset), 0)
+        selector = is_in_state('validated', 'abandoned')
+        self.assertEqual(selector(None, self.req, self.rset), 1)
+        self.assertEqual(self.adapter.state, 'abandoned')
+        self.assertEqual(selector(None, self.req, self.rset), 1)
+
+    def test_is_in_state_unvalid_names(self):
+        selector = is_in_state("unknown")
+        with self.assertRaises(ValueError) as cm:
+            selector(None, self.req, self.rset)
+        self.assertEqual(str(cm.exception),
+                         "wf_test: unknown state(s): unknown")
+        selector = is_in_state("weird", "unknown", "created", "weird")
+        with self.assertRaises(ValueError) as cm:
+            selector(None, self.req, self.rset)
+        self.assertEqual(str(cm.exception),
+                         "wf_test: unknown state(s): unknown,weird")
+
+    def test_on_transition(self):
+        for transition in ('validate', 'forsake'):
+            selector = on_transition(transition)
+            self.assertEqual(selector(None, self.req, self.rset), 0)
+
+        self.adapter.fire_transition('validate')
+        self._commit()
+        self.assertEqual(self.adapter.state, 'validated')
+
+        selector = on_transition("validate")
+        self.assertEqual(selector(None, self.req, self.rset), 1)
+        selector = on_transition("validate", "forsake")
+        self.assertEqual(selector(None, self.req, self.rset), 1)
+        selector = on_transition("forsake")
+        self.assertEqual(selector(None, self.req, self.rset), 0)
+
+        self.adapter.fire_transition('forsake')
+        self._commit()
+        self.assertEqual(self.adapter.state, 'abandoned')
+
+        selector = on_transition("validate")
+        self.assertEqual(selector(None, self.req, self.rset), 0)
+        selector = on_transition("validate", "forsake")
+        self.assertEqual(selector(None, self.req, self.rset), 1)
+        selector = on_transition("forsake")
+        self.assertEqual(selector(None, self.req, self.rset), 1)
+
+    def test_on_transition_unvalid_names(self):
+        selector = on_transition("unknown")
+        with self.assertRaises(ValueError) as cm:
+            selector(None, self.req, self.rset)
+        self.assertEqual(str(cm.exception),
+                         "wf_test: unknown transition(s): unknown")
+        selector = on_transition("weird", "unknown", "validate", "weird")
+        with self.assertRaises(ValueError) as cm:
+            selector(None, self.req, self.rset)
+        self.assertEqual(str(cm.exception),
+                         "wf_test: unknown transition(s): unknown,weird")
+
+    def test_on_transition_with_no_effect(self):
+        """selector will not be triggered with `change_state()`"""
+        self.adapter.change_state('validated')
+        self._commit()
+        self.assertEqual(self.adapter.state, 'validated')
+
+        selector = on_transition("validate")
+        self.assertEqual(selector(None, self.req, self.rset), 0)
+        selector = on_transition("validate", "forsake")
+        self.assertEqual(selector(None, self.req, self.rset), 0)
+        selector = on_transition("forsake")
+        self.assertEqual(selector(None, self.req, self.rset), 0)
 
 
 class MatchUserGroupsTC(CubicWebTC):

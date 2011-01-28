@@ -1175,25 +1175,91 @@ class rql_condition(EntitySelector):
 
 
 class is_in_state(score_entity):
-    """return 1 if entity is in one of the states given as argument list
+    """Return 1 if entity is in one of the states given as argument list
 
-    you should use this instead of your own :class:`score_entity` selector to
+    You should use this instead of your own :class:`score_entity` selector to
     avoid some gotchas:
 
     * possible views gives a fake entity with no state
-    * you must use the latest tr info, not entity.in_state for repository side
-      checking of the current state
+    * you must use the latest tr info thru the workflow adapter for repository
+      side checking of the current state
+
+    In debug mode, this selector can raise:
+    :raises: :exc:`ValueError` for unknown states names
+        (etype workflow only not checked in custom workflow)
+
+    :rtype: int
     """
-    def __init__(self, *states):
-        def score(entity, states=set(states)):
+    def __init__(self, *expected):
+        assert expected, self
+        self.expected = frozenset(expected)
+        def score(entity, expected=self.expected):
             adapted = entity.cw_adapt_to('IWorkflowable')
-            trinfo = adapted.latest_trinfo()
-            if trinfo is None: # entity is probably in it's initial state
-                statename = adapted.state
-            else:
-                statename = trinfo.new_state.name
-            return statename in states
+            # in debug mode only (time consuming)
+            if entity._cw.vreg.config.debugmode:
+                # validation can only be done for generic etype workflow because
+                # expected transition list could have been changed for a custom
+                # workflow (for the current entity)
+                if not entity.custom_workflow:
+                    self._validate(adapted)
+            return self._score(adapted)
         super(is_in_state, self).__init__(score)
+
+    def _score(self, adapted):
+        trinfo = adapted.latest_trinfo()
+        if trinfo is None: # entity is probably in it's initial state
+            statename = adapted.state
+        else:
+            statename = trinfo.new_state.name
+        return statename in self.expected
+
+    def _validate(self, adapted):
+        wf = adapted.current_workflow
+        valid = [n.name for n in wf.reverse_state_of]
+        unknown = sorted(self.expected.difference(valid))
+        if unknown:
+            raise ValueError("%s: unknown state(s): %s"
+                             % (wf.name, ",".join(unknown)))
+
+    def __str__(self):
+        return '%s(%s)' % (self.__class__.__name__,
+                           ','.join(str(s) for s in self.expected))
+
+
+class on_transition(is_in_state):
+    """Return 1 if entity is in one of the transitions given as argument list
+
+    Especially useful to match passed transition to enable notifications when
+    your workflow allows several transition to the same states.
+
+    Note that if workflow `change_state` adapter method is used, this selector
+    will not be triggered.
+
+    You should use this instead of your own :class:`score_entity` selector to
+    avoid some gotchas:
+
+    * possible views gives a fake entity with no state
+    * you must use the latest tr info thru the workflow adapter for repository
+      side checking of the current state
+
+    In debug mode, this selector can raise:
+    :raises: :exc:`ValueError` for unknown transition names
+        (etype workflow only not checked in custom workflow)
+
+    :rtype: int
+    """
+    def _score(self, adapted):
+        trinfo = adapted.latest_trinfo()
+        if trinfo and trinfo.by_transition:
+            return trinfo.by_transition[0].name in self.expected
+
+    def _validate(self, adapted):
+        wf = adapted.current_workflow
+        valid = [n.name for n in wf.reverse_transition_of]
+        unknown = sorted(self.expected.difference(valid))
+        if unknown:
+            raise ValueError("%s: unknown transition(s): %s"
+                             % (wf.name, ",".join(unknown)))
 
 
 # logged user selectors ########################################################
@@ -1433,7 +1499,7 @@ class attribute_edited(EntitySelector):
 
 # Other selectors ##############################################################
 
-
+# XXX deprecated ? maybe use on_transition selector instead ?
 class match_transition(ExpectedValueSelector):
     """Return 1 if `transition` argument is found in the input context which has
     a `.name` attribute matching one of the expected names given to the
