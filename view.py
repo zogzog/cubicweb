@@ -164,6 +164,7 @@ class View(AppObject):
           the whole result set (which may be None in this case), `call` is
           called
         """
+        # XXX use .cw_row/.cw_col
         row = context.get('row')
         if row is not None:
             context.setdefault('col', 0)
@@ -210,11 +211,21 @@ class View(AppObject):
         if rset is None:
             raise NotImplementedError, (self, "an rset is required")
         wrap = self.templatable and len(rset) > 1 and self.add_div_section
-        # XXX propagate self.extra_kwars?
-        for i in xrange(len(rset)):
+        # avoid re-selection if rset of size 1, we already have the most
+        # specific view
+        if rset.rowcount != 1:
+            kwargs.setdefault('initargs', self.cw_extra_kwargs)
+            for i in xrange(len(rset)):
+                if wrap:
+                    self.w(u'<div class="section">')
+                self.wview(self.__regid__, rset, row=i, **kwargs)
+                if wrap:
+                    self.w(u"</div>")
+        else:
             if wrap:
                 self.w(u'<div class="section">')
-            self.wview(self.__regid__, rset, row=i, **kwargs)
+            kwargs.setdefault('col', 0)
+            self.cell_call(row=0, **kwargs)
             if wrap:
                 self.w(u"</div>")
 
