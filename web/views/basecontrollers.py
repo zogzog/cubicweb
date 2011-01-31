@@ -426,6 +426,7 @@ class JSonController(Controller):
                   selectargs=None, renderargs=None):
         if eid is not None:
             rset = self._cw.eid_rset(eid)
+            # XXX set row=0
         elif self._cw.form.get('rql'):
             rset = self._cw.execute(self._cw.form['rql'])
         else:

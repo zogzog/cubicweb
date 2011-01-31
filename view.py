@@ -385,6 +385,7 @@ class EntityView(View):
     def entity_call(self, entity, **kwargs):
         raise NotImplementedError()
 
+
 class StartupView(View):
     """base class for views which doesn't need a particular result set to be
     displayed (so they can always be displayed !)

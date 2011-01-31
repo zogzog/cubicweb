@@ -100,6 +100,7 @@ class PrimaryView(EntityView):
         self.w(u'<div class="%s">' % context)
         for comp in self._cw.vreg['ctxcomponents'].poss_visible_objects(
             self._cw, rset=self.cw_rset, view=self, context=context):
+            # XXX bw compat code
             try:
                 comp.render(w=self.w, row=self.cw_row, view=self)
             except TypeError:
