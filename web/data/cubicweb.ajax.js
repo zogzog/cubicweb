@@ -563,6 +563,51 @@ function getDomFromResponse(response) {
                );
 }
 
+/* High-level functions *******************************************************/
+
+/**
+ * .. function:: reloadCtxComponentsSection(context, actualEid, creationEid=None)
+ *
+ * reload all components in the section for a given `context`.
+ *
+ * This is necessary for cases where the parent entity (on which the section
+ * apply) has been created during post, hence the section has to be reloaded to
+ * consider its new eid, hence the two additional arguments `actualEid` and
+ * `creationEid`: `actualEid` is the eid of newly created top level entity and
+ * `creationEid` the fake eid that was given as form creation marker (e.g. A).
+ *
+ * You can still call this function with only the actual eid if you're not in
+ * such creation case.
+ */
+function reloadCtxComponentsSection(context, actualEid, creationEid) {
+    // in this case, actualEid is the eid of newly created top level entity and
+    // creationEid the fake eid given as form creation marker (e.g. A)
+    if (!creationEid) { creationEid = actualEid ; }
+    var $compsholder = $('#' + context + creationEid);
+    // reload the whole components section
+    $compsholder.children().each(function (index) {
+	// XXX this.id[:-len(eid)]
+	var compid = this.id.replace("_", ".").rstrip(creationEid);
+	var params = ajaxFuncArgs('render', null, 'ctxcomponents',
+				  compid, actualEid);
+	$(this).loadxhtml('json', params, null, 'swap', true);
+    });
+    $compsholder.attr('id', context + actualEid);
+}
+
+
+/**
+ * .. function:: reload(domid, registry, formparams, *render_args)
+ *
+ * `js_render` based reloading of views and components.
+ */
+function reload(domid, compid, registry, formparams  /* ... */) {
+    var ajaxArgs = ['render', formparams, registry, compid];
+    ajaxArgs = ajaxArgs.concat(cw.utils.sliceList(arguments, 4));
+    var params = ajaxFuncArgs.apply(null, ajaxArgs);
+    $('#'+domid).loadxhtml('json', params, null, 'swap');
+}
+
 /* DEPRECATED *****************************************************************/
 
 preprocessAjaxLoad = cw.utils.deprecatedFunction(

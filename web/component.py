@@ -399,6 +399,28 @@ class EntityCtxComponent(CtxComponent):
     def domid(self):
         return domid(self.__regid__) + unicode(self.entity.eid)
 
+    def lazy_view_holder(self, w, entity, oid, registry='views'):
+        """add a holder and return an url that may be used to replace this
+        holder by the html generate by the view specified by registry and
+        identifier. Registry defaults to 'views'.
+        """
+        holderid = '%sHolder' % self.domid
+        w(u'<div id="%s"></div>' % holderid)
+        params = self.cw_extra_kwargs.copy()
+        params.pop('view', None)
+        params.pop('entity', None)
+        form = params.pop('formparams', {})
+        form['pageid'] = self._cw.pageid
+        if entity.has_eid():
+            eid = entity.eid
+        else:
+            eid = None
+            form['etype'] = entity.__regid__
+            form['tempEid'] = entity.eid
+        args = [json_dumps(x) for x in (registry, oid, eid, params)]
+        return self._cw.ajax_replace_url(
+            holderid, fname='render', arg=args, **form)
+
 
 # high level abstract classes ##################################################
 
