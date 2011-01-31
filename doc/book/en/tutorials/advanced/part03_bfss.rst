@@ -4,11 +4,11 @@ Storing images on the file-system
 Step 1: configuring the BytesFileSystem storage
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To avoid cluttering my database, and to ease file manipulation, I don't want
-them to be stored in the database. I want to be able create File/Image entities
-for some files on the server file system, where those file will be accessed to
-get entities data. To do so I've to set a custom :class:`BytesFileSystemStorage` storage
-for the File/Image 'data' attribute, which hold the actual file's content.
+To avoid cluttering my database, and to ease file manipulation, I don't want them
+to be stored in the database. I want to be able create File entities for some
+files on the server file system, where those file will be accessed to get
+entities data. To do so I've to set a custom :class:`BytesFileSystemStorage`
+storage for the File 'data' attribute, which hold the actual file's content.
 
 Since the function to register a custom storage needs to have a repository
 instance as first argument, we've to call it in a server startup hook. So I added
@@ -33,7 +33,6 @@ in `cubes/sytweb/hooks.py` :
 		print 'created', bfssdir
 	    storage = storages.BytesFileSystemStorage(bfssdir)
 	    set_attribute_storage(self.repo, 'File', 'data', storage)
-	    set_attribute_storage(self.repo, 'Image', 'data', storage)
 
 .. Note::
 
@@ -52,7 +51,7 @@ in `cubes/sytweb/hooks.py` :
     (or in the database before migration) will be located
 
   * be ware that by doing this, you can't anymore write queries that will try to
-    restrict on File and Image `data` attribute. Hopefuly we don't do that usually
+    restrict on File `data` attribute. Hopefuly we don't do that usually
     on file's content or more generally on attributes for the Bytes type
 
 Now, if you've already added some photos through the web ui, you'll have to
@@ -68,8 +67,6 @@ seen last time):
     just type migration commands or arbitrary python code and type ENTER to execute it
     type "exit" or Ctrl-D to quit the shell and resume operation
     >>> storage_changed('File', 'data')
-    [........................]
-    >>> storage_changed('Image', 'data')
     [........................]
 
 

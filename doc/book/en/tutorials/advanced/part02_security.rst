@@ -46,10 +46,10 @@ users get access if the expression returns some results. To implement the read
 security defined earlier, groups are not enough, we'll need some RQL expression. Here
 is the idea:
 
-* add a `visibility` attribute on Folder, Image and Comment, which may be one of
+* add a `visibility` attribute on Folder, File and Comment, which may be one of
   the value explained above
 
-* add a `may_be_read_by` relation from Folder, Image and Comment to users,
+* add a `may_be_read_by` relation from Folder, File and Comment to users,
   which will define who can see the entity
 
 * security propagation will be done in hook.
@@ -62,7 +62,7 @@ relations:
     from yams.constraints import StaticVocabularyConstraint
 
     class visibility(RelationDefinition):
-	subject = ('Folder', 'File', 'Image', 'Comment')
+	subject = ('Folder', 'File', 'Comment')
 	object = 'String'
 	constraints = [StaticVocabularyConstraint(('public', 'authenticated',
 						   'restricted', 'parent'))]
@@ -76,7 +76,7 @@ relations:
 	    'delete': ('managers',),
 	    }
 
-	subject = ('Folder', 'File', 'Image', 'Comment',)
+	subject = ('Folder', 'File', 'Comment',)
 	object = 'CWUser'
 
 We can note the following points:
@@ -123,7 +123,7 @@ attribute and relation. Here is the code to add to *schema.py*:
 	    }
 
     from cubes.folder.schema import Folder
-    from cubes.file.schema import File, Image
+    from cubes.file.schema import File
     from cubes.comment.schema import Comment
     from cubes.person.schema import Person
     from cubes.zone.schema import Zone
@@ -131,7 +131,6 @@ attribute and relation. Here is the code to add to *schema.py*:
 
     Folder.__permissions__ = VISIBILITY_PERMISSIONS
     File.__permissions__ = VISIBILITY_PERMISSIONS
-    Image.__permissions__ = VISIBILITY_PERMISSIONS
     Comment.__permissions__ = VISIBILITY_PERMISSIONS.copy()
     Comment.__permissions__['add'] = ('managers', 'users',)
     Person.__permissions__ = AUTH_ONLY_PERMISSIONS
@@ -174,7 +173,7 @@ entity or relation.
 
 The tricky part of the requirement is in *unless explicitly specified*, notably
 because when the entity is added, we don't know yet its 'parent'
-entity (e.g. Folder of an Image, Image commented by a Comment). To handle such things,
+entity (e.g. Folder of an File, File commented by a Comment). To handle such things,
 CubicWeb provides `Operation`, which allow to schedule things to do at commit time.
 
 In our case we will:
@@ -200,7 +199,7 @@ Here is the code in cube's *hooks.py*:
 
     class SetVisibilityHook(hook.Hook):
 	__regid__ = 'sytweb.setvisibility'
-	__select__ = hook.Hook.__select__ & is_instance('Folder', 'File', 'Image', 'Comment')
+	__select__ = hook.Hook.__select__ & is_instance('Folder', 'File', 'Comment')
 	events = ('after_add_entity',)
 	def __call__(self):
 	    hook.set_operation(self._cw, 'pending_visibility', self.entity.eid,
@@ -321,7 +320,7 @@ model, in *test/unittest_sytweb.py*:
 	    folder = req.create_entity('Folder',
 				       name=u'restricted',
 				       visibility=u'restricted')
-	    photo1 = req.create_entity('Image',
+	    photo1 = req.create_entity('File',
 				       data_name=u'photo1.jpg',
 				       data=Binary('xxx'),
 				       filed_under=folder)
@@ -330,7 +329,7 @@ model, in *test/unittest_sytweb.py*:
 	    # visibility propagation
 	    self.assertEquals(photo1.visibility, 'restricted')
 	    # unless explicitly specified
-	    photo2 = req.create_entity('Image',
+	    photo2 = req.create_entity('File',
 				       data_name=u'photo2.jpg',
 				       data=Binary('xxx'),
 				       visibility=u'public',
@@ -340,7 +339,7 @@ model, in *test/unittest_sytweb.py*:
 	    # test security
 	    self.login('toto')
 	    req = self.request()
-	    self.assertEquals(len(req.execute('Image X')), 1) # only the public one
+	    self.assertEquals(len(req.execute('File X')), 1) # only the public one
 	    self.assertEquals(len(req.execute('Folder X')), 0) # restricted...
 	    # may_be_read_by propagation
 	    self.restore_connection()
@@ -351,7 +350,7 @@ model, in *test/unittest_sytweb.py*:
 	    # test security with permissions
 	    self.login('toto')
 	    req = self.request()
-	    self.assertEquals(len(req.execute('Image X')), 2) # now toto has access to photo2
+	    self.assertEquals(len(req.execute('File X')), 2) # now toto has access to photo2
 	    self.assertEquals(len(req.execute('Folder X')), 1) # and to restricted folder
 
     if __name__ == '__main__':
