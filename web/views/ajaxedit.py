@@ -75,8 +75,8 @@ class AddRelationView(component.EditRelationMixIn, View):
         super(AddRelationView, self).unrelated_entities(self)
 
 
-def ajaxCompositeForm(container, entity, rtype, okjs, canceljs,
-                      entityfkwargs=None):
+def ajax_composite_form(container, entity, rtype, okjs, canceljs,
+                        entityfkwargs=None):
     """
     * if entity is None, edit container (assert container.has_eid())
     * if entity has not eid, will be created
