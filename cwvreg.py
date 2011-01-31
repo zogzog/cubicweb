@@ -432,7 +432,9 @@ class CtxComponentsRegistry(CWRegistry):
     def poss_visible_objects(self, *args, **kwargs):
         """return an ordered list of possible components"""
         context = kwargs.pop('context')
-        if kwargs.get('rset') is None:
+        if '__cache' in kwargs:
+            cache = kwargs.pop('__cache')
+        elif kwargs.get('rset') is None:
             cache = args[0]
         else:
             cache = kwargs['rset']
@@ -441,9 +443,19 @@ class CtxComponentsRegistry(CWRegistry):
         except AttributeError:
             ctxcomps = super(CtxComponentsRegistry, self).poss_visible_objects(
                 *args, **kwargs)
+            if cache is None:
+                components = []
+                for component in ctxcomps:
+                    cctx = component.cw_propval('context')
+                    if cctx == context:
+                        component.cw_extra_kwargs['context'] = cctx
+                        components.append(component)
+                return components
             cached = cache.__components_cache = {}
             for component in ctxcomps:
-                cached.setdefault(component.cw_propval('context'), []).append(component)
+                cctx = component.cw_propval('context')
+                component.cw_extra_kwargs['context'] = cctx
+                cached.setdefault(cctx, []).append(component)
         thisctxcomps = cached.get(context, ())
         # XXX set context for bw compat (should now be taken by comp.render())
         for component in thisctxcomps:
