@@ -183,7 +183,7 @@ WHERE _X.cw_prenom=lulu AND NOT (EXISTS(SELECT 1 FROM owned_by_relation AS rel_o
 ]
 
 
-ADVANCED= [
+ADVANCED = [
     ("Societe S WHERE S nom 'Logilab' OR S nom 'Caesium'",
      '''SELECT _S.cw_eid
 FROM cw_Societe AS _S
@@ -572,6 +572,11 @@ ORDER BY T1.C2'''),
     ('Any 1 WHERE X in_group G, X is CWUser',
      '''SELECT 1
 FROM in_group_relation AS rel_in_group0'''),
+
+    ('CWEType X WHERE X name CV, X description V HAVING NOT V=CV AND NOT V = "parent"',
+     '''SELECT _X.cw_eid
+FROM cw_CWEType AS _X
+WHERE NOT (EXISTS(SELECT 1 WHERE _X.cw_description=parent)) AND NOT (EXISTS(SELECT 1 WHERE _X.cw_description=_X.cw_name))'''),
     ]
 
 
