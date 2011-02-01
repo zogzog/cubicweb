@@ -577,6 +577,10 @@ FROM in_group_relation AS rel_in_group0'''),
      '''SELECT _X.cw_eid
 FROM cw_CWEType AS _X
 WHERE NOT (EXISTS(SELECT 1 WHERE _X.cw_description=parent)) AND NOT (EXISTS(SELECT 1 WHERE _X.cw_description=_X.cw_name))'''),
+    ('CWEType X WHERE X name CV, X description V HAVING V!=CV AND V != "parent"',
+     '''SELECT _X.cw_eid
+FROM cw_CWEType AS _X
+WHERE _X.cw_description!=parent AND _X.cw_description!=_X.cw_name'''),
     ]
 
 
