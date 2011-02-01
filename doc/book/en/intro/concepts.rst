@@ -1,3 +1,4 @@
+
 .. -*- coding: utf-8 -*-
 
 .. _Concepts:
@@ -27,14 +28,10 @@ blog entries.
 The `CubicWeb.org Forge`_ offers a large number of cubes developed by the community
 and available under a free software license.
 
-The command :command:`cubicweb-ctl list` displays the list of cubes installed on
-your system.
+.. note::
 
-On a Unix system, the available cubes are usually stored in the directory
-:file:`/usr/share/cubicweb/cubes`. If you're using the cubicweb forest
-(:ref:`SourceInstallation`), the cubes are searched in the directory
-:file:`/path/to/cubicweb_forest/cubes`. The environment variable
-:envvar:`CW_CUBES_PATH` gives additionnal locations where to search for cubes.
+ The command :command:`cubicweb-ctl list` displays the list of cubes
+installed on your system.
 
 .. _`CubicWeb.org Forge`: http://www.cubicweb.org/project/
 .. _`cubicweb-blog`: http://www.cubicweb.org/project/cubicweb-blog
@@ -64,12 +61,6 @@ and data (back-end) instances can be set-up to share the load.
 The command :command:`cubicweb-ctl list` also displays the list of instances
 installed on your system.
 
-On a Unix system, the instances are usually stored in the directory
-:file:`/etc/cubicweb.d/`. During development, the :file:`~/etc/cubicweb.d/`
-directory is looked up, as well as the paths in :envvar:`CW_INSTANCES_DIR`
-environment variable.
-
-
 .. note::
 
   The term application is used to refer to "something that should do something as
@@ -83,28 +74,20 @@ environment variable.
 Data Repository
 ---------------
 
-The data repository [1]_ provides access to one or more data sources (including
-SQL databases, LDAP repositories, other |cubicweb| instance repositories, GAE's
+The data repository [1]_ encapsulates and groups an access to one or
+more data sources (including SQL databases, LDAP repositories, other
+|cubicweb| instance repositories, filesystems, Google AppEngine's
 DataStore, etc).
 
-All interactions with the repository are done using the Relation Query Language
+All interactions with the repository are done using the `Relation Query Language`
 (:ref:`RQL`). The repository federates the data sources and hides them from the
-querier, which does not realize when a query spans accross several data sources
+querier, which does not realize when a query spans several data sources
 and requires running sub-queries and merges to complete.
 
-It is common to run the web engine and the repository in the same process (see
-instances of type all-in-one above), but this is not a requirement. A repository
-can be set up to be accessed remotely using Pyro (`Python Remote Objects`_) and
-act as a server. However, it's important to know if code you're writing is
-executed on the repository side, on our client side (the web engine being a
-client for instance): you don't have the same abilities on both side. On the
-repository side, you can for instance by-pass security checks, which isn't
-possible from client code.
-
-Some logic can be attached to events that happen in the repository,
-like creation of entities, deletion of relations, etc. This is used
-for example to send email notifications when the state of an object
-changes. See :ref:`HookIntro` below.
+Application logic can be mapped to data events happenning within the
+repository, like creation of entities, deletion of relations,
+etc. This is used for example to send email notifications when the
+state of an object changes. See :ref:`HookIntro` below.
 
 .. [1] not to be confused with a Mercurial repository or a Debian repository.
 .. _`Python Remote Objects`: http://pyro.sourceforge.net/
@@ -114,13 +97,18 @@ changes. See :ref:`HookIntro` below.
 Web Engine
 ----------
 
-The web engine replies to http requests and runs the user interface
-and most of the application logic.
+The web engine replies to http requests and runs the user interface.
 
 By default the web engine provides a `CRUD`_ user interface based on
 the data model of the instance. Entities can be created, displayed,
 updated and deleted. As the default user interface is not very fancy,
 it is usually necessary to develop your own.
+
+It is common to run the web engine and the repository in the same
+process (see instances of type all-in-one above), but this is not a
+requirement. A repository can be set up to be accessed remotely using
+Pyro (`Python Remote Objects`_) and act as a standalone server, which
+can be directly accessed or also through a standalone web engine.
 
 .. _`CRUD`: http://en.wikipedia.org/wiki/Create,_read,_update_and_delete
 
@@ -134,24 +122,24 @@ comprehensive language made of Python classes imported from the yams_ library.
 
 .. _yams: http://www.logilab.org/project/yams/
 
-An `entity type` defines a set of attributes and is used in some relations.
-Attributes may be of the following types: `String`, `Int`, `Float`, `Boolean`,
-`Date`, `Time`, `Datetime`, `Interval`, `Password`, `Bytes`, `RichString`.
+An `entity type` defines a sequence of attributes. Attributes may be
+of the following types: `String`, `Int`, `Float`, `Boolean`, `Date`,
+`Time`, `Datetime`, `Interval`, `Password`, `Bytes`, `RichString`.
 
-A `relation type` is used to define an oriented binary relation between two
-entity types.  The left-hand part of a relation is named the `subject` and the
-right-hand part is named the `object`.
+A `relation type` is used to define an oriented binary relation
+between entity types.  The left-hand part of a relation is named the
+`subject` and the right-hand part is named the `object`.
 
 A `relation definition` is a triple (*subject entity type*, *relation type*, *object
 entity type*) associated with a set of properties such as cardinality,
 constraints, etc.
 
-Permissions can be set on entity types and relation definition to control who
+Permissions can be set on entity types or relation definition to control who
 will be able to create, read, update or delete entities and relations. Permissions
-are granted to groups (to which users may belong) or using rql expression (if the
+are granted to groups (to which users may belong) or using rql expressions (if the
 rql expression returns some results, the permission is granted).
 
-Some meta-data necessary to the system is added to the data model. That includes
+Some meta-data necessary to the system are added to the data model. That includes
 entities like users and groups, the entities used to store the data model
 itself and attributes like unique identifier, creation date, creator, etc.
 
@@ -169,19 +157,15 @@ Registries and application objects
 Application objects
 ~~~~~~~~~~~~~~~~~~~
 
-Beside a few core functionalities, almost every feature of the framework is
+Besides a few core functionalities, almost every feature of the framework is
 achieved by dynamic objects (`application objects` or `appobjects`) stored in a
-two-levels registry (the `vregistry`). Each object is affected to a registry with
+two-levels registry. Each object is affected to a registry with
 an identifier in this registry. You may have more than one object sharing an
-identifier in the same registry. At runtime, appobjects are selected in a
-registry according to the context. Selection is done by comparing the *score*
-returned by each appobject's *selector*.
-
-Application objects are stored in the vregistry using a two-level hierarchy :
+identifier in the same registry:
 
   object's `__registry__` : object's `__regid__` : [list of app objects]
 
-In other words, the `vregistry` contains several (sub-)registries which hold a
+In other words, the `registry` contains several (sub-)registries which hold a
 list of appobjects associated to an identifier.
 
 The base class of appobjects is :class:`cubicweb.appobject.AppObject`.
@@ -189,10 +173,14 @@ The base class of appobjects is :class:`cubicweb.appobject.AppObject`.
 Selectors
 ~~~~~~~~~
 
-Each appobject has a selector that is used to compute how well the object fits a
-given context. The better the object fits the context, the higher the score. Scores
-are the glue that ties appobjects to the data model. Using them appropriately is
-an essential part of the construction of well behaved cubes.
+At runtime, appobjects can be selected in a registry according to some
+contextual information. Selection is done by comparing the *score*
+returned by each appobject's *selector*.
+
+The better the object fits the context, the higher the score. Scores
+are the glue that ties appobjects to the data model. Using them
+appropriately is an essential part of the construction of well behaved
+cubes.
 
 |cubicweb| provides a set of basic selectors that may be parametrized.  Also,
 selectors can be combined with the `~` unary operator (negation) and the binary
@@ -200,35 +188,36 @@ operators `&` and `|` (respectivly 'and' and 'or') to build more complex
 selectors. Of course complex selectors may be combined too. Last but not least, you
 can write your own selectors.
 
-The `vregistry`
+The `registry`
 ~~~~~~~~~~~~~~~
 
-At startup, the `vregistry` inspects a number of directories looking for
-compatible classes definition. After a recording process, the objects are
-assigned to registries so that they can be selected dynamically while the
-instance is running.
+At startup, the `registry` inspects a number of directories looking
+for compatible class definitions. After a recording process, the
+objects are assigned to registries and become available through the
+selection process.
 
 In a cube, application object classes are looked in the following modules or
 packages:
 
 - `entities`
 - `views`
+- `hooks`
 - `sobjects`
 
+There are three common ways to look up some application object from a
+registry:
 
-Once initialized, there are three common ways to retrieve some application object
-from a registry:
+* get the most appropriate object by specifying an identifier and
+  context objects. The object with the greatest score is
+  selected. There should always be a single appobject with a greater
+  score than others for a particular context.
 
-* get the most appropriate object by specifying an identifier. In that case, the
-  object with the greatest score is selected. There should always be a single
-  appobject with a greater score than others for a particular context.
+* get all objects applying to a context by specifying a registry. A
+  list of objects will be returned containing the object with the
+  highest score (> 0) for each identifier in that registry.
 
-* get all objects applying to a context by specifying a registry. In that case, a
-  list of objects will be returned containing the object with the highest score
-  (> 0) for each identifier in that registry.
-
-* get the object within a particular registry/identifier. In that case no
-  selection process is involved, the vregistry will expect to find a single
+* get the object within a particular registry/identifier. No selection
+  process is involved: the registry will expect to find a single
   object in that cell.
 
 
@@ -245,21 +234,6 @@ modified using RQL (see :ref:`rql_intro`).
 
 This query language is inspired by SQL but is on a higher level in order to
 emphasize browsing relations.
-
-
-DB-API
-~~~~~~
-
-The repository exposes a `db-api`_ like api but using the RQL instead of SQL.
-
-.. _`db-api`: http://www.python.org/dev/peps/pep-0249/
-
-You basically get a connection using :func:`cubicweb.dbapi.connect` , then
-get a cursor to call its `execute` method which will return result set for the
-given rql query.
-
-You can also get additional information through the connection, such as the
-repository'schema, version configuration, etc.
 
 
 Result set
@@ -285,18 +259,10 @@ above. Views are application objects with a dedicated interface to 'render'
 something, eg producing some html, text, xml, pdf, or whatsover that can be
 displayed to a user.
 
-The two main entry points of a view are:
-
-* `call()`, used to render a view on a context with no result set, or on a whole
-  result set
-
-* `cell_call(row, col)`, used to render a view on a the cell with index `row` and
-  `col` of the context's result set (remember result set may be seen as a two
-  dimensions array).
-
-Then view may gets refined into different kind of objects such as `template`,
-`boxes`, `components`, which are more high-level abstraction useful to build
-the user interface in an object oriented way.
+Views actually are partitioned into different kind of objects such as
+`templates`, `boxes`, `components` and proper `views`, which are more
+high-level abstraction useful to build the user interface in an object
+oriented way.
 
 
 .. _HookIntro:
@@ -312,7 +278,7 @@ can not be expressed there. For instance:
 
 * managing computed attributes
 
-* enforcing complicated structural invariants
+* enforcing complicated business rules
 
 * real-world side-effects linked to data events (email notification
   being a prime example)
@@ -326,10 +292,9 @@ except that:
 
 * it is well-coupled to the rest of the framework
 
-Hooks are also application objects registered on events such as after/before
-add/update/delete on entities/relations, server startup or shutdown, etc. As all
-application objects, they have a selector defining when they should be called or
-not.
+Hooks are also application objects (in the `hooks` registry) and
+selected on events such as after/before add/update/delete on
+entities/relations, server startup or shutdown, etc.
 
 `Operations` may be instantiated by hooks to do further processing at different
 steps of the transaction's commit / rollback, which usually can not be done

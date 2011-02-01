@@ -274,6 +274,14 @@ SYSTEM_HOOKS = set(('server_backup', 'server_restore',
                     'session_open', 'session_close'))
 ALL_HOOKS = ENTITIES_HOOKS | RELATIONS_HOOKS | SYSTEM_HOOKS
 
+def _iter_kwargs(entities, kwargs):
+    if not entities:
+        yield kwargs
+    else:
+        for entity in entities:
+            kwargs['entity'] = entity
+            yield kwargs
+
 
 class HooksRegistry(CWRegistry):
     def initialization_completed(self):
@@ -288,20 +296,30 @@ class HooksRegistry(CWRegistry):
         super(HooksRegistry, self).register(obj, **kwargs)
 
     def call_hooks(self, event, session=None, **kwargs):
+        """call `event` hooks for an entity or a list of entities (passed
+        respectively as the `entity` or ``entities`` keyword argument).
+        """
         kwargs['event'] = event
-        if session is None:
+        if session is None: # True for events such as server_start
             for hook in sorted(self.possible_objects(session, **kwargs),
                                key=lambda x: x.order):
                 hook()
         else:
+            if 'entities' in kwargs:
+                assert 'entity' not in kwargs, \
+                       'can\'t pass "entities" and "entity" arguments simultaneously'
+                entities = kwargs.pop('entities')
+            else:
+                entities = []
             # by default, hooks are executed with security turned off
             with security_enabled(session, read=False):
-                hooks = sorted(self.possible_objects(session, **kwargs),
-                               key=lambda x: x.order)
-                with security_enabled(session, write=False):
-                    for hook in hooks:
-                        #print hook.category, hook.__regid__
-                        hook()
+                for _kwargs in _iter_kwargs(entities, kwargs):
+                    hooks = sorted(self.possible_objects(session, **_kwargs),
+                                   key=lambda x: x.order)
+                    with security_enabled(session, write=False):
+                        for hook in hooks:
+                            #print hook.category, hook.__regid__
+                            hook()
 
 class HooksManager(object):
     def __init__(self, vreg):

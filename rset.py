@@ -487,24 +487,21 @@ class ResultSet(object):
                 select = rqlst
             # take care, due to outer join support, we may find None
             # values for non final relation
-            for i, attr, role in attr_desc_iterator(select, col):
-                outerselidx = rqlst.subquery_selection_index(select, i)
-                if outerselidx is None:
-                    continue
+            for i, attr, role in attr_desc_iterator(select, col, entity.cw_col):
                 if role == 'subject':
                     rschema = eschema.subjrels[attr]
                     if rschema.final:
                         if attr == 'eid':
-                            entity.eid = rowvalues[outerselidx]
+                            entity.eid = rowvalues[i]
                         else:
-                            entity.cw_attr_cache[attr] = rowvalues[outerselidx]
+                            entity.cw_attr_cache[attr] = rowvalues[i]
                         continue
                 else:
                     rschema = eschema.objrels[attr]
                 rdef = eschema.rdef(attr, role)
                 # only keep value if it can't be multivalued
                 if rdef.role_cardinality(role) in '1?':
-                    if rowvalues[outerselidx] is None:
+                    if rowvalues[i] is None:
                         if role == 'subject':
                             rql = 'Any Y WHERE X %s Y, X eid %s'
                         else:
@@ -512,7 +509,7 @@ class ResultSet(object):
                         rrset = ResultSet([], rql % (attr, entity.eid))
                         rrset.req = req
                     else:
-                        rrset = self._build_entity(row, outerselidx).as_rset()
+                        rrset = self._build_entity(row, i).as_rset()
                     entity.cw_set_relation_cache(attr, role, rrset)
         return entity
 
@@ -650,8 +647,13 @@ class ResultSet(object):
                 return rhs.eval(self.args)
         return None
 
+def _get_variable(term):
+    # XXX rewritten const
+    # use iget_nodes for (hack) case where we have things like MAX(V)
+    for vref in term.iget_nodes(nodes.VariableRef):
+        return vref.variable
 
-def attr_desc_iterator(rqlst, index=0):
+def attr_desc_iterator(select, selectidx, rootidx):
     """return an iterator on a list of 2-uple (index, attr_relation)
     localizing attribute relations of the main variable in a result's row
 
@@ -662,25 +664,33 @@ def attr_desc_iterator(rqlst, index=0):
       a generator on (index, relation, target) describing column being
       attribute of the main variable
     """
-    main = rqlst.selection[index]
-    for i, term in enumerate(rqlst.selection):
-        if i == index:
+    rootselect = select
+    while rootselect.parent.parent is not None:
+        rootselect = rootselect.parent.parent.parent
+    rootmain = rootselect.selection[selectidx]
+    rootmainvar = _get_variable(rootmain)
+    assert rootmainvar
+    root = rootselect.parent
+    selectmain = select.selection[selectidx]
+    for i, term in enumerate(rootselect.selection):
+        rootvar = _get_variable(term)
+        if rootvar is None:
             continue
-        # XXX rewritten const
-        # use iget_nodes for (hack) case where we have things like MAX(V)
-        for vref in term.iget_nodes(nodes.VariableRef):
-            var = vref.variable
-            break
-        else:
+        if rootvar.name == rootmainvar.name:
+            continue
+        if select is not rootselect:
+            term = select.selection[root.subquery_selection_index(select, i)]
+        var = _get_variable(term)
+        if var is None:
             continue
         for ref in var.references():
             rel = ref.relation()
             if rel is None or rel.is_types_restriction():
                 continue
             lhs, rhs = rel.get_variable_parts()
-            if main.is_equivalent(lhs):
+            if selectmain.is_equivalent(lhs):
                 if rhs.is_equivalent(term):
                     yield (i, rel.r_type, 'subject')
-            elif main.is_equivalent(rhs):
+            elif selectmain.is_equivalent(rhs):
                 if lhs.is_equivalent(term):
                     yield (i, rel.r_type, 'object')

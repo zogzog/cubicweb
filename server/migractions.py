@@ -183,7 +183,7 @@ class ServerMigrationHelper(MigrationHelper):
         open(backupfile,'w').close() # kinda lock
         os.chmod(backupfile, 0600)
         # backup
-        tmpdir = tempfile.mkdtemp(dir=instbkdir)
+        tmpdir = tempfile.mkdtemp()
         try:
             for source in repo.sources:
                 try:

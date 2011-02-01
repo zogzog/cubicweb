@@ -1080,6 +1080,17 @@ class Repository(object):
         hook.CleanupDeletedEidsCacheOp.get_instance(session).add_data(entity.eid)
         self._delete_info(session, entity, sourceuri, extid, scleanup)
 
+    def delete_info_multi(self, session, entities, sourceuri, extids, scleanup=False):
+        """same as delete_info but accepts a list of entities and
+        extids with the same etype and belonging to the same source
+        """
+        # mark eid as being deleted in session info and setup cache update
+        # operation
+        op = hook.CleanupDeletedEidsCacheOp.get_instance(session)
+        for entity in entities:
+            op.add_data(entity.eid)
+        self._delete_info_multi(session, entities, sourceuri, extids, scleanup)
+
     def _delete_info(self, session, entity, sourceuri, extid, scleanup=False):
         """delete system information on deletion of an entity:
         * delete all remaining relations from/to this entity
@@ -1111,6 +1122,38 @@ class Repository(object):
                     self.exception('error while cascading delete for entity %s '
                                    'from %s. RQL: %s', entity, sourceuri, rql)
         self.system_source.delete_info(session, entity, sourceuri, extid)
+
+    def _delete_info_multi(self, session, entities, sourceuri, extids, scleanup=False):
+        """same as _delete_info but accepts a list of entities with
+        the same etype and belinging to the same source.
+        """
+        pendingrtypes = session.transaction_data.get('pendingrtypes', ())
+        # delete remaining relations: if user can delete the entity, he can
+        # delete all its relations without security checking
+        assert entities and len(entities) == len(extids)
+        with security_enabled(session, read=False, write=False):
+            eids = [_e.eid for _e in entities]
+            in_eids = ','.join((str(eid) for eid in eids))
+            for rschema, _, role in entities[0].e_schema.relation_definitions():
+                rtype = rschema.type
+                if rtype in schema.VIRTUAL_RTYPES or rtype in pendingrtypes:
+                    continue
+                if role == 'subject':
+                    # don't skip inlined relation so they are regularly
+                    # deleted and so hooks are correctly called
+                    rql = 'DELETE X %s Y WHERE X eid IN (%s)' % (rtype, in_eids)
+                else:
+                    rql = 'DELETE Y %s X WHERE X eid IN (%s)' % (rtype, in_eids)
+                if scleanup:
+                    # source cleaning: only delete relations stored locally
+                    rql += ', NOT (Y cw_source S, S name %(source)s)'
+                try:
+                    session.execute(rql, {'source': sourceuri},
+                                    build_descr=False)
+                except:
+                    self.exception('error while cascading delete for entity %s '
+                                   'from %s. RQL: %s', entities, sourceuri, rql)
+        self.system_source.delete_info_multi(session, entities, sourceuri, extids)
 
     def locate_relation_source(self, session, subject, rtype, object):
         subjsource = self.source_from_eid(subject, session)
@@ -1280,19 +1323,40 @@ class Repository(object):
             if orig_edited is not None:
                 entity.cw_edited = orig_edited
 
-    def glob_delete_entity(self, session, eid):
-        """delete an entity and all related entities from the repository"""
-        entity = session.entity_from_eid(eid)
-        etype, sourceuri, extid = self.type_and_source_from_eid(eid, session)
-        if server.DEBUG & server.DBG_REPO:
-            print 'DELETE entity', etype, eid
-        source = self.sources_by_uri[sourceuri]
-        if source.should_call_hooks:
-            self.hm.call_hooks('before_delete_entity', session, entity=entity)
-        self._delete_info(session, entity, sourceuri, extid)
-        source.delete_entity(session, entity)
-        if source.should_call_hooks:
-            self.hm.call_hooks('after_delete_entity', session, entity=entity)
+
+    def glob_delete_entities(self, session, eids):
+        """delete a list of  entities and all related entities from the repository"""
+        data_by_etype_source = {} # values are ([list of eids],
+                                  #             [list of extid],
+                                  #             [list of entities])
+        #
+        # WARNING: the way this dictionary is populated is heavily optimized
+        # and does not use setdefault on purpose. Unless a new release
+        # of the Python interpreter advertises large perf improvements
+        # in setdefault, this should not be changed without profiling.
+
+        for eid in eids:
+            etype, sourceuri, extid = self.type_and_source_from_eid(eid, session)
+            entity = session.entity_from_eid(eid, etype)
+            _key = (etype, sourceuri)
+            if _key not in data_by_etype_source:
+                data_by_etype_source[_key] = ([eid], [extid], [entity])
+            else:
+                _data = data_by_etype_source[_key]
+                _data[0].append(eid)
+                _data[1].append(extid)
+                _data[2].append(entity)
+        for (etype, sourceuri), (eids, extids, entities) in data_by_etype_source.iteritems():
+            if server.DEBUG & server.DBG_REPO:
+                print 'DELETE entities', etype, eids
+            #print 'DELETE entities', etype, len(eids)
+            source = self.sources_by_uri[sourceuri]
+            if source.should_call_hooks:
+                self.hm.call_hooks('before_delete_entity', session, entities=entities)
+            self._delete_info_multi(session, entities, sourceuri, extids) # xxx
+            source.delete_entities(session, entities)
+            if source.should_call_hooks:
+                self.hm.call_hooks('after_delete_entity', session, entities=entities)
         # don't clear cache here this is done in a hook on commit
 
     def glob_add_relation(self, session, subject, rtype, object):

@@ -49,7 +49,7 @@ class AttrDescIteratorTC(TestCase):
             'Any C where C is Company, C employs P' : [],
             }
         for rql, relations in queries.items():
-            result = list(attr_desc_iterator(parse(rql).children[0]))
+            result = list(attr_desc_iterator(parse(rql).children[0], 0, 0))
             self.assertEqual((rql, result), (rql, relations))
 
     def test_relations_description_indexed(self):
@@ -59,8 +59,8 @@ class AttrDescIteratorTC(TestCase):
             {0: [(2,'employs', 'subject')], 1: [(3,'login', 'subject'), (4,'mail', 'subject')]},
             }
         for rql, results in queries.items():
-            for var_index, relations in results.items():
-                result = list(attr_desc_iterator(parse(rql).children[0], var_index))
+            for idx, relations in results.items():
+                result = list(attr_desc_iterator(parse(rql).children[0], idx, idx))
                 self.assertEqual(result, relations)
 
 
@@ -328,7 +328,7 @@ class ResultSetTC(CubicWebTC):
         self.assertEqual(entity, None)
         self.assertEqual(rtype, None)
 
-    def test_related_entity_union_subquery(self):
+    def test_related_entity_union_subquery_1(self):
         e = self.request().create_entity('Bookmark', title=u'aaaa', path=u'path')
         rset = self.execute('Any X,N ORDERBY N WITH X,N BEING '
                             '((Any X,N WHERE X is CWGroup, X name N)'
@@ -337,10 +337,14 @@ class ResultSetTC(CubicWebTC):
         entity, rtype = rset.related_entity(0, 1)
         self.assertEqual(entity.eid, e.eid)
         self.assertEqual(rtype, 'title')
+        self.assertEqual(entity.title, 'aaaa')
         entity, rtype = rset.related_entity(1, 1)
         self.assertEqual(entity.__regid__, 'CWGroup')
         self.assertEqual(rtype, 'name')
-        #
+        self.assertEqual(entity.name, 'guests')
+
+    def test_related_entity_union_subquery_2(self):
+        e = self.request().create_entity('Bookmark', title=u'aaaa', path=u'path')
         rset = self.execute('Any X,N ORDERBY N WHERE X is Bookmark WITH X,N BEING '
                             '((Any X,N WHERE X is CWGroup, X name N)'
                             ' UNION '
@@ -348,7 +352,10 @@ class ResultSetTC(CubicWebTC):
         entity, rtype = rset.related_entity(0, 1)
         self.assertEqual(entity.eid, e.eid)
         self.assertEqual(rtype, 'title')
-        #
+        self.assertEqual(entity.title, 'aaaa')
+
+    def test_related_entity_union_subquery_3(self):
+        e = self.request().create_entity('Bookmark', title=u'aaaa', path=u'path')
         rset = self.execute('Any X,N ORDERBY N WITH N,X BEING '
                             '((Any N,X WHERE X is CWGroup, X name N)'
                             ' UNION '
@@ -356,6 +363,18 @@ class ResultSetTC(CubicWebTC):
         entity, rtype = rset.related_entity(0, 1)
         self.assertEqual(entity.eid, e.eid)
         self.assertEqual(rtype, 'title')
+        self.assertEqual(entity.title, 'aaaa')
+
+    def test_related_entity_union_subquery_4(self):
+        e = self.request().create_entity('Bookmark', title=u'aaaa', path=u'path')
+        rset = self.execute('Any X,X, N ORDERBY N WITH X,N BEING '
+                            '((Any X,N WHERE X is CWGroup, X name N)'
+                            ' UNION '
+                            ' (Any X,N WHERE X is Bookmark, X title N))')
+        entity, rtype = rset.related_entity(0, 2)
+        self.assertEqual(entity.eid, e.eid)
+        self.assertEqual(rtype, 'title')
+        self.assertEqual(entity.title, 'aaaa')
 
     def test_related_entity_trap_subquery(self):
         req = self.request()

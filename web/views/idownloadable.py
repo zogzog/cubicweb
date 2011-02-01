@@ -50,8 +50,7 @@ def download_box(w, entity, title=None, label=None, footer=u''):
 
 
 class DownloadBox(component.EntityCtxComponent):
-    __regid__ = 'download_box'
-    # no download box for images
+    __regid__ = 'download_box'    # no download box for images
     __select__ = (component.EntityCtxComponent.__select__ &
                   adaptable('IDownloadable') & ~has_mimetype('image/'))
 

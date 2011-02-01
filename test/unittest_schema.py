@@ -168,7 +168,7 @@ class SchemaReaderClassTest(TestCase):
                              'ExternalUri', 'File', 'Float', 'Int', 'Interval', 'Note',
                              'Password', 'Personne',
                              'RQLExpression',
-                             'Societe', 'State', 'String', 'SubNote', 'SubWorkflowExitPoint',
+                             'Societe', 'State', 'StateFull', 'String', 'SubNote', 'SubWorkflowExitPoint',
                              'Tag', 'Time', 'Transition', 'TrInfo',
                              'Workflow', 'WorkflowTransition']
         self.assertListEqual(entities, sorted(expected_entities))

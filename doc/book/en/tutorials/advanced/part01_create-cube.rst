@@ -34,8 +34,8 @@ existing cubes that I'll extend for my need. So I'll pick the following cubes:
   both 'album' and a way to map file system folders. Entities are
   added to a given folder using the `filed_under` relation.
 
-* `file`, containing `File` and `Image` entity types, gallery view,
-  and a file system import utility.
+* `file`, containing `File` entity type, gallery view, and a file system import
+  utility.
 
 * `zone`, containing the `Zone` entity type for hierarchical geographical
   zones. Entities (including sub-zones) are added to a given zone using the
@@ -54,8 +54,8 @@ Ok, now I'll tell my cube requires all this by editing :file:`cubes/sytweb/__pkg
 
   .. sourcecode:: python
 
-    __depends__ = {'cubicweb': '>= 3.8.0',
-                   'cubicweb-file': '>= 1.2.0',
+    __depends__ = {'cubicweb': '>= 3.10.0',
+                   'cubicweb-file': '>= 1.9.0',
 		   'cubicweb-folder': '>= 1.1.0',
 		   'cubicweb-person': '>= 1.2.0',
 		   'cubicweb-comment': '>= 1.2.0',
@@ -71,13 +71,16 @@ as:
 
   .. sourcecode:: python
 
-    __depends__ = {'cubicweb': '>= 3.8.0'}
-    __depends_cubes__ = {'file': '>= 1.2.0',
+    __depends__ = {'cubicweb': '>= 3.10.0'}
+    __depends_cubes__ = {'file': '>= 1.9.0',
 		         'folder': '>= 1.1.0',
 		   	 'person': '>= 1.2.0',
 		   	 'comment': '>= 1.2.0',
 		   	 'tag': '>= 1.2.0',
 		   	 'zone': None}
+
+If your cube is packaged for debian, it's a good idea to update the
+`debian/control` file at the same time, so you won't forget it.
 
 
 Step 3: glue everything together in my cube's schema
@@ -89,34 +92,33 @@ Step 3: glue everything together in my cube's schema
 
     class comments(RelationDefinition):
 	subject = 'Comment'
-	object = ('File', 'Image')
+	object = 'File'
 	cardinality = '1*'
 	composite = 'object'
 
     class tags(RelationDefinition):
 	subject = 'Tag'
-	object = ('File', 'Image')
+	object = 'File'
 
     class filed_under(RelationDefinition):
-	subject = ('File', 'Image')
+	subject = 'File'
 	object = 'Folder'
 
     class situated_in(RelationDefinition):
-	subject = 'Image'
+	subject = 'File'
 	object = 'Zone'
 
     class displayed_on(RelationDefinition):
 	subject = 'Person'
-	object = 'Image'
+	object = 'File'
 
 
 This schema:
 
-* allows to comment and tag on `File` and `Image` entity types by adding the
-  `comments` and `tags` relations. This should be all we've to do for this
-  feature since the related cubes provide 'pluggable section' which are
-  automatically displayed on the primary view of entity types supporting the
-  relation.
+* allows to comment and tag on `File` entity type by adding the `comments` and
+  `tags` relations. This should be all we've to do for this feature since the
+  related cubes provide 'pluggable section' which are automatically displayed on
+  the primary view of entity types supporting the relation.
 
 * adds a `situated_in` relation definition so that image entities can be
   geolocalized.

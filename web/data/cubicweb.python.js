@@ -188,6 +188,16 @@ String.prototype.strip = function() {
     return this.replace(/^\s*(.*?)\s*$/, "$1");
 };
 
+/**
+ * .. function:: String.prototype.rstrip()
+ *
+ * python-like rstrip method for js strings
+ */
+String.prototype.rstrip = function(str) {
+    if (!str) { str = '\s' ; }
+    return this.replace(new RegExp('^(.*?)' + str + '*$'), "$1");
+};
+
 // ========= class factories ========= //
 
 /**

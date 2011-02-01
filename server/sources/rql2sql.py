@@ -416,7 +416,7 @@ def extract_fake_having_terms(having):
                     p = compnode.parent
                     oor = None
                     while not isinstance(p, Select):
-                        if isinstance(p, Or):
+                        if isinstance(p, (Or, Not)):
                             oor = p
                         p = p.parent
                     if oor is not None:
@@ -434,7 +434,7 @@ def extract_fake_having_terms(having):
             while not isinstance(p, Select):
                 if p in ors or p is None: # p is None for nodes already in fakehaving
                     break
-                if isinstance(p, Or):
+                if isinstance(p, (Or, Not)):
                     oor = p
                 p = p.parent
             else:

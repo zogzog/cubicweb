@@ -2,8 +2,8 @@
 
 ### BEGIN INIT INFO
 # Provides:          cubicweb
-# Required-Start:    $syslog $local_fs $network
-# Required-Stop:     $syslog $local_fs $network
+# Required-Start:    $remote_fs $syslog $local_fs $network
+# Required-Stop:     $remote_fs $syslog $local_fs $network
 # Should-Start:      $postgresql $pyro-nsd
 # Should-Stop:       $postgresql $pyro-nsd
 # Default-Start:     2 3 4 5
@@ -29,7 +29,7 @@ case $1 in
     status)
         python -W ignore /usr/bin/cubicweb-ctl status
         ;;
-    *)
+    start|stop|restart|*)
         python -W ignore /usr/bin/cubicweb-ctl $1 --force
         ;;
 esac

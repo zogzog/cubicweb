@@ -52,7 +52,7 @@ class IBreadCrumbsAdapter(EntityAdapter):
     __select__ = is_instance('Any', accept_none=False)
 
     def parent_entity(self):
-        if hasattr(self.entity, 'parent'):
+        if hasattr(self.entity, 'parent') and callable(self.entity.parent):
             warn('[3.9] parent() method is deprecated, define a '
                  'custom IBreadCrumbsAdapter/ITreeAdapter for %s instead'
                  % self.entity.__class__, DeprecationWarning)

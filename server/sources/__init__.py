@@ -22,6 +22,7 @@ __docformat__ = "restructuredtext en"
 from os.path import join, splitext
 from datetime import datetime, timedelta
 from logging import getLogger
+import itertools
 
 from cubicweb import set_log_methods, server
 from cubicweb.schema import VIRTUAL_RTYPES
@@ -374,6 +375,11 @@ class AbstractSource(object):
         """update an entity in the source"""
         raise NotImplementedError()
 
+    def delete_entities(self, session, entities):
+        """delete several entities from the source"""
+        for entity in entities:
+            self.delete_entity(session, entity)
+
     def delete_entity(self, session, entity):
         """delete an entity from the source"""
         raise NotImplementedError()
@@ -403,11 +409,18 @@ class AbstractSource(object):
         """mark entity as being modified, fulltext reindex if needed"""
         raise NotImplementedError()
 
-    def delete_info(self, session, entity, uri, extid, attributes, relations):
+    def delete_info(self, session, entity, uri, extid):
         """delete system information on deletion of an entity by transfering
         record from the entities table to the deleted_entities table
         """
         raise NotImplementedError()
+
+    def delete_info_multi(self, session, entities, uri, extids):
+        """ame as delete_info but accepts a list of entities with
+        the same etype and belinging to the same source.
+        """
+        for entity, extid in itertools.izip(entities, extids):
+            self.delete_info(session, entity, uri, extid)
 
     def modified_entities(self, session, etypes, mtime):
         """return a 2-uple:
@@ -425,14 +438,13 @@ class AbstractSource(object):
         """
         raise NotImplementedError()
 
-    def fti_unindex_entity(self, session, eid):
-        """remove text content for entity with the given eid from the full text
-        index
+    def fti_unindex_entities(self, session, entities):
+        """remove text content for entities from the full text index
         """
         raise NotImplementedError()
 
-    def fti_index_entity(self, session, entity):
-        """add text content of a created/modified entity to the full text index
+    def fti_index_entities(self, session, entities):
+        """add text content of created/modified entities to the full text index
         """
         raise NotImplementedError()
 

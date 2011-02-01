@@ -42,11 +42,18 @@ from logilab.common.clcommands import CommandLine
 from logilab.common.shellutils import ASK
 
 from cubicweb import ConfigurationError, ExecutionError, BadCommandUsage
+from cubicweb.utils import support_args
 from cubicweb.cwconfig import CubicWebConfiguration as cwcfg, CWDEV, CONFIGURATIONS
 from cubicweb.toolsutils import Command, rm, create_dir, underline_title
 from cubicweb.__pkginfo__ import version
 
-CWCTL = CommandLine('cubicweb-ctl', 'The CubicWeb swiss-knife.', version=version)
+if support_args(CommandLine, 'check_duplicated_command'):
+    # don't check duplicated commands, it occurs when reloading site_cubicweb
+    CWCTL = CommandLine('cubicweb-ctl', 'The CubicWeb swiss-knife.',
+                        version=version, check_duplicated_command=False)
+else:
+    CWCTL = CommandLine('cubicweb-ctl', 'The CubicWeb swiss-knife.',
+                        version=version)
 
 def wait_process_end(pid, maxtry=10, waittime=1):
     """wait for a process to actually die"""

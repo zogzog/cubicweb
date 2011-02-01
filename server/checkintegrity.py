@@ -129,8 +129,8 @@ def reindex_entities(schema, session, withpb=True, etypes=None):
     # attribute to their current value
     source = repo.system_source
     for eschema in etypes:
-        for entity in session.execute('Any X WHERE X is %s' % eschema).entities():
-            source.fti_index_entity(session, entity)
+        rset = session.execute('Any X WHERE X is %s' % eschema)
+        source.fti_index_entities(session, rset.entities())
         if withpb:
             pb.update()
 
