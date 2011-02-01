@@ -1,5 +1,5 @@
-Creating a new cube from scratch using :command:`cubicweb-ctl newcube`
-----------------------------------------------------------------------
+Creating a new cube from scratch
+--------------------------------
 
 Let's start by creating the cube environment in which we will develop ::
 
@@ -14,7 +14,7 @@ Let's start by creating the cube environment in which we will develop ::
   hg ci
 
 If all went well, you should see the cube you just created in the list
-returned by ``cubicweb-ctl list`` in the  *Available cubes* section. 
+returned by ``cubicweb-ctl list`` in the  *Available cubes* section.
 If not, please refer to :ref:`ConfigurationEnv`.
 
 To reuse an existing cube, add it to the list named
@@ -23,6 +23,14 @@ This variable is used for the instance packaging (dependencies handled
 by system utility tools such as APT) and to find used cubes when the
 database for the instance is created (import_erschema('MyCube') will
 not properly work otherwise).
+
+On a Unix system, the available cubes are usually stored in the
+directory :file:`/usr/share/cubicweb/cubes`. If you are using the
+cubicweb mercurial repository (:ref:`SourceInstallation`), the cubes
+are searched in the directory
+:file:`/path/to/cubicweb_toplevel/cubes`. In this configuration
+cubicweb itself ought to be located at
+:file:`/path/to/cubicweb_toplevel/cubicweb`.
 
 .. note::
 
