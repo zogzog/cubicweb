@@ -1321,11 +1321,11 @@ msgstr "no puede analizar %(value)r (formato requerido : %(format)s)"
 
 #, python-format
 msgid ""
-"can't set inlined=%(inlined)s, %(stype)s %(rtype)s %(otype)s has cardinality="
+"can't set inlined=True, %(stype)s %(rtype)s %(otype)s has cardinality="
 "%(card)s"
 msgstr ""
-"no puede poner 'inlined' = %(inlined)s, %(stype)s %(rtype)s %(otype)s tiene "
-"cardinalidad %(card)s"
+"no puede poner 'inlined' = True, %(stype)s %(rtype)s %(otype)s "
+ "tiene cardinalidad %(card)s"
 
 msgid "cancel"
 msgstr ""
