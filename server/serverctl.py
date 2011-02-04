@@ -75,7 +75,7 @@ def source_cnx(source, dbname=None, special_privs=False, verbose=True):
             user = raw_input('Connect as user ? [%r]: ' % default_user)
             user = user.strip() or default_user
             if user == source.get('db-user'):
-                password = source['db-password']
+                password = source.get('db-password')
             else:
                 password = getpass('password: ')
     else:
@@ -219,7 +219,7 @@ class RepositoryDeleteHandler(CommandHandler):
                 return
             user = source['db-user'] or None
             cnx = confirm_on_error_or_die('connecting to database %s' % dbname,
-                                          _db_sys_cnx, source, 'DROP DATABASE', user=user)
+                                          _db_sys_cnx, source, 'DROP DATABASE')
             if cnx is ERROR:
                 return
             cursor = cnx.cursor()
@@ -328,14 +328,15 @@ class CreateInstanceDBCommand(Command):
         elif self.config.create_db:
             print '\n'+underline_title('Creating the system database')
             # connect on the dbms system base to create our base
-            dbcnx = _db_sys_cnx(source, 'CREATE/DROP DATABASE and / or USER', verbose=verbose)
+            dbcnx = _db_sys_cnx(source, 'CREATE/DROP DATABASE and / or USER',
+                                verbose=verbose)
             cursor = dbcnx.cursor()
             try:
                 if helper.users_support:
                     user = source['db-user']
                     if not helper.user_exists(cursor, user) and (automatic or \
                            ASK.confirm('Create db user %s ?' % user, default_is_yes=False)):
-                        helper.create_user(source['db-user'], source['db-password'])
+                        helper.create_user(source['db-user'], source.get('db-password'))
                         print '-> user %s created.' % user
                 if dbname in helper.list_databases(cursor):
                     if automatic or ASK.confirm('Database %s already exists -- do you want to drop it ?' % dbname):
