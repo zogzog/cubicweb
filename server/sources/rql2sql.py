@@ -991,24 +991,21 @@ class SQLGenerator(object):
         unification (eg X attr1 A, Y attr2 A). In case of selection,
         nothing to do here.
         """
-        contextrels = {}
         for var in rhs_vars:
             if var.name in self._varmap:
                 # ensure table is added
                 self._var_info(var.variable)
             principal = var.variable.stinfo.get('principal')
             if principal is not None and principal is not relation:
-                contextrels[var.name] = relation
-        if not contextrels:
-            return ''
-        # we have to generate unification expression
-        lhssql = self._inlined_var_sql(relation.children[0].variable,
-                                       relation.r_type)
-        try:
-            self._state.ignore_varmap = True
-            return '%s%s' % (lhssql, relation.children[1].accept(self))
-        finally:
-            self._state.ignore_varmap = False
+                # we have to generate unification expression
+                lhssql = self._inlined_var_sql(relation.children[0].variable,
+                                               relation.r_type)
+                try:
+                    self._state.ignore_varmap = True
+                    return '%s%s' % (lhssql, relation.children[1].accept(self))
+                finally:
+                    self._state.ignore_varmap = False
+        return ''
 
     def _visit_attribute_relation(self, rel):
         """generate SQL for an attribute relation"""
