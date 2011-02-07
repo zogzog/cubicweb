@@ -1091,7 +1091,7 @@ class Repository(object):
             op.add_data(entity.eid)
         self._delete_info_multi(session, entities, sourceuri, extids, scleanup)
 
-    def _delete_info(self, session, entity, sourceuri, extid, scleanup=False):
+    def _delete_info(self, session, entity, sourceuri, extid, scleanup=None):
         """delete system information on deletion of an entity:
         * delete all remaining relations from/to this entity
         * call delete info on the system source which will transfer record from
@@ -1112,11 +1112,12 @@ class Repository(object):
                     rql = 'DELETE X %s Y WHERE X eid %%(x)s' % rtype
                 else:
                     rql = 'DELETE Y %s X WHERE X eid %%(x)s' % rtype
-                if scleanup:
+                if scleanup is not None:
                     # source cleaning: only delete relations stored locally
-                    rql += ', NOT (Y cw_source S, S name %(source)s)'
+                    # (here, scleanup
+                    rql += ', NOT (Y cw_source S, S eid %(seid)s)'
                 try:
-                    session.execute(rql, {'x': eid, 'source': sourceuri},
+                    session.execute(rql, {'x': eid, 'seid': scleanup},
                                     build_descr=False)
                 except:
                     self.exception('error while cascading delete for entity %s '
@@ -1144,12 +1145,11 @@ class Repository(object):
                     rql = 'DELETE X %s Y WHERE X eid IN (%s)' % (rtype, in_eids)
                 else:
                     rql = 'DELETE Y %s X WHERE X eid IN (%s)' % (rtype, in_eids)
-                if scleanup:
+                if scleanup is not None:
                     # source cleaning: only delete relations stored locally
-                    rql += ', NOT (Y cw_source S, S name %(source)s)'
+                    rql += ', NOT (Y cw_source S, S eid %(seid)s)'
                 try:
-                    session.execute(rql, {'source': sourceuri},
-                                    build_descr=False)
+                    session.execute(rql, {'seid': scleanup}, build_descr=False)
                 except:
                     self.exception('error while cascading delete for entity %s '
                                    'from %s. RQL: %s', entities, sourceuri, rql)

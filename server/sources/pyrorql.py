@@ -257,7 +257,7 @@ repository (default to 5 minutes).',
                     if eid is not None:
                         entity = session.entity_from_eid(eid, etype)
                         repo.delete_info(session, entity, self.uri, extid,
-                                         scleanup=True)
+                                         scleanup=self.eid)
                 except:
                     self.exception('while updating %s with external id %s of source %s',
                                    etype, extid, self.uri)
