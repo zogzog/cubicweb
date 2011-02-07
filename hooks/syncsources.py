@@ -17,10 +17,14 @@ class SourceAddedHook(SourceHook):
     __select__ = SourceHook.__select__ & is_instance('CWSource')
     events = ('after_add_entity',)
     def __call__(self):
-        if not self.entity.type in SOURCE_TYPES:
+        try:
+            sourcecls = SOURCE_TYPES[self.entity.type]
+        except KeyError:
             msg = self._cw._('unknown source type')
             raise ValidationError(self.entity.eid,
                                   {role_name('type', 'subject'): msg})
+        sourcecls.check_conf_dict(self.entity.eid, self.entity.host_config,
+                                  fail_if_unknown=not self._cw.vreg.config.repairing)
         SourceAddedOp(self._cw, entity=self.entity)
 
 
@@ -36,6 +40,39 @@ class SourceRemovedHook(SourceHook):
         if self.entity.name == 'system':
             raise ValidationError(self.entity.eid, {None: 'cant remove system source'})
         SourceRemovedOp(self._cw, uri=self.entity.name)
+
+
+class SourceUpdatedOp(hook.DataOperationMixIn, hook.Operation):
+
+    def precommit_event(self):
+        self.__processed = []
+        for source in self.get_data():
+            conf = source.repo_source.check_config(source)
+            self.__processed.append( (source, conf) )
+
+    def postcommit_event(self):
+        for source, conf in self.__processed:
+            source.repo_source.update_config(source, conf)
+
+class SourceUpdatedHook(SourceHook):
+    __regid__ = 'cw.sources.configupdate'
+    __select__ = SourceHook.__select__ & is_instance('CWSource')
+    events = ('after_update_entity',)
+    def __call__(self):
+        if 'config' in self.entity.cw_edited:
+            SourceUpdatedOp.get_instance(self._cw).add_data(self.entity)
+
+class SourceHostConfigUpdatedHook(SourceHook):
+    __regid__ = 'cw.sources.hostconfigupdate'
+    __select__ = SourceHook.__select__ & is_instance('CWSourceHostConfig')
+    events = ('after_add_entity', 'after_update_entity', 'before_delete_entity',)
+    def __call__(self):
+        try:
+            SourceUpdatedOp.get_instance(self._cw).add_data(self.entity.cwsource)
+        except IndexError:
+            # XXX no source linked to the host config yet
+            pass
+
 
 # source mapping synchronization. Expect cw_for_source/cw_schema are immutable
 # relations (i.e. can't change from a source or schema to another).

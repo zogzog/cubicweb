@@ -24,7 +24,11 @@ from os.path import join, splitext
 from datetime import datetime, timedelta
 from logging import getLogger
 
-from cubicweb import set_log_methods, server
+from logilab.common import configuration
+
+from yams.schema import role_name
+
+from cubicweb import ValidationError, set_log_methods, server
 from cubicweb.schema import VIRTUAL_RTYPES
 from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.server.ssplanner import EditedEntity
@@ -103,15 +107,19 @@ class AbstractSource(object):
     # force deactivation (configuration error for instance)
     disabled = False
 
-    def __init__(self, repo, source_config, *args, **kwargs):
+    # source configuration options
+    options = ()
+
+    def __init__(self, repo, source_config, eid=None):
         self.repo = repo
-        self.uri = source_config['uri']
-        set_log_methods(self, getLogger('cubicweb.sources.'+self.uri))
         self.set_schema(repo.schema)
         self.support_relations['identity'] = False
-        self.eid = None
+        self.eid = eid
         self.public_config = source_config.copy()
         self.remove_sensitive_information(self.public_config)
+        self.uri = source_config.pop('uri')
+        set_log_methods(self, getLogger('cubicweb.sources.'+self.uri))
+        source_config.pop('type')
 
     def __repr__(self):
         return '<%s source %s @%#x>' % (self.uri, self.eid, id(self))
@@ -134,6 +142,56 @@ class AbstractSource(object):
 
     def restore(self, backupfile, confirm, drop):
         """method called to restore a backup of source's data"""
+        pass
+
+    @classmethod
+    def check_conf_dict(cls, eid, confdict, _=unicode, fail_if_unknown=True):
+        """check configuration of source entity. Return config dict properly
+        typed with defaults set.
+        """
+        processed = {}
+        for optname, optdict in cls.options:
+            value = confdict.pop(optname, optdict.get('default'))
+            if value is configuration.REQUIRED:
+                if not fail_if_unknown:
+                    continue
+                msg = _('specifying %s is mandatory' % optname)
+                raise ValidationError(eid, {role_name('config', 'subject'): msg})
+            elif value is not None:
+                # type check
+                try:
+                    value = configuration.convert(value, optdict, optname)
+                except Exception, ex:
+                    msg = unicode(ex) # XXX internationalization
+                    raise ValidationError(eid, {role_name('config', 'subject'): msg})
+            processed[optname] = value
+        # cw < 3.10 bw compat
+        try:
+            processed['adapter'] = confdict['adapter']
+        except:
+            pass
+        # check for unknown options
+        if confdict and not confdict.keys() == ['adapter']:
+            if fail_if_unknown:
+                msg = _('unknown options %s') % ', '.join(confdict)
+                raise ValidationError(eid, {role_name('config', 'subject'): msg})
+            else:
+                logger = getLogger('cubicweb.sources')
+                logger.warning('unknown options %s', ', '.join(confdict))
+                # add options to processed, they may be necessary during migration
+                processed.update(confdict)
+        return processed
+
+    @classmethod
+    def check_config(cls, source_entity):
+        """check configuration of source entity"""
+        return cls.check_conf_dict(source_entity.eid, source_entity.host_config,
+                                    _=source_entity._cw._)
+
+    def update_config(self, source_entity, typedconfig):
+        """update configuration from source entity. `typedconfig` is config
+        properly typed with defaults set
+        """
         pass
 
     # source initialization / finalization #####################################
@@ -503,8 +561,8 @@ def source_adapter(source_type):
     except KeyError:
         raise RuntimeError('Unknown source type %r' % source_type)
 
-def get_source(type, source_config, repo):
-    """return a source adapter according to the adapter field in the
-    source's configuration
+def get_source(type, source_config, repo, eid):
+    """return a source adapter according to the adapter field in the source's
+    configuration
     """
-    return source_adapter(type)(repo, source_config)
+    return source_adapter(type)(repo, source_config, eid)

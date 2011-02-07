@@ -5,7 +5,7 @@ from cubicweb.server.session import hooks_control
 for uri, cfg in config.sources().items():
     if uri in ('system', 'admin'):
         continue
-    repo.sources_by_uri[uri] = repo.get_source(cfg['adapter'], uri, cfg)
+    repo.sources_by_uri[uri] = repo.get_source(cfg['adapter'], uri, cfg.copy())
 
 add_entity_type('CWSource')
 add_relation_definition('CWSource', 'cw_source', 'CWSource')

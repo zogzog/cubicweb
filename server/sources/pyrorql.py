@@ -123,13 +123,10 @@ repository (default to 5 minutes).',
     PUBLIC_KEYS = AbstractSource.PUBLIC_KEYS + ('base-url',)
     _conn = None
 
-    def __init__(self, repo, source_config, *args, **kwargs):
-        AbstractSource.__init__(self, repo, source_config, *args, **kwargs)
-        # XXX get it through pyro if unset
-        baseurl = source_config.get('base-url')
-        if baseurl and not baseurl.endswith('/'):
-            source_config['base-url'] += '/'
-        self.config = source_config
+    def __init__(self, repo, source_config, eid=None):
+        AbstractSource.__init__(self, repo, source_config, eid)
+        self.update_config(None, self.check_conf_dict(eid, source_config,
+                                                      fail_if_unknown=False))
         myoptions = (('%s.latest-update-time' % self.uri,
                       {'type' : 'int', 'sitewide': True,
                        'default': 0,
@@ -138,8 +135,15 @@ repository (default to 5 minutes).',
                        }),)
         register_persistent_options(myoptions)
         self._query_cache = TimedCache(1800)
-        self._skip_externals = check_yn(None, 'skip-external-entities',
-                                        source_config.get('skip-external-entities', False))
+
+    def update_config(self, source_entity, processed_config):
+        """update configuration from source entity"""
+        # XXX get it through pyro if unset
+        baseurl = processed_config.get('base-url')
+        if baseurl and not baseurl.endswith('/'):
+            processed_config['base-url'] += '/'
+        self.config = processed_config
+        self._skip_externals = processed_config['skip-external-entities']
 
     def reset_caches(self):
         """method called during test to reset potential source caches"""

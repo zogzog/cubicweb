@@ -97,10 +97,21 @@ class CWSource(_CWSourceCfgMixIn, AnyEntity):
                                        cw_schema=schemaentity,
                                        options=options)
 
+    @property
+    def repo_source(self):
+        """repository only property, not available from the web side (eg
+        self._cw is expected to be a server session)
+        """
+        return self._cw.repo.sources_by_eid[self.eid]
+
 
 class CWSourceHostConfig(_CWSourceCfgMixIn, AnyEntity):
     __regid__ = 'CWSourceHostConfig'
     fetch_attrs, fetch_order = fetch_config(['match_host', 'config'])
+
+    @property
+    def cwsource(self):
+        return self.cw_host_config_of[0]
 
     def match(self, hostname):
         return re.match(self.match_host, hostname)

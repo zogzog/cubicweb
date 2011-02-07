@@ -258,8 +258,7 @@ class Repository(object):
 
     def add_source(self, sourceent, add_to_pools=True):
         source = self.get_source(sourceent.type, sourceent.name,
-                                 sourceent.host_config)
-        source.eid = sourceent.eid
+                                 sourceent.host_config, sourceent.eid)
         self.sources_by_eid[sourceent.eid] = source
         self.sources_by_uri[sourceent.name] = source
         if self.config.source_enabled(source):
@@ -283,12 +282,12 @@ class Repository(object):
                 pool.remove_source(source)
         self._clear_planning_caches()
 
-    def get_source(self, type, uri, source_config):
+    def get_source(self, type, uri, source_config, eid=None):
         # set uri and type in source config so it's available through
         # source_defs()
         source_config['uri'] = uri
         source_config['type'] = type
-        return sources.get_source(type, source_config, self)
+        return sources.get_source(type, source_config, self, eid)
 
     def set_schema(self, schema, resetvreg=True, rebuildinfered=True):
         if rebuildinfered:
