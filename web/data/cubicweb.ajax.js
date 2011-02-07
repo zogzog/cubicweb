@@ -419,7 +419,7 @@ function removeBookmark(beid) {
     var d = loadRemote('json', ajaxFuncArgs('delete_bookmark', null, beid));
     d.addCallback(function(boxcontent) {
         $('#bookmarks_box').loadxhtml('json',
-                                      ajaxFuncArgs('render', null, 'boxes',
+                                      ajaxFuncArgs('render', null, 'ctxcomponents',
                                                    'bookmarks_box'));
         document.location.hash = '#header';
         updateMessage(_("bookmark has been removed"));
@@ -633,7 +633,7 @@ reloadComponent = cw.utils.deprecatedFunction(
 reloadBox = cw.utils.deprecatedFunction(
     '[3.9] reloadBox() is deprecated, use loadxhtml instead',
     function(boxid, rql) {
-        return reloadComponent(boxid, rql, 'boxes', boxid);
+        return reloadComponent(boxid, rql, 'ctxcomponents', boxid);
     }
 );
 
