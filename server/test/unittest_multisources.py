@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -17,6 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 
 from datetime import datetime, timedelta
+from itertools import repeat
 
 from cubicweb.devtools import TestServerConfiguration, init_test_database
 from cubicweb.devtools.testlib import CubicWebTC, refresh_repo
@@ -46,13 +47,9 @@ PyroRQLSource_get_connection = PyroRQLSource.get_connection
 Connection_close = Connection.close
 
 def add_extern_mapping(source):
-    execute = source._cw.execute
-    for etype in ('Card', 'Affaire', 'State'):
-        assert execute('SET S cw_support ET WHERE ET name %(etype)s, ET is CWEType, S eid %(s)s',
-                       {'etype': etype, 's': source.eid})
-    for rtype in ('in_state', 'documented_by', 'multisource_inlined_rel'):
-        assert execute('SET S cw_support RT WHERE RT name %(rtype)s, RT is CWRType, S eid %(s)s',
-                       {'rtype': rtype, 's': source.eid})
+    source.init_mapping(zip(('Card', 'Affaire', 'State',
+                             'in_state', 'documented_by', 'multisource_inlined_rel'),
+                            repeat(u'write')))
 
 
 def setUpModule(*args):
@@ -63,6 +60,7 @@ def setUpModule(*args):
     repo3, cnx3 = init_test_database(config=cfg2)
     src = cnx3.request().create_entity('CWSource', name=u'extern',
                                        type=u'pyrorql', config=EXTERN_SOURCE_CFG)
+    cnx3.commit() # must commit before adding the mapping
     add_extern_mapping(src)
     cnx3.commit()
 
@@ -122,6 +120,7 @@ cubicweb-password = gingkow
             source = self.request().create_entity(
                 'CWSource', name=unicode(uri), type=u'pyrorql',
                 config=unicode(config))
+            self.commit() # must commit before adding the mapping
             add_extern_mapping(source)
         self.commit()
         # trigger discovery

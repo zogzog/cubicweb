@@ -108,7 +108,7 @@ PUB_SYSTEM_REL_PERMS = {
     }
 PUB_SYSTEM_ATTR_PERMS = {
     'read':   ('managers', 'users', 'guests',),
-    'update':    ('managers',),
+    'update': ('managers',),
     }
 RO_REL_PERMS = {
     'read':   ('managers', 'users', 'guests',),

@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -281,6 +281,21 @@ class AbstractSource(object):
         inserted in the system table.
         """
         pass
+
+    def add_schema_config(self, schemacfg, checkonly=False):
+        """added CWSourceSchemaConfig, modify mapping accordingly"""
+        msg = schemacfg._cw._("this source doesn't use a mapping")
+        raise ValidationError(schemacfg.eid, {None: msg})
+
+    def del_schema_config(self, schemacfg, checkonly=False):
+        """deleted CWSourceSchemaConfig, modify mapping accordingly"""
+        msg = schemacfg._cw._("this source doesn't use a mapping")
+        raise ValidationError(schemacfg.eid, {None: msg})
+
+    def update_schema_config(self, schemacfg, checkonly=False):
+        """updated CWSourceSchemaConfig, modify mapping accordingly"""
+        self.del_schema_config(schemacfg, checkonly)
+        self.add_schema_config(schemacfg, checkonly)
 
     # user authentication api ##################################################
 

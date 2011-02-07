@@ -501,15 +501,15 @@ class QuerierTC(BaseQuerierTC):
                               [[u'description_format', 12],
                                [u'description', 13],
                                [u'name', 15],
-                               [u'created_by', 40],
-                               [u'creation_date', 40],
-                               [u'cw_source', 40],
-                               [u'cwuri', 40],
-                               [u'in_basket', 40],
-                               [u'is', 40],
-                               [u'is_instance_of', 40],
-                               [u'modification_date', 40],
-                               [u'owned_by', 40]])
+                               [u'created_by', 41],
+                               [u'creation_date', 41],
+                               [u'cw_source', 41],
+                               [u'cwuri', 41],
+                               [u'in_basket', 41],
+                               [u'is', 41],
+                               [u'is_instance_of', 41],
+                               [u'modification_date', 41],
+                               [u'owned_by', 41]])
 
     def test_select_aggregat_having_dumb(self):
         # dumb but should not raise an error

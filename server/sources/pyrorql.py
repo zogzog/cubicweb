@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -31,11 +31,14 @@ from Pyro.errors import PyroError, ConnectionClosedError
 from logilab.common.configuration import REQUIRED
 from logilab.common.optik_ext import check_yn
 
+from yams.schema import role_name
+
 from rql.nodes import Constant
 from rql.utils import rqlvar_maker
 
 from cubicweb import dbapi, server
-from cubicweb import BadConnectionId, UnknownEid, ConnectionError
+from cubicweb import ValidationError, BadConnectionId, UnknownEid, ConnectionError
+from cubicweb.schema import VIRTUAL_RTYPES
 from cubicweb.cwconfig import register_persistent_options
 from cubicweb.server.sources import (AbstractSource, ConnectionWrapper,
                                      TimedCache, dbg_st_search, dbg_results)
@@ -176,32 +179,87 @@ repository (default to 5 minutes).',
         self.dont_cross_relations = set(('owned_by', 'created_by'))
         self.cross_relations = set()
         assert self.eid is not None
+        self._schemacfg_idx = {}
         if session is None:
             _session = self.repo.internal_session()
         else:
             _session = session
         try:
-            for rql, struct in [('Any ETN WHERE S cw_support ET, ET name ETN, ET is CWEType, S eid %(s)s',
-                                 self.support_entities),
-                                ('Any RTN WHERE S cw_support RT, RT name RTN, RT is CWRType, S eid %(s)s',
-                                 self.support_relations)]:
-                for ertype, in _session.execute(rql, {'s': self.eid}):
-                    struct[ertype] = True # XXX write support
-            for rql, struct in [('Any RTN WHERE S cw_may_cross RT, RT name RTN, S eid %(s)s',
-                                 self.cross_relations),
-                                ('Any RTN WHERE S cw_dont_cross RT, RT name RTN, S eid %(s)s',
-                                 self.dont_cross_relations)]:
-                for rtype, in _session.execute(rql, {'s': self.eid}):
-                    struct.add(rtype)
+            for schemacfg in _session.execute(
+                'Any CFG,CFGO,SN,S WHERE '
+                'CFG options CFGO, CFG cw_schema S, S name SN, '
+                'CFG cw_for_source X, X eid %(x)s', {'x': self.eid}).entities():
+                self.add_schema_config(schemacfg)
         finally:
             if session is None:
                 _session.close()
-        # XXX move in hooks or schema constraints
-        for rtype in ('is', 'is_instance_of', 'cw_source'):
-            assert rtype not in self.dont_cross_relations, \
-                   '%s relation should not be in dont_cross_relations' % rtype
-            assert rtype not in self.support_relations, \
-                   '%s relation should not be in support_relations' % rtype
+
+    etype_options = set(('write',))
+    rtype_options = set(('maycross', 'dontcross', 'write',))
+
+    def _check_options(self, schemacfg, allowedoptions):
+        if schemacfg.options:
+            options = set(w.strip() for w in schemacfg.options.split(':'))
+        else:
+            options = set()
+        if options - allowedoptions:
+            options = ', '.join(sorted(options - allowedoptions))
+            msg = _('unknown option(s): %s' % options)
+            raise ValidationError(schemacfg.eid, {role_name('options', 'subject'): msg})
+        return options
+
+    def add_schema_config(self, schemacfg, checkonly=False):
+        """added CWSourceSchemaConfig, modify mapping accordingly"""
+        try:
+            ertype = schemacfg.schema.name
+        except AttributeError:
+            msg = schemacfg._cw._("attribute/relation can't be mapped, only "
+                                  "entity and relation types")
+            raise ValidationError(schemacfg.eid, {role_name('cw_for_schema', 'subject'): msg})
+        if schemacfg.schema.__regid__ == 'CWEType':
+            options = self._check_options(schemacfg, self.etype_options)
+            if not checkonly:
+                self.support_entities[ertype] = 'write' in options
+        else: # CWRType
+            if ertype in ('is', 'is_instance_of', 'cw_source') or ertype in VIRTUAL_RTYPES:
+                msg = schemacfg._cw._('%s relation should not be in mapped') % rtype
+                raise ValidationError(schemacfg.eid, {role_name('cw_for_schema', 'subject'): msg})
+            options = self._check_options(schemacfg, self.rtype_options)
+            if 'dontcross' in options:
+                if 'maycross' in options:
+                    msg = schemacfg._("can't mix dontcross and maycross options")
+                    raise ValidationError(schemacfg.eid, {role_name('options', 'subject'): msg})
+                if 'write' in options:
+                    msg = schemacfg._("can't mix dontcross and write options")
+                    raise ValidationError(schemacfg.eid, {role_name('options', 'subject'): msg})
+                if not checkonly:
+                    self.dont_cross_relations.add(ertype)
+            elif not checkonly:
+                self.support_relations[ertype] = 'write' in options
+                if 'maycross' in options:
+                    self.cross_relations.add(ertype)
+        if not checkonly:
+            # add to an index to ease deletion handling
+            self._schemacfg_idx[schemacfg.eid] = ertype
+
+    def del_schema_config(self, schemacfg, checkonly=False):
+        """deleted CWSourceSchemaConfig, modify mapping accordingly"""
+        if checkonly:
+            return
+        try:
+            ertype = self._schemacfg_idx[schemacfg.eid]
+            if ertype[0].isupper():
+                del self.support_entities[ertype]
+            else:
+                if ertype in self.support_relations:
+                    del self.support_relations[ertype]
+                    if ertype in self.cross_relations:
+                        self.cross_relations.remove(ertype)
+                else:
+                    self.dont_cross_relations.remove(ertype)
+        except:
+            self.error('while updating mapping consequently to removal of %s',
+                       schemacfg)
 
     def local_eid(self, cnx, extid, session):
         etype, dexturi, dextid = cnx.describe(extid)

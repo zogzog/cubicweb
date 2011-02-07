@@ -1,4 +1,4 @@
-# copyright 2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2010-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -15,22 +15,24 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""Specific views for data sources"""
+"""Specific views for data sources and related entities (eg CWSource,
+CWSourceHostConfig, CWSourceSchemaConfig).
+"""
 
 __docformat__ = "restructuredtext en"
 _ = unicode
 
 from itertools import repeat, chain
 
-from cubicweb.selectors import is_instance, score_entity
+from cubicweb.selectors import is_instance, score_entity, match_user_groups
 from cubicweb.view import EntityView
 from cubicweb.schema import META_RTYPES, VIRTUAL_RTYPES, display_name
 from cubicweb.web import uicfg
 from cubicweb.web.views import tabs
 
-for rtype in ('cw_support', 'cw_may_cross', 'cw_dont_cross'):
-    uicfg.primaryview_section.tag_subject_of(('CWSource', rtype, '*'),
-                                             'hidden')
+_pvs = uicfg.primaryview_section
+_pvs.tag_object_of(('*', 'cw_for_source', 'CWSource'), 'hidden')
+
 
 class CWSourcePrimaryView(tabs.TabbedPrimaryView):
     __select__ = is_instance('CWSource')
@@ -43,129 +45,155 @@ class CWSourceMainTab(tabs.PrimaryTab):
     __select__ = tabs.PrimaryTab.__select__ & is_instance('CWSource')
 
 
+MAPPED_SOURCE_TYPES = set( ('pyrorql', 'datafeed') )
+
 class CWSourceMappingTab(EntityView):
     __regid__ = 'cwsource-mapping'
     __select__ = (tabs.PrimaryTab.__select__ & is_instance('CWSource')
-                  & score_entity(lambda x:x.type == 'pyrorql'))
+                  & match_user_groups('managers')
+                  & score_entity(lambda x:x.type in MAPPED_SOURCE_TYPES))
 
     def entity_call(self, entity):
         _ = self._cw._
-        self.w('<h3>%s</h3>' % _('Entity and relation types supported by this source'))
-        self.wview('list', entity.related('cw_support'), 'noresult')
-        self.w('<h3>%s</h3>' % _('Relations that should not be crossed'))
-        self.w('<p>%s</p>' % _(
-            'By default, when a relation is not supported by a source, it is '
-            'supposed that a local relation may point to an entity from the '
-            'external source. Relations listed here won\'t have this '
-            '"crossing" behaviour.'))
-        self.wview('list', entity.related('cw_dont_cross'), 'noresult')
-        self.w('<h3>%s</h3>' % _('Relations that can be crossed'))
-        self.w('<p>%s</p>' % _(
-            'By default, when a relation is supported by a source, it is '
-            'supposed that a local relation can\'t point to an entity from the '
-            'external source. Relations listed here may have this '
-            '"crossing" behaviour anyway.'))
-        self.wview('list', entity.related('cw_may_cross'), 'noresult')
-        if self._cw.user.is_in_group('managers'):
-            errors, warnings, infos = check_mapping(entity)
-            if (errors or warnings or infos):
+        self.w('<h3>%s</h3>' % _('Entity and relation supported by this source'))
+        rset = self._cw.execute(
+            'Any X, SCH, XO ORDERBY ET WHERE X options XO, X cw_for_source S, S eid %(s)s, '
+            'X cw_schema SCH, SCH is ET', {'s': entity.eid})
+        self.wview('table', rset, 'noresult')
+        # self.w('<h3>%s</h3>' % _('Relations that should not be crossed'))
+        # self.w('<p>%s</p>' % _(
+        #     'By default, when a relation is not supported by a source, it is '
+        #     'supposed that a local relation may point to an entity from the '
+        #     'external source. Relations listed here won\'t have this '
+        #     '"crossing" behaviour.'))
+        # self.wview('list', entity.related('cw_dont_cross'), 'noresult')
+        # self.w('<h3>%s</h3>' % _('Relations that can be crossed'))
+        # self.w('<p>%s</p>' % _(
+        #     'By default, when a relation is supported by a source, it is '
+        #     'supposed that a local relation can\'t point to an entity from the '
+        #     'external source. Relations listed here may have this '
+        #     '"crossing" behaviour anyway.'))
+        # self.wview('list', entity.related('cw_may_cross'), 'noresult')
+        checker = MAPPING_CHECKERS.get(entity.type, MappingChecker)(entity)
+        checker.check()
+        if (checker.errors or checker.warnings or checker.infos):
                 self.w('<h2>%s</h2>' % _('Detected problems'))
-                errors = zip(repeat(_('error'), errors))
-                warnings = zip(repeat(_('warning'), warnings))
-                infos = zip(repeat(_('warning'), infos))
+                errors = zip(repeat(_('error')), checker.errors)
+                warnings = zip(repeat(_('warning')), checker.warnings)
+                infos = zip(repeat(_('warning')), checker.infos)
                 self.wview('pyvaltable', pyvalue=chain(errors, warnings, infos))
 
-def check_mapping(cwsource):
-    req = cwsource._cw
-    _ = req._
-    errors = []
-    error = errors.append
-    warnings = []
-    warning = warnings.append
-    infos = []
-    info = infos.append
-    srelations = set()
-    sentities = set()
-    maycross = set()
-    dontcross = set()
-    # first check supported stuff / meta & virtual types and get mapping as sets
-    for cwertype in cwsource.cw_support:
-        if cwertype.name in META_RTYPES:
-            error(_('meta relation %s can not be supported') % cwertype.name)
-        else:
-            if cwertype.__regid__ == 'CWEType':
-                sentities.add(cwertype.name)
-            else:
-                srelations.add(cwertype.name)
-    for attr, attrset in (('cw_may_cross', maycross),
-                          ('cw_dont_cross', dontcross)):
-        for cwrtype in getattr(cwsource, attr):
-            if cwrtype.name in VIRTUAL_RTYPES:
-                error(_('virtual relation %(rtype)s can not be referenced by '
-                        'the "%(srel)s" relation') %
-                      {'rtype': cwrtype.name,
-                       'srel': display_name(req, attr, context='CWSource')})
-            else:
-                attrset.add(cwrtype.name)
-    # check relation in dont_cross_relations aren't in support_relations
-    for rtype in dontcross & maycross:
-        info(_('relation %(rtype)s is supported but in %(dontcross)s') %
-             {'rtype': rtype,
-              'dontcross': display_name(req, 'cw_dont_cross',
-                                        context='CWSource')})
-    # check relation in cross_relations are in support_relations
-    for rtype in maycross & srelations:
-        info(_('relation %(rtype)s isn\'t supported but in %(maycross)s') %
-             {'rtype': rtype,
-              'dontcross': display_name(req, 'cw_may_cross',
-                                        context='CWSource')})
-    # now check for more handy things
-    seen = set()
-    for etype in sentities:
-        eschema = req.vreg.schema[etype]
-        for rschema, ttypes, role in eschema.relation_definitions():
-            if rschema in META_RTYPES:
-                continue
-            ttypes = [ttype for ttype in ttypes if ttype in sentities]
-            if not rschema in srelations:
-                somethingprinted = False
-                for ttype in ttypes:
-                    rdef = rschema.role_rdef(etype, ttype, role)
-                    seen.add(rdef)
-                    if rdef.role_cardinality(role) in '1+':
-                        error(_('relation %(type)s with %(etype)s as %(role)s '
-                                'and target type %(target)s is mandatory but '
-                                'not supported') %
-                              {'rtype': rschema, 'etype': etype, 'role': role,
-                               'target': ttype})
-                        somethingprinted = True
-                    elif ttype in sentities:
-                        if rdef not in seen:
+
+class MappingChecker(object):
+    def __init__(self, cwsource):
+        self.cwsource = cwsource
+        self.errors = []
+        self.warnings = []
+        self.infos = []
+        self.schema = cwsource._cw.vreg.schema
+
+    def init(self):
+        # supported entity types
+        self.sentities = set()
+        # supported relations
+        self.srelations = {}
+        # avoid duplicated messages
+        self.seen = set()
+        # first get mapping as dict/sets
+        for schemacfg in self.cwsource.reverse_cw_for_source:
+            self.init_schemacfg(schemacfg)
+
+    def init_schemacfg(self, schemacfg):
+        cwerschema = schemacfg.schema
+        if cwerschema.__regid__ == 'CWEType':
+            self.sentities.add(cwerschema.name)
+        elif cwerschema.__regid__ == 'CWRType':
+            assert not cwerschema.name in self.srelations
+            self.srelations[cwerschema.name] = None
+        else: # CWAttribute/CWRelation
+            self.srelations.setdefault(cwerschema.rtype.name, []).append(
+                (cwerschema.stype.name, cwerschema.otype.name) )
+
+    def check(self):
+        self.init()
+        error = self.errors.append
+        warning = self.warnings.append
+        info = self.infos.append
+        for etype in self.sentities:
+            eschema = self.schema[etype]
+            for rschema, ttypes, role in eschema.relation_definitions():
+                if rschema in META_RTYPES:
+                    continue
+                ttypes = [ttype for ttype in ttypes if ttype in self.sentities]
+                if not rschema in self.srelations:
+                    for ttype in ttypes:
+                        rdef = rschema.role_rdef(etype, ttype, role)
+                        self.seen.add(rdef)
+                        if rdef.role_cardinality(role) in '1+':
+                            error(_('relation %(type)s with %(etype)s as %(role)s '
+                                    'and target type %(target)s is mandatory but '
+                                    'not supported') %
+                                  {'rtype': rschema, 'etype': etype, 'role': role,
+                                   'target': ttype})
+                        elif ttype in self.sentities:
                             warning(_('%s could be supported') % rdef)
-                        somethingprinted = True
-                if rschema not in dontcross:
-                    if role == 'subject' and rschema.inlined:
-                        error(_('inlined relation %(rtype)s of %(etype)s '
-                                'should be supported') %
-                              {'rtype': rschema, 'etype': etype})
-                    elif (not somethingprinted and rschema not in seen
-                          and rschema not in maycross):
-                        info(_('you may want to specify something for %s') %
-                             rschema)
-                        seen.add(rschema)
-            else:
-                if not ttypes:
-                    warning(_('relation %(rtype)s with %(etype)s as %(role)s '
-                              'is supported but no target type supported') %
+                elif not ttypes:
+                    warning(_('relation %(rtype)s with %(etype)s as %(role)s is '
+                              'supported but no target type supported') %
                             {'rtype': rschema, 'role': role, 'etype': etype})
-                if rschema in maycross and rschema.inlined:
+        for rtype in self.srelations:
+            rschema = self.schema[rtype]
+            for subj, obj in rschema.rdefs:
+                if subj in self.sentities and obj in self.sentities:
+                    break
+            else:
+                error(_('relation %s is supported but none if its definitions '
+                        'matches supported entities') % rtype)
+        self.custom_check()
+
+    def custom_check(self):
+        pass
+
+
+class PyroRQLMappingChecker(MappingChecker):
+    """pyrorql source mapping checker"""
+
+    def init(self):
+        self.dontcross = set()
+        self.maycross = set()
+        super(PyroRQLMappingChecker, self).init()
+
+    def init_schemacfg(self, schemacfg):
+        options = schemacfg.options or ()
+        if 'dontcross' in options:
+            self.dontcross.add(schemacfg.schema.name)
+        else:
+            super(PyroRQLMappingChecker, self).init_schemacfg(schemacfg)
+            if 'maycross' in options:
+                self.maycross.add(schemacfg.schema.name)
+
+    def custom_check(self):
+        error = self.errors.append
+        info = self.infos.append
+        for etype in self.sentities:
+            eschema = self.schema[etype]
+            for rschema, ttypes, role in eschema.relation_definitions():
+                if rschema in META_RTYPES:
+                    continue
+                if not rschema in self.srelations:
+                    if rschema not in self.dontcross:
+                        if role == 'subject' and rschema.inlined:
+                            error(_('inlined relation %(rtype)s of %(etype)s '
+                                    'should be supported') %
+                                  {'rtype': rschema, 'etype': etype})
+                        elif (rschema not in self.seen and rschema not in self.maycross):
+                            info(_('you may want to specify something for %s') %
+                                 rschema)
+                            self.seen.add(rschema)
+                elif rschema in self.maycross and rschema.inlined:
                     error(_('you should un-inline relation %s which is '
                             'supported and may be crossed ') % rschema)
-    for rschema in srelations:
-        for subj, obj in rschema.rdefs:
-            if subj in sentities and obj in sentities:
-                break
-        else:
-            error(_('relation %s is supported but none if its definitions '
-                    'matches supported entities') % rschema)
-    return errors, warnings, infos
+
+MAPPING_CHECKERS = {
+    'pyrorql': PyroRQLMappingChecker,
+    }

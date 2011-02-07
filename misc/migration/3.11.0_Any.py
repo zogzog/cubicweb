@@ -1,6 +1,6 @@
-sync_schema_props_perms('cw_support', syncperms=False)
-sync_schema_props_perms('cw_dont_cross', syncperms=False)
-sync_schema_props_perms('cw_may_cross', syncperms=False)
+for rtype in ('cw_support', 'cw_dont_cross', 'cw_may_cross'):
+    drop_relation_type(rtype)
+add_entity_type('CWSourceSchemaConfig')
 
 try:
     from cubicweb.server.sources.pyrorql import PyroRQLSource
@@ -9,7 +9,7 @@ except ImportError:
 else:
 
     from os.path import join
-
+    # function to read old python mapping file
     def load_mapping_file(source):
         mappingfile = source.config['mapping-file']
         mappingfile = join(source.repo.config.apphome, mappingfile)
@@ -37,21 +37,33 @@ else:
             assert rtype not in mapping['support_relations'], \
                    '%s relation should not be in support_relations' % rtype
         return mapping
-
+    # for now, only pyrorql sources have a mapping
     for source in repo.sources_by_uri.values():
         if not isinstance(source, PyroRQLSource):
             continue
+        sourceentity = session.entity_from_eid(source.eid)
         mapping = load_mapping_file(source)
+        # write mapping as entities
         print 'migrating map for', source
-        for etype in mapping['support_entities']: # XXX write support
-            rql('SET S cw_support ET WHERE ET name %(etype)s, ET is CWEType, S eid %(s)s',
-                {'etype': etype, 's': source.eid})
-        for rtype in mapping['support_relations']: # XXX write support
-            rql('SET S cw_support RT WHERE RT name %(rtype)s, RT is CWRType, S eid %(s)s',
-                {'rtype': rtype, 's': source.eid})
-        for rtype in mapping['dont_cross_relations']: # XXX write support
-            rql('SET S cw_dont_cross RT WHERE RT name %(rtype)s, S eid %(s)s',
-                {'rtype': rtype, 's': source.eid})
-        for rtype in mapping['cross_relations']: # XXX write support
-            rql('SET S cw_may_cross RT WHERE RT name %(rtype)s, S eid %(s)s',
-                {'rtype': rtype, 's': source.eid})
+        for etype, write in mapping['support_entities'].items():
+            create_entity('CWSourceSchemaConfig',
+                          cw_for_source=sourceentity,
+                          cw_schema=session.entity_from_eid(schema[etype].eid),
+                          options=write and u'write' or None,
+                          ask_confirm=False)
+        for rtype, write in mapping['support_relations'].items():
+            options = []
+            if write:
+                options.append(u'write')
+            if rtype in mapping['cross_relations']:
+                options.append(u'maycross')
+            create_entity('CWSourceSchemaConfig',
+                          cw_for_source=sourceentity,
+                          cw_schema=session.entity_from_eid(schema[rtype].eid),
+                          options=u':'.join(options) or None,
+                          ask_confirm=False)
+        for rtype in mapping['dont_cross_relations']:
+            create_entity('CWSourceSchemaConfig',
+                          cw_for_source=source,
+                          cw_schema=session.entity_from_eid(schema[etype].eid),
+                          options=u'dontcross')

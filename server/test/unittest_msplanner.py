@@ -63,7 +63,7 @@ X_ALL_SOLS = sorted([{'X': 'Affaire'}, {'X': 'BaseTransition'}, {'X': 'Basket'},
                      {'X': 'CWConstraint'}, {'X': 'CWConstraintType'}, {'X': 'CWEType'},
                      {'X': 'CWGroup'}, {'X': 'CWPermission'}, {'X': 'CWProperty'},
                      {'X': 'CWRType'}, {'X': 'CWRelation'},
-                     {'X': 'CWSource'}, {'X': 'CWSourceHostConfig'},
+                     {'X': 'CWSource'}, {'X': 'CWSourceHostConfig'}, {'X': 'CWSourceSchemaConfig'},
                      {'X': 'CWUser'}, {'X': 'CWUniqueTogetherConstraint'},
                      {'X': 'Card'}, {'X': 'Comment'}, {'X': 'Division'},
                      {'X': 'Email'}, {'X': 'EmailAddress'}, {'X': 'EmailPart'},
@@ -897,6 +897,7 @@ class MSPlannerTC(BaseMSPlannerTC):
         ueid = self.session.user.eid
         ALL_SOLS = X_ALL_SOLS[:]
         ALL_SOLS.remove({'X': 'CWSourceHostConfig'}) # not authorized
+        ALL_SOLS.remove({'X': 'CWSourceSchemaConfig'}) # not authorized
         self._test('Any MAX(X)',
                    [('FetchStep', [('Any E WHERE E type "X", E is Note', [{'E': 'Note'}])],
                      [self.cards, self.system],  None, {'E': 'table1.C0'}, []),
@@ -947,7 +948,7 @@ class MSPlannerTC(BaseMSPlannerTC):
         ueid = self.session.user.eid
         X_ET_ALL_SOLS = []
         for s in X_ALL_SOLS:
-            if s == {'X': 'CWSourceHostConfig'}:
+            if s in ({'X': 'CWSourceHostConfig'}, {'X': 'CWSourceSchemaConfig'}):
                 continue # not authorized
             ets = {'ET': 'CWEType'}
             ets.update(s)
@@ -2539,7 +2540,7 @@ class MSPlannerTwoSameExternalSourcesTC(BasePlannerTC):
                      None, {'X': 'table0.C0'}, []),
                     ('UnionStep', None, None,
                      [('OneFetchStep',
-                       [(u'Any X WHERE X owned_by U, U login "anon", U is CWUser, X is IN(Affaire, BaseTransition, Basket, Bookmark, CWAttribute, CWCache, CWConstraint, CWConstraintType, CWEType, CWGroup, CWPermission, CWProperty, CWRType, CWRelation, CWSource, CWSourceHostConfig, CWUniqueTogetherConstraint, CWUser, Division, Email, EmailAddress, EmailPart, EmailThread, ExternalUri, File, Folder, Personne, RQLExpression, Societe, SubDivision, SubWorkflowExitPoint, Tag, TrInfo, Transition, Workflow, WorkflowTransition)',
+                       [(u'Any X WHERE X owned_by U, U login "anon", U is CWUser, X is IN(Affaire, BaseTransition, Basket, Bookmark, CWAttribute, CWCache, CWConstraint, CWConstraintType, CWEType, CWGroup, CWPermission, CWProperty, CWRType, CWRelation, CWSource, CWSourceHostConfig, CWSourceSchemaConfig, CWUniqueTogetherConstraint, CWUser, Division, Email, EmailAddress, EmailPart, EmailThread, ExternalUri, File, Folder, Personne, RQLExpression, Societe, SubDivision, SubWorkflowExitPoint, Tag, TrInfo, Transition, Workflow, WorkflowTransition)',
                          [{'U': 'CWUser', 'X': 'Affaire'},
                           {'U': 'CWUser', 'X': 'BaseTransition'},
                           {'U': 'CWUser', 'X': 'Basket'},
@@ -2556,6 +2557,7 @@ class MSPlannerTwoSameExternalSourcesTC(BasePlannerTC):
                           {'U': 'CWUser', 'X': 'CWRelation'},
                           {'U': 'CWUser', 'X': 'CWSource'},
                           {'U': 'CWUser', 'X': 'CWSourceHostConfig'},
+                          {'U': 'CWUser', 'X': 'CWSourceSchemaConfig'},
                           {'U': 'CWUser', 'X': 'CWUniqueTogetherConstraint'},
                           {'U': 'CWUser', 'X': 'CWUser'},
                           {'U': 'CWUser', 'X': 'Division'},
