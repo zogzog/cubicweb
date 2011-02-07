@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -20,7 +20,6 @@
 from __future__ import with_statement
 
 from logilab.common.decorators import clear_cache
-
 from yams.buildobjs import RelationDefinition
 from rql import BadRQLQuery
 
@@ -43,7 +42,6 @@ from cubicweb.server.sources import AbstractSource
 from cubicweb.server.msplanner import MSPlanner, PartPlanInformation
 
 class FakeUserROSource(AbstractSource):
-    uri = 'zzz'
     support_entities = {'CWUser': False}
     support_relations = {}
     def syntax_tree_search(self, *args, **kwargs):
@@ -51,7 +49,6 @@ class FakeUserROSource(AbstractSource):
 
 
 class FakeCardSource(AbstractSource):
-    uri = 'ccc'
     support_entities = {'Card': True, 'Note': True, 'State': True}
     support_relations = {'in_state': True, 'multisource_rel': True, 'multisource_inlined_rel': True,
                          'multisource_crossed_rel': True,}

@@ -19,10 +19,10 @@
 
 __docformat__ = "restructuredtext en"
 
+import itertools
 from os.path import join, splitext
 from datetime import datetime, timedelta
 from logging import getLogger
-import itertools
 
 from cubicweb import set_log_methods, server
 from cubicweb.schema import VIRTUAL_RTYPES
@@ -113,41 +113,6 @@ class AbstractSource(object):
         self.public_config = source_config.copy()
         self.remove_sensitive_information(self.public_config)
 
-    def init_creating(self):
-        """method called by the repository once ready to create a new instance"""
-        pass
-
-    def init(self, activated, session=None):
-        """method called by the repository once ready to handle request.
-        `activated` is a boolean flag telling if the source is activated or not.
-        """
-        pass
-
-    def backup(self, backupfile, confirm):
-        """method called to create a backup of source's data"""
-        pass
-
-    def restore(self, backupfile, confirm, drop):
-        """method called to restore a backup of source's data"""
-        pass
-
-    def close_pool_connections(self):
-        for pool in self.repo.pools:
-            pool._cursors.pop(self.uri, None)
-            pool.source_cnxs[self.uri][1].close()
-
-    def open_pool_connections(self):
-        for pool in self.repo.pools:
-            pool.source_cnxs[self.uri] = (self, self.get_connection())
-
-    def reset_caches(self):
-        """method called during test to reset potential source caches"""
-        pass
-
-    def clear_eid_cache(self, eid, etype):
-        """clear potential caches for the given eid"""
-        pass
-
     def __repr__(self):
         return '<%s source %s @%#x>' % (self.uri, self.eid, id(self))
 
@@ -163,9 +128,86 @@ class AbstractSource(object):
             return -1
         return cmp(self.uri, other.uri)
 
+    def backup(self, backupfile, confirm):
+        """method called to create a backup of source's data"""
+        pass
+
+    def restore(self, backupfile, confirm, drop):
+        """method called to restore a backup of source's data"""
+        pass
+
+    # source initialization / finalization #####################################
+
     def set_schema(self, schema):
         """set the instance'schema"""
         self.schema = schema
+
+    def init_creating(self):
+        """method called by the repository once ready to create a new instance"""
+        pass
+
+    def init(self, activated, session=None):
+        """method called by the repository once ready to handle request.
+        `activated` is a boolean flag telling if the source is activated or not.
+        """
+        pass
+
+    PUBLIC_KEYS = ('type', 'uri')
+    def remove_sensitive_information(self, sourcedef):
+        """remove sensitive information such as login / password from source
+        definition
+        """
+        for key in sourcedef.keys():
+            if not key in self.PUBLIC_KEYS:
+                sourcedef.pop(key)
+
+    # connections handling #####################################################
+
+    def get_connection(self):
+        """open and return a connection to the source"""
+        raise NotImplementedError()
+
+    def check_connection(self, cnx):
+        """Check connection validity, return None if the connection is still
+        valid else a new connection (called when the pool using the given
+        connection is being attached to a session). Do nothing by default.
+        """
+        pass
+
+    def close_pool_connections(self):
+        for pool in self.repo.pools:
+            pool._cursors.pop(self.uri, None)
+            pool.source_cnxs[self.uri][1].close()
+
+    def open_pool_connections(self):
+        for pool in self.repo.pools:
+            pool.source_cnxs[self.uri] = (self, self.get_connection())
+
+    def pool_reset(self, cnx):
+        """the pool using the given connection is being reseted from its current
+        attached session
+
+        do nothing by default
+        """
+        pass
+
+    # cache handling ###########################################################
+
+    def reset_caches(self):
+        """method called during test to reset potential source caches"""
+        pass
+
+    def clear_eid_cache(self, eid, etype):
+        """clear potential caches for the given eid"""
+        pass
+
+    # external source api ######################################################
+
+    def eid2extid(self, eid, session=None):
+        return self.repo.eid2extid(self, eid, session)
+
+    def extid2eid(self, value, etype, session=None, **kwargs):
+        return self.repo.extid2eid(self, value, etype, session, **kwargs)
 
     def support_entity(self, etype, write=False):
         """return true if the given entity's type is handled by this adapter
@@ -221,127 +263,6 @@ class AbstractSource(object):
             return rtype in self.cross_relations
         return rtype not in self.dont_cross_relations
 
-    def eid2extid(self, eid, session=None):
-        return self.repo.eid2extid(self, eid, session)
-
-    def extid2eid(self, value, etype, session=None, **kwargs):
-        return self.repo.extid2eid(self, value, etype, session, **kwargs)
-
-    PUBLIC_KEYS = ('type', 'uri')
-    def remove_sensitive_information(self, sourcedef):
-        """remove sensitive information such as login / password from source
-        definition
-        """
-        for key in sourcedef.keys():
-            if not key in self.PUBLIC_KEYS:
-                sourcedef.pop(key)
-
-    def _cleanup_system_relations(self, session):
-        """remove relation in the system source referencing entities coming from
-        this source
-        """
-        cu = session.system_sql('SELECT eid FROM entities WHERE source=%(uri)s',
-                                {'uri': self.uri})
-        myeids = ','.join(str(r[0]) for r in cu.fetchall())
-        if not myeids:
-            return
-        # delete relations referencing one of those eids
-        eidcolum = SQL_PREFIX + 'eid'
-        for rschema in self.schema.relations():
-            if rschema.final or rschema.type in VIRTUAL_RTYPES:
-                continue
-            if rschema.inlined:
-                column = SQL_PREFIX + rschema.type
-                for subjtype in rschema.subjects():
-                    table = SQL_PREFIX + str(subjtype)
-                    for objtype in rschema.objects(subjtype):
-                        if self.support_entity(objtype):
-                            sql = 'UPDATE %s SET %s=NULL WHERE %s IN (%s);' % (
-                                table, column, eidcolum, myeids)
-                            session.system_sql(sql)
-                            break
-                continue
-            for etype in rschema.subjects():
-                if self.support_entity(etype):
-                    sql = 'DELETE FROM %s_relation WHERE eid_from IN (%s);' % (
-                        rschema.type, myeids)
-                    session.system_sql(sql)
-                    break
-            for etype in rschema.objects():
-                if self.support_entity(etype):
-                    sql = 'DELETE FROM %s_relation WHERE eid_to IN (%s);' % (
-                        rschema.type, myeids)
-                    session.system_sql(sql)
-                    break
-
-    def cleanup_entities_info(self, session):
-        """cleanup system tables from information for entities coming from
-        this source. This should be called when a source is removed to
-        properly cleanup the database
-        """
-        self._cleanup_system_relations(session)
-        # fti / entities tables cleanup
-        # sqlite doesn't support DELETE FROM xxx USING yyy
-        dbhelper = session.pool.source('system').dbhelper
-        session.system_sql('DELETE FROM %s WHERE %s.%s IN (SELECT eid FROM '
-                           'entities WHERE entities.source=%%(uri)s)'
-                           % (dbhelper.fti_table, dbhelper.fti_table,
-                              dbhelper.fti_uid_attr),
-                           {'uri': self.uri})
-        session.system_sql('DELETE FROM entities WHERE source=%(uri)s',
-                           {'uri': self.uri})
-
-    # abstract methods to override (at least) in concrete source classes #######
-
-    def get_connection(self):
-        """open and return a connection to the source"""
-        raise NotImplementedError()
-
-    def check_connection(self, cnx):
-        """check connection validity, return None if the connection is still valid
-        else a new connection (called when the pool using the given connection is
-        being attached to a session)
-
-        do nothing by default
-        """
-        pass
-
-    def pool_reset(self, cnx):
-        """the pool using the given connection is being reseted from its current
-        attached session
-
-        do nothing by default
-        """
-        pass
-
-    def authenticate(self, session, login, **kwargs):
-        """if the source support CWUser entity type, it should implement
-        this method which should return CWUser eid for the given login/password
-        if this account is defined in this source and valid login / password is
-        given. Else raise `AuthenticationError`
-        """
-        raise NotImplementedError()
-
-    def syntax_tree_search(self, session, union,
-                           args=None, cachekey=None, varmap=None, debug=0):
-        """return result from this source for a rql query (actually from a rql
-        syntax tree and a solution dictionary mapping each used variable to a
-        possible type). If cachekey is given, the query necessary to fetch the
-        results (but not the results themselves) may be cached using this key.
-        """
-        raise NotImplementedError()
-
-    def flying_insert(self, table, session, union, args=None, varmap=None):
-        """similar as .syntax_tree_search, but inserts data in the temporary
-        table (on-the-fly if possible, eg for the system source whose the given
-        cursor come from). If not possible, inserts all data by calling
-        .executemany().
-        """
-        res = self.syntax_tree_search(session, union, args, varmap=varmap)
-        session.pool.source('system').manual_insert(res, table, session)
-
-    # system source don't have to implement the two methods below
-
     def before_entity_insertion(self, session, lid, etype, eid):
         """called by the repository when an eid has been attributed for an
         entity stored here but the entity has not been inserted in the system
@@ -361,6 +282,37 @@ class AbstractSource(object):
         """
         pass
 
+    # user authentication api ##################################################
+
+    def authenticate(self, session, login, **kwargs):
+        """if the source support CWUser entity type, it should implement
+        this method which should return CWUser eid for the given login/password
+        if this account is defined in this source and valid login / password is
+        given. Else raise `AuthenticationError`
+        """
+        raise NotImplementedError()
+
+    # RQL query api ############################################################
+
+    def syntax_tree_search(self, session, union,
+                           args=None, cachekey=None, varmap=None, debug=0):
+        """return result from this source for a rql query (actually from a rql
+        syntax tree and a solution dictionary mapping each used variable to a
+        possible type). If cachekey is given, the query necessary to fetch the
+        results (but not the results themselves) may be cached using this key.
+        """
+        raise NotImplementedError()
+
+    def flying_insert(self, table, session, union, args=None, varmap=None):
+        """similar as .syntax_tree_search, but inserts data in the temporary
+        table (on-the-fly if possible, eg for the system source whose the given
+        cursor come from). If not possible, inserts all data by calling
+        .executemany().
+        """
+        res = self.syntax_tree_search(session, union, args, varmap=varmap)
+        session.pool.source('system').manual_insert(res, table, session)
+
+    # write modification api ###################################################
     # read-only sources don't have to implement methods below
 
     def get_extid(self, entity):
