@@ -111,8 +111,8 @@ registered. If not set, default to the value from all_in_one.conf.',
           'group': 'pyro-source', 'level': 2,
           }),
         ('synchronization-interval',
-         {'type' : 'int',
-          'default': 5*60,
+         {'type' : 'time',
+          'default': '5min',
           'help': 'interval between synchronization with the external \
 repository (default to 5 minutes).',
           'group': 'pyro-source', 'level': 2,
@@ -172,7 +172,7 @@ repository (default to 5 minutes).',
         """method called by the repository once ready to handle request"""
         self.load_mapping(session)
         if activated:
-            interval = int(self.config.get('synchronization-interval', 5*60))
+            interval = self.config['synchronization-interval']
             self.repo.looping_task(interval, self.synchronize)
             self.repo.looping_task(self._query_cache.ttl.seconds/10,
                                    self._query_cache.clear_expired)
