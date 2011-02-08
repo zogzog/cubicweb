@@ -24,29 +24,28 @@ from logilab.common.deprecation import class_renamed
 from logilab.mtconverter import xml_escape
 
 from cubicweb import NoSelectableObject, role
+from cubicweb import tags, uilib, utils
 from cubicweb.selectors import partial_has_related_entities
 from cubicweb.view import EntityView
-from cubicweb import tags, uilib
-from cubicweb.utils import make_uid
 from cubicweb.web.views import primary
 
 class LazyViewMixin(object):
-    """provides two convenience methods for the tab machinery
-    can also be used to lazy-load arbitrary views
+    """provides two convenience methods for the tab machinery.
+
+    Can also be used to lazy-load arbitrary views.
     """
 
     def _prepare_bindings(self, vid, reloadable):
         self._cw.add_onload(u"""
   jQuery('#lazy-%(vid)s').bind('%(event)s', function(event) {
-     load_now('#lazy-%(vid)s', '#%(vid)s-hole', %(reloadable)s);
+     loadNow('#lazy-%(vid)s', '#%(vid)s-hole', %(reloadable)s);
   });""" % {'event': 'load_%s' % vid, 'vid': vid,
             'reloadable' : str(reloadable).lower()})
 
     def lazyview(self, vid, rql=None, eid=None, rset=None, tabid=None,
                  reloadable=False, show_spinbox=True, w=None):
-        """ a lazy version of wview """
+        """a lazy version of wview"""
         w = w or self.w
-        self._cw.add_js('cubicweb.lazy.js')
         urlparams = {'vid' : vid, 'fname' : 'view'}
         if rql:
             urlparams['rql'] = rql
@@ -70,16 +69,14 @@ class LazyViewMixin(object):
         self._prepare_bindings(tabid, reloadable)
 
     def forceview(self, vid):
-        """trigger an event that will force immediate loading of the view
-        on dom readyness
+        """trigger an event that will force immediate loading of the view on dom
+        readyness
         """
-        self._cw.add_js('cubicweb.lazy.js')
-        self._cw.add_onload("trigger_load('%s');" % vid)
+        self._cw.add_onload(uilib.js.triggerLoad(vid))
 
 
 class TabsMixin(LazyViewMixin):
-    """a tab mixin
-    """
+    """a tab mixin to easily get jQuery based, lazy, ajax tabs"""
 
     @property
     def cookie_name(self):
@@ -104,11 +101,11 @@ class TabsMixin(LazyViewMixin):
         active_tab = uilib.domid(default_tab)
         viewsvreg = self._cw.vreg['views']
         for tab in tabs:
-            try:
+            if isinstance(tab, basestring):
+                tabid, tabkwargs = tab, {}
+            else:
                 tabid, tabkwargs = tab
                 tabkwargs = tabkwargs.copy()
-            except ValueError:
-                tabid, tabkwargs = tab, {}
             tabkwargs.setdefault('rset', self.cw_rset)
             vid = tabkwargs.get('vid', tabid)
             domid = uilib.domid(tabid)
@@ -128,20 +125,19 @@ class TabsMixin(LazyViewMixin):
             entity.view(default, w=self.w)
             return
         self._cw.add_css('ui.tabs.css')
-        self._cw.add_js(('ui.core.js', 'ui.tabs.js',
-                         'cubicweb.ajax.js', 'cubicweb.tabs.js', 'cubicweb.lazy.js'))
+        self._cw.add_js(('ui.core.js', 'ui.tabs.js', 'cubicweb.ajax.js'))
         # prune tabs : not all are to be shown
         tabs, active_tab = self.prune_tabs(tabs, default)
         # build the html structure
         w = self.w
-        uid = entity and entity.eid or make_uid('tab')
+        uid = entity and entity.eid or utils.make_uid('tab')
         w(u'<div id="entity-tabs-%s">' % uid)
         w(u'<ul>')
         active_tab_idx = None
         for i, (tabid, domid, tabkwargs) in enumerate(tabs):
             w(u'<li>')
             w(u'<a href="#%s">' % domid)
-            w(u'<span onclick="set_tab(\'%s\', \'%s\')">' % (domid, self.cookie_name))
+            w(u'<span onclick="%s">' % xml_escape(unicode(uilib.js.setTab(domid, self.cookie_name))))
             w(tabkwargs.pop('label', self._cw._(tabid)))
             w(u'</span>')
             w(u'</a>')
@@ -157,12 +153,12 @@ class TabsMixin(LazyViewMixin):
             tabkwargs.setdefault('rset', self.cw_rset)
             self.lazyview(**tabkwargs)
             w(u'</div>')
-        # call the set_tab() JS function *after* each tab is generated
+        # call the setTab() JS function *after* each tab is generated
         # because the callback binding needs to be done before
         # XXX make work history: true
         self._cw.add_onload(u"""
   jQuery('#entity-tabs-%(eeid)s > ul').tabs( { selected: %(tabindex)s });
-  set_tab('%(domid)s', '%(cookiename)s');
+  setTab('%(domid)s', '%(cookiename)s');
 """ % {'tabindex'   : active_tab_idx,
        'domid'        : active_tab,
        'eeid'       : (entity and entity.eid or uid),
