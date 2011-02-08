@@ -195,7 +195,7 @@ def _select_main_var(relations):
     for rel in sorted(relations, key=lambda x: (x.children[0].name, x.r_type)):
         # only equality relation with a variable as rhs may be principal
         if rel.operator() not in ('=', 'IS') \
-               or not isinstance(rel.children[1].children[0], VariableRef):
+               or not isinstance(rel.children[1].children[0], VariableRef) or rel.neged(strict=True):
             continue
         if rel.scope is rel.stmt:
             return rel

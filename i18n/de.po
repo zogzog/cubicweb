@@ -1321,11 +1321,9 @@ msgstr ""
 
 #, python-format
 msgid ""
-"can't set inlined=%(inlined)s, %(stype)s %(rtype)s %(otype)s has cardinality="
+"can't set inlined=True, %(stype)s %(rtype)s %(otype)s has cardinality="
 "%(card)s"
 msgstr ""
-"Kann 'inlined' = %(inlined)s nicht zuweisen, %(stype)s %(rtype)s %(otype)s "
-"hat die Kardinalität %(card)s"
 
 msgid "cancel"
 msgstr ""
@@ -4346,3 +4344,10 @@ msgstr "Sie sind jetzt abgemeldet."
 
 msgid "you should probably delete that property"
 msgstr "Sie sollten diese Eigenschaft wahrscheinlich löschen."
+
+#~ msgid ""
+#~ "can't set inlined=%(inlined)s, %(stype)s %(rtype)s %(otype)s has "
+#~ "cardinality=%(card)s"
+#~ msgstr ""
+#~ "Kann 'inlined' = %(inlined)s nicht zuweisen, %(stype)s %(rtype)s "
+#~ "%(otype)s hat die Kardinalität %(card)s"

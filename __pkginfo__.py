@@ -1,4 +1,4 @@
-# pylint: disable=W0622,C0103
+ # pylint: disable=W0622,C0103
 # copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
@@ -52,7 +52,7 @@ __depends__ = {
     'Twisted': '',
     # XXX graphviz
     # server dependencies
-    'logilab-database': '>= 1.3.2',
+    'logilab-database': '>= 1.3.3',
     'pysqlite': '>= 2.5.5', # XXX install pysqlite2
     }
 

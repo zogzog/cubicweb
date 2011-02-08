@@ -1275,7 +1275,7 @@ msgstr ""
 
 #, python-format
 msgid ""
-"can't set inlined=%(inlined)s, %(stype)s %(rtype)s %(otype)s has cardinality="
+"can't set inlined=True, %(stype)s %(rtype)s %(otype)s has cardinality="
 "%(card)s"
 msgstr ""
 

@@ -180,6 +180,10 @@ WHERE _X.cw_prenom=lulu AND EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_
 FROM cw_Personne AS _X
 WHERE _X.cw_prenom=lulu AND NOT (EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_by0, in_group_relation AS rel_in_group1, cw_CWGroup AS _G WHERE rel_owned_by0.eid_from=_X.cw_eid AND rel_in_group1.eid_from=rel_owned_by0.eid_to AND rel_in_group1.eid_to=_G.cw_eid AND ((_G.cw_name=lulufanclub) OR (_G.cw_name=managers))))'''),
 
+    ('Any X WHERE  X title V, NOT X wikiid V, NOT X title "parent", X is Card',
+     '''SELECT _X.cw_eid
+FROM cw_Card AS _X
+WHERE NOT (_X.cw_wikiid=_X.cw_title) AND NOT (_X.cw_title=parent)''')
 ]
 
 
