@@ -65,6 +65,8 @@ SYSTEM_RTYPES = set(('in_group', 'require_group', 'require_permission',
 NO_I18NCONTEXT = META_RTYPES | WORKFLOW_RTYPES
 NO_I18NCONTEXT.add('require_permission')
 
+SKIP_COMPOSITE_RELS = [('cw_source', 'subject')]
+
 # set of entity and relation types used to build the schema
 SCHEMA_TYPES = set((
     'CWEType', 'CWRType', 'CWAttribute', 'CWRelation',
@@ -367,6 +369,14 @@ class CubicWebEntitySchema(EntitySchema):
                 if isinstance(group_or_rqlexpr, RRQLExpression):
                     msg = "can't use RRQLExpression on %s, use an ERQLExpression"
                     raise BadSchemaDefinition(msg % self.type)
+
+    def is_subobject(self, strict=False, skiprels=None):
+        if skiprels is None:
+            skiprels = SKIP_COMPOSITE_RELS
+        else:
+            skiprels += SKIP_COMPOSITE_RELS
+        return super(CubicWebEntitySchema, self).is_subobject(strict,
+                                                              skiprels=skiprels)
 
     def attribute_definitions(self):
         """return an iterator on attribute definitions
