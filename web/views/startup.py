@@ -38,7 +38,7 @@ class ManageView(StartupView):
     add_etype_links = ()
     skip_startup_views = set( ('index', 'manage', 'schema', 'owl', 'changelog',
                                'systempropertiesform', 'propertiesform',
-                               'cw.user-management',
+                               'cw.user-management', 'cw.source-management',
                                'siteinfo', 'info', 'registry', 'gc',
                                'tree') )
 

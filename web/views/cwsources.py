@@ -25,10 +25,12 @@ _ = unicode
 from itertools import repeat, chain
 
 from cubicweb.selectors import is_instance, score_entity, match_user_groups
-from cubicweb.view import EntityView
+from cubicweb.view import EntityView, StartupView
 from cubicweb.schema import META_RTYPES, VIRTUAL_RTYPES, display_name
 from cubicweb.web import uicfg
-from cubicweb.web.views import tabs
+from cubicweb.web.views import tabs, actions
+
+# source primary views #########################################################
 
 _pvs = uicfg.primaryview_section
 _pvs.tag_object_of(('*', 'cw_for_source', 'CWSource'), 'hidden')
@@ -56,6 +58,12 @@ class CWSourceMappingTab(EntityView):
     def entity_call(self, entity):
         _ = self._cw._
         self.w('<h3>%s</h3>' % _('Entity and relation supported by this source'))
+        eschema = self._cw.vreg.schema.eschema('CWSourceSchemaConfig')
+        if eschema.has_perm(self._cw, 'add'):
+            self.w(u'<a href="%s" class="addButton right">%s</a>' % (
+                self._cw.build_url('add/%s' % eschema),
+                self._cw._('add a CWSourceSchemaConfig')))
+            self.w(u'<div class="clear"></div>')
         rset = self._cw.execute(
             'Any X, SCH, XO ORDERBY ET WHERE X options XO, X cw_for_source S, S eid %(s)s, '
             'X cw_schema SCH, SCH is ET', {'s': entity.eid})
@@ -197,3 +205,25 @@ class PyroRQLMappingChecker(MappingChecker):
 MAPPING_CHECKERS = {
     'pyrorql': PyroRQLMappingChecker,
     }
+
+# sources management view ######################################################
+
+class ManageSourcesAction(actions.ManagersAction):
+    __regid__ = 'cwsource'
+    title = _('data sources')
+    category = 'manage'
+
+class CWSourceManagementView(StartupView):
+    __regid__ = 'cw.source-management'
+    rql = ('Any S, ST, SN ORDERBY SN WHERE S is CWSource, S name SN, S type ST')
+    title = _('data sources management')
+
+    def call(self, **kwargs):
+        self.w('<h1>%s</h1>' % self._cw._(self.title))
+        eschema = self._cw.vreg.schema.eschema('CWSource')
+        if eschema.has_perm(self._cw, 'add'):
+            self.w(u'<a href="%s" class="addButton right">%s</a>' % (
+                self._cw.build_url('add/%s' % eschema),
+                self._cw._('add a CWSource')))
+            self.w(u'<div class="clear"></div>')
+        self.wview('table', self._cw.execute(self.rql), displaycols=range(2))
