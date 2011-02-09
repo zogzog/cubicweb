@@ -1070,7 +1070,7 @@ class Repository(object):
         hook.CleanupNewEidsCacheOp.get_instance(session).add_data(entity.eid)
         self.system_source.add_info(session, entity, source, extid, complete)
 
-    def delete_info(self, session, entity, sourceuri, extid, scleanup=False):
+    def delete_info(self, session, entity, sourceuri, extid, scleanup=None):
         """called by external source when some entity known by the system source
         has been deleted in the external source
         """
@@ -1079,7 +1079,7 @@ class Repository(object):
         hook.CleanupDeletedEidsCacheOp.get_instance(session).add_data(entity.eid)
         self._delete_info(session, entity, sourceuri, extid, scleanup)
 
-    def delete_info_multi(self, session, entities, sourceuri, extids, scleanup=False):
+    def delete_info_multi(self, session, entities, sourceuri, extids, scleanup=None):
         """same as delete_info but accepts a list of entities and
         extids with the same etype and belonging to the same source
         """
@@ -1123,7 +1123,7 @@ class Repository(object):
                                    'from %s. RQL: %s', entity, sourceuri, rql)
         self.system_source.delete_info(session, entity, sourceuri, extid)
 
-    def _delete_info_multi(self, session, entities, sourceuri, extids, scleanup=False):
+    def _delete_info_multi(self, session, entities, sourceuri, extids, scleanup=None):
         """same as _delete_info but accepts a list of entities with
         the same etype and belinging to the same source.
         """
