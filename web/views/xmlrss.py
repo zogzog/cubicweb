@@ -112,6 +112,10 @@ class XMLItemView(EntityView):
                 continue
             self.w(u'  <%s role="%s">\n' % (rtype, role))
             for related in entity.related(rtype, role, entities=True):
+                # XXX put unique attributes as xml attribute, they are much
+                # probably used to search existing entities in client data feed,
+                # and putting it here may avoid an extra request to get those
+                # attributes values
                 self.w(u'    <%s eid="%s" cwuri="%s"/>\n'
                        % (related.e_schema, related.eid,
                           xml_escape(related.cwuri)))
@@ -270,7 +274,6 @@ class RSSItemView(EntityView):
     def render_entity_creator(self, entity):
         if entity.creator:
             self._marker('dc:creator', entity.dc_creator())
-
 
     def _marker(self, marker, value):
         if value:
