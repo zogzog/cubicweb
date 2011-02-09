@@ -19,6 +19,7 @@
 
 import urllib2
 import StringIO
+import os.path as osp
 from cookielib import CookieJar
 from datetime import datetime, timedelta
 
@@ -193,6 +194,10 @@ class CWEntityXMLParser(datafeed.DataFeedParser):
         if not url.startswith('http'):
             stream = StringIO.StringIO(url)
         else:
+            for mappedurl in HOST_MAPPING:
+                if url.startswith(mappedurl):
+                    url = url.replace(mappedurl, HOST_MAPPING[mappedurl], 1)
+                    break
             self.source.info('GET %s', url)
             stream = _OPENER.open(url)
         return _entity_etree(etree.parse(stream).getroot())
@@ -334,3 +339,13 @@ class CWEntityXMLParser(datafeed.DataFeedParser):
         else:
             rql = 'SET %s, Y eid IN (%s), NOT X %s Y' % (rql, eidstr, rtype)
         self._cw.execute(rql, {'x': entity.eid})
+
+def registration_callback(vreg):
+    global HOST_MAPPING
+    vreg.register_all(globals().values(), __name__)
+    host_mapping_file = osp.join(vreg.config.apphome, 'hostmapping.py')
+    if osp.exists(host_mapping_file):
+        HOST_MAPPING = eval(file(host_mapping_file).read())
+        vreg.info('using host mapping %s from %s', HOST_MAPPING, host_mapping_file)
+    else:
+        HOST_MAPPING = {}
