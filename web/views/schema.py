@@ -690,13 +690,14 @@ class CWFinalFacet(facet.AttributeFacet):
     __select__ = facet.AttributeFacet.__select__ & is_instance('CWEType', 'CWRType')
     rtype = 'final'
 
+
 class ViewSchemaAction(action.Action):
     __regid__ = 'schema'
     __select__ = yes()
 
     title = _("site schema")
-    category = 'siteactions'
     order = 30
+    category = 'manage'
 
     def url(self):
         return self._cw.build_url(self.__regid__)

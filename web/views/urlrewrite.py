@@ -90,7 +90,7 @@ class SimpleReqRewriter(URLRewriter):
         ('/index', dict(vid='index')),
         ('/myprefs', dict(vid='propertiesform')),
         ('/siteconfig', dict(vid='systempropertiesform')),
-        ('/siteinfo', dict(vid='info')),
+        ('/siteinfo', dict(vid='siteinfo')),
         ('/manage', dict(vid='manage')),
         ('/notfound', dict(vid='404')),
         ('/error', dict(vid='error')),

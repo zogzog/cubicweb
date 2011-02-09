@@ -391,6 +391,7 @@ class SiteConfigurationAction(ManagersAction):
     __regid__ = 'siteconfig'
     title = _('site configuration')
     order = 10
+    category = 'manage'
 
 
 class ManageAction(ManagersAction):

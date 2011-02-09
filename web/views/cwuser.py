@@ -164,14 +164,14 @@ class CWGroupInContextView(EntityView):
 
 class ManageUsersAction(actions.ManagersAction):
     __regid__ = 'cwuser' # see rewrite rule /cwuser
-    title = _('users management')
+    title = _('users and groups')
     category = 'manage'
 
 
 class CWUserManagementView(StartupView):
     __regid__ = 'cw.user-management'
     rql = ('Any U, F, S, U, L ORDERBY L WHERE U is CWUser, U login L, U firstname F, U surname S')
-    title = _('users management')
+    title = _('users and groups management')
 
     def call(self, **kwargs):
         self.w('<h1>%s</h1>' % self._cw._(self.title))
