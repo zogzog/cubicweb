@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -372,8 +372,8 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             if self.repo.config.open_connections_pools:
                 self.open_pool_connections()
 
-    def init(self, activated, session=None):
-        self.init_creating(session and session.pool)
+    def init(self, activated, source_entity):
+        self.init_creating(source_entity._cw.pool)
 
     def shutdown(self):
         if self._eid_creation_cnx:
@@ -803,13 +803,13 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             res[-1] = b64decode(res[-1])
         return res
 
-    def extid2eid(self, session, source, extid):
+    def extid2eid(self, session, source_uri, extid):
         """get eid from an external id. Return None if no record found."""
         assert isinstance(extid, str)
         cursor = self.doexec(session,
                              'SELECT eid FROM entities '
                              'WHERE extid=%(x)s AND source=%(s)s',
-                             {'x': b64encode(extid), 's': source.uri})
+                             {'x': b64encode(extid), 's': source_uri})
         # XXX testing rowcount cause strange bug with sqlite, results are there
         #     but rowcount is 0
         #if cursor.rowcount > 0:
@@ -898,8 +898,9 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         if extid is not None:
             assert isinstance(extid, str)
             extid = b64encode(extid)
+        uri = 'system' if source.copy_based_source else source.uri
         attrs = {'type': entity.__regid__, 'eid': entity.eid, 'extid': extid,
-                 'source': source.uri, 'mtime': datetime.now()}
+                 'source': uri, 'mtime': datetime.now()}
         self.doexec(session, self.sqlgen.insert('entities', attrs), attrs)
         # insert core relations: is, is_instance_of and cw_source
         try:

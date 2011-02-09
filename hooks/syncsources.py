@@ -1,4 +1,24 @@
+# copyright 2010-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# CubicWeb is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
+"""hooks for repository sources synchronization"""
+
 from yams.schema import role_name
+
 from cubicweb import ValidationError
 from cubicweb.selectors import is_instance
 from cubicweb.server import SOURCE_TYPES, hook
@@ -101,7 +121,7 @@ class SourceMappingChangedOp(hook.DataOperationMixIn, hook.Operation):
             data = self.__data = self.get_data()
         for schemacfg, source in data:
             if source is None:
-                source = schemacfg.source
+                source = schemacfg.cwsource.repo_source
             if session.added_in_transaction(schemacfg.eid):
                 if not session.deleted_in_transaction(schemacfg.eid):
                     source.add_schema_config(schemacfg, checkonly=checkonly)

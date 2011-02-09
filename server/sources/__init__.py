@@ -79,6 +79,9 @@ class TimedCache(dict):
 
 class AbstractSource(object):
     """an abstract class for sources"""
+    # does the source copy data into the system source, or is it a *true* source
+    # (i.e. entities are not stored physically here)
+    copy_based_source = False
 
     # boolean telling if modification hooks should be called when something is
     # modified in this source
@@ -204,7 +207,7 @@ class AbstractSource(object):
         """method called by the repository once ready to create a new instance"""
         pass
 
-    def init(self, activated, session=None):
+    def init(self, activated, source_entity):
         """method called by the repository once ready to handle request.
         `activated` is a boolean flag telling if the source is activated or not.
         """
@@ -321,7 +324,7 @@ class AbstractSource(object):
             return rtype in self.cross_relations
         return rtype not in self.dont_cross_relations
 
-    def before_entity_insertion(self, session, lid, etype, eid):
+    def before_entity_insertion(self, session, lid, etype, eid, sourceparams):
         """called by the repository when an eid has been attributed for an
         entity stored here but the entity has not been inserted in the system
         table yet.
@@ -334,11 +337,29 @@ class AbstractSource(object):
         entity.cw_edited = EditedEntity(entity)
         return entity
 
-    def after_entity_insertion(self, session, lid, entity):
+    def after_entity_insertion(self, session, lid, entity, sourceparams):
         """called by the repository after an entity stored here has been
         inserted in the system table.
         """
         pass
+
+    def _load_mapping(self, session=None, **kwargs):
+        if not 'CWSourceSchemaConfig' in self.schema:
+            self.warning('instance is not mapping ready')
+            return
+        if session is None:
+            _session = self.repo.internal_session()
+        else:
+            _session = session
+        try:
+            for schemacfg in _session.execute(
+                'Any CFG,CFGO,S WHERE '
+                'CFG options CFGO, CFG cw_schema S, '
+                'CFG cw_for_source X, X eid %(x)s', {'x': self.eid}).entities():
+                self.add_schema_config(schemacfg, **kwargs)
+        finally:
+            if session is None:
+                _session.close()
 
     def add_schema_config(self, schemacfg, checkonly=False):
         """added CWSourceSchemaConfig, modify mapping accordingly"""

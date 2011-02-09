@@ -129,8 +129,5 @@ class CWSourceSchemaConfig(AnyEntity):
         return self.cw_schema[0]
 
     @property
-    def source(self):
-        """repository only property, not available from the web side (eg
-        self._cw is expected to be a server session)
-        """
-        return self._cw.repo.sources_by_eid[self.cw_for_source[0].eid]
+    def cwsource(self):
+        return self.cw_for_source[0]

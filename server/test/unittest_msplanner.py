@@ -58,6 +58,10 @@ class FakeCardSource(AbstractSource):
     def syntax_tree_search(self, *args, **kwargs):
         return []
 
+
+class FakeDataFeedSource(FakeCardSource):
+    copy_based_source = True
+
 X_ALL_SOLS = sorted([{'X': 'Affaire'}, {'X': 'BaseTransition'}, {'X': 'Basket'},
                      {'X': 'Bookmark'}, {'X': 'CWAttribute'}, {'X': 'CWCache'},
                      {'X': 'CWConstraint'}, {'X': 'CWConstraintType'}, {'X': 'CWEType'},
@@ -110,6 +114,7 @@ class BaseMSPlannerTC(BasePlannerTC):
         self.schema['CWUser'].set_action_permissions('read', userreadperms)
         self.add_source(FakeUserROSource, 'ldap')
         self.add_source(FakeCardSource, 'cards')
+        self.add_source(FakeDataFeedSource, 'datafeed')
 
     def tearDown(self):
         # restore hijacked security
@@ -1955,6 +1960,22 @@ class MSPlannerTC(BaseMSPlannerTC):
                     ])
 
     def test_source_specified_1_2(self):
+        self._test('Card X WHERE X cw_source S, S name "datafeed"',
+                   [('OneFetchStep', [('Any X WHERE X cw_source S, S name "datafeed", X is Card',
+                                       [{'X': 'Card', 'S': 'CWSource'}])],
+                     None, None,
+                     [self.system],{}, [])
+                    ])
+
+    def test_source_specified_1_3(self):
+        self._test('Any X, SN WHERE X is Card, X cw_source S, S name "datafeed", S name SN',
+                   [('OneFetchStep', [('Any X,SN WHERE X is Card, X cw_source S, S name "datafeed", '
+                                       'S name SN',
+                                       [{'S': 'CWSource', 'SN': 'String', 'X': 'Card'}])],
+                     None, None, [self.system], {}, [])
+                    ])
+
+    def test_source_specified_1_4(self):
         sols = []
         for sol in X_ALL_SOLS:
             sol = sol.copy()
@@ -2004,6 +2025,14 @@ class MSPlannerTC(BaseMSPlannerTC):
                     ])
 
     def test_source_specified_3_2(self):
+        self._test('Any X,XT WHERE X is Card, X title XT, X cw_source S, S name "datafeed"',
+                   [('OneFetchStep',
+                     [('Any X,XT WHERE X is Card, X title XT, X cw_source S, S name "datafeed"',
+                       [{'X': 'Card', 'XT': 'String', 'S': 'CWSource'}])],
+                     None, None, [self.system], {}, [])
+                    ])
+
+    def test_source_specified_3_3(self):
         self.skipTest('oops')
         self._test('Any STN WHERE X is Note, X type XT, X in_state ST, ST name STN, X cw_source S, S name "cards"',
                    [('OneFetchStep',

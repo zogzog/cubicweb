@@ -168,9 +168,9 @@ repository (default to 5 minutes).',
         finally:
             session.close()
 
-    def init(self, activated, session=None):
+    def init(self, activated, source_entity):
         """method called by the repository once ready to handle request"""
-        self.load_mapping(session)
+        self.load_mapping(source_entity._cw)
         if activated:
             interval = self.config['synchronization-interval']
             self.repo.looping_task(interval, self.synchronize)
@@ -184,19 +184,7 @@ repository (default to 5 minutes).',
         self.cross_relations = set()
         assert self.eid is not None
         self._schemacfg_idx = {}
-        if session is None:
-            _session = self.repo.internal_session()
-        else:
-            _session = session
-        try:
-            for schemacfg in _session.execute(
-                'Any CFG,CFGO,SN,S WHERE '
-                'CFG options CFGO, CFG cw_schema S, S name SN, '
-                'CFG cw_for_source X, X eid %(x)s', {'x': self.eid}).entities():
-                self.add_schema_config(schemacfg)
-        finally:
-            if session is None:
-                _session.close()
+        self._load_mapping(session)
 
     etype_options = set(('write',))
     rtype_options = set(('maycross', 'dontcross', 'write',))

@@ -202,7 +202,7 @@ directory (default to once a day).',
         self._cache = {}
         self._query_cache = TimedCache(self._cache_ttl)
 
-    def init(self, activated, session=None):
+    def init(self, activated, source_entity):
         """method called by the repository once ready to handle request"""
         if activated:
             self.info('ldap init')
@@ -575,7 +575,7 @@ directory (default to once a day).',
         self.debug('ldap built results %s', len(result))
         return result
 
-    def before_entity_insertion(self, session, lid, etype, eid):
+    def before_entity_insertion(self, session, lid, etype, eid, sourceparams):
         """called by the repository when an eid has been attributed for an
         entity stored here but the entity has not been inserted in the system
         table yet.
@@ -584,18 +584,20 @@ directory (default to once a day).',
         entity.
         """
         self.debug('ldap before entity insertion')
-        entity = super(LDAPUserSource, self).before_entity_insertion(session, lid, etype, eid)
+        entity = super(LDAPUserSource, self).before_entity_insertion(
+            session, lid, etype, eid, sourceparams)
         res = self._search(session, lid, BASE)[0]
         for attr in entity.e_schema.indexable_attributes():
             entity.cw_edited[attr] = res[self.user_rev_attrs[attr]]
         return entity
 
-    def after_entity_insertion(self, session, lid, entity):
+    def after_entity_insertion(self, session, lid, entity, sourceparams):
         """called by the repository after an entity stored here has been
         inserted in the system table.
         """
         self.debug('ldap after entity insertion')
-        super(LDAPUserSource, self).after_entity_insertion(session, lid, entity)
+        super(LDAPUserSource, self).after_entity_insertion(
+            session, lid, entity, sourceparams)
         dn = lid
         for group in self.user_default_groups:
             session.execute('SET X in_group G WHERE X eid %(x)s, G name %(group)s',

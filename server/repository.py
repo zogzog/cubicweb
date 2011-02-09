@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -207,12 +207,6 @@ class Repository(object):
             self.init_sources_from_database()
             if 'CWProperty' in self.schema:
                 self.vreg.init_properties(self.properties())
-            # call source's init method to complete their initialisation if
-            # needed (for instance looking for persistent configuration using an
-            # internal session, which is not possible until pools have been
-            # initialized)
-            for source in self.sources_by_uri.itervalues():
-                source.init(source in self.sources)
         else:
             # call init_creating so that for instance native source can
             # configurate tsearch according to postgres version
@@ -241,11 +235,12 @@ class Repository(object):
         try:
             # FIXME: sources should be ordered (add_entity priority)
             for sourceent in session.execute(
-                'Any S, SN, SA, SC WHERE S is CWSource, '
+                'Any S, SN, SA, SC WHERE S is_instance_of CWSource, '
                 'S name SN, S type SA, S config SC').entities():
                 if sourceent.name == 'system':
                     self.system_source.eid = sourceent.eid
                     self.sources_by_eid[sourceent.eid] = self.system_source
+                    self.system_source.init(True, sourceent)
                     continue
                 self.add_source(sourceent, add_to_pools=False)
         finally:
@@ -262,20 +257,25 @@ class Repository(object):
         self.sources_by_eid[sourceent.eid] = source
         self.sources_by_uri[sourceent.name] = source
         if self.config.source_enabled(source):
-            source.init(True, session=sourceent._cw)
-            self.sources.append(source)
-            self.querier.set_planner()
-            if add_to_pools:
-                for pool in self.pools:
-                    pool.add_source(source)
+            # call source's init method to complete their initialisation if
+            # needed (for instance looking for persistent configuration using an
+            # internal session, which is not possible until pools have been
+            # initialized)
+            source.init(True, sourceent)
+            if not source.copy_based_source:
+                self.sources.append(source)
+                self.querier.set_planner()
+                if add_to_pools:
+                    for pool in self.pools:
+                        pool.add_source(source)
         else:
-            source.init(False, session=sourceent._cw)
+            source.init(False, sourceent)
         self._clear_planning_caches()
 
     def remove_source(self, uri):
         source = self.sources_by_uri.pop(uri)
         del self.sources_by_eid[source.eid]
-        if self.config.source_enabled(source):
+        if self.config.source_enabled(source) and not source.copy_based_source:
             self.sources.remove(source)
             self.querier.set_planner()
             for pool in self.pools:
@@ -1015,9 +1015,11 @@ class Repository(object):
             raise UnknownEid(eid)
         return extid
 
-    def extid2eid(self, source, extid, etype, session=None, insert=True):
+    def extid2eid(self, source, extid, etype, session=None, insert=True,
+                  sourceparams=None):
         """get eid from a local id. An eid is attributed if no record is found"""
-        cachekey = (extid, source.uri)
+        uri = 'system' if source.copy_based_source else source.uri
+        cachekey = (extid, uri)
         try:
             return self._extid_cache[cachekey]
         except KeyError:
@@ -1026,10 +1028,10 @@ class Repository(object):
         if session is None:
             session = self.internal_session()
             reset_pool = True
-        eid = self.system_source.extid2eid(session, source, extid)
+        eid = self.system_source.extid2eid(session, uri, extid)
         if eid is not None:
             self._extid_cache[cachekey] = eid
-            self._type_source_cache[eid] = (etype, source.uri, extid)
+            self._type_source_cache[eid] = (etype, uri, extid)
             if reset_pool:
                 session.reset_pool()
             return eid
@@ -1047,13 +1049,14 @@ class Repository(object):
         try:
             eid = self.system_source.create_eid(session)
             self._extid_cache[cachekey] = eid
-            self._type_source_cache[eid] = (etype, source.uri, extid)
-            entity = source.before_entity_insertion(session, extid, etype, eid)
+            self._type_source_cache[eid] = (etype, uri, extid)
+            entity = source.before_entity_insertion(
+                session, extid, etype, eid, sourceparams)
             if source.should_call_hooks:
                 self.hm.call_hooks('before_add_entity', session, entity=entity)
             # XXX call add_info with complete=False ?
             self.add_info(session, entity, source, extid)
-            source.after_entity_insertion(session, extid, entity)
+            source.after_entity_insertion(session, extid, entity, sourceparams)
             if source.should_call_hooks:
                 self.hm.call_hooks('after_add_entity', session, entity=entity)
             session.commit(reset_pool)
@@ -1190,6 +1193,8 @@ class Repository(object):
         if suri == 'system':
             extid = None
         else:
+            if source.copy_based_source:
+                suri = 'system'
             extid = source.get_extid(entity)
             self._extid_cache[(str(extid), suri)] = entity.eid
         self._type_source_cache[entity.eid] = (entity.__regid__, suri, extid)

@@ -195,7 +195,7 @@ class SchemaReaderClassTest(TestCase):
                               'identity', 'in_group', 'in_state', 'indexed',
                               'initial_state', 'inlined', 'internationalizable', 'is', 'is_instance_of',
 
-                              'label', 'last_login_time', 'login',
+                              'label', 'last_login_time', 'latest_retrieval', 'login',
 
                               'mainvars', 'match_host', 'modification_date',
 
@@ -203,7 +203,7 @@ class SchemaReaderClassTest(TestCase):
 
                               'options', 'ordernum', 'owned_by',
 
-                              'path', 'pkey', 'prefered_form', 'prenom', 'primary_email',
+                              'parser', 'path', 'pkey', 'prefered_form', 'prenom', 'primary_email',
 
                               'read_permission', 'relation_type', 'relations', 'require_group',
 
@@ -211,7 +211,7 @@ class SchemaReaderClassTest(TestCase):
 
                               'tags', 'timestamp', 'title', 'to_entity', 'to_state', 'transition_of', 'travaille', 'type',
 
-                              'upassword', 'update_permission', 'uri', 'use_email',
+                              'upassword', 'update_permission', 'url', 'uri', 'use_email',
 
                               'value',
 

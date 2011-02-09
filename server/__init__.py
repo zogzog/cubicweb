@@ -254,7 +254,7 @@ ON_COMMIT_ADD_RELATIONS = set(())
 
 # available sources registry
 SOURCE_TYPES = {'native': LazyObject('cubicweb.server.sources.native', 'NativeSQLSource'),
-                # XXX private sources installed by an external cube
                 'pyrorql': LazyObject('cubicweb.server.sources.pyrorql', 'PyroRQLSource'),
                 'ldapuser': LazyObject('cubicweb.server.sources.ldapuser', 'LDAPUserSource'),
+                'datafeed': LazyObject('cubicweb.server.sources.datafeed', 'DataFeedSource'),
                 }

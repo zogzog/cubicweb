@@ -519,6 +519,16 @@ class PartPlanInformation(object):
                 invariant = getattr(lhs, '_q_invariant', False)
                 # XXX NOT NOT
                 neged = srel.neged(traverse_scope=True) or (rel and rel.neged(strict=True))
+                has_copy_based_source = False
+                sources_ = []
+                for source in sources:
+                    if source.copy_based_source:
+                        has_copy_based_source = True
+                        if not self.system_source in sources_:
+                            sources_.append(self.system_source)
+                    else:
+                        sources_.append(source)
+                sources = sources_
                 if neged:
                     for source in sources:
                         if invariant and source is self.system_source:
@@ -535,7 +545,8 @@ class PartPlanInformation(object):
                 if rel is None or (len(var.stinfo['relations']) == 2 and
                                    not var.stinfo['selected']):
                     self._remove_source_term(self.system_source, var)
-                    if not (len(sources) > 1 or usesys or invariant):
+                    if not (has_copy_based_source or len(sources) > 1
+                            or usesys or invariant):
                         if rel is None:
                             srel.parent.remove(srel)
                         else:

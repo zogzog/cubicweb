@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -15,17 +15,17 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""core hooks
+"""core hooks registering some maintainance tasks as server startup time"""
 
-"""
 __docformat__ = "restructuredtext en"
 
 from datetime import timedelta, datetime
+
 from cubicweb.server import hook
 
 class ServerStartupHook(hook.Hook):
     """task to cleanup expirated auth cookie entities"""
-    __regid__ = 'cw_cleanup_transactions'
+    __regid__ = 'cw.start-looping-tasks'
     events = ('server_startup',)
 
     def __call__(self):
@@ -47,3 +47,27 @@ class ServerStartupHook(hook.Hook):
             finally:
                 session.close()
         self.repo.looping_task(60*60*24, cleanup_old_transactions, self.repo)
+        def update_feeds(repo):
+            session = repo.internal_session()
+            try:
+                # don't iter on repo.sources which doesn't include copy based
+                # sources (the one we're looking for)
+                for source in repo.sources_by_eid.itervalues():
+                    if (not source.copy_based_source
+                        or not repo.config.source_enabled(source)
+                        or not source.config['synchronize']):
+                        continue
+                    try:
+                        stats = source.pull_data(session)
+                        if stats['created']:
+                            source.info('added %s entities', len(stats['created']))
+                        if stats['updated']:
+                            source.info('updated %s entities', len(stats['updated']))
+                        session.commit()
+                    except Exception, exc:
+                        session.exception('while trying to update feed %s', source)
+                        session.rollback()
+                    session.set_pool()
+            finally:
+                session.close()
+        self.repo.looping_task(60, update_feeds, self.repo)

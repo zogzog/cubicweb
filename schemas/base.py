@@ -21,7 +21,7 @@ __docformat__ = "restructuredtext en"
 _ = unicode
 
 from yams.buildobjs import (EntityType, RelationType, RelationDefinition,
-                            SubjectRelation, String, Datetime, Password)
+                            SubjectRelation, String, Datetime, Password, Interval)
 from cubicweb.schema import (
     RQLConstraint, WorkflowableEntityType, ERQLExpression, RRQLExpression,
     PUB_SYSTEM_ENTITY_PERMS, PUB_SYSTEM_REL_PERMS, PUB_SYSTEM_ATTR_PERMS)
@@ -258,6 +258,13 @@ class CWSource(EntityType):
                         'read':   ('managers',),
                         'update': ('managers',),
                         })
+    # put this here and not in a subclass even if it's only for some sources
+    # since having subclasses on generic relation (cw_source) double the number
+    # of rdef in the schema, and make ms planning harder since queries solutions
+    # may changes when sources are specified
+    url = String(description=_('URLs from which content will be imported. You can put one url per line'))
+    parser = String(description=_('parser to use to extract entities from content retrieved at given URLs.'))
+    latest_retrieval = Datetime(description=_('latest synchronization time'))
 
 
 ENTITY_MANAGERS_PERMISSIONS = {
@@ -271,6 +278,7 @@ RELATION_MANAGERS_PERMISSIONS = {
     'add':    ('managers',),
     'delete': ('managers',),
     }
+
 
 class CWSourceHostConfig(EntityType):
     __permissions__ = ENTITY_MANAGERS_PERMISSIONS
