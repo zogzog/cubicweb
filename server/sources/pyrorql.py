@@ -127,13 +127,6 @@ repository (default to 5 minutes).',
         AbstractSource.__init__(self, repo, source_config, eid)
         self.update_config(None, self.check_conf_dict(eid, source_config,
                                                       fail_if_unknown=False))
-        myoptions = (('%s.latest-update-time' % self.uri,
-                      {'type' : 'int', 'sitewide': True,
-                       'default': 0,
-                       'help': _('timestamp of the latest source synchronization.'),
-                       'group': 'sources',
-                       }),)
-        register_persistent_options(myoptions)
         self._query_cache = TimedCache(1800)
 
     def update_config(self, source_entity, processed_config):
@@ -144,29 +137,12 @@ repository (default to 5 minutes).',
             processed_config['base-url'] += '/'
         self.config = processed_config
         self._skip_externals = processed_config['skip-external-entities']
+        if source_entity is not None:
+            self.latest_retrieval = source_entity.latest_retrieval
 
     def reset_caches(self):
         """method called during test to reset potential source caches"""
         self._query_cache = TimedCache(1800)
-
-    def last_update_time(self):
-        pkey = u'sources.%s.latest-update-time' % self.uri
-        session = self.repo.internal_session()
-        try:
-            rset = session.execute('Any V WHERE X is CWProperty, X value V, X pkey %(k)s',
-                                   {'k': pkey})
-            if not rset:
-                # insert it
-                session.execute('INSERT CWProperty X: X pkey %(k)s, X value %(v)s',
-                                {'k': pkey, 'v': u'0'})
-                session.commit()
-                timestamp = 0
-            else:
-                assert len(rset) == 1
-                timestamp = int(rset[0][0])
-            return datetime.fromtimestamp(timestamp)
-        finally:
-            session.close()
 
     def init(self, activated, source_entity):
         """method called by the repository once ready to handle request"""
@@ -176,6 +152,7 @@ repository (default to 5 minutes).',
             self.repo.looping_task(interval, self.synchronize)
             self.repo.looping_task(self._query_cache.ttl.seconds/10,
                                    self._query_cache.clear_expired)
+            self.latest_retrieval = source_entity.latest_retrieval
 
     def load_mapping(self, session=None):
         self.support_entities = {}
@@ -279,7 +256,7 @@ repository (default to 5 minutes).',
             return
         etypes = self.support_entities.keys()
         if mtime is None:
-            mtime = self.last_update_time()
+            mtime = self.latest_retrieval
         updatetime, modified, deleted = extrepo.entities_modified_since(
             etypes, mtime)
         self._query_cache.clear()
@@ -312,9 +289,9 @@ repository (default to 5 minutes).',
                     self.exception('while updating %s with external id %s of source %s',
                                    etype, extid, self.uri)
                     continue
-            session.execute('SET X value %(v)s WHERE X pkey %(k)s',
-                            {'k': u'sources.%s.latest-update-time' % self.uri,
-                             'v': unicode(int(mktime(updatetime.timetuple())))})
+            self.latest_retrieval = updatetime
+            session.execute('SET X latest_retrieval %(date)s WHERE X eid %(x)s',
+                            {'x': self.eid, 'date': self.latest_retrieval})
             session.commit()
         finally:
             session.close()

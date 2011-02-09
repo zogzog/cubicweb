@@ -1,3 +1,5 @@
+from datetime import datetime
+
 for rtype in ('cw_support', 'cw_dont_cross', 'cw_may_cross'):
     drop_relation_type(rtype)
 
@@ -73,3 +75,10 @@ else:
                           cw_for_source=source,
                           cw_schema=session.entity_from_eid(schema[etype].eid),
                           options=u'dontcross')
+        # latest update time cwproperty is now a source attribute (latest_retrieval)
+        pkey = u'sources.%s.latest-update-time' % source.uri
+        rset = session.execute('Any V WHERE X is CWProperty, X value V, X pkey %(k)s',
+                               {'k': pkey})
+        timestamp = int(rset[0][0])
+        sourceentity.set_attributes(latest_retrieval=datetime.fromtimestamp(timestamp))
+        session.execute('DELETE CWProperty X WHERE X pkey %(k)s', {'k': pkey})
