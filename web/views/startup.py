@@ -62,15 +62,15 @@ class ManageView(StartupView):
             self.w(u'</ul>')
 
     def startup_views(self):
-        views = self._cw.vreg['views'].possible_views(self._cw, None)
+        views = [v for v in self._cw.vreg['views'].possible_views(self._cw, None)
+                 if v.category == 'startupview'
+                 or v.__regid__ not in self.skip_startup_views]
         if not views:
             return
         self.w(u'<div class="hr">&#160;</div>')
         self.w(u'<h2>%s</h2>\n' % self._cw._('Startup views'))
         self.w(u'<ul class="startup">')
         for v in sorted(views, key=lambda x: self._cw._(x.title)):
-            if v.category != 'startupview' or v.__regid__ in self.skip_startup_views:
-                continue
             self.w('<li><a href="%s">%s</a></li>' % (
                 xml_escape(v.url()), xml_escape(self._cw._(v.title).capitalize())))
         self.w(u'</ul>')
