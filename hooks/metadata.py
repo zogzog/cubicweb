@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -44,7 +44,7 @@ class InitMetaAttrsHook(MetaDataHook):
         edited.setdefault('creation_date', timestamp)
         edited.setdefault('modification_date', timestamp)
         if not self._cw.get_shared_data('do-not-insert-cwuri'):
-            cwuri = u'%seid/%s' % (self._cw.base_url(), self.entity.eid)
+            cwuri = u'%s%s' % (self._cw.base_url(), self.entity.eid)
             edited.setdefault('cwuri', cwuri)
 
 
