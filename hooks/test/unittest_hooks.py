@@ -150,7 +150,7 @@ class CoreHooksTC(CubicWebTC):
 
     def test_metadata_cwuri(self):
         entity = self.request().create_entity('Workflow', name=u'wf1')
-        self.assertEqual(entity.cwuri, self.repo.config['base-url'] + 'eid/%s' % entity.eid)
+        self.assertEqual(entity.cwuri, self.repo.config['base-url'] + str(entity.eid))
 
     def test_metadata_creation_modification_date(self):
         _now = datetime.now()
