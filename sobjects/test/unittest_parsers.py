@@ -24,15 +24,15 @@ from cubicweb.sobjects.parsers import CWEntityXMLParser
 
 orig_parse = CWEntityXMLParser.parse
 
-def parse(url):
+def parse(self, url):
     try:
         url = RELATEDXML[url.split('?')[0]]
     except KeyError:
         pass
-    return orig_parse(url)
+    return orig_parse(self, url)
 
 def setUpModule():
-    CWEntityXMLParser.parse = staticmethod(parse)
+    CWEntityXMLParser.parse = parse
 
 def tearDownModule():
     CWEntityXMLParser.parse = orig_parse
@@ -40,61 +40,61 @@ def tearDownModule():
 
 BASEXML = ''.join(u'''
 <rset size="1">
- <CWUser eid="5" cwuri="http://pouet.org/eid/5">
+ <CWUser eid="5" cwuri="http://pouet.org/5">
   <login>sthenault</login>
   <upassword>toto</upassword>
   <last_login_time>2011-01-25 14:14:06</last_login_time>
   <creation_date>2010-01-22 10:27:59</creation_date>
   <modification_date>2011-01-25 14:14:06</modification_date>
   <use_email role="subject">
-    <EmailAddress cwuri="http://pouet.org/eid/6" eid="6"/>
+    <EmailAddress cwuri="http://pouet.org/6" eid="6"/>
   </use_email>
   <in_group role="subject">
-    <CWGroup cwuri="http://pouet.org/eid/7" eid="7"/>
-    <CWGroup cwuri="http://pouet.org/eid/8" eid="8"/>
+    <CWGroup cwuri="http://pouet.org/7" eid="7"/>
+    <CWGroup cwuri="http://pouet.org/8" eid="8"/>
   </in_group>
   <tags role="object">
-    <Tag cwuri="http://pouet.org/eid/9" eid="9"/>
-    <Tag cwuri="http://pouet.org/eid/10" eid="10"/>
+    <Tag cwuri="http://pouet.org/9" eid="9"/>
+    <Tag cwuri="http://pouet.org/10" eid="10"/>
   </tags>
  </CWUser>
 </rset>
 '''.splitlines())
 
 RELATEDXML ={
-    'http://pouet.org/eid/6': u'''
+    'http://pouet.org/6': u'''
 <rset size="1">
- <EmailAddress eid="6" cwuri="http://pouet.org/eid/6">
+ <EmailAddress eid="6" cwuri="http://pouet.org/6">
   <address>syt@logilab.fr</address>
   <modification_date>2010-04-13 14:35:56</modification_date>
   <creation_date>2010-04-13 14:35:56</creation_date>
  </EmailAddress>
 </rset>
 ''',
-    'http://pouet.org/eid/7': u'''
+    'http://pouet.org/7': u'''
 <rset size="1">
- <CWGroup eid="7" cwuri="http://pouet.org/eid/7">
+ <CWGroup eid="7" cwuri="http://pouet.org/7">
   <name>users</name>
  </CWGroup>
 </rset>
 ''',
-    'http://pouet.org/eid/8': u'''
+    'http://pouet.org/8': u'''
 <rset size="1">
- <CWGroup eid="8" cwuri="http://pouet.org/eid/8">
+ <CWGroup eid="8" cwuri="http://pouet.org/8">
   <name>unknown</name>
  </CWGroup>
 </rset>
 ''',
-    'http://pouet.org/eid/9': u'''
+    'http://pouet.org/9': u'''
 <rset size="1">
- <Tag eid="9" cwuri="http://pouet.org/eid/9">
+ <Tag eid="9" cwuri="http://pouet.org/9">
   <name>hop</name>
  </Tag>
 </rset>
 ''',
-    'http://pouet.org/eid/10': u'''
+    'http://pouet.org/10': u'''
 <rset size="1">
- <Tag eid="10" cwuri="http://pouet.org/eid/10">
+ <Tag eid="10" cwuri="http://pouet.org/10">
   <name>unknown</name>
  </Tag>
 </rset>
@@ -137,13 +137,13 @@ class CWEntityXMLParserTC(CubicWebTC):
         user = self.execute('CWUser X WHERE X login "sthenault"').get_entity(0, 0)
         self.assertEqual(user.creation_date, datetime(2010, 01, 22, 10, 27, 59))
         self.assertEqual(user.modification_date, datetime(2011, 01, 25, 14, 14, 06))
-        self.assertEqual(user.cwuri, 'http://pouet.org/eid/5')
+        self.assertEqual(user.cwuri, 'http://pouet.org/5')
         self.assertEqual(user.cw_source[0].name, 'myfeed')
         self.assertEqual(len(user.use_email), 1)
         # copy action
         email = user.use_email[0]
         self.assertEqual(email.address, 'syt@logilab.fr')
-        self.assertEqual(email.cwuri, 'http://pouet.org/eid/6')
+        self.assertEqual(email.cwuri, 'http://pouet.org/6')
         self.assertEqual(email.cw_source[0].name, 'myfeed')
         # link action
         self.assertFalse(self.execute('CWGroup X WHERE X name "unknown"'))
@@ -153,7 +153,7 @@ class CWEntityXMLParserTC(CubicWebTC):
         tags = sorted([t.name for t in user.reverse_tags])
         self.assertEqual(tags, ['hop', 'unknown'])
         tag = self.execute('Tag X WHERE X name "unknown"').get_entity(0, 0)
-        self.assertEqual(tag.cwuri, 'http://testing.fr/cubicweb/eid/%s' % tag.eid)
+        self.assertEqual(tag.cwuri, 'http://testing.fr/cubicweb/%s' % tag.eid)
         self.assertEqual(tag.cw_source[0].name, 'system')
 
         stats = dfsource.pull_data(session, force=True)
