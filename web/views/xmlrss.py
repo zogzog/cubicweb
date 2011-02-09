@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -20,6 +20,7 @@
 __docformat__ = "restructuredtext en"
 _ = unicode
 
+from base64 import b64encode
 from time import timezone
 
 from logilab.mtconverter import xml_escape
@@ -31,6 +32,18 @@ from cubicweb.view import implements_adapter_compat
 from cubicweb.uilib import simple_sgml_tag
 from cubicweb.web import httpcache, component
 
+def encode_bytes(value):
+    return '<![CDATA[%s]]>' % b64encode(value.getvalue())
+
+# see cubicweb.sobjects.parser.DEFAULT_CONVERTERS
+SERIALIZERS = {
+    'String': xml_escape,
+    'Bytes': encode_bytes,
+    'Date': lambda x: x.strftime('%Y-%m-%d'),
+    'Datetime': lambda x: x.strftime('%Y-%m-%d %H:%M:%S'),
+    'Time': lambda x: x.strftime('%H:%M:%S'),
+    'Interval': lambda x: x.days * 60*60*24 + x.seconds,
+    }
 
 # base xml views ##############################################################
 
@@ -61,24 +74,48 @@ class XMLItemView(EntityView):
     def cell_call(self, row, col):
         """ element as an item for an xml feed """
         entity = self.cw_rset.complete_entity(row, col)
-        self.w(u'<%s>\n' % (entity.e_schema))
+        self.w(u'<%s eid="%s" cwuri="%s">\n'
+               % (entity.e_schema, entity.eid, xml_escape(entity.cwuri)))
         for rschema, attrschema in entity.e_schema.attribute_definitions():
             attr = rschema.type
-            if attr == 'eid':
-                value = entity.eid
+            if attr in ('eid', 'cwuri'):
+                continue
             else:
                 try:
                     value = entity.cw_attr_cache[attr]
                 except KeyError:
                     # Bytes
                     continue
-            if value is not None:
-                if attrschema == 'Bytes':
-                    from base64 import b64encode
-                    value = '<![CDATA[%s]]>' % b64encode(value.getvalue())
-                elif isinstance(value, basestring):
-                    value = xml_escape(value)
+            if value is None:
+                self.w(u'  <%s/>\n' % attr)
+            else:
+                try:
+                    value = SERIALIZERS[attrschema](value)
+                except KeyError:
+                    pass
                 self.w(u'  <%s>%s</%s>\n' % (attr, value, attr))
+        for relstr in self._cw.list_form_param('relation'):
+            try:
+                rtype, role = relstr.split('-')
+            except ValueError:
+                self.error('badly formated relation name %r', relstr)
+                continue
+            if role == 'subject':
+                getrschema = entity.e_schema.subjrels
+            elif role == 'object':
+                getrschema = entity.e_schema.objrels
+            else:
+                self.error('badly formated relation name %r', relstr)
+                continue
+            if not rtype in getrschema:
+                self.error('unexisting relation %r', relstr)
+                continue
+            self.w(u'  <%s role="%s">\n' % (rtype, role))
+            for related in entity.related(rtype, role, entities=True):
+                self.w(u'    <%s eid="%s" cwuri="%s"/>\n'
+                       % (related.e_schema, related.eid,
+                          xml_escape(related.cwuri)))
+            self.w(u'  </%s>\n' % rtype)
         self.w(u'</%s>\n' % (entity.e_schema))
 
 
