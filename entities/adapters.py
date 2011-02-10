@@ -183,7 +183,7 @@ class IDownloadableAdapter(EntityAdapter):
         """return actual data of the downloadable content"""
         raise NotImplementedError
 
-
+# XXX should propose to use two different relations for children/parent
 class ITreeAdapter(EntityAdapter):
     """This adapter has to be overriden to be configured using the
     tree_relation, child_role and parent_role class attributes to benefit from
