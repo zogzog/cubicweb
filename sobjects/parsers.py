@@ -34,6 +34,9 @@ from yams.schema import role_name as rn
 from cubicweb import ValidationError, typed_eid
 from cubicweb.server.sources import datafeed
 
+def ensure_str_keys(dict):
+    for key in dict:
+        dict[str(key)] = dict.pop(key)
 
 # see cubicweb.web.views.xmlrss.SERIALIZERS
 DEFAULT_CONVERTERS = BASE_CONVERTERS.copy()
@@ -282,6 +285,7 @@ class CWEntityXMLParser(datafeed.DataFeedParser):
                           ritem['cwtype'], searchvalues)
 
     def _create_not_found(self, entity, rtype, role, ritem, searchvalues):
+        ensure_str_keys(searchvalues) # XXX necessary with python < 2.6
         return self._cw.create_entity(ritem['cwtype'], **searchvalues).eid
 
     def _related_link(self, entity, rtype, role, ttype, value, searchattrs,
