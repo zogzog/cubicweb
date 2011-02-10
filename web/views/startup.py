@@ -64,7 +64,7 @@ class ManageView(StartupView):
     def startup_views(self):
         views = [v for v in self._cw.vreg['views'].possible_views(self._cw, None)
                  if v.category == 'startupview'
-                 or v.__regid__ not in self.skip_startup_views]
+                 and v.__regid__ not in self.skip_startup_views]
         if not views:
             return
         self.w(u'<div class="hr">&#160;</div>')
