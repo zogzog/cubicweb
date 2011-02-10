@@ -122,7 +122,7 @@ class DataFeedSource(AbstractSource):
 
     def pull_data(self, session, force=False):
         if not force and self.fresh():
-            return
+            return {}
         if self.config['delete-entities']:
             myuris = self.source_cwuris(session)
         else:
