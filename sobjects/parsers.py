@@ -341,11 +341,11 @@ class CWEntityXMLParser(datafeed.DataFeedParser):
         self._cw.execute(rql, {'x': entity.eid})
 
 def registration_callback(vreg):
-    global HOST_MAPPING
     vreg.register_all(globals().values(), __name__)
-    host_mapping_file = osp.join(vreg.config.apphome, 'hostmapping.py')
-    if osp.exists(host_mapping_file):
-        HOST_MAPPING = eval(file(host_mapping_file).read())
-        vreg.info('using host mapping %s from %s', HOST_MAPPING, host_mapping_file)
-    else:
-        HOST_MAPPING = {}
+    global HOST_MAPPING
+    HOST_MAPPING = {}
+    if vreg.config.apphome:
+        host_mapping_file = osp.join(vreg.config.apphome, 'hostmapping.py')
+        if osp.exists(host_mapping_file):
+            HOST_MAPPING = eval(file(host_mapping_file).read())
+            vreg.info('using host mapping %s from %s', HOST_MAPPING, host_mapping_file)
