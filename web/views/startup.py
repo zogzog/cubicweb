@@ -77,13 +77,14 @@ class ManageView(StartupView):
 
     def entities(self):
         schema = self._cw.vreg.schema
-        self.w(u'<div class="hr">&#160;</div>')
-        self.w(u'<h2>%s</h2>\n' % self._cw._('Browse by entity type'))
-        manager = self._cw.user.matching_groups('managers')
-        self.w(u'<table class="startup">')
-        self.entity_types_table(eschema for eschema in schema.entities()
-                                if uicfg.indexview_etype_section.get(eschema) == 'application')
-        self.w(u'</table>')
+        eschemas = [eschema for eschema in schema.entities()
+                    if uicfg.indexview_etype_section.get(eschema) == 'application']
+        if eschemas:
+            self.w(u'<div class="hr">&#160;</div>')
+            self.w(u'<h2>%s</h2>\n' % self._cw._('Browse by entity type'))
+            self.w(u'<table class="startup">')
+            self.entity_types_table(eschemas)
+            self.w(u'</table>')
 
     def entity_types_table(self, eschemas):
         infos = sorted(self.entity_types(eschemas),
