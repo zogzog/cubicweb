@@ -17,10 +17,10 @@ include         /etc/ldap/schema/misc.schema
 
 # Where the pid file is put. The init.d script
 # will not stop the server if you change this.
-pidfile         ./data/test-slapd.pid
+pidfile         %(apphome)s/test-slapd.pid
 
 # List of arguments that were passed to the server
-argsfile        ./data/slapd.args
+argsfile        %(apphome)s/slapd.args
 
 # Read slapd.conf(5) for possible values
 loglevel        sync
@@ -49,5 +49,5 @@ suffix          "dc=cubicweb,dc=test"
 #rootdn          "cn=admin,dc=cubicweb,dc=test"
 #rootpw          "cubicwebrocks"
 # Where the database file are physically stored for database #1
-directory       "./data/ldapdb"
+directory       "%(apphome)s/ldapdb"
 

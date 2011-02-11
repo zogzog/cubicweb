@@ -88,6 +88,10 @@ def create_slapd_configuration(config):
     global slapd_process, CONFIG
     basedir = join(config.apphome, "ldapdb")
     slapdconf = join(config.apphome, "slapd.conf")
+    confin = file(join(config.apphome, "slapd.conf.in")).read()
+    confstream = file(slapdconf, 'w')
+    confstream.write(confin % {'apphome': config.apphome})
+    confstream.close()
     if not exists(basedir):
         os.makedirs(basedir)
         # fill ldap server with some data
