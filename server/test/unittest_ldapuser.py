@@ -27,6 +27,7 @@ from socket import socket, error as socketerror
 from logilab.common.testlib import TestCase, unittest_main, mock_object
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.devtools.repotest import RQLGeneratorTC
+from cubicweb.devtools.httptest import get_available_port
 
 from cubicweb.server.sources.ldapuser import *
 
@@ -101,19 +102,7 @@ def create_slapd_configuration(config):
 
 
     #ldapuri = 'ldapi://' + join(basedir, "ldapi").replace('/', '%2f')
-    for port in range(9000, 9100):
-        try:
-            socket().bind(('localhost', port))
-        except socketerror, e:
-            if e.errno == 98: # Address already in use
-                pass
-            else:
-                raise
-        else:
-            break
-    else:
-        raise Exception("Can't find a free TCP port on localhost")
-
+    port = get_available_port(xrange(9000, 9100))
     host = 'localhost:%s' % port
     ldapuri = 'ldap://%s' % host
     cmdline = ["/usr/sbin/slapd", "-f",  slapdconf,  "-h",  ldapuri, "-d", "0"]
@@ -131,7 +120,11 @@ def terminate_slapd():
     global slapd_process
     if slapd_process.returncode is None:
         print "terminating slapd"
-        slapd_process.terminate()
+        if hasattr(slapd_process, 'terminate'):
+            slapd_process.terminate()
+        else:
+            import os, signal
+            os.kill(slapd_process.pid, signal.SIGTERM)
         slapd_process.wait()
         print "DONE"
 
