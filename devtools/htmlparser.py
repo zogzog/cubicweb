@@ -127,19 +127,46 @@ class PageInfo(object):
         self.input_tags = self.find_tag('input')
         self.title_tags = [self.h1_tags, self.h2_tags, self.h3_tags, self.h4_tags]
 
+    def iterstr(self, tag):
+        if self.default_ns is None:
+            return ".//%s" % tag
+        else:
+            return ".//{%s}%s" % (self.default_ns, tag)
+
     def find_tag(self, tag, gettext=True):
         """return a list which contains text of all "tag" elements """
-        if self.default_ns is None:
-            iterstr = ".//%s" % tag
-        else:
-            iterstr = ".//{%s}%s" % (self.default_ns, tag)
+        iterstr = self.iterstr(tag)
         if not gettext or tag in ('a', 'input'):
-            return [(elt.text, elt.attrib) for elt in self.etree.iterfind(iterstr)]
-        return [u''.join(elt.xpath('.//text()')) for elt in self.etree.iterfind(iterstr)]
+            return [(elt.text, elt.attrib)
+                    for elt in self.etree.iterfind(iterstr)]
+        return [u''.join(elt.xpath('.//text()'))
+                for elt in self.etree.iterfind(iterstr)]
 
     def appears(self, text):
         """returns True if <text> appears in the page"""
         return text in self.raw_text
+
+    def has_tag(self, tag, nboccurs=1, **attrs):
+        """returns True if tag with given attributes appears in the page
+        `nbtimes` (any if None)
+        """
+        for elt in self.etree.iterfind(self.iterstr(tag)):
+            eltattrs  = elt.attrib
+            for attr, value in attrs.iteritems():
+                try:
+                    if eltattrs[attr] != value:
+                        break
+                except KeyError:
+                    break
+            else: # all attributes match
+                if nboccurs is None: # no need to check number of occurences
+                    return True
+                if not nboccurs: # too much occurences
+                    return False
+                nboccurs -= 1
+        if nboccurs == 0: # correct number of occurences
+            return True
+        return False # no matching tag/attrs
 
     def __contains__(self, text):
         return text in self.source
