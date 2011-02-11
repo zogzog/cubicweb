@@ -21,7 +21,7 @@ recursive-include test/data bootstrap_cubes *.py *.sql
 recursive-include entities/test/data bootstrap_cubes *.py
 recursive-include sobjects/test/data bootstrap_cubes *.py
 recursive-include hooks/test/data bootstrap_cubes *.py
-recursive-include server/test/data bootstrap_cubes *.py source*
+recursive-include server/test/data bootstrap_cubes *.py source* *.conf *.ldif
 recursive-include devtools/test/data bootstrap_cubes *.py *.txt *.js
 recursive-include web/test/data bootstrap_cubes pouet.css *.py
 
