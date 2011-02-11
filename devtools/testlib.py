@@ -663,13 +663,6 @@ class CubicWebTC(TestCase):
 
     # content validation #######################################################
 
-    def assertDocTestFile(self, testfile):
-        # doctest returns tuple (failure_count, test_count)
-        result = self.shell().process_script(testfile)
-        if result[0] and result[1]:
-            raise self.failureException("doctest file '%s' failed"
-                                        % testfile)
-
     # validators are used to validate (XML, DTD, whatever) view's content
     # validators availables are :
     #  DTDValidator : validates XML + declared DTD
@@ -754,25 +747,33 @@ class CubicWebTC(TestCase):
             raise AssertionError, msg, tcbk
         return self._check_html(output, view, template)
 
+    def get_validator(self, view=None, content_type=None, output=None):
+        if view is not None:
+            try:
+                return self.vid_validators[view.__regid__]()
+            except KeyError:
+                if content_type is None:
+                    content_type = view.content_type
+        if content_type is None:
+            content_type = 'text/html'
+        if content_type in ('text/html', 'application/xhtml+xml'):
+            if output and output.startswith('<?xml'):
+                default_validator = htmlparser.DTDValidator
+            else:
+                default_validator = htmlparser.HTMLValidator
+        else:
+            default_validator = None
+        validatorclass = self.content_type_validators.get(content_type,
+                                                          default_validator)
+        if validatorclass is None:
+            return
+        return validatorclass()
+
     @nocoverage
     def _check_html(self, output, view, template='main-template'):
         """raises an exception if the HTML is invalid"""
         output = output.strip()
-        try:
-            validatorclass = self.vid_validators[view.__regid__]
-        except KeyError:
-            if view.content_type in ('text/html', 'application/xhtml+xml'):
-                if output.startswith('<?xml'):
-                    default_validator = htmlparser.DTDValidator
-                else:
-                    default_validator = htmlparser.HTMLValidator
-            else:
-                default_validator = None
-            validatorclass = self.content_type_validators.get(view.content_type,
-                                                              default_validator)
-        if validatorclass is None:
-            return
-        validator = validatorclass()
+        validator = self.get_validator(view, output=output)
         if isinstance(validator, htmlparser.DTDValidator):
             # XXX remove <canvas> used in progress widget, unknown in html dtd
             output = re.sub('<canvas.*?></canvas>', '', output)
@@ -814,6 +815,13 @@ class CubicWebTC(TestCase):
                                          if line_context_filter(idx+1, position))
                     msg += u'\nfor content:\n%s' % content
             raise AssertionError, msg, tcbk
+
+    def assertDocTestFile(self, testfile):
+        # doctest returns tuple (failure_count, test_count)
+        result = self.shell().process_script(testfile)
+        if result[0] and result[1]:
+            raise self.failureException("doctest file '%s' failed"
+                                        % testfile)
 
     # deprecated ###############################################################
 
