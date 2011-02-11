@@ -774,6 +774,8 @@ class CubicWebTC(TestCase):
         """raises an exception if the HTML is invalid"""
         output = output.strip()
         validator = self.get_validator(view, output=output)
+        if validator is None:
+            return
         if isinstance(validator, htmlparser.DTDValidator):
             # XXX remove <canvas> used in progress widget, unknown in html dtd
             output = re.sub('<canvas.*?></canvas>', '', output)
