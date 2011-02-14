@@ -73,8 +73,9 @@ else:
         for rtype in mapping['dont_cross_relations']:
             create_entity('CWSourceSchemaConfig',
                           cw_for_source=source,
-                          cw_schema=session.entity_from_eid(schema[etype].eid),
-                          options=u'dontcross')
+                          cw_schema=session.entity_from_eid(schema[rtype].eid),
+                          options=u'dontcross',
+                          ask_confirm=False)
         # latest update time cwproperty is now a source attribute (latest_retrieval)
         pkey = u'sources.%s.latest-update-time' % source.uri
         rset = session.execute('Any V WHERE X is CWProperty, X value V, X pkey %(k)s',
