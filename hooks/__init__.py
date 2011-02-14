@@ -59,9 +59,9 @@ class ServerStartupHook(hook.Hook):
                         continue
                     try:
                         stats = source.pull_data(session)
-                        if stats['created']:
+                        if stats.get('created'):
                             source.info('added %s entities', len(stats['created']))
-                        if stats['updated']:
+                        if stats.get('updated'):
                             source.info('updated %s entities', len(stats['updated']))
                         session.commit()
                     except Exception, exc:
