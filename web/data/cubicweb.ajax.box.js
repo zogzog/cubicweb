@@ -37,6 +37,26 @@ function ajaxBoxRemoveLinkedEntity(boxid, eid, relatedeid, delfname, msg) {
     });
 }
 
+/**
+ * .. function:: ajaxBoxShowSelector(boxid, eid, unrelfname,
+ *                                  addfname, msg,
+ *                                  oklabel, cancellabel,
+ *                                  separator=None)
+ *
+ * Display an ajax selector within a box of regid `boxid`, for entity with eid
+ * `eid`.
+ *
+ * Other parameters are:
+ *
+ * * `addfname`, name of the json controller method to call to add a relation
+ *
+ * * `msg`, message to display to the user when a relation has been added
+ *
+ * * `oklabel`/`cancellabel`, OK/cancel buttons label
+ *
+ * * `separator`, items separator if the field is multi-valued (will be
+ *   considered mono-valued when not specified)
+ */
 function ajaxBoxShowSelector(boxid, eid,
                              unrelfname,
                              addfname, msg,
@@ -59,11 +79,11 @@ function ajaxBoxShowSelector(boxid, eid,
                     ajaxBoxValidateSelectorInput(boxid, eid, separator, addfname, msg);
                 }
             });
-            $input.cwautocomplete(unrelated, {multiple: true});
+            $input.cwautocomplete(unrelated, {multiple: Boolean(separator)});
             var buttons = DIV({'class' : "sgformbuttons"},
                               A({href : "javascript: noop();",
                                  onclick : cw.utils.strFuncCall('ajaxBoxValidateSelectorInput',
-                                                                  boxid, eid, separator, addfname, msg)},
+                                                                boxid, eid, separator, addfname, msg)},
                                 oklabel),
                               ' / ',
                               A({'href' : "javascript: noop();",
