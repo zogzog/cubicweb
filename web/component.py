@@ -577,6 +577,7 @@ class AjaxEditRelationCtxComponent(EntityCtxComponent):
         if mayadd or maydel:
             req.add_js(('jquery.ui.js', 'cubicweb.widgets.js'))
             req.add_js(('cubicweb.ajax.js', 'cubicweb.ajax.box.js'))
+            req.add_css('jquery.ui.css')
         _ = req._
         if related:
             w(u'<table class="ajaxEditRelationTable">')
@@ -597,8 +598,6 @@ class AjaxEditRelationCtxComponent(EntityCtxComponent):
         else:
             w(_('no related entity'))
         if mayadd:
-            req.add_js(('jquery.ui.js', 'cubicweb.widgets.js'))
-            req.add_css('jquery.ui.css')
             multiple = self.rdef.role_cardinality(self.role) in '*+'
             w(u'<table><tr><td>')
             jscall = unicode(js.ajaxBoxShowSelector(
