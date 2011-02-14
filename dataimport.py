@@ -306,11 +306,18 @@ class ObjectStore(object):
         self.items.append(item)
         return len(self.items) - 1
 
-    def add(self, type, item):
+    def create_entity(self, etype, **data):
+        data['eid'] =  eid = self._put(etype, data)
+        self.eids[eid] = data
+        self.types.setdefault(etype, []).append(eid)
+        return data
+
+    @deprecated("[3.11] add is deprecated, use create_entity instead")
+    def add(self, etype, item):
         assert isinstance(item, dict), 'item is not a dict but a %s' % type(item)
-        eid = item['eid'] = self._put(type, item)
-        self.eids[eid] = item
-        self.types.setdefault(type, []).append(eid)
+        data = self.create_entity(etype, **item)
+        item['eid'] = data['eid']
+        return item
 
     def relate(self, eid_from, rtype, eid_to, inlined=False):
         """Add new relation"""
@@ -688,7 +695,7 @@ class MetaGenerator(object):
         del entity.cw_extra_kwargs
         entity.cw_edited = EditedEntity(entity)
         for attr in self.etype_attrs:
-            entity.cw_edited.attribute_edited(attr, self.generate(entity, attr))
+            entity.cw_edited.edited_attribute(attr, self.generate(entity, attr))
         rels = {}
         for rel in self.etype_rels:
             rels[rel] = self.generate(entity, rel)
@@ -697,7 +704,7 @@ class MetaGenerator(object):
     def init_entity(self, entity):
         entity.eid = self.source.create_eid(self.session)
         for attr in self.entity_attrs:
-            entity.cw_edited.attribute_edited(attr, self.generate(entity, attr))
+            entity.cw_edited.edited_attribute(attr, self.generate(entity, attr))
 
     def generate(self, entity, rtype):
         return getattr(self, 'gen_%s' % rtype)(entity)
