@@ -56,7 +56,10 @@ def convert_interval(ustr):
 DEFAULT_CONVERTERS['Interval'] = convert_interval
 
 # use a cookie enabled opener to use session cookie if any
-_OPENER = urllib2.build_opener(urllib2.HTTPCookieProcessor(CookieJar()))
+from logilab.common import urllib2ext
+_OPENER = urllib2.build_opener()
+_OPENER.add_handler(urllib2ext.HTTPGssapiAuthHandler())
+_OPENER.add_handler(urllib2.HTTPCookieProcessor(CookieJar()))
 
 def extract_typed_attrs(eschema, stringdict, converters=DEFAULT_CONVERTERS):
     typeddict = {}
