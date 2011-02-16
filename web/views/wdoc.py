@@ -92,9 +92,14 @@ def build_toc(config):
     return index
 
 def title_for_lang(node, lang):
+    fallback_title = None
     for title in node.findall('title'):
-        if title.attrib['{http://www.w3.org/XML/1998/namespace}lang'] == lang:
+        title_lang = title.attrib['{http://www.w3.org/XML/1998/namespace}lang']
+        if title_lang == lang:
             return unicode(title.text)
+        if title_lang == 'en':
+            fallback_title = unicode(title.text)
+    return fallback_title
 
 def subsections(node):
     return [child for child in node if child.tag == 'section']
