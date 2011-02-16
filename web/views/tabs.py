@@ -58,8 +58,8 @@ class LazyViewMixin(object):
         w(u'<div id="lazy-%s" cubicweb:loadurl="%s">' % (
             tabid, xml_escape(self._cw.build_url('json', **urlparams))))
         if show_spinbox:
-            w(u'<img src="data/loading.gif" id="%s-hole" alt="%s"/>'
-              % (tabid, self._cw._('(loading ...)')))
+            w(u'<img src="%sloading.gif" id="%s-hole" alt="%s"/>'
+              % (self._cw.datadir_url, tabid, self._cw._('(loading ...)')))
         else:
             w(u'<div id="%s-hole"></div>' % tabid)
         w(u'<noscript><p><a class="style: hidden" id="seo-%s" href="%s">%s</a></p></noscript>'
