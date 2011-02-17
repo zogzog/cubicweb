@@ -132,7 +132,8 @@ class DataFeedSource(AbstractSource):
         self.info('pulling data for source %s', self.uri)
         for url in self.urls:
             try:
-                parser.process(url)
+                if parser.process(url):
+                    error = True
             except IOError, exc:
                 self.error('could not pull data while processing %s: %s',
                            url, exc)

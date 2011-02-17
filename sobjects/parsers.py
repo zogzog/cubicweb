@@ -191,13 +191,25 @@ class CWEntityXMLParser(datafeed.DataFeedParser):
         # XXX suppression support according to source configuration. If set, get
         # all cwuri of entities from this source, and compare with newly
         # imported ones
+        error = False
         for item, rels in self.parse(url):
-            self.process_item(item, rels)
-            if partialcommit:
-                # commit+set_pool instead of commit(reset_pool=False) to let
-                # other a chance to get our pool
-                self._cw.commit()
-                self._cw.set_pool()
+            cwuri = item['cwuri']
+            try:
+                self.process_item(item, rels)
+                if partialcommit:
+                    # commit+set_pool instead of commit(reset_pool=False) to let
+                    # other a chance to get our pool
+                    self._cw.commit()
+                    self._cw.set_pool()
+            except ValidationError, exc:
+                if partialcommit:
+                    self.source.error('Skipping %s because of validation error %s' % (cwuri, exc))
+                    self._cw.rollback()
+                    self._cw.set_pool()
+                    error = True
+                else:
+                    raise
+        return error
 
     def parse(self, url):
         if not url.startswith('http'):
