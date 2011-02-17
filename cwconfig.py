@@ -587,6 +587,14 @@ this option is set to yes",
             return # cubes dir doesn't exists
 
     @classmethod
+    def load_available_configs(cls):
+        from logilab.common.modutils import load_module_from_file
+        for conffile in ('web/webconfig.py',  'etwist/twconfig.py',
+                        'server/serverconfig.py',):
+            if exists(join(CW_SOFTWARE_ROOT, conffile)):
+                load_module_from_file(join(CW_SOFTWARE_ROOT, conffile))
+
+    @classmethod
     def load_cwctl_plugins(cls):
         from logilab.common.modutils import load_module_from_file
         cls.cls_adjust_sys_path()
@@ -597,8 +605,8 @@ this option is set to yes",
                 try:
                     load_module_from_file(join(CW_SOFTWARE_ROOT, ctlfile))
                 except ImportError, err:
-                    cls.info('could not import the command provider %s (cause : %s)' %
-                                (ctlfile, err))
+                    cls.error('could not import the command provider %s: %s',
+                              ctlfile, err)
                 cls.info('loaded cubicweb-ctl plugin %s', ctlfile)
         for cube in cls.available_cubes():
             oldpluginfile = join(cls.cube_dir(cube), 'ecplugin.py')
@@ -895,6 +903,7 @@ the repository',
     def config_for(cls, appid, config=None, debugmode=False):
         """return a configuration instance for the given instance identifier
         """
+        cls.load_available_configs()
         config = config or guess_configuration(cls.instance_home(appid))
         configcls = configuration_cls(config)
         return configcls(appid, debugmode)

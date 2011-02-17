@@ -844,6 +844,12 @@ Iterating over operation data closed it and should be reserved to precommit /
 postcommit method of the operation."""
         _container_add(self._container, data)
 
+    def remove_data(self, data):
+        assert not self._processed, """Trying to add data to a closed operation.
+Iterating over operation data closed it and should be reserved to precommit /
+postcommit method of the operation."""
+        self._container.remove(data)
+
     def get_data(self):
         assert not self._processed, """Trying to get data from a closed operation.
 Iterating over operation data closed it and should be reserved to precommit /

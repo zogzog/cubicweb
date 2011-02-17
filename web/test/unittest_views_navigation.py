@@ -58,7 +58,7 @@ class NavigationTC(CubicWebTC):
         navcomp = self.vreg['components'].select('navigation', req, rset=rset, page_size=20)
         self.assertIsInstance(navcomp, PageNavigationSelect)
 
-    def test_navigation_selection_not_enough(self):
+    def test_navigation_selection_not_enough_1(self):
         req = self.request()
         rset = self.execute('Any X,N LIMIT 10 WHERE X name N')
         navcomp = self.vreg['components'].select_or_none('navigation', req, rset=rset)
@@ -68,7 +68,7 @@ class NavigationTC(CubicWebTC):
         self.assertEqual(navcomp, None)
         req.set_search_state('normal')
 
-    def test_navigation_selection_not_enough(self):
+    def test_navigation_selection_not_enough_2(self):
         req = self.request()
         rset = self.execute('Any N, COUNT(RDEF) GROUPBY N ORDERBY N WHERE RDEF relation_type RT, RT name N')
         navcomp = self.vreg['components'].select('navigation', req, rset=rset)
