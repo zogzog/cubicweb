@@ -46,6 +46,8 @@ def convert_date(ustr):
     return todate(datetime.strptime(ustr, '%Y-%m-%d'))
 DEFAULT_CONVERTERS['Date'] = convert_date
 def convert_datetime(ustr):
+    if '.' in ustr: # assume %Y-%m-%d %H:%M:%S.mmmmmm
+        ustr = ustr.split('.',1)[0]
     return datetime.strptime(ustr, '%Y-%m-%d %H:%M:%S')
 DEFAULT_CONVERTERS['Datetime'] = convert_datetime
 def convert_time(ustr):
@@ -76,10 +78,17 @@ def extract_typed_attrs(eschema, stringdict, converters=DEFAULT_CONVERTERS):
 
 def _entity_etree(parent):
     for node in list(parent):
-        item = {'cwtype': unicode(node.tag),
-                'cwuri': node.attrib['cwuri'],
-                'eid': typed_eid(node.attrib['eid']),
-                }
+        try:
+            item = {'cwtype': unicode(node.tag),
+                    'cwuri': node.attrib['cwuri'],
+                    'eid': typed_eid(node.attrib['eid']),
+                    }
+        except KeyError:
+            # cw < 3.11 compat mode XXX
+            item = {'cwtype': unicode(node.tag),
+                    'cwuri': node.find('cwuri').text,
+                    'eid': typed_eid(node.find('eid').text),
+                    }
         rels = {}
         for child in node:
             role = child.get('role')
