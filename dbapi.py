@@ -168,16 +168,20 @@ def connect(database=None, login=None, host=None, group=None,
       where it's already initialized.
 
     :kwargs:
-      there goes authentication tokens. You usually have to specify for
-      instance a password for the given user, using a named 'password' argument.
+      there goes authentication tokens. You usually have to specify a password
+      for the given user, using a named 'password' argument.
     """
-    config = cwconfig.CubicWebNoAppConfiguration()
-    if host:
-        config.global_set_option('pyro-ns-host', host)
-    if group:
-        config.global_set_option('pyro-ns-group', group)
     cnxprops = cnxprops or ConnectionProperties()
     method = cnxprops.cnxtype
+    if method == 'pyro':
+        config = cwconfig.CubicWebNoAppConfiguration()
+        if host:
+            config.global_set_option('pyro-ns-host', host)
+        if group:
+            config.global_set_option('pyro-ns-group', group)
+    else:
+        assert database
+        config = cwconfig.instance_configuration(database)
     repo = get_repository(method, database, config=config)
     if method == 'inmemory':
         vreg = repo.vreg
