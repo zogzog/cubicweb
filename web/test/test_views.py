@@ -20,11 +20,12 @@
 from cubicweb.devtools.testlib import CubicWebTC, AutoPopulateTest, AutomaticWebTest
 from cubicweb.view import AnyRsetView
 
-AutomaticWebTest.application_rql = [
-    'Any L,F WHERE E is CWUser, E login L, E firstname F',
-    'Any L,F,E WHERE E is CWUser, E login L, E firstname F',
-    'Any COUNT(X) WHERE X is CWUser',
-    ]
+class AutomaticWebTest(AutomaticWebTest):
+    application_rql = [
+        'Any L,F WHERE E is CWUser, E login L, E firstname F',
+        'Any L,F,E WHERE E is CWUser, E login L, E firstname F',
+        'Any COUNT(X) WHERE X is CWUser',
+        ]
 
 
 class SomeView(AnyRsetView):
