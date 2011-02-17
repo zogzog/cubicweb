@@ -235,7 +235,7 @@ def deserialize_schema(schema, session):
             uniquecstreid, eeid, releid = values
             eschema = schema.schema_by_eid(eeid)
             relations = unique_togethers.setdefault(uniquecstreid, (eschema, []))
-            relations[1].append(ertidx[releid])
+            relations[1].append(str(ertidx[releid]))
         for eschema, unique_together in unique_togethers.itervalues():
             eschema._unique_together.append(tuple(sorted(unique_together)))
     schema.infer_specialization_rules()
