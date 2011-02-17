@@ -545,7 +545,7 @@ class ServerMigrationHelper(MigrationHelper):
                 self.rqlexec('DELETE CWUniqueTogetherConstraint C '
                              'WHERE C constraint_of E, '
                              '      E eid %%(x)s,'
-                             '      %s' % ', '.join( restrictions),
+                             '      %s' % ', '.join(restrictions),
                              substs)
             for ut in unique_together - repo_unique_together:
                 rql, substs = ss.uniquetogether2rql(eschema, ut)
