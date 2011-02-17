@@ -235,7 +235,14 @@ def deserialize_schema(schema, session):
             uniquecstreid, eeid, releid = values
             eschema = schema.schema_by_eid(eeid)
             relations = unique_togethers.setdefault(uniquecstreid, (eschema, []))
-            relations[1].append(str(ertidx[releid]))
+            rel = ertidx[releid]
+            if isinstance(rel, schemamod.RelationSchema):
+                rtype = rel.type
+            else:
+                # not yet migrated 3.9 database ('relations' target type changed
+                # to CWRType in 3.10)
+                rtype = rel.rtype.type
+            relations[1].append(rtype)
         for eschema, unique_together in unique_togethers.itervalues():
             eschema._unique_together.append(tuple(sorted(unique_together)))
     schema.infer_specialization_rules()
