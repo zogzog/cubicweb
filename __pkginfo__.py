@@ -1,5 +1,5 @@
- # pylint: disable=W0622,C0103
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# pylint: disable=W0622,C0103
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -62,6 +62,7 @@ __recommends__ = {
     'pycrypto': '',             # for crypto extensions
     'fyzz': '>= 0.1.0',         # for sparql
     'vobject': '>= 0.6.0',      # for ical view
+    'rdflib': None,             #
     #'Products.FCKeditor':'',
     #'SimpleTAL':'>= 4.1.6',
     }
