@@ -176,7 +176,7 @@ class CubicWebServerTC(CubicWebTC):
         return response
 
     def setUp(self):
-        CubicWebTC.setUp(self)
+        super(CubicWebServerTC, self).setUp()
         self.start_server()
 
     def tearDown(self):
@@ -185,7 +185,7 @@ class CubicWebServerTC(CubicWebTC):
         except error.ReactorNotRunning, err:
             # Server could be launched manually
             print err
-        CubicWebTC.tearDown(self)
+        super(CubicWebServerTC, self).teardown()
 
     @classmethod
     def init_config(cls, config):

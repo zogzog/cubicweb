@@ -77,10 +77,10 @@ class CubicWebWindmillUseCase(CubicWebServerTC):
 
         test_dir = __file__
 
-    Instead of toggle `edit_test` value, try `pytest -i`
+    Instead of toggle `edit_test` value, try `python <test script> -f`
     """
     browser = 'firefox'
-    edit_test = "-i" in sys.argv # detection for pytest invocation
+    edit_test = "-f" in sys.argv or "-i" in sys.argv # XXX pytest
     # Windmill use case are written with no anonymous user
     anonymous_logged = False
 
@@ -99,7 +99,7 @@ class CubicWebWindmillUseCase(CubicWebServerTC):
 
     def setUp(self):
         # Start CubicWeb session before running the server to populate self.vreg
-        CubicWebServerTC.setUp(self)
+        super(CubicWebWindmillUseCase, self).setUp()
         # XXX reduce log output (should be done in a cleaner way)
         # windmill fu** up our logging configuration
         for logkey in ('windmill', 'logilab', 'cubicweb'):
@@ -118,7 +118,7 @@ class CubicWebWindmillUseCase(CubicWebServerTC):
 
     def tearDown(self):
         teardown(self.windmill_shell_objects)
-        CubicWebServerTC.tearDown(self)
+        super(CubicWebWindmillUseCase, self).tearDown()
 
     def testWindmill(self):
         if self.edit_test:

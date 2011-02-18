@@ -91,3 +91,5 @@ class Ticket(EntityType):
     title = String(maxsize=32, required=True, fulltextindexed=True)
     concerns = SubjectRelation('Project', composite='object')
 
+# used by windmill for `test_edit_relation`
+from cubes.folder.schema import Folder
