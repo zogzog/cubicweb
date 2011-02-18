@@ -30,6 +30,11 @@ from cubicweb.schema import META_RTYPES, VIRTUAL_RTYPES, display_name
 from cubicweb.web import uicfg
 from cubicweb.web.views import tabs, actions
 
+
+_abaa = uicfg.actionbox_appearsin_addmenu
+_abaa.tag_object_of(('CWSourceSchemaConfig', 'cw_schema', '*'), False)
+_abaa.tag_object_of(('CWSourceSchemaConfig', 'cw_for_source', '*'), False)
+
 # source primary views #########################################################
 
 _pvs = uicfg.primaryview_section
