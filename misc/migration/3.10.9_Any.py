@@ -1,3 +1,4 @@
+from __future__ import with_statement
 if confirm('fix existing cwuri?'):
     from logilab.common.shellutils import ProgressBar
     from cubicweb.server.session import hooks_control
