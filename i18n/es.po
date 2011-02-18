@@ -8,10 +8,10 @@ msgstr ""
 "Last-Translator: Celso Flores<celso.flores@crealibre.com>, Carlos Balderas "
 "<carlos.balderas@crealibre.com>\n"
 "Language-Team: es <contact@logilab.fr>\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: \n"
 
 #, python-format
 msgid ""
@@ -25,8 +25,8 @@ msgid ""
 "url: %(url)s\n"
 msgstr ""
 "\n"
-"%(user)s ha cambiado su estado de <%(previous_state)s> hacia <%"
-"(current_state)s> por la entidad\n"
+"%(user)s ha cambiado su estado de <%(previous_state)s> hacia <"
+"%(current_state)s> por la entidad\n"
 "'%(title)s'\n"
 "\n"
 "%(comment)s\n"
@@ -39,6 +39,13 @@ msgstr "  del estado %(fromstate)s hacia el estado %(tostate)s\n"
 
 msgid " :"
 msgstr ":"
+
+#, python-format
+msgid "\"action\" must be specified in options; allowed values are %s"
+msgstr ""
+
+msgid "\"role=subject\" or \"role=object\" must be specified in options"
+msgstr ""
 
 #, python-format
 msgid "%(attr)s set to %(newvalue)s"
@@ -125,6 +132,10 @@ msgid "%d&#160;years"
 msgstr "%d&#160;años"
 
 #, python-format
+msgid "%s could be supported"
+msgstr ""
+
+#, python-format
 msgid "%s error report"
 msgstr "%s reporte de errores"
 
@@ -133,12 +144,24 @@ msgid "%s not estimated"
 msgstr "%s no estimado(s)"
 
 #, python-format
+msgid "%s relation should not be in mapped"
+msgstr ""
+
+#, python-format
 msgid "%s software version of the database"
 msgstr "versión sistema de la base para %s"
 
 #, python-format
 msgid "%s updated"
 msgstr "%s actualizado"
+
+#, python-format
+msgid "'%s' action doesn't take any options"
+msgstr ""
+
+#, python-format
+msgid "'%s' action require 'linkattr' option"
+msgstr ""
 
 msgid "(UNEXISTANT EID)"
 msgstr "(EID INEXISTENTE"
@@ -221,9 +244,6 @@ msgstr "Cualquiera"
 
 msgid "Attributes permissions:"
 msgstr "Permisos de atributos:"
-
-msgid "Attributes with non default permissions:"
-msgstr "Atributos con permisos no estándares"
 
 # schema pot file, generated on 2009-09-16 16:46:55
 #
@@ -345,6 +365,12 @@ msgstr ""
 msgid "CWSourceHostConfig_plural"
 msgstr ""
 
+msgid "CWSourceSchemaConfig"
+msgstr ""
+
+msgid "CWSourceSchemaConfig_plural"
+msgstr ""
+
 msgid "CWSource_plural"
 msgstr ""
 
@@ -430,16 +456,19 @@ msgstr "Decimal"
 msgid "Decimal_plural"
 msgstr "Decimales"
 
+msgid "Detected problems"
+msgstr ""
+
 msgid "Do you want to delete the following element(s) ?"
 msgstr "Desea eliminar el(los) elemento(s) siguiente(s)"
 
 msgid "Download schema as OWL"
 msgstr "Descargar el esquema en formato OWL"
 
-msgctxt "inlined:CWUser.use_email.subject"
 msgid "EmailAddress"
 msgstr "Correo Electrónico"
 
+msgctxt "inlined:CWUser.use_email.subject"
 msgid "EmailAddress"
 msgstr "Correo Electrónico"
 
@@ -449,8 +478,8 @@ msgstr "Direcciones de Correo Electrónico"
 msgid "Entities"
 msgstr "Entidades"
 
-msgid "Entity types"
-msgstr "Tipos de entidades"
+msgid "Entity and relation supported by this source"
+msgstr ""
 
 msgid "ExternalUri"
 msgstr "Uri externo"
@@ -482,9 +511,6 @@ msgstr ""
 msgid "Help"
 msgstr "Ayuda"
 
-msgid "Index"
-msgstr "Índice"
-
 msgid "Instance"
 msgstr "Instancia"
 
@@ -505,6 +531,9 @@ msgstr "Duraciones"
 
 msgid "Looked up classes"
 msgstr "Clases buscadas"
+
+msgid "Manage"
+msgstr ""
 
 msgid "Most referenced classes"
 msgstr "Clases más referenciadas"
@@ -549,6 +578,9 @@ msgid "New CWSource"
 msgstr ""
 
 msgid "New CWSourceHostConfig"
+msgstr ""
+
+msgid "New CWSourceSchemaConfig"
 msgstr ""
 
 msgid "New CWUniqueTogetherConstraint"
@@ -606,12 +638,6 @@ msgstr "Contraseña"
 msgid "Password_plural"
 msgstr "Contraseñas"
 
-msgid "Permissions for entity types"
-msgstr "Permisos por tipos de entidad"
-
-msgid "Permissions for relations"
-msgstr "Permisos por las relaciones"
-
 msgid "Please note that this is only a shallow copy"
 msgstr "Recuerde que sólo es una copia superficial"
 
@@ -642,9 +668,6 @@ msgstr "restricción expresión regular"
 msgid "Registry's content"
 msgstr "Contenido del registro"
 
-msgid "Relation types"
-msgstr "Tipos de relación"
-
 msgid "Relations"
 msgstr "Relaciones"
 
@@ -660,6 +683,9 @@ msgstr "Esquema del modelo de datos"
 
 msgid "Search for"
 msgstr "Buscar"
+
+msgid "Site information"
+msgstr ""
 
 msgid "SizeConstraint"
 msgstr "Restricción de tamaño"
@@ -759,6 +785,9 @@ msgstr ""
 msgid "This CWSourceHostConfig"
 msgstr ""
 
+msgid "This CWSourceSchemaConfig"
+msgstr ""
+
 msgid "This CWUniqueTogetherConstraint"
 msgstr ""
 
@@ -812,6 +841,9 @@ msgstr "Transición"
 
 msgid "Transition_plural"
 msgstr "Transiciones"
+
+msgid "URLs from which content will be imported. You can put one url per line"
+msgstr ""
 
 msgid "UniqueConstraint"
 msgstr "Restricción de Unicidad"
@@ -1019,6 +1051,10 @@ msgstr "Salida de sub-workflow"
 msgid "add WorkflowTransition transition_of Workflow object"
 msgstr "Transición Workflow"
 
+#, python-format
+msgid "add a %s"
+msgstr ""
+
 msgctxt "inlined:CWRelation.from_entity.subject"
 msgid "add a CWEType"
 msgstr "Agregar un tipo de entidad"
@@ -1030,6 +1066,12 @@ msgstr "Agregar un tipo de entidad"
 msgctxt "inlined:CWRelation.relation_type.subject"
 msgid "add a CWRType"
 msgstr "Agregar un tipo de relación"
+
+msgid "add a CWSource"
+msgstr ""
+
+msgid "add a CWSourceSchemaConfig"
+msgstr ""
 
 msgctxt "inlined:CWUser.use_email.subject"
 msgid "add a EmailAddress"
@@ -1053,14 +1095,14 @@ msgctxt "CWRelation"
 msgid "add_permission"
 msgstr "Permiso de agregar"
 
+msgid "add_permission_object"
+msgstr "tiene permiso de agregar"
+
 msgctxt "CWGroup"
 msgid "add_permission_object"
 msgstr "tiene permiso de agregar"
 
 msgctxt "RQLExpression"
-msgid "add_permission_object"
-msgstr "tiene permiso de agregar"
-
 msgid "add_permission_object"
 msgstr "tiene permiso de agregar"
 
@@ -1073,8 +1115,8 @@ msgstr "se agregó %(etype)s #%(eid)s (%(title)s)"
 
 #, python-format
 msgid ""
-"added relation %(rtype)s from %(frometype)s #%(eidfrom)s to %(toetype)s #%"
-"(eidto)s"
+"added relation %(rtype)s from %(frometype)s #%(eidfrom)s to %(toetype)s #"
+"%(eidto)s"
 msgstr ""
 "la relación %(rtype)s de %(frometype)s #%(eidfrom)s a %(toetype)s #%(eidto)s "
 "ha sido agregada"
@@ -1099,6 +1141,9 @@ msgstr "alias"
 msgid "allow to set a specific workflow for an entity"
 msgstr "permite definir un Workflow específico para una entidad"
 
+msgid "allowed options depends on the source type"
+msgstr ""
+
 msgid "allowed transitions from this state"
 msgstr "transiciones autorizadas desde este estado"
 
@@ -1108,6 +1153,9 @@ msgstr "transiciones autorizadas"
 msgctxt "State"
 msgid "allowed_transition"
 msgstr "transiciones autorizadas"
+
+msgid "allowed_transition_object"
+msgstr "Estados de entrada"
 
 msgctxt "BaseTransition"
 msgid "allowed_transition_object"
@@ -1120,21 +1168,6 @@ msgstr "transición autorizada de"
 msgctxt "WorkflowTransition"
 msgid "allowed_transition_object"
 msgstr "transición autorizada de"
-
-msgid "allowed_transition_object"
-msgstr "Estados de entrada"
-
-msgid "am/pm calendar (month)"
-msgstr "calendario am/pm (mes)"
-
-msgid "am/pm calendar (semester)"
-msgstr "calendario am/pm (semestre)"
-
-msgid "am/pm calendar (week)"
-msgstr "calendario am/pm (semana)"
-
-msgid "am/pm calendar (year)"
-msgstr "calendario am/pm (año)"
 
 msgid "an electronic mail address associated to a short alias"
 msgstr "una dirección electrónica asociada a este alias"
@@ -1160,9 +1193,6 @@ msgstr "y/o entre los diferentes valores"
 msgid "anonymous"
 msgstr "anónimo"
 
-msgid "application entities"
-msgstr "Entidades de la aplicación"
-
 msgid "april"
 msgstr "Abril"
 
@@ -1182,6 +1212,9 @@ msgstr ""
 
 msgid "attribute"
 msgstr "Atributo"
+
+msgid "attribute/relation can't be mapped, only entity and relation types"
+msgstr ""
 
 msgid "august"
 msgstr "Agosto"
@@ -1217,10 +1250,10 @@ msgctxt "Bookmark"
 msgid "bookmarked_by"
 msgstr "está en los Favoritos de"
 
-msgctxt "CWUser"
 msgid "bookmarked_by_object"
 msgstr "tiene como Favoritos"
 
+msgctxt "CWUser"
 msgid "bookmarked_by_object"
 msgstr "tiene como Favoritos"
 
@@ -1261,6 +1294,9 @@ msgctxt "TrInfo"
 msgid "by_transition"
 msgstr "transición"
 
+msgid "by_transition_object"
+msgstr "cambio de estados"
+
 msgctxt "BaseTransition"
 msgid "by_transition_object"
 msgstr "tiene como información"
@@ -1273,23 +1309,8 @@ msgctxt "WorkflowTransition"
 msgid "by_transition_object"
 msgstr "tiene como información"
 
-msgid "by_transition_object"
-msgstr "cambio de estados"
-
 msgid "calendar"
 msgstr "mostrar un calendario"
-
-msgid "calendar (month)"
-msgstr "calendario (mensual)"
-
-msgid "calendar (semester)"
-msgstr "calendario (semestral)"
-
-msgid "calendar (week)"
-msgstr "calendario (semanal)"
-
-msgid "calendar (year)"
-msgstr "calendario (anual)"
 
 msgid "can not resolve entity types:"
 msgstr "Imposible de interpretar los tipos de entidades:"
@@ -1304,6 +1325,9 @@ msgstr "No puede ser eliminado"
 msgid "can't change the %s attribute"
 msgstr "no puede modificar el atributo %s"
 
+msgid "can't change this relation"
+msgstr ""
+
 #, python-format
 msgid "can't connect to source %s, some data may be missing"
 msgstr "no se puede conectar a la fuente %s, algunos datos pueden faltar"
@@ -1315,6 +1339,12 @@ msgstr "imposible de mostrar los datos, a causa del siguiente error: %s"
 msgid "can't have multiple exits on the same state"
 msgstr "no puede tener varias salidas en el mismo estado"
 
+msgid "can't mix dontcross and maycross options"
+msgstr ""
+
+msgid "can't mix dontcross and write options"
+msgstr ""
+
 #, python-format
 msgid "can't parse %(value)r (expected %(format)s)"
 msgstr "no puede analizar %(value)r (formato requerido : %(format)s)"
@@ -1324,8 +1354,8 @@ msgid ""
 "can't set inlined=True, %(stype)s %(rtype)s %(otype)s has cardinality="
 "%(card)s"
 msgstr ""
-"no puede poner 'inlined' = True, %(stype)s %(rtype)s %(otype)s "
- "tiene cardinalidad %(card)s"
+"no puede poner 'inlined' = True, %(stype)s %(rtype)s %(otype)s tiene "
+"cardinalidad %(card)s"
 
 msgid "cancel"
 msgstr ""
@@ -1434,10 +1464,10 @@ msgctxt "WorkflowTransition"
 msgid "condition"
 msgstr "condición"
 
-msgctxt "RQLExpression"
 msgid "condition_object"
 msgstr "condición de"
 
+msgctxt "RQLExpression"
 msgid "condition_object"
 msgstr "condición de"
 
@@ -1447,11 +1477,11 @@ msgstr "condiciones"
 msgid "config"
 msgstr ""
 
-msgctxt "CWSourceHostConfig"
+msgctxt "CWSource"
 msgid "config"
 msgstr ""
 
-msgctxt "CWSource"
+msgctxt "CWSourceHostConfig"
 msgid "config"
 msgstr ""
 
@@ -1475,10 +1505,10 @@ msgctxt "CWRelation"
 msgid "constrained_by"
 msgstr "Restricción impuesta por"
 
-msgctxt "CWConstraint"
 msgid "constrained_by_object"
 msgstr "Restricción de"
 
+msgctxt "CWConstraint"
 msgid "constrained_by_object"
 msgstr "Restricción de"
 
@@ -1492,10 +1522,10 @@ msgctxt "CWUniqueTogetherConstraint"
 msgid "constraint_of"
 msgstr ""
 
-msgctxt "CWEType"
 msgid "constraint_of_object"
 msgstr ""
 
+msgctxt "CWEType"
 msgid "constraint_of_object"
 msgstr ""
 
@@ -1560,9 +1590,6 @@ msgstr "Imposible de conectarse al servidor SMTP"
 msgid "create an index for quick search on this attribute"
 msgstr "Crear un índice para accelerar las búsquedas sobre este atributo"
 
-msgid "create an index page"
-msgstr "Crear una página de inicio"
-
 msgid "created on"
 msgstr "creado el"
 
@@ -1593,8 +1620,8 @@ msgid "creating CWRelation (CWRelation relation_type CWRType %(linkto)s)"
 msgstr "Creación de la relación %(linkto)s"
 
 msgid ""
-"creating CWSourceHostConfig (CWSourceHostConfig cw_host_config_of CWSource %"
-"(linkto)s)"
+"creating CWSourceHostConfig (CWSourceHostConfig cw_host_config_of CWSource "
+"%(linkto)s)"
 msgstr ""
 
 msgid ""
@@ -1687,8 +1714,8 @@ msgstr ""
 "Creación de una Transición Workflow permitida desde el estado %(linkto)s"
 
 msgid ""
-"creating WorkflowTransition (WorkflowTransition transition_of Workflow %"
-"(linkto)s)"
+"creating WorkflowTransition (WorkflowTransition transition_of Workflow "
+"%(linkto)s)"
 msgstr "Creación de una Transición Workflow del Workflow %(linkto)s"
 
 msgid "creation"
@@ -1710,12 +1737,12 @@ msgctxt "CWConstraint"
 msgid "cstrtype"
 msgstr "Tipo"
 
+msgid "cstrtype_object"
+msgstr "utilizado por"
+
 msgctxt "CWConstraintType"
 msgid "cstrtype_object"
 msgstr "Tipo de restricciones"
-
-msgid "cstrtype_object"
-msgstr "utilizado por"
 
 msgid "csv entities export"
 msgstr "Exportar entidades en csv"
@@ -1839,18 +1866,18 @@ msgstr "Workflow específico"
 msgid "custom_workflow_object"
 msgstr "Workflow de"
 
-msgid "cw_dont_cross"
+msgid "cw_for_source"
+msgstr ""
+
+msgctxt "CWSourceSchemaConfig"
+msgid "cw_for_source"
+msgstr ""
+
+msgid "cw_for_source_object"
 msgstr ""
 
 msgctxt "CWSource"
-msgid "cw_dont_cross"
-msgstr ""
-
-msgctxt "CWRType"
-msgid "cw_dont_cross_object"
-msgstr ""
-
-msgid "cw_dont_cross_object"
+msgid "cw_for_source_object"
 msgstr ""
 
 msgid "cw_host_config_of"
@@ -1860,49 +1887,43 @@ msgctxt "CWSourceHostConfig"
 msgid "cw_host_config_of"
 msgstr ""
 
+msgid "cw_host_config_of_object"
+msgstr ""
+
 msgctxt "CWSource"
 msgid "cw_host_config_of_object"
 msgstr ""
 
-msgid "cw_host_config_of_object"
+msgid "cw_schema"
 msgstr ""
 
-msgid "cw_may_cross"
+msgctxt "CWSourceSchemaConfig"
+msgid "cw_schema"
 msgstr ""
 
-msgctxt "CWSource"
-msgid "cw_may_cross"
+msgid "cw_schema_object"
+msgstr ""
+
+msgctxt "CWAttribute"
+msgid "cw_schema_object"
+msgstr ""
+
+msgctxt "CWEType"
+msgid "cw_schema_object"
 msgstr ""
 
 msgctxt "CWRType"
-msgid "cw_may_cross_object"
+msgid "cw_schema_object"
 msgstr ""
 
-msgid "cw_may_cross_object"
+msgctxt "CWRelation"
+msgid "cw_schema_object"
 msgstr ""
 
 msgid "cw_source"
 msgstr ""
 
 msgid "cw_source_object"
-msgstr ""
-
-msgid "cw_support"
-msgstr ""
-
-msgctxt "CWSource"
-msgid "cw_support"
-msgstr ""
-
-msgctxt "CWEType"
-msgid "cw_support_object"
-msgstr ""
-
-msgctxt "CWRType"
-msgid "cw_support_object"
-msgstr ""
-
-msgid "cw_support_object"
 msgstr ""
 
 msgid "cwetype-box"
@@ -1932,11 +1953,23 @@ msgstr "Descripción"
 msgid "cwrtype-permissions"
 msgstr "Permisos"
 
+msgid "cwsource-main"
+msgstr ""
+
+msgid "cwsource-mapping"
+msgstr ""
+
 msgid "cwuri"
 msgstr "Uri Interna"
 
 msgid "data directory url"
 msgstr "Url del repertorio de datos"
+
+msgid "data sources"
+msgstr ""
+
+msgid "data sources management"
+msgstr ""
 
 msgid "date"
 msgstr "Fecha"
@@ -1976,10 +2009,10 @@ msgctxt "CWEType"
 msgid "default_workflow"
 msgstr "Workflow por defecto"
 
-msgctxt "Workflow"
 msgid "default_workflow_object"
 msgstr "Workflow por defecto de"
 
+msgctxt "Workflow"
 msgid "default_workflow_object"
 msgstr "Workflow por defecto de"
 
@@ -2065,6 +2098,9 @@ msgctxt "CWRelation"
 msgid "delete_permission"
 msgstr "Permiso de eliminar"
 
+msgid "delete_permission_object"
+msgstr "posee permiso para eliminar"
+
 msgctxt "CWGroup"
 msgid "delete_permission_object"
 msgstr "puede eliminar"
@@ -2073,17 +2109,14 @@ msgctxt "RQLExpression"
 msgid "delete_permission_object"
 msgstr "puede eliminar"
 
-msgid "delete_permission_object"
-msgstr "posee permiso para eliminar"
-
 #, python-format
 msgid "deleted %(etype)s #%(eid)s (%(title)s)"
 msgstr "Eliminación de la entidad %(etype)s #%(eid)s (%(title)s)"
 
 #, python-format
 msgid ""
-"deleted relation %(rtype)s from %(frometype)s #%(eidfrom)s to %(toetype)s #%"
-"(eidto)s"
+"deleted relation %(rtype)s from %(frometype)s #%(eidfrom)s to %(toetype)s #"
+"%(eidto)s"
 msgstr ""
 "La relación %(rtype)s de %(frometype)s #%(eidfrom)s a %(toetype)s #%(eidto)s "
 "ha sido suprimida."
@@ -2094,15 +2127,7 @@ msgstr "Depende del tipo de restricción"
 msgid "description"
 msgstr "Descripción"
 
-msgctxt "CWEType"
-msgid "description"
-msgstr "Descripción"
-
-msgctxt "CWRelation"
-msgid "description"
-msgstr "Descripción"
-
-msgctxt "Workflow"
+msgctxt "BaseTransition"
 msgid "description"
 msgstr "Descripción"
 
@@ -2110,15 +2135,7 @@ msgctxt "CWAttribute"
 msgid "description"
 msgstr "Descripción"
 
-msgctxt "Transition"
-msgid "description"
-msgstr "Descripción"
-
-msgctxt "WorkflowTransition"
-msgid "description"
-msgstr "Descripción"
-
-msgctxt "State"
+msgctxt "CWEType"
 msgid "description"
 msgstr "Descripción"
 
@@ -2126,22 +2143,30 @@ msgctxt "CWRType"
 msgid "description"
 msgstr "Descripción"
 
-msgctxt "BaseTransition"
+msgctxt "CWRelation"
+msgid "description"
+msgstr "Descripción"
+
+msgctxt "State"
+msgid "description"
+msgstr "Descripción"
+
+msgctxt "Transition"
+msgid "description"
+msgstr "Descripción"
+
+msgctxt "Workflow"
+msgid "description"
+msgstr "Descripción"
+
+msgctxt "WorkflowTransition"
 msgid "description"
 msgstr "Descripción"
 
 msgid "description_format"
 msgstr "Formato"
 
-msgctxt "CWEType"
-msgid "description_format"
-msgstr "Formato"
-
-msgctxt "CWRelation"
-msgid "description_format"
-msgstr "Formato"
-
-msgctxt "Workflow"
+msgctxt "BaseTransition"
 msgid "description_format"
 msgstr "Formato"
 
@@ -2149,15 +2174,7 @@ msgctxt "CWAttribute"
 msgid "description_format"
 msgstr "Formato"
 
-msgctxt "Transition"
-msgid "description_format"
-msgstr "Formato"
-
-msgctxt "WorkflowTransition"
-msgid "description_format"
-msgstr "Formato"
-
-msgctxt "State"
+msgctxt "CWEType"
 msgid "description_format"
 msgstr "Formato"
 
@@ -2165,7 +2182,23 @@ msgctxt "CWRType"
 msgid "description_format"
 msgstr "Formato"
 
-msgctxt "BaseTransition"
+msgctxt "CWRelation"
+msgid "description_format"
+msgstr "Formato"
+
+msgctxt "State"
+msgid "description_format"
+msgstr "Formato"
+
+msgctxt "Transition"
+msgid "description_format"
+msgstr "Formato"
+
+msgctxt "Workflow"
+msgid "description_format"
+msgstr "Formato"
+
+msgctxt "WorkflowTransition"
 msgid "description_format"
 msgstr "Formato"
 
@@ -2191,20 +2224,20 @@ msgstr ""
 msgid "destination_state"
 msgstr "Estado destino"
 
-msgctxt "Transition"
-msgid "destination_state"
-msgstr "Estado destino"
-
 msgctxt "SubWorkflowExitPoint"
 msgid "destination_state"
 msgstr "Estado destino"
 
-msgctxt "State"
-msgid "destination_state_object"
-msgstr "Estado final de"
+msgctxt "Transition"
+msgid "destination_state"
+msgstr "Estado destino"
 
 msgid "destination_state_object"
 msgstr "Destino de"
+
+msgctxt "State"
+msgid "destination_state_object"
+msgstr "Estado final de"
 
 msgid "detach attached file"
 msgstr "soltar el archivo existente"
@@ -2253,9 +2286,6 @@ msgstr "Editar favoritos"
 msgid "edit canceled"
 msgstr "Edición cancelada"
 
-msgid "edit the index page"
-msgstr "Modificar la página de inicio"
-
 msgid "editable-table"
 msgstr "Tabla modificable"
 
@@ -2279,6 +2309,9 @@ msgstr "La inclusión de este url esta prohibida"
 
 msgid "entities deleted"
 msgstr "Entidades eliminadas"
+
+msgid "entity and relation types can't be mapped, only attributes or relations"
+msgstr ""
 
 msgid "entity copied"
 msgstr "Entidad copiada"
@@ -2319,6 +2352,9 @@ msgstr "Tipos de entidades que pueden utilizar este Workflow"
 
 msgid "entity update"
 msgstr "Actualización de la Entidad"
+
+msgid "error"
+msgstr ""
 
 msgid "error while embedding page"
 msgstr "Error durante la inclusión de la página"
@@ -2468,12 +2504,12 @@ msgctxt "CWProperty"
 msgid "for_user"
 msgstr "Propiedad del Usuario"
 
+msgid "for_user_object"
+msgstr "Utiliza las propiedades"
+
 msgctxt "CWUser"
 msgid "for_user_object"
 msgstr "Tiene como preferencia"
-
-msgid "for_user_object"
-msgstr "Utiliza las propiedades"
 
 msgid "friday"
 msgstr "Viernes"
@@ -2496,12 +2532,12 @@ msgctxt "CWRelation"
 msgid "from_entity"
 msgstr "Relación de la entidad"
 
+msgid "from_entity_object"
+msgstr "Relación sujeto"
+
 msgctxt "CWEType"
 msgid "from_entity_object"
 msgstr "Entidad de"
-
-msgid "from_entity_object"
-msgstr "Relación sujeto"
 
 msgid "from_interval_start"
 msgstr "De"
@@ -2513,12 +2549,12 @@ msgctxt "TrInfo"
 msgid "from_state"
 msgstr "Estado de Inicio"
 
+msgid "from_state_object"
+msgstr "Transiciones desde este estado"
+
 msgctxt "State"
 msgid "from_state_object"
 msgstr "Estado de Inicio de"
-
-msgid "from_state_object"
-msgstr "Transiciones desde este estado"
 
 msgid "full text or RQL query"
 msgstr "Texto de búsqueda o demanda RQL"
@@ -2536,6 +2572,9 @@ msgstr "Indexación de texto"
 msgctxt "CWAttribute"
 msgid "fulltextindexed"
 msgstr "Texto indexado"
+
+msgid "gc"
+msgstr ""
 
 msgid "generic plot"
 msgstr "Gráfica Genérica"
@@ -2573,8 +2612,8 @@ msgid ""
 "graphical representation of the %(rtype)s relation type from %(appid)s data "
 "model"
 msgstr ""
-"Representación gráfica del modelo de datos para el tipo de relación %(rtype)"
-"s de %(appid)s"
+"Representación gráfica del modelo de datos para el tipo de relación "
+"%(rtype)s de %(appid)s"
 
 msgid "group in which a user should be to be allowed to pass this transition"
 msgstr "Grupo en el cual el usuario debe estar lograr la transición"
@@ -2601,9 +2640,6 @@ msgid "header-left"
 msgstr ""
 
 msgid "header-right"
-msgstr ""
-
-msgid "help"
 msgstr ""
 
 msgid "hide filter form"
@@ -2695,12 +2731,12 @@ msgctxt "CWUser"
 msgid "in_group"
 msgstr "Forma parte del grupo"
 
+msgid "in_group_object"
+msgstr "Miembros"
+
 msgctxt "CWGroup"
 msgid "in_group_object"
 msgstr "Contiene los usuarios"
-
-msgid "in_group_object"
-msgstr "Miembros"
 
 msgid "in_state"
 msgstr "Estado"
@@ -2754,10 +2790,10 @@ msgctxt "Workflow"
 msgid "initial_state"
 msgstr "Estado inicial"
 
-msgctxt "State"
 msgid "initial_state_object"
 msgstr "Estado inicial de"
 
+msgctxt "State"
 msgid "initial_state_object"
 msgstr "Estado inicial de"
 
@@ -2767,6 +2803,10 @@ msgstr "Inlined"
 msgctxt "CWRType"
 msgid "inlined"
 msgstr "Inlined"
+
+#, python-format
+msgid "inlined relation %(rtype)s of %(etype)s should be supported"
+msgstr ""
 
 msgid "instance home"
 msgstr "Repertorio de la Instancia"
@@ -2871,8 +2911,18 @@ msgstr "Ultima conexión"
 msgid "latest modification time of an entity"
 msgstr "Fecha de la última modificación de una entidad "
 
+msgid "latest synchronization time"
+msgstr ""
+
 msgid "latest update on"
 msgstr "Actualizado el"
+
+msgid "latest_retrieval"
+msgstr ""
+
+msgctxt "CWSource"
+msgid "latest_retrieval"
+msgstr ""
 
 msgid "left"
 msgstr "izquierda"
@@ -3041,23 +3091,11 @@ msgstr "Mi búsqueda personalizada"
 msgid "name"
 msgstr "Nombre"
 
-msgctxt "CWEType"
+msgctxt "BaseTransition"
 msgid "name"
 msgstr "Nombre"
 
-msgctxt "Transition"
-msgid "name"
-msgstr "Nombre"
-
-msgctxt "CWSource"
-msgid "name"
-msgstr ""
-
-msgctxt "Workflow"
-msgid "name"
-msgstr "Nombre"
-
-msgctxt "CWGroup"
+msgctxt "CWCache"
 msgid "name"
 msgstr "Nombre"
 
@@ -3065,11 +3103,11 @@ msgctxt "CWConstraintType"
 msgid "name"
 msgstr "Nombre"
 
-msgctxt "WorkflowTransition"
+msgctxt "CWEType"
 msgid "name"
 msgstr "Nombre"
 
-msgctxt "State"
+msgctxt "CWGroup"
 msgid "name"
 msgstr "Nombre"
 
@@ -3081,11 +3119,23 @@ msgctxt "CWRType"
 msgid "name"
 msgstr "Nombre"
 
-msgctxt "BaseTransition"
+msgctxt "CWSource"
+msgid "name"
+msgstr ""
+
+msgctxt "State"
 msgid "name"
 msgstr "Nombre"
 
-msgctxt "CWCache"
+msgctxt "Transition"
+msgid "name"
+msgstr "Nombre"
+
+msgctxt "Workflow"
+msgid "name"
+msgstr "Nombre"
+
+msgctxt "WorkflowTransition"
 msgid "name"
 msgstr "Nombre"
 
@@ -3215,6 +3265,10 @@ msgstr "Sesiones Web abiertas"
 msgid "options"
 msgstr "Opciones"
 
+msgctxt "CWSourceSchemaConfig"
+msgid "options"
+msgstr ""
+
 msgid "order"
 msgstr "Orden"
 
@@ -3252,6 +3306,16 @@ msgstr "Derechos de propiedad modificados"
 
 msgid "pageid-not-found"
 msgstr "Página no encontrada."
+
+msgid "parser"
+msgstr ""
+
+msgctxt "CWSource"
+msgid "parser"
+msgstr ""
+
+msgid "parser to use to extract entities from content retrieved at given URLs."
+msgstr ""
 
 msgid "password"
 msgstr "Contraseña"
@@ -3301,12 +3365,12 @@ msgctxt "EmailAddress"
 msgid "prefered_form"
 msgstr "Email principal"
 
+msgid "prefered_form_object"
+msgstr "Formato preferido sobre"
+
 msgctxt "EmailAddress"
 msgid "prefered_form_object"
 msgstr "Email principal de"
-
-msgid "prefered_form_object"
-msgstr "Formato preferido sobre"
 
 msgid "preferences"
 msgstr "Preferencias"
@@ -3324,12 +3388,12 @@ msgctxt "CWUser"
 msgid "primary_email"
 msgstr "Dirección principal de correo electrónico"
 
+msgid "primary_email_object"
+msgstr "Dirección de email principal (objeto)"
+
 msgctxt "EmailAddress"
 msgid "primary_email_object"
 msgstr "Dirección principal de correo electrónico de"
-
-msgid "primary_email_object"
-msgstr "Dirección de email principal (objeto)"
 
 msgid "profile"
 msgstr ""
@@ -3349,23 +3413,29 @@ msgstr "Descripción"
 msgid "rdef-permissions"
 msgstr "Permisos"
 
+msgid "rdf"
+msgstr ""
+
 msgid "read"
 msgstr "Lectura"
 
 msgid "read_permission"
 msgstr "Permiso de lectura"
 
-msgctxt "CWEType"
+msgctxt "CWAttribute"
 msgid "read_permission"
 msgstr "Permiso de Lectura"
 
-msgctxt "CWAttribute"
+msgctxt "CWEType"
 msgid "read_permission"
 msgstr "Permiso de Lectura"
 
 msgctxt "CWRelation"
 msgid "read_permission"
 msgstr "Permiso de Lectura"
+
+msgid "read_permission_object"
+msgstr "Tiene acceso de lectura a"
 
 msgctxt "CWGroup"
 msgid "read_permission_object"
@@ -3374,9 +3444,6 @@ msgstr "Puede leer"
 msgctxt "RQLExpression"
 msgid "read_permission_object"
 msgstr "Puede leer"
-
-msgid "read_permission_object"
-msgstr "Tiene acceso de lectura a"
 
 msgid "regexp matching host(s) to which this config applies"
 msgstr ""
@@ -3397,6 +3464,24 @@ msgstr "relación"
 msgid "relation %(relname)s of %(ent)s"
 msgstr "relación %(relname)s de %(ent)s"
 
+#, python-format
+msgid ""
+"relation %(rtype)s with %(etype)s as %(role)s is supported but no target "
+"type supported"
+msgstr ""
+
+#, python-format
+msgid ""
+"relation %(type)s with %(etype)s as %(role)s and target type %(target)s is "
+"mandatory but not supported"
+msgstr ""
+
+#, python-format
+msgid ""
+"relation %s is supported but none if its definitions matches supported "
+"entities"
+msgstr ""
+
 msgid "relation add"
 msgstr "Agregar Relación"
 
@@ -3414,10 +3499,10 @@ msgctxt "CWRelation"
 msgid "relation_type"
 msgstr "Tipo de Relación"
 
-msgctxt "CWRType"
 msgid "relation_type_object"
 msgstr "Definición de Relaciones"
 
+msgctxt "CWRType"
 msgid "relation_type_object"
 msgstr "Definición de Relaciones"
 
@@ -3431,7 +3516,6 @@ msgstr ""
 msgid "relations deleted"
 msgstr "Relaciones Eliminadas"
 
-msgctxt "CWAttribute"
 msgid "relations_object"
 msgstr ""
 
@@ -3452,11 +3536,11 @@ msgctxt "BaseTransition"
 msgid "require_group"
 msgstr "Restringida al Grupo"
 
-msgctxt "Transition"
+msgctxt "CWPermission"
 msgid "require_group"
 msgstr "Restringida al Grupo"
 
-msgctxt "CWPermission"
+msgctxt "Transition"
 msgid "require_group"
 msgstr "Restringida al Grupo"
 
@@ -3464,10 +3548,10 @@ msgctxt "WorkflowTransition"
 msgid "require_group"
 msgstr "Restringida al Grupo"
 
-msgctxt "CWGroup"
 msgid "require_group_object"
 msgstr "Posee derechos sobre"
 
+msgctxt "CWGroup"
 msgid "require_group_object"
 msgstr "Posee derechos sobre"
 
@@ -3521,9 +3605,6 @@ msgstr "Ejemplo"
 msgid "saturday"
 msgstr "Sábado"
 
-msgid "schema entities"
-msgstr "Entidades del esquema"
-
 msgid "schema's permissions definitions"
 msgstr "Definiciones de permisos del esquema"
 
@@ -3535,9 +3616,6 @@ msgstr "Entidades"
 
 msgid "schema-relation-types"
 msgstr "Relaciones"
-
-msgid "schema-security"
-msgstr "Seguridad"
 
 msgid "search"
 msgstr "Buscar"
@@ -3649,6 +3727,9 @@ msgstr "Nombre del Sistema"
 msgid "site-wide property can't be set for user"
 msgstr "Una propiedad específica al Sistema no puede ser propia al usuario"
 
+msgid "siteinfo"
+msgstr ""
+
 msgid "some errors occurred:"
 msgstr "Algunos errores encontrados :"
 
@@ -3677,12 +3758,16 @@ msgctxt "CWEType"
 msgid "specializes"
 msgstr "Especializa"
 
+msgid "specializes_object"
+msgstr "Especializado por"
+
 msgctxt "CWEType"
 msgid "specializes_object"
 msgstr "Especializado por"
 
-msgid "specializes_object"
-msgstr "Especializado por"
+#, python-format
+msgid "specifying %s is mandatory"
+msgstr ""
 
 msgid "startup views"
 msgstr "Vistas de inicio"
@@ -3719,10 +3804,10 @@ msgctxt "State"
 msgid "state_of"
 msgstr "Estado de"
 
-msgctxt "Workflow"
 msgid "state_of_object"
 msgstr "Tiene por Estado"
 
+msgctxt "Workflow"
 msgid "state_of_object"
 msgstr "Tiene por Estado"
 
@@ -3768,20 +3853,20 @@ msgctxt "WorkflowTransition"
 msgid "subworkflow_exit"
 msgstr "Salida del Sub-Workflow"
 
+msgid "subworkflow_exit_object"
+msgstr "Salida Sub-Workflow de"
+
 msgctxt "SubWorkflowExitPoint"
 msgid "subworkflow_exit_object"
 msgstr "Salida Sub-Workflow de"
 
-msgid "subworkflow_exit_object"
-msgstr "Salida Sub-Workflow de"
+msgid "subworkflow_object"
+msgstr "Sub-Workflow de"
 
 msgctxt "Workflow"
 msgid "subworkflow_object"
 msgstr "Sub-Workflow de"
 
-msgid "subworkflow_object"
-msgstr "Sub-Workflow de"
-
 msgid "subworkflow_state"
 msgstr "Estado de Sub-Workflow"
 
@@ -3789,10 +3874,10 @@ msgctxt "SubWorkflowExitPoint"
 msgid "subworkflow_state"
 msgstr "Estado de Sub-Workflow"
 
-msgctxt "State"
 msgid "subworkflow_state_object"
 msgstr "Estado de Salida de"
 
+msgctxt "State"
 msgid "subworkflow_state_object"
 msgstr "Estado de Salida de"
 
@@ -3813,8 +3898,8 @@ msgctxt "CWRType"
 msgid "symmetric"
 msgstr "Simétrico"
 
-msgid "system entities"
-msgstr "Entidades del sistema"
+msgid "synchronization-interval must be greater than 1 minute"
+msgstr ""
 
 msgid "table"
 msgstr "Tabla"
@@ -3846,6 +3931,9 @@ msgstr "El URI del Objeto"
 msgid "the prefered email"
 msgstr "Dirección principal de email"
 
+msgid "the system source has its configuration stored on the file-system"
+msgstr ""
+
 #, python-format
 msgid "the value \"%s\" is already used, use another one"
 msgstr "El valor \"%s\" ya esta en uso, favor de utilizar otro"
@@ -3856,8 +3944,14 @@ msgstr "Esta acción es irreversible!."
 msgid "this entity is currently owned by"
 msgstr "Esta Entidad es propiedad de"
 
+msgid "this parser doesn't use a mapping"
+msgstr ""
+
 msgid "this resource does not exist"
 msgstr "Este recurso no existe"
+
+msgid "this source doesn't use a mapping"
+msgstr ""
 
 msgid "thursday"
 msgstr "Jueves"
@@ -3871,9 +3965,6 @@ msgstr "Fecha"
 msgctxt "CWCache"
 msgid "timestamp"
 msgstr "Válido desde"
-
-msgid "timestamp of the latest source synchronization."
-msgstr "Fecha de la última sincronización de la fuente."
 
 msgid "timetable"
 msgstr "Tablero de tiempos"
@@ -3906,10 +3997,10 @@ msgctxt "CWRelation"
 msgid "to_entity"
 msgstr "Por la entidad"
 
-msgctxt "CWEType"
 msgid "to_entity_object"
 msgstr "Objeto de la Relación"
 
+msgctxt "CWEType"
 msgid "to_entity_object"
 msgstr "Objeto de la Relación"
 
@@ -3923,10 +4014,10 @@ msgctxt "TrInfo"
 msgid "to_state"
 msgstr "Hacia el Estado"
 
-msgctxt "State"
 msgid "to_state_object"
 msgstr "Transición hacia este Estado"
 
+msgctxt "State"
 msgid "to_state_object"
 msgstr "Transición hacia este Estado"
 
@@ -3977,10 +4068,10 @@ msgctxt "WorkflowTransition"
 msgid "transition_of"
 msgstr "Transición de"
 
-msgctxt "Workflow"
 msgid "transition_of_object"
 msgstr "Utiliza las transiciones"
 
+msgctxt "Workflow"
 msgid "transition_of_object"
 msgstr "Utiliza las transiciones"
 
@@ -3997,6 +4088,10 @@ msgctxt "BaseTransition"
 msgid "type"
 msgstr "Tipo"
 
+msgctxt "CWSource"
+msgid "type"
+msgstr ""
+
 msgctxt "Transition"
 msgid "type"
 msgstr "Tipo"
@@ -4004,10 +4099,6 @@ msgstr "Tipo"
 msgctxt "WorkflowTransition"
 msgid "type"
 msgstr "Tipo"
-
-msgctxt "CWSource"
-msgid "type"
-msgstr ""
 
 msgid "type here a sparql query"
 msgstr "Escriba aquí su consulta en Sparql"
@@ -4067,14 +4158,22 @@ msgid "unknown external entity"
 msgstr "Entidad externa desconocida"
 
 #, python-format
+msgid "unknown option(s): %s"
+msgstr ""
+
+#, python-format
+msgid "unknown options %s"
+msgstr ""
+
+#, python-format
 msgid "unknown property key %s"
 msgstr "Clave de Propiedad desconocida: %s"
 
+msgid "unknown source type"
+msgstr ""
+
 msgid "unknown vocabulary:"
 msgstr "Vocabulario desconocido: "
-
-msgid "up"
-msgstr "Arriba"
 
 msgid "upassword"
 msgstr "Contraseña"
@@ -4089,13 +4188,16 @@ msgstr "Modificación"
 msgid "update_permission"
 msgstr "Puede ser modificado por"
 
+msgctxt "CWAttribute"
+msgid "update_permission"
+msgstr "Puede ser modificado por"
+
 msgctxt "CWEType"
 msgid "update_permission"
 msgstr "Puede ser modificado por"
 
-msgctxt "CWAttribute"
-msgid "update_permission"
-msgstr "Puede ser modificado por"
+msgid "update_permission_object"
+msgstr "Tiene permiso de modificar"
 
 msgctxt "CWGroup"
 msgid "update_permission_object"
@@ -4104,9 +4206,6 @@ msgstr "Puede modificar"
 msgctxt "RQLExpression"
 msgid "update_permission_object"
 msgstr "Puede modificar"
-
-msgid "update_permission_object"
-msgstr "Tiene permiso de modificar"
 
 msgid "update_relation"
 msgstr "Modificar"
@@ -4124,6 +4223,13 @@ msgstr "URI"
 msgctxt "ExternalUri"
 msgid "uri"
 msgstr "URI"
+
+msgid "url"
+msgstr ""
+
+msgctxt "CWSource"
+msgid "url"
+msgstr ""
 
 msgid "use template languages"
 msgstr "Utilizar plantillas de lenguaje"
@@ -4144,12 +4250,12 @@ msgctxt "CWUser"
 msgid "use_email"
 msgstr "Usa el Correo Electrónico"
 
+msgid "use_email_object"
+msgstr "Email utilizado por"
+
 msgctxt "EmailAddress"
 msgid "use_email_object"
 msgstr "Utilizado por"
-
-msgid "use_email_object"
-msgstr "Email utilizado por"
 
 msgid "use_template_format"
 msgstr "Utilización del formato 'cubicweb template'"
@@ -4189,6 +4295,12 @@ msgstr "Preferencias"
 
 msgid "users"
 msgstr "Usuarios"
+
+msgid "users and groups"
+msgstr ""
+
+msgid "users and groups management"
+msgstr ""
 
 msgid "users using this bookmark"
 msgstr "Usuarios utilizando este Favorito"
@@ -4270,6 +4382,9 @@ msgstr ""
 msgid "visible"
 msgstr "Visible"
 
+msgid "warning"
+msgstr ""
+
 msgid "we are not yet ready to handle this query"
 msgstr "Aún no podemos manejar este tipo de consulta Sparql"
 
@@ -4339,10 +4454,10 @@ msgctxt "Workflow"
 msgid "workflow_of"
 msgstr "Workflow de"
 
-msgctxt "CWEType"
 msgid "workflow_of_object"
 msgstr "Utiliza el Workflow"
 
+msgctxt "CWEType"
 msgid "workflow_of_object"
 msgstr "Utiliza el Workflow"
 
@@ -4365,5 +4480,79 @@ msgstr "Sí"
 msgid "you have been logged out"
 msgstr "Ha terminado la sesión"
 
+#, python-format
+msgid "you may want to specify something for %s"
+msgstr ""
+
 msgid "you should probably delete that property"
 msgstr "Debería probablamente suprimir esta propriedad"
+
+#, python-format
+msgid "you should un-inline relation %s which is supported and may be crossed "
+msgstr ""
+
+#~ msgid "Attributes with non default permissions:"
+#~ msgstr "Atributos con permisos no estándares"
+
+#~ msgid "Entity types"
+#~ msgstr "Tipos de entidades"
+
+#~ msgid "Index"
+#~ msgstr "Índice"
+
+#~ msgid "Permissions for entity types"
+#~ msgstr "Permisos por tipos de entidad"
+
+#~ msgid "Permissions for relations"
+#~ msgstr "Permisos por las relaciones"
+
+#~ msgid "Relation types"
+#~ msgstr "Tipos de relación"
+
+#~ msgid "am/pm calendar (month)"
+#~ msgstr "calendario am/pm (mes)"
+
+#~ msgid "am/pm calendar (semester)"
+#~ msgstr "calendario am/pm (semestre)"
+
+#~ msgid "am/pm calendar (week)"
+#~ msgstr "calendario am/pm (semana)"
+
+#~ msgid "am/pm calendar (year)"
+#~ msgstr "calendario am/pm (año)"
+
+#~ msgid "application entities"
+#~ msgstr "Entidades de la aplicación"
+
+#~ msgid "calendar (month)"
+#~ msgstr "calendario (mensual)"
+
+#~ msgid "calendar (semester)"
+#~ msgstr "calendario (semestral)"
+
+#~ msgid "calendar (week)"
+#~ msgstr "calendario (semanal)"
+
+#~ msgid "calendar (year)"
+#~ msgstr "calendario (anual)"
+
+#~ msgid "create an index page"
+#~ msgstr "Crear una página de inicio"
+
+#~ msgid "edit the index page"
+#~ msgstr "Modificar la página de inicio"
+
+#~ msgid "schema entities"
+#~ msgstr "Entidades del esquema"
+
+#~ msgid "schema-security"
+#~ msgstr "Seguridad"
+
+#~ msgid "system entities"
+#~ msgstr "Entidades del sistema"
+
+#~ msgid "timestamp of the latest source synchronization."
+#~ msgstr "Fecha de la última sincronización de la fuente."
+
+#~ msgid "up"
+#~ msgstr "Arriba"
