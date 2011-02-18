@@ -44,7 +44,7 @@ $(document).ready(function() {
             callback: function() {
                 var origLength = scriptsIncluded.length;
                 scriptsIncluded = jsSources();
-                // check that foo.js has been inserted in <head>
+                // check that foo.js has been *appended* to <head>
                 equals(scriptsIncluded.length, origLength + 1);
                 equals(scriptsIncluded[origLength].indexOf('http://foo.js'), 0);
                 // check that <div class="ajaxHtmlHead"> has been removed
@@ -105,7 +105,7 @@ $(document).ready(function() {
     test('test callback after synchronous request with parameters', function() {
         var deferred = new Deferred();
         var result = jQuery.ajax({
-            url: './ajax_url0.html',
+            url: '/../ajax_url0.html',
             async: false,
             beforeSend: function(xhr) {
                 deferred._req = xhr;
