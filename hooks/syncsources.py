@@ -17,6 +17,8 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """hooks for repository sources synchronization"""
 
+from socket import gethostname
+
 from yams.schema import role_name
 
 from cubicweb import ValidationError
@@ -87,11 +89,15 @@ class SourceHostConfigUpdatedHook(SourceHook):
     __select__ = SourceHook.__select__ & is_instance('CWSourceHostConfig')
     events = ('after_add_entity', 'after_update_entity', 'before_delete_entity',)
     def __call__(self):
-        try:
-            SourceUpdatedOp.get_instance(self._cw).add_data(self.entity.cwsource)
-        except IndexError:
-            # XXX no source linked to the host config yet
-            pass
+        if self.entity.match_host(gethostname()):
+            if self.event == 'after_update_entity' and \
+                   not 'config' in self.entity.cw_edited:
+                return
+            try:
+                SourceUpdatedOp.get_instance(self._cw).add_data(self.entity.cwsource)
+            except IndexError:
+                # XXX no source linked to the host config yet
+                pass
 
 
 # source mapping synchronization. Expect cw_for_source/cw_schema are immutable
