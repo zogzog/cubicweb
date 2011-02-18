@@ -1127,7 +1127,7 @@ class BeforeDeleteConstrainedByHook(SyncSchemaHook):
 class AfterAddCWUniqueTogetherConstraintHook(SyncSchemaHook):
     __regid__ = 'syncadd_cwuniquetogether_constraint'
     __select__ = SyncSchemaHook.__select__ & is_instance('CWUniqueTogetherConstraint')
-    events = ('after_add_entity', 'after_update_entity')
+    events = ('after_add_entity',)
 
     def __call__(self):
         CWUniqueTogetherConstraintAddOp(self._cw, entity=self.entity)
