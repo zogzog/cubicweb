@@ -664,10 +664,11 @@ class UpgradeInstanceCommand(InstanceCommandFork):
     name = 'upgrade'
     actionverb = 'upgraded'
     options = InstanceCommand.options + (
-        ('force-componant-version',
-         {'short': 't', 'type' : 'csv', 'metavar': 'cube1=X.Y.Z,cube2=X.Y.Z',
+        ('force-cube-version',
+         {'short': 't', 'type' : 'named', 'metavar': 'cube1:X.Y.Z,cube2:X.Y.Z',
           'default': None,
-          'help': 'force migration from the indicated  version for the specified cube.'}),
+          'help': 'force migration from the indicated version for the specified cube(s).'}),
+
         ('force-cubicweb-version',
          {'short': 'e', 'type' : 'string', 'metavar': 'X.Y.Z',
           'default': None,
@@ -721,12 +722,9 @@ given, appropriate sources for migration will be automatically selected \
         mih = config.migration_handler()
         repo = mih.repo_connect()
         vcconf = repo.get_versions()
-        if self.config.force_componant_version:
-            packversions = {}
-            for vdef in self.config.force_componant_version:
-                componant, version = vdef.split('=')
-                packversions[componant] = Version(version)
-            vcconf.update(packversions)
+        if self.config.force_cube_version:
+            for cube, version in self.config.force_cube_version.iteritems():
+                vcconf[cube] = Version(version)
         toupgrade = []
         for cube in config.cubes():
             installedversion = config.cube_version(cube)
