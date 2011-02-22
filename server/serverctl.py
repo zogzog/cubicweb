@@ -388,6 +388,10 @@ class InitInstanceCommand(Command):
           'default': False,
           'help': 'insert drop statements to remove previously existant \
 tables, indexes... (no by default)'}),
+        ('config-level',
+         {'short': 'l', 'type': 'int', 'default': 1,
+          'help': 'level threshold for questions asked when configuring another source'
+          }),
         )
 
     def run(self, args):
@@ -412,7 +416,7 @@ tables, indexes... (no by default)'}),
                 % (config.sources_file(), str(ex).strip()))
         init_repository(config, drop=self.config.drop)
         while ASK.confirm('Enter another source ?', default_is_yes=False):
-            CWCTL.run(['add-source', config.appid])
+            CWCTL.run(['add-source', '--config-level', self.config.config_level, config.appid])
 
 
 class AddSourceCommand(Command):
@@ -424,7 +428,12 @@ class AddSourceCommand(Command):
     name = 'add-source'
     arguments = '<instance>'
     min_args = max_args = 1
-    options = ()
+    options = (
+        ('config-level',
+         {'short': 'l', 'type': 'int', 'default': 1,
+          'help': 'level threshold for questions asked when configuring another source'
+          }),
+        )
 
     def run(self, args):
         appid = args[0]
@@ -463,7 +472,7 @@ class AddSourceCommand(Command):
                 else:
                     break
         # XXX configurable inputlevel
-        sconfig = ask_source_config(config, type, inputlevel=0)
+        sconfig = ask_source_config(config, type, inputlevel=self.config.config_level)
         cfgstr = unicode(generate_source_config(sconfig), sys.stdin.encoding)
         req.create_entity('CWSource', name=sourceuri,
                           type=unicode(type), config=cfgstr)
