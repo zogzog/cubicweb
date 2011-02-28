@@ -1,4 +1,5 @@
 from __future__ import with_statement
+
 if confirm('fix existing cwuri?'):
     from logilab.common.shellutils import ProgressBar
     from cubicweb.server.session import hooks_control
@@ -11,3 +12,11 @@ if confirm('fix existing cwuri?'):
                 commit(ask_confirm=False)
             pb.update()
     commit(ask_confirm=False)
+
+try:
+    from cubicweb import devtools
+    option_group_changed('anonymous-user', 'main', 'web')
+    option_group_changed('anonymous-password', 'main', 'web')
+except ImportError:
+    # cubicweb-dev unavailable, nothing needed
+    pass
