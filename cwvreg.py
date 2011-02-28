@@ -554,7 +554,7 @@ class CubicWebVRegistry(VRegistry):
         if not self.initialized:
             self['propertydefs'] = {}
             self['propertyvalues'] = self.eprop_values = {}
-            for key, propdef in self.config.eproperty_definitions():
+            for key, propdef in self.config.cwproperty_definitions():
                 self.register_property(key, **propdef)
         CW_EVENT_MANAGER.emit('after-registry-reset', self)
 

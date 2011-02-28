@@ -771,7 +771,7 @@ this option is set to yes",
         self.debug('%s loaded', sitefile)
         return module
 
-    def eproperty_definitions(self):
+    def cwproperty_definitions(self):
         cfg = self.persistent_options_configuration()
         for section, options in cfg.options_by_section():
             section = section.lower()

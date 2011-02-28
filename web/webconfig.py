@@ -207,8 +207,8 @@ have the python imaging library installed to use captcha)',
     def fckeditor_installed(self):
         return exists(self.uiprops['FCKEDITOR_PATH'])
 
-    def eproperty_definitions(self):
-        for key, pdef in super(WebConfiguration, self).eproperty_definitions():
+    def cwproperty_definitions(self):
+        for key, pdef in super(WebConfiguration, self).cwproperty_definitions():
             if key == 'ui.fckeditor' and not self.fckeditor_installed():
                 continue
             yield key, pdef
