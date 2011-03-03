@@ -849,9 +849,12 @@ class CheckRepositoryCommand(Command):
     options = (
         ('checks',
          {'short': 'c', 'type' : 'csv', 'metavar' : '<check list>',
-          'default' : ('entities', 'relations', 'metadata', 'schema', 'text_index'),
+          'default' : ('entities', 'relations',
+                       'mandatory_relations', 'mandatory_attributes',
+                       'metadata', 'schema', 'text_index'),
           'help': 'Comma separated list of check to run. By default run all \
-checks, i.e. entities, relations, text_index and metadata.'}
+checks, i.e. entities, relations, mandatory_relations, mandatory_attributes, \
+metadata, text_index and schema.'}
          ),
 
         ('autofix',

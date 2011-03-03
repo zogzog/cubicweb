@@ -264,6 +264,54 @@ def check_relations(schema, session, eids, fix=1):
                     session.system_sql(sql)
 
 
+def check_mandatory_relations(schema, session, eids, fix=1):
+    """check entities missing some mandatory relation"""
+    print 'Checking mandatory relations'
+    for rschema in schema.relations():
+        if rschema.final or rschema in PURE_VIRTUAL_RTYPES:
+            continue
+        smandatory = set()
+        omandatory = set()
+        for rdef in rschema.rdefs.values():
+            if rdef.cardinality[0] in '1+':
+                smandatory.add(rdef.subject)
+            if rdef.cardinality[1] in '1+':
+                omandatory.add(rdef.object)
+        for role, etypes in (('subject', smandatory), ('object', omandatory)):
+            for etype in etypes:
+                if role == 'subject':
+                    rql = 'Any X WHERE NOT X %s Y, X is %s' % (rschema, etype)
+                else:
+                    rql = 'Any X WHERE NOT Y %s X, X is %s' % (rschema, etype)
+                for entity in session.execute(rql).entities():
+                    print >> sys.stderr, '%s #%s is missing mandatory %s relation %s' % (
+                        entity.__regid__, entity.eid, role, rschema)
+                    if fix:
+                        #if entity.cw_describe()['source']['uri'] == 'system': XXX
+                        entity.delete()
+                    notify_fixed(fix)
+
+
+def check_mandatory_attributes(schema, session, eids, fix=1):
+    """check for entities stored in the system source missing some mandatory
+    attribute
+    """
+    print 'Checking mandatory attributes'
+    for rschema in schema.relations():
+        if not rschema.final or rschema in VIRTUAL_RTYPES:
+            continue
+        for rdef in rschema.rdefs.values():
+            if rdef.cardinality[0] in '1+':
+                rql = 'Any X WHERE X %s NULL, X is %s, X cw_source S, S name "system"' % (
+                    rschema, rdef.subject)
+                for entity in session.execute(rql).entities():
+                    print >> sys.stderr, '%s #%s is missing mandatory attribute %s' % (
+                        entity.__regid__, entity.eid, rschema)
+                    if fix:
+                        entity.delete()
+                    notify_fixed(fix)
+
+
 def check_metadata(schema, session, eids, fix=1):
     """check entities has required metadata
 
