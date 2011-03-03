@@ -8,7 +8,7 @@ from shutil import rmtree, copy as copyfile
 from uuid import uuid4 
 
 # imported by default to simplify further import statements
-from logilab.common.testlib import unittest_main, with_tempdir, InnerTest
+from logilab.common.testlib import unittest_main, with_tempdir, InnerTest, Tags
 from logilab.common.shellutils import getlogin
 
 import cubicweb
@@ -85,6 +85,8 @@ class FirefoxHelper(object):
 
 
 class QUnitTestCase(CubicWebServerTC):
+
+    tags = CubicWebServerTC.tags | Tags(('qunit',))
 
     # testfile, (dep_a, dep_b)
     all_js_tests = ()
