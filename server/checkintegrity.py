@@ -36,6 +36,12 @@ from cubicweb.schema import META_RTYPES, VIRTUAL_RTYPES, PURE_VIRTUAL_RTYPES
 from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.server.session import security_enabled
 
+def notify_fixed(fix):
+    if fix:
+        print >> sys.stderr, ' [FIXED]'
+    else:
+        print >> sys.stderr
+
 def has_eid(session, sqlcursor, eid, eids):
     """return true if the eid is a valid eid"""
     if eid in eids:
@@ -169,9 +175,7 @@ def check_text_index(schema, session, eids, fix=1):
             print >> sys.stderr, msg % eid,
             if fix:
                 session.system_sql('DELETE FROM appears WHERE uid=%s;' % eid)
-                print >> sys.stderr, ' [FIXED]'
-            else:
-                print >> sys.stderr
+            notify_fixed(fix)
 
 
 def check_entities(schema, session, eids, fix=1):
@@ -185,9 +189,7 @@ def check_entities(schema, session, eids, fix=1):
             print >> sys.stderr, msg % eid,
             if fix:
                 session.system_sql('DELETE FROM entities WHERE eid=%s;' % eid)
-                print >> sys.stderr, ' [FIXED]'
-            else:
-                print >> sys.stderr
+            notify_fixed(fix)
     print 'Checking entities tables'
     for eschema in schema.entities():
         if eschema.final:
@@ -204,22 +206,19 @@ def check_entities(schema, session, eids, fix=1):
                 print >> sys.stderr, msg % (eid, eschema.type),
                 if fix:
                     session.system_sql('DELETE FROM %s WHERE %s=%s;' % (table, column, eid))
-                    print >> sys.stderr, ' [FIXED]'
-                else:
-                    print >> sys.stderr
+                notify_fixed(fix)
 
 
 def bad_related_msg(rtype, target, eid, fix):
     msg = '  A relation %s with %s eid %s exists but no such entity in sources'
     print >> sys.stderr, msg % (rtype, target, eid),
-    if fix:
-        print >> sys.stderr, ' [FIXED]'
-    else:
-        print >> sys.stderr
+    notify_fixed(fix)
 
 
 def check_relations(schema, session, eids, fix=1):
-    """check all relations registered in the repo system table"""
+    """check that eids referenced by relations are registered in the repo system
+    table
+    """
     print 'Checking relations'
     for rschema in schema.relations():
         if rschema.final or rschema in PURE_VIRTUAL_RTYPES:
@@ -287,9 +286,7 @@ def check_metadata(schema, session, eids, fix=1):
                     session.system_sql("UPDATE %s SET %s=%%(v)s WHERE %s=%s ;"
                                        % (table, column, eidcolumn, eid),
                                        {'v': default})
-                    print >> sys.stderr, ' [FIXED]'
-                else:
-                    print >> sys.stderr
+                notify_fixed(fix)
     cursor = session.system_sql('SELECT MIN(%s) FROM %sCWUser;' % (eidcolumn,
                                                                   SQL_PREFIX))
     default_user_eid = cursor.fetchone()[0]
@@ -305,9 +302,7 @@ def check_metadata(schema, session, eids, fix=1):
             if fix:
                 session.system_sql('INSERT INTO %s_relation VALUES (%s, %s) ;'
                                    % (rel, eid, default))
-                print >> sys.stderr, ' [FIXED]'
-            else:
-                print >> sys.stderr
+            notify_fixed(fix)
 
 
 def check(repo, cnx, checks, reindex, fix, withpb=True):
