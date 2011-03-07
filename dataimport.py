@@ -339,6 +339,7 @@ class ObjectStore(object):
     def rql(self, *args):
         if self._rql is not None:
             return self._rql(*args)
+        return []
 
     @property
     def nb_inserted_entities(self):
@@ -470,7 +471,7 @@ class RQLObjectStore(ObjectStore):
         eid_from, rtype, eid_to = super(RQLObjectStore, self).relate(
             eid_from, rtype, eid_to)
         self.rql('SET X %s Y WHERE X eid %%(x)s, Y eid %%(y)s' % rtype,
-                  {'x': int(eid_from), 'y': int(eid_to)}, ('x', 'y'))
+                 {'x': int(eid_from), 'y': int(eid_to)})
 
 
 # the import controller ########################################################
@@ -513,7 +514,6 @@ class CWImportController(object):
             traceback.print_exc(file=tmp)
         else:
             traceback.print_exception(type, value, tb, file=tmp)
-        print tmp.getvalue()
         # use a list to avoid counting a <nb lines> errors instead of one
         errorlog = self.errors.setdefault(key, [])
         if msg is None:

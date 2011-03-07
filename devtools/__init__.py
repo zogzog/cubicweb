@@ -85,20 +85,10 @@ class TestServerConfiguration(ServerConfiguration):
     read_instance_schema = False
     init_repository = True
     db_require_setup = True
-    options = cwconfig.merge_options(ServerConfiguration.options + (
-        ('anonymous-user',
-         {'type' : 'string',
-          'default': None,
-          'help': 'login of the CubicWeb user account to use for anonymous user (if you want to allow anonymous)',
-          'group': 'main', 'level': 1,
-          }),
-        ('anonymous-password',
-         {'type' : 'string',
-          'default': None,
-          'help': 'password of the CubicWeb user account matching login',
-          'group': 'main', 'level': 1,
-          }),
-        ))
+    options = cwconfig.merge_options(
+        ServerConfiguration.options +
+        tuple((opt, optdict) for opt, optdict in TwistedConfiguration.options
+              if opt in ('anonymous-user', 'anonymous-password')))
 
     def __init__(self, appid, apphome=None, log_threshold=logging.CRITICAL+10):
         # must be set before calling parent __init__

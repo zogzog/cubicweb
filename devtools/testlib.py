@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -355,7 +355,7 @@ class CubicWebTC(TestCase):
         user = req.create_entity('CWUser', login=unicode(login),
                                  upassword=password, **kwargs)
         req.execute('SET X in_group G WHERE X eid %%(x)s, G name IN(%s)'
-                    % ','.join(repr(g) for g in groups),
+                    % ','.join(repr(str(g)) for g in groups),
                     {'x': user.eid})
         user.cw_clear_relation_cache('in_group', 'subject')
         if commit:
@@ -434,6 +434,21 @@ class CubicWebTC(TestCase):
 
     # other utilities #########################################################
 
+    def grant_permission(self, entity, group, pname, plabel=None):
+        """insert a permission on an entity. Will have to commit the main
+        connection to be considered
+        """
+        pname = unicode(pname)
+        plabel = plabel and unicode(plabel) or unicode(group)
+        e = entity.eid
+        with security_enabled(self.session, False, False):
+            peid = self.execute(
+            'INSERT CWPermission X: X name %(pname)s, X label %(plabel)s,'
+            'X require_group G, E require_permission X '
+            'WHERE G name %(group)s, E eid %(e)s',
+            locals())[0][0]
+        return peid
+
     @contextmanager
     def temporary_appobjects(self, *appobjects):
         self.vreg._loadedmods.setdefault(self.__module__, {})
@@ -445,7 +460,20 @@ class CubicWebTC(TestCase):
             for obj in appobjects:
                 self.vreg.unregister(obj)
 
-    # vregistry inspection utilities ###########################################
+    def assertModificationDateGreater(self, entity, olddate):
+        entity.cw_attr_cache.pop('modification_date', None)
+        self.failUnless(entity.modification_date > olddate)
+
+
+    # workflow utilities #######################################################
+
+    def assertPossibleTransitions(self, entity, expected):
+        transitions = entity.cw_adapt_to('IWorkflowable').possible_transitions()
+        self.assertListEqual(sorted(tr.name for tr in transitions),
+                             sorted(expected))
+
+
+    # views and actions registries inspection ##################################
 
     def pviews(self, req, rset):
         return sorted((a.__regid__, a.__class__)

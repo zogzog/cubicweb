@@ -586,12 +586,12 @@ class QuerierHelper(object):
     def set_schema(self, schema):
         self.schema = schema
         repo = self._repo
-        # rql st and solution cache. Don't bother using a Cache instance: we
-        # should have a limited number of queries in there, since there are no
-        # entries in this cache for user queries (which have no args)
-        self._rql_cache = {}
-        # rql cache key cache
-        self._rql_ck_cache = Cache(repo.config['rql-cache-size'])
+        # rql st and solution cache.
+        self._rql_cache = Cache(repo.config['rql-cache-size'])
+        # rql cache key cache. Don't bother using a Cache instance: we should
+        # have a limited number of queries in there, since there are no entries
+        # in this cache for user queries (which have no args)
+        self._rql_ck_cache = {}
         # some cache usage stats
         self.cache_hit, self.cache_miss = 0, 0
         # rql parsing / analysing helper
@@ -656,11 +656,15 @@ class QuerierHelper(object):
                 print '*'*80
             print 'querier input', rql, args
         # parse the query and binds variables
+        cachekey = rql
         try:
-            cachekey = rql
             if args:
+                # search for named args in query which are eids (hence
+                # influencing query's solutions)
                 eidkeys = self._rql_ck_cache[rql]
                 if eidkeys:
+                    # if there are some, we need a better cache key, eg (rql +
+                    # entity type of each eid)
                     try:
                         cachekey = self._repo.querier_cache_key(session, rql,
                                                                 args, eidkeys)
@@ -674,15 +678,20 @@ class QuerierHelper(object):
             self.cache_miss += 1
             rqlst = self.parse(rql)
             try:
+                # compute solutions for rqlst and return named args in query
+                # which are eids. Notice that if you may not need `eidkeys`, we
+                # have to compute solutions anyway (kept as annotation on the
+                # tree)
                 eidkeys = self.solutions(session, rqlst, args)
             except UnknownEid:
                 # we want queries such as "Any X WHERE X eid 9999" return an
                 # empty result instead of raising UnknownEid
                 return empty_rset(rql, args, rqlst)
-            self._rql_ck_cache[rql] = eidkeys
-            if eidkeys:
-                cachekey = self._repo.querier_cache_key(session, rql, args,
-                                                        eidkeys)
+            if args and not rql in self._rql_ck_cache:
+                self._rql_ck_cache[rql] = eidkeys
+                if eidkeys:
+                    cachekey = self._repo.querier_cache_key(session, rql, args,
+                                                            eidkeys)
             self._rql_cache[cachekey] = rqlst
         orig_rqlst = rqlst
         if rqlst.TYPE != 'select':

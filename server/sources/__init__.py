@@ -572,7 +572,9 @@ class ConnectionWrapper(object):
         pass
     def cursor(self):
         return None # no actual cursor support
-
+    def close(self):
+        if hasattr(self.cnx, 'close'):
+            self.cnx.close()
 
 from cubicweb.server import SOURCE_TYPES
 

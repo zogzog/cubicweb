@@ -1,3 +1,10 @@
+from __future__ import with_statement
+
+# fix some corrupted entities noticed on several instances
+rql('DELETE CWConstraint X WHERE NOT E constrained_by X')
+rql('SET X is_instance_of Y WHERE X is Y, NOT X is_instance_of Y')
+commit()
+
 if confirm('fix existing cwuri?'):
     from logilab.common.shellutils import ProgressBar
     from cubicweb.server.session import hooks_control
@@ -10,3 +17,11 @@ if confirm('fix existing cwuri?'):
                 commit(ask_confirm=False)
             pb.update()
     commit(ask_confirm=False)
+
+try:
+    from cubicweb import devtools
+    option_group_changed('anonymous-user', 'main', 'web')
+    option_group_changed('anonymous-password', 'main', 'web')
+except ImportError:
+    # cubicweb-dev unavailable, nothing needed
+    pass
