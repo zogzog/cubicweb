@@ -89,7 +89,7 @@ class SourceHostConfigUpdatedHook(SourceHook):
     __select__ = SourceHook.__select__ & is_instance('CWSourceHostConfig')
     events = ('after_add_entity', 'after_update_entity', 'before_delete_entity',)
     def __call__(self):
-        if self.entity.match_host(gethostname()):
+        if self.entity.match(gethostname()):
             if self.event == 'after_update_entity' and \
                    not 'config' in self.entity.cw_edited:
                 return
