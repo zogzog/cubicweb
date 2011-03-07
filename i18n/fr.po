@@ -1220,7 +1220,9 @@ msgid "attribute"
 msgstr "attribut"
 
 msgid "attribute/relation can't be mapped, only entity and relation types"
-msgstr "les attributs et relations ne peuvent être mappés, uniquement les types d'entité et de relation"
+msgstr ""
+"les attributs et relations ne peuvent être mappés, uniquement les types "
+"d'entité et de relation"
 
 msgid "august"
 msgstr "août"
@@ -2318,7 +2320,9 @@ msgid "entities deleted"
 msgstr "entités supprimées"
 
 msgid "entity and relation types can't be mapped, only attributes or relations"
-msgstr "les types d'entités et de relations ne peuvent être mappés, uniquement les relations"
+msgstr ""
+"les types d'entités et de relations ne peuvent être mappés, uniquement les "
+"relations"
 
 msgid "entity copied"
 msgstr "entité copiée"
@@ -2812,7 +2816,9 @@ msgstr "mise en ligne"
 
 #, python-format
 msgid "inlined relation %(rtype)s of %(etype)s should be supported"
-msgstr "la relation %(rtype)s du type d'entité %(etype)s doit être supportée ('inlined')"
+msgstr ""
+"la relation %(rtype)s du type d'entité %(etype)s doit être supportée "
+"('inlined')"
 
 msgid "instance home"
 msgstr "répertoire de l'instance"
@@ -3324,7 +3330,9 @@ msgid "parser"
 msgstr "parseur"
 
 msgid "parser to use to extract entities from content retrieved at given URLs."
-msgstr "parseur à utiliser pour extraire entités et relations du contenu récupéré aux URLs données"
+msgstr ""
+"parseur à utiliser pour extraire entités et relations du contenu récupéré "
+"aux URLs données"
 
 msgid "password"
 msgstr "mot de passe"
@@ -3478,19 +3486,25 @@ msgstr "relation %(relname)s de %(ent)s"
 msgid ""
 "relation %(rtype)s with %(etype)s as %(role)s is supported but no target "
 "type supported"
-msgstr "la relation %(rtype)s avec %(etype)s comme %(role)s est supportée mais aucun type cible n'est supporté"
+msgstr ""
+"la relation %(rtype)s avec %(etype)s comme %(role)s est supportée mais aucun "
+"type cible n'est supporté"
 
 #, python-format
 msgid ""
 "relation %(type)s with %(etype)s as %(role)s and target type %(target)s is "
 "mandatory but not supported"
-msgstr "la relation %(rtype)s avec %(etype)s comme %(role)s est obligatoire mais non supportée"
+msgstr ""
+"la relation %(rtype)s avec %(etype)s comme %(role)s est obligatoire mais non "
+"supportée"
 
 #, python-format
 msgid ""
 "relation %s is supported but none if its definitions matches supported "
 "entities"
-msgstr "la relation %s est supportée mais aucune de ses définitions ne correspondent aux types d'entités supportés"
+msgstr ""
+"la relation %s est supportée mais aucune de ses définitions ne correspondent "
+"aux types d'entités supportés"
 
 msgid "relation add"
 msgstr "ajout de relation"
@@ -4502,7 +4516,9 @@ msgstr "vous devriez probablement supprimer cette propriété"
 
 #, python-format
 msgid "you should un-inline relation %s which is supported and may be crossed "
-msgstr "vous devriez enlevé la mise en ligne de la relation %s qui est supportée et peut-être croisée"
+msgstr ""
+"vous devriez enlevé la mise en ligne de la relation %s qui est supportée et "
+"peut-être croisée"
 
 #~ msgid "Attributes with non default permissions:"
 #~ msgstr "Attributs ayant des permissions non-standard"
