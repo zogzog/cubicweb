@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -365,6 +365,11 @@ class StateInfo(object):
             yield 1
             return
         thisexistssols, thisexistsvars = self.existssols[exists]
+        # when iterating other solutions inner to an EXISTS subquery, we should
+        # reset variables which have this exists node as scope at each iteration
+        for var in exists.stmt.defined_vars.itervalues():
+            if var.scope is exists:
+                thisexistsvars.add(var.name)
         origsol = self.solution
         origtables = self.tables
         done = self.done
