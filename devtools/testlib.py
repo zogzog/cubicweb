@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -356,7 +356,7 @@ class CubicWebTC(TestCase):
         user = req.create_entity('CWUser', login=unicode(login),
                                  upassword=password, **kwargs)
         req.execute('SET X in_group G WHERE X eid %%(x)s, G name IN(%s)'
-                    % ','.join(repr(g) for g in groups),
+                    % ','.join(repr(str(g)) for g in groups),
                     {'x': user.eid})
         user.cw_clear_relation_cache('in_group', 'subject')
         if commit:
