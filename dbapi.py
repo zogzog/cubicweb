@@ -201,21 +201,30 @@ def connect(database=None, login=None, host=None, group=None,
     cnx.vreg = vreg
     return cnx
 
-def in_memory_cnx(config, login, **kwargs):
-    """usefull method for testing and scripting to get a dbapi.Connection
-    object connected to an in-memory repository instance
-    """
+def in_memory_repo(config):
+    """Return and in_memory Repository object from a config (or vreg)"""
     if isinstance(config, cwvreg.CubicWebVRegistry):
         vreg = config
         config = None
     else:
         vreg = None
     # get local access to the repository
-    repo = get_repository('inmemory', config=config, vreg=vreg)
-    # connection to the CubicWeb repository
+    return get_repository('inmemory', config=config, vreg=vreg)
+
+def in_memory_cnx(repo, login, **kwargs):
+    """Establish a In memory connection to a <repo> for the user with <login>
+
+    additionel credential might be required"""
     cnxprops = ConnectionProperties('inmemory')
-    cnx = repo_connect(repo, login, cnxprops=cnxprops, **kwargs)
-    return repo, cnx
+    return repo_connect(repo, login, cnxprops=cnxprops, **kwargs)
+
+def in_memory_repo_cnx(config, login, **kwargs):
+    """usefull method for testing and scripting to get a dbapi.Connection
+    object connected to an in-memory repository instance
+    """
+    # connection to the CubicWeb repository
+    repo = in_memory_repo(config)
+    return repo, in_memory_cnx(repo, login, **kwargs)
 
 class _NeedAuthAccessMock(object):
     def __getattribute__(self, attr):

@@ -217,7 +217,7 @@ class RealDatabaseConfiguration(ApptestConfiguration):
 
 def init_test_database(config=None, appid='data', apphome=None):
     """init a test database for a specific driver"""
-    from cubicweb.dbapi import in_memory_cnx
+    from cubicweb.dbapi import in_memory_repo_cnx
     config = config or TestServerConfiguration(appid, apphome=apphome)
     sources = config.sources()
     driver = sources['system']['db-driver']
@@ -229,7 +229,7 @@ def init_test_database(config=None, appid='data', apphome=None):
         else:
             raise ValueError('no initialization function for driver %r' % driver)
     config._cubes = None # avoid assertion error
-    repo, cnx = in_memory_cnx(config, unicode(sources['admin']['login']),
+    repo, cnx = in_memory_repo_cnx(config, unicode(sources['admin']['login']),
                               password=sources['admin']['password'] or 'xxx')
     if driver == 'sqlite':
         install_sqlite_patch(repo.querier)

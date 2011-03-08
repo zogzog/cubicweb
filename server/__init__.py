@@ -121,7 +121,7 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     with the minimal set of entities (ie at least the schema, base groups and
     a initial user)
     """
-    from cubicweb.dbapi import in_memory_cnx
+    from cubicweb.dbapi import in_memory_repo_cnx
     from cubicweb.server.repository import Repository
     from cubicweb.server.utils import manager_userpasswd
     from cubicweb.server.sqlutils import sqlexec, sqlschema, sqldropschema
@@ -185,7 +185,7 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     repo.shutdown()
     # reloging using the admin user
     config._cubes = None # avoid assertion error
-    repo, cnx = in_memory_cnx(config, login, password=pwd)
+    repo, cnx = in_memory_repo_cnx(config, login, password=pwd)
     repo.system_source.eid = ssource.eid # redo this manually
     # trigger vreg initialisation of entity classes
     config.cubicweb_appobject_path = set(('entities',))
