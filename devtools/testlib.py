@@ -853,6 +853,27 @@ class CubicWebTC(TestCase):
             raise self.failureException("doctest file '%s' failed"
                                         % testfile)
 
+    # notifications ############################################################
+
+    def assertSentEmail(self, subject, recipients=None, nb_msgs=None):
+        """test recipients in system mailbox for given email subject
+
+        :param subject: email subject to find in mailbox
+        :param recipients: list of email recipients
+        :param nb_msgs: expected number of entries
+        :returns: list of matched emails
+        """
+        messages = [email for email in MAILBOX
+                    if email.message.get('Subject') == subject]
+        if recipients is not None:
+            sent_to = set()
+            for msg in messages:
+                sent_to.update(msg.recipients)
+            self.assertSetEqual(set(recipients), sent_to)
+        if nb_msgs is not None:
+            self.assertEqual(len(MAILBOX), nb_msgs)
+        return messages
+
     # deprecated ###############################################################
 
     @deprecated('[3.8] use self.execute(...).get_entity(0, 0)')
