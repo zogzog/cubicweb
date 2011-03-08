@@ -19,6 +19,7 @@
 
 import httplib
 
+from logilab.common.testlib import Tags
 from cubicweb.devtools.httptest import CubicWebServerTC, CubicWebServerConfig
 
 
@@ -40,7 +41,9 @@ class TwistedCWAnonTC(CubicWebServerTC):
 
 
 class TwistedCWIdentTC(CubicWebServerTC):
+
     anonymous_logged = False
+    tags = CubicWebServerTC.tags | Tags(('auth',))
 
     def test_response_denied(self):
         response = self.web_get()
@@ -49,7 +52,7 @@ class TwistedCWIdentTC(CubicWebServerTC):
     def test_login(self):
         response = self.web_get()
         if response.status != httplib.FORBIDDEN:
-             self.skipTest('Already authenticated')
+            self.skipTest('Already authenticated, "test_response_denied" must have failed')
         # login
         self.web_login(self.admlogin, self.admpassword)
         response = self.web_get()

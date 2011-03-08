@@ -196,6 +196,7 @@ directory (default to once a day).',
         self._interval = typedconfig['synchronization-interval']
         self._cache_ttl = max(71, typedconfig['cache-life-time'])
         self.reset_caches()
+        self._conn = None
 
     def reset_caches(self):
         """method called during test to reset potential source caches"""

@@ -60,7 +60,7 @@ class StorageTC(CubicWebTC):
         storages.set_attribute_storage(self.repo, 'File', 'data', bfs_storage)
 
     def tearDown(self):
-        super(CubicWebTC, self).tearDown()
+        super(StorageTC, self).tearDown()
         storages.unset_attribute_storage(self.repo, 'File', 'data')
         shutil.rmtree(self.tempdir)
 

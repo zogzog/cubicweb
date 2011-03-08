@@ -130,7 +130,7 @@ def _db_sys_cnx(source, special_privs, verbose=True):
 
 def repo_cnx(config):
     """return a in-memory repository and a db api connection it"""
-    from cubicweb.dbapi import in_memory_cnx
+    from cubicweb.dbapi import in_memory_repo_cnx
     from cubicweb.server.utils import manager_userpasswd
     try:
         login = config.sources()['admin']['login']
@@ -139,7 +139,7 @@ def repo_cnx(config):
         login, pwd = manager_userpasswd()
     while True:
         try:
-            return in_memory_cnx(config, login, password=pwd)
+            return in_memory_repo_cnx(config, login, password=pwd)
         except AuthenticationError:
             print '-> Error: wrong user/password.'
             # reset cubes else we'll have an assertion error on next retry

@@ -47,9 +47,8 @@ def rql_for_eid(eid):
     return 'Any X WHERE X eid %s' % eid
 
 def eid_param(name, eid):
+    assert name is not None
     assert eid is not None
-    if eid is None:
-        eid = ''
     return '%s:%s' % (name, eid)
 
 def printable_value(req, attrtype, value, props=None, displaytime=True):
