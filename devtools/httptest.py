@@ -185,7 +185,7 @@ class CubicWebServerTC(CubicWebTC):
         except error.ReactorNotRunning, err:
             # Server could be launched manually
             print err
-        super(CubicWebServerTC, self).teardown()
+        super(CubicWebServerTC, self).tearDown()
 
     @classmethod
     def init_config(cls, config):
