@@ -854,6 +854,10 @@ class Session(RequestSessionBase):
         del self.__threaddata
         del self._tx_data
 
+    @property
+    def closed(self):
+        return not hasattr(self, '_tx_data')
+
     # transaction data/operations management ##################################
 
     @property
