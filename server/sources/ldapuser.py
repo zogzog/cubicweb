@@ -202,7 +202,7 @@ directory (default to once a day).',
 
     def _make_base_filters(self):
         filters =  [filter_format('(%s=%s)', ('objectClass', o))
-                              for o in self.user_classes] 
+                              for o in self.user_classes]
         if self.user_filter:
             filters += [self.user_filter]
         return filters
