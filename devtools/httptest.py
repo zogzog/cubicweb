@@ -189,6 +189,6 @@ class CubicWebServerTC(CubicWebTC):
 
     @classmethod
     def init_config(cls, config):
-        super(CubicWebServerTC, cls).init_config(config)
         if not cls.anonymous_logged:
             config.anonymous_credential = None
+        super(CubicWebServerTC, cls).init_config(config)
