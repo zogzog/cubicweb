@@ -543,7 +543,13 @@ class Repository(object):
             return self.config[option]
         pool = self._get_pool()
         try:
-            return pool.connection(sourceuri).get_option_value(option, extid)
+            cnx = pool.connection(sourceuri)
+            # needed to check connection is valid and usable by the current
+            # thread
+            newcnx = self.sources_by_uri[sourceuri].check_connection(cnx)
+            if newcnx is not None:
+                cnx = newcnx
+            return cnx.get_option_value(option, extid)
         finally:
             self._free_pool(pool)
 
