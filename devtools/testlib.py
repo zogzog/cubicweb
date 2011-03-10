@@ -659,6 +659,10 @@ class CubicWebTC(TestCase):
     def init_authentication(self, authmode, anonuser=None):
         self.set_option('auth-mode', authmode)
         self.set_option('anonymous-user', anonuser)
+        if anonuser is None:
+            self.config.anonymous_credential = None
+        else:
+            self.config.anonymous_credential = (anonuser, anonuser)
         req = self.request()
         origsession = req.session
         req.session = req.cnx = None

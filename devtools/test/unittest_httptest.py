@@ -42,7 +42,7 @@ class TwistedCWAnonTC(CubicWebServerTC):
 
 class TwistedCWIdentTC(CubicWebServerTC):
 
-    anonymous_logged = False
+    anonymous_allowed = False
     tags = CubicWebServerTC.tags | Tags(('auth',))
 
     def test_response_denied(self):

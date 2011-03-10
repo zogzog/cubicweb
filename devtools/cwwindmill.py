@@ -91,7 +91,7 @@ else:
         browser = 'firefox'
         edit_test = "-i" in sys.argv # detection for pytest invocation
         # Windmill use case are written with no anonymous user
-        anonymous_logged = False
+        anonymous_allowed = False
 
         tags = CubicWebServerTC.tags & Tags(('windmill',))
 

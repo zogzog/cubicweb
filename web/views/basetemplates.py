@@ -74,7 +74,7 @@ class LoggedOutTemplate(LogInOutTemplate):
         # FIXME Deprecated code ?
         msg = self._cw._('you have been logged out')
         w(u'<h2>%s</h2>\n' % msg)
-        if self._cw.vreg.config['anonymous-user']:
+        if self._cw.vreg.config.anonymous_user()[0]:
             indexurl = self._cw.build_url('view', vid='index', __message=msg)
             w(u'<p><a href="%s">%s</a><p>' % (
                 xml_escape(indexurl),

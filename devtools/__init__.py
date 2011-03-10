@@ -85,13 +85,6 @@ class TestServerConfiguration(ServerConfiguration):
     read_instance_schema = False
     init_repository = True
     db_require_setup = True
-    options = cwconfig.merge_options(
-        ServerConfiguration.options +
-        tuple((opt, optdict) for opt, optdict in TwistedConfiguration.options
-              if opt in ('anonymous-user', 'anonymous-password')))
-    # By default anonymous login are allow but some test need to deny of to
-    # change the default user. Set it to None to prevent anonymous login.
-    anonymous_credential = ('anon', 'anon')
 
     def __init__(self, appid='data', apphome=None, log_threshold=logging.CRITICAL+10):
         # must be set before calling parent __init__
@@ -106,7 +99,20 @@ class TestServerConfiguration(ServerConfiguration):
         # need this, usually triggered by cubicweb-ctl
         self.load_cwctl_plugins()
 
-    anonymous_user = TwistedConfiguration.anonymous_user.im_func
+    # By default anonymous login are allow but some test need to deny of to
+    # change the default user. Set it to None to prevent anonymous login.
+    anonymous_credential = ('anon', 'anon')
+
+    def anonymous_user(self):
+        if not self.anonymous_credential:
+            return None, None
+        return self.anonymous_credential
+
+    def set_anonymous_allowed(self, allowed, anonuser='anon'):
+        if allowed:
+            self.anonymous_credential = (anonuser, anonuser)
+        else:
+            self.anonymous_credential = None
 
     @property
     def apphome(self):
@@ -115,10 +121,6 @@ class TestServerConfiguration(ServerConfiguration):
 
     def load_configuration(self):
         super(TestServerConfiguration, self).load_configuration()
-        if self.anonymous_credential:
-            user, password = self.anonymous_credential
-            self.global_set_option('anonymous-user', user)
-            self.global_set_option('anonymous-password', password)
         # no undo support in tests
         self.global_set_option('undo-support', '')
 
