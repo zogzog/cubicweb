@@ -785,7 +785,8 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
     def editable_attributes(self, strict=False):
         """return a list of (relation schema, role) to edit for the entity"""
         if self.display_fields is not None:
-            return self.display_fields
+            schema = self._cw.vreg.schema
+            return [(schema[rtype], role) for rtype, role in self.display_fields]
         if self.edited_entity.has_eid() and not self.edited_entity.cw_has_perm('update'):
             return []
         # XXX we should simply put eid in the generated section, no?

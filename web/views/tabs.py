@@ -46,7 +46,9 @@ class LazyViewMixin(object):
                  reloadable=False, show_spinbox=True, w=None):
         """a lazy version of wview"""
         w = w or self.w
-        urlparams = {'vid' : vid, 'fname' : 'view'}
+        self._cw.add_js('cubicweb.lazy.js')
+        urlparams = self._cw.form.copy()
+        urlparams.update({'vid' : vid, 'fname' : 'view'})
         if rql:
             urlparams['rql'] = rql
         elif eid:
