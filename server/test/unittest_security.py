@@ -27,8 +27,8 @@ from cubicweb.server.querier import check_read_access
 
 class BaseSecurityTC(CubicWebTC):
 
-    def setUp(self):
-        CubicWebTC.setUp(self)
+    def setup_database(self):
+        super(BaseSecurityTC, self).setup_database()
         self.create_user('iaminusersgrouponly')
         self.readoriggroups = self.schema['Personne'].permissions['read']
         self.addoriggroups = self.schema['Personne'].permissions['add']
@@ -75,7 +75,7 @@ class SecurityRewritingTC(BaseSecurityTC):
 
     def tearDown(self):
         self.repo.system_source.__dict__.pop('syntax_tree_search', None)
-        BaseSecurityTC.tearDown(self)
+        super(SecurityRewritingTC, self).tearDown()
 
     def test_not_relation_read_security(self):
         cnx = self.login('iaminusersgrouponly')
@@ -86,6 +86,7 @@ class SecurityRewritingTC(BaseSecurityTC):
         self.execute('Any U WHERE NOT EXISTS(A todo_by U), A is Affaire')
         self.assertEqual(self.query[0][1].as_string(),
                           'Any U WHERE NOT EXISTS(A todo_by U), A is Affaire')
+        cnx.close()
 
 class SecurityTC(BaseSecurityTC):
 
@@ -104,6 +105,7 @@ class SecurityTC(BaseSecurityTC):
         cu.execute("INSERT Personne X: X nom 'bidule'")
         self.assertRaises(Unauthorized, cnx.commit)
         self.assertEqual(cu.execute('Personne X').rowcount, 1)
+        cnx.close()
 
     def test_insert_rql_permission(self):
         # test user can only add une affaire related to a societe he owns
@@ -120,6 +122,7 @@ class SecurityTC(BaseSecurityTC):
         cu.execute("INSERT Societe X: X nom 'chouette'")
         cu.execute("SET A concerne S WHERE A sujet 'cool', S nom 'chouette'")
         cnx.commit()
+        cnx.close()
 
     def test_update_security_1(self):
         cnx = self.login('anon')
@@ -147,6 +150,7 @@ class SecurityTC(BaseSecurityTC):
         cu.execute("INSERT Personne X: X nom 'biduuule'")
         cu.execute("INSERT Societe X: X nom 'looogilab'")
         cu.execute("SET X travaille S WHERE X nom 'biduuule', S nom 'looogilab'")
+        cnx.close()
 
     def test_update_rql_permission(self):
         self.execute("SET A concerne S WHERE A is Affaire, S is Societe")
@@ -165,6 +169,7 @@ class SecurityTC(BaseSecurityTC):
         cu.execute("SET A concerne S WHERE A sujet 'pascool', S nom 'chouette'")
         cu.execute("SET X sujet 'habahsicestcool' WHERE X sujet 'pascool'")
         cnx.commit()
+        cnx.close()
 
     def test_delete_security(self):
         # FIXME: sample below fails because we don't detect "owner" can't delete
@@ -177,6 +182,7 @@ class SecurityTC(BaseSecurityTC):
         cnx = self.login('iaminusersgrouponly')
         cu = cnx.cursor()
         self.assertRaises(Unauthorized, cu.execute, "DELETE CWGroup Y WHERE Y name 'staff'")
+        cnx.close()
 
     def test_delete_rql_permission(self):
         self.execute("SET A concerne S WHERE A is Affaire, S is Societe")
@@ -200,6 +206,7 @@ class SecurityTC(BaseSecurityTC):
 ##         self.assertRaises(Unauthorized, cu.execute, "DELETE Affaire X")
         cu.execute("DELETE Affaire X WHERE X sujet 'pascool'")
         cnx.commit()
+        cnx.close()
 
 
     def test_insert_relation_rql_permission(self):
@@ -225,6 +232,7 @@ class SecurityTC(BaseSecurityTC):
         cu.execute("INSERT Societe X: X nom 'chouette'")
         cu.execute("SET A concerne S WHERE A is Affaire, S nom 'chouette'")
         cnx.commit()
+        cnx.close()
 
     def test_delete_relation_rql_permission(self):
         self.execute("SET A concerne S WHERE A is Affaire, S is Societe")
@@ -249,6 +257,7 @@ class SecurityTC(BaseSecurityTC):
         cu.execute("SET A concerne S WHERE A is Affaire, S nom 'chouette'")
         cnx.commit()
         cu.execute("DELETE A concerne S WHERE S nom 'chouette'")
+        cnx.close()
 
 
     def test_user_can_change_its_upassword(self):
@@ -260,6 +269,7 @@ class SecurityTC(BaseSecurityTC):
         cnx.commit()
         cnx.close()
         cnx = self.login('user', password='newpwd')
+        cnx.close()
 
     def test_user_cant_change_other_upassword(self):
         ueid = self.create_user('otheruser').eid
@@ -268,6 +278,7 @@ class SecurityTC(BaseSecurityTC):
         cu.execute('SET X upassword %(passwd)s WHERE X eid %(x)s',
                    {'x': ueid, 'passwd': 'newpwd'})
         self.assertRaises(Unauthorized, cnx.commit)
+        cnx.close()
 
     # read security test
 
@@ -277,6 +288,7 @@ class SecurityTC(BaseSecurityTC):
         cu = cnx.cursor()
         self.assertRaises(Unauthorized,
                           cu.execute, 'Personne U where U nom "managers"')
+        cnx.close()
 
     def test_read_erqlexpr_base(self):
         eid = self.execute("INSERT Affaire X: X sujet 'cool'")[0][0]
@@ -301,6 +313,7 @@ class SecurityTC(BaseSecurityTC):
         self.assertEqual(rset.rows, [])
         # test can't update an attribute of an entity that can't be readen
         self.assertRaises(Unauthorized, cu.execute, 'SET X sujet "hacked" WHERE X eid %(x)s', {'x': eid})
+        cnx.close()
 
 
     def test_entity_created_in_transaction(self):
@@ -337,6 +350,7 @@ class SecurityTC(BaseSecurityTC):
         rset = cu.execute("Any X WHERE X has_text 'cool'")
         self.assertEqual(sorted(eid for eid, in rset.rows),
                           [card1, aff2])
+        cnx.close()
 
     def test_read_erqlexpr_has_text2(self):
         self.execute("INSERT Personne X: X nom 'bidule'")
@@ -349,6 +363,7 @@ class SecurityTC(BaseSecurityTC):
         self.assertEqual(len(rset.rows), 1, rset.rows)
         rset = cu.execute('Any N WITH N BEING (Any N WHERE N has_text "bidule")')
         self.assertEqual(len(rset.rows), 1, rset.rows)
+        cnx.close()
 
     def test_read_erqlexpr_optional_rel(self):
         self.execute("INSERT Personne X: X nom 'bidule'")
@@ -359,6 +374,7 @@ class SecurityTC(BaseSecurityTC):
         cu = cnx.cursor()
         rset = cu.execute('Any N,U WHERE N has_text "bidule", N owned_by U?')
         self.assertEqual(len(rset.rows), 1, rset.rows)
+        cnx.close()
 
     def test_read_erqlexpr_aggregat(self):
         self.execute("INSERT Affaire X: X sujet 'cool'")[0][0]
@@ -382,6 +398,7 @@ class SecurityTC(BaseSecurityTC):
         values = dict(rset)
         self.assertEqual(values['Affaire'], 1)
         self.assertEqual(values['Societe'], 2)
+        cnx.close()
 
 
     def test_attribute_security(self):
@@ -429,6 +446,7 @@ class SecurityTC(BaseSecurityTC):
         cnx.commit()
         cu.execute("SET X para 'chouette' WHERE X eid %(x)s", {'x': note2.eid})
         cnx.commit()
+        cnx.close()
 
     def test_attribute_read_security(self):
         # anon not allowed to see users'login, but they can see users
@@ -446,6 +464,7 @@ class SecurityTC(BaseSecurityTC):
         self.assertEqual(x.login, None)
         self.failUnless(x.creation_date)
         cnx.rollback()
+        cnx.close()
 
 class BaseSchemaSecurityTC(BaseSecurityTC):
     """tests related to the base schema permission configuration"""
@@ -472,6 +491,7 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
         cu.execute('DELETE Affaire X WHERE X ref "ARCT01"')
         cnx.commit()
         self.failIf(cu.execute('Affaire X'))
+        cnx.close()
 
     def test_users_and_groups_non_readable_by_guests(self):
         cnx = self.login('anon')
@@ -498,6 +518,7 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
         # but can't modify it
         cu.execute('SET X login "toto" WHERE X eid %(x)s', {'x': anon.eid})
         self.assertRaises(Unauthorized, cnx.commit)
+        cnx.close()
 
     def test_in_group_relation(self):
         cnx = self.login('iaminusersgrouponly')
@@ -506,6 +527,7 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
         self.assertRaises(Unauthorized, cu.execute, rql)
         rql = u"SET U in_group G WHERE U login 'admin', G name 'users'"
         self.assertRaises(Unauthorized, cu.execute, rql)
+        cnx.close()
 
     def test_owned_by(self):
         self.execute("INSERT Personne X: X nom 'bidule'")
@@ -514,6 +536,7 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
         cu = cnx.cursor()
         rql = u"SET X owned_by U WHERE U login 'iaminusersgrouponly', X is Personne"
         self.assertRaises(Unauthorized, cu.execute, rql)
+        cnx.close()
 
     def test_bookmarked_by_guests_security(self):
         beid1 = self.execute('INSERT Bookmark B: B path "?vid=manage", B title "manage"')[0][0]
@@ -535,6 +558,7 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
         self.assertRaises(Unauthorized,
                           cu.execute, 'SET B bookmarked_by U WHERE U eid %(x)s, B eid %(b)s',
                           {'x': anoneid, 'b': beid1})
+        cnx.close()
 
 
     def test_ambigous_ordered(self):
@@ -542,6 +566,7 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
         cu = cnx.cursor()
         names = [t for t, in cu.execute('Any N ORDERBY lower(N) WHERE X name N')]
         self.assertEqual(names, sorted(names, key=lambda x: x.lower()))
+        cnx.close()
 
     def test_in_state_without_update_perm(self):
         """check a user change in_state without having update permission on the
@@ -575,6 +600,7 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
             # restore orig perms
             for action, perms in affaire_perms.iteritems():
                 self.schema['Affaire'].set_action_permissions(action, perms)
+        cnx.close()
 
     def test_trinfo_security(self):
         aff = self.execute('INSERT Affaire X: X ref "ARCT01"').get_entity(0, 0)

@@ -127,6 +127,7 @@ class WorkflowTC(CubicWebTC):
         # fetch the entity using the new session
         trs = list(cnx.user().cw_adapt_to('IWorkflowable').possible_transitions())
         self.assertEqual(len(trs), 0)
+        cnx.close()
 
     def _test_manager_deactivate(self, user):
         iworkflowable = user.cw_adapt_to('IWorkflowable')
@@ -211,6 +212,7 @@ class WorkflowTC(CubicWebTC):
         with self.assertRaises(ValidationError) as cm:
             iworkflowable.fire_transition('activate')
         self.assertEqual(cm.exception.errors, {'by_transition-subject': "transition may not be fired"})
+        cnx.close()
 
     def test_fire_transition_owned_by(self):
         self.execute('INSERT RQLExpression X: X exprtype "ERQLExpression", '
