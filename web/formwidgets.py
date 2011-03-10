@@ -770,7 +770,7 @@ class StaticFileAutoCompletionWidget(AutoCompletionWidget):
             fname = entity.autocomplete_initfuncs[field.name]
         else:
             fname = self.autocomplete_initfunc
-        return entity._cw.datadir_url + fname
+        return entity._cw.data_url(fname)
 
 
 class RestrictedAutoCompletionWidget(AutoCompletionWidget):

@@ -56,12 +56,15 @@ class ClickAndEditFormView(EntityView):
     _cancelclick = "cw.reledit.cleanupAfterCancel('%s')"
 
     # ui side actions/buttons
-    _addzone = u'<img title="%(msg)s" src="data/plus.png" alt="%(msg)s"/>'
+    _addzone = u'<img title="%(msg)s" src="%(logo)s" alt="%(msg)s"/>'
     _addmsg = _('click to add a value')
-    _deletezone = u'<img title="%(msg)s" src="data/cancel.png" alt="%(msg)s"/>'
+    _addlogo = 'plus.png'
+    _deletezone = u'<img title="%(msg)s" src="%(logo)s" alt="%(msg)s"/>'
     _deletemsg = _('click to delete this value')
-    _editzone = u'<img title="%(msg)s" src="data/pen_icon.png" alt="%(msg)s"/>'
+    _deletelogo = 'cancel.png'
+    _editzone = u'<img title="%(msg)s" src="%(logo)s" alt="%(msg)s"/>'
     _editzonemsg = _('click to edit this field')
+    _editlogo = 'pen_icon.png'
 
     # renderer
     _form_renderer_id = 'base'
@@ -210,14 +213,18 @@ class ClickAndEditFormView(EntityView):
         # NOTE: should be sufficient given a well built schema/security
         return rschema.has_perm(self._cw, 'delete', **kwargs)
 
+    def _build_zone(self, zonedef, msg, logo):
+        return zonedef % {'msg': xml_escape(self._cw._(msg)),
+                          'logo': xml_escape(self._cw.data_url(logo))}
+
     def _build_edit_zone(self):
-        return self._editzone % {'msg' : xml_escape(self._cw._(self._editzonemsg))}
+        return self._build_zone(self._editzone, self._editzonemsg, self._editlogo)
 
     def _build_delete_zone(self):
-        return self._deletezone % {'msg': xml_escape(self._cw._(self._deletemsg))}
+        return self._build_zone(self._deletezone, self._deletezonemsg, self._deletelogo)
 
     def _build_add_zone(self):
-        return self._addzone % {'msg': xml_escape(self._cw._(self._addmsg))}
+        return self._build_zone(self._addzone, self._addzonemsg, self._addlogo)
 
     def _build_divid(self, rtype, role, entity_eid):
         """ builds an id for the root div of a reledit widget """
