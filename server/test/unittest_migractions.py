@@ -23,7 +23,7 @@ from copy import deepcopy
 from datetime import date
 from os.path import join
 
-from logilab.common.testlib import TestCase, unittest_main
+from logilab.common.testlib import TestCase, unittest_main, Tags, tag
 
 from yams.constraints import UniqueConstraint
 
@@ -37,9 +37,12 @@ migrschema = None
 def tearDownModule(*args):
     global migrschema
     del migrschema
-    del MigrationCommandsTC.origschema
+    if hasattr(MigrationCommandsTC, 'origschema'):
+        del MigrationCommandsTC.origschema
 
 class MigrationCommandsTC(CubicWebTC):
+
+    tags = CubicWebTC.tags | Tags(('server', 'migration', 'migractions'))
 
     @classmethod
     def init_config(cls, config):
@@ -343,6 +346,7 @@ class MigrationCommandsTC(CubicWebTC):
             self.mh.cmd_change_relation_props('Personne', 'adel', 'String',
                                               fulltextindexed=False)
 
+    @tag('longrun')
     def test_sync_schema_props_perms(self):
         cursor = self.mh.session
         cursor.set_pool()
@@ -464,6 +468,7 @@ class MigrationCommandsTC(CubicWebTC):
         finally:
             self.mh.cmd_set_size_constraint('CWEType', 'description', None)
 
+    @tag('longrun')
     def test_add_remove_cube_and_deps(self):
         cubes = set(self.config.cubes())
         schema = self.repo.schema
@@ -527,6 +532,7 @@ class MigrationCommandsTC(CubicWebTC):
             self.commit()
 
 
+    @tag('longrun')
     def test_add_remove_cube_no_deps(self):
         cubes = set(self.config.cubes())
         schema = self.repo.schema
@@ -558,6 +564,7 @@ class MigrationCommandsTC(CubicWebTC):
             self.mh.cmd_remove_cube('file')
         self.assertEqual(str(cm.exception), "can't remove cube file, used as a dependency")
 
+    @tag('longrun')
     def test_introduce_base_class(self):
         self.mh.cmd_add_entity_type('Para')
         self.mh.repo.schema.rebuild_infered_relations()
