@@ -157,6 +157,11 @@ title
         base = date(randint(2000, 2010), 1, 1) + timedelta(randint(1, 365))
         return self._constrained_generate(entity, attrname, base, timedelta(days=1), index)
 
+    def generate_interval(self, entity, attrname, index):
+        """generates a random date (format is 'yyyy-mm-dd')"""
+        base = timedelta(randint(1, 365))
+        return self._constrained_generate(entity, attrname, base, timedelta(days=1), index)
+
     def generate_time(self, entity, attrname, index):
         """generates a random time (format is ' HH:MM')"""
         return time(11, index%60) #'11:%02d' % (index % 60)

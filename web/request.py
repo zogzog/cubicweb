@@ -420,7 +420,7 @@ class CubicWebRequestBase(DBAPIRequest):
         self.add_js('fckeditor/fckeditor.js')
         self.html_headers.define_var('fcklang', self.lang)
         self.html_headers.define_var('fckconfigpath',
-                                     self.build_url('data/cubicweb.fckcwconfig.js'))
+                                     self.data_url('cubicweb.fckcwconfig.js'))
     def use_fckeditor(self):
         return self.vreg.config.fckeditor_installed() and self.property_value('ui.fckeditor')
 
@@ -559,7 +559,7 @@ class CubicWebRequestBase(DBAPIRequest):
             jsfiles = (jsfiles,)
         for jsfile in jsfiles:
             if localfile:
-                jsfile = self.datadir_url + jsfile
+                jsfile = self.data_url(jsfile)
             self.html_headers.add_js(jsfile)
 
     def add_css(self, cssfiles, media=u'all', localfile=True, ieonly=False,
@@ -588,7 +588,7 @@ class CubicWebRequestBase(DBAPIRequest):
             add_css = self.html_headers.add_css
         for cssfile in cssfiles:
             if localfile:
-                cssfile = self.datadir_url + cssfile
+                cssfile = self.data_url(cssfile)
             add_css(cssfile, media, *extraargs)
 
     @deprecated('[3.9] use ajax_replace_url() instead, naming rql and vid arguments')
@@ -644,6 +644,10 @@ class CubicWebRequestBase(DBAPIRequest):
     def base_url_path(self):
         """returns the absolute path of the base url"""
         return urlsplit(self.base_url())[2]
+
+    def data_url(self, relpath):
+        """returns the absolute path for a data resouce"""
+        return self.datadir_url + relpath
 
     @cached
     def from_controller(self):

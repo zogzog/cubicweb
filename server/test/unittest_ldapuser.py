@@ -50,8 +50,7 @@ def nopwd_authenticate(self, session, login, password):
     """
     assert login, 'no login!'
     searchfilter = [filter_format('(%s=%s)', (self.user_login_attr, login))]
-    searchfilter.extend([filter_format('(%s=%s)', ('objectClass', o))
-                         for o in self.user_classes])
+    searchfilter.extend(self.base_filters)
     searchstr = '(&%s)' % ''.join(searchfilter)
     # first search the user
     try:
@@ -453,8 +452,7 @@ class RQL2LDAPFilterTC(RQLGeneratorTC):
         self.pool = repo._get_pool()
         session = mock_object(pool=self.pool)
         self.o = RQL2LDAPFilter(ldapsource, session)
-        self.ldapclasses = ''.join('(objectClass=%s)' % ldapcls
-                                   for ldapcls in ldapsource.user_classes)
+        self.ldapclasses = ''.join(ldapsource.base_filters)
 
     def tearDown(self):
         repo._free_pool(self.pool)

@@ -336,3 +336,48 @@ td.prev {
 td.next {
   text-align: right;
 }
+
+/* ------------------------- */
+/* tooltips for fullcalendar */
+
+div.calevent div.tooltip {
+   display: none; /* tooltip hidden */
+}
+
+div.calevent:hover {
+   z-index: auto !important; /* in order that the tooltip from the above .calevent div can be put over this div*/
+}
+
+div.calevent a{
+   display: inline;
+   font-size: none;
+   font-weight: bold;
+}
+
+div.calevent:hover div.tooltip{
+   display: block;
+   position: absolute;
+   z-index: 10;
+   color: black;
+   border:1px solid black;
+   background: white;
+   padding: 5px;
+   overflow: visible;
+   width: 200px;
+}
+
+div.tooltip a{
+   border: none;
+   background: none;
+   color: #2952A3;
+   text-decoration: none;
+ }
+
+div.tooltip a:hover{
+   text-decoration: underline;
+ }
+
+
+div.fc-view{
+  overflow: visible;
+}

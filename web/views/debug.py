@@ -27,7 +27,7 @@ from logilab.mtconverter import xml_escape
 from cubicweb import BadConnectionId
 from cubicweb.selectors import none_rset, match_user_groups
 from cubicweb.view import StartupView
-from cubicweb.web.views import actions
+from cubicweb.web.views import actions, tabs
 
 def dict_to_html(w, dict):
     # XHTML doesn't allow emtpy <ul> nodes
@@ -39,12 +39,24 @@ def dict_to_html(w, dict):
         w(u'</ul>')
 
 
-
 class SiteInfoAction(actions.ManagersAction):
     __regid__ = 'siteinfo'
     __select__ = match_user_groups('users','managers')
-    title = _('info')
-    order = 30
+    title = _('siteinfo')
+    category = 'manage'
+    order = 1000
+
+
+class SiteInfoView(tabs.TabsMixin, StartupView):
+    __regid__ = 'siteinfo'
+    title = _('Site information')
+    tabs = [_('info'), _('registry'), _('gc')]
+    default_tab = 'info'
+
+    def call(self, **kwargs):
+        """The default view representing the instance's management"""
+        self.w(u'<h1>%s</h1>' % self._cw._(self.title))
+        self.render_tabs(self.tabs, self.default_tab)
 
 
 class ProcessInformationView(StartupView):
@@ -61,7 +73,7 @@ class ProcessInformationView(StartupView):
         _ = req._
         w = self.w
         # generic instance information
-        w(u'<h1>%s</h1>' % _('Instance'))
+        w(u'<h2>%s</h2>' % _('Instance'))
         w(u'<table>')
         w(u'<tr><th align="left">%s</th><td>%s</td></tr>' % (
             _('config type'), self._cw.vreg.config.name))
@@ -82,7 +94,7 @@ class ProcessInformationView(StartupView):
         w(u'</table>')
         # repository information
         repo = req.vreg.config.repository(None)
-        w(u'<h1>%s</h1>' % _('Repository'))
+        w(u'<h2>%s</h2>' % _('Repository'))
         w(u'<h3>%s</h3>' % _('resources usage'))
         w(u'<table>')
         stats = repo.stats()
@@ -107,7 +119,7 @@ class ProcessInformationView(StartupView):
             else:
                 w(u'<p>%s</p>' % _('no repository sessions found'))
         # web server information
-        w(u'<h1>%s</h1>' % _('Web server'))
+        w(u'<h2>%s</h2>' % _('Web server'))
         w(u'<table>')
         w(u'<tr><th align="left">%s</th><td>%s</td></tr>' % (
             _('base url'), req.base_url()))
@@ -146,7 +158,7 @@ class RegistryView(StartupView):
     cache_max_age = 0
 
     def call(self, **kwargs):
-        self.w(u'<h1>%s</h1>' % self._cw._("Registry's content"))
+        self.w(u'<h2>%s</h2>' % self._cw._("Registry's content"))
         keys = sorted(self._cw.vreg)
         url = xml_escape(self._cw.url())
         self.w(u'<p>%s</p>\n' % ' - '.join('<a href="%s#%s">%s</a>'
@@ -154,7 +166,7 @@ class RegistryView(StartupView):
         for key in keys:
             if key in ('boxes', 'contentnavigation'): # those are bw compat registries
                 continue
-            self.w(u'<h2 id="%s">%s</h2>' % (key, key))
+            self.w(u'<h3 id="%s">%s</h3>' % (key, key))
             if self._cw.vreg[key]:
                 values = sorted(self._cw.vreg[key].iteritems())
                 self.wview('pyvaltable', pyvalue=[(key, xml_escape(repr(val)))
@@ -186,7 +198,7 @@ class GCView(StartupView):
             lookupclasses += (InternalSession, Session)
         except ImportError:
             pass # no server part installed
-        self.w(u'<h1>%s</h1>' % _('Garbage collection information'))
+        self.w(u'<h2>%s</h2>' % _('Garbage collection information'))
         counters, ocounters, garbage = gc_info(lookupclasses,
                                                viewreferrersclasses=())
         self.w(u'<h3>%s</h3>' % self._cw._('Looked up classes'))

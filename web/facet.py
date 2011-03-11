@@ -1169,11 +1169,11 @@ class FacetItem(HTMLWidget):
     def _render(self):
         if self.selected:
             cssclass = ' facetValueSelected'
-            imgsrc = self._cw.datadir_url + self.selected_img
+            imgsrc = self._cw.data_url(self.selected_img)
             imgalt = self._cw._('selected')
         else:
             cssclass = ''
-            imgsrc = self._cw.datadir_url + self.unselected_img
+            imgsrc = self._cw.data_url(self.unselected_img)
             imgalt = self._cw._('not selected')
         self.w(u'<div class="facetValue facetCheckBox%s" cubicweb:value="%s">\n'
                % (cssclass, xml_escape(unicode(self.value))))
@@ -1198,11 +1198,11 @@ class CheckBoxFacetWidget(HTMLWidget):
         self.w(u'<div id="%s" class="facet">\n' % facetid)
         if self.selected:
             cssclass = ' facetValueSelected'
-            imgsrc = self._cw.datadir_url + self.selected_img
+            imgsrc = self._cw.data_url(self.selected_img)
             imgalt = self._cw._('selected')
         else:
             cssclass = ''
-            imgsrc = self._cw.datadir_url + self.unselected_img
+            imgsrc = self._cw.data_url(self.unselected_img)
             imgalt = self._cw._('not selected')
         self.w(u'<div class="facetValue facetCheckBox%s" cubicweb:value="%s">\n'
                % (cssclass, xml_escape(unicode(self.value))))

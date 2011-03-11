@@ -163,7 +163,7 @@ class SchemaReaderClassTest(TestCase):
                              'CWCache', 'CWConstraint', 'CWConstraintType', 'CWEType',
                              'CWAttribute', 'CWGroup', 'EmailAddress', 'CWRelation',
                              'CWPermission', 'CWProperty', 'CWRType',
-                             'CWSource', 'CWSourceHostConfig',
+                             'CWSource', 'CWSourceHostConfig', 'CWSourceSchemaConfig',
                              'CWUniqueTogetherConstraint', 'CWUser',
                              'ExternalUri', 'File', 'Float', 'Int', 'Interval', 'Note',
                              'Password', 'Personne',
@@ -171,7 +171,7 @@ class SchemaReaderClassTest(TestCase):
                              'Societe', 'State', 'StateFull', 'String', 'SubNote', 'SubWorkflowExitPoint',
                              'Tag', 'Time', 'Transition', 'TrInfo',
                              'Workflow', 'WorkflowTransition']
-        self.assertListEqual(entities, sorted(expected_entities))
+        self.assertListEqual(sorted(expected_entities), entities)
         relations = sorted([str(r) for r in schema.relations()])
         expected_relations = ['add_permission', 'address', 'alias', 'allowed_transition',
                               'bookmarked_by', 'by_transition',
@@ -181,8 +181,7 @@ class SchemaReaderClassTest(TestCase):
                               'constrained_by', 'constraint_of',
                               'content', 'content_format',
                               'created_by', 'creation_date', 'cstrtype', 'custom_workflow',
-                              'cwuri', 'cw_source', 'cw_host_config_of',
-                              'cw_support', 'cw_dont_cross', 'cw_may_cross',
+                              'cwuri', 'cw_for_source', 'cw_host_config_of', 'cw_schema', 'cw_source',
 
                               'data', 'data_encoding', 'data_format', 'data_name', 'default_workflow', 'defaultval', 'delete_permission',
                               'description', 'description_format', 'destination_state',
@@ -196,15 +195,15 @@ class SchemaReaderClassTest(TestCase):
                               'identity', 'in_group', 'in_state', 'indexed',
                               'initial_state', 'inlined', 'internationalizable', 'is', 'is_instance_of',
 
-                              'label', 'last_login_time', 'login',
+                              'label', 'last_login_time', 'latest_retrieval', 'login',
 
                               'mainvars', 'match_host', 'modification_date',
 
                               'name', 'nom',
 
-                              'ordernum', 'owned_by',
+                              'options', 'ordernum', 'owned_by',
 
-                              'path', 'pkey', 'prefered_form', 'prenom', 'primary_email',
+                              'parser', 'path', 'pkey', 'prefered_form', 'prenom', 'primary_email',
 
                               'read_permission', 'relation_type', 'relations', 'require_group',
 
@@ -212,13 +211,13 @@ class SchemaReaderClassTest(TestCase):
 
                               'tags', 'timestamp', 'title', 'to_entity', 'to_state', 'transition_of', 'travaille', 'type',
 
-                              'upassword', 'update_permission', 'uri', 'use_email',
+                              'upassword', 'update_permission', 'url', 'uri', 'use_email',
 
                               'value',
 
                               'wf_info_for', 'wikiid', 'workflow_of', 'tr_count']
 
-        self.assertListEqual(relations, sorted(expected_relations))
+        self.assertListEqual(sorted(expected_relations), relations)
 
         eschema = schema.eschema('CWUser')
         rels = sorted(str(r) for r in eschema.subject_relations())

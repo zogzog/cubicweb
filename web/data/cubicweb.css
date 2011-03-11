@@ -598,6 +598,10 @@ div#etyperestriction {
 }
 
 /* pagination */
+
+div.pagination{
+  margin: 0.5em 0;
+}
 span.slice a:visited,
 span.slice a:hover{
   color: %(helperColor)s;
@@ -752,7 +756,7 @@ table.listing {
 table.listing th {
   font-weight: bold;
   font-size: 8pt;
-  background: %(listingHeaderBgColor)s; 
+  background: %(listingHeaderBgColor)s;
   padding: 2px 4px;
   border: 1px solid %(listingBorderColor)s;
   border-right:none;
@@ -879,6 +883,12 @@ input.button{
 .folder {
   /* disable odd/even under folder class */
   background-color: transparent;
+}
+
+a.addButton {
+  margin-left: 0.5em;
+  padding-left: 16px;
+  background: transparent url("add_button.png") 0% 50% no-repeat;
 }
 
 /***************************************/

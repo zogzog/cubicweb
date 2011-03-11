@@ -602,6 +602,10 @@ div#etyperestriction {
   border-bottom: 1px solid #ccc;
 }
 
+div.pagination{
+  margin: 0.5em 0;
+}
+
 span.slice a:visited,
 span.slice a:hover{
   color: #555544;
@@ -897,6 +901,12 @@ input.button{
 .folder {
   /* disable odd/even under folder class */
   background-color: transparent;
+}
+
+a.addButton {
+  margin-left: 0.5em;
+  padding-left: 16px;
+  background: transparent url("add_button.png") 0% 50% no-repeat;
 }
 
 /***************************************/

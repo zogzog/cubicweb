@@ -86,9 +86,11 @@ else:
 
             test_dir = __file__
 
-        Instead of toggle `edit_test` value, try `pytest -i`
+        Instead of toggle `edit_test` value, try `python <test script> -f`
         """
         browser = 'firefox'
+<<<<<<< /home/syt/src/fcubicweb/cubicweb/devtools/cwwindmill.py
+
         edit_test = "-i" in sys.argv # detection for pytest invocation
         # Windmill use case are written with no anonymous user
         anonymous_allowed = False

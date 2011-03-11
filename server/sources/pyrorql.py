@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -31,11 +31,14 @@ from Pyro.errors import PyroError, ConnectionClosedError
 from logilab.common.configuration import REQUIRED
 from logilab.common.optik_ext import check_yn
 
+from yams.schema import role_name
+
 from rql.nodes import Constant
 from rql.utils import rqlvar_maker
 
 from cubicweb import dbapi, server
-from cubicweb import BadConnectionId, UnknownEid, ConnectionError
+from cubicweb import ValidationError, BadConnectionId, UnknownEid, ConnectionError
+from cubicweb.schema import VIRTUAL_RTYPES
 from cubicweb.cwconfig import register_persistent_options
 from cubicweb.server.sources import (AbstractSource, ConnectionWrapper,
                                      TimedCache, dbg_st_search, dbg_results)
@@ -44,34 +47,6 @@ from cubicweb.server.msplanner import neged_relation
 def uidtype(union, col, etype, args):
     select, col = union.locate_subquery(col, etype, args)
     return getattr(select.selection[col], 'uidtype', None)
-
-def load_mapping_file(mappingfile):
-    mapping = {}
-    execfile(mappingfile, mapping)
-    for junk in ('__builtins__', '__doc__'):
-        mapping.pop(junk, None)
-    mapping.setdefault('support_relations', {})
-    mapping.setdefault('dont_cross_relations', set())
-    mapping.setdefault('cross_relations', set())
-
-    # do some basic checks of the mapping content
-    assert 'support_entities' in mapping, \
-           'mapping file should at least define support_entities'
-    assert isinstance(mapping['support_entities'], dict)
-    assert isinstance(mapping['support_relations'], dict)
-    assert isinstance(mapping['dont_cross_relations'], set)
-    assert isinstance(mapping['cross_relations'], set)
-    unknown = set(mapping) - set( ('support_entities', 'support_relations',
-                                   'dont_cross_relations', 'cross_relations') )
-    assert not unknown, 'unknown mapping attribute(s): %s' % unknown
-    # relations that are necessarily not crossed
-    mapping['dont_cross_relations'] |= set(('owned_by', 'created_by'))
-    for rtype in ('is', 'is_instance_of', 'cw_source'):
-        assert rtype not in mapping['dont_cross_relations'], \
-               '%s relation should not be in dont_cross_relations' % rtype
-        assert rtype not in mapping['support_relations'], \
-               '%s relation should not be in support_relations' % rtype
-    return mapping
 
 
 class ReplaceByInOperator(Exception):
@@ -95,12 +70,6 @@ class PyroRQLSource(AbstractSource):
           'default': REQUIRED,
           'help': 'identifier of the repository in the pyro name server',
           'group': 'pyro-source', 'level': 0,
-          }),
-        ('mapping-file',
-         {'type' : 'string',
-          'default': REQUIRED,
-          'help': 'path to a python file with the schema mapping definition',
-          'group': 'pyro-source', 'level': 1,
           }),
         ('cubicweb-user',
          {'type' : 'string',
@@ -142,8 +111,8 @@ registered. If not set, default to the value from all_in_one.conf.',
           'group': 'pyro-source', 'level': 2,
           }),
         ('synchronization-interval',
-         {'type' : 'int',
-          'default': 5*60,
+         {'type' : 'time',
+          'default': '5min',
           'help': 'interval between synchronization with the external \
 repository (default to 5 minutes).',
           'group': 'pyro-source', 'level': 2,
@@ -154,70 +123,112 @@ repository (default to 5 minutes).',
     PUBLIC_KEYS = AbstractSource.PUBLIC_KEYS + ('base-url',)
     _conn = None
 
-    def __init__(self, repo, source_config, *args, **kwargs):
-        AbstractSource.__init__(self, repo, source_config, *args, **kwargs)
-        mappingfile = source_config['mapping-file']
-        if not mappingfile[0] == '/':
-            mappingfile = join(repo.config.apphome, mappingfile)
-        try:
-            mapping = load_mapping_file(mappingfile)
-        except IOError:
-            self.disabled = True
-            self.error('cant read mapping file %s, source disabled',
-                       mappingfile)
-            self.support_entities = {}
-            self.support_relations = {}
-            self.dont_cross_relations = set()
-            self.cross_relations = set()
-        else:
-            self.support_entities = mapping['support_entities']
-            self.support_relations = mapping['support_relations']
-            self.dont_cross_relations = mapping['dont_cross_relations']
-            self.cross_relations = mapping['cross_relations']
-        baseurl = source_config.get('base-url')
-        if baseurl and not baseurl.endswith('/'):
-            source_config['base-url'] += '/'
-        self.config = source_config
-        myoptions = (('%s.latest-update-time' % self.uri,
-                      {'type' : 'int', 'sitewide': True,
-                       'default': 0,
-                       'help': _('timestamp of the latest source synchronization.'),
-                       'group': 'sources',
-                       }),)
-        register_persistent_options(myoptions)
+    def __init__(self, repo, source_config, eid=None):
+        AbstractSource.__init__(self, repo, source_config, eid)
+        self.update_config(None, self.check_conf_dict(eid, source_config,
+                                                      fail_if_unknown=False))
         self._query_cache = TimedCache(1800)
-        self._skip_externals = check_yn(None, 'skip-external-entities',
-                                        source_config.get('skip-external-entities', False))
+
+    def update_config(self, source_entity, processed_config):
+        """update configuration from source entity"""
+        # XXX get it through pyro if unset
+        baseurl = processed_config.get('base-url')
+        if baseurl and not baseurl.endswith('/'):
+            processed_config['base-url'] += '/'
+        self.config = processed_config
+        self._skip_externals = processed_config['skip-external-entities']
+        if source_entity is not None:
+            self.latest_retrieval = source_entity.latest_retrieval
 
     def reset_caches(self):
         """method called during test to reset potential source caches"""
         self._query_cache = TimedCache(1800)
 
-    def last_update_time(self):
-        pkey = u'sources.%s.latest-update-time' % self.uri
-        session = self.repo.internal_session()
-        try:
-            rset = session.execute('Any V WHERE X is CWProperty, X value V, X pkey %(k)s',
-                                   {'k': pkey})
-            if not rset:
-                # insert it
-                session.execute('INSERT CWProperty X: X pkey %(k)s, X value %(v)s',
-                                {'k': pkey, 'v': u'0'})
-                session.commit()
-                timestamp = 0
-            else:
-                assert len(rset) == 1
-                timestamp = int(rset[0][0])
-            return datetime.fromtimestamp(timestamp)
-        finally:
-            session.close()
-
-    def init(self):
+    def init(self, activated, source_entity):
         """method called by the repository once ready to handle request"""
-        interval = int(self.config.get('synchronization-interval', 5*60))
-        self.repo.looping_task(interval, self.synchronize)
-        self.repo.looping_task(self._query_cache.ttl.seconds/10,
-                               self._query_cache.clear_expired)
+        self.load_mapping(source_entity._cw)
+        if activated:
+            interval = self.config['synchronization-interval']
+            self.repo.looping_task(interval, self.synchronize)
+            self.repo.looping_task(self._query_cache.ttl.seconds/10,
+                                   self._query_cache.clear_expired)
+            self.latest_retrieval = source_entity.latest_retrieval
+
+    def load_mapping(self, session=None):
+        self.support_entities = {}
+        self.support_relations = {}
+        self.dont_cross_relations = set(('owned_by', 'created_by'))
+        self.cross_relations = set()
+        assert self.eid is not None
+        self._schemacfg_idx = {}
+        self._load_mapping(session)
+
+    etype_options = set(('write',))
+    rtype_options = set(('maycross', 'dontcross', 'write',))
+
+    def _check_options(self, schemacfg, allowedoptions):
+        if schemacfg.options:
+            options = set(w.strip() for w in schemacfg.options.split(':'))
+        else:
+            options = set()
+        if options - allowedoptions:
+            options = ', '.join(sorted(options - allowedoptions))
+            msg = _('unknown option(s): %s' % options)
+            raise ValidationError(schemacfg.eid, {role_name('options', 'subject'): msg})
+        return options
+
+    def add_schema_config(self, schemacfg, checkonly=False):
+        """added CWSourceSchemaConfig, modify mapping accordingly"""
+        try:
+            ertype = schemacfg.schema.name
+        except AttributeError:
+            msg = schemacfg._cw._("attribute/relation can't be mapped, only "
+                                  "entity and relation types")
+            raise ValidationError(schemacfg.eid, {role_name('cw_for_schema', 'subject'): msg})
+        if schemacfg.schema.__regid__ == 'CWEType':
+            options = self._check_options(schemacfg, self.etype_options)
+            if not checkonly:
+                self.support_entities[ertype] = 'write' in options
+        else: # CWRType
+            if ertype in ('is', 'is_instance_of', 'cw_source') or ertype in VIRTUAL_RTYPES:
+                msg = schemacfg._cw._('%s relation should not be in mapped') % rtype
+                raise ValidationError(schemacfg.eid, {role_name('cw_for_schema', 'subject'): msg})
+            options = self._check_options(schemacfg, self.rtype_options)
+            if 'dontcross' in options:
+                if 'maycross' in options:
+                    msg = schemacfg._("can't mix dontcross and maycross options")
+                    raise ValidationError(schemacfg.eid, {role_name('options', 'subject'): msg})
+                if 'write' in options:
+                    msg = schemacfg._("can't mix dontcross and write options")
+                    raise ValidationError(schemacfg.eid, {role_name('options', 'subject'): msg})
+                if not checkonly:
+                    self.dont_cross_relations.add(ertype)
+            elif not checkonly:
+                self.support_relations[ertype] = 'write' in options
+                if 'maycross' in options:
+                    self.cross_relations.add(ertype)
+        if not checkonly:
+            # add to an index to ease deletion handling
+            self._schemacfg_idx[schemacfg.eid] = ertype
+
+    def del_schema_config(self, schemacfg, checkonly=False):
+        """deleted CWSourceSchemaConfig, modify mapping accordingly"""
+        if checkonly:
+            return
+        try:
+            ertype = self._schemacfg_idx[schemacfg.eid]
+            if ertype[0].isupper():
+                del self.support_entities[ertype]
+            else:
+                if ertype in self.support_relations:
+                    del self.support_relations[ertype]
+                    if ertype in self.cross_relations:
+                        self.cross_relations.remove(ertype)
+                else:
+                    self.dont_cross_relations.remove(ertype)
+        except:
+            self.error('while updating mapping consequently to removal of %s',
+                       schemacfg)
 
     def local_eid(self, cnx, extid, session):
         etype, dexturi, dextid = cnx.describe(extid)
@@ -245,9 +256,9 @@ repository (default to 5 minutes).',
             return
         etypes = self.support_entities.keys()
         if mtime is None:
-            mtime = self.last_update_time()
-        updatetime, modified, deleted = extrepo.entities_modified_since(etypes,
-                                                                        mtime)
+            mtime = self.latest_retrieval
+        updatetime, modified, deleted = extrepo.entities_modified_since(
+            etypes, mtime)
         self._query_cache.clear()
         repo = self.repo
         session = repo.internal_session()
@@ -273,14 +284,14 @@ repository (default to 5 minutes).',
                     if eid is not None:
                         entity = session.entity_from_eid(eid, etype)
                         repo.delete_info(session, entity, self.uri, extid,
-                                         scleanup=True)
+                                         scleanup=self.eid)
                 except:
                     self.exception('while updating %s with external id %s of source %s',
                                    etype, extid, self.uri)
                     continue
-            session.execute('SET X value %(v)s WHERE X pkey %(k)s',
-                            {'k': u'sources.%s.latest-update-time' % self.uri,
-                             'v': unicode(int(mktime(updatetime.timetuple())))})
+            self.latest_retrieval = updatetime
+            session.execute('SET X latest_retrieval %(date)s WHERE X eid %(x)s',
+                            {'x': self.eid, 'date': self.latest_retrieval})
             session.commit()
         finally:
             session.close()

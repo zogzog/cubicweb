@@ -56,41 +56,50 @@ class URLPublisherTC(CubicWebTC):
         self.assertRaises(NotFound, self.process, '123/345')
         self.assertRaises(NotFound, self.process, 'not_eid')
 
-    def test_rest_path(self):
+    def test_rest_path_etype(self):
         """tests the rest path resolution"""
-        ctrl, rset = self.process('CWUser')
+        ctrl, rset = self.process('CWEType')
         self.assertEqual(ctrl, 'view')
-        self.assertEqual(rset.description[0][0], 'CWUser')
+        self.assertEqual(rset.description[0][0], 'CWEType')
         self.assertEqual(rset.printable_rql(),
-                          "Any X,AA,AB,AC,AD ORDERBY AA WHERE X is CWUser, X login AA, X firstname AB, X surname AC, X modification_date AD")
+                          "Any X,AA,AB ORDERBY AA WHERE X is CWEType, X name AA, X modification_date AB")
+
+    def test_rest_path_by_attr(self):
         ctrl, rset = self.process('CWUser/login/admin')
         self.assertEqual(ctrl, 'view')
         self.assertEqual(len(rset), 1)
         self.assertEqual(rset.description[0][0], 'CWUser')
         self.assertEqual(rset.printable_rql(), 'Any X,AA,AB,AC,AD WHERE X login "admin", X is CWUser, X login AA, X firstname AB, X surname AC, X modification_date AD')
+
+    def test_rest_path_unique_attr(self):
         ctrl, rset = self.process('cwuser/admin')
         self.assertEqual(ctrl, 'view')
         self.assertEqual(len(rset), 1)
         self.assertEqual(rset.description[0][0], 'CWUser')
         self.assertEqual(rset.printable_rql(), 'Any X,AA,AB,AC,AD WHERE X login "admin", X is CWUser, X login AA, X firstname AB, X surname AC, X modification_date AD')
-        ctrl, rset = self.process('cwuser/eid/%s'%rset[0][0])
+
+    def test_rest_path_eid(self):
+        ctrl, rset = self.process('cwuser/eid/%s' % self.user().eid)
         self.assertEqual(ctrl, 'view')
         self.assertEqual(len(rset), 1)
         self.assertEqual(rset.description[0][0], 'CWUser')
         self.assertEqual(rset.printable_rql(), 'Any X,AA,AB,AC,AD WHERE X eid %s, X is CWUser, X login AA, X firstname AB, X surname AC, X modification_date AD' % rset[0][0])
-        # test non-ascii paths
+
+    def test_rest_path_non_ascii_paths(self):
         ctrl, rset = self.process('CWUser/login/%C3%BFsa%C3%BFe')
         self.assertEqual(ctrl, 'view')
         self.assertEqual(len(rset), 1)
         self.assertEqual(rset.description[0][0], 'CWUser')
         self.assertEqual(rset.printable_rql(), u'Any X,AA,AB,AC,AD WHERE X login "\xffsa\xffe", X is CWUser, X login AA, X firstname AB, X surname AC, X modification_date AD')
-        # test quoted paths
+
+    def test_rest_path_quoted_paths(self):
         ctrl, rset = self.process('BlogEntry/title/hell%27o')
         self.assertEqual(ctrl, 'view')
         self.assertEqual(len(rset), 1)
         self.assertEqual(rset.description[0][0], 'BlogEntry')
         self.assertEqual(rset.printable_rql(), u'Any X,AA,AB,AC WHERE X title "hell\'o", X is BlogEntry, X creation_date AA, X title AB, X modification_date AC')
-        # errors
+
+    def test_rest_path_errors(self):
         self.assertRaises(NotFound, self.process, 'CWUser/eid/30000')
         self.assertRaises(NotFound, self.process, 'Workcases')
         self.assertRaises(NotFound, self.process, 'CWUser/inexistant_attribute/joe')

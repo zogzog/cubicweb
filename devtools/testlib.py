@@ -259,8 +259,7 @@ class CubicWebTC(TestCase):
         cls.init_config(cls.config)
         cls.repo.hm.call_hooks('server_startup', repo=cls.repo)
         cls.vreg = cls.repo.vreg
-        cls.websession = DBAPISession(cls.cnx, cls.admlogin,
-                                      {'password': cls.admpassword})
+        cls.websession = DBAPISession(cls.cnx, cls.admlogin)
         cls._orig_cnx = (cls.cnx, cls.websession)
         cls.config.repository = lambda x=None: cls.repo
 
@@ -481,7 +480,8 @@ class CubicWebTC(TestCase):
                       for a in self.vreg['views'].possible_views(req, rset=rset))
 
     def pactions(self, req, rset,
-                 skipcategories=('addrelated', 'siteactions', 'useractions', 'footer')):
+                 skipcategories=('addrelated', 'siteactions', 'useractions',
+                                 'footer', 'manage')):
         return [(a.__regid__, a.__class__)
                 for a in self.vreg['actions'].poss_visible_objects(req, rset=rset)
                 if a.category not in skipcategories]
@@ -492,7 +492,8 @@ class CubicWebTC(TestCase):
                 if a.category in categories]
 
     def pactionsdict(self, req, rset,
-                     skipcategories=('addrelated', 'siteactions', 'useractions', 'footer')):
+                     skipcategories=('addrelated', 'siteactions', 'useractions',
+                                     'footer', 'manage')):
         res = {}
         for a in self.vreg['actions'].poss_visible_objects(req, rset=rset):
             if a.category not in skipcategories:

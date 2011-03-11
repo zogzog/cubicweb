@@ -208,7 +208,6 @@ class StartupViewsBox(PossibleViewsBox):
             raise component.EmptyComponent()
         self.items = []
 
-
 class RsetBox(component.CtxComponent):
     """helper view class to display an rset in a sidebox"""
     __select__ = nonempty_rset() & match_kwargs('title', 'vid')

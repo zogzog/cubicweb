@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -156,7 +156,7 @@ class RestPathEvaluator(URLPathEvaluator):
 
         <etype>[[/<attribute name>]/<attribute value>]*
     """
-    priority = 2
+    priority = 3
 
     def evaluate_path(self, req, parts):
         if not (0 < len(parts) < 4):
@@ -214,7 +214,8 @@ class URLRewriteEvaluator(URLPathEvaluator):
 
     URL rewrite rule definitions are stored in URLRewriter objects
     """
-    priority = 3
+    priority = 2
+
     def evaluate_path(self, req, parts):
         # uri <=> req._twreq.path or req._twreq.uri
         uri = req.url_unquote('/' + '/'.join(parts))
@@ -236,6 +237,7 @@ class ActionPathEvaluator(URLPathEvaluator):
     <any evaluator path>/<action>
     """
     priority = 4
+
     def evaluate_path(self, req, parts):
         if len(parts) < 2:
             raise PathDontMatch()

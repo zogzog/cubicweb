@@ -608,6 +608,29 @@ function reload(domid, compid, registry, formparams  /* ... */) {
     $('#'+domid).loadxhtml('json', params, null, 'swap');
 }
 
+/* ajax tabs ******************************************************************/
+
+function setTab(tabname, cookiename) {
+    // set appropriate cookie
+    loadRemote('json', ajaxFuncArgs('set_cookie', null, cookiename, tabname));
+    // trigger show + tabname event
+    triggerLoad(tabname);
+}
+
+function loadNow(eltsel, holesel, reloadable) {
+    var lazydiv = jQuery(eltsel);
+    var hole = lazydiv.children(holesel);
+    if ((hole.length == 0) && ! reloadable) {
+        /* the hole is already filed */
+        return;
+    }
+    lazydiv.loadxhtml(lazydiv.attr('cubicweb:loadurl'), {'pageid': pageid});
+}
+
+function triggerLoad(divid) {
+    jQuery('#lazy-' + divid).trigger('load_' + divid);
+}
+
 /* DEPRECATED *****************************************************************/
 
 preprocessAjaxLoad = cw.utils.deprecatedFunction(

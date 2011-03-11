@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -45,8 +45,10 @@ from logilab.common.shellutils import getlogin
 from logilab.database import get_db_helper
 
 from yams import schema2sql as y2sql
+from yams.schema import role_name
 
-from cubicweb import UnknownEid, AuthenticationError, ValidationError, Binary, UniqueTogetherError
+from cubicweb import (UnknownEid, AuthenticationError, ValidationError, Binary,
+                      UniqueTogetherError)
 from cubicweb import transaction as tx, server, neg_role
 from cubicweb.schema import VIRTUAL_RTYPES
 from cubicweb.cwconfig import CubicWebNoAppConfiguration
@@ -267,6 +269,8 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
     def __init__(self, repo, source_config, *args, **kwargs):
         SQLAdapterMixIn.__init__(self, source_config)
         self.authentifiers = [LoginPasswordAuthentifier(self)]
+        if repo.config['allow-email-login']:
+            self.authentifiers.insert(0, EmailPasswordAuthentifier(self))
         AbstractSource.__init__(self, repo, source_config, *args, **kwargs)
         # sql generator
         self._rql_sqlgen = self.sqlgen_class(self.schema, self.dbhelper,
@@ -308,6 +312,13 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         #      consuming, find another way
         return SQLAdapterMixIn.get_connection(self)
 
+    def check_config(self, source_entity):
+        """check configuration of source entity"""
+        if source_entity.host_config:
+            msg = source_entity._cw._('the system source has its configuration '
+                                      'stored on the file-system')
+            raise ValidationError(source_entity.eid, {role_name('config', 'subject'): msg})
+
     def add_authentifier(self, authentifier):
         self.authentifiers.append(authentifier)
         authentifier.source = self
@@ -327,17 +338,21 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         """execute the query and return its result"""
         return self.process_result(self.doexec(session, sql, args))
 
-    def init_creating(self):
-        pool = self.repo._get_pool()
-        pool.pool_set()
+    def init_creating(self, pool=None):
         # check full text index availibility
         if self.do_fti:
-            if not self.dbhelper.has_fti_table(pool['system']):
+            if pool is None:
+                _pool = self.repo._get_pool()
+                _pool.pool_set()
+            else:
+                _pool = pool
+            if not self.dbhelper.has_fti_table(_pool['system']):
                 if not self.repo.config.creating:
                     self.critical('no text index table')
                 self.do_fti = False
-        pool.pool_reset()
-        self.repo._free_pool(pool)
+            if pool is None:
+                _pool.pool_reset()
+                self.repo._free_pool(_pool)
 
     def backup(self, backupfile, confirm):
         """method called to create a backup of the source's data"""
@@ -357,8 +372,8 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             if self.repo.config.open_connections_pools:
                 self.open_pool_connections()
 
-    def init(self):
-        self.init_creating()
+    def init(self, activated, source_entity):
+        self.init_creating(source_entity._cw.pool)
 
     def shutdown(self):
         if self._eid_creation_cnx:
@@ -788,13 +803,13 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             res[-1] = b64decode(res[-1])
         return res
 
-    def extid2eid(self, session, source, extid):
+    def extid2eid(self, session, source_uri, extid):
         """get eid from an external id. Return None if no record found."""
         assert isinstance(extid, str)
         cursor = self.doexec(session,
                              'SELECT eid FROM entities '
                              'WHERE extid=%(x)s AND source=%(s)s',
-                             {'x': b64encode(extid), 's': source.uri})
+                             {'x': b64encode(extid), 's': source_uri})
         # XXX testing rowcount cause strange bug with sqlite, results are there
         #     but rowcount is 0
         #if cursor.rowcount > 0:
@@ -883,24 +898,24 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         if extid is not None:
             assert isinstance(extid, str)
             extid = b64encode(extid)
+        uri = 'system' if source.copy_based_source else source.uri
         attrs = {'type': entity.__regid__, 'eid': entity.eid, 'extid': extid,
-                 'source': source.uri, 'mtime': datetime.now()}
+                 'source': uri, 'mtime': datetime.now()}
         self.doexec(session, self.sqlgen.insert('entities', attrs), attrs)
         # insert core relations: is, is_instance_of and cw_source
-        if not hasattr(entity, '_cw_recreating'):
-            try:
-                self.doexec(session, 'INSERT INTO is_relation(eid_from,eid_to) VALUES (%s,%s)'
-                            % (entity.eid, eschema_eid(session, entity.e_schema)))
-            except IndexError:
-                # during schema serialization, skip
-                pass
-            else:
-                for eschema in entity.e_schema.ancestors() + [entity.e_schema]:
-                    self.doexec(session, 'INSERT INTO is_instance_of_relation(eid_from,eid_to) VALUES (%s,%s)'
-                               % (entity.eid, eschema_eid(session, eschema)))
-            if 'CWSource' in self.schema and source.eid is not None: # else, cw < 3.10
-                self.doexec(session, 'INSERT INTO cw_source_relation(eid_from,eid_to) '
-                            'VALUES (%s,%s)' % (entity.eid, source.eid))
+        try:
+            self.doexec(session, 'INSERT INTO is_relation(eid_from,eid_to) VALUES (%s,%s)'
+                        % (entity.eid, eschema_eid(session, entity.e_schema)))
+        except IndexError:
+            # during schema serialization, skip
+            pass
+        else:
+            for eschema in entity.e_schema.ancestors() + [entity.e_schema]:
+                self.doexec(session, 'INSERT INTO is_instance_of_relation(eid_from,eid_to) VALUES (%s,%s)'
+                           % (entity.eid, eschema_eid(session, eschema)))
+        if 'CWSource' in self.schema and source.eid is not None: # else, cw < 3.10
+            self.doexec(session, 'INSERT INTO cw_source_relation(eid_from,eid_to) '
+                        'VALUES (%s,%s)' % (entity.eid, source.eid))
         # now we can update the full text index
         if self.do_fti and self.need_fti_indexation(entity.__regid__):
             if complete:
@@ -1524,3 +1539,19 @@ class LoginPasswordAuthentifier(BaseAuthentifier):
             return rset[0][0]
         except IndexError:
             raise AuthenticationError('bad password')
+
+
+class EmailPasswordAuthentifier(BaseAuthentifier):
+    def authenticate(self, session, login, **authinfo):
+        # email_auth flag prevent from infinite recursion (call to
+        # repo.check_auth_info at the end of this method may lead us here again)
+        if not '@' in login or authinfo.pop('email_auth', None):
+            raise AuthenticationError('not an email')
+        rset = session.execute('Any L WHERE U login L, U primary_email M, '
+                               'M address %(login)s', {'login': login},
+                               build_descr=False)
+        if rset.rowcount != 1:
+            raise AuthenticationError('unexisting email')
+        login = rset.rows[0][0]
+        authinfo['email_auth'] = True
+        return self.source.repo.check_auth_info(session, login, authinfo)

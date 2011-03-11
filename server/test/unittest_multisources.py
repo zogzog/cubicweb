@@ -1,4 +1,4 @@
- # copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -17,6 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 
 from datetime import datetime, timedelta
+from itertools import repeat
 
 from cubicweb.devtools import TestServerConfiguration, init_test_database
 from cubicweb.devtools.testlib import CubicWebTC, refresh_repo
@@ -35,7 +36,6 @@ EXTERN_SOURCE_CFG = u'''
 pyro-ns-id = extern
 cubicweb-user = admin
 cubicweb-password = gingkow
-mapping-file = extern_mapping.py
 base-url=http://extern.org/
 '''
 
@@ -46,14 +46,22 @@ from cubicweb.dbapi import Connection
 PyroRQLSource_get_connection = PyroRQLSource.get_connection
 Connection_close = Connection.close
 
+def add_extern_mapping(source):
+    source.init_mapping(zip(('Card', 'Affaire', 'State',
+                             'in_state', 'documented_by', 'multisource_inlined_rel'),
+                            repeat(u'write')))
+
+
 def setUpModule(*args):
     global repo2, cnx2, repo3, cnx3
     cfg1 = ExternalSource1Configuration('data', apphome=TwoSourcesTC.datadir)
     repo2, cnx2 = init_test_database(config=cfg1)
     cfg2 = ExternalSource2Configuration('data', apphome=TwoSourcesTC.datadir)
     repo3, cnx3 = init_test_database(config=cfg2)
-    cnx3.request().create_entity('CWSource', name=u'extern', type=u'pyrorql',
-                                 config=EXTERN_SOURCE_CFG)
+    src = cnx3.request().create_entity('CWSource', name=u'extern',
+                                       type=u'pyrorql', config=EXTERN_SOURCE_CFG)
+    cnx3.commit() # must commit before adding the mapping
+    add_extern_mapping(src)
     cnx3.commit()
 
     TestServerConfiguration.no_sqlite_wrap = True
@@ -108,11 +116,12 @@ class TwoSourcesTC(CubicWebTC):
 pyro-ns-id = extern-multi
 cubicweb-user = admin
 cubicweb-password = gingkow
-mapping-file = extern_mapping.py
 ''')]:
-            self.request().create_entity('CWSource', name=unicode(uri),
-                                         type=u'pyrorql',
-                                         config=unicode(config))
+            source = self.request().create_entity(
+                'CWSource', name=unicode(uri), type=u'pyrorql',
+                config=unicode(config))
+            self.commit() # must commit before adding the mapping
+            add_extern_mapping(source)
         self.commit()
         # trigger discovery
         self.sexecute('Card X')

@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -207,12 +207,6 @@ class Repository(object):
             self.init_sources_from_database()
             if 'CWProperty' in self.schema:
                 self.vreg.init_properties(self.properties())
-            # call source's init method to complete their initialisation if
-            # needed (for instance looking for persistent configuration using an
-            # internal session, which is not possible until pools have been
-            # initialized)
-            for source in self.sources:
-                source.init()
         else:
             # call init_creating so that for instance native source can
             # configurate tsearch according to postgres version
@@ -241,11 +235,12 @@ class Repository(object):
         try:
             # FIXME: sources should be ordered (add_entity priority)
             for sourceent in session.execute(
-                'Any S, SN, SA, SC WHERE S is CWSource, '
+                'Any S, SN, SA, SC WHERE S is_instance_of CWSource, '
                 'S name SN, S type SA, S config SC').entities():
                 if sourceent.name == 'system':
                     self.system_source.eid = sourceent.eid
                     self.sources_by_eid[sourceent.eid] = self.system_source
+                    self.system_source.init(True, sourceent)
                     continue
                 self.add_source(sourceent, add_to_pools=False)
         finally:
@@ -258,34 +253,41 @@ class Repository(object):
 
     def add_source(self, sourceent, add_to_pools=True):
         source = self.get_source(sourceent.type, sourceent.name,
-                                 sourceent.host_config)
-        source.eid = sourceent.eid
+                                 sourceent.host_config, sourceent.eid)
         self.sources_by_eid[sourceent.eid] = source
         self.sources_by_uri[sourceent.name] = source
         if self.config.source_enabled(source):
-            self.sources.append(source)
-            self.querier.set_planner()
-            if add_to_pools:
-                for pool in self.pools:
-                    pool.add_source(source)
+            # call source's init method to complete their initialisation if
+            # needed (for instance looking for persistent configuration using an
+            # internal session, which is not possible until pools have been
+            # initialized)
+            source.init(True, sourceent)
+            if not source.copy_based_source:
+                self.sources.append(source)
+                self.querier.set_planner()
+                if add_to_pools:
+                    for pool in self.pools:
+                        pool.add_source(source)
+        else:
+            source.init(False, sourceent)
         self._clear_planning_caches()
 
     def remove_source(self, uri):
         source = self.sources_by_uri.pop(uri)
         del self.sources_by_eid[source.eid]
-        if self.config.source_enabled(source):
+        if self.config.source_enabled(source) and not source.copy_based_source:
             self.sources.remove(source)
             self.querier.set_planner()
             for pool in self.pools:
                 pool.remove_source(source)
         self._clear_planning_caches()
 
-    def get_source(self, type, uri, source_config):
+    def get_source(self, type, uri, source_config, eid=None):
         # set uri and type in source config so it's available through
         # source_defs()
         source_config['uri'] = uri
         source_config['type'] = type
-        return sources.get_source(type, source_config, self)
+        return sources.get_source(type, source_config, self, eid)
 
     def set_schema(self, schema, resetvreg=True, rebuildinfered=True):
         if rebuildinfered:
@@ -427,33 +429,24 @@ class Repository(object):
         except ZeroDivisionError:
             pass
 
-    def _login_from_email(self, login):
-        session = self.internal_session()
-        try:
-            rset = session.execute('Any L WHERE U login L, U primary_email M, '
-                                   'M address %(login)s', {'login': login},
-                                   build_descr=False)
-            if rset.rowcount == 1:
-                login = rset[0][0]
-        finally:
-            session.close()
-        return login
-
-    def authenticate_user(self, session, login, **kwargs):
-        """validate login / password, raise AuthenticationError on failure
-        return associated CWUser instance on success
+    def check_auth_info(self, session, login, authinfo):
+        """validate authentication, raise AuthenticationError on failure, return
+        associated CWUser's eid on success.
         """
-        if self.vreg.config['allow-email-login'] and '@' in login:
-            login = self._login_from_email(login)
         for source in self.sources:
             if source.support_entity('CWUser'):
                 try:
-                    eid = source.authenticate(session, login, **kwargs)
-                    break
+                    return source.authenticate(session, login, **authinfo)
                 except AuthenticationError:
                     continue
         else:
             raise AuthenticationError('authentication failed with all sources')
+
+    def authenticate_user(self, session, login, **authinfo):
+        """validate login / password, raise AuthenticationError on failure
+        return associated CWUser instance on success
+        """
+        eid = self.check_auth_info(session, login, authinfo)
         cwuser = self._build_user(session, eid)
         if self.config.consider_user_state and \
                not cwuser.cw_adapt_to('IWorkflowable').state in cwuser.AUTHENTICABLE_STATES:
@@ -1029,9 +1022,10 @@ class Repository(object):
         return extid
 
     def extid2eid(self, source, extid, etype, session=None, insert=True,
-                  recreate=False):
+                  sourceparams=None):
         """get eid from a local id. An eid is attributed if no record is found"""
-        cachekey = (extid, source.uri)
+        uri = 'system' if source.copy_based_source else source.uri
+        cachekey = (extid, uri)
         try:
             return self._extid_cache[cachekey]
         except KeyError:
@@ -1040,20 +1034,10 @@ class Repository(object):
         if session is None:
             session = self.internal_session()
             reset_pool = True
-        eid = self.system_source.extid2eid(session, source, extid)
+        eid = self.system_source.extid2eid(session, uri, extid)
         if eid is not None:
             self._extid_cache[cachekey] = eid
-            self._type_source_cache[eid] = (etype, source.uri, extid)
-            # XXX used with extlite (eg vcsfile), probably not needed anymore
-            if recreate:
-                entity = source.before_entity_insertion(session, extid, etype, eid)
-                entity._cw_recreating = True
-                if source.should_call_hooks:
-                    self.hm.call_hooks('before_add_entity', session, entity=entity)
-                # XXX add fti op ?
-                source.after_entity_insertion(session, extid, entity)
-                if source.should_call_hooks:
-                    self.hm.call_hooks('after_add_entity', session, entity=entity)
+            self._type_source_cache[eid] = (etype, uri, extid)
             if reset_pool:
                 session.reset_pool()
             return eid
@@ -1071,13 +1055,14 @@ class Repository(object):
         try:
             eid = self.system_source.create_eid(session)
             self._extid_cache[cachekey] = eid
-            self._type_source_cache[eid] = (etype, source.uri, extid)
-            entity = source.before_entity_insertion(session, extid, etype, eid)
+            self._type_source_cache[eid] = (etype, uri, extid)
+            entity = source.before_entity_insertion(
+                session, extid, etype, eid, sourceparams)
             if source.should_call_hooks:
                 self.hm.call_hooks('before_add_entity', session, entity=entity)
             # XXX call add_info with complete=False ?
             self.add_info(session, entity, source, extid)
-            source.after_entity_insertion(session, extid, entity)
+            source.after_entity_insertion(session, extid, entity, sourceparams)
             if source.should_call_hooks:
                 self.hm.call_hooks('after_add_entity', session, entity=entity)
             session.commit(reset_pool)
@@ -1094,7 +1079,7 @@ class Repository(object):
         hook.CleanupNewEidsCacheOp.get_instance(session).add_data(entity.eid)
         self.system_source.add_info(session, entity, source, extid, complete)
 
-    def delete_info(self, session, entity, sourceuri, extid, scleanup=False):
+    def delete_info(self, session, entity, sourceuri, extid, scleanup=None):
         """called by external source when some entity known by the system source
         has been deleted in the external source
         """
@@ -1103,7 +1088,7 @@ class Repository(object):
         hook.CleanupDeletedEidsCacheOp.get_instance(session).add_data(entity.eid)
         self._delete_info(session, entity, sourceuri, extid, scleanup)
 
-    def delete_info_multi(self, session, entities, sourceuri, extids, scleanup=False):
+    def delete_info_multi(self, session, entities, sourceuri, extids, scleanup=None):
         """same as delete_info but accepts a list of entities and
         extids with the same etype and belonging to the same source
         """
@@ -1114,7 +1099,7 @@ class Repository(object):
             op.add_data(entity.eid)
         self._delete_info_multi(session, entities, sourceuri, extids, scleanup)
 
-    def _delete_info(self, session, entity, sourceuri, extid, scleanup=False):
+    def _delete_info(self, session, entity, sourceuri, extid, scleanup=None):
         """delete system information on deletion of an entity:
         * delete all remaining relations from/to this entity
         * call delete info on the system source which will transfer record from
@@ -1135,18 +1120,19 @@ class Repository(object):
                     rql = 'DELETE X %s Y WHERE X eid %%(x)s' % rtype
                 else:
                     rql = 'DELETE Y %s X WHERE X eid %%(x)s' % rtype
-                if scleanup:
+                if scleanup is not None:
                     # source cleaning: only delete relations stored locally
-                    rql += ', NOT (Y cw_source S, S name %(source)s)'
+                    # (here, scleanup
+                    rql += ', NOT (Y cw_source S, S eid %(seid)s)'
                 try:
-                    session.execute(rql, {'x': eid, 'source': sourceuri},
+                    session.execute(rql, {'x': eid, 'seid': scleanup},
                                     build_descr=False)
                 except:
                     self.exception('error while cascading delete for entity %s '
                                    'from %s. RQL: %s', entity, sourceuri, rql)
         self.system_source.delete_info(session, entity, sourceuri, extid)
 
-    def _delete_info_multi(self, session, entities, sourceuri, extids, scleanup=False):
+    def _delete_info_multi(self, session, entities, sourceuri, extids, scleanup=None):
         """same as _delete_info but accepts a list of entities with
         the same etype and belinging to the same source.
         """
@@ -1167,12 +1153,11 @@ class Repository(object):
                     rql = 'DELETE X %s Y WHERE X eid IN (%s)' % (rtype, in_eids)
                 else:
                     rql = 'DELETE Y %s X WHERE X eid IN (%s)' % (rtype, in_eids)
-                if scleanup:
+                if scleanup is not None:
                     # source cleaning: only delete relations stored locally
-                    rql += ', NOT (Y cw_source S, S name %(source)s)'
+                    rql += ', NOT (Y cw_source S, S eid %(seid)s)'
                 try:
-                    session.execute(rql, {'source': sourceuri},
-                                    build_descr=False)
+                    session.execute(rql, {'seid': scleanup}, build_descr=False)
                 except:
                     self.exception('error while cascading delete for entity %s '
                                    'from %s. RQL: %s', entities, sourceuri, rql)
@@ -1214,6 +1199,8 @@ class Repository(object):
         if suri == 'system':
             extid = None
         else:
+            if source.copy_based_source:
+                suri = 'system'
             extid = source.get_extid(entity)
             self._extid_cache[(str(extid), suri)] = entity.eid
         self._type_source_cache[entity.eid] = (entity.__regid__, suri, extid)

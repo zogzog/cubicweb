@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -15,10 +15,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""
-
-"""
-from yams.buildobjs import RelationDefinition
+from yams.buildobjs import EntityType, RelationDefinition, String, SubjectRelation
 
 class comments(RelationDefinition):
     subject = 'Comment'
@@ -26,3 +23,6 @@ class comments(RelationDefinition):
     cardinality='1*'
     composite='object'
 
+class Tag(EntityType):
+    name = String(unique=True)
+    tags = SubjectRelation('CWUser')

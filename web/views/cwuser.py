@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -24,10 +24,11 @@ import hashlib
 
 from logilab.mtconverter import xml_escape
 
+from cubicweb.schema import display_name
 from cubicweb.selectors import one_line_rset, is_instance, match_user_groups
-from cubicweb.view import EntityView
+from cubicweb.view import EntityView, StartupView
 from cubicweb.web import action, uicfg, formwidgets
-from cubicweb.web.views import tabs
+from cubicweb.web.views import tabs, tableview, actions
 
 _pvs = uicfg.primaryview_section
 _pvs.tag_attribute(('CWUser', 'login'), 'hidden')
@@ -157,3 +158,50 @@ class CWGroupInContextView(EntityView):
         entity = self.cw_rset.complete_entity(row, col)
         self.w(u'<a href="%s" class="%s">%s</a>' % (
             entity.absolute_url(), entity.name, entity.printable_value('name')))
+
+
+# user / groups management views ###############################################
+
+class ManageUsersAction(actions.ManagersAction):
+    __regid__ = 'cwuser' # see rewrite rule /cwuser
+    title = _('users and groups')
+    category = 'manage'
+
+
+class CWUserManagementView(StartupView):
+    __regid__ = 'cw.user-management'
+    rql = ('Any U, F, S, U, L ORDERBY L WHERE U is CWUser, U login L, U firstname F, U surname S')
+    title = _('users and groups management')
+
+    def call(self, **kwargs):
+        self.w('<h1>%s</h1>' % self._cw._(self.title))
+        for etype in ('CWUser', 'CWGroup'):
+            eschema = self._cw.vreg.schema.eschema(etype)
+            if eschema.has_perm(self._cw, 'add'):
+                self.w(u'<a href="%s" class="addButton right">%s</a>' % (
+                    self._cw.build_url('add/%s' % eschema),
+                    self._cw._('add a %s' % etype).capitalize()))
+        self.w(u'<div class="clear"></div>')
+        self.wview('cw.user-table', self._cw.execute(self.rql))
+
+
+class CWUserTable(tableview.EditableTableView):
+    __regid__ = 'cw.user-table'
+    __select__ = is_instance('CWUser')
+
+    def call(self, **kwargs):
+        headers = (display_name(self._cw, 'CWUser', 'plural'),
+                   self._cw._('firstname'), self._cw._('surname'),
+                   display_name(self._cw, 'CWGroup', 'plural'))
+        super(CWUserTable, self).call(
+            paginate=True, cellvids={3: 'cw.user-table.group-cell'},
+            headers=headers, **kwargs)
+
+
+class CWUserGroupCell(EntityView):
+    __regid__ = 'cw.user-table.group-cell'
+    __select__ = is_instance('CWUser')
+
+    def cell_call(self, row, col, **kwargs):
+        entity = self.cw_rset.get_entity(row, col)
+        self.w(entity.view('reledit', rtype='in_group', role='subject'))

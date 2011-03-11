@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -20,7 +20,6 @@
 from __future__ import with_statement
 
 from logilab.common.decorators import clear_cache
-
 from yams.buildobjs import RelationDefinition
 from rql import BadRQLQuery
 
@@ -43,7 +42,6 @@ from cubicweb.server.sources import AbstractSource
 from cubicweb.server.msplanner import MSPlanner, PartPlanInformation
 
 class FakeUserROSource(AbstractSource):
-    uri = 'zzz'
     support_entities = {'CWUser': False}
     support_relations = {}
     def syntax_tree_search(self, *args, **kwargs):
@@ -51,7 +49,6 @@ class FakeUserROSource(AbstractSource):
 
 
 class FakeCardSource(AbstractSource):
-    uri = 'ccc'
     support_entities = {'Card': True, 'Note': True, 'State': True}
     support_relations = {'in_state': True, 'multisource_rel': True, 'multisource_inlined_rel': True,
                          'multisource_crossed_rel': True,}
@@ -61,12 +58,16 @@ class FakeCardSource(AbstractSource):
     def syntax_tree_search(self, *args, **kwargs):
         return []
 
+
+class FakeDataFeedSource(FakeCardSource):
+    copy_based_source = True
+
 X_ALL_SOLS = sorted([{'X': 'Affaire'}, {'X': 'BaseTransition'}, {'X': 'Basket'},
                      {'X': 'Bookmark'}, {'X': 'CWAttribute'}, {'X': 'CWCache'},
                      {'X': 'CWConstraint'}, {'X': 'CWConstraintType'}, {'X': 'CWEType'},
                      {'X': 'CWGroup'}, {'X': 'CWPermission'}, {'X': 'CWProperty'},
                      {'X': 'CWRType'}, {'X': 'CWRelation'},
-                     {'X': 'CWSource'}, {'X': 'CWSourceHostConfig'},
+                     {'X': 'CWSource'}, {'X': 'CWSourceHostConfig'}, {'X': 'CWSourceSchemaConfig'},
                      {'X': 'CWUser'}, {'X': 'CWUniqueTogetherConstraint'},
                      {'X': 'Card'}, {'X': 'Comment'}, {'X': 'Division'},
                      {'X': 'Email'}, {'X': 'EmailAddress'}, {'X': 'EmailPart'},
@@ -113,6 +114,7 @@ class BaseMSPlannerTC(BasePlannerTC):
         self.schema['CWUser'].set_action_permissions('read', userreadperms)
         self.add_source(FakeUserROSource, 'ldap')
         self.add_source(FakeCardSource, 'cards')
+        self.add_source(FakeDataFeedSource, 'datafeed')
 
     def tearDown(self):
         # restore hijacked security
@@ -900,6 +902,7 @@ class MSPlannerTC(BaseMSPlannerTC):
         ueid = self.session.user.eid
         ALL_SOLS = X_ALL_SOLS[:]
         ALL_SOLS.remove({'X': 'CWSourceHostConfig'}) # not authorized
+        ALL_SOLS.remove({'X': 'CWSourceSchemaConfig'}) # not authorized
         self._test('Any MAX(X)',
                    [('FetchStep', [('Any E WHERE E type "X", E is Note', [{'E': 'Note'}])],
                      [self.cards, self.system],  None, {'E': 'table1.C0'}, []),
@@ -950,7 +953,7 @@ class MSPlannerTC(BaseMSPlannerTC):
         ueid = self.session.user.eid
         X_ET_ALL_SOLS = []
         for s in X_ALL_SOLS:
-            if s == {'X': 'CWSourceHostConfig'}:
+            if s in ({'X': 'CWSourceHostConfig'}, {'X': 'CWSourceSchemaConfig'}):
                 continue # not authorized
             ets = {'ET': 'CWEType'}
             ets.update(s)
@@ -1957,6 +1960,22 @@ class MSPlannerTC(BaseMSPlannerTC):
                     ])
 
     def test_source_specified_1_2(self):
+        self._test('Card X WHERE X cw_source S, S name "datafeed"',
+                   [('OneFetchStep', [('Any X WHERE X cw_source S, S name "datafeed", X is Card',
+                                       [{'X': 'Card', 'S': 'CWSource'}])],
+                     None, None,
+                     [self.system],{}, [])
+                    ])
+
+    def test_source_specified_1_3(self):
+        self._test('Any X, SN WHERE X is Card, X cw_source S, S name "datafeed", S name SN',
+                   [('OneFetchStep', [('Any X,SN WHERE X is Card, X cw_source S, S name "datafeed", '
+                                       'S name SN',
+                                       [{'S': 'CWSource', 'SN': 'String', 'X': 'Card'}])],
+                     None, None, [self.system], {}, [])
+                    ])
+
+    def test_source_specified_1_4(self):
         sols = []
         for sol in X_ALL_SOLS:
             sol = sol.copy()
@@ -2006,6 +2025,14 @@ class MSPlannerTC(BaseMSPlannerTC):
                     ])
 
     def test_source_specified_3_2(self):
+        self._test('Any X,XT WHERE X is Card, X title XT, X cw_source S, S name "datafeed"',
+                   [('OneFetchStep',
+                     [('Any X,XT WHERE X is Card, X title XT, X cw_source S, S name "datafeed"',
+                       [{'X': 'Card', 'XT': 'String', 'S': 'CWSource'}])],
+                     None, None, [self.system], {}, [])
+                    ])
+
+    def test_source_specified_3_3(self):
         self.skipTest('oops')
         self._test('Any STN WHERE X is Note, X type XT, X in_state ST, ST name STN, X cw_source S, S name "cards"',
                    [('OneFetchStep',
@@ -2542,7 +2569,7 @@ class MSPlannerTwoSameExternalSourcesTC(BasePlannerTC):
                      None, {'X': 'table0.C0'}, []),
                     ('UnionStep', None, None,
                      [('OneFetchStep',
-                       [(u'Any X WHERE X owned_by U, U login "anon", U is CWUser, X is IN(Affaire, BaseTransition, Basket, Bookmark, CWAttribute, CWCache, CWConstraint, CWConstraintType, CWEType, CWGroup, CWPermission, CWProperty, CWRType, CWRelation, CWSource, CWSourceHostConfig, CWUniqueTogetherConstraint, CWUser, Division, Email, EmailAddress, EmailPart, EmailThread, ExternalUri, File, Folder, Personne, RQLExpression, Societe, SubDivision, SubWorkflowExitPoint, Tag, TrInfo, Transition, Workflow, WorkflowTransition)',
+                       [(u'Any X WHERE X owned_by U, U login "anon", U is CWUser, X is IN(Affaire, BaseTransition, Basket, Bookmark, CWAttribute, CWCache, CWConstraint, CWConstraintType, CWEType, CWGroup, CWPermission, CWProperty, CWRType, CWRelation, CWSource, CWSourceHostConfig, CWSourceSchemaConfig, CWUniqueTogetherConstraint, CWUser, Division, Email, EmailAddress, EmailPart, EmailThread, ExternalUri, File, Folder, Personne, RQLExpression, Societe, SubDivision, SubWorkflowExitPoint, Tag, TrInfo, Transition, Workflow, WorkflowTransition)',
                          [{'U': 'CWUser', 'X': 'Affaire'},
                           {'U': 'CWUser', 'X': 'BaseTransition'},
                           {'U': 'CWUser', 'X': 'Basket'},
@@ -2559,6 +2586,7 @@ class MSPlannerTwoSameExternalSourcesTC(BasePlannerTC):
                           {'U': 'CWUser', 'X': 'CWRelation'},
                           {'U': 'CWUser', 'X': 'CWSource'},
                           {'U': 'CWUser', 'X': 'CWSourceHostConfig'},
+                          {'U': 'CWUser', 'X': 'CWSourceSchemaConfig'},
                           {'U': 'CWUser', 'X': 'CWUniqueTogetherConstraint'},
                           {'U': 'CWUser', 'X': 'CWUser'},
                           {'U': 'CWUser', 'X': 'Division'},
