@@ -87,7 +87,7 @@ class AutoClickAndEditFormView(EntityView):
         assert rtype
         self._cw.add_css('cubicweb.form.css')
         self._cw.add_js(('cubicweb.reledit.js', 'cubicweb.edition.js', 'cubicweb.ajax.js'))
-        entity = self.cw_rset.get_entity(row, col)
+        self.entity = self.cw_rset.get_entity(row, col)
         rschema = self._cw.vreg.schema[rtype]
         self._rules = rctrl.etype_get(self.entity.e_schema.type, rschema.type, role, '*')
         if rvid is not None or default_value is not None:
@@ -220,7 +220,7 @@ class AutoClickAndEditFormView(EntityView):
         return self._build_zone(self._editzone, self._editzonemsg, self._editlogo)
 
     def _build_delete_zone(self):
-        return self._build_zone(self._deletezone, self._deletezonemsg, self._deletelogo)
+        return self._build_zone(self._deletezone, self._deletemsg, self._deletelogo)
 
     def _build_add_zone(self):
         return self._build_zone(self._addzone, self._addzonemsg, self._addlogo)
