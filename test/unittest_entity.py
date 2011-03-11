@@ -16,9 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""unit tests for cubicweb.web.views.entities module
-
-"""
+"""unit tests for cubicweb.web.views.entities module"""
 
 from datetime import datetime
 
@@ -26,6 +24,8 @@ from cubicweb import Binary, Unauthorized
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.mttransforms import HAS_TAL
 from cubicweb.entities import fetch_config
+from cubicweb.uilib import soup2xhtml
+
 
 class EntityTC(CubicWebTC):
 
@@ -319,33 +319,33 @@ class EntityTC(CubicWebTC):
 
     def test_printable_value_string(self):
         e = self.request().create_entity('Card', title=u'rest test', content=u'du :eid:`1:*ReST*`',
-                            content_format=u'text/rest')
+                                         content_format=u'text/rest')
         self.assertEqual(e.printable_value('content'),
-                          '<p>du <a class="reference" href="http://testing.fr/cubicweb/cwgroup/guests">*ReST*</a></p>\n')
-        e['content'] = 'du <em>html</em> <ref rql="CWUser X">users</ref>'
-        e['content_format'] = 'text/html'
+                         '<p>du <a class="reference" href="http://testing.fr/cubicweb/cwsource/system">*ReST*</a></p>\n')
+        e.cw_attr_cache['content'] = 'du <em>html</em> <ref rql="CWUser X">users</ref>'
+        e.cw_attr_cache['content_format'] = 'text/html'
         self.assertEqual(e.printable_value('content'),
                           'du <em>html</em> <a href="http://testing.fr/cubicweb/view?rql=CWUser%20X">users</a>')
-        e['content'] = 'du *texte*'
-        e['content_format'] = 'text/plain'
+        e.cw_attr_cache['content'] = 'du *texte*'
+        e.cw_attr_cache['content_format'] = 'text/plain'
         self.assertEqual(e.printable_value('content'),
                           '<p>\ndu *texte*<br/>\n</p>')
-        e['title'] = 'zou'
-        e['content'] = '''\
+        e.cw_attr_cache['title'] = 'zou'
+        e.cw_attr_cache['content'] = '''\
 a title
 =======
 du :eid:`1:*ReST*`'''
-        e['content_format'] = 'text/rest'
+        e.cw_attr_cache['content_format'] = 'text/rest'
         self.assertEqual(e.printable_value('content', format='text/plain'),
-                          e['content'])
+                          e.cw_attr_cache['content'])
 
-        e['content'] = u'<b>yo (zou éà ;)</b>'
-        e['content_format'] = 'text/html'
+        e.cw_attr_cache['content'] = u'<b>yo (zou éà ;)</b>'
+        e.cw_attr_cache['content_format'] = 'text/html'
         self.assertEqual(e.printable_value('content', format='text/plain').strip(),
-                          u'**yo (zou éà ;)**')
+                         u'**yo (zou éà ;)**')
         if HAS_TAL:
-            e['content'] = '<h1 tal:content="self/title">titre</h1>'
-            e['content_format'] = 'text/cubicweb-page-template'
+            e.cw_attr_cache['content'] = '<h1 tal:content="self/title">titre</h1>'
+            e.cw_attr_cache['content_format'] = 'text/cubicweb-page-template'
             self.assertEqual(e.printable_value('content'),
                               '<h1>zou</h1>')
 
@@ -387,63 +387,53 @@ du :eid:`1:*ReST*`'''
         tidy = lambda x: x.replace('\n', '')
         self.assertEqual(tidy(e.printable_value('content')),
                           '<div>R&amp;D<br/></div>')
-        e['content'] = u'yo !! R&D <div> pas fermé'
+        e.cw_attr_cache['content'] = u'yo !! R&D <div> pas fermé'
         self.assertEqual(tidy(e.printable_value('content')),
                           u'yo !! R&amp;D <div> pas fermé</div>')
-        e['content'] = u'R&D'
+        e.cw_attr_cache['content'] = u'R&D'
         self.assertEqual(tidy(e.printable_value('content')), u'R&amp;D')
-        e['content'] = u'R&D;'
+        e.cw_attr_cache['content'] = u'R&D;'
         self.assertEqual(tidy(e.printable_value('content')), u'R&amp;D;')
-        e['content'] = u'yo !! R&amp;D <div> pas fermé'
+        e.cw_attr_cache['content'] = u'yo !! R&amp;D <div> pas fermé'
         self.assertEqual(tidy(e.printable_value('content')),
-                          u'yo !! R&amp;D <div> pas fermé</div>')
-        e['content'] = u'été <div> été'
+                         u'yo !! R&amp;D <div> pas fermé</div>')
+        e.cw_attr_cache['content'] = u'été <div> été'
         self.assertEqual(tidy(e.printable_value('content')),
-                          u'été <div> été</div>')
-        e['content'] = u'C&apos;est un exemple s&eacute;rieux'
+                         u'été <div> été</div>')
+        e.cw_attr_cache['content'] = u'C&apos;est un exemple s&eacute;rieux'
         self.assertEqual(tidy(e.printable_value('content')),
-                          u"C'est un exemple sérieux")
+                         u"C'est un exemple sérieux")
         # make sure valid xhtml is left untouched
-        e['content'] = u'<div>R&amp;D<br/></div>'
-        self.assertEqual(e.printable_value('content'), e['content'])
-        e['content'] = u'<div>été</div>'
-        self.assertEqual(e.printable_value('content'), e['content'])
-        e['content'] = u'été'
-        self.assertEqual(e.printable_value('content'), e['content'])
-        e['content'] = u'hop\r\nhop\nhip\rmomo'
+        e.cw_attr_cache['content'] = u'<div>R&amp;D<br/></div>'
+        self.assertEqual(e.printable_value('content'), e.cw_attr_cache['content'])
+        e.cw_attr_cache['content'] = u'<div>été</div>'
+        self.assertEqual(e.printable_value('content'), e.cw_attr_cache['content'])
+        e.cw_attr_cache['content'] = u'été'
+        self.assertEqual(e.printable_value('content'), e.cw_attr_cache['content'])
+        e.cw_attr_cache['content'] = u'hop\r\nhop\nhip\rmomo'
         self.assertEqual(e.printable_value('content'), u'hop\nhop\nhip\nmomo')
 
     def test_printable_value_bad_html_ms(self):
-        self.skipTest('fix soup2xhtml to handle this test')
         req = self.request()
         e = req.create_entity('Card', title=u'bad html', content=u'<div>R&D<br>',
                             content_format=u'text/html')
         tidy = lambda x: x.replace('\n', '')
-        e['content'] = u'<div x:foo="bar">ms orifice produces weird html</div>'
-        self.assertEqual(tidy(e.printable_value('content')),
-                          u'<div>ms orifice produces weird html</div>')
-        import tidy as tidymod # apt-get install python-tidy
-        tidy = lambda x: str(tidymod.parseString(x.encode('utf-8'),
-                                                 **{'drop_proprietary_attributes': True,
-                                                    'output_xhtml': True,
-                                                    'show_body_only' : True,
-                                                    'quote-nbsp' : False,
-                                                    'char_encoding' : 'utf8'})).decode('utf-8').strip()
-        self.assertEqual(tidy(e.printable_value('content')),
-                          u'<div>ms orifice produces weird html</div>')
-
+        e.cw_attr_cache['content'] = u'<div x:foo="bar">ms orifice produces weird html</div>'
+        # Caution! current implementation of soup2xhtml strips first div element
+        content = soup2xhtml(e.printable_value('content'), 'utf-8')
+        self.assertMultiLineEqual(content, u'<div>ms orifice produces weird html</div>')
 
     def test_fulltextindex(self):
         e = self.vreg['etypes'].etype_class('File')(self.request())
-        e['description'] = 'du <em>html</em>'
-        e['description_format'] = 'text/html'
-        e['data'] = Binary('some <em>data</em>')
-        e['data_name'] = 'an html file'
-        e['data_format'] = 'text/html'
-        e['data_encoding'] = 'ascii'
+        e.cw_attr_cache['description'] = 'du <em>html</em>'
+        e.cw_attr_cache['description_format'] = 'text/html'
+        e.cw_attr_cache['data'] = Binary('some <em>data</em>')
+        e.cw_attr_cache['data_name'] = 'an html file'
+        e.cw_attr_cache['data_format'] = 'text/html'
+        e.cw_attr_cache['data_encoding'] = 'ascii'
         e._cw.transaction_data = {} # XXX req should be a session
         self.assertEqual(e.cw_adapt_to('IFTIndexable').get_words(),
-                          {'C': [u'du', u'html', 'an', 'html', 'file', u'some', u'data']})
+                          {'C': ['an', 'html', 'file', 'du', 'html', 'some', 'data']})
 
 
     def test_nonregr_relation_cache(self):
@@ -461,7 +451,7 @@ du :eid:`1:*ReST*`'''
             'WHERE U login "admin", S1 name "activated", S2 name "deactivated"')[0][0]
         trinfo = self.execute('Any X WHERE X eid %(x)s', {'x': eid}).get_entity(0, 0)
         trinfo.complete()
-        self.failUnless(isinstance(trinfo['creation_date'], datetime))
+        self.failUnless(isinstance(trinfo.cw_attr_cache['creation_date'], datetime))
         self.failUnless(trinfo.cw_relation_cached('from_state', 'subject'))
         self.failUnless(trinfo.cw_relation_cached('to_state', 'subject'))
         self.failUnless(trinfo.cw_relation_cached('wf_info_for', 'subject'))
@@ -499,7 +489,7 @@ du :eid:`1:*ReST*`'''
         self.assertEqual(card3.rest_path(), 'card/eid/%d' % card3.eid)
         card4 = req.create_entity('Card', title=u'pod', wikiid=u'zo?bi')
         self.assertEqual(card4.rest_path(), 'card/eid/%d' % card4.eid)
-        
+
 
     def test_set_attributes(self):
         req = self.request()
@@ -515,7 +505,7 @@ du :eid:`1:*ReST*`'''
         req = self.request()
         note = req.create_entity('Note', type=u'z')
         metainf = note.cw_metainformation()
-        self.assertEqual(metainf, {'source': {'adapter': 'native', 'uri': 'system'}, 'type': u'Note', 'extid': None})
+        self.assertEqual(metainf, {'source': {'type': 'native', 'uri': 'system'}, 'type': u'Note', 'extid': None})
         self.assertEqual(note.absolute_url(), 'http://testing.fr/cubicweb/note/%s' % note.eid)
         metainf['source'] = metainf['source'].copy()
         metainf['source']['base-url']  = 'http://cubicweb2.com/'

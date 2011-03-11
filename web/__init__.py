@@ -30,7 +30,9 @@ from cubicweb.web._exceptions import *
 from cubicweb.utils import json_dumps
 from cubicweb.uilib import eid_param
 
-dumps = deprecated('[3.9] use cubicweb.utils.json_dumps instead of dumps')(json_dumps)
+assert json_dumps is not None, 'no json module installed'
+dumps = deprecated('[3.9] use cubicweb.utils.json_dumps instead of dumps')(
+    json_dumps)
 
 INTERNAL_FIELD_VALUE = '__cubicweb_internal_field__'
 

@@ -1,5 +1,5 @@
 # -*- coding: iso-8859-1 -*-
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -62,9 +62,11 @@ class MakeSchemaTC(TestCase):
                           ('C0 text,C1 integer', {'A': 'table0.C0', 'B': 'table0.C1'}))
 
 
-repo, cnx = init_test_database()
+def setUpModule(*args):
+    global repo, cnx
+    repo, cnx = init_test_database(apphome=UtilsTC.datadir)
 
-def teardown_module(*args):
+def tearDownModule(*args):
     global repo, cnx
     cnx.close()
     repo.shutdown()
@@ -72,7 +74,9 @@ def teardown_module(*args):
 
 
 class UtilsTC(BaseQuerierTC):
-    repo = repo
+    def setUp(self):
+        self.__class__.repo = repo
+        super(UtilsTC, self).setUp()
 
     def get_max_eid(self):
         # no need for cleanup here
@@ -130,7 +134,7 @@ class UtilsTC(BaseQuerierTC):
                                        'X': 'Affaire',
                                        'ET': 'CWEType', 'ETN': 'String'}])
         rql, solutions = partrqls[1]
-        self.assertEqual(rql,  'Any ETN,X WHERE X is ET, ET name ETN, ET is CWEType, X is IN(BaseTransition, Bookmark, CWAttribute, CWCache, CWConstraint, CWConstraintType, CWEType, CWGroup, CWPermission, CWProperty, CWRType, CWRelation, CWUniqueTogetherConstraint, CWUser, Card, Comment, Division, Email, EmailAddress, EmailPart, EmailThread, ExternalUri, File, Folder, Note, Personne, RQLExpression, Societe, State, SubDivision, SubWorkflowExitPoint, Tag, TrInfo, Transition, Workflow, WorkflowTransition)')
+        self.assertEqual(rql,  'Any ETN,X WHERE X is ET, ET name ETN, ET is CWEType, X is IN(BaseTransition, Bookmark, CWAttribute, CWCache, CWConstraint, CWConstraintType, CWEType, CWGroup, CWPermission, CWProperty, CWRType, CWRelation, CWSource, CWUniqueTogetherConstraint, CWUser, Card, Comment, Division, Email, EmailAddress, EmailPart, EmailThread, ExternalUri, File, Folder, Note, Personne, RQLExpression, Societe, State, SubDivision, SubWorkflowExitPoint, Tag, TrInfo, Transition, Workflow, WorkflowTransition)')
         self.assertListEqual(sorted(solutions),
                               sorted([{'X': 'BaseTransition', 'ETN': 'String', 'ET': 'CWEType'},
                                       {'X': 'Bookmark', 'ETN': 'String', 'ET': 'CWEType'},
@@ -147,6 +151,7 @@ class UtilsTC(BaseQuerierTC):
                                       {'X': 'CWPermission', 'ETN': 'String', 'ET': 'CWEType'},
                                       {'X': 'CWProperty', 'ETN': 'String', 'ET': 'CWEType'},
                                       {'X': 'CWRType', 'ETN': 'String', 'ET': 'CWEType'},
+                                      {'X': 'CWSource', 'ETN': 'String', 'ET': 'CWEType'},
                                       {'X': 'CWUniqueTogetherConstraint', 'ETN': 'String', 'ET': 'CWEType'},
                                       {'X': 'CWUser', 'ETN': 'String', 'ET': 'CWEType'},
                                       {'X': 'Email', 'ETN': 'String', 'ET': 'CWEType'},
@@ -224,7 +229,9 @@ class UtilsTC(BaseQuerierTC):
 
 
 class QuerierTC(BaseQuerierTC):
-    repo = repo
+    def setUp(self):
+        self.__class__.repo = repo
+        super(QuerierTC, self).setUp()
 
     def test_encoding_pb(self):
         self.assertRaises(RQLSyntaxError, self.execute,
@@ -251,15 +258,15 @@ class QuerierTC(BaseQuerierTC):
     def test_select_1(self):
         rset = self.execute('Any X ORDERBY X WHERE X is CWGroup')
         result, descr = rset.rows, rset.description
-        self.assertEqual(tuplify(result), [(1,), (2,), (3,), (4,)])
+        self.assertEqual(tuplify(result), [(2,), (3,), (4,), (5,)])
         self.assertEqual(descr, [('CWGroup',), ('CWGroup',), ('CWGroup',), ('CWGroup',)])
 
     def test_select_2(self):
         rset = self.execute('Any X ORDERBY N WHERE X is CWGroup, X name N')
-        self.assertEqual(tuplify(rset.rows), [(1,), (2,), (3,), (4,)])
+        self.assertEqual(tuplify(rset.rows), [(2,), (3,), (4,), (5,)])
         self.assertEqual(rset.description, [('CWGroup',), ('CWGroup',), ('CWGroup',), ('CWGroup',)])
         rset = self.execute('Any X ORDERBY N DESC WHERE X is CWGroup, X name N')
-        self.assertEqual(tuplify(rset.rows), [(4,), (3,), (2,), (1,)])
+        self.assertEqual(tuplify(rset.rows), [(5,), (4,), (3,), (2,)])
 
     def test_select_3(self):
         rset = self.execute('Any N GROUPBY N WHERE X is CWGroup, X name N')
@@ -302,7 +309,7 @@ class QuerierTC(BaseQuerierTC):
 
     def test_select_5(self):
         rset = self.execute('Any X, TMP ORDERBY TMP WHERE X name TMP, X is CWGroup')
-        self.assertEqual(tuplify(rset.rows), [(1, 'guests',), (2, 'managers',), (3, 'owners',), (4, 'users',)])
+        self.assertEqual(tuplify(rset.rows), [(2, 'guests',), (3, 'managers',), (4, 'owners',), (5, 'users',)])
         self.assertEqual(rset.description, [('CWGroup', 'String',), ('CWGroup', 'String',), ('CWGroup', 'String',), ('CWGroup', 'String',)])
 
     def test_select_6(self):
@@ -350,11 +357,11 @@ class QuerierTC(BaseQuerierTC):
         self.assertEqual(len(rset.rows), 0)
 
     def test_select_nonregr_edition_not(self):
-        groupeids = set((1, 2, 3))
-        groupreadperms = set(r[0] for r in self.execute('Any Y WHERE X name "CWGroup", Y eid IN(1, 2, 3), X read_permission Y'))
-        rset = self.execute('DISTINCT Any Y WHERE X is CWEType, X name "CWGroup", Y eid IN(1, 2, 3), NOT X read_permission Y')
+        groupeids = set((2, 3, 4))
+        groupreadperms = set(r[0] for r in self.execute('Any Y WHERE X name "CWGroup", Y eid IN(2, 3, 4), X read_permission Y'))
+        rset = self.execute('DISTINCT Any Y WHERE X is CWEType, X name "CWGroup", Y eid IN(2, 3, 4), NOT X read_permission Y')
         self.assertEqual(sorted(r[0] for r in rset.rows), sorted(groupeids - groupreadperms))
-        rset = self.execute('DISTINCT Any Y WHERE X name "CWGroup", Y eid IN(1, 2, 3), NOT X read_permission Y')
+        rset = self.execute('DISTINCT Any Y WHERE X name "CWGroup", Y eid IN(2, 3, 4), NOT X read_permission Y')
         self.assertEqual(sorted(r[0] for r in rset.rows), sorted(groupeids - groupreadperms))
 
     def test_select_outer_join(self):
@@ -493,15 +500,16 @@ class QuerierTC(BaseQuerierTC):
         self.assertListEqual(rset.rows,
                               [[u'description_format', 12],
                                [u'description', 13],
-                               [u'name', 14],
-                               [u'created_by', 38],
-                               [u'creation_date', 38],
-                               [u'cwuri', 38],
-                               [u'in_basket', 38],
-                               [u'is', 38],
-                               [u'is_instance_of', 38],
-                               [u'modification_date', 38],
-                               [u'owned_by', 38]])
+                               [u'name', 15],
+                               [u'created_by', 40],
+                               [u'creation_date', 40],
+                               [u'cw_source', 40],
+                               [u'cwuri', 40],
+                               [u'in_basket', 40],
+                               [u'is', 40],
+                               [u'is_instance_of', 40],
+                               [u'modification_date', 40],
+                               [u'owned_by', 40]])
 
     def test_select_aggregat_having_dumb(self):
         # dumb but should not raise an error
@@ -544,6 +552,26 @@ class QuerierTC(BaseQuerierTC):
         rset = self.execute('Any UPPER(L) WHERE X eid %s, X login L'%eid)
         self.assertEqual(rset.rows[0][0], 'ADMIN')
         self.assertEqual(rset.description, [('String',)])
+
+    def test_select_float_abs(self):
+        # test positive number
+        eid = self.execute('INSERT Affaire A: A invoiced %(i)s', {'i': 1.2})[0][0]
+        rset = self.execute('Any ABS(I) WHERE X eid %(x)s, X invoiced I', {'x': eid})
+        self.assertEqual(rset.rows[0][0], 1.2)
+        # test negative number
+        eid = self.execute('INSERT Affaire A: A invoiced %(i)s', {'i': -1.2})[0][0]
+        rset = self.execute('Any ABS(I) WHERE X eid %(x)s, X invoiced I', {'x': eid})
+        self.assertEqual(rset.rows[0][0], 1.2)
+
+    def test_select_int_abs(self):
+        # test positive number
+        eid = self.execute('INSERT Affaire A: A duration %(d)s', {'d': 12})[0][0]
+        rset = self.execute('Any ABS(D) WHERE X eid %(x)s, X duration D', {'x': eid})
+        self.assertEqual(rset.rows[0][0], 12)
+        # test negative number
+        eid = self.execute('INSERT Affaire A: A duration %(d)s', {'d': -12})[0][0]
+        rset = self.execute('Any ABS(D) WHERE X eid %(x)s, X duration D', {'x': eid})
+        self.assertEqual(rset.rows[0][0], 12)
 
 ##     def test_select_simplified(self):
 ##         ueid = self.session.user.eid
@@ -597,15 +625,15 @@ class QuerierTC(BaseQuerierTC):
     def test_select_no_descr(self):
         rset = self.execute('Any X WHERE X is CWGroup', build_descr=0)
         rset.rows.sort()
-        self.assertEqual(tuplify(rset.rows), [(1,), (2,), (3,), (4,)])
+        self.assertEqual(tuplify(rset.rows), [(2,), (3,), (4,), (5,)])
         self.assertEqual(rset.description, ())
 
     def test_select_limit_offset(self):
         rset = self.execute('CWGroup X ORDERBY N LIMIT 2 WHERE X name N')
-        self.assertEqual(tuplify(rset.rows), [(1,), (2,)])
+        self.assertEqual(tuplify(rset.rows), [(2,), (3,)])
         self.assertEqual(rset.description, [('CWGroup',), ('CWGroup',)])
         rset = self.execute('CWGroup X ORDERBY N LIMIT 2 OFFSET 2 WHERE X name N')
-        self.assertEqual(tuplify(rset.rows), [(3,), (4,)])
+        self.assertEqual(tuplify(rset.rows), [(4,), (5,)])
 
     def test_select_symmetric(self):
         self.execute("INSERT Personne X: X nom 'machin'")
@@ -746,14 +774,14 @@ class QuerierTC(BaseQuerierTC):
     def test_select_constant(self):
         rset = self.execute('Any X, "toto" ORDERBY X WHERE X is CWGroup')
         self.assertEqual(rset.rows,
-                          map(list, zip((1,2,3,4), ('toto','toto','toto','toto',))))
+                          map(list, zip((2,3,4,5), ('toto','toto','toto','toto',))))
         self.assertIsInstance(rset[0][1], unicode)
         self.assertEqual(rset.description,
                           zip(('CWGroup', 'CWGroup', 'CWGroup', 'CWGroup'),
                               ('String', 'String', 'String', 'String',)))
         rset = self.execute('Any X, %(value)s ORDERBY X WHERE X is CWGroup', {'value': 'toto'})
         self.assertEqual(rset.rows,
-                          map(list, zip((1,2,3,4), ('toto','toto','toto','toto',))))
+                          map(list, zip((2,3,4,5), ('toto','toto','toto','toto',))))
         self.assertIsInstance(rset[0][1], unicode)
         self.assertEqual(rset.description,
                           zip(('CWGroup', 'CWGroup', 'CWGroup', 'CWGroup'),

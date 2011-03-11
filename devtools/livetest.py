@@ -35,7 +35,7 @@ from twisted.internet.error import CannotListenError
 
 from logilab.common.testlib import TestCase
 
-from cubicweb.dbapi import in_memory_cnx
+from cubicweb.dbapi import in_memory_repo_cnx
 from cubicweb.etwist.server import CubicWebRootResource
 from cubicweb.devtools import BaseApptestConfiguration, init_test_database
 
@@ -164,7 +164,7 @@ class LiveTestCase(TestCase):
         # build a config, and get a connection
         self.config = LivetestConfiguration(self.cube, self.sourcefile)
         _, user, passwd, _ = loadconf()
-        self.repo, self.cnx = in_memory_cnx(self.config, user, password=passwd)
+        self.repo, self.cnx = in_memory_repo_cnx(self.config, user, password=passwd)
         self.setup_db(self.cnx)
 
     def tearDown(self):

@@ -18,6 +18,7 @@
 """default templates for CubicWeb web client"""
 
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 from logilab.mtconverter import xml_escape
 from logilab.common.deprecation import class_renamed
@@ -73,7 +74,7 @@ class LoggedOutTemplate(LogInOutTemplate):
         # FIXME Deprecated code ?
         msg = self._cw._('you have been logged out')
         w(u'<h2>%s</h2>\n' % msg)
-        if self._cw.vreg.config['anonymous-user']:
+        if self._cw.vreg.config.anonymous_user()[0]:
             indexurl = self._cw.build_url('view', vid='index', __message=msg)
             w(u'<p><a href="%s">%s</a><p>' % (
                 xml_escape(indexurl),
@@ -127,7 +128,7 @@ class TheMainTemplate(MainTemplate):
         w(u'<div id="pageContent">\n')
         vtitle = self._cw.form.get('vtitle')
         if vtitle:
-            w(u'<h1 class="vtitle">%s</h1>\n' % xml_escape(vtitle))
+            w(u'<div class="vtitle">%s</div>\n' % xml_escape(vtitle))
         # display entity type restriction component
         etypefilter = self._cw.vreg['components'].select_or_none(
             'etypenavigation', self._cw, rset=self.cw_rset)
@@ -188,9 +189,10 @@ class TheMainTemplate(MainTemplate):
         self.w(u'</body>')
 
     def nav_column(self, view, context):
-        boxes = list(self._cw.vreg['boxes'].poss_visible_objects(
+        boxes = list(self._cw.vreg['ctxcomponents'].poss_visible_objects(
             self._cw, rset=self.cw_rset, view=view, context=context))
         if boxes:
+            getlayout = self._cw.vreg['components'].select
             self.w(u'<td id="navColumn%s"><div class="navboxes">\n' % context.capitalize())
             for box in boxes:
                 box.render(w=self.w, view=view)
@@ -257,7 +259,7 @@ class SimpleMainTemplate(TheMainTemplate):
         w(u'<table width="100%" height="100%" border="0"><tr>\n')
         w(u'<td id="navColumnLeft">\n')
         self.topleft_header()
-        boxes = list(self._cw.vreg['boxes'].poss_visible_objects(
+        boxes = list(self._cw.vreg['ctxcomponents'].poss_visible_objects(
             self._cw, rset=self.cw_rset, view=view, context='left'))
         if boxes:
             w(u'<div class="navboxes">\n')
@@ -269,17 +271,18 @@ class SimpleMainTemplate(TheMainTemplate):
         w(u'<div id="pageContent">\n')
         vtitle = self._cw.form.get('vtitle')
         if vtitle:
-            w(u'<h1 class="vtitle">%s</h1>' % xml_escape(vtitle))
+            w(u'<div class="vtitle">%s</div>' % xml_escape(vtitle))
 
     def topleft_header(self):
         logo = self._cw.vreg['components'].select_or_none('logo', self._cw,
                                                           rset=self.cw_rset)
         if logo and logo.cw_propval('visible'):
-            self.w(u'<table id="header"><tr>\n')
-            self.w(u'<td>')
-            logo.render(w=self.w)
-            self.w(u'</td>\n')
-            self.w(u'</tr></table>\n')
+            w = self.w
+            w(u'<table id="header"><tr>\n')
+            w(u'<td>')
+            logo.render(w=w)
+            w(u'</td>\n')
+            w(u'</tr></table>\n')
 
 
 # page parts templates ########################################################
@@ -325,6 +328,8 @@ class HTMLPageHeader(View):
     """default html page header"""
     __regid__ = 'header'
     main_cell_components = ('appliname', 'breadcrumbs')
+    headers = (('headtext', 'header-left'),
+               ('header-right', 'header-right'))
 
     def call(self, view, **kwargs):
         self.main_header(view)
@@ -334,35 +339,17 @@ class HTMLPageHeader(View):
 
     def main_header(self, view):
         """build the top menu with authentification info and the rql box"""
-        self.w(u'<table id="header"><tr>\n')
-        self.w(u'<td id="firstcolumn">')
-        logo = self._cw.vreg['components'].select_or_none(
-            'logo', self._cw, rset=self.cw_rset)
-        if logo and logo.cw_propval('visible'):
-            logo.render(w=self.w)
-        self.w(u'</td>\n')
-        # appliname and breadcrumbs
-        self.w(u'<td id="headtext">')
-        for cid in self.main_cell_components:
-            comp = self._cw.vreg['components'].select_or_none(
-                cid, self._cw, rset=self.cw_rset)
-            if comp and comp.cw_propval('visible'):
-                comp.render(w=self.w)
-        self.w(u'</td>')
-        # logged user and help
-        self.w(u'<td>\n')
-        comp = self._cw.vreg['components'].select_or_none(
-            'loggeduserlink', self._cw, rset=self.cw_rset)
-        if comp and comp.cw_propval('visible'):
-            comp.render(w=self.w)
-        self.w(u'</td>')
-        # lastcolumn
-        self.w(u'<td id="lastcolumn">')
-        self.w(u'</td>\n')
-        self.w(u'</tr></table>\n')
-        if self._cw.session.anonymous_session:
-            self.wview('logform', rset=self.cw_rset, id='popupLoginBox',
-                       klass='hidden', title=False, showmessage=False)
+        w = self.w
+        w(u'<table id="header"><tr>\n')
+        for colid, context in self.headers:
+            w(u'<td id="%s">' % colid)
+            components = self._cw.vreg['ctxcomponents'].poss_visible_objects(
+                self._cw, rset=self.cw_rset, view=view, context=context)
+            for comp in components:
+                comp.render(w=w)
+                w(u'&#160;')
+            w(u'</td>')
+        w(u'</tr></table>\n')
 
     def state_header(self):
         state = self._cw.search_state
@@ -379,27 +366,24 @@ class HTMLPageHeader(View):
         return self.w(u'<div class="stateMessage">%s</div>' % msg)
 
 
-
 class HTMLPageFooter(View):
-    """default html page footer: include footer actions
-    """
+    """default html page footer: include footer actions"""
     __regid__ = 'footer'
 
     def call(self, **kwargs):
-        req = self._cw
         self.w(u'<div id="footer">')
+        self.footer_content()
+        self.w(u'</div>')
+
+    def footer_content(self):
         actions = self._cw.vreg['actions'].possible_actions(self._cw,
                                                             rset=self.cw_rset)
         footeractions = actions.get('footer', ())
         for i, action in enumerate(footeractions):
-            self.w(u'<a href="%s"' % action.url())
-            if getattr(action, 'html_class'):
-                self.w(u' class="%s"' % action.html_class())
-            self.w(u'>%s</a>' % self._cw._(action.title))
+            self.w(u'<a href="%s">%s</a>' % (action.url(),
+                                             self._cw._(action.title)))
             if i < (len(footeractions) - 1):
                 self.w(u' | ')
-        self.w(u'</div>')
-
 
 class HTMLContentHeader(View):
     """default html page content header:
@@ -410,7 +394,7 @@ class HTMLContentHeader(View):
 
     def call(self, view, **kwargs):
         """by default, display informal messages in content header"""
-        components = self._cw.vreg['contentnavigation'].poss_visible_objects(
+        components = self._cw.vreg['ctxcomponents'].poss_visible_objects(
             self._cw, rset=self.cw_rset, view=view, context='navtop')
         if components:
             self.w(u'<div id="contentheader">')
@@ -426,7 +410,7 @@ class HTMLContentFooter(View):
     __regid__ = 'contentfooter'
 
     def call(self, view, **kwargs):
-        components = self._cw.vreg['contentnavigation'].poss_visible_objects(
+        components = self._cw.vreg['ctxcomponents'].poss_visible_objects(
             self._cw, rset=self.cw_rset, view=view, context='navbottom')
         if components:
             self.w(u'<div id="contentfooter">')
@@ -439,12 +423,16 @@ class LogForm(forms.FieldsForm):
     __regid__ = 'logform'
     domid = 'loginForm'
     needs_css = ('cubicweb.login.css',)
+    onclick = "javascript: cw.htmlhelpers.popupLoginBox('%s', '%s');"
     # XXX have to recall fields name since python is mangling __login/__password
     __login = ff.StringField('__login', widget=fw.TextInput({'class': 'data'}))
     __password = ff.StringField('__password', label=_('password'),
                                 widget=fw.PasswordSingleInput({'class': 'data'}))
     form_buttons = [fw.SubmitButton(label=_('log in'),
-                                    attrs={'class': 'loginButton'})]
+                                    attrs={'class': 'loginButton'}),
+                    fw.ResetButton(label=_('cancel'),
+                                   attrs={'class': 'loginButton',
+                                          'onclick': onclick % ('popupLoginBox', '__login')}),]
 
     def form_action(self):
         if self.action is None:
@@ -453,32 +441,35 @@ class LogForm(forms.FieldsForm):
 
 
 class LogFormView(View):
+    # XXX an awfull lot of hardcoded assumptions there
+    #     makes it unobvious to reuse/specialize
     __regid__ = 'logform'
     __select__ = match_kwargs('id', 'klass')
 
     title = 'log in'
 
     def call(self, id, klass, title=True, showmessage=True):
-        self.w(u'<div id="%s" class="%s">' % (id, klass))
+        w = self.w
+        w(u'<div id="%s" class="%s">' % (id, klass))
         if title:
             stitle = self._cw.property_value('ui.site-title')
             if stitle:
                 stitle = xml_escape(stitle)
             else:
                 stitle = u'&#160;'
-            self.w(u'<div id="loginTitle">%s</div>' % stitle)
-        self.w(u'<div id="loginContent">\n')
+            w(u'<div class="loginTitle">%s</div>' % stitle)
+        w(u'<div class="loginContent">\n')
         if showmessage and self._cw.message:
-            self.w(u'<div class="loginMessage">%s</div>\n' % self._cw.message)
+            w(u'<div class="loginMessage">%s</div>\n' % self._cw.message)
         config = self._cw.vreg.config
         if config['auth-mode'] != 'http':
             self.login_form(id) # Cookie authentication
-        self.w(u'</div>')
+        w(u'</div>')
         if self._cw.https and config.anonymous_user()[0]:
             path = xml_escape(config['base-url'] + self._cw.relative_path())
-            self.w(u'<div class="loginMessage"><a href="%s">%s</a></div>\n'
-                   % (path, self._cw._('No account? Try public access at %s') % path))
-        self.w(u'</div>\n')
+            w(u'<div class="loginMessage"><a href="%s">%s</a></div>\n'
+              % (path, self._cw._('No account? Try public access at %s') % path))
+        w(u'</div>\n')
 
     def login_form(self, id):
         cw = self._cw
@@ -488,7 +479,7 @@ class LogFormView(View):
         else:
             label = cw.pgettext('CWUser', 'login')
         form.field_by_name('__login').label = label
-        self.w(form.render(table_class='', display_progress_div=False))
+        form.render(w=self.w, table_class='', display_progress_div=False)
         cw.html_headers.add_onload('jQuery("#__login:visible").focus()')
 
 LogFormTemplate = class_renamed('LogFormTemplate', LogFormView)

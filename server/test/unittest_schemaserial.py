@@ -15,8 +15,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""unit tests for schema rql (de)serialization
-"""
+"""unit tests for schema rql (de)serialization"""
 
 import sys
 from cStringIO import StringIO
@@ -26,14 +25,16 @@ from logilab.common.testlib import TestCase, unittest_main
 from cubicweb.schema import CubicWebSchemaLoader
 from cubicweb.devtools import TestServerConfiguration
 
-loader = CubicWebSchemaLoader()
-config = TestServerConfiguration('data')
-config.bootstrap_cubes()
-schema = loader.load(config)
+def setUpModule(*args):
+    global schema, config
+    loader = CubicWebSchemaLoader()
+    config = TestServerConfiguration('data', apphome=Schema2RQLTC.datadir)
+    config.bootstrap_cubes()
+    schema = loader.load(config)
 
-def teardown_module(*args):
-    global schema, config, loader
-    del schema, config, loader
+def tearDownModule(*args):
+    global schema, config
+    del schema, config
 
 from cubicweb.server.schemaserial import *
 from cubicweb.server.schemaserial import _erperms2rql as erperms2rql

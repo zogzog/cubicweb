@@ -84,9 +84,8 @@ is supported, no group or such):
   1. return the result of Any X WHERE X owned_by Y from system source, that's
      enough (optimization of the sql querier will avoid join on CWUser, so we
      will directly get local eids)
-
-
 """
+
 __docformat__ = "restructuredtext en"
 
 from itertools import imap, ifilterfalse
@@ -94,6 +93,7 @@ from itertools import imap, ifilterfalse
 from logilab.common.compat import any
 from logilab.common.decorators import cached
 
+from rql import BadRQLQuery
 from rql.stmts import Union, Select
 from rql.nodes import (VariableRef, Comparison, Relation, Constant, Variable,
                        Not, Exists, SortTerm, Function)
@@ -434,10 +434,13 @@ class PartPlanInformation(object):
         # add source for relations
         rschema = self._schema.rschema
         termssources = {}
+        sourcerels = []
         for rel in self.rqlst.iget_nodes(Relation):
             # process non final relations only
             # note: don't try to get schema for 'is' relation (not available
             # during bootstrap)
+            if rel.r_type == 'cw_source':
+                sourcerels.append(rel)
             if not (rel.is_types_restriction() or rschema(rel.r_type).final):
                 # nothing to do if relation is not supported by multiple sources
                 # or if some source has it listed in its cross_relations
@@ -469,6 +472,75 @@ class PartPlanInformation(object):
                 self._handle_cross_relation(rel, relsources, termssources)
                 self._linkedterms.setdefault(lhsv, set()).add((rhsv, rel))
                 self._linkedterms.setdefault(rhsv, set()).add((lhsv, rel))
+        # extract information from cw_source relation
+        for srel in sourcerels:
+            vref = srel.children[1].children[0]
+            sourceeids, sourcenames = [], []
+            if isinstance(vref, Constant):
+                # simplified variable
+                sourceeids = None, (vref.eval(self.plan.args),)
+                var = vref
+            else:
+                var = vref.variable
+                for rel in var.stinfo['relations'] - var.stinfo['rhsrelations']:
+                    if rel.r_type in ('eid', 'name'):
+                        if rel.r_type == 'eid':
+                            slist = sourceeids
+                        else:
+                            slist = sourcenames
+                        sources = [cst.eval(self.plan.args)
+                                   for cst in rel.children[1].get_nodes(Constant)]
+                        if sources:
+                            if slist:
+                                # don't attempt to do anything
+                                sourcenames = sourceeids = None
+                                break
+                            slist[:] = (rel, sources)
+            if sourceeids:
+                rel, values = sourceeids
+                sourcesdict = self._repo.sources_by_eid
+            elif sourcenames:
+                rel, values = sourcenames
+                sourcesdict = self._repo.sources_by_uri
+            else:
+                sourcesdict = None
+            if sourcesdict is not None:
+                lhs = srel.children[0]
+                try:
+                    sources = [sourcesdict[key] for key in values]
+                except KeyError:
+                    raise BadRQLQuery('source conflict for term %s' % lhs.as_string())
+                if isinstance(lhs, Constant):
+                    source = self._session.source_from_eid(lhs.eval(self.plan.args))
+                    if not source in sources:
+                        raise BadRQLQuery('source conflict for term %s' % lhs.as_string())
+                else:
+                    lhs = getattr(lhs, 'variable', lhs)
+                invariant = getattr(lhs, '_q_invariant', False)
+                # XXX NOT NOT
+                neged = srel.neged(traverse_scope=True) or (rel and rel.neged(strict=True))
+                if neged:
+                    for source in sources:
+                        if invariant and source is self.system_source:
+                            continue
+                        self._remove_source_term(source, lhs)
+                    usesys = self.system_source not in sources
+                else:
+                    for source, terms in sourcesterms.items():
+                        if lhs in terms and not source in sources:
+                            if invariant and source is self.system_source:
+                                continue
+                            self._remove_source_term(source, lhs)
+                    usesys = self.system_source in sources
+                if rel is None or (len(var.stinfo['relations']) == 2 and
+                                   not var.stinfo['selected']):
+                    self._remove_source_term(self.system_source, var)
+                    if not (len(sources) > 1 or usesys or invariant):
+                        if rel is None:
+                            srel.parent.remove(srel)
+                        else:
+                            self.rqlst.undefine_variable(var)
+                        self._remove_source_term(self.system_source, srel)
         return termssources
 
     def _handle_cross_relation(self, rel, relsources, termssources):
@@ -673,6 +745,15 @@ class PartPlanInformation(object):
                                                and self._need_ext_source_access(term, rel):
                                             self.needsplit = True
                                             return
+        else:
+            # remove sources only accessing to constant nodes
+            for source, terms in self._sourcesterms.items():
+                if source is self.system_source:
+                    continue
+                if not any(x for x in terms if not isinstance(x, Constant)):
+                    del self._sourcesterms[source]
+            if len(self._sourcesterms) < 2:
+                self.needsplit = False
 
     @cached
     def _need_ext_source_access(self, var, rel):
@@ -713,9 +794,16 @@ class PartPlanInformation(object):
                 assert isinstance(term, (rqlb.BaseNode, Variable)), repr(term)
                 continue # may occur with subquery column alias
             if not sourcesterms[source][term]:
-                del sourcesterms[source][term]
-                if not sourcesterms[source]:
-                    del sourcesterms[source]
+                self._remove_source_term(source, term)
+
+    def _remove_source_term(self, source, term):
+        try:
+            poped = self._sourcesterms[source].pop(term, None)
+        except KeyError:
+            pass
+        else:
+            if not self._sourcesterms[source]:
+                del self._sourcesterms[source]
 
     def crossed_relation(self, source, relation):
         return relation in self._crossrelations.get(source, ())
@@ -736,7 +824,7 @@ class PartPlanInformation(object):
             while sourceterms:
                 # take a term randomly, and all terms supporting the
                 # same solutions
-                term, solindices = self._choose_term(sourceterms)
+                term, solindices = self._choose_term(source, sourceterms)
                 if source.uri == 'system':
                     # ensure all variables are available for the latest step
                     # (missing one will be available from temporary tables
@@ -766,8 +854,24 @@ class PartPlanInformation(object):
                 # set of terms which should be additionaly selected when
                 # possible
                 needsel = set()
-                if not self._sourcesterms:
+                if not self._sourcesterms and scope is select:
                     terms += scope.defined_vars.values() + scope.aliases.values()
+                    if isinstance(term, Relation) and len(sources) > 1:
+                        variants = set()
+                        partterms = [term]
+                        for vref in term.get_nodes(VariableRef):
+                            if not vref.variable._q_invariant:
+                                variants.add(vref.name)
+                        if len(variants) == 2:
+                            # we need an extra-step to fetch relations from each source
+                            # before a join with prefetched inputs
+                            # (see test_crossed_relation_noeid_needattr in
+                            #  unittest_msplanner / unittest_multisources)
+                            lhs, rhs = term.get_variable_parts()
+                            steps.append( (sources, [term, getattr(lhs, 'variable', lhs),
+                                                     getattr(rhs, 'variable', rhs)],
+                                           solindices, scope, variants, False) )
+                            sources = [self.system_source]
                     final = True
                 else:
                     # suppose this is a final step until the contrary is proven
@@ -785,7 +889,7 @@ class PartPlanInformation(object):
                             else:
                                 needsel.add(var.name)
                                 final = False
-                    # check where all relations are supported by the sources
+                    # check all relations are supported by the sources
                     for rel in scope.iget_nodes(Relation):
                         if rel.is_types_restriction():
                             continue
@@ -799,7 +903,7 @@ class PartPlanInformation(object):
                                 break
                         else:
                             if not scope is select:
-                                self._exists_relation(rel, terms, needsel)
+                                self._exists_relation(rel, terms, needsel, source)
                             # if relation is supported by all sources and some of
                             # its lhs/rhs variable isn't in "terms", and the
                             # other end *is* in "terms", mark it have to be
@@ -843,9 +947,14 @@ class PartPlanInformation(object):
                     self._cleanup_sourcesterms(sources, solindices)
                 steps.append((sources, terms, solindices, scope, needsel, final)
                              )
+        if not steps[-1][-1]:
+            # add a final step
+            terms = select.defined_vars.values() + select.aliases.values()
+            steps.append( ([self.system_source], terms, set(self._solindices),
+                           select, set(), True) )
         return steps
 
-    def _exists_relation(self, rel, terms, needsel):
+    def _exists_relation(self, rel, terms, needsel, source):
         rschema = self._schema.rschema(rel.r_type)
         lhs, rhs = rel.get_variable_parts()
         try:
@@ -858,13 +967,24 @@ class PartPlanInformation(object):
             # variable is refed by an outer scope and should be substituted
             # using an 'identity' relation (else we'll get a conflict of
             # temporary tables)
-            if rhsvar in terms and not lhsvar in terms and ms_scope(lhsvar) is lhsvar.stmt:
-                self._identity_substitute(rel, lhsvar, terms, needsel)
-            elif lhsvar in terms and not rhsvar in terms and ms_scope(rhsvar) is rhsvar.stmt:
-                self._identity_substitute(rel, rhsvar, terms, needsel)
+            relscope = ms_scope(rel)
+            lhsscope = ms_scope(lhsvar)
+            rhsscope = ms_scope(rhsvar)
+            if rhsvar in terms and not lhsvar in terms and lhsscope is lhsvar.stmt:
+                self._identity_substitute(rel, lhsvar, terms, needsel, relscope)
+            elif lhsvar in terms and not rhsvar in terms and rhsscope is rhsvar.stmt:
+                self._identity_substitute(rel, rhsvar, terms, needsel, relscope)
+            elif self.crossed_relation(source, rel):
+                if lhsscope is not relscope:
+                    self._identity_substitute(rel, lhsvar, terms, needsel,
+                                              relscope, lhsscope)
+                if rhsscope is not relscope:
+                    self._identity_substitute(rel, rhsvar, terms, needsel,
+                                              relscope, rhsscope)
 
-    def _identity_substitute(self, relation, var, terms, needsel):
-        newvar = self._insert_identity_variable(ms_scope(relation), var)
+    def _identity_substitute(self, relation, var, terms, needsel, exist,
+                             idrelscope=None):
+        newvar = self._insert_identity_variable(exist, var, idrelscope)
         # ensure relation is using '=' operator, else we rely on a
         # sqlgenerator side effect (it won't insert an inequality operator
         # in this case)
@@ -872,12 +992,28 @@ class PartPlanInformation(object):
         terms.append(newvar)
         needsel.add(newvar.name)
 
-    def _choose_term(self, sourceterms):
+    def _choose_term(self, source, sourceterms):
         """pick one term among terms supported by a source, which will be used
         as a base to generate an execution step
         """
         secondchoice = None
         if len(self._sourcesterms) > 1:
+            # first, return non invariant variable of crossed relation, then the
+            # crossed relation itself
+            for term in sourceterms:
+                if (isinstance(term, Relation)
+                    and self.crossed_relation(source, term)
+                    and not ms_scope(term) is self.rqlst):
+                    for vref in term.get_variable_parts():
+                        try:
+                            var = vref.variable
+                        except AttributeError:
+                            # Constant
+                            continue
+                        if ((len(var.stinfo['relations']) > 1 or var.stinfo['selected'])
+                            and var in sourceterms):
+                            return var, sourceterms.pop(var)
+                    return term, sourceterms.pop(term)
             # priority to variable from subscopes
             for term in sourceterms:
                 if not ms_scope(term) is self.rqlst:
@@ -962,7 +1098,7 @@ class PartPlanInformation(object):
         if isinstance(term, Relation) and term in cross_rels:
             cross_terms = cross_rels.pop(term)
             base_accept_term = accept_term
-            accept_term = lambda x: (accept_term(x) or x in cross_terms)
+            accept_term = lambda x: (base_accept_term(x) or x in cross_terms)
             for refed in cross_terms:
                 if not refed in candidates:
                     terms.append(refed)
@@ -1015,7 +1151,7 @@ class PartPlanInformation(object):
             if not sourceterms:
                 del self._sourcesterms[source]
 
-    def merge_input_maps(self, allsolindices):
+    def merge_input_maps(self, allsolindices, complete=True):
         """inputmaps is a dictionary with tuple of solution indices as key with
         an associated input map as value. This function compute for each
         solution its necessary input map and return them grouped
@@ -1029,14 +1165,17 @@ class PartPlanInformation(object):
         """
         if not self._inputmaps:
             return [(allsolindices, None)]
+        _allsolindices = allsolindices.copy()
         mapbysol = {}
         # compute a single map for each solution
         for solindices, basemap in self._inputmaps.iteritems():
             for solindex in solindices:
+                if not (complete or solindex in allsolindices):
+                    continue
                 solmap = mapbysol.setdefault(solindex, {})
                 solmap.update(basemap)
                 try:
-                    allsolindices.remove(solindex)
+                    _allsolindices.remove(solindex)
                 except KeyError:
                     continue # already removed
         # group results by identical input map
@@ -1048,14 +1187,14 @@ class PartPlanInformation(object):
                     break
             else:
                 result.append( ([solindex], solmap) )
-        if allsolindices:
-            result.append( (list(allsolindices), None) )
+        if _allsolindices:
+            result.append( (list(_allsolindices), None) )
         return result
 
     def build_final_part(self, select, solindices, inputmap,  sources,
                          insertedvars):
         solutions = [self._solutions[i] for i in solindices]
-        if self._conflicts:
+        if self._conflicts and inputmap:
             for varname, mappedto in self._conflicts:
                 var = select.defined_vars[varname]
                 newvar = select.make_variable()
@@ -1080,7 +1219,7 @@ class PartPlanInformation(object):
         inputmapkey = tuple(sorted(solindices))
         inputmap = self._inputmaps.setdefault(inputmapkey, {})
         for varname, mapping in step.outputmap.iteritems():
-            if varname in inputmap and \
+            if varname in inputmap and not '.' in varname and  \
                    not (mapping == inputmap[varname] or
                         self._schema.eschema(solutions[0][varname]).final):
                 self._conflicts.append((varname, inputmap[varname]))
@@ -1212,13 +1351,15 @@ class MSPlanner(SSPlanner):
         ppi.temptable = atemptable
         vfilter = TermsFiltererVisitor(self.schema, ppi)
         steps = []
+        multifinal = len([x for x in stepdefs if x[-1]]) >= 2
         for sources, terms, solindices, scope, needsel, final in stepdefs:
             # extract an executable query using only the specified terms
             if sources[0].uri == 'system':
                 # in this case we have to merge input maps before call to
                 # filter so already processed restriction are correctly
                 # removed
-                solsinputmaps = ppi.merge_input_maps(solindices)
+                solsinputmaps = ppi.merge_input_maps(
+                    solindices, complete=not (final and multifinal))
                 for solindices, inputmap in solsinputmaps:
                     minrqlst, insertedvars = vfilter.filter(
                         sources, terms, scope, set(solindices), needsel, final)
@@ -1235,7 +1376,8 @@ class MSPlanner(SSPlanner):
                 minrqlst, insertedvars = vfilter.filter(
                     sources, terms, scope, solindices, needsel, final)
                 if final:
-                    solsinputmaps = ppi.merge_input_maps(solindices)
+                    solsinputmaps = ppi.merge_input_maps(
+                        solindices, complete=not (final and multifinal))
                     if len(solsinputmaps) > 1:
                         refrqlst = minrqlst
                     for solindices, inputmap in solsinputmaps:
@@ -1455,7 +1597,7 @@ class TermsFiltererVisitor(object):
 
     def visit_relation(self, node, newroot, terms):
         if not node.is_types_restriction():
-            if node in self.skip and self.solindices.issubset(self.skip[node]):
+            if not node in terms and node in self.skip and self.solindices.issubset(self.skip[node]):
                 if not self.schema.rschema(node.r_type).final:
                     # can't really skip the relation if one variable is selected
                     # and only referenced by this relation

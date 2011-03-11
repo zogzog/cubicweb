@@ -2,8 +2,7 @@
  
 case "$1" in
     purge)
-        rm -rf /etc/cubicweb.d/
-    	rm -rf /var/run/cubicweb/
+	rm -rf /etc/cubicweb.d/
 	rm -rf /var/log/cubicweb/
 	rm -rf /var/lib/cubicweb/
     ;;

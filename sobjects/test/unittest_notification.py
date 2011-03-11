@@ -58,7 +58,7 @@ class MessageIdTC(TestCase):
     def test_nonregr_empty_message_id(self):
         for eid in (1, 12, 123, 1234):
             msgid1 = construct_message_id('testapp', eid, 12)
-            self.assertNotEquals(msgid1, '<@testapp.%s>' % gethostname())
+            self.assertNotEqual(msgid1, '<@testapp.%s>' % gethostname())
 
 
 class RecipientsFinderTC(CubicWebTC):

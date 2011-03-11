@@ -35,6 +35,11 @@ class AnyEntity(Entity):
     __regid__ = 'Any'
     __implements__ = ()
 
+    @classmethod
+    def cw_create_url(cls, req, **kwargs):
+        """ return the url of the entity creation form for this entity type"""
+        return req.build_url('add/%s' % cls.__regid__, **kwargs)
+
     # meta data api ###########################################################
 
     def dc_title(self):

@@ -91,7 +91,7 @@ class Controller(AppObject):
             pp = req.vreg['components'].select_or_none('magicsearch', req)
             if pp is not None:
                 return pp.process_query(rql)
-        if 'eid' in req.form:
+        if 'eid' in req.form and not isinstance(req.form['eid'], list):
             return req.eid_rset(req.form['eid'])
         return None
 
@@ -148,10 +148,13 @@ class Controller(AppObject):
             path = self._cw.form['__redirectpath']
             if (self._edited_entity and path != self._edited_entity.rest_path()
                 and '_cwmsgid' in newparams):
-                # XXX may be here on modification?
-                msg = u'(<a href="%s">%s</a>)' % (
-                    xml_escape(self._edited_entity.absolute_url()),
-                    self._cw._('click here to see created entity'))
+                # are we here on creation or modification?
+                if any(eid == self._edited_entity.eid
+                       for eid in self._cw.data.get('eidmap', {}).values()):
+                    msg = self._cw._('click here to see created entity')
+                else:
+                    msg = self._cw._('click here to see edited entity')
+                msg = u'(<a href="%s">%s</a>)' % (xml_escape(self._edited_entity.absolute_url()), msg)
                 self._cw.append_to_redirect_message(msg)
         elif self._after_deletion_path:
             # else it should have been set during form processing

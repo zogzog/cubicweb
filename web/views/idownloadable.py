@@ -21,16 +21,18 @@ __docformat__ = "restructuredtext en"
 _ = unicode
 
 from logilab.mtconverter import BINARY_ENCODINGS, TransformError, xml_escape
+from logilab.common.deprecation import class_renamed, deprecated
 
 from cubicweb import tags
 from cubicweb.view import EntityView
 from cubicweb.selectors import (one_line_rset, is_instance, match_context_prop,
                                 adaptable, has_mimetype)
 from cubicweb.mttransforms import ENGINE
-from cubicweb.web import box, httpcache
+from cubicweb.web import component, httpcache
 from cubicweb.web.views import primary, baseviews
 
 
+@deprecated('[3.10] use a custom IDownloadable adapter instead')
 def download_box(w, entity, title=None, label=None, footer=u''):
     req = entity._cw
     w(u'<div class="sideBox">')
@@ -42,22 +44,30 @@ def download_box(w, entity, title=None, label=None, footer=u''):
     w(u'<a href="%s"><img src="%s" alt="%s"/> %s</a>'
       % (xml_escape(entity.cw_adapt_to('IDownloadable').download_url()),
          req.uiprops['DOWNLOAD_ICON'],
-         _('download icon'), xml_escape(label or entity.dc_title())))
+         req._('download icon'), xml_escape(label or entity.dc_title())))
     w(u'%s</div>' % footer)
     w(u'</div></div>\n')
 
 
-class DownloadBox(box.EntityBoxTemplate):
-    __regid__ = 'download_box'
-    # no download box for images
-    # XXX primary_view selector ?
-    __select__ = (one_line_rset() & match_context_prop()
-                  & adaptable('IDownloadable') & ~has_mimetype('image/'))
-    order = 10
+class DownloadBox(component.EntityCtxComponent):
+    __regid__ = 'download_box'    # no download box for images
+    __select__ = (component.EntityCtxComponent.__select__ &
+                  adaptable('IDownloadable') & ~has_mimetype('image/'))
 
-    def cell_call(self, row, col, title=None, label=None, **kwargs):
-        entity = self.cw_rset.get_entity(row, col)
-        download_box(self.w, entity, title, label)
+    order = 10
+    title = _('download')
+
+    def init_rendering(self):
+        self.items = [self.entity]
+
+    def render_body(self, w):
+        for item in self.items:
+            idownloadable = item.cw_adapt_to('IDownloadable')
+            w(u'<a href="%s"><img src="%s" alt="%s"/> %s</a>'
+              % (xml_escape(idownloadable.download_url()),
+                 self._cw.uiprops['DOWNLOAD_ICON'],
+                 self._cw._('download icon'),
+                 xml_escape(idownloadable.download_file_name())))
 
 
 class DownloadView(EntityView):
@@ -146,7 +156,7 @@ class IDownloadablePrimaryView(primary.PrimaryView):
         return False
 
 
-class IDownloadableLineView(baseviews.OneLineView):
+class IDownloadableOneLineView(baseviews.OneLineView):
     __select__ = adaptable('IDownloadable')
 
     def cell_call(self, row, col, title=None, **kwargs):
@@ -154,10 +164,14 @@ class IDownloadableLineView(baseviews.OneLineView):
         entity = self.cw_rset.get_entity(row, col)
         url = xml_escape(entity.absolute_url())
         adapter = entity.cw_adapt_to('IDownloadable')
-        name = xml_escape(title or adapter.download_file_name())
+        name = xml_escape(title or entity.dc_title())
         durl = xml_escape(adapter.download_url())
         self.w(u'<a href="%s">%s</a> [<a href="%s">%s</a>]' %
                (url, name, durl, self._cw._('download')))
+
+IDownloadableLineView = class_renamed(
+    'IDownloadableLineView', IDownloadableOneLineView,
+    '[3.10] IDownloadableLineView is deprecated, use IDownloadableOneLineView')
 
 
 class AbstractEmbeddedView(EntityView):

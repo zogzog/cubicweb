@@ -1,0 +1,53 @@
+# This is the main slapd configuration file. See slapd.conf(5) for more
+# info on the configuration options.
+
+#######################################################################
+# Global Directives:
+
+# Features to permit
+#allow bind_v2
+
+# Schema and objectClass definitions
+include         /etc/ldap/schema/core.schema
+include         /etc/ldap/schema/cosine.schema
+include         /etc/ldap/schema/nis.schema
+include         /etc/ldap/schema/inetorgperson.schema
+include         /etc/ldap/schema/openldap.schema
+include         /etc/ldap/schema/misc.schema
+
+# Where the pid file is put. The init.d script
+# will not stop the server if you change this.
+pidfile         %(apphome)s/test-slapd.pid
+
+# List of arguments that were passed to the server
+argsfile        %(apphome)s/slapd.args
+
+# Read slapd.conf(5) for possible values
+loglevel        sync
+# none
+
+# Where the dynamically loaded modules are stored
+modulepath	/usr/lib/ldap
+moduleload	back_hdb
+moduleload	back_bdb
+moduleload      back_monitor
+
+# The maximum number of entries that is returned for a search operation
+sizelimit 500
+
+# The tool-threads parameter sets the actual amount of cpu's that is used
+# for indexing.
+tool-threads 1
+
+database        bdb
+
+# The base of your directory in database #1
+suffix          "dc=cubicweb,dc=test"
+
+# rootdn directive for specifying a superuser on the database. This is needed
+# for syncrepl.
+#rootdn          "cn=admin,dc=cubicweb,dc=test"
+#rootpw          "cubicwebrocks"
+# Where the database file are physically stored for database #1
+directory       "%(apphome)s/ldapdb"
+

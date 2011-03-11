@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""Specific views for CWProperty
+"""Specific views for CWProperty (eg site/user preferences"""
 
-"""
 __docformat__ = "restructuredtext en"
 _ = unicode
 
@@ -45,7 +44,7 @@ _('navigation')
 _('ui')
 _('boxes')
 _('components')
-_('contentnavigation')
+_('ctxcomponents')
 _('navigation.combobox-limit')
 _('navigation.page-size')
 _('navigation.related-limit')
@@ -66,8 +65,8 @@ _('category')
 
 def make_togglable_link(nodeid, label):
     """builds a HTML link that switches the visibility & remembers it"""
-    action = u"javascript: togglePrefVisibility('%s')" % nodeid
-    return u'<a href="%s">%s</a>' % (action, label)
+    return u'<a href="javascript: togglePrefVisibility(\'%s\')">%s</a>' % (
+        nodeid, label)
 
 def css_class(someclass):
     return someclass and 'class="%s"' % someclass or ''
@@ -111,7 +110,8 @@ class SystemCWPropertiesForm(FormViewMixIn, StartupView):
         return status
 
     def call(self, **kwargs):
-        self._cw.add_js(('cubicweb.edition.js', 'cubicweb.preferences.js', 'cubicweb.ajax.js'))
+        self._cw.add_js(('cubicweb.preferences.js',
+                         'cubicweb.edition.js', 'cubicweb.ajax.js'))
         self._cw.add_css('cubicweb.preferences.css')
         vreg = self._cw.vreg
         values = self.defined_keys
@@ -135,7 +135,7 @@ class SystemCWPropertiesForm(FormViewMixIn, StartupView):
 
         for group, objects in groupedopts.items():
             for oid, keys in objects.items():
-                groupedopts[group][oid] = self.form(group + '-' + oid, keys, True)
+                groupedopts[group][oid] = self.form(group + '_' + oid, keys, True)
 
         w = self.w
         req = self._cw
@@ -162,10 +162,10 @@ class SystemCWPropertiesForm(FormViewMixIn, StartupView):
                                            for o, f in objects.iteritems())
             for label, oid, form in sorted_objects:
                 w(u'<div class="component">')
-                w(u'''<div class="componentLink"><a href="javascript:noop();"
+                w(u'''<div class="componentLink"><a href="javascript:$.noop();"
                            onclick="javascript:toggleVisibility('field_%(oid)s_%(group)s')"
                            class="componentTitle">%(label)s</a>''' % {'label':label, 'oid':oid, 'group':group})
-                w(u''' (<div class="openlink"><a href="javascript:noop();"
+                w(u''' (<div class="openlink"><a href="javascript:$.noop();"
                              onclick="javascript:openFieldset('fieldset_%(group)s')">%(label)s</a></div>)'''
                   % {'label':_('open all'), 'group':group})
                 w(u'</div>')
@@ -200,8 +200,8 @@ class SystemCWPropertiesForm(FormViewMixIn, StartupView):
         else:
             entity = self._cw.vreg['etypes'].etype_class('CWProperty')(self._cw)
             entity.eid = self._cw.varmaker.next()
-            entity['pkey'] = key
-            entity['value'] = self._cw.vreg.property_value(key)
+            entity.cw_attr_cache['pkey'] = key
+            entity.cw_attr_cache['value'] = self._cw.vreg.property_value(key)
         return entity
 
     def form(self, formid, keys, splitlabel=False):
@@ -219,7 +219,9 @@ class SystemCWPropertiesForm(FormViewMixIn, StartupView):
             self.form_row(form, key, splitlabel)
         renderer = self._cw.vreg['formrenderers'].select('cwproperties', self._cw,
                                                      display_progress_div=False)
-        return form.render(renderer=renderer)
+        data = []
+        form.render(w=data.append, renderer=renderer)
+        return u'\n'.join(data)
 
     def form_row(self, form, key, splitlabel):
         entity = self.entity_for_key(key)
@@ -329,7 +331,7 @@ class PropertyValueField(StringField):
 
     def form_init(self, form):
         entity = form.edited_entity
-        if not (entity.has_eid() or 'pkey' in entity):
+        if not (entity.has_eid() or 'pkey' in entity.cw_attr_cache):
             # no key set yet, just include an empty div which will be filled
             # on key selection
             return
@@ -353,7 +355,7 @@ class PropertyValueField(StringField):
         if vocab is not None:
             if callable(vocab):
                 # list() just in case its a generator function
-                self.choices = list(vocab(form._cw))
+                self.choices = list(vocab())
             else:
                 self.choices = vocab
             wdg = Select()

@@ -127,8 +127,7 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None):
     from copy import deepcopy
     from cubicweb.i18n import add_msg
     from cubicweb.web import uicfg
-    from cubicweb.schema import META_RTYPES, SYSTEM_RTYPES, CONSTRAINTS
-    no_context_rtypes = META_RTYPES | SYSTEM_RTYPES
+    from cubicweb.schema import NO_I18NCONTEXT, CONSTRAINTS
     w('# schema pot file, generated on %s\n'
       % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
     w('# \n')
@@ -217,13 +216,13 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None):
         else:
             librschema = libschema.rschema(rtype)
         # add context information only for non-metadata rtypes
-        if rschema not in no_context_rtypes:
+        if rschema not in NO_I18NCONTEXT:
             libsubjects = librschema and librschema.subjects() or ()
             for subjschema in rschema.subjects():
                 if not subjschema in libsubjects:
                     add_msg(w, rtype, subjschema.type)
         if not (schema.rschema(rtype).final or rschema.symmetric):
-            if rschema not in no_context_rtypes:
+            if rschema not in NO_I18NCONTEXT:
                 libobjects = librschema and librschema.objects() or ()
                 for objschema in rschema.objects():
                     if not objschema in libobjects:
@@ -239,6 +238,8 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None):
 
 def _iter_vreg_objids(vreg, done):
     for reg, objdict in vreg.items():
+        if reg in ('boxes', 'contentnavigation'):
+            continue
         for objects in objdict.values():
             for obj in objects:
                 objid = '%s_%s' % (reg, obj.__regid__)
@@ -345,7 +346,7 @@ class UpdateCubicWebCatalogCommand(Command):
         print 'when you are done, run "cubicweb-ctl i18ncube yourcube".'
 
 
-class UpdateTemplateCatalogCommand(Command):
+class UpdateCubeCatalogCommand(Command):
     """Update i18n catalogs for cubes. If no cube is specified, update
     catalogs of all registered cubes.
     """
@@ -782,7 +783,7 @@ class GenerateQUnitHTML(Command):
         print make_qunit_html(args[0], args[1:])
 
 for cmdcls in (UpdateCubicWebCatalogCommand,
-               UpdateTemplateCatalogCommand,
+               UpdateCubeCatalogCommand,
                #LiveServerCommand,
                NewCubeCommand,
                ExamineLogCommand,

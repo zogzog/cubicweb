@@ -95,15 +95,14 @@ class RepositoryTC(CubicWebTC):
         self.assertItemsEqual(person._unique_together[0],
                                            ('nom', 'prenom', 'inline2'))
 
-    def test_schema_has_owner(self):
-        repo = self.repo
-        cnxid = repo.connect(self.admlogin, password=self.admpassword)
-        self.failIf(repo.execute(cnxid, 'CWEType X WHERE NOT X owned_by U'))
-        self.failIf(repo.execute(cnxid, 'CWRType X WHERE NOT X owned_by U'))
-        self.failIf(repo.execute(cnxid, 'CWAttribute X WHERE NOT X owned_by U'))
-        self.failIf(repo.execute(cnxid, 'CWRelation X WHERE NOT X owned_by U'))
-        self.failIf(repo.execute(cnxid, 'CWConstraint X WHERE NOT X owned_by U'))
-        self.failIf(repo.execute(cnxid, 'CWConstraintType X WHERE NOT X owned_by U'))
+    def test_all_entities_have_owner(self):
+        self.failIf(self.execute('Any X WHERE NOT X owned_by U'))
+
+    def test_all_entities_have_is(self):
+        self.failIf(self.execute('Any X WHERE NOT X is ET'))
+
+    def test_all_entities_have_cw_source(self):
+        self.failIf(self.execute('Any X WHERE NOT X cw_source S'))
 
     def test_connect(self):
         self.assert_(self.repo.connect(self.admlogin, password=self.admpassword))
@@ -155,8 +154,9 @@ class RepositoryTC(CubicWebTC):
             self.assertRaises(ValidationError,
                               self.execute, 'SET X name "toto" WHERE X is CWGroup, X name "guests"')
             self.failUnless(self.execute('Any X WHERE X is CWGroup, X name "toto"'))
-            ex = self.assertRaises(QueryError, self.commit)
-            self.assertEqual(str(ex), 'transaction must be rollbacked')
+            with self.assertRaises(QueryError) as cm:
+                self.commit()
+            self.assertEqual(str(cm.exception), 'transaction must be rollbacked')
             self.rollback()
             self.failIf(self.execute('Any X WHERE X is CWGroup, X name "toto"'))
 
@@ -171,8 +171,9 @@ class RepositoryTC(CubicWebTC):
             self.assertRaises(Unauthorized,
                               self.execute, 'SET X name "toto" WHERE X is CWGroup, X name "guests"')
             self.failUnless(self.execute('Any X WHERE X is CWGroup, X name "toto"'))
-            ex = self.assertRaises(QueryError, self.commit)
-            self.assertEqual(str(ex), 'transaction must be rollbacked')
+            with self.assertRaises(QueryError) as cm:
+                self.commit()
+            self.assertEqual(str(cm.exception), 'transaction must be rollbacked')
             self.rollback()
             self.failIf(self.execute('Any X WHERE X is CWGroup, X name "toto"'))
 
@@ -211,7 +212,7 @@ class RepositoryTC(CubicWebTC):
     def test_check_session(self):
         repo = self.repo
         cnxid = repo.connect(self.admlogin, password=self.admpassword)
-        self.assertEqual(repo.check_session(cnxid), None)
+        self.assertIsInstance(repo.check_session(cnxid), float)
         repo.close(cnxid)
         self.assertRaises(BadConnectionId, repo.check_session, cnxid)
 
@@ -277,8 +278,9 @@ class RepositoryTC(CubicWebTC):
             repo.execute(cnxid, 'DELETE CWUser X WHERE X login "toto"')
             repo.commit(cnxid)
         try:
-            ex = self.assertRaises(Exception, run_transaction)
-            self.assertEqual(str(ex), 'try to access pool on a closed session')
+            with self.assertRaises(Exception) as cm:
+                run_transaction()
+            self.assertEqual(str(cm.exception), 'try to access pool on a closed session')
         finally:
             t.join()
 
@@ -288,7 +290,7 @@ class RepositoryTC(CubicWebTC):
         self.assertListEqual([r.type for r in schema.eschema('CWAttribute').ordered_relations()
                                if not r.type in ('eid', 'is', 'is_instance_of', 'identity',
                                                  'creation_date', 'modification_date', 'cwuri',
-                                                 'owned_by', 'created_by',
+                                                 'owned_by', 'created_by', 'cw_source',
                                                  'update_permission', 'read_permission',
                                                  'in_basket')],
                               ['relation_type',
@@ -369,25 +371,25 @@ class RepositoryTC(CubicWebTC):
         repo = self.repo
         cnxid = repo.connect(self.admlogin, password=self.admpassword)
         session = repo._get_session(cnxid, setpool=True)
-        self.assertEqual(repo.type_and_source_from_eid(1, session),
-                          ('CWGroup', 'system', None))
-        self.assertEqual(repo.type_from_eid(1, session), 'CWGroup')
-        self.assertEqual(repo.source_from_eid(1, session).uri, 'system')
-        self.assertEqual(repo.eid2extid(repo.system_source, 1, session), None)
+        self.assertEqual(repo.type_and_source_from_eid(2, session),
+                         ('CWGroup', 'system', None))
+        self.assertEqual(repo.type_from_eid(2, session), 'CWGroup')
+        self.assertEqual(repo.source_from_eid(2, session).uri, 'system')
+        self.assertEqual(repo.eid2extid(repo.system_source, 2, session), None)
         class dummysource: uri = 'toto'
-        self.assertRaises(UnknownEid, repo.eid2extid, dummysource, 1, session)
+        self.assertRaises(UnknownEid, repo.eid2extid, dummysource, 2, session)
 
     def test_public_api(self):
         self.assertEqual(self.repo.get_schema(), self.repo.schema)
-        self.assertEqual(self.repo.source_defs(), {'system': {'adapter': 'native', 'uri': 'system'}})
+        self.assertEqual(self.repo.source_defs(), {'system': {'type': 'native', 'uri': 'system'}})
         # .properties() return a result set
         self.assertEqual(self.repo.properties().rql, 'Any K,V WHERE P is CWProperty,P pkey K, P value V, NOT P for_user U')
 
     def test_session_api(self):
         repo = self.repo
         cnxid = repo.connect(self.admlogin, password=self.admpassword)
-        self.assertEqual(repo.user_info(cnxid), (5, 'admin', set([u'managers']), {}))
-        self.assertEqual(repo.describe(cnxid, 1), (u'CWGroup', u'system', None))
+        self.assertEqual(repo.user_info(cnxid), (6, 'admin', set([u'managers']), {}))
+        self.assertEqual(repo.describe(cnxid, 2), (u'CWGroup', u'system', None))
         repo.close(cnxid)
         self.assertRaises(BadConnectionId, repo.user_info, cnxid)
         self.assertRaises(BadConnectionId, repo.describe, cnxid, 1)
@@ -480,7 +482,7 @@ class RepositoryTC(CubicWebTC):
                               'EmailAddress', address=u'a@b.fr')
 
     def test_multiple_edit_set_attributes(self):
-        """make sure edited_attributes doesn't get cluttered
+        """make sure cw_edited doesn't get cluttered
         by previous entities on multiple set
         """
         # local hook
@@ -491,9 +493,9 @@ class RepositoryTC(CubicWebTC):
             events = ('before_update_entity',)
             def __call__(self):
                 # invoiced attribute shouldn't be considered "edited" before the hook
-                self._test.failIf('invoiced' in self.entity.edited_attributes,
-                                  'edited_attributes cluttered by previous update')
-                self.entity['invoiced'] = 10
+                self._test.failIf('invoiced' in self.entity.cw_edited,
+                                  'cw_edited cluttered by previous update')
+                self.entity.cw_edited['invoiced'] = 10
         with self.temporary_appobjects(DummyBeforeHook):
             req = self.request()
             req.create_entity('Affaire', ref=u'AFF01')
@@ -518,7 +520,7 @@ class DataHelpersTC(CubicWebTC):
 
     def test_type_from_eid(self):
         self.session.set_pool()
-        self.assertEqual(self.repo.type_from_eid(1, self.session), 'CWGroup')
+        self.assertEqual(self.repo.type_from_eid(2, self.session), 'CWGroup')
 
     def test_type_from_eid_raise(self):
         self.session.set_pool()
@@ -669,8 +671,9 @@ class InlineRelHooksTC(CubicWebTC):
         req.cnx.commit()
         req = self.request()
         req.create_entity('Note', type=u'todo', inline1=a01)
-        ex = self.assertRaises(ValidationError, req.cnx.commit)
-        self.assertEqual(ex.errors, {'inline1-subject': u'RQLUniqueConstraint S type T, S inline1 A1, A1 todo_by C, Y type T, Y inline1 A2, A2 todo_by C failed'})
+        with self.assertRaises(ValidationError) as cm:
+            req.cnx.commit()
+        self.assertEqual(cm.exception.errors, {'inline1-subject': u'RQLUniqueConstraint S type T, S inline1 A1, A1 todo_by C, Y type T, Y inline1 A2, A2 todo_by C failed'})
 
 if __name__ == '__main__':
     unittest_main()

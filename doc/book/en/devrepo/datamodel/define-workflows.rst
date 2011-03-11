@@ -8,14 +8,13 @@ Defining a Workflow
 General
 -------
 
-A workflow describes how certain entities have to evolve between
-different states. Hence we have a set of states, and a "transition
-graph", i.e. a set of possible transitions from one state to another
-state.
+A workflow describes how certain entities have to evolve between different
+states. Hence we have a set of states, and a "transition graph", i.e. a set of
+possible transitions from one state to another state.
 
-We will define a simple workflow for a blog, with only the following
-two states: `submitted` and `published`. So first, we create a simple
-|cubicweb| instance in five minutes (see :ref:`BlogFiveMinutes`).
+We will define a simple workflow for a blog, with only the following two states:
+`submitted` and `published`. You may want to take a look at :ref:`_TutosBase` if
+you want to quickly setup an instance running a blog.
 
 Setting up a workflow
 ---------------------

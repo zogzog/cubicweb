@@ -21,27 +21,44 @@ __docformat__ = "restructuredtext en"
 _ = unicode
 
 from logilab.mtconverter import xml_escape
+from logilab.common.deprecation import class_deprecated, class_renamed
 
-from cubicweb import Unauthorized, role as get_role, target as get_target
+from cubicweb import Unauthorized, role as get_role
 from cubicweb.schema import display_name
-from cubicweb.selectors import (no_cnx, one_line_rset,  primary_view,
-                                match_context_prop, partial_relation_possible,
-                                partial_has_related_entities)
-from cubicweb.view import View, ReloadableMixIn
-from cubicweb.uilib import domid, js
+from cubicweb.selectors import no_cnx, one_line_rset
+from cubicweb.view import View
 from cubicweb.web import INTERNAL_FIELD_VALUE, stdmsgs
 from cubicweb.web.htmlwidgets import (BoxLink, BoxWidget, SideBoxWidget,
                                       RawBoxItem, BoxSeparator)
 from cubicweb.web.action import UnregisteredAction
 
 
+def sort_by_category(actions, categories_in_order=None):
+    """return a list of (category, actions_sorted_by_title)"""
+    result = []
+    actions_by_cat = {}
+    for action in actions:
+        actions_by_cat.setdefault(action.category, []).append(
+            (action.title, action) )
+    for key, values in actions_by_cat.items():
+        actions_by_cat[key] = [act for title, act in sorted(values)]
+    if categories_in_order:
+        for cat in categories_in_order:
+            if cat in actions_by_cat:
+                result.append( (cat, actions_by_cat[cat]) )
+    for item in sorted(actions_by_cat.items()):
+        result.append(item)
+    return result
+
+
+# old box system, deprecated ###################################################
+
 class BoxTemplate(View):
     """base template for boxes, usually a (contextual) list of possible
-
     actions. Various classes attributes may be used to control the box
     rendering.
 
-    You may override on of the formatting callbacks is this is not necessary
+    You may override one of the formatting callbacks if this is not necessary
     for your custom box.
 
     Classes inheriting from this class usually only have to override call
@@ -49,8 +66,11 @@ class BoxTemplate(View):
 
         box.render(self.w)
     """
-    __registry__ = 'boxes'
-    __select__ = ~no_cnx() & match_context_prop()
+    __metaclass__ = class_deprecated
+    __deprecation_warning__ = '[3.10] *BoxTemplate classes are deprecated, use *CtxComponent instead (%(cls)s)'
+
+    __registry__ = 'ctxcomponents'
+    __select__ = ~no_cnx()
 
     categories_in_order = ()
     cw_property_defs = {
@@ -64,34 +84,21 @@ class BoxTemplate(View):
                            help=_('context where this box should be displayed')),
         }
     context = 'left'
-    htmlitemclass = 'boxItem'
 
     def sort_actions(self, actions):
         """return a list of (category, actions_sorted_by_title)"""
-        result = []
-        actions_by_cat = {}
-        for action in actions:
-            actions_by_cat.setdefault(action.category, []).append(
-                (action.title, action) )
-        for key, values in actions_by_cat.items():
-            actions_by_cat[key] = [act for title, act in sorted(values)]
-        for cat in self.categories_in_order:
-            if cat in actions_by_cat:
-                result.append( (cat, actions_by_cat[cat]) )
-        for item in sorted(actions_by_cat.items()):
-            result.append(item)
-        return result
+        return sort_by_category(actions, self.categories_in_order)
 
-    def mk_action(self, title, path, escape=True, **kwargs):
+    def mk_action(self, title, url, escape=True, **kwargs):
         """factory function to create dummy actions compatible with the
         .format_actions method
         """
         if escape:
             title = xml_escape(title)
-        return self.box_action(self._action(title, path, **kwargs))
+        return self.box_action(self._action(title, url, **kwargs))
 
-    def _action(self, title, path, **kwargs):
-        return UnregisteredAction(self._cw, self.cw_rset, title, path, **kwargs)
+    def _action(self, title, url, **kwargs):
+        return UnregisteredAction(self._cw, title, url, **kwargs)
 
     # formating callbacks
 
@@ -101,18 +108,14 @@ class BoxTemplate(View):
         return u''
 
     def box_action(self, action):
-        cls = getattr(action, 'html_class', lambda: None)() or self.htmlitemclass
+        klass = getattr(action, 'html_class', lambda: None)()
         return BoxLink(action.url(), self._cw._(action.title),
-                       cls, self.boxitem_link_tooltip(action))
+                       klass, self.boxitem_link_tooltip(action))
 
 
 class RQLBoxTemplate(BoxTemplate):
     """abstract box for boxes displaying the content of a rql query not
     related to the current result set.
-
-    It rely on etype, rtype (both optional, usable to control registration
-    according to application schema and display according to connected
-    user's rights) and rql attributes
     """
 
     rql  = None
@@ -148,29 +151,17 @@ class UserRQLBoxTemplate(RQLBoxTemplate):
 
 class EntityBoxTemplate(BoxTemplate):
     """base class for boxes related to a single entity"""
-    __select__ = BoxTemplate.__select__ & one_line_rset() & primary_view()
+    __select__ = BoxTemplate.__select__ & one_line_rset()
     context = 'incontext'
 
     def call(self, row=0, col=0, **kwargs):
         """classes inheriting from EntityBoxTemplate should define cell_call"""
         self.cell_call(row, col, **kwargs)
 
-
-class RelatedEntityBoxTemplate(EntityBoxTemplate):
-    __select__ = EntityBoxTemplate.__select__ & partial_has_related_entities()
-
-    def cell_call(self, row, col, **kwargs):
-        entity = self.cw_rset.get_entity(row, col)
-        limit = self._cw.property_value('navigation.related-limit') + 1
-        role = get_role(self)
-        self.w(u'<div class="sideBox">')
-        self.wview('sidebox', entity.related(self.rtype, role, limit=limit),
-                   title=display_name(self._cw, self.rtype, role,
-                                      context=entity.__regid__))
-        self.w(u'</div>')
+from cubicweb.web.component import AjaxEditRelationCtxComponent, EditRelationMixIn
 
 
-class EditRelationBoxTemplate(ReloadableMixIn, EntityBoxTemplate):
+class EditRelationBoxTemplate(EditRelationMixIn, EntityBoxTemplate):
     """base class for boxes which let add or remove entities linked
     by a given relation
 
@@ -181,7 +172,8 @@ class EditRelationBoxTemplate(ReloadableMixIn, EntityBoxTemplate):
     def cell_call(self, row, col, view=None, **kwargs):
         self._cw.add_js('cubicweb.ajax.js')
         entity = self.cw_rset.get_entity(row, col)
-        title = display_name(self._cw, self.rtype, get_role(self), context=entity.__regid__)
+        title = display_name(self._cw, self.rtype, get_role(self),
+                             context=entity.__regid__)
         box = SideBoxWidget(title, self.__regid__)
         related = self.related_boxitems(entity)
         unrelated = self.unrelated_boxitems(entity)
@@ -191,144 +183,13 @@ class EditRelationBoxTemplate(ReloadableMixIn, EntityBoxTemplate):
         box.extend(unrelated)
         box.render(self.w)
 
-    def div_id(self):
-        return self.__regid__
-
     def box_item(self, entity, etarget, rql, label):
-        """builds HTML link to edit relation between `entity` and `etarget`
-        """
-        role, target = get_role(self), get_target(self)
-        args = {role[0] : entity.eid, target[0] : etarget.eid}
-        url = self._cw.user_rql_callback((rql, args))
-        # for each target, provide a link to edit the relation
-        label = u'[<a href="%s">%s</a>] %s' % (xml_escape(url), label,
-                                               etarget.view('incontext'))
+        label = super(EditRelationBoxTemplate, self).box_item(
+            entity, etarget, rql, label)
         return RawBoxItem(label, liclass=u'invisible')
 
-    def related_boxitems(self, entity):
-        rql = 'DELETE S %s O WHERE S eid %%(s)s, O eid %%(o)s' % self.rtype
-        related = []
-        for etarget in self.related_entities(entity):
-            related.append(self.box_item(entity, etarget, rql, u'-'))
-        return related
 
-    def unrelated_boxitems(self, entity):
-        rql = 'SET S %s O WHERE S eid %%(s)s, O eid %%(o)s' % self.rtype
-        unrelated = []
-        for etarget in self.unrelated_entities(entity):
-            unrelated.append(self.box_item(entity, etarget, rql, u'+'))
-        return unrelated
+AjaxEditRelationBoxTemplate = class_renamed(
+    'AjaxEditRelationBoxTemplate', AjaxEditRelationCtxComponent,
+    '[3.10] AjaxEditRelationBoxTemplate has been renamed to AjaxEditRelationCtxComponent (%(cls)s)')
 
-    def related_entities(self, entity):
-        return entity.related(self.rtype, get_role(self), entities=True)
-
-    def unrelated_entities(self, entity):
-        """returns the list of unrelated entities, using the entity's
-        appropriate vocabulary function
-        """
-        skip = set(unicode(e.eid) for e in entity.related(self.rtype, get_role(self),
-                                                          entities=True))
-        skip.add(None)
-        skip.add(INTERNAL_FIELD_VALUE)
-        filteretype = getattr(self, 'etype', None)
-        entities = []
-        form = self._cw.vreg['forms'].select('edition', self._cw,
-                                             rset=self.cw_rset,
-                                             row=self.cw_row or 0)
-        field = form.field_by_name(self.rtype, get_role(self), entity.e_schema)
-        for _, eid in field.vocabulary(form):
-            if eid not in skip:
-                entity = self._cw.entity_from_eid(eid)
-                if filteretype is None or entity.__regid__ == filteretype:
-                    entities.append(entity)
-        return entities
-
-
-class AjaxEditRelationBoxTemplate(EntityBoxTemplate):
-    __select__ = EntityBoxTemplate.__select__ & partial_relation_possible()
-
-    # view used to display related entties
-    item_vid = 'incontext'
-    # values separator when multiple values are allowed
-    separator = ','
-    # msgid of the message to display when some new relation has been added/removed
-    added_msg = None
-    removed_msg = None
-
-    # class attributes below *must* be set in concret classes (additionaly to
-    # rtype / role [/ target_etype]. They should correspond to js_* methods on
-    # the json controller
-
-    # function(eid)
-    # -> expected to return a list of values to display as input selector
-    #    vocabulary
-    fname_vocabulary = None
-
-    # function(eid, value)
-    # -> handle the selector's input (eg create necessary entities and/or
-    # relations). If the relation is multiple, you'll get a list of value, else
-    # a single string value.
-    fname_validate = None
-
-    # function(eid, linked entity eid)
-    # -> remove the relation
-    fname_remove = None
-
-    def cell_call(self, row, col, **kwargs):
-        req = self._cw
-        entity = self.cw_rset.get_entity(row, col)
-        related = entity.related(self.rtype, self.role)
-        rdef = entity.e_schema.rdef(self.rtype, self.role, self.target_etype)
-        if self.role == 'subject':
-            mayadd = rdef.has_perm(req, 'add', fromeid=entity.eid)
-            maydel = rdef.has_perm(req, 'delete', fromeid=entity.eid)
-        else:
-            mayadd = rdef.has_perm(req, 'add', toeid=entity.eid)
-            maydel = rdef.has_perm(req, 'delete', toeid=entity.eid)
-        if not (related or mayadd):
-            return
-        if mayadd or maydel:
-            req.add_js(('cubicweb.ajax.js', 'cubicweb.ajax.box.js'))
-        _ = req._
-        w = self.w
-        divid = domid(self.__regid__) + unicode(entity.eid)
-        w(u'<div class="sideBox" id="%s%s">' % (domid(self.__regid__), entity.eid))
-        w(u'<div class="sideBoxTitle"><span>%s</span></div>' %
-               rdef.rtype.display_name(req, self.role, context=entity.__regid__))
-        w(u'<div class="sideBox"><div class="sideBoxBody">')
-        if related:
-            w(u'<table>')
-            for rentity in related.entities():
-                # for each related entity, provide a link to remove the relation
-                subview = rentity.view(self.item_vid)
-                if maydel:
-                    jscall = unicode(js.ajaxBoxRemoveLinkedEntity(
-                        self.__regid__, entity.eid, rentity.eid,
-                        self.fname_remove,
-                        self.removed_msg and _(self.removed_msg)))
-                    w(u'<tr><td>[<a href="javascript: %s">-</a>]</td>'
-                      '<td class="tagged">%s</td></tr>' % (xml_escape(jscall),
-                                                           subview))
-                else:
-                    w(u'<tr><td class="tagged">%s</td></tr>' % (subview))
-            w(u'</table>')
-        else:
-            w(_('no related entity'))
-        if mayadd:
-            req.add_js('jquery.autocomplete.js')
-            req.add_css('jquery.autocomplete.css')
-            multiple = rdef.role_cardinality(self.role) in '*+'
-            w(u'<table><tr><td>')
-            jscall = unicode(js.ajaxBoxShowSelector(
-                self.__regid__, entity.eid, self.fname_vocabulary,
-                self.fname_validate, self.added_msg and _(self.added_msg),
-                _(stdmsgs.BUTTON_OK[0]), _(stdmsgs.BUTTON_CANCEL[0]),
-                multiple and self.separator))
-            w('<a class="button sglink" href="javascript: %s">%s</a>' % (
-                xml_escape(jscall),
-                multiple and _('add_relation') or _('update_relation')))
-            w(u'</td><td>')
-            w(u'<div id="%sHolder"></div>' % divid)
-            w(u'</td></tr></table>')
-        w(u'</div>\n')
-        w(u'</div></div>\n')

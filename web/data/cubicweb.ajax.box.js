@@ -16,7 +16,7 @@ function ajaxBoxValidateSelectorInput(boxid, eid, separator, fname, msg) {
     var d = loadRemote('json', ajaxFuncArgs(fname, null, eid, value));
     d.addCallback(function() {
             $('#' + holderid).empty();
-            var formparams = ajaxFuncArgs('render', null, 'boxes', boxid, eid);
+            var formparams = ajaxFuncArgs('render', null, 'ctxcomponents', boxid, eid);
             $('#' + cw.utils.domid(boxid) + eid).loadxhtml('json', formparams);
             if (msg) {
                 document.location.hash = '#header';
@@ -28,7 +28,7 @@ function ajaxBoxValidateSelectorInput(boxid, eid, separator, fname, msg) {
 function ajaxBoxRemoveLinkedEntity(boxid, eid, relatedeid, delfname, msg) {
     var d = loadRemote('json', ajaxFuncArgs(delfname, null, eid, relatedeid));
     d.addCallback(function() {
-            var formparams = ajaxFuncArgs('render', null, 'boxes', boxid, eid);
+            var formparams = ajaxFuncArgs('render', null, 'ctxcomponents', boxid, eid);
             $('#' + cw.utils.domid(boxid) + eid).loadxhtml('json', formparams);
             if (msg) {
                 document.location.hash = '#header';
@@ -37,6 +37,26 @@ function ajaxBoxRemoveLinkedEntity(boxid, eid, relatedeid, delfname, msg) {
     });
 }
 
+/**
+ * .. function:: ajaxBoxShowSelector(boxid, eid, unrelfname,
+ *                                  addfname, msg,
+ *                                  oklabel, cancellabel,
+ *                                  separator=None)
+ *
+ * Display an ajax selector within a box of regid `boxid`, for entity with eid
+ * `eid`.
+ *
+ * Other parameters are:
+ *
+ * * `addfname`, name of the json controller method to call to add a relation
+ *
+ * * `msg`, message to display to the user when a relation has been added
+ *
+ * * `oklabel`/`cancellabel`, OK/cancel buttons label
+ *
+ * * `separator`, items separator if the field is multi-valued (will be
+ *   considered mono-valued when not specified)
+ */
 function ajaxBoxShowSelector(boxid, eid,
                              unrelfname,
                              addfname, msg,
@@ -53,28 +73,23 @@ function ajaxBoxShowSelector(boxid, eid,
         deferred.addCallback(function (unrelated) {
             var input = INPUT({'type': 'text', 'id': inputid, 'size': 20});
             holder.append(input).show();
-            $input = $(input);
-            $input.keypress(function (event) {
-                if (event.keyCode == KEYS.KEY_ENTER) {
-                    // XXX not very user friendly: we should test that the suggestions
-                    //     aren't visible anymore
+            var $input = $(input);
+            $input.keypress(function (evt) {
+                if (evt.keyCode == $.ui.keyCode.ENTER) {
                     ajaxBoxValidateSelectorInput(boxid, eid, separator, addfname, msg);
                 }
             });
+            $input.cwautocomplete(unrelated, {multiple: Boolean(separator)});
             var buttons = DIV({'class' : "sgformbuttons"},
-                              A({'href' : "javascript: noop();",
-                                 'onclick' : cw.utils.strFuncCall('ajaxBoxValidateSelectorInput',
-                                                                  boxid, eid, separator, addfname, msg)},
-                                  oklabel),
+                              A({href : "javascript: noop();",
+                                 onclick : cw.utils.strFuncCall('ajaxBoxValidateSelectorInput',
+                                                                boxid, eid, separator, addfname, msg)},
+                                oklabel),
                               ' / ',
                               A({'href' : "javascript: noop();",
                                  'onclick' : '$("#' + holderid + '").empty()'},
                                   cancellabel));
             holder.append(buttons);
-            $input.autocomplete(unrelated, {
-                multiple: separator,
-                max: 15
-            });
             $input.focus();
         });
     }

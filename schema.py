@@ -49,16 +49,28 @@ VIRTUAL_RTYPES = set(('eid', 'identity', 'has_text',))
 # set of meta-relations available for every entity types
 META_RTYPES = set((
     'owned_by', 'created_by', 'is', 'is_instance_of', 'identity',
-    'eid', 'creation_date', 'modification_date', 'has_text', 'cwuri',
+    'eid', 'creation_date', 'cw_source', 'modification_date', 'has_text', 'cwuri',
     ))
 WORKFLOW_RTYPES = set(('custom_workflow', 'in_state', 'wf_info_for'))
-SYSTEM_RTYPES = set(('require_permission',)) | WORKFLOW_RTYPES
+WORKFLOW_DEF_RTYPES = set(('workflow_of', 'state_of', 'transition_of',
+                           'initial_state', 'default_workflow',
+                           'allowed_transition', 'destination_state',
+                           'from_state', 'to_state', 'condition',
+                           'subworkflow', 'subworkflow_state', 'subworkflow_exit',
+                           ))
+SYSTEM_RTYPES = set(('in_group', 'require_group', 'require_permission',
+                     # cwproperty
+                     'for_user',
+                     )) | WORKFLOW_RTYPES
+NO_I18NCONTEXT = META_RTYPES | WORKFLOW_RTYPES
+NO_I18NCONTEXT.add('require_permission')
 
 # set of entity and relation types used to build the schema
 SCHEMA_TYPES = set((
     'CWEType', 'CWRType', 'CWAttribute', 'CWRelation',
     'CWConstraint', 'CWConstraintType', 'CWUniqueTogetherConstraint',
     'RQLExpression',
+    'specializes',
     'relation_type', 'from_entity', 'to_entity',
     'constrained_by', 'cstrtype',
     'constraint_of', 'relations',
@@ -70,7 +82,9 @@ WORKFLOW_TYPES = set(('Transition', 'State', 'TrInfo', 'Workflow',
                       'WorkflowTransition', 'BaseTransition',
                       'SubWorkflowExitPoint'))
 
-INTERNAL_TYPES = set(('CWProperty', 'CWPermission', 'CWCache', 'ExternalUri'))
+INTERNAL_TYPES = set(('CWProperty', 'CWPermission', 'CWCache', 'ExternalUri',
+                      'CWSource', 'CWSourceHostConfig',
+))
 
 
 _LOGGER = getLogger('cubicweb.schemaloader')
@@ -536,7 +550,11 @@ class CubicWebSchema(Schema):
     def add_entity_type(self, edef):
         edef.name = edef.name.encode()
         edef.name = bw_normalize_etype(edef.name)
-        assert re.match(r'[A-Z][A-Za-z0-9]*[a-z]+[0-9]*$', edef.name), repr(edef.name)
+        if not re.match(r'[A-Z][A-Za-z0-9]*[a-z]+[0-9]*$', edef.name):
+            raise BadSchemaDefinition(
+                '%r is not a valid name for an entity type. It should start '
+                'with an upper cased letter and be followed by at least a '
+                'lower cased letter' % edef.name)
         eschema = super(CubicWebSchema, self).add_entity_type(edef)
         if not eschema.final:
             # automatically add the eid relation to non final entity types
@@ -551,7 +569,11 @@ class CubicWebSchema(Schema):
         return eschema
 
     def add_relation_type(self, rdef):
-        rdef.name = rdef.name.lower().encode()
+        if not rdef.name.islower():
+            raise BadSchemaDefinition(
+                '%r is not a valid name for a relation type. It should be '
+                'lower cased' % rdef.name)
+        rdef.name = rdef.name.encode()
         rschema = super(CubicWebSchema, self).add_relation_type(rdef)
         self._eid_index[rschema.eid] = rschema
         return rschema

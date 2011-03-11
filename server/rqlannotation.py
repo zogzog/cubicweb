@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -135,7 +135,12 @@ def _annotate_select(annotator, rqlst):
             # priority should be given to relation which are not in inner queries
             # (eg exists)
             try:
-                stinfo['principal'] = _select_principal(var.scope, joins)
+                stinfo['principal'] = principal = _select_principal(var.scope, joins)
+                if getrschema(principal.r_type).inlined:
+                    # the scope of the lhs variable must be equal or outer to the
+                    # rhs variable's scope (since it's retrieved from lhs's table)
+                    sstinfo = principal.children[0].variable.stinfo
+                    sstinfo['scope'] = common_parent(sstinfo['scope'], stinfo['scope']).scope
             except CantSelectPrincipal:
                 stinfo['invariant'] = False
     rqlst.need_distinct = need_distinct
@@ -195,7 +200,7 @@ def _select_main_var(relations):
     for rel in sorted(relations, key=lambda x: (x.children[0].name, x.r_type)):
         # only equality relation with a variable as rhs may be principal
         if rel.operator() not in ('=', 'IS') \
-               or not isinstance(rel.children[1].children[0], VariableRef):
+               or not isinstance(rel.children[1].children[0], VariableRef) or rel.neged(strict=True):
             continue
         if rel.scope is rel.stmt:
             return rel

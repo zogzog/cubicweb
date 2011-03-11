@@ -15,10 +15,10 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""csv export views
+"""csv export views"""
 
-"""
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 from cubicweb.schema import display_name
 from cubicweb.uilib import UnicodeCSVWriter

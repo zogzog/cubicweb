@@ -29,7 +29,7 @@ from cubicweb.devtools import testlib
 
 class DefaultTC(testlib.CubicWebTC):
     def test_something(self):
-        self.skip('this cube has no test')
+        self.skipTest('this cube has no test')
 
 
 if __name__ == '__main__':

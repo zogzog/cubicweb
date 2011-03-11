@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -23,7 +23,6 @@ from datetime import datetime
 
 from cubicweb.selectors import is_instance
 from cubicweb.server import hook
-from cubicweb.server.utils import eschema_eid
 
 
 class MetaDataHook(hook.Hook):
@@ -41,11 +40,12 @@ class InitMetaAttrsHook(MetaDataHook):
 
     def __call__(self):
         timestamp = datetime.now()
-        self.entity.setdefault('creation_date', timestamp)
-        self.entity.setdefault('modification_date', timestamp)
+        edited = self.entity.cw_edited
+        edited.setdefault('creation_date', timestamp)
+        edited.setdefault('modification_date', timestamp)
         if not self._cw.get_shared_data('do-not-insert-cwuri'):
-            cwuri = u'%seid/%s' % (self._cw.base_url(), self.entity.eid)
-            self.entity.setdefault('cwuri', cwuri)
+            cwuri = u'%s%s' % (self._cw.base_url(), self.entity.eid)
+            edited.setdefault('cwuri', cwuri)
 
 
 class UpdateMetaAttrsHook(MetaDataHook):
@@ -60,44 +60,20 @@ class UpdateMetaAttrsHook(MetaDataHook):
         # XXX to be really clean, we should turn off modification_date update
         # explicitly on each command where we do not want that behaviour.
         if not self._cw.vreg.config.repairing:
-            self.entity.setdefault('modification_date', datetime.now())
+            self.entity.cw_edited.setdefault('modification_date', datetime.now())
 
 
-class _SetCreatorOp(hook.Operation):
+class SetCreatorOp(hook.DataOperationMixIn, hook.Operation):
 
     def precommit_event(self):
         session = self.session
-        for eid in session.transaction_data.pop('set_creator_op'):
+        for eid in self.get_data():
             if session.deleted_in_transaction(eid):
                 # entity have been created and deleted in the same transaction
                 continue
             entity = session.entity_from_eid(eid)
             if not entity.created_by:
                 session.add_relation(eid, 'created_by', session.user.eid)
-
-
-class SetIsHook(MetaDataHook):
-    """create a new entity -> set is and is_instance_of relations
-
-    those relations are inserted using sql so they are not hookable.
-    """
-    __regid__ = 'setis'
-    events = ('after_add_entity',)
-
-    def __call__(self):
-        if hasattr(self.entity, '_cw_recreating'):
-            return
-        session = self._cw
-        entity = self.entity
-        try:
-            session.system_sql('INSERT INTO is_relation(eid_from,eid_to) VALUES (%s,%s)'
-                           % (entity.eid, eschema_eid(session, entity.e_schema)))
-        except IndexError:
-            # during schema serialization, skip
-            return
-        for eschema in entity.e_schema.ancestors() + [entity.e_schema]:
-            session.system_sql('INSERT INTO is_instance_of_relation(eid_from,eid_to) VALUES (%s,%s)'
-                               % (entity.eid, eschema_eid(session, eschema)))
 
 
 class SetOwnershipHook(MetaDataHook):
@@ -108,11 +84,12 @@ class SetOwnershipHook(MetaDataHook):
     def __call__(self):
         if not self._cw.is_internal_session:
             self._cw.add_relation(self.entity.eid, 'owned_by', self._cw.user.eid)
-            hook.set_operation(self._cw, 'set_creator_op', self.entity.eid, _SetCreatorOp)
+            SetCreatorOp.get_instance(self._cw).add_data(self.entity.eid)
 
-class _SyncOwnersOp(hook.Operation):
+
+class SyncOwnersOp(hook.DataOperationMixIn, hook.Operation):
     def precommit_event(self):
-        for compositeeid, composedeid in self.session.transaction_data.pop('sync_owners_op'):
+        for compositeeid, composedeid in self.get_data():
             self.session.execute('SET X owned_by U WHERE C owned_by U, C eid %(c)s,'
                                  'NOT EXISTS(X owned_by U, X eid %(x)s)',
                                  {'c': compositeeid, 'x': composedeid})
@@ -132,9 +109,9 @@ class SyncCompositeOwner(MetaDataHook):
         eidfrom, eidto = self.eidfrom, self.eidto
         composite = self._cw.schema_rproperty(self.rtype, eidfrom, eidto, 'composite')
         if composite == 'subject':
-            hook.set_operation(self._cw, 'sync_owners_op', (eidfrom, eidto), _SyncOwnersOp)
+            SyncOwnersOp.get_instance(self._cw).add_data( (eidfrom, eidto) )
         elif composite == 'object':
-            hook.set_operation(self._cw, 'sync_owners_op', (eidto, eidfrom), _SyncOwnersOp)
+            SyncOwnersOp.get_instance(self._cw).add_data( (eidto, eidfrom) )
 
 
 class FixUserOwnershipHook(MetaDataHook):

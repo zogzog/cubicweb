@@ -48,6 +48,9 @@ def _fake_property_value(self, name):
     except KeyError:
         return ''
 
+def fake(*args, **kwargs):
+    return None
+
 def multiple_connections_fix():
     """some monkey patching necessary when an application has to deal with
     several connections to different repositories. It tries to hide buggy class
@@ -165,16 +168,20 @@ def connect(database=None, login=None, host=None, group=None,
       where it's already initialized.
 
     :kwargs:
-      there goes authentication tokens. You usually have to specify for
-      instance a password for the given user, using a named 'password' argument.
+      there goes authentication tokens. You usually have to specify a password
+      for the given user, using a named 'password' argument.
     """
-    config = cwconfig.CubicWebNoAppConfiguration()
-    if host:
-        config.global_set_option('pyro-ns-host', host)
-    if group:
-        config.global_set_option('pyro-ns-group', group)
     cnxprops = cnxprops or ConnectionProperties()
     method = cnxprops.cnxtype
+    if method == 'pyro':
+        config = cwconfig.CubicWebNoAppConfiguration()
+        if host:
+            config.global_set_option('pyro-ns-host', host)
+        if group:
+            config.global_set_option('pyro-ns-group', group)
+    else:
+        assert database
+        config = cwconfig.instance_configuration(database)
     repo = get_repository(method, database, config=config)
     if method == 'inmemory':
         vreg = repo.vreg
@@ -194,21 +201,30 @@ def connect(database=None, login=None, host=None, group=None,
     cnx.vreg = vreg
     return cnx
 
-def in_memory_cnx(config, login, **kwargs):
-    """usefull method for testing and scripting to get a dbapi.Connection
-    object connected to an in-memory repository instance
-    """
+def in_memory_repo(config):
+    """Return and in_memory Repository object from a config (or vreg)"""
     if isinstance(config, cwvreg.CubicWebVRegistry):
         vreg = config
         config = None
     else:
         vreg = None
     # get local access to the repository
-    repo = get_repository('inmemory', config=config, vreg=vreg)
-    # connection to the CubicWeb repository
+    return get_repository('inmemory', config=config, vreg=vreg)
+
+def in_memory_cnx(repo, login, **kwargs):
+    """Establish a In memory connection to a <repo> for the user with <login>
+
+    additionel credential might be required"""
     cnxprops = ConnectionProperties('inmemory')
-    cnx = repo_connect(repo, login, cnxprops=cnxprops, **kwargs)
-    return repo, cnx
+    return repo_connect(repo, login, cnxprops=cnxprops, **kwargs)
+
+def in_memory_repo_cnx(config, login, **kwargs):
+    """usefull method for testing and scripting to get a dbapi.Connection
+    object connected to an in-memory repository instance
+    """
+    # connection to the CubicWeb repository
+    repo = in_memory_repo(config)
+    return repo, in_memory_cnx(repo, login, **kwargs)
 
 class _NeedAuthAccessMock(object):
     def __getattribute__(self, attr):
@@ -313,19 +329,17 @@ class DBAPIRequest(RequestSessionBase):
 
     # low level session data management #######################################
 
-    def get_shared_data(self, key, default=None, pop=False):
-        """return value associated to `key` in shared data"""
-        return self.cnx.get_shared_data(key, default, pop)
+    def get_shared_data(self, key, default=None, pop=False, txdata=False):
+        """see :meth:`Connection.get_shared_data`"""
+        return self.cnx.get_shared_data(key, default, pop, txdata)
 
-    def set_shared_data(self, key, value, querydata=False):
-        """set value associated to `key` in shared data
-
-        if `querydata` is true, the value will be added to the repository
-        session's query data which are cleared on commit/rollback of the current
-        transaction, and won't be available through the connexion, only on the
-        repository side.
-        """
-        return self.cnx.set_shared_data(key, value, querydata)
+    def set_shared_data(self, key, value, txdata=False, querydata=None):
+        """see :meth:`Connection.set_shared_data`"""
+        if querydata is not None:
+            txdata = querydata
+            warn('[3.10] querydata argument has been renamed to txdata',
+                 DeprecationWarning, stacklevel=2)
+        return self.cnx.set_shared_data(key, value, txdata)
 
     # server session compat layer #############################################
 
@@ -482,6 +496,7 @@ class Connection(object):
         self.sessionid = cnxid
         self._close_on_del = getattr(cnxprops, 'close_on_del', True)
         self._cnxtype = getattr(cnxprops, 'cnxtype', 'pyro')
+        self._web_request = False
         if cnxprops and cnxprops.log_queries:
             self.executed_queries = []
             self.cursor_class = LogCursor
@@ -534,9 +549,8 @@ class Connection(object):
             esubpath = list(subpath)
             esubpath.remove('views')
             esubpath.append(join('web', 'views'))
-        cubespath = [config.cube_dir(p) for p in cubes]
-        config.load_site_cubicweb(cubespath)
-        vpath = config.build_vregistry_path(reversed(cubespath),
+        config.init_cubes(cubes)
+        vpath = config.build_vregistry_path(reversed(config.cubes_path()),
                                             evobjpath=esubpath,
                                             tvobjpath=subpath)
         self.vreg.register_objects(vpath)
@@ -547,35 +561,33 @@ class Connection(object):
 
         You should call `load_appobjects` at some point to register those views.
         """
-        from cubicweb.web.request import CubicWebRequestBase as cwrb
-        DBAPIRequest.build_ajax_replace_url = cwrb.build_ajax_replace_url.im_func
-        DBAPIRequest.ajax_replace_url = cwrb.ajax_replace_url.im_func
-        DBAPIRequest.list_form_param = cwrb.list_form_param.im_func
         DBAPIRequest.property_value = _fake_property_value
         DBAPIRequest.next_tabindex = count().next
-        DBAPIRequest.form = {}
-        DBAPIRequest.data = {}
-        fake = lambda *args, **kwargs: None
         DBAPIRequest.relative_path = fake
         DBAPIRequest.url = fake
-        DBAPIRequest.next_tabindex = fake
         DBAPIRequest.get_page_data = fake
         DBAPIRequest.set_page_data = fake
-        DBAPIRequest.add_js = fake #cwrb.add_js.im_func
-        DBAPIRequest.add_css = fake #cwrb.add_css.im_func
         # XXX could ask the repo for it's base-url configuration
         self.vreg.config.set_option('base-url', baseurl)
+        self.vreg.config.uiprops = {}
+        self.vreg.config.datadir_url = baseurl + '/data'
         # XXX why is this needed? if really needed, could be fetched by a query
         if sitetitle is not None:
             self.vreg['propertydefs']['ui.site-title'] = {'default': sitetitle}
+        self._web_request = True
 
-    @check_not_closed
-    def source_defs(self):
-        """Return the definition of sources used by the repository.
-
-        This is NOT part of the DB-API.
-        """
-        return self._repo.source_defs()
+    def request(self):
+        if self._web_request:
+            from cubicweb.web.request import CubicWebRequestBase
+            req = CubicWebRequestBase(self.vreg, False)
+            req.get_header = lambda x, default=None: default
+            req.set_session = lambda session, user=None: DBAPIRequest.set_session(
+                req, session, user)
+            req.relative_path = lambda includeparams=True: ''
+        else:
+            req = DBAPIRequest(self.vreg)
+        req.set_session(DBAPISession(self))
+        return req
 
     @check_not_closed
     def user(self, req=None, props=None):
@@ -593,20 +605,19 @@ class Connection(object):
         else:
             from cubicweb.entity import Entity
             user = Entity(req, rset, row=0)
-        user['login'] = login # cache login
+        user.cw_attr_cache['login'] = login # cache login
         return user
 
     @check_not_closed
     def check(self):
-        """raise `BadConnectionId` if the connection is no more valid"""
-        self._repo.check_session(self.sessionid)
+        """raise `BadConnectionId` if the connection is no more valid, else
+        return its latest activity timestamp.
+        """
+        return self._repo.check_session(self.sessionid)
 
     def _txid(self, cursor=None): # XXX could now handle various isolation level!
         # return a dict as bw compat trick
         return {'txid': currentThread().getName()}
-
-    def request(self):
-        return DBAPIRequest(self.vreg, DBAPISession(self))
 
     # session data methods #####################################################
 
@@ -616,22 +627,33 @@ class Connection(object):
         self._repo.set_session_props(self.sessionid, props)
 
     @check_not_closed
-    def get_shared_data(self, key, default=None, pop=False):
-        """return value associated to `key` in shared data"""
-        return self._repo.get_shared_data(self.sessionid, key, default, pop)
+    def get_shared_data(self, key, default=None, pop=False, txdata=False):
+        """return value associated to key in the session's data dictionary or
+        session's transaction's data if `txdata` is true.
+
+        If pop is True, value will be removed from the dictionnary.
+
+        If key isn't defined in the dictionnary, value specified by the
+        `default` argument will be returned.
+        """
+        return self._repo.get_shared_data(self.sessionid, key, default, pop, txdata)
 
     @check_not_closed
-    def set_shared_data(self, key, value, querydata=False):
+    def set_shared_data(self, key, value, txdata=False):
         """set value associated to `key` in shared data
 
-        if `querydata` is true, the value will be added to the repository
+        if `txdata` is true, the value will be added to the repository
         session's query data which are cleared on commit/rollback of the current
-        transaction, and won't be available through the connexion, only on the
-        repository side.
+        transaction.
         """
-        return self._repo.set_shared_data(self.sessionid, key, value, querydata)
+        return self._repo.set_shared_data(self.sessionid, key, value, txdata)
 
     # meta-data accessors ######################################################
+
+    @check_not_closed
+    def source_defs(self):
+        """Return the definition of sources used by the repository."""
+        return self._repo.source_defs()
 
     @check_not_closed
     def get_schema(self):

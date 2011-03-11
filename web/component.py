@@ -22,58 +22,24 @@ client
 __docformat__ = "restructuredtext en"
 _ = unicode
 
-from logilab.common.deprecation import class_renamed
+from warnings import warn
+
+from logilab.common.deprecation import class_deprecated, class_renamed, deprecated
 from logilab.mtconverter import xml_escape
 
-from cubicweb import role
+from cubicweb import Unauthorized, role, target, tags
+from cubicweb.schema import display_name
+from cubicweb.uilib import js, domid
 from cubicweb.utils import json_dumps
-from cubicweb.uilib import js
-from cubicweb.view import Component
-from cubicweb.selectors import (
-    paginated_rset, one_line_rset, primary_view, match_context_prop,
-    partial_has_related_entities)
+from cubicweb.view import ReloadableMixIn, Component
+from cubicweb.selectors import (no_cnx, paginated_rset, one_line_rset,
+                                non_final_entity, partial_relation_possible,
+                                partial_has_related_entities)
+from cubicweb.appobject import AppObject
+from cubicweb.web import INTERNAL_FIELD_VALUE, stdmsgs
 
 
-class EntityVComponent(Component):
-    """abstract base class for additinal components displayed in content
-    headers and footer according to:
-
-    * the displayed entity's type
-    * a context (currently 'header' or 'footer')
-
-    it should be configured using .accepts, .etype, .rtype, .target and
-    .context class attributes
-    """
-
-    __registry__ = 'contentnavigation'
-    __select__ = one_line_rset() & primary_view() & match_context_prop()
-
-    cw_property_defs = {
-        _('visible'):  dict(type='Boolean', default=True,
-                            help=_('display the component or not')),
-        _('order'):    dict(type='Int', default=99,
-                            help=_('display order of the component')),
-        _('context'):  dict(type='String', default='navtop',
-                            vocabulary=(_('navtop'), _('navbottom'),
-                                        _('navcontenttop'), _('navcontentbottom'),
-                                        _('ctxtoolbar')),
-                            help=_('context where this component should be displayed')),
-    }
-
-    context = 'navcontentbottom'
-
-    def call(self, view=None):
-        if self.cw_rset is None:
-            self.entity_call(self.cw_extra_kwargs.pop('entity'))
-        else:
-            self.cell_call(0, 0, view=view)
-
-    def cell_call(self, row, col, view=None):
-        self.entity_call(self.cw_rset.get_entity(row, col), view=view)
-
-    def entity_call(self, entity, view=None):
-        raise NotImplementedError()
-
+# abstract base class for navigation components ################################
 
 class NavigationComponent(Component):
     """abstract base class for navigation components"""
@@ -150,7 +116,7 @@ class NavigationComponent(Component):
         # XXX hack to avoid opening a new page containing the evaluation of the
         # js expression on ajax call
         if url.startswith('javascript:'):
-            url += '; noop();'
+            url += '; $.noop();'
         return url
 
     def ajax_page_url(self, **params):
@@ -183,6 +149,529 @@ class NavigationComponent(Component):
         return self.next_page_link_templ % (url, title, content)
 
 
+# new contextual components system #############################################
+
+def override_ctx(cls, **kwargs):
+    cwpdefs = cls.cw_property_defs.copy()
+    cwpdefs['context']  = cwpdefs['context'].copy()
+    cwpdefs['context'].update(kwargs)
+    return cwpdefs
+
+
+class EmptyComponent(Exception):
+    """some selectable component has actually no content and should not be
+    rendered
+    """
+
+
+class Link(object):
+    """a link to a view or action in the ui.
+
+    Use this rather than `cw.web.htmlwidgets.BoxLink`.
+
+    Note this class could probably be avoided with a proper DOM on the server
+    side.
+    """
+    newstyle = True
+
+    def __init__(self, href, label, **attrs):
+        self.href = href
+        self.label = label
+        self.attrs = attrs
+
+    def __unicode__(self):
+        return tags.a(self.label, href=self.href, **self.attrs)
+
+    def render(self, w):
+        w(tags.a(self.label, href=self.href, **self.attrs))
+
+
+class Separator(object):
+    """a menu separator.
+
+    Use this rather than `cw.web.htmlwidgets.BoxSeparator`.
+    """
+    newstyle = True
+
+    def render(self, w):
+        w(u'<hr class="boxSeparator"/>')
+
+
+def _bwcompatible_render_item(w, item):
+    if hasattr(item, 'render'):
+        if getattr(item, 'newstyle', False):
+            if isinstance(item, Separator):
+                w(u'</ul>')
+                item.render(w)
+                w(u'<ul>')
+            else:
+                w(u'<li>')
+                item.render(w)
+                w(u'</li>')
+        else:
+            item.render(w) # XXX displays <li> by itself
+    else:
+        w(u'<li>%s</li>' % item)
+
+
+class Layout(Component):
+    __regid__ = 'layout'
+    __abstract__ = True
+
+    def init_rendering(self):
+        """init view for rendering. Return true if we should go on, false
+        if we should stop now.
+        """
+        view = self.cw_extra_kwargs['view']
+        try:
+            view.init_rendering()
+        except Unauthorized, ex:
+            self.warning("can't render %s: %s", view, ex)
+            return False
+        except EmptyComponent:
+            return False
+        return True
+
+
+class CtxComponent(AppObject):
+    """base class for contextual components. The following contexts are
+    predefined:
+
+    * boxes: 'left', 'incontext', 'right'
+    * section: 'navcontenttop', 'navcontentbottom', 'navtop', 'navbottom'
+    * other: 'ctxtoolbar'
+
+    The 'incontext', 'navcontenttop', 'navcontentbottom' and 'ctxtoolbar'
+    contexts are handled by the default primary view, others by the default main
+    template.
+
+    All subclasses may not support all those contexts (for instance if it can't
+    be displayed as box, or as a toolbar icon). You may restrict allowed context
+    as follows:
+
+    .. sourcecode:: python
+
+      class MyComponent(CtxComponent):
+          cw_property_defs = override_ctx(CtxComponent,
+                                          vocabulary=[list of contexts])
+          context = 'my default context'
+
+    You can configure a component's default context by simply giving an
+    appropriate value to the `context` class attribute, as seen above.
+    """
+    __registry__ = 'ctxcomponents'
+    __select__ = ~no_cnx()
+
+    categories_in_order = ()
+    cw_property_defs = {
+        _('visible'): dict(type='Boolean', default=True,
+                           help=_('display the box or not')),
+        _('order'):   dict(type='Int', default=99,
+                           help=_('display order of the box')),
+        _('context'): dict(type='String', default='left',
+                           vocabulary=(_('left'), _('incontext'), _('right'),
+                                       _('navtop'), _('navbottom'),
+                                       _('navcontenttop'), _('navcontentbottom'),
+                                       _('ctxtoolbar')),
+                           help=_('context where this component should be displayed')),
+        }
+    visible = True
+    order = 0
+    context = 'left'
+    contextual = False
+    title = None
+
+    # XXX support kwargs for compat with old boxes which gets the view as
+    # argument
+    def render(self, w, **kwargs):
+        if hasattr(self, 'call'):
+            warn('[3.10] should not anymore implement call on %s, see new CtxComponent api'
+                 % self.__class__, DeprecationWarning)
+            self.w = w
+            def wview(__vid, rset=None, __fallback_vid=None, **kwargs):
+                self._cw.view(__vid, rset, __fallback_vid, w=self.w, **kwargs)
+            self.wview = wview
+            self.call(**kwargs)
+            return
+        getlayout = self._cw.vreg['components'].select
+        layout = getlayout('layout', self._cw, **self.layout_select_args())
+        layout.render(w)
+
+    def layout_select_args(self):
+        try:
+            # XXX ensure context is given when the component is reloaded through
+            # ajax
+            context = self.cw_extra_kwargs['context']
+        except KeyError:
+            context = self.cw_propval('context')
+        return dict(rset=self.cw_rset, row=self.cw_row, col=self.cw_col,
+                    view=self, context=context)
+
+    def init_rendering(self):
+        """init rendering callback: that's the good time to check your component
+        has some content to display. If not, you can still raise
+        :exc:`EmptyComponent` to inform it should be skipped.
+
+        Also, :exc:`Unauthorized` will be catched, logged, then the component
+        will be skipped.
+        """
+        self.items = []
+
+    @property
+    def domid(self):
+        """return the HTML DOM identifier for this component"""
+        return domid(self.__regid__)
+
+    @property
+    def cssclass(self):
+        """return the CSS class name for this component"""
+        return domid(self.__regid__)
+
+    def render_title(self, w):
+        """return the title for this component"""
+        if self.title:
+            w(self._cw._(self.title))
+
+    def render_body(self, w):
+        """return the body (content) for this component"""
+        raise NotImplementedError()
+
+    def render_items(self, w, items=None, klass=u'boxListing'):
+        if items is None:
+            items = self.items
+        assert items
+        w(u'<ul class="%s">' % klass)
+        for item in items:
+            _bwcompatible_render_item(w, item)
+        w(u'</ul>')
+
+    def append(self, item):
+        self.items.append(item)
+
+    def action_link(self, action):
+        return self.link(self._cw._(action.title), action.url())
+
+    def link(self, title, url, **kwargs):
+        if self._cw.selected(url):
+            try:
+                kwargs['klass'] += ' selected'
+            except KeyError:
+                kwargs['klass'] = 'selected'
+        return Link(url, title, **kwargs)
+
+    def separator(self):
+        return Separator()
+
+    @deprecated('[3.10] use action_link() / link()')
+    def box_action(self, action): # XXX action_link
+        return self.build_link(self._cw._(action.title), action.url())
+
+    @deprecated('[3.10] use action_link() / link()')
+    def build_link(self, title, url, **kwargs):
+        if self._cw.selected(url):
+            try:
+                kwargs['klass'] += ' selected'
+            except KeyError:
+                kwargs['klass'] = 'selected'
+        return tags.a(title, href=url, **kwargs)
+
+
+class EntityCtxComponent(CtxComponent):
+    """base class for boxes related to a single entity"""
+    __select__ = CtxComponent.__select__ & non_final_entity() & one_line_rset()
+    context = 'incontext'
+    contextual = True
+
+    def __init__(self, *args, **kwargs):
+        super(EntityCtxComponent, self).__init__(*args, **kwargs)
+        try:
+            entity = kwargs['entity']
+        except KeyError:
+            entity = self.cw_rset.get_entity(self.cw_row or 0, self.cw_col or 0)
+        self.entity = entity
+
+    def layout_select_args(self):
+        args = super(EntityCtxComponent, self).layout_select_args()
+        args['entity'] = self.entity
+        return args
+
+    @property
+    def domid(self):
+        return domid(self.__regid__) + unicode(self.entity.eid)
+
+    def lazy_view_holder(self, w, entity, oid, registry='views'):
+        """add a holder and return an url that may be used to replace this
+        holder by the html generate by the view specified by registry and
+        identifier. Registry defaults to 'views'.
+        """
+        holderid = '%sHolder' % self.domid
+        w(u'<div id="%s"></div>' % holderid)
+        params = self.cw_extra_kwargs.copy()
+        params.pop('view', None)
+        params.pop('entity', None)
+        form = params.pop('formparams', {})
+        form['pageid'] = self._cw.pageid
+        if entity.has_eid():
+            eid = entity.eid
+        else:
+            eid = None
+            form['etype'] = entity.__regid__
+            form['tempEid'] = entity.eid
+        args = [json_dumps(x) for x in (registry, oid, eid, params)]
+        return self._cw.ajax_replace_url(
+            holderid, fname='render', arg=args, **form)
+
+
+# high level abstract classes ##################################################
+
+class RQLCtxComponent(CtxComponent):
+    """abstract box for boxes displaying the content of a rql query not related
+    to the current result set.
+
+    Notice that this class's init_rendering implemention is overwriting context
+    result set (eg `cw_rset`) with the result set returned by execution of
+    `to_display_rql()`.
+    """
+    rql = None
+
+    def to_display_rql(self):
+        """return arguments to give to self._cw.execute, as a tuple, to build
+        the result set to be displayed by this box.
+        """
+        assert self.rql is not None, self.__regid__
+        return (self.rql,)
+
+    def init_rendering(self):
+        super(RQLCtxComponent, self).init_rendering()
+        self.cw_rset = self._cw.execute(*self.to_display_rql())
+        if not self.cw_rset:
+            raise EmptyComponent()
+
+    def render_body(self, w):
+        rset = self.cw_rset
+        if len(rset[0]) == 2:
+            items = []
+            for i, (eid, label) in enumerate(rset):
+                entity = rset.get_entity(i, 0)
+                items.append(self.link(label, entity.absolute_url()))
+        else:
+            items = [self.link(e.dc_title(), e.absolute_url())
+                     for e in rset.entities()]
+        self.render_items(w, items)
+
+
+class EditRelationMixIn(ReloadableMixIn):
+    def box_item(self, entity, etarget, rql, label):
+        """builds HTML link to edit relation between `entity` and `etarget`"""
+        args = {role(self)[0] : entity.eid, target(self)[0] : etarget.eid}
+        url = self._cw.user_rql_callback((rql, args))
+        # for each target, provide a link to edit the relation
+        return u'[<a href="%s" class="action">%s</a>] %s' % (
+            xml_escape(url), label, etarget.view('incontext'))
+
+    def related_boxitems(self, entity):
+        rql = 'DELETE S %s O WHERE S eid %%(s)s, O eid %%(o)s' % self.rtype
+        return [self.box_item(entity, etarget, rql, u'-')
+                for etarget in self.related_entities(entity)]
+
+    def related_entities(self, entity):
+        return entity.related(self.rtype, role(self), entities=True)
+
+    def unrelated_boxitems(self, entity):
+        rql = 'SET S %s O WHERE S eid %%(s)s, O eid %%(o)s' % self.rtype
+        return [self.box_item(entity, etarget, rql, u'+')
+                for etarget in self.unrelated_entities(entity)]
+
+    def unrelated_entities(self, entity):
+        """returns the list of unrelated entities, using the entity's
+        appropriate vocabulary function
+        """
+        skip = set(unicode(e.eid) for e in entity.related(self.rtype, role(self),
+                                                          entities=True))
+        skip.add(None)
+        skip.add(INTERNAL_FIELD_VALUE)
+        filteretype = getattr(self, 'etype', None)
+        entities = []
+        form = self._cw.vreg['forms'].select('edition', self._cw,
+                                             rset=self.cw_rset,
+                                             row=self.cw_row or 0)
+        field = form.field_by_name(self.rtype, role(self), entity.e_schema)
+        for _, eid in field.vocabulary(form):
+            if eid not in skip:
+                entity = self._cw.entity_from_eid(eid)
+                if filteretype is None or entity.__regid__ == filteretype:
+                    entities.append(entity)
+        return entities
+
+# XXX should be a view usable using uicfg
+class EditRelationCtxComponent(EditRelationMixIn, EntityCtxComponent):
+    """base class for boxes which let add or remove entities linked by a given
+    relation
+
+    subclasses should define at least id, rtype and target class attributes.
+    """
+    def render_title(self, w):
+        w(display_name(self._cw, self.rtype, role(self),
+                       context=self.entity.__regid__))
+
+    def render_body(self, w):
+        self._cw.add_js('cubicweb.ajax.js')
+        related = self.related_boxitems(self.entity)
+        unrelated = self.unrelated_boxitems(self.entity)
+        self.items.extend(related)
+        if related and unrelated:
+            self.items.append(u'<hr class="boxSeparator"/>')
+        self.items.extend(unrelated)
+        self.render_items(w)
+
+
+class AjaxEditRelationCtxComponent(EntityCtxComponent):
+    __select__ = EntityCtxComponent.__select__ & (
+        partial_relation_possible(action='add') | partial_has_related_entities())
+
+    # view used to display related entties
+    item_vid = 'incontext'
+    # values separator when multiple values are allowed
+    separator = ','
+    # msgid of the message to display when some new relation has been added/removed
+    added_msg = None
+    removed_msg = None
+
+    # class attributes below *must* be set in concret classes (additionaly to
+    # rtype / role [/ target_etype]. They should correspond to js_* methods on
+    # the json controller
+
+    # function(eid)
+    # -> expected to return a list of values to display as input selector
+    #    vocabulary
+    fname_vocabulary = None
+
+    # function(eid, value)
+    # -> handle the selector's input (eg create necessary entities and/or
+    # relations). If the relation is multiple, you'll get a list of value, else
+    # a single string value.
+    fname_validate = None
+
+    # function(eid, linked entity eid)
+    # -> remove the relation
+    fname_remove = None
+
+    def __init__(self, *args, **kwargs):
+        super(AjaxEditRelationCtxComponent, self).__init__(*args, **kwargs)
+        self.rdef = self.entity.e_schema.rdef(self.rtype, self.role, self.target_etype)
+
+    def render_title(self, w):
+        w(self.rdef.rtype.display_name(self._cw, self.role,
+                                       context=self.entity.__regid__))
+
+    def render_body(self, w):
+        req = self._cw
+        entity = self.entity
+        related = entity.related(self.rtype, self.role)
+        if self.role == 'subject':
+            mayadd = self.rdef.has_perm(req, 'add', fromeid=entity.eid)
+            maydel = self.rdef.has_perm(req, 'delete', fromeid=entity.eid)
+        else:
+            mayadd = self.rdef.has_perm(req, 'add', toeid=entity.eid)
+            maydel = self.rdef.has_perm(req, 'delete', toeid=entity.eid)
+        if mayadd or maydel:
+            req.add_js(('jquery.ui.js', 'cubicweb.widgets.js'))
+            req.add_js(('cubicweb.ajax.js', 'cubicweb.ajax.box.js'))
+            req.add_css('jquery.ui.css')
+        _ = req._
+        if related:
+            w(u'<table class="ajaxEditRelationTable">')
+            for rentity in related.entities():
+                # for each related entity, provide a link to remove the relation
+                subview = rentity.view(self.item_vid)
+                if maydel:
+                    jscall = unicode(js.ajaxBoxRemoveLinkedEntity(
+                        self.__regid__, entity.eid, rentity.eid,
+                        self.fname_remove,
+                        self.removed_msg and _(self.removed_msg)))
+                    w(u'<tr><td class="dellink">[<a href="javascript: %s">-</a>]</td>'
+                      '<td class="entity"> %s</td></tr>' % (xml_escape(jscall),
+                                                            subview))
+                else:
+                    w(u'<tr><td class="entity">%s</td></tr>' % (subview))
+            w(u'</table>')
+        else:
+            w(_('no related entity'))
+        if mayadd:
+            multiple = self.rdef.role_cardinality(self.role) in '*+'
+            w(u'<table><tr><td>')
+            jscall = unicode(js.ajaxBoxShowSelector(
+                self.__regid__, entity.eid, self.fname_vocabulary,
+                self.fname_validate, self.added_msg and _(self.added_msg),
+                _(stdmsgs.BUTTON_OK[0]), _(stdmsgs.BUTTON_CANCEL[0]),
+                multiple and self.separator))
+            w('<a class="button sglink" href="javascript: %s">%s</a>' % (
+                xml_escape(jscall),
+                multiple and _('add_relation') or _('update_relation')))
+            w(u'</td><td>')
+            w(u'<div id="%sHolder"></div>' % self.domid)
+            w(u'</td></tr></table>')
+
+
+class RelatedObjectsCtxComponent(EntityCtxComponent):
+    """a contextual component to display entities related to another"""
+    __select__ = EntityCtxComponent.__select__ & partial_has_related_entities()
+    context = 'navcontentbottom'
+    rtype = None
+    role = 'subject'
+
+    vid = 'list'
+
+    def render_body(self, w):
+        rset = self.entity.related(self.rtype, role(self))
+        self._cw.view(self.vid, rset, w=w)
+
+
+# old contextual components, deprecated ########################################
+
+class EntityVComponent(Component):
+    """abstract base class for additinal components displayed in content
+    headers and footer according to:
+
+    * the displayed entity's type
+    * a context (currently 'header' or 'footer')
+
+    it should be configured using .accepts, .etype, .rtype, .target and
+    .context class attributes
+    """
+    __metaclass__ = class_deprecated
+    __deprecation_warning__ = '[3.10] *VComponent classes are deprecated, use *CtxComponent instead (%(cls)s)'
+
+    __registry__ = 'ctxcomponents'
+    __select__ = one_line_rset()
+
+    cw_property_defs = {
+        _('visible'):  dict(type='Boolean', default=True,
+                            help=_('display the component or not')),
+        _('order'):    dict(type='Int', default=99,
+                            help=_('display order of the component')),
+        _('context'):  dict(type='String', default='navtop',
+                            vocabulary=(_('navtop'), _('navbottom'),
+                                        _('navcontenttop'), _('navcontentbottom'),
+                                        _('ctxtoolbar')),
+                            help=_('context where this component should be displayed')),
+    }
+
+    context = 'navcontentbottom'
+
+    def call(self, view=None):
+        if self.cw_rset is None:
+            self.entity_call(self.cw_extra_kwargs.pop('entity'))
+        else:
+            self.cell_call(0, 0, view=view)
+
+    def cell_call(self, row, col, view=None):
+        self.entity_call(self.cw_rset.get_entity(row, col), view=view)
+
+    def entity_call(self, entity, view=None):
+        raise NotImplementedError()
+
+
 class RelatedObjectsVComponent(EntityVComponent):
     """a section to display some related entities"""
     __select__ = EntityVComponent.__select__ & partial_has_related_entities()
@@ -203,14 +692,15 @@ class RelatedObjectsVComponent(EntityVComponent):
             rset = self._cw.execute(self.rql(), {'x': eid})
         if not rset.rowcount:
             return
-        self.w(u'<div class="%s">' % self.div_class())
+        self.w(u'<div class="%s">' % self.cssclass)
         self.w(u'<h4>%s</h4>\n' % self._cw._(self.title).capitalize())
         self.wview(self.vid, rset)
         self.w(u'</div>')
 
 
+
 VComponent = class_renamed('VComponent', Component,
-                           'VComponent is deprecated, use Component')
+                           '[3.2] VComponent is deprecated, use Component')
 SingletonVComponent = class_renamed('SingletonVComponent', Component,
-                                    'SingletonVComponent is deprecated, use '
+                                    '[3.2] SingletonVComponent is deprecated, use '
                                     'Component and explicit registration control')

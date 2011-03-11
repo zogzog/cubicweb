@@ -15,12 +15,16 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""schema definition related entities
+"""schema definition related entities"""
 
-"""
 __docformat__ = "restructuredtext en"
 
+import re
+from socket import gethostname
+
 from logilab.common.decorators import cached
+from logilab.common.textutils import text_to_dict
+from logilab.common.configuration import OptionError
 
 from yams.schema import role_name
 
@@ -28,6 +32,58 @@ from cubicweb import ValidationError
 from cubicweb.schema import ERQLExpression, RRQLExpression
 
 from cubicweb.entities import AnyEntity, fetch_config
+
+
+class _CWSourceCfgMixIn(object):
+    @property
+    def dictconfig(self):
+        return self.config and text_to_dict(self.config) or {}
+
+    def update_config(self, skip_unknown=False, **config):
+        from cubicweb.server import SOURCE_TYPES
+        from cubicweb.server.serverconfig import (SourceConfiguration,
+                                                  generate_source_config)
+        cfg = self.dictconfig
+        cfg.update(config)
+        options = SOURCE_TYPES[self.type].options
+        sconfig = SourceConfiguration(self._cw.vreg.config, options=options)
+        for opt, val in cfg.iteritems():
+            try:
+                sconfig.set_option(opt, val)
+            except OptionError:
+                if skip_unknown:
+                    continue
+                raise
+        cfgstr = unicode(generate_source_config(sconfig), self._cw.encoding)
+        self.set_attributes(config=cfgstr)
+
+
+class CWSource(_CWSourceCfgMixIn, AnyEntity):
+    __regid__ = 'CWSource'
+    fetch_attrs, fetch_order = fetch_config(['name', 'type'])
+
+    @property
+    def host_config(self):
+        dictconfig = self.dictconfig
+        host = gethostname()
+        for hostcfg in self.host_configs:
+            if hostcfg.match(host):
+                self.info('matching host config %s for source %s',
+                          hostcfg.match_host, self.name)
+                dictconfig.update(hostcfg.dictconfig)
+        return dictconfig
+
+    @property
+    def host_configs(self):
+        return self.reverse_cw_host_config_of
+
+
+class CWSourceHostConfig(_CWSourceCfgMixIn, AnyEntity):
+    __regid__ = 'CWSourceHostConfig'
+    fetch_attrs, fetch_order = fetch_config(['match_host', 'config'])
+
+    def match(self, hostname):
+        return re.match(self.match_host, hostname)
 
 
 class CWEType(AnyEntity):
@@ -83,7 +139,7 @@ class CWRType(AnyEntity):
                 rtype = self.name
                 stype = rdef.stype
                 otype = rdef.otype
-                msg = self._cw._("can't set inlined=%(inlined)s, "
+                msg = self._cw._("can't set inlined=True, "
                                  "%(stype)s %(rtype)s %(otype)s "
                                  "has cardinality=%(card)s")
                 raise ValidationError(self.eid, {qname: msg % locals()})

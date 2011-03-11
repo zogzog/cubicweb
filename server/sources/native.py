@@ -35,6 +35,7 @@ from base64 import b64decode, b64encode
 from contextlib import contextmanager
 from os.path import abspath
 import re
+import itertools
 
 from logilab.common.compat import any
 from logilab.common.cache import Cache
@@ -55,6 +56,7 @@ from cubicweb.server.sqlutils import SQL_PREFIX, SQLAdapterMixIn
 from cubicweb.server.rqlannotation import set_qdata
 from cubicweb.server.hook import CleanupDeletedEidsCacheOp
 from cubicweb.server.session import hooks_control, security_enabled
+from cubicweb.server.ssplanner import EditedEntity
 from cubicweb.server.sources import AbstractSource, dbg_st_search, dbg_results
 from cubicweb.server.sources.rql2sql import SQLGenerator
 
@@ -262,13 +264,12 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
           }),
     )
 
-    def __init__(self, repo, appschema, source_config, *args, **kwargs):
+    def __init__(self, repo, source_config, *args, **kwargs):
         SQLAdapterMixIn.__init__(self, source_config)
         self.authentifiers = [LoginPasswordAuthentifier(self)]
-        AbstractSource.__init__(self, repo, appschema, source_config,
-                                *args, **kwargs)
+        AbstractSource.__init__(self, repo, source_config, *args, **kwargs)
         # sql generator
-        self._rql_sqlgen = self.sqlgen_class(appschema, self.dbhelper,
+        self._rql_sqlgen = self.sqlgen_class(self.schema, self.dbhelper,
                                              ATTR_MAP.copy())
         # full text index helper
         self.do_fti = not repo.config['delay-full-text-indexation']
@@ -547,25 +548,30 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         #    on the filesystem. To make the entity.data usage absolutely
         #    transparent, we'll have to reset entity.data to its binary
         #    value once the SQL query will be executed
-        restore_values = {}
-        etype = entity.__regid__
+        restore_values = []
+        if isinstance(entity, list):
+            entities = entity
+        else:
+            entities = [entity]
+        etype = entities[0].__regid__
         for attr, storage in self._storages.get(etype, {}).items():
-            try:
-                edited = entity.edited_attributes
-            except AttributeError:
-                assert event == 'deleted'
-                getattr(storage, 'entity_deleted')(entity, attr)
-            else:
-                if attr in edited:
-                    handler = getattr(storage, 'entity_%s' % event)
-                    real_value = handler(entity, attr)
-                    restore_values[attr] = real_value
+            for entity in entities:
+                try:
+                    edited = entity.cw_edited
+                except AttributeError:
+                    assert event == 'deleted'
+                    getattr(storage, 'entity_deleted')(entity, attr)
+                else:
+                    if attr in edited:
+                        handler = getattr(storage, 'entity_%s' % event)
+                        to_restore = handler(entity, attr)
+                        restore_values.append((entity, attr, to_restore))
         try:
             yield # 2/ execute the source's instructions
         finally:
             # 3/ restore original values
-            for attr, value in restore_values.items():
-                entity[attr] = value
+            for entity, attr, value in restore_values:
+                entity.cw_edited.edited_attribute(attr, value)
 
     def add_entity(self, session, entity):
         """add a new entity to the source"""
@@ -844,8 +850,8 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         if self._eid_creation_cnx is None:
             self._eid_creation_cnx = self.get_connection()
         cnx = self._eid_creation_cnx
-        cursor = cnx.cursor()
         try:
+            cursor = cnx.cursor()
             for sql in self.dbhelper.sqls_increment_sequence('entities_id_seq'):
                 cursor.execute(sql)
             eid = cursor.fetchone()[0]
@@ -880,6 +886,21 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         attrs = {'type': entity.__regid__, 'eid': entity.eid, 'extid': extid,
                  'source': source.uri, 'mtime': datetime.now()}
         self.doexec(session, self.sqlgen.insert('entities', attrs), attrs)
+        # insert core relations: is, is_instance_of and cw_source
+        if not hasattr(entity, '_cw_recreating'):
+            try:
+                self.doexec(session, 'INSERT INTO is_relation(eid_from,eid_to) VALUES (%s,%s)'
+                            % (entity.eid, eschema_eid(session, entity.e_schema)))
+            except IndexError:
+                # during schema serialization, skip
+                pass
+            else:
+                for eschema in entity.e_schema.ancestors() + [entity.e_schema]:
+                    self.doexec(session, 'INSERT INTO is_instance_of_relation(eid_from,eid_to) VALUES (%s,%s)'
+                               % (entity.eid, eschema_eid(session, eschema)))
+            if 'CWSource' in self.schema and source.eid is not None: # else, cw < 3.10
+                self.doexec(session, 'INSERT INTO cw_source_relation(eid_from,eid_to) '
+                            'VALUES (%s,%s)' % (entity.eid, source.eid))
         # now we can update the full text index
         if self.do_fti and self.need_fti_indexation(entity.__regid__):
             if complete:
@@ -904,7 +925,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         * transfer it to the deleted_entities table if the entity's type is
           multi-sources
         """
-        self.fti_unindex_entity(session, entity.eid)
+        self.fti_unindex_entities(session, [entity])
         attrs = {'eid': entity.eid}
         self.doexec(session, self.sqlgen.delete('entities', attrs), attrs)
         if not entity.__regid__ in self.multisources_etypes:
@@ -916,6 +937,27 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                  'source': uri, 'dtime': datetime.now()}
         self.doexec(session, self.sqlgen.insert('deleted_entities', attrs), attrs)
 
+    def delete_info_multi(self, session, entities, uri, extids):
+        """delete system information on deletion of an entity:
+        * update the fti
+        * remove record from the entities table
+        * transfer it to the deleted_entities table if the entity's type is
+          multi-sources
+        """
+        self.fti_unindex_entities(session, entities)
+        attrs = {'eid': '(%s)' % ','.join([str(_e.eid) for _e in entities])}
+        self.doexec(session, self.sqlgen.delete_many('entities', attrs), attrs)
+        if entities[0].__regid__ not in self.multisources_etypes:
+            return
+        attrs = {'type': entities[0].__regid__,
+                 'source': uri, 'dtime': datetime.now()}
+        for entity, extid in itertools.izip(entities, extids):
+            if extid is not None:
+                assert isinstance(extid, str), type(extid)
+                extid = b64encode(extid)
+            attrs.update({'eid': entity.eid, 'extid': extid})
+            self.doexec(session, self.sqlgen.insert('deleted_entities', attrs), attrs)
+
     def modified_entities(self, session, etypes, mtime):
         """return a 2-uple:
         * list of (etype, eid) of entities of the given types which have been
@@ -926,7 +968,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         """
         for etype in etypes:
             if not etype in self.multisources_etypes:
-                self.critical('%s not listed as a multi-sources entity types. '
+                self.error('%s not listed as a multi-sources entity types. '
                               'Modify your configuration' % etype)
                 self.multisources_etypes.add(etype)
         modsql = _modified_sql('entities', etypes)
@@ -1127,6 +1169,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             err("can't restore entity %s of type %s, type no more supported"
                 % (eid, etype))
             return errors
+        entity.cw_edited = edited = EditedEntity(entity)
         # check for schema changes, entities linked through inlined relation
         # still exists, rewrap binary values
         eschema = entity.e_schema
@@ -1143,27 +1186,19 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                 assert value is None
             elif eschema.destination(rtype) in ('Bytes', 'Password'):
                 action.changes[column] = self._binary(value)
-                entity[rtype] = Binary(value)
+                edited[rtype] = Binary(value)
             elif isinstance(value, str):
-                entity[rtype] = unicode(value, session.encoding, 'replace')
+                edited[rtype] = unicode(value, session.encoding, 'replace')
             else:
-                entity[rtype] = value
+                edited[rtype] = value
         entity.eid = eid
         session.repo.init_entity_caches(session, entity, self)
-        entity.edited_attributes = set(entity)
-        entity._cw_check()
+        edited.check()
         self.repo.hm.call_hooks('before_add_entity', session, entity=entity)
         # restore the entity
         action.changes['cw_eid'] = eid
         sql = self.sqlgen.insert(SQL_PREFIX + etype, action.changes)
         self.doexec(session, sql, action.changes)
-        # add explicitly is / is_instance_of whose deletion is not recorded for
-        # consistency with addition (done by sql in hooks)
-        self.doexec(session, 'INSERT INTO is_relation(eid_from, eid_to) '
-                    'VALUES(%s, %s)' % (eid, eschema_eid(session, eschema)))
-        for eschema in entity.e_schema.ancestors() + [entity.e_schema]:
-            self.doexec(session, 'INSERT INTO is_instance_of_relation(eid_from,'
-                        'eid_to) VALUES(%s, %s)' % (eid, eschema_eid(session, eschema)))
         # restore record in entities (will update fti if needed)
         self.add_info(session, entity, self, None, True)
         # remove record from deleted_entities if entity's type is multi-sources
@@ -1220,13 +1255,13 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                 "no more supported" % {'eid': eid, 'etype': etype})]
         entity.eid = eid
         # for proper eid/type cache update
-        hook.set_operation(session, 'pendingeids', eid,
-                           CleanupDeletedEidsCacheOp)
+        CleanupDeletedEidsCacheOp.get_instance(session).add_data(eid)
         self.repo.hm.call_hooks('before_delete_entity', session, entity=entity)
         # remove is / is_instance_of which are added using sql by hooks, hence
         # unvisible as transaction action
         self.doexec(session, 'DELETE FROM is_relation WHERE eid_from=%s' % eid)
         self.doexec(session, 'DELETE FROM is_instance_of_relation WHERE eid_from=%s' % eid)
+        self.doexec(session, 'DELETE FROM cw_source_relation WHERE eid_from=%s' % self.eid)
         # XXX check removal of inlined relation?
         # delete the entity
         attrs = {'cw_eid': eid}
@@ -1288,32 +1323,37 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         """create an operation to [re]index textual content of the given entity
         on commit
         """
-        hook.set_operation(session, 'ftindex', entity.eid, FTIndexEntityOp)
+        FTIndexEntityOp.get_instance(session).add_data(entity.eid)
 
-    def fti_unindex_entity(self, session, eid):
-        """remove text content for entity with the given eid from the full text
-        index
+    def fti_unindex_entities(self, session, entities):
+        """remove text content for entities from the full text index
         """
+        cursor = session.pool['system']
+        cursor_unindex_object = self.dbhelper.cursor_unindex_object
         try:
-            self.dbhelper.cursor_unindex_object(eid, session.pool['system'])
+            for entity in entities:
+                cursor_unindex_object(entity.eid, cursor)
         except Exception: # let KeyboardInterrupt / SystemExit propagate
-            self.exception('error while unindexing %s', eid)
+            self.exception('error while unindexing %s', entity)
 
-    def fti_index_entity(self, session, entity):
-        """add text content of a created/modified entity to the full text index
+
+    def fti_index_entities(self, session, entities):
+        """add text content of created/modified entities to the full text index
         """
-        self.debug('reindexing %r', entity.eid)
+        cursor_index_object = self.dbhelper.cursor_index_object
+        cursor = session.pool['system']
         try:
             # use cursor_index_object, not cursor_reindex_object since
             # unindexing done in the FTIndexEntityOp
-            self.dbhelper.cursor_index_object(entity.eid,
-                                              entity.cw_adapt_to('IFTIndexable'),
-                                              session.pool['system'])
+            for entity in entities:
+                cursor_index_object(entity.eid,
+                                    entity.cw_adapt_to('IFTIndexable'),
+                                    cursor)
         except Exception: # let KeyboardInterrupt / SystemExit propagate
-            self.exception('error while reindexing %s', entity)
+            self.exception('error while indexing %s', entity)
 
 
-class FTIndexEntityOp(hook.LateOperation):
+class FTIndexEntityOp(hook.DataOperationMixIn, hook.LateOperation):
     """operation to delay entity full text indexation to commit
 
     since fti indexing may trigger discovery of other entities, it should be
@@ -1326,17 +1366,17 @@ class FTIndexEntityOp(hook.LateOperation):
         source = session.repo.system_source
         pendingeids = session.transaction_data.get('pendingeids', ())
         done = session.transaction_data.setdefault('indexedeids', set())
-        for eid in session.transaction_data.pop('ftindex', ()):
+        to_reindex = set()
+        for eid in self.get_data():
             if eid in pendingeids or eid in done:
                 # entity added and deleted in the same transaction or already
                 # processed
-                return
+                continue
             done.add(eid)
             iftindexable = session.entity_from_eid(eid).cw_adapt_to('IFTIndexable')
-            for container in iftindexable.fti_containers():
-                source.fti_unindex_entity(session, container.eid)
-                source.fti_index_entity(session, container)
-
+            to_reindex |= set(iftindexable.fti_containers())
+        source.fti_unindex_entities(session, to_reindex)
+        source.fti_index_entities(session, to_reindex)
 
 def sql_schema(driver):
     helper = get_db_helper(driver)

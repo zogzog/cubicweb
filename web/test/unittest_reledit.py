@@ -43,7 +43,8 @@ class ClickAndEditFormTC(ReleditMixinTC, CubicWebTC):
             if rschema not in reledit:
                 continue
             rtype = rschema.type
-            self.assertMultiLineEqual(reledit[rtype] % {'eid': self.proj.eid}, self.proj.view('reledit', rtype=rtype, role=role), rtype)
+            self.assertMultiLineEqual(reledit[rtype] % {'eid': self.proj.eid},
+                                      self.proj.view('reledit', rtype=rtype, role=role), rtype)
 
     def test_default_forms(self):
         doreledit = {'title': """<div id="title-subject-%(eid)s-reledit" onmouseout="jQuery('#title-subject-%(eid)s').addClass('hidden')" onmouseover="jQuery('#title-subject-%(eid)s').removeClass('hidden')" class="releditField"><div id="title-subject-%(eid)s-value" class="editableFieldValue">cubicweb-world-domination</div><form action="http://testing.fr/cubicweb/validateform?__onsuccess=window.parent.cw.reledit.onSuccess" method="post" enctype="application/x-www-form-urlencoded" id="title-subject-%(eid)s-form" onsubmit="return freezeFormButtons(&#39;title-subject-%(eid)s-form&#39;);" class="releditForm" cubicweb:target="eformframe">
@@ -65,18 +66,14 @@ class ClickAndEditFormTC(ReleditMixinTC, CubicWebTC):
 <fieldset class="default">
 <table class="">
 <tr class="title_subject_row">
-<td
->
+<td>
 <input id="title-subject:%(eid)s" maxlength="32" name="title-subject:%(eid)s" size="32" tabindex="1" type="text" value="cubicweb-world-domination" />
 </td></tr>
 </table></fieldset>
 <table class="buttonbar">
 <tr>
-
 <td><button class="validateButton" tabindex="2" type="submit" value="button_ok"><img alt="OK_ICON" src="http://testing.fr/cubicweb/data/ok.png" />button_ok</button></td>
-
 <td><button class="validateButton" onclick="cw.reledit.cleanupAfterCancel(&#39;title-subject-%(eid)s&#39;)" tabindex="3" type="button" value="button_cancel"><img alt="CANCEL_ICON" src="http://testing.fr/cubicweb/data/cancel.png" />button_cancel</button></td>
-
 </tr></table>
 </fieldset>
 </form><div id="title-subject-%(eid)s" class="editableField hidden"><div id="title-subject-%(eid)s-update" class="editableField" onclick="cw.reledit.loadInlineEditionForm(&#39;base&#39;, %(eid)s, &#39;title&#39;, &#39;subject&#39;, &#39;title-subject-%(eid)s&#39;, false, &#39;&#39;);" title="click to edit this field"><img title="click to edit this field" src="data/pen_icon.png" alt="click to edit this field"/></div></div></div>""",
@@ -103,30 +100,24 @@ class ClickAndEditFormTC(ReleditMixinTC, CubicWebTC):
 <table class="attributeForm">
 <tr class="title_subject_row">
 <th class="labelCol"><label class="required" for="title-subject:A">title</label></th>
-<td
->
+<td>
 <input id="title-subject:A" maxlength="50" name="title-subject:A" size="45" tabindex="4" type="text" value="" />
 </td></tr>
 <tr class="description_subject_row">
 <th class="labelCol"><label for="description-subject:A">description</label></th>
-<td
->
+<td>
 <input name="description_format-subject:A" type="hidden" value="text/html" /><textarea cols="80" cubicweb:type="wysiwyg" id="description-subject:A" name="description-subject:A" onkeyup="autogrow(this)" rows="2" tabindex="5"></textarea>
 </td></tr>
 <tr class="rss_url_subject_row">
 <th class="labelCol"><label for="rss_url-subject:A">rss_url</label></th>
-<td
->
+<td>
 <input id="rss_url-subject:A" maxlength="128" name="rss_url-subject:A" size="45" tabindex="6" type="text" value="" />
 </td></tr>
 </table></fieldset>
 <table class="buttonbar">
 <tr>
-
 <td><button class="validateButton" tabindex="7" type="submit" value="button_ok"><img alt="OK_ICON" src="http://testing.fr/cubicweb/data/ok.png" />button_ok</button></td>
-
 <td><button class="validateButton" onclick="cw.reledit.cleanupAfterCancel(&#39;long_desc-subject-%(eid)s&#39;)" tabindex="8" type="button" value="button_cancel"><img alt="CANCEL_ICON" src="http://testing.fr/cubicweb/data/cancel.png" />button_cancel</button></td>
-
 </tr></table>
 </fieldset>
 </form><div id="long_desc-subject-%(eid)s" class="editableField hidden"><div id="long_desc-subject-%(eid)s-add" class="editableField" onclick="cw.reledit.loadInlineEditionForm(&#39;edition&#39;, %(eid)s, &#39;long_desc&#39;, &#39;subject&#39;, &#39;long_desc-subject-%(eid)s&#39;, false, &#39;autolimited&#39;);" title="click to add a value"><img title="click to add a value" src="data/plus.png" alt="click to add a value"/></div></div></div>""",
@@ -152,8 +143,7 @@ class ClickAndEditFormTC(ReleditMixinTC, CubicWebTC):
 <fieldset class="default">
 <table class="">
 <tr class="manager_subject_row">
-<td
->
+<td>
 <select id="manager-subject:%(eid)s" name="manager-subject:%(eid)s" size="1" tabindex="9">
 <option value="__cubicweb_internal_field__"></option>
 <option value="%(toto)s">Toto</option>
@@ -162,11 +152,8 @@ class ClickAndEditFormTC(ReleditMixinTC, CubicWebTC):
 </table></fieldset>
 <table class="buttonbar">
 <tr>
-
 <td><button class="validateButton" tabindex="10" type="submit" value="button_ok"><img alt="OK_ICON" src="http://testing.fr/cubicweb/data/ok.png" />button_ok</button></td>
-
 <td><button class="validateButton" onclick="cw.reledit.cleanupAfterCancel(&#39;manager-subject-%(eid)s&#39;)" tabindex="11" type="button" value="button_cancel"><img alt="CANCEL_ICON" src="http://testing.fr/cubicweb/data/cancel.png" />button_cancel</button></td>
-
 </tr></table>
 </fieldset>
 </form><div id="manager-subject-%(eid)s" class="editableField hidden"><div id="manager-subject-%(eid)s-update" class="editableField" onclick="cw.reledit.loadInlineEditionForm(&#39;base&#39;, %(eid)s, &#39;manager&#39;, &#39;subject&#39;, &#39;manager-subject-%(eid)s&#39;, false, &#39;autolimited&#39;);" title="click to edit this field"><img title="click to edit this field" src="data/pen_icon.png" alt="click to edit this field"/></div></div></div>""",

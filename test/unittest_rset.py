@@ -16,9 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""unit tests for module cubicweb.utils
-
-"""
+"""unit tests for module cubicweb.utils"""
 
 from urlparse import urlsplit
 import pickle
@@ -51,7 +49,7 @@ class AttrDescIteratorTC(TestCase):
             'Any C where C is Company, C employs P' : [],
             }
         for rql, relations in queries.items():
-            result = list(attr_desc_iterator(parse(rql).children[0]))
+            result = list(attr_desc_iterator(parse(rql).children[0], 0, 0))
             self.assertEqual((rql, result), (rql, relations))
 
     def test_relations_description_indexed(self):
@@ -61,8 +59,8 @@ class AttrDescIteratorTC(TestCase):
             {0: [(2,'employs', 'subject')], 1: [(3,'login', 'subject'), (4,'mail', 'subject')]},
             }
         for rql, results in queries.items():
-            for var_index, relations in results.items():
-                result = list(attr_desc_iterator(parse(rql).children[0], var_index))
+            for idx, relations in results.items():
+                result = list(attr_desc_iterator(parse(rql).children[0], idx, idx))
                 self.assertEqual(result, relations)
 
 
@@ -157,13 +155,13 @@ class ResultSetTC(CubicWebTC):
         rs.req = self.request()
         rs.vreg = self.vreg
 
-        rs2 = rs.sorted_rset(lambda e:e['login'])
+        rs2 = rs.sorted_rset(lambda e:e.cw_attr_cache['login'])
         self.assertEqual(len(rs2), 3)
         self.assertEqual([login for _, login in rs2], ['adim', 'nico', 'syt'])
         # make sure rs is unchanged
         self.assertEqual([login for _, login in rs], ['adim', 'syt', 'nico'])
 
-        rs2 = rs.sorted_rset(lambda e:e['login'], reverse=True)
+        rs2 = rs.sorted_rset(lambda e:e.cw_attr_cache['login'], reverse=True)
         self.assertEqual(len(rs2), 3)
         self.assertEqual([login for _, login in rs2], ['syt', 'nico', 'adim'])
         # make sure rs is unchanged
@@ -186,8 +184,7 @@ class ResultSetTC(CubicWebTC):
                        description=[['CWUser', 'String', 'String']] * 5)
         rs.req = self.request()
         rs.vreg = self.vreg
-
-        rsets = rs.split_rset(lambda e:e['login'])
+        rsets = rs.split_rset(lambda e:e.cw_attr_cache['login'])
         self.assertEqual(len(rsets), 3)
         self.assertEqual([login for _, login,_ in rsets[0]], ['adim', 'adim'])
         self.assertEqual([login for _, login,_ in rsets[1]], ['syt'])
@@ -195,7 +192,7 @@ class ResultSetTC(CubicWebTC):
         # make sure rs is unchanged
         self.assertEqual([login for _, login,_ in rs], ['adim', 'adim', 'syt', 'nico', 'nico'])
 
-        rsets = rs.split_rset(lambda e:e['login'], return_dict=True)
+        rsets = rs.split_rset(lambda e:e.cw_attr_cache['login'], return_dict=True)
         self.assertEqual(len(rsets), 3)
         self.assertEqual([login for _, login,_ in rsets['nico']], ['nico', 'nico'])
         self.assertEqual([login for _, login,_ in rsets['adim']], ['adim', 'adim'])
@@ -230,12 +227,12 @@ class ResultSetTC(CubicWebTC):
         self.request().create_entity('CWUser', login=u'adim', upassword='adim',
                                      surname=u'di mascio', firstname=u'adrien')
         e = self.execute('Any X,T WHERE X login "adim", X surname T').get_entity(0, 0)
-        self.assertEqual(e['surname'], 'di mascio')
-        self.assertRaises(KeyError, e.__getitem__, 'firstname')
-        self.assertRaises(KeyError, e.__getitem__, 'creation_date')
+        self.assertEqual(e.cw_attr_cache['surname'], 'di mascio')
+        self.assertRaises(KeyError, e.cw_attr_cache.__getitem__, 'firstname')
+        self.assertRaises(KeyError, e.cw_attr_cache.__getitem__, 'creation_date')
         self.assertEqual(pprelcachedict(e._cw_related_cache), [])
         e.complete()
-        self.assertEqual(e['firstname'], 'adrien')
+        self.assertEqual(e.cw_attr_cache['firstname'], 'adrien')
         self.assertEqual(pprelcachedict(e._cw_related_cache), [])
 
     def test_get_entity_advanced(self):
@@ -246,20 +243,20 @@ class ResultSetTC(CubicWebTC):
         e = rset.get_entity(0, 0)
         self.assertEqual(e.cw_row, 0)
         self.assertEqual(e.cw_col, 0)
-        self.assertEqual(e['title'], 'zou')
-        self.assertRaises(KeyError, e.__getitem__, 'path')
+        self.assertEqual(e.cw_attr_cache['title'], 'zou')
+        self.assertRaises(KeyError, e.cw_attr_cache.__getitem__, 'path')
         self.assertEqual(e.view('text'), 'zou')
         self.assertEqual(pprelcachedict(e._cw_related_cache), [])
 
         e = rset.get_entity(0, 1)
         self.assertEqual(e.cw_row, 0)
         self.assertEqual(e.cw_col, 1)
-        self.assertEqual(e['login'], 'anon')
-        self.assertRaises(KeyError, e.__getitem__, 'firstname')
+        self.assertEqual(e.cw_attr_cache['login'], 'anon')
+        self.assertRaises(KeyError, e.cw_attr_cache.__getitem__, 'firstname')
         self.assertEqual(pprelcachedict(e._cw_related_cache),
                           [])
         e.complete()
-        self.assertEqual(e['firstname'], None)
+        self.assertEqual(e.cw_attr_cache['firstname'], None)
         self.assertEqual(e.view('text'), 'anon')
         self.assertEqual(pprelcachedict(e._cw_related_cache),
                           [])
@@ -282,17 +279,17 @@ class ResultSetTC(CubicWebTC):
         rset = self.execute('Any X,U,S,XT,UL,SN WHERE X created_by U, U in_state S, '
                             'X title XT, S name SN, U login UL, X eid %s' % e.eid)
         e = rset.get_entity(0, 0)
-        self.assertEqual(e['title'], 'zou')
+        self.assertEqual(e.cw_attr_cache['title'], 'zou')
         self.assertEqual(pprelcachedict(e._cw_related_cache),
-                          [('created_by_subject', [5])])
+                          [('created_by_subject', [self.user().eid])])
         # first level of recursion
         u = e.created_by[0]
-        self.assertEqual(u['login'], 'admin')
-        self.assertRaises(KeyError, u.__getitem__, 'firstname')
+        self.assertEqual(u.cw_attr_cache['login'], 'admin')
+        self.assertRaises(KeyError, u.cw_attr_cache.__getitem__, 'firstname')
         # second level of recursion
         s = u.in_state[0]
-        self.assertEqual(s['name'], 'activated')
-        self.assertRaises(KeyError, s.__getitem__, 'description')
+        self.assertEqual(s.cw_attr_cache['name'], 'activated')
+        self.assertRaises(KeyError, s.cw_attr_cache.__getitem__, 'description')
 
 
     def test_get_entity_cache_with_left_outer_join(self):
@@ -322,7 +319,7 @@ class ResultSetTC(CubicWebTC):
             etype, n = expected[entity.cw_row]
             self.assertEqual(entity.__regid__, etype)
             attr = etype == 'Bookmark' and 'title' or 'name'
-            self.assertEqual(entity[attr], n)
+            self.assertEqual(entity.cw_attr_cache[attr], n)
 
     def test_related_entity_optional(self):
         e = self.request().create_entity('Bookmark', title=u'aaaa', path=u'path')
@@ -331,7 +328,7 @@ class ResultSetTC(CubicWebTC):
         self.assertEqual(entity, None)
         self.assertEqual(rtype, None)
 
-    def test_related_entity_union_subquery(self):
+    def test_related_entity_union_subquery_1(self):
         e = self.request().create_entity('Bookmark', title=u'aaaa', path=u'path')
         rset = self.execute('Any X,N ORDERBY N WITH X,N BEING '
                             '((Any X,N WHERE X is CWGroup, X name N)'
@@ -340,10 +337,14 @@ class ResultSetTC(CubicWebTC):
         entity, rtype = rset.related_entity(0, 1)
         self.assertEqual(entity.eid, e.eid)
         self.assertEqual(rtype, 'title')
+        self.assertEqual(entity.title, 'aaaa')
         entity, rtype = rset.related_entity(1, 1)
         self.assertEqual(entity.__regid__, 'CWGroup')
         self.assertEqual(rtype, 'name')
-        #
+        self.assertEqual(entity.name, 'guests')
+
+    def test_related_entity_union_subquery_2(self):
+        e = self.request().create_entity('Bookmark', title=u'aaaa', path=u'path')
         rset = self.execute('Any X,N ORDERBY N WHERE X is Bookmark WITH X,N BEING '
                             '((Any X,N WHERE X is CWGroup, X name N)'
                             ' UNION '
@@ -351,7 +352,10 @@ class ResultSetTC(CubicWebTC):
         entity, rtype = rset.related_entity(0, 1)
         self.assertEqual(entity.eid, e.eid)
         self.assertEqual(rtype, 'title')
-        #
+        self.assertEqual(entity.title, 'aaaa')
+
+    def test_related_entity_union_subquery_3(self):
+        e = self.request().create_entity('Bookmark', title=u'aaaa', path=u'path')
         rset = self.execute('Any X,N ORDERBY N WITH N,X BEING '
                             '((Any N,X WHERE X is CWGroup, X name N)'
                             ' UNION '
@@ -359,6 +363,18 @@ class ResultSetTC(CubicWebTC):
         entity, rtype = rset.related_entity(0, 1)
         self.assertEqual(entity.eid, e.eid)
         self.assertEqual(rtype, 'title')
+        self.assertEqual(entity.title, 'aaaa')
+
+    def test_related_entity_union_subquery_4(self):
+        e = self.request().create_entity('Bookmark', title=u'aaaa', path=u'path')
+        rset = self.execute('Any X,X, N ORDERBY N WITH X,N BEING '
+                            '((Any X,N WHERE X is CWGroup, X name N)'
+                            ' UNION '
+                            ' (Any X,N WHERE X is Bookmark, X title N))')
+        entity, rtype = rset.related_entity(0, 2)
+        self.assertEqual(entity.eid, e.eid)
+        self.assertEqual(rtype, 'title')
+        self.assertEqual(entity.title, 'aaaa')
 
     def test_related_entity_trap_subquery(self):
         req = self.request()
@@ -384,6 +400,14 @@ class ResultSetTC(CubicWebTC):
                           set(['CWUser',]))
         self.assertEqual(set(e.e_schema.type for e in rset.entities(1)),
                           set(['CWGroup',]))
+
+    def test_iter_rows_with_entities(self):
+        rset = self.execute('Any U,UN,G,GN WHERE U in_group G, U login UN, G name GN')
+        # make sure we have at least one element
+        self.failUnless(rset)
+        out = list(rset.iter_rows_with_entities())[0]
+        self.assertEqual( out[0].login, out[1] )
+        self.assertEqual( out[2].name, out[3] )
 
     def test_printable_rql(self):
         rset = self.execute(u'CWEType X WHERE X final FALSE')

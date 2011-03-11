@@ -24,6 +24,10 @@ from cubicweb.selectors import match_kwargs
 
 
 class PyValTableView(View):
+    """display a list of list of values into an html table.
+
+    Take care, content is NOT xml-escaped.
+    """
     __regid__ = 'pyvaltable'
     __select__ = match_kwargs('pyvalue')
 
@@ -50,6 +54,10 @@ class PyValTableView(View):
 
 
 class PyValListView(View):
+    """display a list of values into an html list.
+
+    Take care, content is NOT xml-escaped.
+    """
     __regid__ = 'pyvallist'
     __select__ = match_kwargs('pyvalue')
 

@@ -31,7 +31,9 @@ Here are the base renderers available:
 .. autoclass:: cubicweb.web.views.formrenderers.EntityInlinedFormRenderer
 
 """
+
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 from warnings import warn
 
@@ -41,7 +43,7 @@ from logilab.mtconverter import xml_escape
 from cubicweb import tags
 from cubicweb.appobject import AppObject
 from cubicweb.selectors import is_instance, yes
-from cubicweb.utils import json_dumps
+from cubicweb.utils import json_dumps, support_args
 from cubicweb.web import eid_param, formwidgets as fwdgs
 
 
@@ -53,6 +55,8 @@ def checkbox(name, value, attrs='', checked=None):
         name, value, checked, attrs)
 
 def field_label(form, field):
+    if callable(field.label):
+        return field.label(form, field)
     # XXX with 3.6 we can now properly rely on 'if field.role is not None' and
     # stop having a tuple for label
     if isinstance(field.label, tuple): # i.e. needs contextual translation
@@ -102,23 +106,23 @@ class FormRenderer(AppObject):
 
     # renderer interface ######################################################
 
-    def render(self, form, values):
+    def render(self, w, form, values):
         self._set_options(values)
         form.add_media()
         data = []
-        w = data.append
-        w(self.open_form(form, values))
+        _w = data.append
+        _w(self.open_form(form, values))
         if self.display_progress_div:
-            w(u'<div id="progress">%s</div>' % self._cw._('validating...'))
-        w(u'<fieldset>')
-        self.render_fields(w, form, values)
-        self.render_buttons(w, form)
-        w(u'</fieldset>')
-        w(self.close_form(form, values))
+            _w(u'<div id="progress">%s</div>' % self._cw._('validating...'))
+        _w(u'\n<fieldset>\n')
+        self.render_fields(_w, form, values)
+        self.render_buttons(_w, form)
+        _w(u'\n</fieldset>\n')
+        _w(self.close_form(form, values))
         errormsg = self.error_message(form)
         if errormsg:
             data.insert(0, errormsg)
-        return '\n'.join(data)
+        w(''.join(data))
 
     def render_label(self, form, field):
         if field.label is None:
@@ -133,7 +137,12 @@ class FormRenderer(AppObject):
         help = []
         descr = field.help
         if callable(descr):
-            descr = descr(form)
+            if support_args(descr, 'form', 'field'):
+                descr = descr(form, field)
+            else:
+                warn("[3.10] field's help callback must now take form and field as argument (%s)"
+                     % field, DeprecationWarning)
+                descr = descr(form)
         if descr:
             help.append('<div class="helper">%s</div>' % self._cw._(descr))
         example = field.example_format(self._cw)
@@ -172,29 +181,29 @@ class FormRenderer(AppObject):
 
     def open_form(self, form, values):
         if form.needs_multipart:
-            enctype = 'multipart/form-data'
+            enctype = u'multipart/form-data'
         else:
-            enctype = 'application/x-www-form-urlencoded'
-        tag = ('<form action="%s" method="post" enctype="%s"' % (
+            enctype = u'application/x-www-form-urlencoded'
+        tag = (u'<form action="%s" method="post" enctype="%s"' % (
             xml_escape(form.form_action() or '#'), enctype))
         if form.domid:
-            tag += ' id="%s"' % form.domid
+            tag += u' id="%s"' % form.domid
         if form.onsubmit:
-            tag += ' onsubmit="%s"' % xml_escape(form.onsubmit % dictattr(form))
+            tag += u' onsubmit="%s"' % xml_escape(form.onsubmit % dictattr(form))
         if form.cssstyle:
-            tag += ' style="%s"' % xml_escape(form.cssstyle)
+            tag += u' style="%s"' % xml_escape(form.cssstyle)
         if form.cssclass:
-            tag += ' class="%s"' % xml_escape(form.cssclass)
+            tag += u' class="%s"' % xml_escape(form.cssclass)
         if form.cwtarget:
-            tag += ' cubicweb:target="%s"' % xml_escape(form.cwtarget)
-        return tag + '>'
+            tag += u' cubicweb:target="%s"' % xml_escape(form.cwtarget)
+        return tag + u'>'
 
     def close_form(self, form, values):
         """seems dumb but important for consistency w/ close form, and necessary
         for form renderers overriding open_form to use something else or more than
         and <form>
         """
-        return '</form>'
+        return u'</form>'
 
     def render_fields(self, w, form, values):
         fields = self._render_hidden_fields(w, form)
@@ -212,6 +221,7 @@ class FormRenderer(AppObject):
         for field in form.fields:
             if not field.is_visible():
                 w(field.render(form, self))
+                w(u'\n')
                 fields.remove(field)
         return fields
 
@@ -229,28 +239,29 @@ class FormRenderer(AppObject):
             except KeyError:
                 self.warning('no such fieldset: %s (%s)', fieldset, form)
                 continue
-            w(u'<fieldset class="%s">' % (fieldset or u'default'))
+            w(u'<fieldset class="%s">\n' % (fieldset or u'default'))
             if fieldset:
                 w(u'<legend>%s</legend>' % self._cw._(fieldset))
-            w(u'<table class="%s">' % self.table_class)
+            w(u'<table class="%s">\n' % self.table_class)
             for field in fields:
-                w(u'<tr class="%s_%s_row">' % (field.name, field.role))
+                w(u'<tr class="%s_%s_row">\n' % (field.name, field.role))
                 if self.display_label and field.label is not None:
-                    w(u'<th class="labelCol">%s</th>' % self.render_label(form, field))
-                w('<td')
+                    w(u'<th class="labelCol">%s</th>\n' % self.render_label(form, field))
+                w(u'<td')
                 if field.label is None:
-                    w(' colspan="2"')
+                    w(u' colspan="2"')
                 error = form.field_error(field)
                 if error:
                     w(u' class="error"')
-                w(u'>')
+                w(u'>\n')
                 w(field.render(form, self))
+                w(u'\n')
                 if error:
                     self.render_error(w, error)
                 if self.display_help:
                     w(self.render_help(form, field))
-                w(u'</td></tr>')
-            w(u'</table></fieldset>')
+                w(u'</td></tr>\n')
+            w(u'</table></fieldset>\n')
         if byfieldset:
             self.warning('unused fieldsets: %s', ', '.join(byfieldset))
 
@@ -441,10 +452,8 @@ class EntityInlinedFormRenderer(EntityFormRenderer):
     """
     __regid__ = 'inline'
 
-    def render(self, form, values):
+    def render(self, w, form, values):
         form.add_media()
-        data = []
-        w = data.append
         try:
             w(u'<div id="div-%(divid)s" onclick="%(divonclick)s">' % values)
         except KeyError:
@@ -458,7 +467,7 @@ class EntityInlinedFormRenderer(EntityFormRenderer):
             values['removemsg'] = self._cw._('remove-inlined-entity-form')
             w(u'<div class="iformTitle"><span>%(title)s</span> '
               '#<span class="icounter">%(counter)s</span> '
-              '[<a href="javascript: %(removejs)s;noop();">%(removemsg)s</a>]</div>'
+              '[<a href="javascript: %(removejs)s;$.noop();">%(removemsg)s</a>]</div>'
               % values)
         else:
             w(u'<div class="iformTitle"><span>%(title)s</span> '
@@ -470,7 +479,6 @@ class EntityInlinedFormRenderer(EntityFormRenderer):
             values.pop(key, None)
         self.render_fields(w, form, values)
         w(u'</div></div>')
-        return '\n'.join(data)
 
     def render_fields(self, w, form, values):
         w(u'<fieldset id="fs-%(divid)s">' % values)

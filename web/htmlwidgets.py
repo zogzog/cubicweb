@@ -19,17 +19,18 @@
 
 those are in cubicweb since we need to know available widgets at schema
 serialization time
-
 """
 
-from math import floor
 import random
+from math import floor
 
 from logilab.mtconverter import xml_escape
+from logilab.common.deprecation import class_deprecated
 
 from cubicweb.utils import UStringIO
 from cubicweb.uilib import toggle_action, htmlescape
 from cubicweb.web import jsonize
+from cubicweb.web.component import _bwcompatible_render_item
 
 # XXX HTMLWidgets should have access to req (for datadir / static urls,
 #     i18n strings, etc.)
@@ -55,7 +56,8 @@ class HTMLWidget(object):
         return False
 
 
-class BoxWidget(HTMLWidget):
+class BoxWidget(HTMLWidget): # XXX Deprecated
+
     def __init__(self, title, id, items=None, _class="boxFrame",
                  islist=True, shadow=True, escape=True):
         self.title = title
@@ -108,13 +110,16 @@ class BoxWidget(HTMLWidget):
         if self.items:
             self.box_begin_content()
             for item in self.items:
-                item.render(self.w)
+                _bwcompatible_render_item(self.w, item)
             self.box_end_content()
         self.w(u'</div>')
 
 
 class SideBoxWidget(BoxWidget):
     """default CubicWeb's sidebox widget"""
+    __metaclass__ = class_deprecated
+    __deprecation_warning__ = '[3.10] class %(cls)s is deprecated'
+
     title_class = u'sideBoxTitle'
     main_div_class = u'sideBoxBody'
     listing_class = ''
@@ -125,6 +130,7 @@ class SideBoxWidget(BoxWidget):
 
 
 class MenuWidget(BoxWidget):
+
     main_div_class = 'menuContent'
     listing_class = 'menuListing'
 
@@ -134,8 +140,9 @@ class MenuWidget(BoxWidget):
         self.w(u'</div>\n')
 
 
-class RawBoxItem(HTMLWidget):
+class RawBoxItem(HTMLWidget): # XXX deprecated
     """a simpe box item displaying raw data"""
+
     def __init__(self, label, liclass=None):
         self.label = label
         self.liclass = liclass
@@ -154,6 +161,7 @@ class RawBoxItem(HTMLWidget):
 
 class BoxMenu(RawBoxItem):
     """a menu in a box"""
+
     link_class = 'boxMenu'
 
     def __init__(self, label, items=None, isitem=True, liclass=None, ident=None,
@@ -182,7 +190,7 @@ class BoxMenu(RawBoxItem):
             toggle_action(ident), self.link_class, self.label))
         self._begin_menu(ident)
         for item in self.items:
-            item.render(self.w)
+            _bwcompatible_render_item(self.w, item)
         self._end_menu()
         if self.isitem:
             self.w(u'</li>')
@@ -203,6 +211,8 @@ class PopupBoxMenu(BoxMenu):
 
 class BoxField(HTMLWidget):
     """couples label / value meant to be displayed in a box"""
+    __metaclass__ = class_deprecated
+    __deprecation_warning__ = '[3.10] class %(cls)s is deprecated'
     def __init__(self, label, value):
         self.label = label
         self.value = value
@@ -214,6 +224,8 @@ class BoxField(HTMLWidget):
 
 class BoxSeparator(HTMLWidget):
     """a menu separator"""
+    __metaclass__ = class_deprecated
+    __deprecation_warning__ = '[3.10] class %(cls)s is deprecated'
 
     def _render(self):
         self.w(u'</ul><hr class="boxSeparator"/><ul>')
@@ -221,6 +233,8 @@ class BoxSeparator(HTMLWidget):
 
 class BoxLink(HTMLWidget):
     """a link in a box"""
+    __metaclass__ = class_deprecated
+    __deprecation_warning__ = '[3.10] class %(cls)s is deprecated'
     def __init__(self, href, label, _class='', title='', ident='', escape=False):
         self.href = href
         if escape:
@@ -242,6 +256,8 @@ class BoxLink(HTMLWidget):
 
 class BoxHtml(HTMLWidget):
     """a form in a box"""
+    __metaclass__ = class_deprecated
+    __deprecation_warning__ = '[3.10] class %(cls)s is deprecated'
     def __init__(self, rawhtml):
         self.rawhtml = rawhtml
 
@@ -267,6 +283,7 @@ class TableColumn(object):
     def add_attr(self, attr, value):
         self.cell_attrs[attr] = value
 
+
 class SimpleTableModel(object):
     """
     uses a list of lists as a storage backend
@@ -277,7 +294,6 @@ class SimpleTableModel(object):
     """
     def __init__(self, rows):
         self._rows = rows
-
 
     def get_rows(self):
         return self._rows

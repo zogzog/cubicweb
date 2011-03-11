@@ -19,9 +19,9 @@ from cubicweb.server.session import hooks_control
 sourcescfg = repo.config.sources()
 backupcfg = cwconfig.instance_configuration(backupinstance)
 backupcfg.repairing = True
-backuprepo, backupcnx = dbapi.in_memory_cnx(backupcfg, sourcescfg['admin']['login'],
-                                            password=sourcescfg['admin']['password'],
-                                            host='localhost')
+backuprepo, backupcnx = dbapi.in_memory_repo_cnx(backupcfg, sourcescfg['admin']['login'],
+                                                 password=sourcescfg['admin']['password'],
+                                                 host='localhost')
 backupcu = backupcnx.cursor()
 
 with hooks_control(session, session.HOOKS_DENY_ALL):

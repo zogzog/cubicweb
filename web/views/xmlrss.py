@@ -29,7 +29,7 @@ from cubicweb.selectors import (is_instance, non_final_entity, one_line_rset,
 from cubicweb.view import EntityView, EntityAdapter, AnyRsetView, Component
 from cubicweb.view import implements_adapter_compat
 from cubicweb.uilib import simple_sgml_tag
-from cubicweb.web import httpcache, box
+from cubicweb.web import httpcache, component
 
 
 # base xml views ##############################################################
@@ -68,7 +68,7 @@ class XMLItemView(EntityView):
                 value = entity.eid
             else:
                 try:
-                    value = entity[attr]
+                    value = entity.cw_attr_cache[attr]
                 except KeyError:
                     # Bytes
                     continue
@@ -122,6 +122,7 @@ class XMLRsetView(AnyRsetView):
 # RSS stuff ###################################################################
 
 class IFeedAdapter(EntityAdapter):
+    __needs_bw_compat__ = True
     __regid__ = 'IFeed'
     __select__ = is_instance('Any')
 
@@ -148,25 +149,25 @@ class RSSEntityFeedURL(Component):
         return entity.cw_adapt_to('IFeed').rss_feed_url()
 
 
-class RSSIconBox(box.BoxTemplate):
+class RSSIconBox(component.CtxComponent):
     """just display the RSS icon on uniform result set"""
     __regid__ = 'rss'
-    __select__ = (box.BoxTemplate.__select__
+    __select__ = (component.CtxComponent.__select__
                   & appobject_selectable('components', 'rss_feed_url'))
 
     visible = False
     order = 999
 
-    def call(self, **kwargs):
+    def render(self, w, **kwargs):
         try:
             rss = self._cw.uiprops['RSS_LOGO']
         except KeyError:
             self.error('missing RSS_LOGO external resource')
             return
         urlgetter = self._cw.vreg['components'].select('rss_feed_url', self._cw,
-                                                   rset=self.cw_rset)
+                                                       rset=self.cw_rset)
         url = urlgetter.feed_url()
-        self.w(u'<a href="%s"><img src="%s" alt="rss"/></a>\n' % (xml_escape(url), rss))
+        w(u'<a href="%s"><img src="%s" alt="rss"/></a>\n' % (xml_escape(url), rss))
 
 
 class RSSView(XMLView):

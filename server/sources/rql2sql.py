@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -365,6 +365,11 @@ class StateInfo(object):
             yield 1
             return
         thisexistssols, thisexistsvars = self.existssols[exists]
+        # when iterating other solutions inner to an EXISTS subquery, we should
+        # reset variables which have this exists node as scope at each iteration
+        for var in exists.stmt.defined_vars.itervalues():
+            if var.scope is exists:
+                thisexistsvars.add(var.name)
         origsol = self.solution
         origtables = self.tables
         done = self.done
@@ -416,7 +421,7 @@ def extract_fake_having_terms(having):
                     p = compnode.parent
                     oor = None
                     while not isinstance(p, Select):
-                        if isinstance(p, Or):
+                        if isinstance(p, (Or, Not)):
                             oor = p
                         p = p.parent
                     if oor is not None:
@@ -434,7 +439,7 @@ def extract_fake_having_terms(having):
             while not isinstance(p, Select):
                 if p in ors or p is None: # p is None for nodes already in fakehaving
                     break
-                if isinstance(p, Or):
+                if isinstance(p, (Or, Not)):
                     oor = p
                 p = p.parent
             else:
@@ -508,7 +513,7 @@ class SQLGenerator(object):
                 select.need_distinct = True
         return self.__union_sql(union, needalias)
 
-    def union_sql(self, union, needalias=False): # pylint: disable-msg=E0202
+    def union_sql(self, union, needalias=False): # pylint: disable=E0202
         if len(union.children) == 1:
             return self.select_sql(union.children[0], needalias)
         sqls = ('(%s)' % self.select_sql(select, needalias)
@@ -991,24 +996,21 @@ class SQLGenerator(object):
         unification (eg X attr1 A, Y attr2 A). In case of selection,
         nothing to do here.
         """
-        contextrels = {}
         for var in rhs_vars:
             if var.name in self._varmap:
                 # ensure table is added
                 self._var_info(var.variable)
             principal = var.variable.stinfo.get('principal')
             if principal is not None and principal is not relation:
-                contextrels[var.name] = relation
-        if not contextrels:
-            return ''
-        # we have to generate unification expression
-        lhssql = self._inlined_var_sql(relation.children[0].variable,
-                                       relation.r_type)
-        try:
-            self._state.ignore_varmap = True
-            return '%s%s' % (lhssql, relation.children[1].accept(self))
-        finally:
-            self._state.ignore_varmap = False
+                # we have to generate unification expression
+                lhssql = self._inlined_var_sql(relation.children[0].variable,
+                                               relation.r_type)
+                try:
+                    self._state.ignore_varmap = True
+                    return '%s%s' % (lhssql, relation.children[1].accept(self))
+                finally:
+                    self._state.ignore_varmap = False
+        return ''
 
     def _visit_attribute_relation(self, rel):
         """generate SQL for an attribute relation"""
@@ -1337,10 +1339,10 @@ class SQLGenerator(object):
 
     # tables handling #########################################################
 
-    def alias_and_add_table(self, tablename):
+    def alias_and_add_table(self, tablename, scope=-1):
         alias = '%s%s' % (tablename, self._state.count)
         self._state.count += 1
-        self.add_table('%s AS %s' % (tablename, alias), alias)
+        self.add_table('%s AS %s' % (tablename, alias), alias, scope)
         return alias
 
     def add_table(self, table, key=None, scope=-1):
@@ -1437,6 +1439,7 @@ class SQLGenerator(object):
             except AttributeError:
                 pass
         self._state.done.add(relation)
-        alias = self.alias_and_add_table(self.dbhelper.fti_table)
+        scope = self._state.scopes[relation.scope]
+        alias = self.alias_and_add_table(self.dbhelper.fti_table, scope=scope)
         relation._q_sqltable = alias
         return alias

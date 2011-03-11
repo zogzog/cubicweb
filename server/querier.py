@@ -38,7 +38,7 @@ from cubicweb.rset import ResultSet
 
 from cubicweb.server.utils import cleanup_solutions
 from cubicweb.server.rqlannotation import SQLGenAnnotator, set_qdata
-from cubicweb.server.ssplanner import READ_ONLY_RTYPES, add_types_restriction
+from cubicweb.server.ssplanner import READ_ONLY_RTYPES, add_types_restriction, EditedEntity
 from cubicweb.server.session import security_enabled
 
 def empty_rset(rql, args, rqlst=None):
@@ -450,7 +450,7 @@ class InsertPlan(ExecutionPlan):
         # save originaly selected variable, we may modify this
         # dictionary for substitution (query parameters)
         self.selected = rqlst.selection
-        # list of new or updated entities definition (utils.Entity)
+        # list of rows of entities definition (ssplanner.EditedEntity)
         self.e_defs = [[]]
         # list of new relation definition (3-uple (from_eid, r_type, to_eid)
         self.r_defs = set()
@@ -461,7 +461,6 @@ class InsertPlan(ExecutionPlan):
 
     def add_entity_def(self, edef):
         """add an entity definition to build"""
-        edef.querier_pending_relations = {}
         self.e_defs[-1].append(edef)
 
     def add_relation_def(self, rdef):
@@ -493,8 +492,9 @@ class InsertPlan(ExecutionPlan):
             self.e_defs[i][colidx] = edefs[0]
             samplerow = self.e_defs[i]
             for edef_ in edefs[1:]:
-                row = samplerow[:]
-                row[colidx] = edef_
+                row = [ed.clone() for i, ed in enumerate(samplerow)
+                       if i != colidx]
+                row.insert(colidx, edef_)
                 self.e_defs.append(row)
         # now, see if this entity def is referenced as subject in some relation
         # definition
@@ -560,15 +560,16 @@ class InsertPlan(ExecutionPlan):
             if isinstance(subj, basestring):
                 subj = typed_eid(subj)
             elif not isinstance(subj, (int, long)):
-                subj = subj.eid
+                subj = subj.entity.eid
             if isinstance(obj, basestring):
                 obj = typed_eid(obj)
             elif not isinstance(obj, (int, long)):
-                obj = obj.eid
+                obj = obj.entity.eid
             if repo.schema.rschema(rtype).inlined:
                 entity = session.entity_from_eid(subj)
-                entity[rtype] = obj
-                repo.glob_update_entity(session, entity, set((rtype,)))
+                edited = EditedEntity(entity)
+                edited.edited_attribute(rtype, obj)
+                repo.glob_update_entity(session, edited)
             else:
                 repo.glob_add_relation(session, subj, rtype, obj)
 
@@ -585,12 +586,12 @@ class QuerierHelper(object):
     def set_schema(self, schema):
         self.schema = schema
         repo = self._repo
-        # rql st and solution cache. Don't bother using a Cache instance: we
-        # should have a limited number of queries in there, since there are no
-        # entries in this cache for user queries (which have no args)
-        self._rql_cache = {}
-        # rql cache key cache
-        self._rql_ck_cache = Cache(repo.config['rql-cache-size'])
+        # rql st and solution cache.
+        self._rql_cache = Cache(repo.config['rql-cache-size'])
+        # rql cache key cache. Don't bother using a Cache instance: we should
+        # have a limited number of queries in there, since there are no entries
+        # in this cache for user queries (which have no args)
+        self._rql_ck_cache = {}
         # some cache usage stats
         self.cache_hit, self.cache_miss = 0, 0
         # rql parsing / analysing helper
@@ -601,9 +602,7 @@ class QuerierHelper(object):
         self._parse = rqlhelper.parse
         self._annotate = rqlhelper.annotate
         # rql planner
-        # note: don't use repo.sources, may not be built yet, and also "admin"
-        #       isn't an actual source
-        if len([uri for uri in repo.config.sources() if uri != 'admin']) < 2:
+        if len(repo.sources) < 2:
             from cubicweb.server.ssplanner import SSPlanner
             self._planner = SSPlanner(schema, rqlhelper)
         else:
@@ -611,6 +610,14 @@ class QuerierHelper(object):
             self._planner = MSPlanner(schema, rqlhelper)
         # sql generation annotator
         self.sqlgen_annotate = SQLGenAnnotator(schema).annotate
+
+    def set_planner(self):
+        if len(self._repo.sources) < 2:
+            from cubicweb.server.ssplanner import SSPlanner
+            self._planner = SSPlanner(self.schema, self._repo.vreg.rqlhelper)
+        else:
+            from cubicweb.server.msplanner import MSPlanner
+            self._planner = MSPlanner(self.schema, self._repo.vreg.rqlhelper)
 
     def parse(self, rql, annotate=False):
         """return a rql syntax tree for the given rql"""
@@ -649,11 +656,15 @@ class QuerierHelper(object):
                 print '*'*80
             print 'querier input', rql, args
         # parse the query and binds variables
+        cachekey = rql
         try:
-            cachekey = rql
             if args:
+                # search for named args in query which are eids (hence
+                # influencing query's solutions)
                 eidkeys = self._rql_ck_cache[rql]
                 if eidkeys:
+                    # if there are some, we need a better cache key, eg (rql +
+                    # entity type of each eid)
                     try:
                         cachekey = self._repo.querier_cache_key(session, rql,
                                                                 args, eidkeys)
@@ -667,15 +678,20 @@ class QuerierHelper(object):
             self.cache_miss += 1
             rqlst = self.parse(rql)
             try:
+                # compute solutions for rqlst and return named args in query
+                # which are eids. Notice that if you may not need `eidkeys`, we
+                # have to compute solutions anyway (kept as annotation on the
+                # tree)
                 eidkeys = self.solutions(session, rqlst, args)
             except UnknownEid:
                 # we want queries such as "Any X WHERE X eid 9999" return an
                 # empty result instead of raising UnknownEid
                 return empty_rset(rql, args, rqlst)
-            self._rql_ck_cache[rql] = eidkeys
-            if eidkeys:
-                cachekey = self._repo.querier_cache_key(session, rql, args,
-                                                        eidkeys)
+            if args and not rql in self._rql_ck_cache:
+                self._rql_ck_cache[rql] = eidkeys
+                if eidkeys:
+                    cachekey = self._repo.querier_cache_key(session, rql, args,
+                                                            eidkeys)
             self._rql_cache[cachekey] = rqlst
         orig_rqlst = rqlst
         if rqlst.TYPE != 'select':

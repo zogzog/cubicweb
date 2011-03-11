@@ -16,21 +16,26 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""unit tests for modules cubicweb.server.rqlannotation
-"""
+"""unit tests for modules cubicweb.server.rqlannotation"""
 
 from cubicweb.devtools import init_test_database
 from cubicweb.devtools.repotest import BaseQuerierTC
 
-repo, cnx = init_test_database()
 
-def teardown_module(*args):
+def setUpModule(*args):
+    global repo, cnx
+    repo, cnx = init_test_database(apphome=SQLGenAnnotatorTC.datadir)
+
+def tearDownModule(*args):
     global repo, cnx
     del repo, cnx
 
 
 class SQLGenAnnotatorTC(BaseQuerierTC):
-    repo = repo
+
+    def setUp(self):
+        self.__class__.repo = repo
+        super(SQLGenAnnotatorTC, self).setUp()
 
     def get_max_eid(self):
         # no need for cleanup here

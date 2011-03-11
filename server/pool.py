@@ -34,7 +34,7 @@ class ConnectionsPool(object):
         # dictionnary of (source, connection), indexed by sources'uri
         self.source_cnxs = {}
         for source in sources:
-            self.source_cnxs[source.uri] = (source, source.get_connection())
+            self.add_source(source)
         if not 'system' in self.source_cnxs:
             self.source_cnxs['system'] = self.source_cnxs[sources[0].uri]
         self._cursors = {}
@@ -49,6 +49,15 @@ class ConnectionsPool(object):
                 # None possible on sources without cursor support such as ldap
                 self._cursors[uri] = cursor
         return cursor
+
+    def add_source(self, source):
+        assert not source.uri in self.source_cnxs
+        self.source_cnxs[source.uri] = (source, source.get_connection())
+
+    def remove_source(self, source):
+        source, cnx = self.source_cnxs.pop(source.uri)
+        cnx.close()
+        self._cursors.pop(source.uri, None)
 
     def commit(self):
         """commit the current transaction for this user"""
@@ -144,11 +153,9 @@ class ConnectionsPool(object):
         self._cursors.pop(source.uri, None)
 
 
-from cubicweb.server.hook import (Operation, LateOperation, SingleOperation,
-                                  SingleLastOperation)
+from cubicweb.server.hook import Operation, LateOperation, SingleLastOperation
 from logilab.common.deprecation import class_moved, class_renamed
 Operation = class_moved(Operation)
 PreCommitOperation = class_renamed('PreCommitOperation', Operation)
 LateOperation = class_moved(LateOperation)
-SingleOperation = class_moved(SingleOperation)
 SingleLastOperation = class_moved(SingleLastOperation)

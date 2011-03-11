@@ -15,8 +15,10 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""the 'reedit' feature (eg edit attribute/relation from primary view)
-"""
+"""the 'reedit' feature (eg edit attribute/relation from primary view"""
+
+__docformat__ = "restructuredtext en"
+_ = unicode
 
 import copy
 from warnings import warn
@@ -76,10 +78,10 @@ class ClickAndEditFormView(EntityView):
         assert rtype
         assert role in ('subject', 'object'), '%s is not an acceptable role value' % role
         self._cw.add_css('cubicweb.form.css')
-        self._cw.add_js('cubicweb.reledit.js', 'cubicweb.edition.js')
+        self._cw.add_js(('cubicweb.reledit.js', 'cubicweb.edition.js', 'cubicweb.ajax.js'))
         entity = self.cw_rset.get_entity(row, col)
         rschema = self._cw.vreg.schema[rtype]
-        self._rules = rctrl.etype_get(entity.e_schema.type, rschema.type, role, '*')
+        self._rules = rctrl.etype_get(entity.e_schema, rschema, role, '*')
         if rvid is not None or default_value is not None:
             warn('[3.9] specifying rvid/default_value on select is deprecated, '
                  'reledit_ctrl rtag to control this' % self, DeprecationWarning)
@@ -209,7 +211,7 @@ class ClickAndEditFormView(EntityView):
         return rschema.has_perm(self._cw, 'delete', **kwargs)
 
     def _build_edit_zone(self):
-        return self._editzone % {'msg' : xml_escape(_(self._cw._(self._editzonemsg)))}
+        return self._editzone % {'msg' : xml_escape(self._cw._(self._editzonemsg))}
 
     def _build_delete_zone(self):
         return self._deletezone % {'msg': xml_escape(self._cw._(self._deletemsg))}
@@ -322,7 +324,7 @@ class ClickAndEditFormView(EntityView):
         w(u'<div id="%s-value" class="editableFieldValue">' % divid)
         w(value)
         w(u'</div>')
-        w(form.render(renderer=renderer))
+        form.render(w=w, renderer=renderer)
         w(u'<div id="%s" class="editableField hidden">' % divid)
 
     def _edit_action(self, divid, args, edit_related, add_related, _delete_related):

@@ -77,7 +77,7 @@ class URLPublisherTC(CubicWebTC):
         self.assertEqual(ctrl, 'view')
         self.assertEqual(len(rset), 1)
         self.assertEqual(rset.description[0][0], 'CWUser')
-        self.assertEqual(rset.printable_rql(), 'Any X,AA,AB,AC,AD WHERE X eid 5, X is CWUser, X login AA, X firstname AB, X surname AC, X modification_date AD')
+        self.assertEqual(rset.printable_rql(), 'Any X,AA,AB,AC,AD WHERE X eid %s, X is CWUser, X login AA, X firstname AB, X surname AC, X modification_date AD' % rset[0][0])
         # test non-ascii paths
         ctrl, rset = self.process('CWUser/login/%C3%BFsa%C3%BFe')
         self.assertEqual(ctrl, 'view')

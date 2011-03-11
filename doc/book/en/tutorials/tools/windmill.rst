@@ -150,7 +150,7 @@ Examples:
 
 If you want to change cubicweb test server parameters, you can check class
 variables from :class:`CubicWebServerConfig` or inherit it with overriding the
-:var:`configcls` attribute in :class:`CubicWebServerTC` ::
+:attr:`configcls` attribute in :class:`CubicWebServerTC` ::
 
 .. sourcecode:: python
 

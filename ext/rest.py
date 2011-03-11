@@ -47,6 +47,8 @@ from logilab.mtconverter import ESC_UCAR_TABLE, ESC_CAR_TABLE, xml_escape
 from cubicweb import UnknownEid
 from cubicweb.ext.html4zope import Writer
 
+from cubicweb.web.views import vid_from_rset # XXX better not to import c.w.views here...
+
 # We provide our own parser as an attempt to get rid of
 # state machine reinstanciation
 
@@ -93,6 +95,23 @@ def eid_reference_role(role, rawtext, text, lineno, inliner,
     return [nodes.reference(rawtext, utils.unescape(rest), refuri=ref,
                             **options)], []
 
+def rql_role(role, rawtext, text, lineno, inliner, options={}, content=[]):
+    """:rql:`Any X,Y WHERE X is CWUser, X login Y:table`"""
+    _cw = inliner.document.settings.context._cw
+    text = text.strip()
+    if ':' in text:
+        rql, vid = text.rsplit(u':', 1)
+        rql = rql.strip()
+    else:
+        rql, vid = text, None
+    _cw.ensure_ro_rql(rql)
+    rset = _cw.execute(rql, {'userid': _cw.user.eid})
+    if vid is None:
+        vid = vid_from_rset(_cw, rset, _cw.vreg.schema)
+    view = _cw.vreg['views'].select(vid, _cw, rset=rset)
+    content = view.render()
+    set_classes(options)
+    return [nodes.raw('', content, format='html')], []
 
 def winclude_directive(name, arguments, options, content, lineno,
                        content_offset, block_text, state, state_machine):
@@ -288,6 +307,7 @@ def cw_rest_init():
         return
     _INITIALIZED = True
     register_canonical_role('eid', eid_reference_role)
+    register_canonical_role('rql', rql_role)
     directives.register_directive('winclude', winclude_directive)
     if pygments_directive is not None:
         directives.register_directive('sourcecode', pygments_directive)

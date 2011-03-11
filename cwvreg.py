@@ -196,7 +196,7 @@ _ = unicode
 from warnings import warn
 
 from logilab.common.decorators import cached, clear_cache
-from logilab.common.deprecation import  deprecated
+from logilab.common.deprecation import deprecated, class_deprecated
 from logilab.common.modutils import cleanup_sys_modules
 
 from rql import RQLHelper
@@ -290,13 +290,18 @@ VRegistry.REGISTRY_FACTORY[None] = CWRegistry
 
 class ETypeRegistry(CWRegistry):
 
+    def clear_caches(self):
+        clear_cache(self, 'etype_class')
+        clear_cache(self, 'parent_classes')
+        from cubicweb import selectors
+        selectors._reset_is_instance_cache(self.vreg)
+
     def initialization_completed(self):
         """on registration completed, clear etype_class internal cache
         """
         super(ETypeRegistry, self).initialization_completed()
         # clear etype cache if you don't want to run into deep weirdness
-        clear_cache(self, 'etype_class')
-        clear_cache(self, 'parent_classes')
+        self.clear_caches()
 
     def register(self, obj, **kwargs):
         oid = kwargs.get('oid') or class_regid(obj)
@@ -389,6 +394,8 @@ class ViewsRegistry(CWRegistry):
         for vid, views in self.items():
             if vid[0] == '_':
                 continue
+            views = [view for view in views
+                     if not isinstance(view, class_deprecated)]
             try:
                 view = self._select_best(views, req, rset=rset, **kwargs)
                 if view.linkable():
@@ -421,6 +428,56 @@ class ActionsRegistry(CWRegistry):
 VRegistry.REGISTRY_FACTORY['actions'] = ActionsRegistry
 
 
+class CtxComponentsRegistry(CWRegistry):
+    def poss_visible_objects(self, *args, **kwargs):
+        """return an ordered list of possible components"""
+        context = kwargs.pop('context')
+        if '__cache' in kwargs:
+            cache = kwargs.pop('__cache')
+        elif kwargs.get('rset') is None:
+            cache = args[0]
+        else:
+            cache = kwargs['rset']
+        try:
+            cached = cache.__components_cache
+        except AttributeError:
+            ctxcomps = super(CtxComponentsRegistry, self).poss_visible_objects(
+                *args, **kwargs)
+            if cache is None:
+                components = []
+                for component in ctxcomps:
+                    cctx = component.cw_propval('context')
+                    if cctx == context:
+                        component.cw_extra_kwargs['context'] = cctx
+                        components.append(component)
+                return components
+            cached = cache.__components_cache = {}
+            for component in ctxcomps:
+                cctx = component.cw_propval('context')
+                component.cw_extra_kwargs['context'] = cctx
+                cached.setdefault(cctx, []).append(component)
+        thisctxcomps = cached.get(context, ())
+        # XXX set context for bw compat (should now be taken by comp.render())
+        for component in thisctxcomps:
+            component.cw_extra_kwargs['context'] = context
+        return thisctxcomps
+
+VRegistry.REGISTRY_FACTORY['ctxcomponents'] = CtxComponentsRegistry
+
+
+class BwCompatCWRegistry(object):
+    def __init__(self, vreg, oldreg, redirecttoreg):
+        self.vreg = vreg
+        self.oldreg = oldreg
+        self.redirecto = redirecttoreg
+
+    def __getattr__(self, attr):
+        warn('[3.10] you should now use the %s registry instead of the %s registry'
+             % (self.redirecto, self.oldreg), DeprecationWarning, stacklevel=2)
+        return getattr(self.vreg[self.redirecto], attr)
+
+    def clear(self): pass
+    def initialization_completed(self): pass
 
 class CubicWebVRegistry(VRegistry):
     """Central registry for the cubicweb instance, extending the generic
@@ -433,15 +490,23 @@ class CubicWebVRegistry(VRegistry):
     stored objects. Currently we have the following registries of objects known
     by the web instance (library may use some others additional registries):
 
-    * etypes
-    * views
-    * components
-    * actions
-    * forms
-    * formrenderers
-    * controllers, which are directly plugged into the application
-      object to handle request publishing XXX to merge with views
-    * contentnavigation XXX to merge with components? to kill?
+    * 'etypes', entity type classes
+
+    * 'views', views and templates (e.g. layout views)
+
+    * 'components', non contextual components, like magic search, url evaluators
+
+    * 'ctxcomponents', contextual components like boxes and dynamic section
+
+    * 'actions', contextual actions, eg links to display in predefined places in
+      the ui
+
+    * 'forms', describing logic of HTML form
+
+    * 'formrenderers', rendering forms to html
+
+    * 'controllers', primary objects to handle request publishing, directly
+      plugged into the application
     """
 
     def __init__(self, config, initlog=True):
@@ -456,6 +521,8 @@ class CubicWebVRegistry(VRegistry):
             # don't clear rtags during test, this may cause breakage with
             # manually imported appobject modules
             CW_EVENT_MANAGER.bind('before-registry-reload', clear_rtag_objects)
+        self['boxes'] = BwCompatCWRegistry(self, 'boxes', 'ctxcomponents')
+        self['contentnavigation'] = BwCompatCWRegistry(self, 'contentnavigation', 'ctxcomponents')
 
     def setdefault(self, regid):
         try:
@@ -487,7 +554,7 @@ class CubicWebVRegistry(VRegistry):
         if not self.initialized:
             self['propertydefs'] = {}
             self['propertyvalues'] = self.eprop_values = {}
-            for key, propdef in self.config.eproperty_definitions():
+            for key, propdef in self.config.cwproperty_definitions():
                 self.register_property(key, **propdef)
         CW_EVENT_MANAGER.emit('after-registry-reset', self)
 
@@ -713,7 +780,7 @@ class CubicWebVRegistry(VRegistry):
         vocab = pdef['vocabulary']
         if vocab is not None:
             if callable(vocab):
-                vocab = vocab(key, None) # XXX need a req object
+                vocab = vocab(None) # XXX need a req object
             if not value in vocab:
                 raise ValueError(_('unauthorized value'))
         return value
@@ -751,7 +818,7 @@ class CubicWebVRegistry(VRegistry):
     def possible_actions(self, req, rset=None, **kwargs):
         return self["actions"].possible_actions(req, rest=rset, **kwargs)
 
-    @deprecated('[3.4] use vreg["boxes"].select_object(...)')
+    @deprecated('[3.4] use vreg["ctxcomponents"].select_object(...)')
     def select_box(self, oid, *args, **kwargs):
         return self['boxes'].select_object(oid, *args, **kwargs)
 

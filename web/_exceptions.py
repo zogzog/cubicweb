@@ -1,4 +1,4 @@
-# pylint: disable-msg=W0401,W0614
+# pylint: disable=W0401,W0614
 # copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
@@ -62,7 +62,7 @@ class RemoteCallFailed(RequestError):
     """raised when a json remote call fails
     """
     def __init__(self, reason=''):
-        super(RequestError, self).__init__()
+        super(RemoteCallFailed, self).__init__()
         self.reason = reason
 
     def dumps(self):

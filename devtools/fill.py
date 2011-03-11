@@ -27,7 +27,7 @@ from decimal import Decimal
 
 from logilab.common import attrdict
 from yams.constraints import (SizeConstraint, StaticVocabularyConstraint,
-                              IntervalBoundConstraint, BoundConstraint,
+                              IntervalBoundConstraint, BoundaryConstraint,
                               Attribute, actual_value)
 from rql.utils import decompose_b26 as base_decompose_b26
 
@@ -185,10 +185,12 @@ title
             minvalue = maxvalue - (index * step) # i.e. randint(-index, 0)
         return choice(list(custom_range(minvalue, maxvalue, step)))
 
-    def _actual_boundary(self, entity, boundary):
+    def _actual_boundary(self, entity, attrname, boundary):
         if isinstance(boundary, Attribute):
             # ensure we've a value for this attribute
-            self.generate_attribute_value(entity, boundary.attr)
+            entity[attrname] = None # infinite loop safety belt
+            if not boundary.attr in entity:
+                self.generate_attribute_value(entity, boundary.attr)
             boundary = actual_value(boundary, entity)
         return boundary
 
@@ -196,13 +198,13 @@ title
         minvalue = maxvalue = None
         for cst in self.eschema.rdef(attrname).constraints:
             if isinstance(cst, IntervalBoundConstraint):
-                minvalue = self._actual_boundary(entity, cst.minvalue)
-                maxvalue = self._actual_boundary(entity, cst.maxvalue)
-            elif isinstance(cst, BoundConstraint):
+                minvalue = self._actual_boundary(entity, attrname, cst.minvalue)
+                maxvalue = self._actual_boundary(entity, attrname, cst.maxvalue)
+            elif isinstance(cst, BoundaryConstraint):
                 if cst.operator[0] == '<':
-                    maxvalue = self._actual_boundary(entity, cst.boundary)
+                    maxvalue = self._actual_boundary(entity, attrname, cst.boundary)
                 else:
-                    minvalue = self._actual_boundary(entity, cst.boundary)
+                    minvalue = self._actual_boundary(entity, attrname, cst.boundary)
         return minvalue, maxvalue
 
     def get_choice(self, entity, attrname):

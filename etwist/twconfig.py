@@ -23,7 +23,6 @@
 * the "all-in-one" configuration to get a web instance running in a twisted
   web server integrating a repository server in the same process (only available
   if the repository part of the software is installed
-
 """
 __docformat__ = "restructuredtext en"
 
@@ -31,7 +30,9 @@ from os.path import join
 
 from logilab.common.configuration import Method
 
+from cubicweb.cwconfig import CONFIGURATIONS
 from cubicweb.web.webconfig import WebConfiguration, merge_options
+
 
 class TwistedConfiguration(WebConfiguration):
     """web instance (in a twisted web server) client of a RQL server"""
@@ -44,6 +45,12 @@ class TwistedConfiguration(WebConfiguration):
           'default': None,
           'help': 'http server port number (default to 8080)',
           'group': 'web', 'level': 0,
+          }),
+        ('interface',
+         {'type' : 'string',
+          'default': "",
+          'help': 'http server address on which to listen (default to everywhere)',
+          'group': 'web', 'level': 1,
           }),
         ('max-post-length',
          {'type' : 'bytes',
@@ -76,12 +83,6 @@ class TwistedConfiguration(WebConfiguration):
 the repository rather than the user running the command',
           'group': 'main', 'level': WebConfiguration.mode == 'system'
           }),
-        ('session-time',
-         {'type' : 'time',
-          'default': '30min',
-          'help': 'session expiration time, default to 30 minutes',
-          'group': 'main', 'level': 1,
-          }),
         ('pyro-server',
          {'type' : 'yn',
           # pyro is only a recommends by default, so don't activate it here
@@ -98,6 +99,9 @@ the repository rather than the user running the command',
         from socket import gethostname
         return 'http://%s:%s/' % (self['host'] or gethostname(), self['port'] or 8080)
 
+
+CONFIGURATIONS.append(TwistedConfiguration)
+
 try:
     from cubicweb.server.serverconfig import ServerConfiguration
 
@@ -113,6 +117,9 @@ try:
         def pyro_enabled(self):
             """tell if pyro is activated for the in memory repository"""
             return self['pyro-server']
+
+
+    CONFIGURATIONS.append(AllInOneConfiguration)
 
 except ImportError:
     pass

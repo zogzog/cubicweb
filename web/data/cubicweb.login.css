@@ -5,20 +5,20 @@
  *  :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
  */
 
-div#popupLoginBox {
+div.popupLoginBox {
   position: absolute;
   z-index: 400;
   right: 0px;
   width: 26em;
   padding: 0px 1px 1px;
-  background: %(listingBorderColor)s; 
+  background: %(listingBorderColor)s;
 }
 
-div#popupLoginBox label{
+div.popupLoginBox label{
   font-weight: bold;
 }
 
-div#popupLoginBox div#loginContent {
+div.popupLoginBox div.loginContent {
   background: #e6e4ce;
   padding: 5px 3px 4px;
 }
@@ -30,7 +30,7 @@ div#loginBox {
   margin-left: -14em;
   width: 28em;
   background: #fff;
-  border: 2px solid %(actionBoxTitleBgColor)s;
+  border: 2px solid %(incontextBoxBodyBgColor)s;
   padding-bottom: 0.5em;
   text-align: center;
 }
@@ -40,7 +40,7 @@ div#loginBox h1 {
   font-size: 140%;
 }
 
-div#loginTitle {
+div.loginTitle {
   color: #fff;
   font-weight: bold;
   font-size: 140%;
@@ -49,18 +49,19 @@ div#loginTitle {
   background: %(headerBgColor)s url("banner.png") repeat-x top left;
 }
 
-div#loginBox div#loginContent form {
+div#loginBox div.loginContent form {
   padding-top: 1em;
   width: 90%;
   margin: auto;
 }
 
-#popupLoginBox table td {
+
+.popupLoginBox table td {
   padding: 0px 3px;
   white-space: nowrap;
 }
 
-#loginContent table {
+.loginContent table {
   padding: 0px 0.5em;
   margin: auto;
 }
@@ -74,17 +75,20 @@ div#loginBox div#loginContent form {
   margin-top: 0.6em;
  }
 
-#loginContent input.data {
+.loginContent input.data {
   width: 12em;
 }
 
+/* This is seriously debatable
+   These buttons render much more clearly as standard/default buttons
+ */
 .loginButton {
   border: 1px solid #edecd2;
-  border-color: #edecd2 %(actionBoxTitleBgColor)s %(actionBoxTitleBgColor)s  #edecd2;
+  border-color: #edecd2 %(incontextBoxBodyBgColor)s %(incontextBoxBodyBgColor)s  #edecd2;
   margin: 2px 0px 0px;
   background: #f0eff0 url("gradient-grey-up.png") left top repeat-x;
 }
 
-#loginContent .formButtonBar {
+.loginContent .formButtonBar {
   float: right;
 }

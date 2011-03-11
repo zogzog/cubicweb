@@ -22,16 +22,11 @@
 Resource mode
 -------------
 
-A resource *mode* is a predifined set of settings for various resources
+A resource *mode* is a predefined set of settings for various resources
 directories, such as cubes, instances, etc. to ease development with the
 framework. There are two running modes with *CubicWeb*:
 
-* 'user', resources are searched / created in the user home directory:
-
-  - instances are stored in :file:`~/etc/cubicweb.d`
-  - temporary files (such as pid file) in :file:`/tmp`
-
-* 'system', resources are searched / created in the system directories (eg
+* **system**: resources are searched / created in the system directories (eg
   usually requiring root access):
 
   - instances are stored in :file:`<INSTALL_PREFIX>/etc/cubicweb.d`
@@ -40,28 +35,34 @@ framework. There are two running modes with *CubicWeb*:
   where `<INSTALL_PREFIX>` is the detected installation prefix ('/usr/local' for
   instance).
 
+* **user**: resources are searched / created in the user home directory:
+
+  - instances are stored in :file:`~/etc/cubicweb.d`
+  - temporary files (such as pid file) in :file:`/tmp`
+
+
 
 Notice that each resource path may be explicitly set using an environment
 variable if the default doesn't suit your needs. Here are the default resource
 directories that are affected according to mode:
 
-* 'system': ::
+* **system**: ::
 
         CW_INSTANCES_DIR = <INSTALL_PREFIX>/etc/cubicweb.d/
         CW_INSTANCES_DATA_DIR = /var/lib/cubicweb/instances/
         CW_RUNTIME_DIR = /var/run/cubicweb/
 
-* 'user': ::
+* **user**: ::
 
         CW_INSTANCES_DIR = ~/etc/cubicweb.d/
         CW_INSTANCES_DATA_DIR = ~/etc/cubicweb.d/
         CW_RUNTIME_DIR = /tmp
 
-Cubes search path is also affected, see the :ref:Cube section.
+Cubes search path is also affected, see the :ref:`Cube` section.
 
-By default, the mode automatically set to 'user' if a :file:`.hg` directory is found
-in the cubicweb package, else it's set to 'system'. You can force this by setting
-the :envvar:`CW_MODE` environment variable to either 'user' or 'system' so you can
+By default, the mode automatically set to `user` if a :file:`.hg` directory is found
+in the cubicweb package, else it's set to `system`. You can force this by setting
+the :envvar:`CW_MODE` environment variable to either `user` or `system` so you can
 easily:
 
 * use system wide installation but user specific instances and all, without root
@@ -157,14 +158,6 @@ CONFIGURATIONS = []
 
 SMTP_LOCK = Lock()
 
-
-class metaconfiguration(type):
-    """metaclass to automaticaly register configuration"""
-    def __new__(mcs, name, bases, classdict):
-        cls = super(metaconfiguration, mcs).__new__(mcs, name, bases, classdict)
-        if classdict.get('name'):
-            CONFIGURATIONS.append(cls)
-        return cls
 
 def configuration_cls(name):
     """return the configuration class registered with the given name"""
@@ -289,7 +282,6 @@ _USR_INSTALL = _INSTALL_PREFIX == '/usr'
 class CubicWebNoAppConfiguration(ConfigurationMixIn):
     """base class for cubicweb configuration without a specific instance directory
     """
-    __metaclass__ = metaconfiguration
     # to set in concrete configuration
     name = None
     # log messages format (see logging module documentation for available keys)
@@ -315,6 +307,12 @@ class CubicWebNoAppConfiguration(ConfigurationMixIn):
           'default': 'WARNING',
           'help': 'server\'s log level',
           'group': 'main', 'level': 1,
+          }),
+        ('umask',
+         {'type' : 'int',
+          'default': 077,
+          'help': 'permission umask for files created by the server',
+          'group': 'main', 'level': 2,
           }),
         # pyro options
         ('pyro-instance-id',
@@ -443,14 +441,15 @@ this option is set to yes",
 
     @classmethod
     def cube_dir(cls, cube):
-        """return the cube directory for the given cube id,
-        raise `ConfigurationError` if it doesn't exists
+        """return the cube directory for the given cube id, raise
+        `ConfigurationError` if it doesn't exist
         """
         for directory in cls.cubes_search_path():
             cubedir = join(directory, cube)
             if exists(cubedir):
                 return cubedir
-        raise ConfigurationError('no cube %s in %s' % (cube, cls.cubes_search_path()))
+        raise ConfigurationError('no cube %r in %s' % (
+            cube, cls.cubes_search_path()))
 
     @classmethod
     def cube_migration_scripts_dir(cls, cube):
@@ -588,6 +587,14 @@ this option is set to yes",
             return # cubes dir doesn't exists
 
     @classmethod
+    def load_available_configs(cls):
+        from logilab.common.modutils import load_module_from_file
+        for conffile in ('web/webconfig.py',  'etwist/twconfig.py',
+                        'server/serverconfig.py',):
+            if exists(join(CW_SOFTWARE_ROOT, conffile)):
+                load_module_from_file(join(CW_SOFTWARE_ROOT, conffile))
+
+    @classmethod
     def load_cwctl_plugins(cls):
         from logilab.common.modutils import load_module_from_file
         cls.cls_adjust_sys_path()
@@ -598,8 +605,8 @@ this option is set to yes",
                 try:
                     load_module_from_file(join(CW_SOFTWARE_ROOT, ctlfile))
                 except ImportError, err:
-                    cls.info('could not import the command provider %s (cause : %s)' %
-                                (ctlfile, err))
+                    cls.error('could not import the command provider %s: %s',
+                              ctlfile, err)
                 cls.info('loaded cubicweb-ctl plugin %s', ctlfile)
         for cube in cls.available_cubes():
             oldpluginfile = join(cls.cube_dir(cube), 'ecplugin.py')
@@ -688,6 +695,7 @@ this option is set to yes",
 
     def __init__(self, debugmode=False):
         register_stored_procedures()
+        self._cubes = None
         super(CubicWebNoAppConfiguration, self).__init__()
         self.debugmode = debugmode
         self.adjust_sys_path()
@@ -763,7 +771,7 @@ this option is set to yes",
         self.debug('%s loaded', sitefile)
         return module
 
-    def eproperty_definitions(self):
+    def cwproperty_definitions(self):
         cfg = self.persistent_options_configuration()
         for section, options in cfg.options_by_section():
             section = section.lower()
@@ -790,6 +798,31 @@ this option is set to yes",
         as default value
         """
         return None
+
+    _cubes = None
+
+    def init_cubes(self, cubes):
+        assert self._cubes is None, self._cubes
+        self._cubes = self.reorder_cubes(cubes)
+        # load cubes'__init__.py file first
+        for cube in cubes:
+            __import__('cubes.%s' % cube)
+        self.load_site_cubicweb()
+
+    def cubes(self):
+        """return the list of cubes used by this instance
+
+        result is ordered from the top level cubes to inner dependencies
+        cubes
+        """
+        assert self._cubes is not None, 'cubes not initialized'
+        return self._cubes
+
+    def cubes_path(self):
+        """return the list of path to cubes used by this instance, from outer
+        most to inner most cubes
+        """
+        return [self.cube_dir(p) for p in self.cubes()]
 
 
 class CubicWebConfiguration(CubicWebNoAppConfiguration):
@@ -870,6 +903,7 @@ the repository',
     def config_for(cls, appid, config=None, debugmode=False):
         """return a configuration instance for the given instance identifier
         """
+        cls.load_available_configs()
         config = config or guess_configuration(cls.instance_home(appid))
         configcls = configuration_cls(config)
         return configcls(appid, debugmode)
@@ -984,32 +1018,12 @@ the repository',
         return join(iddir, self.appid)
 
     def init_cubes(self, cubes):
-        assert self._cubes is None, self._cubes
-        self._cubes = self.reorder_cubes(cubes)
-        # load cubes'__init__.py file first
-        for cube in cubes:
-            __import__('cubes.%s' % cube)
-        self.load_site_cubicweb()
+        super(CubicWebConfiguration, self).init_cubes(cubes)
         # reload config file in cases options are defined in cubes __init__
         # or site_cubicweb files
         self.load_file_configuration(self.main_config_file())
         # configuration initialization hook
         self.load_configuration()
-
-    def cubes(self):
-        """return the list of cubes used by this instance
-
-        result is ordered from the top level cubes to inner dependencies
-        cubes
-        """
-        assert self._cubes is not None
-        return self._cubes
-
-    def cubes_path(self):
-        """return the list of path to cubes used by this instance, from outer
-        most to inner most cubes
-        """
-        return [self.cube_dir(p) for p in self.cubes()]
 
     def add_cubes(self, cubes):
         """add given cubes to the list of used cubes"""
@@ -1265,7 +1279,9 @@ def register_stored_procedures():
             stack[0] = self.source_execute
 
         def as_sql(self, backend, args):
-            raise NotImplementedError('source only callback')
+            raise NotImplementedError(
+                'This callback is only available for BytesFileSystemStorage '
+                'managed attribute. Is FSPATH() argument BFSS managed?')
 
         def source_execute(self, source, session, value):
             fpath = source.binary_to_str(value)

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# pylint: disable-msg=W0142,W0403,W0404,W0613,W0622,W0622,W0704,R0904,C0103,E0611
+# pylint: disable=W0142,W0403,W0404,W0613,W0622,W0622,W0704,R0904,C0103,E0611
 #
 # copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
@@ -194,9 +194,10 @@ if USE_SETUPTOOLS:
         old_ok = DS._ok
         def _ok(self, path):
             """Return True if ``path`` can be written during installation."""
-            out = old_ok(self, path)
+            out = old_ok(self, path) # here for side effect from setuptools
             realpath = os.path.normcase(os.path.realpath(path))
-            if realpath.startswith(sys.prefix):
+            allowed_path = os.path.normcase(sys.prefix)
+            if realpath.startswith(allowed_path):
                 out = True
             return out
         DS._ok = _ok

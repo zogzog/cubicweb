@@ -22,9 +22,11 @@ This module contains functions to initialize a new repository.
 
 __docformat__ = "restructuredtext en"
 
+from copy import deepcopy
 from pprint import pprint
 
 from logilab.common.decorators import clear_cache
+from logilab.common.testlib import SkipTest
 
 def tuplify(list):
     for i in range(len(list)):
@@ -140,13 +142,22 @@ from logilab.database import get_db_helper
 from rql import RQLHelper
 
 from cubicweb.devtools.fake import FakeRepo, FakeSession
-from cubicweb.server import set_debug
+from cubicweb.server import set_debug, debugged
 from cubicweb.server.querier import QuerierHelper
 from cubicweb.server.session import Session
 from cubicweb.server.sources.rql2sql import SQLGenerator, remove_unused_solutions
 
 class RQLGeneratorTC(TestCase):
     schema = backend = None # set this in concret test
+
+
+    @classmethod
+    def setUpClass(cls):
+        if cls.backend is not None:
+            try:
+                cls.dbhelper = get_db_helper(cls.backend)
+            except ImportError, ex:
+                raise SkipTest(str(ex))
 
     def setUp(self):
         self.repo = FakeRepo(self.schema)
@@ -158,11 +169,7 @@ class RQLGeneratorTC(TestCase):
         ExecutionPlan._check_permissions = _dummy_check_permissions
         rqlannotation._select_principal = _select_principal
         if self.backend is not None:
-            try:
-                dbhelper = get_db_helper(self.backend)
-            except ImportError, ex:
-                self.skipTest(str(ex))
-            self.o = SQLGenerator(self.schema, dbhelper)
+            self.o = SQLGenerator(self.schema, self.dbhelper)
 
     def tearDown(self):
         ExecutionPlan._check_permissions = _orig_check_permissions
@@ -170,6 +177,8 @@ class RQLGeneratorTC(TestCase):
 
     def set_debug(self, debug):
         set_debug(debug)
+    def debugged(self, debug):
+        return debugged(debug)
 
     def _prepare(self, rql):
         #print '******************** prepare', rql
@@ -221,6 +230,8 @@ class BaseQuerierTC(TestCase):
 
     def set_debug(self, debug):
         set_debug(debug)
+    def debugged(self, debug):
+        return debugged(debug)
 
     def _rqlhelper(self):
         rqlhelper = self.repo.vreg.rqlhelper
@@ -284,8 +295,7 @@ class BasePlannerTC(BaseQuerierTC):
         self.repo.vreg.rqlhelper.backend = 'postgres' # so FTIRANK is considered
 
     def add_source(self, sourcecls, uri):
-        self.sources.append(sourcecls(self.repo, self.o.schema,
-                                      {'uri': uri}))
+        self.sources.append(sourcecls(self.repo, {'uri': uri}))
         self.repo.sources_by_uri[uri] = self.sources[-1]
         setattr(self, uri, self.sources[-1])
         self.newsources += 1
@@ -364,17 +374,17 @@ try:
     from cubicweb.server.msplanner import PartPlanInformation
 except ImportError:
     class PartPlanInformation(object):
-        def merge_input_maps(self, *args):
+        def merge_input_maps(self, *args, **kwargs):
             pass
         def _choose_term(self, sourceterms):
             pass
 _orig_merge_input_maps = PartPlanInformation.merge_input_maps
 _orig_choose_term = PartPlanInformation._choose_term
 
-def _merge_input_maps(*args):
-    return sorted(_orig_merge_input_maps(*args))
+def _merge_input_maps(*args, **kwargs):
+    return sorted(_orig_merge_input_maps(*args, **kwargs))
 
-def _choose_term(self, sourceterms):
+def _choose_term(self, source, sourceterms):
     # predictable order for test purpose
     def get_key(x):
         try:
@@ -387,8 +397,13 @@ def _choose_term(self, sourceterms):
             except AttributeError:
                 # const
                 return x.value
-    return _orig_choose_term(self, DumbOrderedDict2(sourceterms, get_key))
+    return _orig_choose_term(self, source, DumbOrderedDict2(sourceterms, get_key))
 
+from cubicweb.server.sources.pyrorql import PyroRQLSource
+_orig_syntax_tree_search = PyroRQLSource.syntax_tree_search
+
+def _syntax_tree_search(*args, **kwargs):
+    return deepcopy(_orig_syntax_tree_search(*args, **kwargs))
 
 def do_monkey_patch():
     RQLRewriter.insert_snippets = _insert_snippets
@@ -398,6 +413,7 @@ def do_monkey_patch():
     ExecutionPlan.init_temp_table = _init_temp_table
     PartPlanInformation.merge_input_maps = _merge_input_maps
     PartPlanInformation._choose_term = _choose_term
+    PyroRQLSource.syntax_tree_search = _syntax_tree_search
 
 def undo_monkey_patch():
     RQLRewriter.insert_snippets = _orig_insert_snippets
@@ -406,3 +422,4 @@ def undo_monkey_patch():
     ExecutionPlan.init_temp_table = _orig_init_temp_table
     PartPlanInformation.merge_input_maps = _orig_merge_input_maps
     PartPlanInformation._choose_term = _orig_choose_term
+    PyroRQLSource.syntax_tree_search = _orig_syntax_tree_search

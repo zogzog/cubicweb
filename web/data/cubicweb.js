@@ -6,6 +6,15 @@ function Namespace(name) {
 cw = new Namespace('cw');
 
 jQuery.extend(cw, {
+    cubes: new Namespace('cubes'),
+    /* provide a removeEventListener / detachEvent definition to
+     * to bypass a jQuery 1.4.2 bug when unbind() is called on a
+     * plain JS object and not a DOM node.
+     * see http://dev.jquery.com/ticket/6184 for more details
+     */
+    removeEventListener: function() {},
+    detachEvent: function() {},
+
     log: function () {
         var args = [];
         for (var i = 0; i < arguments.length; i++) {
@@ -299,6 +308,17 @@ jQuery.extend(cw.utils, {
     },
 
     /**
+     * .. function:: difference(lst1, lst2)
+     *
+     * returns a list containing all elements in `lst1` that are not
+     * in `lst2`.
+     */
+    difference: function(lst1, lst2) {
+        return jQuery.grep(lst1, function(elt, i) {
+            return jQuery.inArray(elt, lst2) == -1;
+        });
+    },
+    /**
      * .. function:: domid(string)
      *
      * return a valid DOM id from a string (should also be usable in jQuery
@@ -415,22 +435,17 @@ function IFRAME(params) {
 }
 
 // XXX avoid crashes / backward compat
-CubicWeb = {
+CubicWeb = cw;
+
+jQuery.extend(cw, {
     require: cw.utils.deprecatedFunction(
         '[3.9] CubicWeb.require() is not used anymore',
         function(module) {}),
     provide: cw.utils.deprecatedFunction(
         '[3.9] CubicWeb.provide() is not used anymore',
         function(module) {})
-};
-
-jQuery(document).ready(function() {
-    jQuery(CubicWeb).trigger('server-response', [false, document]);
-    jQuery(cw).trigger('server-response', [false, document]);
 });
 
-// XXX as of 2010-04-07, no known cube uses this
-jQuery(CubicWeb).bind('ajax-loaded', function() {
-    log('[3.7] "ajax-loaded" event is deprecated, use "server-response" instead');
-    jQuery(cw).trigger('server-response', [false, document]);
+jQuery(document).ready(function() {
+    $(cw).trigger('server-response', [false, document]);
 });

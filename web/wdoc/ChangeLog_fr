@@ -5,7 +5,28 @@
 .. _schema: schema
 .. _OWL: http://www.w3.org/TR/owl-features/
 .. _pdfexport: http://www.cubicweb.org/project/cubicweb-pdfexport
+.. _CWSource: cwetype/CWSource
 
+2010-10-07 --  3.10.0
+
+  * les facettes sur les relations optionnelles proposent maintenant
+    de filter les entité qui n'ont *pas* la relation
+
+  * les boîtes et composants contextuels ont été fusionnés, permettant
+    de simplifier la configuration et de placer ces nouveaux composants
+    comme vous le désirez
+
+  * les boîtes globales ou dépendantes du contexte sont plus
+    facilement distinguable pour rendre l'interface plus intuitive
+
+  * passage à jQuery 1.4.2, et jQuery UI 1.8
+
+  * les sources de données sont maintenant stockées dans la base de
+    données sous forme d'entités CWSource_. Cela permet sur les
+    instances multi-source de filter les résultats de recherche en
+    fonction de la source dont viennent les entités.
+
+    
 2010-06-11  --  3.8.4
    * support pour la recherche de préfixe pour les instances utilisant postgres > 8.4 :
      essayez en cherchant par ex. 'cubic*'

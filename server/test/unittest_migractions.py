@@ -15,28 +15,34 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""unit tests for module cubicweb.server.migractions
-"""
+"""unit tests for module cubicweb.server.migractions"""
+
+from __future__ import with_statement
 
 from copy import deepcopy
 from datetime import date
 from os.path import join
 
-from logilab.common.testlib import TestCase, unittest_main
+from logilab.common.testlib import TestCase, unittest_main, Tags, tag
 
-from cubicweb import ConfigurationError
+from yams.constraints import UniqueConstraint
+
+from cubicweb import ConfigurationError, ValidationError
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.schema import CubicWebSchemaLoader
 from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.server.migractions import *
 
 migrschema = None
-def teardown_module(*args):
+def tearDownModule(*args):
     global migrschema
     del migrschema
-    del MigrationCommandsTC.origschema
+    if hasattr(MigrationCommandsTC, 'origschema'):
+        del MigrationCommandsTC.origschema
 
 class MigrationCommandsTC(CubicWebTC):
+
+    tags = CubicWebTC.tags | Tags(('server', 'migration', 'migractions'))
 
     @classmethod
     def init_config(cls, config):
@@ -47,9 +53,11 @@ class MigrationCommandsTC(CubicWebTC):
         cls.origschema = deepcopy(cls.repo.schema)
         # hack to read the schema from data/migrschema
         config.appid = join('data', 'migratedapp')
+        config._apphome = cls.datapath('migratedapp')
         global migrschema
         migrschema = config.load_schema()
         config.appid = 'data'
+        config._apphome = cls.datadir
         assert 'Folder' in migrschema
 
     @classmethod
@@ -72,6 +80,10 @@ class MigrationCommandsTC(CubicWebTC):
         assert self.cnx is self.mh._cnx
         assert self.session is self.mh.session, (self.session.id, self.mh.session.id)
 
+    def tearDown(self):
+        CubicWebTC.tearDown(self)
+        self.repo.vreg['etypes'].clear_caches()
+
     def test_add_attribute_int(self):
         self.failIf('whatever' in self.schema)
         self.request().create_entity('Note')
@@ -83,8 +95,12 @@ class MigrationCommandsTC(CubicWebTC):
         self.assertEqual(self.schema['whatever'].subjects(), ('Note',))
         self.assertEqual(self.schema['whatever'].objects(), ('Int',))
         self.assertEqual(self.schema['Note'].default('whatever'), 2)
+        # test default value set on existing entities
         note = self.execute('Note X').get_entity(0, 0)
         self.assertEqual(note.whatever, 2)
+        # test default value set for next entities
+        self.assertEqual(self.request().create_entity('Note').whatever, 2)
+        # test attribute order
         orderdict2 = dict(self.mh.rqlexec('Any RTN, O WHERE X name "Note", RDEF from_entity X, '
                                           'RDEF relation_type RT, RDEF ordernum O, RT name RTN'))
         whateverorder = migrschema['whatever'].rdef('Note', 'Int').order
@@ -103,6 +119,9 @@ class MigrationCommandsTC(CubicWebTC):
         self.mh.rollback()
 
     def test_add_attribute_varchar(self):
+        self.failIf('whatever' in self.schema)
+        self.request().create_entity('Note')
+        self.commit()
         self.failIf('shortpara' in self.schema)
         self.mh.cmd_add_attribute('Note', 'shortpara')
         self.failUnless('shortpara' in self.schema)
@@ -112,6 +131,11 @@ class MigrationCommandsTC(CubicWebTC):
         notesql = self.mh.sqlexec("SELECT sql FROM sqlite_master WHERE type='table' and name='%sNote'" % SQL_PREFIX)[0][0]
         fields = dict(x.strip().split()[:2] for x in notesql.split('(', 1)[1].rsplit(')', 1)[0].split(','))
         self.assertEqual(fields['%sshortpara' % SQL_PREFIX], 'varchar(64)')
+        req = self.request()
+        # test default value set on existing entities
+        self.assertEqual(req.execute('Note X').get_entity(0, 0).shortpara, 'hop')
+        # test default value set for next entities
+        self.assertEqual(req.create_entity('Note').shortpara, 'hop')
         self.mh.rollback()
 
     def test_add_datetime_with_default_value_attribute(self):
@@ -130,6 +154,29 @@ class MigrationCommandsTC(CubicWebTC):
         self.assertEqual(d2, testdate)
         self.mh.rollback()
 
+    def test_drop_chosen_constraints_ctxmanager(self):
+        with self.mh.cmd_dropped_constraints('Note', 'unique_id', UniqueConstraint):
+            self.mh.cmd_add_attribute('Note', 'unique_id')
+            # make sure the maxsize constraint is not dropped
+            self.assertRaises(ValidationError,
+                              self.mh.rqlexec,
+                              'INSERT Note N: N unique_id "xyz"')
+            self.mh.rollback()
+            # make sure the unique constraint is dropped
+            self.mh.rqlexec('INSERT Note N: N unique_id "x"')
+            self.mh.rqlexec('INSERT Note N: N unique_id "x"')
+            self.mh.rqlexec('DELETE Note N')
+        self.mh.rollback()
+
+    def test_drop_required_ctxmanager(self):
+        with self.mh.cmd_dropped_constraints('Note', 'unique_id', cstrtype=None,
+                                             droprequired=True):
+            self.mh.cmd_add_attribute('Note', 'unique_id')
+            self.mh.rqlexec('INSERT Note N')
+        # make sure the required=True was restored
+        self.assertRaises(ValidationError, self.mh.rqlexec, 'INSERT Note N')
+        self.mh.rollback()
+
     def test_rename_attribute(self):
         self.failIf('civility' in self.schema)
         eid1 = self.mh.rqlexec('INSERT Personne X: X nom "lui", X sexe "M"')[0][0]
@@ -145,7 +192,8 @@ class MigrationCommandsTC(CubicWebTC):
 
 
     def test_workflow_actions(self):
-        wf = self.mh.cmd_add_workflow(u'foo', ('Personne', 'Email'))
+        wf = self.mh.cmd_add_workflow(u'foo', ('Personne', 'Email'),
+                                      ensure_workflowable=False)
         for etype in ('Personne', 'Email'):
             s1 = self.mh.rqlexec('Any N WHERE WF workflow_of ET, ET name "%s", WF name N' %
                                  etype)[0][0]
@@ -164,7 +212,7 @@ class MigrationCommandsTC(CubicWebTC):
         self.failUnless(self.execute('CWRType X WHERE X name "filed_under2"'))
         self.schema.rebuild_infered_relations()
         self.assertEqual(sorted(str(rs) for rs in self.schema['Folder2'].subject_relations()),
-                          ['created_by', 'creation_date', 'cwuri',
+                          ['created_by', 'creation_date', 'cw_source', 'cwuri',
                            'description', 'description_format',
                            'eid',
                            'filed_under2', 'has_text',
@@ -181,7 +229,8 @@ class MigrationCommandsTC(CubicWebTC):
 
     def test_add_drop_entity_type(self):
         self.mh.cmd_add_entity_type('Folder2')
-        wf = self.mh.cmd_add_workflow(u'folder2 wf', 'Folder2')
+        wf = self.mh.cmd_add_workflow(u'folder2 wf', 'Folder2',
+                                      ensure_workflowable=False)
         todo = wf.add_state(u'todo', initial=True)
         done = wf.add_state(u'done')
         wf.add_transition(u'redoit', done, todo)
@@ -297,6 +346,7 @@ class MigrationCommandsTC(CubicWebTC):
             self.mh.cmd_change_relation_props('Personne', 'adel', 'String',
                                               fulltextindexed=False)
 
+    @tag('longrun')
     def test_sync_schema_props_perms(self):
         cursor = self.mh.session
         cursor.set_pool()
@@ -309,7 +359,7 @@ class MigrationCommandsTC(CubicWebTC):
         migrschema['titre'].rdefs[('Personne', 'String')].description = 'title for this person'
         delete_concerne_rqlexpr = self._rrqlexpr_rset('delete', 'concerne')
         add_concerne_rqlexpr = self._rrqlexpr_rset('add', 'concerne')
-        
+
         self.mh.cmd_sync_schema_props_perms(commit=False)
 
         self.assertEqual(cursor.execute('Any D WHERE X name "Personne", X description D')[0][0],
@@ -386,9 +436,9 @@ class MigrationCommandsTC(CubicWebTC):
         self.assertEqual(len(self.schema.eschema('Personne')._unique_together), 1)
         self.assertItemsEqual(self.schema.eschema('Personne')._unique_together[0],
                                            ('nom', 'prenom', 'datenaiss'))
-        rset = cursor.execute('Any C WHERE C is CWUniqueTogetherConstraint')
+        rset = cursor.execute('Any C WHERE C is CWUniqueTogetherConstraint, C constraint_of ET, ET name "Personne"')
         self.assertEqual(len(rset), 1)
-        relations = [r.rtype.name for r in rset.get_entity(0,0).relations]
+        relations = [r.name for r in rset.get_entity(0, 0).relations]
         self.assertItemsEqual(relations, ('nom', 'prenom', 'datenaiss'))
 
     def _erqlexpr_rset(self, action, ertype):
@@ -418,6 +468,7 @@ class MigrationCommandsTC(CubicWebTC):
         finally:
             self.mh.cmd_set_size_constraint('CWEType', 'description', None)
 
+    @tag('longrun')
     def test_add_remove_cube_and_deps(self):
         cubes = set(self.config.cubes())
         schema = self.repo.schema
@@ -481,6 +532,7 @@ class MigrationCommandsTC(CubicWebTC):
             self.commit()
 
 
+    @tag('longrun')
     def test_add_remove_cube_no_deps(self):
         cubes = set(self.config.cubes())
         schema = self.repo.schema
@@ -508,9 +560,11 @@ class MigrationCommandsTC(CubicWebTC):
             self.commit()
 
     def test_remove_dep_cube(self):
-        ex = self.assertRaises(ConfigurationError, self.mh.cmd_remove_cube, 'file')
-        self.assertEqual(str(ex), "can't remove cube file, used as a dependency")
+        with self.assertRaises(ConfigurationError) as cm:
+            self.mh.cmd_remove_cube('file')
+        self.assertEqual(str(cm.exception), "can't remove cube file, used as a dependency")
 
+    @tag('longrun')
     def test_introduce_base_class(self):
         self.mh.cmd_add_entity_type('Para')
         self.mh.repo.schema.rebuild_infered_relations()
@@ -524,7 +578,7 @@ class MigrationCommandsTC(CubicWebTC):
         self.assertEqual(self.schema['Text'].specializes().type, 'Para')
         # test columns have been actually added
         text = self.execute('INSERT Text X: X para "hip", X summary "hop", X newattr "momo"').get_entity(0, 0)
-        note = self.execute('INSERT Note X: X para "hip", X shortpara "hop", X newattr "momo"').get_entity(0, 0)
+        note = self.execute('INSERT Note X: X para "hip", X shortpara "hop", X newattr "momo", X unique_id "x"').get_entity(0, 0)
         aff = self.execute('INSERT Affaire X').get_entity(0, 0)
         self.failUnless(self.execute('SET X newnotinlined Y WHERE X eid %(x)s, Y eid %(y)s',
                                      {'x': text.eid, 'y': aff.eid}))

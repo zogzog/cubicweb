@@ -159,5 +159,5 @@ class NotAnEntity(CubicWebRuntimeError):
 class ExecutionError(Exception):
     """server execution control error (already started, not running...)"""
 
-# pylint: disable-msg=W0611
+# pylint: disable=W0611
 from logilab.common.clcommands import BadCommandUsage

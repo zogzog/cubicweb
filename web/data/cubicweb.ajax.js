@@ -184,7 +184,7 @@ function _postAjaxLoad(node) {
     _loadDynamicFragments(node);
     // XXX [3.7] jQuery.one is now used instead jQuery.bind,
     // jquery.treeview.js can be unpatched accordingly.
-    jQuery(CubicWeb).trigger('server-response', [true, node]);
+    jQuery(cw).trigger('server-response', [true, node]);
     jQuery(node).trigger('server-response', [true, node]);
 }
 
@@ -283,7 +283,7 @@ jQuery.fn.loadxhtml = function(url, form, reqtype, mode, cursor) {
  * dictionary, `reqtype` the HTTP request type (get 'GET' or 'POST').
  */
 function loadRemote(url, form, reqtype, sync) {
-    if (!url.startswith(baseuri())) {
+    if (!url.toLowerCase().startswith(baseuri())) {
         url = baseuri() + url;
     }
     if (!sync) {
@@ -292,6 +292,7 @@ function loadRemote(url, form, reqtype, sync) {
             url: url,
             type: (reqtype || 'POST').toUpperCase(),
             data: form,
+            traditional: true,
             async: true,
 
             beforeSend: function(xhr) {
@@ -299,9 +300,6 @@ function loadRemote(url, form, reqtype, sync) {
             },
 
             success: function(data, status) {
-                if (deferred._req.getResponseHeader("content-type") == 'application/json') {
-                    data = cw.evalJSON(data);
-                }
                 deferred.success(data);
             },
 
@@ -320,18 +318,22 @@ function loadRemote(url, form, reqtype, sync) {
         });
         return deferred;
     } else {
-        var result = jQuery.ajax({
+        var result;
+        // jQuery.ajax returns the XHR object, even for synchronous requests,
+        // but in that case, the success callback will be called before
+        // jQuery.ajax returns. The first argument of the callback will be
+        // the server result, interpreted by jQuery according to the reponse's
+        // content-type (i.e. json or xml)
+        jQuery.ajax({
             url: url,
             type: (reqtype || 'GET').toUpperCase(),
             data: form,
-            async: false
+            traditional: true,
+            async: false,
+            success: function(res) {
+                result = res;
+            }
         });
-        // check result.responseText instead of result to avoid error encountered with IE
-        if (result.responseText) {
-            // XXX no good reason to force json here,
-            // it should depends on request content-type
-            result = cw.evalJSON(result.responseText);
-        }
         return result;
     }
 }
@@ -417,7 +419,7 @@ function removeBookmark(beid) {
     var d = loadRemote('json', ajaxFuncArgs('delete_bookmark', null, beid));
     d.addCallback(function(boxcontent) {
         $('#bookmarks_box').loadxhtml('json',
-                                      ajaxFuncArgs('render', null, 'boxes',
+                                      ajaxFuncArgs('render', null, 'ctxcomponents',
                                                    'bookmarks_box'));
         document.location.hash = '#header';
         updateMessage(_("bookmark has been removed"));
@@ -561,6 +563,51 @@ function getDomFromResponse(response) {
                );
 }
 
+/* High-level functions *******************************************************/
+
+/**
+ * .. function:: reloadCtxComponentsSection(context, actualEid, creationEid=None)
+ *
+ * reload all components in the section for a given `context`.
+ *
+ * This is necessary for cases where the parent entity (on which the section
+ * apply) has been created during post, hence the section has to be reloaded to
+ * consider its new eid, hence the two additional arguments `actualEid` and
+ * `creationEid`: `actualEid` is the eid of newly created top level entity and
+ * `creationEid` the fake eid that was given as form creation marker (e.g. A).
+ *
+ * You can still call this function with only the actual eid if you're not in
+ * such creation case.
+ */
+function reloadCtxComponentsSection(context, actualEid, creationEid) {
+    // in this case, actualEid is the eid of newly created top level entity and
+    // creationEid the fake eid given as form creation marker (e.g. A)
+    if (!creationEid) { creationEid = actualEid ; }
+    var $compsholder = $('#' + context + creationEid);
+    // reload the whole components section
+    $compsholder.children().each(function (index) {
+	// XXX this.id[:-len(eid)]
+	var compid = this.id.replace("_", ".").rstrip(creationEid);
+	var params = ajaxFuncArgs('render', null, 'ctxcomponents',
+				  compid, actualEid);
+	$(this).loadxhtml('json', params, null, 'swap', true);
+    });
+    $compsholder.attr('id', context + actualEid);
+}
+
+
+/**
+ * .. function:: reload(domid, registry, formparams, *render_args)
+ *
+ * `js_render` based reloading of views and components.
+ */
+function reload(domid, compid, registry, formparams  /* ... */) {
+    var ajaxArgs = ['render', formparams, registry, compid];
+    ajaxArgs = ajaxArgs.concat(cw.utils.sliceList(arguments, 4));
+    var params = ajaxFuncArgs.apply(null, ajaxArgs);
+    $('#'+domid).loadxhtml('json', params, null, 'swap');
+}
+
 /* DEPRECATED *****************************************************************/
 
 preprocessAjaxLoad = cw.utils.deprecatedFunction(
@@ -586,7 +633,7 @@ reloadComponent = cw.utils.deprecatedFunction(
 reloadBox = cw.utils.deprecatedFunction(
     '[3.9] reloadBox() is deprecated, use loadxhtml instead',
     function(boxid, rql) {
-        return reloadComponent(boxid, rql, 'boxes', boxid);
+        return reloadComponent(boxid, rql, 'ctxcomponents', boxid);
     }
 );
 
@@ -635,14 +682,15 @@ remoteExec = cw.utils.deprecatedFunction(
     function(fname /* ... */) {
         setProgressCursor();
         var props = {
-            'fname': fname,
-            'pageid': pageid,
-            'arg': $.map(cw.utils.sliceList(arguments, 1), jQuery.toJSON)
+            fname: fname,
+            pageid: pageid,
+            arg: $.map(cw.utils.sliceList(arguments, 1), jQuery.toJSON)
         };
         var result = jQuery.ajax({
             url: JSON_BASE_URL,
             data: props,
-            async: false
+            async: false,
+            traditional: true
         }).responseText;
         if (result) {
             result = cw.evalJSON(result);
@@ -657,9 +705,9 @@ asyncRemoteExec = cw.utils.deprecatedFunction(
     function(fname /* ... */) {
         setProgressCursor();
         var props = {
-            'fname': fname,
-            'pageid': pageid,
-            'arg': $.map(cw.utils.sliceList(arguments, 1), jQuery.toJSON)
+            fname: fname,
+            pageid: pageid,
+            arg: $.map(cw.utils.sliceList(arguments, 1), jQuery.toJSON)
         };
         // XXX we should inline the content of loadRemote here
         var deferred = loadRemote(JSON_BASE_URL, props, 'POST');

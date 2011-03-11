@@ -1,8 +1,6 @@
 /**
- * toggle visibility of an element by its id
- * & set current visibility status in a cookie
- * XXX whenever used outside of preferences, don't forget to
- *     move me in a more appropriate place
+ * toggle visibility of an element by its id & set current visibility status in a cookie
+ *
  */
 
 var prefsValues = {};
@@ -46,30 +44,27 @@ function _toggleFieldset(fieldsetid, closeaction, linklabel, linkhref) {
 
 function validatePrefsForm(formid) {
     clearPreviousMessages();
-    clearPreviousErrors(formid);
+    _clearPreviousErrors(formid);
     return validateForm(formid, null, submitSucces, submitFailure);
 }
 
-function submitFailure(formid) {
-    var form = jQuery('#' + formid);
-    var dom = DIV({
-        'class': 'critical'
-    },
-    _("please correct errors below"));
-    jQuery(form).find('div.formsg').empty().append(dom);
-    // clearPreviousMessages()
-    jQuery(form).find('span.error').next().focus();
+function submitFailure(result, formid, cbargs) {
+    var $form = jQuery('#' + formid);
+    var dom = DIV({'class': 'critical'}, _("please correct errors below"));
+    $form.find('div.formsg').empty().append(dom);
+    unfreezeFormButtons(formid);
+    var descr = result[1];
+    _displayValidationerrors(formid, descr[0], descr[1]);
+    $form.find('span.error').next().focus();
+    return false; // so handleFormValidationResponse doesn't try to display error
 }
 
-function submitSucces(url, formid) {
-    var form = jQuery('#' + formid);
-    setCurrentValues(form);
-    var dom = DIV({
-        'class': 'msg'
-    },
-    _("changes applied"));
-    jQuery(form).find('div.formsg').empty().append(dom);
-    jQuery(form).find('input').removeClass('changed');
+function submitSucces(result, formid, cbargs) {
+    var $form = jQuery('#' + formid);
+    setCurrentValues($form);
+    var dom = DIV({'class': 'msg'}, _("changes applied"));
+    $form.find('div.formsg').empty().append(dom);
+    $form.find('input').removeClass('changed');
     checkValues(form, true);
     return;
 }
@@ -77,10 +72,6 @@ function submitSucces(url, formid) {
 function clearPreviousMessages() {
     jQuery('div#appMsg').addClass('hidden');
     jQuery('div.formsg').empty();
-}
-
-function clearPreviousErrors(formid) {
-    jQuery('#err-value:' + formid).remove();
 }
 
 function checkValues(form, success) {
@@ -101,7 +92,7 @@ function checkValues(form, success) {
         if (!success) {
             clearPreviousMessages();
         }
-        clearPreviousErrors(form.attr('id'));
+        _clearPreviousErrors(form.attr('id'));
         freezeFormButtons(form.attr('id'));
     }
 }

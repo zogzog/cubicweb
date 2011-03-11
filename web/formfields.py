@@ -73,6 +73,7 @@ from yams.constraints import (SizeConstraint, StaticVocabularyConstraint,
                               FormatConstraint)
 
 from cubicweb import Binary, tags, uilib
+from cubicweb.utils import support_args
 from cubicweb.web import INTERNAL_FIELD_VALUE, ProcessFormError, eid_param, \
      formwidgets as fw, uicfg
 
@@ -332,7 +333,7 @@ class Field(object):
         if self.eidparam and self.role is not None:
             entity = form.edited_entity
             if form._cw.vreg.schema.rschema(self.name).final:
-                if entity.has_eid() or self.name in entity:
+                if entity.has_eid() or self.name in entity.cw_attr_cache:
                     value = getattr(entity, self.name)
                     if value is not None or not self.fallback_on_none_attribute:
                         return value
@@ -345,7 +346,12 @@ class Field(object):
     def initial_typed_value(self, form, load_bytes):
         if self.value is not _MARKER:
             if callable(self.value):
-                return self.value(form)
+                if support_args(self.value, 'form', 'field'):
+                    return self.value(form, self)
+                else:
+                    warn("[3.10] field's value callback must now take form and "
+                         "field as argument (%s)" % self, DeprecationWarning)
+                    return self.value(form)
             return self.value
         formattr = '%s_%s_default' % (self.role, self.name)
         if hasattr(form, formattr):
@@ -422,12 +428,14 @@ class Field(object):
                 vocab[i] = option
         return vocab
 
-    def format(self, form):
+    # support field as argument to avoid warning when used as format field value
+    # callback
+    def format(self, form, field=None):
         """return MIME type used for the given (text or bytes) field"""
         if self.eidparam and self.role == 'subject':
             entity = form.edited_entity
             if entity.e_schema.has_metadata(self.name, 'format') and (
-                entity.has_eid() or '%s_format' % self.name in entity):
+                entity.has_eid() or '%s_format' % self.name in entity.cw_attr_cache):
                 return form.edited_entity.cw_attr_metadata(self.name, 'format')
         return form._cw.property_value('ui.default-text-format')
 

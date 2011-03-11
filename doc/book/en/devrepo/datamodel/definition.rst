@@ -304,7 +304,7 @@ For *CubicWeb* in particular:
 
 * we associate rights at the entities/relations schema level
 
-* the default groups are: `administrators`, `users` and `guests`
+* the default groups are: `managers`, `users` and `guests`
 
 * users belong to the `users` group
 
@@ -334,6 +334,34 @@ one or multiple RQL expressions to satisfy to grant access. The access is
 provided if the user is in one of the listed groups or if one of the RQL condition
 is satisfied.
 
+Default permissions
+```````````````````
+
+The default permissions for ``EntityType`` are:
+
+.. sourcecode:: python
+
+   __permissions__ = {
+        'read': ('managers', 'users', 'guests',),
+        'update': ('managers', 'owners',),
+        'delete': ('managers', 'owners'),
+        'add': ('managers', 'users',)
+        }
+
+The default permissions for relations are:
+
+.. sourcecode:: python
+
+   __permissions__ = {'read': ('managers', 'users', 'guests',),
+                    'delete': ('managers', 'users'),
+                    'add': ('managers', 'users',)}
+
+The default permissions for attributes are:
+
+.. sourcecode:: python
+
+   __permissions__ = {'read': ('managers', 'users', 'guests',),
+                     'update': ('managers', ERQLExpression('U has_update_permission X')),}
 
 The standard user groups
 ````````````````````````

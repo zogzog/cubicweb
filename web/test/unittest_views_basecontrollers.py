@@ -17,6 +17,8 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """cubicweb.web.views.basecontrollers unit tests"""
 
+from __future__ import with_statement
+
 from logilab.common.testlib import unittest_main, mock_object
 
 from cubicweb import Binary, NoSelectableObject, ValidationError
@@ -47,8 +49,9 @@ class EditControllerTC(CubicWebTC):
     def test_noparam_edit(self):
         """check behaviour of this controller without any form parameter
         """
-        ex = self.assertRaises(ValidationError, self.ctrl_publish, self.request())
-        self.assertEqual(ex.errors, {None: u'no selected entities'})
+        with self.assertRaises(ValidationError) as cm:
+            self.ctrl_publish(self.request())
+        self.assertEqual(cm.exception.errors, {None: u'no selected entities'})
 
     def test_validation_unique(self):
         """test creation of two linked entities
@@ -61,8 +64,9 @@ class EditControllerTC(CubicWebTC):
                     'upassword-subject:X': u'toto',
                     'upassword-subject-confirm:X': u'toto',
                     }
-        ex = self.assertRaises(ValidationError, self.ctrl_publish, req)
-        self.assertEqual(ex.errors, {'login-subject': 'the value "admin" is already used, use another one'})
+        with self.assertRaises(ValidationError) as cm:
+            self.ctrl_publish(req)
+        self.assertEqual(cm.exception.errors, {'login-subject': 'the value "admin" is already used, use another one'})
 
     def test_user_editing_itself(self):
         """checking that a manager user can edit itself
@@ -205,8 +209,9 @@ class EditControllerTC(CubicWebTC):
                     'login-subject:X': u'toto',
                     'upassword-subject:X': u'toto',
                     }
-        ex = self.assertRaises(ValidationError, self.ctrl_publish, req)
-        self.assertEqual(ex.errors, {'upassword-subject': u'password and confirmation don\'t match'})
+        with self.assertRaises(ValidationError) as cm:
+            self.ctrl_publish(req)
+        self.assertEqual(cm.exception.errors, {'upassword-subject': u'password and confirmation don\'t match'})
         req = self.request()
         req.form = {'__cloned_eid:X': u(user.eid),
                     'eid': 'X', '__type:X': 'CWUser',
@@ -215,8 +220,9 @@ class EditControllerTC(CubicWebTC):
                     'upassword-subject:X': u'toto',
                     'upassword-subject-confirm:X': u'tutu',
                     }
-        ex = self.assertRaises(ValidationError, self.ctrl_publish, req)
-        self.assertEqual(ex.errors, {'upassword-subject': u'password and confirmation don\'t match'})
+        with self.assertRaises(ValidationError) as cm:
+            self.ctrl_publish(req)
+        self.assertEqual(cm.exception.errors, {'upassword-subject': u'password and confirmation don\'t match'})
 
 
     def test_interval_bound_constraint_success(self):
@@ -230,8 +236,9 @@ class EditControllerTC(CubicWebTC):
                     'amount-subject:X': u'-10',
                     'described_by_test-subject:X': u(feid),
                 }
-        ex = self.assertRaises(ValidationError, self.ctrl_publish, req)
-        self.assertEqual(ex.errors, {'amount-subject': 'value must be >= 0'})
+        with self.assertRaises(ValidationError) as cm:
+            self.ctrl_publish(req)
+        self.assertEqual(cm.exception.errors, {'amount-subject': 'value must be >= 0'})
         req = self.request(rollbackfirst=True)
         req.form = {'eid': ['X'],
                     '__type:X': 'Salesterm',
@@ -239,8 +246,9 @@ class EditControllerTC(CubicWebTC):
                     'amount-subject:X': u'110',
                     'described_by_test-subject:X': u(feid),
                     }
-        ex = self.assertRaises(ValidationError, self.ctrl_publish, req)
-        self.assertEqual(ex.errors, {'amount-subject': 'value must be <= 100'})
+        with self.assertRaises(ValidationError) as cm:
+            self.ctrl_publish(req)
+        self.assertEqual(cm.exception.errors, {'amount-subject': 'value must be <= 100'})
         req = self.request(rollbackfirst=True)
         req.form = {'eid': ['X'],
                     '__type:X': 'Salesterm',
@@ -421,8 +429,9 @@ class EditControllerTC(CubicWebTC):
                     'alias-subject:Y': u'',
                     'use_email-object:Y': 'X',
                     }
-        ex = self.assertRaises(ValidationError, self.ctrl_publish, req)
-        self.assertEqual(ex.errors, {'address-subject': u'required field'})
+        with self.assertRaises(ValidationError) as cm:
+            self.ctrl_publish(req)
+        self.assertEqual(cm.exception.errors, {'address-subject': u'required field'})
 
     def test_nonregr_copy(self):
         user = self.user()

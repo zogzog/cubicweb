@@ -143,7 +143,7 @@ class EntityFieldsFormTC(CubicWebTC):
         state.eid = 'S'
         form = RTFForm(self.req, redirect_path='perdu.com', entity=state)
         # make it think it can use fck editor anyway
-        form.field_by_name('description', 'subject').format = lambda x: 'text/html'
+        form.field_by_name('description', 'subject').format = lambda form, field=None: 'text/html'
         self.assertMultiLineEqual(self._render_entity_field('description', form),
                               expected % {'eid': state.eid})
 

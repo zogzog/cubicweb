@@ -20,6 +20,7 @@
 __docformat__ = "restructuredtext en"
 _ = unicode
 
+import types, new
 from cStringIO import StringIO
 from warnings import warn
 
@@ -163,6 +164,7 @@ class View(AppObject):
           the whole result set (which may be None in this case), `call` is
           called
         """
+        # XXX use .cw_row/.cw_col
         row = context.get('row')
         if row is not None:
             context.setdefault('col', 0)
@@ -170,8 +172,11 @@ class View(AppObject):
         else:
             view_func = self.call
         stream = self.set_stream(w)
-        # stream = self.set_stream(context)
-        view_func(**context)
+        try:
+            view_func(**context)
+        except:
+            self.debug('view call %s failed (context=%s)', view_func, context)
+            raise
         # return stream content if we have created it
         if stream is not None:
             return self._stream.getvalue()
@@ -206,11 +211,21 @@ class View(AppObject):
         if rset is None:
             raise NotImplementedError, (self, "an rset is required")
         wrap = self.templatable and len(rset) > 1 and self.add_div_section
-        # XXX propagate self.extra_kwars?
-        for i in xrange(len(rset)):
+        # avoid re-selection if rset of size 1, we already have the most
+        # specific view
+        if rset.rowcount != 1:
+            kwargs.setdefault('initargs', self.cw_extra_kwargs)
+            for i in xrange(len(rset)):
+                if wrap:
+                    self.w(u'<div class="section">')
+                self.wview(self.__regid__, rset, row=i, **kwargs)
+                if wrap:
+                    self.w(u"</div>")
+        else:
             if wrap:
                 self.w(u'<div class="section">')
-            self.wview(self.__regid__, rset, row=i, **kwargs)
+            kwargs.setdefault('col', 0)
+            self.cell_call(row=0, **kwargs)
             if wrap:
                 self.w(u"</div>")
 
@@ -319,21 +334,11 @@ class View(AppObject):
             clabel = vtitle
         return u'%s (%s)' % (clabel, self._cw.property_value('ui.site-title'))
 
-    def output_url_builder( self, name, url, args ):
-        self.w(u'<script language="JavaScript"><!--\n' \
-               u'function %s( %s ) {\n' % (name, ','.join(args) ) )
-        url_parts = url.split("%s")
-        self.w(u' url="%s"' % url_parts[0] )
-        for arg, part in zip(args, url_parts[1:]):
-            self.w(u'+str(%s)' % arg )
-            if part:
-                self.w(u'+"%s"' % part)
-        self.w('\n document.window.href=url;\n')
-        self.w('}\n-->\n</script>\n')
-
+    @deprecated('[3.10] use vreg["etypes"].etype_class(etype).cw_create_url(req)')
     def create_url(self, etype, **kwargs):
         """ return the url of the entity creation form for a given entity type"""
-        return self._cw.build_url('add/%s' % etype, **kwargs)
+        return self._cw.vreg["etypes"].etype_class(etype).cw_create_url(
+            self._cw, **kwargs)
 
     def field(self, label, value, row=True, show_label=True, w=None, tr=True,
               table=False):
@@ -350,7 +355,7 @@ class View(AppObject):
             if table:
                 w(u'<th>%s</th>' % label)
             else:
-                w(u'<span>%s</span> ' % label)
+                w(u'<span class="label">%s</span> ' % label)
         if table:
             if not (show_label and label):
                 w(u'<td colspan="2">%s</td></tr>' % value)
@@ -379,6 +384,7 @@ class EntityView(View):
 
     def entity_call(self, entity, **kwargs):
         raise NotImplementedError()
+
 
 class StartupView(View):
     """base class for views which doesn't need a particular result set to be
@@ -514,8 +520,13 @@ class ReloadableMixIn(object):
 
     build_js = build_update_js_call # expect updatable component by default
 
+    @property
+    def domid(self):
+        return domid(self.__regid__)
+
+    @deprecated('[3.10] use .domid property')
     def div_id(self):
-        return ''
+        return self.domid
 
 
 class Component(ReloadableMixIn, View):
@@ -523,30 +534,25 @@ class Component(ReloadableMixIn, View):
     __registry__ = 'components'
     __select__ = yes()
 
-    # XXX huummm, much probably useless
+    # XXX huummm, much probably useless (should be...)
     htmlclass = 'mainRelated'
-    def div_class(self):
-        return '%s %s' % (self.htmlclass, self.__regid__)
+    @property
+    def cssclass(self):
+        return '%s %s' % (self.htmlclass, domid(self.__regid__))
 
-    # XXX a generic '%s%s' % (self.__regid__, self.__registry__.capitalize()) would probably be nicer
-    def div_id(self):
-        return '%sComponent' % self.__regid__
+    # XXX should rely on ReloadableMixIn.domid
+    @property
+    def domid(self):
+        return '%sComponent' % domid(self.__regid__)
+
+    @deprecated('[3.10] use .cssclass property')
+    def div_class(self):
+        return self.cssclass
 
 
 class Adapter(AppObject):
     """base class for adapters"""
     __registry__ = 'adapters'
-
-
-class EntityAdapter(Adapter):
-    """base class for entity adapters (eg adapt an entity to an interface)"""
-    def __init__(self, _cw, **kwargs):
-        try:
-            self.entity = kwargs.pop('entity')
-        except KeyError:
-            self.entity = kwargs['rset'].get_entity(kwargs.get('row') or 0,
-                                                    kwargs.get('col') or 0)
-        Adapter.__init__(self, _cw, **kwargs)
 
 
 def implements_adapter_compat(iface):
@@ -563,5 +569,35 @@ def implements_adapter_compat(iface):
                     return member(*args, **kwargs)
                 return member
             return func(self, *args, **kwargs)
+        decorated.decorated = func
         return decorated
     return _pre39_compat
+
+
+def unwrap_adapter_compat(cls):
+    parent = cls.__bases__[0]
+    for member_name in dir(parent):
+        member = getattr(parent, member_name)
+        if isinstance(member, types.MethodType) and hasattr(member.im_func, 'decorated') and not member_name in cls.__dict__:
+            method = new.instancemethod(member.im_func.decorated, None, cls)
+            setattr(cls, member_name, method)
+
+
+class auto_unwrap_bw_compat(type):
+    def __new__(mcs, name, bases, classdict):
+        cls = type.__new__(mcs, name, bases, classdict)
+        if not classdict.get('__needs_bw_compat__'):
+            unwrap_adapter_compat(cls)
+        return cls
+
+
+class EntityAdapter(Adapter):
+    """base class for entity adapters (eg adapt an entity to an interface)"""
+    __metaclass__ = auto_unwrap_bw_compat
+    def __init__(self, _cw, **kwargs):
+        try:
+            self.entity = kwargs.pop('entity')
+        except KeyError:
+            self.entity = kwargs['rset'].get_entity(kwargs.get('row') or 0,
+                                                    kwargs.get('col') or 0)
+        Adapter.__init__(self, _cw, **kwargs)

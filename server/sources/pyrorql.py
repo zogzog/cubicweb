@@ -18,6 +18,7 @@
 """Source to query another RQL repository using pyro"""
 
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 import threading
 from os.path import join
@@ -28,6 +29,7 @@ from base64 import b64decode
 from Pyro.errors import PyroError, ConnectionClosedError
 
 from logilab.common.configuration import REQUIRED
+from logilab.common.optik_ext import check_yn
 
 from rql.nodes import Constant
 from rql.utils import rqlvar_maker
@@ -64,7 +66,7 @@ def load_mapping_file(mappingfile):
     assert not unknown, 'unknown mapping attribute(s): %s' % unknown
     # relations that are necessarily not crossed
     mapping['dont_cross_relations'] |= set(('owned_by', 'created_by'))
-    for rtype in ('is', 'is_instance_of'):
+    for rtype in ('is', 'is_instance_of', 'cw_source'):
         assert rtype not in mapping['dont_cross_relations'], \
                '%s relation should not be in dont_cross_relations' % rtype
         assert rtype not in mapping['support_relations'], \
@@ -119,6 +121,12 @@ class PyroRQLSource(AbstractSource):
           'to generate external link to entities from this repository',
           'group': 'pyro-source', 'level': 1,
           }),
+        ('skip-external-entities',
+         {'type' : 'yn',
+          'default': False,
+          'help': 'should entities not local to the source be considered or not',
+          'group': 'pyro-source', 'level': 0,
+          }),
         ('pyro-ns-host',
          {'type' : 'string',
           'default': None,
@@ -131,7 +139,7 @@ from all_in_one.conf. It may contains port information using <host>:<port> notat
           'default': None,
           'help': 'Pyro name server\'s group where the repository will be \
 registered. If not set, default to the value from all_in_one.conf.',
-          'group': 'pyro-source', 'level': 1,
+          'group': 'pyro-source', 'level': 2,
           }),
         ('synchronization-interval',
          {'type' : 'int',
@@ -146,17 +154,26 @@ repository (default to 5 minutes).',
     PUBLIC_KEYS = AbstractSource.PUBLIC_KEYS + ('base-url',)
     _conn = None
 
-    def __init__(self, repo, appschema, source_config, *args, **kwargs):
-        AbstractSource.__init__(self, repo, appschema, source_config,
-                                *args, **kwargs)
+    def __init__(self, repo, source_config, *args, **kwargs):
+        AbstractSource.__init__(self, repo, source_config, *args, **kwargs)
         mappingfile = source_config['mapping-file']
         if not mappingfile[0] == '/':
             mappingfile = join(repo.config.apphome, mappingfile)
-        mapping = load_mapping_file(mappingfile)
-        self.support_entities = mapping['support_entities']
-        self.support_relations = mapping['support_relations']
-        self.dont_cross_relations = mapping['dont_cross_relations']
-        self.cross_relations = mapping['cross_relations']
+        try:
+            mapping = load_mapping_file(mappingfile)
+        except IOError:
+            self.disabled = True
+            self.error('cant read mapping file %s, source disabled',
+                       mappingfile)
+            self.support_entities = {}
+            self.support_relations = {}
+            self.dont_cross_relations = set()
+            self.cross_relations = set()
+        else:
+            self.support_entities = mapping['support_entities']
+            self.support_relations = mapping['support_relations']
+            self.dont_cross_relations = mapping['dont_cross_relations']
+            self.cross_relations = mapping['cross_relations']
         baseurl = source_config.get('base-url')
         if baseurl and not baseurl.endswith('/'):
             source_config['base-url'] += '/'
@@ -169,6 +186,8 @@ repository (default to 5 minutes).',
                        }),)
         register_persistent_options(myoptions)
         self._query_cache = TimedCache(1800)
+        self._skip_externals = check_yn(None, 'skip-external-entities',
+                                        source_config.get('skip-external-entities', False))
 
     def reset_caches(self):
         """method called during test to reset potential source caches"""
@@ -176,10 +195,10 @@ repository (default to 5 minutes).',
 
     def last_update_time(self):
         pkey = u'sources.%s.latest-update-time' % self.uri
-        rql = 'Any V WHERE X is CWProperty, X value V, X pkey %(k)s'
         session = self.repo.internal_session()
         try:
-            rset = session.execute(rql, {'k': pkey})
+            rset = session.execute('Any V WHERE X is CWProperty, X value V, X pkey %(k)s',
+                                   {'k': pkey})
             if not rset:
                 # insert it
                 session.execute('INSERT CWProperty X: X pkey %(k)s, X value %(v)s',
@@ -199,6 +218,18 @@ repository (default to 5 minutes).',
         self.repo.looping_task(interval, self.synchronize)
         self.repo.looping_task(self._query_cache.ttl.seconds/10,
                                self._query_cache.clear_expired)
+
+    def local_eid(self, cnx, extid, session):
+        etype, dexturi, dextid = cnx.describe(extid)
+        if dexturi == 'system' or not (
+            dexturi in self.repo.sources_by_uri or self._skip_externals):
+            return self.repo.extid2eid(self, str(extid), etype, session), True
+        if dexturi in self.repo.sources_by_uri:
+            source = self.repo.sources_by_uri[dexturi]
+            cnx = session.pool.connection(source.uri)
+            eid = source.local_eid(cnx, dextid, session)[0]
+            return eid, False
+        return None, None
 
     def synchronize(self, mtime=None):
         """synchronize content known by this repository with content in the
@@ -224,9 +255,8 @@ repository (default to 5 minutes).',
         try:
             for etype, extid in modified:
                 try:
-                    exturi = cnx.describe(extid)[1]
-                    if exturi == 'system' or not exturi in repo.sources_by_uri:
-                        eid = self.extid2eid(str(extid), etype, session)
+                    eid = self.local_eid(cnx, extid, session)[0]
+                    if eid is not None:
                         rset = session.eid_rset(eid, etype)
                         entity = rset.get_entity(0, 0)
                         entity.complete(entity.e_schema.indexable_attributes())
@@ -242,7 +272,8 @@ repository (default to 5 minutes).',
                     # entity has been deleted from external repository but is not known here
                     if eid is not None:
                         entity = session.entity_from_eid(eid, etype)
-                        repo.delete_info(session, entity, self.uri, extid)
+                        repo.delete_info(session, entity, self.uri, extid,
+                                         scleanup=True)
                 except:
                     self.exception('while updating %s with external id %s of source %s',
                                    etype, extid, self.uri)
@@ -323,8 +354,9 @@ repository (default to 5 minutes).',
             msg = session._("can't connect to source %s, some data may be missing")
             session.set_shared_data('sources_error', msg % self.uri)
             return []
+        translator = RQL2RQL(self)
         try:
-            rql = RQL2RQL(self).generate(session, union, args)
+            rql = translator.generate(session, union, args)
         except UnknownEid, ex:
             if server.DEBUG:
                 print '  unknown eid', ex, 'no results'
@@ -350,19 +382,27 @@ repository (default to 5 minutes).',
                 cnx = session.pool.connection(self.uri)
                 for rowindex in xrange(rset.rowcount - 1, -1, -1):
                     row = rows[rowindex]
+                    localrow = False
                     for colindex in needtranslation:
                         if row[colindex] is not None: # optional variable
-                            etype = descr[rowindex][colindex]
-                            exttype, exturi, extid = cnx.describe(row[colindex])
-                            if exturi == 'system' or not exturi in self.repo.sources_by_uri:
-                                eid = self.extid2eid(str(row[colindex]), etype,
-                                                     session)
+                            eid, local = self.local_eid(cnx, row[colindex], session)
+                            if local:
+                                localrow = True
+                            if eid is not None:
                                 row[colindex] = eid
                             else:
                                 # skip this row
                                 del rows[rowindex]
                                 del descr[rowindex]
                                 break
+                    else:
+                        # skip row if it only contains eids of entities which
+                        # are actually from a source we also know locally,
+                        # except if some args specified (XXX should actually
+                        # check if there are some args local to the source)
+                        if not (translator.has_local_eid or localrow):
+                            del rows[rowindex]
+                            del descr[rowindex]
             results = rows
         else:
             results = []
@@ -371,7 +411,7 @@ repository (default to 5 minutes).',
     def _entity_relations_and_kwargs(self, session, entity):
         relations = []
         kwargs = {'x': self.eid2extid(entity.eid, session)}
-        for key, val in entity.iteritems():
+        for key, val in entity.cw_attr_cache.iteritems():
             relations.append('X %s %%(%s)s' % (key, key))
             kwargs[key] = val
         return relations, kwargs
@@ -434,6 +474,7 @@ class RQL2RQL(object):
         self._session = session
         self.kwargs = args
         self.need_translation = False
+        self.has_local_eid = False
         return self.visit_union(rqlst)
 
     def visit_union(self, node):
@@ -580,6 +621,7 @@ class RQL2RQL(object):
     def visit_constant(self, node):
         if self.need_translation or node.uidtype:
             if node.type == 'Int':
+                self.has_local_eid = True
                 return str(self.eid2extid(node.value))
             if node.type == 'Substitute':
                 key = node.value
@@ -587,6 +629,7 @@ class RQL2RQL(object):
                 if not key in self._const_var:
                     self.kwargs[key] = self.eid2extid(self.kwargs[key])
                     self._const_var[key] = None
+                    self.has_local_eid = True
         return node.as_string()
 
     def visit_variableref(self, node):

@@ -34,6 +34,7 @@ from cubicweb.web.views import basecontrollers, autoform
 
 
 class IEditControlAdapter(EntityAdapter):
+    __needs_bw_compat__ = True
     __regid__ = 'IEditControl'
     __select__ = is_instance('Any')
 
@@ -115,19 +116,14 @@ class EditController(basecontrollers.ViewController):
         form = req.form
         # so we're able to know the main entity from the repository side
         if '__maineid' in form:
-            req.set_shared_data('__maineid', form['__maineid'], querydata=True)
+            req.set_shared_data('__maineid', form['__maineid'], txdata=True)
         # no specific action, generic edition
         self._to_create = req.data['eidmap'] = {}
         self._pending_fields = req.data['pendingfields'] = set()
         try:
-            methodname = req.form.pop('__method', None)
             for eid in req.edited_eids():
                 # __type and eid
                 formparams = req.extract_entity_params(eid, minparams=2)
-                if methodname is not None:
-                    entity = req.entity_from_eid(eid)
-                    method = getattr(entity, methodname)
-                    method(formparams)
                 eid = self.edit_entity(formparams)
         except (RequestError, NothingToEdit), ex:
             if '__linkto' in req.form and 'eid' in req.form:

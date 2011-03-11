@@ -24,7 +24,7 @@ from logilab.mtconverter import xml_escape
 
 from cubicweb.selectors import yes, none_rset, match_user_groups, authenticated_user
 from cubicweb.view import AnyRsetView, StartupView, EntityView, View
-from cubicweb.uilib import html_traceback, rest_traceback
+from cubicweb.uilib import html_traceback, rest_traceback, exc_message
 from cubicweb.web import formwidgets as wdgs
 from cubicweb.web.formfields import guess_field
 from cubicweb.web.views.schema import SecurityViewMixIn
@@ -84,7 +84,7 @@ class SecurityManagementView(SecurityViewMixIn, EntityView):
                                          __redirectpath=entity.rest_path())
         field = guess_field(entity.e_schema, self._cw.vreg.schema.rschema('owned_by'))
         form.append_field(field)
-        self.w(form.render(display_progress_div=False))
+        form.render(w=self.w, display_progress_div=False)
 
     def owned_by_information(self, entity):
         ownersrset = entity.related('owned_by')
@@ -154,7 +154,7 @@ class SecurityManagementView(SecurityViewMixIn, EntityView):
         form.append_field(field)
         renderer = self._cw.vreg['formrenderers'].select(
             'htable', self._cw, rset=None, display_progress_div=False)
-        self.w(form.render(renderer=renderer))
+        form.render(w=self.w, renderer=renderer)
 
 
 class ErrorView(AnyRsetView):
@@ -217,17 +217,8 @@ class ErrorView(AnyRsetView):
             form.add_hidden('__bugreporting', '1')
             form.form_buttons = [wdgs.SubmitButton(MAIL_SUBMIT_MSGID)]
             form.action = req.build_url('reportbug')
-            w(form.render())
+            form.render(w=w)
 
-
-def exc_message(ex, encoding):
-    try:
-        return unicode(ex)
-    except:
-        try:
-            return unicode(str(ex), encoding, 'replace')
-        except:
-            return unicode(repr(ex), encoding, 'replace')
 
 def text_error_description(ex, excinfo, req, eversion, cubes):
     binfo = rest_traceback(excinfo, xml_escape(ex))

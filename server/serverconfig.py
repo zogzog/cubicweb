@@ -19,14 +19,15 @@
 
 __docformat__ = "restructuredtext en"
 
+import sys
 from os.path import join, exists
+from StringIO import StringIO
 
-from logilab.common.configuration import REQUIRED, Method, Configuration, \
-     ini_format_section
+import logilab.common.configuration as lgconfig
 from logilab.common.decorators import wproperty, cached
 
 from cubicweb.toolsutils import read_config, restrict_perms_to_user
-from cubicweb.cwconfig import CubicWebConfiguration, merge_options
+from cubicweb.cwconfig import CONFIGURATIONS, CubicWebConfiguration, merge_options
 from cubicweb.server import SOURCE_TYPES
 
 
@@ -38,13 +39,13 @@ USER_OPTIONS =  (
                'level': 0,
                }),
     ('password', {'type' : 'password',
-                  'default': REQUIRED,
+                  'default': lgconfig.REQUIRED,
                   'help': "cubicweb manager account's password",
                   'level': 0,
                   }),
     )
 
-class SourceConfiguration(Configuration):
+class SourceConfiguration(lgconfig.Configuration):
     def __init__(self, appconfig, options):
         self.appconfig = appconfig # has to be done before super call
         super(SourceConfiguration, self).__init__(options=options)
@@ -54,54 +55,36 @@ class SourceConfiguration(Configuration):
         return self.appconfig.appid
 
     def input_option(self, option, optdict, inputlevel):
-        if self['db-driver'] == 'sqlite':
-            if option in ('db-user', 'db-password'):
-                return
-            if option == 'db-name':
-                optdict = optdict.copy()
-                optdict['help'] = 'path to the sqlite database'
-                optdict['default'] = join(self.appconfig.appdatahome,
-                                          self.appconfig.appid + '.sqlite')
+        try:
+            dbdriver = self['db-driver']
+        except lgconfig.OptionError:
+            pass
+        else:
+            if dbdriver == 'sqlite':
+                if option in ('db-user', 'db-password'):
+                    return
+                if option == 'db-name':
+                    optdict = optdict.copy()
+                    optdict['help'] = 'path to the sqlite database'
+                    optdict['default'] = join(self.appconfig.appdatahome,
+                                              self.appconfig.appid + '.sqlite')
         super(SourceConfiguration, self).input_option(option, optdict, inputlevel)
 
 
-def generate_sources_file(appconfig, sourcesfile, sourcescfg, keys=None):
-    """serialize repository'sources configuration into a INI like file
 
-    the `keys` parameter may be used to sort sections
-    """
-    if keys is None:
-        keys = sourcescfg.keys()
-    else:
-        for key in sourcescfg:
-            if not key in keys:
-                keys.append(key)
-    stream = open(sourcesfile, 'w')
-    for uri in keys:
-        sconfig = sourcescfg[uri]
-        if isinstance(sconfig, dict):
-            # get a Configuration object
-            if uri == 'admin':
-                options = USER_OPTIONS
-            else:
-                options = SOURCE_TYPES[sconfig['adapter']].options
-            _sconfig = SourceConfiguration(appconfig, options=options)
-            for attr, val in sconfig.items():
-                if attr == 'uri':
-                    continue
-                if attr == 'adapter':
-                    _sconfig.adapter = val
-                else:
-                    _sconfig.set_option(attr, val)
-            sconfig = _sconfig
-        optsbysect = list(sconfig.options_by_section())
-        assert len(optsbysect) == 1, 'all options for a source should be in the same group'
-        ini_format_section(stream, uri, optsbysect[0][1])
-        if hasattr(sconfig, 'adapter'):
-            print >> stream
-            print >> stream, '# adapter for this source (YOU SHOULD NOT CHANGE THIS)'
-            print >> stream, 'adapter=%s' % sconfig.adapter
-        print >> stream
+def ask_source_config(appconfig, type, inputlevel=0):
+    options = SOURCE_TYPES[type].options
+    sconfig = SourceConfiguration(appconfig, options=options)
+    sconfig.input_config(inputlevel=inputlevel)
+    return sconfig
+
+def generate_source_config(sconfig, encoding=sys.stdin.encoding):
+    """serialize a repository source configuration as text"""
+    stream = StringIO()
+    optsbysect = list(sconfig.options_by_section())
+    assert len(optsbysect) == 1, 'all options for a source should be in the same group'
+    lgconfig.ini_format(stream, optsbysect[0][1], encoding)
+    return stream.getvalue()
 
 
 class ServerConfiguration(CubicWebConfiguration):
@@ -121,7 +104,7 @@ class ServerConfiguration(CubicWebConfiguration):
           }),
         ('pid-file',
          {'type' : 'string',
-          'default': Method('default_pid_file'),
+          'default': lgconfig.Method('default_pid_file'),
           'help': 'repository\'s pid file',
           'group': 'main', 'level': 2,
           }),
@@ -132,10 +115,16 @@ class ServerConfiguration(CubicWebConfiguration):
 the repository rather than the user running the command',
           'group': 'main', 'level': (CubicWebConfiguration.mode == 'installed') and 0 or 1,
           }),
-        ('session-time',
+        ('cleanup-session-time',
          {'type' : 'time',
-          'default': '30min',
-          'help': 'session expiration time, default to 30 minutes',
+          'default': '24h',
+          'help': 'duration of inactivity after which a session '
+          'will be closed, to limit memory consumption (avoid sessions that '
+          'never expire and cause memory leak when http-session-time is 0, or '
+          'because of bad client that never closes their connection). '
+          'So notice that even if http-session-time is 0 and the user don\'t '
+          'close his browser, he will have to reauthenticate after this time '
+          'of inactivity. Default to 24h.',
           'group': 'main', 'level': 3,
           }),
         ('connections-pool-size',
@@ -276,16 +265,48 @@ and if not set, it will be choosen randomly',
         """
         return self.read_sources_file()
 
-    def source_enabled(self, uri):
-        return not self.enabled_sources or uri in self.enabled_sources
+    def source_enabled(self, source):
+        if self.sources_mode is not None:
+            if 'migration' in self.sources_mode:
+                assert len(self.sources_mode) == 1
+                if source.connect_for_migration:
+                    return True
+                print 'not connecting to source', source.uri, 'during migration'
+                return False
+            if 'all' in self.sources_mode:
+                assert len(self.sources_mode) == 1
+                return True
+            return source.uri in self.sources_mode
+        if self.quick_start:
+            return False
+        return (not source.disabled and (
+            not self.enabled_sources or source.uri in self.enabled_sources))
 
     def write_sources_file(self, sourcescfg):
+        """serialize repository'sources configuration into a INI like file"""
         sourcesfile = self.sources_file()
         if exists(sourcesfile):
             import shutil
             shutil.copy(sourcesfile, sourcesfile + '.bak')
-        generate_sources_file(self, sourcesfile, sourcescfg,
-                              ['admin', 'system'])
+        stream = open(sourcesfile, 'w')
+        for section in ('admin', 'system'):
+            sconfig = sourcescfg[section]
+            if isinstance(sconfig, dict):
+                # get a Configuration object
+                assert section == 'system'
+                _sconfig = SourceConfiguration(
+                    self, options=SOURCE_TYPES['native'].options)
+                for attr, val in sconfig.items():
+                    try:
+                        _sconfig.set_option(attr, val)
+                    except lgconfig.OptionError:
+                        # skip adapter, may be present on pre 3.10 instances
+                        if attr != 'adapter':
+                            self.error('skip unknown option %s in sources file')
+                sconfig = _sconfig
+            print >> stream, '[%s]' % section
+            print >> stream, generate_source_config(sconfig)
+            print >> stream
         restrict_perms_to_user(sourcesfile)
 
     def pyro_enabled(self):
@@ -312,27 +333,9 @@ and if not set, it will be choosen randomly',
         schema.name = 'bootstrap'
         return schema
 
+    sources_mode = None
     def set_sources_mode(self, sources):
-        if 'migration' in sources:
-            from cubicweb.server.sources import source_adapter
-            assert len(sources) == 1
-            enabled_sources = []
-            for uri, config in self.sources().iteritems():
-                if uri == 'admin':
-                    continue
-                if source_adapter(config).connect_for_migration:
-                    enabled_sources.append(uri)
-                else:
-                    print 'not connecting to source', uri, 'during migration'
-        elif 'all' in sources:
-            assert len(sources) == 1
-            enabled_sources = None
-        else:
-            known_sources = self.sources()
-            for uri in sources:
-                assert uri in known_sources, uri
-            enabled_sources = sources
-        self.enabled_sources = enabled_sources
+        self.sources_mode = sources
 
     def migration_handler(self, schema=None, interactive=True,
                           cnx=None, repo=None, connect=True, verbosity=None):
@@ -343,3 +346,6 @@ and if not set, it will be choosen randomly',
         return ServerMigrationHelper(self, schema, interactive=interactive,
                                      cnx=cnx, repo=repo, connect=connect,
                                      verbosity=verbosity)
+
+
+CONFIGURATIONS.append(ServerConfiguration)

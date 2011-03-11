@@ -15,11 +15,10 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""some hooks and views to handle supervising of any data changes
+"""some hooks and views to handle supervising of any data changes"""
 
-
-"""
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 from cubicweb import UnknownEid
 from cubicweb.selectors import none_rset
@@ -135,7 +134,8 @@ class SupervisionEmailView(Component):
         self.w(msg % locals())
 
     def change_state(self, (entity, fromstate, tostate)):
-        msg = self._cw._('changed state of %(etype)s #%(eid)s (%(title)s)')
+        _ = self._cw._
+        msg = _('changed state of %(etype)s #%(eid)s (%(title)s)')
         self.w(u'%s\n' % (msg % self._entity_context(entity)))
         self.w(_('  from state %(fromstate)s to state %(tostate)s\n' %
                  {'fromstate': _(fromstate.name), 'tostate': _(tostate.name)}))
@@ -185,6 +185,6 @@ class SupervisionMailOp(SendMailOp):
         msg = format_mail(uinfo, recipients, content, view.subject(), config=config)
         self.to_send = [(msg, recipients)]
 
-    def commit_event(self):
+    def postcommit_event(self):
         self._prepare_email()
-        SendMailOp.commit_event(self)
+        SendMailOp.postcommit_event(self)

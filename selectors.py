@@ -60,9 +60,9 @@ In web/views/boxes.py lies the RSSIconBox class. Look at its selector:
 
 .. sourcecode:: python
 
-  class RSSIconBox(ExtResourcesBoxTemplate):
+  class RSSIconBox(box.Box):
     ''' just display the RSS icon on uniform result set '''
-    __select__ = ExtResourcesBoxTemplate.__select__ & non_final_entity()
+    __select__ = box.Box.__select__ & non_final_entity()
 
 It takes into account:
 
@@ -479,6 +479,31 @@ class adaptable(appobject_selectable):
             return score + 0.5
         return score
 
+
+class configuration_values(Selector):
+    """Return 1 if the instance has an option set to a given value(s) in its
+    configuration file.
+    """
+    # XXX this selector could be evaluated on startup
+    def __init__(self, key, values):
+        self._key = key
+        if not isinstance(values, (tuple, list)):
+            values = (values,)
+        self._values = frozenset(values)
+
+    @lltrace
+    def __call__(self, cls, req, **kwargs):
+        try:
+            return self._score
+        except AttributeError:
+            if req is None:
+                config = kwargs['repo'].config
+            else:
+                config = req.vreg.config
+            self._score = config[self._key] in self._values
+        return self._score
+
+
 # rset selectors ##############################################################
 
 @objectify_selector
@@ -526,6 +551,8 @@ def one_line_rset(cls, req, rset=None, row=None, **kwargs):
     """Return 1 if the result set is of size 1, or greater but a specific row in
       the result set is specified ('row' argument).
     """
+    if rset is None and 'entity' in kwargs:
+        return 1
     if rset is not None and (row is not None or rset.rowcount == 1):
         return 1
     return 0
@@ -534,12 +561,12 @@ def one_line_rset(cls, req, rset=None, row=None, **kwargs):
 class multi_lines_rset(Selector):
     """Return 1 if the operator expression matches between `num` elements
     in the result set and the `expected` value if defined.
-    
+
     By default, multi_lines_rset(expected) matches equality expression:
         `nb` row(s) in result set equals to expected value
     But, you can perform richer comparisons by overriding default operator:
         multi_lines_rset(expected, operator.gt)
-    
+
     If `expected` is None, return 1 if the result set contains *at least*
     two rows.
     If rset is None, return 0.
@@ -605,7 +632,7 @@ class paginated_rset(Selector):
 @lltrace
 def sorted_rset(cls, req, rset=None, **kwargs):
     """Return 1 for sorted result set (e.g. from an RQL query containing an
-    :ref:ORDERBY clause), with exception that it will return 0 if the rset is
+    ORDERBY clause), with exception that it will return 0 if the rset is
     'ORDERBY FTIRANK(VAR)' (eg sorted by rank value of the has_text index).
     """
     if rset is None:
@@ -752,7 +779,11 @@ class is_instance(EClassSelector):
 
     def score_class(self, eclass, req):
         # cache on vreg to avoid reloading issues
-        cache = req.vreg._is_instance_selector_cache
+        try:
+            cache = req.vreg._is_instance_selector_cache
+        except AttributeError:
+            # XXX 'before-registry-reset' not called for db-api connections
+            cache = req.vreg._is_instance_selector_cache = {}
         try:
             expected_eclasses = cache[self]
         except KeyError:
@@ -788,6 +819,9 @@ class score_entity(EntitySelector):
     This is a very useful selector that will usually interest you since it
     allows a lot of things without having to write a specific selector.
 
+    The function can return arbitrary value which will be casted to an integer
+    value at the end.
+
     See :class:`~cubicweb.selectors.EntitySelector` documentation for entity
     lookup / score rules according to the input context.
     """
@@ -802,21 +836,6 @@ class score_entity(EntitySelector):
             return 1
         self.score_entity = intscore
 
-class attribute_edited(EntitySelector):
-    """Scores if the specified attribute has been edited
-    This is useful for selection of forms by the edit controller.
-    The initial use case is on a form, in conjunction with match_transition,
-    which will not score at edit time::
-
-     is_instance('Version') & (match_transition('ready') |
-                               attribute_edited('publication_date'))
-    """
-    def __init__(self, attribute, once_is_enough=False):
-        super(attribute_edited, self).__init__(once_is_enough)
-        self._attribute = attribute
-
-    def score_entity(self, entity):
-        return eid_param(role_name(self._attribute, 'subject'), entity.eid) in entity._cw.form
 
 class has_mimetype(EntitySelector):
     """Return 1 if the entity adapt to IDownloadable and has the given MIME type.
@@ -1128,26 +1147,120 @@ class rql_condition(EntitySelector):
     must use 'X' variable to represent the context entity and may use 'U' to
     represent the request's user.
 
+    .. warning::
+        If simply testing value of some attribute/relation of context entity (X),
+        you should rather use the :class:`score_entity` selector which will
+        benefit from the ORM's request entities cache.
+
     See :class:`~cubicweb.selectors.EntitySelector` documentation for entity
     lookup / score rules according to the input context.
     """
     def __init__(self, expression, once_is_enough=False):
         super(rql_condition, self).__init__(once_is_enough)
         if 'U' in frozenset(split_expression(expression)):
-            rql = 'Any X WHERE X eid %%(x)s, U eid %%(u)s, %s' % expression
+            rql = 'Any COUNT(X) WHERE X eid %%(x)s, U eid %%(u)s, %s' % expression
         else:
-            rql = 'Any X WHERE X eid %%(x)s, %s' % expression
+            rql = 'Any COUNT(X) WHERE X eid %%(x)s, %s' % expression
         self.rql = rql
 
-    def __repr__(self):
-        return u'<rql_condition "%s" at %x>' % (self.rql, id(self))
+    def __str__(self):
+        return '%s(%r)' % (self.__class__.__name__, self.rql)
 
     def score(self, req, rset, row, col):
         try:
-            return len(req.execute(self.rql, {'x': rset[row][col],
-                                              'u': req.user.eid}))
+            return req.execute(self.rql, {'x': rset[row][col],
+                                          'u': req.user.eid})[0][0]
         except Unauthorized:
             return 0
+
+
+class is_in_state(score_entity):
+    """Return 1 if entity is in one of the states given as argument list
+
+    You should use this instead of your own :class:`score_entity` selector to
+    avoid some gotchas:
+
+    * possible views gives a fake entity with no state
+    * you must use the latest tr info thru the workflow adapter for repository
+      side checking of the current state
+
+    In debug mode, this selector can raise:
+    :raises: :exc:`ValueError` for unknown states names
+        (etype workflow only not checked in custom workflow)
+
+    :rtype: int
+    """
+    def __init__(self, *expected):
+        assert expected, self
+        self.expected = frozenset(expected)
+        def score(entity, expected=self.expected):
+            adapted = entity.cw_adapt_to('IWorkflowable')
+            # in debug mode only (time consuming)
+            if entity._cw.vreg.config.debugmode:
+                # validation can only be done for generic etype workflow because
+                # expected transition list could have been changed for a custom
+                # workflow (for the current entity)
+                if not entity.custom_workflow:
+                    self._validate(adapted)
+            return self._score(adapted)
+        super(is_in_state, self).__init__(score)
+
+    def _score(self, adapted):
+        trinfo = adapted.latest_trinfo()
+        if trinfo is None: # entity is probably in it's initial state
+            statename = adapted.state
+        else:
+            statename = trinfo.new_state.name
+        return statename in self.expected
+
+    def _validate(self, adapted):
+        wf = adapted.current_workflow
+        valid = [n.name for n in wf.reverse_state_of]
+        unknown = sorted(self.expected.difference(valid))
+        if unknown:
+            raise ValueError("%s: unknown state(s): %s"
+                             % (wf.name, ",".join(unknown)))
+
+    def __str__(self):
+        return '%s(%s)' % (self.__class__.__name__,
+                           ','.join(str(s) for s in self.expected))
+
+
+class on_transition(is_in_state):
+    """Return 1 if entity is in one of the transitions given as argument list
+
+    Especially useful to match passed transition to enable notifications when
+    your workflow allows several transition to the same states.
+
+    Note that if workflow `change_state` adapter method is used, this selector
+    will not be triggered.
+
+    You should use this instead of your own :class:`score_entity` selector to
+    avoid some gotchas:
+
+    * possible views gives a fake entity with no state
+    * you must use the latest tr info thru the workflow adapter for repository
+      side checking of the current state
+
+    In debug mode, this selector can raise:
+    :raises: :exc:`ValueError` for unknown transition names
+        (etype workflow only not checked in custom workflow)
+
+    :rtype: int
+    """
+    def _score(self, adapted):
+        trinfo = adapted.latest_trinfo()
+        if trinfo and trinfo.by_transition:
+            return trinfo.by_transition[0].name in self.expected
+
+    def _validate(self, adapted):
+        wf = adapted.current_workflow
+        valid = [n.name for n in wf.reverse_transition_of]
+        unknown = sorted(self.expected.difference(valid))
+        if unknown:
+            raise ValueError("%s: unknown transition(s): %s"
+                             % (wf.name, ",".join(unknown)))
+
 
 # logged user selectors ########################################################
 
@@ -1183,7 +1296,6 @@ def anonymous_user():
     """
     return ~ authenticated_user()
 
-
 class match_user_groups(ExpectedValueSelector):
     """Return a non-zero score if request's user is in at least one of the
     groups given as initializer argument. Returned score is the number of groups
@@ -1213,9 +1325,9 @@ class match_user_groups(ExpectedValueSelector):
                 score = all(user.owns(r[col]) for r in rset)
         return score
 
-
 # Web request selectors ########################################################
 
+# XXX deprecate
 @objectify_selector
 @lltrace
 def primary_view(cls, req, view=None, **kwargs):
@@ -1233,6 +1345,15 @@ def primary_view(cls, req, view=None, **kwargs):
     return 1
 
 
+@objectify_selector
+@lltrace
+def contextual(cls, req, view=None, **kwargs):
+    """Return 1 if view's contextual property is true"""
+    if view is not None and view.contextual:
+        return 1
+    return 0
+
+
 class match_view(ExpectedValueSelector):
     """Return 1 if a view is specified an as its registry id is in one of the
     expected view id given to the initializer.
@@ -1244,6 +1365,19 @@ class match_view(ExpectedValueSelector):
         return 1
 
 
+class match_context(ExpectedValueSelector):
+
+    @lltrace
+    def __call__(self, cls, req, context=None, **kwargs):
+        try:
+            if not context in self.expected:
+                return 0
+        except AttributeError:
+            return 1 # class doesn't care about search state, accept it
+        return 1
+
+
+# XXX deprecate
 @objectify_selector
 @lltrace
 def match_context_prop(cls, req, context=None, **kwargs):
@@ -1264,8 +1398,6 @@ def match_context_prop(cls, req, context=None, **kwargs):
         return 1
     propval = req.property_value('%s.%s.context' % (cls.__registry__,
                                                     cls.__regid__))
-    if not propval:
-        propval = cls.context
     if propval and context != propval:
         return 0
     return 1
@@ -1347,43 +1479,62 @@ class specified_etype_implements(is_instance):
         return 0
 
 
+class attribute_edited(EntitySelector):
+    """Scores if the specified attribute has been edited This is useful for
+    selection of forms by the edit controller.
+
+    The initial use case is on a form, in conjunction with match_transition,
+    which will not score at edit time::
+
+     is_instance('Version') & (match_transition('ready') |
+                               attribute_edited('publication_date'))
+    """
+    def __init__(self, attribute, once_is_enough=False):
+        super(attribute_edited, self).__init__(once_is_enough)
+        self._attribute = attribute
+
+    def score_entity(self, entity):
+        return eid_param(role_name(self._attribute, 'subject'), entity.eid) in entity._cw.form
+
+
 # Other selectors ##############################################################
 
-
+# XXX deprecated ? maybe use on_transition selector instead ?
 class match_transition(ExpectedValueSelector):
-    """Return 1 if `transition` argument is found in the input context
-      which has a `.name` attribute matching one of the expected names
-      given to the initializer
+    """Return 1 if `transition` argument is found in the input context which has
+    a `.name` attribute matching one of the expected names given to the
+    initializer.
     """
     @lltrace
     def __call__(self, cls, req, transition=None, **kwargs):
         # XXX check this is a transition that apply to the object?
+        if transition is None:
+            treid = req.form.get('treid', None)
+            if treid:
+                transition = req.entity_from_eid(treid)
         if transition is not None and getattr(transition, 'name', None) in self.expected:
             return 1
         return 0
 
-class is_in_state(score_entity):
-    """return 1 if entity is in one of the states given as argument list
 
-    you should use this instead of your own :class:`score_entity` selector to
-    avoid some gotchas:
-
-    * possible views gives a fake entity with no state
-    * you must use the latest tr info, not entity.in_state for repository side
-      checking of the current state
+class match_exception(ExpectedValueSelector):
+    """Return 1 if a view is specified an as its registry id is in one of the
+    expected view id given to the initializer.
     """
-    def __init__(self, *states):
-        def score(entity, states=set(states)):
-            trinfo = entity.cw_adapt_to('IWorkflowable').latest_trinfo()
-            try:
-                return trinfo.new_state.name in states
-            except AttributeError:
-                return None
-        super(is_in_state, self).__init__(score)
+    def __init__(self, *expected):
+        assert expected, self
+        self.expected = expected
+
+    @lltrace
+    def __call__(self, cls, req, exc=None, **kwargs):
+        if exc is not None and isinstance(exc, self.expected):
+            return 1
+        return 0
+
 
 @objectify_selector
 def debug_mode(cls, req, rset=None, **kwargs):
-    """Return 1 if running in debug mode"""
+    """Return 1 if running in debug mode."""
     return req.vreg.config.debugmode and 1 or 0
 
 ## deprecated stuff ############################################################

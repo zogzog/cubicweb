@@ -20,20 +20,23 @@
 * the rql input form
 * the logged user link
 """
+from __future__ import with_statement
 
 __docformat__ = "restructuredtext en"
 _ = unicode
 
 from logilab.mtconverter import xml_escape
+from logilab.common.deprecation import class_renamed
 from rql import parse
 
 from cubicweb.selectors import (yes, multi_etypes_rset, match_form_params,
+                                match_context, configuration_values,
                                 anonymous_user, authenticated_user)
 from cubicweb.schema import display_name
+from cubicweb.utils import wrap_on_write
 from cubicweb.uilib import toggle_action
-from cubicweb.web import component
-from cubicweb.web.htmlwidgets import (MenuWidget, PopupBoxMenu, BoxSeparator,
-                                      BoxLink)
+from cubicweb.web import component, uicfg
+from cubicweb.web.htmlwidgets import MenuWidget, PopupBoxMenu
 
 VISIBLE_PROP_DEF = {
     _('visible'):  dict(type='Boolean', default=True,
@@ -68,69 +71,107 @@ class RQLInputForm(component.Component):
         self.w(u'</form></div>')
 
 
-class ApplLogo(component.Component):
-    """build the instance logo, usually displayed in the header"""
-    __regid__ = 'logo'
-    cw_property_defs = VISIBLE_PROP_DEF
-    # don't want user to hide this component using an cwproperty
-    site_wide = True
 
-    def call(self):
-        self.w(u'<a href="%s"><img id="logo" src="%s" alt="logo"/></a>'
-               % (self._cw.base_url(), self._cw.uiprops['LOGO']))
-
-
-class ApplHelp(component.Component):
-    """build the help button, usually displayed in the header"""
-    __regid__ = 'help'
-    cw_property_defs = VISIBLE_PROP_DEF
-    def call(self):
-        self.w(u'<a href="%s" class="help" title="%s">&#160;</a>'
-               % (self._cw.build_url(_restpath='doc/main'),
-                  self._cw._(u'help'),))
-
-
-class _UserLink(component.Component):
+class HeaderComponent(component.CtxComponent): # XXX rename properly along with related context
     """if the user is the anonymous user, build a link to login else display a menu
     with user'action (preference, logout, etc...)
     """
-    cw_property_defs = VISIBLE_PROP_DEF
+    __abstract__ = True
+    cw_property_defs = component.override_ctx(
+        component.CtxComponent,
+        vocabulary=['header-left', 'header-right'])
     # don't want user to hide this component using an cwproperty
     site_wide = True
-    __regid__ = 'loggeduserlink'
+    context = _('header-left')
 
 
-class AnonUserLink(_UserLink):
-    __select__ = _UserLink.__select__ & anonymous_user()
+class ApplLogo(HeaderComponent):
+    """build the instance logo, usually displayed in the header"""
+    __regid__ = 'logo'
+    order = -1
+
+    def render(self, w):
+        w(u'<a href="%s"><img id="logo" src="%s" alt="logo"/></a>'
+          % (self._cw.base_url(), self._cw.uiprops['LOGO']))
+
+
+class ApplicationName(HeaderComponent):
+    """display the instance name"""
+    __regid__ = 'appliname'
+
+    def render(self, w):
+        title = self._cw.property_value('ui.site-title')
+        if title:
+            w(u'<span id="appliName"><a href="%s">%s</a></span>' % (
+                self._cw.base_url(), xml_escape(title)))
+
+
+class CookieLoginComponent(HeaderComponent):
+    __regid__ = 'anonuserlink'
+    __select__ = (HeaderComponent.__select__ & anonymous_user()
+                  & configuration_values('auth-mode', 'cookie'))
+    context = 'header-right'
+    loginboxid = 'popupLoginBox'
+    _html = u"""[<a class="logout" title="%s" href="javascript:
+cw.htmlhelpers.popupLoginBox('%s', '__login');">%s</a>]"""
+
+    def render(self, w):
+        # XXX bw compat, though should warn about subclasses redefining call
+        self.w = w
+        self.call()
+
     def call(self):
-        if self._cw.vreg.config['auth-mode'] == 'cookie':
-            self.w(self._cw._('anonymous'))
-            self.w(u'''&#160;[<a class="logout" href="javascript: popupLoginBox();">%s</a>]'''
-                   % (self._cw._('i18n_login_popup')))
-        else:
-            self.w(self._cw._('anonymous'))
-            self.w(u'&#160;[<a class="logout" href="%s">%s</a>]'
-                   % (self._cw.build_url('login'), self._cw._('login')))
+        self.w(self._html % (self._cw._('login / password'),
+                             self.loginboxid, self._cw._('i18n_login_popup')))
+        self._cw.view('logform', rset=self.cw_rset, id=self.loginboxid,
+                      klass='%s hidden' % self.loginboxid, title=False,
+                      showmessage=False, w=self.w)
 
 
-class UserLink(_UserLink):
-    __select__ = _UserLink.__select__ & authenticated_user()
+class HTTPLoginComponent(CookieLoginComponent):
+    __select__ = (HeaderComponent.__select__ & anonymous_user()
+                  & configuration_values('auth-mode', 'http'))
 
-    def call(self):
+    def render(self, w):
+        # this redirects to the 'login' controller which in turn
+        # will raise a 401/Unauthorized
+        req = self._cw
+        w(u'[<a class="logout" title="%s" href="%s">%s</a>]'
+          % (req._('login / password'), req.build_url('login'), req._('login')))
+
+
+_UserLink = class_renamed('_UserLink', HeaderComponent)
+AnonUserLink = class_renamed('AnonUserLink', CookieLoginComponent)
+AnonUserLink.__abstract__ = True
+AnonUserLink.__select__ &= yes(1)
+
+
+class AnonUserStatusLink(HeaderComponent):
+    __regid__ = 'userstatus'
+    __select__ = HeaderComponent.__select__ & anonymous_user()
+    context = _('header-right')
+    order = HeaderComponent.order - 10
+
+    def render(self, w):
+        w(u'<span class="caption">%s</span>' % self._cw._('anonymous'))
+
+
+class AuthenticatedUserStatus(AnonUserStatusLink):
+    __select__ = HeaderComponent.__select__ & authenticated_user()
+
+    def render(self, w):
         # display useractions and siteactions
         actions = self._cw.vreg['actions'].possible_actions(self._cw, rset=self.cw_rset)
         box = MenuWidget('', 'userActionsBox', _class='', islist=False)
         menu = PopupBoxMenu(self._cw.user.login, isitem=False)
         box.append(menu)
         for action in actions.get('useractions', ()):
-            menu.append(BoxLink(action.url(), self._cw._(action.title),
-                                action.html_class()))
+            menu.append(self.action_link(action))
         if actions.get('useractions') and actions.get('siteactions'):
-            menu.append(BoxSeparator())
+            menu.append(self.separator())
         for action in actions.get('siteactions', ()):
-            menu.append(BoxLink(action.url(), self._cw._(action.title),
-                                action.html_class()))
-        box.render(w=self.w)
+            menu.append(self.action_link(action))
+        box.render(w=w)
 
 
 class ApplicationMessage(component.Component):
@@ -148,35 +189,8 @@ class ApplicationMessage(component.Component):
         self.w(u'<div id="appMsg" onclick="%s" class="%s">\n' %
                (toggle_action('appMsg'), (msgs and ' ' or 'hidden')))
         for msg in msgs:
-            self.w(u'<div class="message" id="%s">%s</div>' % (
-                self.div_id(), msg))
+            self.w(u'<div class="message" id="%s">%s</div>' % (self.domid, msg))
         self.w(u'</div>')
-
-
-class ApplicationName(component.Component):
-    """display the instance name"""
-    __regid__ = 'appliname'
-    cw_property_defs = VISIBLE_PROP_DEF
-    # don't want user to hide this component using an cwproperty
-    site_wide = True
-
-    def call(self):
-        title = self._cw.property_value('ui.site-title')
-        if title:
-            self.w(u'<span id="appliName"><a href="%s">%s</a></span>' % (
-                self._cw.base_url(), xml_escape(title)))
-
-
-class SeeAlsoVComponent(component.RelatedObjectsVComponent):
-    """display any entity's see also"""
-    __regid__ = 'seealso'
-    context = 'navcontentbottom'
-    rtype = 'see_also'
-    role = 'subject'
-    order = 40
-    # register msg not generated since no entity use see_also in cubicweb itself
-    title = _('contentnavigation_seealso')
-    help = _('contentnavigation_seealso_description')
 
 
 class EtypeRestrictionComponent(component.Component):
@@ -230,17 +244,29 @@ class EtypeRestrictionComponent(component.Component):
         self.w(u'&#160;|&#160;'.join(html))
         self.w(u'</div>')
 
+# contextual components ########################################################
 
-class MetaDataComponent(component.EntityVComponent):
+
+class MetaDataComponent(component.EntityCtxComponent):
     __regid__ = 'metadata'
     context = 'navbottom'
     order = 1
 
-    def cell_call(self, row, col, view=None):
-        self.wview('metadata', self.cw_rset, row=row, col=col)
+    def render_body(self, w):
+        self.entity.view('metadata', w=w)
 
 
-def registration_callback(vreg):
-    vreg.register_all(globals().values(), __name__, (SeeAlsoVComponent,))
-    if 'see_also' in vreg.schema:
-        vreg.register(SeeAlsoVComponent)
+class SectionLayout(component.Layout):
+    __select__ = match_context('navtop', 'navbottom',
+                               'navcontenttop', 'navcontentbottom')
+    cssclass = 'section'
+
+    def render(self, w):
+        if self.init_rendering():
+            view = self.cw_extra_kwargs['view']
+            w(u'<div class="%s %s" id="%s">' % (self.cssclass, view.cssclass,
+                                                view.domid))
+            with wrap_on_write(w, '<h4>') as wow:
+                view.render_title(wow)
+            view.render_body(w)
+            w(u'</div>\n')

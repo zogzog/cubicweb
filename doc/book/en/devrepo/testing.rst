@@ -109,6 +109,8 @@ It is possible to have these tests run continuously using `apycot`_.
 
 .. _apycot: http://www.logilab.org/project/apycot
 
+.. _securitytest:
+
 Managing connections or users
 +++++++++++++++++++++++++++++
 
@@ -194,13 +196,13 @@ Let us look at simple example from the ``blog`` cube.
             blog_entry_2 = req.create_entity('BlogEntry', title=u'yes',
                                              content=u'cubicweb yes')
             blog_entry_2.set_relations(entry_of=cubicweb_blog)
-            self.assertEquals(len(MAILBOX), 0)
+            self.assertEqual(len(MAILBOX), 0)
             self.commit()
-            self.assertEquals(len(MAILBOX), 2)
+            self.assertEqual(len(MAILBOX), 2)
             mail = MAILBOX[0]
-            self.assertEquals(mail.subject, '[data] hop')
+            self.assertEqual(mail.subject, '[data] hop')
             mail = MAILBOX[1]
-            self.assertEquals(mail.subject, '[data] yes')
+            self.assertEqual(mail.subject, '[data] yes')
 
 Visible actions tests
 `````````````````````
@@ -227,7 +229,7 @@ user or to a category of users. Let's take an example in the
         def test_admin(self):
             req = self.request()
             rset = req.execute('Any C WHERE C is Conference')
-            self.assertListEquals(self.pactions(req, rset),
+            self.assertListEqual(self.pactions(req, rset),
                                   [('workflow', workflow.WorkflowActions),
                                    ('edit', confactions.ModifyAction),
                                    ('managepermission', actions.ManagePermissionsAction),
@@ -236,7 +238,7 @@ user or to a category of users. Let's take an example in the
                                    ('generate_badge_action', badges.GenerateBadgeAction),
                                    ('addtalkinconf', confactions.AddTalkInConferenceAction)
                                    ])
-            self.assertListEquals(self.action_submenu(req, rset, 'addrelated'),
+            self.assertListEqual(self.action_submenu(req, rset, 'addrelated'),
                                   [(u'add Track in_conf Conference object',
                                     u'http://testing.fr/cubicweb/add/Track'
                                     u'?__linkto=in_conf%%3A%(conf)s%%3Asubject&'
@@ -340,6 +342,60 @@ It is also possible to add a ``schema.py`` file in
 ``mycube/test/data``, which will be used by the testing framework,
 therefore making new entity types and relations available to the
 tests. 
+
+Literate programming
+--------------------
+
+CubicWeb provides some literate programming capabilities. The :ref:`cubicweb-ctl`
+`shell` command accepts differents format files. If your file ends with `.txt`
+or `.rst`, the file will be parsed by :mod:`doctest.testfile` with CubicWeb
+:ref:`migration` API enabled in it.
+
+Create a `scenario.txt` file into `test/` directory and fill with some content.
+Please refer the :mod:`doctest.testfile` `documentation`_.
+
+.. _documentation: http://docs.python.org/library/doctest.html
+
+Then, you can run it directly by::
+
+    $ cubicweb-ctl shell <cube_instance> test/scenario.txt
+
+When your scenario file is ready, put it in a new test case to be able to run
+it automatically.
+
+.. sourcecode:: python
+
+      from os.path import dirname, join
+      from logilab.common.testlib import unittest_main
+      from cubicweb.devtools.testlib import CubicWebTC
+
+      class AcceptanceTC(CubicWebTC):
+
+              def test_scenario(self):
+                      self.assertDocTestFile(join(dirname(__file__), 'scenario.txt'))
+
+      if __name__ == '__main__':
+              unittest_main()
+
+Skipping a scenario
+```````````````````
+
+If you want to set up initial conditions that you can't put in your unit test
+case, you have to use a :exc:`KeyboardInterrupt` exception only because of the
+way :mod:`doctest` module will catch all the exceptions internally.
+
+    >>> if condition_not_met:
+    ...     raise KeyboardInterrupt('please, check your fixture.')
+
+Passing paramaters
+``````````````````
+Using extra arguments to parametrize your scenario is possible by prepend them
+by double dashes.
+
+Please refer to the `cubicweb-ctl shell --help` usage.
+
+.. important::
+    Your scenario file must be utf-8 encoded.
 
 Test APIS
 ---------

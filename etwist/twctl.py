@@ -21,7 +21,7 @@ from cubicweb.toolsutils import CommandHandler
 from cubicweb.web.webctl import WebCreateHandler
 
 # trigger configuration registration
-import cubicweb.etwist.twconfig # pylint: disable-msg=W0611
+import cubicweb.etwist.twconfig # pylint: disable=W0611
 
 class TWCreateHandler(WebCreateHandler):
     cfgname = 'twisted'
@@ -32,7 +32,7 @@ class TWStartHandler(CommandHandler):
 
     def start_server(self, config):
         from cubicweb.etwist import server
-        server.run(config)
+        return server.run(config)
 
 class TWStopHandler(CommandHandler):
     cmdname = 'stop'

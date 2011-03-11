@@ -28,6 +28,7 @@ Widgets
 
 .. autoclass:: cubicweb.web.formwidgets.FieldWidget
 
+
 HTML <input> based widgets
 ''''''''''''''''''''''''''
 
@@ -37,6 +38,7 @@ HTML <input> based widgets
 .. autoclass:: cubicweb.web.formwidgets.FileInput
 .. autoclass:: cubicweb.web.formwidgets.ButtonInput
 
+
 Other standard HTML widgets
 '''''''''''''''''''''''''''
 
@@ -44,6 +46,7 @@ Other standard HTML widgets
 .. autoclass:: cubicweb.web.formwidgets.Select
 .. autoclass:: cubicweb.web.formwidgets.CheckBox
 .. autoclass:: cubicweb.web.formwidgets.Radio
+
 
 Date and time widgets
 '''''''''''''''''''''
@@ -53,30 +56,35 @@ Date and time widgets
 .. autoclass:: cubicweb.web.formwidgets.JQueryDatePicker
 .. autoclass:: cubicweb.web.formwidgets.JQueryTimePicker
 
+
 Ajax / javascript widgets
 '''''''''''''''''''''''''
 
 .. autoclass:: cubicweb.web.formwidgets.FCKEditor
 .. autoclass:: cubicweb.web.formwidgets.AjaxWidget
 .. autoclass:: cubicweb.web.formwidgets.AutoCompletionWidget
+.. autoclass:: cubicweb.web.formwidgets.InOutWidget
 
 .. kill or document StaticFileAutoCompletionWidget
 .. kill or document LazyRestrictedAutoCompletionWidget
 .. kill or document RestrictedAutoCompletionWidget
 
+
 Other widgets
 '''''''''''''
+
 .. autoclass:: cubicweb.web.formwidgets.PasswordInput
 .. autoclass:: cubicweb.web.formwidgets.IntervalWidget
 .. autoclass:: cubicweb.web.formwidgets.HorizontalLayoutWidget
 .. autoclass:: cubicweb.web.formwidgets.EditableURLWidget
 
+
 Form controls
 '''''''''''''
-Those classes are not proper widget (they are not associated to
-field) but are used as form controls. Their API is similar
-to widgets except that `field` argument given to :meth:`render`
-will be `None`.
+
+Those classes are not proper widget (they are not associated to field) but are
+used as form controls. Their API is similar to widgets except that `field`
+argument given to :meth:`render` will be `None`.
 
 .. autoclass:: cubicweb.web.formwidgets.Button
 .. autoclass:: cubicweb.web.formwidgets.SubmitButton
@@ -93,6 +101,7 @@ from logilab.common.deprecation import deprecated
 from logilab.common.date import todatetime
 
 from cubicweb import tags, uilib
+from cubicweb.utils import json_dumps
 from cubicweb.web import stdmsgs, INTERNAL_FIELD_VALUE, ProcessFormError
 
 
@@ -106,15 +115,20 @@ class FieldWidget(object):
 
     :attr:`needs_js`
        list of javascript files needed by the widget.
+
     :attr:`needs_css`
        list of css files needed by the widget.
+
     :attr:`setdomid`
        flag telling if HTML DOM identifier should be set on input.
+
     :attr:`settabindex`
        flag telling if HTML tabindex attribute of inputs should be set.
+
     :attr:`suffix`
        string to use a suffix when generating input, to ease usage as a
        sub-widgets (eg widget used by another widget)
+
     :attr:`vocabulary_widget`
        flag telling if this widget expect a vocabulary
 
@@ -211,7 +225,7 @@ class FieldWidget(object):
            generating the form)
 
         4. field's typed value (returned by its
-          :meth:`~cubicweb.web.formfields.Field.typed_value` method)
+           :meth:`~cubicweb.web.formfields.Field.typed_value` method)
 
         Values found in 1. and 2. are expected te be already some 'display
         value' (eg a string) while those found in 3. and 4. are expected to be
@@ -698,12 +712,13 @@ class AutoCompletionWidget(TextInput):
     controller. This method is expected to return allowed values for the input,
     that the widget will use to propose matching values as you type.
     """
-    needs_js = ('cubicweb.widgets.js', 'jquery.autocomplete.js')
-    needs_css = ('jquery.autocomplete.css',)
-    wdgtype = 'SuggestField'
-    loadtype = 'auto'
+    needs_js = ('cubicweb.widgets.js', 'jquery.ui.js')
+    needs_css = ('jquery.ui.css',)
+    default_settings = {}
 
     def __init__(self, *args, **kwargs):
+        self.autocomplete_settings = kwargs.pop('autocomplete_settings',
+                                                self.default_settings)
         try:
             self.autocomplete_initfunc = kwargs.pop('autocomplete_initfunc')
         except KeyError:
@@ -720,12 +735,17 @@ class AutoCompletionWidget(TextInput):
             values = ('',)
         return values
 
-    def attributes(self, form, field):
-        attrs = super(AutoCompletionWidget, self).attributes(form, field)
-        init_ajax_attributes(attrs, self.wdgtype, self.loadtype)
-        # XXX entity form specific
-        attrs['cubicweb:dataurl'] = self._get_url(form.edited_entity, field)
-        return attrs
+    def _render(self, form, field, renderer):
+        entity = form.edited_entity
+        domid = field.dom_id(form).replace(':', r'\\:')
+        if callable(self.autocomplete_initfunc):
+            data = self.autocomplete_initfunc(form, field)
+        else:
+            data = xml_escape(self._get_url(entity, field))
+        form._cw.add_onload(u'$("#%s").cwautocomplete(%s, %s);'
+                            % (domid, json_dumps(data),
+                               json_dumps(self.autocomplete_settings)))
+        return super(AutoCompletionWidget, self)._render(form, field, renderer)
 
     def _get_url(self, entity, field):
         if self.autocomplete_initfunc is None:
@@ -735,6 +755,7 @@ class AutoCompletionWidget(TextInput):
             fname = self.autocomplete_initfunc
         return entity._cw.build_url('json', fname=fname, mode='remote',
                                     pageid=entity._cw.pageid)
+
 
 
 class StaticFileAutoCompletionWidget(AutoCompletionWidget):
@@ -752,12 +773,11 @@ class StaticFileAutoCompletionWidget(AutoCompletionWidget):
 
 class RestrictedAutoCompletionWidget(AutoCompletionWidget):
     """XXX describe me"""
-    wdgtype = 'RestrictedSuggestField'
+    default_settings = {'mustMatch': True}
 
 
 class LazyRestrictedAutoCompletionWidget(RestrictedAutoCompletionWidget):
     """remote autocomplete """
-    wdgtype = 'LazySuggestField'
 
     def values_and_attributes(self, form, field):
         """override values_and_attributes to handle initial displayed values"""
@@ -881,7 +901,9 @@ class EditableURLWidget(FieldWidget):
         values = {}
         path = req.form.get(field.input_name(form, 'path'))
         if isinstance(path, basestring):
-            path = path.strip() or None
+            path = path.strip()
+        if path is None:
+            path = u''
         fqs = req.form.get(field.input_name(form, 'fqs'))
         if isinstance(fqs, basestring):
             fqs = fqs.strip() or None
@@ -978,3 +1000,55 @@ class ImgButton(object):
             'label': label, 'imgsrc': imgsrc,
             'domid': self.domid, 'href': self.href}
 
+class InOutWidget(Select):
+    needs_js = ('cubicweb.widgets.js', )
+    template = """
+<table id="%(widgetid)s">
+<tr><td>%(inoutinput)s</td>
+    <td><div style="margin-bottom:3px">%(addinput)s</div> <div>%(removeinput)s</div></td>
+    <td>%(resinput)s</td></tr>
+</table>
+"""
+    add_button = """<input type="button" id="cwinoutadd"  class="wdgButton cwinoutadd" value="&gt;&gt;" size="10" />"""
+    remove_button ="""<input type="button" class="wdgButton cwinoutremove" value="&lt;&lt;" size="10" />"""
+
+    def __init__(self, attrs=None):
+        super(InOutWidget, self).__init__(attrs, multiple=True)
+
+    def render_select(self, form, field, name, selected=False):
+        values, attrs = self.values_and_attributes(form, field)
+        options = []
+        inputs = []
+        for _option in field.vocabulary(form):
+            try:
+                label, value, oattrs = _option
+            except ValueError:
+                label, value = _option
+            if selected:
+                # add values
+                if value in values:
+                    options.append(tags.option(label, value=value))
+                    # add hidden inputs
+                    inputs.append(tags.input(value=value, name=field.dom_id(form), type="hidden"))
+            else:
+                options.append(tags.option(label, value=value))
+        if 'size' not in attrs:
+            attrs['size'] = 5
+        if 'id' in attrs :
+            attrs.pop('id')
+        return tags.select(name=name, multiple=self._multiple, id=name,
+                           options=options, **attrs) + '\n'.join(inputs)
+
+
+    def _render(self, form, field, renderer):
+        domid = field.dom_id(form)
+        jsnodes = {'widgetid': domid, 'from': 'from_' + domid, 'to': 'to_' + domid}
+        form._cw.add_onload(u'$(cw.jqNode("%s")).cwinoutwidget("%s", "%s");'
+                            % (jsnodes['widgetid'], jsnodes['from'], jsnodes['to']))
+        field.required=True
+        return self.template % {'widgetid': jsnodes['widgetid'],
+                                'inoutinput' : self.render_select(form, field, jsnodes['from']), # helpinfo select tag
+                                'resinput' : self.render_select(form, field, jsnodes['to'], selected=True), # select tag with resultats
+                                'addinput' : self.add_button % jsnodes,
+                                'removeinput': self.remove_button % jsnodes
+                                }

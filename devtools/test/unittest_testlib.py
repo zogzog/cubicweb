@@ -15,24 +15,23 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""unittests for gct.apptest module
-
-"""
+"""unittests for cw.devtools.testlib module"""
 
 from cStringIO import StringIO
 
-from logilab.common.testlib import (TestCase, unittest_main, TestSuite,
-                                    SkipAwareTextTestRunner)
+from unittest import TextTestRunner
+from logilab.common.testlib import TestSuite, TestCase, unittest_main
 
 from cubicweb.devtools import htmlparser
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.pytestconf import clean_repo_test_cls
 
+
 class WebTestTC(TestCase):
 
     def setUp(self):
         output = StringIO()
-        self.runner = SkipAwareTextTestRunner(stream=output)
+        self.runner = TextTestRunner(stream=output)
 
     def test_error_raised(self):
         class MyWebTest(CubicWebTC):

@@ -46,6 +46,10 @@ from cubicweb.web.http_headers import Headers
 
 _MARKER = object()
 
+def build_cb_uid(seed):
+    sha = hashlib.sha1('%s%s%s' % (time.time(), seed, random.random()))
+    return 'cb_%s' % (sha.hexdigest())
+
 
 def list_form_param(form, param, pop=False):
     """get param from form parameters and return its value as a list,
@@ -80,7 +84,6 @@ class CubicWebRequestBase(DBAPIRequest):
 
     def __init__(self, vreg, https, form=None):
         super(CubicWebRequestBase, self).__init__(vreg)
-        self.authmode = vreg.config['auth-mode']
         self.https = https
         if https:
             self.uiprops = vreg.config.https_uiprops
@@ -115,6 +118,10 @@ class CubicWebRequestBase(DBAPIRequest):
             pid = make_uid(id(self))
         self.pageid = pid
         self.html_headers.define_var('pageid', pid, override=False)
+
+    @property
+    def authmode(self):
+        return self.vreg.config['auth-mode']
 
     @property
     def varmaker(self):
@@ -382,10 +389,7 @@ class CubicWebRequestBase(DBAPIRequest):
         return "javascript: %s" % getattr(js, jsfunc)(cbname, *args)
 
     def register_onetime_callback(self, func, *args):
-        cbname = 'cb_%s' % (
-            hashlib.sha1('%s%s%s%s' % (time.time(), func.__name__,
-                                       random.random(),
-                                       self.user.login)).hexdigest())
+        cbname = build_cb_uid(func.__name__)
         def _cb(req):
             try:
                 ret = func(req, *args)
@@ -607,10 +611,17 @@ class CubicWebRequestBase(DBAPIRequest):
         Arbitrary extra named arguments may be given, they will be included as
         parameters of the generated url.
         """
+        # define a function in headers and use it in the link to avoid url
+        # unescaping pb: browsers give the js expression to the interpreter
+        # after having url unescaping the content. This may make appear some
+        # quote or other special characters that will break the js expression.
         extraparams.setdefault('fname', 'view')
         url = self.build_url('json', **extraparams)
-        return "javascript: $('#%s').%s; noop()" % (
-            nodeid, js.loadxhtml(url, None, 'get', replacemode))
+        cbname = build_cb_uid(url[:50])
+        jscode = 'function %s() { $("#%s").%s; }' % (
+            cbname, nodeid, js.loadxhtml(url, None, 'get', replacemode))
+        self.html_headers.add_post_inline_script(jscode)
+        return "javascript: %s()" % cbname
 
     # urls/path management ####################################################
 

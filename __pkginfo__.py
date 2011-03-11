@@ -1,5 +1,5 @@
-# pylint: disable-msg=W0622,C0103
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# pylint: disable=W0622,C0103
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -22,7 +22,7 @@ software
 
 modname = distname = "cubicweb"
 
-numversion = (3, 9, 9)
+numversion = (3, 10, 9)
 version = '.'.join(str(num) for num in numversion)
 
 description = "a repository of entities / relations for knowledge management"
@@ -40,9 +40,9 @@ classifiers = [
 ]
 
 __depends__ = {
-    'logilab-common': '>= 0.51.0',
+    'logilab-common': '>= 0.54.0',
     'logilab-mtconverter': '>= 0.8.0',
-    'rql': '>= 0.26.2',
+    'rql': '>= 0.28.0',
     'yams': '>= 0.30.1',
     'docutils': '>= 0.6',
     #gettext                    # for xgettext, msgcat, etc...
@@ -52,7 +52,7 @@ __depends__ = {
     'Twisted': '',
     # XXX graphviz
     # server dependencies
-    'logilab-database': '>= 1.3.2',
+    'logilab-database': '>= 1.3.3',
     'pysqlite': '>= 2.5.5', # XXX install pysqlite2
     }
 

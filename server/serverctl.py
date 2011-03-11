@@ -25,6 +25,7 @@ __docformat__ = 'restructuredtext en'
 import sys
 import os
 
+from logilab.common import nullobject
 from logilab.common.configuration import Configuration
 from logilab.common.shellutils import ASK
 
@@ -32,8 +33,9 @@ from cubicweb import AuthenticationError, ExecutionError, ConfigurationError
 from cubicweb.toolsutils import Command, CommandHandler, underline_title
 from cubicweb.cwctl import CWCTL
 from cubicweb.server import SOURCE_TYPES
-from cubicweb.server.serverconfig import (USER_OPTIONS, ServerConfiguration,
-                                          SourceConfiguration)
+from cubicweb.server.serverconfig import (
+    USER_OPTIONS, ServerConfiguration, SourceConfiguration,
+    ask_source_config, generate_source_config)
 
 # utility functions ###########################################################
 
@@ -55,16 +57,14 @@ def source_cnx(source, dbname=None, special_privs=False, verbose=True):
         else:
             print dbname,
     if dbhelper.users_support:
-        if not verbose or (not special_privs and source.get('db-user')):
+        if not special_privs and source.get('db-user'):
             user = source['db-user']
             if verbose:
                 print 'as', user
-            if source.get('db-password'):
-                password = source['db-password']
-            else:
-                password = getpass('password: ')
+            password = source.get('db-password')
         else:
-            print
+            if verbose:
+                print
             if special_privs:
                 print 'WARNING'
                 print ('the user will need the following special access rights '
@@ -73,9 +73,9 @@ def source_cnx(source, dbname=None, special_privs=False, verbose=True):
                 print
             default_user = source.get('db-user', os.environ.get('USER', ''))
             user = raw_input('Connect as user ? [%r]: ' % default_user)
-            user = user or default_user
-            if user == source.get('db-user') and source.get('db-password'):
-                password = source['db-password']
+            user = user.strip() or default_user
+            if user == source.get('db-user'):
+                password = source.get('db-password')
             else:
                 password = getpass('password: ')
     else:
@@ -107,22 +107,18 @@ def system_source_cnx(source, dbms_system_base=False,
         return source_cnx(source, system_db, special_privs=special_privs, verbose=verbose)
     return source_cnx(source, special_privs=special_privs, verbose=verbose)
 
-def _db_sys_cnx(source, what, db=None, user=None, verbose=True):
-    """return a connection on the RDMS system table (to create/drop a user
-    or a database
+def _db_sys_cnx(source, special_privs, verbose=True):
+    """return a connection on the RDMS system table (to create/drop a user or a
+    database)
     """
     import logilab.common as lgp
     from logilab.database import get_db_helper
     lgp.USE_MX_DATETIME = False
-    special_privs = ''
     driver = source['db-driver']
     helper = get_db_helper(driver)
-    if user is not None and helper.users_support:
-        special_privs += '%s USER' % what
-    if db is not None:
-        special_privs += ' %s DATABASE' % what
     # connect on the dbms system base to create our base
-    cnx = system_source_cnx(source, True, special_privs=special_privs, verbose=verbose)
+    cnx = system_source_cnx(source, True, special_privs=special_privs,
+                            verbose=verbose)
     # disable autocommit (isolation_level(1)) because DROP and
     # CREATE DATABASE can't be executed in a transaction
     try:
@@ -134,7 +130,7 @@ def _db_sys_cnx(source, what, db=None, user=None, verbose=True):
 
 def repo_cnx(config):
     """return a in-memory repository and a db api connection it"""
-    from cubicweb.dbapi import in_memory_cnx
+    from cubicweb.dbapi import in_memory_repo_cnx
     from cubicweb.server.utils import manager_userpasswd
     try:
         login = config.sources()['admin']['login']
@@ -143,7 +139,7 @@ def repo_cnx(config):
         login, pwd = manager_userpasswd()
     while True:
         try:
-            return in_memory_cnx(config, login, password=pwd)
+            return in_memory_repo_cnx(config, login, password=pwd)
         except AuthenticationError:
             print '-> Error: wrong user/password.'
             # reset cubes else we'll have an assertion error on next retry
@@ -161,7 +157,6 @@ class RepositoryCreateHandler(CommandHandler):
         """create an instance by copying files from the given cube and by asking
         information necessary to build required configuration files
         """
-        from cubicweb.server.utils import ask_source_config
         config = self.config
         print underline_title('Configuring the repository')
         config.input_config('email', inputlevel)
@@ -176,37 +171,9 @@ class RepositoryCreateHandler(CommandHandler):
         # defs (in native.py)
         sconfig = SourceConfiguration(config,
                                       options=SOURCE_TYPES['native'].options)
-        sconfig.adapter = 'native'
         sconfig.input_config(inputlevel=inputlevel)
         sourcescfg = {'system': sconfig}
-        for cube in cubes:
-            # if a source is named as the cube containing it, we need the
-            # source to use the cube, so add it.
-            if cube in SOURCE_TYPES:
-                sourcescfg[cube] = ask_source_config(cube, inputlevel)
         print
-        while ASK.confirm('Enter another source ?', default_is_yes=False):
-            available = sorted(stype for stype in SOURCE_TYPES
-                               if not stype in cubes)
-            while True:
-                sourcetype = raw_input('source type (%s): ' % ', '.join(available))
-                if sourcetype in available:
-                    break
-                print '-> unknown source type, use one of the available types.'
-            while True:
-                sourceuri = raw_input('source identifier (a unique name used to tell sources apart): ').strip()
-                if sourceuri != 'admin' and sourceuri not in sourcescfg:
-                    break
-                print '-> uri already used, choose another one.'
-            sourcescfg[sourceuri] = ask_source_config(sourcetype, inputlevel)
-            sourcemodule = SOURCE_TYPES[sourcetype].module
-            if not sourcemodule.startswith('cubicweb.'):
-                # module names look like cubes.mycube.themodule
-                sourcecube = SOURCE_TYPES[sourcetype].module.split('.', 2)[1]
-                # if the source adapter is coming from an external component,
-                # ensure it's specified in used cubes
-                if not sourcecube in cubes:
-                    cubes.append(sourcecube)
         sconfig = Configuration(options=USER_OPTIONS)
         sconfig.input_config(inputlevel=inputlevel)
         sourcescfg['admin'] = sconfig
@@ -222,6 +189,16 @@ class RepositoryCreateHandler(CommandHandler):
             print ('-> nevermind, you can do it later with '
                    '"cubicweb-ctl db-create %s".' % self.config.appid)
 
+ERROR = nullobject()
+
+def confirm_on_error_or_die(msg, func, *args, **kwargs):
+    try:
+        return func(*args, **kwargs)
+    except Exception, ex:
+        print 'ERROR', ex
+        if not ASK.confirm('An error occurred while %s. Continue anyway?' % msg):
+            raise ExecutionError(str(ex))
+    return ERROR
 
 class RepositoryDeleteHandler(CommandHandler):
     cmdname = 'delete'
@@ -235,19 +212,29 @@ class RepositoryDeleteHandler(CommandHandler):
         helper = get_db_helper(source['db-driver'])
         if ASK.confirm('Delete database %s ?' % dbname):
             if source['db-driver'] == 'sqlite':
-                os.unlink(source['db-name'])
+                if confirm_on_error_or_die(
+                    'deleting database file %s' % dbname,
+                    os.unlink, source['db-name']) is not ERROR:
+                    print '-> database %s dropped.' % dbname
                 return
             user = source['db-user'] or None
-            cnx = _db_sys_cnx(source, 'DROP DATABASE', user=user)
+            cnx = confirm_on_error_or_die('connecting to database %s' % dbname,
+                                          _db_sys_cnx, source, 'DROP DATABASE')
+            if cnx is ERROR:
+                return
             cursor = cnx.cursor()
             try:
-                cursor.execute('DROP DATABASE %s' % dbname)
-                print '-> database %s dropped.' % dbname
+                if confirm_on_error_or_die(
+                    'dropping database %s' % dbname,
+                    cursor.execute, 'DROP DATABASE "%s"' % dbname) is not ERROR:
+                    print '-> database %s dropped.' % dbname
                 # XXX should check we are not connected as user
                 if user and helper.users_support and \
                        ASK.confirm('Delete user %s ?' % user, default_is_yes=False):
-                    cursor.execute('DROP USER %s' % user)
-                    print '-> user %s dropped.' % user
+                    if confirm_on_error_or_die(
+                        'dropping user %s' % user,
+                        cursor.execute, 'DROP USER %s' % user) is not ERROR:
+                        print '-> user %s dropped.' % user
                 cnx.commit()
             except:
                 cnx.rollback()
@@ -265,6 +252,7 @@ class RepositoryStartHandler(CommandHandler):
         command.append('--loglevel %s' % config['log-threshold'].lower())
         command.append(config.appid)
         os.system(' '.join(command))
+        return 1
 
 
 class RepositoryStopHandler(CommandHandler):
@@ -294,7 +282,7 @@ class CreateInstanceDBCommand(Command):
 
     You will be prompted for a login / password to use to connect to
     the system database.  The given user should have almost all rights
-    on the database (ie a super user on the dbms allowed to create
+    on the database (ie a super user on the DBMS allowed to create
     database, users, languages...).
 
     <instance>
@@ -340,14 +328,15 @@ class CreateInstanceDBCommand(Command):
         elif self.config.create_db:
             print '\n'+underline_title('Creating the system database')
             # connect on the dbms system base to create our base
-            dbcnx = _db_sys_cnx(source, 'CREATE DATABASE and / or USER', verbose=verbose)
+            dbcnx = _db_sys_cnx(source, 'CREATE/DROP DATABASE and / or USER',
+                                verbose=verbose)
             cursor = dbcnx.cursor()
             try:
                 if helper.users_support:
                     user = source['db-user']
                     if not helper.user_exists(cursor, user) and (automatic or \
                            ASK.confirm('Create db user %s ?' % user, default_is_yes=False)):
-                        helper.create_user(source['db-user'], source['db-password'])
+                        helper.create_user(source['db-user'], source.get('db-password'))
                         print '-> user %s created.' % user
                 if dbname in helper.list_databases(cursor):
                     if automatic or ASK.confirm('Database %s already exists -- do you want to drop it ?' % dbname):
@@ -360,7 +349,8 @@ class CreateInstanceDBCommand(Command):
             except:
                 dbcnx.rollback()
                 raise
-        cnx = system_source_cnx(source, special_privs='LANGUAGE C', verbose=verbose)
+        cnx = system_source_cnx(source, special_privs='CREATE LANGUAGE',
+                                verbose=verbose)
         cursor = cnx.cursor()
         helper.init_fti_extensions(cursor)
         # postgres specific stuff
@@ -383,9 +373,8 @@ class CreateInstanceDBCommand(Command):
 class InitInstanceCommand(Command):
     """Initialize the system database of an instance (run after 'db-create').
 
-    You will be prompted for a login / password to use to connect to
-    the system database.  The given user should have the create tables,
-    and grant permissions.
+    Notice this will be done using user specified in the sources files, so this
+    user should have the create tables grant permissions on the database.
 
     <instance>
       the identifier of the instance to initialize.
@@ -399,6 +388,10 @@ class InitInstanceCommand(Command):
           'default': False,
           'help': 'insert drop statements to remove previously existant \
 tables, indexes... (no by default)'}),
+        ('config-level',
+         {'short': 'l', 'type': 'int', 'default': 1,
+          'help': 'level threshold for questions asked when configuring another source'
+          }),
         )
 
     def run(self, args):
@@ -422,6 +415,68 @@ tables, indexes... (no by default)'}),
                 'the %s file. Resolve this first (error: %s).'
                 % (config.sources_file(), str(ex).strip()))
         init_repository(config, drop=self.config.drop)
+        while ASK.confirm('Enter another source ?', default_is_yes=False):
+            CWCTL.run(['add-source', '--config-level', self.config.config_level, config.appid])
+
+
+class AddSourceCommand(Command):
+    """Add a data source to an instance.
+
+    <instance>
+      the identifier of the instance to initialize.
+    """
+    name = 'add-source'
+    arguments = '<instance>'
+    min_args = max_args = 1
+    options = (
+        ('config-level',
+         {'short': 'l', 'type': 'int', 'default': 1,
+          'help': 'level threshold for questions asked when configuring another source'
+          }),
+        )
+
+    def run(self, args):
+        appid = args[0]
+        config = ServerConfiguration.config_for(appid)
+        config.quick_start = True
+        repo, cnx = repo_cnx(config)
+        req = cnx.request()
+        used = set(n for n, in req.execute('Any SN WHERE S is CWSource, S name SN'))
+        cubes = repo.get_cubes()
+        while True:
+            type = raw_input('source type (%s): '
+                                % ', '.join(sorted(SOURCE_TYPES)))
+            if type not in SOURCE_TYPES:
+                print '-> unknown source type, use one of the available types.'
+                continue
+            sourcemodule = SOURCE_TYPES[type].module
+            if not sourcemodule.startswith('cubicweb.'):
+                # module names look like cubes.mycube.themodule
+                sourcecube = SOURCE_TYPES[type].module.split('.', 2)[1]
+                # if the source adapter is coming from an external component,
+                # ensure it's specified in used cubes
+                if not sourcecube in cubes:
+                    print ('-> this source type require the %s cube which is '
+                           'not used by the instance.')
+                    continue
+            break
+        while True:
+            sourceuri = raw_input('source identifier (a unique name used to '
+                                  'tell sources apart): ').strip()
+            if not sourceuri:
+                print '-> mandatory.'
+            else:
+                sourceuri = unicode(sourceuri, sys.stdin.encoding)
+                if sourceuri in used:
+                    print '-> uri already used, choose another one.'
+                else:
+                    break
+        # XXX configurable inputlevel
+        sconfig = ask_source_config(config, type, inputlevel=self.config.config_level)
+        cfgstr = unicode(generate_source_config(sconfig), sys.stdin.encoding)
+        req.create_entity('CWSource', name=sourceuri,
+                          type=unicode(type), config=cfgstr)
+        cnx.commit()
 
 
 class GrantUserOnInstanceCommand(Command):
@@ -486,6 +541,9 @@ class ResetAdminPasswordCommand(Command):
             print '-> Error: could not get cubicweb administrator login.'
             sys.exit(1)
         cnx = source_cnx(sourcescfg['system'])
+        driver = sourcescfg['system']['db-driver']
+        from logilab.database import get_db_helper
+        dbhelper = get_db_helper(driver)
         cursor = cnx.cursor()
         # check admin exists
         cursor.execute("SELECT * FROM cw_CWUser WHERE cw_login=%(l)s",
@@ -501,7 +559,7 @@ class ResetAdminPasswordCommand(Command):
                                        passwdmsg='new password for %s' % adminlogin)
         try:
             cursor.execute("UPDATE cw_CWUser SET cw_upassword=%(p)s WHERE cw_login=%(l)s",
-                           {'p': buffer(crypt_password(passwd)), 'l': adminlogin})
+                           {'p': dbhelper.binary_value(crypt_password(passwd)), 'l': adminlogin})
             sconfig = Configuration(options=USER_OPTIONS)
             sconfig['login'] = adminlogin
             sconfig['password'] = passwd
@@ -519,7 +577,7 @@ class ResetAdminPasswordCommand(Command):
 
 
 class StartRepositoryCommand(Command):
-    """Start an CubicWeb RQL server for a given instance.
+    """Start a CubicWeb RQL server for a given instance.
 
     The server will be accessible through pyro
 
@@ -562,7 +620,7 @@ class StartRepositoryCommand(Command):
         # go ! (don't daemonize in debug mode)
         if not os.path.exists(piddir):
             os.makedirs(piddir)
-        if not debug and daemonize(pidfile):
+        if not debug and daemonize(pidfile, umask=config['umask']):
             return
         uid = config['uid']
         if uid is not None:
@@ -791,9 +849,12 @@ class CheckRepositoryCommand(Command):
     options = (
         ('checks',
          {'short': 'c', 'type' : 'csv', 'metavar' : '<check list>',
-          'default' : ('entities', 'relations', 'metadata', 'schema', 'text_index'),
+          'default' : ('entities', 'relations',
+                       'mandatory_relations', 'mandatory_attributes',
+                       'metadata', 'schema', 'text_index'),
           'help': 'Comma separated list of check to run. By default run all \
-checks, i.e. entities, relations, text_index and metadata.'}
+checks, i.e. entities, relations, mandatory_relations, mandatory_attributes, \
+metadata, text_index and schema.'}
          ),
 
         ('autofix',
@@ -897,7 +958,7 @@ for cmdclass in (CreateInstanceDBCommand, InitInstanceCommand,
                  GrantUserOnInstanceCommand, ResetAdminPasswordCommand,
                  StartRepositoryCommand,
                  DBDumpCommand, DBRestoreCommand, DBCopyCommand,
-                 CheckRepositoryCommand, RebuildFTICommand,
+                 AddSourceCommand, CheckRepositoryCommand, RebuildFTICommand,
                  SynchronizeInstanceSchemaCommand,
                  CheckMappingCommand,
                  ):

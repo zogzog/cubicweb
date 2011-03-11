@@ -117,7 +117,7 @@ javascript (`$('#sendmail')` being the jQuery call to get the element with DOM i
 set to 'sendmail', which is our form DOM id as specified by its `domid`
 attribute), another to cancel the form which will go back to the previous page
 using another javascript call. Also we specify an image to use as button icon as a
-resource identifier (see :ref:`external_resources`) given as last argument to
+resource identifier (see :ref:`uiprops`) given as last argument to
 :class:`cubicweb.web.formwidgets.ImgButton`.
 
 To see this form, we still have to wrap it in a view. This is pretty simple:
@@ -131,12 +131,13 @@ To see this form, we still have to wrap it in a view. This is pretty simple:
 	def call(self):
 	    form = self._cw.vreg['forms'].select('massmailing', self._cw,
 	                                         rset=self.cw_rset)
-	    self.w(form.render())
+	    form.render(w=self.w)
 
 As you see, we simply define a view with proper selector so it only apply to a
 result set containing :class:`IEmailable` entities, and so that only users in the
 managers or users group can use it. Then in the `call()` method for this view we
-simply select the above form and write what its `.render()` method returns.
+simply select the above form and call its `.render()` method with our output
+stream as argument.
 
 When this form is submitted, a controller with id 'sendmail' will be called (as
 specified using `action`). This controller will be responsible to actually send

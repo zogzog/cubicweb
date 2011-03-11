@@ -42,11 +42,18 @@ from logilab.common.clcommands import CommandLine
 from logilab.common.shellutils import ASK
 
 from cubicweb import ConfigurationError, ExecutionError, BadCommandUsage
+from cubicweb.utils import support_args
 from cubicweb.cwconfig import CubicWebConfiguration as cwcfg, CWDEV, CONFIGURATIONS
 from cubicweb.toolsutils import Command, rm, create_dir, underline_title
 from cubicweb.__pkginfo__ import version
 
-CWCTL = CommandLine('cubicweb-ctl', 'The CubicWeb swiss-knife.', version=version)
+if support_args(CommandLine, 'check_duplicated_command'):
+    # don't check duplicated commands, it occurs when reloading site_cubicweb
+    CWCTL = CommandLine('cubicweb-ctl', 'The CubicWeb swiss-knife.',
+                        version=version, check_duplicated_command=False)
+else:
+    CWCTL = CommandLine('cubicweb-ctl', 'The CubicWeb swiss-knife.',
+                        version=version)
 
 def wait_process_end(pid, maxtry=10, waittime=1):
     """wait for a process to actually die"""
@@ -235,9 +242,9 @@ class ListCommand(Command):
                     tinfo = cwcfg.cube_pkginfo(cube)
                     tversion = tinfo.version
                     cfgpb.add_cube(cube, tversion)
-                except ConfigurationError:
+                except (ConfigurationError, AttributeError), ex:
                     tinfo = None
-                    tversion = '[missing cube information]'
+                    tversion = '[missing cube information: %s]' % ex
                 print '* %s %s' % (cube.ljust(namesize), tversion)
                 if self.config.verbose:
                     if tinfo:
@@ -494,7 +501,8 @@ running.'}),
             msg = "%s seems to be running. Remove %s by hand if necessary or use \
 the --force option."
             raise ExecutionError(msg % (appid, pidf))
-        helper.start_server(config)
+        if helper.start_server(config) == 1:
+            print 'instance %s started' % appid
 
 
 def init_cmdline_log_threshold(config, loglevel):
@@ -656,10 +664,11 @@ class UpgradeInstanceCommand(InstanceCommandFork):
     name = 'upgrade'
     actionverb = 'upgraded'
     options = InstanceCommand.options + (
-        ('force-componant-version',
-         {'short': 't', 'type' : 'csv', 'metavar': 'cube1=X.Y.Z,cube2=X.Y.Z',
+        ('force-cube-version',
+         {'short': 't', 'type' : 'named', 'metavar': 'cube1:X.Y.Z,cube2:X.Y.Z',
           'default': None,
-          'help': 'force migration from the indicated  version for the specified cube.'}),
+          'help': 'force migration from the indicated version for the specified cube(s).'}),
+
         ('force-cubicweb-version',
          {'short': 'e', 'type' : 'string', 'metavar': 'X.Y.Z',
           'default': None,
@@ -713,12 +722,9 @@ given, appropriate sources for migration will be automatically selected \
         mih = config.migration_handler()
         repo = mih.repo_connect()
         vcconf = repo.get_versions()
-        if self.config.force_componant_version:
-            packversions = {}
-            for vdef in self.config.force_componant_version:
-                componant, version = vdef.split('=')
-                packversions[componant] = Version(version)
-            vcconf.update(packversions)
+        if self.config.force_cube_version:
+            for cube, version in self.config.force_cube_version.iteritems():
+                vcconf[cube] = Version(version)
         toupgrade = []
         for cube in config.cubes():
             installedversion = config.cube_version(cube)

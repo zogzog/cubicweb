@@ -334,14 +334,15 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
         if not self.execscript_confirm(migrscript):
             return
         scriptlocals = self._create_context().copy()
+        scriptlocals.update({'__file__': migrscript,
+                             '__args__': kwargs.pop("scriptargs", [])})
         self._context_stack.append(scriptlocals)
         if script_mode == 'python':
             if funcname is None:
                 pyname = '__main__'
             else:
                 pyname = splitext(basename(migrscript))[0]
-            scriptlocals.update({'__file__': migrscript, '__name__': pyname,
-                                 '__args__': kwargs.pop("scriptargs", [])})
+            scriptlocals['__name__'] = pyname
             execfile(migrscript, scriptlocals)
             if funcname is not None:
                 try:
@@ -358,8 +359,13 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
             self.commit()
         else: # script_mode == 'doctest'
             import doctest
-            doctest.testfile(migrscript, module_relative=False,
-                             optionflags=doctest.ELLIPSIS, globs=scriptlocals)
+            return doctest.testfile(migrscript, module_relative=False,
+                                    optionflags=doctest.ELLIPSIS,
+                                    # verbose mode when user input is expected
+                                    verbose=self.verbosity==2,
+                                    report=True,
+                                    encoding='utf-8',
+                                    globs=scriptlocals)
         self._context_stack.pop()
 
     def cmd_option_renamed(self, oldname, newname):

@@ -20,11 +20,10 @@ __docformat__ = "restructuredtext en"
 
 import sys
 import string
+import logging
 from threading import Timer, Thread
 from getpass import getpass
 from random import choice
-
-from logilab.common.configuration import Configuration
 
 from cubicweb.server import SOURCE_TYPES
 
@@ -111,12 +110,6 @@ def manager_userpasswd(user=None, msg=DEFAULT_MSG, confirm=False,
     return user, passwd
 
 
-def ask_source_config(sourcetype, inputlevel=0):
-    sconfig = Configuration(options=SOURCE_TYPES[sourcetype].options)
-    sconfig.adapter = sourcetype
-    sconfig.input_config(inputlevel=inputlevel)
-    return sconfig
-
 _MARKER=object()
 def func_name(func):
     name = getattr(func, '__name__', _MARKER)
@@ -137,6 +130,10 @@ class LoopTask(object):
         def auto_restart_func(self=self, func=func, args=args):
             try:
                 func(*args)
+            except:
+                logger = logging.getLogger('cubicweb.repository')
+                logger.exception('Unhandled exception in LoopTask %s', self.name)
+                raise
             finally:
                 self.start()
         self.func = auto_restart_func
@@ -166,6 +163,10 @@ class RepoThread(Thread):
         def auto_remove_func(self=self, func=target):
             try:
                 func()
+            except:
+                logger = logging.getLogger('cubicweb.repository')
+                logger.exception('Unhandled exception in RepoThread %s', self._name)
+                raise
             finally:
                 self.running_threads.remove(self)
         Thread.__init__(self, target=auto_remove_func)

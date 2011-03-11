@@ -1,7 +1,7 @@
 .. -*- coding: utf-8 -*-
 
-Frequently Asked Questions
-==========================
+Frequently Asked Questions (FAQ)
+================================
 
 [XXX 'copy answer from forum' means reusing text from
 http://groups.google.com/group/google-appengine/browse_frm/thread/c9476925f5f66ec6
@@ -73,7 +73,7 @@ http://www.cubicweb.org/project/cubicweb?tab=projectroadmap_tab.
 
 
 Why is the RQL query language looking similar to X ?
------------------------------------------------------
+----------------------------------------------------
 
 It may remind you of SQL but it is higher level than SQL, more like
 SPARQL. Except that SPARQL did not exist when we started the project.
@@ -97,12 +97,56 @@ like frameworks for several reasons.
 Which ajax library is CubicWeb using ?
 --------------------------------------
 
-CubicWeb uses jQuery and provides a few helpers on top of
-that. Additionally, some jQuery plugins are provided (some are
-provided in specific cubes).
+CubicWeb uses jQuery_ and provides a few helpers on top of that. Additionally,
+some jQuery plugins are provided (some are provided in specific cubes).
+
+.. _jQuery: http://jquery.com
+
 
 Development
 ```````````
+
+How to change the instance logo ?
+---------------------------------
+
+There are two ways of changing the logo.
+
+1. The easiest way to use a different logo is to replace the existing
+   ``logo.png`` in ``myapp/data`` by your prefered icon and refresh.
+   By default all instance will look for a ``logo.png`` to be
+   rendered in the logo section.
+
+   .. image:: ../images/lax-book_06-main-template-logo_en.png
+
+2. In your cube directory, you can specify which file to use for the logo.
+   This is configurable in ``mycube/uiprops.py``: ::
+
+     LOGO = data('mylogo.gif')
+
+   ``mylogo.gif`` is in ``mycube/data`` directory.
+
+How to create an anonymous user ?
+---------------------------------
+
+This allows to browse the site without being authenticated. In the
+``all-in-one.conf`` file of your instance, define the anonymous user
+as follows ::
+
+  # login of the CubicWeb user account to use for anonymous user (if you want to
+  # allow anonymous)
+  anonymous-user=anon
+
+  # password of the CubicWeb user account matching login
+  anonymous-password=anon
+
+You also must ensure that this `anon` user is a registered user of
+the DB backend. If not, you can create through the administation
+interface of your instance by adding a user with in the group `guests`.
+
+.. note::
+    While creating a new instance, you can decide to allow access
+    to anonymous user, which will automatically execute what is
+    decribed above.
 
 How to load data from a script ?
 --------------------------------
@@ -117,88 +161,35 @@ you would not be able to use dbapi.
 
     cnx = dbapi.connect(database='instance-id', user='admin', password='admin')
     cur = cnx.cursor()
-    for name in ('Personal', 'Professional', 'Computers'):
-        cur.execute('INSERT Blog B: B name %s', name)
+    for name in (u'Personal', u'Professional', u'Computers'):
+        cur.execute('INSERT Tag T: T name %(n)s', {'n': name})
     cnx.commit()
 
+Wether your instance as pyro activated or not, you can still acheive this by
+using cubicweb-ctl shell scripts.
 
 How to format an entity date attribute ?
 ----------------------------------------
 
-If your schema has an attribute of type Date or Datetime, you might
-want to format it. First, you should define your preferred format using
-the site configuration panel ``http://appurl/view?vid=systempropertiesform``
-and then set ``ui.date`` and/or ``ui.datetime``.
-Then in the view code, use:
+If your schema has an attribute of type `Date` or `Datetime`, you usually want to
+format it when displaying it. First, you should define your preferred format
+using the site configuration panel
+``http://appurl/view?vid=systempropertiesform`` and then set ``ui.date`` and/or
+``ui.datetime``.  Then in the view code, use:
 
 .. sourcecode:: python
 
-    self.format_date(entity.date_attribute)
+    entity.printable_value(date_attribute)
 
-What is the CubicWeb datatype corresponding to GAE datastore's UserProperty ?
------------------------------------------------------------------------------
-
-If you take a look at your instance schema and
-click on "display detailed view of metadata" you will see that there
-is a Euser entity in there. That's the one that is modeling users. The
-thing that corresponds to a UserProperty is a relationship between
-your entity and the Euser entity. As in:
-
-.. sourcecode:: python
-
-    class TodoItem(EntityType):
-       text = String()
-       todo_by = SubjectRelation('Euser')
-
-[XXX check that cw handle users better by mapping Google Accounts to local Euser
-entities automatically]
-
+which will always return a string whatever the attribute's type (so it's
+recommended also for other attribute types). By default it expects to generate
+HTML, so it deals with rich text formating, xml escaping...
 
 How do I translate an msg id defined (and translated) in another cube ?
 -----------------------------------------------------------------------
 
 You should put these translations in the `i18n/static-messages.pot`
 file of your own cube.
-
-
-What is `Error while publishing rest text ...` ?
-------------------------------------------------
-
-While modifying the description of an entity, you get an error message in
-the instance `Error while publishing ...` for Rest text and plain text.
-The server returns a traceback like as follows ::
-
-      2008-10-06 15:05:08 - (cubicweb.rest) ERROR: error while publishing ReST text
-      Traceback (most recent call last):
-      File "/home/user/src/blogdemo/cubicweb/common/rest.py", line 217, in rest_publish
-      File "/usr/lib/python2.5/codecs.py", line 817, in open
-      file = __builtin__.open(filename, mode, buffering)
-      TypeError: __init__() takes at most 3 arguments (4 given)
-
-This can be fixed by applying the patch described in :
-http://code.google.com/p/googleappengine/issues/detail?id=48
-
-What are hooks used for ?
--------------------------
-
-Hooks are executed around (actually before or after) events.  The
-most common events are data creation, update and deletion.  They
-permit additional constraint checking (those not expressible at the
-schema level), pre and post computations depending on data
-movements.
-
-As such, they are a vital part of the framework.
-
-Other kinds of hooks, called Operations, are available
-for execution just before commit.
-
-When should you define an HTML template rather than define a graphical component ?
-----------------------------------------------------------------------------------
-
-An HTML template cannot contain code, hence it is only about static
-content.  A component is made of code and operations that apply on a
-well defined context (request, result set). It enables much more
-dynamic views.
 
 How to update a database after a schema modification ?
 ------------------------------------------------------
@@ -212,51 +203,76 @@ It depends on what has been modified in the schema.
 
 * add a relation: ``add_relation_definition('SubjRelation', 'MyRelation', 'ObjRelation')``.
 
+I get `NoSelectableObject` exceptions, how do I debug selectors ?
+-----------------------------------------------------------------
 
-How to create an anonymous user ?
----------------------------------
+You just need to put the appropriate context manager around view/component
+selection. One standard place for components is in cubicweb/vregistry.py: 
 
-This allows to bypass authentication for your site. In the
-``all-in-one.conf`` file of your instance, define the anonymous user
-as follows ::
+.. sourcecode:: python
 
-  # login of the CubicWeb user account to use for anonymous user (if you want to
-  # allow anonymous)
-  anonymous-user=anon
+    def possible_objects(self, *args, **kwargs):
+        """return an iterator on possible objects in this registry for the given
+        context
+        """
+        from cubicweb.selectors import traced_selection
+        with traced_selection():
+            for appobjects in self.itervalues():
+                try:
+                    yield self._select_best(appobjects, *args, **kwargs)
+                except NoSelectableObject:
+                    continue
 
-  # password of the CubicWeb user account matching login
-  anonymous-password=anon
+Don't forget the 'from __future__ import with_statement' at the module
+top-level if you're using python 2.5.
 
-You also must ensure that this `anon` user is a registered user of
-the DB backend. If not, you can create through the administation
-interface of your instance by adding a user with the role `guests`.
-This could be the admin account (for development
-purposes, of course).
+This will yield additional WARNINGs, like this::
 
-.. note::
-    While creating a new instance, you can decide to allow access
-    to anonymous user, which will automatically execute what is
-    decribed above.
+    2009-01-09 16:43:52 - (cubicweb.selectors) WARNING: selector one_line_rset returned 0 for <class 'cubicweb.web.views.basecomponents.WFHistoryVComponent'>
+
+For views, you can put this context in `cubicweb/web/views/basecontrollers.py` in
+the `ViewController`:
+
+.. sourcecode:: python
+
+    def _select_view_and_rset(self, rset):
+        ...
+        try:
+            from cubicweb.selectors import traced_selection
+            with traced_selection():
+                view = self._cw.vreg['views'].select(vid, req, rset=rset)
+        except ObjectNotFound:
+            self.warning("the view %s could not be found", vid)
+            req.set_message(req._("The view %s could not be found") % vid)
+            vid = vid_from_rset(req, rset, self._cw.vreg.schema)
+            view = self._cw.vreg['views'].select(vid, req, rset=rset)
+        ...
+
+I get "database is locked" when executing tests
+-----------------------------------------------
+
+If you have "database is locked" as error when you are executing security tests,
+it is usually because commit or rollback are missing before login() calls.
+
+You can also use a context manager, to avoid such errors, as described
+here: :ref:`securitytest`.
 
 
-How to change the instance logo ?
-------------------------------------
+What are hooks used for ?
+-------------------------
 
-There are two ways of changing the logo.
+Hooks are executed around (actually before or after) events.  The most common
+events are data creation, update and deletion.  They permit additional constraint
+checking (those not expressible at the schema level), pre and post computations
+depending on data movements.
 
-1. The easiest way to use a different logo is to replace the existing
-   ``logo.png`` in ``myapp/data`` by your prefered icon and refresh.
-   By default all instance will look for a ``logo.png`` to be
-   rendered in the logo section.
+As such, they are a vital part of the framework.
 
-   .. image:: ../images/lax-book_06-main-template-logo_en.png
+Other kinds of hooks, called Operations, are available
+for execution just before commit.
 
-2. In your cube directory, you can specify which file to use for the logo.
-   This is configurable in ``mycube/data/external_resources``: ::
+For more information, read :ref:`hooks` section.
 
-     LOGO = DATADIR/path/to/mylogo.gif
-
-   where DATADIR is ``mycube/data``.
 
 Configuration
 `````````````
@@ -264,31 +280,7 @@ Configuration
 How to configure a LDAP source ?
 --------------------------------
 
-Your instance's sources are defined in ``/etc/cubicweb.d/myapp/sources``.
-Configuring an LDAP source is about declaring that source in your
-instance configuration file such as: ::
-
-  [ldapuser]
-  adapter=ldapuser
-  # ldap host
-  host=myhost
-  # base DN to lookup for usres
-  user-base-dn=ou=People,dc=mydomain,dc=fr
-  # user search scope
-  user-scope=ONELEVEL
-  # classes of user
-  user-classes=top,posixAccount
-  # attribute used as login on authentication
-  user-login-attr=uid
-  # name of a group in which ldap users will be by default
-  user-default-group=users
-  # map from ldap user attributes to cubicweb attributes
-  user-attrs-map=gecos:email,uid:login
-
-Any change applied to configuration file requires to restart your
-instance.
-
-You can find additional information in the section :ref:`LDAP`.
+See :ref:`LDAP`.
 
 How to import LDAP users in |cubicweb| ?
 ----------------------------------------
@@ -350,34 +342,6 @@ How to import LDAP users in |cubicweb| ?
         cnx.close()
 
 
-I get NoSelectableObject exceptions, how do I debug selectors ?
----------------------------------------------------------------
-
-You just need to put the appropriate context manager around view/component
-selection (one standard place in in vreg.py):
-
-.. sourcecode:: python
-
-    def possible_objects(self, registry, *args, **kwargs):
-        """return an iterator on possible objects in a registry for this result set
-
-        actions returned are classes, not instances
-        """
-        from cubicweb.selectors import traced_selection
-        with traced_selection():
-            for vobjects in self.registry(registry).values():
-                try:
-                    yield self.select(vobjects, *args, **kwargs)
-                except NoSelectableObject:
-                    continue
-
-Don't forget the 'from __future__ import with_statement' at the module
-top-level.
-
-This will yield additional WARNINGs, like this::
-
-    2009-01-09 16:43:52 - (cubicweb.selectors) WARNING: selector one_line_rset returned 0 for <class 'cubicweb.web.views.basecomponents.WFHistoryVComponent'>
-
 Security
 ````````
 
@@ -410,7 +374,7 @@ therefore::
 
 Be careful, the encryption algorithm is different on Windows and on
 Unix. You cannot therefore use a hash generated on Unix to fill in a
-Windows database, nor the other way round. 
+Windows database, nor the other way round.
 
 
 You can prefer use a migration script similar to this shell invocation instead::
@@ -434,7 +398,8 @@ You are probably getting errors such as ::
 
   remove {'PR': 'Project', 'C': 'CWUser'} from solutions since your_user has no read access to cost
 
-This is because you have to put your user in the "users" group. The user has to be in both groups.
+This is because you have to put your user in the "users" group. The user has to
+be in both groups.
 
 How is security implemented ?
 ------------------------------
@@ -491,9 +456,7 @@ You can find additional information in the section :ref:`securitymodel`.
 Is it possible to bypass security from the UI (web front) part ?
 ----------------------------------------------------------------
 
-No.
-
-Only Hooks/Operations can do that.
+No. Only Hooks/Operations can do that.
 
 Can PostgreSQL and CubicWeb authentication work with kerberos ?
 ----------------------------------------------------------------

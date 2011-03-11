@@ -22,6 +22,7 @@ __docformat__ = "restructuredtext en"
 
 from logilab.common.textutils import normalize_text
 
+from cubicweb import RegistryNotFound
 from cubicweb.selectors import is_instance
 from cubicweb.server import hook
 from cubicweb.sobjects.supervising import SupervisionMailOp
@@ -42,8 +43,14 @@ class NotificationHook(hook.Hook):
     category = 'notification'
 
     def select_view(self, vid, rset, row=0, col=0):
-        return self._cw.vreg['views'].select_or_none(vid, self._cw, rset=rset,
-                                                     row=row, col=col)
+        try:
+            return self._cw.vreg['views'].select_or_none(vid, self._cw, rset=rset,
+                                                         row=row, col=col)
+        except RegistryNotFound: # can happen in some config
+                                 # (e.g. repo only config with no
+                                 # notification views registered by
+                                 # the instance's cubes)
+            return None
 
 
 class StatusChangeHook(NotificationHook):
@@ -68,7 +75,6 @@ class StatusChangeHook(NotificationHook):
         RenderAndSendNotificationView(self._cw, view=view, viewargs={
             'comment': comment, 'previous_state': entity.previous_state.name,
             'current_state': entity.new_state.name})
-
 
 class RelationChangeHook(NotificationHook):
     __regid__ = 'notifyrelationchange'
@@ -125,7 +131,7 @@ class EntityUpdateHook(NotificationHook):
         if session.added_in_transaction(self.entity.eid):
             return # entity is being created
         # then compute changes
-        attrs = [k for k in self.entity.edited_attributes
+        attrs = [k for k in self.entity.cw_edited
                  if not k in self.skip_attrs]
         if not attrs:
             return
@@ -140,7 +146,7 @@ class EntityUpdateHook(NotificationHook):
         rset = session.execute(rql, {'x': self.entity.eid})
         for i, attr in enumerate(attrs):
             oldvalue = rset[0][i]
-            newvalue = self.entity[attr]
+            newvalue = self.entity.cw_edited[attr]
             if oldvalue != newvalue:
                 thisentitychanges.add((attr, oldvalue, newvalue))
         if thisentitychanges:
@@ -168,8 +174,9 @@ class SomethingChangedHook(NotificationHook):
             if self._cw.added_in_transaction(self.entity.eid):
                 return False
             if self.entity.e_schema == 'CWUser':
-                if not (self.entity.edited_attributes - frozenset(('eid', 'modification_date',
-                                                                   'last_login_time'))):
+                if not (frozenset(self.entity.cw_edited)
+                        - frozenset(('eid', 'modification_date',
+                                     'last_login_time'))):
                     # don't record last_login_time update which are done
                     # automatically at login time
                     return False

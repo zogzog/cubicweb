@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -30,7 +30,6 @@ from yams.schema import BASE_TYPES, RelationSchema, RelationDefinitionSchema
 from yams import buildobjs as ybo, schema2sql as y2sql
 
 from logilab.common.decorators import clear_cache
-from logilab.common.testlib import mock_object
 
 from cubicweb import ValidationError
 from cubicweb.selectors import is_instance
@@ -121,16 +120,19 @@ def insert_rdef_on_subclasses(session, eschema, rschema, rdefdef, props):
 def check_valid_changes(session, entity, ro_attrs=('name', 'final')):
     errors = {}
     # don't use getattr(entity, attr), we would get the modified value if any
-    for attr in entity.edited_attributes:
+    for attr in entity.cw_edited:
         if attr in ro_attrs:
-            newval = entity.pop(attr)
-            origval = getattr(entity, attr)
+            origval, newval = entity.cw_edited.oldnewvalue(attr)
             if newval != origval:
                 errors[attr] = session._("can't change the %s attribute") % \
                                display_name(session, attr)
-            entity[attr] = newval
     if errors:
         raise ValidationError(entity.eid, errors)
+
+
+class _MockEntity(object): # XXX use a named tuple with python 2.6
+    def __init__(self, eid):
+        self.eid = eid
 
 
 class SyncSchemaHook(hook.Hook):
@@ -259,12 +261,17 @@ class CWETypeAddOp(MemSchemaOperation):
         gmap = group_mapping(session)
         cmap = ss.cstrtype_mapping(session)
         for rtype in (META_RTYPES - VIRTUAL_RTYPES):
-            rschema = schema[rtype]
+            try:
+                rschema = schema[rtype]
+            except:
+                if rtype == 'cw_source':
+                    continue # XXX 3.10 migration
+                raise
             sampletype = rschema.subjects()[0]
             desttype = rschema.objects()[0]
             rdef = copy(rschema.rdef(sampletype, desttype))
-            rdef.subject = mock_object(eid=entity.eid)
-            mock = mock_object(eid=None)
+            rdef.subject = _MockEntity(eid=entity.eid)
+            mock = _MockEntity(eid=None)
             ss.execschemarql(session.execute, mock, ss.rdef2rql(rdef, cmap, gmap))
 
     def revertprecommit_event(self):
@@ -311,11 +318,10 @@ class CWRTypeUpdateOp(MemSchemaOperation):
             return # watched changes to final relation type are unexpected
         session = self.session
         if 'fulltext_container' in self.values:
+            op = UpdateFTIndexOp.get_instance(session)
             for subjtype, objtype in rschema.rdefs:
-                hook.set_operation(session, 'fti_update_etypes', subjtype,
-                                   UpdateFTIndexOp)
-                hook.set_operation(session, 'fti_update_etypes', objtype,
-                                   UpdateFTIndexOp)
+                op.add_data(subjtype)
+                op.add_data(objtype)
         # update the in-memory schema first
         self.oldvalues = dict( (attr, getattr(rschema, attr)) for attr in self.values)
         self.rschema.__dict__.update(self.values)
@@ -607,8 +613,7 @@ class RDefUpdateOp(MemSchemaOperation):
             syssource.update_rdef_null_allowed(self.session, rdef)
             self.null_allowed_changed = True
         if 'fulltextindexed' in self.values:
-            hook.set_operation(session, 'fti_update_etypes', rdef.subject,
-                               UpdateFTIndexOp)
+            UpdateFTIndexOp.get_instance(session).add_data(rdef.subject)
 
     def revertprecommit_event(self):
         if self.rdef is None:
@@ -700,14 +705,14 @@ class CWConstraintAddOp(CWConstraintDelOp):
             syssource.update_rdef_unique(session, rdef)
             self.unique_changed = True
 
+
 class CWUniqueTogetherConstraintAddOp(MemSchemaOperation):
     entity = None # make pylint happy
     def precommit_event(self):
         session = self.session
         prefix = SQL_PREFIX
         table = '%s%s' % (prefix, self.entity.constraint_of[0].name)
-        cols = ['%s%s' % (prefix, r.rtype.name)
-                for r in self.entity.relations]
+        cols = ['%s%s' % (prefix, r.name) for r in self.entity.relations]
         dbhelper= session.pool.source('system').dbhelper
         sqls = dbhelper.sqls_create_multicol_unique_index(table, cols)
         for sql in sqls:
@@ -717,8 +722,9 @@ class CWUniqueTogetherConstraintAddOp(MemSchemaOperation):
 
     def postcommit_event(self):
         eschema = self.session.vreg.schema.schema_by_eid(self.entity.constraint_of[0].eid)
-        attrs = [r.rtype.name for r in self.entity.relations]
+        attrs = [r.name for r in self.entity.relations]
         eschema._unique_together.append(attrs)
+
 
 class CWUniqueTogetherConstraintDelOp(MemSchemaOperation):
     entity = oldcstr = None # for pylint
@@ -741,6 +747,7 @@ class CWUniqueTogetherConstraintDelOp(MemSchemaOperation):
         unique_together = [ut for ut in eschema._unique_together
                            if set(ut) != cols]
         eschema._unique_together = unique_together
+
 
 # operations for in-memory schema synchronization  #############################
 
@@ -904,7 +911,7 @@ class AfterAddCWETypeHook(DelCWETypeHook):
 
     def __call__(self):
         entity = self.entity
-        if entity.get('final'):
+        if entity.cw_edited.get('final'):
             return
         CWETypeAddOp(self._cw, entity=entity)
 
@@ -918,8 +925,8 @@ class BeforeUpdateCWETypeHook(DelCWETypeHook):
         entity = self.entity
         check_valid_changes(self._cw, entity, ro_attrs=('final',))
         # don't use getattr(entity, attr), we would get the modified value if any
-        if 'name' in entity.edited_attributes:
-            oldname, newname = hook.entity_oldnewvalue(entity, 'name')
+        if 'name' in entity.cw_edited:
+            oldname, newname = entity.cw_edited.oldnewvalue('name')
             if newname.lower() != oldname.lower():
                 CWETypeRenameOp(self._cw, oldname=oldname, newname=newname)
 
@@ -962,8 +969,8 @@ class AfterAddCWRTypeHook(DelCWRTypeHook):
         entity = self.entity
         rtypedef = ybo.RelationType(name=entity.name,
                                     description=entity.description,
-                                    inlined=entity.get('inlined', False),
-                                    symmetric=entity.get('symmetric', False),
+                                    inlined=entity.cw_edited.get('inlined', False),
+                                    symmetric=entity.cw_edited.get('symmetric', False),
                                     eid=entity.eid)
         MemSchemaCWRTypeAdd(self._cw, rtypedef=rtypedef)
 
@@ -978,10 +985,10 @@ class BeforeUpdateCWRTypeHook(DelCWRTypeHook):
         check_valid_changes(self._cw, entity)
         newvalues = {}
         for prop in ('symmetric', 'inlined', 'fulltext_container'):
-            if prop in entity.edited_attributes:
-                old, new = hook.entity_oldnewvalue(entity, prop)
+            if prop in entity.cw_edited:
+                old, new = entity.cw_edited.oldnewvalue(prop)
                 if old != new:
-                    newvalues[prop] = entity[prop]
+                    newvalues[prop] = new
         if newvalues:
             rschema = self._cw.vreg.schema.rschema(entity.name)
             CWRTypeUpdateOp(self._cw, rschema=rschema, entity=entity,
@@ -1066,8 +1073,8 @@ class AfterUpdateCWRDefHook(SyncSchemaHook):
                 attr = 'ordernum'
             else:
                 attr = prop
-            if attr in entity.edited_attributes:
-                old, new = hook.entity_oldnewvalue(entity, attr)
+            if attr in entity.cw_edited:
+                old, new = entity.cw_edited.oldnewvalue(attr)
                 if old != new:
                     newvalues[prop] = new
         if newvalues:
@@ -1120,7 +1127,7 @@ class BeforeDeleteConstrainedByHook(SyncSchemaHook):
 class AfterAddCWUniqueTogetherConstraintHook(SyncSchemaHook):
     __regid__ = 'syncadd_cwuniquetogether_constraint'
     __select__ = SyncSchemaHook.__select__ & is_instance('CWUniqueTogetherConstraint')
-    events = ('after_add_entity', 'after_update_entity')
+    events = ('after_add_entity',)
 
     def __call__(self):
         CWUniqueTogetherConstraintAddOp(self._cw, entity=self.entity)
@@ -1137,9 +1144,9 @@ class BeforeDeleteConstraintOfHook(SyncSchemaHook):
         schema = self._cw.vreg.schema
         cstr = self._cw.entity_from_eid(self.eidfrom)
         entity = schema.schema_by_eid(self.eidto)
-        cols = [r.rtype.name
-                for r in cstr.relations]
-        CWUniqueTogetherConstraintDelOp(self._cw, entity=entity, oldcstr=cstr, cols=cols)
+        cols = [r.name for r in cstr.relations]
+        CWUniqueTogetherConstraintDelOp(self._cw, entity=entity,
+                                        oldcstr=cstr, cols=cols)
 
 
 # permissions synchronization hooks ############################################
@@ -1185,32 +1192,33 @@ class BeforeDelPermissionHook(AfterAddPermissionHook):
 
 
 
-class UpdateFTIndexOp(hook.SingleLastOperation):
+class UpdateFTIndexOp(hook.DataOperationMixIn, hook.SingleLastOperation):
     """operation to update full text indexation of entity whose schema change
 
-    We wait after the commit to as the schema in memory is only updated after the commit.
+    We wait after the commit to as the schema in memory is only updated after
+    the commit.
     """
 
     def postcommit_event(self):
         session = self.session
         source = session.repo.system_source
-        to_reindex = session.transaction_data.pop('fti_update_etypes', ())
+        schema = session.repo.vreg.schema
+        to_reindex = self.get_data()
         self.info('%i etypes need full text indexed reindexation',
                   len(to_reindex))
-        schema = self.session.repo.vreg.schema
         for etype in to_reindex:
             rset = session.execute('Any X WHERE X is %s' % etype)
             self.info('Reindexing full text index for %i entity of type %s',
                       len(rset), etype)
             still_fti = list(schema[etype].indexable_attributes())
             for entity in rset.entities():
-                source.fti_unindex_entity(session, entity.eid)
+                source.fti_unindex_entities(session, [entity])
                 for container in entity.cw_adapt_to('IFTIndexable').fti_containers():
                     if still_fti or container is not entity:
-                        source.fti_unindex_entity(session, container.eid)
-                        source.fti_index_entity(session, container)
-        if len(to_reindex):
-            # Transaction have already been committed
+                        source.fti_unindex_entities(session, [container])
+                        source.fti_index_entities(session, [container])
+        if to_reindex:
+            # Transaction has already been committed
             session.pool.commit()
 
 

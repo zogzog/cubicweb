@@ -92,14 +92,14 @@ function buildRQL(divid, vid, paginate, vidargs) {
                 $node.loadxhtml('json', ajaxFuncArgs('render', {
                     'rql': rql
                 },
-                'boxes', 'edit_box'));
+                'ctxcomponents', 'edit_box'));
             }
             $node = jQuery('#breadcrumbs')
             if ($node.length) {
                 $node.loadxhtml('json', ajaxFuncArgs('render', {
                     'rql': rql
                 },
-                'components', 'breadcrumbs'));
+                'ctxcomponents', 'breadcrumbs'));
             }
         }
         var d = loadRemote('json', ajaxFuncArgs('filter_select_content', null, toupdate, rql));

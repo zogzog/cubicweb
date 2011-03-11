@@ -11,7 +11,7 @@
 /**
  * .. function:: setPropValueWidget(varname, tabindex)
  *
- * called on Eproperty key selection:
+ * called on CWProperty key selection:
  * - get the selected value
  * - get a widget according to the key by a sync query to the server
  * - fill associated div with the returned html
@@ -65,12 +65,12 @@ function showMatchingSelect(selectedValue, eid) {
                 vid: 'unrelateddivs',
                 relation: selectedValue,
                 rql: rql_for_eid(eid),
-                '__notemplate': 1,
-                callback: function() {
-                    _showMatchingSelect(eid, jQuery('#' + divId));
-                }
+                '__notemplate': 1
             };
-            jQuery('#unrelatedDivs_' + eid).loadxhtml(baseuri() + 'view', args, 'post', 'append');
+            var d = jQuery('#unrelatedDivs_' + eid).loadxhtml(baseuri() + 'view', args, 'post', 'append');
+            d.addCallback(function() {
+                _showMatchingSelect(eid, jQuery('#' + divId));
+            });
         } else {
             _showMatchingSelect(eid, divNode);
         }
@@ -209,7 +209,7 @@ function cancelPendingInsert(elementId, element_name, comboId, eid) {
         }
     }
     elementId = elementId.substring(2, elementId.length);
-    loadRemote('json', ajaxFuncArgs('remove_pending_inserts', null,
+    loadRemote('json', ajaxFuncArgs('remove_pending_insert', null,
                                     elementId.split(':')), 'GET', true);
 }
 
@@ -265,7 +265,7 @@ function cancelPendingDelete(nodeId, eid) {
  */
 function togglePendingDelete(nodeId, eid) {
     // node found means we should cancel deletion
-    if (jQuery.className.has(cw.getNode('span' + nodeId), 'pendingDelete')) {
+    if (jQuery(cw.getNode('span' + nodeId)).hasClass('pendingDelete')) {
         cancelPendingDelete(nodeId, eid);
     } else {
         addPendingDelete(nodeId, eid);
@@ -588,179 +588,11 @@ function validateForm(formid, action, onsuccess, onfailure) {
         var args = ajaxFuncArgs('validate_form', null, action, zipped[0], zipped[1]);
         var d = loadRemote('json', args, 'POST');
     } catch(ex) {
-        log('got exception', ex);
+        cw.log('got exception', ex);
         return false;
     }
-    function _callback(result, req) {
+    d.addCallback(function(result, req) {
         handleFormValidationResponse(formid, onsuccess, onfailure, result);
-    }
-    d.addCallback(_callback);
+    });
     return false;
 }
-
-
-
-// ======================= DEPRECATED FUNCTIONS ========================= //
-// (mostly reledit related)
-/**
- * .. function:: inlineValidateRelationFormOptions(rtype, eid, divid, options)
- *
- * called by reledit forms to submit changes
- * * `rtype`, the attribute being edited
- *
- * * `eid`, the eid of the entity being edited
- *
- * * `options`, a dictionnary of options used by the form validation handler such
- *    as ``role``, ``onsuccess``, ``onfailure``, ``reload``, ``vid``, ``lzone``
- *    and ``default_value``:
- *
- *     * `onsucess`, javascript function to execute on success, default is noop
- *
- *     * `onfailure`, javascript function to execute on failure, default is noop
- *
- *     * `default_value`, value if the field is empty
- *
- *     * `lzone`, html fragment (string) for a clic-zone triggering actual edition
- */
-
-
-showInlineEditionForm = cw.utils.deprecatedFunction(
-    '[3.9] this is now unused by reledit (see cw.reledit.js)',
-    function showInlineEditionForm(eid, rtype, divid) {
-        jQuery('#' + divid).hide();
-        jQuery('#' + divid + '-value').hide();
-        jQuery('#' + divid + '-form').show();
-    }
-);
-
-hideInlineEdit = cw.utils.deprecatedFunction(
-    '[3.9] this is now unused by reledit (see cw.reledit.js)',
-    function hideInlineEdit(eid, rtype, divid) {
-        jQuery('#appMsg').hide();
-        jQuery('div.errorMessage').remove();
-        jQuery('#' + divid).show();
-        jQuery('#' + divid + '-value').show();
-        jQuery('#' + divid + '-form').hide();
-    }
-);
-
-
-inlineValidateRelationFormOptions = cw.utils.deprecatedFunction(
-    '[3.9] this is now unused by reledit (see cw.reledit.js)',
-    function inlineValidateRelationFormOptions(rtype, eid, divid, options) {
-        try {
-            var form = cw.getNode(divid + '-form');
-            var relname = rtype + ':' + eid;
-            var newtarget = jQuery('[name=' + relname + ']').val();
-            var zipped = cw.utils.formContents(form);
-            var args = ajaxFuncArgs('validate_form', null, 'apply', zipped[0], zipped[1]);
-            var d = loadRemote(JSON_BASE_URL, args, 'POST');
-        } catch(ex) {
-            return false;
-        }
-        d.addCallback(function(result, req) {
-            execFormValidationResponse(rtype, eid, divid, options, result);
-        });
-        return false;
-    });
-
-execFormValidationResponse = cw.utils.deprecatedFunction(
-    '[3.9] this is now unused by reledit (see cw.reledit.js)',
-    function execFormValidationResponse(rtype, eid, divid, options, result) {
-        options = $.extend({onsuccess: noop,
-                            onfailure: noop
-                           }, options);
-        if (handleFormValidationResponse(divid + '-form', options.onsucess , options.onfailure, result)) {
-            if (options.reload) {
-                document.location.reload();
-            } else {
-                var args = {
-                    fname: 'reledit_form',
-                    rtype: rtype,
-                    role: options.role,
-                    eid: eid,
-                    divid: divid,
-                    reload: options.reload,
-                    vid: options.vid,
-                    default_value: options.default_value,
-                    landing_zone: options.lzone
-                };
-                jQuery('#' + divid + '-reledit').parent().loadxhtml(JSON_BASE_URL, args, 'post');
-            }
-        }
-});
-
-
-/**
- * .. function:: loadInlineEditionFormOptions(eid, rtype, divid, options)
- *
- * inline edition
- */
-loadInlineEditionFormOptions = cw.utils.deprecatedFunction(
-  '[3.9] this is now unused by reledit (see cw.reledit.js) ',
-  function loadInlineEditionFormOptions(eid, rtype, divid, options) {
-    var args = {
-        fname: 'reledit_form',
-        rtype: rtype,
-        role: options.role,
-        eid: eid,
-        divid: divid,
-        reload: options.reload,
-        vid: options.vid,
-        default_value: options.default_value,
-        landing_zone: options.lzone,
-        callback: function() {
-            showInlineEditionForm(eid, rtype, divid);
-        }
-    };
-    jQuery('#' + divid + '-reledit').parent().loadxhtml(JSON_BASE_URL, args, 'post');
-});
-
-
-inlineValidateRelationForm = cw.utils.deprecatedFunction(
-    '[3.9] inlineValidateRelationForm() function is deprecated, use inlineValidateRelationFormOptions instead',
-    function(rtype, role, eid, divid, reload, vid, default_value, lzone, onsucess, onfailure) {
-        try {
-            var form = cw.getNode(divid + '-form');
-            var relname = rtype + ':' + eid;
-            var newtarget = jQuery('[name=' + relname + ']').val();
-            var zipped = cw.utils.formContents(form);
-            var d = asyncRemoteExec('validate_form', 'apply', zipped[0], zipped[1]);
-        } catch(ex) {
-            return false;
-        }
-        d.addCallback(function(result, req) {
-        var options = {role : role,
-                       reload: reload,
-                       vid: vid,
-                       default_value: default_value,
-                       lzone: lzone,
-                       onsucess: onsucess || $.noop,
-                       onfailure: onfailure || $.noop
-                      };
-            execFormValidationResponse(rtype, eid, divid, options);
-        });
-        return false;
-    }
-);
-
-loadInlineEditionForm = cw.utils.deprecatedFunction(
-    '[3.9] loadInlineEditionForm() function is deprecated, use loadInlineEditionFormOptions instead',
-    function(eid, rtype, role, divid, reload, vid, default_value, lzone) {
-        var args = {
-            fname: 'reledit_form',
-            rtype: rtype,
-            role: role,
-            eid: eid,
-            divid: divid,
-            reload: reload,
-            vid: vid,
-            default_value: default_value,
-            landing_zone: lzone,
-            callback: function() {
-                showInlineEditionForm(eid, rtype, divid);
-            }
-        };
-        jQuery('#' + divid + '-reledit').parent().loadxhtml(JSON_BASE_URL, args, 'post');
-    }
-);

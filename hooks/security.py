@@ -31,12 +31,9 @@ def check_entity_attributes(session, entity, editedattrs=None, creation=False):
     eschema = entity.e_schema
     # ._cw_skip_security_attributes is there to bypass security for attributes
     # set by hooks by modifying the entity's dictionnary
-    dontcheck = entity._cw_skip_security_attributes
     if editedattrs is None:
-        try:
-            editedattrs = entity.edited_attributes
-        except AttributeError:
-            editedattrs = entity # XXX unexpected
+        editedattrs = entity.cw_edited
+    dontcheck = editedattrs.skip_security
     for attr in editedattrs:
         if attr in dontcheck:
             continue
@@ -46,38 +43,25 @@ def check_entity_attributes(session, entity, editedattrs=None, creation=False):
             if creation and not rdef.permissions.get('update'):
                 continue
             rdef.check_perm(session, 'update', eid=eid)
-    # don't update dontcheck until everything went fine: see usage in
-    # after_update_entity, where if we got an Unauthorized at hook time, we will
-    # retry and commit time
-    dontcheck |= frozenset(editedattrs)
 
 
-class _CheckEntityPermissionOp(hook.LateOperation):
+class CheckEntityPermissionOp(hook.DataOperationMixIn, hook.LateOperation):
     def precommit_event(self):
-        #print 'CheckEntityPermissionOp', self.session.user, self.entity, self.action
         session = self.session
-        for values in session.transaction_data.pop('check_entity_perm_op'):
-            entity = session.entity_from_eid(values[0])
-            action = values[1]
+        for eid, action, edited in self.get_data():
+            entity = session.entity_from_eid(eid)
             entity.cw_check_perm(action)
-            check_entity_attributes(session, entity, values[2:],
-                                    creation=self.creation)
-
-    def commit_event(self):
-        pass
+            check_entity_attributes(session, entity, edited,
+                                    creation=(action == 'add'))
 
 
-class _CheckRelationPermissionOp(hook.LateOperation):
+class CheckRelationPermissionOp(hook.DataOperationMixIn, hook.LateOperation):
     def precommit_event(self):
         session = self.session
-        for args in session.transaction_data.pop('check_relation_perm_op'):
-            action, rschema, eidfrom, eidto = args
+        for action, rschema, eidfrom, eidto in self.get_data():
             rdef = rschema.rdef(session.describe(eidfrom)[0],
                                 session.describe(eidto)[0])
             rdef.check_perm(session, action, fromeid=eidfrom, toeid=eidto)
-
-    def commit_event(self):
-        pass
 
 
 @objectify_selector
@@ -98,9 +82,8 @@ class AfterAddEntitySecurityHook(SecurityHook):
     events = ('after_add_entity',)
 
     def __call__(self):
-        hook.set_operation(self._cw, 'check_entity_perm_op',
-                           (self.entity.eid, 'add') + tuple(self.entity.edited_attributes),
-                           _CheckEntityPermissionOp, creation=True)
+        CheckEntityPermissionOp.get_instance(self._cw).add_data(
+            (self.entity.eid, 'add', self.entity.cw_edited) )
 
 
 class AfterUpdateEntitySecurityHook(SecurityHook):
@@ -115,11 +98,10 @@ class AfterUpdateEntitySecurityHook(SecurityHook):
         except Unauthorized:
             self.entity._cw_clear_local_perm_cache('update')
             # save back editedattrs in case the entity is reedited later in the
-            # same transaction, which will lead to edited_attributes being
+            # same transaction, which will lead to cw_edited being
             # overwritten
-            hook.set_operation(self._cw, 'check_entity_perm_op',
-                               (self.entity.eid, 'update') + tuple(self.entity.edited_attributes),
-                               _CheckEntityPermissionOp, creation=False)
+            CheckEntityPermissionOp.get_instance(self._cw).add_data(
+                (self.entity.eid, 'update', self.entity.cw_edited) )
 
 
 class BeforeDelEntitySecurityHook(SecurityHook):
@@ -156,9 +138,8 @@ class AfterAddRelationSecurityHook(SecurityHook):
                 return
             rschema = self._cw.repo.schema[self.rtype]
             if self.rtype in ON_COMMIT_ADD_RELATIONS:
-                hook.set_operation(self._cw, 'check_relation_perm_op',
-                                   ('add', rschema, self.eidfrom, self.eidto),
-                                   _CheckRelationPermissionOp)
+                CheckRelationPermissionOp.get_instance(self._cw).add_data(
+                    ('add', rschema, self.eidfrom, self.eidto) )
             else:
                 rdef = rschema.rdef(self._cw.describe(self.eidfrom)[0],
                                     self._cw.describe(self.eidto)[0])

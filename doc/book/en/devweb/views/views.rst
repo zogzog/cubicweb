@@ -88,7 +88,7 @@ set has a tabular structure with rows and columns, hence cells):
 
 Other basic view classes
 ````````````````````````
-Here are some of the subclasses of `View` defined in `cubicweb.common.view`
+Here are some of the subclasses of `View` defined in `cubicweb.view`
 that are more concrete as they relate to data rendering within the application:
 
 * `EntityView`, view applying to lines or cell containing an entity (e.g. an eid)

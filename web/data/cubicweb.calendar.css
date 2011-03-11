@@ -230,7 +230,7 @@ td.calendar table {
 .calendar th.month {
  font-weight:bold;
  padding-bottom:0.2em;
- background: %(actionBoxTitleBgColor)s;
+ background: %(incontextBoxBodyBgColor)s;
 }
 
 .calendar th.month a{

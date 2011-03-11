@@ -489,7 +489,7 @@ class IWorkflowableAdapter(WorkflowableMixIn, EntityAdapter):
         try:
             return self.current_state.name
         except AttributeError:
-            self.warning('entity %s has no state', self)
+            self.warning('entity %s has no state', self.entity)
             return None
 
     @property

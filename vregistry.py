@@ -129,6 +129,8 @@ class Registry(dict):
         # or simplify by calling unregister then register here
         if not isinstance(replaced, basestring):
             replaced = classid(replaced)
+        # prevent from misspelling
+        assert obj is not replaced, 'replacing an object by itself: %s' % obj
         registered_objs = self.get(class_regid(obj), ())
         for index, registered in enumerate(registered_objs):
             if classid(registered) == replaced:
@@ -174,7 +176,7 @@ class Registry(dict):
         assert len(objects) == 1, objects
         return objects[0](*args, **kwargs)
 
-    def select(self, oid, *args, **kwargs):
+    def select(self, __oid, *args, **kwargs):
         """return the most specific object among those with the given oid
         according to the given context.
 
@@ -182,14 +184,14 @@ class Registry(dict):
 
         raise :exc:`NoSelectableObject` if not object apply
         """
-        return self._select_best(self[oid], *args, **kwargs)
+        return self._select_best(self[__oid], *args, **kwargs)
 
-    def select_or_none(self, oid, *args, **kwargs):
+    def select_or_none(self, __oid, *args, **kwargs):
         """return the most specific object among those with the given oid
         according to the given context, or None if no object applies.
         """
         try:
-            return self.select(oid, *args, **kwargs)
+            return self.select(__oid, *args, **kwargs)
         except (NoSelectableObject, ObjectNotFound):
             return None
     select_object = deprecated('[3.6] use select_or_none instead of select_object'
@@ -465,7 +467,7 @@ class VRegistry(dict):
         self.load_module(module)
 
     def load_module(self, module):
-        self.info('loading %s', module)
+        self.info('loading %s from %s', module.__name__, module.__file__)
         if hasattr(module, 'registration_callback'):
             module.registration_callback(self)
         else:

@@ -13,9 +13,7 @@ The following chapters are reference material.
    :numbered:
 
    faq
-   cubicweb-ctl
    rql/index
    mercurial
    depends
-   javascript-api
    docstrings-conventions

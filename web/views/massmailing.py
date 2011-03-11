@@ -65,13 +65,13 @@ class MassMailingForm(forms.FieldsForm):
 
     sender = ff.StringField(widget=TextInput({'disabled': 'disabled'}),
                             label=_('From:'),
-                            value=lambda f: '%s <%s>' % (
-                                f._cw.user.dc_title(),
-                                f._cw.user.cw_adapt_to('IEmailable').get_email()))
+                            value=lambda form, field: '%s <%s>' % (
+                                form._cw.user.dc_title(),
+                                form._cw.user.cw_adapt_to('IEmailable').get_email()))
     recipient = ff.StringField(widget=CheckBox(), label=_('Recipients:'),
                                choices=recipient_vocabulary,
-                               value= lambda f: [entity.eid for entity in f.cw_rset.entities()
-                                                 if entity.cw_adapt_to('IEmailable').get_email()])
+                               value= lambda form, field: [entity.eid for entity in form.cw_rset.entities()
+                                                           if entity.cw_adapt_to('IEmailable').get_email()])
     subject = ff.StringField(label=_('Subject:'), max_length=256)
     mailbody = ff.StringField(widget=AjaxWidget(wdgtype='TemplateTextField',
                                                 inputid='mailbody'))
@@ -146,7 +146,7 @@ class MassMailingFormView(form.FormViewMixIn, EntityView):
     def call(self):
         form = self._cw.vreg['forms'].select('massmailing', self._cw,
                                              rset=self.cw_rset)
-        self.w(form.render())
+        form.render(w=self.w)
 
 
 class SendMailController(controller.Controller):

@@ -97,13 +97,13 @@ class LDAPUserSource(AbstractSource):
          {'type' : 'string',
           'default': '',
           'help': 'user dn to use to open data connection to the ldap (eg used \
-to respond to rql queries).',
+to respond to rql queries). Leave empty for anonymous bind',
           'group': 'ldap-source', 'level': 1,
           }),
         ('data-cnx-password',
          {'type' : 'string',
           'default': '',
-          'help': 'password to use to open data connection to the ldap (eg used to respond to rql queries).',
+          'help': 'password to use to open data connection to the ldap (eg used to respond to rql queries). Leave empty for anonymous bind.',
           'group': 'ldap-source', 'level': 1,
           }),
 
@@ -111,19 +111,19 @@ to respond to rql queries).',
          {'type' : 'string',
           'default': 'ou=People,dc=logilab,dc=fr',
           'help': 'base DN to lookup for users',
-          'group': 'ldap-source', 'level': 0,
+          'group': 'ldap-source', 'level': 1,
           }),
         ('user-scope',
          {'type' : 'choice',
           'default': 'ONELEVEL',
           'choices': ('BASE', 'ONELEVEL', 'SUBTREE'),
-          'help': 'user search scope',
+          'help': 'user search scope (valid values: "BASE", "ONELEVEL", "SUBTREE")',
           'group': 'ldap-source', 'level': 1,
           }),
         ('user-classes',
          {'type' : 'csv',
           'default': ('top', 'posixAccount'),
-          'help': 'classes of user',
+          'help': 'classes of user (with Active Directory, you want to say "user" here)',
           'group': 'ldap-source', 'level': 1,
           }),
         ('user-filter',
@@ -135,7 +135,7 @@ to respond to rql queries).',
         ('user-login-attr',
          {'type' : 'string',
           'default': 'uid',
-          'help': 'attribute used as login on authentication',
+          'help': 'attribute used as login on authentication (with Active Directory, you want to use "sAMAccountName" here)',
           'group': 'ldap-source', 'level': 1,
           }),
         ('user-default-group',
@@ -148,7 +148,7 @@ You can set multiple groups by separating them by a comma.',
         ('user-attrs-map',
          {'type' : 'named',
           'default': {'uid': 'login', 'gecos': 'email'},
-          'help': 'map from ldap user attributes to cubicweb attributes',
+          'help': 'map from ldap user attributes to cubicweb attributes (with Active Directory, you want to use sAMAccountName:login,mail:email,givenName:firstname,sn:surname)',
           'group': 'ldap-source', 'level': 1,
           }),
 
@@ -168,9 +168,8 @@ directory (default to once a day).',
 
     )
 
-    def __init__(self, repo, appschema, source_config, *args, **kwargs):
-        AbstractSource.__init__(self, repo, appschema, source_config,
-                                *args, **kwargs)
+    def __init__(self, repo, source_config, *args, **kwargs):
+        AbstractSource.__init__(self, repo, source_config, *args, **kwargs)
         self.host = source_config['host']
         self.protocol = source_config.get('protocol', 'ldap')
         self.authmode = source_config.get('auth-mode', 'simple')
@@ -178,7 +177,7 @@ directory (default to once a day).',
         self.cnx_dn = source_config.get('data-cnx-dn') or ''
         self.cnx_pwd = source_config.get('data-cnx-password') or ''
         self.user_base_scope = globals()[source_config['user-scope']]
-        self.user_base_dn = source_config['user-base-dn']
+        self.user_base_dn = str(source_config['user-base-dn'])
         self.user_base_scope = globals()[source_config['user-scope']]
         self.user_classes = splitstrip(source_config['user-classes'])
         self.user_login_attr = source_config['user-login-attr']
@@ -203,7 +202,7 @@ directory (default to once a day).',
 
     def _make_base_filters(self):
         filters =  [filter_format('(%s=%s)', ('objectClass', o))
-                              for o in self.user_classes] 
+                              for o in self.user_classes]
         if self.user_filter:
             filters += [self.user_filter]
         return filters
@@ -280,7 +279,10 @@ directory (default to once a day).',
     def get_connection(self):
         """open and return a connection to the source"""
         if self._conn is None:
-            self._connect()
+            try:
+                self._connect()
+            except:
+                self.exception('unable to connect to ldap:')
         return ConnectionWrapper(self._conn)
 
     def authenticate(self, session, login, password=None, **kwargs):
@@ -325,7 +327,7 @@ directory (default to once a day).',
         return None
 
     def prepare_columns(self, mainvars, rqlst):
-        """return two list describin how to build the final results
+        """return two list describing how to build the final results
         from the result of an ldap search (ie a list of dictionnary)
         """
         columns = []
@@ -379,8 +381,14 @@ directory (default to once a day).',
         try:
             results = self._query_cache[rqlkey]
         except KeyError:
-            results = self.rqlst_search(session, rqlst, args)
-            self._query_cache[rqlkey] = results
+            try:
+                results = self.rqlst_search(session, rqlst, args)
+                self._query_cache[rqlkey] = results
+            except ldap.SERVER_DOWN:
+                # cant connect to server
+                msg = session._("can't connect to source %s, some data may be missing")
+                session.set_shared_data('sources_error', msg % self.uri)
+                return []
         return results
 
     def rqlst_search(self, session, rqlst, args):
@@ -523,6 +531,8 @@ directory (default to once a day).',
                 searchstr='(objectClass=*)', attrs=()):
         """make an ldap query"""
         self.debug('ldap search %s %s %s %s %s', self.uri, base, scope, searchstr, list(attrs))
+        # XXX for now, we do not have connection pool support for LDAP, so
+        # this is always self._conn
         cnx = session.pool.connection(self.uri).cnx
         try:
             res = cnx.search_s(base, scope, searchstr, attrs)
@@ -586,15 +596,16 @@ directory (default to once a day).',
         entity = super(LDAPUserSource, self).before_entity_insertion(session, lid, etype, eid)
         res = self._search(session, lid, BASE)[0]
         for attr in entity.e_schema.indexable_attributes():
-            entity[attr] = res[self.user_rev_attrs[attr]]
+            entity.cw_edited[attr] = res[self.user_rev_attrs[attr]]
         return entity
 
-    def after_entity_insertion(self, session, dn, entity):
+    def after_entity_insertion(self, session, lid, entity):
         """called by the repository after an entity stored here has been
         inserted in the system table.
         """
         self.debug('ldap after entity insertion')
-        super(LDAPUserSource, self).after_entity_insertion(session, dn, entity)
+        super(LDAPUserSource, self).after_entity_insertion(session, lid, entity)
+        dn = lid
         for group in self.user_default_groups:
             session.execute('SET X in_group G WHERE X eid %(x)s, G name %(group)s',
                             {'x': entity.eid, 'group': group})

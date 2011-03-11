@@ -97,6 +97,14 @@ elif applcubicwebversion < (3, 6, 0) and cubicwebversion >= (3, 6, 0):
 if applcubicwebversion < (3, 9, 6) and cubicwebversion >= (3, 9, 6):
     add_entity_type('CWUniqueTogetherConstraint')
 
+if not ('CWUniqueTogetherConstraint', 'CWRType') in schema['relations'].rdefs:
+    add_relation_definition('CWUniqueTogetherConstraint', 'relations', 'CWRType')
+    rql('SET C relations RT WHERE C relations RDEF, RDEF relation_type RT')
+    commit()
+    drop_relation_definition('CWUniqueTogetherConstraint', 'relations', 'CWAttribute')
+    drop_relation_definition('CWUniqueTogetherConstraint', 'relations', 'CWRelation')
+
+
 if applcubicwebversion < (3, 4, 0) and cubicwebversion >= (3, 4, 0):
 
     with hooks_control(session, session.HOOKS_ALLOW_ALL, 'integrity'):

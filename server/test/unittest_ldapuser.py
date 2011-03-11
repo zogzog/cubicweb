@@ -17,25 +17,31 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """cubicweb.server.sources.ldapusers unit and functional tests"""
 
-import socket
+import os
+import shutil
+import time
+from os.path import abspath, join, exists
+import subprocess
+from socket import socket, error as socketerror
 
 from logilab.common.testlib import TestCase, unittest_main, mock_object
-from cubicweb.devtools import TestServerConfiguration
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.devtools.repotest import RQLGeneratorTC
+from cubicweb.devtools.httptest import get_available_port
 
 from cubicweb.server.sources.ldapuser import *
 
-if '17.1' in socket.gethostbyname('ldap1'):
-    SYT = 'syt'
-    SYT_EMAIL = 'Sylvain Thenault'
-    ADIM = 'adim'
-    SOURCESFILE = 'data/sources_ldap1'
-else:
-    SYT = 'sthenault'
-    SYT_EMAIL = 'sylvain.thenault@logilab.fr'
-    ADIM = 'adimascio'
-    SOURCESFILE = 'data/sources_ldap2'
+SYT = 'syt'
+SYT_EMAIL = 'Sylvain Thenault'
+ADIM = 'adim'
+CONFIG = u'''host=%s
+user-base-dn=ou=People,dc=cubicweb,dc=test
+user-scope=ONELEVEL
+user-classes=top,posixAccount
+user-login-attr=uid
+user-default-group=users
+user-attrs-map=gecos:email,uid:login
+'''
 
 
 def nopwd_authenticate(self, session, login, password):
@@ -57,24 +63,79 @@ def nopwd_authenticate(self, session, login, password):
     # don't check upassword !
     return self.extid2eid(user['dn'], 'CWUser', session)
 
+def setUpModule(*args):
+    create_slapd_configuration(LDAPUserSourceTC.config)
+    global repo
+    try:
+        LDAPUserSourceTC._init_repo()
+        repo = LDAPUserSourceTC.repo
+        add_ldap_source(LDAPUserSourceTC.cnx)
+    except:
+        terminate_slapd()
+        raise
 
+def tearDownModule(*args):
+    global repo
+    repo.shutdown()
+    del repo
+    terminate_slapd()
+
+def add_ldap_source(cnx):
+    cnx.request().create_entity('CWSource', name=u'ldapuser', type=u'ldapuser',
+                                config=CONFIG)
+    cnx.commit()
+
+def create_slapd_configuration(config):
+    global slapd_process, CONFIG
+    basedir = join(config.apphome, "ldapdb")
+    slapdconf = join(config.apphome, "slapd.conf")
+    confin = file(join(config.apphome, "slapd.conf.in")).read()
+    confstream = file(slapdconf, 'w')
+    confstream.write(confin % {'apphome': config.apphome})
+    confstream.close()
+    if not exists(basedir):
+        os.makedirs(basedir)
+        # fill ldap server with some data
+        ldiffile = join(config.apphome, "ldap_test.ldif")
+        print "Initing ldap database"
+        cmdline = "/usr/sbin/slapadd -f %s -l %s -c" % (slapdconf, ldiffile)
+        subprocess.call(cmdline, shell=True)
+
+
+    #ldapuri = 'ldapi://' + join(basedir, "ldapi").replace('/', '%2f')
+    port = get_available_port(xrange(9000, 9100))
+    host = 'localhost:%s' % port
+    ldapuri = 'ldap://%s' % host
+    cmdline = ["/usr/sbin/slapd", "-f",  slapdconf,  "-h",  ldapuri, "-d", "0"]
+    print "Starting slapd on", ldapuri
+    slapd_process = subprocess.Popen(cmdline)
+    time.sleep(0.2)
+    if slapd_process.poll() is None:
+        print "slapd started with pid %s" % slapd_process.pid
+    else:
+        raise EnvironmentError('Cannot start slapd with cmdline="%s" (from directory "%s")' %
+                               (" ".join(cmdline), os.getcwd()))
+    CONFIG = CONFIG % host
+
+def terminate_slapd():
+    global slapd_process
+    if slapd_process.returncode is None:
+        print "terminating slapd"
+        if hasattr(slapd_process, 'terminate'):
+            slapd_process.terminate()
+        else:
+            import os, signal
+            os.kill(slapd_process.pid, signal.SIGTERM)
+        slapd_process.wait()
+        print "DONE"
+
+    del slapd_process
 
 class LDAPUserSourceTC(CubicWebTC):
-    config = TestServerConfiguration('data')
-    config.sources_file = lambda: SOURCESFILE
 
     def patch_authenticate(self):
         self._orig_authenticate = LDAPUserSource.authenticate
         LDAPUserSource.authenticate = nopwd_authenticate
-
-    def setup_database(self):
-        # XXX: need this first query else we get 'database is locked' from
-        # sqlite since it doesn't support multiple connections on the same
-        # database
-        # so doing, ldap inserted users don't get removed between each test
-        rset = self.sexecute('CWUser X')
-        # check we get some users from ldap
-        self.assert_(len(rset) > 1)
 
     def tearDown(self):
         if hasattr(self, '_orig_authenticate'):
@@ -93,7 +154,8 @@ class LDAPUserSourceTC(CubicWebTC):
 
     def test_base(self):
         # check a known one
-        e = self.sexecute('CWUser X WHERE X login %(login)s', {'login': SYT}).get_entity(0, 0)
+        rset = self.sexecute('CWUser X WHERE X login %(login)s', {'login': SYT})
+        e = rset.get_entity(0, 0)
         self.assertEqual(e.login, SYT)
         e.complete()
         self.assertEqual(e.creation_date, None)
@@ -382,19 +444,10 @@ class GlobTrFuncTC(TestCase):
         res = trfunc.apply([[1, 2], [2, 4], [3, 6], [1, 5]])
         self.assertEqual(res, [[1, 5], [2, 4], [3, 6]])
 
-# XXX
-LDAPUserSourceTC._init_repo()
-repo = LDAPUserSourceTC.repo
-
-def teardown_module(*args):
-    global repo
-    del repo
-    del RQL2LDAPFilterTC.schema
-
 class RQL2LDAPFilterTC(RQLGeneratorTC):
-    schema = repo.schema
 
     def setUp(self):
+        self.schema = repo.schema
         RQLGeneratorTC.setUp(self)
         ldapsource = repo.sources[-1]
         self.pool = repo._get_pool()

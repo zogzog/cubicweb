@@ -15,21 +15,19 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""Set of views allowing edition of entities/relations using ajax
+"""Set of views allowing edition of entities/relations using ajax"""
 
-"""
 __docformat__ = "restructuredtext en"
 
 from cubicweb import role
+from cubicweb.view import View
 from cubicweb.selectors import match_form_params, match_kwargs
-from cubicweb.web.box import EditRelationBoxTemplate
+from cubicweb.web import component, stdmsgs, formwidgets as fw
 
-class AddRelationView(EditRelationBoxTemplate):
-    """base class for view which let add entities linked
-    by a given relation
+class AddRelationView(component.EditRelationMixIn, View):
+    """base class for view which let add entities linked by a given relation
 
-    subclasses should define at least id, rtype and target
-    class attributes.
+    subclasses should define at least id, rtype and target class attributes.
     """
     __registry__ = 'views'
     __regid__ = 'xaddrelation'
@@ -38,7 +36,7 @@ class AddRelationView(EditRelationBoxTemplate):
     cw_property_defs = {} # don't want to inherit this from Box
     expected_kwargs = form_params = ('rtype', 'target')
 
-    build_js = EditRelationBoxTemplate.build_reload_js_call
+    build_js = component.EditRelationMixIn.build_reload_js_call
 
     def cell_call(self, row, col, rtype=None, target=None, etype=None):
         self.rtype = rtype or self._cw.form['rtype']
@@ -53,13 +51,13 @@ class AddRelationView(EditRelationBoxTemplate):
                 etypes = rschema.subjects(entity.e_schema)
             if len(etypes) == 1:
                 self.etype = etypes[0]
-        self.w(u'<div id="%s">' % self.__regid__)
+        self.w(u'<div id="%s">' % self.domid)
         self.w(u'<h1>%s</h1>' % self._cw._('relation %(relname)s of %(ent)s')
                % {'relname': rschema.display_name(self._cw, role(self)),
                   'ent': entity.view('incontext')})
         self.w(u'<ul>')
         for boxitem in self.unrelated_boxitems(entity):
-            boxitem.render(self.w)
+            self.w('<li class="invisible">%s</li>' % boxitem)
         self.w(u'</ul></div>')
 
     def unrelated_entities(self, entity):
@@ -74,11 +72,42 @@ class AddRelationView(EditRelationBoxTemplate):
                                     ordermethod='fetch_order')
             self.pagination(self._cw, rset, w=self.w)
             return rset.entities()
-        # in other cases, use vocabulary functions
-        entities = []
-        # XXX to update for 3.2
-        for _, eid in entity.vocabulary(self.rtype, role(self)):
-            if eid is not None:
-                rset = self._cw.eid_rset(eid)
-                entities.append(rset.get_entity(0, 0))
-        return entities
+        super(AddRelationView, self).unrelated_entities(self)
+
+
+def ajax_composite_form(container, entity, rtype, okjs, canceljs,
+                        entityfkwargs=None):
+    """
+    * if entity is None, edit container (assert container.has_eid())
+    * if entity has not eid, will be created
+    * if container has not eid, will be created (see vcreview InsertionPoint)
+    """
+    req = container._cw
+    parentexists = entity is None or container.has_eid()
+    buttons = [fw.Button(onclick=okjs),
+               fw.Button(stdmsgs.BUTTON_CANCEL, onclick=canceljs)]
+    freg = req.vreg['forms']
+    # main form kwargs
+    mkwargs = dict(action='#', domid='%sForm%s' % (rtype, container.eid),
+                   form_buttons=buttons,
+                   onsubmit='javascript: %s; return false' % okjs)
+    # entity form kwargs
+    # use formtype=inlined to skip the generic relations edition section
+    fkwargs = dict(entity=entity or container, formtype='inlined')
+    if entityfkwargs is not None:
+        fkwargs.update(entityfkwargs)
+    # form values
+    formvalues = {}
+    if entity is not None: # creation
+        formvalues[rtype] = container.eid
+    if parentexists: # creation / edition
+        mkwargs.update(fkwargs)
+        # use formtype=inlined to avoid viewing the relation edition section
+        form = freg.select('edition', req, **mkwargs)
+    else: # creation of both container and comment entities
+        form = freg.select('composite', req, form_renderer_id='default',
+                            **mkwargs)
+        form.add_subform(freg.select('edition', req, entity=container,
+                                      mainform=False, mainentity=True))
+        form.add_subform(freg.select('edition', req, mainform=False, **fkwargs))
+    return form, formvalues

@@ -35,30 +35,19 @@ cwconfig.CubicWebConfiguration.cls_adjust_sys_path()
 
 # db auto-population configuration #############################################
 
-SYSTEM_ENTITIES = schema.SCHEMA_TYPES | set((
-    'CWGroup', 'CWUser', 'CWProperty',
-    'Workflow', 'State', 'BaseTransition', 'Transition', 'WorkflowTransition',
-    'TrInfo', 'SubWorkflowExitPoint',
-    ))
-
-SYSTEM_RELATIONS = schema.META_RTYPES | set((
-    # workflow related
-    'workflow_of', 'state_of', 'transition_of', 'initial_state', 'default_workflow',
-    'allowed_transition', 'destination_state', 'from_state', 'to_state',
-    'condition', 'subworkflow', 'subworkflow_state', 'subworkflow_exit',
-    'custom_workflow', 'in_state', 'wf_info_for',
-    # cwproperty
-    'for_user',
-    # schema definition
-    'specializes',
-    'relation_type', 'from_entity', 'to_entity',
-    'constrained_by', 'cstrtype', 'widget',
-    'read_permission', 'update_permission', 'delete_permission', 'add_permission',
-    # permission
-    'in_group', 'require_group', 'require_permission',
-    # deducted from other relations
-    'primary_email',
-    ))
+SYSTEM_ENTITIES = (schema.SCHEMA_TYPES
+                   | schema.INTERNAL_TYPES
+                   | schema.WORKFLOW_TYPES
+                   | set(('CWGroup', 'CWUser',))
+                   )
+SYSTEM_RELATIONS = (schema.META_RTYPES
+                    | schema.WORKFLOW_RTYPES
+                    | schema.WORKFLOW_DEF_RTYPES
+                    | schema.SYSTEM_RTYPES
+                    | schema.SCHEMA_TYPES
+                    | set(('primary_email', # deducted from other relations
+                           ))
+                    )
 
 # content validation configuration #############################################
 
@@ -96,22 +85,8 @@ class TestServerConfiguration(ServerConfiguration):
     read_instance_schema = False
     init_repository = True
     db_require_setup = True
-    options = cwconfig.merge_options(ServerConfiguration.options + (
-        ('anonymous-user',
-         {'type' : 'string',
-          'default': None,
-          'help': 'login of the CubicWeb user account to use for anonymous user (if you want to allow anonymous)',
-          'group': 'main', 'level': 1,
-          }),
-        ('anonymous-password',
-         {'type' : 'string',
-          'default': None,
-          'help': 'password of the CubicWeb user account matching login',
-          'group': 'main', 'level': 1,
-          }),
-        ))
 
-    def __init__(self, appid, apphome=None, log_threshold=logging.CRITICAL+10):
+    def __init__(self, appid='data', apphome=None, log_threshold=logging.CRITICAL+10):
         # must be set before calling parent __init__
         if apphome is None:
             if exists(appid):
@@ -124,7 +99,20 @@ class TestServerConfiguration(ServerConfiguration):
         # need this, usually triggered by cubicweb-ctl
         self.load_cwctl_plugins()
 
-    anonymous_user = TwistedConfiguration.anonymous_user.im_func
+    # By default anonymous login are allow but some test need to deny of to
+    # change the default user. Set it to None to prevent anonymous login.
+    anonymous_credential = ('anon', 'anon')
+
+    def anonymous_user(self):
+        if not self.anonymous_credential:
+            return None, None
+        return self.anonymous_credential
+
+    def set_anonymous_allowed(self, allowed, anonuser='anon'):
+        if allowed:
+            self.anonymous_credential = (anonuser, anonuser)
+        else:
+            self.anonymous_credential = None
 
     @property
     def apphome(self):
@@ -133,8 +121,6 @@ class TestServerConfiguration(ServerConfiguration):
 
     def load_configuration(self):
         super(TestServerConfiguration, self).load_configuration()
-        self.global_set_option('anonymous-user', 'anon')
-        self.global_set_option('anonymous-password', 'anon')
         # no undo support in tests
         self.global_set_option('undo-support', '')
 
@@ -170,6 +156,8 @@ class TestServerConfiguration(ServerConfiguration):
         sources = super(TestServerConfiguration, self).sources()
         if not sources:
             sources = DEFAULT_SOURCES
+        if 'admin' not in sources:
+            sources['admin'] = DEFAULT_SOURCES['admin']
         return sources
 
     # web config methods needed here for cases when we use this config as a web
@@ -184,6 +172,7 @@ class TestServerConfiguration(ServerConfiguration):
 
 class BaseApptestConfiguration(TestServerConfiguration, TwistedConfiguration):
     repo_method = 'inmemory'
+    name = 'all-in-one' # so it search for all-in-one.conf, not repository.conf
     options = cwconfig.merge_options(TestServerConfiguration.options
                                      + TwistedConfiguration.options)
     cubicweb_appobject_path = TestServerConfiguration.cubicweb_appobject_path | TwistedConfiguration.cubicweb_appobject_path
@@ -233,10 +222,10 @@ class RealDatabaseConfiguration(ApptestConfiguration):
 
 # test database handling #######################################################
 
-def init_test_database(config=None, configdir='data'):
+def init_test_database(config=None, appid='data', apphome=None):
     """init a test database for a specific driver"""
-    from cubicweb.dbapi import in_memory_cnx
-    config = config or TestServerConfiguration(configdir)
+    from cubicweb.dbapi import in_memory_repo_cnx
+    config = config or TestServerConfiguration(appid, apphome=apphome)
     sources = config.sources()
     driver = sources['system']['db-driver']
     if config.db_require_setup:
@@ -247,7 +236,7 @@ def init_test_database(config=None, configdir='data'):
         else:
             raise ValueError('no initialization function for driver %r' % driver)
     config._cubes = None # avoid assertion error
-    repo, cnx = in_memory_cnx(config, unicode(sources['admin']['login']),
+    repo, cnx = in_memory_repo_cnx(config, unicode(sources['admin']['login']),
                               password=sources['admin']['password'] or 'xxx')
     if driver == 'sqlite':
         install_sqlite_patch(repo.querier)
@@ -344,12 +333,13 @@ def reset_test_database_sqlite(config):
 def init_test_database_sqlite(config):
     """initialize a fresh sqlite databse used for testing purpose"""
     # remove database file if it exists
+    dbfile = join(config.apphome, config.sources()['system']['db-name'])
+    config.sources()['system']['db-name'] = dbfile
     if not reset_test_database_sqlite(config):
         # initialize the database
         import shutil
         from cubicweb.server import init_repository
         init_repository(config, interactive=False)
-        dbfile = config.sources()['system']['db-name']
         shutil.copy(dbfile, '%s-template' % dbfile)
 
 def install_sqlite_patch(querier):

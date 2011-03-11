@@ -89,12 +89,11 @@ class CubicWebServerTC(CubicWebTC):
     """Class for running test web server. See :class:`CubicWebServerConfig`.
 
     Class attributes:
-    * ` anonymous_logged`: flag telling ifs anonymous user should be log logged
-      by default (True by default)
+    * `anonymous_allowed`: flag telling if anonymous browsing should be allowed
     """
     configcls = CubicWebServerConfig
     # anonymous is logged by default in cubicweb test cases
-    anonymous_logged = True
+    anonymous_allowed = True
 
     def start_server(self):
         # use a semaphore to avoid starting test while the http server isn't
@@ -176,7 +175,7 @@ class CubicWebServerTC(CubicWebTC):
         return response
 
     def setUp(self):
-        CubicWebTC.setUp(self)
+        super(CubicWebServerTC, self).setUp()
         self.start_server()
 
     def tearDown(self):
@@ -185,13 +184,9 @@ class CubicWebServerTC(CubicWebTC):
         except error.ReactorNotRunning, err:
             # Server could be launched manually
             print err
-        CubicWebTC.tearDown(self)
+        super(CubicWebServerTC, self).tearDown()
 
     @classmethod
     def init_config(cls, config):
+        config.set_anonymous_allowed(cls.anonymous_allowed)
         super(CubicWebServerTC, cls).init_config(config)
-        if not cls.anonymous_logged:
-            config.global_set_option('anonymous-user', None)
-        else:
-            config.global_set_option('anonymous-user', 'anon')
-            config.global_set_option('anonymous-password', 'anon')

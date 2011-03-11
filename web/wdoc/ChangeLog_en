@@ -4,7 +4,27 @@
 .. _SPARQL: http://www.w3.org/TR/rdf-sparql-query/
 .. _schema: schema
 .. _OWL: http://www.w3.org/TR/owl-features/
-.. _pdfexport: http://www.cubicweb.org/project/cubicweb-pdfexport
+.. _CWSource: cwetype/CWSource
+
+2010-10-17 --  3.10.0
+
+  * facets on optional relations now propose to search to entities
+    which miss the relation
+
+  * box and content navigation components have been merged, so this
+    simplify the configuration and you should be able to move
+    boxes/components in various places of the interface
+
+  * global / context dependant boxes should now be more
+    distinguishable to make the interface more intuitive
+
+  * upgraded jQuery and jQuery UI respectively to version 1.4.2 and
+    1.8.
+
+  * data sources are now stored as CWSource_ entities in the database.
+    This allows on multi-sources instance to filter search results
+    according to the source entities are coming from.
+
 
 2010-06-11  --  3.8.4
    * support full text prefix search for instances using postgres > 8.4 as database: try it

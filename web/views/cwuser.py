@@ -18,6 +18,7 @@
 """Specific views for users and groups"""
 
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 import hashlib
 
@@ -25,7 +26,7 @@ from logilab.mtconverter import xml_escape
 
 from cubicweb.selectors import one_line_rset, is_instance, match_user_groups
 from cubicweb.view import EntityView
-from cubicweb.web import action, uicfg
+from cubicweb.web import action, uicfg, formwidgets
 from cubicweb.web.views import tabs
 
 _pvs = uicfg.primaryview_section
@@ -37,6 +38,11 @@ _pvs.tag_subject_of(('CWGroup', 'delete_permission', '*'), 'relations')
 _pvs.tag_subject_of(('CWGroup', 'update_permission', '*'), 'relations')
 _pvs.tag_object_of(('*', 'in_group', 'CWGroup'), 'relations')
 _pvs.tag_object_of(('*', 'require_group', 'CWGroup'), 'relations')
+
+_affk = uicfg.autoform_field_kwargs
+
+_affk.tag_subject_of(('CWUser', 'in_group', 'CWGroup'),
+                    {'widget': formwidgets.InOutWidget})
 
 class UserPreferencesEntityAction(action.Action):
     __regid__ = 'prefs'
@@ -107,6 +113,7 @@ class CWGroupMainTab(tabs.PrimaryTab):
     __select__ = tabs.PrimaryTab.__select__ & is_instance('CWGroup')
 
     def render_entity_attributes(self, entity):
+        _ = self._cw._
         rql = 'Any U, FN, LN, CD, LL ORDERBY L WHERE U in_group G, ' \
               'U login L, U firstname FN, U surname LN, U creation_date CD, ' \
               'U last_login_time LL, G eid %(x)s'

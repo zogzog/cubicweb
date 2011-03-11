@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -38,14 +38,16 @@ except AssertionError, ex:
     pass # already registered
 
 
-config = TestServerConfiguration('data')
-config.bootstrap_cubes()
-schema = config.load_schema()
-schema['in_state'].inlined = True
-schema['state_of'].inlined = False
-schema['comments'].inlined = False
+def setUpModule():
+    global config, schema
+    config = TestServerConfiguration('data', apphome=CWRQLTC.datadir)
+    config.bootstrap_cubes()
+    schema = config.load_schema()
+    schema['in_state'].inlined = True
+    schema['state_of'].inlined = False
+    schema['comments'].inlined = False
 
-def teardown_module(*args):
+def tearDownModule():
     global config, schema
     del config, schema
 
@@ -178,10 +180,14 @@ WHERE _X.cw_prenom=lulu AND EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_
 FROM cw_Personne AS _X
 WHERE _X.cw_prenom=lulu AND NOT (EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_by0, in_group_relation AS rel_in_group1, cw_CWGroup AS _G WHERE rel_owned_by0.eid_from=_X.cw_eid AND rel_in_group1.eid_from=rel_owned_by0.eid_to AND rel_in_group1.eid_to=_G.cw_eid AND ((_G.cw_name=lulufanclub) OR (_G.cw_name=managers))))'''),
 
+    ('Any X WHERE  X title V, NOT X wikiid V, NOT X title "parent", X is Card',
+     '''SELECT _X.cw_eid
+FROM cw_Card AS _X
+WHERE NOT (_X.cw_wikiid=_X.cw_title) AND NOT (_X.cw_title=parent)''')
 ]
 
 
-ADVANCED= [
+ADVANCED = [
     ("Societe S WHERE S nom 'Logilab' OR S nom 'Caesium'",
      '''SELECT _S.cw_eid
 FROM cw_Societe AS _S
@@ -571,7 +577,14 @@ ORDER BY T1.C2'''),
      '''SELECT 1
 FROM in_group_relation AS rel_in_group0'''),
 
-
+    ('CWEType X WHERE X name CV, X description V HAVING NOT V=CV AND NOT V = "parent"',
+     '''SELECT _X.cw_eid
+FROM cw_CWEType AS _X
+WHERE NOT (EXISTS(SELECT 1 WHERE _X.cw_description=parent)) AND NOT (EXISTS(SELECT 1 WHERE _X.cw_description=_X.cw_name))'''),
+    ('CWEType X WHERE X name CV, X description V HAVING V!=CV AND V != "parent"',
+     '''SELECT _X.cw_eid
+FROM cw_CWEType AS _X
+WHERE _X.cw_description!=parent AND _X.cw_description!=_X.cw_name'''),
     ]
 
 
@@ -1078,8 +1091,12 @@ WHERE rel_is0.eid_to=2'''),
 
     ]
 class CWRQLTC(RQLGeneratorTC):
-    schema = schema
     backend = 'sqlite'
+
+    def setUp(self):
+        self.__class__.schema = schema
+        super(CWRQLTC, self).setUp()
+
     def test_nonregr_sol(self):
         delete = self.rqlhelper.parse(
             'DELETE X read_permission READ_PERMISSIONSUBJECT,X add_permission ADD_PERMISSIONSUBJECT,'
@@ -1107,8 +1124,11 @@ def strip(text):
     return '\n'.join(l.strip() for l in text.strip().splitlines())
 
 class PostgresSQLGeneratorTC(RQLGeneratorTC):
-    schema = schema
     backend = 'postgres'
+
+    def setUp(self):
+        self.__class__.schema = schema
+        super(PostgresSQLGeneratorTC, self).setUp()
 
     def _norm_sql(self, sql):
         return sql.strip()
@@ -1414,6 +1434,13 @@ ORDER BY ts_rank(appears0.words, to_tsquery('default', 'hip&hop&momo'))*appears0
              """SELECT appears0.uid, ts_rank(appears0.words, to_tsquery('default', 'toto&tata'))*appears0.weight
 FROM appears AS appears0
 WHERE appears0.words @@ to_tsquery('default', 'toto&tata')"""),
+
+
+            ('Any X WHERE NOT A tags X, X has_text "pouet"',
+             '''SELECT appears1.uid
+FROM appears AS appears1
+WHERE NOT (EXISTS(SELECT 1 FROM tags_relation AS rel_tags0 WHERE appears1.uid=rel_tags0.eid_to)) AND appears1.words @@ to_tsquery('default', 'pouet')
+'''),
 
             )):
             yield t

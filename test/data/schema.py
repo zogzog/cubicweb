@@ -19,7 +19,9 @@
 
 """
 
-from yams.buildobjs import EntityType, String, SubjectRelation, RelationDefinition
+from yams.buildobjs import (EntityType, String, SubjectRelation,
+                            RelationDefinition)
+from cubicweb.schema import  WorkflowableEntityType
 
 class Personne(EntityType):
     nom = String(required=True)
@@ -48,3 +50,9 @@ class tags(RelationDefinition):
 class evaluee(RelationDefinition):
     subject = 'CWUser'
     object = 'Note'
+
+
+class StateFull(WorkflowableEntityType):
+    name = String()
+
+

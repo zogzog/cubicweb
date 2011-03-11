@@ -17,6 +17,8 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unit tests for module cubicweb.schema"""
 
+from __future__ import with_statement
+
 import sys
 from os.path import join, isabs, basename, dirname
 
@@ -72,7 +74,6 @@ RELS = (
     ('Personne tel Int'),
     ('Personne fax Int'),
     ('Personne datenaiss Date'),
-    ('Personne TEST Boolean'),
     ('Personne promo String'),
     # real relations
     ('Personne  travaille Societe'),
@@ -80,7 +81,7 @@ RELS = (
     ('Societe evaluee   Note'),
     ('Personne  concerne  Affaire'),
     ('Personne  concerne  Societe'),
-    ('Affaire Concerne  Societe'),
+    ('Affaire concerne  Societe'),
     )
 done = {}
 for rel in RELS:
@@ -107,17 +108,6 @@ class CubicWebSchemaTC(TestCase):
         self.failIf(issubclass(RQLUniqueConstraint, RQLVocabularyConstraint))
         self.failIf(issubclass(RQLUniqueConstraint, RQLConstraint))
         self.failUnless(issubclass(RQLConstraint, RQLVocabularyConstraint))
-
-    def test_normalize(self):
-        """test that entities, relations and attributes name are normalized
-        """
-        self.assertEqual(esociete.type, 'Societe')
-        self.assertEqual(schema.has_relation('TEST'), 0)
-        self.assertEqual(schema.has_relation('test'), 1)
-        self.assertEqual(eperson.subjrels['test'].type, 'test')
-        self.assertEqual(schema.has_relation('Concerne'), 0)
-        self.assertEqual(schema.has_relation('concerne'), 1)
-        self.assertEqual(schema.rschema('concerne').type, 'concerne')
 
     def test_entity_perms(self):
         self.assertEqual(eperson.get_groups('read'), set(('managers', 'users', 'guests')))
@@ -151,7 +141,7 @@ class CubicWebSchemaTC(TestCase):
         self.assertEqual(str(expr), 'Any O,U WHERE U has_update_permission O, O eid %(o)s, U eid %(u)s')
 
 loader = CubicWebSchemaLoader()
-config = TestConfiguration('data')
+config = TestConfiguration('data', apphome=DATADIR)
 config.bootstrap_cubes()
 
 class SchemaReaderClassTest(TestCase):
@@ -167,31 +157,32 @@ class SchemaReaderClassTest(TestCase):
         schema = loader.load(config)
         self.assert_(isinstance(schema, CubicWebSchema))
         self.assertEqual(schema.name, 'data')
-        entities = [str(e) for e in schema.entities()]
-        entities.sort()
+        entities = sorted([str(e) for e in schema.entities()])
         expected_entities = ['BaseTransition', 'Bookmark', 'Boolean', 'Bytes', 'Card',
                              'Date', 'Datetime', 'Decimal',
                              'CWCache', 'CWConstraint', 'CWConstraintType', 'CWEType',
                              'CWAttribute', 'CWGroup', 'EmailAddress', 'CWRelation',
                              'CWPermission', 'CWProperty', 'CWRType',
+                             'CWSource', 'CWSourceHostConfig',
                              'CWUniqueTogetherConstraint', 'CWUser',
                              'ExternalUri', 'File', 'Float', 'Int', 'Interval', 'Note',
                              'Password', 'Personne',
                              'RQLExpression',
-                             'Societe', 'State', 'String', 'SubNote', 'SubWorkflowExitPoint',
+                             'Societe', 'State', 'StateFull', 'String', 'SubNote', 'SubWorkflowExitPoint',
                              'Tag', 'Time', 'Transition', 'TrInfo',
                              'Workflow', 'WorkflowTransition']
         self.assertListEqual(entities, sorted(expected_entities))
-        relations = [str(r) for r in schema.relations()]
-        relations.sort()
+        relations = sorted([str(r) for r in schema.relations()])
         expected_relations = ['add_permission', 'address', 'alias', 'allowed_transition',
                               'bookmarked_by', 'by_transition',
 
                               'cardinality', 'comment', 'comment_format',
-                              'composite', 'condition', 'connait',
+                              'composite', 'condition', 'config', 'connait',
                               'constrained_by', 'constraint_of',
                               'content', 'content_format',
-                              'created_by', 'creation_date', 'cstrtype', 'custom_workflow', 'cwuri',
+                              'created_by', 'creation_date', 'cstrtype', 'custom_workflow',
+                              'cwuri', 'cw_source', 'cw_host_config_of',
+                              'cw_support', 'cw_dont_cross', 'cw_may_cross',
 
                               'data', 'data_encoding', 'data_format', 'data_name', 'default_workflow', 'defaultval', 'delete_permission',
                               'description', 'description_format', 'destination_state',
@@ -207,7 +198,7 @@ class SchemaReaderClassTest(TestCase):
 
                               'label', 'last_login_time', 'login',
 
-                              'mainvars', 'modification_date',
+                              'mainvars', 'match_host', 'modification_date',
 
                               'name', 'nom',
 
@@ -225,13 +216,14 @@ class SchemaReaderClassTest(TestCase):
 
                               'value',
 
-                              'wf_info_for', 'wikiid', 'workflow_of']
+                              'wf_info_for', 'wikiid', 'workflow_of', 'tr_count']
 
-        self.assertListEqual(relations, expected_relations)
+        self.assertListEqual(relations, sorted(expected_relations))
 
         eschema = schema.eschema('CWUser')
         rels = sorted(str(r) for r in eschema.subject_relations())
-        self.assertListEqual(rels, ['created_by', 'creation_date', 'custom_workflow', 'cwuri', 'eid',
+        self.assertListEqual(rels, ['created_by', 'creation_date', 'custom_workflow',
+                                    'cw_source', 'cwuri', 'eid',
                                      'evaluee', 'firstname', 'has_text', 'identity',
                                      'in_group', 'in_state', 'is',
                                      'is_instance_of', 'last_login_time',
@@ -267,7 +259,7 @@ class SchemaReaderClassTest(TestCase):
         self.assertEqual([x.expression for x in aschema.get_rqlexprs('update')],
                           ['U has_update_permission X'])
 
-class BadSchemaRQLExprTC(TestCase):
+class BadSchemaTC(TestCase):
     def setUp(self):
         self.loader = CubicWebSchemaLoader()
         self.loader.defined = {}
@@ -277,9 +269,19 @@ class BadSchemaRQLExprTC(TestCase):
 
     def _test(self, schemafile, msg):
         self.loader.handle_file(join(DATADIR, schemafile))
-        ex = self.assertRaises(BadSchemaDefinition,
-                               self.loader._build_schema, 'toto', False)
-        self.assertEqual(str(ex), msg)
+        with self.assertRaises(BadSchemaDefinition) as cm:
+            self.loader._build_schema('toto', False)
+        self.assertEqual(str(cm.exception), msg)
+
+    def test_lowered_etype(self):
+        self._test('lowered_etype.py',
+                   "'my_etype' is not a valid name for an entity type. It should "
+                   "start with an upper cased letter and be followed by at least "
+                   "a lower cased letter")
+
+    def test_uppered_rtype(self):
+        self._test('uppered_rtype.py',
+                   "'ARelation' is not a valid name for a relation type. It should be lower cased")
 
     def test_rrqlexpr_on_etype(self):
         self._test('rrqlexpr_on_eetype.py',
@@ -308,7 +310,7 @@ class RQLExpressionTC(TestCase):
     def test_comparison(self):
         self.assertEqual(ERQLExpression('X is CWUser', 'X', 0),
                           ERQLExpression('X is CWUser', 'X', 0))
-        self.assertNotEquals(ERQLExpression('X is CWUser', 'X', 0),
+        self.assertNotEqual(ERQLExpression('X is CWUser', 'X', 0),
                              ERQLExpression('X is CWGroup', 'X', 0))
 
 class GuessRrqlExprMainVarsTC(TestCase):

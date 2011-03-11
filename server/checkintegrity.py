@@ -36,6 +36,12 @@ from cubicweb.schema import META_RTYPES, VIRTUAL_RTYPES, PURE_VIRTUAL_RTYPES
 from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.server.session import security_enabled
 
+def notify_fixed(fix):
+    if fix:
+        print >> sys.stderr, ' [FIXED]'
+    else:
+        print >> sys.stderr
+
 def has_eid(session, sqlcursor, eid, eids):
     """return true if the eid is a valid eid"""
     if eid in eids:
@@ -131,8 +137,8 @@ def reindex_entities(schema, session, withpb=True, etypes=None):
     # attribute to their current value
     source = repo.system_source
     for eschema in etypes:
-        for entity in session.execute('Any X WHERE X is %s' % eschema).entities():
-            source.fti_index_entity(session, entity)
+        rset = session.execute('Any X WHERE X is %s' % eschema)
+        source.fti_index_entities(session, rset.entities())
         if withpb:
             pb.update()
 
@@ -169,9 +175,7 @@ def check_text_index(schema, session, eids, fix=1):
             print >> sys.stderr, msg % eid,
             if fix:
                 session.system_sql('DELETE FROM appears WHERE uid=%s;' % eid)
-                print >> sys.stderr, ' [FIXED]'
-            else:
-                print >> sys.stderr
+            notify_fixed(fix)
 
 
 def check_entities(schema, session, eids, fix=1):
@@ -185,9 +189,7 @@ def check_entities(schema, session, eids, fix=1):
             print >> sys.stderr, msg % eid,
             if fix:
                 session.system_sql('DELETE FROM entities WHERE eid=%s;' % eid)
-                print >> sys.stderr, ' [FIXED]'
-            else:
-                print >> sys.stderr
+            notify_fixed(fix)
     print 'Checking entities tables'
     for eschema in schema.entities():
         if eschema.final:
@@ -204,22 +206,19 @@ def check_entities(schema, session, eids, fix=1):
                 print >> sys.stderr, msg % (eid, eschema.type),
                 if fix:
                     session.system_sql('DELETE FROM %s WHERE %s=%s;' % (table, column, eid))
-                    print >> sys.stderr, ' [FIXED]'
-                else:
-                    print >> sys.stderr
+                notify_fixed(fix)
 
 
 def bad_related_msg(rtype, target, eid, fix):
     msg = '  A relation %s with %s eid %s exists but no such entity in sources'
     print >> sys.stderr, msg % (rtype, target, eid),
-    if fix:
-        print >> sys.stderr, ' [FIXED]'
-    else:
-        print >> sys.stderr
+    notify_fixed(fix)
 
 
 def check_relations(schema, session, eids, fix=1):
-    """check all relations registered in the repo system table"""
+    """check that eids referenced by relations are registered in the repo system
+    table
+    """
     print 'Checking relations'
     for rschema in schema.relations():
         if rschema.final or rschema in PURE_VIRTUAL_RTYPES:
@@ -265,6 +264,54 @@ def check_relations(schema, session, eids, fix=1):
                     session.system_sql(sql)
 
 
+def check_mandatory_relations(schema, session, eids, fix=1):
+    """check entities missing some mandatory relation"""
+    print 'Checking mandatory relations'
+    for rschema in schema.relations():
+        if rschema.final or rschema in PURE_VIRTUAL_RTYPES:
+            continue
+        smandatory = set()
+        omandatory = set()
+        for rdef in rschema.rdefs.values():
+            if rdef.cardinality[0] in '1+':
+                smandatory.add(rdef.subject)
+            if rdef.cardinality[1] in '1+':
+                omandatory.add(rdef.object)
+        for role, etypes in (('subject', smandatory), ('object', omandatory)):
+            for etype in etypes:
+                if role == 'subject':
+                    rql = 'Any X WHERE NOT X %s Y, X is %s' % (rschema, etype)
+                else:
+                    rql = 'Any X WHERE NOT Y %s X, X is %s' % (rschema, etype)
+                for entity in session.execute(rql).entities():
+                    print >> sys.stderr, '%s #%s is missing mandatory %s relation %s' % (
+                        entity.__regid__, entity.eid, role, rschema)
+                    if fix:
+                        #if entity.cw_describe()['source']['uri'] == 'system': XXX
+                        entity.delete()
+                    notify_fixed(fix)
+
+
+def check_mandatory_attributes(schema, session, eids, fix=1):
+    """check for entities stored in the system source missing some mandatory
+    attribute
+    """
+    print 'Checking mandatory attributes'
+    for rschema in schema.relations():
+        if not rschema.final or rschema in VIRTUAL_RTYPES:
+            continue
+        for rdef in rschema.rdefs.values():
+            if rdef.cardinality[0] in '1+':
+                rql = 'Any X WHERE X %s NULL, X is %s, X cw_source S, S name "system"' % (
+                    rschema, rdef.subject)
+                for entity in session.execute(rql).entities():
+                    print >> sys.stderr, '%s #%s is missing mandatory attribute %s' % (
+                        entity.__regid__, entity.eid, rschema)
+                    if fix:
+                        entity.delete()
+                    notify_fixed(fix)
+
+
 def check_metadata(schema, session, eids, fix=1):
     """check entities has required metadata
 
@@ -287,9 +334,7 @@ def check_metadata(schema, session, eids, fix=1):
                     session.system_sql("UPDATE %s SET %s=%%(v)s WHERE %s=%s ;"
                                        % (table, column, eidcolumn, eid),
                                        {'v': default})
-                    print >> sys.stderr, ' [FIXED]'
-                else:
-                    print >> sys.stderr
+                notify_fixed(fix)
     cursor = session.system_sql('SELECT MIN(%s) FROM %sCWUser;' % (eidcolumn,
                                                                   SQL_PREFIX))
     default_user_eid = cursor.fetchone()[0]
@@ -305,9 +350,7 @@ def check_metadata(schema, session, eids, fix=1):
             if fix:
                 session.system_sql('INSERT INTO %s_relation VALUES (%s, %s) ;'
                                    % (rel, eid, default))
-                print >> sys.stderr, ' [FIXED]'
-            else:
-                print >> sys.stderr
+            notify_fixed(fix)
 
 
 def check(repo, cnx, checks, reindex, fix, withpb=True):
@@ -335,6 +378,11 @@ def check(repo, cnx, checks, reindex, fix, withpb=True):
         reindex_entities(repo.schema, session, withpb=withpb)
         cnx.commit()
 
+
+def info(msg, *args):
+    if args:
+        msg = msg % args
+    print 'INFO: %s' % msg
 
 def warning(msg, *args):
     if args:
@@ -374,13 +422,13 @@ def check_mapping(schema, mapping, warning=warning, error=error):
     # check relation in dont_cross_relations aren't in support_relations
     for rschema in mapping['dont_cross_relations']:
         if rschema in mapping['support_relations']:
-            warning('relation %s is in dont_cross_relations and in support_relations',
-                    rschema)
+            info('relation %s is in dont_cross_relations and in support_relations',
+                 rschema)
     # check relation in cross_relations are in support_relations
     for rschema in mapping['cross_relations']:
         if rschema not in mapping['support_relations']:
-            warning('relation %s is in cross_relations but not in support_relations',
-                    rschema)
+            info('relation %s is in cross_relations but not in support_relations',
+                 rschema)
     # check for relation in both cross_relations and dont_cross_relations
     for rschema in mapping['cross_relations'] & mapping['dont_cross_relations']:
         error('relation %s is in both cross_relations and dont_cross_relations',
@@ -410,7 +458,7 @@ def check_mapping(schema, mapping, warning=warning, error=error):
                     if role == 'subject' and rschema.inlined:
                         error('inlined relation %s of %s should be supported',
                               rschema, eschema)
-                    elif not somethingprinted and rschema not in seen:
+                    elif not somethingprinted and rschema not in seen and rschema not in mapping['cross_relations']:
                         print 'you may want to specify something for %s' % rschema
                         seen.add(rschema)
             else:

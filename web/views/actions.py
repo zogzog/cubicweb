@@ -47,7 +47,7 @@ class has_editable_relation(EntitySelector):
         # if user has no update right but it can modify some relation,
         # display action anyway
         form = entity._cw.vreg['forms'].select('edition', entity._cw,
-                                               entity=entity)
+                                               entity=entity, mainform=False)
         for dummy in form.editable_relations():
             return 1
         try:
@@ -407,7 +407,7 @@ class PoweredByAction(action.Action):
 
     category = 'footer'
     order = 3
-    title = _('powered by CubicWeb')
+    title = _('Powered by CubicWeb')
 
     def url(self):
         return 'http://www.cubicweb.org'

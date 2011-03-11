@@ -41,12 +41,14 @@ from datetime import datetime
 from glob import glob
 from copy import copy
 from warnings import warn
+from contextlib import contextmanager
 
 from logilab.common.deprecation import deprecated
 from logilab.common.decorators import cached, clear_cache
 
 from yams.constraints import SizeConstraint
 from yams.schema2sql import eschema2sql, rschema2sql
+from yams.schema import RelationDefinitionSchema
 
 from cubicweb import AuthenticationError, ExecutionError
 from cubicweb.selectors import is_instance
@@ -60,7 +62,7 @@ from cubicweb.server.session import hooks_control
 from cubicweb.server import hook
 try:
     from cubicweb.server import SOURCE_TYPES, schemaserial as ss
-    from cubicweb.server.utils import manager_userpasswd, ask_source_config
+    from cubicweb.server.utils import manager_userpasswd
     from cubicweb.server.sqlutils import sqlexec, SQL_PREFIX
 except ImportError: # LAX
     pass
@@ -181,7 +183,7 @@ class ServerMigrationHelper(MigrationHelper):
         open(backupfile,'w').close() # kinda lock
         os.chmod(backupfile, 0600)
         # backup
-        tmpdir = tempfile.mkdtemp(dir=instbkdir)
+        tmpdir = tempfile.mkdtemp()
         try:
             for source in repo.sources:
                 try:
@@ -534,38 +536,21 @@ class ServerMigrationHelper(MigrationHelper):
             unique_together = set([frozenset(ut)
                                    for ut in eschema._unique_together])
             for ut in repo_unique_together - unique_together:
-                restrictions  = ', '.join(['C relations R%(i)d, '
-                                           'R%(i)d relation_type T%(i)d, '
-                                           'R%(i)d from_entity X, '
-                                           'T%(i)d name %%(T%(i)d)s' % {'i': i,
-                                                                        'col':col}
-                                           for (i, col) in enumerate(ut)])
-                substs = {'etype': etype}
+                restrictions = []
+                substs = {'x': repoeschema.eid}
                 for i, col in enumerate(ut):
+                    restrictions.append('C relations T%(i)d, '
+                                       'T%(i)d name %%(T%(i)d)s' % {'i': i})
                     substs['T%d'%i] = col
                 self.rqlexec('DELETE CWUniqueTogetherConstraint C '
                              'WHERE C constraint_of E, '
-                             '      E name %%(etype)s,'
-                             '      %s' % restrictions,
+                             '      E eid %%(x)s,'
+                             '      %s' % ', '.join(restrictions),
                              substs)
             for ut in unique_together - repo_unique_together:
-                relations = ', '.join(['C relations R%d' % i
-                                       for (i, col) in enumerate(ut)])
-                restrictions  = ', '.join(['R%(i)d relation_type T%(i)d, '
-                                           'R%(i)d from_entity E, '
-                                           'T%(i)d name %%(T%(i)d)s' % {'i': i,
-                                                                        'col':col}
-                                           for (i, col) in enumerate(ut)])
-                substs = {'etype': etype}
-                for i, col in enumerate(ut):
-                    substs['T%d'%i] = col
-                self.rqlexec('INSERT CWUniqueTogetherConstraint C:'
-                             '       C constraint_of E, '
-                             '       %s '
-                             'WHERE '
-                             '      E name %%(etype)s,'
-                             '      %s' % (relations, restrictions),
-                             substs)
+                rql, substs = ss.uniquetogether2rql(eschema, ut)
+                substs['x'] = repoeschema.eid
+                self.rqlexec(rql, substs)
 
     def _synchronize_rdef_schema(self, subjtype, rtype, objtype,
                                  syncperms=True, syncprops=True):
@@ -643,13 +628,6 @@ class ServerMigrationHelper(MigrationHelper):
         for cube in newcubes:
             self.cmd_set_property('system.version.'+cube,
                                   self.config.cube_version(cube))
-            if cube in SOURCE_TYPES:
-                # don't use config.sources() in case some sources have been
-                # disabled for migration
-                sourcescfg = self.config.read_sources_file()
-                sourcescfg[cube] = ask_source_config(cube)
-                self.config.write_sources_file(sourcescfg)
-                clear_cache(self.config, 'read_sources_file')
             # ensure added cube is in config cubes
             # XXX worth restoring on error?
             if not cube in self.config._cubes:
@@ -961,8 +939,7 @@ class ServerMigrationHelper(MigrationHelper):
                     # get some validation error on commit since integrity hooks
                     # may think some required relation is missing... This also ensure
                     # repository caches are properly cleanup
-                    hook.set_operation(session, 'pendingeids', eid,
-                                       hook.CleanupDeletedEidsCacheOp)
+                    hook.CleanupDeletedEidsCacheOp.get_instance(session).add_data(eid)
                     # and don't forget to remove record from system tables
                     self.repo.system_source.delete_info(
                         session, session.entity_from_eid(eid, rdeftype),
@@ -1119,11 +1096,20 @@ class ServerMigrationHelper(MigrationHelper):
         """synchronize the persistent schema against the current definition
         schema.
 
+        `ertype` can be :
+        - None, in that case everything will be synced ;
+        - a string, it should be an entity type or
+          a relation type. In that case, only the corresponding
+          entities / relations will be synced ;
+        - an rdef object to synchronize only this specific relation definition
+
         It will synch common stuff between the definition schema and the
         actual persistent schema, it won't add/remove any entity or relation.
         """
         assert syncperms or syncprops, 'nothing to do'
         if ertype is not None:
+            if isinstance(ertype, RelationDefinitionSchema):
+                ertype = ertype.as_triple()
             if isinstance(ertype, (tuple, list)):
                 assert len(ertype) == 3, 'not a relation definition'
                 self._synchronize_rdef_schema(ertype[0], ertype[1], ertype[2],
@@ -1215,8 +1201,14 @@ class ServerMigrationHelper(MigrationHelper):
 
     # Workflows handling ######################################################
 
+    def cmd_make_workflowable(self, etype):
+        """add workflow relations to an entity type to make it workflowable"""
+        self.cmd_add_relation_definition(etype, 'in_state', 'State')
+        self.cmd_add_relation_definition(etype, 'custom_workflow', 'Workflow')
+        self.cmd_add_relation_definition('TrInfo', 'wf_info_for', etype)
+
     def cmd_add_workflow(self, name, wfof, default=True, commit=False,
-                         **kwargs):
+                         ensure_workflowable=True, **kwargs):
         """
         create a new workflow and links it to entity types
          :type name: unicode
@@ -1236,7 +1228,14 @@ class ServerMigrationHelper(MigrationHelper):
                                     **kwargs)
         if not isinstance(wfof, (list, tuple)):
             wfof = (wfof,)
+        def _missing_wf_rel(etype):
+            return 'missing workflow relations, see make_workflowable(%s)' % etype
         for etype in wfof:
+            eschema = self.repo.schema[etype]
+            if ensure_workflowable:
+                assert 'in_state' in eschema.subjrels, _missing_wf_rel(etype)
+                assert 'custom_workflow' in eschema.subjrels, _missing_wf_rel(etype)
+                assert 'wf_info_for' in eschema.objrels, _missing_wf_rel(etype)
             rset = self.rqlexec(
                 'SET X workflow_of ET WHERE X eid %(x)s, ET name %(et)s',
                 {'x': wf.eid, 'et': etype}, ask_confirm=False)
@@ -1380,6 +1379,40 @@ class ServerMigrationHelper(MigrationHelper):
         """add a new entity of the given type"""
         return self.cmd_create_entity(etype, *args, **kwargs).eid
 
+    @contextmanager
+    def cmd_dropped_constraints(self, etype, attrname, cstrtype,
+                                droprequired=False):
+        """context manager to drop constraints temporarily on fs_schema
+
+        `cstrtype` should be a constraint class (or a tuple of classes)
+        and will be passed to isinstance directly
+
+        For instance::
+
+            >>> with dropped_constraints('MyType', 'myattr',
+            ...                          UniqueConstraint, droprequired=True):
+            ...     add_attribute('MyType', 'myattr')
+            ...     # + instructions to fill MyType.myattr column
+            ...
+            >>>
+
+        """
+        rdef = self.fs_schema.eschema(etype).rdef(attrname)
+        original_constraints = rdef.constraints
+        # remove constraints
+        rdef.constraints = [cstr for cstr in original_constraints
+                            if not (cstrtype and isinstance(cstr, cstrtype))]
+        if droprequired:
+            original_cardinality = rdef.cardinality
+            rdef.cardinality = '?' + rdef.cardinality[1]
+        yield
+        # restore original constraints
+        rdef.constraints = original_constraints
+        if droprequired:
+            rdef.cardinality = original_cardinality
+        # update repository schema
+        self.cmd_sync_schema_props_perms(rdef, syncperms=False)
+
     def sqlexec(self, sql, args=None, ask_confirm=True):
         """execute the given sql if confirmed
 
@@ -1424,7 +1457,7 @@ class ServerMigrationHelper(MigrationHelper):
         return res
 
     def rqliter(self, rql, kwargs=None, ask_confirm=True):
-        return ForRqlIterator(self, rql, None, ask_confirm)
+        return ForRqlIterator(self, rql, kwargs, ask_confirm)
 
     # broken db commands ######################################################
 

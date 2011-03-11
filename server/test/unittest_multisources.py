@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+ # copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -15,29 +15,29 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-from os.path import dirname, join, abspath
-from datetime import datetime, timedelta
 
-from logilab.common.decorators import cached
+from datetime import datetime, timedelta
 
 from cubicweb.devtools import TestServerConfiguration, init_test_database
 from cubicweb.devtools.testlib import CubicWebTC, refresh_repo
 from cubicweb.devtools.repotest import do_monkey_patch, undo_monkey_patch
 
 
-class TwoSourcesConfiguration(TestServerConfiguration):
-    sourcefile = 'sources_multi'
-
-
 class ExternalSource1Configuration(TestServerConfiguration):
     sourcefile = 'sources_extern'
 
 class ExternalSource2Configuration(TestServerConfiguration):
-    sourcefile = 'sources_multi2'
+    sourcefile = 'sources_multi'
 
 MTIME = datetime.now() - timedelta(0, 10)
-repo2, cnx2 = init_test_database(config=ExternalSource1Configuration('data'))
-repo3, cnx3 = init_test_database(config=ExternalSource2Configuration('data'))
+
+EXTERN_SOURCE_CFG = u'''
+pyro-ns-id = extern
+cubicweb-user = admin
+cubicweb-password = gingkow
+mapping-file = extern_mapping.py
+base-url=http://extern.org/
+'''
 
 # hi-jacking
 from cubicweb.server.sources.pyrorql import PyroRQLSource
@@ -46,7 +46,16 @@ from cubicweb.dbapi import Connection
 PyroRQLSource_get_connection = PyroRQLSource.get_connection
 Connection_close = Connection.close
 
-def setup_module(*args):
+def setUpModule(*args):
+    global repo2, cnx2, repo3, cnx3
+    cfg1 = ExternalSource1Configuration('data', apphome=TwoSourcesTC.datadir)
+    repo2, cnx2 = init_test_database(config=cfg1)
+    cfg2 = ExternalSource2Configuration('data', apphome=TwoSourcesTC.datadir)
+    repo3, cnx3 = init_test_database(config=cfg2)
+    cnx3.request().create_entity('CWSource', name=u'extern', type=u'pyrorql',
+                                 config=EXTERN_SOURCE_CFG)
+    cnx3.commit()
+
     TestServerConfiguration.no_sqlite_wrap = True
     # hi-jack PyroRQLSource.get_connection to access existing connection (no
     # pyro connection)
@@ -55,7 +64,7 @@ def setup_module(*args):
     # pool though we want to keep cnx2 valid
     Connection.close = lambda x: None
 
-def teardown_module(*args):
+def tearDownModule(*args):
     PyroRQLSource.get_connection = PyroRQLSource_get_connection
     Connection.close = Connection_close
     global repo2, cnx2, repo3, cnx3
@@ -67,8 +76,9 @@ def teardown_module(*args):
     TestServerConfiguration.no_sqlite_wrap = False
 
 class TwoSourcesTC(CubicWebTC):
-    config = TwoSourcesConfiguration('data')
-
+    """Main repo -> extern-multi -> extern
+                  \-------------/
+    """
     @classmethod
     def _refresh_repo(cls):
         super(TwoSourcesTC, cls)._refresh_repo()
@@ -82,6 +92,8 @@ class TwoSourcesTC(CubicWebTC):
         do_monkey_patch()
 
     def tearDown(self):
+        for source in self.repo.sources[1:]:
+            self.repo.remove_source(source.uri)
         CubicWebTC.tearDown(self)
         undo_monkey_patch()
 
@@ -91,6 +103,17 @@ class TwoSourcesTC(CubicWebTC):
         cu.execute('INSERT Card X: X title "C4: Ze external card", X wikiid "zzz"')
         self.aff1 = cu.execute('INSERT Affaire X: X ref "AFFREF"')[0][0]
         cnx2.commit()
+        for uri, config in [('extern', EXTERN_SOURCE_CFG),
+                            ('extern-multi', '''
+pyro-ns-id = extern-multi
+cubicweb-user = admin
+cubicweb-password = gingkow
+mapping-file = extern_mapping.py
+''')]:
+            self.request().create_entity('CWSource', name=unicode(uri),
+                                         type=u'pyrorql',
+                                         config=unicode(config))
+        self.commit()
         # trigger discovery
         self.sexecute('Card X')
         self.sexecute('Affaire X')
@@ -112,11 +135,11 @@ class TwoSourcesTC(CubicWebTC):
         # since they are orderd by eid, we know the 3 first one is coming from the system source
         # and the others from external source
         self.assertEqual(rset.get_entity(0, 0).cw_metainformation(),
-                          {'source': {'adapter': 'native', 'uri': 'system'},
+                          {'source': {'type': 'native', 'uri': 'system'},
                            'type': u'Card', 'extid': None})
         externent = rset.get_entity(3, 0)
         metainf = externent.cw_metainformation()
-        self.assertEqual(metainf['source'], {'adapter': 'pyrorql', 'base-url': 'http://extern.org/', 'uri': 'extern'})
+        self.assertEqual(metainf['source'], {'type': 'pyrorql', 'base-url': 'http://extern.org/', 'uri': 'extern'})
         self.assertEqual(metainf['type'], 'Card')
         self.assert_(metainf['extid'])
         etype = self.sexecute('Any ETN WHERE X is ET, ET name ETN, X eid %(x)s',
@@ -184,7 +207,7 @@ class TwoSourcesTC(CubicWebTC):
     def test_simplifiable_var_2(self):
         affeid = self.sexecute('Affaire X WHERE X ref "AFFREF"')[0][0]
         rset = self.sexecute('Any E WHERE E eid %(x)s, E in_state S, NOT S name "moved"',
-                            {'x': affeid, 'u': self.session.user.eid})
+                             {'x': affeid, 'u': self.session.user.eid})
         self.assertEqual(len(rset), 1)
 
     def test_sort_func(self):
@@ -270,7 +293,6 @@ class TwoSourcesTC(CubicWebTC):
 
     def test_not_relation(self):
         states = set(tuple(x) for x in self.sexecute('Any S,SN WHERE S is State, S name SN'))
-        self.session.user.clear_all_caches()
         userstate = self.session.user.in_state[0]
         states.remove((userstate.eid, userstate.name))
         notstates = set(tuple(x) for x in self.sexecute('Any S,SN WHERE S is State, S name SN, NOT X in_state S, X eid %(x)s',
@@ -302,6 +324,19 @@ class TwoSourcesTC(CubicWebTC):
         self.assertEqual(lc.absolute_url(), 'http://testing.fr/cubicweb/card/eid/%s' % lc.eid)
         cu.execute('DELETE Card X WHERE X eid %(x)s', {'x':ceid})
         cnx3.commit()
+
+    def test_crossed_relation_noeid_needattr(self):
+        """http://www.cubicweb.org/ticket/1382452"""
+        aff1 = self.sexecute('INSERT Affaire X: X ref "AFFREF"')[0][0]
+        # link within extern source
+        ec1 = self.sexecute('Card X WHERE X wikiid "zzz"')[0][0]
+        self.sexecute('SET A documented_by C WHERE E eid %(a)s, C eid %(c)s',
+                      {'a': aff1, 'c': ec1})
+        # link from system to extern source
+        self.sexecute('SET A documented_by C WHERE E eid %(a)s, C eid %(c)s',
+                      {'a': aff1, 'c': self.ic2})
+        rset = self.sexecute('DISTINCT Any DEP WHERE P ref "AFFREF", P documented_by DEP, DEP wikiid LIKE "z%"')
+        self.assertEqual(sorted(rset.rows), [[ec1], [self.ic2]])
 
     def test_nonregr1(self):
         ueid = self.session.user.eid

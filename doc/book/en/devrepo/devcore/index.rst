@@ -6,5 +6,4 @@ Core APIs
 
    dbapi.rst
    reqbase.rst
-   cwconfig.rst
 

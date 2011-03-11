@@ -20,6 +20,7 @@ plugin.
 """
 
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 from warnings import warn
 
@@ -110,7 +111,7 @@ class TreeView(EntityView):
     __regid__ = 'treeview'
     itemvid = 'treeitemview'
     subvid = 'oneline'
-    css_classes = 'treeview widget'
+    cssclass = 'treeview widget'
     title = _('tree view')
 
     def _init_params(self, subvid, treeid, initial_load, initial_thru_ajax, morekwargs):
@@ -144,7 +145,7 @@ jQuery("#tree-%s").treeview({toggle: toggleTree, prerendered: true});""" % treei
         if toplevel:
             self._init_headers(treeid, toplevel_thru_ajax)
             ulid = ' id="tree-%s"' % treeid
-        self.w(u'<ul%s class="%s">' % (ulid, self.css_classes))
+        self.w(u'<ul%s class="%s">' % (ulid, self.cssclass))
         # XXX force sorting on x.sortvalue() (which return dc_title by default)
         # we need proper ITree & co specification to avoid this.
         # (pb when type ambiguity at the other side of the tree relation,
@@ -171,7 +172,7 @@ class FileTreeView(TreeView):
     """specific version of the treeview to display file trees
     """
     __regid__ = 'filetree'
-    css_classes = 'treeview widget filetree'
+    cssclass = 'treeview widget filetree'
     title = _('file tree view')
 
     def call(self, subvid=None, treeid=None, initial_load=True, **kwargs):

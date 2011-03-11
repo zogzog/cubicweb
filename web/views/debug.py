@@ -18,11 +18,13 @@
 """management and error screens"""
 
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 from time import strftime, localtime
 
 from logilab.mtconverter import xml_escape
 
+from cubicweb import BadConnectionId
 from cubicweb.selectors import none_rset, match_user_groups
 from cubicweb.view import StartupView
 from cubicweb.web.views import actions
@@ -119,10 +121,15 @@ class ProcessInformationView(StartupView):
             if sessions:
                 w(u'<ul>')
                 for session in sessions:
+                    try:
+                        last_usage_time = session.cnx.check()
+                    except BadConnectionId:
+                        w(u'<li>%s (INVALID)</li>' % session.sessionid)
+                        continue
                     w(u'<li>%s (%s: %s)<br/>' % (
                         session.sessionid,
                         _('last usage'),
-                        strftime(dtformat, localtime(session.last_usage_time))))
+                        strftime(dtformat, localtime(last_usage_time))))
                     dict_to_html(w, session.data)
                     w(u'</li>')
                 w(u'</ul>')
@@ -139,12 +146,14 @@ class RegistryView(StartupView):
     cache_max_age = 0
 
     def call(self, **kwargs):
-        self.w(u'<h1>%s</h1>' % _("Registry's content"))
+        self.w(u'<h1>%s</h1>' % self._cw._("Registry's content"))
         keys = sorted(self._cw.vreg)
         url = xml_escape(self._cw.url())
         self.w(u'<p>%s</p>\n' % ' - '.join('<a href="%s#%s">%s</a>'
                                            % (url, key, key) for key in keys))
         for key in keys:
+            if key in ('boxes', 'contentnavigation'): # those are bw compat registries
+                continue
             self.w(u'<h2 id="%s">%s</h2>' % (key, key))
             if self._cw.vreg[key]:
                 values = sorted(self._cw.vreg[key].iteritems())
@@ -173,20 +182,20 @@ class GCView(StartupView):
                          Connection, Cursor,
                          CubicWebRequestBase)
         try:
-            from cubicweb.server.session import Session, ChildSession, InternalSession
-            lookupclasses += (InternalSession, ChildSession, Session)
+            from cubicweb.server.session import Session, InternalSession
+            lookupclasses += (InternalSession, Session)
         except ImportError:
             pass # no server part installed
         self.w(u'<h1>%s</h1>' % _('Garbage collection information'))
         counters, ocounters, garbage = gc_info(lookupclasses,
                                                viewreferrersclasses=())
-        self.w(u'<h3>%s</h3>' % _('Looked up classes'))
+        self.w(u'<h3>%s</h3>' % self._cw._('Looked up classes'))
         values = sorted(counters.iteritems(), key=lambda x: x[1], reverse=True)
         self.wview('pyvaltable', pyvalue=values)
-        self.w(u'<h3>%s</h3>' % _('Most referenced classes'))
+        self.w(u'<h3>%s</h3>' % self._cw._('Most referenced classes'))
         values = sorted(ocounters.iteritems(), key=lambda x: x[1], reverse=True)
         self.wview('pyvaltable', pyvalue=values[:self._cw.form.get('nb', 20)])
         if garbage:
-            self.w(u'<h3>%s</h3>' % _('Unreachable objects'))
+            self.w(u'<h3>%s</h3>' % self._cw._('Unreachable objects'))
             values = sorted(xml_escape(repr(o)) for o in garbage)
             self.wview('pyvallist', pyvalue=values)

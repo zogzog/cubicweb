@@ -27,8 +27,10 @@ from warnings import warn
 from logilab.mtconverter import TransformError
 from logilab.common.decorators import cached
 
+from cubicweb import ValidationError
 from cubicweb.view import EntityAdapter, implements_adapter_compat
-from cubicweb.selectors import implements, is_instance, relation_possible
+from cubicweb.selectors import (implements, is_instance, relation_possible,
+                                match_exception)
 from cubicweb.interfaces import IDownloadable, ITree, IProgress, IMileStone
 
 
@@ -66,6 +68,7 @@ class IEmailableAdapter(EntityAdapter):
 
 
 class INotifiableAdapter(EntityAdapter):
+    __needs_bw_compat__ = True
     __regid__ = 'INotifiable'
     __select__ = is_instance('Any')
 
@@ -155,6 +158,7 @@ def merge_weight_dict(maindict, newdict):
 
 class IDownloadableAdapter(EntityAdapter):
     """interface for downloadable entities"""
+    __needs_bw_compat__ = True
     __regid__ = 'IDownloadable'
     __select__ = implements(IDownloadable, warn=False) # XXX for bw compat, else should be abstract
 
@@ -206,6 +210,7 @@ class ITreeAdapter(EntityAdapter):
     .. automethod: children_rql
     .. automethod: path
     """
+    __needs_bw_compat__ = True
     __regid__ = 'ITree'
     __select__ = implements(ITree, warn=False) # XXX for bw compat, else should be abstract
 
@@ -333,8 +338,8 @@ class ITreeAdapter(EntityAdapter):
             for entity in child.cw_adapt_to('ITree').prefixiter(_done):
                 yield entity
 
-    @cached
     @implements_adapter_compat('ITree')
+    @cached
     def path(self):
         """Returns the list of eids from the root object to this object."""
         path = []
@@ -364,6 +369,7 @@ class IProgressAdapter(EntityAdapter):
     You should at least override progress_info an in_progress methods on concret
     implementations.
     """
+    __needs_bw_compat__ = True
     __regid__ = 'IProgress'
     __select__ = implements(IProgress, warn=False) # XXX for bw compat, should be abstract
 
@@ -432,6 +438,7 @@ class IProgressAdapter(EntityAdapter):
 
 
 class IMileStoneAdapter(IProgressAdapter):
+    __needs_bw_compat__ = True
     __regid__ = 'IMileStone'
     __select__ = implements(IMileStone, warn=False) # XXX for bw compat, should be abstract
 
@@ -463,3 +470,24 @@ class IMileStoneAdapter(IProgressAdapter):
     def contractors(self):
         """returns the list of persons supposed to work on this task"""
         raise NotImplementedError
+
+
+# error handling adapters ######################################################
+
+from cubicweb import UniqueTogetherError
+
+class IUserFriendlyError(EntityAdapter):
+    __regid__ = 'IUserFriendlyError'
+    __abstract__ = True
+    def __init__(self, *args, **kwargs):
+        self.exc = kwargs.pop('exc')
+        super(IUserFriendlyError, self).__init__(*args, **kwargs)
+
+
+class IUserFriendlyUniqueTogether(IUserFriendlyError):
+    __select__ = match_exception(UniqueTogetherError)
+    def raise_user_exception(self):
+        etype, rtypes = self.exc.args
+        msg = self._cw._('violates unique_together constraints (%s)') % (
+            ', '.join([self._cw._(rtype) for rtype in rtypes]))
+        raise ValidationError(self.entity.eid, dict((col, msg) for col in rtypes))

@@ -21,7 +21,7 @@
 from cubicweb.devtools import buildconfig, loadconfig
 from cubicweb.devtools.testlib import RealDBTest
 
-def setup_module(options):
+def setUpModule(options):
     if options.source:
         configcls = loadconfig(options.source)
     elif options.dbname is None:
@@ -33,7 +33,7 @@ def setup_module(options):
     RealDatabaseTC.configcls = configcls
 
 class RealDatabaseTC(RealDBTest):
-    configcls = None # set by setup_module()
+    configcls = None # set by setUpModule()
 
     def test_all_primaries(self):
         for rset in self.iter_individual_rsets(limit=50):

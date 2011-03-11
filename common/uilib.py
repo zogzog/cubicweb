@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """pre 3.6 bw compat"""
-# pylint: disable-msg=W0614,W0401
+# pylint: disable=W0614,W0401
 from warnings import warn
 warn('moved to cubicweb.uilib', DeprecationWarning, stacklevel=2)
 from cubicweb.uilib import *

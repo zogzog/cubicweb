@@ -33,8 +33,8 @@ except ImportError:
 
 class MakeUidTC(TestCase):
     def test_1(self):
-        self.assertNotEquals(make_uid('xyz'), make_uid('abcd'))
-        self.assertNotEquals(make_uid('xyz'), make_uid('xyz'))
+        self.assertNotEqual(make_uid('xyz'), make_uid('abcd'))
+        self.assertNotEqual(make_uid('xyz'), make_uid('xyz'))
 
     def test_2(self):
         d = set()
@@ -140,14 +140,14 @@ class JSONEncoderTC(TestCase):
 
     def test_encoding_bare_entity(self):
         e = Entity(None)
-        e['pouet'] = 'hop'
+        e.cw_attr_cache['pouet'] = 'hop'
         e.eid = 2
         self.assertEqual(json.loads(self.encode(e)),
                           {'pouet': 'hop', 'eid': 2})
 
     def test_encoding_entity_in_list(self):
         e = Entity(None)
-        e['pouet'] = 'hop'
+        e.cw_attr_cache['pouet'] = 'hop'
         e.eid = 2
         self.assertEqual(json.loads(self.encode([e])),
                           [{'pouet': 'hop', 'eid': 2}])

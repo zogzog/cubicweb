@@ -34,17 +34,19 @@ __docformat__ = "restructuredtext en"
 import sys
 import threading
 import Queue
+from itertools import chain
 from os.path import join
 from datetime import datetime
 from time import time, localtime, strftime
 
-from logilab.common.decorators import cached
+from logilab.common.decorators import cached, clear_cache
 from logilab.common.compat import any
 from logilab.common import flatten
 
 from yams import BadSchemaDefinition
 from yams.schema import role_name
 from rql import RQLSyntaxError
+from rql.utils import rqlvar_maker
 
 from cubicweb import (CW_SOFTWARE_ROOT, CW_MIGRATION_MAP, QueryError,
                       UnknownEid, AuthenticationError, ExecutionError,
@@ -55,7 +57,29 @@ from cubicweb import cwvreg, schema, server
 from cubicweb.server import utils, hook, pool, querier, sources
 from cubicweb.server.session import Session, InternalSession, InternalManager, \
      security_enabled
-_ = unicode
+from cubicweb.server.ssplanner import EditedEntity
+
+def prefill_entity_caches(entity, relations):
+    session = entity._cw
+    # prefill entity relation caches
+    for rschema in entity.e_schema.subject_relations():
+        rtype = str(rschema)
+        if rtype in schema.VIRTUAL_RTYPES:
+            continue
+        if rschema.final:
+            entity.cw_attr_cache.setdefault(rtype, None)
+        else:
+            entity.cw_set_relation_cache(rtype, 'subject',
+                                         session.empty_rset())
+    for rschema in entity.e_schema.object_relations():
+        rtype = str(rschema)
+        if rtype in schema.VIRTUAL_RTYPES:
+            continue
+        entity.cw_set_relation_cache(rtype, 'object', session.empty_rset())
+    # set inlined relation cache before call to after_add_entity
+    for attr, value in relations:
+        session.update_rel_cache_add(entity.eid, attr, value)
+        del_existing_rel_if_needed(session, entity.eid, attr, value)
 
 def del_existing_rel_if_needed(session, eidfrom, rtype, eidto):
     """delete existing relation when adding a new one if card is 1 or ?
@@ -120,27 +144,15 @@ class Repository(object):
         # initial schema, should be build or replaced latter
         self.schema = schema.CubicWebSchema(config.appid)
         self.vreg.schema = self.schema # until actual schema is loaded...
-        # querier helper, need to be created after sources initialization
-        self.querier = querier.QuerierHelper(self, self.schema)
-        # sources
-        self.sources = []
-        self.sources_by_uri = {}
         # shutdown flag
         self.shutting_down = False
-        # FIXME: store additional sources info in the system database ?
-        # FIXME: sources should be ordered (add_entity priority)
-        for uri, source_config in config.sources().items():
-            if uri == 'admin':
-                # not an actual source
-                continue
-            source = self.get_source(uri, source_config)
-            self.sources_by_uri[uri] = source
-            if config.source_enabled(uri):
-                self.sources.append(source)
-        self.system_source = self.sources_by_uri['system']
-        # ensure system source is the first one
-        self.sources.remove(self.system_source)
-        self.sources.insert(0, self.system_source)
+        # sources (additional sources info in the system database)
+        self.system_source = self.get_source('native', 'system',
+                                             config.sources()['system'])
+        self.sources = [self.system_source]
+        self.sources_by_uri = {'system': self.system_source}
+        # querier helper, need to be created after sources initialization
+        self.querier = querier.QuerierHelper(self, self.schema)
         # cache eid -> type / source
         self._type_source_cache = {}
         # cache (extid, source uri) -> eid
@@ -192,6 +204,7 @@ class Repository(object):
             config.bootstrap_cubes()
             self.set_schema(config.load_schema())
         if not config.creating:
+            self.init_sources_from_database()
             if 'CWProperty' in self.schema:
                 self.vreg.init_properties(self.properties())
             # call source's init method to complete their initialisation if
@@ -208,7 +221,7 @@ class Repository(object):
         # close initialization pool and reopen fresh ones for proper
         # initialization now that we know cubes
         self._get_pool().close(True)
-        # list of available pools (we can't iterated on Queue instance)
+        # list of available pools (we can't iterate on Queue instance)
         self.pools = []
         for i in xrange(config['connections-pool-size']):
             self.pools.append(pool.ConnectionsPool(self.sources))
@@ -219,9 +232,60 @@ class Repository(object):
 
     # internals ###############################################################
 
-    def get_source(self, uri, source_config):
+    def init_sources_from_database(self):
+        self.sources_by_eid = {}
+        if self.config.quick_start \
+               or not 'CWSource' in self.schema: # # 3.10 migration
+            return
+        session = self.internal_session()
+        try:
+            # FIXME: sources should be ordered (add_entity priority)
+            for sourceent in session.execute(
+                'Any S, SN, SA, SC WHERE S is CWSource, '
+                'S name SN, S type SA, S config SC').entities():
+                if sourceent.name == 'system':
+                    self.system_source.eid = sourceent.eid
+                    self.sources_by_eid[sourceent.eid] = self.system_source
+                    continue
+                self.add_source(sourceent, add_to_pools=False)
+        finally:
+            session.close()
+
+    def _clear_planning_caches(self):
+        for cache in ('source_defs', 'is_multi_sources_relation',
+                      'can_cross_relation', 'rel_type_sources'):
+            clear_cache(self, cache)
+
+    def add_source(self, sourceent, add_to_pools=True):
+        source = self.get_source(sourceent.type, sourceent.name,
+                                 sourceent.host_config)
+        source.eid = sourceent.eid
+        self.sources_by_eid[sourceent.eid] = source
+        self.sources_by_uri[sourceent.name] = source
+        if self.config.source_enabled(source):
+            self.sources.append(source)
+            self.querier.set_planner()
+            if add_to_pools:
+                for pool in self.pools:
+                    pool.add_source(source)
+        self._clear_planning_caches()
+
+    def remove_source(self, uri):
+        source = self.sources_by_uri.pop(uri)
+        del self.sources_by_eid[source.eid]
+        if self.config.source_enabled(source):
+            self.sources.remove(source)
+            self.querier.set_planner()
+            for pool in self.pools:
+                pool.remove_source(source)
+        self._clear_planning_caches()
+
+    def get_source(self, type, uri, source_config):
+        # set uri and type in source config so it's available through
+        # source_defs()
         source_config['uri'] = uri
-        return sources.get_source(source_config, self.schema, self)
+        source_config['type'] = type
+        return sources.get_source(type, source_config, self)
 
     def set_schema(self, schema, resetvreg=True, rebuildinfered=True):
         if rebuildinfered:
@@ -270,7 +334,10 @@ class Repository(object):
             # call instance level initialisation hooks
             self.hm.call_hooks('server_startup', repo=self)
             # register a task to cleanup expired session
-            self.looping_task(self.config['session-time']/3., self.clean_sessions)
+            self.cleanup_session_time = self.config['cleanup-session-time'] or 60 * 60 * 24
+            assert self.cleanup_session_time > 0
+            cleanup_session_interval = min(60*60, self.cleanup_session_time / 3)
+            self.looping_task(cleanup_session_interval, self.clean_sessions)
         assert isinstance(self._looping_tasks, list), 'already started'
         for i, (interval, func, args) in enumerate(self._looping_tasks):
             self._looping_tasks[i] = task = utils.LoopTask(interval, func, args)
@@ -400,7 +467,7 @@ class Repository(object):
         rset = session.execute(rql, {'x': eid})
         assert len(rset) == 1, rset
         cwuser = rset.get_entity(0, 0)
-        # pylint: disable-msg=W0104
+        # pylint: disable=W0104
         # prefetch / cache cwuser's groups and properties. This is especially
         # useful for internal sessions to avoid security insertions
         cwuser.groups
@@ -476,7 +543,13 @@ class Repository(object):
             return self.config[option]
         pool = self._get_pool()
         try:
-            return pool.connection(sourceuri).get_option_value(option, extid)
+            cnx = pool.connection(sourceuri)
+            # needed to check connection is valid and usable by the current
+            # thread
+            newcnx = self.sources_by_uri[sourceuri].check_connection(cnx)
+            if newcnx is not None:
+                cnx = newcnx
+            return cnx.get_option_value(option, extid)
         finally:
             self._free_pool(pool)
 
@@ -520,14 +593,10 @@ class Repository(object):
 
         This is a public method, not requiring a session id.
         """
-        sources = self.config.sources().copy()
-        # remove manager information
-        sources.pop('admin', None)
+        sources = {}
         # remove sensitive information
-        for uri, sourcedef in sources.iteritems():
-            sourcedef = sourcedef.copy()
-            self.sources_by_uri[uri].remove_sensitive_information(sourcedef)
-            sources[uri] = sourcedef
+        for uri, source in self.sources_by_uri.iteritems():
+            sources[uri] = source.public_config
         return sources
 
     def properties(self):
@@ -568,8 +637,7 @@ class Repository(object):
                 password = password.encode('UTF8')
             kwargs['login'] = login
             kwargs['upassword'] = password
-            user.update(kwargs)
-            self.glob_add_entity(session, user)
+            self.glob_add_entity(session, EditedEntity(user, **kwargs))
             session.execute('SET X in_group G WHERE X eid %(x)s, G name "users"',
                             {'x': user.eid})
             if email or '@' in login:
@@ -585,6 +653,39 @@ class Repository(object):
         finally:
             session.close()
         return True
+
+    def find_users(self, fetch_attrs, **query_attrs):
+        """yield user attributes for cwusers matching the given query_attrs
+        (the result set cannot survive this method call)
+
+        This can be used by low-privileges account (anonymous comes to
+        mind).
+
+        `fetch_attrs`: tuple of attributes to be fetched
+        `query_attrs`: dict of attr/values to restrict the query
+        """
+        assert query_attrs
+        if not hasattr(self, '_cwuser_attrs'):
+            cwuser = self.schema['CWUser']
+            self._cwuser_attrs = set(str(rschema)
+                                     for rschema, _eschema in cwuser.attribute_definitions()
+                                     if not rschema.meta)
+        cwuserattrs = self._cwuser_attrs
+        for k in chain(fetch_attrs, query_attrs.iterkeys()):
+            if k not in cwuserattrs:
+                raise Exception('bad input for find_user')
+        session = self.internal_session()
+        try:
+            varmaker = rqlvar_maker()
+            vars = [(attr, varmaker.next()) for attr in fetch_attrs]
+            rql = 'Any %s WHERE X is CWUser, ' % ','.join(var[1] for var in vars)
+            rql += ','.join('X %s %s' % (var[0], var[1]) for var in vars) + ','
+            rset = session.execute(rql + ','.join('X %s %%(%s)s' % (attr, attr)
+                                                  for attr in query_attrs.iterkeys()),
+                                   query_attrs)
+            return rset.rows
+        finally:
+            session.close()
 
     def connect(self, login, **kwargs):
         """open a connection for a given user
@@ -660,24 +761,32 @@ class Repository(object):
             session.reset_pool()
 
     def check_session(self, sessionid):
-        """raise `BadConnectionId` if the connection is no more valid"""
-        self._get_session(sessionid, setpool=False)
+        """raise `BadConnectionId` if the connection is no more valid, else
+        return its latest activity timestamp.
+        """
+        return self._get_session(sessionid, setpool=False).timestamp
 
-    def get_shared_data(self, sessionid, key, default=None, pop=False):
-        """return the session's data dictionary"""
-        session = self._get_session(sessionid, setpool=False)
-        return session.get_shared_data(key, default, pop)
+    def get_shared_data(self, sessionid, key, default=None, pop=False, txdata=False):
+        """return value associated to key in the session's data dictionary or
+        session's transaction's data if `txdata` is true.
 
-    def set_shared_data(self, sessionid, key, value, querydata=False):
-        """set value associated to `key` in shared data
+        If pop is True, value will be removed from the dictionnary.
 
-        if `querydata` is true, the value will be added to the repository
-        session's query data which are cleared on commit/rollback of the current
-        transaction, and won't be available through the connexion, only on the
-        repository side.
+        If key isn't defined in the dictionnary, value specified by the
+        `default` argument will be returned.
         """
         session = self._get_session(sessionid, setpool=False)
-        session.set_shared_data(key, value, querydata)
+        return session.get_shared_data(key, default, pop, txdata)
+
+    def set_shared_data(self, sessionid, key, value, txdata=False):
+        """set value associated to `key` in shared data
+
+        if `txdata` is true, the value will be added to the repository session's
+        transaction's data which are cleared on commit/rollback of the current
+        transaction.
+        """
+        session = self._get_session(sessionid, setpool=False)
+        session.set_shared_data(key, value, txdata)
 
     def commit(self, sessionid, txid=None):
         """commit transaction for the session with the given id"""
@@ -809,7 +918,7 @@ class Repository(object):
         """close sessions not used since an amount of time specified in the
         configuration
         """
-        mintime = time() - self.config['session-time']
+        mintime = time() - self.cleanup_session_time
         self.debug('cleaning session unused since %s',
                    strftime('%T', localtime(mintime)))
         nbclosed = 0
@@ -964,7 +1073,6 @@ class Repository(object):
             self._extid_cache[cachekey] = eid
             self._type_source_cache[eid] = (etype, source.uri, extid)
             entity = source.before_entity_insertion(session, extid, etype, eid)
-            entity.edited_attributes = set(entity.cw_attr_cache)
             if source.should_call_hooks:
                 self.hm.call_hooks('before_add_entity', session, entity=entity)
             # XXX call add_info with complete=False ?
@@ -972,10 +1080,6 @@ class Repository(object):
             source.after_entity_insertion(session, extid, entity)
             if source.should_call_hooks:
                 self.hm.call_hooks('after_add_entity', session, entity=entity)
-            else:
-                # minimal meta-data
-                session.execute('SET X is E WHERE X eid %(x)s, E name %(name)s',
-                                {'x': entity.eid, 'name': entity.__regid__})
             session.commit(reset_pool)
             return eid
         except:
@@ -987,22 +1091,30 @@ class Repository(object):
         and index the entity with the full text index
         """
         # begin by inserting eid/type/source/extid into the entities table
-        hook.set_operation(session, 'neweids', entity.eid,
-                           hook.CleanupNewEidsCacheOp)
+        hook.CleanupNewEidsCacheOp.get_instance(session).add_data(entity.eid)
         self.system_source.add_info(session, entity, source, extid, complete)
 
-    def delete_info(self, session, entity, sourceuri, extid):
+    def delete_info(self, session, entity, sourceuri, extid, scleanup=False):
         """called by external source when some entity known by the system source
         has been deleted in the external source
         """
         # mark eid as being deleted in session info and setup cache update
         # operation
-        hook.set_operation(session, 'pendingeids', entity.eid,
-                           hook.CleanupDeletedEidsCacheOp)
-        self._delete_info(session, entity, sourceuri, extid)
+        hook.CleanupDeletedEidsCacheOp.get_instance(session).add_data(entity.eid)
+        self._delete_info(session, entity, sourceuri, extid, scleanup)
 
-    def _delete_info(self, session, entity, sourceuri, extid):
-                     # attributes=None, relations=None):
+    def delete_info_multi(self, session, entities, sourceuri, extids, scleanup=False):
+        """same as delete_info but accepts a list of entities and
+        extids with the same etype and belonging to the same source
+        """
+        # mark eid as being deleted in session info and setup cache update
+        # operation
+        op = hook.CleanupDeletedEidsCacheOp.get_instance(session)
+        for entity in entities:
+            op.add_data(entity.eid)
+        self._delete_info_multi(session, entities, sourceuri, extids, scleanup)
+
+    def _delete_info(self, session, entity, sourceuri, extid, scleanup=False):
         """delete system information on deletion of an entity:
         * delete all remaining relations from/to this entity
         * call delete info on the system source which will transfer record from
@@ -1023,8 +1135,48 @@ class Repository(object):
                     rql = 'DELETE X %s Y WHERE X eid %%(x)s' % rtype
                 else:
                     rql = 'DELETE Y %s X WHERE X eid %%(x)s' % rtype
-                session.execute(rql, {'x': eid}, build_descr=False)
+                if scleanup:
+                    # source cleaning: only delete relations stored locally
+                    rql += ', NOT (Y cw_source S, S name %(source)s)'
+                try:
+                    session.execute(rql, {'x': eid, 'source': sourceuri},
+                                    build_descr=False)
+                except:
+                    self.exception('error while cascading delete for entity %s '
+                                   'from %s. RQL: %s', entity, sourceuri, rql)
         self.system_source.delete_info(session, entity, sourceuri, extid)
+
+    def _delete_info_multi(self, session, entities, sourceuri, extids, scleanup=False):
+        """same as _delete_info but accepts a list of entities with
+        the same etype and belinging to the same source.
+        """
+        pendingrtypes = session.transaction_data.get('pendingrtypes', ())
+        # delete remaining relations: if user can delete the entity, he can
+        # delete all its relations without security checking
+        assert entities and len(entities) == len(extids)
+        with security_enabled(session, read=False, write=False):
+            eids = [_e.eid for _e in entities]
+            in_eids = ','.join((str(eid) for eid in eids))
+            for rschema, _, role in entities[0].e_schema.relation_definitions():
+                rtype = rschema.type
+                if rtype in schema.VIRTUAL_RTYPES or rtype in pendingrtypes:
+                    continue
+                if role == 'subject':
+                    # don't skip inlined relation so they are regularly
+                    # deleted and so hooks are correctly called
+                    rql = 'DELETE X %s Y WHERE X eid IN (%s)' % (rtype, in_eids)
+                else:
+                    rql = 'DELETE Y %s X WHERE X eid IN (%s)' % (rtype, in_eids)
+                if scleanup:
+                    # source cleaning: only delete relations stored locally
+                    rql += ', NOT (Y cw_source S, S name %(source)s)'
+                try:
+                    session.execute(rql, {'source': sourceuri},
+                                    build_descr=False)
+                except:
+                    self.exception('error while cascading delete for entity %s '
+                                   'from %s. RQL: %s', entities, sourceuri, rql)
+        self.system_source.delete_info_multi(session, entities, sourceuri, extids)
 
     def locate_relation_source(self, session, subject, rtype, object):
         subjsource = self.source_from_eid(subject, session)
@@ -1067,15 +1219,16 @@ class Repository(object):
         self._type_source_cache[entity.eid] = (entity.__regid__, suri, extid)
         return extid
 
-    def glob_add_entity(self, session, entity):
+    def glob_add_entity(self, session, edited):
         """add an entity to the repository
 
         the entity eid should originaly be None and a unique eid is assigned to
         the entity instance
         """
-        # init edited_attributes before calling before_add_entity hooks
+        entity = edited.entity
         entity._cw_is_saved = False # entity has an eid but is not yet saved
-        entity.edited_attributes = set(entity.cw_attr_cache) # XXX cw_edited_attributes
+        # init edited_attributes before calling before_add_entity hooks
+        entity.cw_edited = edited
         eschema = entity.e_schema
         source = self.locate_etype_source(entity.__regid__)
         # allocate an eid to the entity before calling hooks
@@ -1083,49 +1236,26 @@ class Repository(object):
         # set caches asap
         extid = self.init_entity_caches(session, entity, source)
         if server.DEBUG & server.DBG_REPO:
-            print 'ADD entity', self, entity.__regid__, entity.eid, entity.cw_attr_cache
+            print 'ADD entity', self, entity.__regid__, entity.eid, edited
         relations = []
         if source.should_call_hooks:
             self.hm.call_hooks('before_add_entity', session, entity=entity)
-        # XXX use entity.keys here since edited_attributes is not updated for
-        # inline relations XXX not true, right? (see edited_attributes
-        # affectation above)
-        for attr in entity.cw_attr_cache.iterkeys():
+        for attr in edited.iterkeys():
             rschema = eschema.subjrels[attr]
             if not rschema.final: # inlined relation
-                relations.append((attr, entity[attr]))
-        entity._cw_set_defaults()
+                relations.append((attr, edited[attr]))
+        edited.set_defaults()
         if session.is_hook_category_activated('integrity'):
-            entity._cw_check(creation=True)
+            edited.check(creation=True)
+        prefill_entity_caches(entity, relations)
         try:
             source.add_entity(session, entity)
         except UniqueTogetherError, exc:
-            etype, rtypes = exc.args
-            problems = {}
-            for col in rtypes:
-                problems[col] = _('violates unique_together constraints (%s)') % (','.join(rtypes))
-            raise ValidationError(entity.eid, problems)
+            userhdlr = session.vreg['adapters'].select(
+                'IUserFriendlyError', session, entity=entity, exc=exc)
+            userhdlr.raise_user_exception()
         self.add_info(session, entity, source, extid, complete=False)
-        entity._cw_is_saved = True # entity has an eid and is saved
-        # prefill entity relation caches
-        for rschema in eschema.subject_relations():
-            rtype = str(rschema)
-            if rtype in schema.VIRTUAL_RTYPES:
-                continue
-            if rschema.final:
-                entity.setdefault(rtype, None)
-            else:
-                entity.cw_set_relation_cache(rtype, 'subject',
-                                             session.empty_rset())
-        for rschema in eschema.object_relations():
-            rtype = str(rschema)
-            if rtype in schema.VIRTUAL_RTYPES:
-                continue
-            entity.cw_set_relation_cache(rtype, 'object', session.empty_rset())
-        # set inlined relation cache before call to after_add_entity
-        for attr, value in relations:
-            session.update_rel_cache_add(entity.eid, attr, value)
-            del_existing_rel_if_needed(session, entity.eid, attr, value)
+        edited.saved = entity._cw_is_saved = True
         # trigger after_add_entity after after_add_relation
         if source.should_call_hooks:
             self.hm.call_hooks('after_add_entity', session, entity=entity)
@@ -1137,23 +1267,24 @@ class Repository(object):
                                     eidfrom=entity.eid, rtype=attr, eidto=value)
         return entity.eid
 
-    def glob_update_entity(self, session, entity, edited_attributes):
+    def glob_update_entity(self, session, edited):
         """replace an entity in the repository
         the type and the eid of an entity must not be changed
         """
+        entity = edited.entity
         if server.DEBUG & server.DBG_REPO:
             print 'UPDATE entity', entity.__regid__, entity.eid, \
-                  entity.cw_attr_cache, edited_attributes
+                  entity.cw_attr_cache, edited
         hm = self.hm
         eschema = entity.e_schema
         session.set_entity_cache(entity)
-        orig_edited_attributes = getattr(entity, 'edited_attributes', None)
-        entity.edited_attributes = edited_attributes
+        orig_edited = getattr(entity, 'cw_edited', None)
+        entity.cw_edited = edited
         try:
             only_inline_rels, need_fti_update = True, False
             relations = []
             source = self.source_from_eid(entity.eid, session)
-            for attr in list(edited_attributes):
+            for attr in list(edited):
                 if attr == 'eid':
                     continue
                 rschema = eschema.subjrels[attr]
@@ -1166,13 +1297,13 @@ class Repository(object):
                     previous_value = entity.related(attr) or None
                     if previous_value is not None:
                         previous_value = previous_value[0][0] # got a result set
-                        if previous_value == entity[attr]:
+                        if previous_value == entity.cw_attr_cache[attr]:
                             previous_value = None
                         elif source.should_call_hooks:
                             hm.call_hooks('before_delete_relation', session,
                                           eidfrom=entity.eid, rtype=attr,
                                           eidto=previous_value)
-                    relations.append((attr, entity[attr], previous_value))
+                    relations.append((attr, edited[attr], previous_value))
             if source.should_call_hooks:
                 # call hooks for inlined relations
                 for attr, value, _t in relations:
@@ -1181,16 +1312,16 @@ class Repository(object):
                 if not only_inline_rels:
                     hm.call_hooks('before_update_entity', session, entity=entity)
             if session.is_hook_category_activated('integrity'):
-                entity._cw_check()
+                edited.check()
             try:
                 source.update_entity(session, entity)
+                edited.saved = True
             except UniqueTogetherError, exc:
                 etype, rtypes = exc.args
                 problems = {}
                 for col in rtypes:
-                    problems[col] = _('violates unique_together constraints (%s)') % (','.join(rtypes))
+                    problems[col] = session._('violates unique_together constraints (%s)') % (','.join(rtypes))
                 raise ValidationError(entity.eid, problems)
-
             self.system_source.update_info(session, entity, need_fti_update)
             if source.should_call_hooks:
                 if not only_inline_rels:
@@ -1212,22 +1343,43 @@ class Repository(object):
                     hm.call_hooks('after_add_relation', session,
                                   eidfrom=entity.eid, rtype=attr, eidto=value)
         finally:
-            if orig_edited_attributes is not None:
-                entity.edited_attributes = orig_edited_attributes
+            if orig_edited is not None:
+                entity.cw_edited = orig_edited
 
-    def glob_delete_entity(self, session, eid):
-        """delete an entity and all related entities from the repository"""
-        entity = session.entity_from_eid(eid)
-        etype, sourceuri, extid = self.type_and_source_from_eid(eid, session)
-        if server.DEBUG & server.DBG_REPO:
-            print 'DELETE entity', etype, eid
-        source = self.sources_by_uri[sourceuri]
-        if source.should_call_hooks:
-            self.hm.call_hooks('before_delete_entity', session, entity=entity)
-        self._delete_info(session, entity, sourceuri, extid)
-        source.delete_entity(session, entity)
-        if source.should_call_hooks:
-            self.hm.call_hooks('after_delete_entity', session, entity=entity)
+
+    def glob_delete_entities(self, session, eids):
+        """delete a list of  entities and all related entities from the repository"""
+        data_by_etype_source = {} # values are ([list of eids],
+                                  #             [list of extid],
+                                  #             [list of entities])
+        #
+        # WARNING: the way this dictionary is populated is heavily optimized
+        # and does not use setdefault on purpose. Unless a new release
+        # of the Python interpreter advertises large perf improvements
+        # in setdefault, this should not be changed without profiling.
+
+        for eid in eids:
+            etype, sourceuri, extid = self.type_and_source_from_eid(eid, session)
+            entity = session.entity_from_eid(eid, etype)
+            _key = (etype, sourceuri)
+            if _key not in data_by_etype_source:
+                data_by_etype_source[_key] = ([eid], [extid], [entity])
+            else:
+                _data = data_by_etype_source[_key]
+                _data[0].append(eid)
+                _data[1].append(extid)
+                _data[2].append(entity)
+        for (etype, sourceuri), (eids, extids, entities) in data_by_etype_source.iteritems():
+            if server.DEBUG & server.DBG_REPO:
+                print 'DELETE entities', etype, eids
+            #print 'DELETE entities', etype, len(eids)
+            source = self.sources_by_uri[sourceuri]
+            if source.should_call_hooks:
+                self.hm.call_hooks('before_delete_entity', session, entities=entities)
+            self._delete_info_multi(session, entities, sourceuri, extids) # xxx
+            source.delete_entities(session, entities)
+            if source.should_call_hooks:
+                self.hm.call_hooks('after_delete_entity', session, entities=entities)
         # don't clear cache here this is done in a hook on commit
 
     def glob_add_relation(self, session, subject, rtype, object):
@@ -1268,8 +1420,9 @@ class Repository(object):
 
     # pyro handling ###########################################################
 
-    def pyro_register(self, host=''):
-        """register the repository as a pyro object"""
+    @property
+    @cached
+    def pyro_appid(self):
         from logilab.common import pyro_ext as pyro
         config = self.config
         appid = '%s.%s' % pyro.ns_group_and_id(
@@ -1277,12 +1430,26 @@ class Repository(object):
             config['pyro-ns-group'])
         # ensure config['pyro-instance-id'] is a full qualified pyro name
         config['pyro-instance-id'] = appid
-        daemon = pyro.register_object(self, appid,
-                                      daemonhost=config['pyro-host'],
-                                      nshost=config['pyro-ns-host'])
-        self.info('repository registered as a pyro object %s', appid)
+        return appid
+
+    def pyro_register(self, host=''):
+        """register the repository as a pyro object"""
+        from logilab.common import pyro_ext as pyro
+        daemon = pyro.register_object(self, self.pyro_appid,
+                                      daemonhost=self.config['pyro-host'],
+                                      nshost=self.config['pyro-ns-host'])
+        self.info('repository registered as a pyro object %s', self.pyro_appid)
         self.pyro_registered = True
+        # register a looping task to regularly ensure we're still registered
+        # into the pyro name server
+        self.looping_task(60*10, self._ensure_pyro_ns)
         return daemon
+
+    def _ensure_pyro_ns(self):
+        from logilab.common import pyro_ext as pyro
+        pyro.ns_reregister(self.pyro_appid, nshost=self.config['pyro-ns-host'])
+        self.info('repository re-registered as a pyro object %s',
+                  self.pyro_appid)
 
     # multi-sources planner helpers ###########################################
 
