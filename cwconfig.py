@@ -1184,7 +1184,10 @@ the repository',
 
     # these are overridden by set_log_methods below
     # only defining here to prevent pylint from complaining
-    info = warning = error = critical = exception = debug = lambda msg,*a,**kw: None
+    @classmethod
+    def debug(cls, msg, *a, **kw):
+        pass
+    info = warning = error = critical = exception = debug 
 
 set_log_methods(CubicWebNoAppConfiguration,
                 logging.getLogger('cubicweb.configuration'))
