@@ -193,6 +193,10 @@ class CubicWebWSGIApplication(object):
             content = self.appli.need_login_content(req)
         return WSGIResponse(code, req, content)
 
+    # these are overridden by set_log_methods below
+    # only defining here to prevent pylint from complaining
+    info = warning = error = critical = exception = debug = lambda msg,*a,**kw: None
+
 
 from logging import getLogger
 from cubicweb import set_log_methods

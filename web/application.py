@@ -234,6 +234,9 @@ class CookieSessionHandler(object):
         req.remove_cookie(req.get_cookie(), sessioncookie)
         raise LogOut(url=goto_url)
 
+    # these are overridden by set_log_methods below
+    # only defining here to prevent pylint from complaining
+    info = warning = error = critical = exception = debug = lambda msg,*a,**kw: None
 
 class CubicWebPublisher(object):
     """the publisher is a singleton hold by the web frontend, and is responsible
@@ -458,6 +461,9 @@ class CubicWebPublisher(object):
             template = 'main-template'
         return template
 
+    # these are overridden by set_log_methods below
+    # only defining here to prevent pylint from complaining
+    info = warning = error = critical = exception = debug = lambda msg,*a,**kw: None
 
 set_log_methods(CubicWebPublisher, LOGGER)
 set_log_methods(CookieSessionHandler, LOGGER)

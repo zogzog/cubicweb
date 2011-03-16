@@ -434,6 +434,9 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
         if exists(newconfig):
             os.unlink(newconfig)
 
+    # these are overridden by set_log_methods below
+    # only defining here to prevent pylint from complaining
+    info = warning = error = critical = exception = debug = lambda msg,*a,**kw: None
 
 from logging import getLogger
 from cubicweb import set_log_methods
