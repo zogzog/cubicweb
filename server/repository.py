@@ -1471,6 +1471,9 @@ class Repository(object):
                    if not source is self.system_source
                    and source.support_relation(rtype))
 
+    # these are overridden by set_log_methods below
+    # only defining here to prevent pylint from complaining
+    info = warning = error = critical = exception = debug = lambda msg,*a,**kw: None
 
 def pyro_unregister(config):
     """unregister the repository from the pyro name server"""

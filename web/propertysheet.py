@@ -115,6 +115,10 @@ class PropertySheet(dict):
     def compile(self, content):
         return self._percent_rgx.sub('%%', content) % self
 
+    # these are overridden by set_log_methods below
+    # only defining here to prevent pylint from complaining
+    info = warning = error = critical = exception = debug = lambda msg,*a,**kw: None
+
 from cubicweb.web import LOGGER
 from logilab.common.logging_ext import set_log_methods
 set_log_methods(PropertySheet, LOGGER)

@@ -1032,6 +1032,10 @@ class Session(RequestSessionBase):
         """return a result set for the given eid"""
         return self.entity_from_eid(eid)
 
+    # these are overridden by set_log_methods below
+    # only defining here to prevent pylint from complaining
+    info = warning = error = critical = exception = debug = lambda msg,*a,**kw: None
+
 
 class InternalSession(Session):
     """special session created internaly by the repository"""

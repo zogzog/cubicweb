@@ -1182,6 +1182,10 @@ the repository',
             SMTP_LOCK.release()
         return True
 
+    # these are overridden by set_log_methods below
+    # only defining here to prevent pylint from complaining
+    info = warning = error = critical = exception = debug = lambda msg,*a,**kw: None
+
 set_log_methods(CubicWebNoAppConfiguration,
                 logging.getLogger('cubicweb.configuration'))
 
