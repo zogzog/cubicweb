@@ -97,7 +97,7 @@ class MigrationToolsTC(TestCase):
         config.__class__.name = 'repository'
 
 
-from cubicweb.devtools import ApptestConfiguration, init_test_database, cleanup_sqlite
+from cubicweb.devtools import ApptestConfiguration, get_test_db_handler
 
 class BaseCreationTC(TestCase):
 
@@ -106,8 +106,8 @@ class BaseCreationTC(TestCase):
         config = ApptestConfiguration('data', apphome=self.datadir)
         source = config.sources()['system']
         self.assertEqual(source['db-driver'], 'sqlite')
-        cleanup_sqlite(source['db-name'], removetemplate=True)
-        init_test_database(config=config)
+        handler = get_test_db_handler(config)
+        handler.init_test_database()
 
 
 if __name__ == '__main__':
