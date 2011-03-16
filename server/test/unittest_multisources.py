@@ -19,9 +19,9 @@
 from datetime import datetime, timedelta
 
 from cubicweb.devtools import TestServerConfiguration, init_test_database
-from cubicweb.devtools.testlib import CubicWebTC, refresh_repo
+from cubicweb.devtools.testlib import CubicWebTC, Tags
 from cubicweb.devtools.repotest import do_monkey_patch, undo_monkey_patch
-
+from cubicweb.devtools import get_test_db_handler
 
 class ExternalSource1Configuration(TestServerConfiguration):
     sourcefile = 'sources_extern'
@@ -46,78 +46,95 @@ from cubicweb.dbapi import Connection
 PyroRQLSource_get_connection = PyroRQLSource.get_connection
 Connection_close = Connection.close
 
-def setUpModule(*args):
-    global repo2, cnx2, repo3, cnx3
-    cfg1 = ExternalSource1Configuration('data', apphome=TwoSourcesTC.datadir)
-    repo2, cnx2 = init_test_database(config=cfg1)
-    cfg2 = ExternalSource2Configuration('data', apphome=TwoSourcesTC.datadir)
-    repo3, cnx3 = init_test_database(config=cfg2)
-    cnx3.request().create_entity('CWSource', name=u'extern', type=u'pyrorql',
+def pre_setup_database_extern(session, config):
+    session.execute('INSERT Card X: X title "C3: An external card", X wikiid "aaa"')
+    session.execute('INSERT Card X: X title "C4: Ze external card", X wikiid "zzz"')
+    session.execute('INSERT Affaire X: X ref "AFFREF"')
+    session.commit()
+
+def pre_setup_database_multi(session, config):
+    session.create_entity('CWSource', name=u'extern', type=u'pyrorql',
                                  config=EXTERN_SOURCE_CFG)
-    cnx3.commit()
-
-    TestServerConfiguration.no_sqlite_wrap = True
-    # hi-jack PyroRQLSource.get_connection to access existing connection (no
-    # pyro connection)
-    PyroRQLSource.get_connection = lambda x: x.uri == 'extern-multi' and cnx3 or cnx2
-    # also necessary since the repository is closing its initial connections
-    # pool though we want to keep cnx2 valid
-    Connection.close = lambda x: None
-
-def tearDownModule(*args):
-    PyroRQLSource.get_connection = PyroRQLSource_get_connection
-    Connection.close = Connection_close
-    global repo2, cnx2, repo3, cnx3
-    repo2.shutdown()
-    repo3.shutdown()
-    del repo2, cnx2, repo3, cnx3
-    #del TwoSourcesTC.config.vreg
-    #del TwoSourcesTC.config
-    TestServerConfiguration.no_sqlite_wrap = False
+    session.commit()
 
 class TwoSourcesTC(CubicWebTC):
     """Main repo -> extern-multi -> extern
                   \-------------/
     """
+    test_db_id= 'cw-server-multisources'
+    tags = CubicWebTC.tags | Tags(('multisources'))
+
     @classmethod
-    def _refresh_repo(cls):
-        super(TwoSourcesTC, cls)._refresh_repo()
-        cnx2.rollback()
-        refresh_repo(repo2)
-        cnx3.rollback()
-        refresh_repo(repo3)
+    def setUpClass(cls):
+        cls._cfg2 = ExternalSource1Configuration('data', apphome=TwoSourcesTC.datadir)
+        cls._cfg3 = ExternalSource2Configuration('data', apphome=TwoSourcesTC.datadir)
+        TestServerConfiguration.no_sqlite_wrap = True
+        # hi-jack PyroRQLSource.get_connection to access existing connection (no
+        # pyro connection)
+        PyroRQLSource.get_connection = lambda x: x.uri == 'extern-multi' and cls.cnx3 or cls.cnx2
+        # also necessary since the repository is closing its initial connections
+        # pool though we want to keep cnx2 valid
+        Connection.close = lambda x: None
+
+    @classmethod
+    def tearDowncls(cls):
+        PyroRQLSource.get_connection = PyroRQLSource_get_connection
+        Connection.close = Connection_close
+        cls.cnx2.close()
+        cls.cnx3.close()
+        TestServerConfiguration.no_sqlite_wrap = False
+
+
+    @classmethod
+    def _init_repo(cls):
+        repo2_handler = get_test_db_handler(cls._cfg2)
+        repo2_handler.build_db_cache('4cards-1affaire',pre_setup_func=pre_setup_database_extern)
+        cls.repo2, cls.cnx2 = repo2_handler.get_repo_and_cnx('4cards-1affaire')
+
+        repo3_handler = get_test_db_handler(cls._cfg3)
+        repo3_handler.build_db_cache('multisource',pre_setup_func=pre_setup_database_multi)
+        cls.repo3, cls.cnx3 = repo3_handler.get_repo_and_cnx('multisource')
+
+
+        super(TwoSourcesTC, cls)._init_repo()
 
     def setUp(self):
         CubicWebTC.setUp(self)
+        self.addCleanup(self.cnx2.close)
+        self.addCleanup(self.cnx3.close)
         do_monkey_patch()
 
     def tearDown(self):
         for source in self.repo.sources[1:]:
             self.repo.remove_source(source.uri)
         CubicWebTC.tearDown(self)
+        self.cnx2.close()
+        self.cnx3.close()
         undo_monkey_patch()
 
-    def setup_database(self):
-        cu = cnx2.cursor()
-        self.ec1 = cu.execute('INSERT Card X: X title "C3: An external card", X wikiid "aaa"')[0][0]
-        cu.execute('INSERT Card X: X title "C4: Ze external card", X wikiid "zzz"')
-        self.aff1 = cu.execute('INSERT Affaire X: X ref "AFFREF"')[0][0]
-        cnx2.commit()
-        for uri, config in [('extern', EXTERN_SOURCE_CFG),
+    @staticmethod
+    def pre_setup_database(session, config):
+        for uri, src_config in [('extern', EXTERN_SOURCE_CFG),
                             ('extern-multi', '''
 pyro-ns-id = extern-multi
 cubicweb-user = admin
 cubicweb-password = gingkow
 mapping-file = extern_mapping.py
 ''')]:
-            self.request().create_entity('CWSource', name=unicode(uri),
+            session.create_entity('CWSource', name=unicode(uri),
                                          type=u'pyrorql',
-                                         config=unicode(config))
-        self.commit()
+                                         config=unicode(src_config))
+        session.commit()
         # trigger discovery
-        self.sexecute('Card X')
-        self.sexecute('Affaire X')
-        self.sexecute('State X')
+        session.execute('Card X')
+        session.execute('Affaire X')
+        session.execute('State X')
+
+    def setup_database(self):
+        cu2 = self.cnx2.cursor()
+        self.ec1 = cu2.execute('Any X WHERE X is Card, X title "C3: An external card", X wikiid "aaa"')[0][0]
+        self.aff1 = cu2.execute('Any X WHERE X is Affaire, X ref "AFFREF"')[0][0]
+        cu2.close()
         # add some entities
         self.ic1 = self.sexecute('INSERT Card X: X title "C1: An internal card", X wikiid "aaai"')[0][0]
         self.ic2 = self.sexecute('INSERT Card X: X title "C2: Ze internal card", X wikiid "zzzi"')[0][0]
@@ -177,25 +194,25 @@ mapping-file = extern_mapping.py
         Connection_close(cnx.cnx) # cnx is a TestCaseConnectionProxy
 
     def test_synchronization(self):
-        cu = cnx2.cursor()
+        cu = self.cnx2.cursor()
         assert cu.execute('Any X WHERE X eid %(x)s', {'x': self.aff1})
         cu.execute('SET X ref "BLAH" WHERE X eid %(x)s', {'x': self.aff1})
         aff2 = cu.execute('INSERT Affaire X: X ref "AFFREUX"')[0][0]
-        cnx2.commit()
+        self.cnx2.commit()
         try:
             # force sync
             self.repo.sources_by_uri['extern'].synchronize(MTIME)
             self.failUnless(self.sexecute('Any X WHERE X has_text "blah"'))
             self.failUnless(self.sexecute('Any X WHERE X has_text "affreux"'))
             cu.execute('DELETE Affaire X WHERE X eid %(x)s', {'x': aff2})
-            cnx2.commit()
+            self.cnx2.commit()
             self.repo.sources_by_uri['extern'].synchronize(MTIME)
             rset = self.sexecute('Any X WHERE X has_text "affreux"')
             self.failIf(rset)
         finally:
             # restore state
             cu.execute('SET X ref "AFFREF" WHERE X eid %(x)s', {'x': self.aff1})
-            cnx2.commit()
+            self.cnx2.commit()
 
     def test_simplifiable_var(self):
         affeid = self.sexecute('Affaire X WHERE X ref "AFFREF"')[0][0]
@@ -225,9 +242,9 @@ mapping-file = extern_mapping.py
     def test_greater_eid(self):
         rset = self.sexecute('Any X WHERE X eid > %s' % (self.ic1 - 1))
         self.assertEqual(len(rset.rows), 2) # self.ic1 and self.ic2
-        cu = cnx2.cursor()
+        cu = self.cnx2.cursor()
         ec2 = cu.execute('INSERT Card X: X title "glup"')[0][0]
-        cnx2.commit()
+        self.cnx2.commit()
         # 'X eid > something' should not trigger discovery
         rset = self.sexecute('Any X WHERE X eid > %s' % (self.ic1 - 1))
         self.assertEqual(len(rset.rows), 2)
@@ -247,16 +264,16 @@ mapping-file = extern_mapping.py
         self.assertEqual(len(rset), 1, rset.rows)
 
     def test_attr_unification_2(self):
-        cu = cnx2.cursor()
+        cu = self.cnx2.cursor()
         ec2 = cu.execute('INSERT Card X: X title "AFFREF"')[0][0]
-        cnx2.commit()
+        self.cnx2.commit()
         try:
             c1 = self.sexecute('INSERT Card C: C title "AFFREF"')[0][0]
             rset = self.sexecute('Any X,Y WHERE X is Card, Y is Affaire, X title T, Y ref T')
             self.assertEqual(len(rset), 2, rset.rows)
         finally:
             cu.execute('DELETE Card X WHERE X eid %(x)s', {'x': ec2})
-            cnx2.commit()
+            self.cnx2.commit()
 
     def test_attr_unification_neq_1(self):
         # XXX complete
@@ -308,22 +325,22 @@ mapping-file = extern_mapping.py
         self.assertSetEqual(notstates, states)
 
     def test_absolute_url_base_url(self):
-        cu = cnx2.cursor()
+        cu = self.cnx2.cursor()
         ceid = cu.execute('INSERT Card X: X title "without wikiid to get eid based url"')[0][0]
-        cnx2.commit()
+        self.cnx2.commit()
         lc = self.sexecute('Card X WHERE X title "without wikiid to get eid based url"').get_entity(0, 0)
         self.assertEqual(lc.absolute_url(), 'http://extern.org/card/eid/%s' % ceid)
         cu.execute('DELETE Card X WHERE X eid %(x)s', {'x':ceid})
-        cnx2.commit()
+        self.cnx2.commit()
 
     def test_absolute_url_no_base_url(self):
-        cu = cnx3.cursor()
+        cu = self.cnx3.cursor()
         ceid = cu.execute('INSERT Card X: X title "without wikiid to get eid based url"')[0][0]
-        cnx3.commit()
+        self.cnx3.commit()
         lc = self.sexecute('Card X WHERE X title "without wikiid to get eid based url"').get_entity(0, 0)
         self.assertEqual(lc.absolute_url(), 'http://testing.fr/cubicweb/card/eid/%s' % lc.eid)
         cu.execute('DELETE Card X WHERE X eid %(x)s', {'x':ceid})
-        cnx3.commit()
+        self.cnx3.commit()
 
     def test_crossed_relation_noeid_needattr(self):
         """http://www.cubicweb.org/ticket/1382452"""

@@ -33,7 +33,7 @@ Available levels
 Enable verbose output
 ~~~~~~~~~~~~~~~~~~~~~
 
-It may be interested to enable a verboser output to debug your RQL statements:
+To debug your RQL statements, it can be useful to enable a verbose output:
 
 .. sourcecode:: python
 
