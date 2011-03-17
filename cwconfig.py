@@ -1182,6 +1182,13 @@ the repository',
             SMTP_LOCK.release()
         return True
 
+    # these are overridden by set_log_methods below
+    # only defining here to prevent pylint from complaining
+    @classmethod
+    def debug(cls, msg, *a, **kw):
+        pass
+    info = warning = error = critical = exception = debug 
+
 set_log_methods(CubicWebNoAppConfiguration,
                 logging.getLogger('cubicweb.configuration'))
 

@@ -576,4 +576,8 @@ class AppObject(object):
     def propval(self, propid):
         return self._cw.property_value(self._cwpropkey(propid))
 
+    # these are overridden by set_log_methods below
+    # only defining here to prevent pylint from complaining
+    info = warning = error = critical = exception = debug = lambda msg,*a,**kw: None
+
 set_log_methods(AppObject, getLogger('cubicweb.appobject'))

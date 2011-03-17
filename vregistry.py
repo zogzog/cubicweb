@@ -237,6 +237,10 @@ class Registry(dict):
 
     select_best = deprecated('[3.6] select_best is now private')(_select_best)
 
+    # these are overridden by set_log_methods below
+    # only defining here to prevent pylint from complaining
+    info = warning = error = critical = exception = debug = lambda msg,*a,**kw: None
+
 
 class VRegistry(dict):
     """class responsible to register, propose and select the various
@@ -517,6 +521,9 @@ class VRegistry(dict):
                 raise
             self.exception('appobject %s registration failed: %s',
                            appobjectcls, ex)
+    # these are overridden by set_log_methods below
+    # only defining here to prevent pylint from complaining
+    info = warning = error = critical = exception = debug = lambda msg,*a,**kw: None
 
 
 # init logging

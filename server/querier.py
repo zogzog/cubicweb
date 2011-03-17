@@ -747,6 +747,10 @@ class QuerierHelper(object):
         # return a result set object
         return ResultSet(results, rql, args, descr, orig_rqlst)
 
+    # these are overridden by set_log_methods below
+    # only defining here to prevent pylint from complaining
+    info = warning = error = critical = exception = debug = lambda msg,*a,**kw: None
+
 from logging import getLogger
 from cubicweb import set_log_methods
 LOGGER = getLogger('cubicweb.querier')

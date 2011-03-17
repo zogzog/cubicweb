@@ -160,6 +160,9 @@ class RelationTags(object):
             return self.get(etype, rtype, ttype, role)
         return self.get(ttype, rtype, etype, role)
 
+    # these are overridden by set_log_methods below
+    # only defining here to prevent pylint from complaining
+    info = warning = error = critical = exception = debug = lambda msg,*a,**kw: None
 
 
 class RelationTagsSet(RelationTags):

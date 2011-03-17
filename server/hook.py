@@ -454,6 +454,9 @@ class Hook(AppObject):
     order = 0
     # XXX deprecated
     enabled = True
+    # stop pylint from complaining about missing attributes in Hooks classes
+    eidfrom = eidto = entity = rtype = None
+
 
     @classmethod
     def check_events(cls):
@@ -756,6 +759,10 @@ class Operation(object):
     @deprecated('[3.6] use self.session.vreg.config')
     def config(self):
         return self.session.repo.config
+
+    # these are overridden by set_log_methods below
+    # only defining here to prevent pylint from complaining
+    info = warning = error = critical = exception = debug = lambda msg,*a,**kw: None
 
 set_log_methods(Operation, getLogger('cubicweb.session'))
 

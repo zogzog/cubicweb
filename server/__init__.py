@@ -62,9 +62,9 @@ def set_debug(debugmode):
         DEBUG |= debugmode
 
 class debugged(object):
-    """repository debugging context manager / decorator
+    """Context manager and decorator to help debug the repository.
 
-    Can be used either as a context manager:
+    It can be used either as a context manager:
 
     >>> with debugged(server.DBG_RQL | server.DBG_REPO):
     ...     # some code in which you want to debug repository activity,
@@ -77,8 +77,8 @@ class debugged(object):
     ...     # some code in which you want to debug repository activity,
     ...     # seing information about RQL being executed an repository events
 
-    debug mode will be reseted at its original value when leaving the "with"
-    block or the decorated function
+    The debug mode will be reset to its original value when leaving the "with"
+    block or the decorated function.
     """
     def __init__(self, debugmode):
         self.debugmode = debugmode
