@@ -698,9 +698,14 @@ def install_sqlite_patch(querier):
 
 HANDLERS = {}
 
-def register_handler(handlerkls):
+def register_handler(handlerkls, overwrite=False):
     assert handlerkls is not None
-    HANDLERS[handlerkls.DRIVER] = handlerkls
+    if overwrite or handlerkls.DRIVER not in HANDLERS:
+        HANDLERS[handlerkls.DRIVER] = handlerkls
+    else:
+        msg = "%s: Handler already exists use overwrite if it's intended\n"
+              "(existing handler class is %r)"
+        raise ValueError(msg % (handlerkls.DRIVER, HANDLERS[handlerkls.DRIVER]))
 
 register_handler(PostgresTestDataBaseHandler)
 register_handler(SQLiteTestDataBaseHandler)
