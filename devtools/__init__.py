@@ -703,7 +703,7 @@ def register_handler(handlerkls, overwrite=False):
     if overwrite or handlerkls.DRIVER not in HANDLERS:
         HANDLERS[handlerkls.DRIVER] = handlerkls
     else:
-        msg = "%s: Handler already exists use overwrite if it's intended\n"
+        msg = "%s: Handler already exists use overwrite if it's intended\n"\
               "(existing handler class is %r)"
         raise ValueError(msg % (handlerkls.DRIVER, HANDLERS[handlerkls.DRIVER]))
 
