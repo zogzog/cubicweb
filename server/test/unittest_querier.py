@@ -27,9 +27,9 @@ from cubicweb import QueryError, Unauthorized, Binary
 from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.server.utils import crypt_password
 from cubicweb.server.sources.native import make_schema
-from cubicweb.devtools import init_test_database
-from cubicweb.devtools.repotest import tuplify, BaseQuerierTC
+from cubicweb.devtools import get_test_db_handler, TestServerConfiguration
 
+from cubicweb.devtools.repotest import tuplify, BaseQuerierTC
 from unittest_session import Variable
 
 
@@ -64,7 +64,10 @@ class MakeSchemaTC(TestCase):
 
 def setUpModule(*args):
     global repo, cnx
-    repo, cnx = init_test_database(apphome=UtilsTC.datadir)
+    config = TestServerConfiguration(apphome=UtilsTC.datadir)
+    handler = get_test_db_handler(config)
+    handler.build_db_cache()
+    repo, cnx = handler.get_repo_and_cnx()
 
 def tearDownModule(*args):
     global repo, cnx
@@ -746,7 +749,7 @@ class QuerierTC(BaseQuerierTC):
         rset = self.execute('Tag X WHERE X creation_date TODAY')
         self.assertEqual(len(rset.rows), 2)
         rset = self.execute('Any MAX(D) WHERE X is Tag, X creation_date D')
-        self.failUnless(isinstance(rset[0][0], datetime), type(rset[0][0]))
+        self.failUnless(isinstance(rset[0][0], datetime), (rset[0][0], type(rset[0][0])))
 
     def test_today(self):
         self.execute("INSERT Tag X: X name 'bidule', X creation_date TODAY")

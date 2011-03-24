@@ -9,3 +9,9 @@
 \#.*?\#$
 \.swp$
 ^doc/book/en/apidoc$
+\.old$
+syntax: regexp
+.*/data/database/.*\.sqlite
+.*/data/database/.*\.config
+.*/data/database/tmpdb.*
+

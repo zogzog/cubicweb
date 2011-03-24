@@ -620,24 +620,30 @@ class SQLGenerator(object):
                 sql += '\nHAVING %s' % having
             # sort
             if sorts:
-                sqlsortterms = [self._sortterm_sql(sortterm, fselectidx)
-                                for sortterm in sorts]
-                sqlsortterms = [x for x in sqlsortterms if x is not None]
+                sqlsortterms = []
+                for sortterm in sorts:
+                    _term = self._sortterm_sql(sortterm, fselectidx)
+                    if _term is not None:
+                        sqlsortterms.append(_term)
                 if sqlsortterms:
-                    sql += '\nORDER BY %s' % ','.join(sqlsortterms)
-                    if sorts and fneedwrap:
-                        selection = ['T1.C%s' % i for i in xrange(len(origselection))]
-                        sql = 'SELECT %s FROM (%s) AS T1' % (','.join(selection), sql)
+                    sql = self.dbhelper.sql_add_order_by(sql, sqlsortterms,
+                                                         origselection,
+                                                         fneedwrap,
+                                                         select.limit or select.offset)
+                    ## sql += '\nORDER BY %s' % ','.join(sqlsortterms)
+                    ## if sorts and fneedwrap:
+                    ##     selection = ['T1.C%s' % i for i in xrange(len(origselection))]
+                    ##     sql = 'SELECT %s FROM (%s) AS T1' % (','.join(selection), sql)
+            else:
+                sqlsortterms = None
             state.finalize_source_cbs()
         finally:
             select.selection = origselection
         # limit / offset
-        limit = select.limit
-        if limit:
-            sql += '\nLIMIT %s' % limit
-        offset = select.offset
-        if offset:
-            sql += '\nOFFSET %s' % offset
+        sql = self.dbhelper.sql_add_limit_offset(sql,
+                                                 select.limit,
+                                                 select.offset,
+                                                 sqlsortterms)
         return sql
 
     def _subqueries_sql(self, select, state):

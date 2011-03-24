@@ -284,6 +284,9 @@ class SQLAdapterMixIn(object):
         attrs[SQL_PREFIX+'eid'] = entity.eid
         return attrs
 
+    # these are overridden by set_log_methods below
+    # only defining here to prevent pylint from complaining
+    info = warning = error = critical = exception = debug = lambda msg,*a,**kw: None
 
 from logging import getLogger
 from cubicweb import set_log_methods

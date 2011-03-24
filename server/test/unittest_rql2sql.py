@@ -18,6 +18,7 @@
 """unit tests for module cubicweb.server.sources.rql2sql"""
 
 import sys
+import os
 
 from logilab.common.testlib import TestCase, unittest_main, mock_object
 
@@ -37,6 +38,24 @@ try:
 except AssertionError, ex:
     pass # already registered
 
+from logilab import database as db
+def monkey_patch_import_driver_module(driver, drivers, quiet=True):
+    if not driver in drivers:
+        raise db.UnknownDriver(driver)
+    for modname in drivers[driver]:
+        try:
+            if not quiet:
+                print >> sys.stderr, 'Trying %s' % modname
+            module = db.load_module_from_name(modname, use_sys=False)
+            break
+        except ImportError:
+            if not quiet:
+                print >> sys.stderr, '%s is not available' % modname
+            continue
+    else:
+        return None, drivers[driver][0]
+    return module, modname
+
 
 def setUpModule():
     global config, schema
@@ -46,10 +65,14 @@ def setUpModule():
     schema['in_state'].inlined = True
     schema['state_of'].inlined = False
     schema['comments'].inlined = False
+    db._backup_import_driver_module = db._import_driver_module
+    db._import_driver_module = monkey_patch_import_driver_module
 
 def tearDownModule():
     global config, schema
     del config, schema
+    db._import_driver_module = db._backup_import_driver_module
+    del db._backup_import_driver_module
 
 PARSER = [
     (r"Personne P WHERE P nom 'Zig\'oto';",
@@ -92,12 +115,6 @@ WHERE _P.cw_test=FALSE'''),
 
     ("Personne P WHERE P eid -1",
      '''SELECT -1'''),
-
-    ("Personne P LIMIT 20 OFFSET 10",
-     '''SELECT _P.cw_eid
-FROM cw_Personne AS _P
-LIMIT 20
-OFFSET 10'''),
 
     ("Personne P WHERE S is Societe, P travaille S, S nom 'Logilab';",
      '''SELECT rel_travaille0.eid_from
@@ -185,6 +202,14 @@ WHERE _X.cw_prenom=lulu AND NOT (EXISTS(SELECT 1 FROM owned_by_relation AS rel_o
 FROM cw_Card AS _X
 WHERE NOT (_X.cw_wikiid=_X.cw_title) AND NOT (_X.cw_title=parent)''')
 ]
+
+BASIC_WITH_LIMIT = [
+    ("Personne P LIMIT 20 OFFSET 10",
+     '''SELECT _P.cw_eid
+FROM cw_Personne AS _P
+LIMIT 20
+OFFSET 10'''),
+    ]
 
 
 ADVANCED = [
@@ -279,12 +304,6 @@ WHERE _X.cw_from_entity=44 AND _SE.cw_eid=44 AND _X.cw_relation_type=139 AND _R.
 FROM cw_Note AS _S, cw_Personne AS _O
 WHERE (_S.cw_ecrit_par IS NULL OR _S.cw_ecrit_par!=_O.cw_eid) AND _S.cw_eid=1 AND _S.cw_inline1 IS NOT NULL AND _O.cw_inline2=_S.cw_inline1'''),
 
-    ('DISTINCT Any S ORDERBY stockproc(SI) WHERE NOT S ecrit_par O, S para SI',
-     '''SELECT T1.C0 FROM (SELECT DISTINCT _S.cw_eid AS C0, STOCKPROC(_S.cw_para) AS C1
-FROM cw_Note AS _S
-WHERE _S.cw_ecrit_par IS NULL
-ORDER BY 2) AS T1'''),
-
     ('Any N WHERE N todo_by U, N is Note, U eid 2, N filed_under T, T eid 3',
      # N would actually be invarient if U eid 2 had given a specific type to U
      '''SELECT _N.cw_eid
@@ -333,13 +352,6 @@ FROM cw_CWUser AS _X, tags_relation AS rel_tags0
 WHERE rel_tags0.eid_to=_X.cw_eid AND _X.cw_in_state=32
 GROUP BY _X.cw_eid'''),
 
-    ('Any COUNT(S),CS GROUPBY CS ORDERBY 1 DESC LIMIT 10 WHERE S is Affaire, C is Societe, S concerne C, C nom CS, (EXISTS(S owned_by 1)) OR (EXISTS(S documented_by N, N title "published"))',
-     '''SELECT COUNT(rel_concerne0.eid_from), _C.cw_nom
-FROM concerne_relation AS rel_concerne0, cw_Societe AS _C
-WHERE rel_concerne0.eid_to=_C.cw_eid AND ((EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_by1 WHERE rel_concerne0.eid_from=rel_owned_by1.eid_from AND rel_owned_by1.eid_to=1)) OR (EXISTS(SELECT 1 FROM documented_by_relation AS rel_documented_by2, cw_Card AS _N WHERE rel_concerne0.eid_from=rel_documented_by2.eid_from AND rel_documented_by2.eid_to=_N.cw_eid AND _N.cw_title=published)))
-GROUP BY _C.cw_nom
-ORDER BY 1 DESC
-LIMIT 10'''),
 
     ('Any X WHERE Y evaluee X, Y is CWUser',
      '''SELECT rel_evaluee0.eid_to
@@ -435,13 +447,6 @@ FROM cw_File AS _X
 GROUP BY _X.cw_data_name,_X.cw_data_format
 ORDER BY 1,2,_X.cw_data_format'''),
 
-    ('DISTINCT Any MAX(X)+MIN(LENGTH(D)), N GROUPBY N ORDERBY 2, DF WHERE X data_name N, X data D, X data_format DF;',
-     '''SELECT T1.C0,T1.C1 FROM (SELECT DISTINCT (MAX(_X.cw_eid) + MIN(LENGTH(_X.cw_data))) AS C0, _X.cw_data_name AS C1, _X.cw_data_format AS C2
-FROM cw_File AS _X
-GROUP BY _X.cw_data_name,_X.cw_data_format
-ORDER BY 2,3) AS T1
-'''),
-
     # ambiguity in EXISTS() -> should union the sub-query
     ('Any T WHERE T is Tag, NOT T name in ("t1", "t2"), EXISTS(T tags X, X is IN (CWUser, CWGroup))',
      '''SELECT _T.cw_eid
@@ -512,6 +517,72 @@ WHERE rel_owned_by0.eid_to=12
 GROUP BY rel_owned_by0.eid_to
 HAVING COUNT(rel_owned_by0.eid_from)>10'''),
 
+
+    ("Any X WHERE X eid 0, X test TRUE",
+     '''SELECT _X.cw_eid
+FROM cw_Personne AS _X
+WHERE _X.cw_eid=0 AND _X.cw_test=TRUE'''),
+
+    ('Any 1 WHERE X in_group G, X is CWUser',
+     '''SELECT 1
+FROM in_group_relation AS rel_in_group0'''),
+
+    ('CWEType X WHERE X name CV, X description V HAVING NOT V=CV AND NOT V = "parent"',
+     '''SELECT _X.cw_eid
+FROM cw_CWEType AS _X
+WHERE NOT (EXISTS(SELECT 1 WHERE _X.cw_description=parent)) AND NOT (EXISTS(SELECT 1 WHERE _X.cw_description=_X.cw_name))'''),
+    ('CWEType X WHERE X name CV, X description V HAVING V!=CV AND V != "parent"',
+     '''SELECT _X.cw_eid
+FROM cw_CWEType AS _X
+WHERE _X.cw_description!=parent AND _X.cw_description!=_X.cw_name'''),
+    ]
+
+ADVANCED_WITH_GROUP_CONCAT = [
+        ("Any X,GROUP_CONCAT(TN) GROUPBY X ORDERBY XN WHERE T tags X, X name XN, T name TN, X is CWGroup",
+     '''SELECT _X.cw_eid, GROUP_CONCAT(_T.cw_name)
+FROM cw_CWGroup AS _X, cw_Tag AS _T, tags_relation AS rel_tags0
+WHERE rel_tags0.eid_from=_T.cw_eid AND rel_tags0.eid_to=_X.cw_eid
+GROUP BY _X.cw_eid,_X.cw_name
+ORDER BY _X.cw_name'''),
+
+    ("Any X,GROUP_CONCAT(TN) GROUPBY X ORDERBY XN WHERE T tags X, X name XN, T name TN",
+     '''SELECT T1.C0, GROUP_CONCAT(T1.C1) FROM (SELECT _X.cw_eid AS C0, _T.cw_name AS C1, _X.cw_name AS C2
+FROM cw_CWGroup AS _X, cw_Tag AS _T, tags_relation AS rel_tags0
+WHERE rel_tags0.eid_from=_T.cw_eid AND rel_tags0.eid_to=_X.cw_eid
+UNION ALL
+SELECT _X.cw_eid AS C0, _T.cw_name AS C1, _X.cw_name AS C2
+FROM cw_State AS _X, cw_Tag AS _T, tags_relation AS rel_tags0
+WHERE rel_tags0.eid_from=_T.cw_eid AND rel_tags0.eid_to=_X.cw_eid
+UNION ALL
+SELECT _X.cw_eid AS C0, _T.cw_name AS C1, _X.cw_name AS C2
+FROM cw_Tag AS _T, cw_Tag AS _X, tags_relation AS rel_tags0
+WHERE rel_tags0.eid_from=_T.cw_eid AND rel_tags0.eid_to=_X.cw_eid) AS T1
+GROUP BY T1.C0,T1.C2
+ORDER BY T1.C2'''),
+
+]
+
+ADVANCED_WITH_LIMIT_OR_ORDERBY = [
+    ('Any COUNT(S),CS GROUPBY CS ORDERBY 1 DESC LIMIT 10 WHERE S is Affaire, C is Societe, S concerne C, C nom CS, (EXISTS(S owned_by 1)) OR (EXISTS(S documented_by N, N title "published"))',
+     '''SELECT COUNT(rel_concerne0.eid_from), _C.cw_nom
+FROM concerne_relation AS rel_concerne0, cw_Societe AS _C
+WHERE rel_concerne0.eid_to=_C.cw_eid AND ((EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_by1 WHERE rel_concerne0.eid_from=rel_owned_by1.eid_from AND rel_owned_by1.eid_to=1)) OR (EXISTS(SELECT 1 FROM documented_by_relation AS rel_documented_by2, cw_Card AS _N WHERE rel_concerne0.eid_from=rel_documented_by2.eid_from AND rel_documented_by2.eid_to=_N.cw_eid AND _N.cw_title=published)))
+GROUP BY _C.cw_nom
+ORDER BY 1 DESC
+LIMIT 10'''),
+    ('DISTINCT Any S ORDERBY stockproc(SI) WHERE NOT S ecrit_par O, S para SI',
+     '''SELECT T1.C0 FROM (SELECT DISTINCT _S.cw_eid AS C0, STOCKPROC(_S.cw_para) AS C1
+FROM cw_Note AS _S
+WHERE _S.cw_ecrit_par IS NULL
+ORDER BY 2) AS T1'''),
+
+    ('DISTINCT Any MAX(X)+MIN(LENGTH(D)), N GROUPBY N ORDERBY 2, DF WHERE X data_name N, X data D, X data_format DF;',
+     '''SELECT T1.C0,T1.C1 FROM (SELECT DISTINCT (MAX(_X.cw_eid) + MIN(LENGTH(_X.cw_data))) AS C0, _X.cw_data_name AS C1, _X.cw_data_format AS C2
+FROM cw_File AS _X
+GROUP BY _X.cw_data_name,_X.cw_data_format
+ORDER BY 2,3) AS T1
+'''),
+
     ('DISTINCT Any X ORDERBY stockproc(X) WHERE U login X',
      '''SELECT T1.C0 FROM (SELECT DISTINCT _U.cw_login AS C0, STOCKPROC(_U.cw_login) AS C1
 FROM cw_CWUser AS _U
@@ -546,47 +617,7 @@ WHERE NOT (EXISTS(SELECT 1 FROM use_email_relation AS rel_use_email0 WHERE rel_u
 ORDER BY 4 DESC'''),
 
 
-    ("Any X WHERE X eid 0, X test TRUE",
-     '''SELECT _X.cw_eid
-FROM cw_Personne AS _X
-WHERE _X.cw_eid=0 AND _X.cw_test=TRUE'''),
-
-    ("Any X,GROUP_CONCAT(TN) GROUPBY X ORDERBY XN WHERE T tags X, X name XN, T name TN, X is CWGroup",
-     '''SELECT _X.cw_eid, GROUP_CONCAT(_T.cw_name)
-FROM cw_CWGroup AS _X, cw_Tag AS _T, tags_relation AS rel_tags0
-WHERE rel_tags0.eid_from=_T.cw_eid AND rel_tags0.eid_to=_X.cw_eid
-GROUP BY _X.cw_eid,_X.cw_name
-ORDER BY _X.cw_name'''),
-
-    ("Any X,GROUP_CONCAT(TN) GROUPBY X ORDERBY XN WHERE T tags X, X name XN, T name TN",
-     '''SELECT T1.C0, GROUP_CONCAT(T1.C1) FROM (SELECT _X.cw_eid AS C0, _T.cw_name AS C1, _X.cw_name AS C2
-FROM cw_CWGroup AS _X, cw_Tag AS _T, tags_relation AS rel_tags0
-WHERE rel_tags0.eid_from=_T.cw_eid AND rel_tags0.eid_to=_X.cw_eid
-UNION ALL
-SELECT _X.cw_eid AS C0, _T.cw_name AS C1, _X.cw_name AS C2
-FROM cw_State AS _X, cw_Tag AS _T, tags_relation AS rel_tags0
-WHERE rel_tags0.eid_from=_T.cw_eid AND rel_tags0.eid_to=_X.cw_eid
-UNION ALL
-SELECT _X.cw_eid AS C0, _T.cw_name AS C1, _X.cw_name AS C2
-FROM cw_Tag AS _T, cw_Tag AS _X, tags_relation AS rel_tags0
-WHERE rel_tags0.eid_from=_T.cw_eid AND rel_tags0.eid_to=_X.cw_eid) AS T1
-GROUP BY T1.C0,T1.C2
-ORDER BY T1.C2'''),
-
-    ('Any 1 WHERE X in_group G, X is CWUser',
-     '''SELECT 1
-FROM in_group_relation AS rel_in_group0'''),
-
-    ('CWEType X WHERE X name CV, X description V HAVING NOT V=CV AND NOT V = "parent"',
-     '''SELECT _X.cw_eid
-FROM cw_CWEType AS _X
-WHERE NOT (EXISTS(SELECT 1 WHERE _X.cw_description=parent)) AND NOT (EXISTS(SELECT 1 WHERE _X.cw_description=_X.cw_name))'''),
-    ('CWEType X WHERE X name CV, X description V HAVING V!=CV AND V != "parent"',
-     '''SELECT _X.cw_eid
-FROM cw_CWEType AS _X
-WHERE _X.cw_description!=parent AND _X.cw_description!=_X.cw_name'''),
     ]
-
 
 MULTIPLE_SEL = [
     ("DISTINCT Any X,Y where P is Personne, P nom X , P prenom Y;",
@@ -712,12 +743,39 @@ WHERE NOT (EXISTS(SELECT 1 FROM cw_Affaire AS _X WHERE _X.cw_in_state=_S.cw_eid 
      '''SELECT _S.cw_eid
 FROM cw_State AS _S
 WHERE NOT (EXISTS(SELECT 1 FROM cw_CWUser AS _X WHERE _X.cw_in_state=_S.cw_eid AND _S.cw_name=somename))'''),
+    ]
+
+HAS_TEXT_LG_INDEXER = [
+            ('Any X WHERE X has_text "toto tata"',
+             """SELECT DISTINCT appears0.uid
+FROM appears AS appears0
+WHERE appears0.word_id IN (SELECT word_id FROM word WHERE word in ('toto', 'tata'))"""),
+            ('Personne X WHERE X has_text "toto tata"',
+             """SELECT DISTINCT _X.eid
+FROM appears AS appears0, entities AS _X
+WHERE appears0.word_id IN (SELECT word_id FROM word WHERE word in ('toto', 'tata')) AND appears0.uid=_X.eid AND _X.type='Personne'"""),
+            ('Personne X WHERE X has_text %(text)s',
+             """SELECT DISTINCT _X.eid
+FROM appears AS appears0, entities AS _X
+WHERE appears0.word_id IN (SELECT word_id FROM word WHERE word in ('hip', 'hop', 'momo')) AND appears0.uid=_X.eid AND _X.type='Personne'
+"""),
+            ('Any X WHERE X has_text "toto tata", X name "tutu", X is IN (Basket,Folder)',
+             """SELECT DISTINCT _X.cw_eid
+FROM appears AS appears0, cw_Basket AS _X
+WHERE appears0.word_id IN (SELECT word_id FROM word WHERE word in ('toto', 'tata')) AND appears0.uid=_X.cw_eid AND _X.cw_name=tutu
+UNION
+SELECT DISTINCT _X.cw_eid
+FROM appears AS appears0, cw_Folder AS _X
+WHERE appears0.word_id IN (SELECT word_id FROM word WHERE word in ('toto', 'tata')) AND appears0.uid=_X.cw_eid AND _X.cw_name=tutu""")
+        ]
+
+
 
 # XXXFIXME fail
 #         ('Any X,RT WHERE X relation_type RT?, NOT X is CWAttribute',
 #      '''SELECT _X.cw_eid, _X.cw_relation_type
 # FROM cw_CWRelation AS _X'''),
-]
+
 
 OUTER_JOIN = [
     ('Any X,S WHERE X travaille S?',
@@ -965,20 +1023,22 @@ FROM connait_relation AS rel_connait0, cw_Personne AS _P, cw_Personne AS _X
 WHERE (rel_connait0.eid_from=_X.cw_eid AND rel_connait0.eid_to=_P.cw_eid OR rel_connait0.eid_to=_X.cw_eid AND rel_connait0.eid_from=_P.cw_eid) AND _P.cw_nom=nom'''
     ),
 
-    ('Any X ORDERBY X DESC LIMIT 9 WHERE E eid 0, E connait X',
-    '''SELECT DISTINCT _X.cw_eid
-FROM connait_relation AS rel_connait0, cw_Personne AS _X
-WHERE (rel_connait0.eid_from=0 AND rel_connait0.eid_to=_X.cw_eid OR rel_connait0.eid_to=0 AND rel_connait0.eid_from=_X.cw_eid)
-ORDER BY 1 DESC
-LIMIT 9'''
-     ),
-
     ('DISTINCT Any P WHERE P connait S OR S connait P, S nom "chouette"',
      '''SELECT DISTINCT _P.cw_eid
 FROM connait_relation AS rel_connait0, cw_Personne AS _P, cw_Personne AS _S
 WHERE (rel_connait0.eid_from=_P.cw_eid AND rel_connait0.eid_to=_S.cw_eid OR rel_connait0.eid_to=_P.cw_eid AND rel_connait0.eid_from=_S.cw_eid) AND _S.cw_nom=chouette'''
      )
     ]
+
+SYMMETRIC_WITH_LIMIT = [
+        ('Any X ORDERBY X DESC LIMIT 9 WHERE E eid 0, E connait X',
+    '''SELECT DISTINCT _X.cw_eid
+FROM connait_relation AS rel_connait0, cw_Personne AS _X
+WHERE (rel_connait0.eid_from=0 AND rel_connait0.eid_to=_X.cw_eid OR rel_connait0.eid_to=0 AND rel_connait0.eid_from=_X.cw_eid)
+ORDER BY 1 DESC
+LIMIT 9'''
+     ),
+]
 
 INLINE = [
 
@@ -1244,11 +1304,11 @@ FROM cw_Personne AS _P''')
             yield t
 
     def test_basic_parse(self):
-        for t in self._parse(BASIC):
+        for t in self._parse(BASIC + BASIC_WITH_LIMIT):
             yield t
 
     def test_advanced_parse(self):
-        for t in self._parse(ADVANCED):
+        for t in self._parse(ADVANCED + ADVANCED_WITH_LIMIT_OR_ORDERBY + ADVANCED_WITH_GROUP_CONCAT):
             yield t
 
     def test_outer_join_parse(self):
@@ -1357,7 +1417,7 @@ GROUP BY _ET.cw_name'''),
         self.assertRaises(BadRQLQuery, self.o.generate, rqlst)
 
     def test_symmetric(self):
-        for t in self._parse(SYMMETRIC):
+        for t in self._parse(SYMMETRIC + SYMMETRIC_WITH_LIMIT):
             yield t
 
     def test_inline(self):
@@ -1508,6 +1568,111 @@ WHERE ((CAST(EXTRACT(YEAR from _X.cw_creation_date) AS INTEGER)=2010) OR (_X.cw_
         self._check('Any 1 WHERE NOT X in_group G, X is CWUser',
                     '''SELECT 1
 WHERE NOT (EXISTS(SELECT 1 FROM in_group_relation AS rel_in_group0))''')
+
+class SqlServer2005SQLGeneratorTC(PostgresSQLGeneratorTC):
+    backend = 'sqlserver2005'
+    def _norm_sql(self, sql):
+        return sql.strip().replace(' SUBSTR', ' SUBSTRING').replace(' || ', ' + ').replace(' ILIKE ', ' LIKE ')
+
+    def test_has_text(self):
+        for t in self._parse(HAS_TEXT_LG_INDEXER):
+            yield t
+
+    def test_or_having_fake_terms(self):
+        self._check('Any X WHERE X is CWUser, X creation_date D HAVING YEAR(D) = "2010" OR D = NULL',
+                    '''SELECT _X.cw_eid
+FROM cw_CWUser AS _X
+WHERE ((YEAR(_X.cw_creation_date)=2010) OR (_X.cw_creation_date IS NULL))''')
+
+    def test_date_extraction(self):
+        self._check("Any MONTH(D) WHERE P is Personne, P creation_date D",
+                    '''SELECT MONTH(_P.cw_creation_date)
+FROM cw_Personne AS _P''')
+
+    def test_symmetric(self):
+        for t in self._parse(SYMMETRIC):
+            yield t
+
+    def test_basic_parse(self):
+        for t in self._parse(BASIC):# + BASIC_WITH_LIMIT):
+            yield t
+
+    def test_advanced_parse(self):
+        for t in self._parse(ADVANCED):# + ADVANCED_WITH_LIMIT_OR_ORDERBY):
+            yield t
+
+    def test_limit_offset(self):
+        WITH_LIMIT = [
+    ("Personne P LIMIT 20 OFFSET 10",
+             '''WITH orderedrows AS (
+SELECT
+_L01
+, ROW_NUMBER() OVER (ORDER BY _L01) AS __RowNumber
+FROM (
+SELECT _P.cw_eid AS _L01 FROM  cw_Personne AS _P
+) AS _SQ1 )
+SELECT
+_L01
+FROM orderedrows WHERE
+__RowNumber <= 30 AND __RowNumber > 10
+ '''),
+
+    ('Any COUNT(S),CS GROUPBY CS ORDERBY 1 DESC LIMIT 10 WHERE S is Affaire, C is Societe, S concerne C, C nom CS, (EXISTS(S owned_by 1)) OR (EXISTS(S documented_by N, N title "published"))',
+     '''WITH orderedrows AS (
+SELECT
+_L01, _L02
+, ROW_NUMBER() OVER (ORDER BY _L01 DESC) AS __RowNumber
+FROM (
+SELECT COUNT(rel_concerne0.eid_from) AS _L01, _C.cw_nom AS _L02 FROM  concerne_relation AS rel_concerne0, cw_Societe AS _C
+WHERE rel_concerne0.eid_to=_C.cw_eid AND ((EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_by1 WHERE rel_concerne0.eid_from=rel_owned_by1.eid_from AND rel_owned_by1.eid_to=1)) OR (EXISTS(SELECT 1 FROM documented_by_relation AS rel_documented_by2, cw_Card AS _N WHERE rel_concerne0.eid_from=rel_documented_by2.eid_from AND rel_documented_by2.eid_to=_N.cw_eid AND _N.cw_title=published)))
+GROUP BY _C.cw_nom
+) AS _SQ1 )
+SELECT
+_L01, _L02
+FROM orderedrows WHERE
+__RowNumber <= 10
+     '''),
+
+    ('DISTINCT Any MAX(X)+MIN(LENGTH(D)), N GROUPBY N ORDERBY 2, DF WHERE X data_name N, X data D, X data_format DF;',
+     '''SELECT T1.C0,T1.C1 FROM (SELECT DISTINCT (MAX(_X.cw_eid) + MIN(LENGTH(_X.cw_data))) AS C0, _X.cw_data_name AS C1, _X.cw_data_format AS C2
+FROM cw_File AS _X
+GROUP BY _X.cw_data_name,_X.cw_data_format) AS T1
+ORDER BY T1.C1,T1.C2
+'''),
+
+
+    ('DISTINCT Any X ORDERBY Y WHERE B bookmarked_by X, X login Y',
+     '''SELECT T1.C0 FROM (SELECT DISTINCT _X.cw_eid AS C0, _X.cw_login AS C1
+FROM bookmarked_by_relation AS rel_bookmarked_by0, cw_CWUser AS _X
+WHERE rel_bookmarked_by0.eid_to=_X.cw_eid) AS T1
+ORDER BY T1.C1
+ '''),
+
+    ('DISTINCT Any X ORDERBY SN WHERE X in_state S, S name SN',
+     '''SELECT T1.C0 FROM (SELECT DISTINCT _X.cw_eid AS C0, _S.cw_name AS C1
+FROM cw_Affaire AS _X, cw_State AS _S
+WHERE _X.cw_in_state=_S.cw_eid
+UNION
+SELECT DISTINCT _X.cw_eid AS C0, _S.cw_name AS C1
+FROM cw_CWUser AS _X, cw_State AS _S
+WHERE _X.cw_in_state=_S.cw_eid
+UNION
+SELECT DISTINCT _X.cw_eid AS C0, _S.cw_name AS C1
+FROM cw_Note AS _X, cw_State AS _S
+WHERE _X.cw_in_state=_S.cw_eid) AS T1
+ORDER BY T1.C1'''),
+
+    ('Any O,AA,AB,AC ORDERBY AC DESC '
+     'WHERE NOT S use_email O, S eid 1, O is EmailAddress, O address AA, O alias AB, O modification_date AC, '
+     'EXISTS(A use_email O, EXISTS(A identity B, NOT B in_group D, D name "guests", D is CWGroup), A is CWUser), B eid 2',
+     '''
+SELECT _O.cw_eid, _O.cw_address, _O.cw_alias, _O.cw_modification_date
+FROM cw_EmailAddress AS _O
+WHERE NOT (EXISTS(SELECT 1 FROM use_email_relation AS rel_use_email0 WHERE rel_use_email0.eid_from=1 AND rel_use_email0.eid_to=_O.cw_eid)) AND EXISTS(SELECT 1 FROM use_email_relation AS rel_use_email1 WHERE rel_use_email1.eid_to=_O.cw_eid AND EXISTS(SELECT 1 FROM cw_CWGroup AS _D WHERE rel_use_email1.eid_from=2 AND NOT (EXISTS(SELECT 1 FROM in_group_relation AS rel_in_group2 WHERE rel_in_group2.eid_from=2 AND rel_in_group2.eid_to=_D.cw_eid)) AND _D.cw_name=guests))
+ORDER BY 4 DESC'''),
+            ]
+        for t in self._parse(WITH_LIMIT):# + ADVANCED_WITH_LIMIT_OR_ORDERBY):
+            yield t
 
 
 

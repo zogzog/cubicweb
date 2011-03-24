@@ -23,7 +23,7 @@ from copy import deepcopy
 from datetime import date
 from os.path import join
 
-from logilab.common.testlib import TestCase, unittest_main
+from logilab.common.testlib import TestCase, unittest_main, Tags, tag
 
 from yams.constraints import UniqueConstraint
 
@@ -37,14 +37,18 @@ migrschema = None
 def tearDownModule(*args):
     global migrschema
     del migrschema
-    del MigrationCommandsTC.origschema
+    if hasattr(MigrationCommandsTC, 'origschema'):
+        del MigrationCommandsTC.origschema
 
 class MigrationCommandsTC(CubicWebTC):
 
+    tags = CubicWebTC.tags | Tags(('server', 'migration', 'migractions'))
+
     @classmethod
-    def init_config(cls, config):
-        super(MigrationCommandsTC, cls).init_config(config)
+    def _init_repo(cls):
+        super(MigrationCommandsTC, cls)._init_repo()
         # we have to read schema from the database to get eid for schema entities
+        config = cls.config
         config._cubes = None
         cls.repo.fill_schema()
         cls.origschema = deepcopy(cls.repo.schema)
@@ -56,18 +60,6 @@ class MigrationCommandsTC(CubicWebTC):
         config.appid = 'data'
         config._apphome = cls.datadir
         assert 'Folder' in migrschema
-
-    @classmethod
-    def _refresh_repo(cls):
-        super(MigrationCommandsTC, cls)._refresh_repo()
-        cls.repo.set_schema(deepcopy(cls.origschema), resetvreg=False)
-        # reset migration schema eids
-        for eschema in migrschema.entities():
-            eschema.eid = None
-        for rschema in migrschema.relations():
-            rschema.eid = None
-            for rdef in rschema.rdefs.values():
-                rdef.eid = None
 
     def setUp(self):
         CubicWebTC.setUp(self)
@@ -343,6 +335,7 @@ class MigrationCommandsTC(CubicWebTC):
             self.mh.cmd_change_relation_props('Personne', 'adel', 'String',
                                               fulltextindexed=False)
 
+    @tag('longrun')
     def test_sync_schema_props_perms(self):
         cursor = self.mh.session
         cursor.set_pool()
@@ -464,6 +457,7 @@ class MigrationCommandsTC(CubicWebTC):
         finally:
             self.mh.cmd_set_size_constraint('CWEType', 'description', None)
 
+    @tag('longrun')
     def test_add_remove_cube_and_deps(self):
         cubes = set(self.config.cubes())
         schema = self.repo.schema
@@ -527,6 +521,7 @@ class MigrationCommandsTC(CubicWebTC):
             self.commit()
 
 
+    @tag('longrun')
     def test_add_remove_cube_no_deps(self):
         cubes = set(self.config.cubes())
         schema = self.repo.schema
@@ -558,6 +553,7 @@ class MigrationCommandsTC(CubicWebTC):
             self.mh.cmd_remove_cube('file')
         self.assertEqual(str(cm.exception), "can't remove cube file, used as a dependency")
 
+    @tag('longrun')
     def test_introduce_base_class(self):
         self.mh.cmd_add_entity_type('Para')
         self.mh.repo.schema.rebuild_infered_relations()

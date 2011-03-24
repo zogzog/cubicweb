@@ -1,27 +1,29 @@
 from __future__ import with_statement
 import sys
 
-# fix some corrupted entities noticed on several instances
-rql('DELETE CWConstraint X WHERE NOT E constrained_by X')
-rql('SET X is_instance_of Y WHERE X is Y, NOT X is_instance_of Y')
-commit()
+
+if confirm('fix some corrupted entities noticed on several instances?'):
+    rql('DELETE CWConstraint X WHERE NOT E constrained_by X')
+    rql('SET X is_instance_of Y WHERE X is Y, NOT X is_instance_of Y')
+    commit()
 
 if confirm('fix existing cwuri?'):
-    from logilab.common.shellutils import ProgressBar
+    from logilab.common.shellutils import progress
     from cubicweb.server.session import hooks_control
     rset = rql('Any X, XC WHERE X cwuri XC, X cwuri ~= "%/eid/%"')
-    if sys.stdout.isatty():
-        pb = ProgressBar(nbops=rset.rowcount, size=70)
-    else:
-        pb = None
-    with hooks_control(session, session.HOOKS_DENY_ALL, 'integrity'):
-        for i,  e in enumerate(rset.entities()):
-            e.set_attributes(cwuri=e.cwuri.replace('/eid', ''))
-            if i % 100: # commit every 100 entities to limit memory consumption
-                commit(ask_confirm=False)
-            if pb is not None:
+    title = "%i entites to fix" % len(rset)
+    nbops = rset.rowcount
+    enabled = interactive_mode
+    with progress(title=title, nbops=nbops, size=30, enabled=enabled) as pb:
+        with hooks_control(session, session.HOOKS_DENY_ALL, 'integrity'):
+            for i,  row in enumerate(rset):
+                data = {'eid': row[0], 'cwuri': row[1].replace(u'/eid', u'')}
+                rql('SET X cwuri %(cwuri)s WHERE X eid %(eid)s', data)
+                if not i % 100: # commit every 100 entities to limit memory consumption
+                    pb.text = "%i committed" % i
+                    commit(ask_confirm=False)
                 pb.update()
-    commit(ask_confirm=False)
+        commit(ask_confirm=False)
 
 try:
     from cubicweb import devtools

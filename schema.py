@@ -797,6 +797,7 @@ class RQLUniqueConstraint(RepoEnforcedRQLConstraintMixIn, BaseRQLConstraint):
 
 
 class RQLExpression(object):
+
     def __init__(self, expression, mainvars, eid):
         self.eid = eid # eid of the entity representing this rql expression
         if not isinstance(mainvars, unicode):
@@ -942,6 +943,10 @@ class RQLExpression(object):
     @property
     def minimal_rql(self):
         return 'Any %s WHERE %s' % (self.mainvars, self.expression)
+
+    # these are overridden by set_log_methods below
+    # only defining here to prevent pylint from complaining
+    info = warning = error = critical = exception = debug = lambda msg,*a,**kw: None
 
 
 class ERQLExpression(RQLExpression):
@@ -1103,6 +1108,9 @@ class BootstrapSchemaLoader(SchemaLoader):
         """called when a file without handler associated has been found"""
         self.warning('ignoring file %r', filepath)
 
+    # these are overridden by set_log_methods below
+    # only defining here to prevent pylint from complaining
+    info = warning = error = critical = exception = debug = lambda msg,*a,**kw: None
 
 class CubicWebSchemaLoader(BootstrapSchemaLoader):
     """cubicweb specific schema loader, automatically adding metadata to the
@@ -1140,6 +1148,9 @@ class CubicWebSchemaLoader(BootstrapSchemaLoader):
                 self.info('loading %s', filepath)
                 self.handle_file(filepath)
 
+    # these are overridden by set_log_methods below
+    # only defining here to prevent pylint from complaining
+    info = warning = error = critical = exception = debug = lambda msg,*a,**kw: None
 
 set_log_methods(CubicWebSchemaLoader, getLogger('cubicweb.schemaloader'))
 set_log_methods(BootstrapSchemaLoader, getLogger('cubicweb.bootstrapschemaloader'))

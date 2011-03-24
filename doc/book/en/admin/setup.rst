@@ -36,17 +36,17 @@ Debian and Ubuntu packages
 Depending on the distribution you are using, add the appropriate line to your
 list of sources (for example by editing ``/etc/apt/sources.list``).
 
-For Debian Lenny::
+For Debian Squeeze (stable)::
 
-  deb http://ftp.logilab.org/dists/ lenny/
+  deb http://download.logilab.org/production/ squeeze/
 
-For Debian Sid::
+For Debian Sid (unstable)::
 
-  deb http://ftp.logilab.org/dists/ sid/
+  deb http://download.logilab.org/production/ sid/
 
-For Ubuntu Hardy::
+For Ubuntu Lucid (Long Term Support)::
 
-  deb http://ftp.logilab.org/dists/ hardy/
+  deb http://download.logilab.org/production/ lucid/
 
 
 You can now install the required packages with the following command::
@@ -75,11 +75,11 @@ The repositories are signed with `Logilab's gnupg key`_. To avoid warning on
 "apt-get update":
 
 1. become root using sudo
-2. download http://ftp.logilab.org/dists/logilab-dists-key.asc using e.g. wget
+2. download http://download.logilab.org/logilab-dists-key.asc using e.g. wget
 3. run "apt-key add logilab-dists-key.asc"
 4. re-run apt-get update (manually or through the package manager, whichever you prefer)
 
-.. _`Logilab's gnupg key`: http://ftp.logilab.org/dists/logilab-dists-key.asc
+.. _`Logilab's gnupg key`: http://download.logilab.org/logilab-dists-key.asc
 .. _`CubicWeb.org Forge`: http://www.cubicweb.org/project/
 .. _`cubicweb with other database`: DatabaseInstallation_
 .. _`cubicweb with postgresql datatabase` : PostgresqlConfiguration_
@@ -169,11 +169,11 @@ Install from source
 
 .. _TarballInstallation:
 
-You can download the archive containing the sources from our `ftp site`_ at::
+You can download the archive containing the sources from our `download site`_ at::
 
-  http://ftp.logilab.org/pub/cubicweb/
+  http://download.logilab.org/pub/cubicweb/
 
-.. _`ftp site`: http://ftp.logilab.org/pub/cubicweb/
+.. _`download site`: http://download.logilab.org/pub/cubicweb/
 
 Make sure you also have all the :ref:`InstallDependencies`.
 
@@ -268,12 +268,12 @@ Please be careful to select the right python (2.5) and postgres (8.4) versions.
 
 A windows compiled recent version of gettext::
 
-  http://ftp.logilab.org/pub/gettext/gettext-0.17-win32-setup.exe
+  http://download.logilab.org/pub/gettext/gettext-0.17-win32-setup.exe
 
 A pre-compiled version of rql for windows (take care of retrieving the
 most recent version available there)::
 
-  http://ftp.logilab.org/pub/rql/rql-0.23.0.win32-py2.5.exe
+  http://download.logilab.org/pub/rql/rql-0.23.0.win32-py2.5.exe
 
 Pyro enables remote access to cubicweb repository instances. Get it there::
 
