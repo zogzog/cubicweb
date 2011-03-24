@@ -1,10 +1,11 @@
 from __future__ import with_statement
 import sys
 
-# fix some corrupted entities noticed on several instances
-rql('DELETE CWConstraint X WHERE NOT E constrained_by X')
-rql('SET X is_instance_of Y WHERE X is Y, NOT X is_instance_of Y')
-commit()
+
+if confirm('fix some corrupted entities noticed on several instances?'):
+    rql('DELETE CWConstraint X WHERE NOT E constrained_by X')
+    rql('SET X is_instance_of Y WHERE X is Y, NOT X is_instance_of Y')
+    commit()
 
 if confirm('fix existing cwuri?'):
     from logilab.common.shellutils import ProgressBar
