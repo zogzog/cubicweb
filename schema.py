@@ -797,6 +797,7 @@ class RQLUniqueConstraint(RepoEnforcedRQLConstraintMixIn, BaseRQLConstraint):
 
 
 class RQLExpression(object):
+
     def __init__(self, expression, mainvars, eid):
         self.eid = eid # eid of the entity representing this rql expression
         if not isinstance(mainvars, unicode):

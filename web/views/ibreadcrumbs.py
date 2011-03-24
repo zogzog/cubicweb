@@ -196,7 +196,7 @@ class BreadCrumbView(EntityView):
     def cell_call(self, row, col, **kwargs):
         entity = self.cw_rset.get_entity(row, col)
         desc = xml_escape(uilib.cut(entity.dc_description(), 50))
-        # XXX remember camember : tags.a autoescapes !
+        # NOTE remember camember: tags.a autoescapes
         self.w(tags.a(entity.view('breadcrumbtext'),
                       href=entity.absolute_url(), title=desc))
 
