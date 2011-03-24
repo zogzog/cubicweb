@@ -75,6 +75,7 @@ defaultLayoutMargin = '8px'
 
 # header
 headerBgColor = '#ff7700'
+headerBg = lazystr('%(headerBgColor)s url("banner.png") repeat-x top left')
 
 # h
 h1FontSize = '1.5em' # 18px
