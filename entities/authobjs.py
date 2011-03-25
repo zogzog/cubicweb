@@ -80,6 +80,18 @@ class CWUser(AnyEntity):
                          key, self.login)
         return self._cw.vreg.property_value(key)
 
+    def set_property(self, pkey, value):
+        value = unicode(value)
+        try:
+            prop = self._cw.execute(
+                'CWProperty X WHERE X pkey %(k)s, X for_user U, U eid %(u)s',
+                {'k': pkey, 'u': self.eid}).get_entity(0, 0)
+        except:
+            self._cw.create_entity('CWProperty', pkey=unicode(pkey),
+                                   value=value, for_user=self)
+        else:
+            prop.set_attributes(value=value)
+
     def matching_groups(self, groups):
         """return the number of the given group(s) in which the user is
 
