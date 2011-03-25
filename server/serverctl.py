@@ -39,7 +39,7 @@ from cubicweb.server.serverconfig import (
 
 # utility functions ###########################################################
 
-def source_cnx(source, dbname=None, special_privs=False, verbose=True):
+def source_cnx(source, dbname=None, special_privs=False, interactive=True):
     """open and return a connection to the system database defined in the
     given server.serverconfig
     """
@@ -50,21 +50,20 @@ def source_cnx(source, dbname=None, special_privs=False, verbose=True):
         dbname = source['db-name']
     driver = source['db-driver']
     dbhelper = get_db_helper(driver)
-    if verbose:
+    if interactive:
         print '-> connecting to %s database' % driver,
         if dbhost:
             print '%s@%s' % (dbname, dbhost),
         else:
             print dbname,
     if dbhelper.users_support:
-        if not special_privs and source.get('db-user'):
-            user = source['db-user']
-            if verbose:
+        if not interactive or (not special_privs and source.get('db-user')):
+            user = source.get('db-user', os.environ.get('USER', ''))
+            if interactive:
                 print 'as', user
             password = source.get('db-password')
         else:
-            if verbose:
-                print
+            print
             if special_privs:
                 print 'WARNING'
                 print ('the user will need the following special access rights '
@@ -95,7 +94,7 @@ def source_cnx(source, dbname=None, special_privs=False, verbose=True):
     return cnx
 
 def system_source_cnx(source, dbms_system_base=False,
-                      special_privs='CREATE/DROP DATABASE', verbose=True):
+                      special_privs='CREATE/DROP DATABASE', interactive=True):
     """shortcut to get a connextion to the instance system database
     defined in the given config. If <dbms_system_base> is True,
     connect to the dbms system database instead (for task such as
@@ -104,10 +103,12 @@ def system_source_cnx(source, dbms_system_base=False,
     if dbms_system_base:
         from logilab.database import get_db_helper
         system_db = get_db_helper(source['db-driver']).system_database()
-        return source_cnx(source, system_db, special_privs=special_privs, verbose=verbose)
-    return source_cnx(source, special_privs=special_privs, verbose=verbose)
+        return source_cnx(source, system_db, special_privs=special_privs,
+                          interactive=interactive)
+    return source_cnx(source, special_privs=special_privs,
+                      interactive=interactive)
 
-def _db_sys_cnx(source, special_privs, verbose=True):
+def _db_sys_cnx(source, special_privs, interactive=True):
     """return a connection on the RDMS system table (to create/drop a user or a
     database)
     """
@@ -118,7 +119,7 @@ def _db_sys_cnx(source, special_privs, verbose=True):
     helper = get_db_helper(driver)
     # connect on the dbms system base to create our base
     cnx = system_source_cnx(source, True, special_privs=special_privs,
-                            verbose=verbose)
+                            interactive=interactive)
     # disable autocommit (isolation_level(1)) because DROP and
     # CREATE DATABASE can't be executed in a transaction
     try:
@@ -296,12 +297,12 @@ class CreateInstanceDBCommand(Command):
          {'short': 'c', 'type': 'yn', 'metavar': '<y or n>',
           'default': True,
           'help': 'create the database (yes by default)'}),
-        ('verbose',
-         {'short': 'v', 'type' : 'yn', 'metavar': '<verbose>',
-          'default': 'n',
-          'help': 'verbose mode: will ask all possible configuration questions',
-          }
-         ),
+        ('quiet',
+         {'short': 'q', 'action' : 'store_true',
+          'default': False,
+          'help': 'be quiet. Suppose database user in the sources file is a '
+          'super user and don\'t ask for alternate login.',
+          }),
         ('automatic',
          {'short': 'a', 'type' : 'yn', 'metavar': '<auto>',
           'default': 'n',
@@ -312,7 +313,7 @@ class CreateInstanceDBCommand(Command):
     def run(self, args):
         """run the command with its specific arguments"""
         from logilab.database import get_db_helper
-        verbose = self.get('verbose')
+        quiet = self.get('quiet')
         automatic = self.get('automatic')
         appid = args.pop()
         config = ServerConfiguration.config_for(appid)
@@ -329,7 +330,7 @@ class CreateInstanceDBCommand(Command):
             print '\n'+underline_title('Creating the system database')
             # connect on the dbms system base to create our base
             dbcnx = _db_sys_cnx(source, 'CREATE/DROP DATABASE and / or USER',
-                                verbose=verbose)
+                                interactive=not quiet)
             cursor = dbcnx.cursor()
             try:
                 if helper.users_support:
@@ -350,7 +351,7 @@ class CreateInstanceDBCommand(Command):
                 dbcnx.rollback()
                 raise
         cnx = system_source_cnx(source, special_privs='CREATE LANGUAGE',
-                                verbose=verbose)
+                                interactive=not quiet)
         cursor = cnx.cursor()
         helper.init_fti_extensions(cursor)
         # postgres specific stuff

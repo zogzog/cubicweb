@@ -497,7 +497,8 @@ class PostgresTestDataBaseHandler(TestDataBaseHandler):
     @cached
     def dbcnx(self):
         from cubicweb.server.serverctl import _db_sys_cnx
-        return  _db_sys_cnx(self.system_source, 'CREATE DATABASE and / or USER', verbose=0)
+        return  _db_sys_cnx(self.system_source, 'CREATE DATABASE and / or USER',
+                            interactive=False)
 
     @property
     @cached
@@ -514,7 +515,8 @@ class PostgresTestDataBaseHandler(TestDataBaseHandler):
 
             createdb(self.helper, self.system_source, self.dbcnx, self.cursor)
             self.dbcnx.commit()
-            cnx = system_source_cnx(self.system_source, special_privs='LANGUAGE C', verbose=0)
+            cnx = system_source_cnx(self.system_source, special_privs='LANGUAGE C',
+                                    interactive=False)
             templcursor = cnx.cursor()
             try:
                 # XXX factorize with db-create code
