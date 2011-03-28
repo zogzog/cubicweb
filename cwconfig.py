@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -843,9 +843,8 @@ class CubicWebConfiguration(CubicWebNoAppConfiguration):
         if not exists(_INSTANCES_DIR):
             os.makedirs(_INSTANCES_DIR)
 
-    # for some commands (creation...) we don't want to initialize gettext
-    set_language = True
-    # set this to true to allow somethings which would'nt be possible
+    # set to true during repair (shell, migration) to allow some things which
+    # wouldn't be possible otherwise
     repairing = False
 
     options = CubicWebNoAppConfiguration.options + (
@@ -900,13 +899,13 @@ the repository',
         return mdir
 
     @classmethod
-    def config_for(cls, appid, config=None, debugmode=False):
+    def config_for(cls, appid, config=None, debugmode=False, creating=False):
         """return a configuration instance for the given instance identifier
         """
         cls.load_available_configs()
         config = config or guess_configuration(cls.instance_home(appid))
         configcls = configuration_cls(config)
-        return configcls(appid, debugmode)
+        return configcls(appid, debugmode, creating)
 
     @classmethod
     def possible_configurations(cls, appid):
@@ -966,8 +965,6 @@ the repository',
             log_path = os.path.join(_INSTALL_PREFIX, 'var', 'log', 'cubicweb', '%s-%s.log')
             return log_path % (self.appid, self.name)
 
-
-
     def default_pid_file(self):
         """return default path to the pid file of the instance'server"""
         if self.mode == 'system':
@@ -985,8 +982,10 @@ the repository',
 
     # instance methods used to get instance specific resources #############
 
-    def __init__(self, appid, debugmode=False):
+    def __init__(self, appid, debugmode=False, creating=False):
         self.appid = appid
+        # set to true while creating an instance
+        self.creating = creating
         super(CubicWebConfiguration, self).__init__(debugmode)
         fake_gettext = (unicode, lambda ctx, msgid: unicode(msgid))
         for lang in self.available_languages():
@@ -1077,7 +1076,7 @@ the repository',
     def load_configuration(self):
         """load instance's configuration files"""
         super(CubicWebConfiguration, self).load_configuration()
-        if self.apphome and self.set_language:
+        if self.apphome and not self.creating:
             # init gettext
             self._gettext_init()
 

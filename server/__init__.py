@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -129,7 +129,6 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     # on connection
     config.creating = True
     config.consider_user_state = False
-    config.set_language = False
     # only enable the system source at initialization time
     repo = Repository(config, vreg=vreg)
     schema = repo.schema
@@ -210,7 +209,6 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     # restore initial configuration
     config.creating = False
     config.consider_user_state = True
-    config.set_language = True
     print '-> database for instance %s initialized.' % config.appid
 
 

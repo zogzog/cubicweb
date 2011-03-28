@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -343,8 +343,7 @@ repository and the web server.',
         cubes, appid = args
         cubes = splitstrip(cubes)
         # get the configuration and helper
-        config = cwcfg.config_for(appid, configname)
-        config.set_language = False
+        config = cwcfg.config_for(appid, configname, creating=True)
         cubes = config.expand_cubes(cubes)
         config.init_cubes(cubes)
         helper = self.config_helper(config)
