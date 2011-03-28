@@ -1,4 +1,29 @@
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# CubicWeb is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
+"""helper classes to handle server-side edition of entities"""
+
+from __future__ import with_statement
+
+__docformat__ = "restructuredtext en"
+
 from copy import copy
+from yams import ValidationError
+
 
 _MARKER = object()
 
@@ -109,7 +134,6 @@ class EditedEntity(dict):
         else:
             relations = [entity._cw.vreg.schema.rschema(rtype)
                          for rtype in self]
-        from yams import ValidationError
         try:
             entity.e_schema.check(dict_protocol_catcher(entity),
                                   creation=creation, _=entity._cw._,
@@ -124,5 +148,3 @@ class EditedEntity(dict):
         thecopy.entity._cw_related_cache = {}
         thecopy.update(self, skipsec=False)
         return thecopy
-
-
