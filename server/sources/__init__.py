@@ -31,7 +31,7 @@ from yams.schema import role_name
 from cubicweb import ValidationError, set_log_methods, server
 from cubicweb.schema import VIRTUAL_RTYPES
 from cubicweb.server.sqlutils import SQL_PREFIX
-from cubicweb.server.ssplanner import EditedEntity
+from cubicweb.server.edition import EditedEntity
 
 
 def dbg_st_search(uri, union, varmap, args, cachekey=None, prefix='rql for'):

@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -24,7 +24,7 @@ from yams.schema import role_name
 
 from cubicweb import Binary, ValidationError
 from cubicweb.server import hook
-from cubicweb.server.ssplanner import EditedEntity
+from cubicweb.server.edition import EditedEntity
 
 
 def set_attribute_storage(repo, etype, attr, storage):
