@@ -594,8 +594,11 @@ class JQueryDatePicker(FieldWidget):
             value = self.values(form, field)[0]
         else:
             value = self.datestr
+        attrs = {}
+        if self.settabindex:
+            attrs['tabindex'] = req.next_tabindex()
         return tags.input(id=domid, name=domid, value=value,
-                          type='text', size='10')
+                          type='text', size='10', **attrs)
 
 
 class JQueryTimePicker(FieldWidget):
@@ -620,6 +623,9 @@ class JQueryTimePicker(FieldWidget):
             value = self.values(form, field)[0]
         else:
             value = self.timestr
+        attrs = {}
+        if self.settabindex:
+            attrs['tabindex'] = req.next_tabindex()
         return tags.input(id=domid, name=domid, value=value,
                           type='text', size='5')
 
