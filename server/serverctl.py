@@ -185,7 +185,7 @@ class RepositoryCreateHandler(CommandHandler):
     def postcreate(self):
         if ASK.confirm('Run db-create to create the system database ?'):
             verbosity = (self.config.mode == 'installed') and 'y' or 'n'
-            CWCTL.run(['db-create', self.config.appid, '--verbose=%s' % verbosity])
+            CWCTL.run(['db-create', self.config.appid])
         else:
             print ('-> nevermind, you can do it later with '
                    '"cubicweb-ctl db-create %s".' % self.config.appid)
