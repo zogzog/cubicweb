@@ -53,7 +53,7 @@ from datetime import date, datetime, timedelta
 from logilab.mtconverter import xml_escape
 from logilab.common.graph import has_path
 from logilab.common.decorators import cached
-from logilab.common.date import datetime2ticks
+from logilab.common.date import datetime2ticks, ustrftime, ticks2datetime
 from logilab.common.compat import all
 
 from rql import parse, nodes, utils
@@ -981,7 +981,11 @@ class DateRangeFacet(RangeFacet):
 
     def formatvalue(self, value):
         """format `value` before in order to insert it in the RQL query"""
-        return '"%s"' % date.fromtimestamp(float(value) / 1000).strftime('%Y/%m/%d')
+        try:
+            date_value = ticks2datetime(float(value))
+        except (ValueError, OverflowError):
+            return u'"date out-of-range"'
+        return '"%s"' % ustrftime(date_value, '%Y/%m/%d')
 
 
 class HasRelationFacet(AbstractFacet):
