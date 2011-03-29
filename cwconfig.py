@@ -325,7 +325,8 @@ class CubicWebNoAppConfiguration(ConfigurationMixIn):
          {'type' : 'string',
           'default': '',
           'help': 'Pyro name server\'s host. If not set, will be detected by a \
-broadcast query. It may contains port information using <host>:<port> notation.',
+broadcast query. It may contains port information using <host>:<port> notation. \
+Use "NO_PYRONS" to create a Pyro server but not register to a pyro nameserver',
           'group': 'pyro', 'level': 1,
           }),
         ('pyro-ns-group',
