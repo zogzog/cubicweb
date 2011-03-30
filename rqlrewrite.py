@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -434,7 +434,7 @@ class RQLRewriter(object):
                 # no more references, undefine the variable
                 del self.select.defined_vars[vref.name]
 
-    def _may_be_shared_with(self, sniprel, target, searchedvarname):
+    def _may_be_shared_with(self, sniprel, target):
         """if the snippet relation can be skipped to use a relation from the
         original query, return that relation node
         """
@@ -561,12 +561,12 @@ class RQLRewriter(object):
             if self.existingvars and not self.keep_var(rhs.name):
                 return
             if lhs.name in self.revvarmap and rhs.name != 'U':
-                orel = self._may_be_shared_with(node, 'object', lhs.name)
+                orel = self._may_be_shared_with(node, 'object')
                 if orel is not None:
                     self._use_orig_term(rhs.name, orel.children[1].children[0])
                     return
             elif rhs.name in self.revvarmap and lhs.name != 'U':
-                orel = self._may_be_shared_with(node, 'subject', rhs.name)
+                orel = self._may_be_shared_with(node, 'subject')
                 if orel is not None:
                     self._use_orig_term(lhs.name, orel.children[0])
                     return
