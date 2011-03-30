@@ -300,6 +300,11 @@ class ListCommand(Command):
                     print '* cube %s version %s is installed, but version %s is required by %s' % (
                         cube, cfgpb.cubes[cube], version, src)
 
+def check_options_consistency(config):
+    if config.automatic and config.config_level > 0:
+        raise BadCommandUsage('--automatic and --config-level should not be '
+                              'used together')
+
 class CreateInstanceCommand(Command):
     """Create an instance from a cube. This is an unified
     command which can handle web / server / all-in-one installation
@@ -309,7 +314,7 @@ class CreateInstanceCommand(Command):
     <cube>
       the name of cube to use (list available cube names using
       the "list" command). You can use several cubes by separating
-      them using comma (e.g. 'jpl,eemail')
+      them using comma (e.g. 'jpl,email')
     <instance>
       an identifier for the instance to create
     """
@@ -317,28 +322,34 @@ class CreateInstanceCommand(Command):
     arguments = '<cube> <instance>'
     min_args = max_args = 2
     options = (
-        ("config-level",
+        ('automatic',
+         {'short': 'a', 'action' : 'store_true',
+          'default': False,
+          'help': 'automatic mode: never ask and use default answer to every '
+          'question. this may require that your login match a database super '
+          'user (allowed to create database & all).',
+          }),
+        ('config-level',
          {'short': 'l', 'type' : 'int', 'metavar': '<level>',
           'default': 0,
-          'help': 'configuration level (0..2): 0 will ask for essential \
-configuration parameters only while 2 will ask for all parameters',
-          }
-         ),
-        ("config",
+          'help': 'configuration level (0..2): 0 will ask for essential '
+          'configuration parameters only while 2 will ask for all parameters',
+          }),
+        ('config',
          {'short': 'c', 'type' : 'choice', 'metavar': '<install type>',
           'choices': ('all-in-one', 'repository', 'twisted'),
           'default': 'all-in-one',
-          'help': 'installation type, telling which part of an instance \
-should be installed. You can list available configurations using the "list" \
-command. Default to "all-in-one", e.g. an installation embedding both the RQL \
-repository and the web server.',
-          }
-         ),
+          'help': 'installation type, telling which part of an instance '
+          'should be installed. You can list available configurations using the'
+          ' "list" command. Default to "all-in-one", e.g. an installation '
+          'embedding both the RQL repository and the web server.',
+          }),
         )
 
     def run(self, args):
         """run the command with its specific arguments"""
         from logilab.common.textutils import splitstrip
+        check_options_consistency(self.config)
         configname = self.config.config
         cubes, appid = args
         cubes = splitstrip(cubes)
@@ -360,17 +371,19 @@ repository and the web server.',
         print '\n'+underline_title('Creating the instance %s' % appid)
         create_dir(config.apphome)
         # cubicweb-ctl configuration
-        print '\n'+underline_title('Configuring the instance (%s.conf)' % configname)
-        config.input_config('main', self.config.config_level)
+        if not self.config.automatic:
+            print '\n'+underline_title('Configuring the instance (%s.conf)'
+                                       % configname)
+            config.input_config('main', self.config.config_level)
         # configuration'specific stuff
         print
-        helper.bootstrap(cubes, self.config.config_level)
+        helper.bootstrap(cubes, self.config.automatic, self.config.config_level)
         # input for cubes specific options
         sections = set(sect.lower() for sect, opt, odict in config.all_options()
                        if 'type' in odict
                        and odict.get('level') <= self.config.config_level)
         for section in sections:
-            if section not in ('main', 'email', 'pyro'):
+            if section not in ('main', 'email', 'pyro', 'web'):
                 print '\n' + underline_title('%s options' % section)
                 config.input_config(section, self.config.config_level)
         # write down configuration
@@ -385,8 +398,9 @@ repository and the web server.',
         errors = config.i18ncompile(langs)
         if errors:
             print '\n'.join(errors)
-            if not ASK.confirm('error while compiling message catalogs, '
-                               'continue anyway ?'):
+            if self.config.automatic \
+                   or not ASK.confirm('error while compiling message catalogs, '
+                                      'continue anyway ?'):
                 print 'creation not completed'
                 return
         # create the additional data directory for this instance
@@ -399,7 +413,7 @@ repository and the web server.',
             print 'set %s as owner of the data directory' % config['uid']
             chown(config.appdatahome, config['uid'])
         print '\n-> creation done for %r.\n' % config.apphome
-        helper.postcreate()
+        helper.postcreate(self.config.automatic)
 
     def _handle_win32(self, config, appid):
         if sys.platform != 'win32':

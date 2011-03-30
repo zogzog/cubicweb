@@ -27,11 +27,11 @@ import os
 
 from logilab.common import nullobject
 from logilab.common.configuration import Configuration
-from logilab.common.shellutils import ASK
+from logilab.common.shellutils import ASK, generate_password
 
 from cubicweb import AuthenticationError, ExecutionError, ConfigurationError
 from cubicweb.toolsutils import Command, CommandHandler, underline_title
-from cubicweb.cwctl import CWCTL
+from cubicweb.cwctl import CWCTL, check_options_consistency
 from cubicweb.server import SOURCE_TYPES
 from cubicweb.server.serverconfig import (
     USER_OPTIONS, ServerConfiguration, SourceConfiguration,
@@ -154,38 +154,49 @@ class RepositoryCreateHandler(CommandHandler):
     cmdname = 'create'
     cfgname = 'repository'
 
-    def bootstrap(self, cubes, inputlevel=0):
+    def bootstrap(self, cubes, automatic=False, inputlevel=0):
         """create an instance by copying files from the given cube and by asking
         information necessary to build required configuration files
         """
         config = self.config
-        print underline_title('Configuring the repository')
-        config.input_config('email', inputlevel)
-        # ask for pyro configuration if pyro is activated and we're not using a
-        # all-in-one config, in which case this is done by the web side command
-        # handler
-        if config.pyro_enabled() and config.name != 'all-in-one':
-            config.input_config('pyro', inputlevel)
-        print '\n'+underline_title('Configuring the sources')
+        if not automatic:
+            print underline_title('Configuring the repository')
+            config.input_config('email', inputlevel)
+            # ask for pyro configuration if pyro is activated and we're not
+            # using a all-in-one config, in which case this is done by the web
+            # side command handler
+            if config.pyro_enabled() and config.name != 'all-in-one':
+                config.input_config('pyro', inputlevel)
+            print '\n'+underline_title('Configuring the sources')
         sourcesfile = config.sources_file()
-        # XXX hack to make Method('default_instance_id') usable in db option
-        # defs (in native.py)
+        # hack to make Method('default_instance_id') usable in db option defs
+        # (in native.py)
         sconfig = SourceConfiguration(config,
                                       options=SOURCE_TYPES['native'].options)
-        sconfig.input_config(inputlevel=inputlevel)
+        if not automatic:
+            sconfig.input_config(inputlevel=inputlevel)
+            print
         sourcescfg = {'system': sconfig}
-        print
-        sconfig = Configuration(options=USER_OPTIONS)
-        sconfig.input_config(inputlevel=inputlevel)
+        if automatic:
+            # XXX modify a copy
+            password = generate_password()
+            print 'Administration account is admin / %s' % password
+            USER_OPTIONS[1][1]['default'] = password
+            sconfig = Configuration(options=USER_OPTIONS)
+        else:
+            sconfig = Configuration(options=USER_OPTIONS)
+            sconfig.input_config(inputlevel=inputlevel)
         sourcescfg['admin'] = sconfig
         config.write_sources_file(sourcescfg)
         # remember selected cubes for later initialization of the database
         config.write_bootstrap_cubes_file(cubes)
 
-    def postcreate(self):
-        if ASK.confirm('Run db-create to create the system database ?'):
-            verbosity = (self.config.mode == 'installed') and 'y' or 'n'
-            CWCTL.run(['db-create', self.config.appid])
+    def postcreate(self, automatic=False, inputlevel=0):
+        if automatic:
+            CWCTL.run(['db-create', '--automatic', self.config.appid])
+        elif ASK.confirm('Run db-create to create the system database ?'):
+            CWCTL.run(['db-create', '--config-level', str(inputlevel),
+                       self.config.appid])
         else:
             print ('-> nevermind, you can do it later with '
                    '"cubicweb-ctl db-create %s".' % self.config.appid)
@@ -293,27 +304,30 @@ class CreateInstanceDBCommand(Command):
     arguments = '<instance>'
     min_args = max_args = 1
     options = (
+        ('automatic',
+         {'short': 'a', 'action' : 'store_true',
+          'default': False,
+          'help': 'automatic mode: never ask and use default answer to every '
+          'question. this may require that your login match a database super '
+          'user (allowed to create database & all).',
+          }),
+        ('config-level',
+         {'short': 'l', 'type' : 'int', 'metavar': '<level>',
+          'default': 0,
+          'help': 'configuration level (0..2): 0 will ask for essential '
+          'configuration parameters only while 2 will ask for all parameters',
+          }),
         ('create-db',
          {'short': 'c', 'type': 'yn', 'metavar': '<y or n>',
           'default': True,
-          'help': 'create the database (yes by default)'}),
-        ('quiet',
-         {'short': 'q', 'action' : 'store_true',
-          'default': False,
-          'help': 'be quiet. Suppose database user in the sources file is a '
-          'super user and don\'t ask for alternate login.',
+          'help': 'create the database (yes by default)'
           }),
-        ('automatic',
-         {'short': 'a', 'type' : 'yn', 'metavar': '<auto>',
-          'default': 'n',
-          'help': 'automatic mode: never ask and use default answer to every question',
-          }
-         ),
         )
+
     def run(self, args):
         """run the command with its specific arguments"""
         from logilab.database import get_db_helper
-        quiet = self.get('quiet')
+        check_options_consistency(self.config)
         automatic = self.get('automatic')
         appid = args.pop()
         config = ServerConfiguration.config_for(appid)
@@ -330,7 +344,7 @@ class CreateInstanceDBCommand(Command):
             print '\n'+underline_title('Creating the system database')
             # connect on the dbms system base to create our base
             dbcnx = _db_sys_cnx(source, 'CREATE/DROP DATABASE and / or USER',
-                                interactive=not quiet)
+                                interactive=not automatic)
             cursor = dbcnx.cursor()
             try:
                 if helper.users_support:
@@ -343,6 +357,8 @@ class CreateInstanceDBCommand(Command):
                     if automatic or ASK.confirm('Database %s already exists -- do you want to drop it ?' % dbname):
                         cursor.execute('DROP DATABASE %s' % dbname)
                     else:
+                        print ('you may want to run "cubicweb-ctl db-init '
+                               '--drop %s" manually to continue.' % config.appid)
                         return
                 createdb(helper, source, dbcnx, cursor)
                 dbcnx.commit()
@@ -351,7 +367,7 @@ class CreateInstanceDBCommand(Command):
                 dbcnx.rollback()
                 raise
         cnx = system_source_cnx(source, special_privs='CREATE LANGUAGE',
-                                interactive=not quiet)
+                                interactive=not automatic)
         cursor = cnx.cursor()
         helper.init_fti_extensions(cursor)
         # postgres specific stuff
@@ -364,8 +380,12 @@ class CreateInstanceDBCommand(Command):
         cnx.commit()
         print '-> database for instance %s created and necessary extensions installed.' % appid
         print
-        if automatic or ASK.confirm('Run db-init to initialize the system database ?'):
-            CWCTL.run(['db-init', config.appid])
+        if automatic:
+            CWCTL.run(['db-init', '--automatic', '--config-level', '0',
+                       config.appid])
+        elif ASK.confirm('Run db-init to initialize the system database ?'):
+            CWCTL.run(['db-init', '--config-level',
+                       str(self.config.config_level), config.appid])
         else:
             print ('-> nevermind, you can do it later with '
                    '"cubicweb-ctl db-init %s".' % config.appid)
@@ -384,18 +404,27 @@ class InitInstanceCommand(Command):
     arguments = '<instance>'
     min_args = max_args = 1
     options = (
+        ('automatic',
+         {'short': 'a', 'action' : 'store_true',
+          'default': False,
+          'help': 'automatic mode: never ask and use default answer to every '
+          'question.',
+          }),
+        ('config-level',
+         {'short': 'l', 'type': 'int', 'default': 1,
+          'help': 'level threshold for questions asked when configuring '
+          'another source'
+          }),
         ('drop',
          {'short': 'd', 'action': 'store_true',
           'default': False,
-          'help': 'insert drop statements to remove previously existant \
-tables, indexes... (no by default)'}),
-        ('config-level',
-         {'short': 'l', 'type': 'int', 'default': 1,
-          'help': 'level threshold for questions asked when configuring another source'
+          'help': 'insert drop statements to remove previously existant '
+          'tables, indexes... (no by default)'
           }),
         )
 
     def run(self, args):
+        check_options_consistency(self.config)
         print '\n'+underline_title('Initializing the system database')
         from cubicweb.server import init_repository
         from logilab.database import get_connection
@@ -416,8 +445,10 @@ tables, indexes... (no by default)'}),
                 'the %s file. Resolve this first (error: %s).'
                 % (config.sources_file(), str(ex).strip()))
         init_repository(config, drop=self.config.drop)
-        while ASK.confirm('Enter another source ?', default_is_yes=False):
-            CWCTL.run(['add-source', '--config-level', self.config.config_level, config.appid])
+        if not self.config.automatic:
+            while ASK.confirm('Enter another source ?', default_is_yes=False):
+                CWCTL.run(['add-source', '--config-level',
+                           str(self.config.config_level), config.appid])
 
 
 class AddSourceCommand(Command):
