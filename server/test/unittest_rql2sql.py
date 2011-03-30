@@ -38,6 +38,7 @@ try:
 except AssertionError, ex:
     pass # already registered
 
+
 from logilab import database as db
 def monkey_patch_import_driver_module(driver, drivers, quiet=True):
     if not driver in drivers:
@@ -53,7 +54,7 @@ def monkey_patch_import_driver_module(driver, drivers, quiet=True):
                 print >> sys.stderr, '%s is not available' % modname
             continue
     else:
-        return None, drivers[driver][0]
+        return mock_object(STRING=1, BOOLEAN=2, BINARY=3, DATETIME=4, NUMBER=5), drivers[driver][0]
     return module, modname
 
 
