@@ -169,7 +169,7 @@ class SchemaReaderClassTest(TestCase):
                              'Password', 'Personne',
                              'RQLExpression',
                              'Societe', 'State', 'StateFull', 'String', 'SubNote', 'SubWorkflowExitPoint',
-                             'Tag', 'Time', 'Transition', 'TrInfo',
+                             'TZDatetime', 'TZTime', 'Tag', 'Time', 'Transition', 'TrInfo',
                              'Workflow', 'WorkflowTransition']
         self.assertListEqual(sorted(expected_entities), entities)
         relations = sorted([str(r) for r in schema.relations()])
