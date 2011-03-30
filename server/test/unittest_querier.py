@@ -761,18 +761,20 @@ class QuerierTC(BaseQuerierTC):
         rset = self.execute('Any N WHERE X is CWEType, X name N, X final %(val)s',
                             {'val': True})
         self.assertEqual(sorted(r[0] for r in rset.rows), ['Boolean', 'Bytes',
-                                                            'Date', 'Datetime',
-                                                            'Decimal', 'Float',
-                                                            'Int', 'Interval',
-                                                            'Password', 'String',
-                                                            'Time'])
+                                                           'Date', 'Datetime',
+                                                           'Decimal', 'Float',
+                                                           'Int', 'Interval',
+                                                           'Password', 'String',
+                                                           'TZDatetime', 'TZTime',
+                                                           'Time'])
         rset = self.execute('Any N WHERE X is CWEType, X name N, X final TRUE')
         self.assertEqual(sorted(r[0] for r in rset.rows), ['Boolean', 'Bytes',
-                                                            'Date', 'Datetime',
-                                                            'Decimal', 'Float',
-                                                            'Int', 'Interval',
-                                                            'Password', 'String',
-                                                            'Time'])
+                                                           'Date', 'Datetime',
+                                                           'Decimal', 'Float',
+                                                           'Int', 'Interval',
+                                                           'Password', 'String',
+                                                           'TZDatetime', 'TZTime',
+                                                           'Time'])
 
     def test_select_constant(self):
         rset = self.execute('Any X, "toto" ORDERBY X WHERE X is CWGroup')
