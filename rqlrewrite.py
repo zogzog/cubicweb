@@ -252,7 +252,8 @@ class RQLRewriter(object):
                 self.insert_pending()
                 self._insert_scope = None
                 return
-            new = n.Exists(new)
+            if not isinstance(new, (n.Exists, n.Not)):
+                new = n.Exists(new)
             if parent is None:
                 insert_scope.add_restriction(new)
             else:
