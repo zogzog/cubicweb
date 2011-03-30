@@ -354,7 +354,7 @@ class ExecutionPlan(object):
                     myrqlst = select.copy(solutions=lchecksolutions)
                     myunion.append(myrqlst)
                     # in-place rewrite + annotation / simplification
-                    lcheckdef = [((var, 'X'), rqlexprs) for var, rqlexprs in lcheckdef]
+                    lcheckdef = [({var: 'X'}, rqlexprs) for var, rqlexprs in lcheckdef]
                     rewrite(myrqlst, lcheckdef, lchecksolutions, self.args)
                     add_noinvariant(noinvariant, restricted, myrqlst, nbtrees)
                 if () in localchecks:

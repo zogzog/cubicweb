@@ -62,7 +62,6 @@ def can_use_rest_path(value):
     return True
 
 
-
 class Entity(AppObject):
     """an entity instance has e_schema automagically set on
     the class and instances has access to their issuing cursor.
@@ -808,7 +807,11 @@ class Entity(AppObject):
             else:
                 existant = None # instead of 'SO', improve perfs
             for select in rqlst.children:
-                rewriter.rewrite(select, [((searchedvar, searchedvar), rqlexprs)],
+                varmap = {}
+                for var in 'SO':
+                    if var in select.defined_vars:
+                        varmap[var] = var
+                rewriter.rewrite(select, [(varmap, rqlexprs)],
                                  select.solutions, args, existant)
             rql = rqlst.as_string()
         return rql, args
