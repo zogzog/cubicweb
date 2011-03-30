@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -297,7 +297,7 @@ have the python imaging library installed to use captcha)',
         baseurl = self['base-url'] or self.default_base_url()
         if baseurl and baseurl[-1] != '/':
             baseurl += '/'
-        if not self.repairing:
+        if not (self.repairing or self.creating):
             self.global_set_option('base-url', baseurl)
         httpsurl = self['https-url']
         if httpsurl:

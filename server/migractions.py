@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -1307,20 +1307,32 @@ class ServerMigrationHelper(MigrationHelper):
     # CWProperty handling ######################################################
 
     def cmd_property_value(self, pkey):
-        rql = 'Any V WHERE X is CWProperty, X pkey %(k)s, X value V'
-        rset = self.rqlexec(rql, {'k': pkey}, ask_confirm=False)
+        """retreive the site-wide persistent property value for the given key.
+
+        To get a user specific property value, use appropriate method on CWUser
+        instance.
+        """
+        rset = self.rqlexec(
+            'Any V WHERE X is CWProperty, X pkey %(k)s, X value V, NOT X for_user U',
+            {'k': pkey}, ask_confirm=False)
         return rset[0][0]
 
     def cmd_set_property(self, pkey, value):
+        """set the site-wide persistent property value for the given key to the
+        given value.
+
+        To set a user specific property value, use appropriate method on CWUser
+        instance.
+        """
         value = unicode(value)
         try:
-            prop = self.rqlexec('CWProperty X WHERE X pkey %(k)s', {'k': pkey},
-                                ask_confirm=False).get_entity(0, 0)
+            prop = self.rqlexec(
+                'CWProperty X WHERE X pkey %(k)s, NOT X for_user U',
+                {'k': pkey}, ask_confirm=False).get_entity(0, 0)
         except:
             self.cmd_create_entity('CWProperty', pkey=unicode(pkey), value=value)
         else:
-            self.rqlexec('SET X value %(v)s WHERE X pkey %(k)s',
-                         {'k': pkey, 'v': value}, ask_confirm=False)
+            prop.set_attributes(value=value)
 
     # other data migration commands ###########################################
 
@@ -1359,6 +1371,18 @@ class ServerMigrationHelper(MigrationHelper):
         if commit:
             self.commit()
         return entity
+
+    def cmd_find_entities(self, etype, **kwargs):
+        """find entities of the given type and attribute values"""
+        return self._cw.find_entities(etype, **kwargs)
+
+    def cmd_find_one_entity(self, etype, **kwargs):
+        """find one entity of the given type and attribute values.
+
+        raise :exc:`cubicweb.req.FindEntityError` if can not return one and only
+        one entity.
+        """
+        return self._cw.find_one_entity(etype, **kwargs)
 
     def cmd_update_etype_fti_weight(self, etype, weight):
         if self.repo.system_source.dbdriver == 'postgres':

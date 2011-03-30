@@ -59,10 +59,10 @@ from http://www.cubicweb.org/project/cubicweb-keyword).
 
         def setup_database(self):
             req = self.request()
-            group_etype = req.execute('Any X WHERE X name "CWGroup"').get_entity(0,0)
+            group_etype = req.find_one_entity('CWEType', name='CWGroup')
             c1 = req.create_entity('Classification', name=u'classif1',
                                    classifies=group_etype)
-            user_etype = req.execute('Any X WHERE X name "CWUser"').get_entity(0,0)
+            user_etype = req.find_one_entity('CWEType', name='CWUser')
             c2 = req.create_entity('Classification', name=u'classif2',
                                    classifies=user_etype)
             self.kw1 = req.create_entity('Keyword', name=u'kwgroup', included_in=c1)
@@ -228,7 +228,7 @@ user or to a category of users. Let's take an example in the
 
         def test_admin(self):
             req = self.request()
-            rset = req.execute('Any C WHERE C is Conference')
+            rset = req.find_entities('Conference')
             self.assertListEqual(self.pactions(req, rset),
                                   [('workflow', workflow.WorkflowActions),
                                    ('edit', confactions.ModifyAction),

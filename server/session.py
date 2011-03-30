@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -37,6 +37,7 @@ from cubicweb.req import RequestSessionBase
 from cubicweb.dbapi import ConnectionProperties
 from cubicweb.utils import make_uid, RepeatList
 from cubicweb.rqlrewrite import RQLRewriter
+from cubicweb.server.edition import EditedEntity
 
 ETYPE_PYOBJ_MAP[Binary] = 'Bytes'
 
@@ -215,8 +216,9 @@ class Session(RequestSessionBase):
         with security_enabled(self, False, False):
             if self.vreg.schema[rtype].inlined:
                 entity = self.entity_from_eid(fromeid)
-                entity[rtype] = toeid
-                self.repo.glob_update_entity(self, entity, set((rtype,)))
+                edited = EditedEntity(entity)
+                edited.edited_attribute(rtype, toeid)
+                self.repo.glob_update_entity(self, edited)
             else:
                 self.repo.glob_add_relation(self, fromeid, rtype, toeid)
 
@@ -234,7 +236,7 @@ class Session(RequestSessionBase):
         with security_enabled(self, False, False):
             if self.vreg.schema[rtype].inlined:
                 entity = self.entity_from_eid(fromeid)
-                entity[rtype] = None
+                entity.cw_attr_cache[rtype] = None
                 self.repo.glob_update_entity(self, entity, set((rtype,)))
             else:
                 self.repo.glob_delete_relation(self, fromeid, rtype, toeid)

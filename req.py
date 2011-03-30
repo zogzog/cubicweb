@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -35,6 +35,8 @@ from cubicweb.rset import ResultSet
 ONESECOND = timedelta(0, 1, 0)
 CACHE_REGISTRY = {}
 
+class FindEntityError(Exception):
+    """raised when find_one_entity() can not return one and only one entity"""
 
 def _check_cw_unsafe(kwargs):
     if kwargs.pop('_cw_unsafe', False):
@@ -139,6 +141,33 @@ class RequestSessionBase(object):
         _check_cw_unsafe(kwargs)
         cls = self.vreg['etypes'].etype_class(etype)
         return cls.cw_instantiate(self.execute, **kwargs)
+
+    def find_entities(self, etype, **kwargs):
+        """find entities of the given type and attribute values.
+
+        >>> users = find_entities('CWGroup', name=u'users')
+        >>> groups = find_entities('CWGroup')
+        """
+        parts = ['Any X WHERE X is %s' % etype]
+        parts.extend('X %(attr)s %%(%(attr)s)s' % {'attr': attr} for attr in kwargs)
+        return self.execute(', '.join(parts), kwargs).entities()
+
+    def find_one_entity(self, etype, **kwargs):
+        """find one entity of the given type and attribute values.
+        raise :exc:`FindEntityError` if can not return one and only one entity.
+
+        >>> users = find_one_entity('CWGroup', name=u'users')
+        >>> groups = find_one_entity('CWGroup')
+        Exception()
+        """
+        parts = ['Any X WHERE X is %s' % etype]
+        parts.extend('X %(attr)s %%(%(attr)s)s' % {'attr': attr} for attr in kwargs)
+        rql = ', '.join(parts)
+        rset = self.execute(rql, kwargs)
+        if len(rset) != 1:
+            raise FindEntityError('Found %i entitie(s) when 1 was expected (rql=%s ; %s)'
+                                  % (len(rset), rql, repr(kwargs)))
+        return rset.get_entity(0,0)
 
     def ensure_ro_rql(self, rql):
         """raise an exception if the given rql is not a select query"""

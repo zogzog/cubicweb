@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -17,26 +17,29 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """cubicweb-ctl commands and command handlers common to twisted/modpython
 web configuration
-
 """
+
 __docformat__ = "restructuredtext en"
 
-from cubicweb.toolsutils import CommandHandler, underline_title
 from logilab.common.shellutils import ASK
+
+from cubicweb.toolsutils import CommandHandler, underline_title
 
 class WebCreateHandler(CommandHandler):
     cmdname = 'create'
 
-    def bootstrap(self, cubes, inputlevel=0):
+    def bootstrap(self, cubes, automatic=False, inputlevel=0):
         """bootstrap this configuration"""
-        print '\n' + underline_title('Generic web configuration')
-        config = self.config
-        if config.repo_method == 'pyro' or config.pyro_enabled():
-            print '\n' + underline_title('Pyro configuration')
-            config.input_config('pyro', inputlevel)
-        if ASK.confirm('Allow anonymous access ?', False):
-            config.global_set_option('anonymous-user', 'anon')
-            config.global_set_option('anonymous-password', 'anon')
+        if not automatic:
+            print '\n' + underline_title('Generic web configuration')
+            config = self.config
+            if config.repo_method == 'pyro' or config.pyro_enabled():
+                print '\n' + underline_title('Pyro configuration')
+                config.input_config('pyro', inputlevel)
+            config.input_config('web', inputlevel)
+            if ASK.confirm('Allow anonymous access ?', False):
+                config.global_set_option('anonymous-user', 'anon')
+                config.global_set_option('anonymous-password', 'anon')
 
-    def postcreate(self):
+    def postcreate(self, *args, **kwargs):
         """hooks called once instance's initialization has been completed"""

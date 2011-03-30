@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -81,7 +81,7 @@ from logilab.common.decorators import cached
 from logilab.common.deprecation import deprecated
 
 from cubicweb.server.utils import eschema_eid
-from cubicweb.server.ssplanner import EditedEntity
+from cubicweb.server.edition import EditedEntity
 
 def count_lines(stream_or_filename):
     if isinstance(stream_or_filename, basestring):
@@ -473,6 +473,11 @@ class RQLObjectStore(ObjectStore):
         self.rql('SET X %s Y WHERE X eid %%(x)s, Y eid %%(y)s' % rtype,
                  {'x': int(eid_from), 'y': int(eid_to)})
 
+    def find_entities(self, *args, **kwargs):
+        return self.session.find_entities(*args, **kwargs)
+
+    def find_one_entity(self, *args, **kwargs):
+        return self.session.find_one_entity(*args, **kwargs)
 
 # the import controller ########################################################
 

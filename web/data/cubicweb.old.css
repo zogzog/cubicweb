@@ -283,7 +283,7 @@ div#page {
 }
 
 table#mainLayout{
- margin:0px 3px;
+ padding: 0px 3px;
 }
 
 table#mainLayout td#contentColumn {

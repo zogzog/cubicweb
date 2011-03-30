@@ -59,6 +59,7 @@ from cubicweb.server.session import Session, InternalSession, InternalManager, \
      security_enabled
 from cubicweb.server.ssplanner import EditedEntity
 
+
 def prefill_entity_caches(entity, relations):
     session = entity._cw
     # prefill entity relation caches
@@ -134,6 +135,7 @@ class Repository(object):
             vreg = cwvreg.CubicWebVRegistry(config)
         self.vreg = vreg
         self.pyro_registered = False
+        self.pyro_uri = None
         self.info('starting repository from %s', self.config.apphome)
         # dictionary of opened sessions
         self._sessions = {}
@@ -415,7 +417,9 @@ class Repository(object):
                 self.exception('error while closing %s' % pool)
                 continue
         if self.pyro_registered:
-            pyro_unregister(self.config)
+            if self._use_pyrons():
+                pyro_unregister(self.config)
+            self.pyro_uri = None
         hits, misses = self.querier.cache_hit, self.querier.cache_miss
         try:
             self.info('rql st cache hit/miss: %s/%s (%s%% hits)', hits, misses,
@@ -1419,20 +1423,32 @@ class Repository(object):
         config['pyro-instance-id'] = appid
         return appid
 
+    def _use_pyrons(self):
+        """return True if the pyro-ns-host is set to something else
+        than NO_PYRONS, meaning we want to go through a pyro
+        nameserver"""
+        return self.config['pyro-ns-host'] != 'NO_PYRONS'
+
     def pyro_register(self, host=''):
         """register the repository as a pyro object"""
         from logilab.common import pyro_ext as pyro
         daemon = pyro.register_object(self, self.pyro_appid,
                                       daemonhost=self.config['pyro-host'],
-                                      nshost=self.config['pyro-ns-host'])
+                                      nshost=self.config['pyro-ns-host'],
+                                      use_pyrons=self._use_pyrons())
         self.info('repository registered as a pyro object %s', self.pyro_appid)
+        self.pyro_uri =  pyro.get_object_uri(self.pyro_appid)
+        self.info('pyro uri is: %s', self.pyro_uri)
         self.pyro_registered = True
         # register a looping task to regularly ensure we're still registered
         # into the pyro name server
-        self.looping_task(60*10, self._ensure_pyro_ns)
+        if self._use_pyrons():
+            self.looping_task(60*10, self._ensure_pyro_ns)
         return daemon
 
     def _ensure_pyro_ns(self):
+        if not self._use_pyrons():
+            return
         from logilab.common import pyro_ext as pyro
         pyro.ns_reregister(self.pyro_appid, nshost=self.config['pyro-ns-host'])
         self.info('repository re-registered as a pyro object %s',
