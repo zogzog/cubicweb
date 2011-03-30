@@ -20,7 +20,7 @@ in `cubes/sytweb/hooks.py` :
     from os.path import join, exists
 
     from cubicweb.server import hook
-    from cubicweb.server.sources import storage
+    from cubicweb.server.sources import storages
 
     class ServerStartupHook(hook.Hook):
         __regid__ = 'sytweb.serverstartup'
