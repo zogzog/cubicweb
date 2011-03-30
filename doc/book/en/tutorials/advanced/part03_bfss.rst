@@ -20,7 +20,7 @@ in `cubes/sytweb/hooks.py` :
     from os.path import join, exists
 
     from cubicweb.server import hook
-    from cubicweb.server.sources import storage
+    from cubicweb.server.sources import storages
 
     class ServerStartupHook(hook.Hook):
         __regid__ = 'sytweb.serverstartup'
@@ -38,7 +38,7 @@ in `cubes/sytweb/hooks.py` :
 
   * how we built the hook's registry identifier (`__regid__`): you can introduce
     'namespaces' by using there python module like naming identifiers. This is
-    especially import for hooks where you usually want a new custom hook, not
+    especially important for hooks where you usually want a new custom hook, not
     overriding / specializing an existant one, but the concept may be applied to
     any application objects
 
