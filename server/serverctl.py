@@ -180,7 +180,7 @@ class RepositoryCreateHandler(CommandHandler):
         if automatic:
             # XXX modify a copy
             password = generate_password()
-            print 'Administration account is admin / %s' % password
+            print '-> set administrator account to admin / %s' % password
             USER_OPTIONS[1][1]['default'] = password
             sconfig = Configuration(options=USER_OPTIONS)
         else:
