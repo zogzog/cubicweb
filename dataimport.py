@@ -19,12 +19,11 @@
 """This module provides tools to import tabular data.
 
 
-
 Example of use (run this with `cubicweb-ctl shell instance import-script.py`):
 
 .. sourcecode:: python
 
-  from cubicweb.devtools.dataimport import *
+  from cubicweb.dataimport import *
   # define data generators
   GENERATORS = []
 
@@ -36,12 +35,11 @@ Example of use (run this with `cubicweb-ctl shell instance import-script.py`):
   def gen_users(ctl):
       for row in ctl.iter_and_commit('utilisateurs'):
           entity = mk_entity(row, USERS)
-          entity['upassword'] = u'motdepasse'
+          entity['upassword'] = 'motdepasse'
           ctl.check('login', entity['login'], None)
-          ctl.store.add('CWUser', entity)
-          email = {'address': row['email']}
-          ctl.store.add('EmailAddress', email)
-          ctl.store.relate(entity['eid'], 'use_email', email['eid'])
+          entity = ctl.store.create_entity('CWUser', **entity)
+          email = ctl.store.create_entity('EmailAddress', address=row['email'])
+          ctl.store.relate(entity.eid, 'use_email', email.eid)
           ctl.store.rql('SET U in_group G WHERE G name "users", U eid %(x)s', {'x':entity['eid']})
 
   CHK = [('login', check_doubles, 'Utilisateurs Login',
@@ -74,14 +72,17 @@ import traceback
 import os.path as osp
 from StringIO import StringIO
 from copy import copy
+from datetime import datetime
 
 from logilab.common import shellutils
 from logilab.common.date import strptime
 from logilab.common.decorators import cached
 from logilab.common.deprecation import deprecated
 
+from cubicweb.schema import META_RTYPES, VIRTUAL_RTYPES
 from cubicweb.server.utils import eschema_eid
 from cubicweb.server.edition import EditedEntity
+
 
 def count_lines(stream_or_filename):
     if isinstance(stream_or_filename, basestring):
@@ -173,7 +174,6 @@ def mk_entity(row, map):
         except ValueError, err:
             raise ValueError('error with %r field: %s' % (src, err))
     return res
-
 
 # user interactions ############################################################
 
@@ -287,11 +287,9 @@ class ObjectStore(object):
     But it will not enforce the constraints of the schema and hence will miss some problems
 
     >>> store = ObjectStore()
-    >>> user = {'login': 'johndoe'}
-    >>> store.add('CWUser', user)
-    >>> group = {'name': 'unknown'}
-    >>> store.add('CWUser', group)
-    >>> store.relate(user['eid'], 'in_group', group['eid'])
+    >>> user = store.create_entity('CWUser', login=u'johndoe')
+    >>> group = store.create_entity('CWUser', name=u'unknown')
+    >>> store.relate(user.eid, 'in_group', group.eid)
     """
     def __init__(self):
         self.items = []
@@ -592,11 +590,6 @@ class CWImportController(object):
             return callfunc_every(self.store.commit,
                                   self.commitevery,
                                   self.get_data(datakey))
-
-
-
-from datetime import datetime
-from cubicweb.schema import META_RTYPES, VIRTUAL_RTYPES
 
 
 class NoHookRQLObjectStore(RQLObjectStore):
