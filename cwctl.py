@@ -389,10 +389,9 @@ class CreateInstanceCommand(Command):
         # write down configuration
         config.save()
         self._handle_win32(config, appid)
-        print '-> generated %s' % config.main_config_file()
+        print '-> generated config %s' % config.main_config_file()
         # handle i18n files structure
         # in the first cube given
-        print '-> preparing i18n catalogs'
         from cubicweb import i18n
         langs = [lang for lang, _ in i18n.available_catalogs(join(templdirs[0], 'i18n'))]
         errors = config.i18ncompile(langs)
@@ -412,7 +411,7 @@ class CreateInstanceCommand(Command):
             # this directory should be owned by the uid of the server process
             print 'set %s as owner of the data directory' % config['uid']
             chown(config.appdatahome, config['uid'])
-        print '\n-> creation done for %r.\n' % config.apphome
+        print '\n-> creation done for %s\n' % repr(config.apphome)[1:-1]
         helper.postcreate(self.config.automatic)
 
     def _handle_win32(self, config, appid):
