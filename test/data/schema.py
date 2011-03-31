@@ -31,7 +31,10 @@ class Personne(EntityType):
         'Personne', symmetric=True,
         constraints=[
             RQLConstraint('NOT S identity O'),
-            RQLVocabularyConstraint('NOT (S connait P, P nom "toto")')])
+            # conflicting constraints, see cw_unrelated_rql tests in
+            # unittest_entity.py
+            RQLVocabularyConstraint('NOT (S connait P, P nom "toto")'),
+            RQLVocabularyConstraint('S travaille P, P nom "tutu"')])
 
 class Societe(EntityType):
     nom = String()

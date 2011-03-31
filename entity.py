@@ -157,6 +157,7 @@ class Entity(AppObject):
     def fetch_rql(cls, user, restriction=None, fetchattrs=None, mainvar='X',
                   settype=True, ordermethod='fetch_order'):
         """return a rql to fetch all entities of the class type"""
+        # XXX update api and implementation to AST manipulation (see unrelated rql)
         restrictions = restriction or []
         if settype:
             restrictions.append('%s is %s' % (mainvar, cls.__regid__))
@@ -753,7 +754,7 @@ class Entity(AppObject):
     # generic vocabulary methods ##############################################
 
     def cw_unrelated_rql(self, rtype, targettype, role, ordermethod=None,
-                      vocabconstraints=True):
+                         vocabconstraints=True):
         """build a rql to fetch `targettype` entities unrelated to this entity
         using (rtype, role) relation.
 
@@ -763,13 +764,20 @@ class Entity(AppObject):
         ordermethod = ordermethod or 'fetch_unrelated_order'
         if isinstance(rtype, basestring):
             rtype = self._cw.vreg.schema.rschema(rtype)
+        rdef = rtype.role_rdef(self.e_schema, targettype, role)
+        rewriter = RQLRewriter(self._cw)
+        # initialize some variables according to the `role` of `self` in the
+        # relation:
+        # * variable for myself (`evar`) and searched entities (`searchvedvar`)
+        # * entity type of the subject (`subjtype`) and of the object
+        #   (`objtype`) of the relation
         if role == 'subject':
             evar, searchedvar = 'S', 'O'
             subjtype, objtype = self.e_schema, targettype
         else:
             searchedvar, evar = 'S', 'O'
             objtype, subjtype = self.e_schema, targettype
-        rdef = rtype.role_rdef(self.e_schema, targettype, role)
+        # initialize some variables according to `self` existance
         if self.has_eid():
             restriction = ['NOT S %s O' % rtype]
             if rdef.role_cardinality(role) not in '?1':
@@ -777,19 +785,24 @@ class Entity(AppObject):
                 restriction.append('%s eid %%(x)s' % evar)
             args = {'x': self.eid}
             if role == 'subject':
-                securitycheck_args = {'fromeid': self.eid}
+                sec_check_args = {'fromeid': self.eid}
             else:
-                securitycheck_args = {'toeid': self.eid}
+                sec_check_args = {'toeid': self.eid}
+            existant = None # instead of 'SO', improve perfs
         else:
             if rdef.role_cardinality(role) in '?1':
                 restriction = ['NOT S %s O' % rtype]
             else:
                 restriction = []
             args = {}
-            securitycheck_args = {}
-        insertsecurity = (rdef.has_local_role('add') and not
-                          rdef.has_perm(self._cw, 'add', **securitycheck_args))
-        # XXX consider constraint.mainvars to check if constraint apply
+            sec_check_args = {}
+            existant = searchedvar
+        # retreive entity class for targettype to compute base rql
+        etypecls = self._cw.vreg['etypes'].etype_class(targettype)
+        rql = etypecls.fetch_rql(self._cw.user, restriction,
+                                 mainvar=searchedvar, ordermethod=ordermethod)
+        select = self._cw.vreg.parse(self._cw, rql, args).children[0]
+        # insert RQL expressions for schema constraints into the rql syntax tree
         if vocabconstraints:
             # RQLConstraint is a subclass for RQLVocabularyConstraint, so they
             # will be included as well
@@ -797,33 +810,31 @@ class Entity(AppObject):
         else:
             cstrcls = RQLConstraint
         for cstr in rdef.constraints:
-            if isinstance(cstr, RQLVocabularyConstraint) and searchedvar in cstr.mainvars:
+            # consider constraint.mainvars to check if constraint apply
+            if isinstance(cstr, cstrcls) and searchedvar in cstr.mainvars:
                 if not self.has_eid() and evar in cstr.mainvars:
                     continue
-                restriction.append(cstr.expression)
-        etypecls = self._cw.vreg['etypes'].etype_class(targettype)
-        rql = etypecls.fetch_rql(self._cw.user, restriction,
-                                 mainvar=searchedvar, ordermethod=ordermethod)
+                # compute a varmap suitable to RQLRewriter.rewrite argument
+                varmap = dict((v, v) for v in 'SO' if v in select.defined_vars
+                              and v in cstr.mainvars)
+                # rewrite constraint by constraint since we want a AND between
+                # expressions.
+                rewriter.rewrite(select, [(varmap, (cstr,))], select.solutions,
+                                 args, existant)
+        # insert security RQL expressions granting the permission to 'add' the
+        # relation into the rql syntax tree, if necessary
+        rqlexprs = rdef.get_rqlexprs('add')
+        if rqlexprs and not rdef.has_perm(self._cw, 'add', **sec_check_args):
+            # compute a varmap suitable to RQLRewriter.rewrite argument
+            varmap = dict((v, v) for v in 'SO' if v in select.defined_vars)
+            # rewrite all expressions at once since we want a OR between them.
+            rewriter.rewrite(select, [(varmap, rqlexprs)], select.solutions,
+                             args, existant)
         # ensure we have an order defined
-        if not ' ORDERBY ' in rql:
-            before, after = rql.split(' WHERE ', 1)
-            rql = '%s ORDERBY %s WHERE %s' % (before, searchedvar, after)
-        if insertsecurity:
-            rqlexprs = rdef.get_rqlexprs('add')
-            rewriter = RQLRewriter(self._cw)
-            rqlst = self._cw.vreg.parse(self._cw, rql, args)
-            if not self.has_eid():
-                existant = searchedvar
-            else:
-                existant = None # instead of 'SO', improve perfs
-            for select in rqlst.children:
-                varmap = {}
-                for var in 'SO':
-                    if var in select.defined_vars:
-                        varmap[var] = var
-                rewriter.rewrite(select, [(varmap, rqlexprs)],
-                                 select.solutions, args, existant)
-            rql = rqlst.as_string()
+        if not select.orderby:
+            select.add_sort_var(select.defined_vars[searchedvar])
+        # we're done, turn the rql syntax tree as a string
+        rql = select.as_string()
         return rql, args
 
     def unrelated(self, rtype, targettype, role='subject', limit=None,
@@ -835,6 +846,7 @@ class Entity(AppObject):
             rql, args = self.cw_unrelated_rql(rtype, targettype, role, ordermethod)
         except Unauthorized:
             return self._cw.empty_rset()
+        # XXX should be set in unrelated rql when manipulating the AST
         if limit is not None:
             before, after = rql.split(' WHERE ', 1)
             rql = '%s LIMIT %s WHERE %s' % (before, limit, after)

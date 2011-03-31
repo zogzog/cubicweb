@@ -312,6 +312,10 @@ class ETypeRegistry(CWRegistry):
         kwargs['clear'] = True
         super(ETypeRegistry, self).register(obj, **kwargs)
 
+    def iter_classes(self):
+        for etype in self.vreg.schema.entities():
+            yield self.etype_class(etype)
+
     @cached
     def parent_classes(self, etype):
         if etype == 'Any':
