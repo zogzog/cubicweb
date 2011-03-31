@@ -182,7 +182,12 @@ class EditController(basecontrollers.ViewController):
         # process inlined relations at the same time as attributes
         # this will generate less rql queries and might be useful in
         # a few dark corners
-        formid = self._cw.form.get('__form_id', 'edition')
+        if is_main_entity:
+            formid = self._cw.form.get('__form_id', 'edition')
+        else:
+            # XXX inlined forms formid should be saved in a different formparams entry
+            # inbetween, use cubicweb standard formid for inlined forms
+            formid = 'edition'
         form = self._cw.vreg['forms'].select(formid, self._cw, entity=entity)
         eid = form.actual_eid(entity.eid)
         form.formvalues = {} # init fields value cache
