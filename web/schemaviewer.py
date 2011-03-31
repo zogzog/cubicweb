@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""an helper class to display CubicWeb schema using ureports
+"""an helper class to display CubicWeb schema using ureports"""
 
-"""
 __docformat__ = "restructuredtext en"
 _ = unicode
 
@@ -217,7 +216,7 @@ class SchemaViewer(object):
                     if val is None:
                         val = ''
                     elif prop == 'constraints':
-                        val = ', '.join([c.restriction for c in val])
+                        val = ', '.join([c.expression for c in val])
                     elif isinstance(val, dict):
                         for key, value in val.iteritems():
                             if isinstance(value, (list, tuple)):

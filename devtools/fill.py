@@ -1,5 +1,5 @@
 # -*- coding: iso-8859-1 -*-
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -441,7 +441,7 @@ class RelationsQueriesGenerator(object):
         constraints = [c for c in rdef.constraints
                        if isinstance(c, RQLConstraint)]
         if constraints:
-            restrictions = ', '.join(c.restriction for c in constraints)
+            restrictions = ', '.join(c.expression for c in constraints)
             q += ', %s' % restrictions
             # restrict object eids if possible
             # XXX the attempt to restrict below in completely wrong

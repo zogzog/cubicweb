@@ -786,10 +786,10 @@ class Entity(AppObject):
         if vocabconstraints:
             # RQLConstraint is a subclass for RQLVocabularyConstraint, so they
             # will be included as well
-            restriction += [cstr.restriction for cstr in rdef.constraints
+            restriction += [cstr.expression for cstr in rdef.constraints
                             if isinstance(cstr, RQLVocabularyConstraint)]
         else:
-            restriction += [cstr.restriction for cstr in rdef.constraints
+            restriction += [cstr.expression for cstr in rdef.constraints
                             if isinstance(cstr, RQLConstraint)]
         etypecls = self._cw.vreg['etypes'].etype_class(targettype)
         rql = etypecls.fetch_rql(self._cw.user, restriction,

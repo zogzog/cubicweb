@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -239,7 +239,7 @@ class SchemaReaderClassTest(TestCase):
         self.failUnlessEqual(len(constraints), 1, constraints)
         constraint = constraints[0]
         self.failUnless(isinstance(constraint, RQLConstraint))
-        self.failUnlessEqual(constraint.restriction, 'O final TRUE')
+        self.failUnlessEqual(constraint.expression, 'O final TRUE')
 
     def test_fulltext_container(self):
         schema = loader.load(config)
@@ -315,7 +315,7 @@ class RQLExpressionTC(TestCase):
 class GuessRrqlExprMainVarsTC(TestCase):
     def test_exists(self):
         mainvars = guess_rrqlexpr_mainvars(normalize_expression('NOT EXISTS(O team_competition C, C level < 3)'))
-        self.assertEqual(mainvars, 'O')
+        self.assertEqual(mainvars, set(['O']))
 
 
 if __name__ == '__main__':
