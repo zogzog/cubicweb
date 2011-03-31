@@ -146,6 +146,19 @@ def lazytable(reader):
     for row in reader:
         yield dict(zip(header, row))
 
+def lazydbtable(cu, table, headers):
+    """return an iterator on rows of a sql table. On each row, fetch columns
+    defined in headers and return values as a dictionary.
+
+    >>> data = lazydbtable(cu, 'experimentation', ('id', 'nickname', 'gps'))
+    """
+    cu.execute('SELECT %s FROM %s' % (','.join(headers), table,))
+    while True:
+        row = cu.fetchone()
+        if row is None:
+            break
+        yield dict(zip(headers, row))
+
 def mk_entity(row, map):
     """Return a dict made from sanitized mapped values.
 
