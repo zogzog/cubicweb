@@ -274,6 +274,33 @@ class EntityTC(CubicWebTC):
                           'WHERE S is CWUser, S login AA, S firstname AB, S surname AC, S modification_date AD, '
                           'A eid %(B)s, EXISTS(S identity A, NOT A in_group C, C name "guests", C is CWGroup)')
 
+    def test_unrelated_rql_constraints_creation_subject(self):
+        person = self.vreg['etypes'].etype_class('Personne')(self.request())
+        rql = person.cw_unrelated_rql('connait', 'Personne', 'subject')[0]
+        self.assertEqual(rql, 'Any O,AA,AB,AC ORDERBY AC DESC WHERE '
+                         'O is Personne, O nom AA, O prenom AB, O modification_date AC')
+
+    def test_unrelated_rql_constraints_creation_object(self):
+        person = self.vreg['etypes'].etype_class('Personne')(self.request())
+        rql = person.cw_unrelated_rql('connait', 'Personne', 'object')[0]
+        self.assertEqual(rql, 'Any S,AA,AB,AC ORDERBY AC DESC WHERE '
+                         'NOT (S connait P, P nom "toto"), S is Personne, S nom AA, '
+                         'S prenom AB, S modification_date AC')
+
+    def test_unrelated_rql_constraints_edition_subject(self):
+        person = self.request().create_entity('Personne', nom=u'sylvain')
+        rql = person.cw_unrelated_rql('connait', 'Personne', 'subject')[0]
+        self.assertEqual(rql, 'Any O,AA,AB,AC ORDERBY AC DESC WHERE '
+                         'NOT S connait O, S eid %(x)s, NOT S identity O, O is Personne, '
+                         'O nom AA, O prenom AB, O modification_date AC')
+
+    def test_unrelated_rql_constraints_edition_object(self):
+        person = self.request().create_entity('Personne', nom=u'sylvain')
+        rql = person.cw_unrelated_rql('connait', 'Personne', 'object')[0]
+        self.assertEqual(rql, 'Any S,AA,AB,AC ORDERBY AC DESC WHERE '
+                         'NOT S connait O, O eid %(x)s, NOT S identity O, NOT (S connait P, '
+                         'P nom "toto"), S is Personne, S nom AA, S prenom AB, S modification_date AC')
+
     def test_unrelated_base(self):
         req = self.request()
         p = req.create_entity('Personne', nom=u'di mascio', prenom=u'adrien')

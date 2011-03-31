@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -15,13 +15,11 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""
-
-"""
 
 from yams.buildobjs import (EntityType, String, SubjectRelation,
                             RelationDefinition)
-from cubicweb.schema import  WorkflowableEntityType
+from cubicweb.schema import (WorkflowableEntityType,
+                             RQLConstraint, RQLVocabularyConstraint)
 
 class Personne(EntityType):
     nom = String(required=True)
@@ -29,7 +27,11 @@ class Personne(EntityType):
     type = String()
     travaille = SubjectRelation('Societe')
     evaluee = SubjectRelation(('Note', 'Personne'))
-    connait = SubjectRelation('Personne', symmetric=True)
+    connait = SubjectRelation(
+        'Personne', symmetric=True,
+        constraints=[
+            RQLConstraint('NOT S identity O'),
+            RQLVocabularyConstraint('NOT (S connait P, P nom "toto")')])
 
 class Societe(EntityType):
     nom = String()

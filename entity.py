@@ -165,6 +165,7 @@ class Entity(AppObject):
         selection = [mainvar]
         orderby = []
         # start from 26 to avoid possible conflicts with X
+        # XXX not enough to be sure it'll be no conflicts
         varmaker = rqlvar_maker(index=26)
         cls._fetch_restrictions(mainvar, varmaker, fetchattrs, selection,
                                 orderby, restrictions, user, ordermethod)
@@ -768,29 +769,38 @@ class Entity(AppObject):
         else:
             searchedvar, evar = 'S', 'O'
             objtype, subjtype = self.e_schema, targettype
+        rdef = rtype.role_rdef(self.e_schema, targettype, role)
         if self.has_eid():
-            restriction = ['NOT S %s O' % rtype, '%s eid %%(x)s' % evar]
+            restriction = ['NOT S %s O' % rtype]
+            if rdef.role_cardinality(role) not in '?1':
+                # if cardinality in '1?', don't add restriction on eid
+                restriction.append('%s eid %%(x)s' % evar)
             args = {'x': self.eid}
             if role == 'subject':
                 securitycheck_args = {'fromeid': self.eid}
             else:
                 securitycheck_args = {'toeid': self.eid}
         else:
-            restriction = []
+            if rdef.role_cardinality(role) in '?1':
+                restriction = ['NOT S %s O' % rtype]
+            else:
+                restriction = []
             args = {}
             securitycheck_args = {}
-        rdef = rtype.role_rdef(self.e_schema, targettype, role)
         insertsecurity = (rdef.has_local_role('add') and not
                           rdef.has_perm(self._cw, 'add', **securitycheck_args))
         # XXX consider constraint.mainvars to check if constraint apply
         if vocabconstraints:
             # RQLConstraint is a subclass for RQLVocabularyConstraint, so they
             # will be included as well
-            restriction += [cstr.expression for cstr in rdef.constraints
-                            if isinstance(cstr, RQLVocabularyConstraint)]
+            cstrcls = RQLVocabularyConstraint
         else:
-            restriction += [cstr.expression for cstr in rdef.constraints
-                            if isinstance(cstr, RQLConstraint)]
+            cstrcls = RQLConstraint
+        for cstr in rdef.constraints:
+            if isinstance(cstr, RQLVocabularyConstraint) and searchedvar in cstr.mainvars:
+                if not self.has_eid() and evar in cstr.mainvars:
+                    continue
+                restriction.append(cstr.expression)
         etypecls = self._cw.vreg['etypes'].etype_class(targettype)
         rql = etypecls.fetch_rql(self._cw.user, restriction,
                                  mainvar=searchedvar, ordermethod=ordermethod)
