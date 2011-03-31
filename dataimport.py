@@ -74,7 +74,7 @@ from StringIO import StringIO
 from copy import copy
 from datetime import datetime
 
-from logilab.common import shellutils
+from logilab.common import shellutils, attrdict
 from logilab.common.date import strptime
 from logilab.common.decorators import cached
 from logilab.common.deprecation import deprecated
@@ -305,7 +305,8 @@ class ObjectStore(object):
         return len(self.items) - 1
 
     def create_entity(self, etype, **data):
-        data['eid'] =  eid = self._put(etype, data)
+        data = attrdict(data)
+        data['eid'] = eid = self._put(etype, data)
         self.eids[eid] = data
         self.types.setdefault(etype, []).append(eid)
         return data
