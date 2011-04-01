@@ -315,8 +315,7 @@ class ApplicationTC(CubicWebTC):
 
     def test_fb_login_concept(self):
         """see data/views.py"""
-        self.set_option('auth-mode', 'cookie')
-        self.set_option('anonymous-user', 'anon')
+        self.set_auth_mode('cookie', 'anon')
         self.login('anon')
         req = self.request()
         origcnx = req.cnx
@@ -325,6 +324,7 @@ class ApplicationTC(CubicWebTC):
         self.failIf(req.cnx is origcnx)
         self.assertEqual(req.user.login, 'turlututu')
         self.failUnless('turlututu' in page, page)
+        req.cnx.close() # avoid warning
 
     # authentication tests ####################################################
 

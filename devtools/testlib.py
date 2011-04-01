@@ -662,13 +662,16 @@ class CubicWebTC(TestCase):
         """
         return self.expect_redirect(lambda x: self.app_publish(x, path), req)
 
-    def init_authentication(self, authmode, anonuser=None):
+    def set_auth_mode(self, authmode, anonuser=None):
         self.set_option('auth-mode', authmode)
         self.set_option('anonymous-user', anonuser)
         if anonuser is None:
             self.config.anonymous_credential = None
         else:
             self.config.anonymous_credential = (anonuser, anonuser)
+
+    def init_authentication(self, authmode, anonuser=None):
+        self.set_auth_mode(authmode, anonuser)
         req = self.request()
         origsession = req.session
         req.session = req.cnx = None
