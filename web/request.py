@@ -734,26 +734,14 @@ class CubicWebRequestBase(DBAPIRequest):
         return None, None
 
     def parse_accept_header(self, header):
-        """returns an ordered list of preferred languages"""
+        """returns an ordered list of accepted values"""
+        try:
+            value_parser, value_sort_key = ACCEPT_HEADER_PARSER[header.lower()]
+        except KeyError:
+            value_parser = value_sort_key = None
         accepteds = self.get_header(header, '')
-        values = []
-        for info in accepteds.split(','):
-            try:
-                value, scores = info.split(';', 1)
-            except ValueError:
-                value = info
-                score = 1.0
-            else:
-                for score in scores.split(';'):
-                    try:
-                        scorekey, scoreval = score.split('=')
-                        if scorekey == 'q': # XXX 'level'
-                            score = float(scoreval)
-                    except ValueError:
-                        continue
-            values.append((score, value))
-        values.sort(reverse=True)
-        return (value for (score, value) in values)
+        values = _parse_accept_header(accepteds, value_parser, value_sort_key)
+        return (raw_value for (raw_value, parsed_value, score) in values)
 
     def header_if_modified_since(self):
         """If the HTTP header If-modified-since is set, return the equivalent
@@ -857,6 +845,92 @@ class CubicWebRequestBase(DBAPIRequest):
         return [value.split('-')[0] for value in
                 self.parse_accept_header('Accept-Language')]
 
+
+
+## HTTP-accept parsers / utilies ##############################################
+def _mimetype_sort_key(accept_info):
+    """accepted mimetypes must be sorted by :
+
+    1/ highest score first
+    2/ most specific mimetype first, e.g. :
+       - 'text/html level=1' is more specific 'text/html'
+       - 'text/html' is more specific than 'text/*'
+       - 'text/*' itself more specific than '*/*'
+
+    """
+    raw_value, (media_type, media_subtype, media_type_params), score = accept_info
+    # FIXME: handle '+' in media_subtype ? (should xhtml+xml have a
+    # higher precedence than xml ?)
+    if media_subtype == '*':
+        score -= 0.0001
+    if media_type == '*':
+        score -= 0.0001
+    return 1./score, media_type, media_subtype, 1./(1+len(media_type_params))
+
+def _charset_sort_key(accept_info):
+    """accepted mimetypes must be sorted by :
+
+    1/ highest score first
+    2/ most specific charset first, e.g. :
+       - 'utf-8' is more specific than '*'
+    """
+    raw_value, value, score = accept_info
+    if value == '*':
+        score -= 0.0001
+    return 1./score, value
+
+def _parse_accept_header(raw_header, value_parser=None, value_sort_key=None):
+    """returns an ordered list accepted types
+
+    returned value is a list of 2-tuple (value, score), ordered
+    by score. Exact type of `value` will depend on what `value_parser`
+    will reutrn. if `value_parser` is None, then the raw value, as found
+    in the http header, is used.
+    """
+    if value_sort_key is None:
+        value_sort_key = lambda infos: 1./infos[-1]
+    values = []
+    for info in raw_header.split(','):
+        score = 1.0
+        other_params = {}
+        try:
+            value, infodef = info.split(';', 1)
+        except ValueError:
+            value = info
+        else:
+            for info in infodef.split(';'):
+                try:
+                    infokey, infoval = info.split('=')
+                    if infokey == 'q': # XXX 'level'
+                        score = float(infoval)
+                        continue
+                except ValueError:
+                    continue
+                other_params[infokey] = infoval
+        parsed_value = value_parser(value, other_params) if value_parser else value
+        values.append( (value.strip(), parsed_value, score) )
+    values.sort(key=value_sort_key)
+    return values
+
+
+def _mimetype_parser(value, other_params):
+    """return a 3-tuple
+    (type, subtype, type_params) corresponding to the mimetype definition
+    e.g. : for 'text/*', `mimetypeinfo` will be ('text', '*', {}), for
+    'text/html;level=1', `mimetypeinfo` will be ('text', '*', {'level': '1'})
+    """
+    try:
+        media_type, media_subtype = value.strip().split('/')
+    except ValueError: # safety belt : '/' should always be present
+        media_type = value.strip()
+        media_subtype = '*'
+    return (media_type, media_subtype, other_params)
+
+
+ACCEPT_HEADER_PARSER = {
+    'accept': (_mimetype_parser, _mimetype_sort_key),
+    'accept-charset': (None, _charset_sort_key),
+    }
 
 from cubicweb import set_log_methods
 set_log_methods(CubicWebRequestBase, LOGGER)
