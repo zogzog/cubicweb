@@ -152,6 +152,8 @@ title
         base = datetime(randint(2000, 2004), randint(1, 12), randint(1, 28), 11, index%60)
         return self._constrained_generate(entity, attrname, base, timedelta(hours=1), index)
 
+    generate_tzdatetime = generate_datetime # XXX implementation should add a timezone
+
     def generate_date(self, entity, attrname, index):
         """generates a random date (format is 'yyyy-mm-dd')"""
         base = date(randint(2000, 2010), 1, 1) + timedelta(randint(1, 365))
@@ -165,6 +167,8 @@ title
     def generate_time(self, entity, attrname, index):
         """generates a random time (format is ' HH:MM')"""
         return time(11, index%60) #'11:%02d' % (index % 60)
+
+    generate_tztime = generate_time # XXX implementation should add a timezone
 
     def generate_bytes(self, entity, attrname, index, format=None):
         fakefile = Binary("%s%s" % (attrname, index))

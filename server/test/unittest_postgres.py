@@ -1,6 +1,7 @@
 from __future__ import with_statement
 
 import socket
+from datetime import datetime
 
 from logilab.common.testlib import SkipTest
 
@@ -9,15 +10,16 @@ from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.selectors import is_instance
 from cubicweb.entities.adapters import IFTIndexableAdapter
 
-AT_LOGILAB = socket.gethostname().endswith('.logilab.fr')
+AT_LOGILAB = socket.gethostname().endswith('.logilab.fr') # XXX
 
+from unittest_querier import FixedOffset
 
 class PostgresFTITC(CubicWebTC):
-    config = ApptestConfiguration('data', sourcefile='sources_fti')
+    config = ApptestConfiguration('data', sourcefile='sources_postgres')
 
     @classmethod
     def setUpClass(cls):
-        if not AT_LOGILAB:
+        if not AT_LOGILAB: # XXX here until we can raise SkipTest in setUp to detect we can't connect to the db
             raise SkipTest('XXX %s: require logilab configuration' % cls.__name__)
 
     def test_occurence_count(self):
@@ -61,6 +63,13 @@ class PostgresFTITC(CubicWebTC):
             self.commit()
             self.assertEqual(req.execute('Any X ORDERBY FTIRANK(X) DESC WHERE X has_text "cubicweb"').rows,
                               [[c1.eid], [c3.eid], [c2.eid]])
+
+
+    def test_tz_datetime(self):
+        self.execute("INSERT Personne X: X nom 'bob', X tzdatenaiss %(date)s",
+                     {'date': datetime(1977, 6, 7, 2, 0, tzinfo=FixedOffset(1))})
+        datenaiss = self.execute("Any XD WHERE X nom 'bob', X tzdatenaiss XD")[0][0]
+        self.assertEqual(datenaiss.utctimetuple()[:5], (1977, 6, 7, 1, 0))
 
 
 if __name__ == '__main__':

@@ -1200,14 +1200,19 @@ def guess_field(eschema, rschema, role='subject', **kwargs):
 
 
 FIELDS = {
-    'Boolean':  BooleanField,
+    'String' :  StringField,
     'Bytes':    FileField,
-    'Date':     DateField,
-    'Datetime': DateTimeField,
+    'Password': PasswordField,
+
+    'Boolean':  BooleanField,
     'Int':      IntField,
     'Float':    FloatField,
     'Decimal':  StringField,
-    'Password': PasswordField,
-    'String' :  StringField,
-    'Time':     TimeField,
+
+    'Date':       DateField,
+    'Datetime':   DateTimeField,
+    'TZDatetime': DateTimeField,
+    'Time':       TimeField,
+    'TZTime':     TimeField,
+    # XXX implement 'Interval': TimeIntervalField,
     }

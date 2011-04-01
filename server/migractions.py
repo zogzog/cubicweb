@@ -758,9 +758,9 @@ class ServerMigrationHelper(MigrationHelper):
         targeted type is known
         """
         instschema = self.repo.schema
-        assert not etype in instschema, \
-               '%s already defined in the instance schema' % etype
         eschema = self.fs_schema.eschema(etype)
+        assert eschema.final or not etype in instschema, \
+               '%s already defined in the instance schema' % etype
         confirm = self.verbosity >= 2
         groupmap = self.group_mapping()
         cstrtypemap = self.cstrtype_mapping()

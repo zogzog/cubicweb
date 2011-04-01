@@ -47,7 +47,7 @@ def second_column_is_number(cls, req, rset=None, *args, **kwargs):
 @objectify_selector
 def columns_are_date_then_numbers(cls, req, rset=None, *args, **kwargs):
     etypes = rset.description[0]
-    if etypes[0] not in ('Date', 'Datetime'):
+    if etypes[0] not in ('Date', 'Datetime', 'TZDatetime'):
         return 0
     for etype in etypes[1:]:
         if etype not in ('Int', 'Float'):

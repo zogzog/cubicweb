@@ -1219,9 +1219,13 @@ class PostgresSQLGeneratorTC(RQLGeneratorTC):
             yield self._check, rql, sql
 
     def _checkall(self, rql, sql):
+        if isinstance(rql, tuple):
+            rql, args = rql
+        else:
+            args = None
         try:
             rqlst = self._prepare(rql)
-            r, args, cbs = self.o.generate(rqlst)
+            r, args, cbs = self.o.generate(rqlst, args)
             self.assertEqual((r.strip(), args), sql)
         except Exception, ex:
             print rql
@@ -1233,7 +1237,7 @@ class PostgresSQLGeneratorTC(RQLGeneratorTC):
         return
 
     def test1(self):
-        self._checkall('Any count(RDEF) WHERE RDEF relation_type X, X eid %(x)s',
+        self._checkall(('Any count(RDEF) WHERE RDEF relation_type X, X eid %(x)s', {'x': None}),
                        ("""SELECT COUNT(T1.C0) FROM (SELECT _RDEF.cw_eid AS C0
 FROM cw_CWAttribute AS _RDEF
 WHERE _RDEF.cw_relation_type=%(x)s
@@ -1244,7 +1248,7 @@ WHERE _RDEF.cw_relation_type=%(x)s) AS T1""", {}),
                        )
 
     def test2(self):
-        self._checkall('Any X WHERE C comments X, C eid %(x)s',
+        self._checkall(('Any X WHERE C comments X, C eid %(x)s', {'x': None}),
                        ('''SELECT rel_comments0.eid_to
 FROM comments_relation AS rel_comments0
 WHERE rel_comments0.eid_from=%(x)s''', {})
