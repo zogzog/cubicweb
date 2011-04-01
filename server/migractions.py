@@ -438,7 +438,8 @@ class ServerMigrationHelper(MigrationHelper):
                                  'X expression %%(expr)s, X mainvars %%(vars)s, T %s X '
                                  'WHERE T eid %%(x)s' % perm,
                                  {'expr': expr, 'exprtype': exprtype,
-                                  'vars': expression.mainvars, 'x': teid},
+                                  'vars': u','.join(sorted(expression.mainvars)),
+                                  'x': teid},
                                  ask_confirm=False)
 
     def _synchronize_rschema(self, rtype, syncrdefs=True,

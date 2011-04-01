@@ -320,7 +320,7 @@ class RepositoryTC(CubicWebTC):
         self.assertEqual(len(constraints), 1)
         cstr = constraints[0]
         self.assert_(isinstance(cstr, RQLConstraint))
-        self.assertEqual(cstr.restriction, 'O final TRUE')
+        self.assertEqual(cstr.expression, 'O final TRUE')
 
         ownedby = schema.rschema('owned_by')
         self.assertEqual(ownedby.objects('CWEType'), ('CWUser',))
