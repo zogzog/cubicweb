@@ -185,7 +185,7 @@ def mk_entity(row, map):
                 if res[dest] is None:
                     break
         except ValueError, err:
-            raise ValueError('error with %r field: %s' % (src, err))
+            raise ValueError('error with %r field: %s' % (src, err)), None, sys.exc_info()[-1]
     return res
 
 # user interactions ############################################################
