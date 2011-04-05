@@ -139,6 +139,7 @@ _ = unicode
 import sys
 import os
 import logging
+import logging.config
 from smtplib import SMTP
 from threading import Lock
 from os.path import (exists, join, expanduser, abspath, normpath,
@@ -1098,7 +1099,7 @@ the repository',
         # read a config file if it exists
         logconfig = join(self.apphome, 'logging.conf')
         if exists(logconfig):
-            logging.fileConfig(logconfig)
+            logging.config.fileConfig(logconfig)
 
     def available_languages(self, *args):
         """return available translation for an instance, by looking for
