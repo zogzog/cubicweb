@@ -241,7 +241,7 @@ class EntityTC(CubicWebTC):
         user = self.request().user
         rql = user.cw_unrelated_rql('use_email', 'EmailAddress', 'subject')[0]
         self.assertEqual(rql, 'Any O,AA,AB,AC ORDERBY AC DESC '
-                         'WHERE NOT EXISTS(S use_email O), S eid %(x)s, '
+                         'WHERE NOT EXISTS(ZZ use_email O), S eid %(x)s, '
                          'O is EmailAddress, O address AA, O alias AB, O modification_date AC')
 
     def test_unrelated_rql_security_1_user(self):
@@ -250,35 +250,35 @@ class EntityTC(CubicWebTC):
         user = self.request().user
         rql = user.cw_unrelated_rql('use_email', 'EmailAddress', 'subject')[0]
         self.assertEqual(rql, 'Any O,AA,AB,AC ORDERBY AC DESC '
-                          'WHERE NOT EXISTS(S use_email O), S eid %(x)s, '
+                         'WHERE NOT EXISTS(ZZ use_email O), S eid %(x)s, '
                          'O is EmailAddress, O address AA, O alias AB, O modification_date AC')
         user = self.execute('Any X WHERE X login "admin"').get_entity(0, 0)
         rql = user.cw_unrelated_rql('use_email', 'EmailAddress', 'subject')[0]
-        self.assertEqual(rql, 'Any O,AA,AB,AC ORDERBY AC DESC WHERE '
-                         'NOT EXISTS(S use_email O), S eid %(x)s, '
-                         'O is EmailAddress, O address AA, O alias AB, O modification_date AC, '
-                         'A eid %(B)s, EXISTS(S identity A, NOT A in_group C, C name "guests", C is CWGroup)')
+        self.assertEqual(rql, 'Any O,AA,AB,AC ORDERBY AC DESC '
+                         'WHERE NOT EXISTS(ZZ use_email O, ZZ is CWUser), S eid %(x)s, '
+                         'O is EmailAddress, O address AA, O alias AB, O modification_date AC, A eid %(B)s, '
+                         'EXISTS(S identity A, NOT A in_group C, C name "guests", C is CWGroup)')
 
     def test_unrelated_rql_security_1_anon(self):
         self.login('anon')
         user = self.request().user
         rql = user.cw_unrelated_rql('use_email', 'EmailAddress', 'subject')[0]
-        self.assertEqual(rql, 'Any O,AA,AB,AC ORDERBY AC DESC WHERE '
-                         'NOT EXISTS(S use_email O), S eid %(x)s, '
-                         'O is EmailAddress, O address AA, O alias AB, O modification_date AC, '
-                         'A eid %(B)s, EXISTS(S identity A, NOT A in_group C, C name "guests", C is CWGroup)')
+        self.assertEqual(rql, 'Any O,AA,AB,AC ORDERBY AC DESC '
+                         'WHERE NOT EXISTS(ZZ use_email O, ZZ is CWUser), S eid %(x)s, '
+                         'O is EmailAddress, O address AA, O alias AB, O modification_date AC, A eid %(B)s, '
+                         'EXISTS(S identity A, NOT A in_group C, C name "guests", C is CWGroup)')
 
     def test_unrelated_rql_security_2(self):
         email = self.execute('INSERT EmailAddress X: X address "hop"').get_entity(0, 0)
         rql = email.cw_unrelated_rql('use_email', 'CWUser', 'object')[0]
         self.assertEqual(rql, 'Any S,AA,AB,AC,AD ORDERBY AA '
-                         'WHERE NOT EXISTS(S use_email O), S is CWUser, '
+                         'WHERE NOT EXISTS(S use_email O), O eid %(x)s, S is CWUser, '
                          'S login AA, S firstname AB, S surname AC, S modification_date AD')
         self.login('anon')
         email = self.execute('Any X WHERE X eid %(x)s', {'x': email.eid}).get_entity(0, 0)
         rql = email.cw_unrelated_rql('use_email', 'CWUser', 'object')[0]
         self.assertEqual(rql, 'Any S,AA,AB,AC,AD ORDERBY AA '
-                         'WHERE NOT EXISTS(S use_email O, O is EmailAddress), S is CWUser, '
+                         'WHERE NOT EXISTS(S use_email O), O eid %(x)s, S is CWUser, '
                          'S login AA, S firstname AB, S surname AC, S modification_date AD, '
                          'A eid %(B)s, EXISTS(S identity A, NOT A in_group C, C name "guests", C is CWGroup)')
 
@@ -287,7 +287,7 @@ class EntityTC(CubicWebTC):
         email = self.vreg['etypes'].etype_class('EmailAddress')(self.request())
         rql = email.cw_unrelated_rql('use_email', 'CWUser', 'object')[0]
         self.assertEqual(rql, 'Any S,AA,AB,AC,AD ORDERBY AA '
-                         'WHERE NOT EXISTS(S use_email O, O is EmailAddress), S is CWUser, '
+                         'WHERE S is CWUser, '
                          'S login AA, S firstname AB, S surname AC, S modification_date AD, '
                          'A eid %(B)s, EXISTS(S identity A, NOT A in_group C, C name "guests", C is CWGroup)')
 

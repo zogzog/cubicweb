@@ -28,7 +28,7 @@ from logilab.mtconverter import TransformData, TransformError, xml_escape
 
 from rql.utils import rqlvar_maker
 
-from cubicweb import Unauthorized, typed_eid
+from cubicweb import Unauthorized, typed_eid, neg_role
 from cubicweb.rset import ResultSet
 from cubicweb.selectors import yes
 from cubicweb.appobject import AppObject
@@ -778,11 +778,21 @@ class Entity(AppObject):
             searchedvar, evar = 'S', 'O'
             objtype, subjtype = self.e_schema, targettype
         # initialize some variables according to `self` existance
-        if self.has_eid():
+        if rdef.role_cardinality(neg_role(role)) in '?1':
+            # if cardinality in '1?', we want a target entity which isn't
+            # already linked using this relation
+            if searchedvar == 'S':
+                restriction = ['NOT S %s ZZ' % rtype]
+            else:
+                restriction = ['NOT ZZ %s O' % rtype]
+        elif self.has_eid():
+            # elif we have an eid, we don't want a target entity which is
+            # already linked to ourself through this relation
             restriction = ['NOT S %s O' % rtype]
-            if rdef.role_cardinality(role) not in '?1':
-                # if cardinality in '1?', don't add restriction on eid
-                restriction.append('%s eid %%(x)s' % evar)
+        else:
+            restriction = []
+        if self.has_eid():
+            restriction += ['%s eid %%(x)s' % evar]
             args = {'x': self.eid}
             if role == 'subject':
                 sec_check_args = {'fromeid': self.eid}
@@ -790,10 +800,6 @@ class Entity(AppObject):
                 sec_check_args = {'toeid': self.eid}
             existant = None # instead of 'SO', improve perfs
         else:
-            if rdef.role_cardinality(role) in '?1':
-                restriction = ['NOT S %s O' % rtype]
-            else:
-                restriction = []
             args = {}
             sec_check_args = {}
             existant = searchedvar
