@@ -94,7 +94,6 @@ h3Margin = '0'
 
 # links
 aColor = '#e6820e'
-aActiveColor = aVisitedColor = aLinkColor = lazystr('%(aColor)s')
 
 
 # page frame

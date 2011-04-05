@@ -387,7 +387,9 @@ class EntitySelector(EClassSelector):
 
 class ExpectedValueSelector(Selector):
     """Take a list of expected values as initializer argument and store them
-    into the :attr:`expected` set attribute.
+    into the :attr:`expected` set attribute. You may also give a set as single
+    argument, which will be then be referenced as set of expected values,
+    allowing modification to the given set to be considered.
 
     You should implement the :meth:`_get_value(cls, req, **kwargs)` method
     which should return the value for the given context. The selector will then
@@ -395,7 +397,10 @@ class ExpectedValueSelector(Selector):
     """
     def __init__(self, *expected):
         assert expected, self
-        self.expected = frozenset(expected)
+        if len(expected) == 1 and isinstance(expected[0], set):
+            self.expected = expected[0]
+        else:
+            self.expected = frozenset(expected)
 
     def __str__(self):
         return '%s(%s)' % (self.__class__.__name__,

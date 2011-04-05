@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -33,13 +33,13 @@ class IGeocodableAdapter(EntityAdapter):
     @property
     @implements_adapter_compat('IGeocodable')
     def latitude(self):
-        """returns the latitude of the entity"""
+        """returns the latitude of the entity in degree (-90 < float < +90)"""
         raise NotImplementedError
 
     @property
     @implements_adapter_compat('IGeocodable')
     def longitude(self):
-        """returns the longitude of the entity"""
+        """returns the longitude of the entity in degree (-180 < float < +180)"""
         raise NotImplementedError
 
     @implements_adapter_compat('IGeocodable')
