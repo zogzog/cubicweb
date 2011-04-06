@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -19,14 +19,16 @@
 import sys
 from StringIO import StringIO
 from logilab.common.testlib import TestCase, unittest_main
-from cubicweb.devtools import init_test_database
+from cubicweb.devtools import get_test_db_handler, TestServerConfiguration
 
 
 from cubicweb.server.checkintegrity import check, reindex_entities
 
 class CheckIntegrityTC(TestCase):
     def setUp(self):
-        self.repo, self.cnx = init_test_database(apphome=self.datadir)
+        handler = get_test_db_handler(TestServerConfiguration(apphome=self.datadir))
+        handler.build_db_cache()
+        self.repo, self.cnx = handler.get_repo_and_cnx()
         self.execute = self.cnx.cursor().execute
         self.session = self.repo._sessions[self.cnx.sessionid]
         sys.stderr = sys.stdout = StringIO()
