@@ -4,11 +4,6 @@
 Configure an instance
 =====================
 
-On a Unix system, the instances are usually stored in the directory
-:file:`/etc/cubicweb.d/`. During development, the
-:file:`~/etc/cubicweb.d/` directory is looked up, as well as the paths
-in :envvar:`CW_INSTANCES_DIR` environment variable.
-
 While creating an instance, a configuration file is generated in::
 
     $ (CW_INSTANCES_DIR) / <instance> / <configuration name>.conf

@@ -38,7 +38,7 @@ The unbeliever will read the :ref:`Tutorials`.
 
 The hacker will join development at the forge_.
 
-The impatient developer will move right away to :ref:`SetUpEnv`.
+The impatient developer will move right away to :ref:`SetUpEnv` then to :ref:`ConfigEnv`.
 
 The chatter lover will join the `jabber forum`_, the `mailing-list`_ and the blog_.
 
