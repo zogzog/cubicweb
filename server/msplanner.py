@@ -1420,9 +1420,7 @@ class MSPlanner(SSPlanner):
                             steps.append(ppi.build_final_part(minrqlst, solindices, inputmap,
                                                               sources, insertedvars))
                 else:
-                    table = '_T%s%s' % (''.join(sorted(v._ms_table_key() for v in terms)),
-                                        ''.join(sorted(str(i) for i in solindices)))
-                    table = plan.make_temp_table_name(table)
+                    table = plan.make_temp_table_name('T%s' % make_uid(id(select)))
                     ppi.build_non_final_part(minrqlst, solindices, sources,
                                              insertedvars, table)
         # finally: join parts, deal with aggregat/group/sorts if necessary
