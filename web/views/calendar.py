@@ -229,15 +229,15 @@ class CalendarView(EntityView):
         events = []
         for entity in self.cw_rset.entities():
             icalendarable = entity.cw_adapt_to('ICalendarable')
+            if not (icalendarable.start and icalendarable.stop):
+                continue
+            start_date = icalendarable.start or  icalendarable.stop
             event = {'eid': entity.eid,
                      'title': entity.view('calendaritem'),
                      'url': xml_escape(entity.absolute_url()),
                      'className': 'calevent',
                      'description': entity.view('tooltip'),
                      }
-            start_date = icalendarable.start
-            if not start_date:
-                start_date = icalendarable.stop
             event['start'] = start_date.strftime('%Y-%m-%dT%H:%M')
             event['allDay'] = True
             if icalendarable.stop:
