@@ -181,6 +181,7 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     session.execute('SET X owned_by U WHERE X is IN (CWGroup,CWSource), U eid %(u)s',
                     {'u': admin.eid})
     session.commit()
+    session.close()
     repo.shutdown()
     # reloging using the admin user
     config._cubes = None # avoid assertion error
@@ -204,7 +205,6 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     repo.system_source.init_creating()
     cnx.commit()
     cnx.close()
-    session.close()
     repo.shutdown()
     # restore initial configuration
     config.creating = False

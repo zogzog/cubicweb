@@ -1,5 +1,5 @@
 # -*- coding: iso-8859-1 -*-
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -105,7 +105,9 @@ class RepositoryTC(CubicWebTC):
         self.failIf(self.execute('Any X WHERE NOT X cw_source S'))
 
     def test_connect(self):
-        self.assert_(self.repo.connect(self.admlogin, password=self.admpassword))
+        cnxid = self.repo.connect(self.admlogin, password=self.admpassword)
+        self.assert_(cnxid)
+        self.repo.close(cnxid)
         self.assertRaises(AuthenticationError,
                           self.repo.connect, self.admlogin, password='nimportnawak')
         self.assertRaises(AuthenticationError,
@@ -133,7 +135,9 @@ class RepositoryTC(CubicWebTC):
                      {'login': u"barnabé", 'passwd': u"héhéhé".encode('UTF8')})
         repo.commit(cnxid)
         repo.close(cnxid)
-        self.assert_(repo.connect(u"barnabé", password=u"héhéhé".encode('UTF8')))
+        cnxid = repo.connect(u"barnabé", password=u"héhéhé".encode('UTF8'))
+        self.assert_(cnxid)
+        repo.close(cnxid)
 
     def test_rollback_on_commit_error(self):
         cnxid = self.repo.connect(self.admlogin, password=self.admpassword)
@@ -142,6 +146,7 @@ class RepositoryTC(CubicWebTC):
                           {'login': u"tutetute", 'passwd': 'tutetute'})
         self.assertRaises(ValidationError, self.repo.commit, cnxid)
         self.failIf(self.repo.execute(cnxid, 'CWUser X WHERE X login "tutetute"'))
+        self.repo.close(cnxid)
 
     def test_rollback_on_execute_validation_error(self):
         class ValidationErrorAfterHook(Hook):
@@ -234,6 +239,7 @@ class RepositoryTC(CubicWebTC):
         repo.commit(cnxid)
         result = repo.execute(cnxid, 'Personne X')
         self.assertEqual(result.rowcount, 1)
+        repo.close(cnxid)
 
     def test_transaction_base2(self):
         repo = self.repo
@@ -245,6 +251,7 @@ class RepositoryTC(CubicWebTC):
         repo.rollback(cnxid)
         result = repo.execute(cnxid, "Any U WHERE U in_group G, U login 'admin', G name 'guests'")
         self.assertEqual(result.rowcount, 0, result.rows)
+        repo.close(cnxid)
 
     def test_transaction_base3(self):
         repo = self.repo
@@ -259,6 +266,7 @@ class RepositoryTC(CubicWebTC):
         repo.rollback(cnxid)
         rset = repo.execute(cnxid, 'TrInfo T WHERE T wf_info_for X, X eid %(x)s', {'x': user.eid})
         self.assertEqual(len(rset), 0)
+        repo.close(cnxid)
 
     def test_transaction_interleaved(self):
         self.skipTest('implement me')
@@ -378,6 +386,7 @@ class RepositoryTC(CubicWebTC):
         self.assertEqual(repo.eid2extid(repo.system_source, 2, session), None)
         class dummysource: uri = 'toto'
         self.assertRaises(UnknownEid, repo.eid2extid, dummysource, 2, session)
+        repo.close(cnxid)
 
     def test_public_api(self):
         self.assertEqual(self.repo.get_schema(), self.repo.schema)
