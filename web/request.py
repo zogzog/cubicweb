@@ -756,8 +756,16 @@ class CubicWebRequestBase(DBAPIRequest):
         will display '<[' at the beginning of the page
         """
         self.set_content_type('text/html')
-        self.main_stream.doctype = TRANSITIONAL_DOCTYPE_NOEXT
-        self.main_stream.xmldecl = u''
+        self.main_stream.set_doctype(TRANSITIONAL_DOCTYPE_NOEXT)
+
+    def set_doctype(self, doctype, reset_xmldecl=True):
+        """helper method to dynamically change page doctype
+
+        :param doctype: the new doctype, e.g. '<!DOCTYPE html>'
+        :param reset_xmldecl: if True, remove the '<?xml version="1.0"?>'
+                              declaration from the page
+        """
+        self.main_stream.set_doctype(doctype, reset_xmldecl)
 
     # page data management ####################################################
 
