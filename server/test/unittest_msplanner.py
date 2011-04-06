@@ -23,7 +23,7 @@ from logilab.common.decorators import clear_cache
 from yams.buildobjs import RelationDefinition
 from rql import BadRQLQuery
 
-from cubicweb.devtools import init_test_database
+from cubicweb.devtools import get_test_db_handler, TestServerConfiguration
 from cubicweb.devtools.repotest import BasePlannerTC, test_plan
 
 class _SetGenerator(object):
@@ -82,7 +82,9 @@ X_ALL_SOLS = sorted([{'X': 'Affaire'}, {'X': 'BaseTransition'}, {'X': 'Basket'},
 # keep cnx so it's not garbage collected and the associated session is closed
 def setUpModule(*args):
     global repo, cnx
-    repo, cnx = init_test_database(apphome=BaseMSPlannerTC.datadir)
+    handler = get_test_db_handler(TestServerConfiguration(apphome=BaseMSPlannerTC.datadir))
+    handler.build_db_cache()
+    repo, cnx = handler.get_repo_and_cnx()
 
 def tearDownModule(*args):
     global repo, cnx
