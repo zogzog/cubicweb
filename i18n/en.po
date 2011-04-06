@@ -711,6 +711,18 @@ msgstr ""
 msgid "Submit bug report by mail"
 msgstr ""
 
+msgid "TZDatetime"
+msgstr "International date and time"
+
+msgid "TZDatetime_plural"
+msgstr "International dates and times"
+
+msgid "TZTime"
+msgstr "International time"
+
+msgid "TZTime_plural"
+msgstr "International times"
+
 #, python-format
 msgid "The view %s can not be applied to this query"
 msgstr ""

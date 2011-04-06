@@ -737,6 +737,18 @@ msgstr "Fehlerbericht senden"
 msgid "Submit bug report by mail"
 msgstr "Diesen Bericht als E-Mail senden"
 
+msgid "TZDatetime"
+msgstr ""
+
+msgid "TZDatetime_plural"
+msgstr ""
+
+msgid "TZTime"
+msgstr ""
+
+msgid "TZTime_plural"
+msgstr ""
+
 #, python-format
 msgid "The view %s can not be applied to this query"
 msgstr "Die Ansicht %s ist auf diese Anfrage nicht anwendbar."
