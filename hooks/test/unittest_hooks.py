@@ -145,29 +145,6 @@ class UserGroupHooksTC(CubicWebTC):
         self.failIf(self.execute('Any X WHERE X created_by Y, X eid >= %(x)s', {'x': eid}))
 
 
-class CWPropertyHooksTC(CubicWebTC):
-
-    def test_unexistant_eproperty(self):
-        with self.assertRaises(ValidationError) as cm:
-            self.execute('INSERT CWProperty X: X pkey "bla.bla", X value "hop", X for_user U')
-        self.assertEqual(cm.exception.errors, {'pkey-subject': 'unknown property key bla.bla'})
-        with self.assertRaises(ValidationError) as cm:
-            self.execute('INSERT CWProperty X: X pkey "bla.bla", X value "hop"')
-        self.assertEqual(cm.exception.errors, {'pkey-subject': 'unknown property key bla.bla'})
-
-    def test_site_wide_eproperty(self):
-        with self.assertRaises(ValidationError) as cm:
-            self.execute('INSERT CWProperty X: X pkey "ui.site-title", X value "hop", X for_user U')
-        self.assertEqual(cm.exception.errors, {'for_user-subject': "site-wide property can't be set for user"})
-
-    def test_bad_type_eproperty(self):
-        with self.assertRaises(ValidationError) as cm:
-            self.execute('INSERT CWProperty X: X pkey "ui.language", X value "hop", X for_user U')
-        self.assertEqual(cm.exception.errors, {'value-subject': u'unauthorized value'})
-        with self.assertRaises(ValidationError) as cm:
-            self.execute('INSERT CWProperty X: X pkey "ui.language", X value "hop"')
-        self.assertEqual(cm.exception.errors, {'value-subject': u'unauthorized value'})
-
 
 class SchemaHooksTC(CubicWebTC):
 
