@@ -190,13 +190,13 @@ WHERE rel_concerne0.eid_from=0 AND rel_concerne0.eid_to=1'''),
      "EXISTS(X owned_by U, U in_group G, G name 'lulufanclub' OR G name 'managers');",
      '''SELECT _X.cw_eid
 FROM cw_Personne AS _X
-WHERE _X.cw_prenom=lulu AND EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_by0, in_group_relation AS rel_in_group1, cw_CWGroup AS _G WHERE rel_owned_by0.eid_from=_X.cw_eid AND rel_in_group1.eid_from=rel_owned_by0.eid_to AND rel_in_group1.eid_to=_G.cw_eid AND ((_G.cw_name=lulufanclub) OR (_G.cw_name=managers)))'''),
+WHERE _X.cw_prenom=lulu AND EXISTS(SELECT 1 FROM cw_CWGroup AS _G, in_group_relation AS rel_in_group1, owned_by_relation AS rel_owned_by0 WHERE rel_owned_by0.eid_from=_X.cw_eid AND rel_in_group1.eid_from=rel_owned_by0.eid_to AND rel_in_group1.eid_to=_G.cw_eid AND ((_G.cw_name=lulufanclub) OR (_G.cw_name=managers)))'''),
 
     ("Any X WHERE X prenom 'lulu',"
      "NOT EXISTS(X owned_by U, U in_group G, G name 'lulufanclub' OR G name 'managers');",
      '''SELECT _X.cw_eid
 FROM cw_Personne AS _X
-WHERE _X.cw_prenom=lulu AND NOT (EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_by0, in_group_relation AS rel_in_group1, cw_CWGroup AS _G WHERE rel_owned_by0.eid_from=_X.cw_eid AND rel_in_group1.eid_from=rel_owned_by0.eid_to AND rel_in_group1.eid_to=_G.cw_eid AND ((_G.cw_name=lulufanclub) OR (_G.cw_name=managers))))'''),
+WHERE _X.cw_prenom=lulu AND NOT (EXISTS(SELECT 1 FROM cw_CWGroup AS _G, in_group_relation AS rel_in_group1, owned_by_relation AS rel_owned_by0 WHERE rel_owned_by0.eid_from=_X.cw_eid AND rel_in_group1.eid_from=rel_owned_by0.eid_to AND rel_in_group1.eid_to=_G.cw_eid AND ((_G.cw_name=lulufanclub) OR (_G.cw_name=managers))))'''),
 
     ('Any X WHERE  X title V, NOT X wikiid V, NOT X title "parent", X is Card',
      '''SELECT _X.cw_eid
@@ -452,7 +452,7 @@ ORDER BY 1,2,_X.cw_data_format'''),
     ('Any T WHERE T is Tag, NOT T name in ("t1", "t2"), EXISTS(T tags X, X is IN (CWUser, CWGroup))',
      '''SELECT _T.cw_eid
 FROM cw_Tag AS _T
-WHERE NOT (_T.cw_name IN(t1, t2)) AND EXISTS(SELECT 1 FROM tags_relation AS rel_tags0, cw_CWGroup AS _X WHERE rel_tags0.eid_from=_T.cw_eid AND rel_tags0.eid_to=_X.cw_eid UNION SELECT 1 FROM tags_relation AS rel_tags1, cw_CWUser AS _X WHERE rel_tags1.eid_from=_T.cw_eid AND rel_tags1.eid_to=_X.cw_eid)'''),
+WHERE NOT (_T.cw_name IN(t1, t2)) AND EXISTS(SELECT 1 FROM cw_CWGroup AS _X, tags_relation AS rel_tags0 WHERE rel_tags0.eid_from=_T.cw_eid AND rel_tags0.eid_to=_X.cw_eid UNION SELECT 1 FROM cw_CWUser AS _X, tags_relation AS rel_tags1 WHERE rel_tags1.eid_from=_T.cw_eid AND rel_tags1.eid_to=_X.cw_eid)'''),
 
     # must not use a relation in EXISTS scope to inline a variable
     ('Any U WHERE U eid IN (1,2), EXISTS(X owned_by U)',
@@ -468,7 +468,7 @@ WHERE EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_by0 WHERE _U.cw_eid IN
     ('Any COUNT(U) WHERE EXISTS (P owned_by U, P is IN (Note, Affaire))',
      '''SELECT COUNT(_U.cw_eid)
 FROM cw_CWUser AS _U
-WHERE EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_by0, cw_Affaire AS _P WHERE rel_owned_by0.eid_from=_P.cw_eid AND rel_owned_by0.eid_to=_U.cw_eid UNION SELECT 1 FROM owned_by_relation AS rel_owned_by1, cw_Note AS _P WHERE rel_owned_by1.eid_from=_P.cw_eid AND rel_owned_by1.eid_to=_U.cw_eid)'''),
+WHERE EXISTS(SELECT 1 FROM cw_Affaire AS _P, owned_by_relation AS rel_owned_by0 WHERE rel_owned_by0.eid_from=_P.cw_eid AND rel_owned_by0.eid_to=_U.cw_eid UNION SELECT 1 FROM cw_Note AS _P, owned_by_relation AS rel_owned_by1 WHERE rel_owned_by1.eid_from=_P.cw_eid AND rel_owned_by1.eid_to=_U.cw_eid)'''),
 
     ('Any MAX(X)',
      '''SELECT MAX(_X.eid)
@@ -567,7 +567,7 @@ ADVANCED_WITH_LIMIT_OR_ORDERBY = [
     ('Any COUNT(S),CS GROUPBY CS ORDERBY 1 DESC LIMIT 10 WHERE S is Affaire, C is Societe, S concerne C, C nom CS, (EXISTS(S owned_by 1)) OR (EXISTS(S documented_by N, N title "published"))',
      '''SELECT COUNT(rel_concerne0.eid_from), _C.cw_nom
 FROM concerne_relation AS rel_concerne0, cw_Societe AS _C
-WHERE rel_concerne0.eid_to=_C.cw_eid AND ((EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_by1 WHERE rel_concerne0.eid_from=rel_owned_by1.eid_from AND rel_owned_by1.eid_to=1)) OR (EXISTS(SELECT 1 FROM documented_by_relation AS rel_documented_by2, cw_Card AS _N WHERE rel_concerne0.eid_from=rel_documented_by2.eid_from AND rel_documented_by2.eid_to=_N.cw_eid AND _N.cw_title=published)))
+WHERE rel_concerne0.eid_to=_C.cw_eid AND ((EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_by1 WHERE rel_concerne0.eid_from=rel_owned_by1.eid_from AND rel_owned_by1.eid_to=1)) OR (EXISTS(SELECT 1 FROM cw_Card AS _N, documented_by_relation AS rel_documented_by2 WHERE rel_concerne0.eid_from=rel_documented_by2.eid_from AND rel_documented_by2.eid_to=_N.cw_eid AND _N.cw_title=published)))
 GROUP BY _C.cw_nom
 ORDER BY 1 DESC
 LIMIT 10'''),
@@ -723,7 +723,7 @@ WHERE NOT (EXISTS(SELECT 1 FROM evaluee_relation AS rel_evaluee0 WHERE rel_evalu
     ('Any X WHERE NOT Y evaluee X, Y is CWUser',
      '''SELECT _X.cw_eid
 FROM cw_Note AS _X
-WHERE NOT (EXISTS(SELECT 1 FROM evaluee_relation AS rel_evaluee0, cw_CWUser AS _Y WHERE rel_evaluee0.eid_from=_Y.cw_eid AND rel_evaluee0.eid_to=_X.cw_eid))'''),
+WHERE NOT (EXISTS(SELECT 1 FROM cw_CWUser AS _Y, evaluee_relation AS rel_evaluee0 WHERE rel_evaluee0.eid_from=_Y.cw_eid AND rel_evaluee0.eid_to=_X.cw_eid))'''),
 
     ('Any X,RT WHERE X relation_type RT, NOT X is CWAttribute',
      '''SELECT _X.cw_eid, _X.cw_relation_type
@@ -816,7 +816,7 @@ ORDER BY 4 DESC'''),
     ('Any X WHERE X is Affaire, S is Societe, EXISTS(X owned_by U OR (X concerne S?, S owned_by U))',
      '''SELECT _X.cw_eid
 FROM cw_Affaire AS _X
-WHERE EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_by0, cw_CWUser AS _U, cw_Affaire AS _A LEFT OUTER JOIN concerne_relation AS rel_concerne1 ON (rel_concerne1.eid_from=_A.cw_eid) LEFT OUTER JOIN cw_Societe AS _S ON (rel_concerne1.eid_to=_S.cw_eid), owned_by_relation AS rel_owned_by2 WHERE ((rel_owned_by0.eid_from=_A.cw_eid AND rel_owned_by0.eid_to=_U.cw_eid) OR (rel_owned_by2.eid_from=_S.cw_eid AND rel_owned_by2.eid_to=_U.cw_eid)) AND _X.cw_eid=_A.cw_eid)'''),
+WHERE EXISTS(SELECT 1 FROM cw_CWUser AS _U, owned_by_relation AS rel_owned_by0, owned_by_relation AS rel_owned_by2, cw_Affaire AS _A LEFT OUTER JOIN concerne_relation AS rel_concerne1 ON (rel_concerne1.eid_from=_A.cw_eid) LEFT OUTER JOIN cw_Societe AS _S ON (rel_concerne1.eid_to=_S.cw_eid) WHERE ((rel_owned_by0.eid_from=_A.cw_eid AND rel_owned_by0.eid_to=_U.cw_eid) OR (rel_owned_by2.eid_from=_S.cw_eid AND rel_owned_by2.eid_to=_U.cw_eid)) AND _X.cw_eid=_A.cw_eid)'''),
 
     ('Any C,M WHERE C travaille G?, G evaluee M?, G is Societe',
      '''SELECT _C.cw_eid, rel_evaluee1.eid_to
@@ -827,12 +827,17 @@ FROM cw_Personne AS _C LEFT OUTER JOIN travaille_relation AS rel_travaille0 ON (
      'F name "read", F require_group E, U in_group E)), U eid 1',
      '''SELECT _A.cw_eid, rel_documented_by0.eid_to
 FROM cw_Affaire AS _A LEFT OUTER JOIN documented_by_relation AS rel_documented_by0 ON (rel_documented_by0.eid_from=_A.cw_eid)
-WHERE ((rel_documented_by0.eid_to IS NULL) OR (EXISTS(SELECT 1 FROM require_permission_relation AS rel_require_permission1, cw_CWPermission AS _F, require_group_relation AS rel_require_group2, in_group_relation AS rel_in_group3 WHERE rel_documented_by0.eid_to=rel_require_permission1.eid_from AND rel_require_permission1.eid_to=_F.cw_eid AND _F.cw_name=read AND rel_require_group2.eid_from=_F.cw_eid AND rel_in_group3.eid_to=rel_require_group2.eid_to AND rel_in_group3.eid_from=1)))'''),
+WHERE ((rel_documented_by0.eid_to IS NULL) OR (EXISTS(SELECT 1 FROM cw_CWPermission AS _F, in_group_relation AS rel_in_group3, require_group_relation AS rel_require_group2, require_permission_relation AS rel_require_permission1 WHERE rel_documented_by0.eid_to=rel_require_permission1.eid_from AND rel_require_permission1.eid_to=_F.cw_eid AND _F.cw_name=read AND rel_require_group2.eid_from=_F.cw_eid AND rel_in_group3.eid_to=rel_require_group2.eid_to AND rel_in_group3.eid_from=1)))'''),
 
     ("Any X WHERE X eid 12, P? connait X",
      '''SELECT _X.cw_eid
-FROM cw_Personne AS _X LEFT OUTER JOIN connait_relation AS rel_connait0 ON (rel_connait0.eid_to=12)
+FROM cw_Personne AS _X LEFT OUTER JOIN connait_relation AS rel_connait0 ON (rel_connait0.eid_to=_X.cw_eid)
 WHERE _X.cw_eid=12'''
+    ),
+    ("Any P WHERE X eid 12, P? concerne X, X todo_by S",
+     '''SELECT rel_concerne0.eid_from
+FROM todo_by_relation AS rel_todo_by1 LEFT OUTER JOIN concerne_relation AS rel_concerne0 ON (rel_concerne0.eid_to=12)
+WHERE rel_todo_by1.eid_from=12'''
     ),
 
     ('Any GN, TN ORDERBY GN WHERE T tags G?, T name TN, G name GN',
@@ -899,11 +904,11 @@ SELECT _G.cw_eid AS C0, _S.cw_eid AS C1
 FROM cw_CWUser AS _G LEFT OUTER JOIN cw_State AS _S ON (_G.cw_in_state=_S.cw_eid AND _S.cw_name=hop)
 UNION ALL
 SELECT _G.cw_eid AS C0, _S.cw_eid AS C1
-FROM cw_Note AS _G LEFT OUTER JOIN cw_State AS _S ON (_G.cw_in_state=_S.cw_eid AND _S.cw_name=hop) ) AS _T0 ON (rel_tags0.eid_to=_T0.C0)'''),
+FROM cw_Note AS _G LEFT OUTER JOIN cw_State AS _S ON (_G.cw_in_state=_S.cw_eid AND _S.cw_name=hop)) AS _T0 ON (rel_tags0.eid_to=_T0.C0)'''),
 
     ('Any O,AD  WHERE NOT S inline1 O, S eid 123, O todo_by AD?',
      '''SELECT _O.cw_eid, rel_todo_by0.eid_to
-FROM cw_Affaire AS _O LEFT OUTER JOIN todo_by_relation AS rel_todo_by0 ON (rel_todo_by0.eid_from=_O.cw_eid), cw_Note AS _S
+FROM cw_Note AS _S, cw_Affaire AS _O LEFT OUTER JOIN todo_by_relation AS rel_todo_by0 ON (rel_todo_by0.eid_from=_O.cw_eid)
 WHERE (_S.cw_inline1 IS NULL OR _S.cw_inline1!=_O.cw_eid) AND _S.cw_eid=123''')
     ]
 
@@ -1121,7 +1126,7 @@ WHERE NOT (EXISTS(SELECT 1 FROM cw_Affaire AS _X WHERE _X.cw_in_state=_S.cw_eid 
     ('Any PN WHERE NOT X travaille S, X nom PN, S is IN(Division, Societe)',
      '''SELECT _X.cw_nom
 FROM cw_Personne AS _X
-WHERE NOT (EXISTS(SELECT 1 FROM travaille_relation AS rel_travaille0, cw_Division AS _S WHERE rel_travaille0.eid_from=_X.cw_eid AND rel_travaille0.eid_to=_S.cw_eid UNION SELECT 1 FROM travaille_relation AS rel_travaille1, cw_Societe AS _S WHERE rel_travaille1.eid_from=_X.cw_eid AND rel_travaille1.eid_to=_S.cw_eid))'''),
+WHERE NOT (EXISTS(SELECT 1 FROM cw_Division AS _S, travaille_relation AS rel_travaille0 WHERE rel_travaille0.eid_from=_X.cw_eid AND rel_travaille0.eid_to=_S.cw_eid UNION SELECT 1 FROM cw_Societe AS _S, travaille_relation AS rel_travaille1 WHERE rel_travaille1.eid_from=_X.cw_eid AND rel_travaille1.eid_to=_S.cw_eid))'''),
 
     ('Any PN WHERE NOT X travaille S, S nom PN, S is IN(Division, Societe)',
      '''SELECT _S.cw_nom
@@ -1212,6 +1217,7 @@ class PostgresSQLGeneratorTC(RQLGeneratorTC):
                     print r, nargs
                 print '!='
                 print sql.strip()
+            print 'RQL:', rql
             raise
 
     def _parse(self, rqls):
@@ -1402,7 +1408,7 @@ FROM cw_Societe AS _X)
 UNION ALL
 (SELECT _X.cw_eid AS C0
 FROM cw_Affaire AS _X
-WHERE ((EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_by0 WHERE rel_owned_by0.eid_from=_X.cw_eid AND rel_owned_by0.eid_to=1)) OR (((EXISTS(SELECT 1 FROM cw_Affaire AS _D LEFT OUTER JOIN concerne_relation AS rel_concerne1 ON (rel_concerne1.eid_from=_D.cw_eid) LEFT OUTER JOIN cw_Note AS _B ON (rel_concerne1.eid_to=_B.cw_eid), owned_by_relation AS rel_owned_by2 WHERE rel_owned_by2.eid_from=_B.cw_eid AND rel_owned_by2.eid_to=1 AND _X.cw_eid=_D.cw_eid)) OR (EXISTS(SELECT 1 FROM cw_Affaire AS _F LEFT OUTER JOIN concerne_relation AS rel_concerne3 ON (rel_concerne3.eid_from=_F.cw_eid) LEFT OUTER JOIN cw_Societe AS _E ON (rel_concerne3.eid_to=_E.cw_eid), owned_by_relation AS rel_owned_by4 WHERE rel_owned_by4.eid_from=_E.cw_eid AND rel_owned_by4.eid_to=1 AND _X.cw_eid=_F.cw_eid))))))) AS _T0, cw_CWEType AS _ET, is_relation AS rel_is0
+WHERE ((EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_by0 WHERE rel_owned_by0.eid_from=_X.cw_eid AND rel_owned_by0.eid_to=1)) OR (((EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_by2, cw_Affaire AS _D LEFT OUTER JOIN concerne_relation AS rel_concerne1 ON (rel_concerne1.eid_from=_D.cw_eid) LEFT OUTER JOIN cw_Note AS _B ON (rel_concerne1.eid_to=_B.cw_eid) WHERE rel_owned_by2.eid_from=_B.cw_eid AND rel_owned_by2.eid_to=1 AND _X.cw_eid=_D.cw_eid)) OR (EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_by4, cw_Affaire AS _F LEFT OUTER JOIN concerne_relation AS rel_concerne3 ON (rel_concerne3.eid_from=_F.cw_eid) LEFT OUTER JOIN cw_Societe AS _E ON (rel_concerne3.eid_to=_E.cw_eid) WHERE rel_owned_by4.eid_from=_E.cw_eid AND rel_owned_by4.eid_to=1 AND _X.cw_eid=_F.cw_eid))))))) AS _T0, cw_CWEType AS _ET, is_relation AS rel_is0
 WHERE rel_is0.eid_from=_T0.C0 AND rel_is0.eid_to=_ET.cw_eid
 GROUP BY _ET.cw_name'''),
             )):
@@ -1521,7 +1527,7 @@ WHERE NOT (EXISTS(SELECT 1 FROM created_by_relation AS rel_created_by0 WHERE rel
     def test_ambigous_exists_no_from_clause(self):
         self._check('Any COUNT(U) WHERE U eid 1, EXISTS (P owned_by U, P is IN (Note, Affaire))',
                     '''SELECT COUNT(1)
-WHERE EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_by0, cw_Affaire AS _P WHERE rel_owned_by0.eid_from=_P.cw_eid AND rel_owned_by0.eid_to=1 UNION SELECT 1 FROM owned_by_relation AS rel_owned_by1, cw_Note AS _P WHERE rel_owned_by1.eid_from=_P.cw_eid AND rel_owned_by1.eid_to=1)''')
+WHERE EXISTS(SELECT 1 FROM cw_Affaire AS _P, owned_by_relation AS rel_owned_by0 WHERE rel_owned_by0.eid_from=_P.cw_eid AND rel_owned_by0.eid_to=1 UNION SELECT 1 FROM cw_Note AS _P, owned_by_relation AS rel_owned_by1 WHERE rel_owned_by1.eid_from=_P.cw_eid AND rel_owned_by1.eid_to=1)''')
 
     def test_attr_map_sqlcb(self):
         def generate_ref(gen, linkedvar, rel):
@@ -1569,6 +1575,26 @@ WHERE ((CAST(EXTRACT(YEAR from _X.cw_creation_date) AS INTEGER)=2010) OR (_X.cw_
         self._check('Any 1 WHERE NOT X in_group G, X is CWUser',
                     '''SELECT 1
 WHERE NOT (EXISTS(SELECT 1 FROM in_group_relation AS rel_in_group0))''')
+
+    def test_nonregr_subquery_missing_join(self):
+        self._check('Any COUNT(P1148),G GROUPBY G '
+                    'WHERE G owned_by D, D eid 1122, K1148 bookmarked_by P1148, '
+                    'K1148 eid 1148, P1148? in_group G',
+                    '''SELECT COUNT(rel_bookmarked_by1.eid_to), _G.cw_eid
+FROM owned_by_relation AS rel_owned_by0, cw_CWGroup AS _G LEFT OUTER JOIN in_group_relation AS rel_in_group2 ON (rel_in_group2.eid_to=_G.cw_eid) LEFT OUTER JOIN bookmarked_by_relation AS rel_bookmarked_by1 ON (rel_in_group2.eid_from=rel_bookmarked_by1.eid_to)
+WHERE rel_owned_by0.eid_from=_G.cw_eid AND rel_owned_by0.eid_to=1122 AND rel_bookmarked_by1.eid_from=1148
+GROUP BY _G.cw_eid'''
+                    )
+
+    def test_nonregr_subquery_missing_join2(self):
+        self._check('Any COUNT(P1148),G GROUPBY G '
+                    'WHERE G owned_by D, D eid 1122, K1148 bookmarked_by P1148?, '
+                    'K1148 eid 1148, P1148? in_group G',
+                    '''SELECT COUNT(rel_bookmarked_by1.eid_to), _G.cw_eid
+FROM owned_by_relation AS rel_owned_by0, cw_CWGroup AS _G LEFT OUTER JOIN in_group_relation AS rel_in_group2 ON (rel_in_group2.eid_to=_G.cw_eid) LEFT OUTER JOIN bookmarked_by_relation AS rel_bookmarked_by1 ON (rel_bookmarked_by1.eid_from=1148 AND rel_in_group2.eid_from=rel_bookmarked_by1.eid_to)
+WHERE rel_owned_by0.eid_from=_G.cw_eid AND rel_owned_by0.eid_to=1122
+GROUP BY _G.cw_eid''')
+
 
 class SqlServer2005SQLGeneratorTC(PostgresSQLGeneratorTC):
     backend = 'sqlserver2005'
@@ -1625,7 +1651,7 @@ _L01, _L02
 , ROW_NUMBER() OVER (ORDER BY _L01 DESC) AS __RowNumber
 FROM (
 SELECT COUNT(rel_concerne0.eid_from) AS _L01, _C.cw_nom AS _L02 FROM  concerne_relation AS rel_concerne0, cw_Societe AS _C
-WHERE rel_concerne0.eid_to=_C.cw_eid AND ((EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_by1 WHERE rel_concerne0.eid_from=rel_owned_by1.eid_from AND rel_owned_by1.eid_to=1)) OR (EXISTS(SELECT 1 FROM documented_by_relation AS rel_documented_by2, cw_Card AS _N WHERE rel_concerne0.eid_from=rel_documented_by2.eid_from AND rel_documented_by2.eid_to=_N.cw_eid AND _N.cw_title=published)))
+WHERE rel_concerne0.eid_to=_C.cw_eid AND ((EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_by1 WHERE rel_concerne0.eid_from=rel_owned_by1.eid_from AND rel_owned_by1.eid_to=1)) OR (EXISTS(SELECT 1 FROM cw_Card AS _N, documented_by_relation AS rel_documented_by2 WHERE rel_concerne0.eid_from=rel_documented_by2.eid_from AND rel_documented_by2.eid_to=_N.cw_eid AND _N.cw_title=published)))
 GROUP BY _C.cw_nom
 ) AS _SQ1 )
 SELECT
@@ -1874,7 +1900,7 @@ WHERE MATCH (appears0.words) AGAINST ('toto tata' IN BOOLEAN MODE) AND appears0.
         self._check('Any COUNT(U) WHERE U eid 1, EXISTS (P owned_by U, P is IN (Note, Affaire))',
                     '''SELECT COUNT(1)
 FROM (SELECT 1) AS _T
-WHERE EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_by0, cw_Affaire AS _P WHERE rel_owned_by0.eid_from=_P.cw_eid AND rel_owned_by0.eid_to=1 UNION SELECT 1 FROM owned_by_relation AS rel_owned_by1, cw_Note AS _P WHERE rel_owned_by1.eid_from=_P.cw_eid AND rel_owned_by1.eid_to=1)''')
+WHERE EXISTS(SELECT 1 FROM cw_Affaire AS _P, owned_by_relation AS rel_owned_by0 WHERE rel_owned_by0.eid_from=_P.cw_eid AND rel_owned_by0.eid_to=1 UNION SELECT 1 FROM cw_Note AS _P, owned_by_relation AS rel_owned_by1 WHERE rel_owned_by1.eid_from=_P.cw_eid AND rel_owned_by1.eid_to=1)''')
 
     def test_groupby_multiple_outerjoins(self):
         self._check('Any A,U,P,group_concat(TN) GROUPBY A,U,P WHERE A is Affaire, A concerne N, N todo_by U?, T? tags A, T name TN, A todo_by P?',

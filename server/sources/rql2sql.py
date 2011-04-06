@@ -319,6 +319,31 @@ def update_source_cb_stack(state, stmt, node, stack):
 # IGenerator implementation for RQL->SQL #######################################
 
 class StateInfo(object):
+    """this class stores data accumulated during the RQL syntax tree visit
+    for later SQL generation.
+
+    Attributes related to OUTER JOIN handling
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    * `outer_chains`, list of list of strings. Each list represent a tables
+      that have to be outer joined together.
+
+    * `outer_tables`, dictionnary used as index of tables used in outer join ::
+
+        'table alias': (outertype, [conditions], [chain])
+
+      where:
+
+      * `outertype` is one of None, 'LEFT', 'RIGHT', 'FULL'
+      * `conditions` is a list of join conditions (string)
+      * `chain` is a list of table alias (the *outer chain*) in which the key
+        alias appears
+
+    * `outer_pending` is a dictionary containing some conditions that will have
+      to be added to the outer join when the table will be turned into an
+      outerjoin ::
+
+       'table alias': [conditions]
+    """
     def __init__(self, select, existssols, unstablevars):
         self.existssols = existssols
         self.unstablevars = unstablevars
@@ -338,7 +363,9 @@ class StateInfo(object):
         self.actual_tables = [[]]
         for _, tsql in self.tables.itervalues():
             self.actual_tables[-1].append(tsql)
+        self.outer_chains = []
         self.outer_tables = {}
+        self.outer_pending = {}
         self.duplicate_switches = []
         self.aliases = {}
         self.restrictions = []
@@ -403,7 +430,208 @@ class StateInfo(object):
         self.scope_nodes.pop()
         restrictions = self.restrictions
         self.restrictions = self._restr_stack.pop()
-        return restrictions, self.actual_tables.pop()
+        scope = len(self.actual_tables) - 1
+        # check if we have some outer chain for this scope
+        matching_chains = []
+        for chain in self.outer_chains:
+            for tablealias in chain:
+                if self.tables[tablealias][0] < scope:
+                    # chain belongs to outer scope
+                    break
+            else:
+                # chain match current scope
+                matching_chains.append(chain)
+        # call to `tables_sql` will pop actual_tables
+        tables = self.tables_sql(matching_chains)
+        # cleanup outer join related structure for tables in matching chains
+        for chain in matching_chains:
+            self.outer_chains.remove(chain)
+            for alias in chain:
+                del self.outer_tables[alias]
+        return restrictions, tables
+
+    # tables handling #########################################################
+
+    def add_table(self, table, key=None, scope=-1):
+        if key is None:
+            key = table
+        if key in self.tables:
+            return
+        if scope < 0:
+            scope = len(self.actual_tables) + scope
+        self.tables[key] = (scope, table)
+        self.actual_tables[scope].append(table)
+
+    def alias_and_add_table(self, tablename, scope=-1):
+        alias = '%s%s' % (tablename, self.count)
+        self.count += 1
+        self.add_table('%s AS %s' % (tablename, alias), alias, scope)
+        return alias
+
+    def relation_table(self, relation):
+        """return the table alias used by the given relation"""
+        if relation in self.done:
+            return relation._q_sqltable
+        rid = 'rel_%s%s' % (relation.r_type, self.count)
+        # relation's table is belonging to the root scope if it is the principal
+        # table of one of it's variable and if that variable belong's to parent
+        # scope
+        for varref in relation.iget_nodes(VariableRef):
+            var = varref.variable
+            if isinstance(var, ColumnAlias):
+                scope = 0
+                break
+            # XXX may have a principal without being invariant for this generation,
+            #     not sure this is a pb or not
+            if var.stinfo.get('principal') is relation and var.scope is var.stmt:
+                scope = 0
+                break
+        else:
+            scope = -1
+        self.count += 1
+        self.add_table('%s_relation AS %s' % (relation.r_type, rid), rid, scope=scope)
+        relation._q_sqltable = rid
+        self.done.add(relation)
+        return rid
+
+    def fti_table(self, relation, fti_table):
+        """return the table alias used by the given has_text relation,
+        `fti_table` being the table name for the plain text index
+        """
+        if relation in self.done:
+            try:
+                return relation._q_sqltable
+            except AttributeError:
+                pass
+        self.done.add(relation)
+        scope = self.scopes[relation.scope]
+        alias = self.alias_and_add_table(fti_table, scope=scope)
+        relation._q_sqltable = alias
+        return alias
+
+    # outer join handling ######################################################
+
+    def mark_as_used_in_outer_join(self, tablealias, addpending=True):
+        """Mark table of given alias as used in outer join. This must be called
+        after `outer_tables[tablealias]` has been initialized.
+        """
+        # remove a table from actual_table because it's used in an outer join
+        # chain
+        scope, tabledef = self.tables[tablealias]
+        self.actual_tables[scope].remove(tabledef)
+        # check if there are some pending outer join condition for this table
+        if addpending:
+            try:
+                pending_conditions = self.outer_pending.pop(tablealias)
+            except KeyError:
+                pass
+            else:
+                self.outer_tables[tablealias][1].extend(pending_conditions)
+        else:
+            assert not tablealias in self.outer_pending
+
+    def add_outer_join_condition(self, tablealias, condition):
+        try:
+            outer, conditions, chain = self.outer_tables[tablealias]
+            conditions.append(condition)
+        except KeyError:
+            self.outer_pending.setdefault(tablealias, []).append(condition)
+
+    def replace_tables_by_outer_join(self, leftalias, rightalias,
+                                     outertype, condition):
+        """tell we need <leftalias> <outertype> JOIN <rightalias> ON <condition>
+        """
+        assert leftalias != rightalias, leftalias
+        outer_tables = self.outer_tables
+        louter, lconditions, lchain = outer_tables.get(leftalias,
+                                                      (None, None, None))
+        router, rconditions, rchain = outer_tables.get(rightalias,
+                                                      (None, None, None))
+        if lchain is None and rchain is None:
+            # create a new outer chaine
+            chain = [leftalias, rightalias]
+            outer_tables[leftalias] = (None, [], chain)
+            outer_tables[rightalias] = (outertype, [condition], chain)
+            self.outer_chains.append(chain)
+            self.mark_as_used_in_outer_join(leftalias, addpending=False)
+            self.mark_as_used_in_outer_join(rightalias)
+        elif lchain is None:
+            # [A > B > C] + [D > A] -> [D > A > B > C]
+            if rightalias == rchain[0]:
+                outer_tables[leftalias] = (None, [], rchain)
+                conditions = outer_tables[rightalias][1] + [condition]
+                outer_tables[rightalias] = (outertype, conditions, rchain)
+                rchain.insert(0, leftalias)
+            else:
+                # [A > B > C] + [D > B] -> [A > B > C < D]
+                if outertype == 'LEFT':
+                    outertype = 'RIGHT'
+                outer_tables[leftalias] = (outertype, [condition], rchain)
+                rchain.append(leftalias)
+            self.mark_as_used_in_outer_join(leftalias)
+        elif rchain is None:
+            # [A > B > C] + [B > D] -> [A > B > C > D]
+            outer_tables[rightalias] = (outertype, [condition], lchain)
+            lchain.append(rightalias)
+            self.mark_as_used_in_outer_join(rightalias)
+        elif lchain is rchain:
+            # already in the same chain, simply check compatibility and append
+            # the condition if it's ok
+            lidx = lchain.index(leftalias)
+            ridx = lchain.index(rightalias)
+            if (outertype == 'FULL' and router != 'FULL') \
+                   or (lidx < ridx and router != 'LEFT') \
+                   or (ridx < lidx and louter != 'RIGHT'):
+                raise BadRQLQuery()
+            # merge conditions
+            if lidx < ridx:
+                rconditions.append(condition)
+            else:
+                lconditions.append(condition)
+        else:
+            if louter is not None:
+                raise BadRQLQuery()
+            # merge chains
+            self.outer_chains.remove(lchain)
+            self.mark_as_used_in_outer_join(leftalias)
+            rchain += lchain
+            for alias, (aouter, aconditions, achain) in outer_tables.iteritems():
+                if achain is lchain:
+                    outer_tables[alias] = (aouter, aconditions, rchain)
+
+    # sql generation helpers ###################################################
+
+    def tables_sql(self, outer_chains=None):
+        """generate SQL for FROM clause"""
+        # sort for test predictability
+        tables = sorted(self.actual_tables.pop())
+        # process outer joins
+        if outer_chains is None:
+            assert not self.actual_tables, self.actual_tables
+            assert not self.outer_pending
+            outer_chains = self.outer_chains
+        for chain in sorted(outer_chains):
+            tablealias = chain[0]
+            outertype, conditions, _ = self.outer_tables[tablealias]
+            assert _ is chain, (chain, _)
+            assert outertype is None, (chain, self.outer_chains)
+            assert not conditions, (chain, self.outer_chains)
+            assert len(chain) > 1
+            tabledef = self.tables[tablealias][1]
+            outerjoin = [tabledef]
+            for tablealias in chain[1:]:
+                outertype, conditions, _ = self.outer_tables[tablealias]
+                assert _ is chain, (chain, self.outer_chains)
+                assert outertype in ('LEFT', 'RIGHT', 'FULL'), (
+                    tablealias, outertype, conditions)
+                assert isinstance(conditions, (list)), (
+                    tablealias, outertype, conditions)
+                tabledef = self.tables[tablealias][1]
+                outerjoin.append('%s OUTER JOIN %s ON (%s)' % (
+                    outertype, tabledef, ' AND '.join(conditions)))
+            tables.append(' '.join(outerjoin))
+        return ', '.join(tables)
+
 
 def extract_fake_having_terms(having):
     """RQL's HAVING may be used to contains stuff that should go in the WHERE
@@ -447,6 +675,7 @@ def extract_fake_having_terms(having):
                 fakehaving.append(node)
                 node.parent.remove(node)
     return fakehaving
+
 
 class SQLGenerator(object):
     """
@@ -598,12 +827,12 @@ class SQLGenerator(object):
         try:
             sql = self._solutions_sql(select, morerestr, sols, distinct,
                                       needalias or needwrap)
-            # generate groups / having before wrapping query selection to
-            # get correct column aliases
+            # generate groups / having before wrapping query selection to get
+            # correct column aliases
             self._in_wrapping_query = needwrap
             if groups:
-                # no constant should be inserted in GROUP BY else the backend will
-                # interpret it as a positional index in the selection
+                # no constant should be inserted in GROUP BY else the backend
+                # will interpret it as a positional index in the selection
                 groups = ','.join(vref.accept(self) for vref in groups
                                   if not isinstance(vref, Constant))
             if having:
@@ -611,9 +840,9 @@ class SQLGenerator(object):
                 having = ' AND '.join(term.accept(self) for term in having
                                       if not isinstance(term, Constant))
             if needwrap:
-                sql = '%s FROM (%s) AS T1' % (self._selection_sql(outerselection, distinct,
-                                                                  needalias),
-                                              sql)
+                sql = '%s FROM (%s) AS T1' % (
+                    self._selection_sql(outerselection, distinct,needalias),
+                    sql)
             if groups:
                 sql += '\nGROUP BY %s' % groups
             if having:
@@ -626,14 +855,9 @@ class SQLGenerator(object):
                     if _term is not None:
                         sqlsortterms.append(_term)
                 if sqlsortterms:
-                    sql = self.dbhelper.sql_add_order_by(sql, sqlsortterms,
-                                                         origselection,
-                                                         fneedwrap,
-                                                         select.limit or select.offset)
-                    ## sql += '\nORDER BY %s' % ','.join(sqlsortterms)
-                    ## if sorts and fneedwrap:
-                    ##     selection = ['T1.C%s' % i for i in xrange(len(origselection))]
-                    ##     sql = 'SELECT %s FROM (%s) AS T1' % (','.join(selection), sql)
+                    sql = self.dbhelper.sql_add_order_by(
+                        sql, sqlsortterms, origselection, fneedwrap,
+                        select.limit or select.offset)
             else:
                 sqlsortterms = None
             state.finalize_source_cbs()
@@ -683,10 +907,9 @@ class SQLGenerator(object):
             self._state.merge_source_cbs(self._state._needs_source_cb)
             # add required tables
             assert len(self._state.actual_tables) == 1, self._state.actual_tables
-            tables = self._state.actual_tables[-1]
+            tables = self._state.tables_sql()
             if tables:
-                # sort for test predictability
-                sql.insert(1, 'FROM %s' % ', '.join(sorted(tables)))
+                sql.insert(1, 'FROM %s' % tables)
             elif self._state.restrictions and self.dbhelper.needs_from_clause:
                 sql.insert(1, 'FROM (SELECT 1) AS _T')
             sqls.append('\n'.join(sql))
@@ -773,13 +996,13 @@ class SQLGenerator(object):
         restriction = ' AND '.join(restrictions)
         if not restriction:
             if tables:
-                return 'SELECT 1 FROM %s' % ', '.join(tables)
+                return 'SELECT 1 FROM %s' % tables
             return ''
         if not tables:
             # XXX could leave surrounding EXISTS() in this case no?
             sql = 'SELECT 1 WHERE %s' % restriction
         else:
-            sql = 'SELECT 1 FROM %s WHERE %s' % (', '.join(tables), restriction)
+            sql = 'SELECT 1 FROM %s WHERE %s' % (tables, restriction)
         return sql
 
 
@@ -820,12 +1043,11 @@ class SQLGenerator(object):
             # relation has already been processed by a previous step
             return ''
         elif relation.optional:
-            # check it has not already been treaten (to get necessary
-            # information to add an outer join condition)
-            if relation in self._state.done:
-                return ''
             # OPTIONAL relation, generate a left|right outer join
-            sql = self._visit_outer_join_relation(relation, rschema)
+            if rtype == 'identity' or rschema.inlined:
+                sql = self._visit_outer_join_inlined_relation(relation, rschema)
+            else:
+                sql = self._visit_outer_join_relation(relation, rschema)
         elif rschema.inlined:
             sql = self._visit_inlined_relation(relation)
         else:
@@ -888,7 +1110,7 @@ class SQLGenerator(object):
             lhs, rhs = relation.get_parts()
             return '%s%s' % (lhs.accept(self), rhs.accept(self))
         lhsvar, lhsconst, rhsvar, rhsconst = relation_info(relation)
-        rid = self._relation_table(relation)
+        rid = self._state.relation_table(relation)
         sqls = []
         sqls += self._process_relation_term(relation, rid, lhsvar, lhsconst, 'eid_from')
         sqls += self._process_relation_term(relation, rid, rhsvar, rhsconst, 'eid_to')
@@ -925,74 +1147,104 @@ class SQLGenerator(object):
            elif it's a full outer join:
            -> X FULL OUTER JOIN Y ON (X.relation=Y.eid)
         """
-        lhsvar, lhsconst, rhsvar, rhsconst = relation_info(relation)
-        if relation.optional == 'right':
-            joinattr, restrattr = 'eid_from', 'eid_to'
-        else:
-            lhsvar, rhsvar = rhsvar, lhsvar
-            lhsconst, rhsconst = rhsconst, lhsconst
+        leftvar, leftconst, rightvar, rightconst = relation_info(relation)
+        assert not (leftconst and rightconst), "doesn't make sense"
+        if relation.optional == 'left':
+            leftvar, rightvar = rightvar, leftvar
+            leftconst, rightconst = rightconst, leftconst
             joinattr, restrattr = 'eid_to', 'eid_from'
-        if relation.optional == 'both':
-            outertype = 'FULL'
         else:
-            outertype = 'LEFT'
-        if rschema.inlined or relation.r_type == 'identity':
-            self._state.done.add(relation)
-            t1 = self._var_table(lhsvar)
-            if relation.r_type == 'identity':
-                attr = 'eid'
+            joinattr, restrattr = 'eid_from', 'eid_to'
+        # search table for this variable, to use as left table of the outer join
+        leftalias = None
+        if leftvar:
+            # take care, may return None for invariant variable
+            leftalias = self._var_table(leftvar)
+        if leftalias is None:
+            if leftvar.stinfo['principal'] is not relation:
+                # use variable's principal relation
+                leftalias = leftvar.stinfo['principal']._q_sqltable
             else:
-                attr = relation.r_type
-            # reset lhs/rhs, we need the initial order now
-            lhs, rhs = relation.get_variable_parts()
-            if '%s.%s' % (lhs.name, attr) in self._varmap:
-                lhssql = self._varmap['%s.%s' % (lhs.name, attr)]
-            else:
-                lhssql = '%s.%s%s' % (self._var_table(lhs.variable), SQL_PREFIX, attr)
-            if not rhsvar is None:
-                t2 = self._var_table(rhsvar)
-                if t2 is None:
-                    if rhsconst is not None:
-                        # inlined relation with invariant as rhs
-                        condition = '%s=%s' % (lhssql, rhsconst.accept(self))
-                        if relation.r_type != 'identity':
-                            condition = '(%s OR %s IS NULL)' % (condition, lhssql)
-                        if not lhsvar.stinfo.get('optrelations'):
-                            return condition
-                        self.add_outer_join_condition(lhsvar, t1, condition)
-                    return
-            else:
-                condition = '%s=%s' % (lhssql, rhsconst.accept(self))
-                self.add_outer_join_condition(lhsvar, t1, condition)
-            join = '%s OUTER JOIN %s ON (%s=%s)' % (
-                outertype, self._state.tables[t2][1], lhssql, rhs.accept(self))
-            self.replace_tables_by_outer_join(join, t1, t2)
-            return ''
-        lhssql = lhsconst and lhsconst.accept(self) or lhsvar.accept(self)
-        rhssql = rhsconst and rhsconst.accept(self) or rhsvar.accept(self)
-        rid = self._relation_table(relation)
-        if not lhsvar:
-            join = ''
-            toreplace = []
-            maintable = rid
+                # search for relation on which we should join
+                for orelation in leftvar.stinfo['relations']:
+                    if (orelation is not relation and
+                        not self.schema.rschema(orelation.r_type).final):
+                        break
+                else:
+                    for orelation in rightvar.stinfo['relations']:
+                        if (orelation is not relation and
+                            not self.schema.rschema(orelation.r_type).final
+                            and orelation.optional):
+                            break
+                    else:
+                        # unexpected
+                        assert False, leftvar
+                leftalias = self._state.relation_table(orelation)
+        # right table of the outer join
+        rightalias = self._state.relation_table(relation)
+        # compute join condition
+        if not leftconst or (leftvar and not leftvar._q_invariant):
+            leftsql = leftvar.accept(self)
         else:
-            join = '%s OUTER JOIN %s ON (%s.%s=%s' % (
-                outertype, self._state.tables[rid][1], rid, joinattr, lhssql)
-            toreplace = [rid]
-            maintable = self._var_table(lhsvar)
-            if rhsconst:
-                join += ' AND %s.%s=%s)' % (rid, restrattr, rhssql)
+            leftsql = leftconst.accept(self)
+        condition = '%s.%s=%s' % (rightalias, joinattr, leftsql)
+        if rightconst:
+            condition += ' AND %s.%s=%s' % (rightalias, restrattr, rightconst.accept(self))
+        # record outer join
+        outertype = 'FULL' if relation.optional == 'both' else 'LEFT'
+        self._state.replace_tables_by_outer_join(leftalias, rightalias,
+                                                 outertype, condition)
+        # need another join?
+        if rightconst is None:
+            # we need another outer join for the other side of the relation (e.g.
+            # for "X relation Y?" in RQL, we treated earlier the (cw_X.eid /
+            # relation.eid_from) join, now we've to do (relation.eid_to /
+            # cw_Y.eid)
+            leftalias = rightalias
+            rightsql = rightvar.accept(self) # accept before using var_table
+            rightalias = self._var_table(rightvar)
+            if rightalias is None:
+                if rightvar.stinfo['principal'] is not relation:
+                    self._state.replace_tables_by_outer_join(
+                        leftalias, rightvar.stinfo['principal']._q_sqltable,
+                        outertype, '%s.%s=%s' % (leftalias, restrattr, rightvar.accept(self)))
             else:
-                join += ')'
-        if not rhsconst:
-            rhstable = rhsvar._q_sqltable
-            if rhstable:
-                assert rhstable is not None, rhsvar
-                join += ' %s OUTER JOIN %s ON (%s.%s=%s)' % (
-                    outertype, self._state.tables[rhstable][1], rid, restrattr,
-                    rhssql)
-                toreplace.append(rhstable)
-        self.replace_tables_by_outer_join(join, maintable, *toreplace)
+                self._state.replace_tables_by_outer_join(
+                    leftalias, rightalias, outertype,
+                    '%s.%s=%s' % (leftalias, restrattr, rightvar.accept(self)))
+        # this relation will hence be expressed in FROM clause, return nothing
+        # here
+        return ''
+
+
+    def _visit_outer_join_inlined_relation(self, relation, rschema):
+        leftvar, leftconst, rightvar, rightconst = relation_info(relation)
+        assert not (leftconst and rightconst), "doesn't make sense"
+        if relation.optional != 'right':
+            leftvar, rightvar = rightvar, leftvar
+            leftconst, rightconst = rightconst, leftconst
+        outertype = 'FULL' if relation.optional == 'both' else 'LEFT'
+        leftalias = self._var_table(leftvar)
+        attr = 'eid' if relation.r_type == 'identity' else relation.r_type
+        lhs, rhs = relation.get_variable_parts()
+        try:
+            lhssql = self._varmap['%s.%s' % (lhs.name, attr)]
+        except KeyError:
+            lhssql = '%s.%s%s' % (self._var_table(lhs.variable), SQL_PREFIX, attr)
+        if rightvar is not None:
+            rightalias = self._var_table(rightvar)
+            if rightalias is None:
+                if rightconst is not None:
+                    # inlined relation with invariant as rhs
+                    condition = '%s=%s' % (lhssql, rightconst.accept(self))
+                    if relation.r_type != 'identity':
+                        condition = '(%s OR %s IS NULL)' % (condition, lhssql)
+                    if not leftvar.stinfo.get('optrelations'):
+                        return condition
+                    self._state.add_outer_join_condition(leftalias, condition)
+                return
+        self._state.replace_tables_by_outer_join(
+            leftalias, rightalias, outertype, '%s=%s' % (lhssql, rhs.accept(self)))
         return ''
 
     def _visit_var_attr_relation(self, relation, rhs_vars):
@@ -1054,7 +1306,7 @@ class SQLGenerator(object):
         except AttributeError:
             sql = '%s%s' % (lhssql, rhssql)
         if lhs.variable.stinfo.get('optrelations'):
-            self.add_outer_join_condition(lhs.variable, table, sql)
+            self._state.add_outer_join_condition(table, sql)
         else:
             return sql
 
@@ -1062,7 +1314,7 @@ class SQLGenerator(object):
         """generate SQL for a has_text relation"""
         lhs, rhs = rel.get_parts()
         const = rhs.children[0]
-        alias = self._fti_table(rel)
+        alias = self._state.fti_table(rel, self.dbhelper.fti_table)
         jointo = lhs.accept(self)
         restriction = ''
         lhsvar = lhs.variable
@@ -1076,7 +1328,7 @@ class SQLGenerator(object):
                 # external entities on multisources configurations
                 ealias = lhsvar._q_sqltable = '_' + lhsvar.name
                 jointo = lhsvar._q_sql = '%s.eid' % ealias
-                self.add_table('entities AS %s' % ealias, ealias)
+                self._state.add_table('entities AS %s' % ealias, ealias)
                 if not lhsvar._q_invariant or len(lhsvar.stinfo['possibletypes']) == 1:
                     restriction = " AND %s.type='%s'" % (ealias, self._state.solution[lhs.name])
                 else:
@@ -1139,8 +1391,9 @@ class SQLGenerator(object):
                 raise BadRQLQuery("can't use FTIRANK on variable not used in an"
                                   " 'has_text' relation (eg full-text search)")
             const = rel.get_parts()[1].children[0]
-            return self.dbhelper.fti_rank_order(self._fti_table(rel),
-                                                const.eval(self._args))
+            return self.dbhelper.fti_rank_order(
+                self._state.fti_table(rel, self.dbhelper.fti_table),
+                const.eval(self._args))
         args = [c.accept(self) for c in func.children]
         if func in self._state.source_cb_funcs:
             # function executed as a callback on the source
@@ -1188,7 +1441,7 @@ class SQLGenerator(object):
             table = sql.split('.', 1)[0]
             colalias._q_sqltable = table
             colalias._q_sql = sql
-            self.add_table(table)
+            self._state.add_table(table)
             return sql
         return colalias._q_sql
 
@@ -1212,7 +1465,7 @@ class SQLGenerator(object):
             principal = variable.stinfo['principal']
             if principal is None:
                 vtablename = '_' + variable.name
-                self.add_table('entities AS %s' % vtablename, vtablename)
+                self._state.add_table('entities AS %s' % vtablename, vtablename)
                 sql = '%s.eid' % vtablename
                 if variable.stinfo['typerel'] is not None:
                     # add additional restriction on entities.type column
@@ -1225,15 +1478,16 @@ class SQLGenerator(object):
                         restr = '%s.type IN (%s)' % (vtablename, etypes)
                     self._state.add_restriction(restr)
             elif principal.r_type == 'has_text':
-                sql = '%s.%s' % (self._fti_table(principal),
+                sql = '%s.%s' % (self._state.fti_table(principal,
+                                                       self.dbhelper.fti_table),
                                  self.dbhelper.fti_uid_attr)
             elif principal in variable.stinfo['rhsrelations']:
                 if self.schema.rschema(principal.r_type).inlined:
                     sql = self._linked_var_sql(variable)
                 else:
-                    sql = '%s.eid_to' % self._relation_table(principal)
+                    sql = '%s.eid_to' % self._state.relation_table(principal)
             else:
-                sql = '%s.eid_from' % self._relation_table(principal)
+                sql = '%s.eid_from' % self._state.relation_table(principal)
         else:
             # standard variable: get table name according to etype and use .eid
             # attribute
@@ -1283,7 +1537,7 @@ class SQLGenerator(object):
         sql = self._varmap[key]
         tablealias = sql.split('.', 1)[0]
         scope = self._temp_table_scope(term.stmt, tablealias)
-        self.add_table(tablealias, scope=scope)
+        self._state.add_table(tablealias, scope=scope)
         return sql, tablealias
 
     def _var_info(self, var):
@@ -1297,7 +1551,7 @@ class SQLGenerator(object):
                 raise BadRQLQuery(var.stmt.root)
             tablealias = '_' + var.name
             sql = '%s.%seid' % (tablealias, SQL_PREFIX)
-            self.add_table('%s%s AS %s' % (SQL_PREFIX, etype, tablealias),
+            self._state.add_table('%s%s AS %s' % (SQL_PREFIX, etype, tablealias),
                            tablealias, scope=scope)
         return sql, tablealias
 
@@ -1305,7 +1559,7 @@ class SQLGenerator(object):
         try:
             sql = self._varmap['%s.%s' % (var.name, rtype)]
             scope = self._state.scopes[var.scope]
-            self.add_table(sql.split('.', 1)[0], scope=scope)
+            self._state.add_table(sql.split('.', 1)[0], scope=scope)
         except KeyError:
             sql = '%s.%s%s' % (self._var_table(var), SQL_PREFIX, rtype)
             #self._state.done.add(var.name)
@@ -1345,107 +1599,6 @@ class SQLGenerator(object):
 
     # tables handling #########################################################
 
-    def alias_and_add_table(self, tablename, scope=-1):
-        alias = '%s%s' % (tablename, self._state.count)
-        self._state.count += 1
-        self.add_table('%s AS %s' % (tablename, alias), alias, scope)
-        return alias
-
-    def add_table(self, table, key=None, scope=-1):
-        if key is None:
-            key = table
-        if key in self._state.tables:
-            return
-        if scope < 0:
-            scope = len(self._state.actual_tables) + scope
-        self._state.tables[key] = (scope, table)
-        self._state.actual_tables[scope].append(table)
-
-    def replace_tables_by_outer_join(self, substitute, lefttable, *tables):
-        for table in tables:
-            try:
-                scope, alias = self._state.tables[table]
-                self._state.actual_tables[scope].remove(alias)
-            except ValueError: # huum, not sure about what should be done here
-                msg = "%s already used in an outer join, don't know what to do!"
-                raise Exception(msg % table)
-        try:
-            tablealias = self._state.outer_tables[lefttable]
-            actualtables = self._state.actual_tables[-1]
-        except KeyError:
-            tablescope, tablealias = self._state.tables[lefttable]
-            actualtables = self._state.actual_tables[tablescope]
-        outerjoin = '%s %s' % (tablealias, substitute)
-        self._update_outer_tables(lefttable, actualtables, tablealias, outerjoin)
-        for table in tables:
-            self._state.outer_tables[table] = outerjoin
-
-    def add_outer_join_condition(self, var, table, condition):
-        try:
-            tablealias = self._state.outer_tables[table]
-            actualtables = self._state.actual_tables[-1]
-        except KeyError:
-            for rel in var.stinfo.get('optrelations'):
-                self.visit_relation(rel)
-            assert self._state.outer_tables
-            self.add_outer_join_condition(var, table, condition)
-            return
-        before, after = tablealias.split(' AS %s ' % table, 1)
-        beforep, afterp = after.split(')', 1)
-        outerjoin = '%s AS %s %s AND %s) %s' % (before, table, beforep,
-                                                condition, afterp)
-        self._update_outer_tables(table, actualtables, tablealias, outerjoin)
-
-    def _update_outer_tables(self, table, actualtables, oldalias, newalias):
-        actualtables.remove(oldalias)
-        actualtables.append(newalias)
-        self._state.outer_tables[table] = newalias
-        # some tables which have already been used as outer table and replaced
-        # by <oldalias> may not be reused here, though their associated value
-        # in the outer_tables dict has to be updated as well
-        for table, outerexpr in self._state.outer_tables.iteritems():
-            if outerexpr == oldalias:
-                self._state.outer_tables[table] = newalias
-
     def _var_table(self, var):
         var.accept(self)#.visit_variable(var)
         return var._q_sqltable
-
-    def _relation_table(self, relation):
-        """return the table alias used by the given relation"""
-        if relation in self._state.done:
-            return relation._q_sqltable
-        assert not self.schema.rschema(relation.r_type).final, relation.r_type
-        rid = 'rel_%s%s' % (relation.r_type, self._state.count)
-        # relation's table is belonging to the root scope if it is the principal
-        # table of one of it's variable and if that variable belong's to parent
-        # scope
-        for varref in relation.iget_nodes(VariableRef):
-            var = varref.variable
-            if isinstance(var, ColumnAlias):
-                scope = 0
-                break
-            # XXX may have a principal without being invariant for this generation,
-            #     not sure this is a pb or not
-            if var.stinfo.get('principal') is relation and var.scope is var.stmt:
-                scope = 0
-                break
-        else:
-            scope = -1
-        self._state.count += 1
-        self.add_table('%s_relation AS %s' % (relation.r_type, rid), rid, scope=scope)
-        relation._q_sqltable = rid
-        self._state.done.add(relation)
-        return rid
-
-    def _fti_table(self, relation):
-        if relation in self._state.done:
-            try:
-                return relation._q_sqltable
-            except AttributeError:
-                pass
-        self._state.done.add(relation)
-        scope = self._state.scopes[relation.scope]
-        alias = self.alias_and_add_table(self.dbhelper.fti_table, scope=scope)
-        relation._q_sqltable = alias
-        return alias
