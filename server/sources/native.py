@@ -822,13 +822,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         return None
 
     def make_temp_table_name(self, table):
-        try: # XXX remove this once
-            return self.dbhelper.temporary_table_name(table)
-        except AttributeError:
-            import warnings
-            warnings.warn('Please hg up logilab.database')
-            return table
-
+        return self.dbhelper.temporary_table_name(table)
 
     def temp_table_def(self, selected, sol, table):
         return make_schema(selected, sol, table, self.dbhelper.TYPE_MAPPING)
