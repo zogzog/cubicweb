@@ -1223,11 +1223,22 @@ class PartPlanInformation(object):
     def build_non_final_part(self, select, solindices, sources, insertedvars,
                              table):
         """non final step, will have to store results in a temporary table"""
-        solutions = [self._solutions[i] for i in solindices]
-        rqlst = self.plan.finalize(select, solutions, insertedvars)
-        step = FetchStep(self.plan, rqlst, sources, table, False)
-        # update input map for following steps, according to processed solutions
         inputmapkey = tuple(sorted(solindices))
+        solutions = [self._solutions[i] for i in solindices]
+        # XXX be smarter vs rql comparison
+        idx_key = (select.as_string(), inputmapkey,
+                   tuple(sorted(sources)), tuple(sorted(insertedvars)))
+        try:
+            # if a similar step has already been process, simply backport its
+            # input map
+            step = self.plan.ms_steps_idx[idx_key]
+        except KeyError:
+            # processing needed
+            rqlst = self.plan.finalize(select, solutions, insertedvars)
+            step = FetchStep(self.plan, rqlst, sources, table, False)
+            self.plan.ms_steps_idx[idx_key] = step
+            self.plan.add_step(step)
+        # update input map for following steps, according to processed solutions
         inputmap = self._inputmaps.setdefault(inputmapkey, {})
         for varname, mapping in step.outputmap.iteritems():
             if varname in inputmap and not '.' in varname and  \
@@ -1235,7 +1246,6 @@ class PartPlanInformation(object):
                         self._schema.eschema(solutions[0][varname]).final):
                 self._conflicts.append((varname, inputmap[varname]))
         inputmap.update(step.outputmap)
-        self.plan.add_step(step)
 
 
 class MSPlanner(SSPlanner):
@@ -1259,6 +1269,7 @@ class MSPlanner(SSPlanner):
             print 'PLANNING', rqlst
         ppis = [PartPlanInformation(plan, select, self.rqlhelper)
                 for select in rqlst.children]
+        plan.ms_steps_idx = {}
         steps = self._union_plan(plan, ppis)
         if server.DEBUG & server.DBG_MS:
             from pprint import pprint

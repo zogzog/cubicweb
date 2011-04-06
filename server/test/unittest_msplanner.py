@@ -2383,6 +2383,56 @@ class MSPlannerTC(BaseMSPlannerTC):
                      None, None, [self.system], {}, [])],
                    {'x': 999999, 'u': 999998})
 
+    def test_nonregr_similar_subquery(self):
+        repo._type_source_cache[999999] = ('Personne', 'system', 999999)
+        self._test('Any T,TD,U,T,UL WITH T,TD,U,UL BEING ('
+                   '(Any T,TD,U,UL WHERE X eid %(x)s, T comments X, T content TD, T created_by U?, U login UL)'
+                   ' UNION '
+                   '(Any T,TD,U,UL WHERE X eid %(x)s, X connait P, T comments P, T content TD, T created_by U?, U login UL))',
+                   # XXX optimization: use a OneFetchStep with a UNION of both queries
+                   [('FetchStep', [('Any U,UL WHERE U login UL, U is CWUser',
+                                    [{'U': 'CWUser', 'UL': 'String'}])],
+                     [self.ldap, self.system], None,
+                     {'U': 'table0.C0', 'U.login': 'table0.C1', 'UL': 'table0.C1'},
+                     []),
+                    ('UnionFetchStep',
+                     [('FetchStep',
+                       [('Any T,TD,U,UL WHERE T comments 999999, T content TD, T created_by U?, U login UL, T is Comment, U is CWUser',
+                         [{'T': 'Comment', 'TD': 'String', 'U': 'CWUser', 'UL': 'String'}])],
+                       [self.system],
+                       {'U': 'table0.C0', 'U.login': 'table0.C1', 'UL': 'table0.C1'},
+                       {'T': 'table1.C0',
+                        'T.content': 'table1.C1',
+                        'TD': 'table1.C1',
+                        'U': 'table1.C2',
+                        'U.login': 'table1.C3',
+                        'UL': 'table1.C3'},
+                       []),
+                      ('FetchStep',
+                       [('Any T,TD,U,UL WHERE 999999 connait P, T comments P, T content TD, T created_by U?, U login UL, P is Personne, T is Comment, U is CWUser',
+                         [{'P': 'Personne',
+                           'T': 'Comment',
+                           'TD': 'String',
+                           'U': 'CWUser',
+                           'UL': 'String'}])],
+                       [self.system],
+                       {'U': 'table0.C0', 'U.login': 'table0.C1', 'UL': 'table0.C1'},
+                       {'T': 'table1.C0',
+                        'T.content': 'table1.C1',
+                        'TD': 'table1.C1',
+                        'U': 'table1.C2',
+                        'U.login': 'table1.C3',
+                        'UL': 'table1.C3'},
+                       [])]),
+                    ('OneFetchStep',
+                     [('Any T,TD,U,T,UL',
+                       [{'T': 'Comment', 'TD': 'String', 'U': 'CWUser', 'UL': 'String'}])],
+                     None, None,
+                     [self.system],
+                     {'T': 'table1.C0', 'TD': 'table1.C1', 'U': 'table1.C2', 'UL': 'table1.C3'},
+                     [])],
+                   {'x': 999999})
+
 
 class MSPlannerTwoSameExternalSourcesTC(BasePlannerTC):
     """test planner related feature on a 3-sources repository:
