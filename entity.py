@@ -261,8 +261,16 @@ class Entity(AppObject):
         relations = []
         restrictions = set()
         pending_relations = []
+        eschema = cls.e_schema
         for attr, value in kwargs.items():
-            if isinstance(value, (tuple, list, set, frozenset)):
+            if attr.startswith('reverse_'):
+                attr = attr[len('reverse_'):]
+                role = 'object'
+            else:
+                role = 'subject'
+            assert eschema.has_relation(attr, role)
+            rschema = eschema.subjrels[attr] if role == 'subject' else eschema.objrels[attr]
+            if not rschema.final and isinstance(value, (tuple, list, set, frozenset)):
                 if len(value) == 1:
                     value = iter(value).next()
                 else:
