@@ -928,7 +928,9 @@ class RangeFacet(AttributeFacet):
     """
     attrtype = 'Float' # only numerical types are supported
 
-    wdgclass = FacetRangeWidget
+    @property
+    def wdgclass(self):
+        return FacetRangeWidget
 
     def get_widget(self):
         """return the widget instance to use to display this facet"""
@@ -973,7 +975,9 @@ class DateRangeFacet(RangeFacet):
     """
     attrtype = 'Date' # only date types are supported
 
-    wdgclass = DateFacetRangeWidget
+    @property
+    def wdgclass(self):
+        return DateFacetRangeWidget
 
     def formatvalue(self, value):
         """format `value` before in order to insert it in the RQL query"""
