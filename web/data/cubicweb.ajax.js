@@ -501,7 +501,7 @@ function buildWysiwygEditors(parent) {
                 var fck = new FCKeditor(this.id);
                 fck.Config['CustomConfigurationsPath'] = fckconfigpath;
                 fck.Config['DefaultLanguage'] = fcklang;
-                fck.BasePath = "fckeditor/";
+                fck.BasePath = baseuri() + "fckeditor/";
                 fck.ReplaceTextarea();
             } else {
                 cw.log('fckeditor could not be found.');

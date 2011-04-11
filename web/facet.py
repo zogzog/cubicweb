@@ -940,29 +940,37 @@ class RangeFacet(AttributeFacet):
             return None
         return self.wdgclass(self, min(values), max(values))
 
-    def infvalue(self):
-        return self._cw.form.get('%s_inf' % self.__regid__)
-
-    def supvalue(self):
-        return self._cw.form.get('%s_sup' % self.__regid__)
-
     def formatvalue(self, value):
         """format `value` before in order to insert it in the RQL query"""
         return unicode(value)
 
+    def infvalue(self, min=False):
+        if min:
+            return self._cw.form.get('min_%s_inf' % self.__regid__)
+        return self._cw.form.get('%s_inf' % self.__regid__)
+
+    def supvalue(self, max=False):
+        if max:
+            return self._cw.form.get('max_%s_sup' % self.__regid__)
+        return self._cw.form.get('%s_sup' % self.__regid__)
+
     def add_rql_restrictions(self):
         infvalue = self.infvalue()
-        if infvalue is None: # nothing sent
-            return
         supvalue = self.supvalue()
-        self.rqlst.add_constant_restriction(self.filtered_variable,
-                                            self.rtype,
-                                            self.formatvalue(infvalue),
-                                            self.attrtype, '>=')
-        self.rqlst.add_constant_restriction(self.filtered_variable,
-                                            self.rtype,
-                                            self.formatvalue(supvalue),
-                                            self.attrtype, '<=')
+        if infvalue is None or supvalue is None: # nothing sent
+            return
+        # when a value is equal to one of the limit, don't add the restriction,
+        # else we filter out NULL values implicitly
+        if infvalue != self.infvalue(min=True):
+            self.rqlst.add_constant_restriction(self.filtered_variable,
+                                                self.rtype,
+                                                self.formatvalue(infvalue),
+                                                self.attrtype, '>=')
+        if supvalue != self.supvalue(max=True):
+            self.rqlst.add_constant_restriction(self.filtered_variable,
+                                                self.rtype,
+                                                self.formatvalue(supvalue),
+                                                self.attrtype, '<=')
 
 
 class DateRangeFacet(RangeFacet):
@@ -1137,6 +1145,10 @@ class FacetRangeWidget(HTMLWidget):
         self.w(u'<input type="hidden" name="%s_inf" value="%s" />'
                % (facetid, self.minvalue))
         self.w(u'<input type="hidden" name="%s_sup" value="%s" />'
+               % (facetid, self.maxvalue))
+        self.w(u'<input type="hidden" name="min_%s_inf" value="%s" />'
+               % (facetid, self.minvalue))
+        self.w(u'<input type="hidden" name="max_%s_sup" value="%s" />'
                % (facetid, self.maxvalue))
         self.w(u'<div id="%s"></div>' % sliderid)
         self.w(u'</div>\n')
