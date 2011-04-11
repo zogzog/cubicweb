@@ -282,7 +282,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         self._temp_table_data = {}
         # we need a lock to protect eid attribution function (XXX, really?
         # explain)
-        self._eid_creation_lock = Lock()
+        self._eid_cnx_lock = Lock()
         self._eid_creation_cnx = None
         # (etype, attr) / storage mapping
         self._storages = {}
@@ -835,27 +835,22 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         self.doexec(session, sql)
 
     def _create_eid_sqlite(self, session):
-        self._eid_creation_lock.acquire()
-        try:
+        with self._eid_cnx_lock:
             for sql in self.dbhelper.sqls_increment_sequence('entities_id_seq'):
                 cursor = self.doexec(session, sql)
             return cursor.fetchone()[0]
-        finally:
-            self._eid_creation_lock.release()
 
 
     def create_eid(self, session):
-        # lock needed to prevent 'Connection is busy with results for another command (0)' errors with SQLServer
-        self._eid_creation_lock.acquire()
-        try:
+        # lock needed to prevent 'Connection is busy with results for another
+        # command (0)' errors with SQLServer
+        with self._eid_cnx_lock:
             return self._create_eid()
-        finally:
-            self._eid_creation_lock.release()
 
     def _create_eid(self):
         # internal function doing the eid creation without locking.
         # needed for the recursive handling of disconnections (otherwise we
-        # deadlock on self._eid_creation_lock
+        # deadlock on self._eid_cnx_lock
         if self._eid_creation_cnx is None:
             self._eid_creation_cnx = self.get_connection()
         cnx = self._eid_creation_cnx
