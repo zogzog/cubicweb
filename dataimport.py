@@ -147,13 +147,16 @@ def lazytable(reader):
     for row in reader:
         yield dict(zip(header, row))
 
-def lazydbtable(cu, table, headers):
+def lazydbtable(cu, table, headers, orderby=None):
     """return an iterator on rows of a sql table. On each row, fetch columns
     defined in headers and return values as a dictionary.
 
     >>> data = lazydbtable(cu, 'experimentation', ('id', 'nickname', 'gps'))
     """
-    cu.execute('SELECT %s FROM %s' % (','.join(headers), table,))
+    sql = 'SELECT %s FROM %s' % (','.join(headers), table,)
+    if orderby:
+        sql += ' ORDER BY %s' % ','.join(orderby)
+    cu.execute(sql)
     while True:
         row = cu.fetchone()
         if row is None:
