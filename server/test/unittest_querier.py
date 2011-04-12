@@ -1243,6 +1243,7 @@ Any P1,B,E WHERE P1 identity P2 WITH
         self.execute("INSERT Personne X: X nom 'bob', X tzdatenaiss %(date)s",
                      {'date': datetime(1977, 6, 7, 2, 0, tzinfo=FixedOffset(1))})
         datenaiss = self.execute("Any XD WHERE X nom 'bob', X tzdatenaiss XD")[0][0]
+        self.assertEqual(datenaiss.tzinfo, None)
         self.assertEqual(datenaiss.utctimetuple()[:5], (1977, 6, 7, 1, 0))
 
     # non regression tests #####################################################
