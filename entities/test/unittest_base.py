@@ -111,6 +111,11 @@ class CWUserTC(BaseEntityTC):
                                'creation_date', 'modification_date', 'cwuri', 'eid'))
                           )
 
+    def test_cw_instantiate_object_relation(self):
+        """ a weird non regression test """
+        e = self.execute('CWUser U WHERE U login "member"').get_entity(0, 0)
+        self.request().create_entity('CWGroup', name=u'logilab', reverse_in_group=e)
+
 
 class InterfaceTC(CubicWebTC):
 
