@@ -913,9 +913,7 @@ class Entity(AppObject):
         assert kwargs
         assert self.cw_is_saved(), "should not call set_attributes while entity "\
                "hasn't been saved yet"
-        relations = []
-        for key in kwargs:
-            relations.append('X %s %%(%s)s' % (key, key))
+        relations = ['X %s %%(%s)s' % (key, key) for key in kwargs]
         # and now update the database
         kwargs['x'] = self.eid
         self._cw.execute('SET %s WHERE X eid %%(x)s' % ','.join(relations),
