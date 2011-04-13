@@ -581,7 +581,7 @@ class CWImportController(object):
                     self.tell(pformat(sorted(error[1])))
 
     def _print_stats(self):
-        nberrors = sum(len(err[1]) for err in self.errors.values())
+        nberrors = sum(len(err) for err in self.errors.values())
         self.tell('\nImport statistics: %i entities, %i types, %i relations and %i errors'
                   % (self.store.nb_inserted_entities,
                      self.store.nb_inserted_types,
