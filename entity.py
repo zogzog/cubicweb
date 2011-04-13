@@ -254,10 +254,12 @@ class Entity(AppObject):
 
         >>> companycls = vreg['etypes'].etype_class(('Company')
         >>> personcls = vreg['etypes'].etype_class(('Person')
-        >>> c = companycls.cw_instantiate(req.execute, name=u'Logilab')
-        >>> personcls.cw_instantiate(req.execute, firstname=u'John', lastname=u'Doe',
-        ...                          works_for=c)
+        >>> c = companycls.cw_instantiate(session.execute, name=u'Logilab')
+        >>> p = personcls.cw_instantiate(session.execute, firstname=u'John', lastname=u'Doe',
+        ...                              works_for=c)
 
+        You can also set relation where the entity has 'object' role by
+        prefixing the relation by 'reverse_'.
         """
         rql = 'INSERT %s X' % cls.__regid__
         relations = []
@@ -276,14 +278,14 @@ class Entity(AppObject):
                 if len(value) == 1:
                     value = iter(value).next()
                 else:
+                    # prepare IN clause
                     del kwargs[attr]
                     pending_relations.append( (attr, value) )
                     continue
             if hasattr(value, 'eid'): # non final relation
                 rvar = attr.upper()
-                # XXX safer detection of object relation
-                if attr.startswith('reverse_'):
-                    relations.append('%s %s X' % (rvar, attr[len('reverse_'):]))
+                if role == 'object':
+                    relations.append('%s %s X' % (rvar, attr))
                 else:
                     relations.append('X %s %s' % (attr, rvar))
                 restriction = '%s eid %%(%s)s' % (rvar, attr)
@@ -941,9 +943,7 @@ class Entity(AppObject):
         assert kwargs
         assert self.cw_is_saved(), "should not call set_attributes while entity "\
                "hasn't been saved yet"
-        relations = []
-        for key in kwargs:
-            relations.append('X %s %%(%s)s' % (key, key))
+        relations = ['X %s %%(%s)s' % (key, key) for key in kwargs]
         # and now update the database
         kwargs['x'] = self.eid
         self._cw.execute('SET %s WHERE X eid %%(x)s' % ','.join(relations),

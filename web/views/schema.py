@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -543,8 +543,9 @@ class OneHopRSchemaVisitor(RestrictedSchemaVisitorMixIn,
     pass
 
 class CWSchemaDotPropsHandler(s2d.SchemaDotPropsHandler):
-    def __init__(self, visitor):
+    def __init__(self, visitor, cw):
         self.visitor = visitor
+        self.cw = cw
         self.nextcolor = cycle( ('#ff7700', '#000000',
                                  '#ebbc69', '#888888') ).next
         self.colors = {}
@@ -558,7 +559,7 @@ class CWSchemaDotPropsHandler(s2d.SchemaDotPropsHandler):
         label.append(r'\l}') # trailing \l ensure alignement of the last one
         return {'label' : ''.join(label), 'shape' : "record",
                 'fontname' : "Courier", 'style' : "filled",
-                'href': 'cwetype/%s' % eschema.type,
+                'href': self.cw.build_url('cwetype/%s' % eschema.type),
                 'fontsize': '10px'
                 }
 
@@ -569,11 +570,12 @@ class CWSchemaDotPropsHandler(s2d.SchemaDotPropsHandler):
             kwargs = {'label': rschema.type,
                       'color': '#887788', 'style': 'dashed',
                       'dir': 'both', 'arrowhead': 'normal', 'arrowtail': 'normal',
-                      'fontsize': '10px', 'href': 'cwrtype/%s' % rschema.type}
+                      'fontsize': '10px',
+                      'href': self.cw.build_url('cwrtype/%s' % rschema.type)}
         else:
             kwargs = {'label': rschema.type,
                       'color' : 'black',  'style' : 'filled', 'fontsize': '10px',
-                      'href': 'cwrtype/%s' % rschema.type}
+                      'href': self.cw.build_url('cwrtype/%s' % rschema.type)}
             rdef = rschema.rdef(subjnode, objnode)
             composite = rdef.composite
             if rdef.composite == 'subject':
@@ -625,7 +627,7 @@ class SchemaGraphView(StartupView):
             alt = self._cw._('graphical representation of %(appid)s data model')
         alt %= {'rtype': rtype, 'etype': etype,
                 'appid': self._cw.vreg.config.appid}
-        prophdlr = CWSchemaDotPropsHandler(visitor)
+        prophdlr = CWSchemaDotPropsHandler(visitor, self._cw)
         generator = GraphGenerator(DotBackend('schema', 'BT',
                                               ratio='compress',size=None,
                                               renderer='dot',
