@@ -299,9 +299,12 @@ class TestDataBaseHandler(object):
 
     def absolute_backup_file(self, db_id, suffix):
         """Path for config backup of a given database id"""
-        dbname = self.dbname.replace('-', '_')
+        # in case db name is an absolute path, we don't want to replace anything
+        # in parent directories
+        directory, basename = split(self.dbname)
+        dbname = basename.replace('-', '_')
         assert '.' not in db_id
-        filename = '%s-%s.%s' % (dbname, db_id, suffix)
+        filename = join(directory, '%s-%s.%s' % (dbname, db_id, suffix))
         return join(self._ensure_test_backup_db_dir(), filename)
 
     def db_cache_key(self, db_id, dbname=None):
