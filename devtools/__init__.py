@@ -415,9 +415,9 @@ class TestDataBaseHandler(object):
     def dbname(self):
         return self.system_source['db-name']
 
-    def init_test_database():
+    def init_test_database(self):
         """actual initialisation of the database"""
-        raise ValueError('no initialization function for driver %r' % driver)
+        raise ValueError('no initialization function for driver %r' % self.DRIVER)
 
     def has_cache(self, db_id):
         """Check if a given database id exist in cb cache for the current config"""
@@ -636,7 +636,7 @@ class SQLServerTestDataBaseHandler(TestDataBaseHandler):
         """initialize a fresh sqlserver databse used for testing purpose"""
         if self.config.init_repository:
             from cubicweb.server import init_repository
-            init_repository(config, interactive=False, drop=True)
+            init_repository(self.config, interactive=False, drop=True)
 
 ### sqlite test database handling ##############################################
 
