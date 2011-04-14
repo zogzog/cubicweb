@@ -117,3 +117,7 @@ div#facetLoading {
   font-weight:    bold;
   text-align:     center;
 }
+
+div.facetTitleSelected {
+  background: url("required.png") no-repeat right top;
+}

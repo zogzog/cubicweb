@@ -238,6 +238,18 @@ function reorderFacetsItems(root) {
     });
 }
 
+// change css class of facets that have a value selected
+function updateFacetTitles() {
+    $('.facet').each(function() {
+        var $divTitle = $(this).find('.facetTitle');
+       var facetSelected = $(this).find('.facetValueSelected');
+       if (facetSelected.length) {
+           $divTitle.addClass('facetTitleSelected');
+       } else {
+           $divTitle.removeClass('facetTitleSelected');
+       }
+    });
+}
 
 // we need to differenciate cases where initFacetBoxEvents is called with one
 // argument or without any argument. If we use `initFacetBoxEvents` as the
@@ -245,4 +257,5 @@ function reorderFacetsItems(root) {
 // his, so we use this small anonymous function instead.
 jQuery(document).ready(function() {
     initFacetBoxEvents();
+    jQuery(cw).bind('facets-content-loading', updateFacetTitles);
 });
