@@ -266,6 +266,7 @@ class Entity(AppObject):
         restrictions = set()
         pending_relations = []
         eschema = cls.e_schema
+        cache = {}
         for attr, value in kwargs.items():
             if attr.startswith('reverse_'):
                 attr = attr[len('reverse_'):]
@@ -274,7 +275,9 @@ class Entity(AppObject):
                 role = 'subject'
             assert eschema.has_relation(attr, role)
             rschema = eschema.subjrels[attr] if role == 'subject' else eschema.objrels[attr]
-            if not rschema.final and isinstance(value, (tuple, list, set, frozenset)):
+            if rschema.final:
+                cache[attr] = value # XXX what if value is processed in pre add hook (eg timeseries)?
+            elif isinstance(value, (tuple, list, set, frozenset)):
                 if len(value) == 1:
                     value = iter(value).next()
                 else:
@@ -299,6 +302,7 @@ class Entity(AppObject):
         if restrictions:
             rql = '%s WHERE %s' % (rql, ', '.join(restrictions))
         created = execute(rql, kwargs).get_entity(0, 0)
+        created.cw_attr_cache.update(cache)
         for attr, values in pending_relations:
             if attr.startswith('reverse_'):
                 restr = 'Y %s X' % attr[len('reverse_'):]
