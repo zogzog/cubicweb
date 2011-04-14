@@ -242,12 +242,12 @@ function reorderFacetsItems(root) {
 function updateFacetTitles() {
     $('.facet').each(function() {
         var $divTitle = $(this).find('.facetTitle');
-       var facetSelected = $(this).find('.facetValueSelected');
-       if (facetSelected.length) {
-           $divTitle.addClass('facetTitleSelected');
-       } else {
-           $divTitle.removeClass('facetTitleSelected');
-       }
+        var facetSelected = $(this).find('.facetValueSelected');
+        if (facetSelected.length) {
+            $divTitle.addClass('facetTitleSelected');
+        } else {
+            $divTitle.removeClass('facetTitleSelected');
+        }
     });
 }
 
@@ -257,5 +257,32 @@ function updateFacetTitles() {
 // his, so we use this small anonymous function instead.
 jQuery(document).ready(function() {
     initFacetBoxEvents();
+    jQuery(cw).bind('facets-content-loaded', onFacetContentLoaded);
+    jQuery(cw).bind('facets-content-loading', onFacetFiltering);
     jQuery(cw).bind('facets-content-loading', updateFacetTitles);
+});
+
+function showFacetLoading(parentid) {
+    var loadingWidth = 200; // px
+    var loadingHeight = 100; // px
+    var $msg = jQuery('#facetLoading');
+    var $parent = jQuery('#' + parentid);
+    var leftPos = $parent.offset().left + ($parent.width() - loadingWidth) / 2;
+    $parent.fadeTo('normal', 0.2);
+    $msg.css('left', leftPos).show();
+}
+
+function onFacetFiltering(event, divid /* ... */) {
+    showFacetLoading(divid);
+}
+
+function onFacetContentLoaded(event, divid, rql, vid, extraparams) {
+    jQuery('#facetLoading').hide();
+}
+
+jQuery(document).ready(function () {
+    if (jQuery('div.facetBody').length) {
+    document.body.appendChild(DIV({id:'facetLoading'},
+        IMG({src: baseuri() + 'data/facet-loading.png'})));
+    }
 });
