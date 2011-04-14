@@ -384,7 +384,7 @@ class TestDataBaseHandler(object):
 
 
     def get_cnx(self):
-        """return Connection object ont he current repository"""
+        """return Connection object on the current repository"""
         from cubicweb.dbapi import in_memory_cnx
         repo = self.get_repo()
         sources = self.config.sources()
