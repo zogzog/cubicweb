@@ -275,7 +275,7 @@ class SQLAdapterMixIn(object):
                     value = self._binary(value)
                 # XXX needed for sqlite but I don't think it is for other backends
                 # Note: use is __class__ since issubclass(datetime, date)
-                elif atype in ('Datetime', 'TZDatetime') and value.__class__ is date:
+                elif atype in ('Datetime', 'TZDatetime') and type(value) is date:
                     value = todatetime(value)
                 elif atype == 'Date' and isinstance(value, datetime):
                     value = todate(value)
