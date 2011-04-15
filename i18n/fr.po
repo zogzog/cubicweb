@@ -2795,6 +2795,9 @@ msgid ""
 msgstr ""
 "indique quel état devrait être utilisé par défaut lorsqu'une entité est créée"
 
+msgid "indifferent"
+msgstr "indifférent"
+
 msgid "info"
 msgstr "information"
 

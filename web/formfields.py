@@ -875,7 +875,9 @@ class BooleanField(Field):
         if self.choices:
             return super(BooleanField, self).vocabulary(form)
         if self.allow_none:
-            return [('', ''), (form._cw._('yes'), '1'), (form._cw._('no'), '0')]
+            return [(form._cw._('indifferent'), ''),
+                    (form._cw._('yes'), '1'),
+                    (form._cw._('no'), '0')]
         # XXX empty string for 'no' in that case for bw compat
         return [(form._cw._('yes'), '1'), (form._cw._('no'), '')]
 

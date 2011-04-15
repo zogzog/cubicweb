@@ -2680,6 +2680,9 @@ msgid ""
 "is created"
 msgstr ""
 
+msgid "indifferent"
+msgstr "indifferent"
+
 msgid "info"
 msgstr ""
 

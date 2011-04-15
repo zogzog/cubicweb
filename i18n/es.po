@@ -2785,6 +2785,9 @@ msgid ""
 msgstr ""
 "Indica cual estado deberá ser utilizado por defecto al crear una entidad"
 
+msgid "indifferent"
+msgstr "indifferente"
+
 msgid "info"
 msgstr "Información del Sistema"
 

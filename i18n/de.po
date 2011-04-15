@@ -2755,6 +2755,9 @@ msgstr ""
 "zeigt an, welcher Zustand standardmäßig benutzt werden soll, wenn eine "
 "Entität erstellt wird"
 
+msgid "indifferent"
+msgstr "gleichgültig"
+
 msgid "info"
 msgstr "Information"
 

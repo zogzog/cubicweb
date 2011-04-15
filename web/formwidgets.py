@@ -478,11 +478,12 @@ class CheckBox(Input):
     default <br/> is used.
     """
     type = 'checkbox'
+    default_separator = u'<br/>\n'
     vocabulary_widget = True
 
-    def __init__(self, attrs=None, separator=u'<br/>\n', **kwargs):
+    def __init__(self, attrs=None, separator=None, **kwargs):
         super(CheckBox, self).__init__(attrs, **kwargs)
-        self.separator = separator
+        self.separator = separator or self.default_separator
 
     def _render(self, form, field, renderer):
         curvalues, attrs = self.values_and_attributes(form, field)
