@@ -220,3 +220,15 @@ class require_permission(RelationDefinition):
 class require_state(RelationDefinition):
     subject = 'CWPermission'
     object = 'State'
+
+class personne_composite(RelationDefinition):
+    subject='Personne'
+    object='Personne'
+    composite='subject'
+
+class personne_inlined(RelationDefinition):
+    subject='Personne'
+    object='Personne'
+    cardinality='?*'
+    inlined=True
+

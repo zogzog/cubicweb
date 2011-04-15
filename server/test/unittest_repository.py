@@ -685,5 +685,77 @@ class InlineRelHooksTC(CubicWebTC):
             req.cnx.commit()
         self.assertEqual(cm.exception.errors, {'inline1-subject': u'RQLUniqueConstraint S type T, S inline1 A1, A1 todo_by C, Y type T, Y inline1 A2, A2 todo_by C failed'})
 
+
+
+class PerformanceTest(CubicWebTC):
+    def setup_database(self):
+        import logging
+        logger = logging.getLogger('cubicweb.session')
+        #logger.handlers = [logging.StreamHandler(sys.stdout)]
+        logger.setLevel(logging.INFO)
+        self.info = logger.info
+
+    def test_composite_deletion(self):
+        req = self.request()
+        personnes = []
+        t0 = time.time()
+        for i in xrange(2000):
+            p = req.create_entity('Personne', nom=u'Doe%03d'%i, prenom=u'John', sexe=u'M')
+            personnes.append(p)
+        abraham = req.create_entity('Personne', nom=u'Abraham', prenom=u'John', sexe=u'M')
+        for j in xrange(0, 2000, 100):
+            abraham.set_relations(personne_composite=personnes[j:j+100])
+        t1 = time.time()
+        self.info('creation: %.2gs', (t1 - t0))
+        req.cnx.commit()
+        t2 = time.time()
+        self.info('commit creation: %.2gs', (t2 - t1))
+        self.execute('DELETE Personne P WHERE P eid %(eid)s', {'eid': abraham.eid})
+        t3 = time.time()
+        self.info('deletion: %.2gs', (t3 - t2))
+        req.cnx.commit()
+        t4 = time.time()
+        self.info("commit deletion: %2gs", (t4 - t3))
+
+    def test_add_relation_non_inlined(self):
+        req = self.request()
+        personnes = []
+        for i in xrange(2000):
+            p = req.create_entity('Personne', nom=u'Doe%03d'%i, prenom=u'John', sexe=u'M')
+            personnes.append(p)
+        req.cnx.commit()
+        t0 = time.time()
+        abraham = req.create_entity('Personne', nom=u'Abraham', prenom=u'John', sexe=u'M',
+                                    personne_composite=personnes[:100])
+        t1 = time.time()
+        self.info('creation: %.2gs', (t1 - t0))
+        for j in xrange(100, 2000, 100):
+            abraham.set_relations(personne_composite=personnes[j:j+100])
+        t2 = time.time()
+        self.info('more relations: %.2gs', (t2-t1))
+        req.cnx.commit()
+        t3 = time.time()
+        self.info('commit creation: %.2gs', (t3 - t2))
+
+    def test_add_relation_inlined(self):
+        req = self.request()
+        personnes = []
+        for i in xrange(2000):
+            p = req.create_entity('Personne', nom=u'Doe%03d'%i, prenom=u'John', sexe=u'M')
+            personnes.append(p)
+        req.cnx.commit()
+        t0 = time.time()
+        abraham = req.create_entity('Personne', nom=u'Abraham', prenom=u'John', sexe=u'M',
+                                    personne_inlined=personnes[:100])
+        t1 = time.time()
+        self.info('creation: %.2gs', (t1 - t0))
+        for j in xrange(100, 2000, 100):
+            abraham.set_relations(personne_inlined=personnes[j:j+100])
+        t2 = time.time()
+        self.info('more relations: %.2gs', (t2-t1))
+        req.cnx.commit()
+        t3 = time.time()
+        self.info('commit creation: %.2gs', (t3 - t2))
+
 if __name__ == '__main__':
     unittest_main()
