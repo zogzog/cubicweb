@@ -757,5 +757,73 @@ class PerformanceTest(CubicWebTC):
         t3 = time.time()
         self.info('commit creation: %.2gs', (t3 - t2))
 
+
+    def test_session_add_relation(self):
+        """ to be compared with test_session_add_relations"""
+        req = self.request()
+        personnes = []
+        for i in xrange(2000):
+            p = req.create_entity('Personne', nom=u'Doe%03d'%i, prenom=u'John', sexe=u'M')
+            personnes.append(p)
+        abraham = req.create_entity('Personne', nom=u'Abraham', prenom=u'John', sexe=u'M')
+        req.cnx.commit()
+        t0 = time.time()
+        add_relation = self.session.add_relation
+        for p in personnes:
+            add_relation(abraham.eid, 'personne_composite', p.eid)
+        req.cnx.commit()
+        t1 = time.time()
+        self.info('add relation: %.2gs', t1-t0)
+
+    def test_session_add_relations (self):
+        """ to be compared with test_session_add_relation"""
+        req = self.request()
+        personnes = []
+        for i in xrange(2000):
+            p = req.create_entity('Personne', nom=u'Doe%03d'%i, prenom=u'John', sexe=u'M')
+            personnes.append(p)
+        abraham = req.create_entity('Personne', nom=u'Abraham', prenom=u'John', sexe=u'M')
+        req.cnx.commit()
+        t0 = time.time()
+        add_relations = self.session.add_relations
+        relations = [('personne_composite', [(abraham.eid, p.eid) for p in personnes])]
+        add_relations(relations)
+        req.cnx.commit()
+        t1 = time.time()
+        self.info('add relations: %.2gs', t1-t0)
+    def test_session_add_relation_inlined(self):
+        """ to be compared with test_session_add_relations"""
+        req = self.request()
+        personnes = []
+        for i in xrange(2000):
+            p = req.create_entity('Personne', nom=u'Doe%03d'%i, prenom=u'John', sexe=u'M')
+            personnes.append(p)
+        abraham = req.create_entity('Personne', nom=u'Abraham', prenom=u'John', sexe=u'M')
+        req.cnx.commit()
+        t0 = time.time()
+        add_relation = self.session.add_relation
+        for p in personnes:
+            add_relation(abraham.eid, 'personne_inlined', p.eid)
+        req.cnx.commit()
+        t1 = time.time()
+        self.info('add relation (inlined): %.2gs', t1-t0)
+
+    def test_session_add_relations_inlined (self):
+        """ to be compared with test_session_add_relation"""
+        req = self.request()
+        personnes = []
+        for i in xrange(2000):
+            p = req.create_entity('Personne', nom=u'Doe%03d'%i, prenom=u'John', sexe=u'M')
+            personnes.append(p)
+        abraham = req.create_entity('Personne', nom=u'Abraham', prenom=u'John', sexe=u'M')
+        req.cnx.commit()
+        t0 = time.time()
+        add_relations = self.session.add_relations
+        relations = [('personne_inlined', [(abraham.eid, p.eid) for p in personnes])]
+        add_relations(relations)
+        req.cnx.commit()
+        t1 = time.time()
+        self.info('add relations (inlined): %.2gs', t1-t0)
+
 if __name__ == '__main__':
     unittest_main()

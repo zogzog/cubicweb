@@ -628,22 +628,32 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
 
     def add_relation(self, session, subject, rtype, object, inlined=False):
         """add a relation to the source"""
-        self._add_relation(session, subject, rtype, object, inlined)
+        self._add_relations(session,  rtype, [(subject, object)], inlined)
         if session.undoable_action('A', rtype):
             self._record_tx_action(session, 'tx_relation_actions', 'A',
                                    eid_from=subject, rtype=rtype, eid_to=object)
 
-    def _add_relation(self, session, subject, rtype, object, inlined=False):
+    def add_relations(self, session,  rtype, subj_obj_list, inlined=False):
+        """add a relations to the source"""
+        self._add_relations(session, rtype, subj_obj_list, inlined)
+        if session.undoable_action('A', rtype):
+            for subject, object in subj_obj_list:
+                self._record_tx_action(session, 'tx_relation_actions', 'A',
+                                       eid_from=subject, rtype=rtype, eid_to=object)
+                
+    def _add_relations(self, session, rtype, subj_obj_list, inlined=False):
         """add a relation to the source"""
         if inlined is False:
-            attrs = {'eid_from': subject, 'eid_to': object}
-            sql = self.sqlgen.insert('%s_relation' % rtype, attrs)
+            attrs = [{'eid_from': subject, 'eid_to': object}
+                     for subject, object in subj_obj_list]
+            sql = self.sqlgen.insert('%s_relation' % rtype, attrs[0])
         else: # used by data import
             etype = session.describe(subject)[0]
-            attrs = {'cw_eid': subject, SQL_PREFIX + rtype: object}
-            sql = self.sqlgen.update(SQL_PREFIX + etype, attrs,
+            attrs = [{'cw_eid': subject, SQL_PREFIX + rtype: object}
+                     for subject, object in subj_obj_list]
+            sql = self.sqlgen.update(SQL_PREFIX + etype, attrs[0],
                                      ['cw_eid'])
-        self.doexec(session, sql, attrs)
+        self.doexecmany(session, sql, attrs)
 
     def delete_relation(self, session, subject, rtype, object):
         """delete a relation from the source"""

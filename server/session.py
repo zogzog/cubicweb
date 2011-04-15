@@ -213,14 +213,34 @@ class Session(RequestSessionBase):
         You may use this in hooks when you know both eids of the relation you
         want to add.
         """
+        self.add_relations([(rtype, [(fromeid,  toeid)])])
+
+    def add_relations(self, relations):
+        '''set many relation using a shortcut similar to the one in add_relation
+        
+        relations is a list of 2-uples, the first element of each
+        2-uple is the rtype, and the second is a list of (fromeid,
+        toeid) tuples
+        '''
+        edited_entities = {}
+        relations_dict = {}
         with security_enabled(self, False, False):
-            if self.vreg.schema[rtype].inlined:
-                entity = self.entity_from_eid(fromeid)
-                edited = EditedEntity(entity)
-                edited.edited_attribute(rtype, toeid)
+            for rtype, eids in relations:
+                if self.vreg.schema[rtype].inlined:
+                    for fromeid, toeid in eids:
+                        if fromeid not in edited_entities:
+                            entity = self.entity_from_eid(fromeid)
+                            edited = EditedEntity(entity)
+                            edited_entities[fromeid] = edited
+                        else:
+                            edited = edited_entities[fromeid]
+                        edited.edited_attribute(rtype, toeid)
+                else:
+                    relations_dict[rtype] = eids
+            self.repo.glob_add_relations(self, relations_dict)
+            for edited in edited_entities.itervalues():
                 self.repo.glob_update_entity(self, edited)
-            else:
-                self.repo.glob_add_relation(self, fromeid, rtype, toeid)
+
 
     def delete_relation(self, fromeid, rtype, toeid):
         """provide direct access to the repository method to delete a relation.

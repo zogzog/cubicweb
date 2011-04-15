@@ -434,6 +434,13 @@ class AbstractSource(object):
         """add a relation to the source"""
         raise NotImplementedError()
 
+    def add_relations(self, session,  rtype, subj_obj_list):
+        """add a relations to the source"""
+        # override in derived classes if you feel you can
+        # optimize
+        for subject, object in subj_obj_list:
+            self.add_relation(session, subject, rtype, object)
+
     def delete_relation(self, session, subject, rtype, object):
         """delete a relation from the source"""
         raise NotImplementedError()

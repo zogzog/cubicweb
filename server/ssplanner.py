@@ -559,6 +559,7 @@ class UpdateStep(Step):
         session = self.plan.session
         repo = session.repo
         edefs = {}
+        relations = {}
         # insert relations
         if self.children:
             result = self.execute_child()
@@ -578,9 +579,14 @@ class UpdateStep(Step):
                         edefs[eid] = edited = EditedEntity(edef)
                     edited.edited_attribute(str(rschema), rhsval)
                 else:
-                    repo.glob_add_relation(session, lhsval, str(rschema), rhsval)
+                    str_rschema = str(rschema)
+                    if str_rschema in relations:
+                        relations[str_rschema].append((lhsval, rhsval))
+                    else:
+                        relations[str_rschema] = [(lhsval, rhsval)]
             result[i] = newrow
         # update entities
+        repo.glob_add_relations(session, relations)
         for eid, edited in edefs.iteritems():
             repo.glob_update_entity(session, edited)
         return result
