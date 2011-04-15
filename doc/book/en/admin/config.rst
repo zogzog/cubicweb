@@ -12,7 +12,7 @@ You can `configure the database`_ system of your choice:
   - `SQLServer configuration`_
   - `SQLite configuration`_
 
-For advenced features you can have a look to:
+For advanced features, have a look to:
 
   - `Pyro configuration`_
   - `Cubicweb resources configuration`_
@@ -42,8 +42,8 @@ Databases configuration
 
 Each instance can be configured with its own database connection information,
 that will be stored in the instance's :file:`sources` file. The database to use
-will be chosen when creating the instance. Currently cubicweb has been tested
-using Postgresql (recommended), MySQL, SQLServer and SQLite.
+will be chosen when creating the instance. CubicWeb is known to run with
+Postgresql (recommended), MySQL, SQLServer and SQLite.
 
 Other possible sources of data include CubicWeb, Subversion, LDAP and Mercurial,
 but at least one relational database is required for CubicWeb to work. You do
@@ -77,8 +77,7 @@ database host.
     you want a specific cluster for |cubicweb| databases or if your existing
     cluster doesn't use the UTF8 encoding (see note below).
 
-* First, initialize a PostgreSQL cluster with the command ``initdb``.
-  ::
+* First, initialize a PostgreSQL cluster with the command ``initdb``::
 
     $ initdb -E UTF8 -D /path/to/pgsql
 
