@@ -133,7 +133,7 @@ def callfunc_every(func, number, iterable):
     """
     for idx, item in enumerate(iterable):
         yield item
-        if idx % number:
+        if not idx % number:
             func()
     func()
 
