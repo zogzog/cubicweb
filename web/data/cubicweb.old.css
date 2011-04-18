@@ -976,3 +976,42 @@ div#footer a {
   /* remove background image (orange bullet) for autocomplete suggestions */
   background-image: none;
 }
+
+div.ui-tabs.ui-widget-content {
+  background:none;
+  border:none;
+  color:inherit;
+}
+
+div.ui-tabs ul.ui-tabs-nav {
+  padding-left: 0.5em;
+}
+
+div.ui-tabs ul.ui-tabs-nav a {
+  color:#27537A;
+  padding: 0.3em 0.6em;
+  outline:0;
+}
+
+div.ui-tabs ul.ui-tabs-nav li.ui-tabs-selected a {
+  color:black;
+}
+
+div.ui-tabs ul.ui-tabs-nav li.ui-state-hover, div.ui-tabs ul.ui-tabs-nav li.ui-state-focus {
+  background:white;
+}
+
+div.ui-tabs .ui-widget-header {
+  background:none;
+  border:none;
+}
+
+div.ui-tabs .ui-widget-header li {
+  border-color:#333333;
+}
+
+div.ui-tabs .ui-tabs-panel {
+  border-top:1px solid #97A5B0;
+  padding-left:0.5em;
+  color:inherit;
+}

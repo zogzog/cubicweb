@@ -153,9 +153,6 @@ FILES_TO_IGNORE = set([
     'jquery.flot.js',
     'jquery.corner.js',
     'jquery.ui.js',
-    'ui.core.js',
-    'ui.tabs.js',
-    'ui.slider.js',
     'excanvas.js',
     'gmap.utility.labeledmarker.js',
 

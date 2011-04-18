@@ -1125,8 +1125,8 @@ class FacetRangeWidget(HTMLWidget):
 
     def _render(self):
         facet = self.facet
-        facet._cw.add_js('ui.slider.js')
-        facet._cw.add_css('ui.all.css')
+        facet._cw.add_js('jquery.ui.js')
+        facet._cw.add_css('jquery.ui.css')
         sliderid = make_uid('theslider')
         facetid = xml_escape(self.facet.__regid__)
         facet._cw.html_headers.add_onload(self.onload % {
