@@ -112,7 +112,7 @@ class FakeRequest(CubicWebRequestBase):
         raise KeyError if the header is not set
         """
         if raw:
-            return self.headers_out.getRawHeaders(header, default)
+            return self.headers_out.getRawHeaders(header, default)[0]
         else:
             return self.headers_out.getHeader(header, default)
 
