@@ -232,3 +232,8 @@ class personne_inlined(RelationDefinition):
     cardinality='?*'
     inlined=True
 
+
+class login_user(RelationDefinition):
+    subject = 'Personne'
+    object = 'CWUser'
+    cardinality = '??'

@@ -685,6 +685,19 @@ class InlineRelHooksTC(CubicWebTC):
             req.cnx.commit()
         self.assertEqual(cm.exception.errors, {'inline1-subject': u'RQLUniqueConstraint S type T, S inline1 A1, A1 todo_by C, Y type T, Y inline1 A2, A2 todo_by C failed'})
 
+    def test_add_relations_at_creation_with_del_existing_rel(self):
+        req = self.request()
+        person = req.create_entity('Personne', nom=u'Toto', prenom=u'Lanturlu', sexe=u'M')
+        users_rql = 'Any U WHERE U is CWGroup, U name "users"'
+        users = self.execute(users_rql).get_entity(0, 0)
+        req.create_entity('CWUser',
+                      login=u'Toto',
+                      upassword=u'firstname',
+                      firstname=u'firstname',
+                      surname=u'surname',
+                      reverse_login_user=person,
+                      in_group=users)
+        self.commit()
 
 
 class PerformanceTest(CubicWebTC):
@@ -824,6 +837,8 @@ class PerformanceTest(CubicWebTC):
         req.cnx.commit()
         t1 = time.time()
         self.info('add relations (inlined): %.2gs', t1-t0)
+
+
 
 if __name__ == '__main__':
     unittest_main()
