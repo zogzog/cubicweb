@@ -1066,12 +1066,12 @@ class FacetVocabularyWidget(HTMLWidget):
   <option value="AND">%s</option>
 </select>''' % (facetid + '_andor', _('and/or between different values'),
                 _('OR'), _('AND')))
-        cssclass = ''
+        cssclass = 'facetBody'
         if not self.facet.start_unfolded:
             cssclass += ' hidden'
         if len(self.items) > 6:
             cssclass += ' overflowed'
-        self.w(u'<div class="facetBody%s">\n' % cssclass)
+        self.w(u'<div class="%s">\n' % cssclass)
         for item in self.items:
             item.render(w=self.w)
         self.w(u'</div>\n')
@@ -1140,6 +1140,10 @@ class FacetRangeWidget(HTMLWidget):
         self.w(u'<div id="%s" class="facet">\n' % facetid)
         self.w(u'<div class="facetTitle" cubicweb:facetName="%s">%s</div>\n' %
                (facetid, title))
+        cssclass = 'facetBody'
+        if not self.facet.start_unfolded:
+            cssclass += ' hidden'
+        self.w(u'<div class="%s">\n' % cssclass)
         self.w(u'<span id="%s_inf"></span> - <span id="%s_sup"></span>'
                % (sliderid, sliderid))
         self.w(u'<input type="hidden" name="%s_inf" value="%s" />'
@@ -1151,6 +1155,7 @@ class FacetRangeWidget(HTMLWidget):
         self.w(u'<input type="hidden" name="max_%s_sup" value="%s" />'
                % (facetid, self.maxvalue))
         self.w(u'<div id="%s"></div>' % sliderid)
+        self.w(u'</div>\n')
         self.w(u'</div>\n')
 
 
@@ -1183,15 +1188,15 @@ class FacetItem(HTMLWidget):
         self.selected = selected
 
     def _render(self):
+        cssclass = 'facetValue facetCheckBox'
         if self.selected:
-            cssclass = ' facetValueSelected'
+            cssclass += ' facetValueSelected'
             imgsrc = self._cw.data_url(self.selected_img)
             imgalt = self._cw._('selected')
         else:
-            cssclass = ''
             imgsrc = self._cw.data_url(self.unselected_img)
             imgalt = self._cw._('not selected')
-        self.w(u'<div class="facetValue facetCheckBox%s" cubicweb:value="%s">\n'
+        self.w(u'<div class="%s" cubicweb:value="%s">\n'
                % (cssclass, xml_escape(unicode(self.value))))
         self.w(u'<img src="%s" alt="%s"/>&#160;' % (imgsrc, imgalt))
         self.w(u'<a href="javascript: {}">%s</a>' % xml_escape(self.label))
@@ -1212,15 +1217,15 @@ class CheckBoxFacetWidget(HTMLWidget):
         title = xml_escape(self.facet.title)
         facetid = xml_escape(self.facet.__regid__)
         self.w(u'<div id="%s" class="facet">\n' % facetid)
+        cssclass = 'facetValue facetCheckBox'
         if self.selected:
-            cssclass = ' facetValueSelected'
+            cssclass += ' facetValueSelected'
             imgsrc = self._cw.data_url(self.selected_img)
             imgalt = self._cw._('selected')
         else:
-            cssclass = ''
             imgsrc = self._cw.data_url(self.unselected_img)
             imgalt = self._cw._('not selected')
-        self.w(u'<div class="facetValue facetCheckBox%s" cubicweb:value="%s">\n'
+        self.w(u'<div class="%s" cubicweb:value="%s">\n'
                % (cssclass, xml_escape(unicode(self.value))))
         self.w(u'<div class="facetCheckBoxWidget">')
         self.w(u'<img src="%s" alt="%s" cubicweb:unselimg="true" />&#160;' % (imgsrc, imgalt))

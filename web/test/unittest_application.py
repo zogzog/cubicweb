@@ -334,7 +334,7 @@ class ApplicationTC(CubicWebTC):
         self.assertRaises(AuthenticationError, self.app_publish, req, 'login')
         self.assertEqual(req.cnx, None)
         authstr = base64.encodestring('%s:%s' % (self.admlogin, self.admpassword))
-        req._headers['Authorization'] = 'basic %s' % authstr
+        req.set_request_header('Authorization', 'basic %s' % authstr)
         self.assertAuthSuccess(req, origsession)
         self.assertRaises(LogOut, self.app_publish, req, 'logout')
         self.assertEqual(len(self.open_sessions), 0)
@@ -378,7 +378,8 @@ class ApplicationTC(CubicWebTC):
         cookie = Cookie.SimpleCookie()
         sessioncookie = self.app.session_handler.session_cookie(req)
         cookie[sessioncookie] = req.session.sessionid
-        req._headers['Cookie'] = cookie[sessioncookie].OutputString()
+        req.set_request_header('Cookie', cookie[sessioncookie].OutputString(),
+                               raw=True)
         clear_cache(req, 'get_authorization')
         # reset session as if it was a new incoming request
         req.session = req.cnx = None
@@ -403,10 +404,10 @@ class ApplicationTC(CubicWebTC):
         req, origsession = self.init_authentication('http', 'anon')
         self._test_auth_anon(req)
         authstr = base64.encodestring('toto:pouet')
-        req._headers['Authorization'] = 'basic %s' % authstr
+        req.set_request_header('Authorization', 'basic %s' % authstr)
         self._test_anon_auth_fail(req)
         authstr = base64.encodestring('%s:%s' % (self.admlogin, self.admpassword))
-        req._headers['Authorization'] = 'basic %s' % authstr
+        req.set_request_header('Authorization', 'basic %s' % authstr)
         self.assertAuthSuccess(req, origsession)
         self.assertRaises(LogOut, self.app_publish, req, 'logout')
         self.assertEqual(len(self.open_sessions), 0)

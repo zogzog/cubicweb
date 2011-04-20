@@ -557,6 +557,8 @@ def _erperms2rql(erschema, groupmap):
                     yield ('SET X %s_permission Y WHERE Y eid %%(g)s, X eid %%(x)s' % action,
                            {'g': groupmap[group_or_rqlexpr]})
                 except KeyError:
+                    print ("WARNING: group %s used in permissions for %s was ignored because it doesn't exist."
+                           " You may want to add it into a precreate.py file" % (group_or_rqlexpr, erschema))
                     continue
             else:
                 # rqlexpr
