@@ -204,6 +204,12 @@ class SQLAdapterMixIn(object):
     def process_result(self, cursor, column_callbacks=None, session=None):
         """return a list of CubicWeb compliant values from data in the given cursor
         """
+        return list(self.iter_process_result(cursor, column_callbacks, session))
+
+    def iter_process_result(self, cursor, column_callbacks=None, session=None):
+        """return a iterator on tuples of CubicWeb compliant values from data
+        in the given cursor
+        """
         # use two different implementations to avoid paying the price of
         # callback lookup for each *cell* in results when there is nothing to
         # lookup
@@ -219,16 +225,19 @@ class SQLAdapterMixIn(object):
         process_value = self._process_value
         binary = Binary
         # /end
-        results = cursor.fetchall()
-        for i, line in enumerate(results):
-            result = []
-            for col, value in enumerate(line):
-                if value is None:
-                    result.append(value)
-                    continue
-                result.append(process_value(value, descr[col], encoding, binary))
-            results[i] = result
-        return results
+        cursor.arraysize = 100
+        while True:
+            results = cursor.fetchmany()
+            if not results:
+                break
+            for line in results:
+                result = []
+                for col, value in enumerate(line):
+                    if value is None:
+                        result.append(value)
+                        continue
+                    result.append(process_value(value, descr[col], encoding, binary))
+                yield result
 
     def _cb_process_result(self, cursor, column_callbacks, session):
         # begin bind to locals for optimization
@@ -237,22 +246,25 @@ class SQLAdapterMixIn(object):
         process_value = self._process_value
         binary = Binary
         # /end
-        results = cursor.fetchall()
-        for i, line in enumerate(results):
-            result = []
-            for col, value in enumerate(line):
-                if value is None:
+        cursor.arraysize = 100
+        while True:
+            results = cursor.fetchmany()
+            if not results:
+                break
+            for line in results:
+                result = []
+                for col, value in enumerate(line):
+                    if value is None:
+                        result.append(value)
+                        continue
+                    cbstack = column_callbacks.get(col, None)
+                    if cbstack is None:
+                        value = process_value(value, descr[col], encoding, binary)
+                    else:
+                        for cb in cbstack:
+                            value = cb(self, session, value)
                     result.append(value)
-                    continue
-                cbstack = column_callbacks.get(col, None)
-                if cbstack is None:
-                    value = process_value(value, descr[col], encoding, binary)
-                else:
-                    for cb in cbstack:
-                        value = cb(self, session, value)
-                result.append(value)
-            results[i] = result
-        return results
+                yield result
 
     def preprocess_entity(self, entity):
         """return a dictionary to use as extra argument to cursor.execute
