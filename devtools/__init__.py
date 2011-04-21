@@ -129,7 +129,7 @@ class TestServerConfiguration(ServerConfiguration):
     mode = 'test'
     read_instance_schema = False
     init_repository = True
-
+    skip_db_create_and_restore = False
     def __init__(self, appid='data', apphome=None, log_threshold=logging.CRITICAL+10):
         # must be set before calling parent __init__
         if apphome is None:
