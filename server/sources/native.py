@@ -643,17 +643,27 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                 
     def _add_relations(self, session, rtype, subj_obj_list, inlined=False):
         """add a relation to the source"""
+        sql = []
         if inlined is False:
             attrs = [{'eid_from': subject, 'eid_to': object}
                      for subject, object in subj_obj_list]
-            sql = self.sqlgen.insert('%s_relation' % rtype, attrs[0])
+            sql.append((self.sqlgen.insert('%s_relation' % rtype, attrs[0]), attrs))
         else: # used by data import
-            etype = session.describe(subject)[0]
-            attrs = [{'cw_eid': subject, SQL_PREFIX + rtype: object}
-                     for subject, object in subj_obj_list]
-            sql = self.sqlgen.update(SQL_PREFIX + etype, attrs[0],
-                                     ['cw_eid'])
-        self.doexecmany(session, sql, attrs)
+            etypes = {}
+            for subject, object in subj_obj_list:
+                etype = session.describe(subject)[0]
+                if etype in etypes:
+                    etypes[etype].append((subject, object))
+                else:
+                    etypes[etype] = [(subject, object)]
+            for subj_etype, subj_obj_list in etypes.iteritems():
+                attrs = [{'cw_eid': subject, SQL_PREFIX + rtype: object}
+                         for subject, object in subj_obj_list]
+                sql.append((self.sqlgen.update(SQL_PREFIX + etype, attrs[0],
+                                     ['cw_eid']),
+                            attrs))
+        for statement, attrs in sql:
+            self.doexecmany(session, statement, attrs)
 
     def delete_relation(self, session, subject, rtype, object):
         """delete a relation from the source"""
@@ -1242,7 +1252,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             self.repo.hm.call_hooks('before_add_relation', session,
                                     eidfrom=subj, rtype=rtype, eidto=obj)
             # add relation in the database
-            self._add_relation(session, subj, rtype, obj, rdef.rtype.inlined)
+            self._add_relations(session, rtype, [(subj, obj)], rdef.rtype.inlined)
             # set related cache
             session.update_rel_cache_add(subj, rtype, obj, rdef.rtype.symmetric)
             self.repo.hm.call_hooks('after_add_relation', session,
