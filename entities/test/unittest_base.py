@@ -34,7 +34,8 @@ from cubicweb.entities import AnyEntity
 class BaseEntityTC(CubicWebTC):
 
     def setup_database(self):
-        self.member = self.create_user('member')
+        req = self.request()
+        self.member = self.create_user(req, 'member')
 
 
 

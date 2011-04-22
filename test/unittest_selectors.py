@@ -328,7 +328,8 @@ class MatchUserGroupsTC(CubicWebTC):
         self.failUnless(SomeAction in self.vreg['actions']['yo'], self.vreg['actions'])
         try:
             # login as a simple user
-            self.create_user('john')
+            req = self.request()
+            self.create_user(req, 'john')
             self.login('john')
             # it should not be possible to use SomeAction not owned objects
             req = self.request()

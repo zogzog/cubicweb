@@ -245,9 +245,10 @@ class EntityTC(CubicWebTC):
                          'O is EmailAddress, O address AA, O alias AB, O modification_date AC')
 
     def test_unrelated_rql_security_1_user(self):
-        self.create_user('toto')
+        req = self.request()
+        self.create_user(req, 'toto')
         self.login('toto')
-        user = self.request().user
+        user = req.user
         rql = user.cw_unrelated_rql('use_email', 'EmailAddress', 'subject')[0]
         self.assertEqual(rql, 'Any O,AA,AB,AC ORDERBY AC DESC '
                          'WHERE NOT EXISTS(ZZ use_email O), S eid %(x)s, '
@@ -353,7 +354,8 @@ class EntityTC(CubicWebTC):
         user = self.request().user
         rset = user.unrelated('use_email', 'EmailAddress', 'subject')
         self.assertEqual([x.address for x in rset.entities()], [u'hop'])
-        self.create_user('toto')
+        req = self.request()
+        self.create_user(req, 'toto')
         self.login('toto')
         email = self.execute('Any X WHERE X eid %(x)s', {'x': email.eid}).get_entity(0, 0)
         rset = email.unrelated('use_email', 'CWUser', 'object')

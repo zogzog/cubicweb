@@ -93,9 +93,9 @@ class EditControllerTC(CubicWebTC):
         self.assertEqual([g.eid for g in e.in_group], groupeids)
 
     def test_user_can_change_its_password(self):
-        user = self.create_user('user')
-        cnx = self.login('user')
         req = self.request()
+        user = self.create_user(req, 'user')
+        cnx = self.login('user')
         eid = u(user.eid)
         req.form = {
             'eid': eid, '__maineid' : eid,
@@ -160,8 +160,8 @@ class EditControllerTC(CubicWebTC):
         self.assertEqual(email.address, 'dima@logilab.fr')
 
     def test_edit_multiple_linked(self):
-        peid = u(self.create_user('adim').eid)
         req = self.request()
+        peid = u(self.create_user(req, 'adim').eid)
         req.form = {'eid': [peid, 'Y'], '__maineid': peid,
 
                     '__type:'+peid: u'CWUser',
@@ -450,7 +450,8 @@ class EditControllerTC(CubicWebTC):
 
 
     def test_nonregr_rollback_on_validation_error(self):
-        p = self.create_user("doe")
+        req = self.request()
+        p = self.create_user(req, "doe")
         # do not try to skip 'primary_email' for this test
         old_skips = p.__class__.skip_copy_for
         p.__class__.skip_copy_for = ()
@@ -497,7 +498,7 @@ class EmbedControllerTC(CubicWebTC):
 
 class ReportBugControllerTC(CubicWebTC):
 
-    def test_usable_by_guets(self):
+    def test_usable_by_guest(self):
         self.login('anon')
         self.assertRaises(NoSelectableObject,
                           self.vreg['controllers'].select, 'reportbug', self.request())
@@ -506,7 +507,7 @@ class ReportBugControllerTC(CubicWebTC):
 
 class SendMailControllerTC(CubicWebTC):
 
-    def test_not_usable_by_guets(self):
+    def test_not_usable_by_guest(self):
         self.assertRaises(NoSelectableObject,
                           self.vreg['controllers'].select, 'sendmail', self.request())
         self.vreg['controllers'].select('sendmail',
@@ -529,7 +530,7 @@ class JSONControllerTC(CubicWebTC):
         req = self.request()
         self.pytag = req.create_entity('Tag', name=u'python')
         self.cubicwebtag = req.create_entity('Tag', name=u'cubicweb')
-        self.john = self.create_user(u'John')
+        self.john = self.create_user(req, u'John')
 
 
     ## tests ##################################################################

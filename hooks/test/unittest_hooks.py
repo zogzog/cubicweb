@@ -90,7 +90,8 @@ class CoreHooksTC(CubicWebTC):
         self.assertEqual(entity.owned_by[0].eid, self.session.user.eid)
 
     def test_user_login_stripped(self):
-        u = self.create_user('  joe  ')
+        req = self.request()
+        u = self.create_user(req, '  joe  ')
         tname = self.execute('Any L WHERE E login L, E eid %(e)s',
                              {'e': u.eid})[0][0]
         self.assertEqual(tname, 'joe')
@@ -104,7 +105,8 @@ class CoreHooksTC(CubicWebTC):
 class UserGroupHooksTC(CubicWebTC):
 
     def test_user_synchronization(self):
-        self.create_user('toto', password='hop', commit=False)
+        req = self.request()
+        self.create_user(req, 'toto', password='hop', commit=False)
         self.assertRaises(AuthenticationError,
                           self.repo.connect, u'toto', password='hop')
         self.commit()
@@ -129,7 +131,8 @@ class UserGroupHooksTC(CubicWebTC):
         self.assertEqual(user.groups, set(('managers',)))
 
     def test_user_composite_owner(self):
-        ueid = self.create_user('toto').eid
+        req = self.request()
+        ueid = self.create_user(req, 'toto').eid
         # composite of euser should be owned by the euser regardless of who created it
         self.execute('INSERT EmailAddress X: X address "toto@logilab.fr", U use_email X '
                      'WHERE U login "toto"')
