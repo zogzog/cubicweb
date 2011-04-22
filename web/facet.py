@@ -936,7 +936,7 @@ class RangeFacet(AttributeFacet):
         """return the widget instance to use to display this facet"""
         values = set(value for _, value in self.vocabulary() if value is not None)
         # Rset with entities (the facet is selected) but without values
-        if len(values) == 0:
+        if len(values) < 2:
             return None
         return self.wdgclass(self, min(values), max(values))
 
