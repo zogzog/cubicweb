@@ -260,7 +260,8 @@ class LDAPUserSourceTC(CubicWebTC):
         self.sexecute('Any X, Y WHERE X copain Y, X login "comme", Y login "cochon"')
 
     def test_multiple_entities_from_different_sources(self):
-        self.create_user('cochon')
+        req = self.request()
+        self.create_user(req, 'cochon')
         self.failUnless(self.sexecute('Any X,Y WHERE X login %(syt)s, Y login "cochon"', {'syt': SYT}))
 
     def test_exists1(self):
@@ -274,16 +275,18 @@ class LDAPUserSourceTC(CubicWebTC):
         self.assertEqual(rset.rows, [['admin', 'activated'], [SYT, 'activated']])
 
     def test_exists2(self):
-        self.create_user('comme')
-        self.create_user('cochon')
+        req = self.request()
+        self.create_user(req, 'comme')
+        self.create_user(req, 'cochon')
         self.sexecute('SET X copain Y WHERE X login "comme", Y login "cochon"')
         rset = self.sexecute('Any GN ORDERBY GN WHERE X in_group G, G name GN, '
                              '(G name "managers" OR EXISTS(X copain T, T login in ("comme", "cochon")))')
         self.assertEqual(rset.rows, [['managers'], ['users']])
 
     def test_exists3(self):
-        self.create_user('comme')
-        self.create_user('cochon')
+        req = self.request()
+        self.create_user(req, 'comme')
+        self.create_user(req, 'cochon')
         self.sexecute('SET X copain Y WHERE X login "comme", Y login "cochon"')
         self.failUnless(self.sexecute('Any X, Y WHERE X copain Y, X login "comme", Y login "cochon"'))
         self.sexecute('SET X copain Y WHERE X login %(syt)s, Y login "cochon"', {'syt': SYT})
@@ -293,9 +296,10 @@ class LDAPUserSourceTC(CubicWebTC):
         self.assertEqual(sorted(rset.rows), [['managers', 'admin'], ['users', 'comme'], ['users', SYT]])
 
     def test_exists4(self):
-        self.create_user('comme')
-        self.create_user('cochon', groups=('users', 'guests'))
-        self.create_user('billy')
+        req = self.request()
+        self.create_user(req, 'comme')
+        self.create_user(req, 'cochon', groups=('users', 'guests'))
+        self.create_user(req, 'billy')
         self.sexecute('SET X copain Y WHERE X login "comme", Y login "cochon"')
         self.sexecute('SET X copain Y WHERE X login "cochon", Y login "cochon"')
         self.sexecute('SET X copain Y WHERE X login "comme", Y login "billy"')
@@ -315,9 +319,10 @@ class LDAPUserSourceTC(CubicWebTC):
         self.assertEqual(sorted(rset.rows), sorted(all.rows))
 
     def test_exists5(self):
-        self.create_user('comme')
-        self.create_user('cochon', groups=('users', 'guests'))
-        self.create_user('billy')
+        req = self.request()
+        self.create_user(req, 'comme')
+        self.create_user(req, 'cochon', groups=('users', 'guests'))
+        self.create_user(req, 'billy')
         self.sexecute('SET X copain Y WHERE X login "comme", Y login "cochon"')
         self.sexecute('SET X copain Y WHERE X login "cochon", Y login "cochon"')
         self.sexecute('SET X copain Y WHERE X login "comme", Y login "billy"')
@@ -347,7 +352,8 @@ class LDAPUserSourceTC(CubicWebTC):
                           sorted(r[0] for r in afeids + ueids))
 
     def _init_security_test(self):
-        self.create_user('iaminguestsgrouponly', groups=('guests',))
+        req = self.request()
+        self.create_user(req, 'iaminguestsgrouponly', groups=('guests',))
         cnx = self.login('iaminguestsgrouponly')
         return cnx.cursor()
 
