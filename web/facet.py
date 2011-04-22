@@ -451,6 +451,11 @@ class VocabularyFacet(AbstractFacet):
         return False
 
 
+def encode(obj, encoding):
+    if isinstance(obj, unicode):
+        return obj.encode(encoding)
+    return unicode(obj).encode(encoding)
+
 class RelationFacet(VocabularyFacet):
     """Base facet to filter some entities according to other entities to which
     they are related. Create concret facet by inheriting from this class an then
@@ -605,7 +610,8 @@ class RelationFacet(VocabularyFacet):
                 insert_attr_select_relation(
                     rqlst, self.filtered_variable, self.rtype, self.role, self.target_attr,
                     select_target_entity=False)
-            values = [str(x) for x, in self.rqlexec(rqlst.as_string())]
+            encoding = self._cw.encoding
+            values = [encode(x, encoding) for x, in self.rqlexec(rqlst.as_string())]
         except:
             self.exception('while computing values for %s', self)
             return []
