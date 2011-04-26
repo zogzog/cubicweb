@@ -257,11 +257,6 @@ class RQLRewriter(object):
                 insert_scope = None
                 for vi in self.varinfos:
                     scope = vi.get('stinfo', {}).get('scope', self.select)
-                    while True:
-                        negstmt = scope.neged()
-                        if negstmt is None:
-                            break
-                        scope = negstmt.scope
                     if insert_scope is None:
                         insert_scope = scope
                     else:
