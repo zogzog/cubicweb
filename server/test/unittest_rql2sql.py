@@ -1336,6 +1336,13 @@ FROM cw_Personne AS _P''')
                     '''SELECT CAST(_P.cw_eid AS text)
 FROM cw_Personne AS _P''')
 
+    def test_regexp(self):
+        self._check("Any X WHERE X login REGEXP '[0-9].*'",
+                    '''SELECT _X.cw_eid
+FROM cw_CWUser AS _X
+WHERE _X.cw_login ~ [0-9].*
+''')
+
     def test_parser_parse(self):
         for t in self._parse(PARSER):
             yield t
@@ -1635,6 +1642,9 @@ class SqlServer2005SQLGeneratorTC(PostgresSQLGeneratorTC):
         for t in self._parse(HAS_TEXT_LG_INDEXER):
             yield t
 
+    def test_regexp(self):
+        self.skipTest('regexp-based pattern matching not implemented in sqlserver')
+
     def test_or_having_fake_terms(self):
         self._check('Any X WHERE X is CWUser, X creation_date D HAVING YEAR(D) = "2010" OR D = NULL',
                     '''SELECT _X.cw_eid
@@ -1747,6 +1757,14 @@ class SqliteSQLGeneratorTC(PostgresSQLGeneratorTC):
         self._check("Any MONTH(D) WHERE P is Personne, P creation_date D",
                     '''SELECT MONTH(_P.cw_creation_date)
 FROM cw_Personne AS _P''')
+
+    def test_regexp(self):
+        self._check("Any X WHERE X login REGEXP '[0-9].*'",
+                    '''SELECT _X.cw_eid
+FROM cw_CWUser AS _X
+WHERE _X.cw_login REGEXP [0-9].*
+''')
+
 
     def test_union(self):
         for t in self._parse((
@@ -1892,6 +1910,13 @@ FROM cw_Personne AS _P''')
         self._check("Any CAST(String, P) WHERE P is Personne",
                     '''SELECT CAST(_P.cw_eid AS mediumtext)
 FROM cw_Personne AS _P''')
+
+    def test_regexp(self):
+        self._check("Any X WHERE X login REGEXP '[0-9].*'",
+                    '''SELECT _X.cw_eid
+FROM cw_CWUser AS _X
+WHERE _X.cw_login REGEXP [0-9].*
+''')
 
     def test_from_clause_needed(self):
         queries = [("Any 1 WHERE EXISTS(T is CWGroup, T name 'managers')",

@@ -1357,6 +1357,8 @@ class SQLGenerator(object):
                 operator = ' LIKE '
             else:
                 operator = ' %s ' % operator
+        elif operator == 'REGEXP':
+            return ' %s' % self.dbhelper.sql_regexp_match_expression(rhs.accept(self))
         elif (operator == '=' and isinstance(rhs, Constant)
               and rhs.eval(self._args) is None):
             if lhs is None:

@@ -443,6 +443,15 @@ class QuerierTC(BaseQuerierTC):
             self.assertEqual(rset.rows[0][0], result)
             self.assertEqual(rset.description, [('Int',)])
 
+    def test_regexp_based_pattern_matching(self):
+        peid1 = self.execute("INSERT Personne X: X nom 'bidule'")[0][0]
+        peid2 = self.execute("INSERT Personne X: X nom 'cidule'")[0][0]
+        rset = self.execute('Any X WHERE X is Personne, X nom REGEXP "^b"')
+        self.assertEqual(len(rset.rows), 1, rset.rows)
+        self.assertEqual(rset.rows[0][0], peid1)
+        rset = self.execute('Any X WHERE X is Personne, X nom REGEXP "idu"')
+        self.assertEqual(len(rset.rows), 2, rset.rows)
+
     def test_select_aggregat_count(self):
         rset = self.execute('Any COUNT(X)')
         self.assertEqual(len(rset.rows), 1)
