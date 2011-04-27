@@ -237,3 +237,9 @@ class login_user(RelationDefinition):
     subject = 'Personne'
     object = 'CWUser'
     cardinality = '??'
+
+class ambiguous_inlined(RelationDefinition):
+    subject = ('Affaire', 'Note')
+    object = 'CWUser'
+    inlined = True
+    cardinality = '?*'

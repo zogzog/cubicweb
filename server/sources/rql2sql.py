@@ -84,6 +84,7 @@ def _new_var(select, varname):
         newvar.prepare_annotation()
         newvar.stinfo['scope'] = select
         newvar._q_invariant = False
+        select.selection.append(VariableRef(newvar))
     return newvar
 
 def _fill_to_wrap_rel(var, newselect, towrap, schema):
@@ -93,10 +94,12 @@ def _fill_to_wrap_rel(var, newselect, towrap, schema):
             towrap.add( (var, rel) )
             for vref in rel.children[1].iget_nodes(VariableRef):
                 newivar = _new_var(newselect, vref.name)
-                newselect.selection.append(VariableRef(newivar))
                 _fill_to_wrap_rel(vref.variable, newselect, towrap, schema)
         elif rschema.final:
             towrap.add( (var, rel) )
+            for vref in rel.children[1].iget_nodes(VariableRef):
+                newivar = _new_var(newselect, vref.name)
+                newivar.stinfo['attrvar'] = (var, rel.r_type)
 
 def rewrite_unstable_outer_join(select, solutions, unstable, schema):
     """if some optional variables are unstable, they should be selected in a
@@ -116,11 +119,6 @@ def rewrite_unstable_outer_join(select, solutions, unstable, schema):
         # extract aliases / selection
         newvar = _new_var(newselect, var.name)
         newselect.selection = [VariableRef(newvar)]
-        for avar in select.defined_vars.itervalues():
-            if avar.stinfo['attrvar'] is var:
-                newavar = _new_var(newselect, avar.name)
-                newavar.stinfo['attrvar'] = newvar
-                newselect.selection.append(VariableRef(newavar))
         towrap_rels = set()
         _fill_to_wrap_rel(var, newselect, towrap_rels, schema)
         # extract relations

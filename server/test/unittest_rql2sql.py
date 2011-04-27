@@ -909,7 +909,28 @@ FROM cw_Note AS _G LEFT OUTER JOIN cw_State AS _S ON (_G.cw_in_state=_S.cw_eid A
     ('Any O,AD  WHERE NOT S inline1 O, S eid 123, O todo_by AD?',
      '''SELECT _O.cw_eid, rel_todo_by0.eid_to
 FROM cw_Note AS _S, cw_Affaire AS _O LEFT OUTER JOIN todo_by_relation AS rel_todo_by0 ON (rel_todo_by0.eid_from=_O.cw_eid)
-WHERE (_S.cw_inline1 IS NULL OR _S.cw_inline1!=_O.cw_eid) AND _S.cw_eid=123''')
+WHERE (_S.cw_inline1 IS NULL OR _S.cw_inline1!=_O.cw_eid) AND _S.cw_eid=123'''),
+
+    ('Any X,AE WHERE X multisource_inlined_rel S?, S ambiguous_inlined A, A modification_date AE',
+     '''SELECT _X.cw_eid, _T0.C2
+FROM cw_Card AS _X LEFT OUTER JOIN (SELECT _S.cw_eid AS C0, _A.cw_eid AS C1, _A.cw_modification_date AS C2
+FROM cw_Affaire AS _S, cw_CWUser AS _A
+WHERE _S.cw_ambiguous_inlined=_A.cw_eid
+UNION ALL
+SELECT _S.cw_eid AS C0, _A.cw_eid AS C1, _A.cw_modification_date AS C2
+FROM cw_CWUser AS _A, cw_Note AS _S
+WHERE _S.cw_ambiguous_inlined=_A.cw_eid) AS _T0 ON (_X.cw_multisource_inlined_rel=_T0.C0)
+UNION ALL
+SELECT _X.cw_eid, _T0.C2
+FROM cw_Note AS _X LEFT OUTER JOIN (SELECT _S.cw_eid AS C0, _A.cw_eid AS C1, _A.cw_modification_date AS C2
+FROM cw_Affaire AS _S, cw_CWUser AS _A
+WHERE _S.cw_ambiguous_inlined=_A.cw_eid
+UNION ALL
+SELECT _S.cw_eid AS C0, _A.cw_eid AS C1, _A.cw_modification_date AS C2
+FROM cw_CWUser AS _A, cw_Note AS _S
+WHERE _S.cw_ambiguous_inlined=_A.cw_eid) AS _T0 ON (_X.cw_multisource_inlined_rel=_T0.C0)'''
+    ),
+
     ]
 
 VIRTUAL_VARS = [
