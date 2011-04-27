@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -79,6 +79,20 @@ class CWUser(AnyEntity):
             self.warning('incorrect value for eproperty %s of user %s',
                          key, self.login)
         return self._cw.vreg.property_value(key)
+
+    def set_property(self, pkey, value):
+        value = unicode(value)
+        try:
+            prop = self._cw.execute(
+                'CWProperty X WHERE X pkey %(k)s, X for_user U, U eid %(u)s',
+                {'k': pkey, 'u': self.eid}).get_entity(0, 0)
+        except:
+            kwargs = dict(pkey=unicode(pkey), value=value)
+            if self.is_in_group('managers'):
+                kwargs['for_user'] = self
+            self._cw.create_entity('CWProperty', **kwargs)
+        else:
+            prop.set_attributes(value=value)
 
     def matching_groups(self, groups):
         """return the number of the given group(s) in which the user is

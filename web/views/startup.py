@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -15,14 +15,15 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""Set of HTML startup views. A startup view is global, e.g. doesn't
-apply to a result set.
+"""Set of HTML startup views. A startup view is global, e.g. doesn't apply to a
+result set.
 """
 
 __docformat__ = "restructuredtext en"
 _ = unicode
 
 from logilab.common.textutils import unormalize
+from logilab.common.deprecation import deprecated
 from logilab.mtconverter import xml_escape
 
 from cubicweb.view import StartupView
@@ -35,101 +36,59 @@ class ManageView(StartupView):
     title = _('manage')
     http_cache_manager = httpcache.EtagHTTPCacheManager
     add_etype_links = ()
-
-    def display_folders(self):
-        return False
+    skip_startup_views = set( ('index', 'manage', 'schema', 'owl', 'changelog',
+                               'systempropertiesform', 'propertiesform',
+                               'cw.user-management', 'cw.source-management',
+                               'siteinfo', 'info', 'registry', 'gc',
+                               'tree') )
 
     def call(self, **kwargs):
         """The default view representing the instance's management"""
         self._cw.add_css('cubicweb.manageview.css')
         self.w(u'<h1>%s</h1>' % self._cw.property_value('ui.site-title'))
-        if not self.display_folders():
-            self._main_index()
-        else:
-            self.w(u'<table><tr>\n')
-            self.w(u'<td style="width:40%">')
-            self._main_index()
-            self.w(u'</td><td style="width:60%">')
-            self.folders()
-            self.w(u'</td>')
-            self.w(u'</tr></table>\n')
+        self.entities()
+        self.manage_actions()
+        self.startup_views()
 
-    def _main_index(self):
-        req = self._cw
-        manager = req.user.matching_groups('managers')
-        if not manager and 'Card' in self._cw.vreg.schema:
-            rset = self._cw.execute('Card X WHERE X wikiid "index"')
-        else:
-            rset = None
-        if rset:
-            self.wview('inlined', rset, row=0)
-        else:
-            self.entities()
+    def manage_actions(self):
+        allactions = self._cw.vreg['actions'].possible_actions(self._cw)
+        if allactions.get('manage'):
             self.w(u'<div class="hr">&#160;</div>')
-            self.startup_views()
-        if manager and 'Card' in self._cw.vreg.schema:
-            self.w(u'<div class="hr">&#160;</div>')
-            if rset:
-                href = rset.get_entity(0, 0).absolute_url(vid='edition')
-                label = self._cw._('edit the index page')
-            else:
-                href = req.build_url('view', vid='creation', etype='Card', wikiid='index')
-                label = self._cw._('create an index page')
-            self.w(u'<br/><a href="%s">%s</a>\n' % (xml_escape(href), label))
-
-    def folders(self):
-        self.w(u'<h2>%s</h2>\n' % self._cw._('Browse by category'))
-        self._cw.vreg['views'].select('tree', self._cw).render(w=self.w, maxlevel=1)
-
-    def create_links(self):
-        self.w(u'<ul class="createLink">')
-        for etype in self.add_etype_links:
-            eschema = self._cw.vreg.schema.eschema(etype)
-            if eschema.has_perm(self._cw, 'add'):
+            self.w(u'<h2>%s</h2>\n' % self._cw._('Manage'))
+            self.w(u'<ul class="manageActions">')
+            for action in allactions['manage']:
                 self.w(u'<li><a href="%s">%s</a></li>' % (
-                        self._cw.build_url('add/%s' % eschema),
-                        self._cw.__('add a %s' % eschema).capitalize()))
-        self.w(u'</ul>')
+                    action.url(), self._cw._(action.title)))
+            self.w(u'</ul>')
 
     def startup_views(self):
-        self.w(u'<h2>%s</h2>\n' % self._cw._('Startup views'))
-        self.startupviews_table()
-
-    def startupviews_table(self):
-        views = self._cw.vreg['views'].possible_views(self._cw, None)
+        views = [v for v in self._cw.vreg['views'].possible_views(self._cw, None)
+                 if v.category == 'startupview'
+                 and v.__regid__ not in self.skip_startup_views]
         if not views:
             return
+        self.w(u'<div class="hr">&#160;</div>')
+        self.w(u'<h2>%s</h2>\n' % self._cw._('Startup views'))
         self.w(u'<ul class="startup">')
         for v in sorted(views, key=lambda x: self._cw._(x.title)):
-            if v.category != 'startupview' or v.__regid__ in ('index', 'tree', 'manage'):
-                continue
             self.w('<li><a href="%s">%s</a></li>' % (
                 xml_escape(v.url()), xml_escape(self._cw._(v.title).capitalize())))
         self.w(u'</ul>')
 
     def entities(self):
         schema = self._cw.vreg.schema
-        self.w(u'<h2>%s</h2>\n' % self._cw._('Browse by entity type'))
-        manager = self._cw.user.matching_groups('managers')
-        self.w(u'<table class="startup">')
-        if manager:
-            self.w(u'<tr><th colspan="4">%s</th></tr>\n' % self._cw._('application entities'))
-        self.entity_types_table(eschema for eschema in schema.entities()
-                                if uicfg.indexview_etype_section.get(eschema) == 'application')
-        if manager:
-            self.w(u'<tr><th colspan="4">%s</th></tr>\n' % self._cw._('system entities'))
-            self.entity_types_table(eschema for eschema in schema.entities()
-                                if uicfg.indexview_etype_section.get(eschema) == 'system')
-            if 'CWAttribute' in schema: # check schema support
-                self.w(u'<tr><th colspan="4">%s</th></tr>\n' % self._cw._('schema entities'))
-                self.entity_types_table(eschema for eschema in schema.entities()
-                                        if uicfg.indexview_etype_section.get(eschema) == 'schema')
-        self.w(u'</table>')
+        eschemas = [eschema for eschema in schema.entities()
+                    if uicfg.indexview_etype_section.get(eschema) == 'application']
+        if eschemas:
+            self.w(u'<div class="hr">&#160;</div>')
+            self.w(u'<h2>%s</h2>\n' % self._cw._('Browse by entity type'))
+            self.w(u'<table class="startup">')
+            self.entity_types_table(eschemas)
+            self.w(u'</table>')
 
     def entity_types_table(self, eschemas):
-        newline = 0
         infos = sorted(self.entity_types(eschemas),
-                       key=lambda (l,a,e):unormalize(l))
+                       key=lambda (l,a,e): unormalize(l))
         q, r = divmod(len(infos), 2)
         if r:
             infos.append( (None, '&#160;', '&#160;') )
@@ -140,10 +99,9 @@ class ManageView(StartupView):
             self.w(u'<td class="addcol">%s</td><td>%s</td>\n' % (addlink2, etypelink2))
             self.w(u'</tr>\n')
 
-
     def entity_types(self, eschemas):
-        """return a list of formatted links to get a list of entities of
-        a each entity's types
+        """return an iterator on formatted links to get a list of entities of
+        each entity types
         """
         req = self._cw
         for eschema in eschemas:
@@ -161,6 +119,18 @@ class ManageView(StartupView):
                 xml_escape(url), label, nb)
             if eschema.has_perm(req, 'add'):
                 yield (label, etypelink, self.add_entity_link(etype))
+            else:
+                yield (label, etypelink, u'')
+
+    def create_links(self):
+        self.w(u'<ul class="createLink">')
+        for etype in self.add_etype_links:
+            eschema = self.schema.eschema(etype)
+            if eschema.has_perm(self._cw, 'add'):
+                self.w(u'<li><a href="%s">%s</a></li>' % (
+                        self._cw.build_url('add/%s' % eschema),
+                        self._cw.__('add a %s' % eschema).capitalize()))
+        self.w(u'</ul>')
 
     def add_entity_link(self, etype):
         """creates a [+] link for adding an entity"""
@@ -168,11 +138,21 @@ class ManageView(StartupView):
         return u'[<a href="%s" title="%s">+</a>]' % (
             xml_escape(url), self._cw.__('add a %s' % etype))
 
+    @deprecated('[3.11] display_folders method is deprecated, backport it if needed')
+    def display_folders(self):
+        return False
+
+    @deprecated('[3.11] folders method is deprecated, backport it if needed')
+    def folders(self):
+        self.w(u'<h2>%s</h2>\n' % self._cw._('Browse by category'))
+        self._cw.vreg['views'].select('tree', self._cw).render(w=self.w, maxlevel=1)
+
 
 class IndexView(ManageView):
     __regid__ = 'index'
     title = _('view_index')
 
+    @deprecated('[3.11] display_folders method is deprecated, backport it if needed')
     def display_folders(self):
         return 'Folder' in self._cw.vreg.schema and self._cw.execute('Any COUNT(X) WHERE X is Folder')[0][0]
 

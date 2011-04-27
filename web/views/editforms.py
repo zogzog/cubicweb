@@ -99,6 +99,7 @@ class EditionFormView(FormViewMixIn, EntityView):
     # add yes() so it takes precedence over deprecated views in baseforms,
     # though not baseforms based customized view
     __select__ = one_line_rset() & non_final_entity() & yes()
+    form_id = 'edition'
 
     title = _('modification')
 
@@ -109,7 +110,8 @@ class EditionFormView(FormViewMixIn, EntityView):
     def render_form(self, entity):
         """fetch and render the form"""
         self.form_title(entity)
-        form = self._cw.vreg['forms'].select('edition', self._cw, entity=entity,
+        form = self._cw.vreg['forms'].select(self.form_id, self._cw,
+                                             entity=entity,
                                              submitmsg=self.submited_message())
         self.init_form(form, entity)
         form.render(w=self.w)

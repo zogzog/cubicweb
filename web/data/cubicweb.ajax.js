@@ -283,7 +283,7 @@ jQuery.fn.loadxhtml = function(url, form, reqtype, mode, cursor) {
  * dictionary, `reqtype` the HTTP request type (get 'GET' or 'POST').
  */
 function loadRemote(url, form, reqtype, sync) {
-    if (!url.toLowerCase().startswith(baseuri())) {
+    if (!url.toLowerCase().startswith(baseuri().toLowerCase())) {
         url = baseuri() + url;
     }
     if (!sync) {
@@ -501,7 +501,7 @@ function buildWysiwygEditors(parent) {
                 var fck = new FCKeditor(this.id);
                 fck.Config['CustomConfigurationsPath'] = fckconfigpath;
                 fck.Config['DefaultLanguage'] = fcklang;
-                fck.BasePath = "fckeditor/";
+                fck.BasePath = baseuri() + "fckeditor/";
                 fck.ReplaceTextarea();
             } else {
                 cw.log('fckeditor could not be found.');
@@ -606,6 +606,29 @@ function reload(domid, compid, registry, formparams  /* ... */) {
     ajaxArgs = ajaxArgs.concat(cw.utils.sliceList(arguments, 4));
     var params = ajaxFuncArgs.apply(null, ajaxArgs);
     $('#'+domid).loadxhtml('json', params, null, 'swap');
+}
+
+/* ajax tabs ******************************************************************/
+
+function setTab(tabname, cookiename) {
+    // set appropriate cookie
+    loadRemote('json', ajaxFuncArgs('set_cookie', null, cookiename, tabname));
+    // trigger show + tabname event
+    triggerLoad(tabname);
+}
+
+function loadNow(eltsel, holesel, reloadable) {
+    var lazydiv = jQuery(eltsel);
+    var hole = lazydiv.children(holesel);
+    if ((hole.length == 0) && ! reloadable) {
+        /* the hole is already filed */
+        return;
+    }
+    lazydiv.loadxhtml(lazydiv.attr('cubicweb:loadurl'), {'pageid': pageid});
+}
+
+function triggerLoad(divid) {
+    jQuery('#lazy-' + divid).trigger('load_' + divid);
 }
 
 /* DEPRECATED *****************************************************************/

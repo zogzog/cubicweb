@@ -580,6 +580,8 @@ class JQueryDatePicker(FieldWidget):
 
     def _render(self, form, field, renderer):
         req = form._cw
+        if req.lang != 'en':
+            req.add_js('jquery.ui.datepicker-%s.js' % req.lang)
         domid = field.dom_id(form, self.suffix)
         # XXX find a way to understand every format
         fmt = req.property_value('ui.date-format')
@@ -592,8 +594,11 @@ class JQueryDatePicker(FieldWidget):
             value = self.values(form, field)[0]
         else:
             value = self.datestr
+        attrs = {}
+        if self.settabindex:
+            attrs['tabindex'] = req.next_tabindex()
         return tags.input(id=domid, name=domid, value=value,
-                          type='text', size='10')
+                          type='text', size='10', **attrs)
 
 
 class JQueryTimePicker(FieldWidget):
@@ -618,6 +623,9 @@ class JQueryTimePicker(FieldWidget):
             value = self.values(form, field)[0]
         else:
             value = self.timestr
+        attrs = {}
+        if self.settabindex:
+            attrs['tabindex'] = req.next_tabindex()
         return tags.input(id=domid, name=domid, value=value,
                           type='text', size='5')
 
@@ -768,7 +776,7 @@ class StaticFileAutoCompletionWidget(AutoCompletionWidget):
             fname = entity.autocomplete_initfuncs[field.name]
         else:
             fname = self.autocomplete_initfunc
-        return entity._cw.datadir_url + fname
+        return entity._cw.data_url(fname)
 
 
 class RestrictedAutoCompletionWidget(AutoCompletionWidget):

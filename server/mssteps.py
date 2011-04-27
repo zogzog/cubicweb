@@ -162,6 +162,7 @@ class AggrStep(LimitOffsetMixIn, Step):
 
     def get_sql(self):
         self.inputmap = inputmap = self.children[-1].outputmap
+        dbhelper=self.plan.syssource.dbhelper
         # get the select clause
         clause = []
         for i, term in enumerate(self.selection):
@@ -218,12 +219,16 @@ class AggrStep(LimitOffsetMixIn, Step):
                         if not vref.name in grouped:
                             sql[-1] += ', ' + self.inputmap[vref.name]
                             grouped.add(vref.name)
-            sql.append('ORDER BY %s' % ', '.join(clause))
-        if self.limit:
-            sql.append('LIMIT %s' % self.limit)
-        if self.offset:
-            sql.append('OFFSET %s' % self.offset)
-        return ' '.join(sql)
+            sql = dbhelper.sql_add_order_by(' '.join(sql),
+                                            clause,
+                                            None, False,
+                                            self.limit or self.offset)
+        else:
+            sql = ' '.join(sql)
+            clause = None
+
+        sql = dbhelper.sql_add_limit_offset(sql, self.limit, self.offset, clause)
+        return sql
 
     def visit_function(self, function):
         """generate SQL name for a function"""

@@ -92,9 +92,15 @@ class EntityFieldsFormTC(CubicWebTC):
         form.content_type = 'text/html'
         pageinfo = self._check_html(form.render(), form, template=None)
         inputs = pageinfo.find_tag('select', False)
-        self.failUnless(any(attrs for t, attrs in inputs if attrs.get('name') == 'in_group-subject:A'))
+        ok = False
+        for selectnode in pageinfo.matching_nodes('select', name='from_in_group-subject:A'):
+            for optionnode in selectnode:
+                self.assertEqual(optionnode.get('value'), str(geid))
+                self.assertEqual(ok, False)
+                ok = True
+        self.assertEqual(ok, True, 'expected option not found')
         inputs = pageinfo.find_tag('input', False)
-        self.failIf(any(attrs for t, attrs in inputs if attrs.get('name') == '__linkto'))
+        self.failIf(list(pageinfo.matching_nodes('input', name='__linkto')))
 
     def test_reledit_composite_field(self):
         rset = self.execute('INSERT BlogEntry X: X title "cubicweb.org", X content "hop"')

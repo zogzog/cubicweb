@@ -69,8 +69,8 @@ class InMemoryRepositorySessionManager(AbstractSessionManager):
         raise :exc:`cubicweb.AuthenticationError` if authentication failed
         (no authentication info found or wrong user/password)
         """
-        cnx, login, authinfo = self.authmanager.authenticate(req)
-        session = DBAPISession(cnx, login, authinfo)
+        cnx, login = self.authmanager.authenticate(req)
+        session = DBAPISession(cnx, login)
         self._sessions[session.sessionid] = session
         # associate the connection to the current request
         req.set_session(session)

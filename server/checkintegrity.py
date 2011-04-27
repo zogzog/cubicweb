@@ -19,8 +19,6 @@
 
 * integrity of a CubicWeb repository. Hum actually only the system database is
   checked.
-
-* consistency of multi-sources instance mapping file
 """
 
 from __future__ import with_statement
@@ -32,7 +30,7 @@ from datetime import datetime
 
 from logilab.common.shellutils import ProgressBar
 
-from cubicweb.schema import META_RTYPES, VIRTUAL_RTYPES, PURE_VIRTUAL_RTYPES
+from cubicweb.schema import PURE_VIRTUAL_RTYPES
 from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.server.session import security_enabled
 
@@ -377,103 +375,3 @@ def check(repo, cnx, checks, reindex, fix, withpb=True):
         session.set_pool()
         reindex_entities(repo.schema, session, withpb=withpb)
         cnx.commit()
-
-
-def info(msg, *args):
-    if args:
-        msg = msg % args
-    print 'INFO: %s' % msg
-
-def warning(msg, *args):
-    if args:
-        msg = msg % args
-    print 'WARNING: %s' % msg
-
-def error(msg, *args):
-    if args:
-        msg = msg % args
-    print 'ERROR: %s' % msg
-
-def check_mapping(schema, mapping, warning=warning, error=error):
-    # first check stuff found in mapping file exists in the schema
-    for attr in ('support_entities', 'support_relations'):
-        for ertype in mapping[attr].keys():
-            try:
-                mapping[attr][ertype] = erschema = schema[ertype]
-            except KeyError:
-                error('reference to unknown type %s in %s', ertype, attr)
-                del mapping[attr][ertype]
-            else:
-                if erschema.final or erschema in META_RTYPES:
-                    error('type %s should not be mapped in %s', ertype, attr)
-                    del mapping[attr][ertype]
-    for attr in ('dont_cross_relations', 'cross_relations'):
-        for rtype in list(mapping[attr]):
-            try:
-                rschema = schema.rschema(rtype)
-            except KeyError:
-                error('reference to unknown relation type %s in %s', rtype, attr)
-                mapping[attr].remove(rtype)
-            else:
-                if rschema.final or rschema in VIRTUAL_RTYPES:
-                    error('relation type %s should not be mapped in %s',
-                          rtype, attr)
-                    mapping[attr].remove(rtype)
-    # check relation in dont_cross_relations aren't in support_relations
-    for rschema in mapping['dont_cross_relations']:
-        if rschema in mapping['support_relations']:
-            info('relation %s is in dont_cross_relations and in support_relations',
-                 rschema)
-    # check relation in cross_relations are in support_relations
-    for rschema in mapping['cross_relations']:
-        if rschema not in mapping['support_relations']:
-            info('relation %s is in cross_relations but not in support_relations',
-                 rschema)
-    # check for relation in both cross_relations and dont_cross_relations
-    for rschema in mapping['cross_relations'] & mapping['dont_cross_relations']:
-        error('relation %s is in both cross_relations and dont_cross_relations',
-              rschema)
-    # now check for more handy things
-    seen = set()
-    for eschema in mapping['support_entities'].values():
-        for rschema, ttypes, role in eschema.relation_definitions():
-            if rschema in META_RTYPES:
-                continue
-            ttypes = [ttype for ttype in ttypes if ttype in mapping['support_entities']]
-            if not rschema in mapping['support_relations']:
-                somethingprinted = False
-                for ttype in ttypes:
-                    rdef = rschema.role_rdef(eschema, ttype, role)
-                    seen.add(rdef)
-                    if rdef.role_cardinality(role) in '1+':
-                        error('relation %s with %s as %s and target type %s is '
-                              'mandatory but not supported',
-                              rschema, eschema, role, ttype)
-                        somethingprinted = True
-                    elif ttype in mapping['support_entities']:
-                        if rdef not in seen:
-                            warning('%s could be supported', rdef)
-                        somethingprinted = True
-                if rschema not in mapping['dont_cross_relations']:
-                    if role == 'subject' and rschema.inlined:
-                        error('inlined relation %s of %s should be supported',
-                              rschema, eschema)
-                    elif not somethingprinted and rschema not in seen and rschema not in mapping['cross_relations']:
-                        print 'you may want to specify something for %s' % rschema
-                        seen.add(rschema)
-            else:
-                if not ttypes:
-                    warning('relation %s with %s as %s is supported but no target '
-                            'type supported', rschema, role, eschema)
-                if rschema in mapping['cross_relations'] and rschema.inlined:
-                    error('you should unline relation %s which is supported and '
-                          'may be crossed ', rschema)
-    for rschema in mapping['support_relations'].values():
-        if rschema in META_RTYPES:
-            continue
-        for subj, obj in rschema.rdefs:
-            if subj in mapping['support_entities'] and obj in mapping['support_entities']:
-                break
-        else:
-            error('relation %s is supported but none if its definitions '
-                  'matches supported entities', rschema)

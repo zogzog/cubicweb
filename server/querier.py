@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -38,7 +38,8 @@ from cubicweb.rset import ResultSet
 
 from cubicweb.server.utils import cleanup_solutions
 from cubicweb.server.rqlannotation import SQLGenAnnotator, set_qdata
-from cubicweb.server.ssplanner import READ_ONLY_RTYPES, add_types_restriction, EditedEntity
+from cubicweb.server.ssplanner import READ_ONLY_RTYPES, add_types_restriction
+from cubicweb.server.edition import EditedEntity
 from cubicweb.server.session import security_enabled
 
 def empty_rset(rql, args, rqlst=None):
@@ -353,7 +354,7 @@ class ExecutionPlan(object):
                     myrqlst = select.copy(solutions=lchecksolutions)
                     myunion.append(myrqlst)
                     # in-place rewrite + annotation / simplification
-                    lcheckdef = [((var, 'X'), rqlexprs) for var, rqlexprs in lcheckdef]
+                    lcheckdef = [({var: 'X'}, rqlexprs) for var, rqlexprs in lcheckdef]
                     rewrite(myrqlst, lcheckdef, lchecksolutions, self.args)
                     add_noinvariant(noinvariant, restricted, myrqlst, nbtrees)
                 if () in localchecks:

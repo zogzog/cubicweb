@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -114,7 +114,7 @@ class wrap_on_write(object):
 
 # use networkX instead ?
 # http://networkx.lanl.gov/reference/algorithms.traversal.html#module-networkx.algorithms.traversal.astar
-def transitive_closure_of(entity, relname, _seen=None):
+def transitive_closure_of(entity, rtype, _seen=None):
     """return transitive closure *for the subgraph starting from the given
     entity* (eg 'parent' entities are not included in the results)
     """
@@ -122,10 +122,10 @@ def transitive_closure_of(entity, relname, _seen=None):
         _seen = set()
     _seen.add(entity.eid)
     yield entity
-    for child in getattr(entity, relname):
+    for child in getattr(entity, rtype):
         if child.eid in _seen:
             continue
-        for subchild in transitive_closure_of(child, relname, _seen):
+        for subchild in transitive_closure_of(child, rtype, _seen):
             yield subchild
 
 

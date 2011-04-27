@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -121,16 +121,18 @@ class AnyEntity(Entity):
     # edition helper functions ################################################
 
     def linked_to(self, rtype, role, remove=True):
-        """if entity should be linked to another using __linkto form param for
+        """if entity should be linked to another using '__linkto' form param for
         the given relation/role, return eids of related entities
 
         This method is consuming matching link-to information from form params
-        if `remove` is True (by default).
+        if `remove` is True (by default). Computed values are stored into a
+        `cw_linkto` attribute, a dictionary with (relation, role) as key and
+        linked eids as value.
         """
         try:
-            return self.__linkto[(rtype, role)]
+            return self.cw_linkto[(rtype, role)]
         except AttributeError:
-            self.__linkto = {}
+            self.cw_linkto = {}
         except KeyError:
             pass
         linktos = list(self._cw.list_form_param('__linkto'))
@@ -144,7 +146,7 @@ class AnyEntity(Entity):
                     linktos.remove(linkto)
                     self._cw.form['__linkto'] = linktos
                 linkedto.append(typed_eid(eid))
-        self.__linkto[(rtype, role)] = linkedto
+        self.cw_linkto[(rtype, role)] = linkedto
         return linkedto
 
     # server side helpers #####################################################

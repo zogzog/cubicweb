@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -18,11 +18,10 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """functional tests for core hooks
 
-note: most schemahooks.py hooks are actually tested in unittest_migrations.py
+Note:
+  syncschema.py hooks are mostly tested in server/test/unittest_migrations.py
 """
 from __future__ import with_statement
-
-from logilab.common.testlib import TestCase, unittest_main
 
 from datetime import datetime
 
@@ -30,38 +29,6 @@ from cubicweb import ValidationError, AuthenticationError, BadConnectionId
 from cubicweb.devtools.testlib import CubicWebTC
 
 class CoreHooksTC(CubicWebTC):
-
-    def test_delete_internal_entities(self):
-        self.assertRaises(ValidationError, self.execute,
-                          'DELETE CWEType X WHERE X name "CWEType"')
-        self.assertRaises(ValidationError, self.execute,
-                          'DELETE CWRType X WHERE X name "relation_type"')
-        self.assertRaises(ValidationError, self.execute,
-                          'DELETE CWGroup X WHERE X name "owners"')
-
-    def test_delete_required_relations_subject(self):
-        self.execute('INSERT CWUser X: X login "toto", X upassword "hop", X in_group Y '
-                     'WHERE Y name "users"')
-        self.commit()
-        self.execute('DELETE X in_group Y WHERE X login "toto", Y name "users"')
-        self.assertRaises(ValidationError, self.commit)
-        self.execute('DELETE X in_group Y WHERE X login "toto"')
-        self.execute('SET X in_group Y WHERE X login "toto", Y name "guests"')
-        self.commit()
-
-    def test_delete_required_relations_object(self):
-        self.skipTest('no sample in the schema ! YAGNI ? Kermaat ?')
-
-    def test_static_vocabulary_check(self):
-        self.assertRaises(ValidationError,
-                          self.execute,
-                          'SET X composite "whatever" WHERE X from_entity FE, FE name "CWUser", X relation_type RT, RT name "in_group"')
-
-    def test_missing_required_relations_subject_inline(self):
-        # missing in_group relation
-        self.execute('INSERT CWUser X: X login "toto", X upassword "hop"')
-        self.assertRaises(ValidationError,
-                          self.commit)
 
     def test_inlined(self):
         self.assertEqual(self.repo.schema['sender'].inlined, True)
@@ -72,54 +39,6 @@ class CoreHooksTC(CubicWebTC):
         self.execute('SET X sender Y WHERE X is Email, Y is EmailAddress')
         rset = self.execute('Any S WHERE X sender S, X eid %s' % eeid)
         self.assertEqual(len(rset), 1)
-
-    def test_composite_1(self):
-        self.execute('INSERT EmailAddress X: X address "toto@logilab.fr", X alias "hop"')
-        self.execute('INSERT EmailPart X: X content_format "text/plain", X ordernum 1, X content "this is a test"')
-        self.execute('INSERT Email X: X messageid "<1234>", X subject "test", X sender Y, X recipients Y, X parts P '
-                     'WHERE Y is EmailAddress, P is EmailPart')
-        self.failUnless(self.execute('Email X WHERE X sender Y'))
-        self.commit()
-        self.execute('DELETE Email X')
-        rset = self.execute('Any X WHERE X is EmailPart')
-        self.assertEqual(len(rset), 1)
-        self.commit()
-        rset = self.execute('Any X WHERE X is EmailPart')
-        self.assertEqual(len(rset), 0)
-
-    def test_composite_2(self):
-        self.execute('INSERT EmailAddress X: X address "toto@logilab.fr", X alias "hop"')
-        self.execute('INSERT EmailPart X: X content_format "text/plain", X ordernum 1, X content "this is a test"')
-        self.execute('INSERT Email X: X messageid "<1234>", X subject "test", X sender Y, X recipients Y, X parts P '
-                     'WHERE Y is EmailAddress, P is EmailPart')
-        self.commit()
-        self.execute('DELETE Email X')
-        self.execute('DELETE EmailPart X')
-        self.commit()
-        rset = self.execute('Any X WHERE X is EmailPart')
-        self.assertEqual(len(rset), 0)
-
-    def test_composite_redirection(self):
-        self.execute('INSERT EmailAddress X: X address "toto@logilab.fr", X alias "hop"')
-        self.execute('INSERT EmailPart X: X content_format "text/plain", X ordernum 1, X content "this is a test"')
-        self.execute('INSERT Email X: X messageid "<1234>", X subject "test", X sender Y, X recipients Y, X parts P '
-                     'WHERE Y is EmailAddress, P is EmailPart')
-        self.execute('INSERT Email X: X messageid "<2345>", X subject "test2", X sender Y, X recipients Y '
-                     'WHERE Y is EmailAddress')
-        self.commit()
-        self.execute('DELETE X parts Y WHERE X messageid "<1234>"')
-        self.execute('SET X parts Y WHERE X messageid "<2345>"')
-        self.commit()
-        rset = self.execute('Any X WHERE X is EmailPart')
-        self.assertEqual(len(rset), 1)
-        self.assertEqual(rset.get_entity(0, 0).reverse_parts[0].messageid, '<2345>')
-
-    def test_unsatisfied_constraints(self):
-        releid = self.execute('SET U in_group G WHERE G name "owners", U login "admin"')[0][0]
-        with self.assertRaises(ValidationError) as cm:
-            self.commit()
-        self.assertEqual(cm.exception.errors,
-                          {'in_group-object': u'RQLConstraint NOT O name "owners" failed'})
 
     def test_html_tidy_hook(self):
         req = self.request()
@@ -226,29 +145,6 @@ class UserGroupHooksTC(CubicWebTC):
         self.failIf(self.execute('Any X WHERE X created_by Y, X eid >= %(x)s', {'x': eid}))
 
 
-class CWPropertyHooksTC(CubicWebTC):
-
-    def test_unexistant_eproperty(self):
-        with self.assertRaises(ValidationError) as cm:
-            self.execute('INSERT CWProperty X: X pkey "bla.bla", X value "hop", X for_user U')
-        self.assertEqual(cm.exception.errors, {'pkey-subject': 'unknown property key bla.bla'})
-        with self.assertRaises(ValidationError) as cm:
-            self.execute('INSERT CWProperty X: X pkey "bla.bla", X value "hop"')
-        self.assertEqual(cm.exception.errors, {'pkey-subject': 'unknown property key bla.bla'})
-
-    def test_site_wide_eproperty(self):
-        with self.assertRaises(ValidationError) as cm:
-            self.execute('INSERT CWProperty X: X pkey "ui.site-title", X value "hop", X for_user U')
-        self.assertEqual(cm.exception.errors, {'for_user-subject': "site-wide property can't be set for user"})
-
-    def test_bad_type_eproperty(self):
-        with self.assertRaises(ValidationError) as cm:
-            self.execute('INSERT CWProperty X: X pkey "ui.language", X value "hop", X for_user U')
-        self.assertEqual(cm.exception.errors, {'value-subject': u'unauthorized value'})
-        with self.assertRaises(ValidationError) as cm:
-            self.execute('INSERT CWProperty X: X pkey "ui.language", X value "hop"')
-        self.assertEqual(cm.exception.errors, {'value-subject': u'unauthorized value'})
-
 
 class SchemaHooksTC(CubicWebTC):
 
@@ -271,4 +167,5 @@ class SchemaHooksTC(CubicWebTC):
 
 
 if __name__ == '__main__':
+    from logilab.common.testlib import unittest_main
     unittest_main()

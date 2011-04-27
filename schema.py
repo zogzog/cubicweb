@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -65,6 +65,8 @@ SYSTEM_RTYPES = set(('in_group', 'require_group', 'require_permission',
 NO_I18NCONTEXT = META_RTYPES | WORKFLOW_RTYPES
 NO_I18NCONTEXT.add('require_permission')
 
+SKIP_COMPOSITE_RELS = [('cw_source', 'subject')]
+
 # set of entity and relation types used to build the schema
 SCHEMA_TYPES = set((
     'CWEType', 'CWRType', 'CWAttribute', 'CWRelation',
@@ -83,8 +85,7 @@ WORKFLOW_TYPES = set(('Transition', 'State', 'TrInfo', 'Workflow',
                       'SubWorkflowExitPoint'))
 
 INTERNAL_TYPES = set(('CWProperty', 'CWPermission', 'CWCache', 'ExternalUri',
-                      'CWSource', 'CWSourceHostConfig',
-))
+                      'CWSource', 'CWSourceHostConfig', 'CWSourceSchemaConfig'))
 
 
 _LOGGER = getLogger('cubicweb.schemaloader')
@@ -108,7 +109,7 @@ PUB_SYSTEM_REL_PERMS = {
     }
 PUB_SYSTEM_ATTR_PERMS = {
     'read':   ('managers', 'users', 'guests',),
-    'update':    ('managers',),
+    'update': ('managers',),
     }
 RO_REL_PERMS = {
     'read':   ('managers', 'users', 'guests',),
@@ -368,6 +369,14 @@ class CubicWebEntitySchema(EntitySchema):
                 if isinstance(group_or_rqlexpr, RRQLExpression):
                     msg = "can't use RRQLExpression on %s, use an ERQLExpression"
                     raise BadSchemaDefinition(msg % self.type)
+
+    def is_subobject(self, strict=False, skiprels=None):
+        if skiprels is None:
+            skiprels = SKIP_COMPOSITE_RELS
+        else:
+            skiprels += SKIP_COMPOSITE_RELS
+        return super(CubicWebEntitySchema, self).is_subobject(strict,
+                                                              skiprels=skiprels)
 
     def attribute_definitions(self):
         """return an iterator on attribute definitions
@@ -788,6 +797,7 @@ class RQLUniqueConstraint(RepoEnforcedRQLConstraintMixIn, BaseRQLConstraint):
 
 
 class RQLExpression(object):
+
     def __init__(self, expression, mainvars, eid):
         self.eid = eid # eid of the entity representing this rql expression
         if not isinstance(mainvars, unicode):

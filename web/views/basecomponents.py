@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -99,7 +99,9 @@ class ApplicationName(HeaderComponent):
     """display the instance name"""
     __regid__ = 'appliname'
 
-    def render(self, w):
+    # XXX support kwargs for compat with other components which gets the view as
+    # argument
+    def render(self, w, **kwargs):
         title = self._cw.property_value('ui.site-title')
         if title:
             w(u'<span id="appliName"><a href="%s">%s</a></span>' % (

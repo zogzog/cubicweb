@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -127,10 +127,9 @@ def turn_repo_on(repo):
 
 class TestServerConfiguration(ServerConfiguration):
     mode = 'test'
-    set_language = False
     read_instance_schema = False
     init_repository = True
-
+    skip_db_create_and_restore = False
     def __init__(self, appid='data', apphome=None, log_threshold=logging.CRITICAL+10):
         # must be set before calling parent __init__
         if apphome is None:
@@ -233,6 +232,11 @@ class BaseApptestConfiguration(TestServerConfiguration, TwistedConfiguration):
 
 # XXX merge with BaseApptestConfiguration ?
 class ApptestConfiguration(BaseApptestConfiguration):
+    # `skip_db_create_and_restore` controls wether or not the test database
+    # should be created / backuped / restored. If set to True, those
+    # steps are completely skipped, the database is used as is and is
+    # considered initialized
+    skip_db_create_and_restore = False
 
     def __init__(self, appid, apphome=None,
                  log_threshold=logging.CRITICAL, sourcefile=None):
@@ -261,6 +265,7 @@ class RealDatabaseConfiguration(ApptestConfiguration):
               self.view('foaf', rset)
 
     """
+    skip_db_create_and_restore = True
     read_instance_schema = True # read schema from database
 
 
@@ -294,9 +299,12 @@ class TestDataBaseHandler(object):
 
     def absolute_backup_file(self, db_id, suffix):
         """Path for config backup of a given database id"""
-        dbname = self.dbname.replace('-', '_')
+        # in case db name is an absolute path, we don't want to replace anything
+        # in parent directories
+        directory, basename = split(self.dbname)
+        dbname = basename.replace('-', '_')
         assert '.' not in db_id
-        filename = '%s-%s.%s' % (dbname, db_id, suffix)
+        filename = join(directory, '%s-%s.%s' % (dbname, db_id, suffix))
         return join(self._ensure_test_backup_db_dir(), filename)
 
     def db_cache_key(self, db_id, dbname=None):
@@ -407,9 +415,9 @@ class TestDataBaseHandler(object):
     def dbname(self):
         return self.system_source['db-name']
 
-    def init_test_database():
+    def init_test_database(self):
         """actual initialisation of the database"""
-        raise ValueError('no initialization function for driver %r' % driver)
+        raise ValueError('no initialization function for driver %r' % self.DRIVER)
 
     def has_cache(self, db_id):
         """Check if a given database id exist in cb cache for the current config"""
@@ -478,13 +486,38 @@ class TestDataBaseHandler(object):
             cnx.close()
         self.backup_database(test_db_id)
 
+
+class NoCreateDropDatabaseHandler(TestDataBaseHandler):
+    """This handler is used if config.skip_db_create_and_restore is True
+
+    This is typically the case with RealDBConfig. In that case,
+    we explicitely want to skip init / backup / restore phases.
+
+    This handler redefines the three corresponding methods and delegates
+    to original handler for any other method / attribute
+    """
+
+    def __init__(self, base_handler):
+        self.base_handler = base_handler
+
+    # override init / backup / restore methods
+    def init_test_database(self):
+        pass
+
+    def backup_database(self, db_id):
+        pass
+
+    def restore_database(self, db_id):
+        pass
+
+    # delegate to original handler in all other cases
+    def __getattr__(self, attrname):
+        return getattr(self.base_handler, attrname)
+
+
 ### postgres test database handling ############################################
 
 class PostgresTestDataBaseHandler(TestDataBaseHandler):
-
-    # XXX
-    # XXX PostgresTestDataBaseHandler Have not been tested at all.
-    # XXX
     DRIVER = 'postgres'
 
     @property
@@ -497,24 +530,31 @@ class PostgresTestDataBaseHandler(TestDataBaseHandler):
     @cached
     def dbcnx(self):
         from cubicweb.server.serverctl import _db_sys_cnx
-        return  _db_sys_cnx(self.system_source, 'CREATE DATABASE and / or USER', verbose=0)
+        return  _db_sys_cnx(self.system_source, 'CREATE DATABASE and / or USER',
+                            interactive=False)
 
     @property
     @cached
     def cursor(self):
         return self.dbcnx.cursor()
 
+    def process_cache_entry(self, directory, dbname, db_id, entry):
+        backup_name = self._backup_name(db_id)
+        if backup_name in self.helper.list_databases(self.cursor):
+            return backup_name
+        return None
+
     def init_test_database(self):
-        """initialize a fresh postgresql databse used for testing purpose"""
+        """initialize a fresh postgresql database used for testing purpose"""
         from cubicweb.server import init_repository
         from cubicweb.server.serverctl import system_source_cnx, createdb
         # connect on the dbms system base to create our base
         try:
             self._drop(self.dbname)
-
             createdb(self.helper, self.system_source, self.dbcnx, self.cursor)
             self.dbcnx.commit()
-            cnx = system_source_cnx(self.system_source, special_privs='LANGUAGE C', verbose=0)
+            cnx = system_source_cnx(self.system_source, special_privs='LANGUAGE C',
+                                    interactive=False)
             templcursor = cnx.cursor()
             try:
                 # XXX factorize with db-create code
@@ -554,7 +594,6 @@ class PostgresTestDataBaseHandler(TestDataBaseHandler):
 
     def _drop(self, db_name):
         if db_name in self.helper.list_databases(self.cursor):
-            #print 'dropping overwritted database:', db_name
             self.cursor.execute('DROP DATABASE %s' % db_name)
             self.dbcnx.commit()
 
@@ -566,7 +605,6 @@ class PostgresTestDataBaseHandler(TestDataBaseHandler):
         orig_name = self.system_source['db-name']
         try:
             backup_name = self._backup_name(db_id)
-            #print 'storing postgres backup as', backup_name
             self._drop(backup_name)
             self.system_source['db-name'] = backup_name
             createdb(self.helper, self.system_source, self.dbcnx, self.cursor, template=orig_name)
@@ -580,7 +618,6 @@ class PostgresTestDataBaseHandler(TestDataBaseHandler):
         """Actual restore of the current database.
 
         Use the value tostored in db_cache as input """
-        #print 'restoring postgrest backup from', backup_coordinates
         self._drop(self.dbname)
         createdb(self.helper, self.system_source, self.dbcnx, self.cursor,
                  template=backup_coordinates)
@@ -599,7 +636,7 @@ class SQLServerTestDataBaseHandler(TestDataBaseHandler):
         """initialize a fresh sqlserver databse used for testing purpose"""
         if self.config.init_repository:
             from cubicweb.server import init_repository
-            init_repository(config, interactive=False, drop=True)
+            init_repository(self.config, interactive=False, drop=True)
 
 ### sqlite test database handling ##############################################
 
@@ -646,7 +683,6 @@ class SQLiteTestDataBaseHandler(TestDataBaseHandler):
         # remove database file if it exists ?
         dbfile = self.absolute_dbfile()
         self._cleanup_database(dbfile)
-        #print 'resto from', backup_coordinates
         shutil.copy(backup_coordinates, dbfile)
         repo = self.get_repo()
 
@@ -753,6 +789,8 @@ def get_test_db_handler(config):
     handlerkls = HANDLERS.get(driver, None)
     if handlerkls is not None:
         handler = handlerkls(config)
+        if config.skip_db_create_and_restore:
+            handler = NoCreateDropDatabaseHandler(handler)
         HCACHE.set(config, handler)
         return handler
     else:

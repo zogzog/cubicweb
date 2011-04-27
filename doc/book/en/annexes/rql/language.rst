@@ -153,7 +153,7 @@ Sorting and groups
 - Aggregate Functions: COUNT, MIN, MAX, AVG, SUM, GROUP_CONCAT
 
 Having
-``````
+```````
 
 The HAVING clause, as in SQL, has been originally introduced to restrict a query
 according to value returned by an aggregate function, e.g.::
@@ -214,7 +214,12 @@ Limit / offset
 
 
 Exists
-``````
+```````
+
+You can use `EXISTS` when you want to know if some expression is true and do not
+need the complete set of elements that make it true. Testing for existence is
+much faster than fetching the complete set of results.
+
 ::
 
     Any X ORDERBY PN,N

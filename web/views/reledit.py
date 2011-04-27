@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -15,7 +15,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""the 'reedit' feature (eg edit attribute/relation from primary view"""
+"""the 'reledit' feature (eg edit attribute/relation from primary view)"""
 
 __docformat__ = "restructuredtext en"
 _ = unicode
@@ -56,12 +56,15 @@ class ClickAndEditFormView(EntityView):
     _cancelclick = "cw.reledit.cleanupAfterCancel('%s')"
 
     # ui side actions/buttons
-    _addzone = u'<img title="%(msg)s" src="data/plus.png" alt="%(msg)s"/>'
+    _addzone = u'<img title="%(msg)s" src="%(logo)s" alt="%(msg)s"/>'
     _addmsg = _('click to add a value')
-    _deletezone = u'<img title="%(msg)s" src="data/cancel.png" alt="%(msg)s"/>'
+    _addlogo = 'plus.png'
+    _deletezone = u'<img title="%(msg)s" src="%(logo)s" alt="%(msg)s"/>'
     _deletemsg = _('click to delete this value')
-    _editzone = u'<img title="%(msg)s" src="data/pen_icon.png" alt="%(msg)s"/>'
+    _deletelogo = 'cancel.png'
+    _editzone = u'<img title="%(msg)s" src="%(logo)s" alt="%(msg)s"/>'
     _editzonemsg = _('click to edit this field')
+    _editlogo = 'pen_icon.png'
 
     # renderer
     _form_renderer_id = 'base'
@@ -81,7 +84,7 @@ class ClickAndEditFormView(EntityView):
         self._cw.add_js(('cubicweb.reledit.js', 'cubicweb.edition.js', 'cubicweb.ajax.js'))
         entity = self.cw_rset.get_entity(row, col)
         rschema = self._cw.vreg.schema[rtype]
-        self._rules = rctrl.etype_get(entity.e_schema, rschema, role, '*')
+        self._rules = rctrl.etype_get(entity.e_schema.type, rschema.type, role, '*')
         if rvid is not None or default_value is not None:
             warn('[3.9] specifying rvid/default_value on select is deprecated, '
                  'reledit_ctrl rtag to control this' % self, DeprecationWarning)
@@ -210,14 +213,18 @@ class ClickAndEditFormView(EntityView):
         # NOTE: should be sufficient given a well built schema/security
         return rschema.has_perm(self._cw, 'delete', **kwargs)
 
+    def _build_zone(self, zonedef, msg, logo):
+        return zonedef % {'msg': xml_escape(self._cw._(msg)),
+                          'logo': xml_escape(self._cw.data_url(logo))}
+
     def _build_edit_zone(self):
-        return self._editzone % {'msg' : xml_escape(self._cw._(self._editzonemsg))}
+        return self._build_zone(self._editzone, self._editzonemsg, self._editlogo)
 
     def _build_delete_zone(self):
-        return self._deletezone % {'msg': xml_escape(self._cw._(self._deletemsg))}
+        return self._build_zone(self._deletezone, self._deletemsg, self._deletelogo)
 
     def _build_add_zone(self):
-        return self._addzone % {'msg': xml_escape(self._cw._(self._addmsg))}
+        return self._build_zone(self._addzone, self._addmsg, self._addlogo)
 
     def _build_divid(self, rtype, role, entity_eid):
         """ builds an id for the root div of a reledit widget """

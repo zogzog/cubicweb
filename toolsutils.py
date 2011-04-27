@@ -58,12 +58,12 @@ def create_dir(directory):
     """create a directory if it doesn't exist yet"""
     try:
         makedirs(directory)
-        print '-> created directory %s.' % directory
+        print '-> created directory %s' % directory
     except OSError, ex:
         import errno
         if ex.errno != errno.EEXIST:
             raise
-        print '-> directory %s already exists, no need to create it.' % directory
+        print '-> no need to create existing directory %s' % directory
 
 def create_symlink(source, target):
     """create a symbolic link"""
@@ -154,9 +154,9 @@ def fill_templated_file(fpath, tfpath, context):
 def restrict_perms_to_user(filepath, log=None):
     """set -rw------- permission on the given file"""
     if log:
-        log('set %s permissions to 0600', filepath)
+        log('set permissions to 0600 for %s', filepath)
     else:
-        print '-> set %s permissions to 0600' % filepath
+        print '-> set permissions to 0600 for %s' % filepath
     chmod(filepath, 0600)
 
 def read_config(config_file):

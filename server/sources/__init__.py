@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -19,15 +19,19 @@
 
 __docformat__ = "restructuredtext en"
 
+import itertools
 from os.path import join, splitext
 from datetime import datetime, timedelta
 from logging import getLogger
-import itertools
 
-from cubicweb import set_log_methods, server
+from logilab.common import configuration
+
+from yams.schema import role_name
+
+from cubicweb import ValidationError, set_log_methods, server
 from cubicweb.schema import VIRTUAL_RTYPES
 from cubicweb.server.sqlutils import SQL_PREFIX
-from cubicweb.server.ssplanner import EditedEntity
+from cubicweb.server.edition import EditedEntity
 
 
 def dbg_st_search(uri, union, varmap, args, cachekey=None, prefix='rql for'):
@@ -75,6 +79,9 @@ class TimedCache(dict):
 
 class AbstractSource(object):
     """an abstract class for sources"""
+    # does the source copy data into the system source, or is it a *true* source
+    # (i.e. entities are not stored physically here)
+    copy_based_source = False
 
     # boolean telling if modification hooks should be called when something is
     # modified in this source
@@ -103,51 +110,22 @@ class AbstractSource(object):
     # force deactivation (configuration error for instance)
     disabled = False
 
-    def __init__(self, repo, source_config, *args, **kwargs):
+    # source configuration options
+    options = ()
+
+    def __init__(self, repo, source_config, eid=None):
         self.repo = repo
-        self.uri = source_config['uri']
-        set_log_methods(self, getLogger('cubicweb.sources.'+self.uri))
         self.set_schema(repo.schema)
         self.support_relations['identity'] = False
-        self.eid = None
+        self.eid = eid
         self.public_config = source_config.copy()
         self.remove_sensitive_information(self.public_config)
-
-    def init_creating(self):
-        """method called by the repository once ready to create a new instance"""
-        pass
-
-    def init(self):
-        """method called by the repository once ready to handle request"""
-        pass
-
-    def backup(self, backupfile, confirm):
-        """method called to create a backup of source's data"""
-        pass
-
-    def restore(self, backupfile, confirm, drop):
-        """method called to restore a backup of source's data"""
-        pass
-
-    def close_pool_connections(self):
-        for pool in self.repo.pools:
-            pool._cursors.pop(self.uri, None)
-            pool.source_cnxs[self.uri][1].close()
-
-    def open_pool_connections(self):
-        for pool in self.repo.pools:
-            pool.source_cnxs[self.uri] = (self, self.get_connection())
-
-    def reset_caches(self):
-        """method called during test to reset potential source caches"""
-        pass
-
-    def clear_eid_cache(self, eid, etype):
-        """clear potential caches for the given eid"""
-        pass
+        self.uri = source_config.pop('uri')
+        set_log_methods(self, getLogger('cubicweb.sources.'+self.uri))
+        source_config.pop('type')
 
     def __repr__(self):
-        return '<%s source @%#x>' % (self.uri, id(self))
+        return '<%s source %s @%#x>' % (self.uri, self.eid, id(self))
 
     def __cmp__(self, other):
         """simple comparison function to get predictable source order, with the
@@ -161,9 +139,136 @@ class AbstractSource(object):
             return -1
         return cmp(self.uri, other.uri)
 
+    def backup(self, backupfile, confirm):
+        """method called to create a backup of source's data"""
+        pass
+
+    def restore(self, backupfile, confirm, drop):
+        """method called to restore a backup of source's data"""
+        pass
+
+    @classmethod
+    def check_conf_dict(cls, eid, confdict, _=unicode, fail_if_unknown=True):
+        """check configuration of source entity. Return config dict properly
+        typed with defaults set.
+        """
+        processed = {}
+        for optname, optdict in cls.options:
+            value = confdict.pop(optname, optdict.get('default'))
+            if value is configuration.REQUIRED:
+                if not fail_if_unknown:
+                    continue
+                msg = _('specifying %s is mandatory' % optname)
+                raise ValidationError(eid, {role_name('config', 'subject'): msg})
+            elif value is not None:
+                # type check
+                try:
+                    value = configuration.convert(value, optdict, optname)
+                except Exception, ex:
+                    msg = unicode(ex) # XXX internationalization
+                    raise ValidationError(eid, {role_name('config', 'subject'): msg})
+            processed[optname] = value
+        # cw < 3.10 bw compat
+        try:
+            processed['adapter'] = confdict['adapter']
+        except:
+            pass
+        # check for unknown options
+        if confdict and not confdict.keys() == ['adapter']:
+            if fail_if_unknown:
+                msg = _('unknown options %s') % ', '.join(confdict)
+                raise ValidationError(eid, {role_name('config', 'subject'): msg})
+            else:
+                logger = getLogger('cubicweb.sources')
+                logger.warning('unknown options %s', ', '.join(confdict))
+                # add options to processed, they may be necessary during migration
+                processed.update(confdict)
+        return processed
+
+    @classmethod
+    def check_config(cls, source_entity):
+        """check configuration of source entity"""
+        return cls.check_conf_dict(source_entity.eid, source_entity.host_config,
+                                    _=source_entity._cw._)
+
+    def update_config(self, source_entity, typedconfig):
+        """update configuration from source entity. `typedconfig` is config
+        properly typed with defaults set
+        """
+        pass
+
+    # source initialization / finalization #####################################
+
     def set_schema(self, schema):
         """set the instance'schema"""
         self.schema = schema
+
+    def init_creating(self):
+        """method called by the repository once ready to create a new instance"""
+        pass
+
+    def init(self, activated, source_entity):
+        """method called by the repository once ready to handle request.
+        `activated` is a boolean flag telling if the source is activated or not.
+        """
+        pass
+
+    PUBLIC_KEYS = ('type', 'uri')
+    def remove_sensitive_information(self, sourcedef):
+        """remove sensitive information such as login / password from source
+        definition
+        """
+        for key in sourcedef.keys():
+            if not key in self.PUBLIC_KEYS:
+                sourcedef.pop(key)
+
+    # connections handling #####################################################
+
+    def get_connection(self):
+        """open and return a connection to the source"""
+        raise NotImplementedError()
+
+    def check_connection(self, cnx):
+        """Check connection validity, return None if the connection is still
+        valid else a new connection (called when the pool using the given
+        connection is being attached to a session). Do nothing by default.
+        """
+        pass
+
+    def close_pool_connections(self):
+        for pool in self.repo.pools:
+            pool._cursors.pop(self.uri, None)
+            pool.source_cnxs[self.uri][1].close()
+
+    def open_pool_connections(self):
+        for pool in self.repo.pools:
+            pool.source_cnxs[self.uri] = (self, self.get_connection())
+
+    def pool_reset(self, cnx):
+        """the pool using the given connection is being reseted from its current
+        attached session
+
+        do nothing by default
+        """
+        pass
+
+    # cache handling ###########################################################
+
+    def reset_caches(self):
+        """method called during test to reset potential source caches"""
+        pass
+
+    def clear_eid_cache(self, eid, etype):
+        """clear potential caches for the given eid"""
+        pass
+
+    # external source api ######################################################
+
+    def eid2extid(self, eid, session=None):
+        return self.repo.eid2extid(self, eid, session)
+
+    def extid2eid(self, value, etype, session=None, **kwargs):
+        return self.repo.extid2eid(self, value, etype, session, **kwargs)
 
     def support_entity(self, etype, write=False):
         """return true if the given entity's type is handled by this adapter
@@ -219,98 +324,59 @@ class AbstractSource(object):
             return rtype in self.cross_relations
         return rtype not in self.dont_cross_relations
 
-    def eid2extid(self, eid, session=None):
-        return self.repo.eid2extid(self, eid, session)
+    def before_entity_insertion(self, session, lid, etype, eid, sourceparams):
+        """called by the repository when an eid has been attributed for an
+        entity stored here but the entity has not been inserted in the system
+        table yet.
 
-    def extid2eid(self, value, etype, session=None, **kwargs):
-        return self.repo.extid2eid(self, value, etype, session, **kwargs)
-
-    PUBLIC_KEYS = ('type', 'uri')
-    def remove_sensitive_information(self, sourcedef):
-        """remove sensitive information such as login / password from source
-        definition
+        This method must return the an Entity instance representation of this
+        entity.
         """
-        for key in sourcedef.keys():
-            if not key in self.PUBLIC_KEYS:
-                sourcedef.pop(key)
+        entity = self.repo.vreg['etypes'].etype_class(etype)(session)
+        entity.eid = eid
+        entity.cw_edited = EditedEntity(entity)
+        return entity
 
-    def _cleanup_system_relations(self, session):
-        """remove relation in the system source referencing entities coming from
-        this source
+    def after_entity_insertion(self, session, lid, entity, sourceparams):
+        """called by the repository after an entity stored here has been
+        inserted in the system table.
         """
-        cu = session.system_sql('SELECT eid FROM entities WHERE source=%(uri)s',
-                                {'uri': self.uri})
-        myeids = ','.join(str(r[0]) for r in cu.fetchall())
-        if not myeids:
+        pass
+
+    def _load_mapping(self, session=None, **kwargs):
+        if not 'CWSourceSchemaConfig' in self.schema:
+            self.warning('instance is not mapping ready')
             return
-        # delete relations referencing one of those eids
-        eidcolum = SQL_PREFIX + 'eid'
-        for rschema in self.schema.relations():
-            if rschema.final or rschema.type in VIRTUAL_RTYPES:
-                continue
-            if rschema.inlined:
-                column = SQL_PREFIX + rschema.type
-                for subjtype in rschema.subjects():
-                    table = SQL_PREFIX + str(subjtype)
-                    for objtype in rschema.objects(subjtype):
-                        if self.support_entity(objtype):
-                            sql = 'UPDATE %s SET %s=NULL WHERE %s IN (%s);' % (
-                                table, column, eidcolum, myeids)
-                            session.system_sql(sql)
-                            break
-                continue
-            for etype in rschema.subjects():
-                if self.support_entity(etype):
-                    sql = 'DELETE FROM %s_relation WHERE eid_from IN (%s);' % (
-                        rschema.type, myeids)
-                    session.system_sql(sql)
-                    break
-            for etype in rschema.objects():
-                if self.support_entity(etype):
-                    sql = 'DELETE FROM %s_relation WHERE eid_to IN (%s);' % (
-                        rschema.type, myeids)
-                    session.system_sql(sql)
-                    break
+        if session is None:
+            _session = self.repo.internal_session()
+        else:
+            _session = session
+        try:
+            for schemacfg in _session.execute(
+                'Any CFG,CFGO,S WHERE '
+                'CFG options CFGO, CFG cw_schema S, '
+                'CFG cw_for_source X, X eid %(x)s', {'x': self.eid}).entities():
+                self.add_schema_config(schemacfg, **kwargs)
+        finally:
+            if session is None:
+                _session.close()
 
-    def cleanup_entities_info(self, session):
-        """cleanup system tables from information for entities coming from
-        this source. This should be called when a source is removed to
-        properly cleanup the database
-        """
-        self._cleanup_system_relations(session)
-        # fti / entities tables cleanup
-        # sqlite doesn't support DELETE FROM xxx USING yyy
-        dbhelper = session.pool.source('system').dbhelper
-        session.system_sql('DELETE FROM %s WHERE %s.%s IN (SELECT eid FROM '
-                           'entities WHERE entities.source=%%(uri)s)'
-                           % (dbhelper.fti_table, dbhelper.fti_table,
-                              dbhelper.fti_uid_attr),
-                           {'uri': self.uri})
-        session.system_sql('DELETE FROM entities WHERE source=%(uri)s',
-                           {'uri': self.uri})
+    def add_schema_config(self, schemacfg, checkonly=False):
+        """added CWSourceSchemaConfig, modify mapping accordingly"""
+        msg = schemacfg._cw._("this source doesn't use a mapping")
+        raise ValidationError(schemacfg.eid, {None: msg})
 
-    # abstract methods to override (at least) in concrete source classes #######
+    def del_schema_config(self, schemacfg, checkonly=False):
+        """deleted CWSourceSchemaConfig, modify mapping accordingly"""
+        msg = schemacfg._cw._("this source doesn't use a mapping")
+        raise ValidationError(schemacfg.eid, {None: msg})
 
-    def get_connection(self):
-        """open and return a connection to the source"""
-        raise NotImplementedError()
+    def update_schema_config(self, schemacfg, checkonly=False):
+        """updated CWSourceSchemaConfig, modify mapping accordingly"""
+        self.del_schema_config(schemacfg, checkonly)
+        self.add_schema_config(schemacfg, checkonly)
 
-    def check_connection(self, cnx):
-        """check connection validity, return None if the connection is still valid
-        else a new connection (called when the pool using the given connection is
-        being attached to a session)
-
-        do nothing by default
-        """
-        pass
-
-    def pool_reset(self, cnx):
-        """the pool using the given connection is being reseted from its current
-        attached session
-
-        do nothing by default
-        """
-        pass
+    # user authentication api ##################################################
 
     def authenticate(self, session, login, **kwargs):
         """if the source support CWUser entity type, it should implement
@@ -319,6 +385,8 @@ class AbstractSource(object):
         given. Else raise `AuthenticationError`
         """
         raise NotImplementedError()
+
+    # RQL query api ############################################################
 
     def syntax_tree_search(self, session, union,
                            args=None, cachekey=None, varmap=None, debug=0):
@@ -338,27 +406,7 @@ class AbstractSource(object):
         res = self.syntax_tree_search(session, union, args, varmap=varmap)
         session.pool.source('system').manual_insert(res, table, session)
 
-    # system source don't have to implement the two methods below
-
-    def before_entity_insertion(self, session, lid, etype, eid):
-        """called by the repository when an eid has been attributed for an
-        entity stored here but the entity has not been inserted in the system
-        table yet.
-
-        This method must return the an Entity instance representation of this
-        entity.
-        """
-        entity = self.repo.vreg['etypes'].etype_class(etype)(session)
-        entity.eid = eid
-        entity.cw_edited = EditedEntity(entity)
-        return entity
-
-    def after_entity_insertion(self, session, lid, entity):
-        """called by the repository after an entity stored here has been
-        inserted in the system table.
-        """
-        pass
-
+    # write modification api ###################################################
     # read-only sources don't have to implement methods below
 
     def get_extid(self, entity):
@@ -536,8 +584,8 @@ def source_adapter(source_type):
     except KeyError:
         raise RuntimeError('Unknown source type %r' % source_type)
 
-def get_source(type, source_config, repo):
-    """return a source adapter according to the adapter field in the
-    source's configuration
+def get_source(type, source_config, repo, eid):
+    """return a source adapter according to the adapter field in the source's
+    configuration
     """
-    return source_adapter(type)(repo, source_config)
+    return source_adapter(type)(repo, source_config, eid)

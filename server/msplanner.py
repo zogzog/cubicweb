@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -519,6 +519,16 @@ class PartPlanInformation(object):
                 invariant = getattr(lhs, '_q_invariant', False)
                 # XXX NOT NOT
                 neged = srel.neged(traverse_scope=True) or (rel and rel.neged(strict=True))
+                has_copy_based_source = False
+                sources_ = []
+                for source in sources:
+                    if source.copy_based_source:
+                        has_copy_based_source = True
+                        if not self.system_source in sources_:
+                            sources_.append(self.system_source)
+                    else:
+                        sources_.append(source)
+                sources = sources_
                 if neged:
                     for source in sources:
                         if invariant and source is self.system_source:
@@ -535,7 +545,8 @@ class PartPlanInformation(object):
                 if rel is None or (len(var.stinfo['relations']) == 2 and
                                    not var.stinfo['selected']):
                     self._remove_source_term(self.system_source, var)
-                    if not (len(sources) > 1 or usesys or invariant):
+                    if not (has_copy_based_source or len(sources) > 1
+                            or usesys or invariant):
                         if rel is None:
                             srel.parent.remove(srel)
                         else:
@@ -1212,11 +1223,22 @@ class PartPlanInformation(object):
     def build_non_final_part(self, select, solindices, sources, insertedvars,
                              table):
         """non final step, will have to store results in a temporary table"""
-        solutions = [self._solutions[i] for i in solindices]
-        rqlst = self.plan.finalize(select, solutions, insertedvars)
-        step = FetchStep(self.plan, rqlst, sources, table, False)
-        # update input map for following steps, according to processed solutions
         inputmapkey = tuple(sorted(solindices))
+        solutions = [self._solutions[i] for i in solindices]
+        # XXX be smarter vs rql comparison
+        idx_key = (select.as_string(), inputmapkey,
+                   tuple(sorted(sources)), tuple(sorted(insertedvars)))
+        try:
+            # if a similar step has already been process, simply backport its
+            # input map
+            step = self.plan.ms_steps_idx[idx_key]
+        except KeyError:
+            # processing needed
+            rqlst = self.plan.finalize(select, solutions, insertedvars)
+            step = FetchStep(self.plan, rqlst, sources, table, False)
+            self.plan.ms_steps_idx[idx_key] = step
+            self.plan.add_step(step)
+        # update input map for following steps, according to processed solutions
         inputmap = self._inputmaps.setdefault(inputmapkey, {})
         for varname, mapping in step.outputmap.iteritems():
             if varname in inputmap and not '.' in varname and  \
@@ -1224,7 +1246,6 @@ class PartPlanInformation(object):
                         self._schema.eschema(solutions[0][varname]).final):
                 self._conflicts.append((varname, inputmap[varname]))
         inputmap.update(step.outputmap)
-        self.plan.add_step(step)
 
 
 class MSPlanner(SSPlanner):
@@ -1248,6 +1269,7 @@ class MSPlanner(SSPlanner):
             print 'PLANNING', rqlst
         ppis = [PartPlanInformation(plan, select, self.rqlhelper)
                 for select in rqlst.children]
+        plan.ms_steps_idx = {}
         steps = self._union_plan(plan, ppis)
         if server.DEBUG & server.DBG_MS:
             from pprint import pprint
@@ -1398,9 +1420,7 @@ class MSPlanner(SSPlanner):
                             steps.append(ppi.build_final_part(minrqlst, solindices, inputmap,
                                                               sources, insertedvars))
                 else:
-                    table = '_T%s%s' % (''.join(sorted(v._ms_table_key() for v in terms)),
-                                        ''.join(sorted(str(i) for i in solindices)))
-                    table = plan.make_temp_table_name(table)
+                    table = plan.make_temp_table_name('T%s' % make_uid(id(select)))
                     ppi.build_non_final_part(minrqlst, solindices, sources,
                                              insertedvars, table)
         # finally: join parts, deal with aggregat/group/sorts if necessary

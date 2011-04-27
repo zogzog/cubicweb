@@ -98,10 +98,19 @@ def _annotate_select(annotator, rqlst):
                     # variable of an inlined relation
                     if not rel in stinfo['rhsrelations'] and rschema.inlined:
                         break
-                else:
-                    # variable used as main variable of an optional relation
-                    # can't be invariant
+                # variable used as main variable of an optional relation can't
+                # be invariant, unless we can use some other relation as
+                # reference for the outer join
+                elif not stinfo['constnode']:
                     break
+                elif len(stinfo['relations']) == 2:
+                    if onlhs:
+                        ostinfo = rhs.children[0].variable.stinfo
+                    else:
+                        ostinfo = lhs.variable.stinfo
+                    if not any(orel for orel in ostinfo['relations']
+                               if orel.optional and orel is not rel):
+                        break
             if rschema.final or (onlhs and rschema.inlined):
                 if rschema.type != 'has_text':
                     # need join anyway if the variable appears in a final or

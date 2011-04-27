@@ -252,8 +252,7 @@ class CubicWebTC(TestCase):
         # cnx is now an instance property that use a class protected attributes.
         cls.set_cnx(cnx)
         cls.vreg = cls.repo.vreg
-        cls.websession = DBAPISession(cnx, cls.admlogin,
-                                      {'password': cls.admpassword})
+        cls.websession = DBAPISession(cnx, cls.admlogin)
         cls._orig_cnx = (cnx, cls.websession)
         cls.config.repository = lambda x=None: cls.repo
 
@@ -486,7 +485,8 @@ class CubicWebTC(TestCase):
                       for a in self.vreg['views'].possible_views(req, rset=rset))
 
     def pactions(self, req, rset,
-                 skipcategories=('addrelated', 'siteactions', 'useractions', 'footer')):
+                 skipcategories=('addrelated', 'siteactions', 'useractions',
+                                 'footer', 'manage')):
         return [(a.__regid__, a.__class__)
                 for a in self.vreg['actions'].poss_visible_objects(req, rset=rset)
                 if a.category not in skipcategories]
@@ -497,7 +497,8 @@ class CubicWebTC(TestCase):
                 if a.category in categories]
 
     def pactionsdict(self, req, rset,
-                     skipcategories=('addrelated', 'siteactions', 'useractions', 'footer')):
+                     skipcategories=('addrelated', 'siteactions', 'useractions',
+                                     'footer', 'manage')):
         res = {}
         for a in self.vreg['actions'].poss_visible_objects(req, rset=rset):
             if a.category not in skipcategories:
@@ -661,13 +662,16 @@ class CubicWebTC(TestCase):
         """
         return self.expect_redirect(lambda x: self.app_publish(x, path), req)
 
-    def init_authentication(self, authmode, anonuser=None):
+    def set_auth_mode(self, authmode, anonuser=None):
         self.set_option('auth-mode', authmode)
         self.set_option('anonymous-user', anonuser)
         if anonuser is None:
             self.config.anonymous_credential = None
         else:
             self.config.anonymous_credential = (anonuser, anonuser)
+
+    def init_authentication(self, authmode, anonuser=None):
+        self.set_auth_mode(authmode, anonuser)
         req = self.request()
         origsession = req.session
         req.session = req.cnx = None

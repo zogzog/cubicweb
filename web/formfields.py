@@ -733,7 +733,7 @@ class FileField(StringField):
             wdgs.append(u'<a href="%s" title="%s"><img src="%s" alt="%s"/></a>' %
                         (xml_escape(uilib.toggle_action(divid)),
                          form._cw._('show advanced fields'),
-                         xml_escape(form._cw.build_url('data/puce_down.png')),
+                         xml_escape(form._cw.data_url('puce_down.png')),
                          form._cw._('show advanced fields')))
             wdgs.append(u'<div id="%s" class="hidden">' % divid)
             if self.name_field:

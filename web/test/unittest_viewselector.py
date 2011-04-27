@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -27,25 +27,32 @@ from cubicweb.selectors import (match_user_groups, is_instance,
                                 traced_selection)
 from cubicweb.web import NoSelectableObject
 from cubicweb.web.action import Action
-from cubicweb.web.views import (primary, baseviews, tableview, editforms,
-                                calendar, management, embedding, actions,
-                                startup, cwuser, schema, xbel, vcard, owl,
-                                treeview, idownloadable, wdoc, debug,
-                                cwproperties, workflow, xmlrss, csvexport)
+from cubicweb.web.views import (
+    primary, baseviews, tableview, editforms, calendar, management, embedding,
+    actions, startup, cwuser, schema, xbel, vcard, owl, treeview, idownloadable,
+    wdoc, debug, cwuser, cwproperties, cwsources, workflow, xmlrss, rdf,
+    csvexport)
 
 from cubes.folder import views as folderviews
 
 USERACTIONS = [actions.UserPreferencesAction,
                actions.UserInfoAction,
                actions.LogoutAction]
-SITEACTIONS = [actions.SiteConfigurationAction,
-               actions.ManageAction,
-               schema.ViewSchemaAction,
-               debug.SiteInfoAction]
+SITEACTIONS = [actions.ManageAction]
 FOOTERACTIONS = [wdoc.HelpAction,
                  wdoc.ChangeLogAction,
                  wdoc.AboutAction,
                  actions.PoweredByAction]
+MANAGEACTIONS = [actions.SiteConfigurationAction,
+                 schema.ViewSchemaAction,
+                 cwuser.ManageUsersAction,
+                 cwsources.ManageSourcesAction,
+                 debug.SiteInfoAction]
+
+if hasattr(rdf, 'RDFView') is not None: # not available if rdf lib not installed
+    RDFVIEWS = [('rdf', rdf.RDFView)]
+
+assert RDFVIEWS
 
 class ViewSelectorTC(CubicWebTC):
 
@@ -83,6 +90,8 @@ class VRegistryTC(ViewSelectorTC):
         req = self.request()
         self.assertListEqual(self.pviews(req, None),
                              [('changelog', wdoc.ChangeLogView),
+                              ('cw.source-management', cwsources.CWSourceManagementView),
+                              ('cw.user-management', cwuser.CWUserManagementView),
                               ('gc', debug.GCView),
                               ('index', startup.IndexView),
                               ('info', debug.ProcessInformationView),
@@ -91,6 +100,7 @@ class VRegistryTC(ViewSelectorTC):
                               ('propertiesform', cwproperties.CWPropertiesForm),
                               ('registry', debug.RegistryView),
                               ('schema', schema.SchemaView),
+                              ('siteinfo', debug.SiteInfoView),
                               ('systempropertiesform', cwproperties.SystemCWPropertiesForm),
                               ('tree', folderviews.FolderTreeView),
                               ])
@@ -112,7 +122,7 @@ class VRegistryTC(ViewSelectorTC):
                               ('list', baseviews.ListView),
                               ('oneline', baseviews.OneLineView),
                               ('owlabox', owl.OWLABOXView),
-                              ('primary', cwuser.CWGroupPrimaryView),
+                              ('primary', cwuser.CWGroupPrimaryView)] + RDFVIEWS + [
                               ('rsetxml', xmlrss.XMLRsetView),
                               ('rss', xmlrss.RSSView),
                               ('sameetypelist', baseviews.SameETypeListView),
@@ -136,7 +146,7 @@ class VRegistryTC(ViewSelectorTC):
                               ('list', baseviews.ListView),
                               ('oneline', baseviews.OneLineView),
                               ('owlabox', owl.OWLABOXView),
-                              ('primary', cwuser.CWGroupPrimaryView),
+                              ('primary', cwuser.CWGroupPrimaryView)] + RDFVIEWS + [
                               ('rsetxml', xmlrss.XMLRsetView),
                               ('rss', xmlrss.RSSView),
                               ('sameetypelist', baseviews.SameETypeListView),
@@ -191,7 +201,7 @@ class VRegistryTC(ViewSelectorTC):
                               ('list', baseviews.ListView),
                               ('oneline', baseviews.OneLineView),
                               ('owlabox', owl.OWLABOXView),
-                              ('primary', primary.PrimaryView),
+                              ('primary', primary.PrimaryView),] + RDFVIEWS + [
                               ('rsetxml', xmlrss.XMLRsetView),
                               ('rss', xmlrss.RSSView),
                               ('secondary', baseviews.SecondaryView),
@@ -218,6 +228,7 @@ class VRegistryTC(ViewSelectorTC):
         rset = req.execute('CWUser X')
         self.assertListEqual(self.pviews(req, rset),
                              [('csvexport', csvexport.CSVRsetView),
+                              ('cw.user-table', cwuser.CWUserTable),
                               ('ecsvexport', csvexport.CSVEntityView),
                               ('editable-table', tableview.EditableTableView),
                               ('filetree', treeview.FileTreeView),
@@ -225,7 +236,7 @@ class VRegistryTC(ViewSelectorTC):
                               ('list', baseviews.ListView),
                               ('oneline', baseviews.OneLineView),
                               ('owlabox', owl.OWLABOXView),
-                              ('primary', primary.PrimaryView),
+                              ('primary', primary.PrimaryView)] + RDFVIEWS + [
                               ('rsetxml', xmlrss.XMLRsetView),
                               ('rss', xmlrss.RSSView),
                               ('sameetypelist', baseviews.SameETypeListView),
@@ -244,6 +255,7 @@ class VRegistryTC(ViewSelectorTC):
         self.assertDictEqual(self.pactionsdict(req, None, skipcategories=()),
                              {'useractions': USERACTIONS,
                               'siteactions': SITEACTIONS,
+                              'manage': MANAGEACTIONS,
                               'footer': FOOTERACTIONS,
 
                               })
@@ -253,6 +265,7 @@ class VRegistryTC(ViewSelectorTC):
         self.assertDictEqual(self.pactionsdict(req, rset, skipcategories=()),
                              {'useractions': USERACTIONS,
                               'siteactions': SITEACTIONS,
+                              'manage': MANAGEACTIONS,
                               'footer': FOOTERACTIONS,
                               })
 
@@ -262,6 +275,7 @@ class VRegistryTC(ViewSelectorTC):
         self.assertDictEqual(self.pactionsdict(req, rset, skipcategories=()),
                              {'useractions': USERACTIONS,
                               'siteactions': SITEACTIONS,
+                              'manage': MANAGEACTIONS,
                               'footer': FOOTERACTIONS,
                               'mainactions': [actions.MultipleEditAction],
                               'moreactions': [actions.DeleteAction,
@@ -274,6 +288,7 @@ class VRegistryTC(ViewSelectorTC):
         self.assertDictEqual(self.pactionsdict(req, rset, skipcategories=()),
                              {'useractions': USERACTIONS,
                               'siteactions': SITEACTIONS,
+                              'manage': MANAGEACTIONS,
                               'footer': FOOTERACTIONS,
                               'moreactions': [actions.DeleteAction],
                               })
@@ -284,6 +299,7 @@ class VRegistryTC(ViewSelectorTC):
         self.assertDictEqual(self.pactionsdict(req, rset, skipcategories=()),
                              {'useractions': USERACTIONS,
                               'siteactions': SITEACTIONS,
+                              'manage': MANAGEACTIONS,
                               'footer': FOOTERACTIONS,
                               })
 
@@ -293,6 +309,7 @@ class VRegistryTC(ViewSelectorTC):
         self.assertDictEqual(self.pactionsdict(req, rset, skipcategories=()),
                              {'useractions': USERACTIONS,
                               'siteactions': SITEACTIONS,
+                              'manage': MANAGEACTIONS,
                               'footer': FOOTERACTIONS,
                               'mainactions': [actions.ModifyAction,
                                               actions.ViewSameCWEType],
@@ -508,6 +525,7 @@ class RQLActionTC(ViewSelectorTC):
                              {'useractions': USERACTIONS,
                               'siteactions': SITEACTIONS,
                               'footer': FOOTERACTIONS,
+                              'manage': MANAGEACTIONS,
                               'mainactions': [actions.ModifyAction, actions.ViewSameCWEType],
                               'moreactions': [actions.ManagePermissionsAction,
                                               actions.AddRelatedActions,
@@ -522,6 +540,7 @@ class RQLActionTC(ViewSelectorTC):
                              {'useractions': USERACTIONS,
                               'siteactions': SITEACTIONS,
                               'footer': FOOTERACTIONS,
+                              'manage': MANAGEACTIONS,
                               'mainactions': [actions.ModifyAction, actions.ViewSameCWEType],
                               'moreactions': [actions.ManagePermissionsAction,
                                               actions.AddRelatedActions,

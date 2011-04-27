@@ -912,6 +912,10 @@ class AfterAddCWETypeHook(DelCWETypeHook):
     def __call__(self):
         entity = self.entity
         if entity.cw_edited.get('final'):
+            # final entity types don't need a table in the database and are
+            # systematically added by yams at schema initialization time so
+            # there is no need to do further processing. Simply assign its eid.
+            self._cw.vreg.schema[entity.name].eid = entity.eid
             return
         CWETypeAddOp(self._cw, entity=entity)
 

@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -102,11 +102,14 @@ def get_repository(method, database=None, config=None, vreg=None):
         return Repository(config, vreg=vreg)
     else: # method == 'pyro'
         # resolve the Pyro object
-        from logilab.common.pyro_ext import ns_get_proxy
+        from logilab.common.pyro_ext import ns_get_proxy, get_proxy
         pyroid = database or config['pyro-instance-id'] or config.appid
         try:
-            return ns_get_proxy(pyroid, defaultnsgroup=config['pyro-ns-group'],
-                                nshost=config['pyro-ns-host'])
+            if config['pyro-ns-host'] == 'NO_PYRONS':
+                return get_proxy(pyroid)
+            else:
+                return ns_get_proxy(pyroid, defaultnsgroup=config['pyro-ns-group'],
+                                    nshost=config['pyro-ns-host'])
         except Exception, ex:
             raise ConnectionError(str(ex))
 
@@ -233,11 +236,10 @@ class _NeedAuthAccessMock(object):
         return False
 
 class DBAPISession(object):
-    def __init__(self, cnx, login=None, authinfo=None):
+    def __init__(self, cnx, login=None):
         self.cnx = cnx
         self.data = {}
         self.login = login
-        self.authinfo = authinfo
         # dbapi session identifier is the same as the first connection
         # identifier, but may later differ in case of auto-reconnection as done
         # by the web authentication manager (in cw.web.views.authentication)
@@ -602,9 +604,8 @@ class Connection(object):
             req = self.request()
         rset = req.eid_rset(eid, 'CWUser')
         if self.vreg is not None and 'etypes' in self.vreg:
-            user = self.vreg['etypes'].etype_class('CWUser')(req, rset, row=0,
-                                                             groups=groups,
-                                                             properties=properties)
+            user = self.vreg['etypes'].etype_class('CWUser')(
+                req, rset, row=0, groups=groups, properties=properties)
         else:
             from cubicweb.entity import Entity
             user = Entity(req, rset, row=0)

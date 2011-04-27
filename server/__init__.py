@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -129,7 +129,6 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     # on connection
     config.creating = True
     config.consider_user_state = False
-    config.set_language = False
     # only enable the system source at initialization time
     repo = Repository(config, vreg=vreg)
     schema = repo.schema
@@ -182,6 +181,7 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     session.execute('SET X owned_by U WHERE X is IN (CWGroup,CWSource), U eid %(u)s',
                     {'u': admin.eid})
     session.commit()
+    session.close()
     repo.shutdown()
     # reloging using the admin user
     config._cubes = None # avoid assertion error
@@ -205,12 +205,10 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     repo.system_source.init_creating()
     cnx.commit()
     cnx.close()
-    session.close()
     repo.shutdown()
     # restore initial configuration
     config.creating = False
     config.consider_user_state = True
-    config.set_language = True
     print '-> database for instance %s initialized.' % config.appid
 
 
@@ -254,7 +252,7 @@ ON_COMMIT_ADD_RELATIONS = set(())
 
 # available sources registry
 SOURCE_TYPES = {'native': LazyObject('cubicweb.server.sources.native', 'NativeSQLSource'),
-                # XXX private sources installed by an external cube
                 'pyrorql': LazyObject('cubicweb.server.sources.pyrorql', 'PyroRQLSource'),
                 'ldapuser': LazyObject('cubicweb.server.sources.ldapuser', 'LDAPUserSource'),
+                'datafeed': LazyObject('cubicweb.server.sources.datafeed', 'DataFeedSource'),
                 }

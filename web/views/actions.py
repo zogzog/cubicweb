@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -28,7 +28,7 @@ from cubicweb.schema import display_name
 from cubicweb.appobject import objectify_selector
 from cubicweb.selectors import (EntitySelector, yes,
     one_line_rset, multi_lines_rset, one_etype_rset, relation_possible,
-    nonempty_rset, non_final_entity,
+    nonempty_rset, non_final_entity, score_entity,
     authenticated_user, match_user_groups, match_search_state,
     has_permission, has_add_permission, is_instance, debug_mode,
     )
@@ -322,7 +322,7 @@ class ViewSameCWEType(action.Action):
     """when displaying the schema of a CWEType, offer to list entities of that type
     """
     __regid__ = 'entitiesoftype'
-    __select__ = one_line_rset() & is_instance('CWEType')
+    __select__ = one_line_rset() & is_instance('CWEType') & score_entity(lambda x: not x.final)
     category = 'mainactions'
     order = 40
 
@@ -391,6 +391,7 @@ class SiteConfigurationAction(ManagersAction):
     __regid__ = 'siteconfig'
     title = _('site configuration')
     order = 10
+    category = 'manage'
 
 
 class ManageAction(ManagersAction):

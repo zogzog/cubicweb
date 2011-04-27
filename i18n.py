@@ -80,7 +80,7 @@ def compile_i18n_catalogs(sourcedirs, destdir, langs):
     """generate .mo files for a set of languages into the `destdir` i18n directory
     """
     from logilab.common.fileutils import ensure_fs_mode
-    print '-> compiling %s catalogs...' % destdir
+    print '-> compiling message catalogs to %s' % destdir
     errors = []
     for lang in langs:
         langdir = join(destdir, lang, 'LC_MESSAGES')

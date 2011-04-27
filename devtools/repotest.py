@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -277,7 +277,8 @@ class BaseQuerierTC(TestCase):
 
 
 class BasePlannerTC(BaseQuerierTC):
-    newsources = 0
+    newsources = ()
+
     def setup(self):
         clear_cache(self.repo, 'rel_type_sources')
         clear_cache(self.repo, 'rel_type_sources')
@@ -293,18 +294,21 @@ class BasePlannerTC(BaseQuerierTC):
         do_monkey_patch()
         self._dumb_sessions = [] # by hi-jacked parent setup
         self.repo.vreg.rqlhelper.backend = 'postgres' # so FTIRANK is considered
+        self.newsources = []
 
     def add_source(self, sourcecls, uri):
-        self.sources.append(sourcecls(self.repo, {'uri': uri}))
-        self.repo.sources_by_uri[uri] = self.sources[-1]
-        setattr(self, uri, self.sources[-1])
-        self.newsources += 1
+        source = sourcecls(self.repo, {'uri': uri, 'type': 'whatever'})
+        if not source.copy_based_source:
+            self.sources.append(source)
+        self.newsources.append(source)
+        self.repo.sources_by_uri[uri] = source
+        setattr(self, uri, source)
 
     def tearDown(self):
-        while self.newsources:
-            source = self.sources.pop(-1)
+        for source in self.newsources:
+            if not source.copy_based_source:
+                self.sources.remove(source)
             del self.repo.sources_by_uri[source.uri]
-            self.newsources -= 1
         undo_monkey_patch()
         for session in self._dumb_sessions:
             session._threaddata.pool = None

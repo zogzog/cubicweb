@@ -16,11 +16,15 @@ jQuery.extend(cw.htmlhelpers, {
  * available and inspects the <base> tag manually otherwise.)
  */
 function baseuri() {
-    var uri = document.baseURI;
-    if (uri) { // some browsers don't define baseURI
-        return uri.toLowerCase();
+    if (typeof BASE_URL === 'undefined') {
+        // backward compatibility, BASE_URL might be undefined
+        var uri = document.baseURI;
+        if (uri) { // some browsers don't define baseURI
+            return uri.toLowerCase();
+        }
+        return jQuery('base').attr('href').toLowerCase();
     }
-    return jQuery('base').attr('href').toLowerCase();
+    return BASE_URL;
 }
 
 /**

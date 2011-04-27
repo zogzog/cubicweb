@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -21,7 +21,7 @@ __docformat__ = "restructuredtext en"
 _ = unicode
 
 from yams.buildobjs import (EntityType, RelationType, RelationDefinition,
-                            SubjectRelation, String, Datetime, Password)
+                            SubjectRelation, String, Datetime, Password, Interval)
 from cubicweb.schema import (
     RQLConstraint, WorkflowableEntityType, ERQLExpression, RRQLExpression,
     PUB_SYSTEM_ENTITY_PERMS, PUB_SYSTEM_REL_PERMS, PUB_SYSTEM_ATTR_PERMS)
@@ -258,15 +258,30 @@ class CWSource(EntityType):
                         'read':   ('managers',),
                         'update': ('managers',),
                         })
+    # put this here and not in a subclass even if it's only for some sources
+    # since having subclasses on generic relation (cw_source) double the number
+    # of rdef in the schema, and make ms planning harder since queries solutions
+    # may changes when sources are specified
+    url = String(description=_('URLs from which content will be imported. You can put one url per line'))
+    parser = String(description=_('parser to use to extract entities from content retrieved at given URLs.'))
+    latest_retrieval = Datetime(description=_('latest synchronization time'))
+
+
+ENTITY_MANAGERS_PERMISSIONS = {
+    'read':   ('managers',),
+    'add':    ('managers',),
+    'update': ('managers',),
+    'delete': ('managers',),
+    }
+RELATION_MANAGERS_PERMISSIONS = {
+    'read':   ('managers',),
+    'add':    ('managers',),
+    'delete': ('managers',),
+    }
 
 
 class CWSourceHostConfig(EntityType):
-    __permissions__ = {
-        'read':   ('managers',),
-        'add':    ('managers',),
-        'update': ('managers',),
-        'delete': ('managers',),
-        }
+    __permissions__ = ENTITY_MANAGERS_PERMISSIONS
     __unique_together__ = [('match_host', 'cw_host_config_of')]
     match_host = String(required=True, maxsize=128,
                         description=_('regexp matching host(s) to which this config applies'))
@@ -282,6 +297,7 @@ class CWSourceHostConfig(EntityType):
 
 
 class cw_host_config_of(RelationDefinition):
+    __permissions__ = RELATION_MANAGERS_PERMISSIONS
     subject = 'CWSourceHostConfig'
     object = 'CWSource'
     cardinality = '1*'
@@ -297,18 +313,20 @@ class cw_source(RelationDefinition):
     subject = '*'
     object = 'CWSource'
     cardinality = '1*'
+    composite = 'object'
 
-class cw_support(RelationDefinition):
-    subject = 'CWSource'
-    object = ('CWEType', 'CWRType')
+class CWSourceSchemaConfig(EntityType):
+    __permissions__ = ENTITY_MANAGERS_PERMISSIONS
+    __unique_together__ = [('cw_for_source', 'cw_schema')]
+    cw_for_source = SubjectRelation(
+        'CWSource', inlined=True, cardinality='1*', composite='object',
+        __permissions__=RELATION_MANAGERS_PERMISSIONS)
+    cw_schema = SubjectRelation(
+        ('CWEType', 'CWRType', 'CWAttribute', 'CWRelation'),
+        inlined=True, cardinality='1*', composite='object',
+        __permissions__=RELATION_MANAGERS_PERMISSIONS)
+    options = String(description=_('allowed options depends on the source type'))
 
-class cw_dont_cross(RelationDefinition):
-    subject = 'CWSource'
-    object = 'CWRType'
-
-class cw_may_cross(RelationDefinition):
-    subject = 'CWSource'
-    object = 'CWRType'
 
 # "abtract" relation types, no definition in cubicweb itself ###################
 

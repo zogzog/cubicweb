@@ -1,6 +1,6 @@
 /*
  *  :organization: Logilab
- *  :copyright: 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+ *  :copyright: 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
  *  :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
  */
 
@@ -56,7 +56,7 @@ h6{
 }
 
 a, a:active, a:visited, a:link {
-  color: #ff4500;
+  color: %(aColor)s;
   text-decoration: none;
 }
 
@@ -227,7 +227,7 @@ li.invisible div {
 /* header */
 
 table#header {
-  background: #ff7700 url("banner.png") left top repeat-x;
+  background: %(headerBg)s;
   width: 100%;
 }
 
@@ -283,7 +283,7 @@ div#page {
 }
 
 table#mainLayout{
- margin:0px 3px;
+ padding: 0px 3px;
 }
 
 table#mainLayout td#contentColumn {
@@ -602,6 +602,10 @@ div#etyperestriction {
   border-bottom: 1px solid #ccc;
 }
 
+div.pagination{
+  margin: 0.5em 0;
+}
+
 span.slice a:visited,
 span.slice a:hover{
   color: #555544;
@@ -897,6 +901,12 @@ input.button{
 .folder {
   /* disable odd/even under folder class */
   background-color: transparent;
+}
+
+a.addButton {
+  margin-left: 0.5em;
+  padding-left: 16px;
+  background: transparent url("add_button.png") 0% 50% no-repeat;
 }
 
 /***************************************/

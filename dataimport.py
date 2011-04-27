@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -19,12 +19,11 @@
 """This module provides tools to import tabular data.
 
 
-
 Example of use (run this with `cubicweb-ctl shell instance import-script.py`):
 
 .. sourcecode:: python
 
-  from cubicweb.devtools.dataimport import *
+  from cubicweb.dataimport import *
   # define data generators
   GENERATORS = []
 
@@ -36,12 +35,11 @@ Example of use (run this with `cubicweb-ctl shell instance import-script.py`):
   def gen_users(ctl):
       for row in ctl.iter_and_commit('utilisateurs'):
           entity = mk_entity(row, USERS)
-          entity['upassword'] = u'motdepasse'
+          entity['upassword'] = 'motdepasse'
           ctl.check('login', entity['login'], None)
-          ctl.store.add('CWUser', entity)
-          email = {'address': row['email']}
-          ctl.store.add('EmailAddress', email)
-          ctl.store.relate(entity['eid'], 'use_email', email['eid'])
+          entity = ctl.store.create_entity('CWUser', **entity)
+          email = ctl.store.create_entity('EmailAddress', address=row['email'])
+          ctl.store.relate(entity.eid, 'use_email', email.eid)
           ctl.store.rql('SET U in_group G WHERE G name "users", U eid %(x)s', {'x':entity['eid']})
 
   CHK = [('login', check_doubles, 'Utilisateurs Login',
@@ -74,14 +72,18 @@ import traceback
 import os.path as osp
 from StringIO import StringIO
 from copy import copy
+from datetime import datetime
 
-from logilab.common import shellutils
+from logilab.common import shellutils, attrdict
 from logilab.common.date import strptime
 from logilab.common.decorators import cached
 from logilab.common.deprecation import deprecated
 
+from cubicweb import QueryError
+from cubicweb.schema import META_RTYPES, VIRTUAL_RTYPES
 from cubicweb.server.utils import eschema_eid
-from cubicweb.server.ssplanner import EditedEntity
+from cubicweb.server.edition import EditedEntity
+
 
 def count_lines(stream_or_filename):
     if isinstance(stream_or_filename, basestring):
@@ -145,6 +147,22 @@ def lazytable(reader):
     for row in reader:
         yield dict(zip(header, row))
 
+def lazydbtable(cu, table, headers, orderby=None):
+    """return an iterator on rows of a sql table. On each row, fetch columns
+    defined in headers and return values as a dictionary.
+
+    >>> data = lazydbtable(cu, 'experimentation', ('id', 'nickname', 'gps'))
+    """
+    sql = 'SELECT %s FROM %s' % (','.join(headers), table,)
+    if orderby:
+        sql += ' ORDER BY %s' % ','.join(orderby)
+    cu.execute(sql)
+    while True:
+        row = cu.fetchone()
+        if row is None:
+            break
+        yield dict(zip(headers, row))
+
 def mk_entity(row, map):
     """Return a dict made from sanitized mapped values.
 
@@ -171,9 +189,8 @@ def mk_entity(row, map):
                 if res[dest] is None:
                     break
         except ValueError, err:
-            raise ValueError('error with %r field: %s' % (src, err))
+            raise ValueError('error with %r field: %s' % (src, err)), None, sys.exc_info()[-1]
     return res
-
 
 # user interactions ############################################################
 
@@ -287,11 +304,9 @@ class ObjectStore(object):
     But it will not enforce the constraints of the schema and hence will miss some problems
 
     >>> store = ObjectStore()
-    >>> user = {'login': 'johndoe'}
-    >>> store.add('CWUser', user)
-    >>> group = {'name': 'unknown'}
-    >>> store.add('CWUser', group)
-    >>> store.relate(user['eid'], 'in_group', group['eid'])
+    >>> user = store.create_entity('CWUser', login=u'johndoe')
+    >>> group = store.create_entity('CWUser', name=u'unknown')
+    >>> store.relate(user.eid, 'in_group', group.eid)
     """
     def __init__(self):
         self.items = []
@@ -307,7 +322,8 @@ class ObjectStore(object):
         return len(self.items) - 1
 
     def create_entity(self, etype, **data):
-        data['eid'] =  eid = self._put(etype, data)
+        data = attrdict(data)
+        data['eid'] = eid = self._put(etype, data)
         self.eids[eid] = data
         self.types.setdefault(etype, []).append(eid)
         return data
@@ -473,6 +489,11 @@ class RQLObjectStore(ObjectStore):
         self.rql('SET X %s Y WHERE X eid %%(x)s, Y eid %%(y)s' % rtype,
                  {'x': int(eid_from), 'y': int(eid_to)})
 
+    def find_entities(self, *args, **kwargs):
+        return self.session.find_entities(*args, **kwargs)
+
+    def find_one_entity(self, *args, **kwargs):
+        return self.session.find_one_entity(*args, **kwargs)
 
 # the import controller ########################################################
 
@@ -523,6 +544,10 @@ class CWImportController(object):
 
     def run(self):
         self.errors = {}
+        if self.commitevery is None:
+            self.tell('Will commit all or nothing.')
+        else:
+            self.tell('Will commit every %s iterations' % self.commitevery)
         for func, checks in self.generators:
             self._checks = {}
             func_name = func.__name__
@@ -541,7 +566,12 @@ class CWImportController(object):
                     err = func(buckets)
                     if err:
                         self.errors[title] = (help, err)
-        txuuid = self.store.commit()
+        try:
+            txuuid = self.store.commit()
+            if txuuid is not None:
+                self.tell('Transaction commited (txuuid: %s)' % txuuid)
+        except QueryError, ex:
+            self.tell('Transaction aborted: %s' % ex)
         self._print_stats()
         if self.errors:
             if self.askerror == 2 or (self.askerror and confirm('Display errors ?')):
@@ -549,10 +579,9 @@ class CWImportController(object):
                 for errkey, error in self.errors.items():
                     self.tell("\n%s (%s): %d\n" % (error[0], errkey, len(error[1])))
                     self.tell(pformat(sorted(error[1])))
-        if txuuid is not None:
-            print 'transaction id:', txuuid
+
     def _print_stats(self):
-        nberrors = sum(len(err[1]) for err in self.errors.values())
+        nberrors = sum(len(err) for err in self.errors.values())
         self.tell('\nImport statistics: %i entities, %i types, %i relations and %i errors'
                   % (self.store.nb_inserted_entities,
                      self.store.nb_inserted_types,
@@ -587,11 +616,6 @@ class CWImportController(object):
             return callfunc_every(self.store.commit,
                                   self.commitevery,
                                   self.get_data(datakey))
-
-
-
-from datetime import datetime
-from cubicweb.schema import META_RTYPES, VIRTUAL_RTYPES
 
 
 class NoHookRQLObjectStore(RQLObjectStore):

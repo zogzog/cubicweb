@@ -25,6 +25,8 @@ from logilab.database import get_db_helper
 from cubicweb.req import RequestSessionBase
 from cubicweb.cwvreg import CubicWebVRegistry
 from cubicweb.web.request import CubicWebRequestBase
+from cubicweb.web.http_headers import Headers
+
 from cubicweb.devtools import BASE_URL, BaseApptestConfiguration
 
 
@@ -59,8 +61,14 @@ class FakeRequest(CubicWebRequestBase):
         self._url = kwargs.pop('url', 'view?rql=Blop&vid=blop')
         super(FakeRequest, self).__init__(*args, **kwargs)
         self._session_data = {}
-        self._headers = {}
+        self._headers_in = Headers()
 
+    def set_cookie(self, cookie, key, maxage=300, expires=None):
+        super(FakeRequest, self).set_cookie(cookie, key, maxage=300, expires=None)
+        cookie = self.get_response_header('Set-Cookie')
+        self._headers_in.setHeader('Cookie', cookie)
+
+    ## Implement request abstract API
     def header_accept_language(self):
         """returns an ordered list of preferred languages"""
         return ('en',)
@@ -81,48 +89,32 @@ class FakeRequest(CubicWebRequestBase):
             return url
         return url.split('?', 1)[0]
 
-    def set_content_type(self, content_type, filename=None, encoding=None):
-        """set output content type for this request. An optional filename
-        may be given
+    def get_header(self, header, default=None, raw=True):
+        """return the value associated with the given input header, raise
+        KeyError if the header is not set
         """
-        pass
+        if raw:
+            return self._headers_in.getRawHeaders(header, [default])[0]
+        return self._headers_in.getHeader(header, default)
 
-    def set_header(self, header, value, raw=True):
-        """set an output HTTP header"""
-        self._headers[header] = value
+    ## extend request API to control headers in / out values
+    def set_request_header(self, header, value, raw=False):
+        """set an input HTTP header"""
+        if isinstance(value, basestring):
+            value = [value]
+        if raw:
+            self._headers_in.setRawHeaders(header, value)
+        else:
+            self._headers_in.setHeader(header, value)
 
-    def add_header(self, header, value):
-        """set an output HTTP header"""
-        self._headers[header] = value # XXX
-
-    def remove_header(self, header):
-        """remove an output HTTP header"""
-        self._headers.pop(header, None)
-
-    def get_header(self, header, default=None):
+    def get_response_header(self, header, default=None, raw=False):
         """return the value associated with the given input header,
         raise KeyError if the header is not set
         """
-        return self._headers.get(header, default)
-
-    def set_cookie(self, cookie, key, maxage=300, expires=None):
-        """set / update a cookie key
-
-        by default, cookie will be available for the next 5 minutes
-        """
-        morsel = cookie[key]
-        if maxage is not None:
-            morsel['Max-Age'] = maxage
-        if expires:
-            morsel['expires'] = expires.strftime('%a, %d %b %Y %H:%M:%S %z')
-        # make sure cookie is set on the correct path
-        morsel['path'] = self.base_url_path()
-        self.add_header('Set-Cookie', morsel.OutputString())
-        self.add_header('Cookie', morsel.OutputString())
-
-    def remove_cookie(self, cookie, key):
-        self.remove_header('Set-Cookie')
-        self.remove_header('Cookie')
+        if raw:
+            return self.headers_out.getRawHeaders(header, default)[0]
+        else:
+            return self.headers_out.getHeader(header, default)
 
     def validate_cache(self):
         pass
@@ -185,8 +177,7 @@ class FakeRepo(object):
     def internal_session(self):
         return FakeSession(self)
 
-    def extid2eid(self, source, extid, etype, session, insert=True,
-                  recreate=False):
+    def extid2eid(self, source, extid, etype, session, insert=True):
         try:
             return self.extids[extid]
         except KeyError:

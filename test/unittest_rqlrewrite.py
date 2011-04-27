@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -62,15 +62,17 @@ def rewrite(rqlst, snippets_map, kwargs, existingvars=None):
             def simplify(mainrqlst, needcopy=False):
                 rqlhelper.simplify(rqlst, needcopy)
     rewriter = RQLRewriter(mock_object(vreg=FakeVReg, user=(mock_object(eid=1))))
-    for v, snippets in snippets_map.items():
-        snippets_map[v] = [isinstance(snippet, basestring)
-                           and mock_object(snippet_rqlst=parse('Any X WHERE '+snippet).children[0],
-                                           expression='Any X WHERE '+snippet)
-                           or snippet
-                           for snippet in snippets]
+    snippets = []
+    for v, exprs in snippets_map.items():
+        rqlexprs = [isinstance(snippet, basestring)
+                    and mock_object(snippet_rqlst=parse('Any X WHERE '+snippet).children[0],
+                                    expression='Any X WHERE '+snippet)
+                    or snippet
+                    for snippet in exprs]
+        snippets.append((dict([v]), rqlexprs))
     rqlhelper.compute_solutions(rqlst.children[0], {'eid': eid_func_map}, kwargs=kwargs)
     solutions = rqlst.children[0].solutions
-    rewriter.rewrite(rqlst.children[0], snippets_map.items(), solutions, kwargs,
+    rewriter.rewrite(rqlst.children[0], snippets, solutions, kwargs,
                      existingvars)
     test_vrefs(rqlst.children[0])
     return rewriter.rewritten

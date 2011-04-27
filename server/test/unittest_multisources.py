@@ -1,4 +1,4 @@
- # copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -17,6 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 
 from datetime import datetime, timedelta
+from itertools import repeat
 
 from cubicweb.devtools import TestServerConfiguration, init_test_database
 from cubicweb.devtools.testlib import CubicWebTC, Tags
@@ -35,7 +36,6 @@ EXTERN_SOURCE_CFG = u'''
 pyro-ns-id = extern
 cubicweb-user = admin
 cubicweb-password = gingkow
-mapping-file = extern_mapping.py
 base-url=http://extern.org/
 '''
 
@@ -45,6 +45,12 @@ from cubicweb.dbapi import Connection
 
 PyroRQLSource_get_connection = PyroRQLSource.get_connection
 Connection_close = Connection.close
+
+def add_extern_mapping(source):
+    source.init_mapping(zip(('Card', 'Affaire', 'State',
+                             'in_state', 'documented_by', 'multisource_inlined_rel'),
+                            repeat(u'write')))
+
 
 def pre_setup_database_extern(session, config):
     session.execute('INSERT Card X: X title "C3: An external card", X wikiid "aaa"')
@@ -119,11 +125,13 @@ class TwoSourcesTC(CubicWebTC):
 pyro-ns-id = extern-multi
 cubicweb-user = admin
 cubicweb-password = gingkow
-mapping-file = extern_mapping.py
 ''')]:
-            session.create_entity('CWSource', name=unicode(uri),
-                                         type=u'pyrorql',
-                                         config=unicode(src_config))
+            source = session.create_entity('CWSource', name=unicode(uri),
+                                           type=u'pyrorql',
+                                           config=unicode(src_config))
+            session.commit()
+            add_extern_mapping(source)
+
         session.commit()
         # trigger discovery
         session.execute('Card X')

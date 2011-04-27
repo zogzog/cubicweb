@@ -93,7 +93,7 @@ means as data gets in (entities added, updated, relations set or
 unset), specific events are issued and the Hooks matching these events
 are called.
 
-You can get the event that triggered a hook by accessing its :attr:event
+You can get the event that triggered a hook by accessing its `event`
 attribute.
 
 .. _`dataflow`: http://en.wikipedia.org/wiki/Dataflow
@@ -105,68 +105,64 @@ Entity modification related events
 When called for one of these events, hook will have an `entity` attribute
 containing the entity instance.
 
-* `before_add_entity`, `before_update_entity`:
+- `before_add_entity`, `before_update_entity`:
 
-  - on those events, you can check what attributes of the entity are modified in
-    `entity.cw_edited` (by definition the database is not yet updated in a before
-    event)
+  On those events, you can access the modified attributes of the entity using
+  the `entity.cw_edited` dictionnary. The values can be modified and the old
+  values can be retrieved.
 
-  - you are allowed to further modify the entity before database
-    operations, using the dictionary notation on `cw_edited`. By doing
-    this, you'll avoid the need for a whole new rql query processing,
-    the only difference is that the underlying backend query (eg
-    usually sql) will contains the additional data. For example:
+  If you modify the `entity.cw_edited` dictionnary in the hook, that is before
+  the database operations take place, you will avoid the need to process a whole
+  new rql query and the underlying backend query (eg usually sql) will contain
+  the modified data. For example:
 
-    .. sourcecode:: python
+  .. sourcecode:: python
 
-       self.entity.set_attributes(age=42)
+     self.entity.cw_edited['age'] = 42
 
-    will set the `age` attribute of the entity to 42. But to do so, it will
-    generate a rql query that will have to be processed, then trigger some
-    hooks, and so one (potentially leading to infinite hook loops or such
-    awkward situations..) You can avoid this by doing the modification that way:
+  will modify the age before it is written to the backend storage.
 
-    .. sourcecode:: python
+  Similarly, removing an attribute from `cw_edited` will cancel its
+  modification:
 
-       self.entity.cw_edited['age'] = 42
+  .. sourcecode:: python
 
-    Here the attribute will simply be edited in the same query that the
-    one that triggered the hook.
+     del self.entity.cw_edited['age']
 
-    Similarly, removing an attribute from `cw_edited` will cancel its
-    modification.
+  On a `before_update_entity` event, you can access the old and new values:
 
-  - on `before_update_entity` event, you can access to old and new values in
-    this hook, by using `entity.cw_edited.oldnewvalue(attr)`
+  .. sourcecode:: python
 
+     old, new = entity.cw_edited.oldnewvalue('age')
 
-* `after_add_entity`, `after_update_entity`
+- `after_add_entity`, `after_update_entity`
 
-  - on those events, you can still check what attributes of the entity are
-    modified in `entity.cw_edited` but you can't get anymore the old value, nor
-    modify it.
+  On those events, you can get the list of attributes that were modified using
+  the `entity.cw_edited` dictionnary, but you can not modify it or get the old
+  value of an attribute.
 
-* `before_delete_entity`, `after_delete_entity`
+- `before_delete_entity`, `after_delete_entity`
 
-  - on those events, the entity has no `cw_edited` set.
+  On those events, the entity has no `cw_edited` dictionnary.
 
+.. note:: `self.entity.set_attributes(age=42)` will set the `age` attribute to
+  42. But to do so, it will generate a rql query that will have to be processed,
+  hence may trigger some hooks, etc. This could lead to infinitely looping hooks.
 
 Relation modification related events
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When called for one of these events, hook will have `eidfrom`, `rtype`, `eidto`
-attributes containing respectivly the eid of the subject entity, the relation
+attributes containing respectively the eid of the subject entity, the relation
 type and the eid of the object entity.
 
 * `before_add_relation`, `before_delete_relation`
 
-  - on those events, you can still get original relation by issuing a rql query
+  On those events, you can still get the original relation by issuing a rql query.
 
 * `after_add_relation`, `after_delete_relation`
 
-This is an occasion to remind us that relations support the add / delete
-operation, but no update.
-
+Take note that relations can be added or deleted, but not updated.
 
 Non data events
 ~~~~~~~~~~~~~~~
