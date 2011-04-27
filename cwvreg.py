@@ -402,10 +402,8 @@ class ViewsRegistry(CWRegistry):
                      if not isinstance(view, class_deprecated)]
             try:
                 view = self._select_best(views, req, rset=rset, **kwargs)
-                if view.linkable():
+                if view is not None and view.linkable():
                     yield view
-            except NoSelectableObject:
-                continue
             except Exception:
                 self.exception('error while trying to select %s view for %s',
                                vid, rset)
