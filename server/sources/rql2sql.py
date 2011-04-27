@@ -1407,6 +1407,8 @@ class SQLGenerator(object):
         if constant.type is None:
             return 'NULL'
         value = constant.value
+        if constant.type == 'etype':
+            return value
         if constant.type == 'Int' and  isinstance(constant.parent, SortTerm):
             return value
         if constant.type in ('Date', 'Datetime'):

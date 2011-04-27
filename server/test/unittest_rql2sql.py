@@ -1331,6 +1331,11 @@ FROM cw_Personne AS _P''')
                     '''SELECT SUBSTR(_P.cw_nom, 1, 1)
 FROM cw_Personne AS _P''')
 
+    def test_cast(self):
+        self._check("Any CAST(String, P) WHERE P is Personne",
+                    '''SELECT CAST(_P.cw_eid AS text)
+FROM cw_Personne AS _P''')
+
     def test_parser_parse(self):
         for t in self._parse(PARSER):
             yield t
@@ -1726,6 +1731,10 @@ ORDER BY 4 DESC'''),
         for t in self._parse(WITH_LIMIT):# + ADVANCED_WITH_LIMIT_OR_ORDERBY):
             yield t
 
+    def test_cast(self):
+        self._check("Any CAST(String, P) WHERE P is Personne",
+                    '''SELECT CAST(_P.cw_eid AS nvarchar(max))
+FROM cw_Personne AS _P''')
 
 
 class SqliteSQLGeneratorTC(PostgresSQLGeneratorTC):
@@ -1877,6 +1886,11 @@ class MySQLGenerator(PostgresSQLGeneratorTC):
     def test_date_extraction(self):
         self._check("Any MONTH(D) WHERE P is Personne, P creation_date D",
                     '''SELECT EXTRACT(MONTH from _P.cw_creation_date)
+FROM cw_Personne AS _P''')
+
+    def test_cast(self):
+        self._check("Any CAST(String, P) WHERE P is Personne",
+                    '''SELECT CAST(_P.cw_eid AS mediumtext)
 FROM cw_Personne AS _P''')
 
     def test_from_clause_needed(self):
