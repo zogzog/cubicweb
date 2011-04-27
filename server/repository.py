@@ -1375,19 +1375,45 @@ class Repository(object):
 
     def glob_add_relation(self, session, subject, rtype, object):
         """add a relation to the repository"""
-        if server.DEBUG & server.DBG_REPO:
-            print 'ADD relation', subject, rtype, object
-        source = self.locate_relation_source(session, subject, rtype, object)
-        if source.should_call_hooks:
-            del_existing_rel_if_needed(session, subject, rtype, object)
-            self.hm.call_hooks('before_add_relation', session,
-                               eidfrom=subject, rtype=rtype, eidto=object)
-        source.add_relation(session, subject, rtype, object)
-        rschema = self.schema.rschema(rtype)
-        session.update_rel_cache_add(subject, rtype, object, rschema.symmetric)
-        if source.should_call_hooks:
-            self.hm.call_hooks('after_add_relation', session,
-                               eidfrom=subject, rtype=rtype, eidto=object)
+        self.glob_add_relations(session, {rtype: [(subject, object)]})
+
+    def glob_add_relations(self, session, relations):
+        """add several relations to the repository
+
+        relations is a dictionary rtype: [(subj_eid, obj_eid), ...]
+        """
+        sources = {}
+        for rtype, eids_subj_obj in relations.iteritems():
+            if server.DEBUG & server.DBG_REPO:
+                for subject, object in relations:
+                    print 'ADD relation', subject, rtype, object
+            for subject, object in eids_subj_obj:
+                source = self.locate_relation_source(session, subject, rtype, object)
+                if source not in sources:
+                    relations_by_rtype = {}
+                    sources[source] = relations_by_rtype
+                else:
+                    relations_by_rtype = sources[source]
+                if rtype in relations_by_rtype:
+                    relations_by_rtype[rtype].append((subject, object))
+                else:
+                    relations_by_rtype[rtype] = [(subject, object)]
+        for source, relations_by_rtype in sources.iteritems():
+            if source.should_call_hooks:
+                for rtype, source_relations in relations_by_rtype.iteritems():
+                    for subject, object in source_relations:
+                        del_existing_rel_if_needed(session, subject, rtype, object)
+                    self.hm.call_hooks('before_add_relation', session,
+                                    rtype=rtype, eids_from_to=source_relations)
+            for rtype, source_relations in relations_by_rtype.iteritems():
+                source.add_relations(session, rtype, source_relations)
+                rschema = self.schema.rschema(rtype)
+                for subject, object in source_relations:
+                    session.update_rel_cache_add(subject, rtype, object, rschema.symmetric)
+            if source.should_call_hooks:
+                for rtype, source_relations in relations_by_rtype.iteritems():
+                    self.hm.call_hooks('after_add_relation', session,
+                                       rtype=rtype, eids_from_to=source_relations)
 
     def glob_delete_relation(self, session, subject, rtype, object):
         """delete a relation from the repository"""

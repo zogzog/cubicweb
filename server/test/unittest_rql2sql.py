@@ -909,7 +909,28 @@ FROM cw_Note AS _G LEFT OUTER JOIN cw_State AS _S ON (_G.cw_in_state=_S.cw_eid A
     ('Any O,AD  WHERE NOT S inline1 O, S eid 123, O todo_by AD?',
      '''SELECT _O.cw_eid, rel_todo_by0.eid_to
 FROM cw_Note AS _S, cw_Affaire AS _O LEFT OUTER JOIN todo_by_relation AS rel_todo_by0 ON (rel_todo_by0.eid_from=_O.cw_eid)
-WHERE (_S.cw_inline1 IS NULL OR _S.cw_inline1!=_O.cw_eid) AND _S.cw_eid=123''')
+WHERE (_S.cw_inline1 IS NULL OR _S.cw_inline1!=_O.cw_eid) AND _S.cw_eid=123'''),
+
+    ('Any X,AE WHERE X multisource_inlined_rel S?, S ambiguous_inlined A, A modification_date AE',
+     '''SELECT _X.cw_eid, _T0.C2
+FROM cw_Card AS _X LEFT OUTER JOIN (SELECT _S.cw_eid AS C0, _A.cw_eid AS C1, _A.cw_modification_date AS C2
+FROM cw_Affaire AS _S, cw_CWUser AS _A
+WHERE _S.cw_ambiguous_inlined=_A.cw_eid
+UNION ALL
+SELECT _S.cw_eid AS C0, _A.cw_eid AS C1, _A.cw_modification_date AS C2
+FROM cw_CWUser AS _A, cw_Note AS _S
+WHERE _S.cw_ambiguous_inlined=_A.cw_eid) AS _T0 ON (_X.cw_multisource_inlined_rel=_T0.C0)
+UNION ALL
+SELECT _X.cw_eid, _T0.C2
+FROM cw_Note AS _X LEFT OUTER JOIN (SELECT _S.cw_eid AS C0, _A.cw_eid AS C1, _A.cw_modification_date AS C2
+FROM cw_Affaire AS _S, cw_CWUser AS _A
+WHERE _S.cw_ambiguous_inlined=_A.cw_eid
+UNION ALL
+SELECT _S.cw_eid AS C0, _A.cw_eid AS C1, _A.cw_modification_date AS C2
+FROM cw_CWUser AS _A, cw_Note AS _S
+WHERE _S.cw_ambiguous_inlined=_A.cw_eid) AS _T0 ON (_X.cw_multisource_inlined_rel=_T0.C0)'''
+    ),
+
     ]
 
 VIRTUAL_VARS = [
@@ -1225,9 +1246,13 @@ class PostgresSQLGeneratorTC(RQLGeneratorTC):
             yield self._check, rql, sql
 
     def _checkall(self, rql, sql):
+        if isinstance(rql, tuple):
+            rql, args = rql
+        else:
+            args = None
         try:
             rqlst = self._prepare(rql)
-            r, args, cbs = self.o.generate(rqlst)
+            r, args, cbs = self.o.generate(rqlst, args)
             self.assertEqual((r.strip(), args), sql)
         except Exception, ex:
             print rql
@@ -1239,7 +1264,7 @@ class PostgresSQLGeneratorTC(RQLGeneratorTC):
         return
 
     def test1(self):
-        self._checkall('Any count(RDEF) WHERE RDEF relation_type X, X eid %(x)s',
+        self._checkall(('Any count(RDEF) WHERE RDEF relation_type X, X eid %(x)s', {'x': None}),
                        ("""SELECT COUNT(T1.C0) FROM (SELECT _RDEF.cw_eid AS C0
 FROM cw_CWAttribute AS _RDEF
 WHERE _RDEF.cw_relation_type=%(x)s
@@ -1250,7 +1275,7 @@ WHERE _RDEF.cw_relation_type=%(x)s) AS T1""", {}),
                        )
 
     def test2(self):
-        self._checkall('Any X WHERE C comments X, C eid %(x)s',
+        self._checkall(('Any X WHERE C comments X, C eid %(x)s', {'x': None}),
                        ('''SELECT rel_comments0.eid_to
 FROM comments_relation AS rel_comments0
 WHERE rel_comments0.eid_from=%(x)s''', {})

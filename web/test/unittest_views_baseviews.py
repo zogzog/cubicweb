@@ -16,11 +16,14 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import with_statement
+
 from logilab.common.testlib import unittest_main
 from logilab.mtconverter import html_unescape
 
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.utils import json
+from cubicweb.view import StartupView, TRANSITIONAL_DOCTYPE_NOEXT
 from cubicweb.web.htmlwidgets import TableWidget
 from cubicweb.web.views import vid_from_rset
 
@@ -124,6 +127,48 @@ class TableViewTC(CubicWebTC):
         got = [loadjson(value) for _, value in table.itercols(0)]
         self.assertListEqual(got, expected)
 
+
+class HTMLStreamTests(CubicWebTC):
+
+    def test_set_doctype_reset_xmldecl(self):
+        """
+        tests `cubicweb.web.request.CubicWebRequestBase.set_doctype`
+        with xmldecl reset
+        """
+        class MyView(StartupView):
+            __regid__ = 'my-view'
+            def call(self):
+                self._cw.set_doctype('<!DOCTYPE html>')
+
+        with self.temporary_appobjects(MyView):
+            html_source = self.view('my-view').source
+            source_lines = [line.strip() for line in html_source.splitlines(False)
+                            if line.strip()]
+            self.assertListEqual(source_lines[:2],
+                                 ['<!DOCTYPE html>',
+                                  '<html xmlns="http://www.w3.org/1999/xhtml" xmlns:cubicweb="http://www.logilab.org/2008/cubicweb" xml:lang="en" lang="en">'])
+
+    def test_set_doctype_no_reset_xmldecl(self):
+        """
+        tests `cubicweb.web.request.CubicWebRequestBase.set_doctype`
+        with no xmldecl reset
+        """
+        html_doctype = TRANSITIONAL_DOCTYPE_NOEXT.strip()
+        class MyView(StartupView):
+            __regid__ = 'my-view'
+            def call(self):
+                self._cw.set_doctype(html_doctype, reset_xmldecl=False)
+                self._cw.main_stream.set_namespaces([('xmlns', 'http://www.w3.org/1999/xhtml')])
+                self._cw.main_stream.set_htmlattrs([('lang', 'cz')])
+
+        with self.temporary_appobjects(MyView):
+            html_source = self.view('my-view').source
+            source_lines = [line.strip() for line in html_source.splitlines(False)
+                            if line.strip()]
+            self.assertListEqual(source_lines[:3],
+                                 ['<?xml version="1.0" encoding="UTF-8"?>',
+                                  html_doctype,
+                                  '<html xmlns="http://www.w3.org/1999/xhtml" lang="cz">'])
 
 if __name__ == '__main__':
     unittest_main()

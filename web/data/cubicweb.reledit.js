@@ -18,6 +18,7 @@ jQuery.extend(cw.reledit, {
     cleanupAfterCancel: function (divid) {
         jQuery('#appMsg').hide();
         jQuery('div.errorMessage').remove();
+        // plus re-set inline style ?
         jQuery('#' + divid).show();
         jQuery('#' + divid + '-value').show();
         jQuery('#' + divid + '-form').hide();
@@ -63,9 +64,9 @@ jQuery.extend(cw.reledit, {
      * @param reload: boolean to reload page if true (when changing URL dependant data)
      * @param default_value : value if the field is empty
      */
-    loadInlineEditionForm: function(formid, eid, rtype, role, divid, reload, vid) {
+    loadInlineEditionForm: function(formid, eid, rtype, role, divid, reload, vid, action) {
         var args = {fname: 'reledit_form', rtype: rtype, role: role,
-                    pageid: pageid,
+                    pageid: pageid, action: action,
                     eid: eid, divid: divid, formid: formid,
                     reload: reload, vid: vid};
         var d = jQuery('#'+divid+'-reledit').loadxhtml(JSON_BASE_URL, args, 'post');

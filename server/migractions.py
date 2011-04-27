@@ -438,7 +438,8 @@ class ServerMigrationHelper(MigrationHelper):
                                  'X expression %%(expr)s, X mainvars %%(vars)s, T %s X '
                                  'WHERE T eid %%(x)s' % perm,
                                  {'expr': expr, 'exprtype': exprtype,
-                                  'vars': expression.mainvars, 'x': teid},
+                                  'vars': u','.join(sorted(expression.mainvars)),
+                                  'x': teid},
                                  ask_confirm=False)
 
     def _synchronize_rschema(self, rtype, syncrdefs=True,
@@ -757,9 +758,9 @@ class ServerMigrationHelper(MigrationHelper):
         targeted type is known
         """
         instschema = self.repo.schema
-        assert not etype in instschema, \
-               '%s already defined in the instance schema' % etype
         eschema = self.fs_schema.eschema(etype)
+        assert eschema.final or not etype in instschema, \
+               '%s already defined in the instance schema' % etype
         confirm = self.verbosity >= 2
         groupmap = self.group_mapping()
         cstrtypemap = self.cstrtype_mapping()

@@ -2,7 +2,7 @@
 
 db-driver   = postgres
 db-host     = localhost
-db-port     = 
+db-port     = 5433
 adapter     = native
 db-name     = cw_fti_test
 db-encoding = UTF-8

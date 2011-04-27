@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -25,7 +25,7 @@ from datetime import datetime, date
 
 from logilab import database as db, common as lgc
 from logilab.common.shellutils import ProgressBar
-from logilab.common.date import todate, todatetime
+from logilab.common.date import todate, todatetime, utcdatetime, utctime
 from logilab.database.sqlgen import SQLGenerator
 
 from cubicweb import Binary, ConfigurationError
@@ -274,10 +274,15 @@ class SQLAdapterMixIn(object):
                         value = crypt_password(value)
                     value = self._binary(value)
                 # XXX needed for sqlite but I don't think it is for other backends
-                elif atype == 'Datetime' and isinstance(value, date):
+                # Note: use is __class__ since issubclass(datetime, date)
+                elif atype in ('Datetime', 'TZDatetime') and type(value) is date:
                     value = todatetime(value)
                 elif atype == 'Date' and isinstance(value, datetime):
                     value = todate(value)
+                elif atype == 'TZDatetime' and getattr(value, 'tzinfo', None):
+                    value = utcdatetime(value)
+                elif atype == 'TZTime' and getattr(value, 'tzinfo', None):
+                    value = utctime(value)
                 elif isinstance(value, Binary):
                     value = self._binary(value.getvalue())
             attrs[SQL_PREFIX+str(attr)] = value
@@ -326,3 +331,13 @@ def init_sqlite_connexion(cnx):
 
 sqlite_hooks = SQL_CONNECT_HOOKS.setdefault('sqlite', [])
 sqlite_hooks.append(init_sqlite_connexion)
+
+
+def init_postgres_connexion(cnx):
+    cnx.cursor().execute('SET TIME ZONE UTC')
+    # commit is needed, else setting are lost if the connection is first
+    # rollbacked
+    cnx.commit()
+
+postgres_hooks = SQL_CONNECT_HOOKS.setdefault('postgres', [])
+postgres_hooks.append(init_postgres_connexion)

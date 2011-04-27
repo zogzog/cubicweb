@@ -54,7 +54,8 @@ class EmailAddressHooksTC(CubicWebTC):
         self.failIf(rset.rowcount != 1, rset)
 
     def test_security_check(self):
-        self.create_user('toto')
+        req = self.request()
+        self.create_user(req, 'toto')
         email1 = self.execute('INSERT EmailAddress E: E address "client@client.com", U use_email E WHERE U login "admin"')[0][0]
         self.commit()
         cnx = self.login('toto')

@@ -23,9 +23,11 @@ from cubicweb.transaction import *
 
 class UndoableTransactionTC(CubicWebTC):
 
+        
     def setup_database(self):
+        req = self.request()
         self.session.undo_actions = set('CUDAR')
-        self.toto = self.create_user('toto', password='toto', groups=('users',),
+        self.toto = self.create_user(req, 'toto', password='toto', groups=('users',),
                                      commit=False)
         self.txuuid = self.commit()
 
@@ -246,7 +248,8 @@ class UndoableTransactionTC(CubicWebTC):
 
     def test_undo_creation_integrity_1(self):
         session = self.session
-        tutu = self.create_user('tutu', commit=False)
+        req = self.request()
+        tutu = self.create_user(req, 'tutu', commit=False)
         txuuid = self.commit()
         email = self.request().create_entity('EmailAddress', address=u'tutu@cubicweb.org')
         prop = self.request().create_entity('CWProperty', pkey=u'ui.default-text-format',

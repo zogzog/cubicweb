@@ -37,7 +37,7 @@ from logilab.common.testlib import TestCase, InnerTest, Tags
 from logilab.common.pytest import nocoverage, pause_tracing, resume_tracing
 from logilab.common.debugger import Debugger
 from logilab.common.umessage import message_from_string
-from logilab.common.decorators import cached, classproperty, clear_cache
+from logilab.common.decorators import cached, classproperty, clear_cache, iclassmethod
 from logilab.common.deprecation import deprecated, class_deprecated
 from logilab.common.shellutils import getlogin
 
@@ -46,7 +46,7 @@ from cubicweb import cwconfig, devtools, web, server
 from cubicweb.dbapi import ProgrammingError, DBAPISession, repo_connect
 from cubicweb.sobjects import notification
 from cubicweb.web import Redirect, application
-from cubicweb.server.session import security_enabled
+from cubicweb.server.session import Session, security_enabled
 from cubicweb.server.hook import SendMailOp
 from cubicweb.devtools import SYSTEM_ENTITIES, SYSTEM_RELATIONS, VIEW_VALIDATORS
 from cubicweb.devtools import BASE_URL, fake, htmlparser, DEFAULT_EMPTY_DB_ID
@@ -354,13 +354,24 @@ class CubicWebTC(TestCase):
         else:
             return req.user
 
-    def create_user(self, login, groups=('users',), password=None, req=None,
+    @iclassmethod # XXX turn into a class method
+    def create_user(self, req, login=None, groups=('users',), password=None,
                     commit=True, **kwargs):
         """create and return a new user entity"""
+        if isinstance(req, basestring):
+            warn('[3.12] create_user arguments are now (req, login[, groups, password, commit, **kwargs])',
+                 DeprecationWarning, stacklevel=1)
+            if not isinstance(groups, (tuple, list)):
+                password = groups
+                groups = login
+            elif isinstance(login, tuple):
+                groups = login
+            login = req
+            if req is None:
+                assert not isinstance(self, type)
+                req = self._orig_cnx[0].request()
         if password is None:
             password = login.encode('utf8')
-        if req is None:
-            req = self._orig_cnx[0].request()
         user = req.create_entity('CWUser', login=unicode(login),
                                  upassword=password, **kwargs)
         req.execute('SET X in_group G WHERE X eid %%(x)s, G name IN(%s)'
@@ -368,8 +379,36 @@ class CubicWebTC(TestCase):
                     {'x': user.eid})
         user.cw_clear_relation_cache('in_group', 'subject')
         if commit:
-            req.cnx.commit()
+            try:
+                req.commit() # req is a session
+            except AttributeError:
+                req.cnx.commit()
         return user
+
+    @iclassmethod # XXX turn into a class method
+    def grant_permission(self, session, entity, group, pname=None, plabel=None):
+        """insert a permission on an entity. Will have to commit the main
+        connection to be considered
+        """
+        if not isinstance(session, Session):
+            warn('[3.12] grant_permission arguments are now (session, entity, group, pname[, plabel])',
+                 DeprecationWarning, stacklevel=1)
+            plabel = pname
+            pname = group
+            group = entity
+            entity = session
+            assert not isinstance(self, type)
+            session = self.session
+        pname = unicode(pname)
+        plabel = plabel and unicode(plabel) or unicode(group)
+        e = entity.eid
+        with security_enabled(session, False, False):
+            peid = session.execute(
+            'INSERT CWPermission X: X name %(pname)s, X label %(plabel)s,'
+            'X require_group G, E require_permission X '
+            'WHERE G name %(group)s, E eid %(e)s',
+            locals())[0][0]
+        return peid
 
     def login(self, login, **kwargs):
         """return a connection for the given login/password"""
@@ -438,21 +477,6 @@ class CubicWebTC(TestCase):
         return self.session.execute(rql, args)
 
     # other utilities #########################################################
-
-    def grant_permission(self, entity, group, pname, plabel=None):
-        """insert a permission on an entity. Will have to commit the main
-        connection to be considered
-        """
-        pname = unicode(pname)
-        plabel = plabel and unicode(plabel) or unicode(group)
-        e = entity.eid
-        with security_enabled(self.session, False, False):
-            peid = self.execute(
-            'INSERT CWPermission X: X name %(pname)s, X label %(plabel)s,'
-            'X require_group G, E require_permission X '
-            'WHERE G name %(group)s, E eid %(e)s',
-            locals())[0][0]
-        return peid
 
     @contextmanager
     def temporary_appobjects(self, *appobjects):

@@ -95,13 +95,15 @@ class WorkflowBuildingTC(CubicWebTC):
 class WorkflowTC(CubicWebTC):
 
     def setup_database(self):
+        req = self.request()
         rschema = self.schema['in_state']
         for rdef in rschema.rdefs.values():
             self.assertEqual(rdef.cardinality, '1*')
-        self.member = self.create_user('member')
+        self.member = self.create_user(req, 'member')
 
     def test_workflow_base(self):
-        e = self.create_user('toto')
+        req = self.request()
+        e = self.create_user(req, 'toto')
         iworkflowable = e.cw_adapt_to('IWorkflowable')
         self.assertEqual(iworkflowable.state, 'activated')
         iworkflowable.change_state('deactivated', u'deactivate 1')
@@ -170,13 +172,14 @@ class WorkflowTC(CubicWebTC):
         self.assertEqual(trinfo.transition.name, 'deactivate')
 
     def test_goback_transition(self):
+        req = self.request()
         wf = self.session.user.cw_adapt_to('IWorkflowable').current_workflow
         asleep = wf.add_state('asleep')
         wf.add_transition('rest', (wf.state_by_name('activated'),
                                    wf.state_by_name('deactivated')),
                           asleep)
         wf.add_transition('wake up', asleep)
-        user = self.create_user('stduser')
+        user = self.create_user(req, 'stduser')
         iworkflowable = user.cw_adapt_to('IWorkflowable')
         iworkflowable.fire_transition('rest')
         self.commit()
@@ -196,7 +199,8 @@ class WorkflowTC(CubicWebTC):
 
     def _test_stduser_deactivate(self):
         ueid = self.member.eid
-        self.create_user('tutu')
+        req = self.request()
+        self.create_user(req, 'tutu')
         cnx = self.login('tutu')
         req = self.request()
         iworkflowable = req.entity_from_eid(self.member.eid).cw_adapt_to('IWorkflowable')
@@ -393,7 +397,8 @@ class WorkflowTC(CubicWebTC):
 class CustomWorkflowTC(CubicWebTC):
 
     def setup_database(self):
-        self.member = self.create_user('member')
+        req = self.request()
+        self.member = self.create_user(req, 'member')
 
     def test_custom_wf_replace_state_no_history(self):
         """member in inital state with no previous history, state is simply
@@ -493,7 +498,8 @@ class AutoTransitionTC(CubicWebTC):
 
     def test_auto_transition_fired(self):
         wf = self.setup_custom_wf()
-        user = self.create_user('member')
+        req = self.request()
+        user = self.create_user(req, 'member')
         iworkflowable = user.cw_adapt_to('IWorkflowable')
         self.execute('SET X custom_workflow WF WHERE X eid %(x)s, WF eid %(wf)s',
                      {'wf': wf.eid, 'x': user.eid})
@@ -523,7 +529,8 @@ class AutoTransitionTC(CubicWebTC):
 
     def test_auto_transition_custom_initial_state_fired(self):
         wf = self.setup_custom_wf()
-        user = self.create_user('member', surname=u'toto')
+        req = self.request()
+        user = self.create_user(req, 'member', surname=u'toto')
         self.execute('SET X custom_workflow WF WHERE X eid %(x)s, WF eid %(wf)s',
                      {'wf': wf.eid, 'x': user.eid})
         self.commit()
@@ -538,7 +545,8 @@ class AutoTransitionTC(CubicWebTC):
                           type=u'auto', conditions=({'expr': u'X surname "toto"',
                                                      'mainvars': u'X'},))
         self.commit()
-        user = self.create_user('member', surname=u'toto')
+        req = self.request()
+        user = self.create_user(req, 'member', surname=u'toto')
         self.commit()
         iworkflowable = user.cw_adapt_to('IWorkflowable')
         self.assertEqual(iworkflowable.state, 'dead')
@@ -554,7 +562,8 @@ class WorkflowHooksTC(CubicWebTC):
         self.s_deactivated = self.wf.state_by_name('deactivated').eid
         self.s_dummy = self.wf.add_state(u'dummy').eid
         self.wf.add_transition(u'dummy', (self.s_deactivated,), self.s_dummy)
-        ueid = self.create_user('stduser', commit=False).eid
+        req = self.request()
+        ueid = self.create_user(req, 'stduser', commit=False).eid
         # test initial state is set
         rset = self.execute('Any N WHERE S name N, X in_state S, X eid %(x)s',
                             {'x' : ueid})

@@ -18,7 +18,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unit tests for modules cubicweb.server.querier and cubicweb.server.ssplanner
 """
-from datetime import date, datetime
+from datetime import date, datetime, timedelta, tzinfo
 
 from logilab.common.testlib import TestCase, unittest_main
 from rql import BadRQLQuery, RQLSyntaxError
@@ -31,6 +31,14 @@ from cubicweb.devtools import get_test_db_handler, TestServerConfiguration
 
 from cubicweb.devtools.repotest import tuplify, BaseQuerierTC
 from unittest_session import Variable
+
+class FixedOffset(tzinfo):
+    def __init__(self, hours=0):
+        self.hours = hours
+    def utcoffset(self, dt):
+        return timedelta(hours=self.hours)
+    def dst(self, dt):
+        return timedelta(0)
 
 
 # register priority/severity sorting registered procedure
@@ -761,18 +769,20 @@ class QuerierTC(BaseQuerierTC):
         rset = self.execute('Any N WHERE X is CWEType, X name N, X final %(val)s',
                             {'val': True})
         self.assertEqual(sorted(r[0] for r in rset.rows), ['Boolean', 'Bytes',
-                                                            'Date', 'Datetime',
-                                                            'Decimal', 'Float',
-                                                            'Int', 'Interval',
-                                                            'Password', 'String',
-                                                            'Time'])
+                                                           'Date', 'Datetime',
+                                                           'Decimal', 'Float',
+                                                           'Int', 'Interval',
+                                                           'Password', 'String',
+                                                           'TZDatetime', 'TZTime',
+                                                           'Time'])
         rset = self.execute('Any N WHERE X is CWEType, X name N, X final TRUE')
         self.assertEqual(sorted(r[0] for r in rset.rows), ['Boolean', 'Bytes',
-                                                            'Date', 'Datetime',
-                                                            'Decimal', 'Float',
-                                                            'Int', 'Interval',
-                                                            'Password', 'String',
-                                                            'Time'])
+                                                           'Date', 'Datetime',
+                                                           'Decimal', 'Float',
+                                                           'Int', 'Interval',
+                                                           'Password', 'String',
+                                                           'TZDatetime', 'TZTime',
+                                                           'Time'])
 
     def test_select_constant(self):
         rset = self.execute('Any X, "toto" ORDERBY X WHERE X is CWGroup')
@@ -1213,11 +1223,11 @@ Any P1,B,E WHERE P1 identity P2 WITH
         self.assertEqual(rset.description, [('CWUser',)])
 
     def test_update_upassword(self):
-        cursor = self.pool['system']
         rset = self.execute("INSERT CWUser X: X login 'bob', X upassword %(pwd)s", {'pwd': 'toto'})
         self.assertEqual(rset.description[0][0], 'CWUser')
         rset = self.execute("SET X upassword %(pwd)s WHERE X is CWUser, X login 'bob'",
                             {'pwd': 'tutu'})
+        cursor = self.pool['system']
         cursor.execute("SELECT %supassword from %sCWUser WHERE %slogin='bob'"
                        % (SQL_PREFIX, SQL_PREFIX, SQL_PREFIX))
         passwd = str(cursor.fetchone()[0])
@@ -1227,7 +1237,16 @@ Any P1,B,E WHERE P1 identity P2 WITH
         self.assertEqual(len(rset.rows), 1)
         self.assertEqual(rset.description, [('CWUser',)])
 
-    # non regression tests ####################################################
+    # ZT datetime tests ########################################################
+
+    def test_tz_datetime(self):
+        self.execute("INSERT Personne X: X nom 'bob', X tzdatenaiss %(date)s",
+                     {'date': datetime(1977, 6, 7, 2, 0, tzinfo=FixedOffset(1))})
+        datenaiss = self.execute("Any XD WHERE X nom 'bob', X tzdatenaiss XD")[0][0]
+        self.assertEqual(datenaiss.tzinfo, None)
+        self.assertEqual(datenaiss.utctimetuple()[:5], (1977, 6, 7, 1, 0))
+
+    # non regression tests #####################################################
 
     def test_nonregr_1(self):
         teid = self.execute("INSERT Tag X: X name 'tag'")[0][0]

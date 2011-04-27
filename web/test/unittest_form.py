@@ -104,9 +104,9 @@ class EntityFieldsFormTC(CubicWebTC):
 
     def test_reledit_composite_field(self):
         rset = self.execute('INSERT BlogEntry X: X title "cubicweb.org", X content "hop"')
-        form = self.vreg['views'].select('doreledit', self.request(),
+        form = self.vreg['views'].select('reledit', self.request(),
                                          rset=rset, row=0, rtype='content')
-        data = form.render(row=0, rtype='content', formid='base')
+        data = form.render(row=0, rtype='content', formid='base', action='edit_rtype')
         self.failUnless('content_format' in data)
 
     # form view tests #########################################################

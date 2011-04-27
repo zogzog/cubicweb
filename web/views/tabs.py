@@ -46,7 +46,7 @@ class LazyViewMixin(object):
                  reloadable=False, show_spinbox=True, w=None):
         """a lazy version of wview"""
         w = w or self.w
-        self._cw.add_js('cubicweb.lazy.js')
+        self._cw.add_js('cubicweb.ajax.js')
         urlparams = self._cw.form.copy()
         urlparams.update({'vid' : vid, 'fname' : 'view'})
         if rql:
@@ -127,8 +127,8 @@ class TabsMixin(LazyViewMixin):
         if entity and len(self.cw_rset) > 1:
             entity.view(default, w=self.w)
             return
-        self._cw.add_css('ui.tabs.css')
-        self._cw.add_js(('ui.core.js', 'ui.tabs.js', 'cubicweb.ajax.js'))
+        self._cw.add_css('jquery.ui.css')
+        self._cw.add_js(('jquery.ui.js', 'cubicweb.ajax.js'))
         # prune tabs : not all are to be shown
         tabs, active_tab = self.prune_tabs(tabs, default)
         # build the html structure
@@ -148,7 +148,6 @@ class TabsMixin(LazyViewMixin):
             if domid == active_tab:
                 active_tab_idx = i
         w(u'</ul>')
-        w(u'</div>')
         for tabid, domid, tabkwargs in tabs:
             w(u'<div id="%s">' % domid)
             tabkwargs.setdefault('tabid', domid)
@@ -156,11 +155,12 @@ class TabsMixin(LazyViewMixin):
             tabkwargs.setdefault('rset', self.cw_rset)
             self.lazyview(**tabkwargs)
             w(u'</div>')
+        w(u'</div>')
         # call the setTab() JS function *after* each tab is generated
         # because the callback binding needs to be done before
         # XXX make work history: true
         self._cw.add_onload(u"""
-  jQuery('#entity-tabs-%(eeid)s > ul').tabs( { selected: %(tabindex)s });
+  jQuery('#entity-tabs-%(eeid)s').tabs( { selected: %(tabindex)s });
   setTab('%(domid)s', '%(cookiename)s');
 """ % {'tabindex'   : active_tab_idx,
        'domid'        : active_tab,

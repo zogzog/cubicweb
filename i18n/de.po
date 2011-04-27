@@ -737,6 +737,18 @@ msgstr "Fehlerbericht senden"
 msgid "Submit bug report by mail"
 msgstr "Diesen Bericht als E-Mail senden"
 
+msgid "TZDatetime"
+msgstr ""
+
+msgid "TZDatetime_plural"
+msgstr ""
+
+msgid "TZTime"
+msgstr ""
+
+msgid "TZTime_plural"
+msgstr ""
+
 #, python-format
 msgid "The view %s can not be applied to this query"
 msgstr "Die Ansicht %s ist auf diese Anfrage nicht anwendbar."
@@ -2742,6 +2754,9 @@ msgid ""
 msgstr ""
 "zeigt an, welcher Zustand standardmäßig benutzt werden soll, wenn eine "
 "Entität erstellt wird"
+
+msgid "indifferent"
+msgstr "gleichgültig"
 
 msgid "info"
 msgstr "Information"

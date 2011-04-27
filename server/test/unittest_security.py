@@ -29,7 +29,8 @@ class BaseSecurityTC(CubicWebTC):
 
     def setup_database(self):
         super(BaseSecurityTC, self).setup_database()
-        self.create_user('iaminusersgrouponly')
+        req = self.request()
+        self.create_user(req, 'iaminusersgrouponly')
         readoriggroups = self.schema['Personne'].permissions['read']
         addoriggroups = self.schema['Personne'].permissions['add']
         def fix_perm():
@@ -260,7 +261,8 @@ class SecurityTC(BaseSecurityTC):
 
 
     def test_user_can_change_its_upassword(self):
-        ueid = self.create_user('user').eid
+        req = self.request()
+        ueid = self.create_user(req, 'user').eid
         cnx = self.login('user')
         cu = cnx.cursor()
         cu.execute('SET X upassword %(passwd)s WHERE X eid %(x)s',
@@ -271,7 +273,8 @@ class SecurityTC(BaseSecurityTC):
         cnx.close()
 
     def test_user_cant_change_other_upassword(self):
-        ueid = self.create_user('otheruser').eid
+        req = self.request()
+        ueid = self.create_user(req, 'otheruser').eid
         cnx = self.login('iaminusersgrouponly')
         cu = cnx.cursor()
         cu.execute('SET X upassword %(passwd)s WHERE X eid %(x)s',

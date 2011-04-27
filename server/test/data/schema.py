@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -18,7 +18,7 @@
 
 from yams.buildobjs import (EntityType, RelationType, RelationDefinition,
                             SubjectRelation, RichString, String, Int, Float,
-                            Boolean, Datetime)
+                            Boolean, Datetime, TZDatetime)
 from yams.constraints import SizeConstraint
 from cubicweb.schema import (WorkflowableEntityType,
                              RQLConstraint, RQLUniqueConstraint,
@@ -114,6 +114,7 @@ class Personne(EntityType):
     tel    = Int()
     fax    = Int()
     datenaiss = Datetime()
+    tzdatenaiss = TZDatetime()
     test   = Boolean(__permissions__={
         'read': ('managers', 'users', 'guests'),
         'update': ('managers',),
@@ -219,3 +220,26 @@ class require_permission(RelationDefinition):
 class require_state(RelationDefinition):
     subject = 'CWPermission'
     object = 'State'
+
+class personne_composite(RelationDefinition):
+    subject='Personne'
+    object='Personne'
+    composite='subject'
+
+class personne_inlined(RelationDefinition):
+    subject='Personne'
+    object='Personne'
+    cardinality='?*'
+    inlined=True
+
+
+class login_user(RelationDefinition):
+    subject = 'Personne'
+    object = 'CWUser'
+    cardinality = '??'
+
+class ambiguous_inlined(RelationDefinition):
+    subject = ('Affaire', 'Note')
+    object = 'CWUser'
+    inlined = True
+    cardinality = '?*'

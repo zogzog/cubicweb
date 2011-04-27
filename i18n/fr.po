@@ -449,7 +449,7 @@ msgid "Datetime"
 msgstr "Date et heure"
 
 msgid "Datetime_plural"
-msgstr "Date et heure"
+msgstr "Dates et heures"
 
 msgid "Decimal"
 msgstr "Nombre décimal"
@@ -735,6 +735,18 @@ msgstr "Soumettre un rapport de bug"
 
 msgid "Submit bug report by mail"
 msgstr "Soumettre ce rapport par email"
+
+msgid "TZDatetime"
+msgstr "Date et heure internationale"
+
+msgid "TZDatetime_plural"
+msgstr "Dates et heures internationales"
+
+msgid "TZTime"
+msgstr "Heure internationale"
+
+msgid "TZTime_plural"
+msgstr "Heures internationales"
 
 #, python-format
 msgid "The view %s can not be applied to this query"
@@ -2782,6 +2794,9 @@ msgid ""
 "is created"
 msgstr ""
 "indique quel état devrait être utilisé par défaut lorsqu'une entité est créée"
+
+msgid "indifferent"
+msgstr "indifférent"
 
 msgid "info"
 msgstr "information"

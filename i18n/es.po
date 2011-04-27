@@ -732,6 +732,18 @@ msgstr "Enviar un reporte de error (bug)"
 msgid "Submit bug report by mail"
 msgstr "Enviar este reporte por email"
 
+msgid "TZDatetime"
+msgstr ""
+
+msgid "TZDatetime_plural"
+msgstr ""
+
+msgid "TZTime"
+msgstr ""
+
+msgid "TZTime_plural"
+msgstr ""
+
 #, python-format
 msgid "The view %s can not be applied to this query"
 msgstr "La vista %s no puede ser aplicada a esta búsqueda"
@@ -2772,6 +2784,9 @@ msgid ""
 "is created"
 msgstr ""
 "Indica cual estado deberá ser utilizado por defecto al crear una entidad"
+
+msgid "indifferent"
+msgstr "indifferente"
 
 msgid "info"
 msgstr "Información del Sistema"

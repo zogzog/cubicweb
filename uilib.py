@@ -62,9 +62,9 @@ def printable_value(req, attrtype, value, props=None, displaytime=True):
         return value
     if attrtype == 'Date':
         return ustrftime(value, req.property_value('ui.date-format'))
-    if attrtype == 'Time':
+    if attrtype in ('Time', 'TZTime'):
         return ustrftime(value, req.property_value('ui.time-format'))
-    if attrtype == 'Datetime':
+    if attrtype in ('Datetime', 'TZDatetime'):
         if displaytime:
             return ustrftime(value, req.property_value('ui.datetime-format'))
         return ustrftime(value, req.property_value('ui.date-format'))
@@ -72,8 +72,9 @@ def printable_value(req, attrtype, value, props=None, displaytime=True):
         if value:
             return req._('yes')
         return req._('no')
-    if attrtype == 'Float':
+    if attrtype in ('Float', 'Decimal'):
         value = req.property_value('ui.float-format') % value
+    # XXX Interval
     return unicode(value)
 
 

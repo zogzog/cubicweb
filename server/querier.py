@@ -556,6 +556,8 @@ class InsertPlan(ExecutionPlan):
     def insert_relation_defs(self):
         session = self.session
         repo = session.repo
+        edited_entities = {}
+        relations = {}
         for subj, rtype, obj in self.relation_defs():
             # if a string is given into args instead of an int, we get it here
             if isinstance(subj, basestring):
@@ -567,12 +569,21 @@ class InsertPlan(ExecutionPlan):
             elif not isinstance(obj, (int, long)):
                 obj = obj.entity.eid
             if repo.schema.rschema(rtype).inlined:
-                entity = session.entity_from_eid(subj)
-                edited = EditedEntity(entity)
+                if subj not in edited_entities:
+                    entity = session.entity_from_eid(subj)
+                    edited = EditedEntity(entity)
+                    edited_entities[subj] = edited
+                else:
+                    edited = edited_entities[subj]
                 edited.edited_attribute(rtype, obj)
-                repo.glob_update_entity(session, edited)
             else:
-                repo.glob_add_relation(session, subj, rtype, obj)
+                if rtype in relations:
+                    relations[rtype].append((subj, obj))
+                else:
+                    relations[rtype] = [(subj, obj)]
+        repo.glob_add_relations(session, relations)
+        for edited in edited_entities.itervalues():
+            repo.glob_update_entity(session, edited)
 
 
 class QuerierHelper(object):

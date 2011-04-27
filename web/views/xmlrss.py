@@ -42,6 +42,8 @@ SERIALIZERS = {
     'Date': lambda x: x.strftime('%Y-%m-%d'),
     'Datetime': lambda x: x.strftime('%Y-%m-%d %H:%M:%S'),
     'Time': lambda x: x.strftime('%H:%M:%S'),
+    'TZDatetime': lambda x: x.strftime('%Y-%m-%d %H:%M:%S'), # XXX TZ
+    'TZTime': lambda x: x.strftime('%H:%M:%S'),
     'Interval': lambda x: x.days * 60*60*24 + x.seconds,
     }
 
