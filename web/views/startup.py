@@ -125,7 +125,7 @@ class ManageView(StartupView):
     def create_links(self):
         self.w(u'<ul class="createLink">')
         for etype in self.add_etype_links:
-            eschema = self.schema.eschema(etype)
+            eschema = self._cw.vreg.schema.eschema(etype)
             if eschema.has_perm(self._cw, 'add'):
                 self.w(u'<li><a href="%s">%s</a></li>' % (
                         self._cw.build_url('add/%s' % eschema),
