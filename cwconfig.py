@@ -1070,9 +1070,10 @@ the repository',
     def instance_md5_version(self):
         import hashlib
         infos = []
-        for pkg in self.cubes():
+        for pkg in sorted(self.cubes()):
             version = self.cube_version(pkg)
             infos.append('%s-%s' % (pkg, version))
+        infos.append('cubicweb-%s' % str(self.cubicweb_version()))
         return hashlib.md5(';'.join(infos)).hexdigest()
 
     def load_configuration(self):
