@@ -553,6 +553,7 @@ class Session(RequestSessionBase):
         - on HOOKS_ALLOW_ALL mode, ensure those categories are disabled
         """
         changes = set()
+        self.pruned_hooks_cache.clear()
         if self.hooks_mode is self.HOOKS_DENY_ALL:
             enabledcats = self.enabled_hook_categories
             for category in categories:
@@ -574,6 +575,7 @@ class Session(RequestSessionBase):
         - on HOOKS_ALLOW_ALL mode, ensure those categories are not disabled
         """
         changes = set()
+        self.pruned_hooks_cache.clear()
         if self.hooks_mode is self.HOOKS_DENY_ALL:
             enabledcats = self.enabled_hook_categories
             for category in categories:
@@ -807,7 +809,8 @@ class Session(RequestSessionBase):
 
     def _clear_tx_storage(self, txstore):
         for name in ('commit_state', 'transaction_data',
-                     'pending_operations', '_rewriter'):
+                     'pending_operations', '_rewriter',
+                     'pruned_hooks_cache'):
             try:
                 delattr(txstore, name)
             except AttributeError:
@@ -957,6 +960,14 @@ class Session(RequestSessionBase):
         except AttributeError:
             self._threaddata.pending_operations = []
             return self._threaddata.pending_operations
+
+    @property
+    def pruned_hooks_cache(self):
+        try:
+            return self._threaddata.pruned_hooks_cache
+        except AttributeError:
+            self._threaddata.pruned_hooks_cache = {}
+            return self._threaddata.pruned_hooks_cache
 
     def add_operation(self, operation, index=None):
         """add an observer"""

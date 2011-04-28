@@ -102,6 +102,10 @@ class SelectorsTC(TestCase):
         self.assertIs(csel.search_selector(is_instance), sel)
         csel = AndSelector(Selector(), sel)
         self.assertIs(csel.search_selector(is_instance), sel)
+        self.assertIs(csel.search_selector((AndSelector, OrSelector)), csel)
+        self.assertIs(csel.search_selector((OrSelector, AndSelector)), csel)
+        self.assertIs(csel.search_selector((is_instance, score_entity)),  sel)
+        self.assertIs(csel.search_selector((score_entity, is_instance)), sel)
 
     def test_inplace_and(self):
         selector = _1_()

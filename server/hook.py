@@ -248,7 +248,7 @@ from warnings import warn
 from logging import getLogger
 from itertools import chain
 
-from logilab.common.decorators import classproperty
+from logilab.common.decorators import classproperty, cached
 from logilab.common.deprecation import deprecated, class_renamed
 from logilab.common.logging_ext import set_log_methods
 
@@ -257,7 +257,7 @@ from cubicweb.vregistry import classid
 from cubicweb.cwvreg import CWRegistry, VRegistry
 from cubicweb.selectors import (objectify_selector, lltrace, ExpectedValueSelector,
                                 is_instance)
-from cubicweb.appobject import AppObject
+from cubicweb.appobject import AppObject, NotSelector, OrSelector
 from cubicweb.server.session import security_enabled
 
 ENTITIES_HOOKS = set(('before_add_entity',    'after_add_entity',
@@ -318,15 +318,83 @@ class HooksRegistry(CWRegistry):
             else:
                 entities = []
                 eids_from_to = []
+            pruned = self.get_pruned_hooks(session, event,
+                                           entities, eids_from_to, kwargs)
             # by default, hooks are executed with security turned off
             with security_enabled(session, read=False):
                 for _kwargs in _iter_kwargs(entities, eids_from_to, kwargs):
-                    hooks = sorted(self.possible_objects(session, **_kwargs),
+                    hooks = sorted(self.filtered_possible_objects(pruned, session, **_kwargs),
                                    key=lambda x: x.order)
                     with security_enabled(session, write=False):
                         for hook in hooks:
-                            #print hook.category, hook.__regid__
-                            hook()
+                           hook()
+
+    def get_pruned_hooks(self, session, event, entities, eids_from_to, kwargs):
+        """return a set of hooks that should not be considered by filtered_possible objects
+
+        the idea is to make a first pass over all the hooks in the
+        registry and to mark put some of them in a pruned list. The
+        pruned hooks are the one which:
+
+        * are disabled at the session level
+        * have a match_rtype or an is_instance selector which does not
+          match the rtype / etype of the relations / entities for
+          which we are calling the hooks. This works because the
+          repository calls the hooks grouped by rtype or by etype when
+          using the entities or eids_to_from keyword arguments
+
+        Only hooks with a simple selector or an AndSelector of simple
+        selectors are considered for disabling.
+
+        """
+        if 'entity' in kwargs:
+            entities = [kwargs['entity']]
+        if len(entities):
+            look_for_selector = is_instance
+            etype = entities[0].__regid__
+        elif 'rtype' in kwargs:
+            look_for_selector = match_rtype
+            etype = None
+        else: # nothing to prune, how did we get there ???
+            return set()
+        cache_key = (event, kwargs.get('rtype'), etype)
+        pruned = session.pruned_hooks_cache.get(cache_key)
+        if pruned is not None:
+            return pruned
+        pruned = set()
+        session.pruned_hooks_cache[cache_key] = pruned
+        if look_for_selector is not None:
+            for id, hooks in self.iteritems():
+                for hook in hooks:
+                    enabled_cat, main_filter = hook.filterable_selectors()
+                    if enabled_cat is not None:
+                        if not enabled_cat(hook, session):
+                            pruned.add(hook)
+                            continue
+                    if main_filter is not None:
+                        if isinstance(main_filter, match_rtype) and \
+                           (main_filter.frometypes is not None  or \
+                            main_filter.toetypes is not None):
+                            continue
+                        first_kwargs = _iter_kwargs(entities, eids_from_to, kwargs).next()
+                        if not main_filter(hook, session, **first_kwargs):
+                            pruned.add(hook)
+        return pruned
+
+
+    def filtered_possible_objects(self, pruned, *args, **kwargs):
+        for appobjects in self.itervalues():
+            if pruned:
+                filtered_objects = [obj for obj in appobjects if obj not in pruned]
+                if not filtered_objects:
+                    continue
+            else:
+                filtered_objects = appobjects
+            obj = self._select_best(filtered_objects,
+                                    *args, **kwargs)
+            if obj is None:
+                continue
+            yield obj
 
 class HooksManager(object):
     def __init__(self, vreg):
@@ -464,6 +532,15 @@ class Hook(AppObject):
     # stop pylint from complaining about missing attributes in Hooks classes
     eidfrom = eidto = entity = rtype = None
 
+    @classmethod
+    @cached
+    def filterable_selectors(cls):
+        search = cls.__select__.search_selector
+        if search((NotSelector, OrSelector)):
+            return None, None
+        enabled_cat = search(enabled_category)
+        main_filter = search((is_instance, match_rtype))
+        return enabled_cat, main_filter
 
     @classmethod
     def check_events(cls):
