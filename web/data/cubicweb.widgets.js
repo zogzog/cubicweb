@@ -491,8 +491,8 @@ Widgets.TemplateTextField = defclass("TemplateTextField", null, {
         var group = null;
         var variableRegexp = /%\((\w+)\)s/g;
         // emulates rgx.findAll()
-        while (group = variableRegexp.exec(text)) {
-            if (!$.inArray(group[1], self.variables)) {
+        while ( (group = variableRegexp.exec(text)) ) {
+            if ($.inArray(group[1], self.variables) == -1) {
                 unknownVariables.push(group[1]);
             }
             it++;
