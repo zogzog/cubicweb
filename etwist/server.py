@@ -86,6 +86,10 @@ class DataLookupDirectory(NoListingFile):
         # root directory or as a data subdirectory. XXX (adim) : why
         # that ?
         self.putChild('fckeditor', FCKEditorResource(self.config, ''))
+        self._defineChildResources()
+
+    def _defineChildResources(self):
+        self.putChild(self.config.instance_md5_version(), self)
 
     def getChild(self, path, request):
         if not path:
@@ -133,6 +137,9 @@ class LongTimeExpiringFile(DataLookupDirectory):
       etc.
 
     """
+    def _defineChildResources(self):
+        pass
+
     def render(self, request):
         # XXX: Don't provide additional resource information to error responses
         #
@@ -156,8 +163,6 @@ class CubicWebRootResource(resource.Resource):
         self.putChild('static', NoListingFile(config.static_directory))
         self.putChild('fckeditor', FCKEditorResource(self.config, ''))
         self.putChild('data', DataLookupDirectory(self.config, ''))
-        self.putChild('data%s' % config.instance_md5_version(),
-                      LongTimeExpiringFile(self.config, ''))
 
     def init_publisher(self):
         config = self.config

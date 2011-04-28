@@ -32,6 +32,12 @@ from cubicweb.cwconfig import CubicWebConfiguration as cwcfg
 from cubicweb.toolsutils import Command, CommandHandler, underline_title
 
 
+try:
+    from os import symlink as linkdir
+except ImportError:
+    from shutil import copytree as linkdir
+
+
 class WebCreateHandler(CommandHandler):
     cmdname = 'create'
 
@@ -87,6 +93,8 @@ class GenStaticDataDir(Command):
                 os.makedirs(dest_resource)
             resource_dir, resource_path = config.locate_resource(resource)
             copy(osp.join(resource_dir, resource_path), dest_resource)
+        # handle md5 version subdirectory
+        linkdir(dest, osp.join(dest, config.instance_md5_version()))
         print ('You can use apache rewrite rule below :\n'
                'RewriteRule ^/data/(.*) %s/$1 [L]' % dest)
 
