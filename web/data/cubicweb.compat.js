@@ -15,7 +15,7 @@ if ($.noop === undefined) {
 
 // ========== ARRAY EXTENSIONS ========== ///
 Array.prototype.contains = cw.utils.deprecatedFunction(
-    '[3.9] array.contains(elt) is deprecated, use $.inArray(elt, array) instead',
+    '[3.9] array.contains(elt) is deprecated, use $.inArray(elt, array)!=-1 instead',
     function(element) {
         return jQuery.inArray(element, this) != - 1;
     }

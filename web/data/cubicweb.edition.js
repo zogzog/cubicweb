@@ -45,7 +45,7 @@ function reorderTabindex(start, formid) {
     var tabindex = (start == null) ? 15: start;
     cw.utils.nodeWalkDepthFirst(form, function(elem) {
         var tagName = elem.tagName.toUpperCase();
-        if ($.inArray(tagName, inputTypes)) {
+        if (jQuery.inArray(tagName, inputTypes) != -1) {
             if (jQuery(elem).attr('tabindex') != null) {
                 tabindex += 1;
                 jQuery(elem).attr('tabindex', tabindex);
@@ -58,7 +58,7 @@ function reorderTabindex(start, formid) {
 
 function showMatchingSelect(selectedValue, eid) {
     if (selectedValue) {
-        divId = 'div' + selectedValue + '_' + eid;
+        var divId = 'div' + selectedValue + '_' + eid;
         var divNode = jQuery('#' + divId);
         if (!divNode.length) {
             var args = {
