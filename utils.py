@@ -237,7 +237,7 @@ class HTMLHead(UStringIO):
     xhtml_safe_script_opening = u'<script type="text/javascript"><!--//--><![CDATA[//><!--\n'
     xhtml_safe_script_closing = u'\n//--><!]]></script>'
 
-    def __init__(self):
+    def __init__(self, datadir_url=None):
         super(HTMLHead, self).__init__()
         self.jsvars = []
         self.jsfiles = []
@@ -245,6 +245,7 @@ class HTMLHead(UStringIO):
         self.ie_cssfiles = []
         self.post_inlined_scripts = []
         self.pagedata_unload = False
+        self.datadir_url = datadir_url
 
 
     def add_raw(self, rawheader):
@@ -281,7 +282,7 @@ class HTMLHead(UStringIO):
         if jsfile not in self.jsfiles:
             self.jsfiles.append(jsfile)
 
-    def add_css(self, cssfile, media):
+    def add_css(self, cssfile, media='all'):
         """adds `cssfile` to the list of javascripts used in the webpage
 
         This function checks if the file has already been added
@@ -301,6 +302,45 @@ class HTMLHead(UStringIO):
             self.post_inlined_scripts.append(self.js_unload_code)
             self.pagedata_unload = True
 
+    def concat_urls(self, urls):
+        """concatenates urls into one url usable by Apache mod_concat
+
+        This method returns the url without modifying it if there is only
+        one element in the list
+        :param urls: list of local urls/filenames to concatenate
+        """
+        if len(urls) == 1:
+            return urls[0]
+        len_prefix = len(self.datadir_url)
+        concated = u','.join(url[len_prefix:] for url in urls)
+        return (u'%s??%s' % (self.datadir_url, concated))
+
+    def group_urls(self, urls_spec):
+        """parses urls_spec in order to generate concatenated urls
+        for js and css includes
+
+        This method checks if the file is local and if it shares options
+        with direct neighbors
+        :param urls_spec: entire list of urls/filenames to inspect
+        """
+        concatable = []
+        prev_islocal = False
+        prev_key = None
+        for url, key in urls_spec:
+            islocal = url.startswith(self.datadir_url)
+            if concatable and (islocal != prev_islocal or key != prev_key):
+                yield (self.concat_urls(concatable), prev_key)
+                del concatable[:]
+            if not islocal:
+                yield (url, key)
+            else:
+                concatable.append(url)
+            prev_islocal = islocal
+            prev_key = key
+        if concatable:
+            yield (self.concat_urls(concatable), prev_key)
+
+
     def getvalue(self, skiphead=False):
         """reimplement getvalue to provide a consistent (and somewhat browser
         optimzed cf. http://stevesouders.com/cuzillion) order in external
@@ -318,18 +358,20 @@ class HTMLHead(UStringIO):
                 w(vardecl + u'\n')
             w(self.xhtml_safe_script_closing)
         # 2/ css files
-        for cssfile, media in self.cssfiles:
+        for cssfile, media in (self.group_urls(self.cssfiles) if self.datadir_url else self.cssfiles):
             w(u'<link rel="stylesheet" type="text/css" media="%s" href="%s"/>\n' %
               (media, xml_escape(cssfile)))
         # 3/ ie css if necessary
         if self.ie_cssfiles:
-            for cssfile, media, iespec in self.ie_cssfiles:
+            ie_cssfiles = ((x, (y, z)) for x, y, z in self.ie_cssfiles)
+            for cssfile, (media, iespec) in (self.group_urls(ie_cssfiles) if self.datadir_url else ie_cssfiles):
                 w(u'<!--%s>\n' % iespec)
                 w(u'<link rel="stylesheet" type="text/css" media="%s" href="%s"/>\n' %
                   (media, xml_escape(cssfile)))
             w(u'<![endif]--> \n')
         # 4/ js files
-        for jsfile in self.jsfiles:
+        jsfiles = ((x, None) for x in self.jsfiles)
+        for jsfile, media in self.group_urls(jsfiles) if self.datadir_url else jsfiles:
             w(u'<script type="text/javascript" src="%s"></script>\n' %
               xml_escape(jsfile))
         # 5/ post inlined scripts (i.e. scripts depending on other JS files)

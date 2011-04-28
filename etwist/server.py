@@ -88,10 +88,6 @@ class DataLookupDirectory(NoListingFile):
         NoListingFile.__init__(self, path)
         self.config = config
         self.here = path
-        # backward-compatiblity: take care fckeditor may appears as
-        # root directory or as a data subdirectory. XXX (adim) : why
-        # that ?
-        self.putChild('fckeditor', FCKEditorResource(self.config, ''))
         self._defineChildResources()
         if self.config.debugmode:
             self.data_modconcat_basepath = '/data/??'
