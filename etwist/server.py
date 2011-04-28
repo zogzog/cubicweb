@@ -21,6 +21,7 @@ __docformat__ = "restructuredtext en"
 
 import sys
 import os
+import os.path as osp
 import select
 import errno
 import traceback
@@ -70,13 +71,57 @@ class ForbiddenDirectoryLister(resource.Resource):
                             code=http.FORBIDDEN,
                             stream='Access forbidden')
 
-class File(static.File):
-    """Prevent from listing directories"""
+
+class NoListingFile(static.File):
     def directoryListing(self):
         return ForbiddenDirectoryLister()
 
 
-class LongTimeExpiringFile(File):
+class DataLookupDirectory(NoListingFile):
+    def __init__(self, config, path):
+        NoListingFile.__init__(self, path)
+        self.config = config
+        self.here = path
+        # backward-compatiblity: take care fckeditor may appears as
+        # root directory or as a data subdirectory. XXX (adim) : why
+        # that ?
+        self.putChild('fckeditor', FCKEditorResource(self.config, ''))
+
+    def getChild(self, path, request):
+        if not path:
+            return self.directoryListing()
+        childpath = join(self.here, path)
+        dirpath, rid = self.config.locate_resource(childpath)
+        if dirpath is None:
+            # resource not found
+            return self.childNotFound
+        filepath = os.path.join(dirpath, rid)
+        if os.path.isdir(filepath):
+            resource = DataLookupDirectory(self.config, childpath)
+            # cache resource for this segment path to avoid recomputing
+            # directory lookup
+            self.putChild(path, resource)
+            return resource
+        else:
+            return NoListingFile(filepath)
+
+
+class FCKEditorResource(NoListingFile):
+    def __init__(self, config, path):
+        NoListingFile.__init__(self, path)
+        self.config = config
+
+    def getChild(self, path, request):
+        pre_path = request.path.split('/')[1:]
+        if pre_path[0] == 'https':
+            pre_path.pop(0)
+            uiprops = self.config.https_uiprops
+        else:
+            uiprops = self.config.uiprops
+        return static.File(osp.join(uiprops['FCKEDITOR_PATH'], path))
+
+
+class LongTimeExpiringFile(DataLookupDirectory):
     """overrides static.File and sets a far future ``Expires`` date
     on the resouce.
 
@@ -94,22 +139,25 @@ class LongTimeExpiringFile(File):
         # the HTTP RFC recommands not going further than 1 year ahead
         expires = date.today() + timedelta(days=6*30)
         request.setHeader('Expires', generateDateTime(mktime(expires.timetuple())))
-        return File.render(self, request)
+        return DataLookupDirectory.render(self, request)
 
 
 class CubicWebRootResource(resource.Resource):
     def __init__(self, config, vreg=None):
+        resource.Resource.__init__(self)
         self.config = config
         # instantiate publisher here and not in init_publisher to get some
         # checks done before daemonization (eg versions consistency)
         self.appli = CubicWebPublisher(config, vreg=vreg)
         self.base_url = config['base-url']
         self.https_url = config['https-url']
-        self.children = {}
-        self.static_directories = set(('data%s' % config.instance_md5_version(),
-                                       'data', 'static', 'fckeditor'))
         global MAX_POST_LENGTH
         MAX_POST_LENGTH = config['max-post-length']
+        self.putChild('static', NoListingFile(config.static_directory))
+        self.putChild('fckeditor', FCKEditorResource(self.config, ''))
+        self.putChild('data', DataLookupDirectory(self.config, ''))
+        self.putChild('data%s' % config.instance_md5_version(),
+                      LongTimeExpiringFile(self.config, ''))
 
     def init_publisher(self):
         config = self.config
@@ -152,38 +200,6 @@ class CubicWebRootResource(resource.Resource):
 
     def getChild(self, path, request):
         """Indicate which resource to use to process down the URL's path"""
-        pre_path = request.path.split('/')[1:]
-        if pre_path[0] == 'https':
-            pre_path.pop(0)
-            uiprops = self.config.https_uiprops
-        else:
-            uiprops = self.config.uiprops
-        directory = pre_path[0]
-        # Anything in data/, static/, fckeditor/ and the generated versioned
-        # data directory is treated as static files
-        if directory in self.static_directories:
-            # take care fckeditor may appears as root directory or as a data
-            # subdirectory
-            if directory == 'static':
-                return File(self.config.static_directory)
-            if directory == 'fckeditor':
-                return File(uiprops['FCKEDITOR_PATH'])
-            if directory != 'data':
-                # versioned directory, use specific file with http cache
-                # headers so their are cached for a very long time
-                cls = LongTimeExpiringFile
-            else:
-                cls = File
-            if path == 'fckeditor':
-                return cls(uiprops['FCKEDITOR_PATH'])
-            if path == directory: # recurse
-                return self
-            datadir, path = self.config.locate_resource(path)
-            if datadir is None:
-                return self # recurse
-            self.debug('static file %s from %s', path, datadir)
-            return cls(join(datadir, path))
-        # Otherwise we use this single resource
         return self
 
     def render(self, request):

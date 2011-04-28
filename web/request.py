@@ -890,10 +890,20 @@ def _charset_sort_key(accept_info):
 def _parse_accept_header(raw_header, value_parser=None, value_sort_key=None):
     """returns an ordered list accepted types
 
-    returned value is a list of 2-tuple (value, score), ordered
-    by score. Exact type of `value` will depend on what `value_parser`
-    will reutrn. if `value_parser` is None, then the raw value, as found
-    in the http header, is used.
+    :param value_parser: a function to parse a raw accept chunk. If None
+    is provided, the function defaults to identity. If a function is provided,
+    it must accept 2 parameters ``value`` and ``other_params``. ``value`` is
+    the value found before the first ';', `other_params` is a dictionary
+    built from all other chunks after this first ';'
+
+    :param value_sort_key: a key function to sort values found in the accept
+    header. This function will be passed a 3-tuple
+    (raw_value, parsed_value, score). If None is provided, the default
+    sort_key is 1./score
+
+    :return: a list of 3-tuple (raw_value, parsed_value, score),
+    ordered by score. ``parsed_value`` will be the return value of
+    ``value_parser(raw_value)``
     """
     if value_sort_key is None:
         value_sort_key = lambda infos: 1./infos[-1]
@@ -928,7 +938,7 @@ def _mimetype_parser(value, other_params):
     'text/html;level=1', `mimetypeinfo` will be ('text', '*', {'level': '1'})
     """
     try:
-        media_type, media_subtype = value.strip().split('/')
+        media_type, media_subtype = value.strip().split('/', 1)
     except ValueError: # safety belt : '/' should always be present
         media_type = value.strip()
         media_subtype = '*'
