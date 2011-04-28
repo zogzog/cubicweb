@@ -135,12 +135,12 @@ class CubicWebRequestBase(DBAPIRequest):
         """
         return self.set_varmaker()
 
-    def _get_tabindex_func(self):
+    def next_tabindex(self):
         nextfunc = self.get_page_data('nexttabfunc')
         if nextfunc is None:
             nextfunc = count(1).next
             self.set_page_data('nexttabfunc', nextfunc)
-        return nextfunc
+        return nextfunc()
 
     def set_varmaker(self):
         varmaker = self.get_page_data('rql_varmaker')
@@ -154,8 +154,6 @@ class CubicWebRequestBase(DBAPIRequest):
         or an anonymous connection is open
         """
         super(CubicWebRequestBase, self).set_session(session, user)
-        # tabindex generator
-        self.next_tabindex = self._get_tabindex_func()
         # set request language
         vreg = self.vreg
         if self.user:
