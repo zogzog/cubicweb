@@ -17,6 +17,8 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """twisted server for CubicWeb web instances"""
 
+from __future__ import with_statement
+
 __docformat__ = "restructuredtext en"
 
 import sys
@@ -26,6 +28,8 @@ import select
 import errno
 import traceback
 import threading
+import re
+import hashlib
 from os.path import join
 from time import mktime
 from datetime import date, timedelta
@@ -42,7 +46,8 @@ from twisted.web.server import NOT_DONE_YET
 
 from logilab.common.decorators import monkeypatch
 
-from cubicweb import AuthenticationError, ConfigurationError, CW_EVENT_MANAGER
+from cubicweb import (AuthenticationError, ConfigurationError,
+                      CW_EVENT_MANAGER, CubicWebException)
 from cubicweb.utils import json_dumps
 from cubicweb.web import Redirect, DirectResponse, StatusResponse, LogOut
 from cubicweb.web.application import CubicWebPublisher
@@ -79,6 +84,7 @@ class NoListingFile(static.File):
 
 class DataLookupDirectory(NoListingFile):
     def __init__(self, config, path):
+        self.md5_version = config.instance_md5_version()
         NoListingFile.__init__(self, path)
         self.config = config
         self.here = path
@@ -87,12 +93,24 @@ class DataLookupDirectory(NoListingFile):
         # that ?
         self.putChild('fckeditor', FCKEditorResource(self.config, ''))
         self._defineChildResources()
+        if self.config.debugmode:
+            self.data_modconcat_basepath = '/data/??'
+        else:
+            self.data_modconcat_basepath = '/data/%s/??' % self.md5_version
 
     def _defineChildResources(self):
-        self.putChild(self.config.instance_md5_version(), self)
+        self.putChild(self.md5_version, self)
 
     def getChild(self, path, request):
         if not path:
+            if request.uri.startswith(self.data_modconcat_basepath):
+                resource_relpath = request.uri[len(self.data_modconcat_basepath):]
+                if resource_relpath:
+                    paths = resource_relpath.split(',')
+                    try:
+                        return ConcatFiles(self.config, paths)
+                    except ConcatFileNotFoundError:
+                        return self.childNotFound
             return self.directoryListing()
         childpath = join(self.here, path)
         dirpath, rid = self.config.locate_resource(childpath)
@@ -147,6 +165,34 @@ class LongTimeExpiringFile(DataLookupDirectory):
         expires = date.today() + timedelta(days=6*30)
         request.setHeader('Expires', generateDateTime(mktime(expires.timetuple())))
         return DataLookupDirectory.render(self, request)
+
+
+class ConcatFileNotFoundError(CubicWebException):
+    pass
+
+
+class ConcatFiles(LongTimeExpiringFile):
+    def __init__(self, config, paths):
+        path = self._concat_cached_filepath(config, paths)
+        LongTimeExpiringFile.__init__(self, config, path)
+
+    @staticmethod
+    def _concat_cached_filepath(config, paths):
+        _, ext = osp.splitext(paths[0])
+        # create a unique / predictable filename
+        fname = hashlib.md5(';'.join(paths)).hexdigest() + ext
+        filepath = osp.join(config.appdatahome, 'uicache', fname)
+        if not osp.isfile(filepath):
+            concat_data = []
+            for path in paths:
+                dirpath, rid = config.locate_resource(path)
+                if rid is None:
+                    raise ConcatFileNotFoundError(path)
+                concat_data.append(open(osp.join(dirpath, rid)).read())
+            with open(filepath, 'wb') as f:
+                f.write('\n'.join(concat_data))
+        return filepath
+
 
 
 class CubicWebRootResource(resource.Resource):
