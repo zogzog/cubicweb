@@ -170,7 +170,7 @@ class ManageUsersAction(actions.ManagersAction):
 
 class CWUserManagementView(StartupView):
     __regid__ = 'cw.user-management'
-    rql = ('Any U,USN,F,S,U,UA,UDS, L,UAA,UDSN ORDERBY L WHERE U is CWUser, '
+    rql = ('Any U,USN,F,S,U,UAA,UDS, L,UAA,UDSN ORDERBY L WHERE U is CWUser, '
            'U login L, U firstname F, U surname S, '
            'U in_state US, US name USN, '
            'U primary_email UA?, UA address UAA, '
