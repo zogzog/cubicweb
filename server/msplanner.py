@@ -483,7 +483,7 @@ class PartPlanInformation(object):
             else:
                 var = vref.variable
                 for rel in var.stinfo['relations'] - var.stinfo['rhsrelations']:
-                    if rel.r_type in ('eid', 'name'):
+                    if rel.r_type in ('eid', 'name') and not rel.neged(strict=True):
                         if rel.r_type == 'eid':
                             slist = sourceeids
                         else:
