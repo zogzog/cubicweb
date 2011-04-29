@@ -562,6 +562,8 @@ class CubicWebTC(TestCase):
             if views:
                 try:
                     view = viewsvreg._select_best(views, req, rset=rset)
+                    if view is None:
+                        raise NoSelectableObject((req,), {'rset':rset}, views)
                     if view.linkable():
                         yield view
                     else:

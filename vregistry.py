@@ -184,7 +184,10 @@ class Registry(dict):
 
         raise :exc:`NoSelectableObject` if not object apply
         """
-        return self._select_best(self[__oid], *args, **kwargs)
+        obj =  self._select_best(self[__oid], *args, **kwargs)
+        if obj is None:
+            raise NoSelectableObject(args, kwargs, self[__oid] )
+        return obj
 
     def select_or_none(self, __oid, *args, **kwargs):
         """return the most specific object among those with the given oid
@@ -202,16 +205,18 @@ class Registry(dict):
         context
         """
         for appobjects in self.itervalues():
-            try:
-                yield self._select_best(appobjects, *args, **kwargs)
-            except NoSelectableObject:
+            obj = self._select_best(appobjects,  *args, **kwargs)
+            if obj is None:
                 continue
+            yield obj
 
     def _select_best(self, appobjects, *args, **kwargs):
         """return an instance of the most specific object according
         to parameters
 
-        raise `NoSelectableObject` if not object apply
+        return None if not object apply (don't raise `NoSelectableObject` since
+        it's costly when searching appobjects using `possible_objects`
+        (e.g. searching for hooks).
         """
         if len(args) > 1:
             warn('[3.5] only the request param can not be named when calling select*',
@@ -224,7 +229,7 @@ class Registry(dict):
             elif appobjectscore > 0 and appobjectscore == score:
                 winners.append(appobject)
         if winners is None:
-            raise NoSelectableObject(args, kwargs, appobjects)
+            return None
         if len(winners) > 1:
             # log in production environement / test, error while debugging
             msg = 'select ambiguity: %s\n(args: %s, kwargs: %s)'

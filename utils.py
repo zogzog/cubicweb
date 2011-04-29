@@ -230,7 +230,10 @@ class HTMLHead(UStringIO):
     Request objects use a HTMLHead instance to ease adding of
     javascripts and stylesheets
     """
-    js_unload_code = u'jQuery(window).unload(unloadPageData);'
+    js_unload_code = u'''if (typeof(pageDataUnloaded) == 'undefined') {
+    jQuery(window).unload(unloadPageData);
+    pageDataUnloaded = true;
+}'''
     # Making <script> tag content work properly with all possible
     # content-types (xml/html) and all possible browsers is very
     # tricky, see http://www.hixie.ch/advocacy/xhtml for an in-depth discussion
