@@ -169,27 +169,44 @@ class ConcatFileNotFoundError(CubicWebException):
 
 class ConcatFiles(LongTimeExpiringFile):
     def __init__(self, config, paths):
-        path = self._concat_cached_filepath(config, paths)
-        LongTimeExpiringFile.__init__(self, config, path)
-
-    @staticmethod
-    def _concat_cached_filepath(config, paths):
         _, ext = osp.splitext(paths[0])
         # create a unique / predictable filename
         fname = hashlib.md5(';'.join(paths)).hexdigest() + ext
         filepath = osp.join(config.appdatahome, 'uicache', fname)
-        if not osp.isfile(filepath):
+        LongTimeExpiringFile.__init__(self, config, filepath)
+        self._concat_cached_filepath(filepath, paths)
+
+    def _concat_cached_filepath(self, filepath, paths):
+        if not self._up_to_date(filepath, paths):
             concat_data = []
             for path in paths:
-                dirpath, rid = config.locate_resource(path)
+                # FIXME locate_resource is called twice() in debug-mode, but
+                # it's a @cached method
+                dirpath, rid = self.config.locate_resource(path)
                 if rid is None:
                     raise ConcatFileNotFoundError(path)
                 concat_data.append(open(osp.join(dirpath, rid)).read())
             with open(filepath, 'wb') as f:
                 f.write('\n'.join(concat_data))
-        return filepath
 
-
+    def _up_to_date(self, filepath, paths):
+        """
+        The concat-file is considered up-to-date if it exists.
+        In debug mode, an additional check is performed to make sure that
+        concat-file is more recent than all concatenated files
+        """
+        if not osp.isfile(filepath):
+            return False
+        if self.config.debugmode:
+            concat_lastmod = os.stat(filepath).st_mtime
+            for path in paths:
+                dirpath, rid = self.config.locate_resource(path)
+                if rid is None:
+                    raise ConcatFileNotFoundError(path)
+                path = osp.join(dirpath, rid)
+                if os.stat(path).st_mtime > concat_lastmod:
+                    return False
+        return True
 
 class CubicWebRootResource(resource.Resource):
     def __init__(self, config, vreg=None):
