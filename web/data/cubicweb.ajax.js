@@ -86,6 +86,41 @@ jQuery.extend(Deferred.prototype, {
 
 var JSON_BASE_URL = baseuri() + 'json?';
 
+/**
+ * returns true if `url` is a mod_concat-like url
+ * (e.g. http://..../data??resource1.js,resource2.js)
+ */
+function _modconcatLikeUrl(url) {
+    var base = baseuri();
+    if (!base.endswith('/')) {
+        base += '/';
+    }
+    var modconcat_rgx = new RegExp('(' + base + 'data/([a-z0-9]+/))?\\?\\?(.+)');
+    return modconcat_rgx.exec(url);
+}
+
+/**
+ * decomposes a mod_concat-like url into its corresponding list of
+ * resources' urls
+ *
+ * >>> _listResources('http://foo.com/data/??a.js,b.js,c.js')
+ * ['http://foo.com/data/a.js', 'http://foo.com/data/b.js', 'http://foo.com/data/c.js']
+ */
+function _listResources(src) {
+    var resources = [];
+    var groups = _modconcatLikeUrl(src);
+    if (groups == null) {
+        resources.push(src);
+    } else {
+        var dataurl = groups[0];
+        $.each(cw.utils.lastOf(groups).split(','),
+               function() {
+                   resources.push(dataurl + this);
+               });
+    }
+    return resources;
+}
+
 //============= utility function handling remote calls responses. ==============//
 function _loadAjaxHtmlHead($node, $head, tag, srcattr) {
     var jqtagfilter = tag + '[' + srcattr + ']';
@@ -93,28 +128,33 @@ function _loadAjaxHtmlHead($node, $head, tag, srcattr) {
         cw['loaded_'+srcattr] = [];
         var loaded = cw['loaded_'+srcattr];
         jQuery('head ' + jqtagfilter).each(function(i) {
-                   loaded.push(this.getAttribute(srcattr));
-               });
+            // tab1.push.apply(tab1, tab2) <=> tab1 += tab2 (python-wise)
+            loaded.push.apply(loaded, _listResources(this.getAttribute(srcattr)));
+        });
     } else {
         var loaded = cw['loaded_'+srcattr];
     }
     $node.find(tag).each(function(i) {
-        var url = this.getAttribute(srcattr);
+        var srcnode = this;
+        var url = srcnode.getAttribute(srcattr);
         if (url) {
-            if (jQuery.inArray(url, loaded) == -1) {
-                // take care to <script> tags: jQuery append method script nodes
-                // don't appears in the DOM (See comments on
-                // http://api.jquery.com/append/), which cause undesired
-                // duplicated load in our case. After trying to use bare DOM api
-                // to avoid this, we switched to handle a list of already loaded
-                // stuff ourselves, since bare DOM api gives bug with the
-                // server-response event, since we loose control on when the
-                // script is loaded (jQuery load it immediatly).
-                loaded.push(url);
-                jQuery(this).appendTo($head);
-            }
+            $.each(_listResources(url), function() {
+                var resource = '' + this; // implicit object->string cast
+                if ($.inArray(resource, loaded) == -1) {
+                    // take care to <script> tags: jQuery append method script nodes
+                    // don't appears in the DOM (See comments on
+                    // http://api.jquery.com/append/), which cause undesired
+                    // duplicated load in our case. After trying to use bare DOM api
+                    // to avoid this, we switched to handle a list of already loaded
+                    // stuff ourselves, since bare DOM api gives bug with the
+                    // server-response event, since we loose control on when the
+                    // script is loaded (jQuery load it immediatly).
+                    loaded.push(resource);
+                    jQuery(srcnode).appendTo($head);
+                }
+            });
         } else {
-            jQuery(this).appendTo($head);
+            jQuery(srcnode).appendTo($head);
         }
     });
     $node.find(jqtagfilter).remove();

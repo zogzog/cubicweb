@@ -308,6 +308,17 @@ jQuery.extend(cw.utils, {
     },
 
     /**
+     * returns the last element of an array-like object or undefined if empty
+     */
+    lastOf: function(array) {
+        if (array.length) {
+            return array[array.length-1];
+        } else {
+            return undefined;
+        }
+    },
+
+    /**
      * .. function:: difference(lst1, lst2)
      *
      * returns a list containing all elements in `lst1` that are not
