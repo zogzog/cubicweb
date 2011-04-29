@@ -1016,6 +1016,7 @@ class HasRelationFacet(AbstractFacet):
           rtype = 'has_image'
           role = 'subject'
     """
+    __select__ = partial_relation_possible() & match_context_prop()
     rtype = None # override me in subclass
     role = 'subject' # role of filtered entity in the relation
 
