@@ -201,8 +201,15 @@ class MetaDataView(EntityView):
             self.w(u'<span class="value">%s</span>'
                    % self._cw.format_date(entity.creation_date))
         if entity.creator:
-            self.w(u' <span>%s</span> ' % _('by'))
+            if entity.creation_date:
+                self.w(u' <span>%s</span> ' % _('by'))
+            else:
+                self.w(u' <span>%s</span> ' % _('created by'))
             self.w(u'<span class="value">%s</span>' % entity.creator.name())
+        meta = entity.cw_metainformation()
+        if meta['source']['uri'] != 'system':
+            self.w(u' (<span>%s</span>' % _('from source'))
+            self.w(u' <span class="value">%s</span>)' % meta['source']['uri'])
         self.w(u'</div>')
 
 

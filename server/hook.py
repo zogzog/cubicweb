@@ -812,9 +812,9 @@ class DataOperationMixIn(object):
     by redefining :meth:`_build_container` and :meth:`add_data`
 
     More optional parameters can be given to the `get_instance` operation, that
-    will be given to the operation constructer (though those parameters should
-    not vary accross different calls to this method for a same operation for
-    obvious reason).
+    will be given to the operation constructor (for obvious reasons those
+    parameters should not vary accross different calls to this method for a
+    given operation).
 
     .. Note::
         For sanity reason `get_data` will reset the operation, so that once

@@ -170,7 +170,11 @@ class ManageUsersAction(actions.ManagersAction):
 
 class CWUserManagementView(StartupView):
     __regid__ = 'cw.user-management'
-    rql = ('Any U, F, S, U, L ORDERBY L WHERE U is CWUser, U login L, U firstname F, U surname S')
+    rql = ('Any U,USN,F,S,U,UAA,UDS, L,UAA,UDSN ORDERBY L WHERE U is CWUser, '
+           'U login L, U firstname F, U surname S, '
+           'U in_state US, US name USN, '
+           'U primary_email UA?, UA address UAA, '
+           'U cw_source UDS, US name UDSN')
     title = _('users and groups management')
 
     def call(self, **kwargs):
@@ -191,10 +195,14 @@ class CWUserTable(tableview.EditableTableView):
 
     def call(self, **kwargs):
         headers = (display_name(self._cw, 'CWUser', 'plural'),
+                   display_name(self._cw, 'in_state'),
                    self._cw._('firstname'), self._cw._('surname'),
-                   display_name(self._cw, 'CWGroup', 'plural'))
+                   display_name(self._cw, 'CWGroup', 'plural'),
+                   display_name(self._cw, 'primary_email'),
+                   display_name(self._cw, 'CWSource'))
         super(CWUserTable, self).call(
-            paginate=True, cellvids={3: 'cw.user-table.group-cell'},
+            paginate=True, displayfilter=True,
+            cellvids={4: 'cw.user-table.group-cell'},
             headers=headers, **kwargs)
 
 

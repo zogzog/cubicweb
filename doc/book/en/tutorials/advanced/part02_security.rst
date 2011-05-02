@@ -190,9 +190,10 @@ Here is the code in cube's *hooks.py*:
     from cubicweb.selectors import is_instance
     from cubicweb.server import hook
 
-    class SetVisibilityOp(hook.Operation):
+    class SetVisibilityOp(hook.DataOperationMixIn, hook.Operation):
+
 	def precommit_event(self):
-	    for eid in self.session.transaction_data.pop('pending_visibility'):
+	    for eid in self.get_data():
 		entity = self.session.entity_from_eid(eid)
 		if entity.visibility == 'parent':
 		    entity.set_attributes(visibility=u'authenticated')
@@ -201,9 +202,9 @@ Here is the code in cube's *hooks.py*:
 	__regid__ = 'sytweb.setvisibility'
 	__select__ = hook.Hook.__select__ & is_instance('Folder', 'File', 'Comment')
 	events = ('after_add_entity',)
+
 	def __call__(self):
-	    hook.set_operation(self._cw, 'pending_visibility', self.entity.eid,
-			       SetVisibilityOp)
+	    SetVisibilityOp.get_instance(self._cw).add_data(self.entity.eid)
 
     class SetParentVisibilityHook(hook.Hook):
 	__regid__ = 'sytweb.setparentvisibility'
@@ -240,7 +241,7 @@ Notice:
   - `self.entity` is the newly added entity on 'after_add_entity' events
 
   - `self.eidfrom` / `self.eidto` are the eid of the subject / object entity on
-    'after_add_relatiohn' events (you may also get the relation type using
+    'after_add_relation' events (you may also get the relation type using
     `self.rtype`)
 
 The `parent` visibility value is used to tell "propagate using parent security"
@@ -381,7 +382,7 @@ The first execution is taking time, since it creates a sqlite database for the
 test instance. The second one will be much quicker:
 
 .. sourcecode:: bash
-    
+
     $ pytest unittest_sytweb.py
     ========================  unittest_sytweb.py  ========================
     .
