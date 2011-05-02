@@ -165,7 +165,7 @@ class Controller(AppObject):
         elif self._edited_entity:
             # clear caches in case some attribute participating to the rest path
             # has been modified
-            self._edited_entity.clear_all_caches()
+            self._edited_entity.cw_clear_all_caches()
             path = self._edited_entity.rest_path()
         else:
             path = 'view'

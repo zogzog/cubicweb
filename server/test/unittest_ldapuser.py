@@ -239,7 +239,7 @@ class LDAPUserSourceTC(CubicWebTC):
         iworkflowable.fire_transition('deactivate')
         try:
             cnx.commit()
-            adim.clear_all_caches()
+            adim.cw_clear_all_caches()
             self.assertEqual(adim.in_state[0].name, 'deactivated')
             trinfo = iworkflowable.latest_trinfo()
             self.assertEqual(trinfo.owned_by[0].login, SYT)

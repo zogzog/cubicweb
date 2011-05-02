@@ -194,7 +194,7 @@ class EditControllerTC(CubicWebTC):
                     'use_email-object:'+emaileid: peid,
                     }
         path, params = self.expect_redirect_publish(req, 'edit')
-        email.clear_all_caches()
+        email.cw_clear_all_caches()
         self.assertEqual(email.address, 'adim@logilab.fr')
 
 

@@ -193,7 +193,7 @@ class ImplementsSelectorTC(CubicWebTC):
 class WorkflowSelectorTC(CubicWebTC):
     def _commit(self):
         self.commit()
-        self.wf_entity.clear_all_caches()
+        self.wf_entity.cw_clear_all_caches()
 
     def setup_database(self):
         wf = self.shell().add_workflow("wf_test", 'StateFull', default=True)

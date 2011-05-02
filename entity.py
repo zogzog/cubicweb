@@ -918,7 +918,7 @@ class Entity(AppObject):
             assert role
             self._cw_related_cache.pop('%s_%s' % (rtype, role), None)
 
-    def clear_all_caches(self): # XXX cw_clear_all_caches
+    def cw_clear_all_caches(self):
         """flush all caches on this entity. Further attributes/relations access
         will triggers new database queries to get back values.
 
@@ -990,6 +990,10 @@ class Entity(AppObject):
             self._cw.local_perm_cache.pop((rqlexpr.eid, (('x', self.eid),)), None)
 
     # deprecated stuff #########################################################
+
+    @deprecated('[3.13] use entity.cw_clear_all_caches()')
+    def clear_all_caches(self):
+        return self.cw_clear_all_caches()
 
     @deprecated('[3.9] use entity.cw_attr_value(attr)')
     def get_value(self, name):
