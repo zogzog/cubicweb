@@ -162,7 +162,7 @@ msgid "'%s' action doesn't take any options"
 msgstr "l'action '%s' ne prend pas d'option"
 
 #, python-format
-msgid "'%s' action require 'linkattr' option"
+msgid "'%s' action requires 'linkattr' option"
 msgstr "l'action '%s' nécessite une option 'linkattr'"
 
 msgid "(UNEXISTANT EID)"
