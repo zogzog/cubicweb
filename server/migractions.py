@@ -1249,6 +1249,12 @@ class ServerMigrationHelper(MigrationHelper):
             self.commit()
         return wf
 
+    def cmd_get_workflow_for(self, etype):
+        """return default workflow for the given entity type"""
+        rset = self.rqlexec('Workflow X WHERE ET default_workflow X, ET name %(et)s',
+                            {'et': etype})
+        return rset.get_entity(0, 0)
+
     # XXX remove once cmd_add_[state|transition] are removed
     def _get_or_create_wf(self, etypes):
         if not isinstance(etypes, (list, tuple)):
