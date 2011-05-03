@@ -28,15 +28,17 @@ import shutil
 import pickle
 import glob
 import warnings
+import hashlib
 from datetime import timedelta
 from os.path import (abspath, join, exists, basename, dirname, normpath, split,
                      isfile, isabs, splitext, isdir, expanduser)
 from functools import partial
-import hashlib
 
 from logilab.common.date import strptime
 from logilab.common.decorators import cached, clear_cache
-from cubicweb import CW_SOFTWARE_ROOT, ConfigurationError, schema, cwconfig, BadConnectionId
+
+from cubicweb import ConfigurationError, ExecutionError, BadConnectionId
+from cubicweb import CW_SOFTWARE_ROOT, schema, cwconfig
 from cubicweb.server.serverconfig import ServerConfiguration
 from cubicweb.etwist.twconfig import TwistedConfiguration
 
@@ -197,7 +199,10 @@ class TestServerConfiguration(ServerConfiguration):
         directory from wich tests are launched or by specifying an alternative
         sources file using self.sourcefile.
         """
-        sources = super(TestServerConfiguration, self).sources()
+        try:
+            sources = super(TestServerConfiguration, self).sources()
+        except ExecutionError:
+            sources = {}
         if not sources:
             sources = DEFAULT_SOURCES
         if 'admin' not in sources:

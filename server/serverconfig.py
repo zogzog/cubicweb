@@ -255,7 +255,7 @@ and if not set, it will be choosen randomly',
     # configuration file (#16102)
     @cached
     def read_sources_file(self):
-        return read_config(self.sources_file())
+        return read_config(self.sources_file(), raise_if_unreadable=True)
 
     def sources(self):
         """return a dictionnaries containing sources definitions indexed by
