@@ -1244,9 +1244,10 @@ def on_fire_transition(etype, tr_name, from_state_name=None):
     :class:`cubicweb.entities.wfobjs.TrInfo` for more information.
     """
     def match_etype_and_transition(trinfo):
-        # is_instance() first two arguments are 'cls' (unused, so giving None is
-        # fine) and the request/session
-        return (trinfo.transition.name == tr_name
+        # take care trinfo.transition is None when calling change_state
+        return (trinfo.transition and trinfo.transition.name == tr_name
+                # is_instance() first two arguments are 'cls' (unused, so giving
+                # None is fine) and the request/session
                 and is_instance(etype)(None, trinfo._cw, entity=trinfo.for_entity))
 
     return is_instance('TrInfo') & score_entity(match_etype_and_transition)
