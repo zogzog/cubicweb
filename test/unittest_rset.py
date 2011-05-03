@@ -114,7 +114,6 @@ class ResultSetTC(CubicWebTC):
                        description=[['CWUser', 'String']] * 3)
         rs.req = self.request()
         rs.vreg = self.vreg
-
         self.assertEqual(rs.limit(2).rows, [[12000, 'adim'], [13000, 'syt']])
         rs2 = rs.limit(2, offset=1)
         self.assertEqual(rs2.rows, [[13000, 'syt'], [14000, 'nico']])

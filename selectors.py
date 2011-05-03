@@ -196,7 +196,7 @@ import logging
 from warnings import warn
 from operator import eq
 
-from logilab.common.deprecation import class_renamed
+from logilab.common.deprecation import class_renamed, deprecated
 from logilab.common.compat import all, any
 from logilab.common.interface import implements as implements_iface
 
@@ -1178,6 +1178,7 @@ class rql_condition(EntitySelector):
         except Unauthorized:
             return 0
 
+# workflow selectors ###########################################################
 
 class is_in_state(score_entity):
     """Return 1 if entity is in one of the states given as argument list
@@ -1189,9 +1190,8 @@ class is_in_state(score_entity):
     * you must use the latest tr info thru the workflow adapter for repository
       side checking of the current state
 
-    In debug mode, this selector can raise:
-    :raises: :exc:`ValueError` for unknown states names
-        (etype workflow only not checked in custom workflow)
+    In debug mode, this selector can raise :exc:`ValueError` for unknown states names
+    (only checked on entities without a custom workflow)
 
     :rtype: int
     """
@@ -1231,40 +1231,46 @@ class is_in_state(score_entity):
                            ','.join(str(s) for s in self.expected))
 
 
-class on_transition(is_in_state):
-    """Return 1 if entity is in one of the transitions given as argument list
+def on_fire_transition(etype, tr_name, from_state_name=None):
+    """Return 1 when entity of the type `etype` is going through transition of
+    the name `tr_name`. If `from_state_name` is specified, this selector will
+    also check the incoming state.
 
-    Especially useful to match passed transition to enable notifications when
-    your workflow allows several transition to the same states.
-
-    Note that if workflow `change_state` adapter method is used, this selector
-    will not be triggered.
-
-    You should use this instead of your own :class:`score_entity` selector to
-    avoid some gotchas:
-
-    * possible views gives a fake entity with no state
-    * you must use the latest tr info thru the workflow adapter for repository
-      side checking of the current state
-
-    In debug mode, this selector can raise:
-    :raises: :exc:`ValueError` for unknown transition names
-        (etype workflow only not checked in custom workflow)
-
-    :rtype: int
+    You should use this selector on 'after_add_entity' hook, since it's actually
+    looking for addition of `TrInfo` entities. Hence in the hook, `self.entity`
+    will reference the matching `TrInfo` entity, allowing to get all the
+    transition details (including the entity to which is applied the transition
+    but also its original state, transition, destination state, user...).  See
+    :class:`cubicweb.entities.wfobjs.TrInfo` for more information.
     """
-    def _score(self, adapted):
-        trinfo = adapted.latest_trinfo()
-        if trinfo and trinfo.by_transition:
-            return trinfo.by_transition[0].name in self.expected
+    def match_etype_and_transition(trinfo):
+        # take care trinfo.transition is None when calling change_state
+        return (trinfo.transition and trinfo.transition.name == tr_name
+                # is_instance() first two arguments are 'cls' (unused, so giving
+                # None is fine) and the request/session
+                and is_instance(etype)(None, trinfo._cw, entity=trinfo.for_entity))
 
-    def _validate(self, adapted):
-        wf = adapted.current_workflow
-        valid = [n.name for n in wf.reverse_transition_of]
-        unknown = sorted(self.expected.difference(valid))
-        if unknown:
-            raise ValueError("%s: unknown transition(s): %s"
-                             % (wf.name, ",".join(unknown)))
+    return is_instance('TrInfo') & score_entity(match_etype_and_transition)
+
+
+class match_transition(ExpectedValueSelector):
+    """Return 1 if `transition` argument is found in the input context which has
+    a `.name` attribute matching one of the expected names given to the
+    initializer.
+
+    This selector is expected to be used to customise the status change form in
+    the web ui.
+    """
+    @lltrace
+    def __call__(self, cls, req, transition=None, **kwargs):
+        # XXX check this is a transition that apply to the object?
+        if transition is None:
+            treid = req.form.get('treid', None)
+            if treid:
+                transition = req.entity_from_eid(treid)
+        if transition is not None and getattr(transition, 'name', None) in self.expected:
+            return 1
+        return 0
 
 
 # logged user selectors ########################################################
@@ -1504,23 +1510,6 @@ class attribute_edited(EntitySelector):
 
 # Other selectors ##############################################################
 
-# XXX deprecated ? maybe use on_transition selector instead ?
-class match_transition(ExpectedValueSelector):
-    """Return 1 if `transition` argument is found in the input context which has
-    a `.name` attribute matching one of the expected names given to the
-    initializer.
-    """
-    @lltrace
-    def __call__(self, cls, req, transition=None, **kwargs):
-        # XXX check this is a transition that apply to the object?
-        if transition is None:
-            treid = req.form.get('treid', None)
-            if treid:
-                transition = req.entity_from_eid(treid)
-        if transition is not None and getattr(transition, 'name', None) in self.expected:
-            return 1
-        return 0
-
 
 class match_exception(ExpectedValueSelector):
     """Return 1 if a view is specified an as its registry id is in one of the
@@ -1543,6 +1532,47 @@ def debug_mode(cls, req, rset=None, **kwargs):
     return req.vreg.config.debugmode and 1 or 0
 
 ## deprecated stuff ############################################################
+
+
+class on_transition(is_in_state):
+    """Return 1 if entity is in one of the transitions given as argument list
+
+    Especially useful to match passed transition to enable notifications when
+    your workflow allows several transition to the same states.
+
+    Note that if workflow `change_state` adapter method is used, this selector
+    will not be triggered.
+
+    You should use this instead of your own :class:`score_entity` selector to
+    avoid some gotchas:
+
+    * possible views gives a fake entity with no state
+    * you must use the latest tr info thru the workflow adapter for repository
+      side checking of the current state
+
+    In debug mode, this selector can raise:
+    :raises: :exc:`ValueError` for unknown transition names
+        (etype workflow only not checked in custom workflow)
+
+    :rtype: int
+    """
+    @deprecated('[3.12] on_transition is deprecated, you should rather use '
+                'on_fire_transition(etype, trname)')
+    def __init__(self, *expected):
+        super(on_transition, self).__init__(*expected)
+
+    def _score(self, adapted):
+        trinfo = adapted.latest_trinfo()
+        if trinfo and trinfo.by_transition:
+            return trinfo.by_transition[0].name in self.expected
+
+    def _validate(self, adapted):
+        wf = adapted.current_workflow
+        valid = [n.name for n in wf.reverse_transition_of]
+        unknown = sorted(self.expected.difference(valid))
+        if unknown:
+            raise ValueError("%s: unknown transition(s): %s"
+                             % (wf.name, ",".join(unknown)))
 
 entity_implements = class_renamed('entity_implements', is_instance)
 
