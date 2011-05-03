@@ -109,10 +109,10 @@ div#filterboxTitle {
 div#facetLoading {
   display: none;
   position: fixed;
-  padding-left: 20px;
+  background: #f2f2f2;
   top: 400px;
   width: 200px;
-  height: 100px;
+  padding: 1em;
   font-size:      120%;
   font-weight:    bold;
   text-align:     center;

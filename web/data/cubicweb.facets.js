@@ -282,7 +282,9 @@ function onFacetContentLoaded(event, divid, rql, vid, extraparams) {
 
 jQuery(document).ready(function () {
     if (jQuery('div.facetBody').length) {
-    document.body.appendChild(DIV({id:'facetLoading'},
-        IMG({src: baseuri() + 'data/facet-loading.png'})));
+        var $loadingDiv = $(DIV({id:'facetLoading'},
+                                facetLoadingMsg));
+        $loadingDiv.corner();
+        $('body').append($loadingDiv);
     }
 });

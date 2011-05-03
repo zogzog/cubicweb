@@ -73,6 +73,7 @@ class FilterBox(component.CtxComponent):
         req = self._cw
         req.add_js( self.needs_js )
         req.add_css( self.needs_css)
+        req.html_headers.define_var('facetLoadingMsg', req._('facet-loading-msg'))
         if self.roundcorners:
             req.html_headers.add_onload('jQuery(".facet").corner("tl br 10px");')
         rset, vid, divid, paginate = self._get_context()
