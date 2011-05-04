@@ -373,6 +373,16 @@ class ETypeRegistry(CWRegistry):
         cls.__initialize__(self.schema)
         return cls
 
+    def fetch_attrs(self, targettypes):
+        """return intersection of fetch_attrs of each entity type in
+        `targettypes`
+        """
+        fetchattrs_list = []
+        for ttype in targettypes:
+            etypecls = self.etype_class(ttype)
+            fetchattrs_list.append(set(etypecls.fetch_attrs))
+        return reduce(set.intersection, fetchattrs_list)
+
 VRegistry.REGISTRY_FACTORY['etypes'] = ETypeRegistry
 
 
