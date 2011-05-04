@@ -204,8 +204,6 @@ class Entity(AppObject):
             restriction = '%s %s %s' % (mainvar, attr, var)
             restrictions.append(restriction)
             if not rschema.final:
-                # XXX this does not handle several destination types
-                desttype = rschema.objects(eschema.type)[0]
                 card = rdef.cardinality[0]
                 if card not in '?1':
                     cls.warning('bad relation %s specified in fetch attrs for %s',
@@ -218,11 +216,17 @@ class Entity(AppObject):
                 # that case the relation may still be missing. As we miss this
                 # later information here, systematically add it.
                 restrictions[-1] += '?'
+                targettypes = rschema.objects(eschema.type)
                 # XXX user._cw.vreg iiiirk
-                destcls = user._cw.vreg['etypes'].etype_class(desttype)
-                destcls._fetch_restrictions(var, varmaker, destcls.fetch_attrs,
-                                            selection, orderby, restrictions,
-                                            user, ordermethod, visited=visited)
+                etypecls = user._cw.vreg['etypes'].etype_class(targettypes[0])
+                if len(targettypes) > 1:
+                    # find fetch_attrs common to all destination types
+                    fetchattrs = user._cw.vreg['etypes'].fetch_attrs(targettypes)
+                else:
+                    fetchattrs = etypecls.fetch_attrs
+                etypecls._fetch_restrictions(var, varmaker, fetchattrs,
+                                             selection, orderby, restrictions,
+                                             user, ordermethod, visited=visited)
             if ordermethod is not None:
                 orderterm = getattr(cls, ordermethod)(attr, var)
                 if orderterm:
@@ -730,17 +734,13 @@ class Entity(AppObject):
             else:
                 restriction += ', X is IN (%s)' % ','.join(targettypes)
             card = greater_card(rschema, targettypes, (self.e_schema,), 1)
+        etypecls = self._cw.vreg['etypes'].etype_class(targettypes[0])
         if len(targettypes) > 1:
-            fetchattrs_list = []
-            for ttype in targettypes:
-                etypecls = self._cw.vreg['etypes'].etype_class(ttype)
-                fetchattrs_list.append(set(etypecls.fetch_attrs))
-            fetchattrs = reduce(set.intersection, fetchattrs_list)
-            rql = etypecls.fetch_rql(self._cw.user, [restriction], fetchattrs,
-                                     settype=False)
+            fetchattrs = self._cw.vreg['etypes'].fetch_attrs(targettypes)
         else:
-            etypecls = self._cw.vreg['etypes'].etype_class(targettypes[0])
-            rql = etypecls.fetch_rql(self._cw.user, [restriction], settype=False)
+            fetchattrs = etypecls.fetch_attrs
+        rql = etypecls.fetch_rql(self._cw.user, [restriction], fetchattrs,
+                                 settype=False)
         # optimisation: remove ORDERBY if cardinality is 1 or ? (though
         # greater_card return 1 for those both cases)
         if card == '1':

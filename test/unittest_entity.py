@@ -171,9 +171,9 @@ class EntityTC(CubicWebTC):
             # testing two non final relations
             Personne.fetch_attrs = ('nom', 'prenom', 'travaille', 'evaluee')
             self.assertEqual(Personne.fetch_rql(user),
-                              'Any X,AA,AB,AC,AD,AE,AF ORDERBY AA ASC,AF DESC '
-                              'WHERE X is Personne, X nom AA, X prenom AB, X travaille AC?, AC nom AD, '
-                              'X evaluee AE?, AE modification_date AF')
+                             'Any X,AA,AB,AC,AD,AE ORDERBY AA ASC '
+                             'WHERE X is Personne, X nom AA, X prenom AB, X travaille AC?, AC nom AD, '
+                             'X evaluee AE?')
             # testing one non final relation with recursion
             Personne.fetch_attrs = ('nom', 'prenom', 'travaille')
             Societe.fetch_attrs = ('nom', 'evaluee')
