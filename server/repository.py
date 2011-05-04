@@ -178,8 +178,8 @@ class Repository(object):
             # information (eg dump/restore/...)
             config._cubes = ()
             # only load hooks and entity classes in the registry
-            config.cube_appobject_path = set(('hooks', 'entities'))
-            config.cubicweb_appobject_path = set(('hooks', 'entities'))
+            config.__class__.cube_appobject_path = set(('hooks', 'entities'))
+            config.__class__.cubicweb_appobject_path = set(('hooks', 'entities'))
             self.set_schema(config.load_schema())
             config['connections-pool-size'] = 1
             # will be reinitialized later from cubes found in the database
