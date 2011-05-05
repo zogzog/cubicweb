@@ -367,9 +367,8 @@ class CubicWebTC(TestCase):
             elif isinstance(login, tuple):
                 groups = login
             login = req
-            if req is None:
-                assert not isinstance(self, type)
-                req = self._orig_cnx[0].request()
+            assert not isinstance(self, type)
+            req = self._orig_cnx[0].request()
         if password is None:
             password = login.encode('utf8')
         user = req.create_entity('CWUser', login=unicode(login),
