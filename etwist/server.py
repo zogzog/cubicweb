@@ -171,7 +171,7 @@ class ConcatFiles(LongTimeExpiringFile):
     def __init__(self, config, paths):
         _, ext = osp.splitext(paths[0])
         # create a unique / predictable filename
-        fname = hashlib.md5(';'.join(paths)).hexdigest() + ext
+        fname = 'cache_concat_' + hashlib.md5(';'.join(paths)).hexdigest() + ext
         filepath = osp.join(config.appdatahome, 'uicache', fname)
         LongTimeExpiringFile.__init__(self, config, filepath)
         self._concat_cached_filepath(filepath, paths)

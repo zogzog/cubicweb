@@ -95,7 +95,7 @@ function _modconcatLikeUrl(url) {
     if (!base.endswith('/')) {
         base += '/';
     }
-    var modconcat_rgx = new RegExp('(' + base + 'data/([a-z0-9]+/))?\\?\\?(.+)');
+    var modconcat_rgx = new RegExp('(' + base + 'data/([a-z0-9]+/)?)\\?\\?(.+)');
     return modconcat_rgx.exec(url);
 }
 
@@ -112,7 +112,7 @@ function _listResources(src) {
     if (groups == null) {
         resources.push(src);
     } else {
-        var dataurl = groups[0];
+        var dataurl = groups[1];
         $.each(cw.utils.lastOf(groups).split(','),
                function() {
                    resources.push(dataurl + this);
@@ -150,12 +150,10 @@ function _loadAjaxHtmlHead($node, $head, tag, srcattr) {
                     // server-response event, since we loose control on when the
                     // script is loaded (jQuery load it immediatly).
                     loaded.push(resource);
-                    jQuery(srcnode).appendTo($head);
                 }
             });
-        } else {
-            jQuery(srcnode).appendTo($head);
         }
+	jQuery(srcnode).appendTo($head);
     });
     $node.find(jqtagfilter).remove();
 }
