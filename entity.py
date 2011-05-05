@@ -958,8 +958,9 @@ class Entity(AppObject):
         """add relations to the given object. To set a relation where this entity
         is the object of the relation, use 'reverse_'<relation> as argument name.
 
-        Values may be an entity, a list of entities, or None (meaning that all
-        relations of the given type from or to this object should be deleted).
+        Values may be an entity or eid, a list of entities or eids, or None
+        (meaning that all relations of the given type from or to this object
+        should be deleted).
         """
         # XXX update cache
         _check_cw_unsafe(kwargs)
@@ -974,9 +975,17 @@ class Entity(AppObject):
                 continue
             if not isinstance(values, (tuple, list, set, frozenset)):
                 values = (values,)
+            eids = []
+            for val in values:
+                try:
+                    eids.append(str(val.eid))
+                except AttributeError:
+                    try:
+                        eids.append(str(typed_eid(val)))
+                    except (ValueError, TypeError):
+                        raise Exception('expected an Entity or eid, got %s' % val)
             self._cw.execute('SET %s WHERE X eid %%(x)s, Y eid IN (%s)' % (
-                restr, ','.join(str(r.eid) for r in values)),
-                             {'x': self.eid})
+                    restr, ','.join(eids)), {'x': self.eid})
 
     def cw_delete(self, **kwargs):
         assert self.has_eid(), self.eid
