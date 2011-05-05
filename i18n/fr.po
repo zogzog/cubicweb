@@ -1946,10 +1946,10 @@ msgid "cw_schema_object"
 msgstr "mappé par"
 
 msgid "cw_source"
-msgstr "from data source"
+msgstr "source"
 
 msgid "cw_source_object"
-msgstr "entities"
+msgstr "entités"
 
 msgid "cwetype-box"
 msgstr "vue \"boîte\""
