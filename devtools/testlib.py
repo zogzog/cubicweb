@@ -30,6 +30,7 @@ from urllib import unquote
 from math import log
 from contextlib import contextmanager
 from warnings import warn
+from types import NoneType
 
 import yams.schema
 
@@ -42,8 +43,7 @@ from logilab.common.deprecation import deprecated, class_deprecated
 from logilab.common.shellutils import getlogin
 
 from cubicweb import ValidationError, NoSelectableObject, AuthenticationError
-from cubicweb import cwconfig, devtools, web, server
-from cubicweb.dbapi import ProgrammingError, DBAPISession, repo_connect
+from cubicweb import cwconfig, dbapi, devtools, web, server
 from cubicweb.sobjects import notification
 from cubicweb.web import Redirect, application
 from cubicweb.server.session import Session, security_enabled
@@ -252,7 +252,7 @@ class CubicWebTC(TestCase):
         # cnx is now an instance property that use a class protected attributes.
         cls.set_cnx(cnx)
         cls.vreg = cls.repo.vreg
-        cls.websession = DBAPISession(cnx, cls.admlogin)
+        cls.websession = dbapi.DBAPISession(cnx, cls.admlogin)
         cls._orig_cnx = (cnx, cls.websession)
         cls.config.repository = lambda x=None: cls.repo
 
@@ -418,8 +418,8 @@ class CubicWebTC(TestCase):
         autoclose = kwargs.pop('autoclose', True)
         if not kwargs:
             kwargs['password'] = str(login)
-        self.set_cnx(repo_connect(self.repo, unicode(login), **kwargs))
-        self.websession = DBAPISession(self.cnx)
+        self.set_cnx(dbapi.repo_connect(self.repo, unicode(login), **kwargs))
+        self.websession = dbapi.DBAPISession(self.cnx)
         if login == self.vreg.config.anonymous_user()[0]:
             self.cnx.anonymous_connection = True
         if autoclose:
@@ -461,7 +461,7 @@ class CubicWebTC(TestCase):
     def rollback(self):
         try:
             self.cnx.rollback()
-        except ProgrammingError:
+        except dbapi.ProgrammingError:
             pass # connection closed
         finally:
             self.session.set_pool() # ensure pool still set after commit
@@ -719,9 +719,9 @@ class CubicWebTC(TestCase):
 
     def assertAuthFailure(self, req, nbsessions=0):
         self.app.connect(req)
-        self.assertIsInstance(req.session, DBAPISession)
+        self.assertIsInstance(req.session, dbapi.DBAPISession)
         self.assertEqual(req.session.cnx, None)
-        self.assertEqual(req.cnx, None)
+        self.assertIsInstance(req.cnx, (dbapi._NeedAuthAccessMock, NoneType))
         self.assertEqual(len(self.open_sessions), nbsessions)
         clear_cache(req, 'get_authorization')
 
