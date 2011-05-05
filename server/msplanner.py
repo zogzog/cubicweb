@@ -483,7 +483,12 @@ class PartPlanInformation(object):
             else:
                 var = vref.variable
                 for rel in var.stinfo['relations'] - var.stinfo['rhsrelations']:
-                    if rel.r_type in ('eid', 'name') and not rel.neged(strict=True):
+                    # skip neged eid relation since it's the kind of query
+                    # generated when clearing old value of '?1" relation,
+                    # cw_source included. See
+                    # unittest_ldapuser.test_copy_to_system_source
+                    if rel.r_type == 'name' or \
+                       (rel.r_type == 'eid' and not rel.neged(strict=True)):
                         if rel.r_type == 'eid':
                             slist = sourceeids
                         else:

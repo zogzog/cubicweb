@@ -1991,12 +1991,12 @@ class MSPlannerTC(BaseMSPlannerTC):
                     ])
 
     def test_source_specified_2_0(self):
-        self._test('Card X WHERE X cw_source S, NOT S eid 1',
-                   [('OneFetchStep', [('Any X WHERE X is Card',
-                                       [{'X': 'Card'}])],
-                     None, None,
-                     [self.cards],{}, [])
-                    ])
+        # self._test('Card X WHERE X cw_source S, NOT S eid 1',
+        #            [('OneFetchStep', [('Any X WHERE X is Card',
+        #                                [{'X': 'Card'}])],
+        #              None, None,
+        #              [self.cards],{}, [])
+        #             ])
         self._test('Card X WHERE NOT X cw_source S, S eid 1',
                    [('OneFetchStep', [('Any X WHERE X is Card',
                                        [{'X': 'Card'}])],
