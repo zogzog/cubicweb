@@ -564,6 +564,15 @@ du :eid:`1:*ReST*`'''
         self.assertEqual(person.prenom, u'sylvain')
         self.assertEqual(person.nom, u'thénault')
 
+    def test_set_relations(self):
+        req = self.request()
+        person = req.create_entity('Personne', nom=u'chauvat', prenom=u'nicolas')
+        note = req.create_entity('Note', type=u'x')
+        note.set_relations(ecrit_par=person)
+        note = req.create_entity('Note', type=u'y')
+        note.set_relations(ecrit_par=person.eid)
+        self.assertEqual(len(person.reverse_ecrit_par), 2)
+
     def test_metainformation_and_external_absolute_url(self):
         req = self.request()
         note = req.create_entity('Note', type=u'z')
