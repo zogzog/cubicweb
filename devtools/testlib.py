@@ -360,7 +360,7 @@ class CubicWebTC(TestCase):
         """create and return a new user entity"""
         if isinstance(req, basestring):
             warn('[3.12] create_user arguments are now (req, login[, groups, password, commit, **kwargs])',
-                 DeprecationWarning, stacklevel=1)
+                 DeprecationWarning, stacklevel=2)
             if not isinstance(groups, (tuple, list)):
                 password = groups
                 groups = login
@@ -391,7 +391,7 @@ class CubicWebTC(TestCase):
         """
         if not isinstance(session, Session):
             warn('[3.12] grant_permission arguments are now (session, entity, group, pname[, plabel])',
-                 DeprecationWarning, stacklevel=1)
+                 DeprecationWarning, stacklevel=2)
             plabel = pname
             pname = group
             group = entity
