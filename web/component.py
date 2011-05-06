@@ -139,19 +139,23 @@ class NavigationComponent(Component):
 
     @property
     def no_previous_page_link(self):
-        return u'<img src="%s" class="prevnext_nogo"/>' % self.prev_icon_url
+        return (u'<img src="%s" alt="%s" class="prevnext_nogo"/>' %
+                (self.prev_icon_url, self._cw._('there is no previous page')))
 
     @property
     def no_next_page_link(self):
-        return u'<img src="%s" class="prevnext_nogo"/>' % self.next_icon_url
+        return (u'<img src="%s" alt="%s" class="prevnext_nogo"/>' %
+                (self.next_icon_url, self._cw._('there is no next page')))
 
     @property
     def no_content_prev_link(self):
-        return '<img src="%s" class="prevnext"/>' % self.prev_icon_url
+        return (u'<img src="%s" alt="%s" class="prevnext"/>' % (
+                (self.prev_icon_url, self._cw._('no content prev link'))))
 
     @property
     def no_content_next_link(self):
-        return '<img src="%s" class="prevnext"/>' % self.next_icon_url
+        return (u'<img src="%s" alt="%s" class="prevnext"/>' %
+                (self.next_icon_url, self._cw._('no content next link')))
 
     def previous_link(self, path, params, content=None, title=_('previous_results')):
         if not content:
