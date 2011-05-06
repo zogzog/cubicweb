@@ -33,11 +33,13 @@ from rql.nodes import ETYPE_PYOBJ_MAP, etype_from_pyobj
 from yams import BASE_TYPES
 
 from cubicweb import Binary, UnknownEid, QueryError, schema
+from cubicweb.selectors import objectify_selector
 from cubicweb.req import RequestSessionBase
 from cubicweb.dbapi import ConnectionProperties
 from cubicweb.utils import make_uid, RepeatList
 from cubicweb.rqlrewrite import RQLRewriter
 from cubicweb.server.edition import EditedEntity
+
 
 ETYPE_PYOBJ_MAP[Binary] = 'Bytes'
 
@@ -57,6 +59,20 @@ def _make_description(selected, args, solution):
     for term in selected:
         description.append(term.get_type(solution, args))
     return description
+
+@objectify_selector
+def is_user_session(cls, req, **kwargs):
+    """repository side only selector returning 1 if the session is a regular
+    user session and not an internal session
+    """
+    return req.is_internal_session
+
+@objectify_selector
+def is_internal_session(cls, req, **kwargs):
+    """repository side only selector returning 1 if the session is not a regular
+    user session but an internal session
+    """
+    return req.is_internal_session
 
 
 class hooks_control(object):
