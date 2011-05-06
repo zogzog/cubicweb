@@ -605,7 +605,7 @@ function reload(domid, compid, registry, formparams  /* ... */) {
     var ajaxArgs = ['render', formparams, registry, compid];
     ajaxArgs = ajaxArgs.concat(cw.utils.sliceList(arguments, 4));
     var params = ajaxFuncArgs.apply(null, ajaxArgs);
-    $('#'+domid).loadxhtml('json', params, null, 'swap');
+    return $('#'+domid).loadxhtml('json', params, null, 'swap');
 }
 
 /* ajax tabs ******************************************************************/
