@@ -69,6 +69,18 @@ a img, img {
   text-align: center;
 }
 
+img.prevnext {
+  width: 22px;
+  height: 22px;
+}
+
+img.prevnext_nogo {
+  width: 22px;
+  height: 22px;
+  filter:alpha(opacity=25); /* IE */
+  opacity:.25;
+}
+
 p {
   margin: 0em 0px 0.2em;
   padding-top: 2px;

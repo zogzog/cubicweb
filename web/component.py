@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -57,8 +57,6 @@ class NavigationComponent(Component):
     page_link_templ = u'<span class="slice"><a href="%s" title="%s">%s</a></span>'
     selected_page_link_templ = u'<span class="selectedSlice"><a href="%s" title="%s">%s</a></span>'
     previous_page_link_templ = next_page_link_templ = page_link_templ
-    no_previous_page_link = u'&lt;&lt;'
-    no_next_page_link = u'&gt;&gt;'
 
     def __init__(self, req, rset, **kwargs):
         super(NavigationComponent, self).__init__(req, rset=rset, **kwargs)
@@ -131,7 +129,33 @@ class NavigationComponent(Component):
             return self.selected_page_link_templ % (url, content, content)
         return self.page_link_templ % (url, content, content)
 
-    def previous_link(self, path, params, content='&lt;&lt;', title=_('previous_results')):
+    @property
+    def prev_icon_url(self):
+        return xml_escape(self._cw.data_url('go_prev.png'))
+
+    @property
+    def next_icon_url(self):
+        return xml_escape(self._cw.data_url('go_next.png'))
+
+    @property
+    def no_previous_page_link(self):
+        return u'<img src="%s" class="prevnext_nogo"/>' % self.prev_icon_url
+
+    @property
+    def no_next_page_link(self):
+        return u'<img src="%s" class="prevnext_nogo"/>' % self.next_icon_url
+
+    @property
+    def no_content_prev_link(self):
+        return '<img src="%s" class="prevnext"/>' % self.prev_icon_url
+
+    @property
+    def no_content_next_link(self):
+        return '<img src="%s" class="prevnext"/>' % self.next_icon_url
+
+    def previous_link(self, path, params, content=None, title=_('previous_results')):
+        if not content:
+            content = self.no_content_prev_link
         start = self.starting_from
         if not start :
             return self.no_previous_page_link
@@ -140,7 +164,9 @@ class NavigationComponent(Component):
         url = xml_escape(self.page_url(path, params, start, stop))
         return self.previous_page_link_templ % (url, title, content)
 
-    def next_link(self, path, params, content='&gt;&gt;', title=_('next_results')):
+    def next_link(self, path, params, content=None, title=_('next_results')):
+        if not content:
+            content = self.no_content_next_link
         start = self.starting_from + self.page_size
         if start >= self.total:
             return self.no_next_page_link

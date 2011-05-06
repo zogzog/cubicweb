@@ -120,6 +120,19 @@ img {
   border: none;
 }
 
+
+img.prevnext {
+  width: 22px;
+  height: 22px;
+}
+
+img.prevnext_nogo {
+  width: 22px;
+  height: 22px;
+  filter:alpha(opacity=25); /* IE */
+  opacity:.25;
+}
+
 fieldset {
   border: none;
 }

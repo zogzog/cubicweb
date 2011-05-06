@@ -40,10 +40,10 @@ class PageNavigation(NavigationComponent):
         self.clean_params(params)
         basepath = self._cw.relative_path(includeparams=False)
         self.w(u'<div class="pagination">')
-        self.w(u'%s&#160;' % self.previous_link(basepath, params))
+        self.w(self.previous_link(basepath, params))
         self.w(u'[&#160;%s&#160;]' %
                u'&#160;| '.join(self.iter_page_links(basepath, params)))
-        self.w(u'&#160;%s' % self.next_link(basepath, params))
+        self.w(u'&#160;&#160;%s' % self.next_link(basepath, params))
         self.w(u'</div>')
 
     def index_display(self, start, stop):
@@ -74,12 +74,12 @@ class PageNavigationSelect(PageNavigation):
         basepath = self._cw.relative_path(includeparams=False)
         w = self.w
         w(u'<div class="pagination">')
-        w(u'%s&#160;' % self.previous_link(basepath, params))
+        w(self.previous_link(basepath, params))
         w(u'<select onchange="javascript: document.location=this.options[this.selectedIndex].value">')
         for option in self.iter_page_links(basepath, params):
             w(option)
         w(u'</select>')
-        w(u'&#160;%s' % self.next_link(basepath, params))
+        w(u'&#160;&#160;%s' % self.next_link(basepath, params))
         w(u'</div>')
 
 
