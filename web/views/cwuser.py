@@ -24,6 +24,7 @@ import hashlib
 
 from logilab.mtconverter import xml_escape
 
+from cubicweb import tags
 from cubicweb.schema import display_name
 from cubicweb.selectors import one_line_rset, is_instance, match_user_groups
 from cubicweb.view import EntityView, StartupView
@@ -202,7 +203,8 @@ class CWUserTable(tableview.EditableTableView):
                    display_name(self._cw, 'CWSource'))
         super(CWUserTable, self).call(
             paginate=True, displayfilter=True,
-            cellvids={4: 'cw.user-table.group-cell'},
+            cellvids={0: 'cw.user.login',
+                      4: 'cw.user-table.group-cell'},
             headers=headers, **kwargs)
 
 
@@ -213,3 +215,11 @@ class CWUserGroupCell(EntityView):
     def cell_call(self, row, col, **kwargs):
         entity = self.cw_rset.get_entity(row, col)
         self.w(entity.view('reledit', rtype='in_group', role='subject'))
+
+class CWUserLoginCell(EntityView):
+    __regid__ = 'cw.user.login'
+    __select__ = is_instance('CWUser')
+
+    def cell_call(self, row, col, **kwargs):
+        entity = self.cw_rset.get_entity(row, col)
+        self.w(tags.a(entity.login, href=entity.absolute_url()))
