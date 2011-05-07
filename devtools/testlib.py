@@ -400,7 +400,7 @@ class CubicWebTC(TestCase):
             session = self.session
         pname = unicode(pname)
         plabel = plabel and unicode(plabel) or unicode(group)
-        e = entity.eid
+        e = getattr(entity, 'eid', entity)
         with security_enabled(session, False, False):
             peid = session.execute(
             'INSERT CWPermission X: X name %(pname)s, X label %(plabel)s,'
