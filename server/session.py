@@ -65,7 +65,7 @@ def is_user_session(cls, req, **kwargs):
     """repository side only selector returning 1 if the session is a regular
     user session and not an internal session
     """
-    return req.is_internal_session
+    return not req.is_internal_session
 
 @objectify_selector
 def is_internal_session(cls, req, **kwargs):
