@@ -356,7 +356,7 @@ class CubicWebTC(TestCase):
 
     @iclassmethod # XXX turn into a class method
     def create_user(self, req, login=None, groups=('users',), password=None,
-                    commit=True, **kwargs):
+                    email=None, commit=True, **kwargs):
         """create and return a new user entity"""
         if isinstance(req, basestring):
             warn('[3.12] create_user arguments are now (req, login[, groups, password, commit, **kwargs])',
@@ -376,6 +376,9 @@ class CubicWebTC(TestCase):
         req.execute('SET X in_group G WHERE X eid %%(x)s, G name IN(%s)'
                     % ','.join(repr(str(g)) for g in groups),
                     {'x': user.eid})
+        if email is not None:
+            req.create_entity('EmailAddress', address=unicode(email),
+                              reverse_primary_email=user)
         user.cw_clear_relation_cache('in_group', 'subject')
         if commit:
             try:
