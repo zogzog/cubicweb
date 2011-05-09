@@ -68,8 +68,9 @@ class SetCreatorOp(hook.DataOperationMixIn, hook.Operation):
     def precommit_event(self):
         session = self.session
         relations = [(eid, session.user.eid) for eid in self.get_data()
-                # don't consider entities that have been created and
-                # deleted in the same transaction
+                # don't consider entities that have been created and deleted in
+                # the same transaction, nor ones where created_by has been
+                # explicitly set
                 if not session.deleted_in_transaction(eid) and \
                    not session.entity_from_eid(eid).created_by]
         session.add_relations([('created_by', relations)])
