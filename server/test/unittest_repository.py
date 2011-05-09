@@ -277,7 +277,7 @@ class RepositoryTC(CubicWebTC):
         cnxid = repo.connect(self.admlogin, password=self.admpassword)
         repo.execute(cnxid, 'INSERT CWUser X: X login "toto", X upassword "tutu", X in_group G WHERE G name "users"')
         repo.commit(cnxid)
-        lock = threading.Lock(), threading.Lock()
+        lock = threading.Lock()
         lock.acquire()
         # close has to be in the thread due to sqlite limitations
         def close_in_a_few_moment():
