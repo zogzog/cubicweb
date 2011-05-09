@@ -26,7 +26,7 @@ from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.appobject import Selector, AndSelector, OrSelector
 from cubicweb.selectors import (is_instance, adaptable, match_user_groups,
                                 multi_lines_rset, score_entity, is_in_state,
-                                on_transition)
+                                on_transition, rql_condition)
 from cubicweb.web import action
 
 
@@ -221,7 +221,7 @@ class WorkflowSelectorTC(CubicWebTC):
     def test_is_in_state(self):
         for state in ('created', 'validated', 'abandoned'):
             selector = is_in_state(state)
-            self.assertEqual(selector(None, self.req, self.rset),
+            self.assertEqual(selector(None, self.req, rset=self.rset),
                              state=="created")
 
         self.adapter.fire_transition('validate')
@@ -229,75 +229,75 @@ class WorkflowSelectorTC(CubicWebTC):
         self.assertEqual(self.adapter.state, 'validated')
 
         selector = is_in_state('created')
-        self.assertEqual(selector(None, self.req, self.rset), 0)
+        self.assertEqual(selector(None, self.req, rset=self.rset), 0)
         selector = is_in_state('validated')
-        self.assertEqual(selector(None, self.req, self.rset), 1)
+        self.assertEqual(selector(None, self.req, rset=self.rset), 1)
         selector = is_in_state('validated', 'abandoned')
-        self.assertEqual(selector(None, self.req, self.rset), 1)
+        self.assertEqual(selector(None, self.req, rset=self.rset), 1)
         selector = is_in_state('abandoned')
-        self.assertEqual(selector(None, self.req, self.rset), 0)
+        self.assertEqual(selector(None, self.req, rset=self.rset), 0)
 
         self.adapter.fire_transition('forsake')
         self._commit()
         self.assertEqual(self.adapter.state, 'abandoned')
 
         selector = is_in_state('created')
-        self.assertEqual(selector(None, self.req, self.rset), 0)
+        self.assertEqual(selector(None, self.req, rset=self.rset), 0)
         selector = is_in_state('validated')
-        self.assertEqual(selector(None, self.req, self.rset), 0)
+        self.assertEqual(selector(None, self.req, rset=self.rset), 0)
         selector = is_in_state('validated', 'abandoned')
-        self.assertEqual(selector(None, self.req, self.rset), 1)
+        self.assertEqual(selector(None, self.req, rset=self.rset), 1)
         self.assertEqual(self.adapter.state, 'abandoned')
-        self.assertEqual(selector(None, self.req, self.rset), 1)
+        self.assertEqual(selector(None, self.req, rset=self.rset), 1)
 
     def test_is_in_state_unvalid_names(self):
         selector = is_in_state("unknown")
         with self.assertRaises(ValueError) as cm:
-            selector(None, self.req, self.rset)
+            selector(None, self.req, rset=self.rset)
         self.assertEqual(str(cm.exception),
                          "wf_test: unknown state(s): unknown")
         selector = is_in_state("weird", "unknown", "created", "weird")
         with self.assertRaises(ValueError) as cm:
-            selector(None, self.req, self.rset)
+            selector(None, self.req, rset=self.rset)
         self.assertEqual(str(cm.exception),
                          "wf_test: unknown state(s): unknown,weird")
 
     def test_on_transition(self):
         for transition in ('validate', 'forsake'):
             selector = on_transition(transition)
-            self.assertEqual(selector(None, self.req, self.rset), 0)
+            self.assertEqual(selector(None, self.req, rset=self.rset), 0)
 
         self.adapter.fire_transition('validate')
         self._commit()
         self.assertEqual(self.adapter.state, 'validated')
 
         selector = on_transition("validate")
-        self.assertEqual(selector(None, self.req, self.rset), 1)
+        self.assertEqual(selector(None, self.req, rset=self.rset), 1)
         selector = on_transition("validate", "forsake")
-        self.assertEqual(selector(None, self.req, self.rset), 1)
+        self.assertEqual(selector(None, self.req, rset=self.rset), 1)
         selector = on_transition("forsake")
-        self.assertEqual(selector(None, self.req, self.rset), 0)
+        self.assertEqual(selector(None, self.req, rset=self.rset), 0)
 
         self.adapter.fire_transition('forsake')
         self._commit()
         self.assertEqual(self.adapter.state, 'abandoned')
 
         selector = on_transition("validate")
-        self.assertEqual(selector(None, self.req, self.rset), 0)
+        self.assertEqual(selector(None, self.req, rset=self.rset), 0)
         selector = on_transition("validate", "forsake")
-        self.assertEqual(selector(None, self.req, self.rset), 1)
+        self.assertEqual(selector(None, self.req, rset=self.rset), 1)
         selector = on_transition("forsake")
-        self.assertEqual(selector(None, self.req, self.rset), 1)
+        self.assertEqual(selector(None, self.req, rset=self.rset), 1)
 
     def test_on_transition_unvalid_names(self):
         selector = on_transition("unknown")
         with self.assertRaises(ValueError) as cm:
-            selector(None, self.req, self.rset)
+            selector(None, self.req, rset=self.rset)
         self.assertEqual(str(cm.exception),
                          "wf_test: unknown transition(s): unknown")
         selector = on_transition("weird", "unknown", "validate", "weird")
         with self.assertRaises(ValueError) as cm:
-            selector(None, self.req, self.rset)
+            selector(None, self.req, rset=self.rset)
         self.assertEqual(str(cm.exception),
                          "wf_test: unknown transition(s): unknown,weird")
 
@@ -308,11 +308,11 @@ class WorkflowSelectorTC(CubicWebTC):
         self.assertEqual(self.adapter.state, 'validated')
 
         selector = on_transition("validate")
-        self.assertEqual(selector(None, self.req, self.rset), 0)
+        self.assertEqual(selector(None, self.req, rset=self.rset), 0)
         selector = on_transition("validate", "forsake")
-        self.assertEqual(selector(None, self.req, self.rset), 0)
+        self.assertEqual(selector(None, self.req, rset=self.rset), 0)
         selector = on_transition("forsake")
-        self.assertEqual(selector(None, self.req, self.rset), 0)
+        self.assertEqual(selector(None, self.req, rset=self.rset), 0)
 
 
 class MatchUserGroupsTC(CubicWebTC):
@@ -362,13 +362,13 @@ class MultiLinesRsetSelectorTC(CubicWebTC):
     def test_default_op_in_selector(self):
         expected = len(self.rset)
         selector = multi_lines_rset(expected)
-        self.assertEqual(selector(None, self.req, self.rset), 1)
+        self.assertEqual(selector(None, self.req, rset=self.rset), 1)
         self.assertEqual(selector(None, self.req, None), 0)
         selector = multi_lines_rset(expected + 1)
-        self.assertEqual(selector(None, self.req, self.rset), 0)
+        self.assertEqual(selector(None, self.req, rset=self.rset), 0)
         self.assertEqual(selector(None, self.req, None), 0)
         selector = multi_lines_rset(expected - 1)
-        self.assertEqual(selector(None, self.req, self.rset), 0)
+        self.assertEqual(selector(None, self.req, rset=self.rset), 0)
         self.assertEqual(selector(None, self.req, None), 0)
 
     def test_without_rset(self):
@@ -399,7 +399,7 @@ class MultiLinesRsetSelectorTC(CubicWebTC):
 
         for (expected, operator, assertion) in testdata:
             selector = multi_lines_rset(expected, operator)
-            yield self.assertEqual, selector(None, self.req, self.rset), assertion
+            yield self.assertEqual, selector(None, self.req, rset=self.rset), assertion
 
 
 class ScoreEntitySelectorTC(CubicWebTC):
@@ -408,17 +408,24 @@ class ScoreEntitySelectorTC(CubicWebTC):
         req = self.request()
         rset = req.execute('Any E WHERE E eid 1')
         selector = score_entity(lambda x: None)
-        self.assertEqual(selector(None, req, rset), 0)
+        self.assertEqual(selector(None, req, rset=rset), 0)
         selector = score_entity(lambda x: "something")
-        self.assertEqual(selector(None, req, rset), 1)
+        self.assertEqual(selector(None, req, rset=rset), 1)
         selector = score_entity(lambda x: object)
-        self.assertEqual(selector(None, req, rset), 1)
+        self.assertEqual(selector(None, req, rset=rset), 1)
         rset = req.execute('Any G LIMIT 2 WHERE G is CWGroup')
         selector = score_entity(lambda x: 10)
-        self.assertEqual(selector(None, req, rset), 20)
+        self.assertEqual(selector(None, req, rset=rset), 20)
         selector = score_entity(lambda x: 10, once_is_enough=True)
-        self.assertEqual(selector(None, req, rset), 10)
+        self.assertEqual(selector(None, req, rset=rset), 10)
 
+    def test_rql_condition_entity(self):
+        req = self.request()
+        selector = rql_condition('X identity U')
+        rset = req.user.as_rset()
+        self.assertEqual(selector(None, req, rset=rset), 1)
+        self.assertEqual(selector(None, req, entity=req.user), 1)
+        self.assertEqual(selector(None, req), 0)
 
 if __name__ == '__main__':
     unittest_main()
