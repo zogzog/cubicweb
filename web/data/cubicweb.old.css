@@ -625,7 +625,7 @@ span.slice a:hover{
 
 span.selectedSlice a:visited,
 span.selectedSlice a {
-  color: #000;
+  background-color: #EBE8D9;
 }
 
 /* FIXME should be moved to cubes/folder */
