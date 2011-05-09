@@ -182,7 +182,7 @@ class CWUserManagementView(StartupView):
             if eschema.has_perm(self._cw, 'add'):
                 self.w(u'<a href="%s" class="addButton right">%s</a>' % (
                     self._cw.build_url('add/%s' % eschema),
-                    self._cw._('add a %s' % etype).capitalize()))
+                    self._cw.__('New %s' % etype).capitalize()))
         self.w(u'<div class="clear"></div>')
         self.wview('cw.user-table', self._cw.execute(self.rql))
 
