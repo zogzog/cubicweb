@@ -3320,7 +3320,7 @@ msgid "read"
 msgstr ""
 
 msgid "read_permission"
-msgstr "can be read by"
+msgstr "read permission"
 
 msgctxt "CWAttribute"
 msgid "read_permission"
@@ -3339,11 +3339,11 @@ msgstr "has permission to read"
 
 msgctxt "CWGroup"
 msgid "read_permission_object"
-msgstr "can be read by"
+msgstr "has permission to read"
 
 msgctxt "RQLExpression"
 msgid "read_permission_object"
-msgstr "can be read by"
+msgstr "has permission to read"
 
 msgid "regexp matching host(s) to which this config applies"
 msgstr ""
