@@ -163,6 +163,7 @@ class Session(RequestSessionBase):
         self.__threaddata = threading.local()
         self._threads_in_transaction = set()
         self._closed = False
+        self._closed_lock = threading.Lock()
 
     def __unicode__(self):
         return '<%ssession %s (%s 0x%x)>' % (
@@ -647,22 +648,23 @@ class Session(RequestSessionBase):
 
     def set_pool(self):
         """the session need a pool to execute some queries"""
-        if self._closed:
-            self.reset_pool(True)
-            raise Exception('try to set pool on a closed session')
-        if self.pool is None:
-            # get pool first to avoid race-condition
-            self._threaddata.pool = pool = self.repo._get_pool()
-            self._threaddata.ctx_count += 1
-            try:
-                pool.pool_set()
-            except:
-                self._threaddata.pool = None
-                self.repo._free_pool(pool)
-                raise
-            self._threads_in_transaction.add(
-                (threading.currentThread(), pool) )
-        return self._threaddata.pool
+        with self._closed_lock:
+            if self._closed:
+                self.reset_pool(True)
+                raise Exception('try to set pool on a closed session')
+            if self.pool is None:
+                # get pool first to avoid race-condition
+                self._threaddata.pool = pool = self.repo._get_pool()
+                self._threaddata.ctx_count += 1
+                try:
+                    pool.pool_set()
+                except:
+                    self._threaddata.pool = None
+                    self.repo._free_pool(pool)
+                    raise
+                self._threads_in_transaction.add(
+                    (threading.currentThread(), pool) )
+            return self._threaddata.pool
 
     def _free_thread_pool(self, thread, pool, force_close=False):
         try:
@@ -911,7 +913,8 @@ class Session(RequestSessionBase):
 
     def close(self):
         """do not close pool on session close, since they are shared now"""
-        self._closed = True
+        with self._closed_lock:
+            self._closed = True
         # copy since _threads_in_transaction maybe modified while waiting
         for thread, pool in self._threads_in_transaction.copy():
             if thread is threading.currentThread():

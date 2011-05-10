@@ -1171,12 +1171,18 @@ class rql_condition(EntitySelector):
     def __str__(self):
         return '%s(%r)' % (self.__class__.__name__, self.rql)
 
-    def score(self, req, rset, row, col):
+    def _score(self, req, eid):
         try:
-            return req.execute(self.rql, {'x': rset[row][col],
-                                          'u': req.user.eid})[0][0]
+            return req.execute(self.rql, {'x': eid, 'u': req.user.eid})[0][0]
         except Unauthorized:
             return 0
+
+    def score(self, req, rset, row, col):
+        return self._score(req, rset[row][col])
+
+    def score_entity(self, entity):
+        return self._score(entity._cw, entity.eid)
+
 
 # workflow selectors ###########################################################
 

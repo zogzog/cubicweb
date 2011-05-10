@@ -139,11 +139,11 @@ class AbstractSource(object):
             return -1
         return cmp(self.uri, other.uri)
 
-    def backup(self, backupfile, confirm):
+    def backup(self, backupfile, confirm, format='native'):
         """method called to create a backup of source's data"""
         pass
 
-    def restore(self, backupfile, confirm, drop):
+    def restore(self, backupfile, confirm, drop, format='native'):
         """method called to restore a backup of source's data"""
         pass
 

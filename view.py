@@ -447,11 +447,14 @@ class AnyRsetView(View):
         rqlstdescr = self.cw_rset.syntax_tree().get_description(mainindex,
                                                                 translate)[0]
         labels = []
-        for colindex, label in enumerate(rqlstdescr):
-            # compute column header
-            if label == 'Any': # find a better label
-                label = ','.join(translate(et)
-                                 for et in self.cw_rset.column_types(colindex))
+        for colidx, label in enumerate(rqlstdescr):
+            try:
+                label = getattr(self, 'label_column_%s' % colidx)()
+            except AttributeError:
+                # compute column header
+                if label == 'Any': # find a better label
+                    label = ','.join(translate(et)
+                                     for et in self.cw_rset.column_types(colidx))
             labels.append(label)
         return labels
 

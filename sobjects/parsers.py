@@ -361,15 +361,18 @@ class CWEntityXMLParser(datafeed.DataFeedParser):
                              {'x': entity.eid})
 
     def _set_relation(self, entity, rtype, role, eids):
-        eidstr = ','.join(str(eid) for eid in eids)
-        rql = rtype_role_rql(rtype, role)
-        self._cw.execute('DELETE %s, NOT Y eid IN (%s)' % (rql, eidstr),
-                         {'x': entity.eid})
-        if role == 'object':
-            rql = 'SET %s, Y eid IN (%s), NOT Y %s X' % (rql, eidstr, rtype)
-        else:
-            rql = 'SET %s, Y eid IN (%s), NOT X %s Y' % (rql, eidstr, rtype)
+        rqlbase = rtype_role_rql(rtype, role)
+        rql = 'DELETE %s' % rqlbase
+        if eids:
+            eidstr = ','.join(str(eid) for eid in eids)
+            rql += ', NOT Y eid IN (%s)' % eidstr
         self._cw.execute(rql, {'x': entity.eid})
+        if eids:
+            if role == 'object':
+                rql = 'SET %s, Y eid IN (%s), NOT Y %s X' % (rqlbase, eidstr, rtype)
+            else:
+                rql = 'SET %s, Y eid IN (%s), NOT X %s Y' % (rqlbase, eidstr, rtype)
+            self._cw.execute(rql, {'x': entity.eid})
 
 def registration_callback(vreg):
     vreg.register_all(globals().values(), __name__)

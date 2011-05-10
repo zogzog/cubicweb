@@ -120,7 +120,7 @@ class DataFeedSource(AbstractSource):
             return False
         return datetime.now() < (self.latest_retrieval + self.synchro_interval)
 
-    def pull_data(self, session, force=False):
+    def pull_data(self, session, force=False, raise_on_error=False):
         if not force and self.fresh():
             return {}
         if self.config['delete-entities']:
@@ -135,6 +135,8 @@ class DataFeedSource(AbstractSource):
                 if parser.process(url):
                     error = True
             except IOError, exc:
+                if raise_on_error:
+                    raise
                 self.error('could not pull data while processing %s: %s',
                            url, exc)
                 error = True
