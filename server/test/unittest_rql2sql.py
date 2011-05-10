@@ -835,9 +835,9 @@ FROM cw_Personne AS _X LEFT OUTER JOIN connait_relation AS rel_connait0 ON (rel_
 WHERE _X.cw_eid=12'''
     ),
     ("Any P WHERE X eid 12, P? concerne X, X todo_by S",
-     '''SELECT rel_concerne0.eid_from
-FROM todo_by_relation AS rel_todo_by1 LEFT OUTER JOIN concerne_relation AS rel_concerne0 ON (rel_concerne0.eid_to=12)
-WHERE rel_todo_by1.eid_from=12'''
+     '''SELECT rel_concerne1.eid_from
+FROM todo_by_relation AS rel_todo_by0 LEFT OUTER JOIN concerne_relation AS rel_concerne1 ON (rel_concerne1.eid_to=12)
+WHERE rel_todo_by0.eid_from=12'''
     ),
 
     ('Any GN, TN ORDERBY GN WHERE T tags G?, T name TN, G name GN',
@@ -931,6 +931,10 @@ FROM cw_CWUser AS _A, cw_Note AS _S
 WHERE _S.cw_ambiguous_inlined=_A.cw_eid) AS _T0 ON (_X.cw_multisource_inlined_rel=_T0.C0)'''
     ),
 
+    ('Any X,T,OT WHERE X tags T, OT? tags X, X is Tag, X eid 123',
+     '''SELECT rel_tags0.eid_from, rel_tags0.eid_to, rel_tags1.eid_from
+FROM tags_relation AS rel_tags0 LEFT OUTER JOIN tags_relation AS rel_tags1 ON (rel_tags1.eid_to=123)
+WHERE rel_tags0.eid_from=123'''),
     ]
 
 VIRTUAL_VARS = [
@@ -1601,7 +1605,7 @@ WHERE ((CAST(EXTRACT(YEAR from _X.cw_creation_date) AS INTEGER)=2010) OR (_X.cw_
                     '''SELECT 1
 WHERE NOT (EXISTS(SELECT 1 FROM in_group_relation AS rel_in_group0))''')
 
-    def test_nonregr_subquery_missing_join(self):
+    def test_nonregr_outer_join_multiple(self):
         self._check('Any COUNT(P1148),G GROUPBY G '
                     'WHERE G owned_by D, D eid 1122, K1148 bookmarked_by P1148, '
                     'K1148 eid 1148, P1148? in_group G',
@@ -1611,7 +1615,7 @@ WHERE rel_owned_by0.eid_from=_G.cw_eid AND rel_owned_by0.eid_to=1122 AND rel_boo
 GROUP BY _G.cw_eid'''
                     )
 
-    def test_nonregr_subquery_missing_join2(self):
+    def test_nonregr_outer_join_multiple2(self):
         self._check('Any COUNT(P1148),G GROUPBY G '
                     'WHERE G owned_by D, D eid 1122, K1148 bookmarked_by P1148?, '
                     'K1148 eid 1148, P1148? in_group G',

@@ -588,16 +588,16 @@ class StateInfo(object):
                 rconditions.append(condition)
             else:
                 lconditions.append(condition)
-        else:
-            if louter is not None:
-                raise BadRQLQuery()
+        elif louter is None:
             # merge chains
             self.outer_chains.remove(lchain)
-            self.mark_as_used_in_outer_join(leftalias)
             rchain += lchain
+            self.mark_as_used_in_outer_join(leftalias)
             for alias, (aouter, aconditions, achain) in outer_tables.iteritems():
                 if achain is lchain:
                     outer_tables[alias] = (aouter, aconditions, rchain)
+        else:
+            raise BadRQLQuery()
 
     # sql generation helpers ###################################################
 
