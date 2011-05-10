@@ -264,6 +264,7 @@ class BaseQuerierTC(TestCase):
         u._groups = set(groups)
         s = Session(u, self.repo)
         s._threaddata.pool = self.pool
+        s._threaddata.ctx_count = 1
         # register session to ensure it gets closed
         self._dumb_sessions.append(s)
         return s
