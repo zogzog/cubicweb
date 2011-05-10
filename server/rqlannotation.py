@@ -78,18 +78,19 @@ def _annotate_select(annotator, rqlst):
                 continue
             lhs, rhs = rel.get_parts()
             onlhs = ref is lhs
+            role = 'subject' if onlhs else 'object'
             if rel.r_type == 'eid':
                 if not (onlhs and len(stinfo['relations']) > 1):
                     break
                 if not stinfo['constnode']:
-                    joins.add(rel)
+                    joins.add( (rel, role) )
                 continue
             elif rel.r_type == 'identity':
                 # identity can't be used as principal, so check other relation are used
                 # XXX explain rhs.operator == '='
                 if rhs.operator != '=' or len(stinfo['relations']) <= 1: #(stinfo['constnode'] and rhs.operator == '='):
                     break
-                joins.add(rel)
+                joins.add( (rel, role) )
                 continue
             rschema = getrschema(rel.r_type)
             if rel.optional:
@@ -116,7 +117,7 @@ def _annotate_select(annotator, rqlst):
                     # need join anyway if the variable appears in a final or
                     # inlined relation
                     break
-                joins.add(rel)
+                joins.add( (rel, role) )
                 continue
             if not stinfo['constnode']:
                 if rschema.inlined and rel.neged(strict=True):
@@ -129,7 +130,7 @@ def _annotate_select(annotator, rqlst):
                         break
                 elif rschema.symmetric and stinfo['selected']:
                     break
-            joins.add(rel)
+            joins.add( (rel, role) )
         else:
             # if there is at least one ambigous relation and no other to
             # restrict types, can't be invariant since we need to filter out
@@ -169,10 +170,15 @@ def _select_principal(scope, relations, _sort=lambda x:x):
     diffscope_rels = {}
     ored_rels = set()
     diffscope_rels = set()
-    for rel in _sort(relations):
+    for rel, role in _sort(relations):
         # note: only eid and has_text among all final relations may be there
         if rel.r_type in ('eid', 'identity'):
             continue
+        if rel.optional is not None and len(relations) > 1:
+            if role == 'subject' and rel.optional == 'right':
+                continue
+            if role == 'object' and rel.optional == 'left':
+                continue
         if rel.ored(traverse_scope=True):
             ored_rels.add(rel)
         elif rel.scope is scope:
