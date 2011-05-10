@@ -138,8 +138,6 @@ class FakeUser(object):
 
 
 class FakeSession(RequestSessionBase):
-    read_security = write_security = True
-    set_read_security = set_write_security = lambda *args, **kwargs: None
 
     def __init__(self, repo=None, user=None):
         self.repo = repo
@@ -161,6 +159,13 @@ class FakeSession(RequestSessionBase):
 
     def set_entity_cache(self, entity):
         pass
+
+    # for use with enabled_security context manager
+    read_security = write_security = True
+    def init_security(self, *args):
+        return None, None
+    def reset_security(self, *args):
+        return
 
 class FakeRepo(object):
     querier = None
