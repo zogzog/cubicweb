@@ -163,7 +163,7 @@ msgid "'%s' action doesn't take any options"
 msgstr "la acción '%s'  no acepta opciones"
 
 #, python-format
-msgid "'%s' action require 'linkattr' option"
+msgid "'%s' action requires 'linkattr' option"
 msgstr "la acción '%s' requiere una opción 'linkattr'"
 
 msgid "(UNEXISTANT EID)"
