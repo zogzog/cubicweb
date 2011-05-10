@@ -524,16 +524,16 @@ class Session(RequestSessionBase):
         """
         changes = set()
         if self.hooks_mode is self.HOOKS_DENY_ALL:
-            enablecats = self.enabled_hook_categories
+            enabledcats = self.enabled_hook_categories
             for category in categories:
-                if category in enablecats:
-                    enablecats.remove(category)
+                if category in enabledcats:
+                    enabledcats.remove(category)
                     changes.add(category)
         else:
-            disablecats = self.disabled_hook_categories
+            disabledcats = self.disabled_hook_categories
             for category in categories:
-                if category not in disablecats:
-                    disablecats.add(category)
+                if category not in disabledcats:
+                    disabledcats.add(category)
                     changes.add(category)
         return tuple(changes)
 
@@ -545,16 +545,16 @@ class Session(RequestSessionBase):
         """
         changes = set()
         if self.hooks_mode is self.HOOKS_DENY_ALL:
-            enablecats = self.enabled_hook_categories
+            enabledcats = self.enabled_hook_categories
             for category in categories:
-                if category not in enablecats:
-                    enablecats.add(category)
+                if category not in enabledcats:
+                    enabledcats.add(category)
                     changes.add(category)
         else:
-            disablecats = self.disabled_hook_categories
+            disabledcats = self.disabled_hook_categories
             for category in categories:
-                if category in self.disabled_hook_categories:
-                    disablecats.remove(category)
+                if category in disabledcats:
+                    disabledcats.remove(category)
                     changes.add(category)
         return tuple(changes)
 
