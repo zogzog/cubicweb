@@ -390,7 +390,9 @@ class CubicWebPublisher(object):
                 raise StatusResponse(404, self.notfound_content(req))
             except ValidationError, ex:
                 self.validation_error_handler(req, ex)
-            except (Unauthorized, BadRQLQuery, RequestError), ex:
+            except Unauthorized, ex:
+                self.error_handler(req, ex, tb=False, code=403)
+            except (BadRQLQuery, RequestError), ex:
                 self.error_handler(req, ex, tb=False)
             except BaseException, ex:
                 self.error_handler(req, ex, tb=True)
@@ -422,7 +424,7 @@ class CubicWebPublisher(object):
             raise Redirect(req.form['__errorurl'].rsplit('#', 1)[0])
         self.error_handler(req, ex, tb=False)
 
-    def error_handler(self, req, ex, tb=False):
+    def error_handler(self, req, ex, tb=False, code=500):
         excinfo = sys.exc_info()
         self.exception(repr(ex))
         req.set_header('Cache-Control', 'no-cache')
@@ -441,7 +443,7 @@ class CubicWebPublisher(object):
             content = self.vreg['views'].main_template(req, template, view=errview)
         except:
             content = self.vreg['views'].main_template(req, 'error-template')
-        raise StatusResponse(500, content)
+        raise StatusResponse(code, content)
 
     def need_login_content(self, req):
         return self.vreg['views'].main_template(req, 'login')
