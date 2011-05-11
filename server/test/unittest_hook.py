@@ -23,7 +23,7 @@ from __future__ import with_statement
 from logilab.common.testlib import TestCase, unittest_main, mock_object
 
 
-from cubicweb.devtools import TestServerConfiguration
+from cubicweb.devtools import TestServerConfiguration, fake
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.server import hook
 from cubicweb.hooks import integrity, syncschema
@@ -124,10 +124,8 @@ class HooksRegistryTC(TestCase):
     def test_call_hook(self):
         self.o.register(AddAnyHook)
         dis = set()
-        cw = mock_object(vreg=self.vreg,
-                         set_read_security=lambda *a,**k: None,
-                         set_write_security=lambda *a,**k: None,
-                         is_hook_activated=lambda x, cls: cls.category not in dis)
+        cw = fake.FakeSession()
+        cw.is_hook_activated = lambda cls: cls.category not in dis
         self.assertRaises(HookCalled,
                           self.o.call_hooks, 'before_add_entity', cw)
         dis.add('cat1')
