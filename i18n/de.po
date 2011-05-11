@@ -1061,10 +1061,6 @@ msgstr "Subworkflow Exit-Punkt"
 msgid "add WorkflowTransition transition_of Workflow object"
 msgstr "Workflow-Übergang"
 
-#, python-format
-msgid "add a %s"
-msgstr ""
-
 msgctxt "inlined:CWRelation.from_entity.subject"
 msgid "add a CWEType"
 msgstr "einen Entitätstyp hinzufügen"

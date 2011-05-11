@@ -1069,10 +1069,6 @@ msgstr "sortie de sous-workflow"
 msgid "add WorkflowTransition transition_of Workflow object"
 msgstr "transition workflow"
 
-#, python-format
-msgid "add a %s"
-msgstr "ajouter un %s"
-
 msgctxt "inlined:CWRelation.from_entity.subject"
 msgid "add a CWEType"
 msgstr "ajouter un type d'entité sujet"
@@ -4549,6 +4545,9 @@ msgstr ""
 
 #~ msgid "Relation types"
 #~ msgstr "Types de relation"
+
+#~ msgid "add a %s"
+#~ msgstr "ajouter un %s"
 
 #~ msgid "am/pm calendar (month)"
 #~ msgstr "calendrier am/pm (mois)"
