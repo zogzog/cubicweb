@@ -1160,9 +1160,12 @@ class rql_condition(EntitySelector):
     See :class:`~cubicweb.selectors.EntitySelector` documentation for entity
     lookup / score rules according to the input context.
     """
-    def __init__(self, expression, once_is_enough=False):
+    def __init__(self, expression, once_is_enough=False, user_condition=False):
         super(rql_condition, self).__init__(once_is_enough)
-        if 'U' in frozenset(split_expression(expression)):
+        self.user_condition = user_condition
+        if user_condition:
+            rql = 'Any COUNT(U) WHERE U eid %%(u)s, %s' % expression
+        elif 'U' in frozenset(split_expression(expression)):
             rql = 'Any COUNT(X) WHERE X eid %%(x)s, U eid %%(u)s, %s' % expression
         else:
             rql = 'Any COUNT(X) WHERE X eid %%(x)s, %s' % expression
@@ -1170,6 +1173,16 @@ class rql_condition(EntitySelector):
 
     def __str__(self):
         return '%s(%r)' % (self.__class__.__name__, self.rql)
+
+    @lltrace
+    def __call__(self, cls, req, **kwargs):
+        if self.user_condition:
+            try:
+                return req.execute(self.rql, {'u': req.user.eid})[0][0]
+            except Unauthorized:
+                return 0
+        else:
+            return super(rql_condition, self).__call__(cls, req, **kwargs)
 
     def _score(self, req, eid):
         try:

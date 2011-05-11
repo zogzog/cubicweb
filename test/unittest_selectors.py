@@ -427,6 +427,13 @@ class ScoreEntitySelectorTC(CubicWebTC):
         self.assertEqual(selector(None, req, entity=req.user), 1)
         self.assertEqual(selector(None, req), 0)
 
+    def test_rql_condition_user(self):
+        req = self.request()
+        selector = rql_condition('U login "admin"', user_condition=True)
+        self.assertEqual(selector(None, req), 1)
+        selector = rql_condition('U login "toto"', user_condition=True)
+        self.assertEqual(selector(None, req), 0)
+
 if __name__ == '__main__':
     unittest_main()
 
