@@ -139,9 +139,13 @@ class FakeUser(object):
 
 class FakeSession(RequestSessionBase):
 
-    def __init__(self, repo=None, user=None):
+    def __init__(self, repo=None, user=None, vreg=None):
         self.repo = repo
-        self.vreg = getattr(self.repo, 'vreg', CubicWebVRegistry(FakeConfig(), initlog=False))
+        if vreg is None:
+            vreg = getattr(self.repo, 'vreg', None)
+        if vreg is None:
+            vreg = CubicWebVRegistry(FakeConfig(), initlog=False)
+        self.vreg = vreg
         self.pool = FakePool()
         self.user = user or FakeUser()
         self.is_internal_session = False
