@@ -29,9 +29,6 @@ class CWGroup(AnyEntity):
     fetch_attrs, fetch_order = fetch_config(['name'])
     fetch_unrelated_order = fetch_order
 
-    def db_key_name(self):
-        """XXX goa specific"""
-        return self.get('name')
 
 
 class CWUser(AnyEntity):
@@ -155,10 +152,6 @@ class CWUser(AnyEntity):
         return self.login
 
     dc_long_title = name
-
-    def db_key_name(self):
-        """XXX goa specific"""
-        return self.get('login')
 
 from logilab.common.deprecation import class_renamed
 EUser = class_renamed('EUser', CWUser)
