@@ -212,9 +212,6 @@ class TestServerConfiguration(ServerConfiguration):
     # web config methods needed here for cases when we use this config as a web
     # config
 
-    def instance_md5_version(self):
-        return ''
-
     def default_base_url(self):
         return BASE_URL
 

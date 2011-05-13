@@ -300,7 +300,10 @@ have the python imaging library installed to use captcha)',
         if not (self.repairing or self.creating):
             self.global_set_option('base-url', baseurl)
         httpsurl = self['https-url']
-        datadir_path = 'data/' if self.debugmode else 'data/%s/' % self.instance_md5_version()
+        if (self.debugmode or self.mode == 'test'):
+            datadir_path = 'data/'
+        else:
+            datadir_path = 'data/%s/' % self.instance_md5_version()
         if httpsurl:
             if httpsurl[-1] != '/':
                 httpsurl += '/'
