@@ -714,6 +714,7 @@ class PerformanceTest(CubicWebTC):
 
     def tearDown(self):
         super(PerformanceTest, self).tearDown()
+        logger = logging.getLogger('cubicweb.session')
         logger.setLevel(logging.CRITICAL)
 
     def test_composite_deletion(self):
