@@ -251,7 +251,6 @@ class DataFeedXMLParser(DataFeedParser):
         """IDataFeedParser main entry point"""
         error = False
         for args in self.parse(url):
-            print args
             try:
                 self.process_item(*args)
                 if partialcommit:
