@@ -495,6 +495,10 @@ class CubicWebTC(TestCase):
         entity.cw_attr_cache.pop('modification_date', None)
         self.failUnless(entity.modification_date > olddate)
 
+    def assertItemsEqual(self, it1, it2, *args, **kwargs):
+        it1 = set(getattr(x, 'eid', x) for x in it1)
+        it2 = set(getattr(x, 'eid', x) for x in it2)
+        super(CubicWebTC, self).assertItemsEqual(it1, it2, *args, **kwargs)
 
     # workflow utilities #######################################################
 

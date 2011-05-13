@@ -270,6 +270,7 @@ class Entity(AppObject):
         restrictions = set()
         pending_relations = []
         eschema = cls.e_schema
+        qargs = {}
         for attr, value in kwargs.items():
             if attr.startswith('reverse_'):
                 attr = attr[len('reverse_'):]
@@ -283,10 +284,11 @@ class Entity(AppObject):
                     value = iter(value).next()
                 else:
                     # prepare IN clause
-                    del kwargs[attr]
-                    pending_relations.append( (attr, value) )
+                    pending_relations.append( (attr, role, value) )
                     continue
-            if hasattr(value, 'eid'): # non final relation
+            if rschema.final: # attribute
+                relations.append('X %s %%(%s)s' % (attr, attr))
+            else:
                 rvar = attr.upper()
                 if role == 'object':
                     relations.append('%s %s X' % (rvar, attr))
@@ -295,21 +297,21 @@ class Entity(AppObject):
                 restriction = '%s eid %%(%s)s' % (rvar, attr)
                 if not restriction in restrictions:
                     restrictions.add(restriction)
-                kwargs[attr] = value.eid
-            else: # attribute
-                relations.append('X %s %%(%s)s' % (attr, attr))
+                if hasattr(value, 'eid'):
+                    value = value.eid
+            qargs[attr] = value
         if relations:
             rql = '%s: %s' % (rql, ', '.join(relations))
         if restrictions:
             rql = '%s WHERE %s' % (rql, ', '.join(restrictions))
-        created = execute(rql, kwargs).get_entity(0, 0)
-        for attr, values in pending_relations:
-            if attr.startswith('reverse_'):
-                restr = 'Y %s X' % attr[len('reverse_'):]
+        created = execute(rql, qargs).get_entity(0, 0)
+        for attr, role, values in pending_relations:
+            if role == 'object':
+                restr = 'Y %s X' % attr
             else:
                 restr = 'X %s Y' % attr
             execute('SET %s WHERE X eid %%(x)s, Y eid IN (%s)' % (
-                restr, ','.join(str(r.eid) for r in values)),
+                restr, ','.join(str(getattr(r, 'eid', r)) for r in values)),
                     {'x': created.eid}, build_descr=False)
         return created
 

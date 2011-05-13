@@ -139,6 +139,27 @@ class EntityTC(CubicWebTC):
         self.assertEqual(len(p.related('tags', 'object', limit=2)), 2)
         self.assertEqual(len(p.related('tags', 'object')), 4)
 
+    def test_cw_instantiate_relation(self):
+        req = self.request()
+        p1 = req.create_entity('Personne', nom=u'di')
+        p2 = req.create_entity('Personne', nom=u'mascio')
+        t = req.create_entity('Tag', name=u't1', tags=p1)
+        self.assertItemsEqual(t.tags, [p1])
+        t = req.create_entity('Tag', name=u't2', tags=p1.eid)
+        self.assertItemsEqual(t.tags, [p1])
+        t = req.create_entity('Tag', name=u't3', tags=[p1, p2.eid])
+        self.assertItemsEqual(t.tags, [p1, p2])
+
+    def test_cw_instantiate_reverse_relation(self):
+        req = self.request()
+        t1 = req.create_entity('Tag', name=u't1')
+        t2 = req.create_entity('Tag', name=u't2')
+        p = req.create_entity('Personne', nom=u'di mascio', reverse_tags=t1)
+        self.assertItemsEqual(p.reverse_tags, [t1])
+        p = req.create_entity('Personne', nom=u'di mascio', reverse_tags=t1.eid)
+        self.assertItemsEqual(p.reverse_tags, [t1])
+        p = req.create_entity('Personne', nom=u'di mascio', reverse_tags=[t1, t2.eid])
+        self.assertItemsEqual(p.reverse_tags, [t1, t2])
 
     def test_fetch_rql(self):
         user = self.user()
