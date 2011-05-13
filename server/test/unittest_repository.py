@@ -24,6 +24,7 @@ import os
 import sys
 import threading
 import time
+import logging
 from copy import deepcopy
 from datetime import datetime
 
@@ -704,12 +705,16 @@ class InlineRelHooksTC(CubicWebTC):
 
 
 class PerformanceTest(CubicWebTC):
-    def setup_database(self):
-        import logging
+    def setUp(self):
+        super(PerformanceTest, self).setUp()
         logger = logging.getLogger('cubicweb.session')
         #logger.handlers = [logging.StreamHandler(sys.stdout)]
         logger.setLevel(logging.INFO)
         self.info = logger.info
+
+    def tearDown(self):
+        super(PerformanceTest, self).tearDown()
+        logger.setLevel(logging.CRITICAL)
 
     def test_composite_deletion(self):
         req = self.request()
