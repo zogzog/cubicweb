@@ -126,6 +126,8 @@ class MappingChecker(object):
         else: # CWAttribute/CWRelation
             self.srelations.setdefault(cwerschema.rtype.name, []).append(
                 (cwerschema.stype.name, cwerschema.otype.name) )
+            self.sentities.add(cwerschema.stype.name)
+            self.sentities.add(cwerschema.otype.name)
 
     def check(self):
         self.init()
@@ -154,14 +156,15 @@ class MappingChecker(object):
                     warning(_('relation %(rtype)s with %(etype)s as %(role)s is '
                               'supported but no target type supported') %
                             {'rtype': rschema, 'role': role, 'etype': etype})
-        for rtype in self.srelations:
-            rschema = self.schema[rtype]
-            for subj, obj in rschema.rdefs:
-                if subj in self.sentities and obj in self.sentities:
-                    break
-            else:
-                error(_('relation %s is supported but none if its definitions '
-                        'matches supported entities') % rtype)
+        for rtype, rdefs in self.srelations.iteritems():
+            if rdefs is None:
+                rschema = self.schema[rtype]
+                for subj, obj in rschema.rdefs:
+                    if subj in self.sentities and obj in self.sentities:
+                        break
+                else:
+                    error(_('relation %s is supported but none of its definitions '
+                            'matches supported entities') % rtype)
         self.custom_check()
 
     def custom_check(self):

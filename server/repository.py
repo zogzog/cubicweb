@@ -59,13 +59,18 @@ from cubicweb.server.session import Session, InternalSession, InternalManager, \
      security_enabled
 from cubicweb.server.ssplanner import EditedEntity
 
+NO_CACHE_RELATIONS = set( [('require_permission', 'object'),
+                           ('owned_by', 'object'),
+                           ('created_by', 'object'),
+                           ('cw_source', 'object'),
+                           ])
 
 def prefill_entity_caches(entity, relations):
     session = entity._cw
     # prefill entity relation caches
     for rschema in entity.e_schema.subject_relations():
         rtype = str(rschema)
-        if rtype in schema.VIRTUAL_RTYPES:
+        if rtype in schema.VIRTUAL_RTYPES or (rtype, 'subject') in NO_CACHE_RELATIONS:
             continue
         if rschema.final:
             entity.cw_attr_cache.setdefault(rtype, None)
@@ -74,7 +79,7 @@ def prefill_entity_caches(entity, relations):
                                          session.empty_rset())
     for rschema in entity.e_schema.object_relations():
         rtype = str(rschema)
-        if rtype in schema.VIRTUAL_RTYPES:
+        if rtype in schema.VIRTUAL_RTYPES or (rtype, 'object') in NO_CACHE_RELATIONS:
             continue
         entity.cw_set_relation_cache(rtype, 'object', session.empty_rset())
     # set inlined relation cache before call to after_add_entity

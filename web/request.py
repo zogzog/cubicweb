@@ -116,8 +116,8 @@ class CubicWebRequestBase(DBAPIRequest):
         pid = self.form.get('pageid')
         if pid is None:
             pid = make_uid(id(self))
+            self.html_headers.define_var('pageid', pid, override=False)
         self.pageid = pid
-        self.html_headers.define_var('pageid', pid, override=False)
 
     @property
     def authmode(self):

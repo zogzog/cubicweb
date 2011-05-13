@@ -905,6 +905,7 @@ sources for migration will be automatically selected.",
                 scripts, args = self.cmdline_parser.largs[1:], self.cmdline_parser.rargs
                 for script in scripts:
                     mih.cmd_process_script(script, scriptargs=args)
+                    mih.commit()
             else:
                 mih.interactive_shell()
         finally:
