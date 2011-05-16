@@ -141,7 +141,8 @@ class SimpleReqRewriter(URLRewriter):
 def build_rset(rql, rgxgroups=None, cachekey=None, setuser=False,
                vid=None, vtitle=None, form={}, **kwargs):
 
-    def do_build_rset(inputurl, uri, req, schema):
+    def do_build_rset(inputurl, uri, req, schema, kwargs=kwargs):
+        kwargs = kwargs.copy()
         if rgxgroups:
             match = inputurl.match(uri)
             for arg, group in rgxgroups:
