@@ -39,7 +39,7 @@ class DataFeedTC(CubicWebTC):
 
         class AParser(datafeed.DataFeedParser):
             __regid__ = 'testparser'
-            def process(self, url):
+            def process(self, url, raise_on_error=False):
                 entity = self.extid2entity('http://www.cubicweb.org/', 'Card',
                                   item={'title': u'cubicweb.org',
                                         'content': u'the cw web site'})
