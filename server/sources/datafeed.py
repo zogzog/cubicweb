@@ -138,7 +138,7 @@ class DataFeedSource(AbstractSource):
         self.info('pulling data for source %s', self.uri)
         for url in self.urls:
             try:
-                if parser.process(url):
+                if parser.process(url, raise_on_error):
                     error = True
             except IOError, exc:
                 if raise_on_error:
@@ -247,7 +247,7 @@ class DataFeedParser(AppObject):
 
 class DataFeedXMLParser(DataFeedParser):
 
-    def process(self, url, partialcommit=True):
+    def process(self, url, raise_on_error=False, partialcommit=True):
         """IDataFeedParser main entry point"""
         error = False
         for args in self.parse(url):
@@ -259,6 +259,8 @@ class DataFeedXMLParser(DataFeedParser):
                     self._cw.commit()
                     self._cw.set_pool()
             except ValidationError, exc:
+                if raise_on_error:
+                    raise
                 if partialcommit:
                     self.source.error('Skipping %s because of validation error %s' % (args, exc))
                     self._cw.rollback()
