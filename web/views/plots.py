@@ -134,6 +134,7 @@ class PlotView(baseviews.AnyRsetView):
     title = _('generic plot')
     __select__ = multi_columns_rset() & all_columns_are_numbers()
     timemode = False
+    paginable = False
 
     def call(self, width=500, height=400):
         # prepare data
@@ -181,6 +182,7 @@ else:
     class PieChartView(baseviews.AnyRsetView):
         __regid__ = 'piechart'
         pieclass = Pie
+        paginable = False
 
         __select__ = multi_columns_rset() & second_column_is_number()
 
