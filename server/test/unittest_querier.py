@@ -311,6 +311,14 @@ class QuerierTC(BaseQuerierTC):
         seid = self.execute('State X WHERE X name "deactivated"')[0][0]
         rset = self.execute('Any U,L,S GROUPBY U,L,S WHERE X in_state S, U login L, S eid %s' % seid)
 
+    def test_select_groupby_funccall(self):
+        rset = self.execute('Any YEAR(CD), COUNT(X) GROUPBY YEAR(CD) WHERE X is CWUser, X creation_date CD')
+        self.assertListEqual(rset.rows, [[date.today().year, 2]])
+
+    def test_select_groupby_colnumber(self):
+        rset = self.execute('Any YEAR(CD), COUNT(X) GROUPBY 1 WHERE X is CWUser, X creation_date CD')
+        self.assertListEqual(rset.rows, [[date.today().year, 2]])
+
     def test_select_complex_orderby(self):
         rset1 = self.execute('Any N ORDERBY N WHERE X name N')
         self.assertEqual(sorted(rset1.rows), rset1.rows)
