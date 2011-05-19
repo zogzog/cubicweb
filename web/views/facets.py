@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -203,6 +203,11 @@ class HasTextFacet(facet.AbstractFacet):
     rtype = 'has_text'
     role = 'subject'
     order = 0
+
+    @property
+    def wdgclass(self):
+        return facet.FacetStringWidget
+
     @property
     def title(self):
         return self._cw._('has_text')
@@ -213,7 +218,7 @@ class HasTextFacet(facet.AbstractFacet):
         default implentation expects a .vocabulary method on the facet and
         return a combobox displaying this vocabulary
         """
-        return facet.FacetStringWidget(self)
+        return self.wdgclass(self)
 
     def add_rql_restrictions(self):
         """add restriction for this facet into the rql syntax tree"""

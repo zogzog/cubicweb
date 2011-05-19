@@ -121,3 +121,13 @@ div#facetLoading {
 div.facetTitleSelected {
   background: url("required.png") no-repeat right top;
 }
+
+table.filter {
+  background-color: #EBE8D9;
+  border: dotted grey 1px;
+}
+
+div.facet {
+ padding: none;
+ margin: .3em!important;
+}

@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -405,6 +405,10 @@ class AbstractFacet(AppObject):
         """
         raise NotImplementedError
 
+    @property
+    def wdgclass(self):
+        raise NotImplementedError
+
 
 class VocabularyFacet(AbstractFacet):
     """This abstract class extend :class:`AbstractFacet` to use the
@@ -418,6 +422,10 @@ class VocabularyFacet(AbstractFacet):
     """
     needs_update = True
 
+    @property
+    def wdgclass(self):
+        return FacetVocabularyWidget
+
     def get_widget(self):
         """Return the widget instance to use to display this facet.
 
@@ -427,7 +435,7 @@ class VocabularyFacet(AbstractFacet):
         vocab = self.vocabulary()
         if len(vocab) <= 1:
             return None
-        wdg = FacetVocabularyWidget(self)
+        wdg = self.wdgclass(self)
         selected = frozenset(typed_eid(eid) for eid in self._cw.list_form_param(self.__regid__))
         for label, value in vocab:
             if value is None:
@@ -1051,6 +1059,9 @@ class FacetVocabularyWidget(HTMLWidget):
         self.facet = facet
         self.items = []
 
+    def height(self):
+        return len(self.items) + 1
+
     def append(self, item):
         self.items.append(item)
 
@@ -1083,6 +1094,9 @@ class FacetStringWidget(HTMLWidget):
     def __init__(self, facet):
         self.facet = facet
         self.value = None
+
+    def height(self):
+        return 2
 
     def _render(self):
         title = xml_escape(self.facet.title)
@@ -1123,6 +1137,9 @@ class FacetRangeWidget(HTMLWidget):
         self.facet = facet
         self.minvalue = minvalue
         self.maxvalue = maxvalue
+
+    def height(self):
+        return 3
 
     def _render(self):
         facet = self.facet
@@ -1213,6 +1230,9 @@ class CheckBoxFacetWidget(HTMLWidget):
         self.facet = facet
         self.value = value
         self.selected = selected
+
+    def height(self):
+        return 1
 
     def _render(self):
         title = xml_escape(self.facet.title)
