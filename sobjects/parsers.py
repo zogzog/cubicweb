@@ -202,6 +202,8 @@ class CWEntityXMLParser(datafeed.DataFeedXMLParser):
     def process_item(self, item, rels):
         entity = self.extid2entity(str(item.pop('cwuri')),  item.pop('cwtype'),
                                    item=item)
+        if entity is None:
+            return None
         if not (self.created_during_pull(entity) or self.updated_during_pull(entity)):
             self.notify_updated(entity)
             item.pop('eid')
@@ -233,17 +235,18 @@ class CWEntityXMLParser(datafeed.DataFeedXMLParser):
         Takes no option.
         """
         assert not any(x[1] for x in rules), "'copy' action takes no option"
-        ttypes = set([x[0] for x in rules])
-        others = [item for item in others if item['cwtype'] in ttypes]
+        ttypes = frozenset([x[0] for x in rules])
         eids = [] # local eids
-        if not others:
-            self._clear_relation(entity, rtype, role, ttypes)
-            return
         for item in others:
-            item, _rels = self._complete_item(item)
-            other_entity = self.process_item(item, [])
-            eids.append(other_entity.eid)
-        self._set_relation(entity, rtype, role, eids)
+            if item['cwtype'] in ttypes:
+                item, _rels = self._complete_item(item)
+                other_entity = self.process_item(item, [])
+                if other_entity is not None:
+                    eids.append(other_entity.eid)
+        if eids:
+            self._set_relation(entity, rtype, role, eids)
+        else:
+            self._clear_relation(entity, rtype, role, ttypes)
 
     def related_link(self, entity, rtype, role, others, rules):
         """implementation of 'link' action
@@ -297,10 +300,10 @@ class CWEntityXMLParser(datafeed.DataFeedXMLParser):
             else:
                 self.source.error('can not find %s entity with attributes %s',
                                   item['cwtype'], kwargs)
-        if not eids:
-            self._clear_relation(entity, rtype, role, (ttype,))
-        else:
+        if eids:
             self._set_relation(entity, rtype, role, eids)
+        else:
+            self._clear_relation(entity, rtype, role, (ttype,))
 
     def _complete_item(self, item, add_relations=True):
         itemurl = item['cwuri'] + '?vid=xml'
@@ -321,18 +324,16 @@ class CWEntityXMLParser(datafeed.DataFeedXMLParser):
                              {'x': entity.eid})
 
     def _set_relation(self, entity, rtype, role, eids):
+        assert eids
         rqlbase = rtype_role_rql(rtype, role)
-        rql = 'DELETE %s' % rqlbase
-        if eids:
-            eidstr = ','.join(str(eid) for eid in eids)
-            rql += ', NOT Y eid IN (%s)' % eidstr
+        eidstr = ','.join(str(eid) for eid in eids)
+        self._cw.execute('DELETE %s, NOT Y eid IN (%s)' % (rqlbase, eidstr),
+                         {'x': entity.eid})
+        if role == 'object':
+            rql = 'SET %s, Y eid IN (%s), NOT Y %s X' % (rqlbase, eidstr, rtype)
+        else:
+            rql = 'SET %s, Y eid IN (%s), NOT X %s Y' % (rqlbase, eidstr, rtype)
         self._cw.execute(rql, {'x': entity.eid})
-        if eids:
-            if role == 'object':
-                rql = 'SET %s, Y eid IN (%s), NOT Y %s X' % (rqlbase, eidstr, rtype)
-            else:
-                rql = 'SET %s, Y eid IN (%s), NOT X %s Y' % (rqlbase, eidstr, rtype)
-            self._cw.execute(rql, {'x': entity.eid})
 
 def registration_callback(vreg):
     vreg.register_all(globals().values(), __name__)

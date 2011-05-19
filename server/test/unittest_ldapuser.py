@@ -378,6 +378,23 @@ class LDAPUserSourceTC(CubicWebTC):
         rset = cu.execute('Any F WHERE X has_text "iaminguestsgrouponly", X firstname F')
         self.assertEqual(rset.rows, [[None]])
 
+    def test_copy_to_system_source(self):
+        eid = self.sexecute('CWUser X WHERE X login %(login)s', {'login': SYT})[0][0]
+        self.sexecute('SET X cw_source S WHERE X eid %(x)s, S name "system"', {'x': eid})
+        self.commit()
+        rset = self.sexecute('CWUser X WHERE X login %(login)s', {'login': SYT})
+        self.assertEqual(len(rset), 1)
+        e = rset.get_entity(0, 0)
+        self.assertEqual(e.eid, eid)
+        self.assertEqual(e.cw_metainformation(), {'source': {'type': u'native', 'uri': u'system'},
+                                                  'type': 'CWUser',
+                                                  'extid': None})
+        self.assertEqual(e.cw_source[0].name, 'system')
+        source = self.repo.sources_by_uri['ldapuser']
+        source.synchronize()
+        rset = self.sexecute('CWUser X WHERE X login %(login)s', {'login': SYT})
+        self.assertEqual(len(rset), 1)
+
     def test_nonregr1(self):
         self.sexecute('Any X,AA ORDERBY AA DESC WHERE E eid %(x)s, E owned_by X, '
                      'X modification_date AA',

@@ -234,8 +234,10 @@ repository (default to 5 minutes).',
         etype, dexturi, dextid = cnx.describe(extid)
         if dexturi == 'system' or not (
             dexturi in self.repo.sources_by_uri or self._skip_externals):
-            return self.repo.extid2eid(self, str(extid), etype, session), True
-        if dexturi in self.repo.sources_by_uri:
+            eid = self.repo.extid2eid(self, str(extid), etype, session)
+            if eid > 0:
+                return eid, True
+        elif dexturi in self.repo.sources_by_uri:
             source = self.repo.sources_by_uri[dexturi]
             cnx = session.cnxset.connection(source.uri)
             eid = source.local_eid(cnx, dextid, session)[0]

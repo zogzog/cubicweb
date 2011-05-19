@@ -160,7 +160,7 @@ class Repository(object):
         self.sources_by_uri = {'system': self.system_source}
         # querier helper, need to be created after sources initialization
         self.querier = querier.QuerierHelper(self, self.schema)
-        # cache eid -> type / source
+        # cache eid -> (type, source, extid)
         self._type_source_cache = {}
         # cache (extid, source uri) -> eid
         self._extid_cache = {}
@@ -1032,7 +1032,28 @@ class Repository(object):
 
     def extid2eid(self, source, extid, etype, session=None, insert=True,
                   sourceparams=None):
-        """get eid from a local id. An eid is attributed if no record is found"""
+        """Return eid from a local id. If the eid is a negative integer, that
+        means the entity is known but has been copied back to the system source
+        hence should be ignored.
+
+        If no record is found, ie the entity is not known yet:
+
+        1. an eid is attributed
+
+        2. the source's :meth:`before_entity_insertion` method is called to
+           build the entity instance
+
+        3. unless source's :attr:`should_call_hooks` tell otherwise,
+          'before_add_entity' hooks are called
+
+        4. record is added into the system source
+
+        5. the source's :meth:`after_entity_insertion` method is called to
+           complete building of the entity instance
+
+        6. unless source's :attr:`should_call_hooks` tell otherwise,
+          'before_add_entity' hooks are called
+        """
         uri = 'system' if source.copy_based_source else source.uri
         cachekey = (extid, uri)
         try:

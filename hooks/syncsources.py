@@ -30,6 +30,8 @@ class SourceHook(hook.Hook):
     category = 'cw.sources'
 
 
+# repo sources synchronization #################################################
+
 class SourceAddedOp(hook.Operation):
     def postcommit_event(self):
         self.session.repo.add_source(self.entity)
@@ -100,8 +102,10 @@ class SourceHostConfigUpdatedHook(SourceHook):
                 pass
 
 
-# source mapping synchronization. Expect cw_for_source/cw_schema are immutable
-# relations (i.e. can't change from a source or schema to another).
+# source mapping synchronization ###############################################
+#
+# Expect cw_for_source/cw_schema are immutable relations (i.e. can't change from
+# a source or schema to another).
 
 class SourceMappingDeleteHook(SourceHook):
     """check cw_for_source and cw_schema are immutable relations
@@ -161,3 +165,4 @@ class SourceMappingDeleteHook(SourceHook):
         SourceMappingChangedOp.get_instance(self._cw).add_data(
             (self._cw.entity_from_eid(self.eidfrom),
              self._cw.entity_from_eid(self.eidto)) )
+

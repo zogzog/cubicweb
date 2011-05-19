@@ -27,7 +27,7 @@ from cookielib import CookieJar
 
 from lxml import etree
 
-from cubicweb import RegistryNotFound, ObjectNotFound, ValidationError
+from cubicweb import RegistryNotFound, ObjectNotFound, ValidationError, UnknownEid
 from cubicweb.server.sources import AbstractSource
 from cubicweb.appobject import AppObject
 
@@ -218,9 +218,23 @@ class DataFeedParser(AppObject):
         raise ValidationError(schemacfg.eid, {None: msg})
 
     def extid2entity(self, uri, etype, **sourceparams):
+        """return an entity for the given uri. May return None if it should be
+        skipped
+        """
         sourceparams['parser'] = self
         eid = self.source.extid2eid(str(uri), etype, self._cw,
                                     sourceparams=sourceparams)
+        if eid < 0:
+            # entity has been moved away from its original source
+            #
+            # Don't give etype to entity_from_eid so we get UnknownEid if the
+            # entity has been removed
+            try:
+                entity = self._cw.entity_from_eid(-eid)
+            except UnknownEid:
+                return None
+            self.notify_updated(entity) # avoid later update from the source's data
+            return entity
         if self.sourceuris is not None:
             self.sourceuris.pop(str(uri), None)
         return self._cw.entity_from_eid(eid, etype)

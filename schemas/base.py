@@ -307,8 +307,8 @@ class cw_host_config_of(RelationDefinition):
 class cw_source(RelationDefinition):
     __permissions__ = {
         'read':   ('managers', 'users', 'guests'),
-        'add':    (),
-        'delete': (),
+        'add':    ('managers',),
+        'delete': ('managers',),
         }
     subject = '*'
     object = 'CWSource'
