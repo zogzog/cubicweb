@@ -30,7 +30,7 @@ from warnings import warn
 from logilab.mtconverter import xml_escape
 from logilab.common.graph import escape
 
-from cubicweb import Unauthorized, view
+from cubicweb import Unauthorized
 from cubicweb.selectors import (has_related_entities, one_line_rset,
                                 relation_possible, match_form_params,
                                 score_entity, is_instance, adaptable)
@@ -90,7 +90,7 @@ class ChangeStateForm(forms.CompositeEntityForm):
                     fwdgs.Button(stdmsgs.BUTTON_CANCEL, cwaction='cancel')]
 
 
-class ChangeStateFormView(form.FormViewMixIn, view.EntityView):
+class ChangeStateFormView(form.FormViewMixIn, EntityView):
     __regid__ = 'statuschange'
     title = _('status change')
     __select__ = (one_line_rset()
@@ -183,6 +183,15 @@ class WFHistoryVComponent(component.EntityCtxComponent):
             self.entity.view('wfhistory', w=w, title=None)
 
 
+class InContextWithStateView(EntityView):
+    """display incontext view for an entity as well as its current state"""
+    __regid__ = 'incontext-state'
+    __select__ = adaptable('IWorkflowable')
+    def entity_call(self, entity):
+        iwf = entity.cw_adapt_to('IWorkflowable')
+        self.w(u'%s [%s]' % (entity.view('incontext'), iwf.printable_state))
+
+
 # workflow actions #############################################################
 
 class WorkflowActions(action.Action):
@@ -242,7 +251,7 @@ class WorkflowPrimaryView(TabbedPrimaryView):
     default_tab = 'wf_tab_info'
 
 
-class CellView(view.EntityView):
+class CellView(EntityView):
     __regid__ = 'cell'
     __select__ = is_instance('TrInfo')
 
@@ -250,7 +259,7 @@ class CellView(view.EntityView):
         self.w(self.cw_rset.get_entity(row, col).view('reledit', rtype='comment'))
 
 
-class StateInContextView(view.EntityView):
+class StateInContextView(EntityView):
     """convenience trick, State's incontext view should not be clickable"""
     __regid__ = 'incontext'
     __select__ = is_instance('State')
@@ -285,7 +294,7 @@ class WorkflowTabTextView(PrimaryTab):
                    )
 
 
-class TransitionSecurityTextView(view.EntityView):
+class TransitionSecurityTextView(EntityView):
     __regid__ = 'trsecurity'
     __select__ = is_instance('Transition')
 
@@ -303,7 +312,7 @@ class TransitionSecurityTextView(view.EntityView):
                      u'<br/>'.join((e.dc_title() for e
                                 in entity.condition))))
 
-class TransitionAllowedTextView(view.EntityView):
+class TransitionAllowedTextView(EntityView):
     __regid__ = 'trfromstates'
     __select__ = is_instance('Transition')
 
@@ -434,7 +443,7 @@ class WorkflowGraphView(DotGraphView):
         return WorkflowDotPropsHandler(self._cw)
 
 
-class TmpPngView(TmpFileViewMixin, view.EntityView):
+class TmpPngView(TmpFileViewMixin, EntityView):
     __regid__ = 'tmppng'
     __select__ = match_form_params('tmpfile')
     content_type = 'image/png'
