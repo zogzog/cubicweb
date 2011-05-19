@@ -101,7 +101,7 @@ def reindex_entities(schema, session, withpb=True, etypes=None):
     # deactivate modification_date hook since we don't want them
     # to be updated due to the reindexation
     repo = session.repo
-    cursor = session.pool['system']
+    cursor = session.cnxset['system']
     dbhelper = session.repo.system_source.dbhelper
     if not dbhelper.has_fti_table(cursor):
         print 'no text index table'
@@ -356,7 +356,7 @@ def check(repo, cnx, checks, reindex, fix, withpb=True):
     using given user and password to locally connect to the repository
     (no running cubicweb server needed)
     """
-    session = repo._get_session(cnx.sessionid, setpool=True)
+    session = repo._get_session(cnx.sessionid, setcnxset=True)
     # yo, launch checks
     if checks:
         eids_cache = {}
@@ -372,6 +372,6 @@ def check(repo, cnx, checks, reindex, fix, withpb=True):
             print 'WARNING: Diagnostic run, nothing has been corrected'
     if reindex:
         cnx.rollback()
-        session.set_pool()
+        session.set_cnxset()
         reindex_entities(repo.schema, session, withpb=withpb)
         cnx.commit()

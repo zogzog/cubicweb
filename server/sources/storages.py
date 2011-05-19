@@ -199,7 +199,7 @@ class BytesFileSystemStorage(Storage):
         return fspath
 
     def current_fs_path(self, entity, attr):
-        sysource = entity._cw.pool.source('system')
+        sysource = entity._cw.cnxset.source('system')
         cu = sysource.doexec(entity._cw,
                              'SELECT cw_%s FROM cw_%s WHERE cw_eid=%s' % (
                              attr, entity.__regid__, entity.eid))

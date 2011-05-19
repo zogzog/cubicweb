@@ -74,9 +74,9 @@ class SessionTC(CubicWebTC):
             self.assertEqual(session.disabled_hook_categories, set())
             self.assertEqual(session.enabled_hook_categories, set(('metadata',)))
         # leaving context manager with no transaction running should reset the
-        # transaction local storage (and associated pool)
+        # transaction local storage (and associated cnxset)
         self.assertEqual(session._tx_data, {})
-        self.assertEqual(session.pool, None)
+        self.assertEqual(session.cnxset, None)
 
 if __name__ == '__main__':
     unittest_main()

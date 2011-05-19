@@ -137,7 +137,7 @@ class LDAPUserSourceTC(CubicWebTC):
 
     def test_authenticate(self):
         source = self.repo.sources_by_uri['ldapuser']
-        self.session.set_pool()
+        self.session.set_cnxset()
         self.assertRaises(AuthenticationError,
                           source.authenticate, self.session, 'toto', 'toto')
 
@@ -265,7 +265,7 @@ class LDAPUserSourceTC(CubicWebTC):
         self.failUnless(self.sexecute('Any X,Y WHERE X login %(syt)s, Y login "cochon"', {'syt': SYT}))
 
     def test_exists1(self):
-        self.session.set_pool()
+        self.session.set_cnxset()
         self.session.create_entity('CWGroup', name=u'bougloup1')
         self.session.create_entity('CWGroup', name=u'bougloup2')
         self.sexecute('SET U in_group G WHERE G name ~= "bougloup%", U login "admin"')
@@ -465,8 +465,8 @@ class RQL2LDAPFilterTC(RQLGeneratorTC):
         self._schema = repo.schema
         super(RQL2LDAPFilterTC, self).setUp()
         ldapsource = repo.sources[-1]
-        self.pool = repo._get_pool()
-        session = mock_object(pool=self.pool)
+        self.cnxset = repo._get_cnxset()
+        session = mock_object(cnxset=self.cnxset)
         self.o = RQL2LDAPFilter(ldapsource, session)
         self.ldapclasses = ''.join(ldapsource.base_filters)
 

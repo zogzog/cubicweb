@@ -237,7 +237,7 @@ repository (default to 5 minutes).',
             return self.repo.extid2eid(self, str(extid), etype, session), True
         if dexturi in self.repo.sources_by_uri:
             source = self.repo.sources_by_uri[dexturi]
-            cnx = session.pool.connection(source.uri)
+            cnx = session.cnxset.connection(source.uri)
             eid = source.local_eid(cnx, dextid, session)[0]
             return eid, False
         return None, None
@@ -322,7 +322,7 @@ repository (default to 5 minutes).',
         else a new connection
         """
         # we have to transfer manually thread ownership. This can be done safely
-        # since the pool to which belong the connection is affected to one
+        # since the connections set holding the connection is affected to one
         # session/thread and can't be called simultaneously
         try:
             cnx._repo._transferThread(threading.currentThread())
@@ -359,7 +359,7 @@ repository (default to 5 minutes).',
         if not args is None:
             args = args.copy()
         # get cached cursor anyway
-        cu = session.pool[self.uri]
+        cu = session.cnxset[self.uri]
         if cu is None:
             # this is a ConnectionWrapper instance
             msg = session._("can't connect to source %s, some data may be missing")
@@ -390,7 +390,7 @@ repository (default to 5 minutes).',
                     or uidtype(union, i, etype, args)):
                     needtranslation.append(i)
             if needtranslation:
-                cnx = session.pool.connection(self.uri)
+                cnx = session.cnxset.connection(self.uri)
                 for rowindex in xrange(rset.rowcount - 1, -1, -1):
                     row = rows[rowindex]
                     localrow = False
@@ -434,21 +434,21 @@ repository (default to 5 minutes).',
     def update_entity(self, session, entity):
         """update an entity in the source"""
         relations, kwargs = self._entity_relations_and_kwargs(session, entity)
-        cu = session.pool[self.uri]
+        cu = session.cnxset[self.uri]
         cu.execute('SET %s WHERE X eid %%(x)s' % ','.join(relations), kwargs)
         self._query_cache.clear()
         entity.cw_clear_all_caches()
 
     def delete_entity(self, session, entity):
         """delete an entity from the source"""
-        cu = session.pool[self.uri]
+        cu = session.cnxset[self.uri]
         cu.execute('DELETE %s X WHERE X eid %%(x)s' % entity.__regid__,
                    {'x': self.eid2extid(entity.eid, session)})
         self._query_cache.clear()
 
     def add_relation(self, session, subject, rtype, object):
         """add a relation to the source"""
-        cu = session.pool[self.uri]
+        cu = session.cnxset[self.uri]
         cu.execute('SET X %s Y WHERE X eid %%(x)s, Y eid %%(y)s' % rtype,
                    {'x': self.eid2extid(subject, session),
                     'y': self.eid2extid(object, session)})
@@ -458,7 +458,7 @@ repository (default to 5 minutes).',
 
     def delete_relation(self, session, subject, rtype, object):
         """delete a relation from the source"""
-        cu = session.pool[self.uri]
+        cu = session.cnxset[self.uri]
         cu.execute('DELETE X %s Y WHERE X eid %%(x)s, Y eid %%(y)s' % rtype,
                    {'x': self.eid2extid(subject, session),
                     'y': self.eid2extid(object, session)})

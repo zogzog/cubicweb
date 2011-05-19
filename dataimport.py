@@ -445,14 +445,14 @@ class RQLObjectStore(ObjectStore):
         ObjectStore.__init__(self)
         if session is None:
             sys.exit('please provide a session of run this script with cubicweb-ctl shell and pass cnx as session')
-        if not hasattr(session, 'set_pool'):
+        if not hasattr(session, 'set_cnxset'):
             # connection
             cnx = session
             session = session.request()
-            session.set_pool = lambda : None
+            session.set_cnxset = lambda : None
             commit = commit or cnx.commit
         else:
-            session.set_pool()
+            session.set_cnxset()
         self.session = session
         self._commit = commit or session.commit
 
@@ -462,7 +462,7 @@ class RQLObjectStore(ObjectStore):
 
     def commit(self):
         txuuid = self._commit()
-        self.session.set_pool()
+        self.session.set_cnxset()
         return txuuid
 
     def rql(self, *args):

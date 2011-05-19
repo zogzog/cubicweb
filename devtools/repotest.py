@@ -205,7 +205,7 @@ class BaseQuerierTC(TestCase):
         self.ueid = self.session.user.eid
         assert self.ueid != -1
         self.repo._type_source_cache = {} # clear cache
-        self.pool = self.session.set_pool()
+        self.cnxset = self.session.set_cnxset()
         self.maxeid = self.get_max_eid()
         do_monkey_patch()
         self._dumb_sessions = []
@@ -213,7 +213,7 @@ class BaseQuerierTC(TestCase):
     def get_max_eid(self):
         return self.session.execute('Any MAX(X)')[0][0]
     def cleanup(self):
-        self.session.set_pool()
+        self.session.set_cnxset()
         self.session.execute('DELETE Any X WHERE X eid > %s' % self.maxeid)
 
     def tearDown(self):
@@ -225,7 +225,7 @@ class BaseQuerierTC(TestCase):
         for session in self._dumb_sessions:
             session.rollback()
             session.close()
-        self.repo._free_pool(self.pool)
+        self.repo._free_cnxset(self.cnxset)
         assert self.session.user.eid != -1
 
     def set_debug(self, debug):
@@ -263,7 +263,7 @@ class BaseQuerierTC(TestCase):
         u = self.repo._build_user(self.session, self.session.user.eid)
         u._groups = set(groups)
         s = Session(u, self.repo)
-        s._threaddata.pool = self.pool
+        s._threaddata.cnxset = self.cnxset
         s._threaddata.ctx_count = 1
         # register session to ensure it gets closed
         self._dumb_sessions.append(s)
@@ -274,7 +274,7 @@ class BaseQuerierTC(TestCase):
 
     def commit(self):
         self.session.commit()
-        self.session.set_pool()
+        self.session.set_cnxset()
 
 
 class BasePlannerTC(BaseQuerierTC):
@@ -288,7 +288,7 @@ class BasePlannerTC(BaseQuerierTC):
         # XXX source_defs
         self.o = self.repo.querier
         self.session = self.repo._sessions.values()[0]
-        self.pool = self.session.set_pool()
+        self.cnxset = self.session.set_cnxset()
         self.schema = self.o.schema
         self.sources = self.o._repo.sources
         self.system = self.sources[-1]
@@ -312,7 +312,7 @@ class BasePlannerTC(BaseQuerierTC):
             del self.repo.sources_by_uri[source.uri]
         undo_monkey_patch()
         for session in self._dumb_sessions:
-            session._threaddata.pool = None
+            session._threaddata.cnxset = None
             session.close()
 
     def _prepare_plan(self, rql, kwargs=None):

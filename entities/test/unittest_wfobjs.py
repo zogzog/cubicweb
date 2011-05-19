@@ -557,7 +557,7 @@ class WorkflowHooksTC(CubicWebTC):
     def setUp(self):
         CubicWebTC.setUp(self)
         self.wf = self.session.user.cw_adapt_to('IWorkflowable').current_workflow
-        self.session.set_pool()
+        self.session.set_cnxset()
         self.s_activated = self.wf.state_by_name('activated').eid
         self.s_deactivated = self.wf.state_by_name('deactivated').eid
         self.s_dummy = self.wf.add_state(u'dummy').eid
@@ -629,13 +629,13 @@ class WorkflowHooksTC(CubicWebTC):
         iworkflowable = user.cw_adapt_to('IWorkflowable')
         iworkflowable.fire_transition('deactivate')
         cnx.commit()
-        session.set_pool()
+        session.set_cnxset()
         with self.assertRaises(ValidationError) as cm:
             iworkflowable.fire_transition('deactivate')
         self.assertEqual(self._cleanup_msg(cm.exception.errors['by_transition-subject']),
                                             u"transition isn't allowed from")
         cnx.rollback()
-        session.set_pool()
+        session.set_cnxset()
         # get back now
         iworkflowable.fire_transition('activate')
         cnx.commit()

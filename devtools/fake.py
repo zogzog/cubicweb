@@ -146,7 +146,7 @@ class FakeSession(RequestSessionBase):
         if vreg is None:
             vreg = CubicWebVRegistry(FakeConfig(), initlog=False)
         self.vreg = vreg
-        self.pool = FakePool()
+        self.cnxset = FakeConnectionsSet()
         self.user = user or FakeUser()
         self.is_internal_session = False
         self.transaction_data = {}
@@ -210,6 +210,6 @@ class FakeSource(object):
         self.uri = uri
 
 
-class FakePool(object):
+class FakeConnectionsSet(object):
     def source(self, uri):
         return FakeSource(uri)

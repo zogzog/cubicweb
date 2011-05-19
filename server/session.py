@@ -130,8 +130,76 @@ class TransactionData(object):
 
 
 class Session(RequestSessionBase):
-    """tie session id, user, connections pool and other session data all
-    together
+    """Repository usersession, tie a session id, user, connections set and
+    other session data all together.
+
+    About session storage / transactions
+    ------------------------------------
+
+    Here is a description of internal session attributes. Besides :attr:`data`
+    and :attr:`transaction_data`, you should not have to use attributes
+    described here but higher level APIs.
+
+      :attr:`data` is a dictionary containing shared data, used to communicate
+      extra information between the client and the repository
+
+      :attr:`_tx_data` is a dictionary of :class:`TransactionData` instance, one
+      for each running transaction. The key is the transaction id. By default
+      the transaction id is the thread name but it can be otherwise (per dbapi
+      cursor for instance, or per thread name *from another process*).
+
+      :attr:`__threaddata` is a thread local storage whose `txdata` attribute
+      refers to the proper instance of :class:`TransactionData` according to the
+      transaction.
+
+      :attr:`_threads_in_transaction` is a set of (thread, connections set)
+      referencing threads that currently hold a connections set for the session.
+
+    You should not have to use neither :attr:`_txdata` nor :attr:`__threaddata`,
+    simply access transaction data transparently through the :attr:`_threaddata`
+    property. Also, you usually don't have to access it directly since current
+    transaction's data may be accessed/modified through properties / methods:
+
+      :attr:`transaction_data`, similarly to :attr:`data`, is a dictionary
+      containing some shared data that should be cleared at the end of the
+      transaction. Hooks and operations may put arbitrary data in there, and
+      this may also be used as a communication channel between the client and
+      the repository.
+
+      :attr:`cnxset`, the connections set to use to execute queries on sources.
+      During a transaction, the connection set may be freed so that is may be
+      used by another session as long as no writing is done. This means we can
+      have multiple sessions with a reasonably low connections set pool size.
+
+      :attr:`mode`, string telling the connections set handling mode, may be one
+      of 'read' (connections set may be freed), 'write' (some write was done in
+      the connections set, it can't be freed before end of the transaction),
+      'transaction' (we want to keep the connections set during all the
+      transaction, with or without writing)
+
+      :attr:`pending_operations`, ordered list of operations to be processed on
+      commit/rollback
+
+      :attr:`commit_state`, describing the transaction commit state, may be one
+      of None (not yet committing), 'precommit' (calling precommit event on
+      operations), 'postcommit' (calling postcommit event on operations),
+      'uncommitable' (some :exc:`ValidationError` or :exc:`Unauthorized` error
+      has been raised during the transaction and so it must be rollbacked).
+
+      :attr:`read_security` and :attr:`write_security`, boolean flags telling if
+      read/write security is currently activated.
+
+      :attr:`hooks_mode`, may be either `HOOKS_ALLOW_ALL` or `HOOKS_DENY_ALL`.
+
+      :attr:`enabled_hook_categories`, when :attr:`hooks_mode` is
+      `HOOKS_DENY_ALL`, this set contains hooks categories that are enabled.
+
+      :attr:`disabled_hook_categories`, when :attr:`hooks_mode` is
+      `HOOKS_ALLOW_ALL`, this set contains hooks categories that are disabled.
+
+
+      :attr:`running_dbapi_query`, boolean flag telling if the executing query
+      is coming from a dbapi connection or is a query from within the repository
     """
     is_internal_session = False
 
@@ -190,8 +258,8 @@ class Session(RequestSessionBase):
         """return a fake request/session using specified user"""
         session = Session(user, self.repo)
         threaddata = session._threaddata
-        threaddata.pool = self.pool
-        # we attributed a pool, need to update ctx_count else it will be freed
+        threaddata.cnxset = self.cnxset
+        # we attributed a connections set, need to update ctx_count else it will be freed
         # while undesired
         threaddata.ctx_count = 1
         # share pending_operations, else operation added in the hi-jacked
@@ -335,14 +403,14 @@ class Session(RequestSessionBase):
         """return a sql cursor on the system database"""
         if sql.split(None, 1)[0].upper() != 'SELECT':
             self.mode = 'write'
-        source = self.pool.source('system')
+        source = self.cnxset.source('system')
         try:
             return source.doexec(self, sql, args, rollback=rollback_on_failure)
         except (source.OperationalError, source.InterfaceError):
             if not rollback_on_failure:
                 raise
             source.warning("trying to reconnect")
-            self.pool.reconnect(source)
+            self.cnxset.reconnect(source)
             return source.doexec(self, sql, args, rollback=rollback_on_failure)
 
     def set_language(self, language):
@@ -606,19 +674,19 @@ class Session(RequestSessionBase):
 
     # connection management ###################################################
 
-    def keep_pool_mode(self, mode):
-        """set pool_mode, e.g. how the session will keep its pool:
+    def keep_cnxset_mode(self, mode):
+        """set `mode`, e.g. how the session will keep its connections set:
 
-        * if mode == 'write', the pool is freed after each ready query, but kept
-          until the transaction's end (eg commit or rollback) when a write query
-          is detected (eg INSERT/SET/DELETE queries)
+        * if mode == 'write', the connections set is freed after each ready
+          query, but kept until the transaction's end (eg commit or rollback)
+          when a write query is detected (eg INSERT/SET/DELETE queries)
 
-        * if mode == 'transaction', the pool is only freed after the
+        * if mode == 'transaction', the connections set is only freed after the
           transaction's end
 
-        notice that a repository has a limited set of pools, and a session has to
-        wait for a free pool to run any rql query (unless it already has a pool
-        set).
+        notice that a repository has a limited set of connections sets, and a
+        session has to wait for a free connections set to run any rql query
+        (unless it already has one set).
         """
         assert mode in ('transaction', 'write')
         if mode == 'transaction':
@@ -641,57 +709,57 @@ class Session(RequestSessionBase):
     commit_state = property(get_commit_state, set_commit_state)
 
     @property
-    def pool(self):
-        """connections pool, set according to transaction mode for each query"""
+    def cnxset(self):
+        """connections set, set according to transaction mode for each query"""
         if self._closed:
-            self.reset_pool(True)
-            raise Exception('try to access pool on a closed session')
-        return getattr(self._threaddata, 'pool', None)
+            self.free_cnxset(True)
+            raise Exception('try to access connections set on a closed session')
+        return getattr(self._threaddata, 'cnxset', None)
 
-    def set_pool(self):
-        """the session need a pool to execute some queries"""
+    def set_cnxset(self):
+        """the session need a connections set to execute some queries"""
         with self._closed_lock:
             if self._closed:
-                self.reset_pool(True)
-                raise Exception('try to set pool on a closed session')
-            if self.pool is None:
-                # get pool first to avoid race-condition
-                self._threaddata.pool = pool = self.repo._get_pool()
+                self.free_cnxset(True)
+                raise Exception('try to set connections set on a closed session')
+            if self.cnxset is None:
+                # get connections set first to avoid race-condition
+                self._threaddata.cnxset = cnxset = self.repo._get_cnxset()
                 self._threaddata.ctx_count += 1
                 try:
-                    pool.pool_set()
+                    cnxset.cnxset_set()
                 except:
-                    self._threaddata.pool = None
-                    self.repo._free_pool(pool)
+                    self._threaddata.cnxset = None
+                    self.repo._free_cnxset(cnxset)
                     raise
                 self._threads_in_transaction.add(
-                    (threading.currentThread(), pool) )
-            return self._threaddata.pool
+                    (threading.currentThread(), cnxset) )
+            return self._threaddata.cnxset
 
-    def _free_thread_pool(self, thread, pool, force_close=False):
+    def _free_thread_cnxset(self, thread, cnxset, force_close=False):
         try:
-            self._threads_in_transaction.remove( (thread, pool) )
+            self._threads_in_transaction.remove( (thread, cnxset) )
         except KeyError:
-            # race condition on pool freeing (freed by commit or rollback vs
+            # race condition on cnxset freeing (freed by commit or rollback vs
             # close)
             pass
         else:
             if force_close:
-                pool.reconnect()
+                cnxset.reconnect()
             else:
-                pool.pool_reset()
-            # free pool once everything is done to avoid race-condition
-            self.repo._free_pool(pool)
+                cnxset.cnxset_freed()
+            # free cnxset once everything is done to avoid race-condition
+            self.repo._free_cnxset(cnxset)
 
-    def reset_pool(self, ignoremode=False):
-        """the session is no longer using its pool, at least for some time"""
-        # pool may be none if no operation has been done since last commit
+    def free_cnxset(self, ignoremode=False):
+        """the session is no longer using its connections set, at least for some time"""
+        # cnxset may be none if no operation has been done since last commit
         # or rollback
-        pool = getattr(self._threaddata, 'pool', None)
-        if pool is not None and (ignoremode or self.mode == 'read'):
+        cnxset = getattr(self._threaddata, 'cnxset', None)
+        if cnxset is not None and (ignoremode or self.mode == 'read'):
             # even in read mode, we must release the current transaction
-            self._free_thread_pool(threading.currentThread(), pool)
-            del self._threaddata.pool
+            self._free_thread_cnxset(threading.currentThread(), cnxset)
+            del self._threaddata.cnxset
             self._threaddata.ctx_count -= 1
 
     def _touch(self):
@@ -781,9 +849,9 @@ class Session(RequestSessionBase):
         rset.req = self
         return rset
 
-    def _clear_thread_data(self, reset_pool=True):
-        """remove everything from the thread local storage, except pool
-        which is explicitly removed by reset_pool, and mode which is set anyway
+    def _clear_thread_data(self, free_cnxset=True):
+        """remove everything from the thread local storage, except connections set
+        which is explicitly removed by free_cnxset, and mode which is set anyway
         by _touch
         """
         try:
@@ -791,8 +859,8 @@ class Session(RequestSessionBase):
         except AttributeError:
             pass
         else:
-            if reset_pool:
-                self.reset_pool()
+            if free_cnxset:
+                self.free_cnxset()
                 if txstore.ctx_count == 0:
                     self._clear_thread_storage(txstore)
                 else:
@@ -816,9 +884,13 @@ class Session(RequestSessionBase):
             except AttributeError:
                 continue
 
-    def commit(self, reset_pool=True):
+    def commit(self, free_cnxset=True, reset_pool=None):
         """commit the current session's transaction"""
-        if self.pool is None:
+        if reset_pool is not None:
+            warn('[3.13] use free_cnxset argument instead for reset_pool',
+                 DeprecationWarning, stacklevel=2)
+            free_cnxset = reset_pool
+        if self.cnxset is None:
             assert not self.pending_operations
             self._clear_thread_data()
             self._touch()
@@ -867,9 +939,9 @@ class Session(RequestSessionBase):
                     # XXX use slice notation since self.pending_operations is a
                     # read-only property.
                     self.pending_operations[:] = processed + self.pending_operations
-                    self.rollback(reset_pool)
+                    self.rollback(free_cnxset)
                     raise
-                self.pool.commit()
+                self.cnxset.commit()
                 self.commit_state = 'postcommit'
                 while self.pending_operations:
                     operation = self.pending_operations.pop(0)
@@ -883,15 +955,19 @@ class Session(RequestSessionBase):
                 return self.transaction_uuid(set=False)
         finally:
             self._touch()
-            if reset_pool:
-                self.reset_pool(ignoremode=True)
-            self._clear_thread_data(reset_pool)
+            if free_cnxset:
+                self.free_cnxset(ignoremode=True)
+            self._clear_thread_data(free_cnxset)
 
-    def rollback(self, reset_pool=True):
+    def rollback(self, free_cnxset=True, reset_pool=None):
         """rollback the current session's transaction"""
-        # don't use self.pool, rollback may be called with _closed == True
-        pool = getattr(self._threaddata, 'pool', None)
-        if pool is None:
+        if reset_pool is not None:
+            warn('[3.13] use free_cnxset argument instead for reset_pool',
+                 DeprecationWarning, stacklevel=2)
+            free_cnxset = reset_pool
+        # don't use self.cnxset, rollback may be called with _closed == True
+        cnxset = getattr(self._threaddata, 'cnxset', None)
+        if cnxset is None:
             self._clear_thread_data()
             self._touch()
             self.debug('rollback session %s done (no db activity)', self.id)
@@ -906,20 +982,20 @@ class Session(RequestSessionBase):
                     except:
                         self.critical('rollback error', exc_info=sys.exc_info())
                         continue
-                pool.rollback()
+                cnxset.rollback()
                 self.debug('rollback for session %s done', self.id)
         finally:
             self._touch()
-            if reset_pool:
-                self.reset_pool(ignoremode=True)
-            self._clear_thread_data(reset_pool)
+            if free_cnxset:
+                self.free_cnxset(ignoremode=True)
+            self._clear_thread_data(free_cnxset)
 
     def close(self):
-        """do not close pool on session close, since they are shared now"""
+        """do not close connections set on session close, since they are shared now"""
         with self._closed_lock:
             self._closed = True
         # copy since _threads_in_transaction maybe modified while waiting
-        for thread, pool in self._threads_in_transaction.copy():
+        for thread, cnxset in self._threads_in_transaction.copy():
             if thread is threading.currentThread():
                 continue
             self.info('waiting for thread %s', thread)
@@ -929,12 +1005,12 @@ class Session(RequestSessionBase):
             for i in xrange(10):
                 thread.join(1)
                 if not (thread.isAlive() and
-                        (thread, pool) in self._threads_in_transaction):
+                        (thread, cnxset) in self._threads_in_transaction):
                     break
             else:
                 self.error('thread %s still alive after 10 seconds, will close '
                            'session anyway', thread)
-                self._free_thread_pool(thread, pool, force_close=True)
+                self._free_thread_cnxset(thread, cnxset, force_close=True)
         self.rollback()
         del self.__threaddata
         del self._tx_data
@@ -970,8 +1046,7 @@ class Session(RequestSessionBase):
             return self._threaddata.pruned_hooks_cache
 
     def add_operation(self, operation, index=None):
-        """add an observer"""
-        assert self.commit_state != 'commit'
+        """add an operation"""
         if index is None:
             self.pending_operations.append(operation)
         else:
@@ -1078,6 +1153,19 @@ class Session(RequestSessionBase):
 
     # deprecated ###############################################################
 
+    @property
+    @deprecated("[3.13] use .cnxset attribute instead of .pool")
+    def pool(self):
+        return self.cnxset
+
+    @deprecated("[3.13] use .set_cnxset() method instead of .set_pool()")
+    def set_pool(self):
+        return self.set_cnxset()
+
+    @deprecated("[3.13] use .free_cnxset() method instead of .reset_pool()")
+    def reset_pool(self):
+        return self.free_cnxset()
+
     @deprecated("[3.7] execute is now unsafe by default in hooks/operation. You"
                 " can also control security with the security_enabled context "
                 "manager")
@@ -1143,12 +1231,12 @@ class InternalSession(Session):
         self.disable_hook_categories('integrity')
 
     @property
-    def pool(self):
-        """connections pool, set according to transaction mode for each query"""
+    def cnxset(self):
+        """connections set, set according to transaction mode for each query"""
         if self.repo.shutting_down:
-            self.reset_pool(True)
+            self.free_cnxset(True)
             raise Exception('repository is shutting down')
-        return getattr(self._threaddata, 'pool', None)
+        return getattr(self._threaddata, 'cnxset', None)
 
 
 class InternalManager(object):

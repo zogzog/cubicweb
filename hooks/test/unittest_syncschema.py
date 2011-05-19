@@ -36,9 +36,9 @@ class SchemaModificationHooksTC(CubicWebTC):
         self.__class__.schema_eids = schema_eids_idx(self.repo.schema)
 
     def index_exists(self, etype, attr, unique=False):
-        self.session.set_pool()
-        dbhelper = self.session.pool.source('system').dbhelper
-        sqlcursor = self.session.pool['system']
+        self.session.set_cnxset()
+        dbhelper = self.session.cnxset.source('system').dbhelper
+        sqlcursor = self.session.cnxset['system']
         return dbhelper.index_exists(sqlcursor, SQL_PREFIX + etype, SQL_PREFIX + attr, unique=unique)
 
     def _set_perms(self, eid):
@@ -57,9 +57,9 @@ class SchemaModificationHooksTC(CubicWebTC):
 
     def test_base(self):
         schema = self.repo.schema
-        self.session.set_pool()
-        dbhelper = self.session.pool.source('system').dbhelper
-        sqlcursor = self.session.pool['system']
+        self.session.set_cnxset()
+        dbhelper = self.session.cnxset.source('system').dbhelper
+        sqlcursor = self.session.cnxset['system']
         self.failIf(schema.has_entity('Societe2'))
         self.failIf(schema.has_entity('concerne2'))
         # schema should be update on insertion (after commit)
@@ -170,9 +170,9 @@ class SchemaModificationHooksTC(CubicWebTC):
     # schema modification hooks tests #########################################
 
     def test_uninline_relation(self):
-        self.session.set_pool()
-        dbhelper = self.session.pool.source('system').dbhelper
-        sqlcursor = self.session.pool['system']
+        self.session.set_cnxset()
+        dbhelper = self.session.cnxset.source('system').dbhelper
+        sqlcursor = self.session.cnxset['system']
         self.failUnless(self.schema['state_of'].inlined)
         try:
             self.execute('SET X inlined FALSE WHERE X name "state_of"')
@@ -195,9 +195,9 @@ class SchemaModificationHooksTC(CubicWebTC):
             self.assertEqual(len(rset), 2)
 
     def test_indexed_change(self):
-        self.session.set_pool()
-        dbhelper = self.session.pool.source('system').dbhelper
-        sqlcursor = self.session.pool['system']
+        self.session.set_cnxset()
+        dbhelper = self.session.cnxset.source('system').dbhelper
+        sqlcursor = self.session.cnxset['system']
         try:
             self.execute('SET X indexed FALSE WHERE X relation_type R, R name "name"')
             self.failUnless(self.schema['name'].rdef('Workflow', 'String').indexed)
@@ -214,9 +214,9 @@ class SchemaModificationHooksTC(CubicWebTC):
             self.failUnless(self.index_exists('Workflow', 'name'))
 
     def test_unique_change(self):
-        self.session.set_pool()
-        dbhelper = self.session.pool.source('system').dbhelper
-        sqlcursor = self.session.pool['system']
+        self.session.set_cnxset()
+        dbhelper = self.session.cnxset.source('system').dbhelper
+        sqlcursor = self.session.cnxset['system']
         try:
             self.execute('INSERT CWConstraint X: X cstrtype CT, DEF constrained_by X '
                          'WHERE CT name "UniqueConstraint", DEF relation_type RT, DEF from_entity E,'

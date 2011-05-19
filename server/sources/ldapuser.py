@@ -524,9 +524,9 @@ directory (default to once a day).',
         """make an ldap query"""
         self.debug('ldap search %s %s %s %s %s', self.uri, base, scope,
                    searchstr, list(attrs))
-        # XXX for now, we do not have connection pool support for LDAP, so
+        # XXX for now, we do not have connections set support for LDAP, so
         # this is always self._conn
-        cnx = session.pool.connection(self.uri).cnx
+        cnx = session.cnxset.connection(self.uri).cnx
         try:
             res = cnx.search_s(base, scope, searchstr, attrs)
         except ldap.PARTIAL_RESULTS:

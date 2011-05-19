@@ -230,23 +230,23 @@ class AbstractSource(object):
 
     def check_connection(self, cnx):
         """Check connection validity, return None if the connection is still
-        valid else a new connection (called when the pool using the given
-        connection is being attached to a session). Do nothing by default.
+        valid else a new connection (called when the connections set using the
+        given connection is being attached to a session). Do nothing by default.
         """
         pass
 
-    def close_pool_connections(self):
-        for pool in self.repo.pools:
-            pool._cursors.pop(self.uri, None)
-            pool.source_cnxs[self.uri][1].close()
+    def close_source_connections(self):
+        for cnxset in self.repo.cnxsets:
+            cnxset._cursors.pop(self.uri, None)
+            cnxset.source_cnxs[self.uri][1].close()
 
-    def open_pool_connections(self):
-        for pool in self.repo.pools:
-            pool.source_cnxs[self.uri] = (self, self.get_connection())
+    def open_source_connections(self):
+        for cnxset in self.repo.cnxsets:
+            cnxset.source_cnxs[self.uri] = (self, self.get_connection())
 
-    def pool_reset(self, cnx):
-        """the pool using the given connection is being reseted from its current
-        attached session
+    def cnxset_freed(self, cnx):
+        """the connections set holding the given connection is being reseted
+        from its current attached session.
 
         do nothing by default
         """
@@ -404,7 +404,7 @@ class AbstractSource(object):
         .executemany().
         """
         res = self.syntax_tree_search(session, union, args, varmap=varmap)
-        session.pool.source('system').manual_insert(res, table, session)
+        session.cnxset.source('system').manual_insert(res, table, session)
 
     # write modification api ###################################################
     # read-only sources don't have to implement methods below

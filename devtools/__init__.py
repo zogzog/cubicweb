@@ -93,7 +93,7 @@ def turn_repo_off(repo):
     """ Idea: this is less costly than a full re-creation of the repo object.
     off:
     * session are closed,
-    * pools are closed
+    * cnxsets are closed
     * system source is shutdown
     """
     if not repo._needs_refresh:
@@ -104,8 +104,8 @@ def turn_repo_off(repo):
                 repo.close(sessionid)
             except BadConnectionId: #this is strange ? thread issue ?
                 print 'XXX unknown session', sessionid
-        for pool in repo.pools:
-            pool.close(True)
+        for cnxset in repo.cnxsets:
+            cnxset.close(True)
         repo.system_source.shutdown()
         repo._needs_refresh = True
         repo._has_started = False
@@ -113,12 +113,12 @@ def turn_repo_off(repo):
 def turn_repo_on(repo):
     """Idea: this is less costly than a full re-creation of the repo object.
     on:
-    * pools are connected
+    * cnxsets are connected
     * cache are cleared
     """
     if repo._needs_refresh:
-        for pool in repo.pools:
-            pool.reconnect()
+        for cnxset in repo.cnxsets:
+            cnxset.reconnect()
         repo._type_source_cache = {}
         repo._extid_cache = {}
         repo.querier._rql_cache = {}
@@ -477,12 +477,11 @@ class TestDataBaseHandler(object):
             repo = self.get_repo(startup=True)
             cnx = self.get_cnx()
             session = repo._sessions[cnx.sessionid]
-            session.set_pool()
+            session.set_cnxset()
             _commit = session.commit
-            def always_pooled_commit():
-                _commit()
-                session.set_pool()
-            session.commit = always_pooled_commit
+            def keep_cnxset_commit():
+                _commit(free_cnxset=False)
+            session.commit = keep_cnxset_commit
             pre_setup_func(session, self.config)
             session.commit()
             cnx.close()

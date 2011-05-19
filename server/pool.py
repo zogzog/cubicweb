@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -15,19 +15,18 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""CubicWeb server connections pool : the repository has a limited number of
-connections pools, each of them dealing with a set of connections on each source
-used by the repository. A connections pools (`ConnectionsPool`) is an
-abstraction for a group of connection to each source.
+"""CubicWeb server connections set : the repository has a limited number of
+:class:`ConnectionsSet` (defined in configuration, default to 4). Each of them
+hold a connection for each source used by the repository.
 """
 
 __docformat__ = "restructuredtext en"
 
 import sys
 
-class ConnectionsPool(object):
+class ConnectionsSet(object):
     """handle connections on a set of sources, at some point associated to a
-    user session
+    :class:`Session`
     """
 
     def __init__(self, sources):
@@ -81,9 +80,9 @@ class ConnectionsPool(object):
                 self.reconnect(source)
 
     def close(self, i_know_what_i_do=False):
-        """close all connections in the pool"""
+        """close all connections in the set"""
         if i_know_what_i_do is not True: # unexpected closing safety belt
-            raise RuntimeError('pool shouldn\'t be closed')
+            raise RuntimeError('connections set shouldn\'t be closed')
         for cu in self._cursors.values():
             try:
                 cu.close()
@@ -97,17 +96,17 @@ class ConnectionsPool(object):
 
     # internals ###############################################################
 
-    def pool_set(self):
-        """pool is being set"""
+    def cnxset_set(self):
+        """connections set is being set on a session"""
         self.check_connections()
 
-    def pool_reset(self):
-        """pool is being reseted"""
+    def cnxset_freed(self):
+        """connections set is being freed from a session"""
         for source, cnx in self.source_cnxs.values():
-            source.pool_reset(cnx)
+            source.cnxset_freed(cnx)
 
     def sources(self):
-        """return the source objects handled by this pool"""
+        """return the source objects handled by this connections set"""
         # implementation details of flying insert requires the system source
         # first
         yield self.source_cnxs['system'][0]

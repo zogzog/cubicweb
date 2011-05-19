@@ -970,7 +970,7 @@ class RebuildFTICommand(Command):
         appid = args[0]
         config = ServerConfiguration.config_for(appid)
         repo, cnx = repo_cnx(config)
-        session = repo._get_session(cnx.sessionid, setpool=True)
+        session = repo._get_session(cnx.sessionid, setcnxset=True)
         reindex_entities(repo.schema, session)
         cnx.commit()
 

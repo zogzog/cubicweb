@@ -88,7 +88,7 @@ def deserialize_schema(schema, session):
     repo = session.repo
     dbhelper = repo.system_source.dbhelper
     # XXX bw compat (3.6 migration)
-    sqlcu = session.pool['system']
+    sqlcu = session.cnxset['system']
     sqlcu.execute("SELECT * FROM cw_CWRType WHERE cw_name='symetric'")
     if sqlcu.fetchall():
         sql = dbhelper.sql_rename_col('cw_CWRType', 'cw_symetric', 'cw_symmetric',

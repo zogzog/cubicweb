@@ -254,17 +254,17 @@ class DataFeedXMLParser(DataFeedParser):
             try:
                 self.process_item(*args)
                 if partialcommit:
-                    # commit+set_pool instead of commit(reset_pool=False) to let
-                    # other a chance to get our pool
+                    # commit+set_cnxset instead of commit(free_cnxset=False) to let
+                    # other a chance to get our connections set
                     self._cw.commit()
-                    self._cw.set_pool()
+                    self._cw.set_cnxset()
             except ValidationError, exc:
                 if raise_on_error:
                     raise
                 if partialcommit:
                     self.source.error('Skipping %s because of validation error %s' % (args, exc))
                     self._cw.rollback()
-                    self._cw.set_pool()
+                    self._cw.set_cnxset()
                     error = True
                 else:
                     raise

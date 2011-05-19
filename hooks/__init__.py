@@ -67,7 +67,7 @@ class ServerStartupHook(hook.Hook):
                     except Exception, exc:
                         session.exception('while trying to update feed %s', source)
                         session.rollback()
-                    session.set_pool()
+                    session.set_cnxset()
             finally:
                 session.close()
         self.repo.looping_task(60, update_feeds, self.repo)

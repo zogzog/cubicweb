@@ -130,7 +130,7 @@ the repository rather than the user running the command',
         ('connections-pool-size',
          {'type' : 'int',
           'default': 4,
-          'help': 'size of the connections pools. Each source supporting multiple \
+          'help': 'size of the connections pool. Each source supporting multiple \
 connections will have this number of opened connections.',
           'group': 'main', 'level': 3,
           }),
@@ -209,9 +209,9 @@ and if not set, it will be choosen randomly',
           }),
         ) + CubicWebConfiguration.options)
 
-    # should we open connections pools (eg connect to sources). This is usually
-    # necessary...
-    open_connections_pools = True
+    # should we init the connections pool (eg connect to sources). This is
+    # usually necessary...
+    init_cnxset_pool = True
 
     # read the schema from the database
     read_instance_schema = True

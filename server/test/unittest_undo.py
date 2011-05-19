@@ -232,7 +232,7 @@ class UndoableTransactionTC(CubicWebTC):
         self.failIf(self.execute('Any X WHERE X eid %(x)s', {'x': c.eid}))
         self.failIf(self.execute('Any X WHERE X eid %(x)s', {'x': p.eid}))
         self.failIf(self.execute('Any X,Y WHERE X fiche Y'))
-        self.session.set_pool()
+        self.session.set_cnxset()
         for eid in (p.eid, c.eid):
             self.failIf(session.system_sql(
                 'SELECT * FROM entities WHERE eid=%s' % eid).fetchall())

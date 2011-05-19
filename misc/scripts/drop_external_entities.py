@@ -3,7 +3,7 @@ source, = __args__
 
 sql("DELETE FROM entities WHERE type='Int'")
 
-ecnx = session.pool.connection(source)
+ecnx = session.cnxset.connection(source)
 for e in rql('Any X WHERE X cw_source S, S name %(name)s', {'name': source}).entities():
     meta = e.cw_metainformation()
     assert meta['source']['uri'] == source

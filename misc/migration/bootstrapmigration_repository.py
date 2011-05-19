@@ -49,7 +49,7 @@ if applcubicwebversion == (3, 6, 0) and cubicwebversion >= (3, 6, 0):
 elif applcubicwebversion < (3, 6, 0) and cubicwebversion >= (3, 6, 0):
     CSTRMAP = dict(rql('Any T, X WHERE X is CWConstraintType, X name T',
                        ask_confirm=False))
-    session.set_pool()
+    session.set_cnxset()
     permsdict = ss.deserialize_ertype_permissions(session)
 
     with hooks_control(session, session.HOOKS_ALLOW_ALL, 'integrity'):

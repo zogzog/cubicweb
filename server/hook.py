@@ -730,8 +730,8 @@ class Operation(object):
     operation. These keyword arguments will be accessible as attributes from the
     operation instance.
 
-    An operation is triggered on connections pool events related to
-    commit / rollback transations. Possible events are:
+    An operation is triggered on connections set events related to commit /
+    rollback transations. Possible events are:
 
     * `precommit`:
 
@@ -805,7 +805,7 @@ class Operation(object):
         getattr(self, event)()
 
     def precommit_event(self):
-        """the observed connections pool is preparing a commit"""
+        """the observed connections set is preparing a commit"""
 
     def revertprecommit_event(self):
         """an error went when pre-commiting this operation or a later one
@@ -815,14 +815,13 @@ class Operation(object):
         """
 
     def rollback_event(self):
-        """the observed connections pool has been rollbacked
+        """the observed connections set has been rollbacked
 
-        do nothing by default, the operation will just be removed from the pool
-        operation list
+        do nothing by default
         """
 
     def postcommit_event(self):
-        """the observed connections pool has committed"""
+        """the observed connections set has committed"""
 
     @property
     @deprecated('[3.6] use self.session.user')
@@ -1098,7 +1097,7 @@ class CleanupNewEidsCacheOp(DataOperationMixIn, SingleLastOperation):
     data_key = 'neweids'
 
     def rollback_event(self):
-        """the observed connections pool has been rollbacked,
+        """the observed connections set has been rollbacked,
         remove inserted eid from repository type/source cache
         """
         try:
@@ -1112,7 +1111,7 @@ class CleanupDeletedEidsCacheOp(DataOperationMixIn, SingleLastOperation):
     """
     data_key = 'pendingeids'
     def postcommit_event(self):
-        """the observed connections pool has been rollbacked,
+        """the observed connections set has been rollbacked,
         remove inserted eid from repository type/source cache
         """
         try:

@@ -102,19 +102,19 @@ repository.',
 
     def backup(self, backupfile, confirm):
         """method called to create a backup of the source's data"""
-        self.close_pool_connections()
+        self.close_source_connections()
         try:
             self.sqladapter.backup_to_file(backupfile, confirm)
         finally:
-            self.open_pool_connections()
+            self.open_source_connections()
 
     def restore(self, backupfile, confirm, drop):
         """method called to restore a backup of source's data"""
-        self.close_pool_connections()
+        self.close_source_connections()
         try:
             self.sqladapter.restore_from_file(backupfile, confirm, drop)
         finally:
-            self.open_pool_connections()
+            self.open_source_connections()
 
     @property
     def _sqlcnx(self):
@@ -174,15 +174,15 @@ repository.',
 
     def check_connection(self, cnx):
         """check connection validity, return None if the connection is still valid
-        else a new connection (called when the pool using the given connection is
+        else a new connection (called when the connections set holding the given connection is
         being attached to a session)
 
         always return the connection to reset eventually cached cursor
         """
         return cnx
 
-    def pool_reset(self, cnx):
-        """the pool using the given connection is being reseted from its current
+    def cnxset_freed(self, cnx):
+        """the connections set holding the given connection is being freed from its current
         attached session: release the connection lock if the connection wrapper
         has a connection set
         """
@@ -286,7 +286,7 @@ repository.',
         """
         if server.DEBUG:
             print 'exec', query, args
-        cursor = session.pool[self.uri]
+        cursor = session.cnxset[self.uri]
         try:
             # str(query) to avoid error if it's an unicode string
             cursor.execute(str(query), args)
@@ -294,7 +294,7 @@ repository.',
             self.critical("sql: %r\n args: %s\ndbms message: %r",
                           query, args, ex.args[0])
             try:
-                session.pool.connection(self.uri).rollback()
+                session.cnxset.connection(self.uri).rollback()
                 self.critical('transaction has been rollbacked')
             except:
                 pass

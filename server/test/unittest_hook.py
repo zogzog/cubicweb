@@ -201,10 +201,10 @@ class SystemHooksTC(CubicWebTC):
 #         self.assertEqual(self.called, [(1, 'concerne', 2), (3, 'concerne', 4)])
 
 
-#     def _before_relation_hook(self, pool, subject, r_type, object):
+#     def _before_relation_hook(self, cnxset, subject, r_type, object):
 #         self.called.append((subject, r_type, object))
 
-#     def _after_relation_hook(self, pool, subject, r_type, object):
+#     def _after_relation_hook(self, cnxset, subject, r_type, object):
 #         self.called.append((subject, r_type, object))
 
 
