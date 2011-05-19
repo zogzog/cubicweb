@@ -572,17 +572,30 @@ class IWorkflowableAdapter(WorkflowableMixIn, EntityAdapter):
             kwargs['to_state'] = self._cw.entity_from_eid(tseid)
         return self._cw.create_entity('TrInfo', **kwargs)
 
-    def fire_transition(self, tr, comment=None, commentformat=None):
-        """change the entity's state by firing transition of the given name in
-        entity's workflow
-        """
+    def _get_transition(self, tr):
         assert self.current_workflow
         if isinstance(tr, basestring):
             _tr = self.current_workflow.transition_by_name(tr)
             assert _tr is not None, 'not a %s transition: %s' % (
                 self.__regid__, tr)
             tr = _tr
+        return tr
+
+    def fire_transition(self, tr, comment=None, commentformat=None):
+        """change the entity's state by firing given transition (name or entity)
+        in entity's workflow
+        """
+        tr = self._get_transition(tr)
         return self._add_trinfo(comment, commentformat, tr.eid)
+
+    def fire_transition_if_possible(self, tr, comment=None, commentformat=None):
+        """change the entity's state by firing given transition (name or entity)
+        in entity's workflow if this transition is possible
+        """
+        tr = self._get_transition(tr)
+        if any(tr_ for tr_ in self.possible_transitions()
+               if tr_.eid == tr.eid):
+            self.fire_transition(tr)
 
     def change_state(self, statename, comment=None, commentformat=None, tr=None):
         """change the entity's state to the given state (name or entity) in
@@ -595,7 +608,7 @@ class IWorkflowableAdapter(WorkflowableMixIn, EntityAdapter):
             stateeid = statename.eid
         else:
             if not isinstance(statename, basestring):
-                warn('[3.5] give a state name', DeprecationWarning)
+                warn('[3.5] give a state name', DeprecationWarning, stacklevel=2)
                 state = self.current_workflow.state_by_eid(statename)
             else:
                 state = self.current_workflow.state_by_name(statename)
@@ -605,3 +618,20 @@ class IWorkflowableAdapter(WorkflowableMixIn, EntityAdapter):
             stateeid = state.eid
         # XXX try to find matching transition?
         return self._add_trinfo(comment, commentformat, tr and tr.eid, stateeid)
+
+    def set_initial_state(self, statename):
+        """set a newly created entity's state to the given state (name or entity)
+        in entity's workflow. This is useful if you don't want it to be the
+        workflow's initial state.
+        """
+        assert self.current_workflow
+        if hasattr(statename, 'eid'):
+            stateeid = statename.eid
+        else:
+            state = self.current_workflow.state_by_name(statename)
+            if state is None:
+                raise WorkflowException('not a %s state: %s' % (self.__regid__,
+                                                                statename))
+            stateeid = state.eid
+        self._cw.execute('SET X in_state S WHERE X eid %(x)s, S eid %(s)s',
+                         {'x': self.entity.eid, 's': stateeid})

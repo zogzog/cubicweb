@@ -458,6 +458,9 @@ class Session(RequestSessionBase):
 
     DEFAULT_SECURITY = object() # evaluated to true by design
 
+    def security_enabled(self, read=False, write=False):
+        return security_enabled(self, read=read, write=write)
+
     def init_security(self, read, write):
         if read is None:
             oldread = None
@@ -565,6 +568,11 @@ class Session(RequestSessionBase):
 
     HOOKS_ALLOW_ALL = object()
     HOOKS_DENY_ALL = object()
+
+    def allow_all_hooks_but(self, *categories):
+        return hooks_control(self, self.HOOKS_ALLOW_ALL, *categories)
+    def deny_all_hooks_but(self, *categories):
+        return hooks_control(self, self.HOOKS_DENY_ALL, *categories)
 
     @property
     def hooks_mode(self):
