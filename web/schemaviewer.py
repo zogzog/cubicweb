@@ -151,9 +151,9 @@ class SchemaViewer(object):
                     continue
                 label = rschema.type
                 if role == 'subject':
-                    cards = rschema.rproperty(eschema, oeschema, 'cardinality')
+                    cards = rschema.rdef(eschema, oeschema).cardinality
                 else:
-                    cards = rschema.rproperty(oeschema, eschema, 'cardinality')
+                    cards = rschema.rdef(oeschema, eschema).cardinality
                     cards = cards[::-1]
                 label = '%s %s %s' % (CARD_MAP[cards[1]], label,
                                       CARD_MAP[cards[0]])
