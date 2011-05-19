@@ -1023,6 +1023,9 @@ class SQLGenerator(object):
             # attribute relation
             if rtype == 'has_text':
                 sql = self._visit_has_text_relation(relation)
+            elif rtype == 'eid':
+                sql =  '%s%s' % (relation.children[0].variable.accept(self),
+                                 relation.children[1].accept(self))
             else:
                 rhs_vars = rhs.get_nodes(VariableRef)
                 if rhs_vars:

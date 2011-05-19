@@ -1435,6 +1435,13 @@ Any P1,B,E WHERE P1 identity P2 WITH
     def test_nonregr_final_norestr(self):
         self.assertRaises(BadRQLQuery, self.execute, 'Date X')
 
+    def test_nonregr_eid_cmp(self):
+        peid1 = self.execute("INSERT Personne X: X nom 'bidule'")[0][0]
+        peid2 = self.execute("INSERT Personne X: X nom 'bidule'")[0][0]
+        rset = self.execute('Any X,Y WHERE X is Personne, Y is Personne, X nom XD, Y nom XD, X eid Z, Y eid > Z')
+        self.assertEqual(rset.rows, [[peid1, peid2]])
+        rset = self.execute('Any X,Y WHERE X nom XD, Y nom XD, X eid Z, Y eid > Z')
+        self.assertEqual(rset.rows, [[peid1, peid2]])
 
 if __name__ == '__main__':
     unittest_main()
