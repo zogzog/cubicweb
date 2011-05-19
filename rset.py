@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -79,7 +79,7 @@ class ResultSet(object):
             rows = rows[:10] + ['...']
         if len(rows) > 1:
             # add a line break before first entity if more that one.
-            pattern = '<resultset %r (%s rows):\n%s>' 
+            pattern = '<resultset %r (%s rows):\n%s>'
         else:
             pattern = '<resultset %r (%s rows): %s>'
 
@@ -673,8 +673,12 @@ def attr_desc_iterator(select, selectidx, rootidx):
     root = rootselect.parent
     selectmain = select.selection[selectidx]
     for i, term in enumerate(rootselect.selection):
-        rootvar = _get_variable(term)
-        if rootvar is None:
+        try:
+            # don't use _get_variable here: if the term isn't a variable
+            # (function...), we don't want it to be used as an entity attribute
+            # or relation's value (XXX beside MAX/MIN trick?)
+            rootvar = term.variable
+        except AttributeError:
             continue
         if rootvar.name == rootmainvar.name:
             continue
