@@ -631,7 +631,12 @@ WHERE NOT (_P.cw_nom IS NULL)'''),
     ("Personne X,Y where X nom NX, Y nom NX, X eid XE, not Y eid XE",
      '''SELECT _X.cw_eid, _Y.cw_eid
 FROM cw_Personne AS _X, cw_Personne AS _Y
-WHERE _Y.cw_nom=_X.cw_nom AND NOT (_Y.cw_eid=_X.cw_eid)''')
+WHERE _Y.cw_nom=_X.cw_nom AND NOT (_Y.cw_eid=_X.cw_eid)'''),
+
+    ('Any X,Y WHERE X is Personne, Y is Personne, X nom XD, Y nom XD, X eid Z, Y eid > Z',
+     '''SELECT _X.cw_eid, _Y.cw_eid
+FROM cw_Personne AS _X, cw_Personne AS _Y
+WHERE _Y.cw_nom=_X.cw_nom AND _Y.cw_eid>_X.cw_eid'''),
     ]
 
 
