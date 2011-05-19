@@ -603,8 +603,8 @@ class UndoController(Controller):
         errors = self._cw.cnx.undo_transaction(txuuid)
         if not errors:
             self.redirect()
-        return self._cw._('some errors occurred:') + self.view('pyvalist',
-                                                               pyvalue=errors)
+        return self._cw._('some errors occurred:') + self._cw.view(
+            'pyvalist', pyvalue=errors)
 
     def redirect(self):
         req = self._cw

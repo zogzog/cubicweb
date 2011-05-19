@@ -123,7 +123,7 @@ class SparqlResultXmlView(AnyRsetView):
     def cell_binding(self, row, col, varname):
         celltype = self.cw_rset.description[row][col]
         if self._cw.vreg.schema.eschema(celltype).final:
-            cellcontent = self.view('cell', self.cw_rset, row=row, col=col)
+            cellcontent = self._cw.view('cell', self.cw_rset, row=row, col=col)
             return E.binding(E.literal(cellcontent,
                                        datatype=xmlschema(celltype)),
                              name=varname)

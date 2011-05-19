@@ -198,7 +198,7 @@ else:
             for rowidx, (_, value) in enumerate(self.cw_rset):
                 if value is not None:
                     vid = self._guess_vid(rowidx)
-                    label = '%s: %s' % (self.view(vid, self.cw_rset, row=rowidx, col=0),
+                    label = '%s: %s' % (self._cw.view(vid, self.cw_rset, row=rowidx, col=0),
                                         value)
                     labels.append(label.encode(self._cw.encoding))
                     values.append(value)
