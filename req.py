@@ -88,7 +88,7 @@ class RequestSessionBase(object):
         rset = ResultSet([('A',)]*size, '%s X' % etype,
                          description=[(etype,)]*size)
         def get_entity(row, col=0, etype=etype, req=self, rset=rset):
-            return req.vreg.etype_class(etype)(req, rset, row, col)
+            return req.vreg['etypes'].etype_class(etype)(req, rset, row, col)
         rset.get_entity = get_entity
         rset.req = self
         return rset
