@@ -1066,14 +1066,15 @@ class FacetVocabularyWidget(HTMLWidget):
         self.items.append(item)
 
     def _render(self):
+        w = self.w
         title = xml_escape(self.facet.title)
         facetid = xml_escape(self.facet.__regid__)
-        self.w(u'<div id="%s" class="facet">\n' % facetid)
-        self.w(u'<div class="facetTitle" cubicweb:facetName="%s">%s</div>\n' %
-               (xml_escape(facetid), title))
+        w(u'<div id="%s" class="facet">\n' % facetid)
+        w(u'<div class="facetTitle" cubicweb:facetName="%s">%s</div>\n' %
+          (xml_escape(facetid), title))
         if self.facet.support_and():
             _ = self.facet._cw._
-            self.w(u'''<select name="%s" class="radio facetOperator" title="%s">
+            w(u'''<select name="%s" class="radio facetOperator" title="%s">
   <option value="OR">%s</option>
   <option value="AND">%s</option>
 </select>''' % (facetid + '_andor', _('and/or between different values'),
@@ -1083,11 +1084,11 @@ class FacetVocabularyWidget(HTMLWidget):
             cssclass += ' hidden'
         if len(self.items) > 6:
             cssclass += ' overflowed'
-        self.w(u'<div class="%s">\n' % cssclass)
+        w(u'<div class="%s">\n' % cssclass)
         for item in self.items:
-            item.render(w=self.w)
-        self.w(u'</div>\n')
-        self.w(u'</div>\n')
+            item.render(w=w)
+        w(u'</div>\n')
+        w(u'</div>\n')
 
 
 class FacetStringWidget(HTMLWidget):
@@ -1099,13 +1100,14 @@ class FacetStringWidget(HTMLWidget):
         return 3
 
     def _render(self):
+        w = self.w
         title = xml_escape(self.facet.title)
         facetid = xml_escape(self.facet.__regid__)
-        self.w(u'<div id="%s" class="facet">\n' % facetid)
-        self.w(u'<div class="facetTitle" cubicweb:facetName="%s">%s</div>\n' %
+        w(u'<div id="%s" class="facet">\n' % facetid)
+        w(u'<div class="facetTitle" cubicweb:facetName="%s">%s</div>\n' %
                (facetid, title))
-        self.w(u'<input name="%s" type="text" value="%s" />\n' % (facetid, self.value or u''))
-        self.w(u'</div>\n')
+        w(u'<input name="%s" type="text" value="%s" />\n' % (facetid, self.value or u''))
+        w(u'</div>\n')
 
 
 class FacetRangeWidget(HTMLWidget):
@@ -1142,6 +1144,7 @@ class FacetRangeWidget(HTMLWidget):
         return 3
 
     def _render(self):
+        w = self.w
         facet = self.facet
         facet._cw.add_js('jquery.ui.js')
         facet._cw.add_css('jquery.ui.css')
@@ -1155,26 +1158,26 @@ class FacetRangeWidget(HTMLWidget):
             'formatter': self.formatter,
             })
         title = xml_escape(self.facet.title)
-        self.w(u'<div id="%s" class="facet">\n' % facetid)
-        self.w(u'<div class="facetTitle" cubicweb:facetName="%s">%s</div>\n' %
-               (facetid, title))
+        w(u'<div id="%s" class="facet">\n' % facetid)
+        w(u'<div class="facetTitle" cubicweb:facetName="%s">%s</div>\n' %
+          (facetid, title))
         cssclass = 'facetBody'
         if not self.facet.start_unfolded:
             cssclass += ' hidden'
-        self.w(u'<div class="%s">\n' % cssclass)
-        self.w(u'<span id="%s_inf"></span> - <span id="%s_sup"></span>'
-               % (sliderid, sliderid))
-        self.w(u'<input type="hidden" name="%s_inf" value="%s" />'
-               % (facetid, self.minvalue))
-        self.w(u'<input type="hidden" name="%s_sup" value="%s" />'
-               % (facetid, self.maxvalue))
-        self.w(u'<input type="hidden" name="min_%s_inf" value="%s" />'
-               % (facetid, self.minvalue))
-        self.w(u'<input type="hidden" name="max_%s_sup" value="%s" />'
-               % (facetid, self.maxvalue))
-        self.w(u'<div id="%s"></div>' % sliderid)
-        self.w(u'</div>\n')
-        self.w(u'</div>\n')
+        w(u'<div class="%s">\n' % cssclass)
+        w(u'<span id="%s_inf"></span> - <span id="%s_sup"></span>'
+          % (sliderid, sliderid))
+        w(u'<input type="hidden" name="%s_inf" value="%s" />'
+          % (facetid, self.minvalue))
+        w(u'<input type="hidden" name="%s_sup" value="%s" />'
+          % (facetid, self.maxvalue))
+        w(u'<input type="hidden" name="min_%s_inf" value="%s" />'
+          % (facetid, self.minvalue))
+        w(u'<input type="hidden" name="max_%s_sup" value="%s" />'
+          % (facetid, self.maxvalue))
+        w(u'<div id="%s"></div>' % sliderid)
+        w(u'</div>\n')
+        w(u'</div>\n')
 
 
 class DateFacetRangeWidget(FacetRangeWidget):
@@ -1206,6 +1209,7 @@ class FacetItem(HTMLWidget):
         self.selected = selected
 
     def _render(self):
+        w = self.w
         cssclass = 'facetValue facetCheckBox'
         if self.selected:
             cssclass += ' facetValueSelected'
@@ -1214,11 +1218,11 @@ class FacetItem(HTMLWidget):
         else:
             imgsrc = self._cw.data_url(self.unselected_img)
             imgalt = self._cw._('not selected')
-        self.w(u'<div class="%s" cubicweb:value="%s">\n'
-               % (cssclass, xml_escape(unicode(self.value))))
-        self.w(u'<img src="%s" alt="%s"/>&#160;' % (imgsrc, imgalt))
-        self.w(u'<a href="javascript: {}">%s</a>' % xml_escape(self.label))
-        self.w(u'</div>')
+        w(u'<div class="%s" cubicweb:value="%s">\n'
+          % (cssclass, xml_escape(unicode(self.value))))
+        w(u'<img src="%s" alt="%s"/>&#160;' % (imgsrc, imgalt))
+        w(u'<a href="javascript: {}">%s</a>' % xml_escape(self.label))
+        w(u'</div>')
 
 
 class CheckBoxFacetWidget(HTMLWidget):
@@ -1235,9 +1239,10 @@ class CheckBoxFacetWidget(HTMLWidget):
         return 2
 
     def _render(self):
+        w = self.w
         title = xml_escape(self.facet.title)
         facetid = xml_escape(self.facet.__regid__)
-        self.w(u'<div id="%s" class="facet">\n' % facetid)
+        w(u'<div id="%s" class="facet">\n' % facetid)
         cssclass = 'facetValue facetCheckBox'
         if self.selected:
             cssclass += ' facetValueSelected'
@@ -1246,14 +1251,14 @@ class CheckBoxFacetWidget(HTMLWidget):
         else:
             imgsrc = self._cw.data_url(self.unselected_img)
             imgalt = self._cw._('not selected')
-        self.w(u'<div class="%s" cubicweb:value="%s">\n'
-               % (cssclass, xml_escape(unicode(self.value))))
-        self.w(u'<div class="facetCheckBoxWidget">')
-        self.w(u'<img src="%s" alt="%s" cubicweb:unselimg="true" />&#160;' % (imgsrc, imgalt))
-        self.w(u'<label class="facetTitle" cubicweb:facetName="%s"><a href="javascript: {}">%s</a></label>' % (facetid, title))
-        self.w(u'</div>\n')
-        self.w(u'</div>\n')
-        self.w(u'</div>\n')
+        w(u'<div class="%s" cubicweb:value="%s">\n'
+          % (cssclass, xml_escape(unicode(self.value))))
+        w(u'<div class="facetCheckBoxWidget">')
+        w(u'<img src="%s" alt="%s" cubicweb:unselimg="true" />&#160;' % (imgsrc, imgalt))
+        w(u'<label class="facetTitle" cubicweb:facetName="%s"><a href="javascript: {}">%s</a></label>' % (facetid, title))
+        w(u'</div>\n')
+        w(u'</div>\n')
+        w(u'</div>\n')
 
 
 class FacetSeparator(HTMLWidget):
