@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -114,7 +114,7 @@ class ChangeStateFormView(form.FormViewMixIn, EntityView):
 
     def get_form(self, entity, transition, **kwargs):
         # XXX used to specify both rset/row/col and entity in case implements
-        # selector (and not implements) is used on custom form
+        # selector (and not is_instance) is used on custom form
         form = self._cw.vreg['forms'].select(
             'changestate', self._cw, entity=entity, transition=transition,
             redirect_path=self.redirectpath(entity), **kwargs)
