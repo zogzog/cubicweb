@@ -74,6 +74,8 @@ class TableView(AnyRsetView):
         w = self.w
         self._cw.add_css('cubicweb.facets.css')
         self._cw.add_js( ('cubicweb.ajax.js', 'cubicweb.facets.js'))
+        self._cw.html_headers.define_var('facetLoadingMsg',
+                                         self._cw._('facet-loading-msg'))
         # drop False / None values from vidargs
         vidargs = dict((k, v) for k, v in vidargs.iteritems() if v)
         w(u'<form method="post" cubicweb:facetargs="%s" action="">' %
