@@ -1424,7 +1424,7 @@ class ServerMigrationHelper(MigrationHelper):
         return self.cmd_create_entity(etype, *args, **kwargs).eid
 
     @contextmanager
-    def cmd_dropped_constraints(self, etype, attrname, cstrtype,
+    def cmd_dropped_constraints(self, etype, attrname, cstrtype=None,
                                 droprequired=False):
         """context manager to drop constraints temporarily on fs_schema
 
@@ -1444,8 +1444,9 @@ class ServerMigrationHelper(MigrationHelper):
         rdef = self.fs_schema.eschema(etype).rdef(attrname)
         original_constraints = rdef.constraints
         # remove constraints
-        rdef.constraints = [cstr for cstr in original_constraints
-                            if not (cstrtype and isinstance(cstr, cstrtype))]
+        if cstrtype:
+            rdef.constraints = [cstr for cstr in original_constraints
+                                if not (cstrtype and isinstance(cstr, cstrtype))]
         if droprequired:
             original_cardinality = rdef.cardinality
             rdef.cardinality = '?' + rdef.cardinality[1]
