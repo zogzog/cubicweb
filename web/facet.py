@@ -1096,7 +1096,7 @@ class FacetStringWidget(HTMLWidget):
         self.value = None
 
     def height(self):
-        return 2
+        return 3
 
     def _render(self):
         title = xml_escape(self.facet.title)
@@ -1232,7 +1232,7 @@ class CheckBoxFacetWidget(HTMLWidget):
         self.selected = selected
 
     def height(self):
-        return 1
+        return 2
 
     def _render(self):
         title = xml_escape(self.facet.title)

@@ -83,12 +83,18 @@ class TableView(AnyRsetView):
         w(u'<input type="hidden" name="fromformfilter" value="1" />')
         filter_hiddens(w, facets=','.join(wdg.facet.__regid__ for wdg in fwidgets),
                        baserql=baserql)
-        # sort by vocab size
+        self._build_form_table(fwidgets)
+
+    def _facet_widget_sort(self, fwidgets):
         fwidgets.sort(key=lambda x: x.height())
+
+    def _build_form_table(self, fwidgets):
+        # sort by widget height
+        w = self.w
+        self._facet_widget_sort(fwidgets)
         w(u'<table class="filter">\n')
         widget_queue = []
         queue_size = 0
-        widget_qty = len(fwidgets)
         w(u'<tr>\n')
         for wdg in fwidgets:
             height = wdg.height()
