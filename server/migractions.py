@@ -1516,13 +1516,13 @@ class ServerMigrationHelper(MigrationHelper):
         rschema = self.repo.schema.rschema(attr)
         oldtype = rschema.objects(etype)[0]
         rdefeid = rschema.rproperty(etype, oldtype, 'eid')
-        sql = ("UPDATE CWAttribute "
-               "SET to_entity=(SELECT eid FROM CWEType WHERE name='%s')"
-               "WHERE eid=%s") % (newtype, rdefeid)
+        sql = ("UPDATE cw_CWAttribute "
+               "SET cw_to_entity=(SELECT cw_eid FROM cw_CWEType WHERE cw_name='%s')"
+               "WHERE cw_eid=%s") % (newtype, rdefeid)
         self.sqlexec(sql, ask_confirm=False)
         dbhelper = self.repo.system_source.dbhelper
         sqltype = dbhelper.TYPE_MAPPING[newtype]
-        sql = 'ALTER TABLE %s ALTER COLUMN %s TYPE %s' % (etype, attr, sqltype)
+        sql = 'ALTER TABLE cw_%s ALTER COLUMN cw_%s TYPE %s' % (etype, attr, sqltype)
         self.sqlexec(sql, ask_confirm=False)
         if commit:
             self.commit()
