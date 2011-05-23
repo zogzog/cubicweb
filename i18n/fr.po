@@ -3511,7 +3511,7 @@ msgstr ""
 
 #, python-format
 msgid ""
-"relation %s is supported but none if its definitions matches supported "
+"relation %s is supported but none of its definitions matches supported "
 "entities"
 msgstr ""
 "la relation %s est supportée mais aucune de ses définitions ne correspondent "
