@@ -169,7 +169,7 @@ class UndoableTransactionTC(CubicWebTC):
                           ['CWUser'])
         self.assertEqual([et.name for et in toto.is_instance_of],
                           ['CWUser'])
-        # undoing shouldn't be visble in undoable transaction, and the undoed
+        # undoing shouldn't be visble in undoable transaction, and the undone
         # transaction should be removed
         txs = self.cnx.undoable_transactions()
         self.assertEqual(len(txs), 2)

@@ -4076,7 +4076,7 @@ msgctxt "TrInfo"
 msgid "tr_count"
 msgstr "n° de transition"
 
-msgid "transaction undoed"
+msgid "transaction undone"
 msgstr "transaction annulées"
 
 #, python-format

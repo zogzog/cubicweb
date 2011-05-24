@@ -4025,7 +4025,7 @@ msgctxt "TrInfo"
 msgid "tr_count"
 msgstr ""
 
-msgid "transaction undoed"
+msgid "transaction undone"
 msgstr "Transaktion rückgängig gemacht"
 
 #, python-format
