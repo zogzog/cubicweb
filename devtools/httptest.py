@@ -145,7 +145,7 @@ class CubicWebServerTC(CubicWebTC):
         if passwd is None:
             passwd = user
         self.login(user)
-        response = self.web_get("?__login=%s&__password=%s" %
+        response = self.web_get("login?__login=%s&__password=%s" %
                                 (user, passwd))
         assert response.status == httplib.SEE_OTHER, response.status
         self._ident_cookie = response.getheader('Set-Cookie')
