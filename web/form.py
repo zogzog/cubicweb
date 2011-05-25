@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -112,7 +112,12 @@ class Form(AppObject):
                     if value:
                         self.add_hidden(param, value)
         if submitmsg is not None:
-            self.add_hidden(u'__message', submitmsg)
+            self.set_message(submitmsg)
+
+    def set_message(self, submitmsg):
+        """sets a submitmsg if exists, using _cwmsgid mechanism """
+        cwmsgid = self._cw.set_redirect_message(submitmsg)
+        self.add_hidden(u'_cwmsgid', cwmsgid)
 
     @property
     def root_form(self):

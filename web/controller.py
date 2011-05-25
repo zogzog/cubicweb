@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -114,7 +114,7 @@ class Controller(AppObject):
                           [recipient], body, subject)
         if not self._cw.vreg.config.sendmails([(msg, [recipient])]):
             msg = self._cw._('could not connect to the SMTP server')
-            url = self._cw.build_url(__message=msg)
+            url = self._cw.build_url(__message=msgid)
             raise Redirect(url)
 
     def reset(self):
@@ -123,8 +123,10 @@ class Controller(AppObject):
         """
         newparams = {}
         # sets message if needed
-        if self._cw.message:
-            newparams['_cwmsgid'] = self._cw.set_redirect_message(self._cw.message)
+        # XXX - don't call .message twice since it pops the id
+        msg = self._cw.message
+        if msg:
+            newparams['_cwmsgid'] = self._cw.set_redirect_message(msg)
         if self._cw.form.has_key('__action_apply'):
             self._return_to_edition_view(newparams)
         if self._cw.form.has_key('__action_cancel'):

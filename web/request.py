@@ -214,6 +214,12 @@ class CubicWebRequestBase(DBAPIRequest):
             if param == '_cwmsgid':
                 self.set_message_id(val)
             elif param == '__message':
+                warn('[3.13] __message in request parameter is deprecated (may '
+                     'only be given to .build_url). Seeing this message usualy '
+                     'means your application hold some <form> where you should '
+                     'replace use of __message hidden input by form.set_message, '
+                     'so new _cwmsgid mechanism is properly used',
+                     DeprecationWarning)
                 self.set_message(val)
             else:
                 self.form[param] = val
@@ -264,7 +270,7 @@ class CubicWebRequestBase(DBAPIRequest):
     @property
     def message(self):
         try:
-            return self.session.data.pop(self._msgid, '')
+            return self.session.data.pop(self._msgid, u'')
         except AttributeError:
             try:
                 return self._msg
@@ -283,6 +289,7 @@ class CubicWebRequestBase(DBAPIRequest):
         return make_uid()
 
     def set_redirect_message(self, msg):
+        # TODO - this should probably be merged with append_to_redirect_message
         assert isinstance(msg, unicode)
         msgid = self.redirect_message_id()
         self.session.data[msgid] = msg
@@ -292,7 +299,7 @@ class CubicWebRequestBase(DBAPIRequest):
         msgid = self.redirect_message_id()
         currentmsg = self.session.data.get(msgid)
         if currentmsg is not None:
-            currentmsg = '%s %s' % (currentmsg, msg)
+            currentmsg = u'%s %s' % (currentmsg, msg)
         else:
             currentmsg = msg
         self.session.data[msgid] = currentmsg
@@ -623,6 +630,16 @@ class CubicWebRequestBase(DBAPIRequest):
         return "javascript: %s()" % cbname
 
     # urls/path management ####################################################
+
+    def build_url(self, *args, **kwargs):
+        """return an absolute URL using params dictionary key/values as URL
+        parameters. Values are automatically URL quoted, and the
+        publishing method to use may be specified or will be guessed.
+        """
+        if '__message' in kwargs:
+            msg = kwargs.pop('__message')
+            kwargs['_cwmsgid'] = self.set_redirect_message(msg)
+        return super(CubicWebRequestBase, self).build_url(*args, **kwargs)
 
     def url(self, includeparams=True):
         """return currently accessed url"""

@@ -102,7 +102,7 @@ class LogoutController(Controller):
         msg = self._cw._('you have been logged out')
         # force base_url so on dual http/https configuration, we generate an url
         # on the http version of the site
-        return self._cw.build_url('view', vid='index', __message=msg,
+        return self._cw.build_url('view', vid='loggedout',
                                   base_url=self._cw.vreg.config['base-url'])
 
 
