@@ -58,7 +58,7 @@ class FakeRequest(CubicWebRequestBase):
         if not (args or 'vreg' in kwargs):
             kwargs['vreg'] = CubicWebVRegistry(FakeConfig(), initlog=False)
         kwargs['https'] = False
-        self._url = kwargs.pop('url', 'view?rql=Blop&vid=blop')
+        self._url = kwargs.pop('url', None) or 'view?rql=Blop&vid=blop'
         super(FakeRequest, self).__init__(*args, **kwargs)
         self._session_data = {}
         self._headers_in = Headers()

@@ -611,9 +611,9 @@ class CubicWebTC(TestCase):
         return publisher
 
     requestcls = fake.FakeRequest
-    def request(self, rollbackfirst=False, **kwargs):
+    def request(self, rollbackfirst=False, url=None, **kwargs):
         """return a web ui request"""
-        req = self.requestcls(self.vreg, form=kwargs)
+        req = self.requestcls(self.vreg, url=url, form=kwargs)
         if rollbackfirst:
             self.websession.cnx.rollback()
         req.set_session(self.websession)
@@ -702,7 +702,7 @@ class CubicWebTC(TestCase):
 
     def init_authentication(self, authmode, anonuser=None):
         self.set_auth_mode(authmode, anonuser)
-        req = self.request()
+        req = self.request(url='login')
         origsession = req.session
         req.session = req.cnx = None
         del req.execute # get back to class implementation
@@ -729,7 +729,8 @@ class CubicWebTC(TestCase):
         self.assertIsInstance(req.session, dbapi.DBAPISession)
         self.assertEqual(req.session.cnx, None)
         self.assertIsInstance(req.cnx, (dbapi._NeedAuthAccessMock, NoneType))
-        self.assertEqual(len(self.open_sessions), nbsessions)
+        # + 1 since we should still have session without connection set
+        self.assertEqual(len(self.open_sessions), nbsessions + 1)
         clear_cache(req, 'get_authorization')
 
     # content validation #######################################################
