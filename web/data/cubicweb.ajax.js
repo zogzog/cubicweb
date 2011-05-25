@@ -22,6 +22,9 @@
  *
  * dummy ultra minimalist implementation of deferred for jQuery
  */
+
+cw.ajax = new Namespace('cw.ajax');
+
 function Deferred() {
     this.__init__(this);
 }
@@ -86,40 +89,64 @@ jQuery.extend(Deferred.prototype, {
 
 var JSON_BASE_URL = baseuri() + 'json?';
 
-/**
- * returns true if `url` is a mod_concat-like url
- * (e.g. http://..../data??resource1.js,resource2.js)
- */
-function _modconcatLikeUrl(url) {
-    var base = baseuri();
-    if (!base.endswith('/')) {
-        base += '/';
-    }
-    var modconcat_rgx = new RegExp('(' + base + 'data/([a-z0-9]+/)?)\\?\\?(.+)');
-    return modconcat_rgx.exec(url);
-}
 
-/**
- * decomposes a mod_concat-like url into its corresponding list of
- * resources' urls
- *
- * >>> _listResources('http://foo.com/data/??a.js,b.js,c.js')
- * ['http://foo.com/data/a.js', 'http://foo.com/data/b.js', 'http://foo.com/data/c.js']
- */
-function _listResources(src) {
-    var resources = [];
-    var groups = _modconcatLikeUrl(src);
-    if (groups == null) {
-        resources.push(src);
-    } else {
-        var dataurl = groups[1];
-        $.each(cw.utils.lastOf(groups).split(','),
-               function() {
-                   resources.push(dataurl + this);
-               });
+jQuery.extend(cw.ajax, {
+    /* variant of jquery evalScript with cache: true in ajax call */
+    _evalscript: function ( i, elem ) {
+       if ( elem.src ) {
+           jQuery.ajax({
+               url: elem.src,
+               async: false,
+               cache: true,
+               dataType: "script"
+           });
+       } else {
+           jQuery.globalEval( elem.text || elem.textContent || elem.innerHTML || "" );
+       }
+       if ( elem.parentNode ) {
+           elem.parentNode.removeChild( elem );
+       }
+    },
+
+    evalscripts: function ( scripts ) {
+        if ( scripts.length ) {
+            jQuery.each(scripts, cw.ajax._evalscript);
+        }
+    },
+
+    /**
+     * returns true if `url` is a mod_concat-like url
+     * (e.g. http://..../data??resource1.js,resource2.js)
+     */
+    _modconcatLikeUrl: function(url) {
+        var base = baseuri();
+        if (!base.endswith('/')) { base += '/'; }
+        var modconcat_rgx = new RegExp('(' + base + 'data/([a-z0-9]+/)?)\\?\\?(.+)');
+        return modconcat_rgx.exec(url);
+    },
+
+    /**
+     * decomposes a mod_concat-like url into its corresponding list of
+     * resources' urls
+     * >>> _listResources('http://foo.com/data/??a.js,b.js,c.js')
+     * ['http://foo.com/data/a.js', 'http://foo.com/data/b.js', 'http://foo.com/data/c.js']
+     */
+    _listResources: function(src) {
+        var resources = [];
+        var groups = cw.ajax._modconcatLikeUrl(src);
+        if (groups == null) {
+            resources.push(src);
+        } else {
+            var dataurl = groups[1];
+            $.each(cw.utils.lastOf(groups).split(','),
+                 function() {
+                     resources.push(dataurl + this);
+                 }
+            );
+        }
+        return resources;
     }
-    return resources;
-}
+});
 
 //============= utility function handling remote calls responses. ==============//
 function _loadAjaxHtmlHead($node, $head, tag, srcattr) {
@@ -129,31 +156,47 @@ function _loadAjaxHtmlHead($node, $head, tag, srcattr) {
         var loaded = cw['loaded_'+srcattr];
         jQuery('head ' + jqtagfilter).each(function(i) {
             // tab1.push.apply(tab1, tab2) <=> tab1 += tab2 (python-wise)
-            loaded.push.apply(loaded, _listResources(this.getAttribute(srcattr)));
+            loaded.push.apply(loaded, cw.ajax._listResources(this.getAttribute(srcattr)));
         });
     } else {
         var loaded = cw['loaded_'+srcattr];
     }
     $node.find(tag).each(function(i) {
-        var srcnode = this;
-        var url = srcnode.getAttribute(srcattr);
+        var $srcnode = jQuery(this);
+        var url = $srcnode.attr(srcattr);
         if (url) {
-            $.each(_listResources(url), function() {
-                var resource = '' + this; // implicit object->string cast
-                if ($.inArray(resource, loaded) == -1) {
-                    // take care to <script> tags: jQuery append method script nodes
-                    // don't appears in the DOM (See comments on
-                    // http://api.jquery.com/append/), which cause undesired
-                    // duplicated load in our case. After trying to use bare DOM api
-                    // to avoid this, we switched to handle a list of already loaded
-                    // stuff ourselves, since bare DOM api gives bug with the
-                    // server-response event, since we loose control on when the
-                    // script is loaded (jQuery load it immediatly).
-                    loaded.push(resource);
-                }
+            /* special handling of <script> tags: script nodes appended by jquery
+             * use uncached ajax calls and do not appear in the DOM
+             * (See comments in response to Syt on // http://api.jquery.com/append/),
+             * which cause undesired duplicated load in our case. We now handle
+             * a list of already loaded resources, since bare DOM api gives bugs with the
+             * server-response event, and we lose control on when the
+             * script is loaded (jQuery loads it immediately). */
+            var resources = cw.ajax._listResources(url);
+            var missingResources = $.grep(resources, function(resource) {
+                return $.inArray(resource, loaded) == -1;
             });
+            loaded.push.apply(loaded, missingResources);
+            if (missingResources.length == 1) {
+                // only one resource missing: build a node with a single resource url
+                // (maybe the browser has it in cache already)
+                $srcnode.attr(srcattr, missingResources[0]);
+            } else if (missingResources.length > 1) {
+                // several resources missing: build a node with a concatenated
+                // resources url
+                var dataurl = cw.ajax._modconcatLikeUrl(url)[1];
+                var missing_path = $.map(missingResources, function(resource) {
+                    return resource.substring(dataurl.length);
+                });
+                $srcnode.attr(srcattr, dataurl + '??' + missing_path.join(','));
+            }
+            // === will work if both arguments are of the same type
+            if ( $srcnode.attr('type') === 'text/javascript' ) {
+                cw.ajax.evalscripts($srcnode);
+            } else {
+                $srcnode.appendTo($head);
+            }
         }
-	jQuery(srcnode).appendTo($head);
     });
     $node.find(jqtagfilter).remove();
 }
