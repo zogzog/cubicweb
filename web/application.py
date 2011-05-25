@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -204,17 +204,34 @@ class CookieSessionHandler(object):
             except InvalidSession:
                 # try to open a new session, so we get an anonymous session if
                 # allowed
-                try:
-                    session = self.open_session(req)
-                except AuthenticationError:
-                    req.remove_cookie(cookie, sessioncookie)
-                    raise
+                session = self.open_session(req)
+            else:
+                if not session.cnx:
+                    # session exists but is not bound to a connection. We should
+                    # try to authenticate
+                    loginsucceed = False
+                    try:
+                        if self.open_session(req, allow_no_cnx=False):
+                            loginsucceed = True
+                    except Redirect:
+                        # may be raised in open_session (by postlogin mechanism)
+                        # on successful connection
+                        loginsucceed = True
+                        raise
+                    except AuthenticationError:
+                        # authentication failed, continue to use this session
+                        req.set_session(session)
+                    finally:
+                        if loginsucceed:
+                            # session should be replaced by new session created
+                            # in open_session
+                            self.session_manager.close_session(session)
 
     def get_session(self, req, sessionid):
         return self.session_manager.get_session(req, sessionid)
 
-    def open_session(self, req):
-        session = self.session_manager.open_session(req)
+    def open_session(self, req, allow_no_cnx=True):
+        session = self.session_manager.open_session(req, allow_no_cnx=allow_no_cnx)
         cookie = req.get_cookie()
         sessioncookie = self.session_cookie(req)
         cookie[sessioncookie] = session.sessionid
@@ -279,10 +296,7 @@ class CubicWebPublisher(object):
         sessions (i.e. a new connection may be created or an already existing
         one may be reused
         """
-        try:
-            self.session_handler.set_session(req)
-        except AuthenticationError:
-            req.set_session(DBAPISession(None))
+        self.session_handler.set_session(req)
 
     # publish methods #########################################################
 
@@ -365,11 +379,12 @@ class CubicWebPublisher(object):
                 # redirect is raised by edit controller when everything went fine,
                 # so try to commit
                 try:
-                    txuuid = req.cnx.commit()
-                    if txuuid is not None:
-                        msg = u'<span class="undo">[<a href="%s">%s</a>]</span>' %(
-                            req.build_url('undo', txuuid=txuuid), req._('undo'))
-                        req.append_to_redirect_message(msg)
+                    if req.cnx:
+                        txuuid = req.cnx.commit()
+                        if txuuid is not None:
+                            msg = u'<span class="undo">[<a href="%s">%s</a>]</span>' %(
+                                req.build_url('undo', txuuid=txuuid), req._('undo'))
+                            req.append_to_redirect_message(msg)
                 except ValidationError, ex:
                     self.validation_error_handler(req, ex)
                 except Unauthorized, ex:
