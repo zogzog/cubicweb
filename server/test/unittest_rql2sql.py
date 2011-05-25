@@ -536,6 +536,14 @@ WHERE NOT (EXISTS(SELECT 1 WHERE _X.cw_description=parent)) AND NOT (EXISTS(SELE
      '''SELECT _X.cw_eid
 FROM cw_CWEType AS _X
 WHERE _X.cw_description!=parent AND _X.cw_description!=_X.cw_name'''),
+
+    ('DISTINCT Any X, SUM(C) GROUPBY X ORDERBY SUM(C) DESC WHERE H todo_by X, H duration C',
+     '''SELECT DISTINCT rel_todo_by0.eid_to, SUM(_H.cw_duration)
+FROM cw_Affaire AS _H, todo_by_relation AS rel_todo_by0
+WHERE rel_todo_by0.eid_from=_H.cw_eid
+GROUP BY rel_todo_by0.eid_to
+ORDER BY 2 DESC'''),
+
     ]
 
 ADVANCED_WITH_GROUP_CONCAT = [

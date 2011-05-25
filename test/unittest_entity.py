@@ -250,13 +250,25 @@ class EntityTC(CubicWebTC):
                           'WHERE E eid %(x)s, E tags X, X is IN (Personne), X nom AA, '
                           'X modification_date AB')
 
-    def test_related_rql_ambigous_cant_use_fetch_order(self):
+    def test_related_rql_ambiguous_cant_use_fetch_order(self):
         tag = self.vreg['etypes'].etype_class('Tag')(self.request())
         for ttype in self.schema['tags'].objects():
             self.vreg['etypes'].etype_class(ttype).fetch_attrs = ('modification_date',)
         self.assertEqual(tag.cw_related_rql('tags', 'subject'),
                           'Any X,AA ORDERBY AA DESC '
                           'WHERE E eid %(x)s, E tags X, X modification_date AA')
+
+    def test_related_rql_cant_fetch_ambiguous_rtype(self):
+        soc_etype = self.vreg['etypes'].etype_class('Societe')
+        soc = soc_etype(self.request())
+        soc_etype.fetch_attrs = ('fournit',)
+        self.vreg['etypes'].etype_class('Service').fetch_attrs = ('fabrique_par',)
+        self.vreg['etypes'].etype_class('Produit').fetch_attrs = ('fabrique_par',)
+        self.vreg['etypes'].etype_class('Usine').fetch_attrs = ('lieu',)
+        self.vreg['etypes'].etype_class('Personne').fetch_attrs = ('nom',)
+        # XXX should be improved: we could fetch fabrique_par object too
+        self.assertEqual(soc.cw_related_rql('fournit', 'subject'),
+                         'Any X WHERE E eid %(x)s, E fournit X')
 
     def test_unrelated_rql_security_1_manager(self):
         user = self.request().user

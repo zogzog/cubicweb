@@ -738,43 +738,37 @@ loadxhtml = cw.utils.deprecatedFunction(
     }
 );
 
-remoteExec = cw.utils.deprecatedFunction(
-    '[3.9] remoteExec() is deprecated, use loadRemote instead',
-    function(fname /* ... */) {
-        setProgressCursor();
-        var props = {
-            fname: fname,
-            pageid: pageid,
-            arg: $.map(cw.utils.sliceList(arguments, 1), jQuery.toJSON)
-        };
-        var result = jQuery.ajax({
-            url: JSON_BASE_URL,
-            data: props,
-            async: false,
-            traditional: true
-        }).responseText;
-        if (result) {
-            result = cw.evalJSON(result);
-        }
-        resetCursor();
-        return result;
+function remoteExec(fname /* ... */) {
+    setProgressCursor();
+    var props = {
+        fname: fname,
+        pageid: pageid,
+        arg: $.map(cw.utils.sliceList(arguments, 1), jQuery.toJSON)
+    };
+    var result = jQuery.ajax({
+        url: JSON_BASE_URL,
+        data: props,
+        async: false,
+        traditional: true
+    }).responseText;
+    if (result) {
+        result = cw.evalJSON(result);
     }
-);
+    resetCursor();
+    return result;
+}
 
-asyncRemoteExec = cw.utils.deprecatedFunction(
-    '[3.9] asyncRemoteExec() is deprecated, use loadRemote instead',
-    function(fname /* ... */) {
-        setProgressCursor();
-        var props = {
-            fname: fname,
-            pageid: pageid,
-            arg: $.map(cw.utils.sliceList(arguments, 1), jQuery.toJSON)
-        };
-        // XXX we should inline the content of loadRemote here
-        var deferred = loadRemote(JSON_BASE_URL, props, 'POST');
-        deferred = deferred.addErrback(remoteCallFailed);
-        deferred = deferred.addErrback(resetCursor);
-        deferred = deferred.addCallback(resetCursor);
-        return deferred;
-    }
-);
+function asyncRemoteExec(fname /* ... */) {
+    setProgressCursor();
+    var props = {
+        fname: fname,
+        pageid: pageid,
+        arg: $.map(cw.utils.sliceList(arguments, 1), jQuery.toJSON)
+    };
+    // XXX we should inline the content of loadRemote here
+    var deferred = loadRemote(JSON_BASE_URL, props, 'POST');
+    deferred = deferred.addErrback(remoteCallFailed);
+    deferred = deferred.addErrback(resetCursor);
+    deferred = deferred.addCallback(resetCursor);
+    return deferred;
+}

@@ -3935,7 +3935,7 @@ msgctxt "TrInfo"
 msgid "tr_count"
 msgstr "transition number"
 
-msgid "transaction undoed"
+msgid "transaction undone"
 msgstr ""
 
 #, python-format

@@ -166,10 +166,11 @@ class SchemaReaderClassTest(TestCase):
                              'CWSource', 'CWSourceHostConfig', 'CWSourceSchemaConfig',
                              'CWUniqueTogetherConstraint', 'CWUser',
                              'ExternalUri', 'File', 'Float', 'Int', 'Interval', 'Note',
-                             'Password', 'Personne',
+                             'Password', 'Personne', 'Produit',
                              'RQLExpression',
-                             'Societe', 'State', 'StateFull', 'String', 'SubNote', 'SubWorkflowExitPoint',
+                             'Service', 'Societe', 'State', 'StateFull', 'String', 'SubNote', 'SubWorkflowExitPoint',
                              'Tag', 'TZDatetime', 'TZTime', 'Time', 'Transition', 'TrInfo',
+                             'Usine',
                              'Workflow', 'WorkflowTransition']
         self.assertListEqual(sorted(expected_entities), entities)
         relations = sorted([str(r) for r in schema.relations()])
@@ -188,14 +189,14 @@ class SchemaReaderClassTest(TestCase):
 
                               'ecrit_par', 'eid', 'evaluee', 'expression', 'exprtype',
 
-                              'final', 'firstname', 'for_user',
+                              'fabrique_par', 'final', 'firstname', 'for_user', 'fournit',
                               'from_entity', 'from_state', 'fulltext_container', 'fulltextindexed',
 
                               'has_text',
                               'identity', 'in_group', 'in_state', 'indexed',
                               'initial_state', 'inlined', 'internationalizable', 'is', 'is_instance_of',
 
-                              'label', 'last_login_time', 'latest_retrieval', 'login',
+                              'label', 'last_login_time', 'latest_retrieval', 'lieu', 'login',
 
                               'mainvars', 'match_host', 'modification_date',
 

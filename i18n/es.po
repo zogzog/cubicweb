@@ -4090,7 +4090,7 @@ msgctxt "TrInfo"
 msgid "tr_count"
 msgstr "n° de transición"
 
-msgid "transaction undoed"
+msgid "transaction undone"
 msgstr "Transacciones Anuladas"
 
 #, python-format

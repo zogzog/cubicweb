@@ -72,7 +72,9 @@ def default_update_cb_stack(self, stack):
     stack.append(self.source_execute)
 FunctionDescr.update_cb_stack = default_update_cb_stack
 
-LENGTH = SQL_FUNCTIONS_REGISTRY.get_function('LENGTH')
+get_func_descr = SQL_FUNCTIONS_REGISTRY.get_function
+
+LENGTH = get_func_descr('LENGTH')
 def length_source_execute(source, session, value):
     return len(value.getvalue())
 LENGTH.source_execute = length_source_execute
@@ -271,7 +273,9 @@ def fix_selection_and_group(rqlst, selectedidx, needwrap, selectsortterms,
         # when a query is grouped, ensure sort terms are grouped as well
         for sortterm in sorts:
             term = sortterm.term
-            if not isinstance(term, Constant):
+            if not (isinstance(term, Constant) or \
+                    (isinstance(term, Function) and
+                     get_func_descr(term.name).aggregat)):
                 for vref in term.iget_nodes(VariableRef):
                     if not vref in groups:
                         groups.append(vref)
@@ -308,12 +312,12 @@ def update_source_cb_stack(state, stmt, node, stack):
             break
         if not isinstance(node, Function):
             raise QueryError()
-        func = SQL_FUNCTIONS_REGISTRY.get_function(node.name)
-        if func.source_execute is None:
+        funcd = get_func_descr(node.name)
+        if funcd.source_execute is None:
             raise QueryError('%s can not be called on mapped attribute'
                              % node.name)
         state.source_cb_funcs.add(node)
-        func.update_cb_stack(stack)
+        funcd.update_cb_stack(stack)
 
 
 # IGenerator implementation for RQL->SQL #######################################
