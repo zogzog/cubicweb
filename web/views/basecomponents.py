@@ -29,7 +29,7 @@ from logilab.mtconverter import xml_escape
 from logilab.common.deprecation import class_renamed
 from rql import parse
 
-from cubicweb.selectors import (yes, no_cnx, match_form_params, match_context,
+from cubicweb.selectors import (yes, match_form_params, match_context,
                                 multi_etypes_rset, configuration_values,
                                 anonymous_user, authenticated_user)
 from cubicweb.schema import display_name
@@ -181,14 +181,22 @@ class ApplicationMessage(component.Component):
     """display messages given using the __message parameter into a special div
     section
     """
-    __select__ = ~no_cnx()
+    __select__ = yes()
     __regid__ = 'applmessages'
     # don't want user to hide this component using an cwproperty
     cw_property_defs = {}
 
-    def call(self):
-        msgs = [msg for msg in (self._cw.get_shared_data('sources_error', pop=True),
-                                self._cw.message) if msg]
+    def call(self, msg=None):
+        if msg is None:
+            msgs = []
+            if self._cw.cnx:
+                srcmsg = self._cw.get_shared_data('sources_error', pop=True)
+                msgs.append(srcmsg)
+            reqmsg = self._cw.message # XXX don't call self._cw.message twice
+            if reqmsg:
+                msgs.append(reqmsg)
+        else:
+            msgs = [msg]
         self.w(u'<div id="appMsg" onclick="%s" class="%s">\n' %
                (toggle_action('appMsg'), (msgs and ' ' or 'hidden')))
         for msg in msgs:
