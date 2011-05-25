@@ -191,7 +191,8 @@ class ApplicationMessage(component.Component):
             msgs = []
             if self._cw.cnx:
                 srcmsg = self._cw.get_shared_data('sources_error', pop=True)
-                msgs.append(srcmsg)
+                if srcmsg:
+                    msgs.append(srcmsg)
             reqmsg = self._cw.message # XXX don't call self._cw.message twice
             if reqmsg:
                 msgs.append(reqmsg)
