@@ -724,7 +724,8 @@ class CubicWebTC(TestCase):
         self.assertEqual(session.login, origsession.login)
         self.assertEqual(session.anonymous_session, False)
         self.assertEqual(path, 'view')
-        self.assertEqual(params, {'__message': 'welcome %s !' % req.user.login})
+        msg = req.session.data[params['_cwmsgid']]
+        self.assertEqual(msg, 'welcome %s !' % req.user.login)
 
     def assertAuthFailure(self, req, nbsessions=0):
         self.app.connect(req)
