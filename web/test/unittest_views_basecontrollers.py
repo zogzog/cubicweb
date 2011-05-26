@@ -238,7 +238,7 @@ class EditControllerTC(CubicWebTC):
                 }
         with self.assertRaises(ValidationError) as cm:
             self.ctrl_publish(req)
-        self.assertEqual(cm.exception.errors, {'amount-subject': 'value must be >= 0'})
+        self.assertEqual(cm.exception.errors, {'amount-subject': 'value -10 must be >= 0'})
         req = self.request(rollbackfirst=True)
         req.form = {'eid': ['X'],
                     '__type:X': 'Salesterm',
@@ -248,7 +248,7 @@ class EditControllerTC(CubicWebTC):
                     }
         with self.assertRaises(ValidationError) as cm:
             self.ctrl_publish(req)
-        self.assertEqual(cm.exception.errors, {'amount-subject': 'value must be <= 100'})
+        self.assertEqual(cm.exception.errors, {'amount-subject': 'value 110 must be <= 100'})
         req = self.request(rollbackfirst=True)
         req.form = {'eid': ['X'],
                     '__type:X': 'Salesterm',
