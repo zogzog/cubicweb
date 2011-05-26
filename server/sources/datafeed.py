@@ -118,7 +118,7 @@ class DataFeedSource(AbstractSource):
     def fresh(self):
         if self.latest_retrieval is None:
             return False
-        return datetime.now() < (self.latest_retrieval + self.synchro_interval)
+        return datetime.utcnow() < (self.latest_retrieval + self.synchro_interval)
 
     def pull_data(self, session, force=False, raise_on_error=False):
         if not force and self.fresh():
@@ -150,7 +150,7 @@ class DataFeedSource(AbstractSource):
             for etype, eids in byetype.iteritems():
                 session.execute('DELETE %s X WHERE X eid IN (%s)'
                                 % (etype, ','.join(eids)))
-        self.latest_retrieval = datetime.now()
+        self.latest_retrieval = datetime.utcnow()
         session.execute('SET X latest_retrieval %(date)s WHERE X eid %(x)s',
                         {'x': self.eid, 'date': self.latest_retrieval})
         return parser.stats
