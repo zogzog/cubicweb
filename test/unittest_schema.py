@@ -259,6 +259,11 @@ class SchemaReaderClassTest(TestCase):
         self.assertEqual([x.expression for x in aschema.get_rqlexprs('update')],
                           ['U has_update_permission X'])
 
+    def test_nonregr_allowed_type_names(self):
+        schema = CubicWebSchema('Test Schema')
+        schema.add_entity_type(EntityType('NaN'))
+
+
 class BadSchemaTC(TestCase):
     def setUp(self):
         self.loader = CubicWebSchemaLoader()
