@@ -500,6 +500,10 @@ class CubicWebTC(TestCase):
         it2 = set(getattr(x, 'eid', x) for x in it2)
         super(CubicWebTC, self).assertItemsEqual(it1, it2, *args, **kwargs)
 
+    def assertMessageEqual(self, req, params, msg):
+        msg = req.session.data[params['_cwmsgid']]
+        self.assertEqual(msg, msg)
+
     # workflow utilities #######################################################
 
     def assertPossibleTransitions(self, entity, expected):
@@ -724,8 +728,7 @@ class CubicWebTC(TestCase):
         self.assertEqual(session.login, origsession.login)
         self.assertEqual(session.anonymous_session, False)
         self.assertEqual(path, 'view')
-        msg = req.session.data[params['_cwmsgid']]
-        self.assertEqual(msg, 'welcome %s !' % req.user.login)
+        self.assertMessageEqual(req, params, 'welcome %s !' % req.user.login)
 
     def assertAuthFailure(self, req, nbsessions=0):
         self.app.connect(req)
