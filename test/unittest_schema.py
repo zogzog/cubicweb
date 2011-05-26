@@ -29,7 +29,7 @@ from rql import RQLSyntaxError
 from yams import BadSchemaDefinition
 from yams.constraints import SizeConstraint, StaticVocabularyConstraint
 from yams.buildobjs import RelationDefinition, EntityType, RelationType
-from yams.reader import PyFileReader
+from yams.reader import fill_schema
 
 from cubicweb.schema import (
     CubicWebSchema, CubicWebEntitySchema, CubicWebSchemaLoader,
@@ -270,12 +270,12 @@ class BadSchemaTC(TestCase):
         self.loader.defined = {}
         self.loader.loaded_files = []
         self.loader.post_build_callbacks = []
-        self.loader._pyreader = PyFileReader(self.loader)
 
     def _test(self, schemafile, msg):
         self.loader.handle_file(join(DATADIR, schemafile))
+        sch = self.loader.schemacls('toto')
         with self.assertRaises(BadSchemaDefinition) as cm:
-            self.loader._build_schema('toto', False)
+            fill_schema(sch, self.loader.defined, False)
         self.assertEqual(str(cm.exception), msg)
 
     def test_lowered_etype(self):
