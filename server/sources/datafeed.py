@@ -269,8 +269,13 @@ class DataFeedXMLParser(DataFeedParser):
 
     def process(self, url, raise_on_error=False, partialcommit=True):
         """IDataFeedParser main entry point"""
+        try:
+            parsed = self.parse(url)
+        except Exception, ex:
+            self.source.error(ex)
+            return True
         error = False
-        for args in self.parse(url):
+        for args in parsed:
             try:
                 self.process_item(*args)
                 if partialcommit:
