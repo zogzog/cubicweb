@@ -126,6 +126,11 @@ class DataFeedSource(AbstractSource):
             return False
         return datetime.utcnow() < (self.latest_retrieval + self.synchro_interval)
 
+    def update_latest_retrieval(self, session):
+        self.latest_retrieval = datetime.utcnow()
+        session.execute('SET X latest_retrieval %(date)s WHERE X eid %(x)s',
+                        {'x': self.eid, 'date': self.latest_retrieval})
+
     def pull_data(self, session, force=False, raise_on_error=False):
         if not force and self.fresh():
             return {}
@@ -134,19 +139,7 @@ class DataFeedSource(AbstractSource):
         else:
             myuris = None
         parser = self._get_parser(session, sourceuris=myuris)
-        error = False
-        self.info('pulling data for source %s', self.uri)
-        for url in self.urls:
-            try:
-                if parser.process(url, raise_on_error):
-                    error = True
-            except IOError, exc:
-                if raise_on_error:
-                    raise
-                self.error('could not pull data while processing %s: %s',
-                           url, exc)
-                error = True
-        if error:
+        if self.process_urls(parser, self.urls, raise_on_error):
             self.warning("some error occured, don't attempt to delete entities")
         elif self.config['delete-entities'] and myuris:
             byetype = {}
@@ -156,10 +149,23 @@ class DataFeedSource(AbstractSource):
             for etype, eids in byetype.iteritems():
                 session.execute('DELETE %s X WHERE X eid IN (%s)'
                                 % (etype, ','.join(eids)))
-        self.latest_retrieval = datetime.utcnow()
-        session.execute('SET X latest_retrieval %(date)s WHERE X eid %(x)s',
-                        {'x': self.eid, 'date': self.latest_retrieval})
+        self.update_latest_retrieval(session)
         return parser.stats
+
+    def process_urls(self, parser, urls, raise_on_error=False):
+        error = False
+        for url in urls:
+            self.info('pulling data from %s', url)
+            try:
+                if parser.process(url, raise_on_error):
+                    error = True
+            except IOError, exc:
+                if raise_on_error:
+                    raise
+                self.error('could not pull data while processing %s: %s',
+                           url, exc)
+                error = True
+        return error
 
     def before_entity_insertion(self, session, lid, etype, eid, sourceparams):
         """called by the repository when an eid has been attributed for an
@@ -200,8 +206,8 @@ class DataFeedSource(AbstractSource):
 class DataFeedParser(AppObject):
     __registry__ = 'parsers'
 
-    def __init__(self, session, source, sourceuris=None):
-        self._cw = session
+    def __init__(self, session, source, sourceuris=None, **kwargs):
+        super(DataFeedParser, self).__init__(session, **kwargs)
         self.source = source
         self.sourceuris = sourceuris
         self.stats = {'created': set(),
