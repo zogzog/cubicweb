@@ -1342,7 +1342,7 @@ class match_user_groups(ExpectedValueSelector):
 
     @lltrace
     def __call__(self, cls, req, rset=None, row=None, col=0, **kwargs):
-        if not req.cnx:
+        if getattr(req, 'cnx', True): # default to True for repo session instances
             return 0
         user = req.user
         if user is None:
