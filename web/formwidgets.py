@@ -435,6 +435,7 @@ class Select(FieldWidget):
     an unicode string, or a list of unicode strings.
     """
     vocabulary_widget = True
+    default_size = 5
 
     def __init__(self, attrs=None, multiple=False, **kwargs):
         super(Select, self).__init__(attrs, **kwargs)
@@ -442,8 +443,6 @@ class Select(FieldWidget):
 
     def _render(self, form, field, renderer):
         curvalues, attrs = self.values_and_attributes(form, field)
-        if not 'size' in attrs:
-            attrs['size'] = self._multiple and '5' or '1'
         options = []
         optgroup_opened = False
         for option in field.vocabulary(form):
@@ -466,6 +465,12 @@ class Select(FieldWidget):
                 options.append(tags.option(label, value=value, **oattrs))
         if optgroup_opened:
             options.append(u'</optgroup>')
+        if not 'size' in attrs:
+            if self._multiple:
+                size = unicode(min(self.default_size, len(vocab) or 1))
+            else:
+                size = u'1'
+            attrs['size'] = size
         return tags.select(name=field.input_name(form, self.suffix),
                            multiple=self._multiple, options=options, **attrs)
 
