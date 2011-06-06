@@ -156,11 +156,13 @@ class CWEntityXMLParserTC(CubicWebTC):
         self.assertEqual(tag.cwuri, 'http://testing.fr/cubicweb/%s' % tag.eid)
         self.assertEqual(tag.cw_source[0].name, 'system')
 
+        session.set_cnxset()
         stats = dfsource.pull_data(session, force=True, raise_on_error=True)
         self.assertEqual(stats['created'], set())
         self.assertEqual(len(stats['updated']), 2)
         self.repo._type_source_cache.clear()
         self.repo._extid_cache.clear()
+        session.set_cnxset()
         stats = dfsource.pull_data(session, force=True, raise_on_error=True)
         self.assertEqual(stats['created'], set())
         self.assertEqual(len(stats['updated']), 2)
@@ -180,7 +182,7 @@ class CWEntityXMLParserTC(CubicWebTC):
         self.assertEqual(e.reverse_use_email[0].login, 'sthenault')
         self.commit()
         # test everything is still fine after source synchronization
-        session.set_pool()
+        session.set_cnxset()
         stats = dfsource.pull_data(session, force=True, raise_on_error=True)
         rset = self.sexecute('EmailAddress X WHERE X address "syt@logilab.fr"')
         self.assertEqual(len(rset), 1)
@@ -197,7 +199,7 @@ class CWEntityXMLParserTC(CubicWebTC):
         e.cw_delete()
         self.commit()
         # test everything is still fine after source synchronization
-        session.set_pool()
+        session.set_cnxset()
         stats = dfsource.pull_data(session, force=True, raise_on_error=True)
         rset = self.sexecute('EmailAddress X WHERE X address "syt@logilab.fr"')
         self.assertEqual(len(rset), 0)
