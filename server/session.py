@@ -75,6 +75,25 @@ def is_internal_session(cls, req, **kwargs):
     return req.is_internal_session
 
 
+class transaction(object):
+    """context manager to enter a transaction for a session: when exiting the
+    `with` block on exception, call `session.rollback()`, else call
+    `session.commit()` on normal exit
+    """
+    def __init__(self, session, free_cnxset=True):
+        self.session = session
+        self.free_cnxset = free_cnxset
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self, exctype, exc, traceback):
+        if exctype:
+            self.session.rollback(free_cnxset=self.free_cnxset)
+        else:
+            self.session.commit(free_cnxset=self.free_cnxset)
+
+
 class hooks_control(object):
     """context manager to control activated hooks categories.
 
@@ -187,6 +206,16 @@ class Session(RequestSessionBase):
     def __unicode__(self):
         return '<%ssession %s (%s 0x%x)>' % (
             self.cnxtype, unicode(self.user.login), self.id, id(self))
+
+    def transaction(self, free_cnxset=True):
+        """return context manager to enter a transaction for the session: when
+        exiting the `with` block on exception, call `session.rollback()`, else
+        call `session.commit()` on normal exit.
+
+        The `free_cnxset` will be given to rollback/commit methods to indicate
+        wether the connections set should be freed or not.
+        """
+        return transaction(self, free_cnxset)
 
     def set_tx_data(self, txid=None):
         if txid is None:
