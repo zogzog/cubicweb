@@ -63,10 +63,8 @@ class ServerStartupHook(hook.Hook):
                             source.info('added %s entities', len(stats['created']))
                         if stats.get('updated'):
                             source.info('updated %s entities', len(stats['updated']))
-                        session.commit()
                     except Exception, exc:
                         session.exception('while trying to update feed %s', source)
-                        session.rollback()
                     session.set_cnxset()
             finally:
                 session.close()

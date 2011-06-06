@@ -21,7 +21,8 @@ __docformat__ = "restructuredtext en"
 _ = unicode
 
 from yams.buildobjs import (EntityType, RelationType, RelationDefinition,
-                            SubjectRelation, String, Datetime, Password, Interval)
+                            SubjectRelation,
+                            String, Datetime, Password, Interval, Boolean)
 from cubicweb.schema import (
     RQLConstraint, WorkflowableEntityType, ERQLExpression, RRQLExpression,
     PUB_SYSTEM_ENTITY_PERMS, PUB_SYSTEM_REL_PERMS, PUB_SYSTEM_ATTR_PERMS)
@@ -265,7 +266,8 @@ class CWSource(EntityType):
     url = String(description=_('URLs from which content will be imported. You can put one url per line'))
     parser = String(description=_('parser to use to extract entities from content retrieved at given URLs.'))
     latest_retrieval = Datetime(description=_('latest synchronization time'))
-
+    synchronizing = Boolean(description=_('currently in synchronization'),
+                            default=False)
 
 ENTITY_MANAGERS_PERMISSIONS = {
     'read':   ('managers',),
