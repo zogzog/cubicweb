@@ -445,7 +445,8 @@ class Select(FieldWidget):
         curvalues, attrs = self.values_and_attributes(form, field)
         options = []
         optgroup_opened = False
-        for option in field.vocabulary(form):
+        vocab = field.vocabulary(form)
+        for option in vocab:
             try:
                 label, value, oattrs = option
             except ValueError:
