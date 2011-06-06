@@ -62,11 +62,17 @@ def printable_value(req, attrtype, value, props=None, displaytime=True):
         return value
     if attrtype == 'Date':
         return ustrftime(value, req.property_value('ui.date-format'))
-    if attrtype in ('Time', 'TZTime'):
+    if attrtype == 'Time':
         return ustrftime(value, req.property_value('ui.time-format'))
-    if attrtype in ('Datetime', 'TZDatetime'):
+    if attrtype == 'TZTime':
+        return ustrftime(value, req.property_value('ui.time-format')) + u' UTC'
+    if attrtype == 'Datetime':
         if displaytime:
             return ustrftime(value, req.property_value('ui.datetime-format'))
+        return ustrftime(value, req.property_value('ui.date-format'))
+    if attrtype == 'TZDatetime':
+        if displaytime:
+            return ustrftime(value, req.property_value('ui.datetime-format')) + u' UTC'
         return ustrftime(value, req.property_value('ui.date-format'))
     if attrtype == 'Boolean':
         if value:
