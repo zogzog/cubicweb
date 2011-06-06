@@ -24,6 +24,7 @@ __docformat__ = 'restructuredtext en'
 # completion). So import locally in command helpers.
 import sys
 import os
+import logging
 
 from logilab.common import nullobject
 from logilab.common.configuration import Configuration
@@ -637,8 +638,7 @@ class StartRepositoryCommand(Command):
         appid = args[0]
         debug = self['debug']
         if sys.platform == 'win32' and not debug:
-            from logging import getLogger
-            logger = getLogger('cubicweb.ctl')
+            logger = logging.getLogger('cubicweb.ctl')
             logger.info('Forcing debug mode on win32 platform')
             debug = True
         config = ServerConfiguration.config_for(appid, debugmode=debug)
@@ -995,11 +995,43 @@ class SynchronizeInstanceSchemaCommand(Command):
         mih.cmd_synchronize_schema()
 
 
+class SynchronizeSourceCommand(Command):
+    """Force a source synchronization.
+
+    <instance>
+      the identifier of the instance
+    <source>
+      the name of the source to synchronize.
+    """
+    name = 'source-sync'
+    arguments = '<instance> <source>'
+    min_args = max_args = 2
+
+    def run(self, args):
+        config = ServerConfiguration.config_for(args[0])
+        config.global_set_option('log-file', None)
+        config.log_format = '%(levelname)s %(name)s: %(message)s'
+        logger = logging.getLogger('cubicweb.sources')
+        logger.setLevel(logging.INFO)
+        # only retrieve cnx to trigger authentication, close it right away
+        repo, cnx = repo_cnx(config)
+        cnx.close()
+        try:
+            source = repo.sources_by_uri[args[1]]
+        except KeyError:
+            raise ExecutionError('no source named %r' % args[1])
+        session = repo.internal_session()
+        stats = source.pull_data(session, force=True, raise_on_error=True)
+        for key, val in stats.iteritems():
+            if val:
+                print key, ':', val
+
+
 for cmdclass in (CreateInstanceDBCommand, InitInstanceCommand,
                  GrantUserOnInstanceCommand, ResetAdminPasswordCommand,
                  StartRepositoryCommand,
                  DBDumpCommand, DBRestoreCommand, DBCopyCommand,
                  AddSourceCommand, CheckRepositoryCommand, RebuildFTICommand,
-                 SynchronizeInstanceSchemaCommand,
+                 SynchronizeInstanceSchemaCommand, SynchronizeSourceCommand
                  ):
     CWCTL.register(cmdclass)
