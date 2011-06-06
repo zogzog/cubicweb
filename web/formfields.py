@@ -847,7 +847,7 @@ class BigIntField(Field):
         self.max = max
 
     def init_widget(self, widget):
-        super(BigIntField, self).init_widget(widget):
+        super(BigIntField, self).init_widget(widget)
         if isinstance(self.widget, fw.TextInput):
             self.widget.attrs.setdefault('size', self.default_text_input_size)
 
@@ -871,7 +871,7 @@ class IntField(BigIntField):
     default_text_input_size = 5
 
     def init_widget(self, widget):
-        super(IntField, self).init_widget(widget):
+        super(IntField, self).init_widget(widget)
         if isinstance(self.widget, fw.TextInput):
             self.widget.attrs.setdefault('maxlength', 15)
 
