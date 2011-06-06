@@ -137,7 +137,7 @@ class DataFeedSource(AbstractSource):
         # XXX race condition until WHERE of SET queries is executed using
         # 'SELECT FOR UPDATE'
         if not session.execute('SET X synchronizing TRUE WHERE X eid %(x)s, X synchronizing FALSE',
-                               {'x': self.eid})[0][0]:
+                               {'x': self.eid}):
             self.error('concurrent synchronization detected, skip pull')
             session.commit(free_cnxset=False)
             return False
