@@ -256,6 +256,12 @@ msgstr "Übergang (abstrakt)"
 msgid "BaseTransition_plural"
 msgstr "Übergänge (abstrakt)"
 
+msgid "BigInt"
+msgstr ""
+
+msgid "BigInt_plural"
+msgstr ""
+
 msgid "Bookmark"
 msgstr "Lesezeichen"
 

@@ -42,12 +42,15 @@ from cubicweb.server.sqlutils import SQL_PREFIX
 TYPE_CONVERTER = { # XXX
     'Boolean': bool,
     'Int': int,
+    'BigInt': int,
     'Float': float,
     'Password': str,
     'String': unicode,
     'Date' : unicode,
     'Datetime' : unicode,
     'Time' : unicode,
+    'TZDatetime' : unicode,
+    'TZTime' : unicode,
     }
 
 # core entity and relation types which can't be removed

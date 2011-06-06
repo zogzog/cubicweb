@@ -40,6 +40,7 @@ OWL_TYPE_MAP = {'String': 'xsd:string',
 
                 'Boolean': 'xsd:boolean',
                 'Int': 'xsd:int',
+                'BigInt': 'xsd:int',
                 'Float': 'xsd:float',
                 'Decimal' : 'xsd:decimal',
 

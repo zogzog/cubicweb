@@ -194,12 +194,14 @@ __docformat__ = "restructuredtext en"
 _ = unicode
 
 from warnings import warn
+from datetime import datetime, date, time, timedelta
 
 from logilab.common.decorators import cached, clear_cache
 from logilab.common.deprecation import deprecated, class_deprecated
 from logilab.common.modutils import cleanup_sys_modules
 
 from rql import RQLHelper
+from yams.constraints import BASE_CONVERTERS
 
 from cubicweb import (ETYPE_NAME_MAP, Binary, UnknownProperty, UnknownEid,
                       ObjectNotFound, NoSelectableObject, RegistryNotFound,
@@ -849,24 +851,15 @@ class CubicWebVRegistry(VRegistry):
         return self['views'].select(__vid, req, rset=rset, **kwargs)
 
 
-import decimal
-from datetime import datetime, date, time, timedelta
-
-YAMS_TO_PY = { # XXX unify with yams.constraints.BASE_CONVERTERS?
-    'String' :  unicode,
-    'Bytes':    Binary,
-    'Password': str,
-
-    'Boolean':  bool,
-    'Int':      int,
-    'Float':    float,
-    'Decimal':  decimal.Decimal,
-
+# XXX unify with yams.constraints.BASE_CONVERTERS?
+YAMS_TO_PY = BASE_CONVERTERS.copy()
+YAMS_TO_PY.update({
+    'Bytes':      Binary,
     'Date':       date,
     'Datetime':   datetime,
     'TZDatetime': datetime,
     'Time':       time,
     'TZTime':     time,
     'Interval':   timedelta,
-    }
+    })
 

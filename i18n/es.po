@@ -257,6 +257,12 @@ msgstr "Transición (abstracta)"
 msgid "BaseTransition_plural"
 msgstr "Transiciones (abstractas)"
 
+msgid "BigInt"
+msgstr ""
+
+msgid "BigInt_plural"
+msgstr ""
+
 msgid "Bookmark"
 msgstr "Favorito"
 

@@ -255,6 +255,12 @@ msgstr "Transition (abstraite)"
 msgid "BaseTransition_plural"
 msgstr "Transitions (abstraites)"
 
+msgid "BigInt"
+msgstr "Entier long"
+
+msgid "BigInt_plural"
+msgstr "Entiers longs"
+
 msgid "Bookmark"
 msgstr "Signet"
 

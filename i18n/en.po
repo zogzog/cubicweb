@@ -245,6 +245,12 @@ msgstr "Transition (abstract)"
 msgid "BaseTransition_plural"
 msgstr "Transitions (abstract)"
 
+msgid "BigInt"
+msgstr "Big integer"
+
+msgid "BigInt_plural"
+msgstr "Big integers"
+
 msgid "Bookmark"
 msgstr "Bookmark"
 
@@ -503,7 +509,7 @@ msgid "Interval"
 msgstr "Interval"
 
 msgid "IntervalBoundConstraint"
-msgstr "interval constraint"
+msgstr "Interval constraint"
 
 msgid "Interval_plural"
 msgstr "Intervals"
