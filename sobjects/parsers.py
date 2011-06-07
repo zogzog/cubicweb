@@ -102,10 +102,6 @@ def _parse_entity_etree(parent):
                 item[child.tag] = unicode(child.text)
         yield item, rels
 
-def build_search_rql(etype, attrs):
-    restrictions = ['X %(attr)s %%(%(attr)s)s'%{'attr': attr} for attr in attrs]
-    return 'Any X WHERE X is %s, %s' % (etype, ', '.join(restrictions))
-
 def rtype_role_rql(rtype, role):
     if role == 'object':
         return 'Y %s X WHERE X eid %%(x)s' % rtype
@@ -287,13 +283,12 @@ class CWEntityXMLParser(datafeed.DataFeedXMLParser):
                                       % item, searchattrs)
                     continue
             kwargs = dict((attr, item[attr]) for attr in searchattrs)
-            rql = build_search_rql(item['cwtype'], kwargs)
-            rset = self._cw.execute(rql, kwargs)
-            if len(rset) > 1:
+            targets = tuple(self._cw.find_entities(item['cwtype'], **kwargs))
+            if len(targets) > 1:
                 self.source.error('ambiguous link: found %s entity %s with attributes %s',
-                                  len(rset), item['cwtype'], kwargs)
-            elif len(rset) == 1:
-                eids.append(rset[0][0])
+                                  len(targets), item['cwtype'], kwargs)
+            elif len(targets) == 1:
+                eids.append(targets[0].eid)
             elif create_when_not_found:
                 ensure_str_keys(kwargs) # XXX necessary with python < 2.6
                 eids.append(self._cw.create_entity(item['cwtype'], **kwargs).eid)
