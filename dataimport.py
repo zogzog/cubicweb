@@ -642,7 +642,9 @@ class NoHookRQLObjectStore(RQLObjectStore):
         for k, v in kwargs.iteritems():
             kwargs[k] = getattr(v, 'eid', v)
         entity, rels = self.metagen.base_etype_dicts(etype)
+        # make a copy to keep cached entity pristine
         entity = copy(entity)
+        entity.cw_edited = copy(entity.cw_edited)
         entity.cw_clear_relation_cache()
         self.metagen.init_entity(entity)
         entity.cw_edited.update(kwargs, skipsec=False)
