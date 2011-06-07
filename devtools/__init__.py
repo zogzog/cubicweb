@@ -260,8 +260,9 @@ class RealDatabaseConfiguration(ApptestConfiguration):
     Example usage::
 
       class MyTests(CubicWebTC):
-          _config = RealDatabseConfiguration('myapp',
-                                             sourcefile='/path/to/sources')
+          _config = RealDatabaseConfiguration('myapp',
+                                              sourcefile='/path/to/sources')
+
           def test_something(self):
               rset = self.execute('Any X WHERE X is CWUser')
               self.view('foaf', rset)

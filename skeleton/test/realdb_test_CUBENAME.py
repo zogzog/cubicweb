@@ -18,8 +18,8 @@
 """
 
 """
-from cubicweb.devtools import buildconfig, loadconfig
-from cubicweb.devtools.testlib import RealDBTest
+from cubicweb.devtools.testlib import CubicWebTC
+from cubicweb.devtools.realdbtest import buildconfig, loadconfig
 
 def setUpModule(options):
     if options.source:
@@ -32,7 +32,8 @@ def setUpModule(options):
                                                options.epassword)
     RealDatabaseTC.configcls = configcls
 
-class RealDatabaseTC(RealDBTest):
+
+class RealDatabaseTC(CubicWebTC):
     configcls = None # set by setUpModule()
 
     def test_all_primaries(self):
