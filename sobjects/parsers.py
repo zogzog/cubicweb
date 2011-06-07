@@ -43,10 +43,6 @@ from yams.schema import role_name as rn
 from cubicweb import ValidationError, typed_eid
 from cubicweb.server.sources import datafeed
 
-def ensure_str_keys(dic):
-    for key in dic:
-        dic[str(key)] = dic.pop(key)
-
 # XXX see cubicweb.cwvreg.YAMS_TO_PY
 # XXX see cubicweb.web.views.xmlrss.SERIALIZERS
 DEFAULT_CONVERTERS = BASE_CONVERTERS.copy()
@@ -282,7 +278,7 @@ class CWEntityXMLParser(datafeed.DataFeedXMLParser):
                     self.source.error('missing attribute, got %s expected keys %s'
                                       % item, searchattrs)
                     continue
-            kwargs = dict((attr, item[attr]) for attr in searchattrs)
+            kwargs = dict((str(attr), item[attr]) for attr in searchattrs) # XXX str() needed with python < 2.6
             targets = tuple(self._cw.find_entities(item['cwtype'], **kwargs))
             if len(targets) > 1:
                 self.source.error('ambiguous link: found %s entity %s with attributes %s',
@@ -290,7 +286,6 @@ class CWEntityXMLParser(datafeed.DataFeedXMLParser):
             elif len(targets) == 1:
                 eids.append(targets[0].eid)
             elif create_when_not_found:
-                ensure_str_keys(kwargs) # XXX necessary with python < 2.6
                 eids.append(self._cw.create_entity(item['cwtype'], **kwargs).eid)
             else:
                 self.source.error('can not find %s entity with attributes %s',
