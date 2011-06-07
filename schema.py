@@ -378,11 +378,27 @@ class CubicWebEntitySchema(EntitySchema):
     def add_subject_relation(self, rschema):
         """register the relation schema as possible subject relation"""
         super(CubicWebEntitySchema, self).add_subject_relation(rschema)
-        self._update_has_text()
+        if rschema.final:
+            if self.rdef(rschema).get('fulltextindexed'):
+                self._update_has_text()
+        elif rschema.fulltext_container:
+            self._update_has_text()
+
+    def add_object_relation(self, rschema):
+        """register the relation schema as possible object relation"""
+        super(CubicWebEntitySchema, self).add_object_relation(rschema)
+        if rschema.fulltext_container:
+            self._update_has_text()
 
     def del_subject_relation(self, rtype):
         super(CubicWebEntitySchema, self).del_subject_relation(rtype)
-        self._update_has_text(True)
+        if 'has_text' in self.subjrels:
+            self._update_has_text(deletion=True)
+
+    def del_object_relation(self, rtype):
+        super(CubicWebEntitySchema, self).del_object_relation(rtype)
+        if 'has_text' in self.subjrels:
+            self._update_has_text(deletion=True)
 
     def _update_has_text(self, deletion=False):
         may_need_has_text, has_has_text = False, False
