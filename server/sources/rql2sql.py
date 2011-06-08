@@ -1258,11 +1258,16 @@ class SQLGenerator(object):
         unification (eg X attr1 A, Y attr2 A). In case of selection,
         nothing to do here.
         """
-        for var in rhs_vars:
+        for vref in rhs_vars:
+            var = vref.variable
             if var.name in self._varmap:
                 # ensure table is added
-                self._var_info(var.variable)
-            principal = var.variable.stinfo.get('principal')
+                self._var_info(var)
+            if isinstance(var, ColumnAlias):
+                # force sql generation whatever the computed principal
+                principal = 1
+            else:
+                principal = var.stinfo.get('principal')
             if principal is not None and principal is not relation:
                 # we have to generate unification expression
                 lhssql = self._inlined_var_sql(relation.children[0].variable,

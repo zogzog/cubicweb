@@ -758,7 +758,7 @@ class CubicWebVRegistry(VRegistry):
                           sitewide=False):
         """register a given property"""
         properties = self['propertydefs']
-        assert type in YAMS_TO_PY
+        assert type in YAMS_TO_PY, 'unknown type %s' % type
         properties[key] = {'type': type, 'vocabulary': vocabulary,
                            'default': default, 'help': help,
                            'sitewide': sitewide}
