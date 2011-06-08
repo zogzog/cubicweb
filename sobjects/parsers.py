@@ -135,6 +135,8 @@ class CWEntityXMLParser(datafeed.DataFeedXMLParser):
             'link-or-create': self.related_link_or_create,
             'link': self.related_link,
             }
+        self._parsed_urls = {}
+        self._processed_entities = set()
 
     # mapping handling #########################################################
 
@@ -196,6 +198,9 @@ class CWEntityXMLParser(datafeed.DataFeedXMLParser):
                                    item=item)
         if entity is None:
             return None
+        if entity.eid in self._processed_entities:
+            return entity
+        self._processed_entities.add(entity.eid)
         if not (self.created_during_pull(entity) or self.updated_during_pull(entity)):
             self.notify_updated(entity)
             item.pop('eid')
@@ -296,13 +301,18 @@ class CWEntityXMLParser(datafeed.DataFeedXMLParser):
             self._clear_relation(entity, rtype, role, (ttype,))
 
     def _complete_item(self, item, add_relations=True):
-        itemurl = item['cwuri'] + '?vid=xml'
-        if add_relations:
-            for rtype, role, _ in self.source.mapping.get(item['cwtype'], ()):
-                itemurl += '&relation=%s_%s' % (rtype, role)
-        item_rels = list(self.parse(itemurl))
-        assert len(item_rels) == 1
-        return item_rels[0]
+        try:
+            return self._parsed_urls[(item['cwuri'], add_relations)]
+        except KeyError:
+            itemurl = item['cwuri'] + '?vid=xml'
+            if add_relations:
+                for rtype, role, _ in self.source.mapping.get(item['cwtype'], ()):
+                    itemurl += '&relation=%s_%s' % (rtype, role)
+            item_rels = list(self.parse(itemurl))
+            assert len(item_rels) == 1, 'url %s expected to bring back one '\
+                   'and only one entity, got %s' % (itemurl, len(item_rels))
+            self._parsed_urls[(item['cwuri'], add_relations)] = item_rels[0]
+            return item_rels[0]
 
     def _clear_relation(self, entity, rtype, role, ttypes):
         if entity.eid not in self.stats['created']:
