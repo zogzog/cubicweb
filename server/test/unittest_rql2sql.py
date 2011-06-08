@@ -1453,6 +1453,12 @@ FROM cw_Affaire AS _X
 WHERE ((EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_by0 WHERE rel_owned_by0.eid_from=_X.cw_eid AND rel_owned_by0.eid_to=1)) OR (((EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_by2, cw_Affaire AS _D LEFT OUTER JOIN concerne_relation AS rel_concerne1 ON (rel_concerne1.eid_from=_D.cw_eid) LEFT OUTER JOIN cw_Note AS _B ON (rel_concerne1.eid_to=_B.cw_eid) WHERE rel_owned_by2.eid_from=_B.cw_eid AND rel_owned_by2.eid_to=1 AND _X.cw_eid=_D.cw_eid)) OR (EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_by4, cw_Affaire AS _F LEFT OUTER JOIN concerne_relation AS rel_concerne3 ON (rel_concerne3.eid_from=_F.cw_eid) LEFT OUTER JOIN cw_Societe AS _E ON (rel_concerne3.eid_to=_E.cw_eid) WHERE rel_owned_by4.eid_from=_E.cw_eid AND rel_owned_by4.eid_to=1 AND _X.cw_eid=_F.cw_eid))))))) AS _T0, cw_CWEType AS _ET, is_relation AS rel_is0
 WHERE rel_is0.eid_from=_T0.C0 AND rel_is0.eid_to=_ET.cw_eid
 GROUP BY _ET.cw_name'''),
+
+            ('Any A WHERE A ordernum O, A is CWAttribute WITH O BEING (Any MAX(O) WHERE A ordernum O, A is CWAttribute)',
+             '''SELECT _A.cw_eid
+FROM (SELECT MAX(_A.cw_ordernum) AS C0
+FROM cw_CWAttribute AS _A) AS _T0, cw_CWAttribute AS _A
+WHERE _A.cw_ordernum=_T0.C0'''),
             )):
             yield t
 
