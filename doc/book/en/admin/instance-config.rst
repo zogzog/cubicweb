@@ -43,18 +43,31 @@ and https for authenticated users. This requires to
 use apache (for example) for redirection and the variable `main.https-url`
 of configuration file.
 
+For this to work you have to activate the following apache modules :
+
+* rewrite
+* proxy
+* http_proxy
+
+The command on Debian based systems for that is ::
+
+  a2enmod rewrite http_proxy proxy
+  /etc/init.d/apache2 restart
+
 :Example:
 
    For an apache redirection of a site accessible via `http://localhost/demo`
    and `https://localhost/demo` and actually running on port 8080, it
    takes to the http:::
 
+     RewriteEngine On
      RewriteCond %{REQUEST_URI} ^/demo
      RewriteRule ^/demo$ /demo/
      RewriteRule ^/demo/(.*) http://127.0.0.1:8080/$1 [L,P]
 
    and for the https:::
 
+     RewriteEngine On
      RewriteCond %{REQUEST_URI} ^/ demo
      RewriteRule ^/demo$/demo/
      RewriteRule ^/demo/(.*) http://127.0.0.1:8080/https/$1 [L,P]
