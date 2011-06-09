@@ -352,7 +352,7 @@ class CWEntityXMLParser(datafeed.DataFeedParser):
         itemurl = item['cwuri'] + '?vid=xml'
         if add_relations:
             for rtype, role, _ in self.source.mapping.get(item['cwtype'], ()):
-                itemurl += '&relation=%s_%s' % (rtype, role)
+                itemurl += '&relation=%s-%s' % (rtype, role)
         item_rels = list(self.parse(itemurl))
         assert len(item_rels) == 1
         return item_rels[0]
