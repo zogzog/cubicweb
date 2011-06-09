@@ -165,6 +165,15 @@ def rdef_physical_info(dbhelper, rdef):
 class UndoException(Exception):
     """something went wrong during undoing"""
 
+    def __unicode__(self):
+        """Called by the unicode builtin; should return a Unicode object
+
+        Type of UndoException message must be `unicode` by design in CubicWeb.
+
+        .. warning::
+            This method is not available in python2.5"""
+        assert isinstance(self.message, unicode)
+        return self.message
 
 def _undo_check_relation_target(tentity, rdef, role):
     """check linked entity has not been redirected for this relation"""
