@@ -33,6 +33,7 @@ Example of mapping for CWEntityXMLParser::
 
 import os.path as osp
 from datetime import datetime, timedelta
+import urllib
 
 from logilab.common.date import todate, totime
 from logilab.common.textutils import splitstrip, text_to_dict
@@ -304,10 +305,11 @@ class CWEntityXMLParser(datafeed.DataFeedXMLParser):
         try:
             return self._parsed_urls[(item['cwuri'], add_relations)]
         except KeyError:
-            itemurl = item['cwuri'] + '?vid=xml'
+            query = [('vid','xml')]
             if add_relations:
                 for rtype, role, _ in self.source.mapping.get(item['cwtype'], ()):
-                    itemurl += '&relation=%s_%s' % (rtype, role)
+                    query.append(('relation','%s-%s' % (rtype, role)))
+            itemurl = item['cwuri'] + '?' + urllib.urlencode(query)
             item_rels = list(self.parse(itemurl))
             assert len(item_rels) == 1, 'url %s expected to bring back one '\
                    'and only one entity, got %s' % (itemurl, len(item_rels))
