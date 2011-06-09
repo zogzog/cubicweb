@@ -122,7 +122,7 @@ class BytesFileSystemStorage(Storage):
         fpath = source.binary_to_str(value)
         try:
             return Binary(file(fpath, 'rb').read())
-        except OSError, ex:
+        except EnvironmentError, ex:
             source.critical("can't open %s: %s", value, ex)
             return None
 
