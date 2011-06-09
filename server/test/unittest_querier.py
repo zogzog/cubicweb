@@ -785,7 +785,7 @@ class QuerierTC(BaseQuerierTC):
     def test_select_boolean(self):
         rset = self.execute('Any N WHERE X is CWEType, X name N, X final %(val)s',
                             {'val': True})
-        self.assertEqual(sorted(r[0] for r in rset.rows), ['Boolean', 'Bytes',
+        self.assertEqual(sorted(r[0] for r in rset.rows), ['BigInt', 'Boolean', 'Bytes',
                                                            'Date', 'Datetime',
                                                            'Decimal', 'Float',
                                                            'Int', 'Interval',
@@ -793,7 +793,7 @@ class QuerierTC(BaseQuerierTC):
                                                            'TZDatetime', 'TZTime',
                                                            'Time'])
         rset = self.execute('Any N WHERE X is CWEType, X name N, X final TRUE')
-        self.assertEqual(sorted(r[0] for r in rset.rows), ['Boolean', 'Bytes',
+        self.assertEqual(sorted(r[0] for r in rset.rows), ['BigInt', 'Boolean', 'Bytes',
                                                            'Date', 'Datetime',
                                                            'Decimal', 'Float',
                                                            'Int', 'Interval',
