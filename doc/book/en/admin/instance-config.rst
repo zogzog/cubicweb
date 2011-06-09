@@ -60,6 +60,7 @@ The command on Debian based systems for that is ::
    and `https://localhost/demo` and actually running on port 8080, it
    takes to the http:::
 
+     ProxyPreserveHost On
      RewriteEngine On
      RewriteCond %{REQUEST_URI} ^/demo
      RewriteRule ^/demo$ /demo/
@@ -67,6 +68,7 @@ The command on Debian based systems for that is ::
 
    and for the https:::
 
+     ProxyPreserveHost On
      RewriteEngine On
      RewriteCond %{REQUEST_URI} ^/ demo
      RewriteRule ^/demo$/demo/
@@ -77,6 +79,11 @@ The command on Debian based systems for that is ::
 
      base-url = http://localhost/demo
      https-url = https://localhost/demo
+
+Notice that if you simply want a site accessible through https, not *both* http
+and https, simply set `base-url` to the https url and the first section into your
+apache configuration (as you would have to do for an http configuration with an
+apache front-end).
 
 Setting up the web client
 -------------------------
