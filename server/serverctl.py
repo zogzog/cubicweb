@@ -371,14 +371,21 @@ class CreateInstanceDBCommand(Command):
                                 interactive=not automatic)
         cursor = cnx.cursor()
         helper.init_fti_extensions(cursor)
+        cnx.commit()
         # postgres specific stuff
         if driver == 'postgres':
-            # install plpythonu/plpgsql language if not installed by the cube
-            langs = sys.platform == 'win32' and ('plpgsql',) or ('plpythonu', 'plpgsql')
+            # install plpythonu/plpgsql languages
+            langs = ('plpythonu', 'plpgsql')
             for extlang in langs:
-                helper.create_language(cursor, extlang)
-        cursor.close()
-        cnx.commit()
+                if automatic or ASK.confirm('Create language %s ?' % extlang):
+                    try:
+                        helper.create_language(cursor, extlang)
+                    except Exception, exc:
+                        print '-> ERROR:', exc
+                        print '-> could not create language %s, some stored procedures might be unusable' % extlang
+                        cnx.rollback()
+                    else:
+                        cnx.commit()
         print '-> database for instance %s created and necessary extensions installed.' % appid
         print
         if automatic:

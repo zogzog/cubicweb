@@ -373,18 +373,21 @@ class ServerMigrationHelper(MigrationHelper):
                     self.cmd_reactivate_verification_hooks()
 
     def install_custom_sql_scripts(self, directory, driver):
+        sql_scripts = []
         for fpath in glob(osp.join(directory, '*.sql.%s' % driver)):
             newname = osp.basename(fpath).replace('.sql.%s' % driver,
                                                   '.%s.sql' % driver)
             warn('[3.5.6] rename %s into %s' % (fpath, newname),
                  DeprecationWarning)
+            sql_scripts.append(fpath)
+        sql_scripts += glob(osp.join(directory, '*.%s.sql' % driver))
+        for fpath in sql_scripts:
             print '-> installing', fpath
-            sqlexec(open(fpath).read(), self.session.system_sql, False,
-                    delimiter=';;')
-        for fpath in glob(osp.join(directory, '*.%s.sql' % driver)):
-            print '-> installing', fpath
-            sqlexec(open(fpath).read(), self.session.system_sql, False,
-                    delimiter=';;')
+            try:
+                sqlexec(open(fpath).read(), self.session.system_sql, False,
+                        delimiter=';;')
+            except Exception, exc:
+                print '-> ERROR:', exc, ', skipping', fpath
 
     # schema synchronization internals ########################################
 
