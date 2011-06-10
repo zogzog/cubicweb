@@ -126,9 +126,10 @@ class CheckCardinalityHookBeforeDeleteRelation(IntegrityHook):
             return
         card = session.schema_rproperty(rtype, eidfrom, eidto, 'cardinality')
         if card[0] in '1+' and not session.deleted_in_transaction(eidfrom):
-            _CheckSRelationOp.get_instance(self._cw).add_data((eidfrom, rtype))
+            _CheckSRelationOp.get_instance(session).add_data((eidfrom, rtype))
         if card[1] in '1+' and not session.deleted_in_transaction(eidto):
-            _CheckORelationOp.get_instance(self._cw).add_data((eidto, rtype))
+            _CheckORelationOp.get_instance(session).add_data((eidto, rtype))
+
 
 class CheckCardinalityHookAfterAddEntity(IntegrityHook):
     """check cardinalities are satisfied"""
@@ -149,21 +150,6 @@ class CheckCardinalityHookAfterAddEntity(IntegrityHook):
                 else:
                     op = _CheckORelationOp.get_instance(self._cw)
                 op.add_data((eid, rschema.type))
-
-    def before_delete_relation(self):
-        rtype = self.rtype
-        if rtype in DONT_CHECK_RTYPES_ON_DEL:
-            return
-        session = self._cw
-        eidfrom, eidto = self.eidfrom, self.eidto
-        pendingrdefs = session.transaction_data.get('pendingrdefs', ())
-        if (session.describe(eidfrom)[0], rtype, session.describe(eidto)[0]) in pendingrdefs:
-            return
-        card = session.schema_rproperty(rtype, eidfrom, eidto, 'cardinality')
-        if card[0] in '1+' and not session.deleted_in_transaction(eidfrom):
-            _CheckSRelationOp.get_instance(self._cw).add_data((eidfrom, rtype))
-        if card[1] in '1+' and not session.deleted_in_transaction(eidto):
-            _CheckORelationOp.get_instance(self._cw).add_data((eidto, rtype))
 
 
 class _CheckConstraintsOp(hook.DataOperationMixIn, hook.LateOperation):
