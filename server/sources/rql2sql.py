@@ -1582,8 +1582,14 @@ class SQLGenerator(object):
             scope = self._state.scopes[var.scope]
             self._state.add_table(sql.split('.', 1)[0], scope=scope)
         except KeyError:
-            sql = '%s.%s%s' % (self._var_table(var), SQL_PREFIX, rtype)
-            #self._state.done.add(var.name)
+            # rtype may be an attribute relation when called from
+            # _visit_var_attr_relation.  take care about 'eid' rtype, since in
+            # some case we may use the `entities` table, so in that case we've
+            # to properly use variable'sql
+            if rtype == 'eid':
+                sql = var.accept(self)
+            else:
+                sql = '%s.%s%s' % (self._var_table(var), SQL_PREFIX, rtype)
         return sql
 
     def _linked_var_sql(self, variable):
