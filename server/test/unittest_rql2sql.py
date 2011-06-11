@@ -544,6 +544,10 @@ WHERE rel_todo_by0.eid_from=_H.cw_eid
 GROUP BY rel_todo_by0.eid_to
 ORDER BY 2 DESC'''),
 
+    ('Any R2 WHERE R2 concerne R, R eid RE, R2 eid > RE',
+     '''SELECT _R2.eid
+FROM concerne_relation AS rel_concerne0, entities AS _R2
+WHERE _R2.eid=rel_concerne0.eid_from AND _R2.eid>rel_concerne0.eid_to'''),
     ]
 
 ADVANCED_WITH_GROUP_CONCAT = [
