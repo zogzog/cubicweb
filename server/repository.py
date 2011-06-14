@@ -82,10 +82,6 @@ def prefill_entity_caches(entity, relations):
         if rtype in schema.VIRTUAL_RTYPES or (rtype, 'object') in NO_CACHE_RELATIONS:
             continue
         entity.cw_set_relation_cache(rtype, 'object', session.empty_rset())
-    # set inlined relation cache before call to after_add_entity
-    for attr, value in relations:
-        session.update_rel_cache_add(entity.eid, attr, value)
-        del_existing_rel_if_needed(session, entity.eid, attr, value)
 
 def del_existing_rel_if_needed(session, eidfrom, rtype, eidto):
     """delete existing relation when adding a new one if card is 1 or ?
@@ -96,12 +92,8 @@ def del_existing_rel_if_needed(session, eidfrom, rtype, eidto):
     this kind of behaviour has to be done in the repository so we don't have
     hooks order hazardness
     """
-    # skip that for internal session or if integrity explicitly disabled
-    #
-    # XXX we should imo rely on the orm to first fetch existing entity if any
-    # then delete it.
-    if session.is_internal_session \
-           or not session.is_hook_category_activated('activeintegrity'):
+    # skip that if integrity explicitly disabled
+    if not session.is_hook_category_activated('activeintegrity'):
         return
     rdef = session.rtype_eids_rdef(rtype, eidfrom, eidto)
     card = rdef.cardinality
@@ -116,7 +108,7 @@ def del_existing_rel_if_needed(session, eidfrom, rtype, eidto):
     # * inlined relations will be implicitly deleted for the subject entity
     # * we don't want read permissions to be applied but we want delete
     #   permission to be checked
-    if card[0] in '1?' and not rdef.rtype.inlined:
+    if card[0] in '1?':
         with security_enabled(session, read=False):
             session.execute('DELETE X %s Y WHERE X eid %%(x)s, '
                             'NOT Y eid %%(y)s' % rtype,
@@ -1223,16 +1215,24 @@ class Repository(object):
         if server.DEBUG & server.DBG_REPO:
             print 'ADD entity', self, entity.__regid__, entity.eid, edited
         relations = []
+        prefill_entity_caches(entity, relations)
         if source.should_call_hooks:
             self.hm.call_hooks('before_add_entity', session, entity=entity)
+        activintegrity = session.is_hook_category_activated('activeintegrity')
         for attr in edited.iterkeys():
             rschema = eschema.subjrels[attr]
             if not rschema.final: # inlined relation
-                relations.append((attr, edited[attr]))
+                value = edited[attr]
+                relations.append((attr, value))
+                session.update_rel_cache_add(entity.eid, attr, value)
+                rdef = session.rtype_eids_rdef(attr, entity.eid, value)
+                if rdef.cardinality[1] in '1?' and activintegrity:
+                    with security_enabled(session, read=False):
+                        session.execute('DELETE X %s Y WHERE Y eid %(y)s',
+                                        {'x': entity.eid, 'y': value})
         edited.set_defaults()
         if session.is_hook_category_activated('integrity'):
             edited.check(creation=True)
-        prefill_entity_caches(entity, relations)
         try:
             source.add_entity(session, entity)
         except UniqueTogetherError, exc:
