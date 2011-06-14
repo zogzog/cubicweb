@@ -574,7 +574,8 @@ class RDefDelOp(MemSchemaOperation):
         elif lastrel:
             DropRelationTable(session, str(rschema))
         # then update the in-memory schema
-        rschema.del_relation_def(rdef.subject, rdef.object)
+        if rdef.subject not in ETYPE_NAME_MAP and rdef.object not in ETYPE_NAME_MAP:
+            rschema.del_relation_def(rdef.subject, rdef.object)
         # if this is the last relation definition of this type, drop associated
         # relation type
         if lastrel and not session.deleted_in_transaction(rschema.eid):
@@ -585,8 +586,10 @@ class RDefDelOp(MemSchemaOperation):
         #
         # Note: add_relation_def takes a RelationDefinition, not a
         # RelationDefinitionSchema, needs to fake it
-        self.rdef.name = str(self.rdef.rtype)
-        self.session.vreg.schema.add_relation_def(self.rdef)
+        rdef = self.rdef
+        rdef.name = str(rdef.rtype)
+        if rdef.subject not in ETYPE_NAME_MAP and rdef.object not in ETYPE_NAME_MAP:
+            self.session.vreg.schema.add_relation_def(rdef)
 
 
 
@@ -882,7 +885,7 @@ class DelCWETypeHook(SyncSchemaHook):
         if name in CORE_TYPES:
             raise ValidationError(self.entity.eid, {None: self._cw._('can\'t be deleted')})
         # delete every entities of this type
-        if not name in ETYPE_NAME_MAP:
+        if name not in ETYPE_NAME_MAP:
             self._cw.execute('DELETE %s X' % name)
             MemSchemaCWETypeDel(self._cw, etype=name)
         DropTable(self._cw, table=SQL_PREFIX + name)
@@ -1066,6 +1069,8 @@ class AfterUpdateCWRDefHook(SyncSchemaHook):
             return
         subjtype = entity.stype.name
         objtype = entity.otype.name
+        if subjtype in ETYPE_NAME_MAP or objtype in ETYPE_NAME_MAP:
+            return
         rschema = self._cw.vreg.schema[entity.rtype.name]
         # note: do not access schema rdef here, it may be added later by an
         # operation
