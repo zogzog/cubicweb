@@ -1097,17 +1097,6 @@ class Repository(object):
         hook.CleanupDeletedEidsCacheOp.get_instance(session).add_data(entity.eid)
         self._delete_info(session, entity, sourceuri, extid, scleanup)
 
-    def delete_info_multi(self, session, entities, sourceuri, extids, scleanup=None):
-        """same as delete_info but accepts a list of entities and
-        extids with the same etype and belonging to the same source
-        """
-        # mark eid as being deleted in session info and setup cache update
-        # operation
-        op = hook.CleanupDeletedEidsCacheOp.get_instance(session)
-        for entity in entities:
-            op.add_data(entity.eid)
-        self._delete_info_multi(session, entities, sourceuri, extids, scleanup)
-
     def _delete_info(self, session, entity, sourceuri, extid, scleanup=None):
         """delete system information on deletion of an entity:
         * delete all remaining relations from/to this entity
@@ -1139,16 +1128,15 @@ class Repository(object):
                 except:
                     self.exception('error while cascading delete for entity %s '
                                    'from %s. RQL: %s', entity, sourceuri, rql)
-        self.system_source.delete_info(session, entity, sourceuri, extid)
+        self.system_source.delete_info_multi(session, [entity], sourceuri)
 
-    def _delete_info_multi(self, session, entities, sourceuri, extids, scleanup=None):
+    def _delete_info_multi(self, session, entities, sourceuri, scleanup=None):
         """same as _delete_info but accepts a list of entities with
         the same etype and belinging to the same source.
         """
         pendingrtypes = session.transaction_data.get('pendingrtypes', ())
         # delete remaining relations: if user can delete the entity, he can
         # delete all its relations without security checking
-        assert entities and len(entities) == len(extids)
         with security_enabled(session, read=False, write=False):
             eids = [_e.eid for _e in entities]
             in_eids = ','.join((str(eid) for eid in eids))
@@ -1170,7 +1158,7 @@ class Repository(object):
                 except:
                     self.exception('error while cascading delete for entity %s '
                                    'from %s. RQL: %s', entities, sourceuri, rql)
-        self.system_source.delete_info_multi(session, entities, sourceuri, extids)
+        self.system_source.delete_info_multi(session, entities, sourceuri)
 
     def locate_relation_source(self, session, subject, rtype, object):
         subjsource = self.source_from_eid(subject, session)
@@ -1345,6 +1333,12 @@ class Repository(object):
 
     def glob_delete_entities(self, session, eids):
         """delete a list of  entities and all related entities from the repository"""
+        # mark eids as being deleted in session info and setup cache update
+        # operation (register pending eids before actual deletion to avoid
+        # multiple call to glob_delete_entities)
+        op = hook.CleanupDeletedEidsCacheOp.get_instance(session)
+        eids = eids - op._container
+        op._container |= eids
         data_by_etype_source = {} # values are ([list of eids],
                                   #             [list of extid],
                                   #             [list of entities])
@@ -1356,27 +1350,23 @@ class Repository(object):
 
         for eid in eids:
             etype, sourceuri, extid = self.type_and_source_from_eid(eid, session)
+            # XXX should cache entity's cw_metainformation
             entity = session.entity_from_eid(eid, etype)
-            _key = (etype, sourceuri)
-            if _key not in data_by_etype_source:
-                data_by_etype_source[_key] = ([eid], [extid], [entity])
-            else:
-                _data = data_by_etype_source[_key]
-                _data[0].append(eid)
-                _data[1].append(extid)
-                _data[2].append(entity)
-        for (etype, sourceuri), (eids, extids, entities) in data_by_etype_source.iteritems():
+            try:
+                data_by_etype_source[(etype, sourceuri)].append(entity)
+            except KeyError:
+                data_by_etype_source[(etype, sourceuri)] = [entity]
+        for (etype, sourceuri), entities in data_by_etype_source.iteritems():
             if server.DEBUG & server.DBG_REPO:
-                print 'DELETE entities', etype, eids
-            #print 'DELETE entities', etype, len(eids)
+                print 'DELETE entities', etype, [entity.eid for entity in entities]
             source = self.sources_by_uri[sourceuri]
             if source.should_call_hooks:
                 self.hm.call_hooks('before_delete_entity', session, entities=entities)
-            self._delete_info_multi(session, entities, sourceuri, extids) # xxx
+            self._delete_info_multi(session, entities, sourceuri)
             source.delete_entities(session, entities)
             if source.should_call_hooks:
                 self.hm.call_hooks('after_delete_entity', session, entities=entities)
-        # don't clear cache here this is done in a hook on commit
+        # don't clear cache here, it is done in a hook on commit
 
     def glob_add_relation(self, session, subject, rtype, object):
         """add a relation to the repository"""

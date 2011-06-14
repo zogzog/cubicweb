@@ -944,23 +944,19 @@ class ServerMigrationHelper(MigrationHelper):
             # triggered by schema synchronization hooks.
             session = self.session
             for rdeftype in ('CWRelation', 'CWAttribute'):
-                thispending = set()
-                for eid, in self.sqlexec('SELECT cw_eid FROM cw_%s '
-                                         'WHERE cw_from_entity=%%(eid)s OR '
-                                         ' cw_to_entity=%%(eid)s' % rdeftype,
-                                         {'eid': oldeid}, ask_confirm=False):
-                    # we should add deleted eids into pending eids else we may
-                    # get some validation error on commit since integrity hooks
-                    # may think some required relation is missing... This also ensure
-                    # repository caches are properly cleanup
-                    hook.CleanupDeletedEidsCacheOp.get_instance(session).add_data(eid)
-                    # and don't forget to remove record from system tables
-                    self.repo.system_source.delete_info(
-                        session, session.entity_from_eid(eid, rdeftype),
-                        'system', None)
-                    thispending.add(eid)
-                self.sqlexec('DELETE FROM cw_%s '
-                             'WHERE cw_from_entity=%%(eid)s OR '
+                thispending = set( (eid for eid, in self.sqlexec(
+                    'SELECT cw_eid FROM cw_%s WHERE cw_from_entity=%%(eid)s OR '
+                    ' cw_to_entity=%%(eid)s' % rdeftype,
+                    {'eid': oldeid}, ask_confirm=False)) )
+                # we should add deleted eids into pending eids else we may
+                # get some validation error on commit since integrity hooks
+                # may think some required relation is missing... This also ensure
+                # repository caches are properly cleanup
+                hook.CleanupDeletedEidsCacheOp.get_instance(session).union(thispending)
+                # and don't forget to remove record from system tables
+                entities = [session.entity_from_eid(eid, rdeftype) for eid in thispending]
+                self.repo.system_source.delete_info_multi(session, entities, 'system')
+                self.sqlexec('DELETE FROM cw_%s WHERE cw_from_entity=%%(eid)s OR '
                              'cw_to_entity=%%(eid)s' % rdeftype,
                              {'eid': oldeid}, ask_confirm=False)
                 # now we have to manually cleanup relations pointing to deleted
