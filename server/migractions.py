@@ -1137,6 +1137,10 @@ class ServerMigrationHelper(MigrationHelper):
                                               syncprops=syncprops)
         else:
             for etype in self.repo.schema.entities():
+                if etype.eid is None:
+                     # not yet added final etype (thing to BigInt defined in
+                     # yams though 3.13 migration not done yet)
+                    continue
                 self._synchronize_eschema(etype, syncrdefs=syncrdefs,
                                           syncprops=syncprops, syncperms=syncperms)
         if commit:
