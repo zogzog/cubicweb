@@ -34,6 +34,7 @@ __docformat__ = "restructuredtext en"
 import sys
 import threading
 import Queue
+from warnings import warn
 from itertools import chain
 from os.path import join
 from datetime import datetime
@@ -1228,7 +1229,7 @@ class Repository(object):
                 rdef = session.rtype_eids_rdef(attr, entity.eid, value)
                 if rdef.cardinality[1] in '1?' and activintegrity:
                     with security_enabled(session, read=False):
-                        session.execute('DELETE X %s Y WHERE Y eid %(y)s',
+                        session.execute('DELETE X %s Y WHERE Y eid %%(y)s' % attr,
                                         {'x': entity.eid, 'y': value})
         edited.set_defaults()
         if session.is_hook_category_activated('integrity'):
@@ -1338,6 +1339,10 @@ class Repository(object):
         # operation (register pending eids before actual deletion to avoid
         # multiple call to glob_delete_entities)
         op = hook.CleanupDeletedEidsCacheOp.get_instance(session)
+        if not isinstance(eids, (set, frozenset)):
+            warn('[3.13] eids should be given as a set', DeprecationWarning,
+                 stacklevel=2)
+            eids = frozenset(eids)
         eids = eids - op._container
         op._container |= eids
         data_by_etype_source = {} # values are ([list of eids],

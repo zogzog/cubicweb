@@ -1303,7 +1303,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         sql = self.sqlgen.delete(SQL_PREFIX + entity.__regid__, attrs)
         self.doexec(session, sql, attrs)
         # remove record from entities (will update fti if needed)
-        self.delete_info(session, entity, self.uri, None)
+        self.delete_info_multi(session, [entity], self.uri)
         self.repo.hm.call_hooks('after_delete_entity', session, entity=entity)
         return ()
 
