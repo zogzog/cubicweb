@@ -74,6 +74,13 @@ def is_internal_session(cls, req, **kwargs):
     """
     return req.is_internal_session
 
+@objectify_selector
+def repairing(cls, req, **kwargs):
+    """repository side only selector returning 1 if the session is not a regular
+    user session but an internal session
+    """
+    return req.vreg.config.repairing
+
 
 class transaction(object):
     """context manager to enter a transaction for a session: when exiting the
