@@ -852,6 +852,13 @@ class DataOperationMixIn(object):
     def _build_container(self):
         return self.containercls()
 
+    def union(self, data):
+        """only when container is a set"""
+        assert not self._processed, """Trying to add data to a closed operation.
+Iterating over operation data closed it and should be reserved to precommit /
+postcommit method of the operation."""
+        self._container |= data
+
     def add_data(self, data):
         assert not self._processed, """Trying to add data to a closed operation.
 Iterating over operation data closed it and should be reserved to precommit /
