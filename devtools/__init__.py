@@ -600,15 +600,18 @@ class PostgresTestDataBaseHandler(TestDataBaseHandler):
     def _backup_database(self, db_id):
         """Actual backup the current database.
 
-        return a value to be stored in db_cache to allow restoration"""
+        return a value to be stored in db_cache to allow restoration
+        """
         from cubicweb.server.serverctl import createdb
         orig_name = self.system_source['db-name']
         try:
             backup_name = self._backup_name(db_id)
             self._drop(backup_name)
             self.system_source['db-name'] = backup_name
+            self._repo.turn_repo_off()
             createdb(self.helper, self.system_source, self.dbcnx, self.cursor, template=orig_name)
             self.dbcnx.commit()
+            self._repo.turn_repo_on()
             return backup_name
         finally:
             self.system_source['db-name'] = orig_name
