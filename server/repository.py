@@ -103,7 +103,8 @@ def del_existing_rel_if_needed(session, eidfrom, rtype, eidto):
     if session.is_internal_session \
            or not session.is_hook_category_activated('activeintegrity'):
         return
-    card = session.schema_rproperty(rtype, eidfrom, eidto, 'cardinality')
+    rdef = session.rtype_eids_rdef(rtype, eidfrom, eidto)
+    card = rdef.cardinality
     # one may be tented to check for neweids but this may cause more than one
     # relation even with '1?'  cardinality if thoses relations are added in the
     # same transaction where the entity is being created. This never occurs from
@@ -115,7 +116,7 @@ def del_existing_rel_if_needed(session, eidfrom, rtype, eidto):
     # * inlined relations will be implicitly deleted for the subject entity
     # * we don't want read permissions to be applied but we want delete
     #   permission to be checked
-    if card[0] in '1?' and not session.repo.schema.rschema(rtype).inlined:
+    if card[0] in '1?' and not rdef.rtype.inlined:
         with security_enabled(session, read=False):
             session.execute('DELETE X %s Y WHERE X eid %%(x)s, '
                             'NOT Y eid %%(y)s' % rtype,

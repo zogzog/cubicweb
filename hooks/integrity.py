@@ -121,10 +121,10 @@ class CheckCardinalityHookBeforeDeleteRelation(IntegrityHook):
             return
         session = self._cw
         eidfrom, eidto = self.eidfrom, self.eidto
-        pendingrdefs = session.transaction_data.get('pendingrdefs', ())
-        if (session.describe(eidfrom)[0], rtype, session.describe(eidto)[0]) in pendingrdefs:
+        rdef = session.rtype_eids_rdef(rtype, eidfrom, eidto)
+        if (rdef.subject, rtype, rdef.object) in session.transaction_data.get('pendingrdefs', ()):
             return
-        card = session.schema_rproperty(rtype, eidfrom, eidto, 'cardinality')
+        card = rdef.cardinality
         if card[0] in '1+' and not session.deleted_in_transaction(eidfrom):
             _CheckSRelationOp.get_instance(session).add_data((eidfrom, rtype))
         if card[1] in '1+' and not session.deleted_in_transaction(eidto):
@@ -190,8 +190,8 @@ class CheckConstraintHook(IntegrityHook):
 
     def __call__(self):
         # XXX get only RQL[Unique]Constraints?
-        constraints = self._cw.schema_rproperty(self.rtype, self.eidfrom, self.eidto,
-                                                'constraints')
+        rdef = self._cw.rtype_eids_rdef(self.rtype, self.eidfrom, self.eidto)
+        constraints = rdef.constraints
         if constraints:
             _CheckConstraintsOp.get_instance(self._cw).add_data(
                 (self.eidfrom, self.rtype, self.eidto, constraints))
@@ -341,15 +341,15 @@ class DeleteCompositeOrphanHook(hook.Hook):
     def __call__(self):
         # if the relation is being delete, don't delete composite's components
         # automatically
-        pendingrdefs = self._cw.transaction_data.get('pendingrdefs', ())
-        if (self._cw.describe(self.eidfrom)[0], self.rtype,
-            self._cw.describe(self.eidto)[0]) in pendingrdefs:
+        session = self._cw
+        rtype = self.rtype
+        rdef = session.rtype_eids_rdef(rtype, self.eidfrom, self.eidto)
+        if (rdef.subject, rtype, rdef.object) in session.transaction_data.get('pendingrdefs', ()):
             return
-        composite = self._cw.schema_rproperty(self.rtype, self.eidfrom, self.eidto,
-                                              'composite')
+        composite = rdef.composite
         if composite == 'subject':
             _DelayedDeleteOEntityOp.get_instance(self._cw).add_data(
-                (self.eidto, self.rtype))
+                (self.eidto, rtype))
         elif composite == 'object':
             _DelayedDeleteSEntityOp.get_instance(self._cw).add_data(
-                (self.eidfrom, self.rtype))
+                (self.eidfrom, rtype))

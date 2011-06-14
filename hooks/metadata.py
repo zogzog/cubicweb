@@ -106,7 +106,7 @@ class SyncCompositeOwner(MetaDataHook):
             # skip this special composite relation # XXX (syt) why?
             return
         eidfrom, eidto = self.eidfrom, self.eidto
-        composite = self._cw.schema_rproperty(self.rtype, eidfrom, eidto, 'composite')
+        composite = self._cw.rtype_eids_rdef(self.rtype, eidfrom, eidto).composite
         if composite == 'subject':
             SyncOwnersOp.get_instance(self._cw).add_data( (eidfrom, eidto) )
         elif composite == 'object':

@@ -431,12 +431,12 @@ class Session(RequestSessionBase):
         """
         return eid in self.transaction_data.get('neweids', ())
 
-    def schema_rproperty(self, rtype, eidfrom, eidto, rprop):
-        rschema = self.repo.schema[rtype]
-        subjtype = self.describe(eidfrom)[0]
-        objtype = self.describe(eidto)[0]
-        rdef = rschema.rdef(subjtype, objtype)
-        return rdef.get(rprop)
+    def rtype_eids_rdef(self, rtype, eidfrom, eidto):
+        # use type_and_source_from_eid instead of type_from_eid for optimization
+        # (avoid two extra methods call)
+        subjtype = self.repo.type_and_source_from_eid(eidfrom, self)[0]
+        objtype = self.repo.type_and_source_from_eid(eidto, self)[0]
+        return self.vreg.schema.rschema(rtype).rdefs[(subjtype, objtype)]
 
     # security control #########################################################
 
@@ -1069,6 +1069,11 @@ class Session(RequestSessionBase):
         return description
 
     # deprecated ###############################################################
+
+    @deprecated('[3.13] use getattr(session.rtype_eids_rdef(rtype, eidfrom, eidto), prop)')
+    def schema_rproperty(self, rtype, eidfrom, eidto, rprop):
+        return getattr(self.rtype_eids_rdef(rtype, eidfrom, eidto), rprop)
+
 
     @deprecated("[3.7] execute is now unsafe by default in hooks/operation. You"
                 " can also control security with the security_enabled context "
