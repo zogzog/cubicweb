@@ -312,9 +312,8 @@ repository (default to 5 minutes).',
     def get_connection(self):
         try:
             return self._get_connection()
-        except (ConnectionError, PyroError):
-            self.critical("can't get connection to source %s", self.uri,
-                          exc_info=1)
+        except (ConnectionError, PyroError), ex:
+            self.critical("can't get connection to source %s: %s", self.uri, ex)
             return ConnectionWrapper()
 
     def check_connection(self, cnx):
