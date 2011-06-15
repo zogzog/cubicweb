@@ -15,6 +15,9 @@ build-stamp:
 	# cd doc && make
 	# FIXME cleanup and use sphinx-build as build-depends ?
 	NO_SETUPTOOLS=1 python setup.py build
+	# XXX uncomment this and associated build-depends in control
+	#when necessary sphinx version is in all built distribution
+	#PYTHONPATH=$(CURDIR)/.. $(MAKE) -C doc/book/en all
 	touch build-stamp
 
 clean:
