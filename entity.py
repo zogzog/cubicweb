@@ -108,7 +108,7 @@ class Entity(AppObject):
     # class attributes that must be set in class definition
     rest_attr = None
     fetch_attrs = None
-    skip_copy_for = ('in_state',)
+    skip_copy_for = ('in_state',) # XXX turn into a set
     # class attributes set automatically at registration time
     e_schema = None
 
