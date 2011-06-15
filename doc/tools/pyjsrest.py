@@ -127,8 +127,6 @@ INDEX_IN_ORDER = [
     'cubicweb.htmlhelpers',
     'cubicweb.ajax',
 
-    'cubicweb.lazy',
-    'cubicweb.tabs',
     'cubicweb.ajax.box',
     'cubicweb.facets',
     'cubicweb.widgets',
