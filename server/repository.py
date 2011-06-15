@@ -1384,33 +1384,63 @@ class Repository(object):
         relations is a dictionary rtype: [(subj_eid, obj_eid), ...]
         """
         sources = {}
+        subjects_by_types = {}
+        objects_by_types = {}
+        activintegrity = session.is_hook_category_activated('activeintegrity')
         for rtype, eids_subj_obj in relations.iteritems():
             if server.DEBUG & server.DBG_REPO:
-                for subject, object in relations:
-                    print 'ADD relation', subject, rtype, object
-            for subject, object in eids_subj_obj:
-                source = self.locate_relation_source(session, subject, rtype, object)
+                for subjeid, objeid in relations:
+                    print 'ADD relation', subjeid, rtype, objeid
+            for subjeid, objeid in eids_subj_obj:
+                source = self.locate_relation_source(session, subjeid, rtype, objeid)
                 if source not in sources:
                     relations_by_rtype = {}
                     sources[source] = relations_by_rtype
                 else:
                     relations_by_rtype = sources[source]
                 if rtype in relations_by_rtype:
-                    relations_by_rtype[rtype].append((subject, object))
+                    relations_by_rtype[rtype].append((subjeid, objeid))
                 else:
-                    relations_by_rtype[rtype] = [(subject, object)]
+                    relations_by_rtype[rtype] = [(subjeid, objeid)]
+                if not activintegrity:
+                    continue
+                # take care to relation of cardinality '?1', as all eids will
+                # be inserted later, we've remove duplicated eids since they
+                # won't be catched by `del_existing_rel_if_needed`
+                rdef = session.rtype_eids_rdef(rtype, subjeid, objeid)
+                card = rdef.cardinality
+                if card[0] in '?1':
+                    with security_enabled(session, read=False):
+                        session.execute('DELETE X %s Y WHERE X eid %%(x)s, '
+                                        'NOT Y eid %%(y)s' % rtype,
+                                        {'x': subjeid, 'y': objeid})
+                    subjects = subjects_by_types.setdefault(rdef, {})
+                    if subjeid in subjects:
+                        del relations_by_rtype[rtype][subjects[subjeid]]
+                        subjects[subjeid] = len(relations_by_rtype[rtype]) - 1
+                        continue
+                    subjects[subjeid] = len(relations_by_rtype[rtype]) - 1
+                if card[1] in '?1':
+                    with security_enabled(session, read=False):
+                        session.execute('DELETE X %s Y WHERE Y eid %%(y)s, '
+                                        'NOT X eid %%(x)s' % rtype,
+                                        {'x': subjeid, 'y': objeid})
+                    objects = objects_by_types.setdefault(rdef, {})
+                    if objeid in objects:
+                        del relations_by_rtype[rtype][objects[objeid]]
+                        objects[objeid] = len(relations_by_rtype[rtype])
+                        continue
+                    objects[objeid] = len(relations_by_rtype[rtype])
         for source, relations_by_rtype in sources.iteritems():
             if source.should_call_hooks:
                 for rtype, source_relations in relations_by_rtype.iteritems():
-                    for subject, object in source_relations:
-                        del_existing_rel_if_needed(session, subject, rtype, object)
                     self.hm.call_hooks('before_add_relation', session,
                                     rtype=rtype, eids_from_to=source_relations)
             for rtype, source_relations in relations_by_rtype.iteritems():
                 source.add_relations(session, rtype, source_relations)
                 rschema = self.schema.rschema(rtype)
-                for subject, object in source_relations:
-                    session.update_rel_cache_add(subject, rtype, object, rschema.symmetric)
+                for subjeid, objeid in source_relations:
+                    session.update_rel_cache_add(subjeid, rtype, objeid, rschema.symmetric)
             if source.should_call_hooks:
                 for rtype, source_relations in relations_by_rtype.iteritems():
                     self.hm.call_hooks('after_add_relation', session,

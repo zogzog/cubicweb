@@ -841,6 +841,29 @@ class PerformanceTest(CubicWebTC):
         t1 = time.time()
         self.info('add relations (inlined): %.2gs', t1-t0)
 
+    def test_optional_relation_reset_1(self):
+        req = self.request()
+        p1 = req.create_entity('Personne', nom=u'Vincent')
+        p2 = req.create_entity('Personne', nom=u'Florent')
+        w = req.create_entity('Affaire', ref=u'wc')
+        w.set_relations(todo_by=[p1,p2])
+        w.clear_all_caches()
+        self.commit()
+        self.assertEqual(len(w.todo_by), 1)
+        self.assertEqual(w.todo_by[0].eid, p2.eid)
+
+    def test_optional_relation_reset_2(self):
+        req = self.request()
+        p1 = req.create_entity('Personne', nom=u'Vincent')
+        p2 = req.create_entity('Personne', nom=u'Florent')
+        w = req.create_entity('Affaire', ref=u'wc')
+        w.set_relations(todo_by=p1)
+        self.commit()
+        w.set_relations(todo_by=p2)
+        w.clear_all_caches()
+        self.commit()
+        self.assertEqual(len(w.todo_by), 1)
+        self.assertEqual(w.todo_by[0].eid, p2.eid)
 
 
 if __name__ == '__main__':
