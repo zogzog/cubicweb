@@ -462,18 +462,11 @@ class AbstractSource(object):
         """mark entity as being modified, fulltext reindex if needed"""
         raise NotImplementedError()
 
-    def delete_info(self, session, entity, uri, extid):
-        """delete system information on deletion of an entity by transfering
-        record from the entities table to the deleted_entities table
+    def delete_info_multi(self, session, entities, uri):
+        """delete system information on deletion of a list of entities with the
+        same etype and belinging to the same source
         """
         raise NotImplementedError()
-
-    def delete_info_multi(self, session, entities, uri, extids):
-        """ame as delete_info but accepts a list of entities with
-        the same etype and belinging to the same source.
-        """
-        for entity, extid in itertools.izip(entities, extids):
-            self.delete_info(session, entity, uri, extid)
 
     def modified_entities(self, session, etypes, mtime):
         """return a 2-uple:

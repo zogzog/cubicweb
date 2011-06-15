@@ -970,31 +970,13 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         attrs = {'eid': entity.eid, 'mtime': datetime.now()}
         self.doexec(session, self.sqlgen.update('entities', attrs, ['eid']), attrs)
 
-    def delete_info(self, session, entity, uri, extid):
-        """delete system information on deletion of an entity:
-        * update the fti
-        * remove record from the entities table
-        * transfer it to the deleted_entities table if the entity's type is
-          multi-sources
-        """
-        self.fti_unindex_entities(session, [entity])
-        attrs = {'eid': entity.eid}
-        self.doexec(session, self.sqlgen.delete('entities', attrs), attrs)
-        if not entity.__regid__ in self.multisources_etypes:
-            return
-        if extid is not None:
-            assert isinstance(extid, str), type(extid)
-            extid = b64encode(extid)
-        attrs = {'type': entity.__regid__, 'eid': entity.eid, 'extid': extid,
-                 'source': uri, 'dtime': datetime.now()}
-        self.doexec(session, self.sqlgen.insert('deleted_entities', attrs), attrs)
+    def delete_info_multi(self, session, entities, uri):
+        """delete system information on deletion of a list of entities with the
+        same etype and belinging to the same source
 
-    def delete_info_multi(self, session, entities, uri, extids):
-        """delete system information on deletion of an entity:
         * update the fti
-        * remove record from the entities table
-        * transfer it to the deleted_entities table if the entity's type is
-          multi-sources
+        * remove record from the `entities` table
+        * transfer it to the `deleted_entities`
         """
         self.fti_unindex_entities(session, entities)
         attrs = {'eid': '(%s)' % ','.join([str(_e.eid) for _e in entities])}
@@ -1003,7 +985,8 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             return
         attrs = {'type': entities[0].__regid__,
                  'source': uri, 'dtime': datetime.now()}
-        for entity, extid in itertools.izip(entities, extids):
+        for entity in entities:
+            extid = entity.cw_metainformation()['extid']
             if extid is not None:
                 assert isinstance(extid, str), type(extid)
                 extid = b64encode(extid)
@@ -1320,7 +1303,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         sql = self.sqlgen.delete(SQL_PREFIX + entity.__regid__, attrs)
         self.doexec(session, sql, attrs)
         # remove record from entities (will update fti if needed)
-        self.delete_info(session, entity, self.uri, None)
+        self.delete_info_multi(session, [entity], self.uri)
         self.repo.hm.call_hooks('after_delete_entity', session, entity=entity)
         return ()
 

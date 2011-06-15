@@ -28,7 +28,6 @@ from cubicweb import QueryError, typed_eid
 from cubicweb.schema import VIRTUAL_RTYPES
 from cubicweb.rqlrewrite import add_types_restriction
 from cubicweb.server.session import security_enabled
-from cubicweb.server.hook import CleanupDeletedEidsCacheOp
 from cubicweb.server.edition import EditedEntity
 
 READ_ONLY_RTYPES = set(('eid', 'has_text', 'is', 'is_instance_of', 'identity'))
@@ -521,13 +520,7 @@ class DeleteEntitiesStep(Step):
         if results:
             todelete = frozenset(typed_eid(eid) for eid, in results)
             session = self.plan.session
-            # mark eids as being deleted in session info and setup cache update
-            # operation (register pending eids before actual deletion to avoid
-            # multiple call to glob_delete_entities)
-            op = CleanupDeletedEidsCacheOp.get_instance(session)
-            actual = todelete - op._container
-            op._container |= actual
-            session.repo.glob_delete_entities(session, actual)
+            session.repo.glob_delete_entities(session, todelete)
         return results
 
 class DeleteRelationsStep(Step):

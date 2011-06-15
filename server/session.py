@@ -74,6 +74,13 @@ def is_internal_session(cls, req, **kwargs):
     """
     return req.is_internal_session
 
+@objectify_selector
+def repairing(cls, req, **kwargs):
+    """repository side only selector returning 1 if the session is not a regular
+    user session but an internal session
+    """
+    return req.vreg.config.repairing
+
 
 class transaction(object):
     """context manager to enter a transaction for a session: when exiting the
@@ -476,12 +483,12 @@ class Session(RequestSessionBase):
         """
         return eid in self.transaction_data.get('neweids', ())
 
-    def schema_rproperty(self, rtype, eidfrom, eidto, rprop):
-        rschema = self.repo.schema[rtype]
-        subjtype = self.describe(eidfrom)[0]
-        objtype = self.describe(eidto)[0]
-        rdef = rschema.rdef(subjtype, objtype)
-        return rdef.get(rprop)
+    def rtype_eids_rdef(self, rtype, eidfrom, eidto):
+        # use type_and_source_from_eid instead of type_from_eid for optimization
+        # (avoid two extra methods call)
+        subjtype = self.repo.type_and_source_from_eid(eidfrom, self)[0]
+        objtype = self.repo.type_and_source_from_eid(eidto, self)[0]
+        return self.vreg.schema.rschema(rtype).rdefs[(subjtype, objtype)]
 
     # security control #########################################################
 
@@ -1189,6 +1196,10 @@ class Session(RequestSessionBase):
         return description
 
     # deprecated ###############################################################
+
+    @deprecated('[3.13] use getattr(session.rtype_eids_rdef(rtype, eidfrom, eidto), prop)')
+    def schema_rproperty(self, rtype, eidfrom, eidto, rprop):
+        return getattr(self.rtype_eids_rdef(rtype, eidfrom, eidto), rprop)
 
     @property
     @deprecated("[3.13] use .cnxset attribute instead of .pool")
