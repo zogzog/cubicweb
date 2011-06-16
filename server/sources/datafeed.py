@@ -78,7 +78,7 @@ class DataFeedSource(AbstractSource):
 
     def _entity_update(self, source_entity):
         source_entity.complete()
-        self.parser = source_entity.parser
+        self.parser_id = source_entity.parser
         self.latest_retrieval = source_entity.latest_retrieval
         self.urls = [url.strip() for url in source_entity.url.splitlines()
                      if url.strip()]
@@ -95,12 +95,12 @@ class DataFeedSource(AbstractSource):
     def init(self, activated, source_entity):
         if activated:
             self._entity_update(source_entity)
-        self.parser = source_entity.parser
+        self.parser_id = source_entity.parser
         self.load_mapping(source_entity._cw)
 
     def _get_parser(self, session, **kwargs):
         return self.repo.vreg['parsers'].select(
-            self.parser, session, source=self, **kwargs)
+            self.parser_id, session, source=self, **kwargs)
 
     def load_mapping(self, session):
         self.mapping = {}
