@@ -59,6 +59,9 @@ if rdflib is not None:
                 self.entity2graph(graph, entity)
             self.w(graph.serialize().decode('utf-8'))
 
+        def entity_call(self, entity):
+            self.call()
+
         def entity2graph(self, graph, entity):
             cwuri = URIRef(entity.cwuri)
             add = graph.add
