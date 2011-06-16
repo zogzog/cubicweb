@@ -271,9 +271,17 @@ class SQLGenAnnotator(object):
         return has_text_query
 
     def is_ambiguous(self, var):
-        # ignore has_text relation
-        if len([rel for rel in var.stinfo['relations']
-                if rel.scope is var.scope and rel.r_type == 'has_text']) == 1:
+        # ignore has_text relation when we know it will be used as principal.
+        # This is expected by the rql2sql generator which will use the `entities`
+        # table to filter out by type if necessary, This optimisation is very
+        # interesting in multi-sources cases, as it may avoid a costly query
+        # on sources to get all entities of a given type to achieve this, while
+        # we have all the necessary information.
+        root = var.stmt.root # Union node
+        # rel.scope -> Select or Exists node, so add .parent to get Union from
+        # Select node
+        rels = [rel for rel in var.stinfo['relations'] if rel.scope.parent is root]
+        if len(rels) == 1 and rels[0].r_type == 'has_text':
             return False
         try:
             data = var.stmt._deamb_data

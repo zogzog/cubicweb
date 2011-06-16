@@ -333,6 +333,13 @@ class SQLGenAnnotatorTC(BaseQuerierTC):
         self.assertEqual(rqlst.defined_vars['N']._q_invariant, False)
         self.assertEqual(rqlst.defined_vars['F']._q_invariant, True)
 
+    def test_nonregr_ambiguity_2(self):
+        rqlst = self._prepare('Any S,SN WHERE X has_text "tot", X in_state S, S name SN, X is CWUser')
+        # X use has_text but should not be invariant as ambiguous, and has_text
+        # may not be its principal
+        self.assertEqual(rqlst.defined_vars['X']._q_invariant, False)
+        self.assertEqual(rqlst.defined_vars['S']._q_invariant, False)
+
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main
     unittest_main()

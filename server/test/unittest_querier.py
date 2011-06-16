@@ -1443,5 +1443,14 @@ Any P1,B,E WHERE P1 identity P2 WITH
         rset = self.execute('Any X,Y WHERE X nom XD, Y nom XD, X eid Z, Y eid > Z')
         self.assertEqual(rset.rows, [[peid1, peid2]])
 
+    def test_nonregr_has_text_ambiguity_1(self):
+        peid = self.execute("INSERT CWUser X: X login 'bidule', X upassword 'bidule', X in_group G WHERE G name 'users'")[0][0]
+        aeid = self.execute("INSERT Affaire X: X ref 'bidule'")[0][0]
+        self.commit()
+        rset = self.execute('Any X WHERE X is CWUser, X has_text "bidule"')
+        self.assertEqual(rset.rows, [[peid]])
+        rset = self.execute('Any X WHERE X is CWUser, X has_text "bidule", X in_state S, S name SN')
+        self.assertEqual(rset.rows, [[peid]])
+
 if __name__ == '__main__':
     unittest_main()
