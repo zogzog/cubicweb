@@ -16,11 +16,11 @@ list them by category. They are all defined in
 `Browsing`:
 
 * the View controller is associated with most browsing actions within a
-  CubicWeb application: it always instantiates a :ref:`the_main_template` and
-  lets the ResultSet/Views dispatch system build up the whole content; it
-  handles :exc:`ObjectNotFound` and :exc:`NoSelectableObject` errors that may
-  bubble up to its entry point, in an end-user-friendly way (but other
-  programming errors will slip through)
+  CubicWeb application: it always instantiates a
+  :ref:`the_main_template_layout` and lets the ResultSet/Views dispatch system
+  build up the whole content; it handles :exc:`ObjectNotFound` and
+  :exc:`NoSelectableObject` errors that may bubble up to its entry point, in an
+  end-user-friendly way (but other programming errors will slip through)
 
 * the JSon controller (same module) provides services for Ajax calls,
   typically using JSON as a serialization format for input, and

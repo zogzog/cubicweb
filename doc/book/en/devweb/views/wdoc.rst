@@ -1,9 +1,17 @@
 .. -*- coding: utf-8 -*-
 
 Online documentation system
----------------------------
+===========================
 
-(:mod:`cubicweb.web.views.wdoc`)
+.. automodule:: cubicweb.web.views.wdoc
 
-XXX  describe the on-line documentation system
+Help views
+----------
+.. autoclass:: cubicweb.web.views.wdoc.InlineHelpView
+.. autoclass:: cubicweb.web.views.wdoc.ChangeLogView
 
+Actions
+-------
+.. autoclass:: cubicweb.web.views.wdoc.HelpAction
+.. autoclass:: cubicweb.web.views.wdoc.ChangeLogAction
+.. autoclass:: cubicweb.web.views.wdoc.AboutAction

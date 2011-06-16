@@ -17,5 +17,6 @@ the *CubicWeb* framework.
    edition/index
    facets
    internationalization
-..   property
+   property
    httpcaching
+   resource

@@ -1,10 +1,15 @@
+/**
+ *  This file contains timeline utilities
+ *  :organization: Logilab
+ */
+
 var SimileAjax_urlPrefix = baseuri() + 'data/';
 var Timeline_urlPrefix = baseuri() + 'data/';
 
 /*
  *  Simile Ajax API
  *
- *  Include this file in your HTML file as follows:
+ *  Include this file in your HTML file as follows::
  *
  *    <script src="http://simile.mit.edu/ajax/api/simile-ajax-api.js" type="text/javascript"></script>
  *

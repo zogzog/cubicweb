@@ -79,7 +79,7 @@ match or not according to entity's (instance or class) properties.
 .. autoclass:: cubicweb.selectors.has_add_permission
 .. autoclass:: cubicweb.selectors.has_mimetype
 .. autoclass:: cubicweb.selectors.is_in_state
-.. autoclass:: cubicweb.selectors.on_fire_transition
+.. autofunction:: cubicweb.selectors.on_fire_transition
 .. autoclass:: cubicweb.selectors.implements
 
 

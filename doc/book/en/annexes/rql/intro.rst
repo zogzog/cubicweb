@@ -159,3 +159,4 @@ following chapter (:ref:`RQL`).
 .. _Datalog: http://en.wikipedia.org/wiki/Datalog
 .. _intensional: http://en.wikipedia.org/wiki/Intensional_definition
 .. _extensional: http://en.wikipedia.org/wiki/Extension_(predicate_logic)
+
