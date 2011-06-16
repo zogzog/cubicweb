@@ -18,13 +18,16 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unit tests for modules cubicweb.server.rqlannotation"""
 
-from cubicweb.devtools import init_test_database
+from cubicweb.devtools import TestServerConfiguration, get_test_db_handler
 from cubicweb.devtools.repotest import BaseQuerierTC
 
 
 def setUpModule(*args):
+    handler = get_test_db_handler(TestServerConfiguration(
+        'data2', apphome=SQLGenAnnotatorTC.datadir))
+    handler.build_db_cache()
     global repo, cnx
-    repo, cnx = init_test_database(apphome=SQLGenAnnotatorTC.datadir)
+    repo, cnx = handler.get_repo_and_cnx()
 
 def tearDownModule(*args):
     global repo, cnx
