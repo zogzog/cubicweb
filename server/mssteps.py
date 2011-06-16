@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -22,6 +22,7 @@ FIXME : this code needs refactoring. Some problems :
 * each step has is own members (this is not necessarily bad, but a bit messy
   for now)
 """
+from __future__ import with_statement
 
 __docformat__ = "restructuredtext en"
 
@@ -32,25 +33,30 @@ from cubicweb.server.ssplanner import (LimitOffsetMixIn, Step, OneFetchStep,
 
 AGGR_TRANSFORMS = {'COUNT':'SUM', 'MIN':'MIN', 'MAX':'MAX', 'SUM': 'SUM'}
 
-def remove_clauses(union, keepgroup):
-    clauses = []
-    for select in union.children:
-        if keepgroup:
-            having, orderby = select.having, select.orderby
-            select.having, select.orderby = (), ()
-            clauses.append( (having, orderby) )
-        else:
-            groupby, having, orderby = select.groupby, select.having, select.orderby
-            select.groupby, select.having, select.orderby = (), (), ()
-            clauses.append( (groupby, having, orderby) )
-    return clauses
+class remove_and_restore_clauses(object):
+    def __init__(self, union, keepgroup):
+        self.union = union
+        self.keepgroup = keepgroup
+        self.clauses = None
 
-def restore_clauses(union, keepgroup, clauses):
-    for i, select in enumerate(union.children):
-        if keepgroup:
-            select.having, select.orderby = clauses[i]
-        else:
-            select.groupby, select.having, select.orderby = clauses[i]
+    def __enter__(self):
+        self.clauses = clauses = []
+        for select in self.union.children:
+            if self.keepgroup:
+                having, orderby = select.having, select.orderby
+                select.having, select.orderby = (), ()
+                clauses.append( (having, orderby) )
+            else:
+                groupby, having, orderby = select.groupby, select.having, select.orderby
+                select.groupby, select.having, select.orderby = (), (), ()
+                clauses.append( (groupby, having, orderby) )
+
+    def __exit__(self, exctype, exc, traceback):
+        for i, select in enumerate(self.union.children):
+            if self.keepgroup:
+                select.having, select.orderby = self.clauses[i]
+            else:
+                select.groupby, select.having, select.orderby = self.clauses[i]
 
 
 class FetchStep(OneFetchStep):
@@ -94,29 +100,24 @@ class FetchStep(OneFetchStep):
         plan = self.plan
         plan.create_temp_table(self.table)
         union = self.union
-        # XXX 2.5 use "with"
-        clauses = remove_clauses(union, self.keepgroup)
-        for source in self.sources:
-            source.flying_insert(self.table, plan.session, union, plan.args,
-                                 self.inputmap)
-        restore_clauses(union, self.keepgroup, clauses)
+        with remove_and_restore_clauses(union, self.keepgroup):
+            for source in self.sources:
+                source.flying_insert(self.table, plan.session, union, plan.args,
+                                     self.inputmap)
 
     def mytest_repr(self):
         """return a representation of this step suitable for test"""
-        clauses = remove_clauses(self.union, self.keepgroup)
-        try:
-            inputmap = varmap_test_repr(self.inputmap, self.plan.tablesinorder)
-            outputmap = varmap_test_repr(self.outputmap, self.plan.tablesinorder)
-        except AttributeError:
-            inputmap = self.inputmap
-            outputmap = self.outputmap
-        try:
+        with remove_and_restore_clauses(self.union, self.keepgroup):
+            try:
+                inputmap = varmap_test_repr(self.inputmap, self.plan.tablesinorder)
+                outputmap = varmap_test_repr(self.outputmap, self.plan.tablesinorder)
+            except AttributeError:
+                inputmap = self.inputmap
+                outputmap = self.outputmap
             return (self.__class__.__name__,
-                sorted((r.as_string(kwargs=self.plan.args), r.solutions)
-                       for r in self.union.children),
-                sorted(self.sources), inputmap, outputmap)
-        finally:
-            restore_clauses(self.union, self.keepgroup, clauses)
+                    sorted((r.as_string(kwargs=self.plan.args), r.solutions)
+                           for r in self.union.children),
+                    sorted(self.sources), inputmap, outputmap)
 
 
 class AggrStep(LimitOffsetMixIn, Step):
