@@ -270,7 +270,7 @@ class Session(RequestSessionBase):
 
     def add_relations(self, relations):
         '''set many relation using a shortcut similar to the one in add_relation
-        
+
         relations is a list of 2-uples, the first element of each
         2-uple is the rtype, and the second is a list of (fromeid,
         toeid) tuples
