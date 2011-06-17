@@ -101,12 +101,28 @@ RELATEDXML ={
 ''',
     }
 
+
+OTHERXML = ''.join(u'''
+<rset size="1">
+ <CWUser eid="5" cwuri="http://pouet.org/5" cwsource="myfeed">
+  <login>sthenault</login>
+  <upassword>toto</upassword>
+  <last_login_time>2011-01-25 14:14:06</last_login_time>
+  <creation_date>2010-01-22 10:27:59</creation_date>
+  <modification_date>2011-01-25 14:14:06</modification_date>
+ </CWUser>
+</rset>
+'''.splitlines()
+)
 class CWEntityXMLParserTC(CubicWebTC):
-    def setup_database(self):
-        req = self.request()
-        source = req.create_entity('CWSource', name=u'myfeed', type=u'datafeed',
+    test_db_id = 'xmlparser'
+    @classmethod
+    def pre_setup_database(cls, session, config):
+        source = session.create_entity('CWSource', name=u'myfeed', type=u'datafeed',
                                    parser=u'cw.entityxml', url=BASEXML)
-        self.commit()
+        session.create_entity('CWSource', name=u'myotherfeed', type=u'datafeed',
+                              parser=u'cw.entityxml', url=OTHERXML)
+        session.commit()
         source.init_mapping([(('CWUser', 'use_email', '*'),
                               u'role=subject\naction=copy'),
                              (('CWUser', 'in_group', '*'),
@@ -114,7 +130,7 @@ class CWEntityXMLParserTC(CubicWebTC):
                              (('*', 'tags', 'CWUser'),
                               u'role=object\naction=link-or-create\nlinkattr=name'),
                             ])
-        req.create_entity('Tag', name=u'hop')
+        session.create_entity('Tag', name=u'hop')
 
     def test_complete_url(self):
         dfsource = self.repo.sources_by_uri['myfeed']
@@ -214,6 +230,16 @@ class CWEntityXMLParserTC(CubicWebTC):
         self.assertEqual(len(rset), 0)
         rset = self.sexecute('Any X WHERE X use_email E, X login "sthenault"')
         self.assertEqual(len(rset), 0)
+
+    def test_external_entity(self):
+        dfsource = self.repo.sources_by_uri['myotherfeed']
+        session = self.repo.internal_session()
+        stats = dfsource.pull_data(session, force=True, raise_on_error=True)
+        user = self.execute('CWUser X WHERE X login "sthenault"').get_entity(0, 0)
+        self.assertEqual(user.creation_date, datetime(2010, 01, 22, 10, 27, 59))
+        self.assertEqual(user.modification_date, datetime(2011, 01, 25, 14, 14, 06))
+        self.assertEqual(user.cwuri, 'http://pouet.org/5')
+        self.assertEqual(user.cw_source[0].name, 'myfeed')
 
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main

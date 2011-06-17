@@ -259,9 +259,14 @@ class DataFeedParser(AppObject):
         """return an entity for the given uri. May return None if it should be
         skipped
         """
+        # if cwsource is specified and repository has a source with the same
+        # name, call extid2eid on that source so entity will be properly seen as
+        # coming from this source
+        source = self._cw.repo.sources_by_uri.get(
+            sourceparams.pop('cwsource', None), self.source)
         sourceparams['parser'] = self
-        eid = self.source.extid2eid(str(uri), etype, self._cw,
-                                    sourceparams=sourceparams)
+        eid = source.extid2eid(str(uri), etype, self._cw,
+                               sourceparams=sourceparams)
         if eid < 0:
             # entity has been moved away from its original source
             #

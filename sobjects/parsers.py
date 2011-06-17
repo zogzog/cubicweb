@@ -80,12 +80,14 @@ def _parse_entity_etree(parent):
         try:
             item = {'cwtype': unicode(node.tag),
                     'cwuri': node.attrib['cwuri'],
+                    'cwsource': node.attrib.get('cwsource'),
                     'eid': typed_eid(node.attrib['eid']),
                     }
         except KeyError:
             # cw < 3.11 compat mode XXX
             item = {'cwtype': unicode(node.tag),
                     'cwuri': node.find('cwuri').text,
+                    'cwsource': None,
                     'eid': typed_eid(node.find('eid').text),
                     }
         rels = {}
@@ -202,7 +204,7 @@ class CWEntityXMLParser(datafeed.DataFeedXMLParser):
 
     def process_item(self, item, rels):
         entity = self.extid2entity(str(item.pop('cwuri')),  item.pop('cwtype'),
-                                   item=item)
+                                   cwsource=item.pop('cwsource'), item=item)
         if entity is None:
             return None
         if entity.eid in self._processed_entities:

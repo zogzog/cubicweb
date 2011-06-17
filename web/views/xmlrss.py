@@ -76,8 +76,10 @@ class XMLItemView(EntityView):
     def cell_call(self, row, col):
         """ element as an item for an xml feed """
         entity = self.cw_rset.complete_entity(row, col)
-        self.w(u'<%s eid="%s" cwuri="%s">\n'
-               % (entity.e_schema, entity.eid, xml_escape(entity.cwuri)))
+        source = entity.cw_metainformation()['source']['uri']
+        self.w(u'<%s eid="%s" cwuri="%s" cwsource="%s">\n'
+               % (entity.__regid__, entity.eid, xml_escape(entity.cwuri),
+                  xml_escape(source)))
         for rschema, attrschema in entity.e_schema.attribute_definitions():
             attr = rschema.type
             if attr in ('eid', 'cwuri'):
