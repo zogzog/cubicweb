@@ -34,7 +34,7 @@ Example of mapping for CWEntityXMLParser::
 import os.path as osp
 from datetime import datetime, timedelta
 from urllib import urlencode
-from urlparse import parse_qs
+from cgi import parse_qs # in urlparse with python >= 2.6
 
 from logilab.common.date import todate, totime
 from logilab.common.textutils import splitstrip, text_to_dict
