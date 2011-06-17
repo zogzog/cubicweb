@@ -33,7 +33,8 @@ Example of mapping for CWEntityXMLParser::
 
 import os.path as osp
 from datetime import datetime, timedelta
-import urllib
+from urllib import urlencode
+from urlparse import parse_qs
 
 from logilab.common.date import todate, totime
 from logilab.common.textutils import splitstrip, text_to_dict
@@ -191,6 +192,11 @@ class CWEntityXMLParser(datafeed.DataFeedXMLParser):
 
     # import handling ##########################################################
 
+    def process(self, url, raise_on_error=False, partialcommit=True):
+        """IDataFeedParser main entry point"""
+        super(CWEntityXMLParser, self).process(self.complete_url(url),
+                                               raise_on_error, partialcommit)
+
     # XXX suppression support according to source configuration. If set, get all
     # cwuri of entities from this source, and compare with newly imported ones
 
@@ -301,15 +307,41 @@ class CWEntityXMLParser(datafeed.DataFeedXMLParser):
         else:
             self._clear_relation(entity, rtype, role, (ttype,))
 
+    def complete_url(self, url, etype=None):
+        """append to the url's query string information about relation that should
+        be included in the resulting xml, according to source mapping.
+
+        If etype is not specified, try to guess it using the last path part of
+        the url.
+        """
+        try:
+            url, qs = url.split('?', 1)
+        except ValueError:
+            qs = ''
+        if etype is None:
+            try:
+                etype = url.rsplit('/', 1)[1]
+            except ValueError:
+                return url
+            try:
+                etype = self._cw.vreg.case_insensitive_etypes[etype]
+            except KeyError:
+                return url
+        params = parse_qs(qs)
+        if not 'vid' in params:
+            params['vid'] = ['xml']
+        relations = params.setdefault('relation', [])
+        for rtype, role, _ in self.source.mapping.get(etype, ()):
+            reldef = '%s-%s' % (rtype, role)
+            if not reldef in relations:
+                relations.append(reldef)
+        return url + '?' + self._cw.build_url_params(**params)
+
     def _complete_item(self, item, add_relations=True):
         try:
             return self._parsed_urls[(item['cwuri'], add_relations)]
         except KeyError:
-            query = [('vid','xml')]
-            if add_relations:
-                for rtype, role, _ in self.source.mapping.get(item['cwtype'], ()):
-                    query.append(('relation','%s-%s' % (rtype, role)))
-            itemurl = item['cwuri'] + '?' + urllib.urlencode(query)
+            itemurl = self.complete_url(item['cwuri'], item['cwtype'])
             item_rels = list(self.parse(itemurl))
             assert len(item_rels) == 1, 'url %s expected to bring back one '\
                    'and only one entity, got %s' % (itemurl, len(item_rels))
@@ -336,6 +368,7 @@ class CWEntityXMLParser(datafeed.DataFeedXMLParser):
         else:
             rql = 'SET %s, Y eid IN (%s), NOT X %s Y' % (rqlbase, eidstr, rtype)
         self._cw.execute(rql, {'x': entity.eid})
+
 
 def registration_callback(vreg):
     vreg.register_all(globals().values(), __name__)

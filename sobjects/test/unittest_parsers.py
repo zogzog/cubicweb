@@ -116,6 +116,15 @@ class CWEntityXMLParserTC(CubicWebTC):
                             ])
         req.create_entity('Tag', name=u'hop')
 
+    def test_complete_url(self):
+        dfsource = self.repo.sources_by_uri['myfeed']
+        parser = dfsource._get_parser(self.session)
+        self.assertEqual(parser.complete_url('http://www.cubicweb.org/cwuser'),
+                         'http://www.cubicweb.org/cwuser?relation=tags-object&relation=in_group-subject&relation=use_email-subject&vid=xml')
+        self.assertEqual(parser.complete_url('http://www.cubicweb.org/cwuser?vid=rdf&relation=hop'),
+                         'http://www.cubicweb.org/cwuser?relation=hop&relation=tags-object&relation=in_group-subject&relation=use_email-subject&vid=rdf')
+
+
     def test_actions(self):
         dfsource = self.repo.sources_by_uri['myfeed']
         self.assertEqual(dfsource.mapping,
