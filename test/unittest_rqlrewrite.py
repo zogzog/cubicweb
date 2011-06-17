@@ -82,8 +82,9 @@ def test_vrefs(node):
     for vref in node.iget_nodes(nodes.VariableRef):
         vrefmap.setdefault(vref.name, set()).add(vref)
     for var in node.defined_vars.itervalues():
-        assert not (var.stinfo['references'] ^ vrefmap[var.name])
-        assert (var.stinfo['references'])
+        assert var.stinfo['references']
+        assert not (var.stinfo['references'] ^ vrefmap[var.name]), (node.as_string(), var.stinfo['references'], vrefmap[var.name])
+
 
 class RQLRewriteTC(TestCase):
     """a faire:
@@ -95,10 +96,10 @@ class RQLRewriteTC(TestCase):
     """
 
     def test_base_var(self):
-        card_constraint = ('X in_state S, U in_group G, P require_state S,'
+        constraint = ('X in_state S, U in_group G, P require_state S,'
                            'P name "read", P require_group G')
         rqlst = parse('Card C')
-        rewrite(rqlst, {('C', 'X'): (card_constraint,)}, {})
+        rewrite(rqlst, {('C', 'X'): (constraint,)}, {})
         self.failUnlessEqual(rqlst.as_string(),
                              u"Any C WHERE C is Card, B eid %(D)s, "
                              "EXISTS(C in_state A, B in_group E, F require_state A, "
@@ -130,33 +131,50 @@ class RQLRewriteTC(TestCase):
                              "E in_state D, D name 'subscribed'), D is State, E is CWUser)")
 
     def test_simplified_rqlst(self):
-        card_constraint = ('X in_state S, U in_group G, P require_state S,'
+        constraint = ('X in_state S, U in_group G, P require_state S,'
                            'P name "read", P require_group G')
         rqlst = parse('Any 2') # this is the simplified rql st for Any X WHERE X eid 12
-        rewrite(rqlst, {('2', 'X'): (card_constraint,)}, {})
+        rewrite(rqlst, {('2', 'X'): (constraint,)}, {})
         self.failUnlessEqual(rqlst.as_string(),
                              u"Any 2 WHERE B eid %(C)s, "
                              "EXISTS(2 in_state A, B in_group D, E require_state A, "
                              "E name 'read', E require_group D, A is State, D is CWGroup, E is CWPermission)")
 
-    def test_optional_var_base(self):
-        card_constraint = ('X in_state S, U in_group G, P require_state S,'
+    def test_optional_var_base_1(self):
+        constraint = ('X in_state S, U in_group G, P require_state S,'
                            'P name "read", P require_group G')
         rqlst = parse('Any A,C WHERE A documented_by C?')
-        rewrite(rqlst, {('C', 'X'): (card_constraint,)}, {})
+        rewrite(rqlst, {('C', 'X'): (constraint,)}, {})
         self.failUnlessEqual(rqlst.as_string(),
                              "Any A,C WHERE A documented_by C?, A is Affaire "
                              "WITH C BEING "
                              "(Any C WHERE EXISTS(C in_state B, D in_group F, G require_state B, G name 'read', "
                              "G require_group F), D eid %(A)s, C is Card)")
+
+    def test_optional_var_base_2(self):
+        constraint = ('X in_state S, U in_group G, P require_state S,'
+                           'P name "read", P require_group G')
         rqlst = parse('Any A,C,T WHERE A documented_by C?, C title T')
-        rewrite(rqlst, {('C', 'X'): (card_constraint,)}, {})
+        rewrite(rqlst, {('C', 'X'): (constraint,)}, {})
         self.failUnlessEqual(rqlst.as_string(),
                              "Any A,C,T WHERE A documented_by C?, A is Affaire "
                              "WITH C,T BEING "
                              "(Any C,T WHERE C title T, EXISTS(C in_state B, D in_group F, "
                              "G require_state B, G name 'read', G require_group F), "
                              "D eid %(A)s, C is Card)")
+
+    def test_optional_var_base_3(self):
+        constraint1 = ('X in_state S, U in_group G, P require_state S,'
+                       'P name "read", P require_group G')
+        constraint2 = 'X in_state S, S name "public"'
+        rqlst = parse('Any A,C,T WHERE A documented_by C?, C title T')
+        rewrite(rqlst, {('C', 'X'): (constraint1, constraint2)}, {})
+        self.failUnlessEqual(rqlst.as_string(),
+                             "Any A,C,T WHERE A documented_by C?, A is Affaire "
+                             "WITH C,T BEING (Any C,T WHERE C title T, "
+                             "EXISTS(C in_state B, D in_group F, G require_state B, G name 'read', G require_group F), "
+                             "D eid %(A)s, C is Card, "
+                             "EXISTS(C in_state E, E name 'public'))")
 
     def test_optional_var_inlined(self):
         c1 = ('X require_permission P')
