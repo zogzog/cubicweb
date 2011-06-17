@@ -185,12 +185,6 @@ which will always return a string whatever the attribute's type (so it's
 recommended also for other attribute types). By default it expects to generate
 HTML, so it deals with rich text formating, xml escaping...
 
-How do I translate an msg id defined (and translated) in another cube ?
------------------------------------------------------------------------
-
-You should put these translations in the `i18n/static-messages.pot`
-file of your own cube.
-
 How to update a database after a schema modification ?
 ------------------------------------------------------
 

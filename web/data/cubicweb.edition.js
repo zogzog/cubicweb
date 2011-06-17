@@ -583,6 +583,7 @@ jQuery(document).ready(function() {
  * around the corresponding input fields.
  */
 function validateForm(formid, action, onsuccess, onfailure) {
+    freezeFormButtons(formid);
     try {
         var zipped = cw.utils.formContents(formid);
         var args = ajaxFuncArgs('validate_form', null, action, zipped[0], zipped[1]);

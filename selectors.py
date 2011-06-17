@@ -1252,15 +1252,18 @@ class is_in_state(score_entity):
 
 def on_fire_transition(etype, tr_name, from_state_name=None):
     """Return 1 when entity of the type `etype` is going through transition of
-    the name `tr_name`. If `from_state_name` is specified, this selector will
-    also check the incoming state.
+    the name `tr_name`.
+    
+    If `from_state_name` is specified, this selector will also check the
+    incoming state.
 
     You should use this selector on 'after_add_entity' hook, since it's actually
     looking for addition of `TrInfo` entities. Hence in the hook, `self.entity`
     will reference the matching `TrInfo` entity, allowing to get all the
     transition details (including the entity to which is applied the transition
-    but also its original state, transition, destination state, user...).  See
-    :class:`cubicweb.entities.wfobjs.TrInfo` for more information.
+    but also its original state, transition, destination state, user...).
+    
+    See :class:`cubicweb.entities.wfobjs.TrInfo` for more information.
     """
     def match_etype_and_transition(trinfo):
         # take care trinfo.transition is None when calling change_state

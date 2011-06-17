@@ -25,7 +25,7 @@ in |cubicweb|.
 
    urlpublish
    breadcrumbs
-..   wdoc
+   idownloadable
+   wdoc
 ..   embedding
-..   idownloadable
 

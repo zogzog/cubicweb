@@ -38,7 +38,7 @@ class AjaxReplaceUrlTC(TestCase):
         self.failUnless(url.endswith('()'))
         cbname = url.split()[1][:-2]
         self.assertMultiLineEqual(
-            'function %s() { $("#foo").loadxhtml("http://testing.fr/cubicweb/json?%s",null,"get","replace"); }' % (cbname, qs),
+            'function %s() { $("#foo").loadxhtml("http://testing.fr/cubicweb/json?%s",{"pageid": "%s"},"get","replace"); }' % (cbname, qs, req.pageid),
             req.html_headers.post_inlined_scripts[0])
 
 if __name__ == '__main__':

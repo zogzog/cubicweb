@@ -27,13 +27,19 @@ from itertools import repeat, chain
 from cubicweb.selectors import is_instance, score_entity, match_user_groups
 from cubicweb.view import EntityView, StartupView
 from cubicweb.schema import META_RTYPES, VIRTUAL_RTYPES, display_name
-from cubicweb.web import uicfg
+from cubicweb.web import uicfg, formwidgets as wdgs
 from cubicweb.web.views import tabs, actions
 
 
 _abaa = uicfg.actionbox_appearsin_addmenu
 _abaa.tag_object_of(('CWSourceSchemaConfig', 'cw_schema', '*'), False)
 _abaa.tag_object_of(('CWSourceSchemaConfig', 'cw_for_source', '*'), False)
+
+_afs = uicfg.autoform_section
+_afs.tag_attribute(('CWSource', 'synchronizing'), 'main', 'hidden')
+_afs.tag_object_of(('*', 'cw_for_source', 'CWSource'), 'main', 'hidden')
+_affk = uicfg.autoform_field_kwargs
+_affk.tag_attribute(('CWSource', 'parser'), {'widget': wdgs.TextInput})
 
 # source primary views #########################################################
 

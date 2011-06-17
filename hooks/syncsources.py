@@ -136,7 +136,7 @@ class SourceMappingChangedOp(hook.DataOperationMixIn, hook.Operation):
                 if not session.deleted_in_transaction(schemacfg.eid):
                     source.add_schema_config(schemacfg, checkonly=checkonly)
             elif session.deleted_in_transaction(schemacfg.eid):
-                source.delete_schema_config(schemacfg, checkonly=checkonly)
+                source.del_schema_config(schemacfg, checkonly=checkonly)
             else:
                 source.update_schema_config(schemacfg, checkonly=checkonly)
 
@@ -164,5 +164,4 @@ class SourceMappingDeleteHook(SourceHook):
     def __call__(self):
         SourceMappingChangedOp.get_instance(self._cw).add_data(
             (self._cw.entity_from_eid(self.eidfrom),
-             self._cw.entity_from_eid(self.eidto)) )
-
+             self._cw.entity_from_eid(self.eidto).repo_source) )

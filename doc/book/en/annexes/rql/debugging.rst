@@ -8,26 +8,15 @@ Debugging RQL
 Available levels
 ~~~~~~~~~~~~~~~~
 
-:DBG_NONE:
-    no debug information (current mode)
+Server debugging flags. They may be combined using binary operators.
 
-:DBG_RQL:
-    rql execution information
-
-:DBG_SQL:
-    executed sql
-
-:DBG_REPO:
-    repository events
-
-:DBG_MS:
-    multi-sources
-
-:DBG_MORE:
-    more verbosity
-
-:DBG_ALL:
-    all level enabled
+.. autodata:: cubicweb.server.DBG_NONE
+.. autodata:: cubicweb.server.DBG_RQL
+.. autodata:: cubicweb.server.DBG_SQL
+.. autodata:: cubicweb.server.DBG_REPO
+.. autodata:: cubicweb.server.DBG_MS
+.. autodata:: cubicweb.server.DBG_MORE
+.. autodata:: cubicweb.server.DBG_ALL
 
 
 Enable verbose output
@@ -40,6 +29,8 @@ To debug your RQL statements, it can be useful to enable a verbose output:
     from cubicweb import server
     server.set_debug(server.DBG_RQL|server.DBG_SQL|server.DBG_ALL)
 
+.. autofunction:: cubicweb.server.set_debug
+
 
 Detect largest RQL queries
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -49,8 +40,6 @@ See `Profiling and performance` chapter (see :ref:`PROFILING`).
 
 API
 ~~~
-
-.. autofunction:: cubicweb.server.set_debug
 
 .. autoclass:: cubicweb.server.debugged
 

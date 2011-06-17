@@ -15,8 +15,10 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""Specific views for entities adapting to IDownloadable"""
-
+"""
+Specific views for entities adapting to IDownloadable
+=====================================================
+"""
 __docformat__ = "restructuredtext en"
 _ = unicode
 
@@ -50,6 +52,7 @@ def download_box(w, entity, title=None, label=None, footer=u''):
 
 
 class DownloadBox(component.EntityCtxComponent):
+    """add download box"""
     __regid__ = 'download_box'    # no download box for images
     __select__ = (component.EntityCtxComponent.__select__ &
                   adaptable('IDownloadable') & ~has_mimetype('image/'))
@@ -71,7 +74,9 @@ class DownloadBox(component.EntityCtxComponent):
 
 
 class DownloadView(EntityView):
-    """this view is replacing the deprecated 'download' controller and allow
+    """download view
+    
+    this view is replacing the deprecated 'download' controller and allow
     downloading of entities providing the necessary interface
     """
     __regid__ = 'download'
@@ -199,6 +204,7 @@ class AbstractEmbeddedView(EntityView):
 
 
 class ImageView(AbstractEmbeddedView):
+    """image embedded view"""
     __regid__ = 'image'
     __select__ = has_mimetype('image/')
 
@@ -207,6 +213,7 @@ class ImageView(AbstractEmbeddedView):
 
 
 class EHTMLView(AbstractEmbeddedView):
+    """html embedded view"""
     __regid__ = 'ehtml'
     __select__ = has_mimetype('text/html')
 

@@ -18,13 +18,16 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unit tests for modules cubicweb.server.rqlannotation"""
 
-from cubicweb.devtools import init_test_database
+from cubicweb.devtools import TestServerConfiguration, get_test_db_handler
 from cubicweb.devtools.repotest import BaseQuerierTC
 
 
 def setUpModule(*args):
+    handler = get_test_db_handler(TestServerConfiguration(
+        'data2', apphome=SQLGenAnnotatorTC.datadir))
+    handler.build_db_cache()
     global repo, cnx
-    repo, cnx = init_test_database(apphome=SQLGenAnnotatorTC.datadir)
+    repo, cnx = handler.get_repo_and_cnx()
 
 def tearDownModule(*args):
     global repo, cnx
@@ -329,6 +332,13 @@ class SQLGenAnnotatorTC(BaseQuerierTC):
         # N may be an image as well, not invariant
         self.assertEqual(rqlst.defined_vars['N']._q_invariant, False)
         self.assertEqual(rqlst.defined_vars['F']._q_invariant, True)
+
+    def test_nonregr_ambiguity_2(self):
+        rqlst = self._prepare('Any S,SN WHERE X has_text "tot", X in_state S, S name SN, X is CWUser')
+        # X use has_text but should not be invariant as ambiguous, and has_text
+        # may not be its principal
+        self.assertEqual(rqlst.defined_vars['X']._q_invariant, False)
+        self.assertEqual(rqlst.defined_vars['S']._q_invariant, False)
 
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main

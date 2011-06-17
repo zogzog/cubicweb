@@ -604,7 +604,7 @@ class UndoController(Controller):
         if not errors:
             self.redirect()
         return self._cw._('some errors occurred:') + self._cw.view(
-            'pyvalist', pyvalue=errors)
+            'pyvallist', pyvalue=errors)
 
     def redirect(self):
         req = self._cw

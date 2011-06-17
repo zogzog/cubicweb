@@ -624,8 +624,10 @@ class CubicWebRequestBase(DBAPIRequest):
         extraparams.setdefault('fname', 'view')
         url = self.build_url('json', **extraparams)
         cbname = build_cb_uid(url[:50])
+        # think to propagate pageid. XXX see https://www.cubicweb.org/ticket/1753121
         jscode = 'function %s() { $("#%s").%s; }' % (
-            cbname, nodeid, js.loadxhtml(url, None, 'get', replacemode))
+            cbname, nodeid, js.loadxhtml(url, {'pageid': self.pageid},
+                                         'get', replacemode))
         self.html_headers.add_post_inline_script(jscode)
         return "javascript: %s()" % cbname
 

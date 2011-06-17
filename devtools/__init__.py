@@ -528,11 +528,19 @@ class PostgresTestDataBaseHandler(TestDataBaseHandler):
         return get_db_helper('postgres')
 
     @property
-    @cached
     def dbcnx(self):
-        from cubicweb.server.serverctl import _db_sys_cnx
-        return  _db_sys_cnx(self.system_source, 'CREATE DATABASE and / or USER',
-                            interactive=False)
+        try:
+            return self._cnx
+        except AttributeError:
+            from cubicweb.server.serverctl import _db_sys_cnx
+            try:
+                self._cnx = _db_sys_cnx(
+                    self.system_source, 'CREATE DATABASE and / or USER',
+                    interactive=False)
+                return self._cnx
+            except Exception:
+                self._cnx = None
+                raise
 
     @property
     @cached
@@ -570,17 +578,19 @@ class PostgresTestDataBaseHandler(TestDataBaseHandler):
                 cnx.close()
             init_repository(self.config, interactive=False)
         except:
-            self.dbcnx.rollback()
+            if self.dbcnx is not None:
+                self.dbcnx.rollback()
             print >> sys.stderr, 'building', self.dbname, 'failed'
             #self._drop(self.dbname)
             raise
 
     def helper_clear_cache(self):
-        self.dbcnx.commit()
-        self.dbcnx.close()
-        clear_cache(self, 'dbcnx')
+        if self.dbcnx is not None:
+            self.dbcnx.commit()
+            self.dbcnx.close()
+            del self._cnx
+            clear_cache(self, 'cursor')
         clear_cache(self, 'helper')
-        clear_cache(self, 'cursor')
 
     def __del__(self):
         self.helper_clear_cache()

@@ -23,23 +23,21 @@ The simplest solution is to use a *setuptools/pip* command (for a clean
 environment, take a look to the `virtualenv
 <http://pypi.python.org/pypi/virtualenv>`_ project as well)::
 
-    pip install windmill
-    curl -O http://github.com/windmill/windmill/tarball/master
+    $ pip install windmill
+    $ curl -O http://github.com/windmill/windmill/tarball/master
 
 However, the Windmill project doesn't release frequently. Our recommandation is
-to used the last snapshot of the Git repository:
+to used the last snapshot of the Git repository::
 
-.. sourcecode:: bash
-
-    git clone git://github.com/windmill/windmill.git HEAD
-    cd windmill
-    python setup.py develop
+    $ git clone git://github.com/windmill/windmill.git HEAD
+    $ cd windmill
+    $ python setup.py develop
 
 Install instructions are `available <http://wiki.github.com/windmill/windmill/installing>`_.
 
 Be sure to have the windmill module in your PYTHONPATH afterwards::
 
-    python -c "import windmill"
+    $ python -c "import windmill"
 
 X dummy
 -------
@@ -60,9 +58,9 @@ with a light X server as `Xvfb <http://en.wikipedia.org/wiki/Xvfb>`_.
 
     *From: http://www.x.org/wiki/XorgTesting*
 
-Then, you can run the X server with the following command :
+Then, you can run the X server with the following command ::
 
-    /usr/bin/X11/Xvfb :1 -ac -screen 0 1280x1024x8 -fbdir /tmp
+    $ /usr/bin/X11/Xvfb :1 -ac -screen 0 1280x1024x8 -fbdir /tmp
 
 
 Windmill usage
@@ -82,13 +80,15 @@ Record your use case
 
 If you are using firefox as client, consider the "firebug" option.
 
-If you have a running instance, you can refine the test by the *loadtest* windmill option:
+If you have a running instance, you can refine the test by the *loadtest* windmill option::
 
-    windmill -m firebug loadtest=<test_file.py> <instance url>
+    $ windmill -m firebug loadtest=<test_file.py> <instance url>
 
-Or use the internal windmill shell to explore available commands:
+Or use the internal windmill shell to explore available commands::
 
-    windmill -m firebug shell <instance url>
+    $ windmill -m firebug shell <instance url>
+
+And enter python commands:
 
 .. sourcecode:: python
 
@@ -125,7 +125,7 @@ You have to copy a *test_windmill.py* file from :mod:`web.test`.
 
 To run your test series::
 
-    % pytest test/test_windmill.py
+    $ pytest test/test_windmill.py
 
 By default, CubicWeb will use **firefox** as the default browser and will try
 to run test instance server on localhost. In the general case, You've no need
@@ -143,6 +143,8 @@ Windmill configuration. You can edit windmill settings with following class attr
   load and edit test for debugging (False by default)
 
 Examples:
+
+.. sourcecode:: python
 
     browser = 'firefox'
     test_dir = osp.join(__file__, 'windmill')
@@ -162,7 +164,7 @@ variables from :class:`CubicWebServerConfig` or inherit it with overriding the
 
 For instance, CubicWeb framework windmill tests can be manually run by::
 
-    % pytest web/test/test_windmill.py
+    $ pytest web/test/test_windmill.py
 
 Edit your tests
 ---------------
@@ -172,7 +174,7 @@ You can toggle the `edit_test` variable to enable test edition.
 But if you are using `pytest` as test runner, use the `-i` option directly.
 The test series will be loaded and you can run assertions step-by-step::
 
-    % pytest -i test/test_windmill.py
+    $ pytest -i test/test_windmill.py
 
 In this case, the `firebug` extension will be loaded automatically for you.
 

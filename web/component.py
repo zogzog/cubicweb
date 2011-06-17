@@ -440,7 +440,6 @@ class EntityCtxComponent(CtxComponent):
         params.pop('view', None)
         params.pop('entity', None)
         form = params.pop('formparams', {})
-        form['pageid'] = self._cw.pageid
         if entity.has_eid():
             eid = entity.eid
         else:

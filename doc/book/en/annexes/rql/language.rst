@@ -152,6 +152,10 @@ Sorting and groups
 
 - Aggregate Functions: COUNT, MIN, MAX, AVG, SUM, GROUP_CONCAT
 
+.. note::
+   Aggregate functions will return None if there is no result row.
+
+
 Having
 ```````
 
