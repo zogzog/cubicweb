@@ -304,6 +304,8 @@ class DataFeedXMLParser(DataFeedParser):
         try:
             parsed = self.parse(url)
         except Exception, ex:
+            if raise_on_error:
+                raise
             self.source.error(str(ex))
             return True
         error = False
