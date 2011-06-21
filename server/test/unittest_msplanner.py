@@ -296,7 +296,7 @@ class PartPlanInformationTC(BaseMSPlannerTC):
                    True)
 
     def test_not_relation_no_split_external(self):
-        repo._type_source_cache[999999] = ('Note', 'cards', 999999)
+        repo._type_source_cache[999999] = ('Note', 'cards', 999999, 'cards')
         # similar to the above test but with an eid coming from the external source.
         # the same plan may be used, since we won't find any record in the system source
         # linking 9999999 to a state
@@ -313,7 +313,7 @@ class PartPlanInformationTC(BaseMSPlannerTC):
                    True)
 
     def test_simplified_var(self):
-        repo._type_source_cache[999999] = ('Note', 'cards', 999999)
+        repo._type_source_cache[999999] = ('Note', 'cards', 999999, 'cards')
         self._test('Any U WHERE U in_group G, (G name IN ("managers", "logilab") OR (X require_permission P?, P name "bla", P require_group G)), X eid %(x)s, U eid %(u)s',
                    {'x': 999999, 'u': self.session.user.eid},
                    {self.system: {'P': s[0], 'G': s[0], 'X': s[0],
@@ -329,7 +329,7 @@ class PartPlanInformationTC(BaseMSPlannerTC):
                    False)
 
     def test_crossed_relation_eid_1_needattr(self):
-        repo._type_source_cache[999999] = ('Note', 'system', 999999)
+        repo._type_source_cache[999999] = ('Note', 'system', 999999, 'system')
         ueid = self.session.user.eid
         self._test('Any Y,T WHERE X eid %(x)s, X multisource_crossed_rel Y, Y type T',
                    {'x': 999999,},
@@ -337,14 +337,14 @@ class PartPlanInformationTC(BaseMSPlannerTC):
                    True)
 
     def test_crossed_relation_eid_1_invariant(self):
-        repo._type_source_cache[999999] = ('Note', 'system', 999999)
+        repo._type_source_cache[999999] = ('Note', 'system', 999999, 'system')
         self._test('Any Y WHERE X eid %(x)s, X multisource_crossed_rel Y',
                    {'x': 999999},
                    {self.system: {'Y': s[0], 'x': s[0]}},
                    False)
 
     def test_crossed_relation_eid_2_invariant(self):
-        repo._type_source_cache[999999] = ('Note', 'cards', 999999)
+        repo._type_source_cache[999999] = ('Note', 'cards', 999999, 'cards')
         self._test('Any Y WHERE X eid %(x)s, X multisource_crossed_rel Y',
                    {'x': 999999,},
                    {self.cards: {'Y': s[0], 'multisource_crossed_rel': s[0], 'x': s[0]},
@@ -352,7 +352,7 @@ class PartPlanInformationTC(BaseMSPlannerTC):
                    False)
 
     def test_version_crossed_depends_on_1(self):
-        repo._type_source_cache[999999] = ('Note', 'cards', 999999)
+        repo._type_source_cache[999999] = ('Note', 'cards', 999999, 'cards')
         self._test('Any X,AD,AE WHERE E eid %(x)s, E multisource_crossed_rel X, X in_state AD, AD name AE',
                    {'x': 999999},
                    {self.cards: {'X': s[0], 'AD': s[0], 'multisource_crossed_rel': s[0], 'x': s[0]},
@@ -360,7 +360,7 @@ class PartPlanInformationTC(BaseMSPlannerTC):
                    True)
 
     def test_version_crossed_depends_on_2(self):
-        repo._type_source_cache[999999] = ('Note', 'system', 999999)
+        repo._type_source_cache[999999] = ('Note', 'system', 999999, 'system')
         self._test('Any X,AD,AE WHERE E eid %(x)s, E multisource_crossed_rel X, X in_state AD, AD name AE',
                    {'x': 999999},
                    {self.cards: {'X': s[0], 'AD': s[0]},
@@ -368,8 +368,8 @@ class PartPlanInformationTC(BaseMSPlannerTC):
                     True)
 
     def test_simplified_var_3(self):
-        repo._type_source_cache[999999] = ('Note', 'cards', 999999)
-        repo._type_source_cache[999998] = ('State', 'cards', 999998)
+        repo._type_source_cache[999999] = ('Note', 'cards', 999999, 'cards')
+        repo._type_source_cache[999998] = ('State', 'cards', 999998, 'cards')
         self._test('Any S,T WHERE S eid %(s)s, N eid %(n)s, N type T, N is Note, S is State',
                    {'n': 999999, 's': 999998},
                    {self.cards: {'s': s[0], 'N': s[0]}}, False)
@@ -1266,7 +1266,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                    {'x': ueid})
 
     def test_not_relation_no_split_external(self):
-        repo._type_source_cache[999999] = ('Note', 'cards', 999999)
+        repo._type_source_cache[999999] = ('Note', 'cards', 999999, 'cards')
         # similar to the above test but with an eid coming from the external source.
         # the same plan may be used, since we won't find any record in the system source
         # linking 9999999 to a state
@@ -1297,7 +1297,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                      )])
 
     def test_external_attributes_and_relation(self):
-        repo._type_source_cache[999999] = ('Note', 'cards', 999999)
+        repo._type_source_cache[999999] = ('Note', 'cards', 999999, 'cards')
         self._test('Any A,B,C,D WHERE A eid %(x)s,A creation_date B,A modification_date C, A todo_by D?',
                    [('FetchStep', [('Any A,B,C WHERE A eid 999999, A creation_date B, A modification_date C, A is Note',
                                     [{'A': 'Note', 'C': 'Datetime', 'B': 'Datetime'}])],
@@ -1314,7 +1314,7 @@ class MSPlannerTC(BaseMSPlannerTC):
 
     def test_simplified_var(self):
         ueid = self.session.user.eid
-        repo._type_source_cache[999999] = ('Note', 'cards', 999999)
+        repo._type_source_cache[999999] = ('Note', 'cards', 999999, 'cards')
         self._test('Any U WHERE U in_group G, (G name IN ("managers", "logilab") OR (X require_permission P?, P name "bla", P require_group G)), X eid %(x)s, U eid %(u)s',
                    [('OneFetchStep', [('Any %s WHERE %s in_group G, (G name IN("managers", "logilab")) OR (X require_permission P?, P name "bla", P require_group G), X eid 999999' % (ueid, ueid),
                                        [{'X': 'Note', 'G': 'CWGroup', 'P': 'CWPermission'}])],
@@ -1529,7 +1529,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                    {'E': ueid})
 
     def test_eid_dont_cross_relation_1(self):
-        repo._type_source_cache[999999] = ('Personne', 'system', 999999)
+        repo._type_source_cache[999999] = ('Personne', 'system', 999999, 'system')
         self._test('Any Y,YT WHERE X eid %(x)s, X fiche Y, Y title YT',
                    [('OneFetchStep', [('Any Y,YT WHERE X eid 999999, X fiche Y, Y title YT',
                                        [{'X': 'Personne', 'Y': 'Card', 'YT': 'String'}])],
@@ -1537,7 +1537,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                    {'x': 999999})
 
     def test_eid_dont_cross_relation_2(self):
-        repo._type_source_cache[999999] = ('Note', 'cards', 999999)
+        repo._type_source_cache[999999] = ('Note', 'cards', 999999, 'cards')
         self.cards.dont_cross_relations.add('concerne')
         try:
             self._test('Any Y,S,YT,X WHERE Y concerne X, Y in_state S, X eid 999999, Y ref YT',
@@ -1552,7 +1552,7 @@ class MSPlannerTC(BaseMSPlannerTC):
     # external source w/ .cross_relations == ['multisource_crossed_rel'] ######
 
     def test_crossed_relation_eid_1_invariant(self):
-        repo._type_source_cache[999999] = ('Note', 'system', 999999)
+        repo._type_source_cache[999999] = ('Note', 'system', 999999, 'system')
         self._test('Any Y WHERE X eid %(x)s, X multisource_crossed_rel Y',
                    [('OneFetchStep', [('Any Y WHERE 999999 multisource_crossed_rel Y', [{u'Y': 'Note'}])],
                       None, None, [self.system], {}, [])
@@ -1560,7 +1560,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                    {'x': 999999,})
 
     def test_crossed_relation_eid_1_needattr(self):
-        repo._type_source_cache[999999] = ('Note', 'system', 999999)
+        repo._type_source_cache[999999] = ('Note', 'system', 999999, 'system')
         self._test('Any Y,T WHERE X eid %(x)s, X multisource_crossed_rel Y, Y type T',
                    [('FetchStep', [('Any Y,T WHERE Y type T, Y is Note', [{'T': 'String', 'Y': 'Note'}])],
                      [self.cards, self.system], None,
@@ -1573,7 +1573,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                    {'x': 999999,})
 
     def test_crossed_relation_eid_2_invariant(self):
-        repo._type_source_cache[999999] = ('Note', 'cards', 999999)
+        repo._type_source_cache[999999] = ('Note', 'cards', 999999, 'cards')
         self._test('Any Y WHERE X eid %(x)s, X multisource_crossed_rel Y',
                    [('OneFetchStep', [('Any Y WHERE 999999 multisource_crossed_rel Y, Y is Note', [{'Y': 'Note'}])],
                       None, None, [self.cards, self.system], {}, [])
@@ -1581,7 +1581,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                    {'x': 999999,})
 
     def test_crossed_relation_eid_2_needattr(self):
-        repo._type_source_cache[999999] = ('Note', 'cards', 999999)
+        repo._type_source_cache[999999] = ('Note', 'cards', 999999, 'cards')
         self._test('Any Y,T WHERE X eid %(x)s, X multisource_crossed_rel Y, Y type T',
                    [('OneFetchStep', [('Any Y,T WHERE 999999 multisource_crossed_rel Y, Y type T, Y is Note',
                                        [{'T': 'String', 'Y': 'Note'}])],
@@ -1591,7 +1591,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                    {'x': 999999,})
 
     def test_crossed_relation_eid_not_1(self):
-        repo._type_source_cache[999999] = ('Note', 'system', 999999)
+        repo._type_source_cache[999999] = ('Note', 'system', 999999, 'system')
         self._test('Any Y WHERE X eid %(x)s, NOT X multisource_crossed_rel Y',
                    [('FetchStep', [('Any Y WHERE Y is Note', [{'Y': 'Note'}])],
                      [self.cards, self.system], None, {'Y': 'table0.C0'}, []),
@@ -1608,7 +1608,7 @@ class MSPlannerTC(BaseMSPlannerTC):
 #                    {'x': 999999,})
 
     def test_crossed_relation_base_XXXFIXME(self):
-        repo._type_source_cache[999999] = ('Note', 'system', 999999)
+        repo._type_source_cache[999999] = ('Note', 'system', 999999, 'system')
         self._test('Any X,Y,T WHERE X multisource_crossed_rel Y, Y type T, X type T',
                    [('FetchStep', [('Any X,T WHERE X type T, X is Note', [{'T': 'String', 'X': 'Note'}])],
                      [self.cards, self.system], None,
@@ -1697,8 +1697,8 @@ class MSPlannerTC(BaseMSPlannerTC):
     # edition queries tests ###################################################
 
     def test_insert_simplified_var_1(self):
-        repo._type_source_cache[999999] = ('Note', 'cards', 999999)
-        repo._type_source_cache[999998] = ('State', 'system', None)
+        repo._type_source_cache[999999] = ('Note', 'cards', 999999, 'cards')
+        repo._type_source_cache[999998] = ('State', 'system', None, 'system')
         self._test('INSERT Note X: X in_state S, X type T WHERE S eid %(s)s, N eid %(n)s, N type T',
                    [('InsertStep',
                      [('InsertRelationsStep',
@@ -1710,8 +1710,8 @@ class MSPlannerTC(BaseMSPlannerTC):
                    {'n': 999999, 's': 999998})
 
     def test_insert_simplified_var_2(self):
-        repo._type_source_cache[999999] = ('Note', 'cards', 999999)
-        repo._type_source_cache[999998] = ('State', 'system', None)
+        repo._type_source_cache[999999] = ('Note', 'cards', 999999, 'cards')
+        repo._type_source_cache[999998] = ('State', 'system', None, 'system')
         self._test('INSERT Note X: X in_state S, X type T, X migrated_from N WHERE S eid %(s)s, N eid %(n)s, N type T',
                    [('InsertStep',
                      [('InsertRelationsStep',
@@ -1724,8 +1724,8 @@ class MSPlannerTC(BaseMSPlannerTC):
                    {'n': 999999, 's': 999998})
 
     def test_insert_simplified_var_3(self):
-        repo._type_source_cache[999999] = ('Note', 'cards', 999999)
-        repo._type_source_cache[999998] = ('State', 'cards', 999998)
+        repo._type_source_cache[999999] = ('Note', 'cards', 999999, 'cards')
+        repo._type_source_cache[999998] = ('State', 'cards', 999998, 'cards')
         self._test('INSERT Note X: X in_state S, X type T WHERE S eid %(s)s, N eid %(n)s, N type T',
                    [('InsertStep',
                      [('InsertRelationsStep',
@@ -1737,8 +1737,8 @@ class MSPlannerTC(BaseMSPlannerTC):
                    {'n': 999999, 's': 999998})
 
     def test_insert_simplified_var_4(self):
-        repo._type_source_cache[999999] = ('Note', 'cards', 999999)
-        repo._type_source_cache[999998] = ('State', 'system', None)
+        repo._type_source_cache[999999] = ('Note', 'cards', 999999, 'cards')
+        repo._type_source_cache[999998] = ('State', 'system', None, 'system')
         self._test('INSERT Note X: X in_state S, X type "bla", X migrated_from N WHERE S eid %(s)s, N eid %(n)s',
                    [('InsertStep',
                       [('InsertRelationsStep', [])]
@@ -1746,8 +1746,8 @@ class MSPlannerTC(BaseMSPlannerTC):
                    {'n': 999999, 's': 999998})
 
     def test_insert_simplified_var_5(self):
-        repo._type_source_cache[999999] = ('Note', 'cards', 999999)
-        repo._type_source_cache[999998] = ('State', 'system', None)
+        repo._type_source_cache[999999] = ('Note', 'cards', 999999, 'cards')
+        repo._type_source_cache[999998] = ('State', 'system', None, 'system')
         self._test('INSERT Note X: X in_state S, X type "bla", X migrated_from N WHERE S eid %(s)s, N eid %(n)s, A concerne N',
                    [('InsertStep',
                      [('InsertRelationsStep',
@@ -1784,7 +1784,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                    {'x': ueid, 'y': ueid})
 
     def test_delete_relation3(self):
-        repo._type_source_cache[999999] = ('Note', 'cards', 999999)
+        repo._type_source_cache[999999] = ('Note', 'cards', 999999, 'cards')
         self._test('DELETE Y multisource_inlined_rel X WHERE X eid %(x)s, NOT (Y cw_source S, S name %(source)s)',
                    [('DeleteRelationsStep',
                      [('OneFetchStep',
@@ -1796,7 +1796,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                    {'x': 999999, 'source': 'cards'})
 
     def test_delete_entity1(self):
-        repo._type_source_cache[999999] = ('Note', 'system', 999999)
+        repo._type_source_cache[999999] = ('Note', 'system', 999999, 'system')
         self._test('DELETE Note X WHERE X eid %(x)s, NOT Y multisource_rel X',
                    [('DeleteEntitiesStep',
                      [('OneFetchStep', [('Any 999999 WHERE NOT EXISTS(Y multisource_rel 999999), Y is IN(Card, Note)',
@@ -1807,7 +1807,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                    {'x': 999999})
 
     def test_delete_entity2(self):
-        repo._type_source_cache[999999] = ('Note', 'system', 999999)
+        repo._type_source_cache[999999] = ('Note', 'system', 999999, 'system')
         self._test('DELETE Note X WHERE X eid %(x)s, NOT X multisource_inlined_rel Y',
                    [('DeleteEntitiesStep',
                      [('OneFetchStep', [('Any X WHERE X eid 999999, NOT X multisource_inlined_rel Y, X is Note, Y is IN(Affaire, Note)',
@@ -1872,7 +1872,7 @@ class MSPlannerTC(BaseMSPlannerTC):
 #                     ])
 
     def test_ldap_user_related_to_invariant_and_dont_cross_rel(self):
-        self.repo._type_source_cache[999999] = ('Note', 'cards', 999999)
+        self.repo._type_source_cache[999999] = ('Note', 'cards', 999999, 'cards')
         self.cards.dont_cross_relations.add('created_by')
         try:
             self._test('Any X,XL WHERE E eid %(x)s, E created_by X, X login XL',
@@ -1893,7 +1893,7 @@ class MSPlannerTC(BaseMSPlannerTC):
             self.cards.dont_cross_relations.remove('created_by')
 
     def test_ambigous_cross_relation(self):
-        self.repo._type_source_cache[999999] = ('Note', 'cards', 999999)
+        self.repo._type_source_cache[999999] = ('Note', 'cards', 999999, 'cards')
         self.cards.support_relations['see_also'] = True
         self.cards.cross_relations.add('see_also')
         try:
@@ -2044,7 +2044,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                     ])
 
     def test_source_conflict_1(self):
-        self.repo._type_source_cache[999999] = ('Note', 'cards', 999999)
+        self.repo._type_source_cache[999999] = ('Note', 'cards', 999999, 'cards')
         with self.assertRaises(BadRQLQuery) as cm:
             self._test('Any X WHERE X cw_source S, S name "system", X eid %(x)s',
                        [], {'x': 999999})
@@ -2067,7 +2067,7 @@ class MSPlannerTC(BaseMSPlannerTC):
 
 
     def test_ambigous_cross_relation_source_specified(self):
-        self.repo._type_source_cache[999999] = ('Note', 'cards', 999999)
+        self.repo._type_source_cache[999999] = ('Note', 'cards', 999999, 'cards')
         self.cards.support_relations['see_also'] = True
         self.cards.cross_relations.add('see_also')
         try:
@@ -2198,7 +2198,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                     ])
 
     def test_nonregr7(self):
-        repo._type_source_cache[999999] = ('Note', 'cards', 999999)
+        repo._type_source_cache[999999] = ('Note', 'cards', 999999, 'cards')
         self._test('Any S,SUM(DUR),SUM(I),(SUM(I) - SUM(DUR)),MIN(DI),MAX(DI) GROUPBY S ORDERBY S WHERE A is Affaire, A duration DUR, A invoiced I, A modification_date DI, A in_state S, S name SN, (EXISTS(A concerne WP, W multisource_rel WP)) OR (EXISTS(A concerne W)), W eid %(n)s',
                    [('FetchStep', [('Any WP WHERE 999999 multisource_rel WP, WP is Note', [{'WP': 'Note'}])],
                      [self.cards], None, {'WP': u'table0.C0'}, []),
@@ -2208,7 +2208,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                    {'n': 999999})
 
     def test_nonregr8(self):
-        repo._type_source_cache[999999] = ('Note', 'cards', 999999)
+        repo._type_source_cache[999999] = ('Note', 'cards', 999999, 'cards')
         self._test('Any X,Z WHERE X eid %(x)s, X multisource_rel Y, Z concerne X',
                    [('FetchStep', [('Any 999999 WHERE 999999 multisource_rel Y, Y is Note',
                                     [{'Y': 'Note'}])],
@@ -2223,8 +2223,8 @@ class MSPlannerTC(BaseMSPlannerTC):
                    {'x': 999999})
 
     def test_nonregr9(self):
-        repo._type_source_cache[999999] = ('Note', 'cards', 999999)
-        repo._type_source_cache[999998] = ('Note', 'cards', 999998)
+        repo._type_source_cache[999999] = ('Note', 'cards', 999999, 'cards')
+        repo._type_source_cache[999998] = ('Note', 'cards', 999998, 'cards')
         self._test('SET X migrated_from Y WHERE X eid %(x)s, Y multisource_rel Z, Z eid %(z)s, Y migrated_from Z',
                    [('FetchStep', [('Any Y WHERE Y multisource_rel 999998, Y is Note', [{'Y': 'Note'}])],
                      [self.cards], None, {'Y': u'table0.C0'}, []),
@@ -2236,7 +2236,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                    {'x': 999999, 'z': 999998})
 
     def test_nonregr10(self):
-        repo._type_source_cache[999999] = ('CWUser', 'ldap', 999999)
+        repo._type_source_cache[999999] = ('CWUser', 'ldap', 999999, 'ldap')
         self._test('Any X,AA,AB ORDERBY AA WHERE E eid %(x)s, E owned_by X, X login AA, X modification_date AB',
                    [('FetchStep',
                      [('Any X,AA,AB WHERE X login AA, X modification_date AB, X is CWUser',
@@ -2254,7 +2254,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                    {'x': 999999})
 
     def test_nonregr11(self):
-        repo._type_source_cache[999999] = ('Bookmark', 'system', 999999)
+        repo._type_source_cache[999999] = ('Bookmark', 'system', 999999, 'system')
         self._test('SET X bookmarked_by Y WHERE X eid %(x)s, Y login "hop"',
                    [('UpdateStep',
                      [('OneFetchStep', [('DISTINCT Any Y WHERE Y login "hop", Y is CWUser', [{'Y': 'CWUser'}])],
@@ -2263,7 +2263,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                    {'x': 999999})
 
     def test_nonregr12(self):
-        repo._type_source_cache[999999] = ('Note', 'cards', 999999)
+        repo._type_source_cache[999999] = ('Note', 'cards', 999999, 'cards')
         self._test('Any X ORDERBY Z DESC WHERE X modification_date Z, E eid %(x)s, E see_also X',
                    [('FetchStep', [('Any X,Z WHERE X modification_date Z, X is Note',
                                     [{'X': 'Note', 'Z': 'Datetime'}])],
@@ -2347,38 +2347,38 @@ class MSPlannerTC(BaseMSPlannerTC):
                    {'x': self.session.user.eid})
 
     def test_nonregr14_1(self):
-        repo._type_source_cache[999999] = ('CWUser', 'ldap', 999999)
+        repo._type_source_cache[999999] = ('CWUser', 'ldap', 999999, 'ldap')
         self._test('Any X WHERE X eid %(x)s, X owned_by U, U eid %(u)s',
                    [('OneFetchStep', [('Any 999999 WHERE 999999 owned_by 999999', [{}])],
                      None, None, [self.system], {}, [])],
                    {'x': 999999, 'u': 999999})
 
     def test_nonregr14_2(self):
-        repo._type_source_cache[999999] = ('CWUser', 'ldap', 999999)
-        repo._type_source_cache[999998] = ('Note', 'system', 999998)
+        repo._type_source_cache[999999] = ('CWUser', 'ldap', 999999, 'ldap')
+        repo._type_source_cache[999998] = ('Note', 'system', 999998, 'system')
         self._test('Any X WHERE X eid %(x)s, X owned_by U, U eid %(u)s',
                    [('OneFetchStep', [('Any 999998 WHERE 999998 owned_by 999999', [{}])],
                      None, None, [self.system], {}, [])],
                    {'x': 999998, 'u': 999999})
 
     def test_nonregr14_3(self):
-        repo._type_source_cache[999999] = ('CWUser', 'system', 999999)
-        repo._type_source_cache[999998] = ('CWUser', 'ldap', 999998)
+        repo._type_source_cache[999999] = ('CWUser', 'system', 999999, 'system')
+        repo._type_source_cache[999998] = ('CWUser', 'ldap', 999998, 'ldap')
         self._test('Any X WHERE X eid %(x)s, X owned_by U, U eid %(u)s',
                    [('OneFetchStep', [('Any 999998 WHERE 999998 owned_by 999999', [{}])],
                      None, None, [self.system], {}, [])],
                    {'x': 999998, 'u': 999999})
 
     def test_nonregr_identity_no_source_access_1(self):
-        repo._type_source_cache[999999] = ('CWUser', 'ldap', 999998)
+        repo._type_source_cache[999999] = ('CWUser', 'ldap', 999998, 'ldap')
         self._test('Any S WHERE S identity U, S eid %(s)s, U eid %(u)s',
                    [('OneFetchStep', [('Any 999999 WHERE 999999 identity 999999', [{}])],
                      None, None, [self.system], {}, [])],
                    {'s': 999999, 'u': 999999})
 
     def test_nonregr_identity_no_source_access_2(self):
-        repo._type_source_cache[999999] = ('EmailAddress', 'system', 999999)
-        repo._type_source_cache[999998] = ('CWUser', 'ldap', 999998)
+        repo._type_source_cache[999999] = ('EmailAddress', 'system', 999999, 'system')
+        repo._type_source_cache[999998] = ('CWUser', 'ldap', 999998, 'ldap')
         self._test('Any X WHERE O use_email X, ((EXISTS(O identity U)) OR (EXISTS(O in_group G, G name IN("managers", "staff")))) OR (EXISTS(O in_group G2, U in_group G2, NOT G2 name "users")), X eid %(x)s, U eid %(u)s',
                    [('OneFetchStep', [('Any 999999 WHERE O use_email 999999, ((EXISTS(O identity 999998)) OR (EXISTS(O in_group G, G name IN("managers", "staff")))) OR (EXISTS(O in_group G2, 999998 in_group G2, NOT G2 name "users"))',
                                        [{'G': 'CWGroup', 'G2': 'CWGroup', 'O': 'CWUser'}])],
@@ -2386,7 +2386,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                    {'x': 999999, 'u': 999998})
 
     def test_nonregr_similar_subquery(self):
-        repo._type_source_cache[999999] = ('Personne', 'system', 999999)
+        repo._type_source_cache[999999] = ('Personne', 'system', 999999, 'system')
         self._test('Any T,TD,U,T,UL WITH T,TD,U,UL BEING ('
                    '(Any T,TD,U,UL WHERE X eid %(x)s, T comments X, T content TD, T created_by U?, U login UL)'
                    ' UNION '
@@ -2456,7 +2456,7 @@ class MSPlannerTwoSameExternalSourcesTC(BasePlannerTC):
 
 
     def test_linked_external_entities(self):
-        repo._type_source_cache[999999] = ('Tag', 'system', 999999)
+        repo._type_source_cache[999999] = ('Tag', 'system', 999999, 'system')
         self._test('Any X,XT WHERE X is Card, X title XT, T tags X, T eid %(t)s',
                    [('FetchStep',
                      [('Any X,XT WHERE X title XT, X is Card', [{'X': 'Card', 'XT': 'String'}])],
@@ -2472,7 +2472,7 @@ class MSPlannerTwoSameExternalSourcesTC(BasePlannerTC):
                    {'t': 999999})
 
     def test_version_depends_on(self):
-        self.repo._type_source_cache[999999] = ('Note', 'cards', 999999)
+        self.repo._type_source_cache[999999] = ('Note', 'cards', 999999, 'cards')
         self._test('Any X,AD,AE WHERE E eid %(x)s, E migrated_from X, X in_state AD, AD name AE',
                    [('FetchStep', [('Any X,AD,AE WHERE X in_state AD, AD name AE, AD is State, X is Note',
                                     [{'AD': 'State', 'AE': 'String', 'X': 'Note'}])],
@@ -2488,7 +2488,7 @@ class MSPlannerTwoSameExternalSourcesTC(BasePlannerTC):
                    {'x': 999999})
 
     def test_version_crossed_depends_on_1(self):
-        self.repo._type_source_cache[999999] = ('Note', 'cards', 999999)
+        self.repo._type_source_cache[999999] = ('Note', 'cards', 999999, 'cards')
         self._test('Any X,AD,AE WHERE E eid %(x)s, E multisource_crossed_rel X, X in_state AD, AD name AE',
                    [('FetchStep', [('Any X,AD,AE WHERE X in_state AD, AD name AE, AD is State, X is Note',
                                     [{'AD': 'State', 'AE': 'String', 'X': 'Note'}])],
@@ -2511,7 +2511,7 @@ class MSPlannerTwoSameExternalSourcesTC(BasePlannerTC):
                    {'x': 999999})
 
     def test_version_crossed_depends_on_2(self):
-        self.repo._type_source_cache[999999] = ('Note', 'system', 999999)
+        self.repo._type_source_cache[999999] = ('Note', 'system', 999999, 'system')
         self._test('Any X,AD,AE WHERE E eid %(x)s, E multisource_crossed_rel X, X in_state AD, AD name AE',
                    [('FetchStep', [('Any X,AD,AE WHERE X in_state AD, AD name AE, AD is State, X is Note',
                                     [{'AD': 'State', 'AE': 'String', 'X': 'Note'}])],
@@ -2587,7 +2587,7 @@ class MSPlannerTwoSameExternalSourcesTC(BasePlannerTC):
                        )
 
     def test_nonregr_dont_cross_rel_source_filtering_1(self):
-        self.repo._type_source_cache[999999] = ('Note', 'cards', 999999)
+        self.repo._type_source_cache[999999] = ('Note', 'cards', 999999, 'cards')
         self._test('Any S WHERE E eid %(x)s, E in_state S, NOT S name "moved"',
                    [('OneFetchStep', [('Any S WHERE 999999 in_state S, NOT S name "moved", S is State',
                                        [{'S': 'State'}])],
@@ -2596,7 +2596,7 @@ class MSPlannerTwoSameExternalSourcesTC(BasePlannerTC):
                    {'x': 999999})
 
     def test_nonregr_dont_cross_rel_source_filtering_2(self):
-        self.repo._type_source_cache[999999] = ('Note', 'cards', 999999)
+        self.repo._type_source_cache[999999] = ('Note', 'cards', 999999, 'cards')
         self._test('Any X,AA,AB WHERE E eid %(x)s, E in_state X, X name AA, X modification_date AB',
                    [('OneFetchStep', [('Any X,AA,AB WHERE 999999 in_state X, X name AA, X modification_date AB, X is State',
                                        [{'AA': 'String', 'AB': 'Datetime', 'X': 'State'}])],
@@ -2605,7 +2605,7 @@ class MSPlannerTwoSameExternalSourcesTC(BasePlannerTC):
                    {'x': 999999})
 
     def test_nonregr_eid_query(self):
-        self.repo._type_source_cache[999999] = ('Note', 'cards', 999999)
+        self.repo._type_source_cache[999999] = ('Note', 'cards', 999999, 'cards')
         self._test('Any X WHERE X eid 999999',
                    [('OneFetchStep', [('Any 999999', [{}])],
                      None, None, [self.system], {}, []
@@ -2707,17 +2707,17 @@ class MSPlannerVCSSource(BasePlannerTC):
                     ])
 
     def test_fully_simplified_extsource(self):
-        self.repo._type_source_cache[999998] = ('Note', 'vcs', 999998)
-        self.repo._type_source_cache[999999] = ('Note', 'vcs', 999999)
+        self.repo._type_source_cache[999998] = ('Note', 'vcs', 999998, 'vcs')
+        self.repo._type_source_cache[999999] = ('Note', 'vcs', 999999, 'vcs')
         self._test('Any X, Y WHERE NOT X multisource_rel Y, X eid 999998, Y eid 999999',
                    [('OneFetchStep', [('Any 999998,999999 WHERE NOT EXISTS(999998 multisource_rel 999999)', [{}])],
                      None, None, [self.vcs], {}, [])
                     ])
 
     def test_nonregr_fully_simplified_extsource(self):
-        self.repo._type_source_cache[999998] = ('Note', 'vcs', 999998)
-        self.repo._type_source_cache[999999] = ('Note', 'vcs', 999999)
-        self.repo._type_source_cache[1000000] = ('Note', 'system', 1000000)
+        self.repo._type_source_cache[999998] = ('Note', 'vcs', 999998, 'vcs')
+        self.repo._type_source_cache[999999] = ('Note', 'vcs', 999999, 'vcs')
+        self.repo._type_source_cache[1000000] = ('Note', 'system', 1000000, 'system')
         self._test('DISTINCT Any T,FALSE,L,M WHERE L eid 1000000, M eid 999999, T eid 999998',
                    [('OneFetchStep', [('DISTINCT Any 999998,FALSE,1000000,999999', [{}])],
                      None, None, [self.system], {}, [])

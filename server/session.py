@@ -870,9 +870,13 @@ class Session(RequestSessionBase):
     def source_defs(self):
         return self.repo.source_defs()
 
-    def describe(self, eid):
+    def describe(self, eid, asdict=False):
         """return a tuple (type, sourceuri, extid) for the entity with id <eid>"""
-        return self.repo.type_and_source_from_eid(eid, self)
+        metas = self.repo.type_and_source_from_eid(eid, self)
+        if asdict:
+            return dict(zip(('type', 'source', 'extid', 'asource'), metas)) 
+       # XXX :-1 for cw compat, use asdict=True for full information
+        return metas[:-1]
 
     # db-api like interface ###################################################
 

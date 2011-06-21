@@ -138,8 +138,8 @@ def deserialize_schema(schema, session):
             except:
                 pass
             tocleanup = [eid]
-            tocleanup += (eid for eid, (eidetype, uri, extid) in repo._type_source_cache.items()
-                          if etype == eidetype)
+            tocleanup += (eid for eid, cached in repo._type_source_cache.iteritems()
+                          if etype == cached[0])
             repo.clear_caches(tocleanup)
             session.commit(False)
             if needcopy:

@@ -385,7 +385,7 @@ class RepositoryTC(CubicWebTC):
         cnxid = repo.connect(self.admlogin, password=self.admpassword)
         session = repo._get_session(cnxid, setcnxset=True)
         self.assertEqual(repo.type_and_source_from_eid(2, session),
-                         ('CWGroup', 'system', None))
+                         ('CWGroup', 'system', None, 'system'))
         self.assertEqual(repo.type_from_eid(2, session), 'CWGroup')
         self.assertEqual(repo.source_from_eid(2, session).uri, 'system')
         self.assertEqual(repo.eid2extid(repo.system_source, 2, session), None)
@@ -403,7 +403,7 @@ class RepositoryTC(CubicWebTC):
         repo = self.repo
         cnxid = repo.connect(self.admlogin, password=self.admpassword)
         self.assertEqual(repo.user_info(cnxid), (6, 'admin', set([u'managers']), {}))
-        self.assertEqual(repo.describe(cnxid, 2), (u'CWGroup', u'system', None))
+        self.assertEqual(repo.describe(cnxid, 2), (u'CWGroup', u'system', None, 'system'))
         repo.close(cnxid)
         self.assertRaises(BadConnectionId, repo.user_info, cnxid)
         self.assertRaises(BadConnectionId, repo.describe, cnxid, 1)
@@ -548,10 +548,11 @@ class DataHelpersTC(CubicWebTC):
         self.repo.add_info(self.session, entity, self.repo.system_source)
         cu = self.session.system_sql('SELECT * FROM entities WHERE eid = -1')
         data = cu.fetchall()
-        self.assertIsInstance(data[0][3], datetime)
+        self.assertIsInstance(data[0][4], datetime)
         data[0] = list(data[0])
-        data[0][3] = None
-        self.assertEqual(tuplify(data), [(-1, 'Personne', 'system', None, None)])
+        data[0][4] = None
+        self.assertEqual(tuplify(data), [(-1, 'Personne', 'system', 'system',
+                                          None, None)])
         self.repo.delete_info(self.session, entity, 'system', None)
         #self.repo.commit()
         cu = self.session.system_sql('SELECT * FROM entities WHERE eid = -1')
@@ -813,6 +814,7 @@ class PerformanceTest(CubicWebTC):
         req.cnx.commit()
         t1 = time.time()
         self.info('add relations: %.2gs', t1-t0)
+
     def test_session_add_relation_inlined(self):
         """ to be compared with test_session_add_relations"""
         req = self.request()

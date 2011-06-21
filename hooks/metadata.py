@@ -154,7 +154,7 @@ class ChangeEntityUpdateCaches(hook.Operation):
         entity = self.entity
         extid = entity.cw_metainformation()['extid']
         repo._type_source_cache[entity.eid] = (
-            entity.__regid__, self.newsource.uri, None)
+            entity.__regid__, self.newsource.uri, None, self.newsource.uri)
         if self.oldsource.copy_based_source:
             uri = 'system'
         else:
@@ -176,6 +176,7 @@ class ChangeEntitySourceDeleteHook(MetaDataHook):
             return
         schange = self._cw.transaction_data.setdefault('cw_source_change', {})
         schange[self.eidfrom] = self.eidto
+
 
 class ChangeEntitySourceAddHook(MetaDataHook):
     __regid__ = 'cw.metadata.source-change'
@@ -204,10 +205,12 @@ class ChangeEntitySourceAddHook(MetaDataHook):
             # source='system'. External source will then have consider case
             # where `extid2eid` return a negative eid as 'this entity was known
             # but has been moved, ignore it'.
-            self._cw.system_sql('UPDATE entities SET eid=-eid,source=%(source)s WHERE eid=%(eid)s',
+            self._cw.system_sql('UPDATE entities SET eid=-eid,source=%(source)s '
+                                'WHERE eid=%(eid)s',
                                 {'eid': self.eidfrom, 'source': newsource.name})
             attrs = {'type': entity.__regid__, 'eid': entity.eid, 'extid': None,
-                     'source': 'system', 'mtime': datetime.now()}
+                     'source': 'system', 'asource': 'system',
+                     'mtime': datetime.now()}
             self._cw.system_sql(syssource.sqlgen.insert('entities', attrs), attrs)
             # register an operation to update repository/sources caches
             ChangeEntityUpdateCaches(self._cw, entity=entity,

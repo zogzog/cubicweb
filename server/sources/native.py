@@ -411,6 +411,10 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
 
     def init(self, activated, source_entity):
         self.init_creating(source_entity._cw.cnxset)
+        try:
+            source_entity._cw.system_sql('SELECT COUNT(asource) FROM entities')
+        except Exception, ex:
+            self.eid_type_source = self.eid_type_source_pre_131
 
     def shutdown(self):
         if self._eid_creation_cnx:
@@ -677,7 +681,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             for subject, object in subj_obj_list:
                 self._record_tx_action(session, 'tx_relation_actions', 'A',
                                        eid_from=subject, rtype=rtype, eid_to=object)
-                
+
     def _add_relations(self, session, rtype, subj_obj_list, inlined=False):
         """add a relation to the source"""
         sql = []
@@ -846,6 +850,22 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
 
     def eid_type_source(self, session, eid):
         """return a tuple (type, source, extid) for the entity with id <eid>"""
+        sql = 'SELECT type, source, extid, asource FROM entities WHERE eid=%s' % eid
+        try:
+            res = self.doexec(session, sql).fetchone()
+        except:
+            assert session.cnxset, 'session has no connections set'
+            raise UnknownEid(eid)
+        if res is None:
+            raise UnknownEid(eid)
+        if res[-2] is not None:
+            if not isinstance(res, list):
+                res = list(res)
+            res[-2] = b64decode(res[-2])
+        return res
+
+    def eid_type_source_pre_131(self, session, eid):
+        """return a tuple (type, source, extid) for the entity with id <eid>"""
         sql = 'SELECT type, source, extid FROM entities WHERE eid=%s' % eid
         try:
             res = self.doexec(session, sql).fetchone()
@@ -854,10 +874,11 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             raise UnknownEid(eid)
         if res is None:
             raise UnknownEid(eid)
+        if not isinstance(res, list):
+            res = list(res)
         if res[-1] is not None:
-            if not isinstance(res, list):
-                res = list(res)
             res[-1] = b64decode(res[-1])
+        res.append(res[1])
         return res
 
     def extid2eid(self, session, source_uri, extid):
@@ -946,7 +967,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             extid = b64encode(extid)
         uri = 'system' if source.copy_based_source else source.uri
         attrs = {'type': entity.__regid__, 'eid': entity.eid, 'extid': extid,
-                 'source': uri, 'mtime': datetime.now()}
+                 'source': uri, 'asource': source.uri, 'mtime': datetime.now()}
         self.doexec(session, self.sqlgen.insert('entities', attrs), attrs)
         # insert core relations: is, is_instance_of and cw_source
         try:
@@ -1434,6 +1455,7 @@ CREATE TABLE entities (
   eid INTEGER PRIMARY KEY NOT NULL,
   type VARCHAR(64) NOT NULL,
   source VARCHAR(64) NOT NULL,
+  asource VARCHAR(64) NOT NULL,
   mtime %s NOT NULL,
   extid VARCHAR(256)
 );;

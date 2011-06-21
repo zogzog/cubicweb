@@ -395,8 +395,10 @@ class Entity(AppObject):
 
     @cached
     def cw_metainformation(self):
-        res = dict(zip(('type', 'source', 'extid'), self._cw.describe(self.eid)))
-        res['source'] = self._cw.source_defs()[res['source']]
+        res = self._cw.describe(self.eid, asdict=True)
+        # use 'asource' and not 'source' since this is the actual source,
+        # while 'source' is the physical source (where it's stored)
+        res['source'] = self._cw.source_defs()[res.pop('asource')]
         return res
 
     def cw_check_perm(self, action):

@@ -64,12 +64,12 @@ class DataFeedTC(CubicWebTC):
             self.assertEqual(entity.cw_source[0].name, 'myfeed')
             self.assertEqual(entity.cw_metainformation(),
                              {'type': 'Card',
-                              'source': {'uri': 'system', 'type': 'native'},
+                              'source': {'uri': 'myfeed', 'type': 'datafeed'},
                               'extid': 'http://www.cubicweb.org/'}
                              )
             # test repo cache keys
             self.assertEqual(self.repo._type_source_cache[entity.eid],
-                             ('Card', 'system', 'http://www.cubicweb.org/'))
+                             ('Card', 'system', 'http://www.cubicweb.org/', 'myfeed'))
             self.assertEqual(self.repo._extid_cache[('http://www.cubicweb.org/', 'system')],
                              entity.eid)
             # test repull
@@ -83,7 +83,7 @@ class DataFeedTC(CubicWebTC):
             self.assertEqual(stats['created'], set())
             self.assertEqual(stats['updated'], set((entity.eid,)))
             self.assertEqual(self.repo._type_source_cache[entity.eid],
-                             ('Card', 'system', 'http://www.cubicweb.org/'))
+                             ('Card', 'system', 'http://www.cubicweb.org/', 'myfeed'))
             self.assertEqual(self.repo._extid_cache[('http://www.cubicweb.org/', 'system')],
                              entity.eid)
 

@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -34,6 +34,12 @@ def _add_relation_definition_no_perms(subjtype, rtype, objtype):
     rdef.object = schema.eschema(objtype)
     ss.execschemarql(rql, rdef, ss.rdef2rql(rdef, CSTRMAP, groupmap=None))
     commit(ask_confirm=False)
+
+if applcubicwebversion == (3, 13, 0) and cubicwebversion >= (3, 13, 1):
+    sql('ALTER TABLE entities ADD COLUMN asource VARCHAR(64)')
+    sql('INSERT INTO entities(asource) '
+        'SELECT cw_name FROM cw_CWSource, cw_source_relation '
+        'WHERE entities.eid=cw_source_relation.eid_from AND cw_source_relation.eid_to=cw_CWSource.cw_eid')
 
 if applcubicwebversion == (3, 6, 0) and cubicwebversion >= (3, 6, 0):
     CSTRMAP = dict(rql('Any T, X WHERE X is CWConstraintType, X name T',
