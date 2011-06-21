@@ -757,18 +757,16 @@ given, appropriate sources for migration will be automatically selected \
             applcubicwebversion = vcconf.get('cubicweb')
         if cubicwebversion > applcubicwebversion:
             toupgrade.append(('cubicweb', applcubicwebversion, cubicwebversion))
-        if not self.config.fs_only and not toupgrade:
-            print '-> no data migration needed for instance %s.' % appid
-            self.i18nupgrade(config)
-            mih.shutdown()
-            return
-        for cube, fromversion, toversion in toupgrade:
-            print '-> migration needed from %s to %s for %s' % (fromversion, toversion, cube)
         # only stop once we're sure we have something to do
         if not (CWDEV or self.config.nostartstop):
             StopInstanceCommand(self.logger).stop_instance(appid)
         # run cubicweb/componants migration scripts
-        mih.migrate(vcconf, reversed(toupgrade), self.config)
+        if self.config.fs_only or toupgrade:
+            for cube, fromversion, toversion in toupgrade:
+                print '-> migration needed from %s to %s for %s' % (fromversion, toversion, cube)
+            mih.migrate(vcconf, reversed(toupgrade), self.config)
+        else:
+            print '-> no data migration needed for instance %s.' % appid
         # rewrite main configuration file
         mih.rewrite_configuration()
         mih.shutdown()
