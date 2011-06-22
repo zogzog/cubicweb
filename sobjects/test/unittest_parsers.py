@@ -57,11 +57,14 @@ BASEXML = ''.join(u'''
     <Tag cwuri="http://pouet.org/9" eid="9"/>
     <Tag cwuri="http://pouet.org/10" eid="10"/>
   </tags>
+  <in_state role="subject">
+    <State cwuri="http://pouet.org/11" eid="11" name="activated"/>
+  </in_state>
  </CWUser>
 </rset>
 '''.splitlines())
 
-RELATEDXML ={
+RELATEDXML = {
     'http://pouet.org/6': u'''
 <rset size="1">
  <EmailAddress eid="6" cwuri="http://pouet.org/6">
@@ -127,6 +130,8 @@ class CWEntityXMLParserTC(CubicWebTC):
                               u'role=subject\naction=copy'),
                              (('CWUser', 'in_group', '*'),
                               u'role=subject\naction=link\nlinkattr=name'),
+                             (('CWUser', 'in_state', '*'),
+                              u'role=subject\naction=link\nlinkattr=name'),
                              (('*', 'tags', 'CWUser'),
                               u'role=object\naction=link-or-create\nlinkattr=name'),
                             ])
@@ -136,9 +141,9 @@ class CWEntityXMLParserTC(CubicWebTC):
         dfsource = self.repo.sources_by_uri['myfeed']
         parser = dfsource._get_parser(self.session)
         self.assertEqual(parser.complete_url('http://www.cubicweb.org/cwuser'),
-                         'http://www.cubicweb.org/cwuser?relation=tags-object&relation=in_group-subject&relation=use_email-subject&vid=xml')
+                         'http://www.cubicweb.org/cwuser?relation=tags-object&relation=in_group-subject&relation=in_state-subject&relation=use_email-subject&vid=xml')
         self.assertEqual(parser.complete_url('http://www.cubicweb.org/cwuser?vid=rdf&relation=hop'),
-                         'http://www.cubicweb.org/cwuser?relation=hop&relation=tags-object&relation=in_group-subject&relation=use_email-subject&vid=rdf')
+                         'http://www.cubicweb.org/cwuser?relation=hop&relation=tags-object&relation=in_group-subject&relation=in_state-subject&relation=use_email-subject&vid=rdf')
 
 
     def test_actions(self):
@@ -147,6 +152,8 @@ class CWEntityXMLParserTC(CubicWebTC):
                          {u'CWUser': {
                              (u'in_group', u'subject', u'link'): [
                                  (u'CWGroup', {u'linkattr': u'name'})],
+                             (u'in_state', u'subject', u'link'): [
+                                 (u'State', {u'linkattr': u'name'})],
                              (u'tags', u'object', u'link-or-create'): [
                                  (u'Tag', {u'linkattr': u'name'})],
                              (u'use_email', u'subject', u'copy'): [
