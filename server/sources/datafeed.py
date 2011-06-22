@@ -191,7 +191,7 @@ class DataFeedSource(AbstractSource):
             try:
                 if parser.process(url, raise_on_error):
                     error = True
-            except IOError, exc:
+            except Exception, exc:
                 if raise_on_error:
                     raise
                 self.error('could not pull data while processing %s: %s',
