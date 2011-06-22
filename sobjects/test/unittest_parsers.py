@@ -164,11 +164,13 @@ class CWEntityXMLParserTC(CubicWebTC):
         self.assertEqual(user.modification_date, datetime(2011, 01, 25, 14, 14, 06))
         self.assertEqual(user.cwuri, 'http://pouet.org/5')
         self.assertEqual(user.cw_source[0].name, 'myfeed')
+        self.assertEqual(user.absolute_url(), 'http://pouet.org/5')
         self.assertEqual(len(user.use_email), 1)
         # copy action
         email = user.use_email[0]
         self.assertEqual(email.address, 'syt@logilab.fr')
         self.assertEqual(email.cwuri, 'http://pouet.org/6')
+        self.assertEqual(email.absolute_url(), 'http://pouet.org/6')
         self.assertEqual(email.cw_source[0].name, 'myfeed')
         # link action
         self.assertFalse(self.execute('CWGroup X WHERE X name "unknown"'))
@@ -200,7 +202,8 @@ class CWEntityXMLParserTC(CubicWebTC):
         self.assertEqual(len(rset), 1)
         e = rset.get_entity(0, 0)
         self.assertEqual(e.eid, email.eid)
-        self.assertEqual(e.cw_metainformation(), {'source': {'type': u'native', 'uri': u'system'},
+        self.assertEqual(e.cw_metainformation(), {'source': {'type': u'native', 'uri': u'system',
+                                                             'use-cwuri-as-url': False},
                                                   'type': 'EmailAddress',
                                                   'extid': None})
         self.assertEqual(e.cw_source[0].name, 'system')
@@ -213,7 +216,8 @@ class CWEntityXMLParserTC(CubicWebTC):
         self.assertEqual(len(rset), 1)
         e = rset.get_entity(0, 0)
         self.assertEqual(e.eid, email.eid)
-        self.assertEqual(e.cw_metainformation(), {'source': {'type': u'native', 'uri': u'system'},
+        self.assertEqual(e.cw_metainformation(), {'source': {'type': u'native', 'uri': u'system',
+                                                             'use-cwuri-as-url': False},
                                                   'type': 'EmailAddress',
                                                   'extid': None})
         self.assertEqual(e.cw_source[0].name, 'system')

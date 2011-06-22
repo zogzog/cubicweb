@@ -433,9 +433,11 @@ class Entity(AppObject):
         use_ext_id = False
         if 'base_url' not in kwargs and \
                getattr(self._cw, 'search_state', ('normal',))[0] == 'normal':
-            baseurl = self.cw_metainformation()['source'].get('base-url')
-            if baseurl:
-                kwargs['base_url'] = baseurl
+            sourcemeta = self.cw_metainformation()['source']
+            if sourcemeta.get('use-cwuri-as-url'):
+                return self.cwuri # XXX consider kwargs?
+            if sourcemeta.get('base-url'):
+                kwargs['base_url'] = sourcemeta['base-url']
                 use_ext_id = True
         if method in (None, 'view'):
             try:

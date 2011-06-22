@@ -110,6 +110,10 @@ class AbstractSource(object):
     # force deactivation (configuration error for instance)
     disabled = False
 
+    # boolean telling if cwuri of entities from this source is the url that
+    # should be used as entity's absolute url
+    use_cwuri_as_url = False
+
     # source configuration options
     options = ()
 
@@ -119,6 +123,7 @@ class AbstractSource(object):
         self.support_relations['identity'] = False
         self.eid = eid
         self.public_config = source_config.copy()
+        self.public_config.setdefault('use-cwuri-as-url', self.use_cwuri_as_url)
         self.remove_sensitive_information(self.public_config)
         self.uri = source_config.pop('uri')
         set_log_methods(self, getLogger('cubicweb.sources.'+self.uri))
@@ -213,7 +218,7 @@ class AbstractSource(object):
         """
         pass
 
-    PUBLIC_KEYS = ('type', 'uri')
+    PUBLIC_KEYS = ('type', 'uri', 'use-cwuri-as-url')
     def remove_sensitive_information(self, sourcedef):
         """remove sensitive information such as login / password from source
         definition
