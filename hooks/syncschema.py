@@ -263,7 +263,7 @@ class CWETypeAddOp(MemSchemaOperation):
         for rtype in (META_RTYPES - VIRTUAL_RTYPES):
             try:
                 rschema = schema[rtype]
-            except:
+            except KeyError:
                 if rtype == 'cw_source':
                     continue # XXX 3.10 migration
                 raise
