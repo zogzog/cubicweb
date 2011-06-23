@@ -603,16 +603,14 @@ class UndoController(Controller):
         errors = self._cw.cnx.undo_transaction(txuuid)
         if not errors:
             self.redirect()
-        return self._cw._('some errors occurred:') + self._cw.view(
-            'pyvallist', pyvalue=errors)
+        raise ValidationError(None, {None: '\n'.join(errors)})
 
-    def redirect(self):
+    def redirect(self, msg=None):
         req = self._cw
+        msg = msg or req._("transaction undone")
         breadcrumbs = req.session.data.get('breadcrumbs', None)
         if breadcrumbs is not None and len(breadcrumbs) > 1:
-            url = req.rebuild_url(breadcrumbs[-2],
-                                  __message=req._('transaction undoed'))
+            url = req.rebuild_url(breadcrumbs[-2], __message=msg)
         else:
-            url = req.build_url(__message=req._('transaction undoed'))
+            url = req.build_url(__message=msg)
         raise Redirect(url)
-
