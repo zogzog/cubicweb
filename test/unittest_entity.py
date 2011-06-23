@@ -610,7 +610,9 @@ du :eid:`1:*ReST*`'''
         req = self.request()
         note = req.create_entity('Note', type=u'z')
         metainf = note.cw_metainformation()
-        self.assertEqual(metainf, {'source': {'type': 'native', 'uri': 'system'}, 'type': u'Note', 'extid': None})
+        self.assertEqual(metainf, {'source': {'type': 'native', 'uri': 'system',
+                                              'use-cwuri-as-url': False},
+                                   'type': u'Note', 'extid': None})
         self.assertEqual(note.absolute_url(), 'http://testing.fr/cubicweb/note/%s' % note.eid)
         metainf['source'] = metainf['source'].copy()
         metainf['source']['base-url']  = 'http://cubicweb2.com/'

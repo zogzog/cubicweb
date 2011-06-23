@@ -14,8 +14,8 @@ class EntityXMLViewTC(CubicWebTC):
   <firstname/>
   <surname/>
   <last_login_time/>
-  <creation_date>%(date)s</creation_date>
-  <modification_date>%(date)s</modification_date>
+  <creation_date>%(cdate)s</creation_date>
+  <modification_date>%(mdate)s</modification_date>
   <tags role="object">
   </tags>
   <in_group role="subject">
@@ -27,7 +27,8 @@ class EntityXMLViewTC(CubicWebTC):
   <use_email role="subject">
   </use_email>
 </CWUser>
-''' % {'date': SERIALIZERS['Datetime'](req.user.creation_date),
+''' % {'cdate': SERIALIZERS['Datetime'](req.user.creation_date),
+       'mdate': SERIALIZERS['Datetime'](req.user.modification_date),
        'state_eid': req.user.in_state[0].eid,
        'group_eid': req.user.in_group[0].eid})
 
