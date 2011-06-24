@@ -743,8 +743,9 @@ class ServerMigrationHelper(MigrationHelper):
         except KeyError:
             print 'warning: attribute %s %s is not known, skip deletion' % (
                 etype, attrname)
-            return
-        self.cmd_drop_relation_definition(etype, attrname, attrtype, commit=commit)
+        else:
+            self.cmd_drop_relation_definition(etype, attrname, attrtype,
+                                              commit=commit)
 
     def cmd_rename_attribute(self, etype, oldname, newname, commit=True):
         """rename an existing attribute of the given entity type
@@ -777,7 +778,7 @@ class ServerMigrationHelper(MigrationHelper):
         """
         instschema = self.repo.schema
         eschema = self.fs_schema.eschema(etype)
-        if etype in instschema and (not eschema.final or eschema.eid is not None):
+        if etype in instschema and not (eschema.final and eschema.eid is None):
             print 'warning: %s already known, skip addition' % etype
             return
         confirm = self.verbosity >= 2
@@ -1007,7 +1008,7 @@ class ServerMigrationHelper(MigrationHelper):
 
         """
         reposchema = self.repo.schema
-        if rtype in reporschema:
+        if rtype in reposchema:
             print 'warning: relation type %s is already known, skip addition' % (
                 rtype)
             return
