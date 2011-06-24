@@ -33,7 +33,8 @@ def setUpModule(*args):
     config.bootstrap_cubes()
     schema = config.load_schema()
     from yams.buildobjs import RelationDefinition
-    schema.add_relation_def(RelationDefinition(subject='Card', name='in_state', object='State', cardinality='1*'))
+    schema.add_relation_def(RelationDefinition(subject='Card', name='in_state',
+                                               object='State', cardinality='1*'))
 
     rqlhelper = RQLHelper(schema, special_relations={'eid': 'uid',
                                                      'has_text': 'fti'})
@@ -78,12 +79,21 @@ def rewrite(rqlst, snippets_map, kwargs, existingvars=None):
     return rewriter.rewritten
 
 def test_vrefs(node):
-    vrefmap = {}
+    vrefmaps = {}
+    selects = []
     for vref in node.iget_nodes(nodes.VariableRef):
-        vrefmap.setdefault(vref.name, set()).add(vref)
-    for var in node.defined_vars.itervalues():
-        assert var.stinfo['references']
-        assert not (var.stinfo['references'] ^ vrefmap[var.name]), (node.as_string(), var.stinfo['references'], vrefmap[var.name])
+        stmt = vref.stmt
+        try:
+            vrefmaps[stmt].setdefault(vref.name, set()).add(vref)
+        except KeyError:
+            vrefmaps[stmt] = {vref.name: set( (vref,) )}
+            selects.append(stmt)
+    assert node in selects
+    for stmt in selects:
+        for var in stmt.defined_vars.itervalues():
+            assert var.stinfo['references']
+            vrefmap = vrefmaps[stmt]
+            assert not (var.stinfo['references'] ^ vrefmap[var.name]), (node.as_string(), var, var.stinfo['references'], vrefmap[var.name])
 
 
 class RQLRewriteTC(TestCase):
@@ -140,7 +150,7 @@ class RQLRewriteTC(TestCase):
                              "EXISTS(2 in_state A, B in_group D, E require_state A, "
                              "E name 'read', E require_group D, A is State, D is CWGroup, E is CWPermission)")
 
-    def test_optional_var_base_1(self):
+    def test_optional_var_1(self):
         constraint = ('X in_state S, U in_group G, P require_state S,'
                            'P name "read", P require_group G')
         rqlst = parse('Any A,C WHERE A documented_by C?')
@@ -151,7 +161,7 @@ class RQLRewriteTC(TestCase):
                              "(Any C WHERE EXISTS(C in_state B, D in_group F, G require_state B, G name 'read', "
                              "G require_group F), D eid %(A)s, C is Card)")
 
-    def test_optional_var_base_2(self):
+    def test_optional_var_2(self):
         constraint = ('X in_state S, U in_group G, P require_state S,'
                            'P name "read", P require_group G')
         rqlst = parse('Any A,C,T WHERE A documented_by C?, C title T')
@@ -163,7 +173,7 @@ class RQLRewriteTC(TestCase):
                              "G require_state B, G name 'read', G require_group F), "
                              "D eid %(A)s, C is Card)")
 
-    def test_optional_var_base_3(self):
+    def test_optional_var_3(self):
         constraint1 = ('X in_state S, U in_group G, P require_state S,'
                        'P name "read", P require_group G')
         constraint2 = 'X in_state S, S name "public"'
@@ -175,6 +185,21 @@ class RQLRewriteTC(TestCase):
                              "EXISTS(C in_state B, D in_group F, G require_state B, G name 'read', G require_group F), "
                              "D eid %(A)s, C is Card, "
                              "EXISTS(C in_state E, E name 'public'))")
+
+    def test_optional_var_4(self):
+        constraint1 = 'A created_by U, X documented_by A'
+        constraint2 = 'A created_by U, X concerne A'
+        constraint3 = 'X created_by U'
+        rqlst = parse('Any X,LA,Y WHERE LA? documented_by X, LA concerne Y')
+        rewrite(rqlst, {('LA', 'X'): (constraint1, constraint2),
+                        ('X', 'X'): (constraint3,),
+                        ('Y', 'X'): (constraint3,)}, {})
+        self.failUnlessEqual(rqlst.as_string(),
+                             u'Any X,LA,Y WHERE LA? documented_by X, LA concerne Y, B eid %(C)s, '
+                             'EXISTS(X created_by B), EXISTS(Y created_by B), '
+                             'X is Card, Y is IN(Division, Note, Societe) '
+                             'WITH LA BEING (Any LA WHERE EXISTS(A created_by B, LA documented_by A), '
+                             'B eid %(D)s, LA is Affaire, EXISTS(E created_by B, LA concerne E))')
 
     def test_optional_var_inlined(self):
         c1 = ('X require_permission P')
