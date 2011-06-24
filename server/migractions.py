@@ -737,8 +737,13 @@ class ServerMigrationHelper(MigrationHelper):
 
         `attrname` is a string giving the name of the attribute to drop
         """
-        rschema = self.repo.schema.rschema(attrname)
-        attrtype = rschema.objects(etype)[0]
+        try:
+            rschema = self.repo.schema.rschema(attrname)
+            attrtype = rschema.objects(etype)[0]
+        except KeyError:
+            print 'warning: attribute %s %s is not known, skip deletion' % (
+                etype, attrname)
+            return
         self.cmd_drop_relation_definition(etype, attrname, attrtype, commit=commit)
 
     def cmd_rename_attribute(self, etype, oldname, newname, commit=True):
@@ -772,8 +777,9 @@ class ServerMigrationHelper(MigrationHelper):
         """
         instschema = self.repo.schema
         eschema = self.fs_schema.eschema(etype)
-        assert eschema.final or not etype in instschema, \
-               '%s already defined in the instance schema' % etype
+        if etype in instschema and (not eschema.final or eschema.eid is not None):
+            print 'warning: %s already known, skip addition' % etype
+            return
         confirm = self.verbosity >= 2
         groupmap = self.group_mapping()
         cstrtypemap = self.cstrtype_mapping()
@@ -1001,6 +1007,10 @@ class ServerMigrationHelper(MigrationHelper):
 
         """
         reposchema = self.repo.schema
+        if rtype in reporschema:
+            print 'warning: relation type %s is already known, skip addition' % (
+                rtype)
+            return
         rschema = self.fs_schema.rschema(rtype)
         execute = self._cw.execute
         # register the relation into CWRType and insert necessary relation
@@ -1067,6 +1077,10 @@ class ServerMigrationHelper(MigrationHelper):
         rschema = self.fs_schema.rschema(rtype)
         if not rtype in self.repo.schema:
             self.cmd_add_relation_type(rtype, addrdef=False, commit=True)
+        if (subjtype, objtype) in self.repo.schema.rschema(rtype).rdefs:
+            print 'warning: relation %s %s %s is already known, skip addition' % (
+                subjtype, rtype, objtype)
+            return
         execute = self._cw.execute
         rdef = self._get_rdef(rschema, subjtype, objtype)
         ss.execschemarql(execute, rdef,
