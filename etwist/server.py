@@ -173,22 +173,35 @@ class ConcatFileNotFoundError(CubicWebException):
 class ConcatFiles(LongTimeExpiringFile):
     def __init__(self, config, paths):
         _, ext = osp.splitext(paths[0])
+        self._resources = {}
         # create a unique / predictable filename
         fname = 'cache_concat_' + hashlib.md5(';'.join(paths)).hexdigest() + ext
         filepath = osp.join(config.appdatahome, 'uicache', fname)
         LongTimeExpiringFile.__init__(self, config, filepath)
         self._concat_cached_filepath(filepath, paths)
 
+    def _resource(self, path):
+        try:
+            return self._resources[path]
+        except KeyError:
+            self._resources[path] = self.config.locate_resource(path)
+            return self._resources[path]
+
     def _concat_cached_filepath(self, filepath, paths):
         if not self._up_to_date(filepath, paths):
             concat_data = []
             for path in paths:
-                # FIXME locate_resource is called twice() in debug-mode, but
-                # it's a @cached method
-                dirpath, rid = self.config.locate_resource(path)
+                dirpath, rid = self._resource(path)
                 if rid is None:
-                    raise ConcatFileNotFoundError(path)
-                concat_data.append(open(osp.join(dirpath, rid)).read())
+                    if self.config.debugmode:
+                        raise ConcatFileNotFoundError(path)
+                    else:
+                        # In production mode log an error, do not return a 404
+                        # XXX the erroneous content is cached anyway
+                        LOGGER.error('concatenated data url error: %r file '
+                                     'does not exist', path)
+                else:
+                    concat_data.append(open(osp.join(dirpath, rid)).read())
             with open(filepath, 'wb') as f:
                 f.write('\n'.join(concat_data))
 
@@ -203,7 +216,7 @@ class ConcatFiles(LongTimeExpiringFile):
         if self.config.debugmode:
             concat_lastmod = os.stat(filepath).st_mtime
             for path in paths:
-                dirpath, rid = self.config.locate_resource(path)
+                dirpath, rid = self._resource(path)
                 if rid is None:
                     raise ConcatFileNotFoundError(path)
                 path = osp.join(dirpath, rid)
