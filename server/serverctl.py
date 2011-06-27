@@ -355,7 +355,7 @@ class CreateInstanceDBCommand(Command):
                         print '-> user %s created.' % user
                 if dbname in helper.list_databases(cursor):
                     if automatic or ASK.confirm('Database %s already exists -- do you want to drop it ?' % dbname):
-                        cursor.execute('DROP DATABASE %s' % dbname)
+                        cursor.execute('DROP DATABASE "%s"' % dbname)
                     else:
                         print ('you may want to run "cubicweb-ctl db-init '
                                '--drop %s" manually to continue.' % config.appid)
