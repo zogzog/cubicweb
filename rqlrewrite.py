@@ -467,6 +467,7 @@ class RQLRewriter(object):
         original query, return that relation node
         """
         rschema = self.schema.rschema(sniprel.r_type)
+        stmt = self.current_statement()
         for vi in self.varinfos:
             try:
                 if target == 'object':
@@ -481,6 +482,9 @@ class RQLRewriter(object):
                     rdef = lambda x, y: rschema.rdef(y, x)
             except KeyError:
                 # may be raised by vi['xhs_rels'][sniprel.r_type]
+                return None
+            # don't share if relation's statement is not the current statement
+            if orel.stmt is not stmt:
                 return None
             # can't share neged relation or relations with different outer join
             if (orel.neged(strict=True) or sniprel.neged(strict=True)
@@ -498,9 +502,10 @@ class RQLRewriter(object):
     def _use_orig_term(self, snippet_varname, term):
         key = (self.current_expr, self.varmap, snippet_varname)
         if key in self.rewritten:
-            insertedvar = self.select.defined_vars.pop(self.rewritten[key])
+            stmt = self.current_statement()
+            insertedvar = stmt.defined_vars.pop(self.rewritten[key])
             for inserted_vref in insertedvar.references():
-                inserted_vref.parent.replace(inserted_vref, term.copy(self.select))
+                inserted_vref.parent.replace(inserted_vref, term.copy(stmt))
         self.rewritten[key] = term.name
 
     def _get_varname_or_term(self, vname):

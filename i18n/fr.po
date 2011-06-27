@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: cubicweb 2.46.0\n"
-"PO-Revision-Date: 2011-04-29 12:57+0200\n"
+"PO-Revision-Date: 2011-06-23 10:23+0200\n"
 "Last-Translator: Logilab Team <contact@logilab.fr>\n"
 "Language-Team: fr <contact@logilab.fr>\n"
 "Language: \n"
@@ -4104,8 +4104,13 @@ msgctxt "TrInfo"
 msgid "tr_count"
 msgstr "n° de transition"
 
+<<<<<<< /home/syt/src/fcubicweb/cubicweb/i18n/fr.po
 msgid "transaction undoed"
 msgstr "transaction annulée"
+=======
+msgid "transaction undone"
+msgstr "transaction annulée"
+>>>>>>> /tmp/fr.po~other.p9Lq3c
 
 #, python-format
 msgid "transition %(tr)s isn't allowed from %(st)s"

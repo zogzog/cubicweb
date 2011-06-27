@@ -231,6 +231,7 @@ class Repository(object):
         self.sources_by_eid = {}
         if self.config.quick_start \
                or not 'CWSource' in self.schema: # # 3.10 migration
+            self.system_source.init_creating()
             return
         session = self.internal_session()
         try:

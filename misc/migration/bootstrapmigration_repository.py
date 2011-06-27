@@ -100,7 +100,7 @@ elif applcubicwebversion < (3, 6, 0) and cubicwebversion >= (3, 6, 0):
             drop_relation_definition('CWRType', '%s_permission' % action, 'RQLExpression')
     sync_schema_props_perms('read_permission', syncperms=False) # fix read_permission cardinality
 
-if applcubicwebversion < (3, 9, 6) and cubicwebversion >= (3, 9, 6):
+if applcubicwebversion < (3, 9, 6) and cubicwebversion >= (3, 9, 6) and not 'CWUniqueTogetherConstraint' in schema:
     add_entity_type('CWUniqueTogetherConstraint')
 
 if not ('CWUniqueTogetherConstraint', 'CWRType') in schema['relations'].rdefs:

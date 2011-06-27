@@ -751,7 +751,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                     session.cnxset.connection(self.uri).rollback()
                     if self.repo.config.mode != 'test':
                         self.critical('transaction has been rollbacked')
-                except:
+                except Exception, ex:
                     pass
             if ex.__class__.__name__ == 'IntegrityError':
                 # need string comparison because of various backends
@@ -1627,7 +1627,7 @@ class DatabaseIndependentBackupRestore(object):
     * a list of rows (as tuples with one element per column)
 
     Tables are saved in chunks in different files in order to prevent
-    a too high memory consumption. 
+    a too high memory consumption.
     """
     def __init__(self, source):
         """
