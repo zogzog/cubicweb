@@ -395,7 +395,10 @@ class RepositoryTC(CubicWebTC):
 
     def test_public_api(self):
         self.assertEqual(self.repo.get_schema(), self.repo.schema)
-        self.assertEqual(self.repo.source_defs(), {'system': {'type': 'native', 'uri': 'system'}})
+        self.assertEqual(self.repo.source_defs(), {'system': {'type': 'native',
+                                                              'uri': 'system',
+                                                              'use-cwuri-as-url': False}
+                                                  })
         # .properties() return a result set
         self.assertEqual(self.repo.properties().rql, 'Any K,V WHERE P is CWProperty,P pkey K, P value V, NOT P for_user U')
 
