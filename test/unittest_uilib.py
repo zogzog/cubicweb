@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -22,13 +22,14 @@ __docformat__ = "restructuredtext en"
 
 
 import pkg_resources
-from logilab.common.testlib import TestCase, unittest_main
+
 from unittest2 import skipIf
+
+from logilab.common.testlib import DocTest, TestCase, unittest_main
 
 from cubicweb import uilib
 
 lxml_version = pkg_resources.get_distribution('lxml').version.split('.')
-
 
 class UILIBTC(TestCase):
 
@@ -183,6 +184,10 @@ quis nostrud exercitation ullamco laboris nisi"),
 <tbody><tr height="17"><td width="81" height="17">XXXXXXX</td></tr></tbody>\
 </table>'''
         self.assertMultiLineEqual(uilib.soup2xhtml(incoming, 'ascii'), expected)
+
+
+class DocTest(DocTest):
+    module = uilib
 
 
 if __name__ == '__main__':
