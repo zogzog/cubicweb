@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -21,9 +21,12 @@ import re
 import decimal
 import datetime
 
-from logilab.common.testlib import TestCase, unittest_main
+
+from logilab.common.testlib import TestCase, DocTest, unittest_main
+
 from cubicweb.devtools.testlib import CubicWebTC
-from cubicweb.utils import make_uid, UStringIO, SizeConstrainedList, RepeatList, HTMLHead
+from cubicweb.utils import (make_uid, UStringIO, SizeConstrainedList,
+                            RepeatList, HTMLHead)
 from cubicweb.entity import Entity
 
 try:
@@ -251,6 +254,9 @@ class HTMLHeadTC(CubicWebTC):
 </head>
 """
         self.assertEqual(result, expected)
+
+class DocTest(DocTest):
+    from cubicweb import utils as module
 
 if __name__ == '__main__':
     unittest_main()

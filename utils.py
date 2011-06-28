@@ -116,11 +116,11 @@ def transitive_closure_of(entity, rtype, _seen=None):
 
 
 class SizeConstrainedList(list):
-    """simple list that makes sure the list does not get bigger
-    than a given size.
+    """simple list that makes sure the list does not get bigger than a given
+    size.
 
-    when the list is full and a new element is added, the first
-    element of the list is removed before appending the new one
+    when the list is full and a new element is added, the first element of the
+    list is removed before appending the new one
 
     >>> l = SizeConstrainedList(2)
     >>> l.append(1)
@@ -128,6 +128,7 @@ class SizeConstrainedList(list):
     >>> l
     [1, 2]
     >>> l.append(3)
+    >>> l
     [2, 3]
     """
     def __init__(self, maxsize):
