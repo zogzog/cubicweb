@@ -193,13 +193,12 @@ class ConcatFiles(LongTimeExpiringFile):
             for path in paths:
                 dirpath, rid = self._resource(path)
                 if rid is None:
+                    # In production mode log an error, do not return a 404
+                    # XXX the erroneous content is cached anyway
+                    LOGGER.error('concatenated data url error: %r file '
+                                 'does not exist', path)
                     if self.config.debugmode:
                         raise ConcatFileNotFoundError(path)
-                    else:
-                        # In production mode log an error, do not return a 404
-                        # XXX the erroneous content is cached anyway
-                        LOGGER.error('concatenated data url error: %r file '
-                                     'does not exist', path)
                 else:
                     concat_data.append(open(osp.join(dirpath, rid)).read())
             with open(filepath, 'wb') as f:
