@@ -82,15 +82,17 @@ class PlotWidget(object):
 class FlotPlotWidget(PlotWidget):
     """PlotRenderer widget using Flot"""
     onload = u"""
-var fig = jQuery("#%(figid)s");
+var fig = jQuery('#%(figid)s');
 if (fig.attr('cubicweb:type') != 'prepared-plot') {
     %(plotdefs)s
-    jQuery.plot(jQuery("#%(figid)s"), [%(plotdata)s],
+    jQuery.plot(jQuery('#%(figid)s'), [%(plotdata)s],
         {points: {show: true},
          lines: {show: true},
          grid: {hoverable: true},
+         /*yaxis : {tickFormatter : suffixFormatter},*/
          xaxis: {mode: %(mode)s}});
-    jQuery("#%(figid)s").bind("plothover", onPlotHover);
+    jQuery('#%(figid)s').data({mode: %(mode)s, dateformat: %(dateformat)s});
+    jQuery('#%(figid)s').bind('plothover', onPlotHover);
     fig.attr('cubicweb:type','prepared-plot');
 }
 """
@@ -101,11 +103,8 @@ if (fig.attr('cubicweb:type') != 'prepared-plot') {
         self.timemode = timemode
 
     def dump_plot(self, plot):
-        # XXX for now, the only way that we have to customize properly
-        #     datetime labels on tooltips is to insert an additional column
-        #     cf. function onPlotHover in cubicweb.flot.js
         if self.timemode:
-            plot = [(datetime2ticks(x), y, datetime2ticks(x)) for x, y in plot]
+            plot = [(datetime2ticks(x), y) for x, y in plot]
         return json_dumps(plot)
 
     def _render(self, req, width=500, height=400):
@@ -122,11 +121,14 @@ if (fig.attr('cubicweb:type') != 'prepared-plot') {
             plotdefs.append('var %s = %s;' % (plotid, self.dump_plot(plot)))
             # XXX ugly but required in order to not crash my demo
             plotdata.append("{label: '%s', data: %s}" % (label.replace(u'&', u''), plotid))
+        fmt = req.property_value('ui.date-format') # XXX datetime-format
+        # XXX TODO make plot options customizable
         req.html_headers.add_onload(self.onload %
                                     {'plotdefs': '\n'.join(plotdefs),
                                      'figid': figid,
                                      'plotdata': ','.join(plotdata),
-                                     'mode': self.timemode and "'time'" or 'null'})
+                                     'mode': self.timemode and "'time'" or 'null',
+                                     'dateformat': '"%s"' % fmt})
 
 
 class PlotView(baseviews.AnyRsetView):
