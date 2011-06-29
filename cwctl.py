@@ -727,11 +727,9 @@ given, appropriate sources for migration will be automatically selected \
         config = cwcfg.config_for(appid)
         config.repairing = True # notice we're not starting the server
         config.verbosity = self.config.verbosity
-        try:
-            config.set_sources_mode(self.config.ext_sources or ('migration',))
-        except AttributeError:
-            # not a server config
-            pass
+        set_sources_mode = getattr(config, 'set_sources_mode', None)
+        if set_sources_mode is not None:
+            set_sources_mode(self.config.ext_sources or ('migration',))
         # get instance and installed versions for the server and the componants
         mih = config.migration_handler()
         repo = mih.repo_connect()

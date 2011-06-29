@@ -123,11 +123,10 @@ def _db_sys_cnx(source, special_privs, interactive=True):
                             interactive=interactive)
     # disable autocommit (isolation_level(1)) because DROP and
     # CREATE DATABASE can't be executed in a transaction
-    try:
-        cnx.set_isolation_level(0)
-    except AttributeError:
+    set_isolation_level = getattr(cnx, 'set_isolation_level', None)
+    if set_isolation_level is not None:
         # set_isolation_level() is psycopg specific
-        pass
+        set_isolation_level(0)
     return cnx
 
 def repo_cnx(config):
