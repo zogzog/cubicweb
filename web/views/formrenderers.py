@@ -37,7 +37,6 @@ _ = unicode
 
 from warnings import warn
 
-from logilab.common import dictattr
 from logilab.mtconverter import xml_escape
 
 from cubicweb import tags, uilib
@@ -193,7 +192,7 @@ class FormRenderer(AppObject):
         if form.domid:
             attrs.setdefault('id', form.domid)
         if form.onsubmit:
-            attrs.setdefault('onsubmit',  form.onsubmit % dictattr(form))
+            attrs.setdefault('onsubmit',  form.onsubmit)
         if form.cssstyle:
             attrs.setdefault('style', form.cssstyle)
         if form.cssclass:

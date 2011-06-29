@@ -132,7 +132,6 @@ class FieldsForm(form.Form):
     needs_js = ('cubicweb.ajax.js', 'cubicweb.edition.js',)
     needs_css = ('cubicweb.form.css',)
     action = None
-    onsubmit = "return freezeFormButtons('%(domid)s');"
     cssclass = None
     cssstyle = None
     cwtarget = None
@@ -145,6 +144,15 @@ class FieldsForm(form.Form):
     def needs_multipart(self):
         """true if the form needs enctype=multipart/form-data"""
         return any(field.needs_multipart for field in self.fields)
+
+    def _get_onsubmit(self):
+        try:
+            return self._onsubmit
+        except AttributeError:
+            return "return freezeFormButtons('%(domid)s');" % dictattr(self)
+    def _set_onsubmit(self, value):
+        self._onsubmit = value
+    onsubmit = property(_get_onsubmit, _set_onsubmit)
 
     def add_media(self):
         """adds media (CSS & JS) required by this widget"""
