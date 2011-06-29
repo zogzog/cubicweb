@@ -55,7 +55,7 @@ from cubicweb import (CW_SOFTWARE_ROOT, CW_MIGRATION_MAP, QueryError,
                       BadConnectionId, Unauthorized, ValidationError,
                       RepositoryError, UniqueTogetherError, typed_eid, onevent)
 from cubicweb import cwvreg, schema, server
-from cubicweb.server import utils, hook, pool, querier, sources
+from cubicweb.server import ShuttingDown, utils, hook, pool, querier, sources
 from cubicweb.server.session import Session, InternalSession, InternalManager, \
      security_enabled
 from cubicweb.server.ssplanner import EditedEntity
@@ -940,7 +940,7 @@ class Repository(object):
                      checkshuttingdown=True):
         """return the user associated to the given session identifier"""
         if checkshuttingdown and self.shutting_down:
-            raise Exception('Repository is shutting down')
+            raise ShuttingDown('Repository is shutting down')
         try:
             session = self._sessions[sessionid]
         except KeyError:

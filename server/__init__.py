@@ -36,6 +36,12 @@ from yams import BASE_GROUPS
 
 from cubicweb import CW_SOFTWARE_ROOT
 
+class ShuttingDown(BaseException):
+    """raised when trying to access some resources while the repository is
+    shutting down. Inherit from BaseException so that `except Exception` won't
+    catch it.
+    """
+
 # server-side debugging #########################################################
 
 # server debugging flags. They may be combined using binary operators.
