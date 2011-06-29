@@ -48,7 +48,7 @@ class ClickAndEditFormTC(ReleditMixinTC, CubicWebTC):
                                       rtype)
 
     def test_default_forms(self):
-        self.skip('Need to check if this test should still run post reledit/doreledit merge')
+        self.skipTest('Need to check if this test should still run post reledit/doreledit merge')
         doreledit = {'title': """<div id="title-subject-%(eid)s-reledit" onmouseout="jQuery('#title-subject-%(eid)s').addClass('hidden')" onmouseover="jQuery('#title-subject-%(eid)s').removeClass('hidden')" class="releditField"><div id="title-subject-%(eid)s-value" class="editableFieldValue">cubicweb-world-domination</div><form action="http://testing.fr/cubicweb/validateform?__onsuccess=window.parent.cw.reledit.onSuccess" method="post" enctype="application/x-www-form-urlencoded" id="title-subject-%(eid)s-form" onsubmit="return freezeFormButtons(&#39;title-subject-%(eid)s-form&#39;);" class="releditForm" cubicweb:target="eformframe">
 <fieldset>
 <input name="__form_id" type="hidden" value="base" />
