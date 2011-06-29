@@ -296,7 +296,7 @@ function ajaxFuncArgs(fname, form /* ... */) {
 }
 
 /**
- * .. function:: loadxhtml(url, form, reqtype='get', mode='replace', cursor=true)
+ * .. function:: loadxhtml(url, form, reqtype='get', mode='replace', cursor=false)
  *
  * build url given by absolute or relative `url` and `form` parameters
  * (dictionary), fetch it using `reqtype` method, then evaluate the
@@ -312,7 +312,9 @@ function ajaxFuncArgs(fname, form /* ... */) {
  */
 jQuery.fn.loadxhtml = function(url, form, reqtype, mode, cursor) {
     if (this.size() > 1) {
-        cw.log('loadxhtml was called with more than one element');
+        cw.log('loadxhtml called with more than one element');
+    } else if (this.size() < 1) {
+        cw.log('loadxhtml called without an element');
     }
     var callback = null;
     if (form && form.callback) {

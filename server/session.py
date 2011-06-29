@@ -38,6 +38,7 @@ from cubicweb.req import RequestSessionBase
 from cubicweb.dbapi import ConnectionProperties
 from cubicweb.utils import make_uid, RepeatList
 from cubicweb.rqlrewrite import RQLRewriter
+from cubicweb.server import ShuttingDown
 from cubicweb.server.edition import EditedEntity
 
 
@@ -1287,7 +1288,7 @@ class InternalSession(Session):
         """connections set, set according to transaction mode for each query"""
         if self.repo.shutting_down:
             self.free_cnxset(True)
-            raise Exception('repository is shutting down')
+            raise ShuttingDown('repository is shutting down')
         return getattr(self._threaddata, 'cnxset', None)
 
 
