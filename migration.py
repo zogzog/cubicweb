@@ -509,6 +509,8 @@ class ConfigurationProblem(object):
                         if version_strictly_lower(version, ver):
                             version = ver
                             source = src
+                    elif op == None:
+                        continue
                     else:
                         print 'unable to handle this case', oper, version, op, ver
             # "solve" constraint satisfaction problem

@@ -1545,14 +1545,14 @@ WHERE appears0.words @@ to_tsquery('default', 'hip&hop&momo') AND appears0.uid=_
 ORDER BY ts_rank(appears0.words, to_tsquery('default', 'hip&hop&momo'))*appears0.weight"""),
 
             ('Any X ORDERBY FTIRANK(X) WHERE X has_text "toto tata", X name "tutu", X is IN (Basket,Folder)',
-             """SELECT T1.C0 FROM (SELECT _X.cw_eid AS C0, ts_rank(appears0.words, to_tsquery('default', 'toto&tata'))*appears0.weight AS C1
+             """SELECT _X.cw_eid
 FROM appears AS appears0, cw_Basket AS _X
 WHERE appears0.words @@ to_tsquery('default', 'toto&tata') AND appears0.uid=_X.cw_eid AND _X.cw_name=tutu
 UNION ALL
-SELECT _X.cw_eid AS C0, ts_rank(appears0.words, to_tsquery('default', 'toto&tata'))*appears0.weight AS C1
+SELECT _X.cw_eid
 FROM appears AS appears0, cw_Folder AS _X
 WHERE appears0.words @@ to_tsquery('default', 'toto&tata') AND appears0.uid=_X.cw_eid AND _X.cw_name=tutu
-ORDER BY 2) AS T1"""),
+ORDER BY ts_rank(appears0.words, to_tsquery('default', 'toto&tata'))*appears0.weight"""),
 
             ('Personne X ORDERBY FTIRANK(X),FTIRANK(S) WHERE X has_text %(text)s, X travaille S, S has_text %(text)s',
              """SELECT _X.eid
@@ -1658,6 +1658,16 @@ GROUP BY _G.cw_eid'''
 FROM owned_by_relation AS rel_owned_by0, cw_CWGroup AS _G LEFT OUTER JOIN in_group_relation AS rel_in_group2 ON (rel_in_group2.eid_to=_G.cw_eid) LEFT OUTER JOIN bookmarked_by_relation AS rel_bookmarked_by1 ON (rel_bookmarked_by1.eid_from=1148 AND rel_in_group2.eid_from=rel_bookmarked_by1.eid_to)
 WHERE rel_owned_by0.eid_from=_G.cw_eid AND rel_owned_by0.eid_to=1122
 GROUP BY _G.cw_eid''')
+
+    def test_groupby_orderby_insertion_dont_modify_intention(self):
+        self._check('Any YEAR(XECT)*100+MONTH(XECT), COUNT(X),SUM(XCE),AVG(XSCT-XECT) '
+                    'GROUPBY YEAR(XECT),MONTH(XECT) ORDERBY 1 '
+                    'WHERE X creation_date XSCT, X modification_date XECT, '
+                    'X ordernum XCE, X is CWAttribute',
+                    '''SELECT ((CAST(EXTRACT(YEAR from _X.cw_modification_date) AS INTEGER) * 100) + CAST(EXTRACT(MONTH from _X.cw_modification_date) AS INTEGER)), COUNT(_X.cw_eid), SUM(_X.cw_ordernum), AVG((_X.cw_creation_date - _X.cw_modification_date))
+FROM cw_CWAttribute AS _X
+GROUP BY CAST(EXTRACT(YEAR from _X.cw_modification_date) AS INTEGER),CAST(EXTRACT(MONTH from _X.cw_modification_date) AS INTEGER)
+ORDER BY 1'''),
 
 
 class SqlServer2005SQLGeneratorTC(PostgresSQLGeneratorTC):
@@ -1772,6 +1782,16 @@ ORDER BY 4 DESC'''),
         self._check("Any CAST(String, P) WHERE P is Personne",
                     '''SELECT CAST(_P.cw_eid AS nvarchar(max))
 FROM cw_Personne AS _P''')
+
+    def test_groupby_orderby_insertion_dont_modify_intention(self):
+        self._check('Any YEAR(XECT)*100+MONTH(XECT), COUNT(X),SUM(XCE),AVG(XSCT-XECT) '
+                    'GROUPBY YEAR(XECT),MONTH(XECT) ORDERBY 1 '
+                    'WHERE X creation_date XSCT, X modification_date XECT, '
+                    'X ordernum XCE, X is CWAttribute',
+                    '''SELECT ((YEAR(_X.cw_modification_date) * 100) + MONTH(_X.cw_modification_date)), COUNT(_X.cw_eid), SUM(_X.cw_ordernum), AVG((_X.cw_creation_date - _X.cw_modification_date))
+FROM cw_CWAttribute AS _X
+GROUP BY YEAR(_X.cw_modification_date),MONTH(_X.cw_modification_date)
+ORDER BY 1'''),
 
 
 class SqliteSQLGeneratorTC(PostgresSQLGeneratorTC):
@@ -1911,6 +1931,16 @@ WHERE appears0.word_id IN (SELECT word_id FROM word WHERE word in ('toto', 'tata
 FROM cw_CWUser AS _X
 WHERE ((YEAR(_X.cw_creation_date)=2010) OR (_X.cw_creation_date IS NULL))''')
 
+    def test_groupby_orderby_insertion_dont_modify_intention(self):
+        self._check('Any YEAR(XECT)*100+MONTH(XECT), COUNT(X),SUM(XCE),AVG(XSCT-XECT) '
+                    'GROUPBY YEAR(XECT),MONTH(XECT) ORDERBY 1 '
+                    'WHERE X creation_date XSCT, X modification_date XECT, '
+                    'X ordernum XCE, X is CWAttribute',
+                    '''SELECT ((YEAR(_X.cw_modification_date) * 100) + MONTH(_X.cw_modification_date)), COUNT(_X.cw_eid), SUM(_X.cw_ordernum), AVG((_X.cw_creation_date - _X.cw_modification_date))
+FROM cw_CWAttribute AS _X
+GROUP BY YEAR(_X.cw_modification_date),MONTH(_X.cw_modification_date)
+ORDER BY 1'''),
+
 
 
 class MySQLGenerator(PostgresSQLGeneratorTC):
@@ -2018,6 +2048,16 @@ WHERE ((EXTRACT(YEAR from _X.cw_creation_date)=2010) OR (_X.cw_creation_date IS 
                     '''SELECT 1
 FROM (SELECT 1) AS _T
 WHERE NOT (EXISTS(SELECT 1 FROM in_group_relation AS rel_in_group0))''')
+
+    def test_groupby_orderby_insertion_dont_modify_intention(self):
+        self._check('Any YEAR(XECT)*100+MONTH(XECT), COUNT(X),SUM(XCE),AVG(XSCT-XECT) '
+                    'GROUPBY YEAR(XECT),MONTH(XECT) ORDERBY 1 '
+                    'WHERE X creation_date XSCT, X modification_date XECT, '
+                    'X ordernum XCE, X is CWAttribute',
+                    '''SELECT ((EXTRACT(YEAR from _X.cw_modification_date) * 100) + EXTRACT(MONTH from _X.cw_modification_date)), COUNT(_X.cw_eid), SUM(_X.cw_ordernum), AVG((_X.cw_creation_date - _X.cw_modification_date))
+FROM cw_CWAttribute AS _X
+GROUP BY EXTRACT(YEAR from _X.cw_modification_date),EXTRACT(MONTH from _X.cw_modification_date)
+ORDER BY 1'''),
 
 
 class removeUnsusedSolutionsTC(TestCase):
