@@ -31,7 +31,7 @@ from StringIO import StringIO
 from logilab.mtconverter import xml_escape, html_unescape
 from logilab.common.date import ustrftime
 
-from cubicweb.utils import json_dumps
+from cubicweb.utils import JSString, json_dumps
 
 
 def rql_for_eid(eid):
@@ -281,16 +281,23 @@ class _JSCallArgs(_JSId):
         self.args = args
         self.parent = parent
     def __unicode__(self):
-        args = u','.join(json_dumps(arg) for arg in self.args)
+        args = []
+        for arg in self.args:
+            if isinstance(arg, JSString):
+                args.append(arg)
+            else:
+                args.append(json_dumps(arg))
         if self.parent:
-            return u'%s(%s)' % (self.parent, args)
-        return args
+            return u'%s(%s)' % (self.parent, ','.join(args))
+        return ','.join(args)
 
 class _JS(object):
     def __getattr__(self, attr):
         return _JSId(attr)
 
-"""magic object to return strings suitable to call some javascript function with
+js = _JS()
+js.__doc__ = """\
+magic object to return strings suitable to call some javascript function with
 the given arguments (which should be correctly typed).
 
 >>> str(js.pouet(1, "2"))
@@ -298,9 +305,10 @@ the given arguments (which should be correctly typed).
 >>> str(js.cw.pouet(1, "2"))
 'cw.pouet(1,"2")'
 >>> str(js.cw.pouet(1, "2").pouet(None))
-'cw.pouet(1,"2").pouet(null)')
+'cw.pouet(1,"2").pouet(null)'
+>>> str(js.cw.pouet(1, JSString("$")).pouet(None))
+'cw.pouet(1,$).pouet(null)'
 """
-js = _JS()
 
 def domid(string):
     """return a valid DOM id from a string (should also be usable in jQuery

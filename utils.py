@@ -444,7 +444,7 @@ try:
     else:
         import json
 except ImportError:
-    json_dumps = None
+    json_dumps = JSString = None
 
 else:
     from logilab.common.date import ustrftime
@@ -476,6 +476,40 @@ else:
 
     def json_dumps(value):
         return json.dumps(value, cls=CubicWebJsonEncoder)
+
+
+    class JSString(str):
+        """use this string sub class in values given to :func:`js_dumps` to
+        insert raw javascript chain in some JSON string
+        """
+
+    def _dict2js(d, predictable=False):
+        res = [key + ': ' + js_dumps(val, predictable)
+               for key, val in d.iteritems()]
+        return '{%s}' % ', '.join(res)
+
+    def _list2js(l, predictable=False):
+        return '[%s]' % ', '.join([js_dumps(val, predictable) for val in l])
+
+    def js_dumps(something, predictable=False):
+        """similar as :func:`json_dumps`, except values which are instances of
+        :class:`JSString` are expected to be valid javascript and will be output
+        as is
+
+        >>> js_dumps({'hop': JSString('$.hop'), 'bar': None}, predictable=True)
+        '{bar: null, hop: $.hop}'
+        >>> js_dumps({'hop': '$.hop'})
+        '{hop: "$.hop"}'
+        >>> js_dumps({'hip': {'hop': JSString('momo')}})
+        '{hip: {hop: momo}}'
+        """
+        if isinstance(something, dict):
+            return _dict2js(something, predictable)
+        if isinstance(something, list):
+            return _list2js(something, predictable)
+        if isinstance(something, JSString):
+            return something
+        return json_dumps(something)
 
 
 @deprecated('[3.7] merge_dicts is deprecated')
