@@ -335,6 +335,43 @@ class HTableFormRenderer(FormRenderer):
         pass
 
 
+class OneRowTableFormRenderer(FormRenderer):
+    """The 'htable' form renderer display fields horizontally in a table:
+
+    +--------------+--------------+--------------+--------------+---------+
+    | field1 label | field1 input | field2 label | field2 input | buttons |
+    +--------------+--------------+--------------+--------------+---------+
+    """
+    __regid__ = 'onerowtable'
+
+    display_help = False
+    def _render_fields(self, fields, w, form):
+        w(u'<table border="0" class="oneRowTableForm">')
+        w(u'<tr>')
+        for field in fields:
+            if self.display_label:
+                w(u'<th class="labelCol">%s</th>' % self.render_label(form, field))
+            if self.display_help:
+                w(self.render_help(form, field))
+            error = form.field_error(field)
+            if error:
+                w(u'<td class="error">')
+                self.render_error(w, error)
+            else:
+                w(u'<td>')
+            w(field.render(form, self))
+            w(u'</td>')
+        w(u'<td>')
+        for button in form.form_buttons:
+            w(button.render(form))
+        w(u'</td>')
+        w(u'</tr>')
+        w(u'</table>')
+
+    def render_buttons(self, w, form):
+        pass
+
+
 class EntityCompositeFormRenderer(FormRenderer):
     """This is a specific renderer for the multiple entities edition form
     ('muledit').
