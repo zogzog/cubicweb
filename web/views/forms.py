@@ -45,6 +45,7 @@ __docformat__ = "restructuredtext en"
 
 from warnings import warn
 
+from logilab.common import dictattr
 from logilab.common.decorators import iclassmethod
 from logilab.common.compat import any
 from logilab.common.deprecation import deprecated
