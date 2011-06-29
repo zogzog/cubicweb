@@ -190,6 +190,21 @@ shown)::
   db-encoding=utf8
 
 
+You need to change the default settings on the database by running::
+
+ ALTER DATABASE <databasename> SET READ_COMMITTED_SNAPSHOT ON;
+
+The ALTER DATABASE command above requires some permissions that your
+user may not have. In that case you will have to ask your local DBA to
+run the query for you. 
+
+You can check that the setting is correct by running the following
+query which must return '1'::
+
+   SELECT is_read_committed_snapshot_on 
+     FROM sys.databases WHERE name='<databasename>';
+
+
 
 .. _SQLiteConfiguration:
 
