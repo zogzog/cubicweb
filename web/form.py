@@ -82,6 +82,9 @@ class Form(AppObject):
     force_session_key = None
     domid = 'form'
     copy_nav_params = False
+    control_fields = set( ('__form_id', '__errorurl', '__domid',
+                           '__redirectpath', '_cwmsgid', '__message',
+                           ) )
 
     def __init__(self, req, rset=None, row=None, col=None,
                  submitmsg=None, mainform=True, **kwargs):

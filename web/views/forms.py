@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -45,14 +45,16 @@ __docformat__ = "restructuredtext en"
 
 from warnings import warn
 
-from logilab.common import dictattr
+from logilab.common import dictattr, tempattr
 from logilab.common.decorators import iclassmethod
 from logilab.common.compat import any
+from logilab.common.textutils import splitstrip
 from logilab.common.deprecation import deprecated
 
-from cubicweb import typed_eid
+from cubicweb import ValidationError, typed_eid
 from cubicweb.utils import support_args
 from cubicweb.selectors import non_final_entity, match_kwargs, one_line_rset
+from cubicweb.web import RequestError, ProcessFormError
 from cubicweb.web import uicfg, form, formwidgets as fwdgs
 from cubicweb.web.formfields import relvoc_unrelated, guess_field
 
@@ -125,6 +127,23 @@ class FieldsForm(form.Form):
 
     .. automethod:: cubicweb.web.views.forms.FieldsForm.render
 
+    **Form posting methods**
+
+    Once a form is posted, you can retrieve the form on the controller side and
+    use the following methods to ease processing. For "simple" forms, this
+    should looks like :
+
+    .. sourcecode :: python
+
+        form = self._cw.vreg['forms'].select('myformid', self._cw)
+        posted = form.process_posted()
+        # do something with the returned dictionary
+
+    Notice that form related to entity edition should usually use the
+    `edit` controller which will handle all the logic for you.
+
+    .. automethod:: cubicweb.web.views.forms.FieldsForm.process_content
+    .. automethod:: cubicweb.web.views.forms.FieldsForm.iter_modified_fields
     """
     __regid__ = 'base'
 
@@ -218,6 +237,19 @@ class FieldsForm(form.Form):
         for field in self.fields[:]:
             for field in field.actual_fields(self):
                 field.form_init(self)
+        # store used field in an hidden input for later usage by a controller
+        fields = set()
+        eidfields = set()
+        for field in self.fields:
+            if field.eidparam:
+                eidfields.add(field.role_name())
+            elif field.name not in self.control_fields:
+                fields.add(field.role_name())
+        if fields:
+            self.add_hidden('_cw_fields', u','.join(fields))
+        if eidfields:
+            self.add_hidden('_cw_entity_fields', u','.join(eidfields),
+                            eidparam=True)
 
     _default_form_action_path = 'edit'
     def form_action(self):
@@ -228,6 +260,50 @@ class FieldsForm(form.Form):
         if action is None:
             return self._cw.build_url(self._default_form_action_path)
         return action
+
+    # controller form processing methods #######################################
+
+    def iter_modified_fields(self, editedfields=None, entity=None):
+        """return a generator on field that has been modified by the posted
+        form.
+        """
+        if editedfields is None:
+            try:
+                editedfields = self._cw.form['_cw_fields']
+            except KeyError:
+                raise RequestError(self._cw._('no edited fields specified'))
+        entityform = entity and self.field_by_name.im_func.func_code.co_argcount == 4 # XXX
+        for editedfield in splitstrip(editedfields):
+            try:
+                name, role = editedfield.split('-')
+            except:
+                name = editedfield
+                role = None
+            if entityform:
+                field = self.field_by_name(name, role, eschema=entity.e_schema)
+            else:
+                field = self.field_by_name(name, role)
+            if field.has_been_modified(self):
+                yield field
+
+    def process_posted(self):
+        """use this method to process the content posted by a simple form.  it
+        will return a dictionary with field names as key and typed value as
+        associated value.
+        """
+        with tempattr(self, 'formvalues', {}): # init fields value cache
+            errors = []
+            processed = {}
+            for field in self.iter_modified_fields():
+                try:
+                    for field, value in field.process_posted(self):
+                        processed[field.role_name()] = value
+                except ProcessFormError, exc:
+                    errors.append((field, exc))
+            if errors:
+                errors = dict((f.role_name(), unicode(ex)) for f, ex in errors)
+                raise ValidationError(None, errors)
+            return processed
 
     @deprecated('[3.6] use .add_hidden(name, value, **kwargs)')
     def form_add_hidden(self, name, value=None, **kwargs):
@@ -322,16 +398,6 @@ class EntityFieldsForm(FieldsForm):
         # XXX we should not consider some url parameters that may lead to
         # different url after a validation error
         return '%s#%s' % (self._cw.url(), self.domid)
-
-    def build_context(self, formvalues=None):
-        if self.formvalues is not None:
-            return # already built
-        super(EntityFieldsForm, self).build_context(formvalues)
-        edited = set()
-        for field in self.fields:
-            if field.eidparam:
-                edited.add(field.role_name())
-        self.add_hidden('_cw_edited_fields', u','.join(edited), eidparam=True)
 
     def default_renderer(self):
         return self._cw.vreg['formrenderers'].select(

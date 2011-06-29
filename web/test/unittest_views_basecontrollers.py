@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -33,7 +33,7 @@ u = unicode
 
 def req_form(user):
     return {'eid': [str(user.eid)],
-            '_cw_edited_fields:%s' % user.eid: '_cw_generic_field',
+            '_cw_entity_fields:%s' % user.eid: '_cw_generic_field',
             '__type:%s' % user.eid: user.__regid__
             }
 
@@ -59,7 +59,7 @@ class EditControllerTC(CubicWebTC):
         user = self.user()
         req = self.request()
         req.form = {'eid': 'X', '__type:X': 'CWUser',
-                    '_cw_edited_fields:X': 'login-subject,upassword-subject',
+                    '_cw_entity_fields:X': 'login-subject,upassword-subject',
                     'login-subject:X': u'admin',
                     'upassword-subject:X': u'toto',
                     'upassword-subject-confirm:X': u'toto',
@@ -79,7 +79,7 @@ class EditControllerTC(CubicWebTC):
         eid = u(user.eid)
         req.form = {
             'eid': eid, '__type:'+eid: 'CWUser',
-            '_cw_edited_fields:'+eid: 'login-subject,firstname-subject,surname-subject,in_group-subject',
+            '_cw_entity_fields:'+eid: 'login-subject,firstname-subject,surname-subject,in_group-subject',
             'login-subject:'+eid:     u(user.login),
             'surname-subject:'+eid: u'Th\xe9nault',
             'firstname-subject:'+eid:   u'Sylvain',
@@ -100,7 +100,7 @@ class EditControllerTC(CubicWebTC):
         req.form = {
             'eid': eid, '__maineid' : eid,
             '__type:'+eid: 'CWUser',
-            '_cw_edited_fields:'+eid: 'upassword-subject',
+            '_cw_entity_fields:'+eid: 'upassword-subject',
             'upassword-subject:'+eid: 'tournicoton',
             'upassword-subject-confirm:'+eid: 'tournicoton',
             }
@@ -120,7 +120,7 @@ class EditControllerTC(CubicWebTC):
         req.form = {
             'eid':       eid,
             '__type:'+eid:    'CWUser',
-            '_cw_edited_fields:'+eid: 'login-subject,firstname-subject,surname-subject',
+            '_cw_entity_fields:'+eid: 'login-subject,firstname-subject,surname-subject',
             'login-subject:'+eid:     u(user.login),
             'firstname-subject:'+eid: u'Th\xe9nault',
             'surname-subject:'+eid:   u'Sylvain',
@@ -140,14 +140,14 @@ class EditControllerTC(CubicWebTC):
         req.form = {'eid': ['X', 'Y'], '__maineid' : 'X',
 
                     '__type:X': 'CWUser',
-                    '_cw_edited_fields:X': 'login-subject,upassword-subject,surname-subject,in_group-subject',
+                    '_cw_entity_fields:X': 'login-subject,upassword-subject,surname-subject,in_group-subject',
                     'login-subject:X': u'adim',
                     'upassword-subject:X': u'toto', 'upassword-subject-confirm:X': u'toto',
                     'surname-subject:X': u'Di Mascio',
                     'in_group-subject:X': u(gueid),
 
                     '__type:Y': 'EmailAddress',
-                    '_cw_edited_fields:Y': 'address-subject,use_email-object',
+                    '_cw_entity_fields:Y': 'address-subject,use_email-object',
                     'address-subject:Y': u'dima@logilab.fr',
                     'use_email-object:Y': 'X',
                     }
@@ -165,11 +165,11 @@ class EditControllerTC(CubicWebTC):
         req.form = {'eid': [peid, 'Y'], '__maineid': peid,
 
                     '__type:'+peid: u'CWUser',
-                    '_cw_edited_fields:'+peid: u'surname-subject',
+                    '_cw_entity_fields:'+peid: u'surname-subject',
                     'surname-subject:'+peid: u'Di Masci',
 
                     '__type:Y': u'EmailAddress',
-                    '_cw_edited_fields:Y': u'address-subject,use_email-object',
+                    '_cw_entity_fields:Y': u'address-subject,use_email-object',
                     'address-subject:Y': u'dima@logilab.fr',
                     'use_email-object:Y': peid,
                     }
@@ -185,11 +185,11 @@ class EditControllerTC(CubicWebTC):
         req.form = {'eid': [peid, emaileid],
 
                     '__type:'+peid: u'CWUser',
-                    '_cw_edited_fields:'+peid: u'surname-subject',
+                    '_cw_entity_fields:'+peid: u'surname-subject',
                     'surname-subject:'+peid: u'Di Masci',
 
                     '__type:'+emaileid: u'EmailAddress',
-                    '_cw_edited_fields:'+emaileid: u'address-subject,use_email-object',
+                    '_cw_entity_fields:'+emaileid: u'address-subject,use_email-object',
                     'address-subject:'+emaileid: u'adim@logilab.fr',
                     'use_email-object:'+emaileid: peid,
                     }
@@ -205,7 +205,7 @@ class EditControllerTC(CubicWebTC):
         req = self.request()
         req.form = {'eid': 'X',
                     '__cloned_eid:X': u(user.eid), '__type:X': 'CWUser',
-                    '_cw_edited_fields:X': 'login-subject,upassword-subject',
+                    '_cw_entity_fields:X': 'login-subject,upassword-subject',
                     'login-subject:X': u'toto',
                     'upassword-subject:X': u'toto',
                     }
@@ -215,7 +215,7 @@ class EditControllerTC(CubicWebTC):
         req = self.request()
         req.form = {'__cloned_eid:X': u(user.eid),
                     'eid': 'X', '__type:X': 'CWUser',
-                    '_cw_edited_fields:X': 'login-subject,upassword-subject',
+                    '_cw_entity_fields:X': 'login-subject,upassword-subject',
                     'login-subject:X': u'toto',
                     'upassword-subject:X': u'toto',
                     'upassword-subject-confirm:X': u'tutu',
@@ -232,7 +232,7 @@ class EditControllerTC(CubicWebTC):
         req = self.request(rollbackfirst=True)
         req.form = {'eid': ['X'],
                     '__type:X': 'Salesterm',
-                    '_cw_edited_fields:X': 'amount-subject,described_by_test-subject',
+                    '_cw_entity_fields:X': 'amount-subject,described_by_test-subject',
                     'amount-subject:X': u'-10',
                     'described_by_test-subject:X': u(feid),
                 }
@@ -242,7 +242,7 @@ class EditControllerTC(CubicWebTC):
         req = self.request(rollbackfirst=True)
         req.form = {'eid': ['X'],
                     '__type:X': 'Salesterm',
-                    '_cw_edited_fields:X': 'amount-subject,described_by_test-subject',
+                    '_cw_entity_fields:X': 'amount-subject,described_by_test-subject',
                     'amount-subject:X': u'110',
                     'described_by_test-subject:X': u(feid),
                     }
@@ -252,7 +252,7 @@ class EditControllerTC(CubicWebTC):
         req = self.request(rollbackfirst=True)
         req.form = {'eid': ['X'],
                     '__type:X': 'Salesterm',
-                    '_cw_edited_fields:X': 'amount-subject,described_by_test-subject',
+                    '_cw_entity_fields:X': 'amount-subject,described_by_test-subject',
                     'amount-subject:X': u'10',
                     'described_by_test-subject:X': u(feid),
                     }
@@ -298,7 +298,7 @@ class EditControllerTC(CubicWebTC):
         req = self.request()
         req.form = {
             'eid': 'A', '__maineid' : 'A',
-            '__type:A': 'BlogEntry', '_cw_edited_fields:A': 'content-subject,title-subject',
+            '__type:A': 'BlogEntry', '_cw_entity_fields:A': 'content-subject,title-subject',
             'content-subject:A': u'"13:03:43"',
             'title-subject:A': u'huuu',
             '__redirectrql': redirectrql,
@@ -321,7 +321,7 @@ class EditControllerTC(CubicWebTC):
         req = self.request()
         req.form = {
             'eid': 'A', '__maineid' : 'A',
-            '__type:A': 'BlogEntry', '_cw_edited_fields:A': 'content-subject,title-subject',
+            '__type:A': 'BlogEntry', '_cw_entity_fields:A': 'content-subject,title-subject',
             'content-subject:A': u'"13:03:43"',
             'title-subject:A': u'huuu',
             '__redirectrql': redirectrql,
@@ -377,7 +377,7 @@ class EditControllerTC(CubicWebTC):
         req.form = {
             'eid':      cwetypeeid,
             '__type:'+cwetypeeid:  'CWEType',
-            '_cw_edited_fields:'+cwetypeeid: 'name-subject,final-subject,description-subject,read_permission-subject',
+            '_cw_entity_fields:'+cwetypeeid: 'name-subject,final-subject,description-subject,read_permission-subject',
             'name-subject:'+cwetypeeid:     u'CWEType',
             'final-subject:'+cwetypeeid:    '',
             'description-subject:'+cwetypeeid:     u'users group',
@@ -401,7 +401,7 @@ class EditControllerTC(CubicWebTC):
         req = self.request()
         req.form = {
             'eid': 'A', '__maineid' : 'A',
-            '__type:A': 'BlogEntry', '_cw_edited_fields:A': 'title-subject,content-subject',
+            '__type:A': 'BlogEntry', '_cw_entity_fields:A': 'title-subject,content-subject',
             'title-subject:A': u'"13:03:40"',
             'content-subject:A': u'"13:03:43"',}
         path, params = self.expect_redirect_publish(req, 'edit')
@@ -418,13 +418,13 @@ class EditControllerTC(CubicWebTC):
         req.form = {'eid': ['X', 'Y'],
 
                     '__type:X': 'CWUser',
-                    '_cw_edited_fields:X': 'login-subject,upassword-subject,in_group-subject',
+                    '_cw_entity_fields:X': 'login-subject,upassword-subject,in_group-subject',
                     'login-subject:X': u'adim',
                     'upassword-subject:X': u'toto', 'upassword-subject-confirm:X': u'toto',
                     'in_group-subject:X': `gueid`,
 
                     '__type:Y': 'EmailAddress',
-                    '_cw_edited_fields:Y': 'address-subject,alias-subject,use_email-object',
+                    '_cw_entity_fields:Y': 'address-subject,alias-subject,use_email-object',
                     'address-subject:Y': u'',
                     'alias-subject:Y': u'',
                     'use_email-object:Y': 'X',
@@ -438,7 +438,7 @@ class EditControllerTC(CubicWebTC):
         req = self.request()
         req.form = {'__maineid' : 'X', 'eid': 'X',
                     '__cloned_eid:X': user.eid, '__type:X': 'CWUser',
-                    '_cw_edited_fields:X': 'login-subject,upassword-subject',
+                    '_cw_entity_fields:X': 'login-subject,upassword-subject',
                     'login-subject:X': u'toto',
                     'upassword-subject:X': u'toto', 'upassword-subject-confirm:X': u'toto',
                     }
@@ -462,7 +462,7 @@ class EditControllerTC(CubicWebTC):
             req = self.request()
             req.form = {'eid': 'X',
                         '__cloned_eid:X': p.eid, '__type:X': 'CWUser',
-                        '_cw_edited_fields:X': 'login-subject,surname-subject',
+                        '_cw_entity_fields:X': 'login-subject,surname-subject',
                         'login-subject': u'dodo',
                         'surname-subject:X': u'Boom',
                         '__errorurl' : "whatever but required",
