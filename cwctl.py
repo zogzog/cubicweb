@@ -799,6 +799,28 @@ given, appropriate sources for migration will be automatically selected \
                 return False
         return True
 
+
+class ListVersionsInstanceCommand(InstanceCommand):
+    """List versions used by an instance.
+
+    <instance>...
+      identifiers of the instances to list versions for.
+    """
+    name = 'versions'
+
+    def versions_instance(self, appid):
+        from logilab.common.changelog import Version
+        config = cwcfg.config_for(appid)
+        # should not raise error if db versions don't match fs versions
+        config.repairing = True
+        if hasattr(config, 'set_sources_mode'):
+            config.set_sources_mode(('migration',))
+        repo = config.migration_handler().repo_connect()
+        vcconf = repo.get_versions()
+        for key in sorted(vcconf):
+            print key+': %s.%s.%s' % vcconf[key]
+
+
 class ShellCommand(Command):
     """Run an interactive migration shell on an instance. This is a python shell
     with enhanced migration commands predefined in the namespace. An additional
@@ -961,6 +983,7 @@ for cmdcls in (ListCommand,
                StartInstanceCommand, StopInstanceCommand, RestartInstanceCommand,
                ReloadConfigurationCommand, StatusCommand,
                UpgradeInstanceCommand,
+               ListVersionsInstanceCommand,
                ShellCommand,
                RecompileInstanceCatalogsCommand,
                ListInstancesCommand, ListCubesCommand,
