@@ -11,7 +11,7 @@ The value of the terminal elements (between quotes) is a Python regular
 expression.
 ::
 
-     statement:: = (select | delete | insert | update) ';'
+     statement ::= (select | delete | insert | update) ';'
 
 
      # select specific rules
@@ -130,18 +130,7 @@ Known limitations
   with an OR. I do not think that the negation is supported on this type of
   relation (XXX to be confirmed).
 
-- Relations defining the variables must be left to those using them.  For
-  example::
-
-     Point P where P abs X, P ord Y, P value X+Y
-
-  is valid, but::
-
-     Point P where P abs X, P value X+Y, P ord Y
-
-  is not.
-
-- missing proper explicit type conversion, COALESCE and certainly other things...
+- missing COALESCE and certainly other things...
 
 - writing an rql query requires knowledge of the used schema (with real relation
   names and entities, not those viewed in the user interface). On the other
