@@ -4104,13 +4104,8 @@ msgctxt "TrInfo"
 msgid "tr_count"
 msgstr "n° de transition"
 
-<<<<<<< /home/syt/src/fcubicweb/cubicweb/i18n/fr.po
-msgid "transaction undoed"
-msgstr "transaction annulée"
-=======
 msgid "transaction undone"
 msgstr "transaction annulée"
->>>>>>> /tmp/fr.po~other.p9Lq3c
 
 #, python-format
 msgid "transition %(tr)s isn't allowed from %(st)s"
