@@ -192,11 +192,17 @@ class DataFeedSource(AbstractSource):
             try:
                 if parser.process(url, raise_on_error):
                     error = True
-            except Exception, exc:
+            except IOError, exc:
                 if raise_on_error:
                     raise
                 self.error('could not pull data while processing %s: %s',
                            url, exc)
+                error = True
+            except Exception, exc:
+                if raise_on_error:
+                    raise
+                self.exception('error while processing %s: %s',
+                               url, exc)
                 error = True
         return error
 
@@ -266,8 +272,12 @@ class DataFeedParser(AppObject):
         source = self._cw.repo.sources_by_uri.get(
             sourceparams.pop('cwsource', None), self.source)
         sourceparams['parser'] = self
-        eid = source.extid2eid(str(uri), etype, self._cw,
-                               sourceparams=sourceparams)
+        try:
+            eid = source.extid2eid(str(uri), etype, self._cw,
+                                   sourceparams=sourceparams)
+        except ValidationError, ex:
+            self.source.error('error while creating %s: %s', etype, ex)
+            return None
         if eid < 0:
             # entity has been moved away from its original source
             #
