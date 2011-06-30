@@ -241,6 +241,7 @@ class DBAPISession(object):
         self.cnx = cnx
         self.data = {}
         self.login = login
+        self.mtime = time()
         # dbapi session identifier is the same as the first connection
         # identifier, but may later differ in case of auto-reconnection as done
         # by the web authentication manager (in cw.web.views.authentication)
