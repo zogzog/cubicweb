@@ -1529,14 +1529,14 @@ WHERE appears0.words @@ to_tsquery('default', 'hip&hop&momo') AND appears0.uid=_
 ORDER BY ts_rank(appears0.words, to_tsquery('default', 'hip&hop&momo'))*appears0.weight"""),
 
             ('Any X ORDERBY FTIRANK(X) WHERE X has_text "toto tata", X name "tutu", X is IN (Basket,Folder)',
-             """SELECT _X.cw_eid
+             """SELECT T1.C0 FROM (SELECT _X.cw_eid AS C0, ts_rank(appears0.words, to_tsquery('default', 'toto&tata'))*appears0.weight AS C1
 FROM appears AS appears0, cw_Basket AS _X
 WHERE appears0.words @@ to_tsquery('default', 'toto&tata') AND appears0.uid=_X.cw_eid AND _X.cw_name=tutu
 UNION ALL
-SELECT _X.cw_eid
+SELECT _X.cw_eid AS C0, ts_rank(appears0.words, to_tsquery('default', 'toto&tata'))*appears0.weight AS C1
 FROM appears AS appears0, cw_Folder AS _X
 WHERE appears0.words @@ to_tsquery('default', 'toto&tata') AND appears0.uid=_X.cw_eid AND _X.cw_name=tutu
-ORDER BY ts_rank(appears0.words, to_tsquery('default', 'toto&tata'))*appears0.weight"""),
+ORDER BY 2) AS T1"""),
 
             ('Personne X ORDERBY FTIRANK(X),FTIRANK(S) WHERE X has_text %(text)s, X travaille S, S has_text %(text)s',
              """SELECT _X.eid
