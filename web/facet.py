@@ -1018,15 +1018,19 @@ class RangeFacet(AttributeFacet):
         # when a value is equal to one of the limit, don't add the restriction,
         # else we filter out NULL values implicitly
         if infvalue != self.infvalue(min=True):
-            self.rqlst.add_constant_restriction(self.filtered_variable,
-                                                self.rtype,
-                                                self.formatvalue(infvalue),
-                                                self.attrtype, '>=')
+            self._add_restriction(infvalue, '>=')
         if supvalue != self.supvalue(max=True):
-            self.rqlst.add_constant_restriction(self.filtered_variable,
-                                                self.rtype,
-                                                self.formatvalue(supvalue),
-                                                self.attrtype, '<=')
+            self._add_restriction(supvalue, '<=')
+
+    def _add_restriction(self, operator, value):
+        self.select.add_constant_restriction(self.filtered_variable,
+                                             self.rtype,
+                                             self.formatvalue(value),
+                                             self.attrtype, operator)
+
+    def possible_values(self):
+        # javascript don't know how to update the widget anyway
+        raise facet.DontUpdateFacet()
 
 
 class DateRangeFacet(RangeFacet):
