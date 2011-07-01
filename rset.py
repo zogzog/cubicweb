@@ -515,17 +515,15 @@ class ResultSet(object):
 
     @cached
     def syntax_tree(self):
-        """get the syntax tree for the source query.
-
-        :rtype: rql.stmts.Statement
-        :return: the RQL syntax tree of the originating query
+        """return the syntax tree (:class:`rql.stmts.Union`) for the originating
+        query. You can expect it to have solutions computed but it won't be
+        annotated (you usually don't need that for simple introspection).
         """
         if self._rqlst:
             rqlst = self._rqlst.copy()
             # to avoid transport overhead when pyro is used, the schema has been
             # unset from the syntax tree
             rqlst.schema = self.req.vreg.schema
-            self.req.vreg.rqlhelper.annotate(rqlst)
         else:
             rqlst = self.req.vreg.parse(self.req, self.rql, self.args)
         return rqlst
