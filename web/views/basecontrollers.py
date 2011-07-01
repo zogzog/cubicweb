@@ -505,10 +505,7 @@ class JSonController(Controller):
             update_map = {}
             for facetid in facetids:
                 facet = facetbase.get_facet(self._cw, facetid, select, filtered_variable)
-                try:
-                    update_map[facetid] = facet.possible_values()
-                except facetbase.DontUpdateFacet:
-                    continue
+                update_map[facetid] = facet.possible_values()
             return update_map
 
     def js_unregister_user_callback(self, cbname):

@@ -989,6 +989,7 @@ class RangeFacet(AttributeFacet):
     .. _jquery: http://www.jqueryui.com/
     """
     attrtype = 'Float' # only numerical types are supported
+    needs_update = False # not supported actually
 
     @property
     def wdgclass(self):
@@ -1034,9 +1035,6 @@ class RangeFacet(AttributeFacet):
                                              self.formatvalue(value),
                                              self.attrtype, operator)
 
-    def possible_values(self):
-        # javascript don't know how to update the widget anyway
-        raise facet.DontUpdateFacet()
 
 
 class DateRangeFacet(RangeFacet):
@@ -1087,6 +1085,7 @@ class HasRelationFacet(AbstractFacet):
     role = 'subject' # role of filtered entity in the relation
 
     title = property(rtype_facet_title)
+    needs_update = False # not supported actually
     support_and = False
 
     def get_widget(self):
