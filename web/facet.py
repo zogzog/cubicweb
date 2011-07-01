@@ -457,6 +457,7 @@ class VocabularyFacet(AbstractFacet):
     .. automethod:: cubicweb.web.facet.VocabularyFacet.possible_values
     """
     needs_update = True
+    support_and = False
 
     @property
     def wdgclass(self):
@@ -491,8 +492,6 @@ class VocabularyFacet(AbstractFacet):
         """
         raise NotImplementedError
 
-    def support_and(self):
-        return False
 
 
 class RelationFacet(VocabularyFacet):
@@ -694,10 +693,19 @@ class RelationFacet(VocabularyFacet):
                 values = list(reversed(values))
         return values
 
+    @property
     def support_and(self):
         return self._search_card('+*')
 
     # internal utilities #######################################################
+
+    def _support_and_compat(self):
+        support = self.support_and
+        if callable(support):
+            warn('[3.13] %s.support_and is now a property' % self.__class__,
+                 DeprecationWarning)
+            support = support()
+        return support
 
     def value_restriction(self, restrvar, rel, value):
         if isinstance(value, basestring):
@@ -708,7 +716,7 @@ class RelationFacet(VocabularyFacet):
                 rel.parent.replace(rel, nodes.Not(rel))
         elif self.operator == 'OR':
             # set_distinct only if rtype cardinality is > 1
-            if self.support_and():
+            if self._support_and_compat():
                 self.select.set_distinct(True)
             # multiple ORed values: using IN is fine
             if '' in value:
@@ -906,6 +914,7 @@ class AttributeFacet(RelationAttributeFacet):
                       ('> 275', '275'), ('> 300', '300')]
     """
 
+    support_and = False
     _select_target_entity = True
 
     @property
@@ -939,9 +948,6 @@ class AttributeFacet(RelationAttributeFacet):
         # don't call rset_vocabulary on empty result set, it may be an empty
         # *list* (see rqlexec implementation)
         return rset and self.rset_vocabulary(rset)
-
-    def support_and(self):
-        return False
 
     def add_rql_restrictions(self):
         """add restriction for this facet into the rql syntax tree"""
@@ -1081,9 +1087,7 @@ class HasRelationFacet(AbstractFacet):
     role = 'subject' # role of filtered entity in the relation
 
     title = property(rtype_facet_title)
-
-    def support_and(self):
-        return False
+    support_and = False
 
     def get_widget(self):
         return CheckBoxFacetWidget(self._cw, self,
@@ -1124,7 +1128,7 @@ class FacetVocabularyWidget(HTMLWidget):
         w(u'<div id="%s" class="facet">\n' % facetid)
         w(u'<div class="facetTitle" cubicweb:facetName="%s">%s</div>\n' %
           (xml_escape(facetid), title))
-        if self.facet.support_and():
+        if self.facet._support_and_compat():
             _ = self.facet._cw._
             w(u'''<select name="%s" class="radio facetOperator" title="%s">
   <option value="OR">%s</option>
