@@ -35,11 +35,9 @@ from cubicweb.web.controller import Controller
 from cubicweb.web.views import vid_from_rset, formrenderers
 
 try:
-    from cubicweb.web.facet import (FilterRQLBuilder, get_facet,
-                                    prepare_facets_rqlst)
-    HAS_SEARCH_RESTRICTION = True
+    from cubicweb.web import facet as facetbase
 except ImportError: # gae
-    HAS_SEARCH_RESTRICTION = False
+    facetbase = None
 
 def jsonize(func):
     """decorator to sets correct content_type and calls `json_dumps` on
@@ -490,18 +488,20 @@ class JSonController(Controller):
             return None
         return cb(self._cw)
 
-    if HAS_SEARCH_RESTRICTION:
+    if facetbase is not None:
         @jsonize
         def js_filter_build_rql(self, names, values):
             form = self._rebuild_posted_form(names, values)
             self._cw.form = form
-            builder = FilterRQLBuilder(self._cw)
+            builder = facetbase.FilterRQLBuilder(self._cw)
             return builder.build_rql()
 
         @jsonize
-        def js_filter_select_content(self, facetids, rql):
-            rqlst = self._cw.vreg.parse(self._cw, rql) # XXX Union unsupported yet
-            mainvar = prepare_facets_rqlst(rqlst)[0]
+        def js_filter_select_content(self, facetids, rql, mainvar):
+            # Union unsupported yet
+            select = self._cw.vreg.parse(self._cw, rql).children[0]
+            filtered_variable = facetbase.get_filtered_variable(select, mainvar)
+            facetbase.prepare_select(select, filtered_variable)
             update_map = {}
             for facetid in facetids:
                 facet = get_facet(self._cw, facetid, rqlst.children[0], mainvar)

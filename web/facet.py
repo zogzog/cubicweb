@@ -74,13 +74,9 @@ def rtype_facet_title(facet):
                             context=iter(ptypes).next())
     return display_name(facet._cw, facet.rtype, form=facet.role)
 
-def filtered_variable(rqlst):
-    vref = rqlst.selection[0].iget_nodes(nodes.VariableRef).next()
-    return vref.variable
-
-def get_facet(req, facetid, rqlst, mainvar):
-    return req.vreg['facets'].object_by_id(facetid, req, rqlst=rqlst,
-                                           filtered_variable=mainvar)
+def get_facet(req, facetid, select, filtered_variable):
+    return req.vreg['facets'].object_by_id(facetid, req, select=select,
+                                           filtered_variable=filtered_variable)
 
 @deprecated('[3.13] filter_hiddens moved to cubicweb.web.views.facets with '
             'slightly modified prototype')
@@ -91,21 +87,35 @@ def filter_hiddens(w, **kwargs):
 
 ## rqlst manipulation functions used by facets ################################
 
-def prepare_facets_rqlst(rqlst, args=None):
+def init_facets(rset, select, mainvar=None):
+    rset.req.vreg.rqlhelper.annotate(select)
+    filtered_variable = get_filtered_variable(select, mainvar)
+    baserql = select.as_string(kwargs=rset.args) # before call to prepare_select
+    prepare_select(select, filtered_variable)
+    return filtered_variable, baserql
+
+def get_filtered_variable(select, mainvar=None):
+    """drop any limit/offset from select (in-place modification) and return the
+    variable whose name is `mainvar` or the first variable selected in column 0
+    """
+    select.set_limit(None)
+    select.set_offset(None)
+    if mainvar is None:
+        vref = select.selection[0].iget_nodes(nodes.VariableRef).next()
+        return vref.variable
+    return select.defined_vars[mainvar]
+
+def prepare_select(select, filtered_variable):
     """prepare a syntax tree to generate facet filters
 
     * remove ORDERBY/GROUPBY clauses
     * cleanup selection (remove everything)
     * undefine unnecessary variables
     * set DISTINCT
-    * unset LIMIT/OFFSET
+
+    Notice unset of LIMIT/OFFSET us expected to be done by a previous call to
+    :func:`get_filtered_variable`.
     """
-    assert len(rqlst.children) == 1, 'FIXME: union not yet supported'
-    select = rqlst.children[0]
-    mainvar = filtered_variable(select)
-    select.set_limit(None)
-    select.set_offset(None)
-    baserql = select.as_string(kwargs=args)
     # cleanup sort terms / group by
     select.remove_sort_terms()
     select.remove_groups()
@@ -115,14 +125,21 @@ def prepare_facets_rqlst(rqlst, args=None):
         select.remove_selected(term)
     # remove unbound variables which only have some type restriction
     for dvar in select.defined_vars.values():
-        if not (dvar is mainvar or dvar.stinfo['relations']):
+        if not (dvar is filtered_variable or dvar.stinfo['relations']):
             select.undefine_variable(dvar)
     # global tree config: DISTINCT, LIMIT, OFFSET
     select.set_distinct(True)
-    return mainvar, baserql
 
+@deprecated('[3.13] use init_facets instead')
+def prepare_facets_rqlst(rqlst, args=None):
+    assert len(rqlst.children) == 1, 'FIXME: union not yet supported'
+    select = rqlst.children[0]
+    filtered_variable = get_filtered_variable(select)
+    baserql = select.as_string(args)
+    prepare_select(select, filtered_variable)
+    return filtered_variable, baserql
 
-def prepare_vocabulary_rqlst(rqlst, mainvar, rtype, role,
+def prepare_vocabulary_select(select, filtered_variable, rtype, role,
                               select_target_entity=True):
     """prepare a syntax tree to generate a filter vocabulary rql using the given
     relation:
@@ -131,23 +148,23 @@ def prepare_vocabulary_rqlst(rqlst, mainvar, rtype, role,
     * add the new variable to GROUPBY clause if necessary
     * add the new variable to the selection
     """
-    newvar = _add_rtype_relation(rqlst, mainvar, rtype, role)[0]
+    newvar = _add_rtype_relation(select, filtered_variable, rtype, role)[0]
     if select_target_entity:
-        if rqlst.groupby:
-            rqlst.add_group_var(newvar)
-        rqlst.add_selected(newvar)
+        if select.groupby:
+            select.add_group_var(newvar)
+        select.add_selected(newvar)
     # add is restriction if necessary
-    if mainvar.stinfo['typerel'] is None:
-        etypes = frozenset(sol[mainvar.name] for sol in rqlst.solutions)
-        rqlst.add_type_restriction(mainvar, etypes)
+    if filtered_variable.stinfo['typerel'] is None:
+        etypes = frozenset(sol[filtered_variable.name] for sol in select.solutions)
+        select.add_type_restriction(filtered_variable, etypes)
     return newvar
 
 
-def insert_attr_select_relation(rqlst, mainvar, rtype, role, attrname,
+def insert_attr_select_relation(select, filtered_variable, rtype, role, attrname,
                                 sortfuncname=None, sortasc=True,
                                 select_target_entity=True):
     """modify a syntax tree to :
-    * link a new variable to `mainvar` through `rtype` (where mainvar has `role`)
+    * link a new variable to `filtered_variable` through `rtype` (where filtered_variable has `role`)
     * retrieve only the newly inserted variable and its `attrname`
 
     Sorting:
@@ -155,35 +172,35 @@ def insert_attr_select_relation(rqlst, mainvar, rtype, role, attrname,
     * on `sortfuncname`(`attrname`) if `sortfuncname` is specified
     * no sort if `sortasc` is None
     """
-    cleanup_rqlst(rqlst, mainvar)
-    var = prepare_vocabulary_rqlst(rqlst, mainvar, rtype, role,
+    cleanup_select(select, filtered_variable)
+    var = prepare_vocabulary_select(select, filtered_variable, rtype, role,
                                    select_target_entity)
-    attrvar = rqlst.make_variable()
-    rqlst.add_relation(var, attrname, attrvar)
+    attrvar = select.make_variable()
+    select.add_relation(var, attrname, attrvar)
     # if query is grouped, we have to add the attribute variable
-    if rqlst.groupby:
-        if not attrvar in rqlst.groupby:
-            rqlst.add_group_var(attrvar)
+    #if select.groupby: XXX may not occur anymore
+    #    if not attrvar in select.groupby:
+    #        select.add_group_var(attrvar)
     if sortasc is not None:
-        _set_orderby(rqlst, attrvar, sortasc, sortfuncname)
+        _set_orderby(select, attrvar, sortasc, sortfuncname)
     # add attribute variable to selection
-    rqlst.add_selected(attrvar)
+    select.add_selected(attrvar)
     return var
 
 
-def cleanup_rqlst(rqlst, mainvar):
+def cleanup_select(select, filtered_variable):
     """cleanup tree from unnecessary restrictions:
     * attribute selection
     * optional relations linked to the main variable
     * mandatory relations linked to the main variable
     """
-    if rqlst.where is None:
+    if select.where is None:
         return
-    schema = rqlst.root.schema
+    schema = select.root.schema
     toremove = set()
-    vargraph = deepcopy(rqlst.vargraph) # graph representing links between variable
-    for rel in rqlst.where.get_nodes(nodes.Relation):
-        ovar = _may_be_removed(rel, schema, mainvar)
+    vargraph = deepcopy(select.vargraph) # graph representing links between variable
+    for rel in select.where.get_nodes(nodes.Relation):
+        ovar = _may_be_removed(rel, schema, filtered_variable)
         if ovar is not None:
             toremove.add(ovar)
     removed = set()
@@ -199,29 +216,29 @@ def cleanup_rqlst(rqlst, mainvar):
             if rel in removed:
                 # already removed
                 continue
-            rqlst.remove_node(rel)
+            select.remove_node(rel)
             removed.add(rel)
         rel = trvar.stinfo['typerel']
         if rel is not None and not rel in removed:
-            rqlst.remove_node(rel)
+            select.remove_node(rel)
             removed.add(rel)
         # cleanup groupby clause
-        if rqlst.groupby:
-            for vref in rqlst.groupby[:]:
+        if select.groupby:
+            for vref in select.groupby[:]:
                 if vref.name == trvarname:
-                    rqlst.remove_group_var(vref)
+                    select.remove_group_var(vref)
         # we can also remove all variables which are linked to this variable
         # and have no path to the main variable
         for ovarname in linkedvars:
-            if ovarname == mainvar.name:
+            if ovarname == filtered_variable.name:
                 continue
-            if not has_path(vargraph, ovarname, mainvar.name):
-                toremove.add(rqlst.defined_vars[ovarname])
+            if not has_path(vargraph, ovarname, filtered_variable.name):
+                toremove.add(select.defined_vars[ovarname])
 
 
-def _may_be_removed(rel, schema, mainvar):
+def _may_be_removed(rel, schema, variable):
     """if the given relation may be removed from the tree, return the variable
-    on the other side of `mainvar`, else return None
+    on the other side of `variable`, else return None
     Conditions:
     * the relation is an attribute selection of the main variable
     * the relation is optional relation linked to the main variable
@@ -230,7 +247,7 @@ def _may_be_removed(rel, schema, mainvar):
     """
     lhs, rhs = rel.get_variable_parts()
     rschema = schema.rschema(rel.r_type)
-    if lhs.variable is mainvar:
+    if lhs.variable is variable:
         try:
             ovar = rhs.variable
         except AttributeError:
@@ -244,7 +261,7 @@ def _may_be_removed(rel, schema, mainvar):
             return None
         opt = 'right'
         cardidx = 0
-    elif getattr(rhs, 'variable', None) is mainvar:
+    elif getattr(rhs, 'variable', None) is variable:
         ovar = lhs.variable
         opt = 'left'
         cardidx = 1
@@ -265,32 +282,32 @@ def _may_be_removed(rel, schema, mainvar):
         return ovar
     return None
 
-def _make_relation(rqlst, mainvar, rtype, role):
-    newvar = rqlst.make_variable()
+def _make_relation(select, variable, rtype, role):
+    newvar = select.make_variable()
     if role == 'object':
-        rel = nodes.make_relation(newvar, rtype, (mainvar,), nodes.VariableRef)
+        rel = nodes.make_relation(newvar, rtype, (variable,), nodes.VariableRef)
     else:
-        rel = nodes.make_relation(mainvar, rtype, (newvar,), nodes.VariableRef)
+        rel = nodes.make_relation(variable, rtype, (newvar,), nodes.VariableRef)
     return newvar, rel
 
-def _add_rtype_relation(rqlst, mainvar, rtype, role):
-    """add a relation relying `mainvar` to entities linked by the `rtype`
-    relation (where `mainvar` has `role`)
+def _add_rtype_relation(select, variable, rtype, role):
+    """add a relation relying `variable` to entities linked by the `rtype`
+    relation (where `variable` has `role`)
 
     return the inserted variable for linked entities.
     """
-    newvar, newrel = _make_relation(rqlst, mainvar, rtype, role)
-    rqlst.add_restriction(newrel)
+    newvar, newrel = _make_relation(select, variable, rtype, role)
+    select.add_restriction(newrel)
     return newvar, newrel
 
 def _add_eid_restr(rel, restrvar, value):
     rrel = nodes.make_constant_restriction(restrvar, 'eid', value, 'Int')
     rel.parent.replace(rel, nodes.And(rel, rrel))
 
-def _remove_relation(rqlst, rel, var):
+def _remove_relation(select, rel, var):
     """remove a constraint relation from the syntax tree"""
     # remove the relation
-    rqlst.remove_node(rel)
+    select.remove_node(rel)
     # remove relations where the filtered variable appears on the
     # lhs and rhs is a constant restriction
     extra = []
@@ -300,24 +317,24 @@ def _remove_relation(rqlst, rel, var):
         if vrel.children[0].variable is var:
             if not vrel.children[1].get_nodes(nodes.Constant):
                 extra.append(vrel)
-            rqlst.remove_node(vrel)
+            select.remove_node(vrel)
     return extra
 
-def _set_orderby(rqlst, newvar, sortasc, sortfuncname):
+def _set_orderby(select, newvar, sortasc, sortfuncname):
     if sortfuncname is None:
-        rqlst.add_sort_var(newvar, sortasc)
+        select.add_sort_var(newvar, sortasc)
     else:
         vref = nodes.variable_ref(newvar)
         vref.register_reference()
         sortfunc = nodes.Function(sortfuncname)
         sortfunc.append(vref)
         term = nodes.SortTerm(sortfunc, sortasc)
-        rqlst.add_sort_term(term)
+        select.add_sort_term(term)
 
 
-_prepare_vocabulary_rqlst = deprecated('[3.13] renamed prepare_vocabulary_rqlst ')(
-    prepare_vocabulary_rqlst)
-_cleanup_rqlst = deprecated('[3.13] renamed to cleanup_rqlst')(cleanup_rqlst)
+_prepare_vocabulary_rqlst = deprecated('[3.13] renamed prepare_vocabulary_select')(
+    prepare_vocabulary_select)
+_cleanup_rqlst = deprecated('[3.13] renamed to cleanup_select')(cleanup_select)
 
 
 ## base facet classes ##########################################################
@@ -343,7 +360,8 @@ class AbstractFacet(AppObject):
     Facets will have the following attributes set (beside the standard
     :class:`~cubicweb.appobject.AppObject` ones):
 
-    * `rqlst`, the rql syntax tree being facetted
+    * `select`, the :class:`rql.stmts.Select` node of the rql syntax tree being
+      filtered
 
     * `filtered_variable`, the variable node in this rql syntax tree that we're
       interested in filtering
@@ -373,15 +391,18 @@ class AbstractFacet(AppObject):
     start_unfolded = True
     cw_rset = None # ensure facets have a cw_rset attribute
 
-    def __init__(self, req, rqlst=None, filtered_variable=None,
+    def __init__(self, req, select=None, filtered_variable=None,
                  **kwargs):
         super(AbstractFacet, self).__init__(req, **kwargs)
-        assert rqlst is not None
+        assert select is not None
         assert filtered_variable
         # take care: facet may be retreived using `object_by_id` from an ajax call
         # or from `select` using the result set to filter
-        self.rqlst = rqlst
+        self.select = select
         self.filtered_variable = filtered_variable
+
+    def __repr__(self):
+        return '<%s>' % self.__class__.__name__
 
     @property
     def operator(self):
@@ -411,13 +432,18 @@ class AbstractFacet(AppObject):
         """When some facet criteria has been updated, this method is called to
         add restriction for this facet into the rql syntax tree. It should get
         back its value in form parameters, and modify the syntax tree
-        (`self.rqlst`) accordingly.
+        (`self.select`) accordingly.
         """
         raise NotImplementedError
 
     @property
     def wdgclass(self):
         raise NotImplementedError
+
+    @property
+    @deprecated('[3.13] renamed .select')
+    def rqlst(self):
+        return self.select
 
 
 class VocabularyFacet(AbstractFacet):
@@ -552,6 +578,79 @@ class RelationFacet(VocabularyFacet):
     title = property(rtype_facet_title)
     no_relation_label = '<no relation>'
 
+    def __repr__(self):
+        return '<%s on (%s-%s)>' % (self.__class__.__name__, self.rtype, self.role)
+
+    # facet public API #########################################################
+
+    def vocabulary(self):
+        """return vocabulary for this facet, eg a list of 2-uple (label, value)
+        """
+        select = self.select
+        select.save_state()
+        if self.rql_sort:
+            sort = self.sortasc
+        else:
+            sort = None # will be sorted on label
+        try:
+            var = insert_attr_select_relation(
+                select, self.filtered_variable, self.rtype, self.role,
+                self.target_attr, self.sortfunc, sort,
+                self._select_target_entity)
+            if self.target_type is not None:
+                select.add_type_restriction(var, self.target_type)
+            try:
+                rset = self.rqlexec(select.as_string(), self.cw_rset.args)
+            except:
+                self.exception('error while getting vocabulary for %s, rql: %s',
+                               self, select.as_string())
+                return ()
+        finally:
+            select.recover()
+        # don't call rset_vocabulary on empty result set, it may be an empty
+        # *list* (see rqlexec implementation)
+        values = rset and self.rset_vocabulary(rset) or []
+        if self._include_no_relation():
+            values.insert(0, (self._cw._(self.no_relation_label), ''))
+        return values
+
+    def possible_values(self):
+        """return a list of possible values (as string since it's used to
+        compare to a form value in javascript) for this facet
+        """
+        select = self.select
+        select.save_state()
+        try:
+            cleanup_select(select, self.filtered_variable)
+            if self._select_target_entity:
+                prepare_vocabulary_select(select, self.filtered_variable, self.rtype,
+                                         self.role, select_target_entity=True)
+            else:
+                insert_attr_select_relation(
+                    select, self.filtered_variable, self.rtype, self.role, self.target_attr,
+                    select_target_entity=False)
+            values = [unicode(x) for x, in self.rqlexec(select.as_string())]
+        except:
+            self.exception('while computing values for %s', self)
+            return []
+        finally:
+            select.recover()
+        if self._include_no_relation():
+            values.append('')
+        return values
+
+    def add_rql_restrictions(self):
+        """add restriction for this facet into the rql syntax tree"""
+        value = self._cw.form.get(self.__regid__)
+        if value is None:
+            return
+        filtered_variable = self.filtered_variable
+        restrvar, rel = _add_rtype_relation(self.select, filtered_variable,
+                                            self.rtype, self.role)
+        self.value_restriction(restrvar, rel, value)
+
+    # internal control API #####################################################
+
     @property
     def i18nable(self):
         """should label be internationalized"""
@@ -577,62 +676,6 @@ class RelationFacet(VocabularyFacet):
         return self.sortfunc is not None or (self.label_vid is None
                                              and not self.i18nable)
 
-    def vocabulary(self):
-        """return vocabulary for this facet, eg a list of 2-uple (label, value)
-        """
-        rqlst = self.rqlst
-        rqlst.save_state()
-        if self.rql_sort:
-            sort = self.sortasc
-        else:
-            sort = None # will be sorted on label
-        try:
-            mainvar = self.filtered_variable
-            var = insert_attr_select_relation(
-                rqlst, mainvar, self.rtype, self.role, self.target_attr,
-                self.sortfunc, sort, self._select_target_entity)
-            if self.target_type is not None:
-                rqlst.add_type_restriction(var, self.target_type)
-            try:
-                rset = self.rqlexec(rqlst.as_string(), self.cw_rset.args)
-            except:
-                self.exception('error while getting vocabulary for %s, rql: %s',
-                               self, rqlst.as_string())
-                return ()
-        finally:
-            rqlst.recover()
-        # don't call rset_vocabulary on empty result set, it may be an empty
-        # *list* (see rqlexec implementation)
-        values = rset and self.rset_vocabulary(rset) or []
-        if self._include_no_relation():
-            values.insert(0, (self._cw._(self.no_relation_label), ''))
-        return values
-
-    def possible_values(self):
-        """return a list of possible values (as string since it's used to
-        compare to a form value in javascript) for this facet
-        """
-        rqlst = self.rqlst
-        rqlst.save_state()
-        try:
-            cleanup_rqlst(rqlst, self.filtered_variable)
-            if self._select_target_entity:
-                prepare_vocabulary_rqlst(rqlst, self.filtered_variable, self.rtype,
-                                         self.role, select_target_entity=True)
-            else:
-                insert_attr_select_relation(
-                    rqlst, self.filtered_variable, self.rtype, self.role, self.target_attr,
-                    select_target_entity=False)
-            values = [unicode(x) for x, in self.rqlexec(rqlst.as_string())]
-        except:
-            self.exception('while computing values for %s', self)
-            return []
-        finally:
-            rqlst.recover()
-        if self._include_no_relation():
-            values.append('')
-        return values
-
     def rset_vocabulary(self, rset):
         if self.i18nable:
             _ = self._cw._
@@ -654,24 +697,19 @@ class RelationFacet(VocabularyFacet):
     def support_and(self):
         return self._search_card('+*')
 
-    def add_rql_restrictions(self):
-        """add restriction for this facet into the rql syntax tree"""
-        value = self._cw.form.get(self.__regid__)
-        if value is None:
-            return
-        mainvar = self.filtered_variable
-        restrvar, rel = _add_rtype_relation(self.rqlst, mainvar, self.rtype,
-                                            self.role)
+    # internal utilities #######################################################
+
+    def value_restriction(self, restrvar, rel, value):
         if isinstance(value, basestring):
             # only one value selected
             if value:
-                self.rqlst.add_eid_restriction(restrvar, value)
+                self.select.add_eid_restriction(restrvar, value)
             else:
                 rel.parent.replace(rel, nodes.Not(rel))
         elif self.operator == 'OR':
             # set_distinct only if rtype cardinality is > 1
             if self.support_and():
-                self.rqlst.set_distinct(True)
+                self.select.set_distinct(True)
             # multiple ORed values: using IN is fine
             if '' in value:
                 value.remove('')
@@ -684,7 +722,7 @@ class RelationFacet(VocabularyFacet):
                 self._add_not_rel_restr(rel)
             _add_eid_restr(rel, restrvar, value.pop())
             while value:
-                restrvar, rtrel = _make_relation(self.rqlst, mainvar,
+                restrvar, rtrel = _make_relation(self.select, filtered_variable,
                                                  self.rtype, self.role)
                 _add_eid_restr(rel, restrvar, value.pop())
 
@@ -720,19 +758,19 @@ class RelationFacet(VocabularyFacet):
         if self._cw.vreg.schema.rschema(self.rtype).final:
             return False
         if self.role == 'object':
-            subj = utils.rqlvar_maker(defined=self.rqlst.defined_vars,
-                                      aliases=self.rqlst.aliases).next()
+            subj = utils.rqlvar_maker(defined=self.select.defined_vars,
+                                      aliases=self.select.aliases).next()
             obj = self.filtered_variable.name
         else:
             subj = self.filtered_variable.name
-            obj = utils.rqlvar_maker(defined=self.rqlst.defined_vars,
-                                     aliases=self.rqlst.aliases).next()
+            obj = utils.rqlvar_maker(defined=self.select.defined_vars,
+                                     aliases=self.select.aliases).next()
         restrictions = []
-        if self.rqlst.where:
-            restrictions.append(self.rqlst.where.as_string())
-        if self.rqlst.with_:
+        if self.select.where:
+            restrictions.append(self.select.where.as_string())
+        if self.select.with_:
             restrictions.append('WITH ' + ','.join(
-                term.as_string() for term in self.rqlst.with_))
+                term.as_string() for term in self.select.with_))
         if restrictions:
             restrictions = ',' + ','.join(restrictions)
         else:
@@ -748,7 +786,7 @@ class RelationFacet(VocabularyFacet):
             return False
 
     def _add_not_rel_restr(self, rel):
-        nrrel = nodes.Not(_make_relation(self.rqlst, self.filtered_variable,
+        nrrel = nodes.Not(_make_relation(self.select, self.filtered_variable,
                                          self.rtype, self.role)[1])
         rel.parent.replace(rel, nodes.Or(nrrel, rel))
 
@@ -814,24 +852,24 @@ class RelationAttributeFacet(RelationFacet):
         value = self._cw.form.get(self.__regid__)
         if not value:
             return
-        mainvar = self.filtered_variable
-        restrvar = _add_rtype_relation(self.rqlst, mainvar, self.rtype,
+        filtered_variable = self.filtered_variable
+        restrvar = _add_rtype_relation(self.select, filtered_variable, self.rtype,
                                        self.role)[0]
-        self.rqlst.set_distinct(True)
+        self.select.set_distinct(True)
         if isinstance(value, basestring) or self.operator == 'OR':
             # only one value selected or multiple ORed values: using IN is fine
-            self.rqlst.add_constant_restriction(
+            self.select.add_constant_restriction(
                 restrvar, self.target_attr, value,
                 self.attrtype, self.comparator)
         else:
             # multiple values with AND operator
-            self.rqlst.add_constant_restriction(
+            self.select.add_constant_restriction(
                 restrvar, self.target_attr, value.pop(),
                 self.attrtype, self.comparator)
             while value:
-                restrvar = _add_rtype_relation(self.rqlst, mainvar, self.rtype,
+                restrvar = _add_rtype_relation(self.select, filtered_variable, self.rtype,
                                                self.role)[0]
-                self.rqlst.add_constant_restriction(
+                self.select.add_constant_restriction(
                     restrvar, self.target_attr, value.pop(),
                     self.attrtype, self.comparator)
 
@@ -883,21 +921,21 @@ class AttributeFacet(RelationAttributeFacet):
     def vocabulary(self):
         """return vocabulary for this facet, eg a list of 2-uple (label, value)
         """
-        rqlst = self.rqlst
-        rqlst.save_state()
+        select = self.select
+        select.save_state()
         try:
-            mainvar = self.filtered_variable
-            cleanup_rqlst(rqlst, mainvar)
-            newvar = prepare_vocabulary_rqlst(rqlst, mainvar, self.rtype, self.role)
-            _set_orderby(rqlst, newvar, self.sortasc, self.sortfunc)
+            filtered_variable = self.filtered_variable
+            cleanup_select(select, filtered_variable)
+            newvar = prepare_vocabulary_select(select, filtered_variable, self.rtype, self.role)
+            _set_orderby(select, newvar, self.sortasc, self.sortfunc)
             try:
-                rset = self.rqlexec(rqlst.as_string(), self.cw_rset.args)
+                rset = self.rqlexec(select.as_string(), self.cw_rset.args)
             except:
                 self.exception('error while getting vocabulary for %s, rql: %s',
-                               self, rqlst.as_string())
+                               self, select.as_string())
                 return ()
         finally:
-            rqlst.recover()
+            select.recover()
         # don't call rset_vocabulary on empty result set, it may be an empty
         # *list* (see rqlexec implementation)
         return rset and self.rset_vocabulary(rset)
@@ -910,8 +948,8 @@ class AttributeFacet(RelationAttributeFacet):
         value = self._cw.form.get(self.__regid__)
         if not value:
             return
-        mainvar = self.filtered_variable
-        self.rqlst.add_constant_restriction(mainvar, self.rtype, value,
+        filtered_variable = self.filtered_variable
+        self.select.add_constant_restriction(filtered_variable, self.rtype, value,
                                             self.attrtype, self.comparator)
 
 
@@ -1050,15 +1088,15 @@ class HasRelationFacet(AbstractFacet):
 
     def add_rql_restrictions(self):
         """add restriction for this facet into the rql syntax tree"""
-        self.rqlst.set_distinct(True) # XXX
+        self.select.set_distinct(True) # XXX
         value = self._cw.form.get(self.__regid__)
         if not value: # no value sent for this facet
             return
-        var = self.rqlst.make_variable()
+        var = self.select.make_variable()
         if self.role == 'subject':
-            self.rqlst.add_relation(self.filtered_variable, self.rtype, var)
+            self.select.add_relation(self.filtered_variable, self.rtype, var)
         else:
-            self.rqlst.add_relation(var, self.rtype, self.filtered_variable)
+            self.select.add_relation(var, self.rtype, self.filtered_variable)
 
 
 ## html widets ################################################################
@@ -1131,7 +1169,7 @@ class FacetRangeWidget(HTMLWidget):
         values: [%(minvalue)s, %(maxvalue)s],
         stop: function(event, ui) { // submit when the user stops sliding
            var form = $('#%(sliderid)s').closest('form');
-           buildRQL.apply(null, evalJSON(form.attr('cubicweb:facetargs')));
+           buildRQL.apply(null, cw.evalJSON(form.attr('cubicweb:facetargs')));
         },
         slide: function(event, ui) {
             jQuery('#%(sliderid)s_inf').html(_formatter(ui.values[0]));
@@ -1286,15 +1324,15 @@ class FilterRQLBuilder(object):
     def __init__(self, req):
         self._cw = req
 
-    def build_rql(self):#, tablefilter=False):
+    def build_rql(self):
         form = self._cw.form
         facetids = form['facets'].split(',')
         # XXX Union unsupported yet
         select = self._cw.vreg.parse(self._cw, form['baserql']).children[0]
-        mainvar = filtered_variable(select)
+        filtered_variable = get_filtered_variable(select, form.get('mainvar'))
         toupdate = []
         for facetid in facetids:
-            facet = get_facet(self._cw, facetid, select, mainvar)
+            facet = get_facet(self._cw, facetid, select, filtered_variable)
             facet.add_rql_restrictions()
             if facet.needs_update:
                 toupdate.append(facetid)

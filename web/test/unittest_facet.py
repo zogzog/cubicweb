@@ -7,18 +7,17 @@ class BaseFacetTC(CubicWebTC):
         req = self.request()
         rset = self.execute('CWUser X')
         rqlst = rset.syntax_tree().copy()
-        req.vreg.rqlhelper.annotate(rqlst)
-        mainvar, baserql = facet.prepare_facets_rqlst(rqlst, rset.args)
-        self.assertEqual(mainvar.name, 'X')
+        filtered_variable, baserql = facet.init_facets(rset, rqlst.children[0])
+        self.assertEqual(filtered_variable.name, 'X')
         self.assertEqual(baserql, 'Any X WHERE X is CWUser')
         self.assertEqual(rqlst.as_string(), 'DISTINCT Any  WHERE X is CWUser')
-        return req, rset, rqlst, mainvar
+        return req, rset, rqlst, filtered_variable
 
     def _in_group_facet(self, cls=facet.RelationFacet, no_relation=False):
-        req, rset, rqlst, mainvar = self.prepare_rqlst()
+        req, rset, rqlst, filtered_variable = self.prepare_rqlst()
         cls.no_relation = no_relation
-        f = cls(req, rset=rset, rqlst=rqlst.children[0],
-                filtered_variable=mainvar)
+        f = cls(req, rset=rset, select=rqlst.children[0],
+                filtered_variable=filtered_variable)
         f.__regid__ = 'in_group'
         f.rtype = 'in_group'
         f.role = 'subject'
@@ -34,17 +33,17 @@ class BaseFacetTC(CubicWebTC):
         self.assertEqual(f.vocabulary(),
                       [(u'guests', guests), (u'managers', managers)])
         # ensure rqlst is left unmodified
-        self.assertEqual(f.rqlst.as_string(), 'DISTINCT Any  WHERE X is CWUser')
+        self.assertEqual(f.select.as_string(), 'DISTINCT Any  WHERE X is CWUser')
         #rqlst = rset.syntax_tree()
         self.assertEqual(f.possible_values(),
                           [str(guests), str(managers)])
         # ensure rqlst is left unmodified
-        self.assertEqual(f.rqlst.as_string(), 'DISTINCT Any  WHERE X is CWUser')
+        self.assertEqual(f.select.as_string(), 'DISTINCT Any  WHERE X is CWUser')
         f._cw.form[f.__regid__] = str(guests)
         f.add_rql_restrictions()
         # selection is cluttered because rqlst has been prepared for facet (it
         # is not in real life)
-        self.assertEqual(f.rqlst.as_string(),
+        self.assertEqual(f.select.as_string(),
                           'DISTINCT Any  WHERE X is CWUser, X in_group D, D eid %s' % guests)
 
     def test_relation_optional_rel(self):
@@ -52,12 +51,12 @@ class BaseFacetTC(CubicWebTC):
         rset = self.execute('Any X,GROUP_CONCAT(GN) GROUPBY X '
                             'WHERE X in_group G?, G name GN, NOT G name "users"')
         rqlst = rset.syntax_tree().copy()
-        req.vreg.rqlhelper.annotate(rqlst)
-        mainvar, baserql = facet.prepare_facets_rqlst(rqlst, rset.args)
+        select = rqlst.children[0]
+        filtered_variable, baserql = facet.init_facets(rset, select)
 
         f = facet.RelationFacet(req, rset=rset,
-                                rqlst=rqlst.children[0],
-                                filtered_variable=mainvar)
+                                select=select,
+                                filtered_variable=filtered_variable)
         f.rtype = 'in_group'
         f.role = 'subject'
         f.target_attr = 'name'
@@ -92,18 +91,18 @@ class BaseFacetTC(CubicWebTC):
                           [str(guests), str(managers), ''])
         f._cw.form[f.__regid__] = ''
         f.add_rql_restrictions()
-        self.assertEqual(f.rqlst.as_string(),
+        self.assertEqual(f.select.as_string(),
                           'DISTINCT Any  WHERE X is CWUser, NOT X in_group G')
 
     def test_relation_no_relation_2(self):
         f, (guests, managers) = self._in_group_facet(no_relation=True)
         f._cw.form[f.__regid__] = ['', guests]
-        f.rqlst.save_state()
+        f.select.save_state()
         f.add_rql_restrictions()
-        self.assertEqual(f.rqlst.as_string(),
+        self.assertEqual(f.select.as_string(),
                           'DISTINCT Any  WHERE X is CWUser, (NOT X in_group B) OR (X in_group A, A eid %s)' % guests)
-        f.rqlst.recover()
-        self.assertEqual(f.rqlst.as_string(),
+        f.select.recover()
+        self.assertEqual(f.select.as_string(),
                           'DISTINCT Any  WHERE X is CWUser')
 
 
@@ -113,25 +112,25 @@ class BaseFacetTC(CubicWebTC):
         self.assertEqual(f.vocabulary(),
                           [(u'guests', u'guests'), (u'managers', u'managers')])
         # ensure rqlst is left unmodified
-        self.assertEqual(f.rqlst.as_string(), 'DISTINCT Any  WHERE X is CWUser')
+        self.assertEqual(f.select.as_string(), 'DISTINCT Any  WHERE X is CWUser')
         #rqlst = rset.syntax_tree()
         self.assertEqual(f.possible_values(),
                           ['guests', 'managers'])
         # ensure rqlst is left unmodified
-        self.assertEqual(f.rqlst.as_string(), 'DISTINCT Any  WHERE X is CWUser')
+        self.assertEqual(f.select.as_string(), 'DISTINCT Any  WHERE X is CWUser')
         f._cw.form[f.__regid__] = 'guests'
         f.add_rql_restrictions()
         # selection is cluttered because rqlst has been prepared for facet (it
         # is not in real life)
-        self.assertEqual(f.rqlst.as_string(),
+        self.assertEqual(f.select.as_string(),
                           "DISTINCT Any  WHERE X is CWUser, X in_group E, E name 'guests'")
 
 
     def test_attribute(self):
-        req, rset, rqlst, mainvar = self.prepare_rqlst()
+        req, rset, rqlst, filtered_variable = self.prepare_rqlst()
         f = facet.AttributeFacet(req, rset=rset,
-                                 rqlst=rqlst.children[0],
-                                 filtered_variable=mainvar)
+                                 select=rqlst.children[0],
+                                 filtered_variable=filtered_variable)
         f.rtype = 'login'
         self.assertEqual(f.vocabulary(),
                           [(u'admin', u'admin'), (u'anon', u'anon')])
@@ -146,7 +145,7 @@ class BaseFacetTC(CubicWebTC):
         f.add_rql_restrictions()
         # selection is cluttered because rqlst has been prepared for facet (it
         # is not in real life)
-        self.assertEqual(f.rqlst.as_string(),
+        self.assertEqual(f.select.as_string(),
                           "DISTINCT Any  WHERE X is CWUser, X login 'admin'")
 
 

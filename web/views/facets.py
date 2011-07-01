@@ -255,6 +255,7 @@ class InStateFacet(facetbase.RelationAttributeFacet):
     rtype = 'in_state'
     target_attr = 'name'
 
+
 # inherit from RelationFacet to benefit from its possible_values implementation
 class ETypeFacet(facetbase.RelationFacet):
     __regid__ = 'etype-facet'
@@ -278,24 +279,25 @@ class ETypeFacet(facetbase.RelationFacet):
         value = self._cw.form.get(self.__regid__)
         if not value:
             return
-        self.rqlst.add_type_restriction(self.filtered_variable, value)
+        self.select.add_type_restriction(self.filtered_variable, value)
 
     def possible_values(self):
         """return a list of possible values (as string since it's used to
         compare to a form value in javascript) for this facet
         """
-        rqlst = self.rqlst
-        rqlst.save_state()
+        select = self.select
+        select.save_state()
         try:
-            facetbase.cleanup_rqlst(rqlst, self.filtered_variable)
-            etype_var = facetbase.prepare_vocabulary_rqlst(
-                rqlst, self.filtered_variable, self.rtype, self.role)
-            attrvar = rqlst.make_variable()
-            rqlst.add_selected(attrvar)
-            rqlst.add_relation(etype_var, 'name', attrvar)
-            return [etype for _, etype in self.rqlexec(rqlst.as_string())]
+            facetbase.cleanup_select(select, self.filtered_variable)
+            etype_var = facetbase.prepare_vocabulary_select(
+                select, self.filtered_variable, self.rtype, self.role)
+            attrvar = select.make_variable()
+            select.add_selected(attrvar)
+            select.add_relation(etype_var, 'name', attrvar)
+            return [etype for _, etype in self.rqlexec(select.as_string())]
         finally:
-            rqlst.recover()
+            select.recover()
+
 
 class HasTextFacet(facetbase.AbstractFacet):
     __select__ = relation_possible('has_text', 'subject') & match_context_prop()
@@ -325,4 +327,4 @@ class HasTextFacet(facetbase.AbstractFacet):
         value = self._cw.form.get(self.__regid__)
         if not value:
             return
-        self.rqlst.add_constant_restriction(self.filtered_variable, 'has_text', value, 'String')
+        self.select.add_constant_restriction(self.filtered_variable, 'has_text', value, 'String')
