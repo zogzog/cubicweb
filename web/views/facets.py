@@ -26,7 +26,41 @@ from cubicweb.appobject import objectify_selector
 from cubicweb.selectors import (non_final_entity, multi_lines_rset,
                                 match_context_prop, yes, relation_possible)
 from cubicweb.utils import json_dumps
-from cubicweb.web import component, facet
+from cubicweb.web import component, facet as facetbase
+
+def facets(req, rset, context):
+    """return the base rql and a list of widgets for facets applying to the
+    given rset/context (cached version)
+    """
+    try:
+        cache = req.__rset_facets
+    except AttributeError:
+        cache = req.__rset_facets = {}
+    try:
+        return cache[(rset, context)]
+    except KeyError:
+        facets = cache[(rset, context)] = _facets(req, rset, context)
+        return facets
+
+def _facets(req, rset, context):
+    """return the base rql and a list of widgets for facets applying to the
+    given rset/context
+    """
+    # XXX done by selectors, though maybe necessary when rset has been hijacked
+    # (e.g. contextview_selector matched)
+    rqlst = rset.syntax_tree()
+    # union not yet supported
+    if len(rqlst.children) != 1:
+        return None, ()
+    rqlst = rqlst.copy()
+    vreg = req.vreg
+    vreg.rqlhelper.annotate(rqlst)
+    mainvar, baserql = facetbase.prepare_facets_rqlst(rqlst, rset.args)
+    wdgs = [facet.get_widget() for facet in vreg['facets'].poss_visible_objects(
+        req, rset=rset, rqlst=rqlst.children[0], context=context,
+        filtered_variable=mainvar)]
+    return baserql, [wdg for wdg in wdgs if wdg is not None]
+
 
 @objectify_selector
 def contextview_selector(cls, req, rset=None, row=None, col=None, view=None,
@@ -35,28 +69,92 @@ def contextview_selector(cls, req, rset=None, row=None, col=None, view=None,
         return 1
     return 0
 
+@objectify_selector
+def has_facets(cls, req, rset=None, **kwargs):
+    if rset is None:
+        return 0
+    return len(facets(req, rset, cls.__regid__)[1])
 
-class FilterBox(component.CtxComponent):
+
+def filter_hiddens(w, baserql, wdgs, **kwargs):
+    kwargs['facets'] = ','.join(wdg.facet.__regid__ for wdg in wdgs)
+    kwargs['baserql'] = baserql
+    for key, val in kwargs.items():
+        w(u'<input type="hidden" name="%s" value="%s" />' % (
+            key, xml_escape(val)))
+
+
+class FacetFilterMixIn(object):
+    needs_js = ['cubicweb.ajax.js', 'cubicweb.facets.js']
+    needs_css = ['cubicweb.facets.css']
+    roundcorners = True
+
+    def generate_form(self, w, rset, divid, vid, vidargs,
+                      paginate=False, cssclass='', **hiddens):
+        """display a form to filter some view's content"""
+        baserql, wdgs = facets(self._cw, rset, self.__regid__)
+        if not wdgs: # may happen in contextview_selector matched
+            return
+        self._cw.add_js(self.needs_js)
+        self._cw.add_css(self.needs_css)
+        self._cw.html_headers.define_var('facetLoadingMsg',
+                                         self._cw._('facet-loading-msg'))
+        if self.roundcorners:
+            self._cw.html_headers.add_onload(
+                'jQuery(".facet").corner("tl br 10px");')
+        # drop False / None values from vidargs
+        vidargs = dict((k, v) for k, v in vidargs.iteritems() if v)
+        facetargs = xml_escape(json_dumps([divid, vid, paginate, vidargs]))
+        w(u'<form id="%sForm" class="%s" method="post" action="" '
+          'cubicweb:facetargs="%s" >' % (divid, cssclass, facetargs))
+        w(u'<fieldset>')
+        filter_hiddens(w, baserql, wdgs, **hiddens)
+        self.layout_widgets(w, self.sorted_widgets(wdgs))
+        w(u'</fieldset>\n')
+        w(u'</form>\n')
+
+    def sorted_widgets(self, wdgs):
+        """sort widgets: by default sort by widget height, then according to
+        widget.order (the original widgets order)
+        """
+        return sorted(wdgs, key=lambda x: x.height())
+
+    def layout_widgets(self, w, wdgs):
+        """layout widgets: by default simply render each of them
+        (i.e. succession of <div>)
+        """
+        for wdg in wdgs:
+            wdg.render(w=w)
+
+
+class FilterBox(FacetFilterMixIn, component.CtxComponent):
     """filter results of a query"""
-    __regid__ = 'facet.filters'
-    __select__ = ((non_final_entity() & multi_lines_rset())
-                  | contextview_selector())
+    __regid__ = 'facet.filterbox'
+    __select__ = ((non_final_entity() & has_facets())
+                  | contextview_selector()) # can't use has_facets because of
+                                            # contextview mecanism
     context = 'left' # XXX doesn't support 'incontext', only 'left' or 'right'
     title = _('facet.filters')
     visible = True # functionality provided by the search box by default
     order = 1
-    roundcorners = True
-
-    needs_css = 'cubicweb.facets.css'
-    needs_js = ('cubicweb.ajax.js', 'cubicweb.facets.js')
 
     bk_linkbox_template = u'<div class="facetTitle">%s</div>'
 
-    def facetargs(self):
-        """this method returns the list of extra arguments that should
-        be used by the facet
-        """
-        return {}
+    def render(self, w, **kwargs):
+        req = self._cw
+        rset, vid, divid, paginate = self._get_context()
+        if len(rset) < 2:
+            return
+        if vid is None:
+            vid = req.form.get('vid')
+        if self.bk_linkbox_template and req.vreg.schema['Bookmark'].has_perm(req, 'add'):
+            w(self.bookmark_link(rset))
+        hiddens = {}
+        for param in ('subvid', 'vtitle'):
+            if param in req.form:
+                hiddens[param] = req.form[param]
+        self.generate_form(w, rset, divid, vid, self.vidargs(),
+                           paginate=paginate, **hiddens)
 
     def _get_context(self):
         view = self.cw_extra_kwargs.get('view')
@@ -68,48 +166,6 @@ class FilterBox(component.CtxComponent):
             vid, divid = None, 'pageContent'
             paginate = view and view.paginable
         return rset, vid, divid, paginate
-
-    def render(self, w, **kwargs):
-        req = self._cw
-        req.add_js( self.needs_js )
-        req.add_css( self.needs_css)
-        req.html_headers.define_var('facetLoadingMsg', req._('facet-loading-msg'))
-        if self.roundcorners:
-            req.html_headers.add_onload('jQuery(".facet").corner("tl br 10px");')
-        rset, vid, divid, paginate = self._get_context()
-        # XXX done by selectors, though maybe necessary when rset has been hijacked
-        if rset.rowcount < 2:
-            return
-        rqlst = rset.syntax_tree()
-        # union not yet supported
-        if len(rqlst.children) != 1:
-            return ()
-        rqlst = rqlst.copy()
-        req.vreg.rqlhelper.annotate(rqlst)
-        mainvar, baserql = facet.prepare_facets_rqlst(rqlst, rset.args)
-        widgets = []
-        for facetobj in self.get_facets(rset, rqlst.children[0], mainvar):
-            wdg = facetobj.get_widget()
-            if wdg is not None:
-                widgets.append(wdg)
-        if not widgets:
-            return
-        if vid is None:
-            vid = req.form.get('vid')
-        if self.bk_linkbox_template and req.vreg.schema['Bookmark'].has_perm(req, 'add'):
-            w(self.bookmark_link(rset))
-        w(u'<form method="post" id="%sForm" cubicweb:facetargs="%s" action="">'  % (
-            divid, xml_escape(json_dumps([divid, vid, paginate, self.facetargs()]))))
-        w(u'<fieldset>')
-        hiddens = {'facets': ','.join(wdg.facet.__regid__ for wdg in widgets),
-                   'baserql': baserql}
-        for param in ('subvid', 'vtitle'):
-            if param in req.form:
-                hiddens[param] = req.form[param]
-        facet.filter_hiddens(w, **hiddens)
-        for wdg in widgets:
-            wdg.render(w=w)
-        w(u'</fieldset>\n</form>\n')
 
     def bookmark_link(self, rset):
         req = self._cw
@@ -128,35 +184,79 @@ class FilterBox(component.CtxComponent):
                 req._('bookmark this search'))
         return self.bk_linkbox_template % bk_link
 
-    def get_facets(self, rset, rqlst, mainvar):
-        return self._cw.vreg['facets'].poss_visible_objects(
-            self._cw, rset=rset, rqlst=rqlst,
-            context='facetbox', filtered_variable=mainvar)
+    def vidargs(self):
+        """this method returns the list of extra arguments that should be used
+        by the filter or the view using it
+        """
+        return {}
+
+
+from cubicweb.view import AnyRsetView
+
+class FilterTable(FacetFilterMixIn, AnyRsetView):
+    __regid__ = 'facet.filtertable'
+    __select__ = non_final_entity() & has_facets()
+    wdg_stack_size = 8
+
+    def call(self, vid, divid, vidargs, cssclass=''):
+        self.generate_form(self.w, self.cw_rset, divid, vid, vidargs,
+                           cssclass=cssclass, fromformfilter='1',
+                           # divid=divid XXX
+                           )
+
+    def layout_widgets(self, w, wdgs):
+        """layout widgets: put them in a table where each column should have
+        sum(wdg.height()) < wdg_stack_size.
+        """
+        w(u'<table class="filter">\n')
+        widget_queue = []
+        queue_height = 0
+        w(u'<tr>\n')
+        for wdg in wdgs:
+            height = wdg.height()
+            if queue_height + height <= self.wdg_stack_size:
+                widget_queue.append(wdg)
+                queue_height += height
+                continue
+            w(u'<td>')
+            for queued in widget_queue:
+                queued.render(w=w)
+            w(u'</td>')
+            widget_queue = [wdg]
+            queue_height = height
+        if widget_queue:
+            w(u'<td>')
+            for queued in widget_queue:
+                queued.render(w=w)
+            w(u'</td>')
+        w(u'</tr>\n')
+        w(u'</table>\n')
+
 
 # facets ######################################################################
 
-class CWSourceFacet(facet.RelationFacet):
+class CWSourceFacet(facetbase.RelationFacet):
     __regid__ = 'cw_source-facet'
     rtype = 'cw_source'
     target_attr = 'name'
 
-class CreatedByFacet(facet.RelationFacet):
+class CreatedByFacet(facetbase.RelationFacet):
     __regid__ = 'created_by-facet'
     rtype = 'created_by'
     target_attr = 'login'
 
-class InGroupFacet(facet.RelationFacet):
+class InGroupFacet(facetbase.RelationFacet):
     __regid__ = 'in_group-facet'
     rtype = 'in_group'
     target_attr = 'name'
 
-class InStateFacet(facet.RelationAttributeFacet):
+class InStateFacet(facetbase.RelationAttributeFacet):
     __regid__ = 'in_state-facet'
     rtype = 'in_state'
     target_attr = 'name'
 
 # inherit from RelationFacet to benefit from its possible_values implementation
-class ETypeFacet(facet.RelationFacet):
+class ETypeFacet(facetbase.RelationFacet):
     __regid__ = 'etype-facet'
     __select__ = yes()
     order = 1
@@ -187,8 +287,8 @@ class ETypeFacet(facet.RelationFacet):
         rqlst = self.rqlst
         rqlst.save_state()
         try:
-            facet._cleanup_rqlst(rqlst, self.filtered_variable)
-            etype_var = facet._prepare_vocabulary_rqlst(
+            facetbase.cleanup_rqlst(rqlst, self.filtered_variable)
+            etype_var = facetbase.prepare_vocabulary_rqlst(
                 rqlst, self.filtered_variable, self.rtype, self.role)
             attrvar = rqlst.make_variable()
             rqlst.add_selected(attrvar)
@@ -197,7 +297,7 @@ class ETypeFacet(facet.RelationFacet):
         finally:
             rqlst.recover()
 
-class HasTextFacet(facet.AbstractFacet):
+class HasTextFacet(facetbase.AbstractFacet):
     __select__ = relation_possible('has_text', 'subject') & match_context_prop()
     __regid__ = 'has_text-facet'
     rtype = 'has_text'
@@ -206,7 +306,7 @@ class HasTextFacet(facet.AbstractFacet):
 
     @property
     def wdgclass(self):
-        return facet.FacetStringWidget
+        return facetbase.FacetStringWidget
 
     @property
     def title(self):

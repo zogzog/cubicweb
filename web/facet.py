@@ -55,6 +55,7 @@ from logilab.common.graph import has_path
 from logilab.common.decorators import cached
 from logilab.common.date import datetime2ticks, ustrftime, ticks2datetime
 from logilab.common.compat import all
+from logilab.common.deprecation import deprecated
 
 from rql import parse, nodes, utils
 
@@ -73,6 +74,21 @@ def rtype_facet_title(facet):
                             context=iter(ptypes).next())
     return display_name(facet._cw, facet.rtype, form=facet.role)
 
+def filtered_variable(rqlst):
+    vref = rqlst.selection[0].iget_nodes(nodes.VariableRef).next()
+    return vref.variable
+
+def get_facet(req, facetid, rqlst, mainvar):
+    return req.vreg['facets'].object_by_id(facetid, req, rqlst=rqlst,
+                                           filtered_variable=mainvar)
+
+@deprecated('[3.13] filter_hiddens moved to cubicweb.web.views.facets with '
+            'slightly modified prototype')
+def filter_hiddens(w, **kwargs):
+    from cubicweb.web.views.facets import filter_hiddens
+    return filter_hiddens(w, wdgs=kwargs.pop('facets'))
+
+
 ## rqlst manipulation functions used by facets ################################
 
 def prepare_facets_rqlst(rqlst, args=None):
@@ -84,8 +100,7 @@ def prepare_facets_rqlst(rqlst, args=None):
     * set DISTINCT
     * unset LIMIT/OFFSET
     """
-    if len(rqlst.children) > 1:
-        raise NotImplementedError('FIXME: union not yet supported')
+    assert len(rqlst.children) == 1, 'FIXME: union not yet supported'
     select = rqlst.children[0]
     mainvar = filtered_variable(select)
     select.set_limit(None)
@@ -104,20 +119,102 @@ def prepare_facets_rqlst(rqlst, args=None):
     select.set_distinct(True)
     return mainvar, baserql
 
-def filtered_variable(rqlst):
-    vref = rqlst.selection[0].iget_nodes(nodes.VariableRef).next()
-    return vref.variable
+
+def prepare_vocabulary_rqlst(rqlst, mainvar, rtype, role,
+                              select_target_entity=True):
+    """prepare a syntax tree to generate a filter vocabulary rql using the given
+    relation:
+    * create a variable to filter on this relation
+    * add the relation
+    * add the new variable to GROUPBY clause if necessary
+    * add the new variable to the selection
+    """
+    newvar = _add_rtype_relation(rqlst, mainvar, rtype, role)[0]
+    if select_target_entity:
+        if rqlst.groupby:
+            rqlst.add_group_var(newvar)
+        rqlst.add_selected(newvar)
+    # add is restriction if necessary
+    if mainvar.stinfo['typerel'] is None:
+        etypes = frozenset(sol[mainvar.name] for sol in rqlst.solutions)
+        rqlst.add_type_restriction(mainvar, etypes)
+    return newvar
 
 
-def get_facet(req, facetid, rqlst, mainvar):
-    return req.vreg['facets'].object_by_id(facetid, req, rqlst=rqlst,
-                                           filtered_variable=mainvar)
+def insert_attr_select_relation(rqlst, mainvar, rtype, role, attrname,
+                                sortfuncname=None, sortasc=True,
+                                select_target_entity=True):
+    """modify a syntax tree to :
+    * link a new variable to `mainvar` through `rtype` (where mainvar has `role`)
+    * retrieve only the newly inserted variable and its `attrname`
+
+    Sorting:
+    * on `attrname` ascendant (`sortasc`=True) or descendant (`sortasc`=False)
+    * on `sortfuncname`(`attrname`) if `sortfuncname` is specified
+    * no sort if `sortasc` is None
+    """
+    cleanup_rqlst(rqlst, mainvar)
+    var = prepare_vocabulary_rqlst(rqlst, mainvar, rtype, role,
+                                   select_target_entity)
+    attrvar = rqlst.make_variable()
+    rqlst.add_relation(var, attrname, attrvar)
+    # if query is grouped, we have to add the attribute variable
+    if rqlst.groupby:
+        if not attrvar in rqlst.groupby:
+            rqlst.add_group_var(attrvar)
+    if sortasc is not None:
+        _set_orderby(rqlst, attrvar, sortasc, sortfuncname)
+    # add attribute variable to selection
+    rqlst.add_selected(attrvar)
+    return var
 
 
-def filter_hiddens(w, **kwargs):
-    for key, val in kwargs.items():
-        w(u'<input type="hidden" name="%s" value="%s" />' % (
-            key, xml_escape(val)))
+def cleanup_rqlst(rqlst, mainvar):
+    """cleanup tree from unnecessary restrictions:
+    * attribute selection
+    * optional relations linked to the main variable
+    * mandatory relations linked to the main variable
+    """
+    if rqlst.where is None:
+        return
+    schema = rqlst.root.schema
+    toremove = set()
+    vargraph = deepcopy(rqlst.vargraph) # graph representing links between variable
+    for rel in rqlst.where.get_nodes(nodes.Relation):
+        ovar = _may_be_removed(rel, schema, mainvar)
+        if ovar is not None:
+            toremove.add(ovar)
+    removed = set()
+    while toremove:
+        trvar = toremove.pop()
+        trvarname = trvar.name
+        # remove paths using this variable from the graph
+        linkedvars = vargraph.pop(trvarname)
+        for ovarname in linkedvars:
+            vargraph[ovarname].remove(trvarname)
+        # remove relation using this variable
+        for rel in trvar.stinfo['relations']:
+            if rel in removed:
+                # already removed
+                continue
+            rqlst.remove_node(rel)
+            removed.add(rel)
+        rel = trvar.stinfo['typerel']
+        if rel is not None and not rel in removed:
+            rqlst.remove_node(rel)
+            removed.add(rel)
+        # cleanup groupby clause
+        if rqlst.groupby:
+            for vref in rqlst.groupby[:]:
+                if vref.name == trvarname:
+                    rqlst.remove_group_var(vref)
+        # we can also remove all variables which are linked to this variable
+        # and have no path to the main variable
+        for ovarname in linkedvars:
+            if ovarname == mainvar.name:
+                continue
+            if not has_path(vargraph, ovarname, mainvar.name):
+                toremove.add(rqlst.defined_vars[ovarname])
 
 
 def _may_be_removed(rel, schema, mainvar):
@@ -188,26 +285,6 @@ def _add_eid_restr(rel, restrvar, value):
     rrel = nodes.make_constant_restriction(restrvar, 'eid', value, 'Int')
     rel.parent.replace(rel, nodes.And(rel, rrel))
 
-def _prepare_vocabulary_rqlst(rqlst, mainvar, rtype, role,
-                              select_target_entity=True):
-    """prepare a syntax tree to generate a filter vocabulary rql using the given
-    relation:
-    * create a variable to filter on this relation
-    * add the relation
-    * add the new variable to GROUPBY clause if necessary
-    * add the new variable to the selection
-    """
-    newvar = _add_rtype_relation(rqlst, mainvar, rtype, role)[0]
-    if select_target_entity:
-        if rqlst.groupby:
-            rqlst.add_group_var(newvar)
-        rqlst.add_selected(newvar)
-    # add is restriction if necessary
-    if mainvar.stinfo['typerel'] is None:
-        etypes = frozenset(sol[mainvar.name] for sol in rqlst.solutions)
-        rqlst.add_type_restriction(mainvar, etypes)
-    return newvar
-
 def _remove_relation(rqlst, rel, var):
     """remove a constraint relation from the syntax tree"""
     # remove the relation
@@ -235,79 +312,10 @@ def _set_orderby(rqlst, newvar, sortasc, sortfuncname):
         term = nodes.SortTerm(sortfunc, sortasc)
         rqlst.add_sort_term(term)
 
-def insert_attr_select_relation(rqlst, mainvar, rtype, role, attrname,
-                                sortfuncname=None, sortasc=True,
-                                select_target_entity=True):
-    """modify a syntax tree to :
-    * link a new variable to `mainvar` through `rtype` (where mainvar has `role`)
-    * retrieve only the newly inserted variable and its `attrname`
 
-    Sorting:
-    * on `attrname` ascendant (`sortasc`=True) or descendant (`sortasc`=False)
-    * on `sortfuncname`(`attrname`) if `sortfuncname` is specified
-    * no sort if `sortasc` is None
-    """
-    _cleanup_rqlst(rqlst, mainvar)
-    var = _prepare_vocabulary_rqlst(rqlst, mainvar, rtype, role,
-                                    select_target_entity)
-    attrvar = rqlst.make_variable()
-    rqlst.add_relation(var, attrname, attrvar)
-    # if query is grouped, we have to add the attribute variable
-    if rqlst.groupby:
-        if not attrvar in rqlst.groupby:
-            rqlst.add_group_var(attrvar)
-    if sortasc is not None:
-        _set_orderby(rqlst, attrvar, sortasc, sortfuncname)
-    # add attribute variable to selection
-    rqlst.add_selected(attrvar)
-    return var
-
-def _cleanup_rqlst(rqlst, mainvar):
-    """cleanup tree from unnecessary restriction:
-    * attribute selection
-    * optional relations linked to the main variable
-    * mandatory relations linked to the main variable
-    """
-    if rqlst.where is None:
-        return
-    schema = rqlst.root.schema
-    toremove = set()
-    vargraph = deepcopy(rqlst.vargraph) # graph representing links between variable
-    for rel in rqlst.where.get_nodes(nodes.Relation):
-        ovar = _may_be_removed(rel, schema, mainvar)
-        if ovar is not None:
-            toremove.add(ovar)
-    removed = set()
-    while toremove:
-        trvar = toremove.pop()
-        trvarname = trvar.name
-        # remove paths using this variable from the graph
-        linkedvars = vargraph.pop(trvarname)
-        for ovarname in linkedvars:
-            vargraph[ovarname].remove(trvarname)
-        # remove relation using this variable
-        for rel in trvar.stinfo['relations']:
-            if rel in removed:
-                # already removed
-                continue
-            rqlst.remove_node(rel)
-            removed.add(rel)
-        rel = trvar.stinfo['typerel']
-        if rel is not None and not rel in removed:
-            rqlst.remove_node(rel)
-            removed.add(rel)
-        # cleanup groupby clause
-        if rqlst.groupby:
-            for vref in rqlst.groupby[:]:
-                if vref.name == trvarname:
-                    rqlst.remove_group_var(vref)
-        # we can also remove all variables which are linked to this variable
-        # and have no path to the main variable
-        for ovarname in linkedvars:
-            if ovarname == mainvar.name:
-                continue
-            if not has_path(vargraph, ovarname, mainvar.name):
-                toremove.add(rqlst.defined_vars[ovarname])
+_prepare_vocabulary_rqlst = deprecated('[3.13] renamed prepare_vocabulary_rqlst ')(
+    prepare_vocabulary_rqlst)
+_cleanup_rqlst = deprecated('[3.13] renamed to cleanup_rqlst')(cleanup_rqlst)
 
 
 ## base facet classes ##########################################################
@@ -605,10 +613,10 @@ class RelationFacet(VocabularyFacet):
         rqlst = self.rqlst
         rqlst.save_state()
         try:
-            _cleanup_rqlst(rqlst, self.filtered_variable)
+            cleanup_rqlst(rqlst, self.filtered_variable)
             if self._select_target_entity:
-                _prepare_vocabulary_rqlst(rqlst, self.filtered_variable, self.rtype,
-                                          self.role, select_target_entity=True)
+                prepare_vocabulary_rqlst(rqlst, self.filtered_variable, self.rtype,
+                                         self.role, select_target_entity=True)
             else:
                 insert_attr_select_relation(
                     rqlst, self.filtered_variable, self.rtype, self.role, self.target_attr,
@@ -877,8 +885,8 @@ class AttributeFacet(RelationAttributeFacet):
         rqlst.save_state()
         try:
             mainvar = self.filtered_variable
-            _cleanup_rqlst(rqlst, mainvar)
-            newvar = _prepare_vocabulary_rqlst(rqlst, mainvar, self.rtype, self.role)
+            cleanup_rqlst(rqlst, mainvar)
+            newvar = prepare_vocabulary_rqlst(rqlst, mainvar, self.rtype, self.role)
             _set_orderby(rqlst, newvar, self.sortasc, self.sortfunc)
             try:
                 rset = self.rqlexec(rqlst.as_string(), self.cw_rset.args)
