@@ -198,7 +198,7 @@ from cubicweb.view import AnyRsetView
 
 class FilterTable(FacetFilterMixIn, AnyRsetView):
     __regid__ = 'facet.filtertable'
-    __select__ = non_final_entity() & has_facets()
+    __select__ = has_facets()
     wdg_stack_size = 8
 
     def call(self, vid, divid, vidargs, cssclass=''):
