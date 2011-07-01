@@ -210,6 +210,12 @@ BASIC_WITH_LIMIT = [
 FROM cw_Personne AS _P
 LIMIT 20
 OFFSET 10'''),
+    ("Any P ORDERBY N LIMIT 1 WHERE P is Personne, P travaille S, S eid %(eid)s, P nom N, P nom %(text)s",
+     '''SELECT _P.cw_eid
+FROM cw_Personne AS _P, travaille_relation AS rel_travaille0
+WHERE rel_travaille0.eid_from=_P.cw_eid AND rel_travaille0.eid_to=12345 AND _P.cw_nom=hip hop momo
+ORDER BY _P.cw_nom
+LIMIT 1'''),
     ]
 
 
@@ -1243,7 +1249,7 @@ class PostgresSQLGeneratorTC(RQLGeneratorTC):
 
     def _check(self, rql, sql, varmap=None, args=None):
         if args is None:
-            args = {'text': 'hip hop momo'}
+            args = {'text': 'hip hop momo', 'eid': 12345}
         try:
             union = self._prepare(rql)
             r, nargs, cbs = self.o.generate(union, args,
@@ -1774,6 +1780,48 @@ SELECT _O.cw_eid, _O.cw_address, _O.cw_alias, _O.cw_modification_date
 FROM cw_EmailAddress AS _O
 WHERE NOT (EXISTS(SELECT 1 FROM use_email_relation AS rel_use_email0 WHERE rel_use_email0.eid_from=1 AND rel_use_email0.eid_to=_O.cw_eid)) AND EXISTS(SELECT 1 FROM use_email_relation AS rel_use_email1 WHERE rel_use_email1.eid_to=_O.cw_eid AND EXISTS(SELECT 1 FROM cw_CWGroup AS _D WHERE rel_use_email1.eid_from=2 AND NOT (EXISTS(SELECT 1 FROM in_group_relation AS rel_in_group2 WHERE rel_in_group2.eid_from=2 AND rel_in_group2.eid_to=_D.cw_eid)) AND _D.cw_name=guests))
 ORDER BY 4 DESC'''),
+
+    ("Any P ORDERBY N LIMIT 1 WHERE P is Personne, P travaille S, S eid %(eid)s, P nom N, P nom %(text)s",
+     '''WITH orderedrows AS (
+SELECT
+_L01
+, ROW_NUMBER() OVER (ORDER BY _L01) AS __RowNumber
+FROM (
+SELECT _P.cw_eid AS _L01 FROM  cw_Personne AS _P, travaille_relation AS rel_travaille0
+WHERE rel_travaille0.eid_from=_P.cw_eid AND rel_travaille0.eid_to=12345 AND _P.cw_nom=hip hop momo
+) AS _SQ1 )
+SELECT
+_L01
+FROM orderedrows WHERE
+__RowNumber <= 1'''),
+
+    ("Any P ORDERBY N LIMIT 1 WHERE P is Personne, P nom N",
+     '''WITH orderedrows AS (
+SELECT
+_L01
+, ROW_NUMBER() OVER (ORDER BY _L01) AS __RowNumber
+FROM (
+SELECT _P.cw_eid AS _L01 FROM  cw_Personne AS _P
+) AS _SQ1 )
+SELECT
+_L01
+FROM orderedrows WHERE
+__RowNumber <= 1
+'''),
+
+    ("Any PN, N, P ORDERBY N LIMIT 1 WHERE P is Personne, P nom N, P prenom PN",
+     '''WITH orderedrows AS (
+SELECT
+_L01, _L02, _L03
+, ROW_NUMBER() OVER (ORDER BY _L02) AS __RowNumber
+FROM (
+SELECT _P.cw_prenom AS _L01, _P.cw_nom AS _L02, _P.cw_eid AS _L03 FROM  cw_Personne AS _P
+) AS _SQ1 )
+SELECT
+_L01, _L02, _L03
+FROM orderedrows WHERE
+__RowNumber <= 1
+'''),
             ]
         for t in self._parse(WITH_LIMIT):# + ADVANCED_WITH_LIMIT_OR_ORDERBY):
             yield t
