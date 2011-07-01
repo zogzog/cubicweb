@@ -76,7 +76,7 @@ class BaseFacetTC(CubicWebTC):
         f.add_rql_restrictions()
         # selection is cluttered because rqlst has been prepared for facet (it
         # is not in real life)
-        self.assertEqual(f.select.as_string(),
+        self.assertEqual(f.rqlst.as_string(),
                           'DISTINCT Any  WHERE X in_group G?, G name GN, NOT G name "users", X in_group D, D eid %s' % guests)
 
     def test_relation_no_relation_1(self):
