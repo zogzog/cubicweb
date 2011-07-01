@@ -315,8 +315,8 @@ class RQLExpressionTC(TestCase):
 
 class GuessRrqlExprMainVarsTC(TestCase):
     def test_exists(self):
-        mainvars = guess_rrqlexpr_mainvars(normalize_expression('NOT EXISTS(O team_competition C, C level < 3)'))
-        self.assertEqual(mainvars, set(['O']))
+        mainvars = guess_rrqlexpr_mainvars(normalize_expression('NOT EXISTS(O team_competition C, C level < 3, C concerns S)'))
+        self.assertEqual(mainvars, set(['S', 'O']))
 
 
 if __name__ == '__main__':
