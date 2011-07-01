@@ -133,11 +133,20 @@ function initFacetBoxEvents(root) {
         //       may changes and we must send its value when the callback is
         //       called, not when the page is initialized
         var facetargs = form.attr('cubicweb:facetargs');
-        if (facetargs !== undefined) {
+        if (facetargs != undefined && !form.attr('cubicweb:initialized')) {
+	    form.attr('cubicweb:initialized', '1');
+	    var jsfacetargs = cw.evalJSON(form.attr('cubicweb:facetargs'));
             form.submit(function() {
-                buildRQL.apply(null, cw.evalJSON(form.attr('cubicweb:facetargs')));
+                buildRQL.apply(null, jsfacetargs);
                 return false;
             });
+	    var divid = jsfacetargs[0];
+	    if (jQuery('#'+divid).length) {
+		var $loadingDiv = $(DIV({id:'facetLoading'},
+					facetLoadingMsg));
+		$loadingDiv.corner();
+		$(jQuery('#'+divid).get(0).parentNode).append($loadingDiv);
+	    }
             form.find('div.facet').each(function() {
                 var facet = jQuery(this);
                 facet.find('div.facetCheckBox').each(function(i) {
@@ -188,7 +197,7 @@ function initFacetBoxEvents(root) {
                         var $img = jQuery(this).find('img');
                         $img.attr('src', SELECTED_IMG).attr('alt', (_('selected')));
                     }
-                    buildRQL.apply(null, cw.evalJSON(form.attr('cubicweb:facetargs')));
+                    buildRQL.apply(null, jsfacetargs);
                     facet.find('.facetBody').animate({
                         scrollTop: 0
                     },
@@ -197,7 +206,7 @@ function initFacetBoxEvents(root) {
                 facet.find('select.facetOperator').change(function() {
                     var nbselected = facet.find('div.facetValueSelected').length;
                     if (nbselected >= 2) {
-                        buildRQL.apply(null, cw.evalJSON(form.attr('cubicweb:facetargs')));
+                        buildRQL.apply(null, jsfacetargs);
                     }
                 });
                 facet.find('div.facetTitle').click(function() {

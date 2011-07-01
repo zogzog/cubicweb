@@ -66,18 +66,18 @@ class BaseFacetTC(CubicWebTC):
         self.assertEqual(f.vocabulary(),
                           [(u'guests', guests), (u'managers', managers)])
         # ensure rqlst is left unmodified
-        self.assertEqual(rqlst.as_string(), 'DISTINCT Any  GROUPBY X WHERE X in_group G?, G name GN, NOT G name "users"')
+        self.assertEqual(rqlst.as_string(), 'DISTINCT Any  WHERE X in_group G?, G name GN, NOT G name "users"')
         #rqlst = rset.syntax_tree()
         self.assertEqual(sorted(f.possible_values()),
                           [str(guests), str(managers)])
         # ensure rqlst is left unmodified
-        self.assertEqual(rqlst.as_string(), 'DISTINCT Any  GROUPBY X WHERE X in_group G?, G name GN, NOT G name "users"')
+        self.assertEqual(rqlst.as_string(), 'DISTINCT Any  WHERE X in_group G?, G name GN, NOT G name "users"')
         req.form[f.__regid__] = str(guests)
         f.add_rql_restrictions()
         # selection is cluttered because rqlst has been prepared for facet (it
         # is not in real life)
-        self.assertEqual(f.rqlst.as_string(),
-                          'DISTINCT Any  GROUPBY X WHERE X in_group G?, G name GN, NOT G name "users", X in_group D, D eid %s' % guests)
+        self.assertEqual(f.select.as_string(),
+                          'DISTINCT Any  WHERE X in_group G?, G name GN, NOT G name "users", X in_group D, D eid %s' % guests)
 
     def test_relation_no_relation_1(self):
         f, (guests, managers) = self._in_group_facet(no_relation=True)

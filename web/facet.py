@@ -94,7 +94,7 @@ def filter_hiddens(w, **kwargs):
 def prepare_facets_rqlst(rqlst, args=None):
     """prepare a syntax tree to generate facet filters
 
-    * remove ORDERBY clause
+    * remove ORDERBY/GROUPBY clauses
     * cleanup selection (remove everything)
     * undefine unnecessary variables
     * set DISTINCT
@@ -106,8 +106,10 @@ def prepare_facets_rqlst(rqlst, args=None):
     select.set_limit(None)
     select.set_offset(None)
     baserql = select.as_string(kwargs=args)
-    # cleanup sort terms
+    # cleanup sort terms / group by
     select.remove_sort_terms()
+    select.remove_groups()
+    # XXX remove aggregat from having
     # selection: only vocabulary entity
     for term in select.selection[:]:
         select.remove_selected(term)
