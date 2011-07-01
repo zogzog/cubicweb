@@ -71,6 +71,8 @@ class AbstractSessionManager(component.Component):
             total += 1
             try:
                 last_usage_time = session.cnx.check()
+            except AttributeError:
+                last_usage_time = session.mtime
             except BadConnectionId:
                 self.close_session(session)
                 closed += 1
@@ -228,7 +230,9 @@ class CookieSessionHandler(object):
                             self.session_manager.close_session(session)
 
     def get_session(self, req, sessionid):
-        return self.session_manager.get_session(req, sessionid)
+        session = self.session_manager.get_session(req, sessionid)
+        session.mtime = time()
+        return session
 
     def open_session(self, req, allow_no_cnx=True):
         session = self.session_manager.open_session(req, allow_no_cnx=allow_no_cnx)
