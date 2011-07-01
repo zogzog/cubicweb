@@ -152,16 +152,17 @@ class InstanceCommand(Command):
                 print '*'*72
                 if not ASK.confirm('%s instance %r ?' % (self.name, appid)):
                     continue
-            status = max(status, self.run_arg(appid))
+            try:
+                status = max(status, self.run_arg(appid))
+            except (KeyboardInterrupt, SystemExit):
+                print >> sys.stderr, '%s aborted' % self.name
+                return 2 # specific error code
         sys.exit(status)
 
     def run_arg(self, appid):
         cmdmeth = getattr(self, '%s_instance' % self.name)
         try:
             status = cmdmeth(appid)
-        except (KeyboardInterrupt, SystemExit):
-            print >> sys.stderr, '%s aborted' % self.name
-            return 2 # specific error code
         except (ExecutionError, ConfigurationError), ex:
             print >> sys.stderr, 'instance %s not %s: %s' % (
                 appid, self.actionverb, ex)
