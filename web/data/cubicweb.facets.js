@@ -102,7 +102,13 @@ function buildRQL(divid, vid, paginate, vidargs) {
                 'ctxcomponents', 'breadcrumbs'));
             }
         }
-        var d = loadRemote('json', ajaxFuncArgs('filter_select_content', null, toupdate, rql));
+	var mainvar = null;
+	var index = jQuery.inArray('mainvar', zipped[0]);
+	if (index > - 1) {
+            mainvar = zipped[1][index];
+	}
+
+        var d = loadRemote('json', ajaxFuncArgs('filter_select_content', null, toupdate, rql, mainvar));
         d.addCallback(function(updateMap) {
             for (facetId in updateMap) {
                 var values = updateMap[facetId];

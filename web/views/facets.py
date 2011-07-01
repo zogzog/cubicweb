@@ -28,7 +28,7 @@ from cubicweb.selectors import (non_final_entity, multi_lines_rset,
 from cubicweb.utils import json_dumps
 from cubicweb.web import component, facet as facetbase
 
-def facets(req, rset, context):
+def facets(req, rset, context, mainvar=None):
     """return the base rql and a list of widgets for facets applying to the
     given rset/context (cached version)
     """
@@ -37,29 +37,29 @@ def facets(req, rset, context):
     except AttributeError:
         cache = req.__rset_facets = {}
     try:
-        return cache[(rset, context)]
+        return cache[(rset, context, mainvar)]
     except KeyError:
-        facets = cache[(rset, context)] = _facets(req, rset, context)
+        facets = _facets(req, rset, context, mainvar)
+        cache[(rset, context, mainvar)] = facets
         return facets
 
-def _facets(req, rset, context):
+def _facets(req, rset, context, mainvar):
     """return the base rql and a list of widgets for facets applying to the
     given rset/context
     """
     # XXX done by selectors, though maybe necessary when rset has been hijacked
     # (e.g. contextview_selector matched)
-    rqlst = rset.syntax_tree()
+    origqlst = rset.syntax_tree()
     # union not yet supported
-    if len(rqlst.children) != 1:
+    if len(origqlst.children) != 1:
         return None, ()
-    rqlst = rqlst.copy()
-    vreg = req.vreg
-    vreg.rqlhelper.annotate(rqlst)
-    mainvar, baserql = facetbase.prepare_facets_rqlst(rqlst, rset.args)
-    wdgs = [facet.get_widget() for facet in vreg['facets'].poss_visible_objects(
-        req, rset=rset, rqlst=rqlst.children[0], context=context,
-        filtered_variable=mainvar)]
-    return baserql, [wdg for wdg in wdgs if wdg is not None]
+    rqlst = origqlst.copy()
+    select = rqlst.children[0]
+    filtered_variable, baserql = facetbase.init_facets(rset, select, mainvar)
+    wdgs = [(facet, facet.get_widget()) for facet in req.vreg['facets'].poss_visible_objects(
+        req, rset=rset, rqlst=origqlst, select=select, context=context,
+        filtered_variable=filtered_variable)]
+    return baserql, [wdg for facet, wdg in wdgs if wdg is not None]
 
 
 @objectify_selector
@@ -70,10 +70,10 @@ def contextview_selector(cls, req, rset=None, row=None, col=None, view=None,
     return 0
 
 @objectify_selector
-def has_facets(cls, req, rset=None, **kwargs):
+def has_facets(cls, req, rset=None, mainvar=None, **kwargs):
     if rset is None:
         return 0
-    return len(facets(req, rset, cls.__regid__)[1])
+    return len(facets(req, rset, cls.__regid__, mainvar)[1])
 
 
 def filter_hiddens(w, baserql, wdgs, **kwargs):
@@ -92,7 +92,8 @@ class FacetFilterMixIn(object):
     def generate_form(self, w, rset, divid, vid, vidargs,
                       paginate=False, cssclass='', **hiddens):
         """display a form to filter some view's content"""
-        baserql, wdgs = facets(self._cw, rset, self.__regid__)
+        mainvar = self.cw_extra_kwargs.get('mainvar')
+        baserql, wdgs = facets(self._cw, rset, self.__regid__, mainvar)
         if not wdgs: # may happen in contextview_selector matched
             return
         self._cw.add_js(self.needs_js)
@@ -108,6 +109,8 @@ class FacetFilterMixIn(object):
         w(u'<form id="%sForm" class="%s" method="post" action="" '
           'cubicweb:facetargs="%s" >' % (divid, cssclass, facetargs))
         w(u'<fieldset>')
+        if mainvar:
+            hiddens['mainvar'] = mainvar
         filter_hiddens(w, baserql, wdgs, **hiddens)
         self.layout_widgets(w, self.sorted_widgets(wdgs))
         w(u'</fieldset>\n')
