@@ -560,6 +560,15 @@ class ResetAdminPasswordCommand(Command):
     """
     name = 'reset-admin-pwd'
     arguments = '<instance>'
+    options = (
+        ('password',
+         {'short': 'p', 'type' : 'string', 'metavar' : '<new-password>',
+          'default' : None,
+          'help': 'Use this password instead of prompt for one.\n'
+                  '/!\ THIS IS AN INSECURE PRACTICE /!\ \n'
+                  'the password will appear in shell history'}
+         ),
+        )
 
     def run(self, args):
         """run the command with its specific arguments"""
@@ -586,15 +595,18 @@ class ResetAdminPasswordCommand(Command):
             print "   fix your sources file before running this command"
             cnx.close()
             sys.exit(1)
-        # ask for a new password
-        _, passwd = manager_userpasswd(adminlogin, confirm=True,
-                                       passwdmsg='new password for %s' % adminlogin)
+        if self.config.password is None:
+            # ask for a new password
+            msg = 'new password for %s' % adminlogin
+            _, pwd = manager_userpasswd(adminlogin, confirm=True, passwdmsg=msg)
+        else:
+            pwd = self.config.password
         try:
             cursor.execute("UPDATE cw_CWUser SET cw_upassword=%(p)s WHERE cw_login=%(l)s",
-                           {'p': dbhelper.binary_value(crypt_password(passwd)), 'l': adminlogin})
+                           {'p': dbhelper.binary_value(crypt_password(pwd)), 'l': adminlogin})
             sconfig = Configuration(options=USER_OPTIONS)
             sconfig['login'] = adminlogin
-            sconfig['password'] = passwd
+            sconfig['password'] = pwd
             sourcescfg['admin'] = sconfig
             config.write_sources_file(sourcescfg)
         except Exception, ex:
