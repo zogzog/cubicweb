@@ -143,7 +143,7 @@ class FilterBox(FacetFilterMixIn, component.CtxComponent):
 
     bk_linkbox_template = u'<div class="facetTitle">%s</div>'
 
-    def render(self, w, **kwargs):
+    def render_body(self, w, **kwargs):
         req = self._cw
         rset, vid, divid, paginate = self._get_context()
         if len(rset) < 2:
