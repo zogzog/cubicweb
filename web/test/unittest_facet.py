@@ -1,3 +1,4 @@
+from logilab.common.date import datetime2ticks
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.web import facet
 
@@ -125,6 +126,33 @@ class BaseFacetTC(CubicWebTC):
         self.assertEqual(f.select.as_string(),
                           "DISTINCT Any  WHERE X is CWUser, X in_group E, E name 'guests'")
 
+    def test_daterange(self):
+        req, rset, rqlst, filtered_variable = self.prepare_rqlst()
+        f = facet.DateRangeFacet(req, rset=rset,
+                                 select=rqlst.children[0],
+                                 filtered_variable=filtered_variable)
+        f.rtype = 'creation_date'
+        dates = self.execute('Any CD ORDERBY CD WHERE X is CWUser, X creation_date CD')
+        self.assertEqual(f.vocabulary(),
+                          [(str(dates[0][0]), dates[0][0]),
+                           (str(dates[1][0]), dates[1][0])])
+        # ensure rqlst is left unmodified
+        self.assertEqual(rqlst.as_string(), 'DISTINCT Any  WHERE X is CWUser')
+        #rqlst = rset.syntax_tree()
+        self.assertEqual(f.possible_values(),
+                          [str(dates[0][0]), str(dates[1][0])])
+        # ensure rqlst is left unmodified
+        self.assertEqual(rqlst.as_string(), 'DISTINCT Any  WHERE X is CWUser')
+        req.form['%s_inf' % f.__regid__] = str(datetime2ticks(dates[0][0]))
+        req.form['%s_sup' % f.__regid__] = str(datetime2ticks(dates[0][0]))
+        f.add_rql_restrictions()
+        # selection is cluttered because rqlst has been prepared for facet (it
+        # is not in real life)
+        self.assertEqual(f.select.as_string(),
+                          'DISTINCT Any  WHERE X is CWUser, X creation_date >= "%s", '
+                         'X creation_date <= "%s"'
+                         % (dates[0][0].strftime('%Y/%m/%d'),
+                            dates[0][0].strftime('%Y/%m/%d')))
 
     def test_attribute(self):
         req, rset, rqlst, filtered_variable = self.prepare_rqlst()

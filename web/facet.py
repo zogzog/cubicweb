@@ -1029,7 +1029,7 @@ class RangeFacet(AttributeFacet):
         if supvalue != self.supvalue(max=True):
             self._add_restriction(supvalue, '<=')
 
-    def _add_restriction(self, operator, value):
+    def _add_restriction(self, value, operator):
         self.select.add_constant_restriction(self.filtered_variable,
                                              self.rtype,
                                              self.formatvalue(value),
