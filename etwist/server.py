@@ -174,7 +174,9 @@ class ConcatFiles(LongTimeExpiringFile):
     def __init__(self, config, paths):
         _, ext = osp.splitext(paths[0])
         self._resources = {}
-        # create a unique / predictable filename
+        # create a unique / predictable filename. We don't consider cubes
+        # version since uicache is cleared at server startup, and file's dates
+        # are checked in debug mode
         fname = 'cache_concat_' + hashlib.md5(';'.join(paths)).hexdigest() + ext
         filepath = osp.join(config.appdatahome, 'uicache', fname)
         LongTimeExpiringFile.__init__(self, config, filepath)
@@ -222,6 +224,7 @@ class ConcatFiles(LongTimeExpiringFile):
                 if os.stat(path).st_mtime > concat_lastmod:
                     return False
         return True
+
 
 class CubicWebRootResource(resource.Resource):
     def __init__(self, config, vreg=None):
