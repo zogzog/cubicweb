@@ -191,20 +191,20 @@ class ConcatFiles(LongTimeExpiringFile):
 
     def _concat_cached_filepath(self, filepath, paths):
         if not self._up_to_date(filepath, paths):
-            concat_data = []
-            for path in paths:
-                dirpath, rid = self._resource(path)
-                if rid is None:
-                    # In production mode log an error, do not return a 404
-                    # XXX the erroneous content is cached anyway
-                    LOGGER.error('concatenated data url error: %r file '
-                                 'does not exist', path)
-                    if self.config.debugmode:
-                        raise ConcatFileNotFoundError(path)
-                else:
-                    concat_data.append(open(osp.join(dirpath, rid)).read())
             with open(filepath, 'wb') as f:
-                f.write('\n'.join(concat_data))
+                for path in paths:
+                    dirpath, rid = self._resource(path)
+                    if rid is None:
+                        # In production mode log an error, do not return a 404
+                        # XXX the erroneous content is cached anyway
+                        LOGGER.error('concatenated data url error: %r file '
+                                     'does not exist', path)
+                        if self.config.debugmode:
+                            raise ConcatFileNotFoundError(path)
+                    else:
+                        for line in open(osp.join(dirpath, rid)):
+                            f.write(line)
+                        f.write('\n')
 
     def _up_to_date(self, filepath, paths):
         """
