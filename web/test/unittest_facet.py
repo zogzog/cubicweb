@@ -45,7 +45,7 @@ class BaseFacetTC(CubicWebTC):
         # selection is cluttered because rqlst has been prepared for facet (it
         # is not in real life)
         self.assertEqual(f.select.as_string(),
-                          'DISTINCT Any  WHERE X is CWUser, X in_group D, D eid %s' % guests)
+                         'DISTINCT Any  WHERE X is CWUser, X in_group D, D eid %s' % guests)
 
     def test_relation_optional_rel(self):
         req = self.request()
@@ -175,6 +175,52 @@ class BaseFacetTC(CubicWebTC):
         # is not in real life)
         self.assertEqual(f.select.as_string(),
                           "DISTINCT Any  WHERE X is CWUser, X login 'admin'")
+
+    def test_rql_path_eid(self):
+        req, rset, rqlst, filtered_variable = self.prepare_rqlst()
+        facet.RQLPathFacet.path = [('X created_by U'), ('U owned_by O'), ('O login OL')]
+        f = facet.RQLPathFacet(req, rset=rset,
+                               select=rqlst.children[0],
+                               filtered_variable=filtered_variable)
+        f.filter_variable = 'O'
+        f.label_variable = 'OL'
+
+        self.assertEqual(f.vocabulary(), [(u'admin', self.user().eid),])
+        # ensure rqlst is left unmodified
+        self.assertEqual(rqlst.as_string(), 'DISTINCT Any  WHERE X is CWUser')
+        #rqlst = rset.syntax_tree()
+        self.assertEqual(f.possible_values(),
+                          [str(self.user().eid),])
+        # ensure rqlst is left unmodified
+        self.assertEqual(rqlst.as_string(), 'DISTINCT Any  WHERE X is CWUser')
+        req.form[f.__regid__] = '1'
+        f.add_rql_restrictions()
+        # selection is cluttered because rqlst has been prepared for facet (it
+        # is not in real life)
+        self.assertEqual(f.select.as_string(),
+                         "DISTINCT Any  WHERE X is CWUser, X created_by F, F owned_by G, G eid 1")
+
+    def test_rql_path_attr(self):
+        req, rset, rqlst, filtered_variable = self.prepare_rqlst()
+        facet.RQLPathFacet.path = [('X created_by U'), ('U owned_by O'), ('O login OL')]
+        f = facet.RQLPathFacet(req, rset=rset,
+                               select=rqlst.children[0],
+                               filtered_variable=filtered_variable)
+        f.filter_variable = 'OL'
+
+        self.assertEqual(f.vocabulary(), [(u'admin', 'admin'),])
+        # ensure rqlst is left unmodified
+        self.assertEqual(rqlst.as_string(), 'DISTINCT Any  WHERE X is CWUser')
+        #rqlst = rset.syntax_tree()
+        self.assertEqual(f.possible_values(), ['admin',])
+        # ensure rqlst is left unmodified
+        self.assertEqual(rqlst.as_string(), 'DISTINCT Any  WHERE X is CWUser')
+        req.form[f.__regid__] = 'admin'
+        f.add_rql_restrictions()
+        # selection is cluttered because rqlst has been prepared for facet (it
+        # is not in real life)
+        self.assertEqual(f.select.as_string(),
+                         "DISTINCT Any  WHERE X is CWUser, X created_by G, G owned_by H, H login 'admin'")
 
 
 if __name__ == '__main__':

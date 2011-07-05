@@ -30,6 +30,7 @@ Classes you'll want to use
 .. autoclass:: cubicweb.web.facet.RelationAttributeFacet
 .. autoclass:: cubicweb.web.facet.HasRelationFacet
 .. autoclass:: cubicweb.web.facet.AttributeFacet
+.. autoclass:: cubicweb.web.facet.RQLPathFacet
 .. autoclass:: cubicweb.web.facet.RangeFacet
 .. autoclass:: cubicweb.web.facet.DateRangeFacet
 
@@ -150,8 +151,8 @@ def prepare_vocabulary_select(select, filtered_variable, rtype, role,
     """
     newvar = _add_rtype_relation(select, filtered_variable, rtype, role)[0]
     if select_target_entity:
-        if select.groupby:
-            select.add_group_var(newvar)
+        # if select.groupby: XXX we remove groupby now
+        #     select.add_group_var(newvar)
         select.add_selected(newvar)
     # add is restriction if necessary
     if filtered_variable.stinfo['typerel'] is None:
@@ -300,10 +301,6 @@ def _add_rtype_relation(select, variable, rtype, role):
     select.add_restriction(newrel)
     return newvar, newrel
 
-def _add_eid_restr(rel, restrvar, value):
-    rrel = nodes.make_constant_restriction(restrvar, 'eid', value, 'Int')
-    rel.parent.replace(rel, nodes.And(rel, rrel))
-
 def _remove_relation(select, rel, var):
     """remove a constraint relation from the syntax tree"""
     # remove the relation
@@ -330,6 +327,13 @@ def _set_orderby(select, newvar, sortasc, sortfuncname):
         sortfunc.append(vref)
         term = nodes.SortTerm(sortfunc, sortasc)
         select.add_sort_term(term)
+
+def _get_var(select, varname, varmap):
+    try:
+        return varmap[varname]
+    except KeyError:
+        varmap[varname] = var = select.make_variable()
+        return var
 
 
 _prepare_vocabulary_rqlst = deprecated('[3.13] renamed prepare_vocabulary_select')(
@@ -404,6 +408,21 @@ class AbstractFacet(AppObject):
     def __repr__(self):
         return '<%s>' % self.__class__.__name__
 
+    def get_widget(self):
+        """Return the widget instance to use to display this facet, or None if
+        the facet can't do anything valuable (only one value in the vocabulary
+        for instance).
+        """
+        raise NotImplementedError
+
+    def add_rql_restrictions(self):
+        """When some facet criteria has been updated, this method is called to
+        add restriction for this facet into the rql syntax tree. It should get
+        back its value in form parameters, and modify the syntax tree
+        (`self.select`) accordingly.
+        """
+        raise NotImplementedError
+
     @property
     def operator(self):
         """Return the operator (AND or OR) to use for this facet when multiple
@@ -420,21 +439,6 @@ class AbstractFacet(AppObject):
             return self._cw.execute(rql, args)
         except Unauthorized:
             return []
-
-    def get_widget(self):
-        """Return the widget instance to use to display this facet, or None if
-        the facet can't do anything valuable (only one value in the vocabulary
-        for instance).
-        """
-        raise NotImplementedError
-
-    def add_rql_restrictions(self):
-        """When some facet criteria has been updated, this method is called to
-        add restriction for this facet into the rql syntax tree. It should get
-        back its value in form parameters, and modify the syntax tree
-        (`self.select`) accordingly.
-        """
-        raise NotImplementedError
 
     @property
     def wdgclass(self):
@@ -515,7 +519,7 @@ class RelationFacet(VocabularyFacet):
     set. By default, `i18nable` will be set according to the schema, but you can
     force its value by setting it has a class attribute.
 
-    You can filter out target entity types by specifying `target_type`
+    You can filter out target entity types by specifying `target_type`.
 
     By default, vocabulary will be displayed sorted on `target_attr` value in an
     ascending way. You can control sorting with:
@@ -561,8 +565,14 @@ class RelationFacet(VocabularyFacet):
     # class attributes to configure the relation facet
     rtype = None
     role = 'subject'
-    target_attr = 'eid'
     target_type = None
+    target_attr = 'eid'
+    # for subclasses parametrization, should not change if you want a
+    # RelationFacet
+    target_attr_type = 'Int'
+    restr_attr = 'eid'
+    restr_attr_type = 'Int'
+    comparator = '=' # could be '<', '<=', '>', '>='
     # set this to a stored procedure name if you want to sort on the result of
     # this function's result instead of direct value
     sortfunc = None
@@ -600,7 +610,7 @@ class RelationFacet(VocabularyFacet):
                 select.add_type_restriction(var, self.target_type)
             try:
                 rset = self.rqlexec(select.as_string(), self.cw_rset.args)
-            except:
+            except Exception:
                 self.exception('error while getting vocabulary for %s, rql: %s',
                                self, select.as_string())
                 return ()
@@ -626,10 +636,10 @@ class RelationFacet(VocabularyFacet):
                                          self.role, select_target_entity=True)
             else:
                 insert_attr_select_relation(
-                    select, self.filtered_variable, self.rtype, self.role, self.target_attr,
-                    select_target_entity=False)
+                    select, self.filtered_variable, self.rtype, self.role,
+                    self.target_attr, select_target_entity=False)
             values = [unicode(x) for x, in self.rqlexec(select.as_string())]
-        except:
+        except Exception:
             self.exception('while computing values for %s', self)
             return []
         finally:
@@ -708,10 +718,14 @@ class RelationFacet(VocabularyFacet):
         return support
 
     def value_restriction(self, restrvar, rel, value):
+        if self.restr_attr != 'eid':
+            self.select.set_distinct(True)
         if isinstance(value, basestring):
             # only one value selected
             if value:
-                self.select.add_eid_restriction(restrvar, value)
+                self.select.add_constant_restriction(
+                    restrvar, self.restr_attr, value,
+                    self.restr_attr_type)
             else:
                 rel.parent.replace(rel, nodes.Not(rel))
         elif self.operator == 'OR':
@@ -722,17 +736,23 @@ class RelationFacet(VocabularyFacet):
             if '' in value:
                 value.remove('')
                 self._add_not_rel_restr(rel)
-            _add_eid_restr(rel, restrvar, value)
+            self._and_restriction(rel, restrvar, value)
         else:
             # multiple values with AND operator
             if '' in value:
                 value.remove('')
                 self._add_not_rel_restr(rel)
-            _add_eid_restr(rel, restrvar, value.pop())
+            self._and_restriction(rel, restrvar, value.pop())
             while value:
                 restrvar, rtrel = _make_relation(self.select, filtered_variable,
                                                  self.rtype, self.role)
-                _add_eid_restr(rel, restrvar, value.pop())
+                self._and_restriction(rel, restrvar, value.pop())
+
+    def _and_restriction(self, rel, restrvar, value):
+        rrel = nodes.make_constant_restriction(restrvar, self.restr_attr,
+                                               value, self.restr_attr_type)
+        rel.parent.replace(rel, nodes.And(rel, rrel))
+
 
     @cached
     def _search_card(self, cards):
@@ -787,7 +807,7 @@ class RelationFacet(VocabularyFacet):
             self.filtered_variable.name, subj, self.rtype, obj, restrictions)
         try:
             return bool(self.rqlexec(rql, self.cw_rset and self.cw_rset.args))
-        except:
+        except Exception:
             # catch exception on executing rql, work-around #1356884 until a
             # proper fix
             self.exception('cant handle rql generated by %s', self)
@@ -806,7 +826,7 @@ class RelationAttributeFacet(RelationFacet):
 
     * `label_vid` doesn't make sense here
 
-    * you should specify the attribute type using `attrtype` if it's not a
+    * you should specify the attribute type using `target_attr_type` if it's not a
       String
 
     * you can specify a comparison operator using `comparator`
@@ -839,9 +859,17 @@ class RelationAttributeFacet(RelationFacet):
     """
     _select_target_entity = False
     # attribute type
-    attrtype = 'String'
+    target_attr_type = 'String'
     # type of comparison: default is an exact match on the attribute value
     comparator = '=' # could be '<', '<=', '>', '>='
+
+    @property
+    def restr_attr(self):
+        return self.target_attr
+
+    @property
+    def restr_attr_type(self):
+        return self.target_attr_type
 
     def rset_vocabulary(self, rset):
         if self.i18nable:
@@ -854,32 +882,6 @@ class RelationAttributeFacet(RelationFacet):
         if self.sortasc:
             return sorted(values)
         return reversed(sorted(values))
-
-    def add_rql_restrictions(self):
-        """add restriction for this facet into the rql syntax tree"""
-        value = self._cw.form.get(self.__regid__)
-        if not value:
-            return
-        filtered_variable = self.filtered_variable
-        restrvar = _add_rtype_relation(self.select, filtered_variable, self.rtype,
-                                       self.role)[0]
-        self.select.set_distinct(True)
-        if isinstance(value, basestring) or self.operator == 'OR':
-            # only one value selected or multiple ORed values: using IN is fine
-            self.select.add_constant_restriction(
-                restrvar, self.target_attr, value,
-                self.attrtype, self.comparator)
-        else:
-            # multiple values with AND operator
-            self.select.add_constant_restriction(
-                restrvar, self.target_attr, value.pop(),
-                self.attrtype, self.comparator)
-            while value:
-                restrvar = _add_rtype_relation(self.select, filtered_variable, self.rtype,
-                                               self.role)[0]
-                self.select.add_constant_restriction(
-                    restrvar, self.target_attr, value.pop(),
-                    self.attrtype, self.comparator)
 
 
 class AttributeFacet(RelationAttributeFacet):
@@ -939,7 +941,7 @@ class AttributeFacet(RelationAttributeFacet):
             _set_orderby(select, newvar, self.sortasc, self.sortfunc)
             try:
                 rset = self.rqlexec(select.as_string(), self.cw_rset.args)
-            except:
+            except Exception:
                 self.exception('error while getting vocabulary for %s, rql: %s',
                                self, select.as_string())
                 return ()
@@ -956,7 +958,181 @@ class AttributeFacet(RelationAttributeFacet):
             return
         filtered_variable = self.filtered_variable
         self.select.add_constant_restriction(filtered_variable, self.rtype, value,
-                                            self.attrtype, self.comparator)
+                                            self.target_attr_type, self.comparator)
+
+
+class RQLPathFacet(RelationFacet):
+    """Base facet to filter some entities according to an arbitrary rql
+    path. Path should be specified as a list of 3-uples or triplet string, where
+    'X' represent the filtered variable. You should specify using
+    `filter_variable` the snippet variable that will be used to filter out
+    results. You may also specify a `label_variable`. If you want to filter on
+    an attribute value, you usually don't want to specify the later since it's
+    the same as the filter variable, though you may have to specify the attribute
+    type using `restr_attr_type` if there are some type ambiguity in the schema
+    for the attribute.
+
+    Using this facet, we can rewrite facets we defined previously:
+
+    .. sourcecode:: python
+
+      class AgencyFacet(RQLPathFacet):
+          __regid__ = 'agency'
+          # this facet should only be selected when visualizing offices
+          __select__ = RelationFacet.__select__ & is_instance('Office')
+          # this facet is a filter on the 'Agency' entities linked to the office
+          # through the 'proposed_by' relation, where the office is the subject
+          # of the relation
+          path = ['X has_address O', 'O name N']
+          filter_variable = 'O'
+          label_variable = 'N'
+
+      class PostalCodeFacet(RQLPathFacet):
+          __regid__ = 'postalcode'
+          # this facet should only be selected when visualizing offices
+          __select__ = RelationAttributeFacet.__select__ & is_instance('Office')
+          # this facet is a filter on the PostalAddress entities linked to the
+          # office through the 'has_address' relation, where the office is the
+          # subject of the relation
+          path = ['X has_address O', 'O postal_code PC']
+          filter_variable = 'PC'
+
+    Though some features, such as 'no value' or automatic internationalization,
+    won't work. This facet class is designed to be used for cases where
+    :class:`RelationFacet` or :class:`RelationAttributeFacet` can't do the trick
+    (e.g when you want to filter on entities where are not directly linked to
+     the filtered entities).
+    """
+    # must be specified
+    path = None
+    filter_variable = None
+    # may be specified
+    label_variable = None
+    # usually guessed, but may be explicitly specified
+    restr_attr = None
+    restr_attr_type = None
+
+    # XXX disabled features
+    i18nable = False
+    no_relation = False
+    support_and = False
+
+    def __init__(self, *args, **kwargs):
+        super(RQLPathFacet, self).__init__(*args, **kwargs)
+        assert self.path and isinstance(self.path, (list, tuple)), \
+               'path should be a list of 3-uples, not %s' % self.path
+        for part in self.path:
+            if isinstance(part, basestring):
+                part = part.split()
+            assert len(part) == 3, \
+                   'path should be a list of 3-uples, not %s' % part
+
+    def __repr__(self):
+        return '<%s %s>' % (self.__class__.__name__,
+                            ','.join(str(p) for p in self.path))
+
+    def vocabulary(self):
+        """return vocabulary for this facet, eg a list of 2-uple (label, value)
+        """
+        select = self.select
+        select.save_state()
+        if self.rql_sort:
+            sort = self.sortasc
+        else:
+            sort = None # will be sorted on label
+        try:
+            cleanup_select(select, self.filtered_variable)
+            varmap, restrvar = self.add_path_to_select()
+            select.append_selected(nodes.VariableRef(restrvar))
+            if self.label_variable:
+                attrvar = varmap[self.label_variable]
+            else:
+                attrvar = restrvar
+            select.append_selected(nodes.VariableRef(attrvar))
+            if sort is not None:
+                _set_orderby(select, attrvar, sort, self.sortfunc)
+            try:
+                rset = self.rqlexec(select.as_string(), self.cw_rset.args)
+            except Exception:
+                self.exception('error while getting vocabulary for %s, rql: %s',
+                               self, select.as_string())
+                return ()
+        finally:
+            select.recover()
+        # don't call rset_vocabulary on empty result set, it may be an empty
+        # *list* (see rqlexec implementation)
+        values = rset and self.rset_vocabulary(rset) or []
+        if self._include_no_relation():
+            values.insert(0, (self._cw._(self.no_relation_label), ''))
+        return values
+
+    def possible_values(self):
+        """return a list of possible values (as string since it's used to
+        compare to a form value in javascript) for this facet
+        """
+        select = self.select
+        select.save_state()
+        try:
+            cleanup_select(select, self.filtered_variable)
+            varmap, restrvar = self.add_path_to_select(skiplabel=True)
+            select.append_selected(nodes.VariableRef(restrvar))
+            values = [unicode(x) for x, in self.rqlexec(select.as_string())]
+        except Exception:
+            self.exception('while computing values for %s', self)
+            return []
+        finally:
+            select.recover()
+        if self._include_no_relation():
+            values.append('')
+        return values
+
+    def add_rql_restrictions(self):
+        """add restriction for this facet into the rql syntax tree"""
+        value = self._cw.form.get(self.__regid__)
+        if value is None:
+            return
+        varmap, restrvar = self.add_path_to_select(
+            skiplabel=True, skipattrfilter=True)
+        self.value_restriction(restrvar, None, value)
+
+    def add_path_to_select(self, skiplabel=False, skipattrfilter=False):
+        varmap = {'X': self.filtered_variable}
+        actual_filter_variable = None
+        for part in self.path:
+            if isinstance(part, basestring):
+                part = part.split()
+            subject, rtype, object = part
+            if skiplabel and object == self.label_variable:
+                continue
+            if object == self.filter_variable:
+                rschema = self._cw.vreg.schema.rschema(rtype)
+                if rschema.final:
+                    # filter variable is an attribute variable
+                    if self.restr_attr is None:
+                        self.restr_attr = rtype
+                    if self.restr_attr_type is None:
+                        attrtypes = set(obj for subj,obj in rschema.rdefs)
+                        if len(attrtypes) > 1:
+                            raise Exception('ambigous attribute %s, specify attrtype on %s'
+                                            % (rtype, self.__class__))
+                        self.restr_attr_type = iter(attrtypes).next()
+                    if skipattrfilter:
+                        actual_filter_variable = subject
+                        continue
+            subjvar = _get_var(self.select, subject, varmap)
+            objvar = _get_var(self.select, object, varmap)
+            rel = nodes.make_relation(subjvar, rtype, (objvar,),
+                                      nodes.VariableRef)
+            self.select.add_restriction(rel)
+        if self.restr_attr is None:
+            self.restr_attr = 'eid'
+        if self.restr_attr_type is None:
+            self.restr_attr_type = 'Int'
+        if actual_filter_variable:
+            restrvar = varmap[actual_filter_variable]
+        else:
+            restrvar = varmap[self.filter_variable]
+        return varmap, restrvar
 
 
 class RangeFacet(AttributeFacet):
@@ -988,7 +1164,7 @@ class RangeFacet(AttributeFacet):
 
     .. _jquery: http://www.jqueryui.com/
     """
-    attrtype = 'Float' # only numerical types are supported
+    target_attr_type = 'Float' # only numerical types are supported
     needs_update = False # not supported actually
 
     @property
@@ -1033,7 +1209,7 @@ class RangeFacet(AttributeFacet):
         self.select.add_constant_restriction(self.filtered_variable,
                                              self.rtype,
                                              self.formatvalue(value),
-                                             self.attrtype, operator)
+                                             self.target_attr_type, operator)
 
 
 
@@ -1045,7 +1221,7 @@ class DateRangeFacet(RangeFacet):
 
     .. image:: ../images/facet_date_range.png
     """
-    attrtype = 'Date' # only date types are supported
+    target_attr_type = 'Date' # only date types are supported
 
     @property
     def wdgclass(self):
