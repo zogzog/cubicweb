@@ -10,44 +10,6 @@ what kind of job the automatic entity form does.
 
 .. _`tracker`: http://www.cubicweb.org/project/cubicweb-tracker
 
-Patching the session object
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-In order to play interactively with web side application objects, we
-have to cheat a bit: we will decorate the session object with some
-missing artifacts that should belong to a web request object. With
-that we can instantiate and render forms interactively.
-
-The function below does the minimum to allow going through this
-exercice. Some attributes or methods may be missing for other
-purposes. It is nevertheless not complicated to enhance it if need
-arises.
-
-.. sourcecode:: python
-
- def monkey_patch_session(session):
-     """ useful to use the cw shell session object
-     with web appobjects, which expect more than a plain
-     data repository session
-     """
-     # for autoform selection
-     session.json_request = False
-     session.url = lambda: u'http://perdu.com'
-     session.session = session
-     session.form = {}
-     session.list_form_param = lambda *args: []
-     # for render
-     session.use_fckeditor = lambda: False
-     session._ressources = []
-     session.add_js = session.add_css = lambda *args: session._ressources.append(args)
-     session.external_resource = lambda x:{}
-     session._tabcount = 0
-     def next_tabindex():
-         session._tabcount += 1
-         return session._tabcount
-     session.next_tabindex = next_tabindex
-     return session
-
 Populating the database
 ~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -71,9 +33,16 @@ Now let's see what the edition form builds for us.
 
 .. sourcecode:: python
 
- >>> monkey_patch_session(session)
- >>> form = session.vreg['forms'].select('edition', session, rset=rql('Ticket T'))
+ >>> cnx.use_web_compatible_requests('http://fakeurl.com')
+ >>> req = cnx.request()
+ >>> form = req.vreg['forms'].select('edition', req, rset=rql('Ticket T'))
  >>> html = form.render()
+
+.. note::
+
+  In order to play interactively with web side application objects, we have to
+  cheat a bit to have request object that will looks like HTTP request object, by
+  calling :meth:`use_web_compatible_requests()` on the connection.
 
 This creates an automatic entity form. The ``.render()`` call yields
 an html (unicode) string. The html output is shown below (with
