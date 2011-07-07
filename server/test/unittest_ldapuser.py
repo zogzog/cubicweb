@@ -386,7 +386,7 @@ class LDAPUserSourceTC(CubicWebTC):
         self.assertEqual(len(rset), 1)
         e = rset.get_entity(0, 0)
         self.assertEqual(e.eid, eid)
-        self.assertEqual(e.cw_metainformation(), {'source': {'type': u'native', 'uri': u'system'},
+        self.assertEqual(e.cw_metainformation(), {'source': {'type': u'native', 'uri': u'system', 'use-cwuri-as-url': False},
                                                   'type': 'CWUser',
                                                   'extid': None})
         self.assertEqual(e.cw_source[0].name, 'system')

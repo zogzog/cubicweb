@@ -160,11 +160,11 @@ cubicweb-password = gingkow
         # since they are orderd by eid, we know the 3 first one is coming from the system source
         # and the others from external source
         self.assertEqual(rset.get_entity(0, 0).cw_metainformation(),
-                          {'source': {'type': 'native', 'uri': 'system'},
+                          {'source': {'type': 'native', 'uri': 'system', 'use-cwuri-as-url': False},
                            'type': u'Card', 'extid': None})
         externent = rset.get_entity(3, 0)
         metainf = externent.cw_metainformation()
-        self.assertEqual(metainf['source'], {'type': 'pyrorql', 'base-url': 'http://extern.org/', 'uri': 'extern'})
+        self.assertEqual(metainf['source'], {'type': 'pyrorql', 'base-url': 'http://extern.org/', 'uri': 'extern', 'use-cwuri-as-url': False})
         self.assertEqual(metainf['type'], 'Card')
         self.assert_(metainf['extid'])
         etype = self.sexecute('Any ETN WHERE X is ET, ET name ETN, X eid %(x)s',
