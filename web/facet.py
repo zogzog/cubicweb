@@ -256,7 +256,8 @@ def _may_be_removed(rel, schema, variable):
             # XXX: X title LOWER(T) if it makes sense?
             return None
         if rschema.final:
-            if len(ovar.stinfo['relations']) == 1:
+            if len(ovar.stinfo['relations']) == 1 \
+                   and not ovar.stinfo.get('having'):
                 # attribute selection
                 return ovar
             return None

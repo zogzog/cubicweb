@@ -4,14 +4,17 @@ from cubicweb.web import facet
 
 class BaseFacetTC(CubicWebTC):
 
-    def prepare_rqlst(self):
+    def prepare_rqlst(self, rql='CWUser X', baserql='Any X WHERE X is CWUser',
+                      preparedrql='DISTINCT Any  WHERE X is CWUser',
+                      mainvar='X'):
         req = self.request()
-        rset = self.execute('CWUser X')
+        rset = self.execute(rql)
         rqlst = rset.syntax_tree().copy()
-        filtered_variable, baserql = facet.init_facets(rset, rqlst.children[0])
-        self.assertEqual(filtered_variable.name, 'X')
-        self.assertEqual(baserql, 'Any X WHERE X is CWUser')
-        self.assertEqual(rqlst.as_string(), 'DISTINCT Any  WHERE X is CWUser')
+        filtered_variable, baserql = facet.init_facets(rset, rqlst.children[0],
+                                                       mainvar=mainvar)
+        self.assertEqual(filtered_variable.name, mainvar)
+        self.assertEqual(baserql, baserql)
+        self.assertEqual(rqlst.as_string(), preparedrql)
         return req, rset, rqlst, filtered_variable
 
     def _in_group_facet(self, cls=facet.RelationFacet, no_relation=False):
@@ -222,6 +225,61 @@ class BaseFacetTC(CubicWebTC):
         self.assertEqual(f.select.as_string(),
                          "DISTINCT Any  WHERE X is CWUser, X created_by G, G owned_by H, H login 'admin'")
 
+    def prepareg_aggregat_rqlst(self):
+        return self.prepare_rqlst(
+            'Any 1, COUNT(X) WHERE X is CWUser, X creation_date XD, '
+            'X modification_date XM, Y creation_date YD, Y is CWGroup '
+            'HAVING DAY(XD)>=DAY(YD) AND DAY(XM)<=DAY(YD)', mainvar='X',
+            baserql='DISTINCT Any  WHERE X is CWUser, X creation_date XD, '
+            'X modification_date XM, Y creation_date YD, Y is CWGroup '
+            'HAVING DAY(XD) >= DAY(YD), DAY(XM) <= DAY(YD)',
+            preparedrql='DISTINCT Any  WHERE X is CWUser, X creation_date XD, '
+            'X modification_date XM, Y creation_date YD, Y is CWGroup '
+            'HAVING DAY(XD) >= DAY(YD), DAY(XM) <= DAY(YD)')
+
+
+    def test_aggregat_query_cleanup_select(self):
+        req, rset, rqlst, filtered_variable = self.prepareg_aggregat_rqlst()
+        select = rqlst.children[0]
+        facet.cleanup_select(select, filtered_variable=filtered_variable)
+        self.assertEqual(select.as_string(),
+                         'DISTINCT Any  WHERE X is CWUser, X creation_date XD, '
+                         'X modification_date XM, Y creation_date YD, Y is CWGroup '
+                         'HAVING DAY(XD) >= DAY(YD), DAY(XM) <= DAY(YD)')
+
+    def test_aggregat_query_rql_path(self):
+        req, rset, rqlst, filtered_variable = self.prepareg_aggregat_rqlst()
+        facet.RQLPathFacet.path = [('X created_by U'), ('U owned_by O'), ('O login OL')]
+        f = facet.RQLPathFacet(req, rset=rset,
+                               select=rqlst.children[0],
+                               filtered_variable=filtered_variable)
+        f.filter_variable = 'OL'
+        self.assertEqual(f.vocabulary(), [(u'admin', u'admin')])
+        self.assertEqual(f.possible_values(), ['admin'])
+        req.form[f.__regid__] = 'admin'
+        f.add_rql_restrictions()
+        self.assertEqual(f.select.as_string(),
+                         "DISTINCT Any  WHERE X is CWUser, X creation_date XD, "
+                         "X modification_date XM, Y creation_date YD, Y is CWGroup, "
+                         "X created_by G, G owned_by H, H login 'admin' "
+                         "HAVING DAY(XD) >= DAY(YD), DAY(XM) <= DAY(YD)")
+
+    def test_aggregat_query_attribute(self):
+        req, rset, rqlst, filtered_variable = self.prepareg_aggregat_rqlst()
+        f = facet.AttributeFacet(req, rset=rset,
+                                 select=rqlst.children[0],
+                                 filtered_variable=filtered_variable)
+        f.rtype = 'login'
+        self.assertEqual(f.vocabulary(),
+                          [(u'admin', u'admin'), (u'anon', u'anon')])
+        self.assertEqual(f.possible_values(),
+                          ['admin', 'anon'])
+        req.form[f.__regid__] = 'admin'
+        f.add_rql_restrictions()
+        self.assertEqual(f.select.as_string(),
+                          "DISTINCT Any  WHERE X is CWUser, X creation_date XD, "
+                          "X modification_date XM, Y creation_date YD, Y is CWGroup, X login 'admin' "
+                          "HAVING DAY(XD) >= DAY(YD), DAY(XM) <= DAY(YD)")
 
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main

@@ -921,6 +921,7 @@ class relation_possible(EntitySelector):
 
     # hack hack hack
     def __call__(self, cls, req, **kwargs):
+        # hack hack hack
         if self.strict:
             return EntitySelector.__call__(self, cls, req, **kwargs)
         return EClassSelector.__call__(self, cls, req, **kwargs)
