@@ -954,6 +954,12 @@ WHERE _S.cw_ambiguous_inlined=_A.cw_eid) AS _T0 ON (_X.cw_multisource_inlined_re
      '''SELECT rel_tags0.eid_from, rel_tags0.eid_to, rel_tags1.eid_from
 FROM tags_relation AS rel_tags0 LEFT OUTER JOIN tags_relation AS rel_tags1 ON (rel_tags1.eid_to=123)
 WHERE rel_tags0.eid_from=123'''),
+
+    ('Any CASE, CALIBCFG, CFG '
+     'WHERE CASE eid 1, CFG ecrit_par CASE, CALIBCFG? ecrit_par CASE',
+     '''SELECT _CFG.cw_ecrit_par, _CALIBCFG.cw_eid, _CFG.cw_eid
+FROM cw_Note AS _CFG LEFT OUTER JOIN cw_Note AS _CALIBCFG ON (_CALIBCFG.cw_ecrit_par=_CFG.cw_ecrit_par)
+WHERE _CFG.cw_ecrit_par=1'''),
     ]
 
 VIRTUAL_VARS = [
