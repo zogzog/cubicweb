@@ -1176,6 +1176,47 @@ class RangeFacet(AttributeFacet):
     def wdgclass(self):
         return FacetRangeWidget
 
+    def _range_rset(self):
+        select = self.select
+        select.save_state()
+        try:
+            filtered_variable = self.filtered_variable
+            cleanup_select(select, filtered_variable)
+            newvar = _add_rtype_relation(select, filtered_variable, self.rtype, self.role)[0]
+            minf = nodes.Function('MIN')
+            minf.append(nodes.VariableRef(newvar))
+            select.add_selected(minf)
+            maxf = nodes.Function('MAX')
+            maxf.append(nodes.VariableRef(newvar))
+            select.add_selected(maxf)
+            # add is restriction if necessary
+            if filtered_variable.stinfo['typerel'] is None:
+                etypes = frozenset(sol[filtered_variable.name] for sol in select.solutions)
+                select.add_type_restriction(filtered_variable, etypes)
+            try:
+                return self.rqlexec(select.as_string(), self.cw_rset.args)
+            except Exception:
+                self.exception('error while getting vocabulary for %s, rql: %s',
+                               self, select.as_string())
+                return ()
+        finally:
+            select.recover()
+
+    def vocabulary(self):
+        """return vocabulary for this facet, eg a list of 2-uple (label, value)
+        """
+        rset = self._range_rset()
+        if rset:
+            minv, maxv = rset[0]
+            return [(unicode(minv), minv), (unicode(maxv), maxv)]
+        return []
+
+    def possible_values(self):
+        """Return a list of possible values (as string since it's used to
+        compare to a form value in javascript) for this facet.
+        """
+        return [strval for strval, val in self.vocabulary()]
+
     def get_widget(self):
         """return the widget instance to use to display this facet"""
         values = set(value for _, value in self.vocabulary() if value is not None)
