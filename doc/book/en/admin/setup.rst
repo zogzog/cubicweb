@@ -144,9 +144,9 @@ managing python packages and their dependencies. It is fully compatible with
 .. _`virtualenv`: http://virtualenv.openplans.org/
 
 A working compilation chain is needed to build the modules that include C
-extensions. If you definitively wont, installing `Lxml
-<http://codespeak.net/lxml/>`_, `Twisted <http://twistedmatrix.com/trac/>`_ and
-`libgecode <http://www.gecode.org/>`_ will help.
+extensions. If you definitively wont, installing `Lxml <http://lxml.de/>`_,
+`Twisted Web <http://twistedmatrix.com/trac/wiki/Downloads/>`_ and `libgecode
+<http://www.gecode.org/>`_ will help.
 
 To install |cubicweb| and its dependencies, just run::
 
