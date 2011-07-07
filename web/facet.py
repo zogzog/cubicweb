@@ -1304,10 +1304,10 @@ class FacetVocabularyWidget(HTMLWidget):
     def _render(self):
         w = self.w
         title = xml_escape(self.facet.title)
-        facetid = xml_escape(self.facet.__regid__)
+        facetid = make_uid(self.facet.__regid__)
         w(u'<div id="%s" class="facet">\n' % facetid)
         w(u'<div class="facetTitle" cubicweb:facetName="%s">%s</div>\n' %
-          (xml_escape(facetid), title))
+          (xml_escape(self.facet.__regid__), title))
         if self.facet._support_and_compat():
             _ = self.facet._cw._
             w(u'''<select name="%s" class="radio facetOperator" title="%s">
@@ -1338,10 +1338,10 @@ class FacetStringWidget(HTMLWidget):
     def _render(self):
         w = self.w
         title = xml_escape(self.facet.title)
-        facetid = xml_escape(self.facet.__regid__)
+        facetid = make_uid(self.facet.__regid__)
         w(u'<div id="%s" class="facet">\n' % facetid)
         w(u'<div class="facetTitle" cubicweb:facetName="%s">%s</div>\n' %
-               (facetid, title))
+               (xml_escape(self.facet.__regid__), title))
         w(u'<input name="%s" type="text" value="%s" />\n' % (facetid, self.value or u''))
         w(u'</div>\n')
 
@@ -1362,13 +1362,13 @@ class FacetRangeWidget(HTMLWidget):
         slide: function(event, ui) {
             jQuery('#%(sliderid)s_inf').html(_formatter(ui.values[0]));
             jQuery('#%(sliderid)s_sup').html(_formatter(ui.values[1]));
-            jQuery('input[name=%(facetid)s_inf]').val(ui.values[0]);
-            jQuery('input[name=%(facetid)s_sup]').val(ui.values[1]);
+            jQuery('input[name=%(facetname)s_inf]').val(ui.values[0]);
+            jQuery('input[name=%(facetname)s_sup]').val(ui.values[1]);
         }
    });
    // use JS formatter to format value on page load
-   jQuery('#%(sliderid)s_inf').html(_formatter(jQuery('input[name=%(facetid)s_inf]').val()));
-   jQuery('#%(sliderid)s_sup').html(_formatter(jQuery('input[name=%(facetid)s_sup]').val()));
+   jQuery('#%(sliderid)s_inf').html(_formatter(jQuery('input[name=%(facetname)s_inf]').val()));
+   jQuery('#%(sliderid)s_sup').html(_formatter(jQuery('input[name=%(facetname)s_sup]').val()));
 '''
     #'# make emacs happier
     def __init__(self, facet, minvalue, maxvalue):
@@ -1385,18 +1385,21 @@ class FacetRangeWidget(HTMLWidget):
         facet._cw.add_js('jquery.ui.js')
         facet._cw.add_css('jquery.ui.css')
         sliderid = make_uid('theslider')
-        facetid = xml_escape(self.facet.__regid__)
+        facetname = self.facet.__regid__
+        facetid = make_uid(facetname)
         facet._cw.html_headers.add_onload(self.onload % {
             'sliderid': sliderid,
             'facetid': facetid,
+            'facetname': facetname,
             'minvalue': self.minvalue,
             'maxvalue': self.maxvalue,
             'formatter': self.formatter,
             })
         title = xml_escape(self.facet.title)
+        facetname = xml_escape(facetname)
         w(u'<div id="%s" class="facet">\n' % facetid)
         w(u'<div class="facetTitle" cubicweb:facetName="%s">%s</div>\n' %
-          (facetid, title))
+          (facetname, title))
         cssclass = 'facetBody'
         if not self.facet.start_unfolded:
             cssclass += ' hidden'
@@ -1404,13 +1407,13 @@ class FacetRangeWidget(HTMLWidget):
         w(u'<span id="%s_inf"></span> - <span id="%s_sup"></span>'
           % (sliderid, sliderid))
         w(u'<input type="hidden" name="%s_inf" value="%s" />'
-          % (facetid, self.minvalue))
+          % (facetname, self.minvalue))
         w(u'<input type="hidden" name="%s_sup" value="%s" />'
-          % (facetid, self.maxvalue))
+          % (facetname, self.maxvalue))
         w(u'<input type="hidden" name="min_%s_inf" value="%s" />'
-          % (facetid, self.minvalue))
+          % (facetname, self.minvalue))
         w(u'<input type="hidden" name="max_%s_sup" value="%s" />'
-          % (facetid, self.maxvalue))
+          % (facetname, self.maxvalue))
         w(u'<div id="%s"></div>' % sliderid)
         w(u'</div>\n')
         w(u'</div>\n')
@@ -1477,7 +1480,7 @@ class CheckBoxFacetWidget(HTMLWidget):
     def _render(self):
         w = self.w
         title = xml_escape(self.facet.title)
-        facetid = xml_escape(self.facet.__regid__)
+        facetid = make_uid(self.facet.__regid__)
         w(u'<div id="%s" class="facet">\n' % facetid)
         cssclass = 'facetValue facetCheckBox'
         if self.selected:
@@ -1491,7 +1494,8 @@ class CheckBoxFacetWidget(HTMLWidget):
           % (cssclass, xml_escape(unicode(self.value))))
         w(u'<div class="facetCheckBoxWidget">')
         w(u'<img src="%s" alt="%s" cubicweb:unselimg="true" />&#160;' % (imgsrc, imgalt))
-        w(u'<label class="facetTitle" cubicweb:facetName="%s"><a href="javascript: {}">%s</a></label>' % (facetid, title))
+        w(u'<label class="facetTitle" cubicweb:facetName="%s"><a href="javascript: {}">%s</a></label>'
+          % (xml_escape(self.facet.__regid__), title))
         w(u'</div>\n')
         w(u'</div>\n')
         w(u'</div>\n')
