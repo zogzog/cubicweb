@@ -189,7 +189,7 @@ function _loadAjaxHtmlHead($node, $head, tag, srcattr) {
                     return resource.substring(dataurl.length);
                 });
                 $srcnode.attr(srcattr, dataurl + '??' + missing_path.join(','));
-            }
+            } else { return ; }
             // === will work if both arguments are of the same type
             if ( $srcnode.attr('type') === 'text/javascript' ) {
                 cw.ajax.evalscripts($srcnode);
