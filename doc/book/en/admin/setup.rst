@@ -91,10 +91,10 @@ list of available cubes using ``apt-cache search cubicweb`` or at the
   :ref:`cubicweb with other database <DatabaseInstallation>` using the following
   virtual packages :
 
-  * `cubicweb-postgresql-support` contains the necessary dependency for
+  * `cubicweb-postgresql-support` contains the necessary dependencies for
     using :ref:`cubicweb with postgresql datatabase <PostgresqlConfiguration>`
 
-  * `cubicweb-mysql-support` contains the necessary dependency for using
+  * `cubicweb-mysql-support` contains the necessary dependencies for using
     :ref:`cubicweb with mysql database <MySqlConfiguration>`.
 
 .. _`list of sources`: http://wiki.debian.org/SourcesList

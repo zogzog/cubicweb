@@ -8,13 +8,12 @@ Installing a development environement on Windows
 Setting up a Windows development environment is not too complicated
 but it requires a series of small steps.
 
-We proposed an example of a typical |cubicweb| installation on Windows
+We propose an example of a typical |cubicweb| installation on Windows
 from sources. We assume everything goes into ``C:\\`` and for any
 package, without version specification, "the latest is
 the greatest".
 
-Take into the mind that adjusting the installation drive should be
-straightforward.
+Mind that adjusting the installation drive should be straightforward.
 
 
 
@@ -104,7 +103,7 @@ with the framework.
 Getting the sources
 -------------------
 
-There are tow ways to get the sources of |cubicweb| and its
+There are two ways to get the sources of |cubicweb| and its
 :ref:`cubes <AvailableCubes>`:
 
 * download the latest release (:ref:`SourceInstallation`)
@@ -153,3 +152,6 @@ Now, register your instance as a windows service with::
 Then start the service with::
 
   net start cubicweb-my_instance
+
+In case this does not work, you should be able to see error reports in
+the application log, using the windows event log viewer.
