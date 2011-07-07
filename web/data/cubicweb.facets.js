@@ -1,7 +1,7 @@
 /** filter form, aka facets, javascript functions
  *
  *  :organization: Logilab
- *  :copyright: 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+ *  :copyright: 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
  *  :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
  */
 
@@ -110,9 +110,11 @@ function buildRQL(divid, vid, paginate, vidargs) {
 
         var d = loadRemote('json', ajaxFuncArgs('filter_select_content', null, toupdate, rql, mainvar));
         d.addCallback(function(updateMap) {
-            for (facetId in updateMap) {
-                var values = updateMap[facetId];
-                cw.jqNode(facetId).find('.facetCheckBox').each(function() {
+            for (facetName in updateMap) {
+                var values = updateMap[facetName];
+		// XXX fine with jquery 1.6
+                //$form.find('div[cubicweb\\:facetName="' + facetName + '"] ~ div .facetCheckBox').each(function() {
+                $form.find('div').filter(function () {return $(this).attr('cubicweb:facetName') == facetName}).parent().find('.facetCheckBox').each(function() {
                     var value = this.getAttribute('cubicweb:value');
                     if (jQuery.inArray(value, values) == -1) {
                         if (!jQuery(this).hasClass('facetValueDisabled')) {
