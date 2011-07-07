@@ -1362,13 +1362,13 @@ class FacetRangeWidget(HTMLWidget):
         slide: function(event, ui) {
             jQuery('#%(sliderid)s_inf').html(_formatter(ui.values[0]));
             jQuery('#%(sliderid)s_sup').html(_formatter(ui.values[1]));
-            jQuery('input[name=%(facetname)s_inf]').val(ui.values[0]);
-            jQuery('input[name=%(facetname)s_sup]').val(ui.values[1]);
+            jQuery('input[name="%(facetname)s_inf"]').val(ui.values[0]);
+            jQuery('input[name="%(facetname)s_sup"]').val(ui.values[1]);
         }
    });
    // use JS formatter to format value on page load
-   jQuery('#%(sliderid)s_inf').html(_formatter(jQuery('input[name=%(facetname)s_inf]').val()));
-   jQuery('#%(sliderid)s_sup').html(_formatter(jQuery('input[name=%(facetname)s_sup]').val()));
+   jQuery('#%(sliderid)s_inf').html(_formatter(jQuery('input[name="%(facetname)s_inf"]').val()));
+   jQuery('#%(sliderid)s_sup').html(_formatter(jQuery('input[name="%(facetname)s_sup"]').val()));
 '''
     #'# make emacs happier
     def __init__(self, facet, minvalue, maxvalue):
