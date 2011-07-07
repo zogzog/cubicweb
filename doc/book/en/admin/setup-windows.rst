@@ -24,9 +24,9 @@ Install the required elements
 |cubicweb| requires some base elements that must be installed to run
 correctly. So, first of all, you must install them :
 
-* python >= 2.5 and < 3 
-  (`Download Python <http://www.python.org/download/>`_). 
-  You can also consider the Python(x,y) distribution 
+* python >= 2.5 and < 3
+  (`Download Python <http://www.python.org/download/>`_).
+  You can also consider the Python(x,y) distribution
   (`Download Python(x,y) <http://code.google.com/p/pythonxy/wiki/Downloads>`_)
   as it makes things easier for Windows user by wrapping in a single installer
   python 2.5 plus numerous useful third-party modules and
@@ -34,24 +34,24 @@ correctly. So, first of all, you must install them :
   IDE for Python under Windows).
 
 * `Twisted <http://twistedmatrix.com/trac/>`_ is an event-driven
-  networking engine 
+  networking engine
   (`Download Twisted <http://twistedmatrix.com/trac/>`_)
 
 * `lxml <http://codespeak.net/lxml/>`_ library
-  (version >=2.2.1) allows working with XML and HTML 
+  (version >=2.2.1) allows working with XML and HTML
   (`Download lxml <http://pypi.python.org/pypi/lxml/2.2.1>`_)
 
-* `Postgresql 8.4 <http://www.postgresql.org/>`_, 
-  an object-relational database system 
-  (`Download Postgresql <http://www.enterprisedb.com/products/pgdownload.do#windows>`_) 
-  and its python drivers 
+* `Postgresql 8.4 <http://www.postgresql.org/>`_,
+  an object-relational database system
+  (`Download Postgresql <http://www.enterprisedb.com/products/pgdownload.do#windows>`_)
+  and its python drivers
   (`Download psycopg <http://www.stickpeople.com/projects/python/win-psycopg/#Version2>`_)
 
-* A recent version of `gettext` 
+* A recent version of `gettext`
   (`Download gettext <http://download.logilab.org/pub/gettext/gettext-0.17-win32-setup.exe>`_).
 
-* `rql <http://www.logilab.org/project/rql>`_, 
-  the recent version of the Relationship Query Language parser 
+* `rql <http://www.logilab.org/project/rql>`_,
+  the recent version of the Relationship Query Language parser
   (`Download rql <http://download.logilab.org/pub/rql/rql-0.26.3.win32-py2.5.exe>`_).
 
 Install optional elements
@@ -60,22 +60,22 @@ Install optional elements
 We recommend you to install the following elements. They are not
 mandatory but they activate very interesting features in |cubicweb|:
 
-* `Simplejson <http://pypi.python.org/pypi/simplejson/>`_ 
-  must be installed if you have python <= 2.5 
+* `Simplejson <http://pypi.python.org/pypi/simplejson/>`_
+  must be installed if you have python <= 2.5
   (`Download simplejson <http://www.osuch.org/python-simplejson%3Awin32>`_).
   It is included in the Standard library from Python >= 2.6.
 
-* `Pyro <http://www.xs4all.nl/~irmen/pyro3/>`_ 
+* `Pyro <http://www.xs4all.nl/~irmen/pyro3/>`_
   enables remote access to cubicweb repository instances.
   It also allows the client and the server not running on the same machine
   (`Download Pyro <http://www.xs4all.nl/~irmen/pyro3/download/>`_).
 
-* `python-ldap <http://pypi.python.org/pypi/python-ldap>`_ 
+* `python-ldap <http://pypi.python.org/pypi/python-ldap>`_
   provides access to LDAP/Active directory directories
   (`Download python-ldap <http://www.osuch.org/python-ldap>`_).
 
-* `graphviz <http://www.graphviz.org/>`_ 
-  which allow schema drawings.  
+* `graphviz <http://www.graphviz.org/>`_
+  which allow schema drawings.
   (`Download graphviz <http://www.graphviz.org/Download_windows.php>`_).
   It is quite recommended (albeit not mandatory).
 
@@ -88,18 +88,17 @@ Useful tools
 Some additional tools could be useful to develop :ref:`cubes <AvailableCubes>`
 with the framework.
 
-* `mercurial <http://mercurial.selenic.com/>`_ and its standard
-  windows GUI (`TortoiseHG <http://tortoisehg.bitbucket.org/>`_) 
-  allow you to get the source code of |cubicweb| from control version
-  repositories. So you will be able to get the latest development
-  version in an easy way 
+* `mercurial <http://mercurial.selenic.com/>`_ and its standard windows GUI
+  (`TortoiseHG <http://tortoisehg.bitbucket.org/>`_) allow you to get the source
+  code of |cubicweb| from control version repositories. So you will be able to
+  get the latest development version and pre-release bugfixes in an easy way
   (`Download mercurial <http://bitbucket.org/tortoisehg/stable/wiki/download>`_).
 
 * You can also consider the ssh client `Putty` in order to peruse
   mercurial over ssh (`Download <http://www.putty.org/>`_).
 
 * If you are an Eclipse user, mercurial can be integrated using the
-  `MercurialEclipse` plugin 
+  `MercurialEclipse` plugin
   (`Home page <http://www.vectrace.com/mercurialeclipse/>`_).
 
 Getting the sources
@@ -108,8 +107,8 @@ Getting the sources
 There are tow ways to get the sources of |cubicweb| and its
 :ref:`cubes <AvailableCubes>`:
 
-* download the latest release (:ref:`SourceInstallation`) 
-* get the development version using Mercurial 
+* download the latest release (:ref:`SourceInstallation`)
+* get the development version using Mercurial
   (:ref:`MercurialInstallation`)
 
 Environment variables
@@ -123,8 +122,8 @@ In the `advanced` tab, there is an `Environment variables` button. Click on
 it. That opens a small window allowing edition of user-related and system-wide
 variables.
 
-We will consider only user variables. First, the ``PATH`` variable. Assuming 
-you are logged as user *Jane*, add the following paths, separated by 
+We will consider only user variables. First, the ``PATH`` variable. Assuming
+you are logged as user *Jane*, add the following paths, separated by
 semi-colons::
 
   C:\Documents and Settings\Jane\My Documents\Python\cubicweb\cubicweb\bin

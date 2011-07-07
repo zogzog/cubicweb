@@ -374,7 +374,7 @@ class AbstractFacet(AppObject):
     Facets implementors may also be interested in the following properties /
     methods:
 
-    .. automethod:: cubicweb.web.facet.AbstractFacet.operator
+    .. autoattribute:: cubicweb.web.facet.AbstractFacet.operator
     .. automethod:: cubicweb.web.facet.AbstractFacet.rqlexec
     """
     __abstract__ = True
@@ -1006,7 +1006,7 @@ class RQLPathFacet(RelationFacet):
     won't work. This facet class is designed to be used for cases where
     :class:`RelationFacet` or :class:`RelationAttributeFacet` can't do the trick
     (e.g when you want to filter on entities where are not directly linked to
-     the filtered entities).
+    the filtered entities).
     """
     # must be specified
     path = None

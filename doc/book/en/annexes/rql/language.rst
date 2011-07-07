@@ -6,6 +6,7 @@ RQL syntax
 ----------
 
 .. _RQLKeywords:
+
 Reserved keywords
 ~~~~~~~~~~~~~~~~~
 
@@ -20,6 +21,7 @@ schema, or as RQL variable names.
 
 
 .. _RQLCase:
+
 Case
 ~~~~
 
@@ -33,6 +35,7 @@ Case
 
 
 .. _RQLVariables:
+
 Variables and typing
 ~~~~~~~~~~~~~~~~~~~~
 
@@ -63,11 +66,12 @@ your entities.
 
 * `identity`: relation to use to tell that a RQL variable is the same as another
   when you've to use two different variables for querying purpose. On the
-  opposite it's also useful together with the `NOT`_ operator to tell that two
+  opposite it's also useful together with the :ref:`NOT` operator to tell that two
   variables should not identify the same entity
 
 
 .. _RQLLiterals:
+
 Literal expressions
 ~~~~~~~~~~~~~~~~~~~
 
@@ -88,10 +92,12 @@ You may also use the :keyword:`NULL` keyword, meaning 'unspecified'.
 
 
 .. _RQLOperators:
+
 Operators
 ~~~~~~~~~
 
 .. _RQLLogicalOperators:
+
 Logical operators
 `````````````````
 ::
@@ -102,6 +108,7 @@ Logical operators
 operators (see :ref:`RQLOperatorsPriority`).
 
 .. _RQLMathematicalOperators:
+
 Mathematical operators
 ``````````````````````
 ::
@@ -112,6 +119,7 @@ Those should behave as you expect.
 
 
 .. _RQLComparisonOperators:
+
 Comparison operators
 ````````````````````
  ::
@@ -138,6 +146,7 @@ The operator `IN` provides a list of possible values: ::
 
 
 .. _RQLStringOperators:
+
 String operators
 ````````````````
 ::
@@ -178,6 +187,7 @@ Other back-ends are not supported yet.
 
 
 .. _RQLOperatorsPriority:
+
 Operators priority
 ``````````````````
 
@@ -191,6 +201,7 @@ Operators priority
 
 
 .. _RQLSearchQuery:
+
 Search Query
 ~~~~~~~~~~~~
 
@@ -427,6 +438,7 @@ columns.
 
 
 .. _RQLFunctions:
+
 Available functions
 ~~~~~~~~~~~~~~~~~~~
 
@@ -434,89 +446,94 @@ Below is the list of aggregate and transformation functions that are supported
 nativly by the framework. Notice that cubes may define additional functions.
 
 .. _RQLAggregateFunctions:
+
 Aggregate functions
 ```````````````````
-+------------------------+----------------------------------------------------------+
-| :function:`COUNT`      | return the number of rows                                |
-+------------------------+----------------------------------------------------------+
-| :function:`MIN`        | return the minimum value                                 |
-+------------------------+----------------------------------------------------------+
-| :function:`MAX`        | return the maximum value                                 |
-+------------------------+----------------------------------------------------------+
-| :function:`AVG`        | return the average value                                 |
-+------------------------+----------------------------------------------------------+
-| :function:`SUM`        | return the sum of values                                 |
-+------------------------+----------------------------------------------------------+
-| :function:`COMMA_JOIN` | return each value separated by a comma (for string only) |
-+------------------------+----------------------------------------------------------+
++--------------------+----------------------------------------------------------+
+| :func:`COUNT`      | return the number of rows                                |
++--------------------+----------------------------------------------------------+
+| :func:`MIN`        | return the minimum value                                 |
++--------------------+----------------------------------------------------------+
+| :func:`MAX`        | return the maximum value                                 |
++--------------------+----------------------------------------------------------+
+| :func:`AVG`        | return the average value                                 |
++--------------------+----------------------------------------------------------+
+| :func:`SUM`        | return the sum of values                                 |
++--------------------+----------------------------------------------------------+
+| :func:`COMMA_JOIN` | return each value separated by a comma (for string only) |
++--------------------+----------------------------------------------------------+
 
 All aggregate functions above take a single argument. Take care some aggregate
 functions (e.g. :keyword:`MAX`, :keyword:`MIN`) may return `None` if there is no
 result row.
 
 .. _RQLStringFunctions:
+
 String transformation functions
 ```````````````````````````````
 
-+-----------------------------+-----------------------------------------------------------------+
-| :function:`UPPER(String)`   | upper case the string                                           |
-+-----------------------------+-----------------------------------------------------------------+
-| :function:`LOWER(String)`   | lower case the string                                           |
-+-----------------------------+-----------------------------------------------------------------+
-| :function:`LENGTH(String)`  | return the length of the string                                 |
-+-----------------------------+-----------------------------------------------------------------+
-| :function:`SUBSTRING(       | extract from the string a string starting at given index and of |
-|    String, start, length)`  | given length                                                    |
-+-----------------------------+-----------------------------------------------------------------+
-| :function:`LIMIT_SIZE(      | if the length of the string is greater than given max size,     |
-|  String, max size)`         | strip it and add ellipsis ("..."). The resulting string will    |
-|                             | hence have max size + 3 characters                              |
-+-----------------------------+-----------------------------------------------------------------+
-| :function:`TEXT_LIMIT_SIZE( | similar to the above, but allow to specify the MIME type of the |
-|  String, format, max size)` | text contained by the string. Supported formats are text/html,  |
-|                             | text/xhtml and text/xml. All others will be considered as plain |
-|                             | text. For non plain text format, sgml tags will be first removed|
-|                             | before limiting the string.                                     |
-+-----------------------------+-----------------------------------------------------------------+
++-------------------------+-----------------------------------------------------------------+
+| :func:`UPPER(String)`   | upper case the string                                           |
++-------------------------+-----------------------------------------------------------------+
+| :func:`LOWER(String)`   | lower case the string                                           |
++-------------------------+-----------------------------------------------------------------+
+| :func:`LENGTH(String)`  | return the length of the string                                 |
++-------------------------+-----------------------------------------------------------------+
+| :func:`SUBSTRING(       | extract from the string a string starting at given index and of |
+|  String, start, length)`| given length                                                    |
++-------------------------+-----------------------------------------------------------------+
+| :func:`LIMIT_SIZE(      | if the length of the string is greater than given max size,     |
+|  String, max size)`     | strip it and add ellipsis ("..."). The resulting string will    |
+|                         | hence have max size + 3 characters                              |
++-------------------------+-----------------------------------------------------------------+
+| :func:`TEXT_LIMIT_SIZE( | similar to the above, but allow to specify the MIME type of the |
+|  String, format,        | text contained by the string. Supported formats are text/html,  |
+|  max size)`             | text/xhtml and text/xml. All others will be considered as plain |
+|                         | text. For non plain text format, sgml tags will be first removed|
+|                         | before limiting the string.                                     |
++-------------------------+-----------------------------------------------------------------+
 
 .. _RQLDateFunctions:
+
 Date extraction functions
 `````````````````````````
 
-+------------------------------+----------------------------------------+
-| :function:`YEAR(Date)`       | return the year of a date or datetime  |
-+------------------------------+----------------------------------------+
-| :function:`MONTH(Date)`      | return the year of a date or datetime  |
-+------------------------------+----------------------------------------+
-| :function:`DAY(Date)`        | return the year of a date or datetime  |
-+------------------------------+----------------------------------------+
-| :function:`HOUR(Datetime)`   | return the year of a datetime          |
-+------------------------------+----------------------------------------+
-| :function:`MINUTE(Datetime)` | return the year of a datetime          |
-+------------------------------+----------------------------------------+
-| :function:`SECOND(Datetime)` | return the year of a datetime          |
-+------------------------------+----------------------------------------+
++--------------------------+----------------------------------------+
+| :func:`YEAR(Date)`       | return the year of a date or datetime  |
++--------------------------+----------------------------------------+
+| :func:`MONTH(Date)`      | return the year of a date or datetime  |
++--------------------------+----------------------------------------+
+| :func:`DAY(Date)`        | return the year of a date or datetime  |
++--------------------------+----------------------------------------+
+| :func:`HOUR(Datetime)`   | return the year of a datetime          |
++--------------------------+----------------------------------------+
+| :func:`MINUTE(Datetime)` | return the year of a datetime          |
++--------------------------+----------------------------------------+
+| :func:`SECOND(Datetime)` | return the year of a datetime          |
++--------------------------+----------------------------------------+
 
 .. _RQLOtherFunctions:
+
 Other functions
 ```````````````
-+---------------------------+--------------------------------------------------------------------+
-| :function:`ABS(num)`       | return the absolute value of a number                             |
-+---------------------------+--------------------------------------------------------------------+
-| :function:`RANDOM()`      | return a pseudo-random value from 0.0 to 1.0                       |
-+---------------------------+--------------------------------------------------------------------+
-| :function:`FSPATH(X)`     | expect X to be an attribute whose value is stored in a             |
-|                           | :ref:`BFSStorage` and return its path on the file system           |
-+---------------------------+--------------------------------------------------------------------+
-| :function:`FTKIRANK(X)`   | expect X to be an entity used in a has_text relation, and return a |
-|                           | number corresponding to the rank order of each resulting entity    |
-+---------------------------+--------------------------------------------------------------------+
-| :function:`CAST(Type, X)` | expect X to be an attribute and return it casted into the given    |
-|                           | final type                                                         |
-+---------------------------+--------------------------------------------------------------------+
++-----------------------+--------------------------------------------------------------------+
+| :func:`ABS(num)`      |  return the absolute value of a number                             |
++-----------------------+--------------------------------------------------------------------+
+| :func:`RANDOM()`      | return a pseudo-random value from 0.0 to 1.0                       |
++-----------------------+--------------------------------------------------------------------+
+| :func:`FSPATH(X)`     | expect X to be an attribute whose value is stored in a             |
+|                       | :class:`BFSStorage` and return its path on the file system         |
++-----------------------+--------------------------------------------------------------------+
+| :func:`FTKIRANK(X)`   | expect X to be an entity used in a has_text relation, and return a |
+|                       | number corresponding to the rank order of each resulting entity    |
++-----------------------+--------------------------------------------------------------------+
+| :func:`CAST(Type, X)` | expect X to be an attribute and return it casted into the given    |
+|                       | final type                                                         |
++-----------------------+--------------------------------------------------------------------+
 
 
 .. _RQLExamples:
+
 Examples
 ~~~~~~~~
 
@@ -579,6 +596,7 @@ Examples
 
 
 .. _RQLInsertQuery:
+
 Insertion query
 ~~~~~~~~~~~~~~~
 
@@ -611,6 +629,7 @@ Caution, if a restriction is specified, the insertion is done for
         INSERT Person X: X name 'foo', X friend  Y WHERE name 'nice'
 
 .. _RQLSetQuery:
+
 Update and relation creation queries
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -633,6 +652,7 @@ each result line returned by the restriction*.
 
 
 .. _RQLDeleteQuery:
+
 Deletion query
 ~~~~~~~~~~~~~~
 

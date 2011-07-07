@@ -143,7 +143,7 @@ class FieldsForm(form.Form):
     Notice that form related to entity edition should usually use the
     `edit` controller which will handle all the logic for you.
 
-    .. automethod:: cubicweb.web.views.forms.FieldsForm.process_content
+    .. automethod:: cubicweb.web.views.forms.FieldsForm.process_posted
     .. automethod:: cubicweb.web.views.forms.FieldsForm.iter_modified_fields
     """
     __regid__ = 'base'
