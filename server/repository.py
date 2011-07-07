@@ -742,7 +742,7 @@ class Repository(object):
                     args[0] = ex.entity
                     ex.args = tuple(args)
                 raise
-            except:
+            except Exception:
                 # FIXME: check error to catch internal errors
                 self.exception('unexpected error while executing %s with %s', rqlstring, args)
                 raise
@@ -1145,7 +1145,7 @@ class Repository(object):
                 try:
                     session.execute(rql, {'x': eid, 'seid': scleanup},
                                     build_descr=False)
-                except:
+                except Exception:
                     self.exception('error while cascading delete for entity %s '
                                    'from %s. RQL: %s', entity, sourceuri, rql)
         self.system_source.delete_info_multi(session, [entity], sourceuri)
@@ -1175,7 +1175,7 @@ class Repository(object):
                     rql += ', NOT (Y cw_source S, S eid %(seid)s)'
                 try:
                     session.execute(rql, {'seid': scleanup}, build_descr=False)
-                except:
+                except Exception:
                     self.exception('error while cascading delete for entity %s '
                                    'from %s. RQL: %s', entities, sourceuri, rql)
         self.system_source.delete_info_multi(session, entities, sourceuri)

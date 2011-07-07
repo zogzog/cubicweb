@@ -25,12 +25,12 @@ Execute:
  cubicweb-ctl start -D myblog
  sensible-browser http://localhost:8080/
 
-Details at http://www.cubicweb.org/doc/en/intro/tutorial/blog-in-five-minutes
+Details at http://docs.cubicweb.org/tutorials/base/blog-in-five-minutes
 
 Documentation
 -------------
 
-Look in the doc/ subdirectory or read http://www.cubicweb.org/doc/en/
+Look in the doc/ subdirectory or read http://docs.cubicweb.org/
 
 
 
