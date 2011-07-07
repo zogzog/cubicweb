@@ -750,9 +750,13 @@ class RelationFacet(VocabularyFacet):
                 self._and_restriction(rel, restrvar, value.pop())
 
     def _and_restriction(self, rel, restrvar, value):
-        rrel = nodes.make_constant_restriction(restrvar, self.restr_attr,
-                                               value, self.restr_attr_type)
-        rel.parent.replace(rel, nodes.And(rel, rrel))
+        if rel is None:
+            self.select.add_constant_restriction(restrvar, self.restr_attr,
+                                                 value, self.restr_attr_type)
+        else:
+            rrel = nodes.make_constant_restriction(restrvar, self.restr_attr,
+                                                   value, self.restr_attr_type)
+            rel.parent.replace(rel, nodes.And(rel, rrel))
 
 
     @cached
