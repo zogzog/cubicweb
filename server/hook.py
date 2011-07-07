@@ -69,12 +69,19 @@ Operations
 ~~~~~~~~~~
 
 Operations are subclasses of the :class:`~cubicweb.server.hook.Operation` class
-that may be created by hooks and scheduled to happen just before (or after) the
-`precommit`, `postcommit` or `rollback` event. Hooks are being fired immediately
-on data operations, and it is sometime necessary to delay the actual work down
-to a time where all other hooks have run. Also while the order of execution of
-hooks is data dependant (and thus hard to predict), it is possible to force an
-order on operations.
+that may be created by hooks and scheduled to happen on `precommit`,
+`postcommit` or `rollback` event (i.e. respectivly before/after a commit or
+before a rollback of a transaction).
+
+Hooks are being fired immediately on data operations, and it is sometime
+necessary to delay the actual work down to a time where we can expect all
+information to be there, or when all other hooks have run (though take case
+since operations may themselves trigger hooks). Also while the order of
+execution of hooks is data dependant (and thus hard to predict), it is possible
+to force an order on operations.
+
+So, for such case where you may miss some information that may be set later in
+the transaction, you should instantiate an operation in the hook.
 
 Operations may be used to:
 
