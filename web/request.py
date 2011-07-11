@@ -462,7 +462,7 @@ class CubicWebRequestBase(DBAPIRequest):
             try:
                 name, peid = param.split(':', 1)
             except ValueError:
-                if not param.startswith('__') and param != "eid":
+                if not param.startswith('__') and param not in ('eid', '_cw_fields'):
                     self.warning('param %s mis-formatted', param)
                 continue
             if peid == eid:
