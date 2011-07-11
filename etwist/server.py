@@ -78,6 +78,15 @@ class ForbiddenDirectoryLister(resource.Resource):
 
 
 class NoListingFile(static.File):
+
+    def set_expires(self, request):
+        if not self.config.debugmode:
+            # XXX: Don't provide additional resource information to error responses
+            #
+            # the HTTP RFC recommands not going further than 1 year ahead
+            expires = date.today() + timedelta(days=6*30)
+            request.setHeader('Expires', generateDateTime(mktime(expires.timetuple())))
+
     def directoryListing(self):
         return ForbiddenDirectoryLister()
 
@@ -107,6 +116,7 @@ class DataLookupDirectory(NoListingFile):
                 if resource_relpath:
                     paths = resource_relpath.split(',')
                     try:
+                        self.set_expires(request)
                         return ConcatFiles(self.config, paths)
                     except ConcatFileNotFoundError:
                         return self.childNotFound
@@ -124,6 +134,7 @@ class DataLookupDirectory(NoListingFile):
             self.putChild(path, resource)
             return resource
         else:
+            self.set_expires(request)
             return NoListingFile(filepath)
 
 
@@ -156,14 +167,6 @@ class LongTimeExpiringFile(DataLookupDirectory):
     """
     def _defineChildResources(self):
         pass
-
-    def render(self, request):
-        # XXX: Don't provide additional resource information to error responses
-        #
-        # the HTTP RFC recommands not going further than 1 year ahead
-        expires = date.today() + timedelta(days=6*30)
-        request.setHeader('Expires', generateDateTime(mktime(expires.timetuple())))
-        return DataLookupDirectory.render(self, request)
 
 
 class ConcatFileNotFoundError(CubicWebException):
