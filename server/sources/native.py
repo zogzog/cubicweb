@@ -850,7 +850,9 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
 
     def _eid_type_source(self, session, eid, sql, _retry=True):
         try:
-            return self.doexec(session, sql).fetchone()
+            res = self.doexec(session, sql).fetchone()
+            if res is not None:
+                return res
         except (self.OperationalError, self.InterfaceError):
             if session.mode == 'read' and _retry:
                 self.warning("trying to reconnect (eid_type_source())")
