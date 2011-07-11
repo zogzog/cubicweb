@@ -26,7 +26,7 @@ from logilab.common.testlib import TestCase, unittest_main
 
 from rql import RQLSyntaxError
 
-from yams import BadSchemaDefinition
+from yams import ValidationError, BadSchemaDefinition
 from yams.constraints import SizeConstraint, StaticVocabularyConstraint
 from yams.buildobjs import RelationDefinition, EntityType, RelationType
 from yams.reader import PyFileReader
@@ -37,6 +37,7 @@ from cubicweb.schema import (
     RQLExpression, ERQLExpression, RRQLExpression,
     normalize_expression, order_eschemas, guess_rrqlexpr_mainvars)
 from cubicweb.devtools import TestServerConfiguration as TestConfiguration
+from cubicweb.devtools.testlib import CubicWebTC
 
 DATADIR = join(dirname(__file__), 'data')
 
@@ -317,6 +318,15 @@ class GuessRrqlExprMainVarsTC(TestCase):
     def test_exists(self):
         mainvars = guess_rrqlexpr_mainvars(normalize_expression('NOT EXISTS(O team_competition C, C level < 3, C concerns S)'))
         self.assertEqual(mainvars, set(['S', 'O']))
+
+
+class RQLConstraintTC(CubicWebTC):
+    def test_user_constraint(self):
+        cstr = RQLConstraint('U identity O')
+        anoneid = self.execute('Any X WHERE X login "anon"')[0][0]
+        self.assertRaises(ValidationError, cstr.repo_check, self.session, 1, 'rel', anoneid)
+        self.assertEqual(cstr.repo_check(self.session, 1, self.session.user.eid),
+        None) # no validation error, constraint checked
 
 
 if __name__ == '__main__':

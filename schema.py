@@ -1011,6 +1011,9 @@ class RepoEnforcedRQLConstraintMixIn(object):
         else:
             expression = 'S eid %(s)s, O eid %(o)s, ' + self.expression
             args = {'s': eidfrom, 'o': eidto}
+        if 'U' in self.rqlst.defined_vars:
+            expression = 'U eid %(u)s, ' + expression
+            args['u'] = session.user.eid
         rql = 'Any %s WHERE %s' % (','.join(sorted(self.mainvars)), expression)
         if self.distinct_query:
             rql = 'DISTINCT ' + rql
