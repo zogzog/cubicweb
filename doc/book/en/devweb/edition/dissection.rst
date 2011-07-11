@@ -1,8 +1,8 @@
 
 .. _form_dissection:
 
-Dissection of a form
---------------------
+Dissection of an entity form
+----------------------------
 
 This is done (again) with a vanilla instance of the `tracker`_
 cube. We will populate the database with a bunch of entities and see
