@@ -507,6 +507,7 @@ def run(config, vreg=None, debug=None):
     # serve it via standard HTTP on port set in the configuration
     port = config['port'] or 8080
     interface = config['interface']
+    reactor.suggestThreadPoolSize(config['webserver-threadpool-size'])
     reactor.listenTCP(port, website, interface=interface)
     if not config.debugmode:
         if sys.platform == 'win32':
