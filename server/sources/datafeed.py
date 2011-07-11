@@ -57,7 +57,8 @@ class DataFeedSource(AbstractSource):
         )
     def __init__(self, repo, source_config, eid=None):
         AbstractSource.__init__(self, repo, source_config, eid)
-        self.update_config(None, self.check_conf_dict(eid, source_config))
+        self.update_config(None, self.check_conf_dict(eid, source_config,
+                                                      fail_if_unknown=False))
 
     def check_config(self, source_entity):
         """check configuration of source entity"""
