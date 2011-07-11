@@ -589,7 +589,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             for table in temptables:
                 try:
                     self.doexec(session,'DROP TABLE %s' % table)
-                except:
+                except Exception:
                     pass
                 try:
                     del self._temp_table_data[table]
@@ -791,7 +791,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                 session.cnxset.connection(self.uri).rollback()
                 if self.repo.config.mode != 'test':
                     self.critical('transaction has been rollbacked')
-            except:
+            except Exception:
                 pass
             raise
 
@@ -848,16 +848,23 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
 
     # system source interface #################################################
 
+    def _eid_type_source(self, session, eid, sql, _retry=True):
+        try:
+            return self.doexec(session, sql).fetchone()
+        except (self.OperationalError, self.InterfaceError):
+            if session.mode == 'read' and _retry:
+                self.warning("trying to reconnect (eid_type_source())")
+                session.cnxset.reconnect(self)
+                return self._eid_type_source(session, eid, sql, _retry=False)
+        except Exception:
+            assert session.cnxset, 'session has no connections set'
+            self.exception('failed to query entities table for eid %s', eid)
+        raise UnknownEid(eid)
+
     def eid_type_source(self, session, eid):
         """return a tuple (type, source, extid) for the entity with id <eid>"""
         sql = 'SELECT type, source, extid, asource FROM entities WHERE eid=%s' % eid
-        try:
-            res = self.doexec(session, sql).fetchone()
-        except:
-            assert session.cnxset, 'session has no connections set'
-            raise UnknownEid(eid)
-        if res is None:
-            raise UnknownEid(eid)
+        res = self._eid_type_source(session, eid, sql)
         if res[-2] is not None:
             if not isinstance(res, list):
                 res = list(res)
@@ -867,13 +874,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
     def eid_type_source_pre_131(self, session, eid):
         """return a tuple (type, source, extid) for the entity with id <eid>"""
         sql = 'SELECT type, source, extid FROM entities WHERE eid=%s' % eid
-        try:
-            res = self.doexec(session, sql).fetchone()
-        except:
-            assert session.cnxset, 'session has no connections set'
-            raise UnknownEid(eid)
-        if res is None:
-            raise UnknownEid(eid)
+        res = self._eid_type_source(session, eid, sql)
         if not isinstance(res, list):
             res = list(res)
         if res[-1] is not None:
@@ -895,7 +896,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             result = cursor.fetchone()
             if result:
                 return result[0]
-        except:
+        except Exception:
             pass
         return None
 
@@ -950,7 +951,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                 return self._create_eid()
             else:
                 raise
-        except: # WTF?
+        except Exception: # WTF?
             cnx.rollback()
             self._eid_creation_cnx = None
             self.exception('create eid failed in an unforeseen way on SQL statement %s', sql)
