@@ -1251,6 +1251,8 @@ class SQLGenerator(object):
                         return condition
                     self._state.add_outer_join_condition(leftalias, condition)
                 return
+        if leftalias is None:
+            leftalias = leftvar._q_sql.split('.', 1)[0]
         self._state.replace_tables_by_outer_join(
             leftalias, rightalias, outertype, '%s=%s' % (lhssql, rhs.accept(self)))
         return ''
