@@ -383,7 +383,7 @@ class HTMLHead(UStringIO):
             if skiphead:
                 for script in self.post_inlined_scripts:
                     w(u'<pre class="script">')
-                    w(script)
+                    w(xml_escape(script))
                     w(u'</pre>')
             else:
                 w(self.xhtml_safe_script_opening)
