@@ -677,11 +677,10 @@ class Connection(object):
     @check_not_closed
     def describe(self, eid, asdict=False):
         metas = self._repo.describe(self.sessionid, eid, **self._txid())
+        if len(metas) == 3: # backward compat
+            metas = list(metas)
+            metas.append(metas[1])
         if asdict:
-            if len(metas) == 3:
-                d = dict(zip(('type', 'source', 'extid'), metas))
-                d['asource'] = d['source']
-                return d
             return dict(zip(('type', 'source', 'extid', 'asource'), metas))
         # XXX :-1 for cw compat, use asdict=True for full information
         return metas[:-1]

@@ -94,6 +94,14 @@ class DataFeedTC(CubicWebTC):
         self.assertTrue(dfsource.latest_retrieval)
         self.assertTrue(dfsource.fresh())
 
+        # test_delete_source
+        req = self.request()
+        with self.debugged('DBG_RQL'):
+            req.execute('DELETE CWSource S WHERE S name "myfeed"')
+            self.commit()
+        self.failIf(self.execute('Card X WHERE X title "cubicweb.org"'))
+        self.failIf(self.execute('Any X WHERE X has_text "cubicweb.org"'))
+
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main
     unittest_main()

@@ -443,6 +443,10 @@ repository (default to 5 minutes).',
 
     def delete_entity(self, session, entity):
         """delete an entity from the source"""
+        if session.deleted_in_transaction (self.eid):
+            # source is being deleted, don't propagate
+            self._query_cache.clear()
+            return
         cu = session.cnxset[self.uri]
         cu.execute('DELETE %s X WHERE X eid %%(x)s' % entity.__regid__,
                    {'x': self.eid2extid(entity.eid, session)})
@@ -460,6 +464,10 @@ repository (default to 5 minutes).',
 
     def delete_relation(self, session, subject, rtype, object):
         """delete a relation from the source"""
+        if session.deleted_in_transaction (self.eid):
+            # source is being deleted, don't propagate
+            self._query_cache.clear()
+            return
         cu = session.cnxset[self.uri]
         cu.execute('DELETE X %s Y WHERE X eid %%(x)s, Y eid %%(y)s' % rtype,
                    {'x': self.eid2extid(subject, session),

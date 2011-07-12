@@ -53,7 +53,7 @@ class SourceAddedHook(SourceHook):
 
 
 class SourceRemovedOp(hook.Operation):
-    def precommit_event(self):
+    def postcommit_event(self):
         self.session.repo.remove_source(self.uri)
 
 class SourceRemovedHook(SourceHook):
@@ -71,8 +71,9 @@ class SourceUpdatedOp(hook.DataOperationMixIn, hook.Operation):
     def precommit_event(self):
         self.__processed = []
         for source in self.get_data():
-            conf = source.repo_source.check_config(source)
-            self.__processed.append( (source, conf) )
+            if not self.session.deleted_in_transaction(source.eid):
+                conf = source.repo_source.check_config(source)
+                self.__processed.append( (source, conf) )
 
     def postcommit_event(self):
         for source, conf in self.__processed:

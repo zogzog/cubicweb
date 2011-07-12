@@ -381,6 +381,13 @@ cubicweb-password = gingkow
     def test_nonregr3(self):
         self.sexecute('DELETE Card X WHERE X eid %(x)s, NOT X multisource_inlined_rel Y', {'x': self.ic1})
 
+    def test_delete_source(self):
+        req = self.request()
+        req.execute('DELETE CWSource S WHERE S name "extern"')
+        self.commit()
+        cu = self.session.system_sql("SELECT * FROM entities WHERE source='extern'")
+        self.failIf(cu.fetchall())
+
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main
     unittest_main()
