@@ -162,6 +162,11 @@ msgid "'%s' action doesn't take any options"
 msgstr "l'action '%s' ne prend pas d'option"
 
 #, python-format
+msgid ""
+"'%s' action for in_state relation should at least have 'linkattr=name' option"
+msgstr ""
+
+#, python-format
 msgid "'%s' action requires 'linkattr' option"
 msgstr "l'action '%s' nécessite une option 'linkattr'"
 
@@ -1167,6 +1172,10 @@ msgstr "les options autorisées dépendent du type de la source"
 msgid "allowed transitions from this state"
 msgstr "transitions autorisées depuis cet état"
 
+#, python-format
+msgid "allowed values for \"action\" are %s"
+msgstr ""
+
 msgid "allowed_transition"
 msgstr "transitions autorisées"
 
@@ -1818,13 +1827,12 @@ msgid "ctxcomponents_edit_box_description"
 msgstr ""
 "boîte affichant les différentes actions possibles sur les données affichées"
 
-msgid "ctxcomponents_facet.filters"
+msgid "ctxcomponents_facet.filterbox"
 msgstr "boîte à facettes"
 
-msgid "ctxcomponents_facet.filters_description"
-msgstr ""
-"boîte permettant de filtrer parmi les résultats d'une recherche à l'aide de "
-"facettes"
+msgid "ctxcomponents_facet.filterbox_description"
+msgstr "boîte permettant de filtrer parmi les résultats d'une recherche à l'aide "
+"de facettes"
 
 msgid "ctxcomponents_logo"
 msgstr "logo"
@@ -3233,6 +3241,9 @@ msgstr ""
 msgid "no content prev link"
 msgstr ""
 
+msgid "no edited fields specified"
+msgstr "aucun champ à éditer spécifié"
+
 #, python-format
 msgid "no edited fields specified for entity %s"
 msgstr "aucun champ à éditer spécifié pour l'entité %s"
@@ -3779,9 +3790,6 @@ msgstr "une propriété spécifique au site ne peut être propre à un utilisate
 
 msgid "siteinfo"
 msgstr "informations"
-
-msgid "some errors occurred:"
-msgstr "des erreurs sont survenues"
 
 msgid "some later transaction(s) touch entity, undo them first"
 msgstr ""

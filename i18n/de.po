@@ -162,6 +162,11 @@ msgid "'%s' action doesn't take any options"
 msgstr ""
 
 #, python-format
+msgid ""
+"'%s' action for in_state relation should at least have 'linkattr=name' option"
+msgstr ""
+
+#, python-format
 msgid "'%s' action requires 'linkattr' option"
 msgstr ""
 
@@ -1159,6 +1164,10 @@ msgstr ""
 msgid "allowed transitions from this state"
 msgstr "erlaubte Übergänge von diesem Zustand"
 
+#, python-format
+msgid "allowed values for \"action\" are %s"
+msgstr ""
+
 msgid "allowed_transition"
 msgstr "erlaubter Übergang"
 
@@ -1790,10 +1799,10 @@ msgstr "Aktionsbox"
 msgid "ctxcomponents_edit_box_description"
 msgstr "Box mit verfügbaren Aktionen für die angezeigten Daten"
 
-msgid "ctxcomponents_facet.filters"
+msgid "ctxcomponents_facet.filterbox"
 msgstr "Filter"
 
-msgid "ctxcomponents_facet.filters_description"
+msgid "ctxcomponents_facet.filterbox_description"
 msgstr "Box mit Filter für aktuelle Suchergebnis-Funktionalität"
 
 msgid "ctxcomponents_logo"
@@ -3193,6 +3202,9 @@ msgstr ""
 msgid "no content prev link"
 msgstr ""
 
+msgid "no edited fields specified"
+msgstr ""
+
 #, python-format
 msgid "no edited fields specified for entity %s"
 msgstr "kein Eingabefeld spezifiziert Für Entität %s"
@@ -3731,9 +3743,6 @@ msgstr ""
 msgid "siteinfo"
 msgstr ""
 
-msgid "some errors occurred:"
-msgstr "Einige Fehler sind aufgetreten"
-
 msgid "some later transaction(s) touch entity, undo them first"
 msgstr ""
 "Eine oder mehrere frühere Transaktion(en) betreffen die Tntität. Machen Sie "
@@ -4053,7 +4062,7 @@ msgctxt "TrInfo"
 msgid "tr_count"
 msgstr ""
 
-msgid "transaction undoed"
+msgid "transaction undone"
 msgstr ""
 
 #, python-format

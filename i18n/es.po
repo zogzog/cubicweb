@@ -163,6 +163,11 @@ msgid "'%s' action doesn't take any options"
 msgstr "la acción '%s'  no acepta opciones"
 
 #, python-format
+msgid ""
+"'%s' action for in_state relation should at least have 'linkattr=name' option"
+msgstr ""
+
+#, python-format
 msgid "'%s' action requires 'linkattr' option"
 msgstr "la acción '%s' requiere una opción 'linkattr'"
 
@@ -1169,6 +1174,10 @@ msgstr "las opciones permitidas dependen del tipo de fuente"
 msgid "allowed transitions from this state"
 msgstr "transiciones autorizadas desde este estado"
 
+#, python-format
+msgid "allowed values for \"action\" are %s"
+msgstr ""
+
 msgid "allowed_transition"
 msgstr "transiciones autorizadas"
 
@@ -1815,10 +1824,10 @@ msgstr "Caja de Acciones"
 msgid "ctxcomponents_edit_box_description"
 msgstr "Muestra las acciones posibles a ejecutar para los datos seleccionados"
 
-msgid "ctxcomponents_facet.filters"
+msgid "ctxcomponents_facet.filterbox"
 msgstr "Filtros"
 
-msgid "ctxcomponents_facet.filters_description"
+msgid "ctxcomponents_facet.filterbox_description"
 msgstr "Muestra los filtros aplicables a una búsqueda realizada"
 
 msgid "ctxcomponents_logo"
@@ -3234,6 +3243,9 @@ msgstr ""
 msgid "no content prev link"
 msgstr ""
 
+msgid "no edited fields specified"
+msgstr ""
+
 #, python-format
 msgid "no edited fields specified for entity %s"
 msgstr "Ningún campo editable especificado para la entidad %s"
@@ -3780,9 +3792,6 @@ msgstr "Una propiedad específica al Sistema no puede ser propia al usuario"
 msgid "siteinfo"
 msgstr "información"
 
-msgid "some errors occurred:"
-msgstr "Algunos errores encontrados :"
-
 msgid "some later transaction(s) touch entity, undo them first"
 msgstr ""
 "Las transacciones más recientes modificaron esta entidad, anúlelas primero"
@@ -4103,7 +4112,7 @@ msgctxt "TrInfo"
 msgid "tr_count"
 msgstr "n° de transición"
 
-msgid "transaction undoed"
+msgid "transaction undone"
 msgstr ""
 
 #, python-format

@@ -154,6 +154,11 @@ msgid "'%s' action doesn't take any options"
 msgstr ""
 
 #, python-format
+msgid ""
+"'%s' action for in_state relation should at least have 'linkattr=name' option"
+msgstr ""
+
+#, python-format
 msgid "'%s' action requires 'linkattr' option"
 msgstr ""
 
@@ -1117,6 +1122,10 @@ msgstr ""
 msgid "allowed transitions from this state"
 msgstr ""
 
+#, python-format
+msgid "allowed values for \"action\" are %s"
+msgstr ""
+
 msgid "allowed_transition"
 msgstr "allowed transition"
 
@@ -1745,10 +1754,10 @@ msgstr "actions box"
 msgid "ctxcomponents_edit_box_description"
 msgstr "box listing the applicable actions on the displayed data"
 
-msgid "ctxcomponents_facet.filters"
+msgid "ctxcomponents_facet.filterbox"
 msgstr "facets box"
 
-msgid "ctxcomponents_facet.filters_description"
+msgid "ctxcomponents_facet.filterbox_description"
 msgstr "box providing filter within current search results functionality"
 
 msgid "ctxcomponents_logo"
@@ -3104,6 +3113,9 @@ msgstr ""
 msgid "no content prev link"
 msgstr ""
 
+msgid "no edited fields specified"
+msgstr ""
+
 #, python-format
 msgid "no edited fields specified for entity %s"
 msgstr ""
@@ -3633,9 +3645,6 @@ msgstr ""
 msgid "siteinfo"
 msgstr "site information"
 
-msgid "some errors occurred:"
-msgstr ""
-
 msgid "some later transaction(s) touch entity, undo them first"
 msgstr ""
 
@@ -3948,7 +3957,7 @@ msgctxt "TrInfo"
 msgid "tr_count"
 msgstr "transition number"
 
-msgid "transaction undoed"
+msgid "transaction undone"
 msgstr ""
 
 #, python-format
