@@ -93,9 +93,10 @@ var JSON_BASE_URL = baseuri() + 'json?';
 jQuery.extend(cw.ajax, {
     /* variant of jquery evalScript with cache: true in ajax call */
     _evalscript: function ( i, elem ) {
-       if ( elem.src ) {
+       var src = elem.getAttribute('src');
+       if (src) {
            jQuery.ajax({
-               url: elem.src,
+               url: src,
                async: false,
                cache: true,
                dataType: "script"
@@ -145,62 +146,76 @@ jQuery.extend(cw.ajax, {
             );
         }
         return resources;
+    },
+
+    _buildMissingResourcesUrl: function(url, loadedResources) {
+        var resources = cw.ajax._listResources(url);
+        var missingResources = $.grep(resources, function(resource) {
+            return $.inArray(resource, loadedResources) == -1;
+        });
+        cw.utils.extend(loadedResources, missingResources);
+        var missingResourceUrl = null;
+        if (missingResources.length == 1) {
+            // only one resource missing: build a node with a single resource url
+            // (maybe the browser has it in cache already)
+            missingResourceUrl = missingResources[0];
+        } else if (missingResources.length > 1) {
+            // several resources missing: build a node with a concatenated
+            // resources url
+            var dataurl = cw.ajax._modconcatLikeUrl(url)[1];
+            var missing_path = $.map(missingResources, function(resource) {
+                return resource.substring(dataurl.length);
+            });
+            missingResourceUrl = dataurl + '??' + missing_path.join(',');
+        }
+        return missingResourceUrl;
+    },
+
+    _loadAjaxStylesheets: function($responseHead, $head) {
+        $responseHead.find('link[href]').each(function(i) {
+            var $srcnode = $(this);
+            var url = $srcnode.attr('href');
+            if (url) {
+                var missingStylesheetsUrl = cw.ajax._buildMissingResourcesUrl(url, cw.loaded_links);
+                // compute concat-like url for missing resources and append <link>
+                // element to $head
+                if (missingStylesheetsUrl) {
+                    $srcnode.attr('href', missingStylesheetsUrl);
+                    $srcnode.appendTo($head);
+                }
+            }
+        });
+        $responseHead.find('link[href]').remove();
+    },
+
+    _loadAjaxScripts: function($responseHead, $head) {
+        $responseHead.find('pre.script').each(function(i) {
+            var $srcnode = $(this);
+            var url = $srcnode.attr('src');
+            if (url) {
+                var missingScriptsUrl = cw.ajax._buildMissingResourcesUrl(url, cw.loaded_scripts);
+                if (missingScriptsUrl) {
+                    $srcnode.attr('src', missingScriptsUrl);
+                    /* special handling of <script> tags: script nodes appended by jquery
+                     * use uncached ajax calls and do not appear in the DOM
+                     * (See comments in response to Syt on // http://api.jquery.com/append/),
+                     * which cause undesired duplicated load in our case. We now handle
+                     * a list of already loaded resources, since bare DOM api gives bugs with the
+                     * server-response event, and we lose control on when the
+                     * script is loaded (jQuery loads it immediately). */
+                    cw.ajax.evalscripts($srcnode);
+                }
+            } else {
+                // <script> contains inlined javascript code, node content
+                // must be evaluated
+    	        jQuery.globalEval($srcnode.text());
+    	    }
+        });
+        $responseHead.find('pre.script').remove();
     }
 });
 
 //============= utility function handling remote calls responses. ==============//
-function _loadAjaxHtmlHead($node, $head, tag, srcattr) {
-    var jqtagfilter = tag + '[' + srcattr + ']';
-    if (cw['loaded_'+srcattr] === undefined) {
-        cw['loaded_'+srcattr] = [];
-        var loaded = cw['loaded_'+srcattr];
-        jQuery('head ' + jqtagfilter).each(function(i) {
-            // tab1.push.apply(tab1, tab2) <=> tab1 += tab2 (python-wise)
-            loaded.push.apply(loaded, cw.ajax._listResources(this.getAttribute(srcattr)));
-        });
-    } else {
-        var loaded = cw['loaded_'+srcattr];
-    }
-    $node.find(tag).each(function(i) {
-        var $srcnode = jQuery(this);
-        var url = $srcnode.attr(srcattr);
-        if (url) {
-            /* special handling of <script> tags: script nodes appended by jquery
-             * use uncached ajax calls and do not appear in the DOM
-             * (See comments in response to Syt on // http://api.jquery.com/append/),
-             * which cause undesired duplicated load in our case. We now handle
-             * a list of already loaded resources, since bare DOM api gives bugs with the
-             * server-response event, and we lose control on when the
-             * script is loaded (jQuery loads it immediately). */
-            var resources = cw.ajax._listResources(url);
-            var missingResources = $.grep(resources, function(resource) {
-                return $.inArray(resource, loaded) == -1;
-            });
-            loaded.push.apply(loaded, missingResources);
-            if (missingResources.length == 1) {
-                // only one resource missing: build a node with a single resource url
-                // (maybe the browser has it in cache already)
-                $srcnode.attr(srcattr, missingResources[0]);
-            } else if (missingResources.length > 1) {
-                // several resources missing: build a node with a concatenated
-                // resources url
-                var dataurl = cw.ajax._modconcatLikeUrl(url)[1];
-                var missing_path = $.map(missingResources, function(resource) {
-                    return resource.substring(dataurl.length);
-                });
-                $srcnode.attr(srcattr, dataurl + '??' + missing_path.join(','));
-            } else { return ; }
-            // === will work if both arguments are of the same type
-            if ( $srcnode.attr('type') === 'text/javascript' ) {
-                cw.ajax.evalscripts($srcnode);
-            } else {
-                $srcnode.appendTo($head);
-            }
-        }
-    });
-    $node.find(jqtagfilter).remove();
-}
-
 /**
  * .. function:: function loadAjaxHtmlHead(response)
  *
@@ -216,8 +231,8 @@ function loadAjaxHtmlHead(response) {
     if (!$responseHead.length) {
         return response;
     }
-    _loadAjaxHtmlHead($responseHead, $head, 'script', 'src');
-    _loadAjaxHtmlHead($responseHead, $head, 'link', 'href');
+    cw.ajax._loadAjaxStylesheets($responseHead, $head);
+    cw.ajax._loadAjaxScripts($responseHead, $head);
     // add any remaining children (e.g. meta)
     $responseHead.children().appendTo($head);
     // remove original container, which is now empty
@@ -487,11 +502,6 @@ function _loadDynamicFragments(node) {
         $fragment.loadxhtml('json', ajaxFuncArgs('view', extraparams));
     }
 }
-
-jQuery(document).ready(function() {
-    _loadDynamicFragments();
-});
-
 function unloadPageData() {
     // NOTE: do not make async calls on unload if you want to avoid
     //       strange bugs
@@ -817,3 +827,16 @@ function asyncRemoteExec(fname /* ... */) {
     deferred = deferred.addCallback(resetCursor);
     return deferred;
 }
+
+jQuery(document).ready(function() {
+    _loadDynamicFragments();
+    // build loaded_scripts / loaded_links lists
+    cw.loaded_scripts = [];
+    jQuery('head script[src]').each(function(i) {
+        cw.utils.extend(cw.loaded_scripts, cw.ajax._listResources(this.getAttribute('src')));
+    });
+    cw.loaded_links = [];
+    jQuery('head link[href]').each(function(i) {
+        cw.utils.extend(cw.loaded_links, cw.ajax._listResources(this.getAttribute('href')));
+    });
+});

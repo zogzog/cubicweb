@@ -318,6 +318,17 @@ jQuery.extend(cw.utils, {
         }
     },
 
+
+    /**
+     * .. function:: extend(array1, array2)
+     *
+     * equivalent of python ``+=`` statement on lists (array1 += array2)
+     */
+    extend: function(array1, array2) {
+        array1.push.apply(array1, array2);
+        return array1; // return array1 for convenience
+    },
+
     /**
      * .. function:: difference(lst1, lst2)
      *

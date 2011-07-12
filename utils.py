@@ -362,13 +362,33 @@ class HTMLHead(UStringIO):
         # 4/ js files
         jsfiles = ((x, None) for x in self.jsfiles)
         for jsfile, media in self.group_urls(jsfiles) if self.datadir_url else jsfiles:
-            w(u'<script type="text/javascript" src="%s"></script>\n' %
-              xml_escape(jsfile))
+            if skiphead:
+                # Don't insert <script> tags directly as they would be
+                # interpreted directly by some browsers (e.g. IE).
+                # Use <pre class="script"> tags instead and let
+                # `loadAjaxHtmlHead` handle the script insertion / execution.
+                w(u'<pre class="script" src="%s"></pre>\n' %
+                  xml_escape(jsfile))
+                # FIXME: a probably better implementation might be to add
+                #        JS or CSS urls in a JS list that loadAjaxHtmlHead
+                #        would iterate on and postprocess:
+                #            cw._ajax_js_scripts.push('myscript.js')
+                #        Then, in loadAjaxHtmlHead, do something like:
+                #            jQuery.each(cw._ajax_js_script, jQuery.getScript)
+            else:
+                w(u'<script type="text/javascript" src="%s"></script>\n' %
+                  xml_escape(jsfile))
         # 5/ post inlined scripts (i.e. scripts depending on other JS files)
         if self.post_inlined_scripts:
-            w(self.xhtml_safe_script_opening)
-            w(u'\n\n'.join(self.post_inlined_scripts))
-            w(self.xhtml_safe_script_closing)
+            if skiphead:
+                for script in self.post_inlined_scripts:
+                    w(u'<pre class="script">')
+                    w(script)
+                    w(u'</pre>')
+            else:
+                w(self.xhtml_safe_script_opening)
+                w(u'\n\n'.join(self.post_inlined_scripts))
+                w(self.xhtml_safe_script_closing)
         header = super(HTMLHead, self).getvalue()
         if skiphead:
             return header
