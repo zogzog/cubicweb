@@ -202,8 +202,8 @@ def _select_principal(scope, relations, _sort=lambda x:x):
     # since introduced duplicates will be removed
     if scope.stmt.distinct and diffscope_rels:
         return iter(_sort(diffscope_rels)).next()
-    # XXX  could use a relation for a different scope if it can't generate
-    # duplicates, so we would have to check cardinality
+    # XXX could use a relation from a different scope if it can't generate
+    # duplicates, so we should have to check cardinality
     raise CantSelectPrincipal()
 
 def _select_main_var(relations):

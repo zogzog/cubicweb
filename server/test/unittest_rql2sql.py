@@ -554,6 +554,11 @@ ORDER BY 2 DESC'''),
      '''SELECT _R2.eid
 FROM concerne_relation AS rel_concerne0, entities AS _R2
 WHERE _R2.eid=rel_concerne0.eid_from AND _R2.eid>rel_concerne0.eid_to'''),
+
+    ('Note X WHERE X eid IN (999998, 999999), NOT X cw_source Y',
+     '''SELECT _X.cw_eid
+FROM cw_Note AS _X
+WHERE _X.cw_eid IN(999998, 999999) AND NOT (EXISTS(SELECT 1 FROM cw_source_relation AS rel_cw_source0 WHERE rel_cw_source0.eid_from=_X.cw_eid))'''),
     ]
 
 ADVANCED_WITH_GROUP_CONCAT = [

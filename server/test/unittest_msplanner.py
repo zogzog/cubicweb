@@ -314,12 +314,14 @@ class PartPlanInformationTC(BaseMSPlannerTC):
 
     def test_simplified_var(self):
         repo._type_source_cache[999999] = ('Note', 'cards', 999999, 'cards')
+        # need access to source since X table has to be accessed because of the outer join
         self._test('Any U WHERE U in_group G, (G name IN ("managers", "logilab") OR (X require_permission P?, P name "bla", P require_group G)), X eid %(x)s, U eid %(u)s',
                    {'x': 999999, 'u': self.session.user.eid},
-                   {self.system: {'P': s[0], 'G': s[0], 'X': s[0],
+                   {self.system: {'P': s[0], 'G': s[0],
                                   'require_permission': s[0], 'in_group': s[0], 'P': s[0], 'require_group': s[0],
-                                  'u': s[0]}},
-                   False)
+                                  'u': s[0]},
+                    self.cards: {'X': s[0]}},
+                   True)
 
     def test_delete_relation1(self):
         ueid = self.session.user.eid
@@ -1312,12 +1314,31 @@ class MSPlannerTC(BaseMSPlannerTC):
                    {'x': 999999})
 
 
-    def test_simplified_var(self):
+    def test_simplified_var_1(self):
         ueid = self.session.user.eid
         repo._type_source_cache[999999] = ('Note', 'cards', 999999, 'cards')
-        self._test('Any U WHERE U in_group G, (G name IN ("managers", "logilab") OR (X require_permission P?, P name "bla", P require_group G)), X eid %(x)s, U eid %(u)s',
-                   [('OneFetchStep', [('Any %s WHERE %s in_group G, (G name IN("managers", "logilab")) OR (X require_permission P?, P name "bla", P require_group G), X eid 999999' % (ueid, ueid),
-                                       [{'X': 'Note', 'G': 'CWGroup', 'P': 'CWPermission'}])],
+        # need access to cards source since X table has to be accessed because of the outer join
+        self._test('Any U WHERE U in_group G, (G name IN ("managers", "logilab") OR '
+                   '(X require_permission P?, P name "bla", P require_group G)), X eid %(x)s, U eid %(u)s',
+                   [('FetchStep',
+                     [('Any 999999', [{}])], [self.cards],
+                     None, {u'%(x)s': 'table0.C0'}, []),
+                    ('OneFetchStep',
+                     [(u'Any 6 WHERE 6 in_group G, (G name IN("managers", "logilab")) OR '
+                       '(X require_permission P?, P name "bla", P require_group G), '
+                       'G is CWGroup, P is CWPermission, X is Note',
+                       [{'G': 'CWGroup', 'P': 'CWPermission', 'X': 'Note'}])],
+                     None, None, [self.system], {u'%(x)s': 'table0.C0'}, [])],
+                   {'x': 999999, 'u': ueid})
+
+    def test_simplified_var_2(self):
+        ueid = self.session.user.eid
+        repo._type_source_cache[999999] = ('Note', 'cards', 999999, 'cards')
+        # no need access to source since X is invariant
+        self._test('Any U WHERE U in_group G, (G name IN ("managers", "logilab") OR '
+                   '(X require_permission P, P name "bla", P require_group G)), X eid %(x)s, U eid %(u)s',
+                   [('OneFetchStep', [('Any %s WHERE %s in_group G, (G name IN("managers", "logilab")) OR (999999 require_permission P, P name "bla", P require_group G)' % (ueid, ueid),
+                                       [{'G': 'CWGroup', 'P': 'CWPermission'}])],
                      None, None, [self.system], {}, [])],
                    {'x': 999999, 'u': ueid})
 
@@ -2670,6 +2691,29 @@ class MSPlannerTwoSameExternalSourcesTC(BasePlannerTC):
                        [self.system], {'X': 'table0.C0'}, [])
                       ])
                     ])
+
+    def test_remove_from_deleted_source_1(self):
+        self.repo._type_source_cache[999999] = ('Note', 'cards', 999999, 'cards')
+        self._test('Note X WHERE X eid 999999, NOT X cw_source Y',
+                   [('OneFetchStep',
+                     [('Any 999999 WHERE NOT EXISTS(999999 cw_source Y)',
+                       [{'Y': 'CWSource'}])],
+                     None, None, [self.system], {}, [])
+                    ])
+
+    def test_remove_from_deleted_source_2(self):
+        self.repo._type_source_cache[999999] = ('Note', 'cards', 999999, 'cards')
+        self.repo._type_source_cache[999998] = ('Note', 'cards', 999998, 'cards')
+        self._test('Note X WHERE X eid IN (999998, 999999), NOT X cw_source Y',
+                   [('FetchStep',
+                     [('Any X WHERE X eid IN(999998, 999999), X is Note',
+                       [{'X': 'Note'}])],
+                     [self.cards], None, {'X': 'table0.C0'}, []),
+                    ('OneFetchStep',
+                     [('Any X WHERE NOT EXISTS(X cw_source Y, Y is CWSource), X is Note',
+                       [{'X': 'Note', 'Y': 'CWSource'}])],
+                         None, None, [self.system],{'X': 'table0.C0'}, [])
+                        ])
 
 
 class FakeVCSSource(AbstractSource):
