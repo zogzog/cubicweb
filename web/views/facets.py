@@ -73,7 +73,7 @@ def contextview_selector(cls, req, rset=None, row=None, col=None, view=None,
         rset = getcontext()[0]
         if rset is None or rset.rowcount < 2:
             return 0
-        wdgs = facets(req, rset, cls.__regid__, mainvar)[1]
+        wdgs = facets(req, rset, cls.__regid__)[1]
         return len(wdgs)
     return 0
 
