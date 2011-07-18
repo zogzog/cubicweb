@@ -109,7 +109,7 @@ def printable_value(req, attrtype, value, props=None, displaytime=True):
         printer = PRINTERS[attrtype]
     except KeyError:
         return unicode(value)
-    return printer(req, value, props, displaytime)
+    return printer(value, req, props, displaytime)
 
 
 # text publishing #############################################################
