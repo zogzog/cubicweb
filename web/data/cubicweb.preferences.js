@@ -104,7 +104,7 @@ function _checkValue(input, unfreezeButtons) {
         unfreezeButtons = true;
     } else {
         input.removeClass('changed');
-        jQuery("span[id=err-" + input.attr('id') + "]").remove();
+        jQuery('span[id="err-' + input.attr('id') + '"]').remove();
     }
     input.removeClass('error');
     return unfreezeButtons;
@@ -124,7 +124,7 @@ function setCurrentValues(form) {
         } else {
             prefsValues[name] = input.val();
         }
-        jQuery(form).find('input[name=edits-' + name + ']').val(prefsValues[name]);
+        jQuery(form).find('input[name="edits-' + name + '"]').val(prefsValues[name]);
     });
 }
 
