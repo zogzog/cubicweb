@@ -65,15 +65,24 @@ def _facets(req, rset, context, mainvar):
 @objectify_selector
 def contextview_selector(cls, req, rset=None, row=None, col=None, view=None,
                          **kwargs):
-    if view and getattr(view, 'filter_box_context_info', lambda: None)():
-        return 1
+    if view:
+        try:
+            getcontext = getattr(view, 'filter_box_context_info')
+        except AttributeError:
+            return 0
+        rset = getcontext()[0]
+        if rset is None or rset.rowcount < 2:
+            return 0
+        wdgs = facets(req, rset, cls.__regid__, mainvar)[1]
+        return len(wdgs)
     return 0
 
 @objectify_selector
 def has_facets(cls, req, rset=None, mainvar=None, **kwargs):
-    if rset is None:
+    if rset is None or rset.rowcount < 2:
         return 0
-    return len(facets(req, rset, cls.__regid__, mainvar)[1])
+    wdgs = facets(req, rset, cls.__regid__, mainvar)[1]
+    return len(wdgs)
 
 
 def filter_hiddens(w, baserql, wdgs, **kwargs):
@@ -94,8 +103,7 @@ class FacetFilterMixIn(object):
         """display a form to filter some view's content"""
         mainvar = self.cw_extra_kwargs.get('mainvar')
         baserql, wdgs = facets(self._cw, rset, self.__regid__, mainvar)
-        if not wdgs: # may happen in contextview_selector matched
-            return
+        assert wdgs
         self._cw.add_js(self.needs_js)
         self._cw.add_css(self.needs_css)
         self._cw.html_headers.define_var('facetLoadingMsg',
@@ -146,8 +154,7 @@ class FilterBox(FacetFilterMixIn, component.CtxComponent):
     def render_body(self, w, **kwargs):
         req = self._cw
         rset, vid, divid, paginate = self._get_context()
-        if len(rset) < 2:
-            return
+        assert len(rset) > 1
         if vid is None:
             vid = req.form.get('vid')
         if self.bk_linkbox_template and req.vreg.schema['Bookmark'].has_perm(req, 'add'):
