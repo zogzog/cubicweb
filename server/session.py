@@ -758,7 +758,7 @@ class Session(RequestSessionBase):
         """connections set, set according to transaction mode for each query"""
         if self._closed:
             self.free_cnxset(True)
-            raise Exception('try to access connections set on a closed session')
+            raise Exception('try to access connections set on a closed session %s' % self.id)
         return getattr(self._threaddata, 'cnxset', None)
 
     def set_cnxset(self):
@@ -766,7 +766,7 @@ class Session(RequestSessionBase):
         with self._closed_lock:
             if self._closed:
                 self.free_cnxset(True)
-                raise Exception('try to set connections set on a closed session')
+                raise Exception('try to set connections set on a closed session %s' % self.id)
             if self.cnxset is None:
                 # get connections set first to avoid race-condition
                 self._threaddata.cnxset = cnxset = self.repo._get_cnxset()

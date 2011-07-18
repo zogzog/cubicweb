@@ -483,7 +483,7 @@ class LogCursor(Cursor):
 def check_not_closed(func):
     def decorator(self, *args, **kwargs):
         if self._closed is not None:
-            raise ProgrammingError('Closed connection')
+            raise ProgrammingError('Closed connection %s' % self.sessionid)
         return func(self, *args, **kwargs)
     return decorator
 
