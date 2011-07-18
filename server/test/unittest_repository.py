@@ -293,7 +293,7 @@ class RepositoryTC(CubicWebTC):
         try:
             with self.assertRaises(Exception) as cm:
                 run_transaction()
-            self.assertEqual(str(cm.exception), 'try to access connections set on a closed session')
+            self.assertEqual(str(cm.exception), 'try to access connections set on a closed session %s' % cnxid)
         finally:
             t.join()
 
