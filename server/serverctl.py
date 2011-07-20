@@ -567,6 +567,7 @@ class ResetAdminPasswordCommand(Command):
     """
     name = 'reset-admin-pwd'
     arguments = '<instance>'
+    min_args = max_args = 1
     options = (
         ('password',
          {'short': 'p', 'type' : 'string', 'metavar' : '<new-password>',
