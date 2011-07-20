@@ -177,12 +177,11 @@ class ProgressBarView(EntityView):
 
     @classmethod
     def overrun(cls, iprogress):
-        """overrun = done + todo - """
         done = iprogress.done or 0
         todo = iprogress.todo or 0
-        revised_cost = iprogress.revised_cost or 0
-        if done + todo > revised_cost:
-            overrun = done + todo - revised_cost
+        budget = iprogress.revised_cost or 0
+        if done + todo > budget:
+            overrun = done + todo - budget
         else:
             overrun = 0
         if overrun < cls.precision:
@@ -191,11 +190,10 @@ class ProgressBarView(EntityView):
 
     @classmethod
     def overrun_percentage(cls, iprogress):
-        """pourcentage overrun = overrun / budget"""
-        revised_cost = iprogress.revised_cost or 0
-        if revised_cost == 0:
+        budget = iprogress.revised_cost or 0
+        if budget == 0:
             return 0
-        return cls.overrun(iprogress) * 100. / revised_cost
+        return cls.overrun(iprogress) * 100. / budget
 
     def cell_call(self, row, col):
         self._cw.add_css('cubicweb.iprogress.css')

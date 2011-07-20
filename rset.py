@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -79,7 +79,7 @@ class ResultSet(object):
             rows = rows[:10] + ['...']
         if len(rows) > 1:
             # add a line break before first entity if more that one.
-            pattern = '<resultset %r (%s rows):\n%s>' 
+            pattern = '<resultset %r (%s rows):\n%s>'
         else:
             pattern = '<resultset %r (%s rows): %s>'
 
@@ -515,17 +515,15 @@ class ResultSet(object):
 
     @cached
     def syntax_tree(self):
-        """get the syntax tree for the source query.
-
-        :rtype: rql.stmts.Statement
-        :return: the RQL syntax tree of the originating query
+        """return the syntax tree (:class:`rql.stmts.Union`) for the originating
+        query. You can expect it to have solutions computed but it won't be
+        annotated (you usually don't need that for simple introspection).
         """
         if self._rqlst:
             rqlst = self._rqlst.copy()
             # to avoid transport overhead when pyro is used, the schema has been
             # unset from the syntax tree
             rqlst.schema = self.req.vreg.schema
-            self.req.vreg.rqlhelper.annotate(rqlst)
         else:
             rqlst = self.req.vreg.parse(self.req, self.rql, self.args)
         return rqlst
@@ -673,8 +671,12 @@ def attr_desc_iterator(select, selectidx, rootidx):
     root = rootselect.parent
     selectmain = select.selection[selectidx]
     for i, term in enumerate(rootselect.selection):
-        rootvar = _get_variable(term)
-        if rootvar is None:
+        try:
+            # don't use _get_variable here: if the term isn't a variable
+            # (function...), we don't want it to be used as an entity attribute
+            # or relation's value (XXX beside MAX/MIN trick?)
+            rootvar = term.variable
+        except AttributeError:
             continue
         if rootvar.name == rootmainvar.name:
             continue

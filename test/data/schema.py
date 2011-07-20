@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -15,13 +15,13 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""
-
-"""
 
 from yams.buildobjs import (EntityType, String, SubjectRelation,
                             RelationDefinition)
-from cubicweb.schema import  WorkflowableEntityType
+
+from cubicweb.schema import (WorkflowableEntityType,
+                             RQLConstraint, RQLVocabularyConstraint)
+
 
 class Personne(EntityType):
     nom = String(required=True)
@@ -29,23 +29,48 @@ class Personne(EntityType):
     type = String()
     travaille = SubjectRelation('Societe')
     evaluee = SubjectRelation(('Note', 'Personne'))
-    connait = SubjectRelation('Personne', symmetric=True)
+    connait = SubjectRelation(
+        'Personne', symmetric=True,
+        constraints=[
+            RQLConstraint('NOT S identity O'),
+            # conflicting constraints, see cw_unrelated_rql tests in
+            # unittest_entity.py
+            RQLVocabularyConstraint('NOT (S connait P, P nom "toto")'),
+            RQLVocabularyConstraint('S travaille P, P nom "tutu"')])
+
 
 class Societe(EntityType):
     nom = String()
     evaluee = SubjectRelation('Note')
+    fournit = SubjectRelation(('Service', 'Produit'), cardinality='1*')
+
+
+class Service(EntityType):
+    fabrique_par = SubjectRelation('Personne', cardinality='1*')
+
+
+class Produit(EntityType):
+    fabrique_par = SubjectRelation('Usine', cardinality='1*')
+
+
+class Usine(EntityType):
+    lieu = String(required=True)
+
 
 class Note(EntityType):
     type = String()
     ecrit_par = SubjectRelation('Personne')
 
+
 class SubNote(Note):
     __specializes_schema__ = True
     description = String()
 
+
 class tags(RelationDefinition):
     subject = 'Tag'
     object = ('Personne', 'Note')
+
 
 class evaluee(RelationDefinition):
     subject = 'CWUser'
@@ -54,5 +79,3 @@ class evaluee(RelationDefinition):
 
 class StateFull(WorkflowableEntityType):
     name = String()
-
-

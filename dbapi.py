@@ -30,6 +30,7 @@ from time import time, clock
 from itertools import count
 from warnings import warn
 from os.path import join
+from uuid import uuid4
 
 from logilab.common.logging_ext import set_log_methods
 from logilab.common.decorators import monkeypatch
@@ -240,13 +241,14 @@ class DBAPISession(object):
         self.cnx = cnx
         self.data = {}
         self.login = login
+        self.mtime = time()
         # dbapi session identifier is the same as the first connection
         # identifier, but may later differ in case of auto-reconnection as done
         # by the web authentication manager (in cw.web.views.authentication)
         if cnx is not None:
             self.sessionid = cnx.sessionid
         else:
-            self.sessionid = None
+            self.sessionid = uuid4().hex
 
     @property
     def anonymous_session(self):

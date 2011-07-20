@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -25,7 +25,7 @@ from datetime import datetime, date
 
 from logilab import database as db, common as lgc
 from logilab.common.shellutils import ProgressBar
-from logilab.common.date import todate, todatetime
+from logilab.common.date import todate, todatetime, utcdatetime, utctime
 from logilab.database.sqlgen import SQLGenerator
 
 from cubicweb import Binary, ConfigurationError
@@ -204,6 +204,12 @@ class SQLAdapterMixIn(object):
     def process_result(self, cursor, column_callbacks=None, session=None):
         """return a list of CubicWeb compliant values from data in the given cursor
         """
+        return list(self.iter_process_result(cursor, column_callbacks, session))
+
+    def iter_process_result(self, cursor, column_callbacks=None, session=None):
+        """return a iterator on tuples of CubicWeb compliant values from data
+        in the given cursor
+        """
         # use two different implementations to avoid paying the price of
         # callback lookup for each *cell* in results when there is nothing to
         # lookup
@@ -219,16 +225,19 @@ class SQLAdapterMixIn(object):
         process_value = self._process_value
         binary = Binary
         # /end
-        results = cursor.fetchall()
-        for i, line in enumerate(results):
-            result = []
-            for col, value in enumerate(line):
-                if value is None:
-                    result.append(value)
-                    continue
-                result.append(process_value(value, descr[col], encoding, binary))
-            results[i] = result
-        return results
+        cursor.arraysize = 100
+        while True:
+            results = cursor.fetchmany()
+            if not results:
+                break
+            for line in results:
+                result = []
+                for col, value in enumerate(line):
+                    if value is None:
+                        result.append(value)
+                        continue
+                    result.append(process_value(value, descr[col], encoding, binary))
+                yield result
 
     def _cb_process_result(self, cursor, column_callbacks, session):
         # begin bind to locals for optimization
@@ -237,22 +246,25 @@ class SQLAdapterMixIn(object):
         process_value = self._process_value
         binary = Binary
         # /end
-        results = cursor.fetchall()
-        for i, line in enumerate(results):
-            result = []
-            for col, value in enumerate(line):
-                if value is None:
+        cursor.arraysize = 100
+        while True:
+            results = cursor.fetchmany()
+            if not results:
+                break
+            for line in results:
+                result = []
+                for col, value in enumerate(line):
+                    if value is None:
+                        result.append(value)
+                        continue
+                    cbstack = column_callbacks.get(col, None)
+                    if cbstack is None:
+                        value = process_value(value, descr[col], encoding, binary)
+                    else:
+                        for cb in cbstack:
+                            value = cb(self, session, value)
                     result.append(value)
-                    continue
-                cbstack = column_callbacks.get(col, None)
-                if cbstack is None:
-                    value = process_value(value, descr[col], encoding, binary)
-                else:
-                    for cb in cbstack:
-                        value = cb(self, session, value)
-                result.append(value)
-            results[i] = result
-        return results
+                yield result
 
     def preprocess_entity(self, entity):
         """return a dictionary to use as extra argument to cursor.execute
@@ -274,10 +286,15 @@ class SQLAdapterMixIn(object):
                         value = crypt_password(value)
                     value = self._binary(value)
                 # XXX needed for sqlite but I don't think it is for other backends
-                elif atype == 'Datetime' and isinstance(value, date):
+                # Note: use is __class__ since issubclass(datetime, date)
+                elif atype in ('Datetime', 'TZDatetime') and type(value) is date:
                     value = todatetime(value)
                 elif atype == 'Date' and isinstance(value, datetime):
                     value = todate(value)
+                elif atype == 'TZDatetime' and getattr(value, 'tzinfo', None):
+                    value = utcdatetime(value)
+                elif atype == 'TZTime' and getattr(value, 'tzinfo', None):
+                    value = utctime(value)
                 elif isinstance(value, Binary):
                     value = self._binary(value.getvalue())
             attrs[SQL_PREFIX+str(attr)] = value
@@ -326,3 +343,13 @@ def init_sqlite_connexion(cnx):
 
 sqlite_hooks = SQL_CONNECT_HOOKS.setdefault('sqlite', [])
 sqlite_hooks.append(init_sqlite_connexion)
+
+
+def init_postgres_connexion(cnx):
+    cnx.cursor().execute('SET TIME ZONE UTC')
+    # commit is needed, else setting are lost if the connection is first
+    # rollbacked
+    cnx.commit()
+
+postgres_hooks = SQL_CONNECT_HOOKS.setdefault('postgres', [])
+postgres_hooks.append(init_postgres_connexion)

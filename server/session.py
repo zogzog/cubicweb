@@ -33,11 +33,14 @@ from rql.nodes import ETYPE_PYOBJ_MAP, etype_from_pyobj
 from yams import BASE_TYPES
 
 from cubicweb import Binary, UnknownEid, QueryError, schema
+from cubicweb.selectors import objectify_selector
 from cubicweb.req import RequestSessionBase
 from cubicweb.dbapi import ConnectionProperties
 from cubicweb.utils import make_uid, RepeatList
 from cubicweb.rqlrewrite import RQLRewriter
+from cubicweb.server import ShuttingDown
 from cubicweb.server.edition import EditedEntity
+
 
 ETYPE_PYOBJ_MAP[Binary] = 'Bytes'
 
@@ -57,6 +60,46 @@ def _make_description(selected, args, solution):
     for term in selected:
         description.append(term.get_type(solution, args))
     return description
+
+@objectify_selector
+def is_user_session(cls, req, **kwargs):
+    """repository side only selector returning 1 if the session is a regular
+    user session and not an internal session
+    """
+    return not req.is_internal_session
+
+@objectify_selector
+def is_internal_session(cls, req, **kwargs):
+    """repository side only selector returning 1 if the session is not a regular
+    user session but an internal session
+    """
+    return req.is_internal_session
+
+@objectify_selector
+def repairing(cls, req, **kwargs):
+    """repository side only selector returning 1 if the session is not a regular
+    user session but an internal session
+    """
+    return req.vreg.config.repairing
+
+
+class transaction(object):
+    """context manager to enter a transaction for a session: when exiting the
+    `with` block on exception, call `session.rollback()`, else call
+    `session.commit()` on normal exit
+    """
+    def __init__(self, session, free_cnxset=True):
+        self.session = session
+        self.free_cnxset = free_cnxset
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self, exctype, exc, traceback):
+        if exctype:
+            self.session.rollback(free_cnxset=self.free_cnxset)
+        else:
+            self.session.commit(free_cnxset=self.free_cnxset)
 
 
 class hooks_control(object):
@@ -166,10 +209,21 @@ class Session(RequestSessionBase):
         self.__threaddata = threading.local()
         self._threads_in_transaction = set()
         self._closed = False
+        self._closed_lock = threading.Lock()
 
     def __unicode__(self):
         return '<%ssession %s (%s 0x%x)>' % (
             self.cnxtype, unicode(self.user.login), self.id, id(self))
+
+    def transaction(self, free_cnxset=True):
+        """return context manager to enter a transaction for the session: when
+        exiting the `with` block on exception, call `session.rollback()`, else
+        call `session.commit()` on normal exit.
+
+        The `free_cnxset` will be given to rollback/commit methods to indicate
+        wether the connections set should be freed or not.
+        """
+        return transaction(self, free_cnxset)
 
     def set_tx_data(self, txid=None):
         if txid is None:
@@ -213,14 +267,34 @@ class Session(RequestSessionBase):
         You may use this in hooks when you know both eids of the relation you
         want to add.
         """
+        self.add_relations([(rtype, [(fromeid,  toeid)])])
+
+    def add_relations(self, relations):
+        '''set many relation using a shortcut similar to the one in add_relation
+
+        relations is a list of 2-uples, the first element of each
+        2-uple is the rtype, and the second is a list of (fromeid,
+        toeid) tuples
+        '''
+        edited_entities = {}
+        relations_dict = {}
         with security_enabled(self, False, False):
-            if self.vreg.schema[rtype].inlined:
-                entity = self.entity_from_eid(fromeid)
-                edited = EditedEntity(entity)
-                edited.edited_attribute(rtype, toeid)
+            for rtype, eids in relations:
+                if self.vreg.schema[rtype].inlined:
+                    for fromeid, toeid in eids:
+                        if fromeid not in edited_entities:
+                            entity = self.entity_from_eid(fromeid)
+                            edited = EditedEntity(entity)
+                            edited_entities[fromeid] = edited
+                        else:
+                            edited = edited_entities[fromeid]
+                        edited.edited_attribute(rtype, toeid)
+                else:
+                    relations_dict[rtype] = eids
+            self.repo.glob_add_relations(self, relations_dict)
+            for edited in edited_entities.itervalues():
                 self.repo.glob_update_entity(self, edited)
-            else:
-                self.repo.glob_add_relation(self, fromeid, rtype, toeid)
+
 
     def delete_relation(self, fromeid, rtype, toeid):
         """provide direct access to the repository method to delete a relation.
@@ -358,16 +432,19 @@ class Session(RequestSessionBase):
         """
         return eid in self.transaction_data.get('neweids', ())
 
-    def schema_rproperty(self, rtype, eidfrom, eidto, rprop):
-        rschema = self.repo.schema[rtype]
-        subjtype = self.describe(eidfrom)[0]
-        objtype = self.describe(eidto)[0]
-        rdef = rschema.rdef(subjtype, objtype)
-        return rdef.get(rprop)
+    def rtype_eids_rdef(self, rtype, eidfrom, eidto):
+        # use type_and_source_from_eid instead of type_from_eid for optimization
+        # (avoid two extra methods call)
+        subjtype = self.repo.type_and_source_from_eid(eidfrom, self)[0]
+        objtype = self.repo.type_and_source_from_eid(eidto, self)[0]
+        return self.vreg.schema.rschema(rtype).rdefs[(subjtype, objtype)]
 
     # security control #########################################################
 
     DEFAULT_SECURITY = object() # evaluated to true by design
+
+    def security_enabled(self, read=False, write=False):
+        return security_enabled(self, read=read, write=write)
 
     @property
     def read_security(self):
@@ -453,6 +530,11 @@ class Session(RequestSessionBase):
 
     HOOKS_ALLOW_ALL = object()
     HOOKS_DENY_ALL = object()
+
+    def allow_all_hooks_but(self, *categories):
+        return hooks_control(self, self.HOOKS_ALLOW_ALL, *categories)
+    def deny_all_hooks_but(self, *categories):
+        return hooks_control(self, self.HOOKS_DENY_ALL, *categories)
 
     @property
     def hooks_mode(self):
@@ -582,21 +664,22 @@ class Session(RequestSessionBase):
 
     def set_pool(self):
         """the session need a pool to execute some queries"""
-        if self._closed:
-            self.reset_pool(True)
-            raise Exception('try to set pool on a closed session')
-        if self.pool is None:
-            # get pool first to avoid race-condition
-            self._threaddata.pool = pool = self.repo._get_pool()
-            try:
-                pool.pool_set()
-            except:
-                self._threaddata.pool = None
-                self.repo._free_pool(pool)
-                raise
-            self._threads_in_transaction.add(
-                (threading.currentThread(), pool) )
-        return self._threaddata.pool
+        with self._closed_lock:
+            if self._closed:
+                self.reset_pool(True)
+                raise Exception('try to set pool on a closed session')
+            if self.pool is None:
+                # get pool first to avoid race-condition
+                self._threaddata.pool = pool = self.repo._get_pool()
+                try:
+                    pool.pool_set()
+                except:
+                    self._threaddata.pool = None
+                    self.repo._free_pool(pool)
+                    raise
+                self._threads_in_transaction.add(
+                    (threading.currentThread(), pool) )
+            return self._threaddata.pool
 
     def _free_thread_pool(self, thread, pool, force_close=False):
         try:
@@ -834,7 +917,8 @@ class Session(RequestSessionBase):
 
     def close(self):
         """do not close pool on session close, since they are shared now"""
-        self._closed = True
+        with self._closed_lock:
+            self._closed = True
         # copy since _threads_in_transaction maybe modified while waiting
         for thread, pool in self._threads_in_transaction.copy():
             if thread is threading.currentThread():
@@ -987,6 +1071,11 @@ class Session(RequestSessionBase):
 
     # deprecated ###############################################################
 
+    @deprecated('[3.13] use getattr(session.rtype_eids_rdef(rtype, eidfrom, eidto), prop)')
+    def schema_rproperty(self, rtype, eidfrom, eidto, rprop):
+        return getattr(self.rtype_eids_rdef(rtype, eidfrom, eidto), rprop)
+
+
     @deprecated("[3.7] execute is now unsafe by default in hooks/operation. You"
                 " can also control security with the security_enabled context "
                 "manager")
@@ -1056,7 +1145,7 @@ class InternalSession(Session):
         """connections pool, set according to transaction mode for each query"""
         if self.repo.shutting_down:
             self.reset_pool(True)
-            raise Exception('repository is shutting down')
+            raise ShuttingDown('repository is shutting down')
         return getattr(self._threaddata, 'pool', None)
 
 

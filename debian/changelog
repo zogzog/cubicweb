@@ -1,3 +1,63 @@
+cubicweb (3.12.9-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Sylvain Thénault <sylvain.thenault@logilab.fr>  Tue, 12 Jul 2011 11:30:10 +0200
+
+cubicweb (3.12.8-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Sylvain Thénault <sylvain.thenault@logilab.fr>  Mon, 27 Jun 2011 13:58:58 +0200
+
+cubicweb (3.12.7-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Sylvain Thénault <sylvain.thenault@logilab.fr>  Tue, 21 Jun 2011 14:47:14 +0200
+
+cubicweb (3.12.6-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Sylvain Thénault <sylvain.thenault@logilab.fr>  Thu, 09 Jun 2011 16:09:50 +0200
+
+cubicweb (3.12.5-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Sylvain Thénault <sylvain.thenault@logilab.fr>  Mon, 23 May 2011 10:27:42 +0200
+
+cubicweb (3.12.4-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Sylvain Thénault <sylvain.thenault@logilab.fr>  Wed, 11 May 2011 12:28:42 +0200
+
+cubicweb (3.12.3-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Sylvain Thénault <sylvain.thenault@logilab.fr>  Thu, 05 May 2011 16:21:33 +0200
+
+cubicweb (3.12.2-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Nicolas Chauvat <nicolas.chauvat@logilab.fr>  Mon, 11 Apr 2011 22:15:21 +0200
+
+cubicweb (3.12.1-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Sylvain Thénault <sylvain.thenault@logilab.fr>  Wed, 06 Apr 2011 23:25:12 +0200
+
+cubicweb (3.12.0-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Alexandre Fayolle <alexandre.fayolle@logilab.fr>  Fri, 01 Apr 2011 15:59:37 +0200
+
 cubicweb (3.11.3-1) unstable; urgency=low
 
   * new upstream release
@@ -6,7 +66,7 @@ cubicweb (3.11.3-1) unstable; urgency=low
 
 cubicweb (3.11.2-1) unstable; urgency=low
 
-  * new upstream release 
+  * new upstream release
 
  -- Nicolas Chauvat <nicolas.chauvat@logilab.fr>  Mon, 28 Mar 2011 19:18:54 +0200
 

@@ -210,6 +210,12 @@ BASIC_WITH_LIMIT = [
 FROM cw_Personne AS _P
 LIMIT 20
 OFFSET 10'''),
+    ("Any P ORDERBY N LIMIT 1 WHERE P is Personne, P travaille S, S eid %(eid)s, P nom N, P nom %(text)s",
+     '''SELECT _P.cw_eid
+FROM cw_Personne AS _P, travaille_relation AS rel_travaille0
+WHERE rel_travaille0.eid_from=_P.cw_eid AND rel_travaille0.eid_to=12345 AND _P.cw_nom=hip hop momo
+ORDER BY _P.cw_nom
+LIMIT 1'''),
     ]
 
 
@@ -536,6 +542,14 @@ WHERE NOT (EXISTS(SELECT 1 WHERE _X.cw_description=parent)) AND NOT (EXISTS(SELE
      '''SELECT _X.cw_eid
 FROM cw_CWEType AS _X
 WHERE _X.cw_description!=parent AND _X.cw_description!=_X.cw_name'''),
+
+    ('DISTINCT Any X, SUM(C) GROUPBY X ORDERBY SUM(C) DESC WHERE H todo_by X, H duration C',
+     '''SELECT DISTINCT rel_todo_by0.eid_to, SUM(_H.cw_duration)
+FROM cw_Affaire AS _H, todo_by_relation AS rel_todo_by0
+WHERE rel_todo_by0.eid_from=_H.cw_eid
+GROUP BY rel_todo_by0.eid_to
+ORDER BY 2 DESC'''),
+
     ]
 
 ADVANCED_WITH_GROUP_CONCAT = [
@@ -631,7 +645,12 @@ WHERE NOT (_P.cw_nom IS NULL)'''),
     ("Personne X,Y where X nom NX, Y nom NX, X eid XE, not Y eid XE",
      '''SELECT _X.cw_eid, _Y.cw_eid
 FROM cw_Personne AS _X, cw_Personne AS _Y
-WHERE _Y.cw_nom=_X.cw_nom AND NOT (_Y.cw_eid=_X.cw_eid)''')
+WHERE _Y.cw_nom=_X.cw_nom AND NOT (_Y.cw_eid=_X.cw_eid)'''),
+
+    ('Any X,Y WHERE X is Personne, Y is Personne, X nom XD, Y nom XD, X eid Z, Y eid > Z',
+     '''SELECT _X.cw_eid, _Y.cw_eid
+FROM cw_Personne AS _X, cw_Personne AS _Y
+WHERE _Y.cw_nom=_X.cw_nom AND _Y.cw_eid>_X.cw_eid'''),
     ]
 
 
@@ -835,9 +854,9 @@ FROM cw_Personne AS _X LEFT OUTER JOIN connait_relation AS rel_connait0 ON (rel_
 WHERE _X.cw_eid=12'''
     ),
     ("Any P WHERE X eid 12, P? concerne X, X todo_by S",
-     '''SELECT rel_concerne0.eid_from
-FROM todo_by_relation AS rel_todo_by1 LEFT OUTER JOIN concerne_relation AS rel_concerne0 ON (rel_concerne0.eid_to=12)
-WHERE rel_todo_by1.eid_from=12'''
+     '''SELECT rel_concerne1.eid_from
+FROM todo_by_relation AS rel_todo_by0 LEFT OUTER JOIN concerne_relation AS rel_concerne1 ON (rel_concerne1.eid_to=12)
+WHERE rel_todo_by0.eid_from=12'''
     ),
 
     ('Any GN, TN ORDERBY GN WHERE T tags G?, T name TN, G name GN',
@@ -909,7 +928,38 @@ FROM cw_Note AS _G LEFT OUTER JOIN cw_State AS _S ON (_G.cw_in_state=_S.cw_eid A
     ('Any O,AD  WHERE NOT S inline1 O, S eid 123, O todo_by AD?',
      '''SELECT _O.cw_eid, rel_todo_by0.eid_to
 FROM cw_Note AS _S, cw_Affaire AS _O LEFT OUTER JOIN todo_by_relation AS rel_todo_by0 ON (rel_todo_by0.eid_from=_O.cw_eid)
-WHERE (_S.cw_inline1 IS NULL OR _S.cw_inline1!=_O.cw_eid) AND _S.cw_eid=123''')
+WHERE (_S.cw_inline1 IS NULL OR _S.cw_inline1!=_O.cw_eid) AND _S.cw_eid=123'''),
+
+    ('Any X,AE WHERE X multisource_inlined_rel S?, S ambiguous_inlined A, A modification_date AE',
+     '''SELECT _X.cw_eid, _T0.C2
+FROM cw_Card AS _X LEFT OUTER JOIN (SELECT _S.cw_eid AS C0, _A.cw_eid AS C1, _A.cw_modification_date AS C2
+FROM cw_Affaire AS _S, cw_CWUser AS _A
+WHERE _S.cw_ambiguous_inlined=_A.cw_eid
+UNION ALL
+SELECT _S.cw_eid AS C0, _A.cw_eid AS C1, _A.cw_modification_date AS C2
+FROM cw_CWUser AS _A, cw_Note AS _S
+WHERE _S.cw_ambiguous_inlined=_A.cw_eid) AS _T0 ON (_X.cw_multisource_inlined_rel=_T0.C0)
+UNION ALL
+SELECT _X.cw_eid, _T0.C2
+FROM cw_Note AS _X LEFT OUTER JOIN (SELECT _S.cw_eid AS C0, _A.cw_eid AS C1, _A.cw_modification_date AS C2
+FROM cw_Affaire AS _S, cw_CWUser AS _A
+WHERE _S.cw_ambiguous_inlined=_A.cw_eid
+UNION ALL
+SELECT _S.cw_eid AS C0, _A.cw_eid AS C1, _A.cw_modification_date AS C2
+FROM cw_CWUser AS _A, cw_Note AS _S
+WHERE _S.cw_ambiguous_inlined=_A.cw_eid) AS _T0 ON (_X.cw_multisource_inlined_rel=_T0.C0)'''
+    ),
+
+    ('Any X,T,OT WHERE X tags T, OT? tags X, X is Tag, X eid 123',
+     '''SELECT rel_tags0.eid_from, rel_tags0.eid_to, rel_tags1.eid_from
+FROM tags_relation AS rel_tags0 LEFT OUTER JOIN tags_relation AS rel_tags1 ON (rel_tags1.eid_to=123)
+WHERE rel_tags0.eid_from=123'''),
+
+    ('Any CASE, CALIBCFG, CFG '
+     'WHERE CASE eid 1, CFG ecrit_par CASE, CALIBCFG? ecrit_par CASE',
+     '''SELECT _CFG.cw_ecrit_par, _CALIBCFG.cw_eid, _CFG.cw_eid
+FROM cw_Note AS _CFG LEFT OUTER JOIN cw_Note AS _CALIBCFG ON (_CALIBCFG.cw_ecrit_par=_CFG.cw_ecrit_par)
+WHERE _CFG.cw_ecrit_par=1'''),
     ]
 
 VIRTUAL_VARS = [
@@ -1201,7 +1251,7 @@ class PostgresSQLGeneratorTC(RQLGeneratorTC):
 
     def _check(self, rql, sql, varmap=None, args=None):
         if args is None:
-            args = {'text': 'hip hop momo'}
+            args = {'text': 'hip hop momo', 'eid': 12345}
         try:
             union = self._prepare(rql)
             r, nargs, cbs = self.o.generate(union, args,
@@ -1225,9 +1275,13 @@ class PostgresSQLGeneratorTC(RQLGeneratorTC):
             yield self._check, rql, sql
 
     def _checkall(self, rql, sql):
+        if isinstance(rql, tuple):
+            rql, args = rql
+        else:
+            args = None
         try:
             rqlst = self._prepare(rql)
-            r, args, cbs = self.o.generate(rqlst)
+            r, args, cbs = self.o.generate(rqlst, args)
             self.assertEqual((r.strip(), args), sql)
         except Exception, ex:
             print rql
@@ -1239,7 +1293,7 @@ class PostgresSQLGeneratorTC(RQLGeneratorTC):
         return
 
     def test1(self):
-        self._checkall('Any count(RDEF) WHERE RDEF relation_type X, X eid %(x)s',
+        self._checkall(('Any count(RDEF) WHERE RDEF relation_type X, X eid %(x)s', {'x': None}),
                        ("""SELECT COUNT(T1.C0) FROM (SELECT _RDEF.cw_eid AS C0
 FROM cw_CWAttribute AS _RDEF
 WHERE _RDEF.cw_relation_type=%(x)s
@@ -1250,7 +1304,7 @@ WHERE _RDEF.cw_relation_type=%(x)s) AS T1""", {}),
                        )
 
     def test2(self):
-        self._checkall('Any X WHERE C comments X, C eid %(x)s',
+        self._checkall(('Any X WHERE C comments X, C eid %(x)s', {'x': None}),
                        ('''SELECT rel_comments0.eid_to
 FROM comments_relation AS rel_comments0
 WHERE rel_comments0.eid_from=%(x)s''', {})
@@ -1411,6 +1465,12 @@ FROM cw_Affaire AS _X
 WHERE ((EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_by0 WHERE rel_owned_by0.eid_from=_X.cw_eid AND rel_owned_by0.eid_to=1)) OR (((EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_by2, cw_Affaire AS _D LEFT OUTER JOIN concerne_relation AS rel_concerne1 ON (rel_concerne1.eid_from=_D.cw_eid) LEFT OUTER JOIN cw_Note AS _B ON (rel_concerne1.eid_to=_B.cw_eid) WHERE rel_owned_by2.eid_from=_B.cw_eid AND rel_owned_by2.eid_to=1 AND _X.cw_eid=_D.cw_eid)) OR (EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_by4, cw_Affaire AS _F LEFT OUTER JOIN concerne_relation AS rel_concerne3 ON (rel_concerne3.eid_from=_F.cw_eid) LEFT OUTER JOIN cw_Societe AS _E ON (rel_concerne3.eid_to=_E.cw_eid) WHERE rel_owned_by4.eid_from=_E.cw_eid AND rel_owned_by4.eid_to=1 AND _X.cw_eid=_F.cw_eid))))))) AS _T0, cw_CWEType AS _ET, is_relation AS rel_is0
 WHERE rel_is0.eid_from=_T0.C0 AND rel_is0.eid_to=_ET.cw_eid
 GROUP BY _ET.cw_name'''),
+
+            ('Any A WHERE A ordernum O, A is CWAttribute WITH O BEING (Any MAX(O) WHERE A ordernum O, A is CWAttribute)',
+             '''SELECT _A.cw_eid
+FROM (SELECT MAX(_A.cw_ordernum) AS C0
+FROM cw_CWAttribute AS _A) AS _T0, cw_CWAttribute AS _A
+WHERE _A.cw_ordernum=_T0.C0'''),
             )):
             yield t
 
@@ -1576,7 +1636,7 @@ WHERE ((CAST(EXTRACT(YEAR from _X.cw_creation_date) AS INTEGER)=2010) OR (_X.cw_
                     '''SELECT 1
 WHERE NOT (EXISTS(SELECT 1 FROM in_group_relation AS rel_in_group0))''')
 
-    def test_nonregr_subquery_missing_join(self):
+    def test_nonregr_outer_join_multiple(self):
         self._check('Any COUNT(P1148),G GROUPBY G '
                     'WHERE G owned_by D, D eid 1122, K1148 bookmarked_by P1148, '
                     'K1148 eid 1148, P1148? in_group G',
@@ -1586,7 +1646,7 @@ WHERE rel_owned_by0.eid_from=_G.cw_eid AND rel_owned_by0.eid_to=1122 AND rel_boo
 GROUP BY _G.cw_eid'''
                     )
 
-    def test_nonregr_subquery_missing_join2(self):
+    def test_nonregr_outer_join_multiple2(self):
         self._check('Any COUNT(P1148),G GROUPBY G '
                     'WHERE G owned_by D, D eid 1122, K1148 bookmarked_by P1148?, '
                     'K1148 eid 1148, P1148? in_group G',
@@ -1594,6 +1654,16 @@ GROUP BY _G.cw_eid'''
 FROM owned_by_relation AS rel_owned_by0, cw_CWGroup AS _G LEFT OUTER JOIN in_group_relation AS rel_in_group2 ON (rel_in_group2.eid_to=_G.cw_eid) LEFT OUTER JOIN bookmarked_by_relation AS rel_bookmarked_by1 ON (rel_bookmarked_by1.eid_from=1148 AND rel_in_group2.eid_from=rel_bookmarked_by1.eid_to)
 WHERE rel_owned_by0.eid_from=_G.cw_eid AND rel_owned_by0.eid_to=1122
 GROUP BY _G.cw_eid''')
+
+    def test_groupby_orderby_insertion_dont_modify_intention(self):
+        self._check('Any YEAR(XECT)*100+MONTH(XECT), COUNT(X),SUM(XCE),AVG(XSCT-XECT) '
+                    'GROUPBY YEAR(XECT),MONTH(XECT) ORDERBY 1 '
+                    'WHERE X creation_date XSCT, X modification_date XECT, '
+                    'X ordernum XCE, X is CWAttribute',
+                    '''SELECT ((CAST(EXTRACT(YEAR from _X.cw_modification_date) AS INTEGER) * 100) + CAST(EXTRACT(MONTH from _X.cw_modification_date) AS INTEGER)), COUNT(_X.cw_eid), SUM(_X.cw_ordernum), AVG((_X.cw_creation_date - _X.cw_modification_date))
+FROM cw_CWAttribute AS _X
+GROUP BY CAST(EXTRACT(YEAR from _X.cw_modification_date) AS INTEGER),CAST(EXTRACT(MONTH from _X.cw_modification_date) AS INTEGER)
+ORDER BY 1'''),
 
 
 class SqlServer2005SQLGeneratorTC(PostgresSQLGeneratorTC):
@@ -1697,10 +1767,61 @@ SELECT _O.cw_eid, _O.cw_address, _O.cw_alias, _O.cw_modification_date
 FROM cw_EmailAddress AS _O
 WHERE NOT (EXISTS(SELECT 1 FROM use_email_relation AS rel_use_email0 WHERE rel_use_email0.eid_from=1 AND rel_use_email0.eid_to=_O.cw_eid)) AND EXISTS(SELECT 1 FROM use_email_relation AS rel_use_email1 WHERE rel_use_email1.eid_to=_O.cw_eid AND EXISTS(SELECT 1 FROM cw_CWGroup AS _D WHERE rel_use_email1.eid_from=2 AND NOT (EXISTS(SELECT 1 FROM in_group_relation AS rel_in_group2 WHERE rel_in_group2.eid_from=2 AND rel_in_group2.eid_to=_D.cw_eid)) AND _D.cw_name=guests))
 ORDER BY 4 DESC'''),
+
+    ("Any P ORDERBY N LIMIT 1 WHERE P is Personne, P travaille S, S eid %(eid)s, P nom N, P nom %(text)s",
+     '''WITH orderedrows AS (
+SELECT
+_L01
+, ROW_NUMBER() OVER (ORDER BY _L01) AS __RowNumber
+FROM (
+SELECT _P.cw_eid AS _L01 FROM  cw_Personne AS _P, travaille_relation AS rel_travaille0
+WHERE rel_travaille0.eid_from=_P.cw_eid AND rel_travaille0.eid_to=12345 AND _P.cw_nom=hip hop momo
+) AS _SQ1 )
+SELECT
+_L01
+FROM orderedrows WHERE
+__RowNumber <= 1'''),
+
+    ("Any P ORDERBY N LIMIT 1 WHERE P is Personne, P nom N",
+     '''WITH orderedrows AS (
+SELECT
+_L01
+, ROW_NUMBER() OVER (ORDER BY _L01) AS __RowNumber
+FROM (
+SELECT _P.cw_eid AS _L01 FROM  cw_Personne AS _P
+) AS _SQ1 )
+SELECT
+_L01
+FROM orderedrows WHERE
+__RowNumber <= 1
+'''),
+
+    ("Any PN, N, P ORDERBY N LIMIT 1 WHERE P is Personne, P nom N, P prenom PN",
+     '''WITH orderedrows AS (
+SELECT
+_L01, _L02, _L03
+, ROW_NUMBER() OVER (ORDER BY _L02) AS __RowNumber
+FROM (
+SELECT _P.cw_prenom AS _L01, _P.cw_nom AS _L02, _P.cw_eid AS _L03 FROM  cw_Personne AS _P
+) AS _SQ1 )
+SELECT
+_L01, _L02, _L03
+FROM orderedrows WHERE
+__RowNumber <= 1
+'''),
             ]
         for t in self._parse(WITH_LIMIT):# + ADVANCED_WITH_LIMIT_OR_ORDERBY):
             yield t
 
+    def test_groupby_orderby_insertion_dont_modify_intention(self):
+        self._check('Any YEAR(XECT)*100+MONTH(XECT), COUNT(X),SUM(XCE),AVG(XSCT-XECT) '
+                    'GROUPBY YEAR(XECT),MONTH(XECT) ORDERBY 1 '
+                    'WHERE X creation_date XSCT, X modification_date XECT, '
+                    'X ordernum XCE, X is CWAttribute',
+                    '''SELECT ((YEAR(_X.cw_modification_date) * 100) + MONTH(_X.cw_modification_date)), COUNT(_X.cw_eid), SUM(_X.cw_ordernum), AVG((_X.cw_creation_date - _X.cw_modification_date))
+FROM cw_CWAttribute AS _X
+GROUP BY YEAR(_X.cw_modification_date),MONTH(_X.cw_modification_date)
+ORDER BY 1'''),
 
 
 class SqliteSQLGeneratorTC(PostgresSQLGeneratorTC):
@@ -1832,6 +1953,16 @@ WHERE appears0.word_id IN (SELECT word_id FROM word WHERE word in ('toto', 'tata
 FROM cw_CWUser AS _X
 WHERE ((YEAR(_X.cw_creation_date)=2010) OR (_X.cw_creation_date IS NULL))''')
 
+    def test_groupby_orderby_insertion_dont_modify_intention(self):
+        self._check('Any YEAR(XECT)*100+MONTH(XECT), COUNT(X),SUM(XCE),AVG(XSCT-XECT) '
+                    'GROUPBY YEAR(XECT),MONTH(XECT) ORDERBY 1 '
+                    'WHERE X creation_date XSCT, X modification_date XECT, '
+                    'X ordernum XCE, X is CWAttribute',
+                    '''SELECT ((YEAR(_X.cw_modification_date) * 100) + MONTH(_X.cw_modification_date)), COUNT(_X.cw_eid), SUM(_X.cw_ordernum), AVG((_X.cw_creation_date - _X.cw_modification_date))
+FROM cw_CWAttribute AS _X
+GROUP BY YEAR(_X.cw_modification_date),MONTH(_X.cw_modification_date)
+ORDER BY 1'''),
+
 
 
 class MySQLGenerator(PostgresSQLGeneratorTC):
@@ -1927,6 +2058,16 @@ WHERE ((EXTRACT(YEAR from _X.cw_creation_date)=2010) OR (_X.cw_creation_date IS 
                     '''SELECT 1
 FROM (SELECT 1) AS _T
 WHERE NOT (EXISTS(SELECT 1 FROM in_group_relation AS rel_in_group0))''')
+
+    def test_groupby_orderby_insertion_dont_modify_intention(self):
+        self._check('Any YEAR(XECT)*100+MONTH(XECT), COUNT(X),SUM(XCE),AVG(XSCT-XECT) '
+                    'GROUPBY YEAR(XECT),MONTH(XECT) ORDERBY 1 '
+                    'WHERE X creation_date XSCT, X modification_date XECT, '
+                    'X ordernum XCE, X is CWAttribute',
+                    '''SELECT ((EXTRACT(YEAR from _X.cw_modification_date) * 100) + EXTRACT(MONTH from _X.cw_modification_date)), COUNT(_X.cw_eid), SUM(_X.cw_ordernum), AVG((_X.cw_creation_date - _X.cw_modification_date))
+FROM cw_CWAttribute AS _X
+GROUP BY EXTRACT(YEAR from _X.cw_modification_date),EXTRACT(MONTH from _X.cw_modification_date)
+ORDER BY 1'''),
 
 
 class removeUnsusedSolutionsTC(TestCase):

@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -77,17 +77,22 @@ class SparqlFormView(form.FormViewMixIn, StartupView):
 
 YAMS_XMLSCHEMA_MAPPING = {
     'String': 'string',
+
+    'Boolean': 'boolean',
     'Int': 'integer',
     'Float': 'float',
-    'Boolean': 'boolean',
+
     'Datetime': 'dateTime',
+    'TZDatetime': 'dateTime',
     'Date': 'date',
     'Time': 'time',
+    'TZTime': 'time',
+
     # XXX the following types don't have direct mapping
     'Decimal': 'string',
     'Interval': 'duration',
-    'Password': 'string',
     'Bytes': 'base64Binary',
+    'Password': 'string',
     }
 
 def xmlschema(yamstype):
@@ -118,7 +123,7 @@ class SparqlResultXmlView(AnyRsetView):
     def cell_binding(self, row, col, varname):
         celltype = self.cw_rset.description[row][col]
         if self._cw.vreg.schema.eschema(celltype).final:
-            cellcontent = self.view('cell', self.cw_rset, row=row, col=col)
+            cellcontent = self._cw.view('cell', self.cw_rset, row=row, col=col)
             return E.binding(E.literal(cellcontent,
                                        datatype=xmlschema(celltype)),
                              name=varname)

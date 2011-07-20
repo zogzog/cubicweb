@@ -384,7 +384,7 @@ class TestDataBaseHandler(object):
 
 
     def get_cnx(self):
-        """return Connection object ont he current repository"""
+        """return Connection object on the current repository"""
         from cubicweb.dbapi import in_memory_cnx
         repo = self.get_repo()
         sources = self.config.sources()
@@ -527,11 +527,19 @@ class PostgresTestDataBaseHandler(TestDataBaseHandler):
         return get_db_helper('postgres')
 
     @property
-    @cached
     def dbcnx(self):
-        from cubicweb.server.serverctl import _db_sys_cnx
-        return  _db_sys_cnx(self.system_source, 'CREATE DATABASE and / or USER',
-                            interactive=False)
+        try:
+            return self._cnx
+        except AttributeError:
+            from cubicweb.server.serverctl import _db_sys_cnx
+            try:
+                self._cnx = _db_sys_cnx(
+                    self.system_source, 'CREATE DATABASE and / or USER',
+                    interactive=False)
+                return self._cnx
+            except Exception:
+                self._cnx = None
+                raise
 
     @property
     @cached
@@ -569,17 +577,19 @@ class PostgresTestDataBaseHandler(TestDataBaseHandler):
                 cnx.close()
             init_repository(self.config, interactive=False)
         except:
-            self.dbcnx.rollback()
+            if self.dbcnx is not None:
+                self.dbcnx.rollback()
             print >> sys.stderr, 'building', self.dbname, 'failed'
             #self._drop(self.dbname)
             raise
 
     def helper_clear_cache(self):
-        self.dbcnx.commit()
-        self.dbcnx.close()
-        clear_cache(self, 'dbcnx')
+        if self.dbcnx is not None:
+            self.dbcnx.commit()
+            self.dbcnx.close()
+            del self._cnx
+            clear_cache(self, 'cursor')
         clear_cache(self, 'helper')
-        clear_cache(self, 'cursor')
 
     def __del__(self):
         self.helper_clear_cache()
@@ -600,15 +610,18 @@ class PostgresTestDataBaseHandler(TestDataBaseHandler):
     def _backup_database(self, db_id):
         """Actual backup the current database.
 
-        return a value to be stored in db_cache to allow restoration"""
+        return a value to be stored in db_cache to allow restoration
+        """
         from cubicweb.server.serverctl import createdb
         orig_name = self.system_source['db-name']
         try:
             backup_name = self._backup_name(db_id)
             self._drop(backup_name)
             self.system_source['db-name'] = backup_name
+            self._repo.turn_repo_off()
             createdb(self.helper, self.system_source, self.dbcnx, self.cursor, template=orig_name)
             self.dbcnx.commit()
+            self._repo.turn_repo_on()
             return backup_name
         finally:
             self.system_source['db-name'] = orig_name

@@ -154,7 +154,7 @@ msgid "'%s' action doesn't take any options"
 msgstr ""
 
 #, python-format
-msgid "'%s' action require 'linkattr' option"
+msgid "'%s' action requires 'linkattr' option"
 msgstr ""
 
 msgid "(UNEXISTANT EID)"
@@ -711,6 +711,18 @@ msgstr ""
 msgid "Submit bug report by mail"
 msgstr ""
 
+msgid "TZDatetime"
+msgstr "International date and time"
+
+msgid "TZDatetime_plural"
+msgstr "International dates and times"
+
+msgid "TZTime"
+msgstr "International time"
+
+msgid "TZTime_plural"
+msgstr "International times"
+
 #, python-format
 msgid "The view %s can not be applied to this query"
 msgstr ""
@@ -1009,10 +1021,6 @@ msgstr "subworkflow exit-point"
 msgid "add WorkflowTransition transition_of Workflow object"
 msgstr "workflow-transition"
 
-#, python-format
-msgid "add a %s"
-msgstr ""
-
 msgctxt "inlined:CWRelation.from_entity.subject"
 msgid "add a CWEType"
 msgstr "add an entity type"
@@ -1148,6 +1156,9 @@ msgstr ""
 
 msgid "anonymous"
 msgstr ""
+
+msgid "anyrsetview"
+msgstr "rset views"
 
 msgid "april"
 msgstr ""
@@ -2267,6 +2278,9 @@ msgstr ""
 msgid "entity update"
 msgstr ""
 
+msgid "entityview"
+msgstr "entity views"
+
 msgid "error"
 msgstr ""
 
@@ -2667,6 +2681,9 @@ msgid ""
 "indicate which state should be used by default when an entity using states "
 "is created"
 msgstr ""
+
+msgid "indifferent"
+msgstr "indifferent"
 
 msgid "info"
 msgstr ""
@@ -3305,7 +3322,7 @@ msgid "read"
 msgstr ""
 
 msgid "read_permission"
-msgstr "can be read by"
+msgstr "read permission"
 
 msgctxt "CWAttribute"
 msgid "read_permission"
@@ -3324,11 +3341,11 @@ msgstr "has permission to read"
 
 msgctxt "CWGroup"
 msgid "read_permission_object"
-msgstr "can be read by"
+msgstr "has permission to read"
 
 msgctxt "RQLExpression"
 msgid "read_permission_object"
-msgstr "can be read by"
+msgstr "has permission to read"
 
 msgid "regexp matching host(s) to which this config applies"
 msgstr ""
@@ -3363,7 +3380,7 @@ msgstr ""
 
 #, python-format
 msgid ""
-"relation %s is supported but none if its definitions matches supported "
+"relation %s is supported but none of its definitions matches supported "
 "entities"
 msgstr ""
 
@@ -3648,6 +3665,9 @@ msgstr ""
 msgid "startup views"
 msgstr ""
 
+msgid "startupview"
+msgstr "startup views"
+
 msgid "state"
 msgstr ""
 
@@ -3909,7 +3929,7 @@ msgctxt "TrInfo"
 msgid "tr_count"
 msgstr "transition number"
 
-msgid "transaction undoed"
+msgid "transaction undone"
 msgstr ""
 
 #, python-format

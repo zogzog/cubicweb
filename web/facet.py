@@ -78,7 +78,7 @@ def rtype_facet_title(facet):
 def prepare_facets_rqlst(rqlst, args=None):
     """prepare a syntax tree to generate facet filters
 
-    * remove ORDERBY clause
+    * remove ORDERBY/GROUPBY clauses
     * cleanup selection (remove everything)
     * undefine unnecessary variables
     * set DISTINCT
@@ -91,8 +91,10 @@ def prepare_facets_rqlst(rqlst, args=None):
     select.set_limit(None)
     select.set_offset(None)
     baserql = select.as_string(kwargs=args)
-    # cleanup sort terms
+    # cleanup sort terms / group by
     select.remove_sort_terms()
+    select.remove_groups()
+    # XXX remove aggregat from having
     # selection: only vocabulary entity
     for term in select.selection[:]:
         select.remove_selected(term)
@@ -605,7 +607,7 @@ class RelationFacet(VocabularyFacet):
                 insert_attr_select_relation(
                     rqlst, self.filtered_variable, self.rtype, self.role, self.target_attr,
                     select_target_entity=False)
-            values = [str(x) for x, in self.rqlexec(rqlst.as_string())]
+            values = [unicode(x) for x, in self.rqlexec(rqlst.as_string())]
         except:
             self.exception('while computing values for %s', self)
             return []
@@ -936,7 +938,7 @@ class RangeFacet(AttributeFacet):
         """return the widget instance to use to display this facet"""
         values = set(value for _, value in self.vocabulary() if value is not None)
         # Rset with entities (the facet is selected) but without values
-        if len(values) == 0:
+        if len(values) < 2:
             return None
         return self.wdgclass(self, min(values), max(values))
 
@@ -1016,6 +1018,7 @@ class HasRelationFacet(AbstractFacet):
           rtype = 'has_image'
           role = 'subject'
     """
+    __select__ = partial_relation_possible() & match_context_prop()
     rtype = None # override me in subclass
     role = 'subject' # role of filtered entity in the relation
 
@@ -1125,8 +1128,8 @@ class FacetRangeWidget(HTMLWidget):
 
     def _render(self):
         facet = self.facet
-        facet._cw.add_js('ui.slider.js')
-        facet._cw.add_css('ui.all.css')
+        facet._cw.add_js('jquery.ui.js')
+        facet._cw.add_css('jquery.ui.css')
         sliderid = make_uid('theslider')
         facetid = xml_escape(self.facet.__regid__)
         facet._cw.html_headers.add_onload(self.onload % {

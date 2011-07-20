@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
@@ -21,11 +22,15 @@ from cubicweb import ValidationError
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.transaction import *
 
+from cubicweb.server.sources.native import UndoException
+
+
 class UndoableTransactionTC(CubicWebTC):
 
     def setup_database(self):
+        req = self.request()
         self.session.undo_actions = set('CUDAR')
-        self.toto = self.create_user('toto', password='toto', groups=('users',),
+        self.toto = self.create_user(req, 'toto', password='toto', groups=('users',),
                                      commit=False)
         self.txuuid = self.commit()
 
@@ -167,7 +172,7 @@ class UndoableTransactionTC(CubicWebTC):
                           ['CWUser'])
         self.assertEqual([et.name for et in toto.is_instance_of],
                           ['CWUser'])
-        # undoing shouldn't be visble in undoable transaction, and the undoed
+        # undoing shouldn't be visble in undoable transaction, and the undone
         # transaction should be removed
         txs = self.cnx.undoable_transactions()
         self.assertEqual(len(txs), 2)
@@ -246,7 +251,8 @@ class UndoableTransactionTC(CubicWebTC):
 
     def test_undo_creation_integrity_1(self):
         session = self.session
-        tutu = self.create_user('tutu', commit=False)
+        req = self.request()
+        tutu = self.create_user(req, 'tutu', commit=False)
         txuuid = self.commit()
         email = self.request().create_entity('EmailAddress', address=u'tutu@cubicweb.org')
         prop = self.request().create_entity('CWProperty', pkey=u'ui.default-text-format',
@@ -281,6 +287,15 @@ class UndoableTransactionTC(CubicWebTC):
         #                    'required on CWUser (%s)' % self.toto.eid})
 
     # test implicit 'replacement' of an inlined relation
+
+
+class UndoExceptionInUnicode(CubicWebTC):
+
+    # problem occurs in string manipulation for python < 2.6
+    def test___unicode__method(self):
+        u = UndoException(u"voilà")
+        self.assertIsInstance(unicode(u), unicode)
+
 
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main

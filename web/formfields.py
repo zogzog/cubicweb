@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -386,12 +386,11 @@ class Field(object):
         """
         assert self.choices is not None
         if callable(self.choices):
-            try:
-                if getattr(self.choices, 'im_self', None) is self:
-                    vocab = self.choices(form=form, **kwargs)
-                else:
-                    vocab = self.choices(form=form, field=self, **kwargs)
-            except TypeError:
+            if getattr(self.choices, 'im_self', None) is self:
+                vocab = self.choices(form=form, **kwargs)
+            elif support_args(self.choices, 'form', 'field'):
+                vocab = self.choices(form=form, field=self, **kwargs)
+            else:
                 try:
                     vocab = self.choices(form=form, **kwargs)
                     warn('[3.6]  %s: choices should now take '
@@ -875,7 +874,9 @@ class BooleanField(Field):
         if self.choices:
             return super(BooleanField, self).vocabulary(form)
         if self.allow_none:
-            return [('', ''), (form._cw._('yes'), '1'), (form._cw._('no'), '0')]
+            return [(form._cw._('indifferent'), ''),
+                    (form._cw._('yes'), '1'),
+                    (form._cw._('no'), '0')]
         # XXX empty string for 'no' in that case for bw compat
         return [(form._cw._('yes'), '1'), (form._cw._('no'), '')]
 
@@ -1200,14 +1201,19 @@ def guess_field(eschema, rschema, role='subject', **kwargs):
 
 
 FIELDS = {
-    'Boolean':  BooleanField,
+    'String' :  StringField,
     'Bytes':    FileField,
-    'Date':     DateField,
-    'Datetime': DateTimeField,
+    'Password': PasswordField,
+
+    'Boolean':  BooleanField,
     'Int':      IntField,
     'Float':    FloatField,
     'Decimal':  StringField,
-    'Password': PasswordField,
-    'String' :  StringField,
-    'Time':     TimeField,
+
+    'Date':       DateField,
+    'Datetime':   DateTimeField,
+    'TZDatetime': DateTimeField,
+    'Time':       TimeField,
+    'TZTime':     TimeField,
+    # XXX implement 'Interval': TimeIntervalField,
     }

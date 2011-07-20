@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -21,7 +21,7 @@ import re
 import decimal
 import datetime
 
-from logilab.common.testlib import TestCase, unittest_main
+from logilab.common.testlib import TestCase, DocTest, unittest_main
 
 from cubicweb.utils import make_uid, UStringIO, SizeConstrainedList, RepeatList
 from cubicweb.entity import Entity
@@ -155,6 +155,9 @@ class JSONEncoderTC(TestCase):
     def test_encoding_unknown_stuff(self):
         self.assertEqual(self.encode(TestCase), 'null')
 
+
+class DocTest(DocTest):
+    from cubicweb import utils as module
 
 if __name__ == '__main__':
     unittest_main()

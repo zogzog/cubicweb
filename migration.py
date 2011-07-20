@@ -492,6 +492,8 @@ class ConfigurationProblem(object):
                         self.warnings.append(
                             'cube %s depends on %s but constraint badly '
                             'formatted: %s' % (cube, name, constraint))
+                else:
+                    self.reverse_dependencies[name].add( (None, None, cube) )
         # check consistency
         for cube, versions in sorted(self.reverse_dependencies.items()):
             oper, version, source = None, None, None
@@ -507,6 +509,8 @@ class ConfigurationProblem(object):
                         if version_strictly_lower(version, ver):
                             version = ver
                             source = src
+                    elif op == None:
+                        continue
                     else:
                         print 'unable to handle this case', oper, version, op, ver
             # "solve" constraint satisfaction problem
@@ -517,5 +521,7 @@ class ConfigurationProblem(object):
                 if oper in ('>=','='):
                     if lower_strict:
                         self.errors.append( ('update', cube, version, source) )
+                elif oper is None:
+                    pass # no constraint on version
                 else:
                     print 'unknown operator', oper

@@ -270,12 +270,16 @@ SYSTEM_HOOKS = set(('server_backup', 'server_restore',
                     'session_open', 'session_close'))
 ALL_HOOKS = ENTITIES_HOOKS | RELATIONS_HOOKS | SYSTEM_HOOKS
 
-def _iter_kwargs(entities, kwargs):
-    if not entities:
+def _iter_kwargs(entities, eids_from_to, kwargs):
+    if not entities and not eids_from_to:
         yield kwargs
-    else:
+    elif entities:
         for entity in entities:
             kwargs['entity'] = entity
+            yield kwargs
+    else:
+        for subject, object in eids_from_to:
+            kwargs.update({'eidfrom': subject, 'eidto': object})
             yield kwargs
 
 
@@ -304,12 +308,19 @@ class HooksRegistry(CWRegistry):
             if 'entities' in kwargs:
                 assert 'entity' not in kwargs, \
                        'can\'t pass "entities" and "entity" arguments simultaneously'
+                assert 'eids_from_to' not in kwargs, \
+                       'can\'t pass "entities" and "eids_from_to" arguments simultaneously'
                 entities = kwargs.pop('entities')
+                eids_from_to = []
+            elif 'eids_from_to' in kwargs:
+                entities = []
+                eids_from_to = kwargs.pop('eids_from_to')
             else:
                 entities = []
+                eids_from_to = []
             # by default, hooks are executed with security turned off
             with security_enabled(session, read=False):
-                for _kwargs in _iter_kwargs(entities, kwargs):
+                for _kwargs in _iter_kwargs(entities, eids_from_to, kwargs):
                     hooks = sorted(self.possible_objects(session, **_kwargs),
                                    key=lambda x: x.order)
                     with security_enabled(session, write=False):
@@ -840,6 +851,13 @@ class DataOperationMixIn(object):
 
     def _build_container(self):
         return self.containercls()
+
+    def union(self, data):
+        """only when container is a set"""
+        assert not self._processed, """Trying to add data to a closed operation.
+Iterating over operation data closed it and should be reserved to precommit /
+postcommit method of the operation."""
+        self._container |= data
 
     def add_data(self, data):
         assert not self._processed, """Trying to add data to a closed operation.

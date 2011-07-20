@@ -18,7 +18,7 @@
 """Server subcube of cubicweb : defines objects used only on the server
 (repository) side
 
-This module contains functions to initialize a new repository.
+The server module contains functions to initialize a new repository.
 """
 
 from __future__ import with_statement
@@ -36,17 +36,32 @@ from yams import BASE_GROUPS
 
 from cubicweb import CW_SOFTWARE_ROOT
 
+class ShuttingDown(BaseException):
+    """raised when trying to access some resources while the repository is
+    shutting down. Inherit from BaseException so that `except Exception` won't
+    catch it.
+    """
+
 # server-side debugging #########################################################
 
 # server debugging flags. They may be combined using binary operators.
-DBG_NONE = 0  # no debug information
-DBG_RQL = 1   # rql execution information
-DBG_SQL = 2   # executed sql
-DBG_REPO = 4  # repository events
-DBG_MS = 8    # multi-sources
-DBG_MORE = 16 # more verbosity
-DBG_ALL = 1 + 2 + 4 + 8 + 16
-# current debug mode
+
+#:no debug information
+DBG_NONE = 0  #: no debug information
+#: rql execution information
+DBG_RQL  = 1
+#: executed sql
+DBG_SQL  = 2
+#: repository events
+DBG_REPO = 4
+#: multi-sources
+DBG_MS   = 8
+#: more verbosity
+DBG_MORE = 16
+#: all level enabled
+DBG_ALL  = DBG_RQL + DBG_SQL + DBG_REPO + DBG_MS + DBG_MORE
+
+#: current debug mode
 DEBUG = 0
 
 def set_debug(debugmode):

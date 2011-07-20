@@ -53,6 +53,9 @@ class StatusResponse(Exception):
         self.status = int(status)
         self.content = content
 
+    def __repr__(self):
+        return '%s(%r, %r)' % (self.__class__.__name__, self.status, self.content)
+
 class InvalidSession(CubicWebException):
     """raised when a session id is found but associated session is not found or
     invalid

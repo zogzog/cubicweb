@@ -185,12 +185,6 @@ which will always return a string whatever the attribute's type (so it's
 recommended also for other attribute types). By default it expects to generate
 HTML, so it deals with rich text formating, xml escaping...
 
-How do I translate an msg id defined (and translated) in another cube ?
------------------------------------------------------------------------
-
-You should put these translations in the `i18n/static-messages.pot`
-file of your own cube.
-
 How to update a database after a schema modification ?
 ------------------------------------------------------
 
@@ -380,11 +374,14 @@ Windows database, nor the other way round.
 You can prefer use a migration script similar to this shell invocation instead::
 
     $ cubicweb-ctl shell <instance>
+    >>> from cubicweb import Binary
     >>> from cubicweb.server.utils import crypt_password
     >>> crypted = crypt_password('joepass')
     >>> rset = rql('Any U WHERE U is CWUser, U login "joe"')
     >>> joe = rset.get_entity(0,0)
-    >>> joe.set_attributes(upassword=crypted)
+    >>> joe.set_attributes(upassword=Binary(crypted))
+
+Please, refer to the script example is provided in the `misc/examples/chpasswd.py` file.
 
 The more experimented people would use RQL request directly::
 

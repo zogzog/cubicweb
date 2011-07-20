@@ -128,14 +128,18 @@ class LoopTask(object):
                              (interval, func_name(func)))
         self.interval = interval
         def auto_restart_func(self=self, func=func, args=args):
+            restart = True
             try:
                 func(*args)
-            except:
+            except Exception:
                 logger = logging.getLogger('cubicweb.repository')
                 logger.exception('Unhandled exception in LoopTask %s', self.name)
                 raise
+            except BaseException:
+                restart = False
             finally:
-                self.start()
+                if restart:
+                    self.start()
         self.func = auto_restart_func
         self.name = func_name(func)
 

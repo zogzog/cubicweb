@@ -11,7 +11,7 @@ if confirm('fix existing cwuri?'):
     from logilab.common.shellutils import progress
     from cubicweb.server.session import hooks_control
     rset = rql('Any X, XC WHERE X cwuri XC, X cwuri ~= "%/eid/%"')
-    title = "%i entites to fix" % len(rset)
+    title = "%i entities to fix" % len(rset)
     nbops = rset.rowcount
     enabled = interactive_mode
     with progress(title=title, nbops=nbops, size=30, enabled=enabled) as pb:

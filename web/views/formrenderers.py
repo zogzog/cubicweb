@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -40,7 +40,7 @@ from warnings import warn
 from logilab.common import dictattr
 from logilab.mtconverter import xml_escape
 
-from cubicweb import tags
+from cubicweb import tags, uilib
 from cubicweb.appobject import AppObject
 from cubicweb.selectors import is_instance, yes
 from cubicweb.utils import json_dumps, support_args
@@ -112,17 +112,20 @@ class FormRenderer(AppObject):
         data = []
         _w = data.append
         _w(self.open_form(form, values))
-        if self.display_progress_div:
-            _w(u'<div id="progress">%s</div>' % self._cw._('validating...'))
-        _w(u'\n<fieldset>\n')
-        self.render_fields(_w, form, values)
-        self.render_buttons(_w, form)
-        _w(u'\n</fieldset>\n')
+        self.render_content(_w, form, values)
         _w(self.close_form(form, values))
         errormsg = self.error_message(form)
         if errormsg:
             data.insert(0, errormsg)
         w(''.join(data))
+
+    def render_content(self, w, form, values):
+        if self.display_progress_div:
+            w(u'<div id="progress">%s</div>' % self._cw._('validating...'))
+        w(u'\n<fieldset>\n')
+        self.render_fields(w, form, values)
+        self.render_buttons(w, form)
+        w(u'\n</fieldset>\n')
 
     def render_label(self, form, field):
         if field.label is None:
@@ -179,24 +182,25 @@ class FormRenderer(AppObject):
             return u'<div class="errorMessage">%s</div>' % errormsg
         return u''
 
-    def open_form(self, form, values):
+    def open_form(self, form, values, **attrs):
         if form.needs_multipart:
             enctype = u'multipart/form-data'
         else:
             enctype = u'application/x-www-form-urlencoded'
-        tag = (u'<form action="%s" method="post" enctype="%s"' % (
-            xml_escape(form.form_action() or '#'), enctype))
+        attrs.setdefault('enctype', enctype)
+        attrs.setdefault('method', 'post')
+        attrs.setdefault('action', form.form_action() or '#')
         if form.domid:
-            tag += u' id="%s"' % form.domid
+            attrs.setdefault('id', form.domid)
         if form.onsubmit:
-            tag += u' onsubmit="%s"' % xml_escape(form.onsubmit % dictattr(form))
+            attrs.setdefault('onsubmit',  form.onsubmit % dictattr(form))
         if form.cssstyle:
-            tag += u' style="%s"' % xml_escape(form.cssstyle)
+            attrs.setdefault('style', form.cssstyle)
         if form.cssclass:
-            tag += u' class="%s"' % xml_escape(form.cssclass)
+            attrs.setdefault('class', form.cssclass)
         if form.cwtarget:
-            tag += u' cubicweb:target="%s"' % xml_escape(form.cwtarget)
-        return tag + u'>'
+            attrs.setdefault('cubicweb:target', form.cwtarget)
+        return '<form %s>' % uilib.sgml_attributes(attrs)
 
     def close_form(self, form, values):
         """seems dumb but important for consistency w/ close form, and necessary

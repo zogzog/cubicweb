@@ -190,6 +190,21 @@ shown)::
   db-encoding=utf8
 
 
+You need to change the default settings on the database by running::
+
+ ALTER DATABASE <databasename> SET READ_COMMITTED_SNAPSHOT ON;
+
+The ALTER DATABASE command above requires some permissions that your
+user may not have. In that case you will have to ask your local DBA to
+run the query for you. 
+
+You can check that the setting is correct by running the following
+query which must return '1'::
+
+   SELECT is_read_committed_snapshot_on 
+     FROM sys.databases WHERE name='<databasename>';
+
+
 
 .. _SQLiteConfiguration:
 
@@ -209,6 +224,8 @@ anything for db-user and db-password, they will be ignore anyway.
 Pyro configuration
 ------------------
 
+Pyro name server
+~~~~~~~~~~~~~~~~
 If you want to use Pyro to access your instance remotely, or to have multi-source
 or distributed configuration, it is required to have a Pyro name server running
 on your network. By default it is detected by a broadcast request, but you can
@@ -216,9 +233,13 @@ specify a location in the instance's configuration file.
 
 To do so, you need to :
 
+* be sure to have installed it (see :ref:`InstallDependencies`)
+
 * launch the pyro name server with `pyro-nsd start` before starting cubicweb
 
 * under debian, edit the file :file:`/etc/default/pyro-nsd` so that the name
   server pyro will be launched automatically when the machine fire up
 
+Note that you can use the pyro server without a running pyro nameserver.
+Refer to `pyro-ns-host` server configuration option for details.
 

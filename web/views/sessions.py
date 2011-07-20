@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -21,7 +21,7 @@ object :/
 
 __docformat__ = "restructuredtext en"
 
-from cubicweb import RepositoryError, Unauthorized
+from cubicweb import RepositoryError, Unauthorized, AuthenticationError
 from cubicweb.web import InvalidSession, Redirect
 from cubicweb.web.application import AbstractSessionManager
 from cubicweb.dbapi import DBAPISession
@@ -49,28 +49,36 @@ class InMemoryRepositorySessionManager(AbstractSessionManager):
 
     def get_session(self, req, sessionid):
         """return existing session for the given session identifier"""
-        if not sessionid in self._sessions:
+        if sessionid not in self._sessions:
             raise InvalidSession()
         session = self._sessions[sessionid]
-        try:
-            user = self.authmanager.validate_session(req, session)
-        except InvalidSession:
-            # invalid session
-            self.close_session(session)
-            raise
-        # associate the connection to the current request
-        req.set_session(session, user)
+        if session.cnx:
+            try:
+                user = self.authmanager.validate_session(req, session)
+            except InvalidSession:
+                # invalid session
+                self.close_session(session)
+                raise
+            # associate the connection to the current request
+            req.set_session(session, user)
         return session
 
-    def open_session(self, req):
+    def open_session(self, req, allow_no_cnx=True):
         """open and return a new session for the given request. The session is
         also bound to the request.
 
         raise :exc:`cubicweb.AuthenticationError` if authentication failed
         (no authentication info found or wrong user/password)
         """
-        cnx, login = self.authmanager.authenticate(req)
-        session = DBAPISession(cnx, login)
+        try:
+            cnx, login = self.authmanager.authenticate(req)
+        except AuthenticationError:
+            if allow_no_cnx:
+                session = DBAPISession(None)
+            else:
+                raise
+        else:
+            session = DBAPISession(cnx, login)
         self._sessions[session.sessionid] = session
         # associate the connection to the current request
         req.set_session(session)
@@ -89,15 +97,16 @@ class InMemoryRepositorySessionManager(AbstractSessionManager):
         args = req.form
         for forminternal_key in ('__form_id', '__domid', '__errorurl'):
             args.pop(forminternal_key, None)
-        args['__message'] = req._('welcome %s !') % req.user.login
-        if 'vid' in req.form:
-            args['vid'] = req.form['vid']
-        if 'rql' in req.form:
-            args['rql'] = req.form['rql']
         path = req.relative_path(False)
         if path == 'login':
             path = 'view'
-        raise Redirect(req.build_url(path, **args))
+            args['__message'] = req._('welcome %s !') % req.user.login
+            if 'vid' in req.form:
+                args['vid'] = req.form['vid']
+            if 'rql' in req.form:
+                args['rql'] = req.form['rql']
+            raise Redirect(req.build_url(path, **args))
+        req.set_message(req._('welcome %s !') % req.user.login)
 
     def _update_last_login_time(self, req):
         # XXX should properly detect missing permission / non writeable source
@@ -120,10 +129,11 @@ class InMemoryRepositorySessionManager(AbstractSessionManager):
         """
         self.info('closing http session %s' % session.sessionid)
         del self._sessions[session.sessionid]
-        try:
-            session.cnx.close()
-        except:
-            # already closed, may occurs if the repository session expired but
-            # not the web session
-            pass
-        session.cnx = None
+        if session.cnx:
+            try:
+                session.cnx.close()
+            except:
+                # already closed, may occur if the repository session expired
+                # but not the web session
+                pass
+            session.cnx = None

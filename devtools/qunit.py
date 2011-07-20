@@ -5,7 +5,7 @@ import tempfile
 from Queue import Queue, Empty
 from subprocess import Popen, check_call, CalledProcessError
 from shutil import rmtree, copy as copyfile
-from uuid import uuid4 
+from uuid import uuid4
 
 # imported by default to simplify further import statements
 from logilab.common.testlib import unittest_main, with_tempdir, InnerTest, Tags

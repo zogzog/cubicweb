@@ -130,11 +130,11 @@ def transitive_closure_of(entity, rtype, _seen=None):
 
 
 class SizeConstrainedList(list):
-    """simple list that makes sure the list does not get bigger
-    than a given size.
+    """simple list that makes sure the list does not get bigger than a given
+    size.
 
-    when the list is full and a new element is added, the first
-    element of the list is removed before appending the new one
+    when the list is full and a new element is added, the first element of the
+    list is removed before appending the new one
 
     >>> l = SizeConstrainedList(2)
     >>> l.append(1)
@@ -142,6 +142,7 @@ class SizeConstrainedList(list):
     >>> l
     [1, 2]
     >>> l.append(3)
+    >>> l
     [2, 3]
     """
     def __init__(self, maxsize):
@@ -364,16 +365,42 @@ class HTMLStream(object):
         self.doctype = u''
         # xmldecl and html opening tag
         self.xmldecl = u'<?xml version="1.0" encoding="%s"?>\n' % req.encoding
-        self.htmltag = u'<html xmlns="http://www.w3.org/1999/xhtml" ' \
-                       'xmlns:cubicweb="http://www.logilab.org/2008/cubicweb" ' \
-                       'xml:lang="%s" lang="%s">' % (req.lang, req.lang)
+        self._namespaces = [('xmlns', 'http://www.w3.org/1999/xhtml'),
+                            ('xmlns:cubicweb','http://www.logilab.org/2008/cubicweb')]
+        self._htmlattrs = [('xml:lang', req.lang),
+                           ('lang', req.lang)]
         # keep main_stream's reference on req for easier text/html demoting
         req.main_stream = self
+
+    def add_namespace(self, prefix, uri):
+        self._namespaces.append( (prefix, uri) )
+
+    def set_namespaces(self, namespaces):
+        self._namespaces = namespaces
+
+    def add_htmlattr(self, attrname, attrvalue):
+        self._htmlattrs.append( (attrname, attrvalue) )
+
+    def set_htmlattrs(self, attrs):
+        self._htmlattrs = attrs
+
+    def set_doctype(self, doctype, reset_xmldecl=True):
+        self.doctype = doctype
+        if reset_xmldecl:
+            self.xmldecl = u''
 
     def write(self, data):
         """StringIO interface: this method will be assigned to self.w
         """
         self.body.write(data)
+
+    @property
+    def htmltag(self):
+        attrs = ' '.join('%s="%s"' % (attr, xml_escape(value))
+                         for attr, value in (self._namespaces + self._htmlattrs))
+        if attrs:
+            return '<html %s>' % attrs
+        return '<html>'
 
     def getvalue(self):
         """writes HTML headers, closes </head> tag and writes HTML body"""
@@ -381,7 +408,6 @@ class HTMLStream(object):
                                                  self.htmltag,
                                                  self.head.getvalue(),
                                                  self.body.getvalue())
-
 
 try:
     # may not be there if cubicweb-web not installed

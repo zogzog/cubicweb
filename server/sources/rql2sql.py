@@ -50,7 +50,9 @@ and Informix.
 __docformat__ = "restructuredtext en"
 
 import threading
+from datetime import datetime, time
 
+from logilab.common.date import utcdatetime, utctime
 from logilab.database import FunctionDescr, SQL_FUNCTIONS_REGISTRY
 
 from rql import BadRQLQuery, CoercionError
@@ -70,7 +72,9 @@ def default_update_cb_stack(self, stack):
     stack.append(self.source_execute)
 FunctionDescr.update_cb_stack = default_update_cb_stack
 
-LENGTH = SQL_FUNCTIONS_REGISTRY.get_function('LENGTH')
+get_func_descr = SQL_FUNCTIONS_REGISTRY.get_function
+
+LENGTH = get_func_descr('LENGTH')
 def length_source_execute(source, session, value):
     return len(value.getvalue())
 LENGTH.source_execute = length_source_execute
@@ -82,6 +86,7 @@ def _new_var(select, varname):
         newvar.prepare_annotation()
         newvar.stinfo['scope'] = select
         newvar._q_invariant = False
+        select.selection.append(VariableRef(newvar))
     return newvar
 
 def _fill_to_wrap_rel(var, newselect, towrap, schema):
@@ -91,10 +96,12 @@ def _fill_to_wrap_rel(var, newselect, towrap, schema):
             towrap.add( (var, rel) )
             for vref in rel.children[1].iget_nodes(VariableRef):
                 newivar = _new_var(newselect, vref.name)
-                newselect.selection.append(VariableRef(newivar))
                 _fill_to_wrap_rel(vref.variable, newselect, towrap, schema)
         elif rschema.final:
             towrap.add( (var, rel) )
+            for vref in rel.children[1].iget_nodes(VariableRef):
+                newivar = _new_var(newselect, vref.name)
+                newivar.stinfo['attrvar'] = (var, rel.r_type)
 
 def rewrite_unstable_outer_join(select, solutions, unstable, schema):
     """if some optional variables are unstable, they should be selected in a
@@ -114,11 +121,6 @@ def rewrite_unstable_outer_join(select, solutions, unstable, schema):
         # extract aliases / selection
         newvar = _new_var(newselect, var.name)
         newselect.selection = [VariableRef(newvar)]
-        for avar in select.defined_vars.itervalues():
-            if avar.stinfo['attrvar'] is var:
-                newavar = _new_var(newselect, avar.name)
-                newavar.stinfo['attrvar'] = newvar
-                newselect.selection.append(VariableRef(newavar))
         towrap_rels = set()
         _fill_to_wrap_rel(var, newselect, towrap_rels, schema)
         # extract relations
@@ -245,47 +247,56 @@ def switch_relation_field(sql, table=''):
                                       table + '.eid_from')
     return switchedsql.replace('__eid_from__', table + '.eid_to')
 
-def sort_term_selection(sorts, selectedidx, rqlst, groups):
+def sort_term_selection(sorts, rqlst, groups):
     # XXX beurk
     if isinstance(rqlst, list):
         def append(term):
             rqlst.append(term)
+        selectionidx = set(str(term) for term in rqlst)
     else:
         def append(term):
             rqlst.selection.append(term.copy(rqlst))
+        selectionidx = set(str(term) for term in rqlst.selection)
+
     for sortterm in sorts:
         term = sortterm.term
-        if not isinstance(term, Constant) and not str(term) in selectedidx:
-            selectedidx.append(str(term))
+        if not isinstance(term, Constant) and not str(term) in selectionidx:
+            selectionidx.add(str(term))
             append(term)
             if groups:
                 for vref in term.iget_nodes(VariableRef):
                     if not vref in groups:
                         groups.append(vref)
 
-def fix_selection_and_group(rqlst, selectedidx, needwrap, selectsortterms,
+def fix_selection_and_group(rqlst, needwrap, selectsortterms,
                             sorts, groups, having):
     if selectsortterms and sorts:
-        sort_term_selection(sorts, selectedidx, rqlst, not needwrap and groups)
+        sort_term_selection(sorts, rqlst, not needwrap and groups)
+    groupvrefs = [vref for term in groups for vref in term.iget_nodes(VariableRef)]
     if sorts and groups:
         # when a query is grouped, ensure sort terms are grouped as well
         for sortterm in sorts:
             term = sortterm.term
-            if not isinstance(term, Constant):
+            if not (isinstance(term, Constant) or \
+                    (isinstance(term, Function) and
+                     get_func_descr(term.name).aggregat)):
                 for vref in term.iget_nodes(VariableRef):
-                    if not vref in groups:
+                    if not vref in groupvrefs:
                         groups.append(vref)
-    if needwrap:
+                        groupvrefs.append(vref)
+    if needwrap and (groups or having):
+        selectedidx = set(vref.name for term in rqlst.selection
+                          for vref in term.get_nodes(VariableRef))
         if groups:
-            for vref in groups:
-                if not vref.name in selectedidx:
-                    selectedidx.append(vref.name)
+            for vref in groupvrefs:
+                if vref.name not in selectedidx:
+                    selectedidx.add(vref.name)
                     rqlst.selection.append(vref)
         if having:
             for term in having:
                 for vref in term.iget_nodes(VariableRef):
-                    if not vref.name in selectedidx:
-                        selectedidx.append(vref.name)
+                    if vref.name not in selectedidx:
+                        selectedidx.add(vref.name)
                         rqlst.selection.append(vref)
 
 def iter_mapped_var_sels(stmt, variable):
@@ -308,12 +319,12 @@ def update_source_cb_stack(state, stmt, node, stack):
             break
         if not isinstance(node, Function):
             raise QueryError()
-        func = SQL_FUNCTIONS_REGISTRY.get_function(node.name)
-        if func.source_execute is None:
+        funcd = get_func_descr(node.name)
+        if funcd.source_execute is None:
             raise QueryError('%s can not be called on mapped attribute'
                              % node.name)
         state.source_cb_funcs.add(node)
-        func.update_cb_stack(stack)
+        funcd.update_cb_stack(stack)
 
 
 # IGenerator implementation for RQL->SQL #######################################
@@ -588,16 +599,16 @@ class StateInfo(object):
                 rconditions.append(condition)
             else:
                 lconditions.append(condition)
-        else:
-            if louter is not None:
-                raise BadRQLQuery()
+        elif louter is None:
             # merge chains
             self.outer_chains.remove(lchain)
-            self.mark_as_used_in_outer_join(leftalias)
             rchain += lchain
+            self.mark_as_used_in_outer_join(leftalias)
             for alias, (aouter, aconditions, achain) in outer_tables.iteritems():
                 if achain is lchain:
                     outer_tables[alias] = (aouter, aconditions, rchain)
+        else:
+            raise BadRQLQuery()
 
     # sql generation helpers ###################################################
 
@@ -802,23 +813,16 @@ class SQLGenerator(object):
         # treat subqueries
         self._subqueries_sql(select, state)
         # generate sql for this select node
-        selectidx = [str(term) for term in select.selection]
         if needwrap:
             outerselection = origselection[:]
             if sorts and selectsortterms:
-                outerselectidx = [str(term) for term in outerselection]
                 if distinct:
-                    sort_term_selection(sorts, outerselectidx,
-                                        outerselection, groups)
-            else:
-                outerselectidx = selectidx[:]
-        fix_selection_and_group(select, selectidx, needwrap,
-                                selectsortterms, sorts, groups, having)
+                    sort_term_selection(sorts, outerselection, groups)
+        fix_selection_and_group(select, needwrap, selectsortterms,
+                                sorts, groups, having)
         if needwrap:
-            fselectidx = outerselectidx
             fneedwrap = len(outerselection) != len(origselection)
         else:
-            fselectidx = selectidx
             fneedwrap = len(select.selection) != len(origselection)
         if fneedwrap:
             needalias = True
@@ -850,8 +854,12 @@ class SQLGenerator(object):
             # sort
             if sorts:
                 sqlsortterms = []
+                if needwrap:
+                    selectidx = [str(term) for term in outerselection]
+                else:
+                    selectidx = [str(term) for term in select.selection]
                 for sortterm in sorts:
-                    _term = self._sortterm_sql(sortterm, fselectidx)
+                    _term = self._sortterm_sql(sortterm, selectidx)
                     if _term is not None:
                         sqlsortterms.append(_term)
                 if sqlsortterms:
@@ -1243,6 +1251,8 @@ class SQLGenerator(object):
                         return condition
                     self._state.add_outer_join_condition(leftalias, condition)
                 return
+        if leftalias is None:
+            leftalias = leftvar._q_sql.split('.', 1)[0]
         self._state.replace_tables_by_outer_join(
             leftalias, rightalias, outertype, '%s=%s' % (lhssql, rhs.accept(self)))
         return ''
@@ -1254,11 +1264,16 @@ class SQLGenerator(object):
         unification (eg X attr1 A, Y attr2 A). In case of selection,
         nothing to do here.
         """
-        for var in rhs_vars:
+        for vref in rhs_vars:
+            var = vref.variable
             if var.name in self._varmap:
                 # ensure table is added
-                self._var_info(var.variable)
-            principal = var.variable.stinfo.get('principal')
+                self._var_info(var)
+            if isinstance(var, ColumnAlias):
+                # force sql generation whatever the computed principal
+                principal = 1
+            else:
+                principal = var.stinfo.get('principal')
             if principal is not None and principal is not relation:
                 # we have to generate unification expression
                 lhssql = self._inlined_var_sql(relation.children[0].variable,
@@ -1424,6 +1439,14 @@ class SQLGenerator(object):
                 _id = value
                 if isinstance(_id, unicode):
                     _id = _id.encode()
+                # convert timestamp to utc.
+                # expect SET TiME ZONE to UTC at connection opening time.
+                # This shouldn't change anything for datetime without TZ.
+                value = self._args[_id]
+                if isinstance(value, datetime) and value.tzinfo is not None:
+                    self._query_attrs[_id] = utcdatetime(value)
+                elif isinstance(value, time) and value.tzinfo is not None:
+                    self._query_attrs[_id] = utctime(value)
         else:
             _id = str(id(constant)).replace('-', '', 1)
             self._query_attrs[_id] = value

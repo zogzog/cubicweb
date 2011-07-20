@@ -29,8 +29,8 @@ from logilab.mtconverter import xml_escape
 from logilab.common.deprecation import class_renamed
 from rql import parse
 
-from cubicweb.selectors import (yes, multi_etypes_rset, match_form_params,
-                                match_context, configuration_values,
+from cubicweb.selectors import (yes, match_form_params, match_context,
+                                multi_etypes_rset, configuration_values,
                                 anonymous_user, authenticated_user)
 from cubicweb.schema import display_name
 from cubicweb.utils import wrap_on_write
@@ -88,6 +88,7 @@ class HeaderComponent(component.CtxComponent): # XXX rename properly along with 
 class ApplLogo(HeaderComponent):
     """build the instance logo, usually displayed in the header"""
     __regid__ = 'logo'
+    __select__ = yes() # no need for a cnx
     order = -1
 
     def render(self, w):
@@ -150,7 +151,7 @@ AnonUserLink.__select__ &= yes(1)
 
 class AnonUserStatusLink(HeaderComponent):
     __regid__ = 'userstatus'
-    __select__ = HeaderComponent.__select__ & anonymous_user()
+    __select__ = anonymous_user()
     context = _('header-right')
     order = HeaderComponent.order - 10
 
@@ -159,7 +160,7 @@ class AnonUserStatusLink(HeaderComponent):
 
 
 class AuthenticatedUserStatus(AnonUserStatusLink):
-    __select__ = HeaderComponent.__select__ & authenticated_user()
+    __select__ = authenticated_user()
 
     def render(self, w):
         # display useractions and siteactions
@@ -185,9 +186,18 @@ class ApplicationMessage(component.Component):
     # don't want user to hide this component using an cwproperty
     cw_property_defs = {}
 
-    def call(self):
-        msgs = [msg for msg in (self._cw.get_shared_data('sources_error', pop=True),
-                                self._cw.message) if msg]
+    def call(self, msg=None):
+        if msg is None:
+            msgs = []
+            if self._cw.cnx:
+                srcmsg = self._cw.get_shared_data('sources_error', pop=True)
+                if srcmsg:
+                    msgs.append(srcmsg)
+            reqmsg = self._cw.message # XXX don't call self._cw.message twice
+            if reqmsg:
+                msgs.append(reqmsg)
+        else:
+            msgs = [msg]
         self.w(u'<div id="appMsg" onclick="%s" class="%s">\n' %
                (toggle_action('appMsg'), (msgs and ' ' or 'hidden')))
         for msg in msgs:

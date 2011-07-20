@@ -312,6 +312,10 @@ class ETypeRegistry(CWRegistry):
         kwargs['clear'] = True
         super(ETypeRegistry, self).register(obj, **kwargs)
 
+    def iter_classes(self):
+        for etype in self.vreg.schema.entities():
+            yield self.etype_class(etype)
+
     @cached
     def parent_classes(self, etype):
         if etype == 'Any':
@@ -368,6 +372,16 @@ class ETypeRegistry(CWRegistry):
         cls.__regid__ = etype
         cls.__initialize__(self.schema)
         return cls
+
+    def fetch_attrs(self, targettypes):
+        """return intersection of fetch_attrs of each entity type in
+        `targettypes`
+        """
+        fetchattrs_list = []
+        for ttype in targettypes:
+            etypecls = self.etype_class(ttype)
+            fetchattrs_list.append(set(etypecls.fetch_attrs))
+        return reduce(set.intersection, fetchattrs_list)
 
 VRegistry.REGISTRY_FACTORY['etypes'] = ETypeRegistry
 
@@ -742,7 +756,7 @@ class CubicWebVRegistry(VRegistry):
                           sitewide=False):
         """register a given property"""
         properties = self['propertydefs']
-        assert type in YAMS_TO_PY
+        assert type in YAMS_TO_PY, 'unknown type %s' % type
         properties[key] = {'type': type, 'vocabulary': vocabulary,
                            'default': default, 'help': help,
                            'sitewide': sitewide}
@@ -835,18 +849,24 @@ class CubicWebVRegistry(VRegistry):
         return self['views'].select(__vid, req, rset=rset, **kwargs)
 
 
+import decimal
 from datetime import datetime, date, time, timedelta
 
-YAMS_TO_PY = {
-    'Boolean':  bool,
+YAMS_TO_PY = { # XXX unify with yams.constraints.BASE_CONVERTERS?
     'String' :  unicode,
-    'Password': str,
     'Bytes':    Binary,
+    'Password': str,
+
+    'Boolean':  bool,
     'Int':      int,
     'Float':    float,
-    'Date':     date,
-    'Datetime': datetime,
-    'Time':     time,
-    'Interval': timedelta,
+    'Decimal':  decimal.Decimal,
+
+    'Date':       date,
+    'Datetime':   datetime,
+    'TZDatetime': datetime,
+    'Time':       time,
+    'TZTime':     time,
+    'Interval':   timedelta,
     }
 

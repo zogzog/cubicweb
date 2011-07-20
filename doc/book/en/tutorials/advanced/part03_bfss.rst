@@ -32,7 +32,7 @@ in `cubes/sytweb/hooks.py` :
                 makedirs(bfssdir)
                 print 'created', bfssdir
             storage = storages.BytesFileSystemStorage(bfssdir)
-            set_attribute_storage(self.repo, 'File', 'data', storage)
+            storages.set_attribute_storage(self.repo, 'File', 'data', storage)
 
 .. Note::
 

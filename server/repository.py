@@ -34,6 +34,7 @@ __docformat__ = "restructuredtext en"
 import sys
 import threading
 import Queue
+from warnings import warn
 from itertools import chain
 from os.path import join
 from datetime import datetime
@@ -54,18 +55,23 @@ from cubicweb import (CW_SOFTWARE_ROOT, CW_MIGRATION_MAP, QueryError,
                       BadConnectionId, Unauthorized, ValidationError,
                       RepositoryError, UniqueTogetherError, typed_eid, onevent)
 from cubicweb import cwvreg, schema, server
-from cubicweb.server import utils, hook, pool, querier, sources
+from cubicweb.server import ShuttingDown, utils, hook, pool, querier, sources
 from cubicweb.server.session import Session, InternalSession, InternalManager, \
      security_enabled
 from cubicweb.server.ssplanner import EditedEntity
 
+NO_CACHE_RELATIONS = set( [('require_permission', 'object'),
+                           ('owned_by', 'object'),
+                           ('created_by', 'object'),
+                           ('cw_source', 'object'),
+                           ])
 
 def prefill_entity_caches(entity, relations):
     session = entity._cw
     # prefill entity relation caches
     for rschema in entity.e_schema.subject_relations():
         rtype = str(rschema)
-        if rtype in schema.VIRTUAL_RTYPES:
+        if rtype in schema.VIRTUAL_RTYPES or (rtype, 'subject') in NO_CACHE_RELATIONS:
             continue
         if rschema.final:
             entity.cw_attr_cache.setdefault(rtype, None)
@@ -74,13 +80,9 @@ def prefill_entity_caches(entity, relations):
                                          session.empty_rset())
     for rschema in entity.e_schema.object_relations():
         rtype = str(rschema)
-        if rtype in schema.VIRTUAL_RTYPES:
+        if rtype in schema.VIRTUAL_RTYPES or (rtype, 'object') in NO_CACHE_RELATIONS:
             continue
         entity.cw_set_relation_cache(rtype, 'object', session.empty_rset())
-    # set inlined relation cache before call to after_add_entity
-    for attr, value in relations:
-        session.update_rel_cache_add(entity.eid, attr, value)
-        del_existing_rel_if_needed(session, entity.eid, attr, value)
 
 def del_existing_rel_if_needed(session, eidfrom, rtype, eidto):
     """delete existing relation when adding a new one if card is 1 or ?
@@ -91,14 +93,11 @@ def del_existing_rel_if_needed(session, eidfrom, rtype, eidto):
     this kind of behaviour has to be done in the repository so we don't have
     hooks order hazardness
     """
-    # skip that for internal session or if integrity explicitly disabled
-    #
-    # XXX we should imo rely on the orm to first fetch existing entity if any
-    # then delete it.
-    if session.is_internal_session \
-           or not session.is_hook_category_activated('activeintegrity'):
+    # skip that if integrity explicitly disabled
+    if not session.is_hook_category_activated('activeintegrity'):
         return
-    card = session.schema_rproperty(rtype, eidfrom, eidto, 'cardinality')
+    rdef = session.rtype_eids_rdef(rtype, eidfrom, eidto)
+    card = rdef.cardinality
     # one may be tented to check for neweids but this may cause more than one
     # relation even with '1?'  cardinality if thoses relations are added in the
     # same transaction where the entity is being created. This never occurs from
@@ -110,7 +109,7 @@ def del_existing_rel_if_needed(session, eidfrom, rtype, eidto):
     # * inlined relations will be implicitly deleted for the subject entity
     # * we don't want read permissions to be applied but we want delete
     #   permission to be checked
-    if card[0] in '1?' and not session.repo.schema.rschema(rtype).inlined:
+    if card[0] in '1?':
         with security_enabled(session, read=False):
             session.execute('DELETE X %s Y WHERE X eid %%(x)s, '
                             'NOT Y eid %%(y)s' % rtype,
@@ -178,8 +177,8 @@ class Repository(object):
             # information (eg dump/restore/...)
             config._cubes = ()
             # only load hooks and entity classes in the registry
-            config.cube_appobject_path = set(('hooks', 'entities'))
-            config.cubicweb_appobject_path = set(('hooks', 'entities'))
+            config.__class__.cube_appobject_path = set(('hooks', 'entities'))
+            config.__class__.cubicweb_appobject_path = set(('hooks', 'entities'))
             self.set_schema(config.load_schema())
             config['connections-pool-size'] = 1
             # will be reinitialized later from cubes found in the database
@@ -232,6 +231,7 @@ class Repository(object):
         self.sources_by_eid = {}
         if self.config.quick_start \
                or not 'CWSource' in self.schema: # # 3.10 migration
+            self.system_source.init_creating()
             return
         session = self.internal_session()
         try:
@@ -742,7 +742,7 @@ class Repository(object):
                     args[0] = ex.entity
                     ex.args = tuple(args)
                 raise
-            except:
+            except Exception:
                 # FIXME: check error to catch internal errors
                 self.exception('unexpected error while executing %s with %s', rqlstring, args)
                 raise
@@ -940,7 +940,7 @@ class Repository(object):
                      checkshuttingdown=True):
         """return the user associated to the given session identifier"""
         if checkshuttingdown and self.shutting_down:
-            raise Exception('Repository is shutting down')
+            raise ShuttingDown('Repository is shutting down')
         try:
             session = self._sessions[sessionid]
         except KeyError:
@@ -1092,17 +1092,6 @@ class Repository(object):
         hook.CleanupDeletedEidsCacheOp.get_instance(session).add_data(entity.eid)
         self._delete_info(session, entity, sourceuri, extid, scleanup)
 
-    def delete_info_multi(self, session, entities, sourceuri, extids, scleanup=None):
-        """same as delete_info but accepts a list of entities and
-        extids with the same etype and belonging to the same source
-        """
-        # mark eid as being deleted in session info and setup cache update
-        # operation
-        op = hook.CleanupDeletedEidsCacheOp.get_instance(session)
-        for entity in entities:
-            op.add_data(entity.eid)
-        self._delete_info_multi(session, entities, sourceuri, extids, scleanup)
-
     def _delete_info(self, session, entity, sourceuri, extid, scleanup=None):
         """delete system information on deletion of an entity:
         * delete all remaining relations from/to this entity
@@ -1131,19 +1120,18 @@ class Repository(object):
                 try:
                     session.execute(rql, {'x': eid, 'seid': scleanup},
                                     build_descr=False)
-                except:
+                except Exception:
                     self.exception('error while cascading delete for entity %s '
                                    'from %s. RQL: %s', entity, sourceuri, rql)
-        self.system_source.delete_info(session, entity, sourceuri, extid)
+        self.system_source.delete_info_multi(session, [entity], sourceuri)
 
-    def _delete_info_multi(self, session, entities, sourceuri, extids, scleanup=None):
+    def _delete_info_multi(self, session, entities, sourceuri, scleanup=None):
         """same as _delete_info but accepts a list of entities with
         the same etype and belinging to the same source.
         """
         pendingrtypes = session.transaction_data.get('pendingrtypes', ())
         # delete remaining relations: if user can delete the entity, he can
         # delete all its relations without security checking
-        assert entities and len(entities) == len(extids)
         with security_enabled(session, read=False, write=False):
             eids = [_e.eid for _e in entities]
             in_eids = ','.join((str(eid) for eid in eids))
@@ -1162,10 +1150,10 @@ class Repository(object):
                     rql += ', NOT (Y cw_source S, S eid %(seid)s)'
                 try:
                     session.execute(rql, {'seid': scleanup}, build_descr=False)
-                except:
+                except Exception:
                     self.exception('error while cascading delete for entity %s '
                                    'from %s. RQL: %s', entities, sourceuri, rql)
-        self.system_source.delete_info_multi(session, entities, sourceuri, extids)
+        self.system_source.delete_info_multi(session, entities, sourceuri)
 
     def locate_relation_source(self, session, subject, rtype, object):
         subjsource = self.source_from_eid(subject, session)
@@ -1229,16 +1217,24 @@ class Repository(object):
         if server.DEBUG & server.DBG_REPO:
             print 'ADD entity', self, entity.__regid__, entity.eid, edited
         relations = []
+        prefill_entity_caches(entity, relations)
         if source.should_call_hooks:
             self.hm.call_hooks('before_add_entity', session, entity=entity)
+        activintegrity = session.is_hook_category_activated('activeintegrity')
         for attr in edited.iterkeys():
             rschema = eschema.subjrels[attr]
             if not rschema.final: # inlined relation
-                relations.append((attr, edited[attr]))
+                value = edited[attr]
+                relations.append((attr, value))
+                session.update_rel_cache_add(entity.eid, attr, value)
+                rdef = session.rtype_eids_rdef(attr, entity.eid, value)
+                if rdef.cardinality[1] in '1?' and activintegrity:
+                    with security_enabled(session, read=False):
+                        session.execute('DELETE X %s Y WHERE Y eid %%(y)s' % attr,
+                                        {'x': entity.eid, 'y': value})
         edited.set_defaults()
         if session.is_hook_category_activated('integrity'):
             edited.check(creation=True)
-        prefill_entity_caches(entity, relations)
         try:
             source.add_entity(session, entity)
         except UniqueTogetherError, exc:
@@ -1340,6 +1336,16 @@ class Repository(object):
 
     def glob_delete_entities(self, session, eids):
         """delete a list of  entities and all related entities from the repository"""
+        # mark eids as being deleted in session info and setup cache update
+        # operation (register pending eids before actual deletion to avoid
+        # multiple call to glob_delete_entities)
+        op = hook.CleanupDeletedEidsCacheOp.get_instance(session)
+        if not isinstance(eids, (set, frozenset)):
+            warn('[3.13] eids should be given as a set', DeprecationWarning,
+                 stacklevel=2)
+            eids = frozenset(eids)
+        eids = eids - op._container
+        op._container |= eids
         data_by_etype_source = {} # values are ([list of eids],
                                   #             [list of extid],
                                   #             [list of entities])
@@ -1351,43 +1357,95 @@ class Repository(object):
 
         for eid in eids:
             etype, sourceuri, extid = self.type_and_source_from_eid(eid, session)
+            # XXX should cache entity's cw_metainformation
             entity = session.entity_from_eid(eid, etype)
-            _key = (etype, sourceuri)
-            if _key not in data_by_etype_source:
-                data_by_etype_source[_key] = ([eid], [extid], [entity])
-            else:
-                _data = data_by_etype_source[_key]
-                _data[0].append(eid)
-                _data[1].append(extid)
-                _data[2].append(entity)
-        for (etype, sourceuri), (eids, extids, entities) in data_by_etype_source.iteritems():
+            try:
+                data_by_etype_source[(etype, sourceuri)].append(entity)
+            except KeyError:
+                data_by_etype_source[(etype, sourceuri)] = [entity]
+        for (etype, sourceuri), entities in data_by_etype_source.iteritems():
             if server.DEBUG & server.DBG_REPO:
-                print 'DELETE entities', etype, eids
-            #print 'DELETE entities', etype, len(eids)
+                print 'DELETE entities', etype, [entity.eid for entity in entities]
             source = self.sources_by_uri[sourceuri]
             if source.should_call_hooks:
                 self.hm.call_hooks('before_delete_entity', session, entities=entities)
-            self._delete_info_multi(session, entities, sourceuri, extids) # xxx
+            self._delete_info_multi(session, entities, sourceuri)
             source.delete_entities(session, entities)
             if source.should_call_hooks:
                 self.hm.call_hooks('after_delete_entity', session, entities=entities)
-        # don't clear cache here this is done in a hook on commit
+        # don't clear cache here, it is done in a hook on commit
 
     def glob_add_relation(self, session, subject, rtype, object):
         """add a relation to the repository"""
-        if server.DEBUG & server.DBG_REPO:
-            print 'ADD relation', subject, rtype, object
-        source = self.locate_relation_source(session, subject, rtype, object)
-        if source.should_call_hooks:
-            del_existing_rel_if_needed(session, subject, rtype, object)
-            self.hm.call_hooks('before_add_relation', session,
-                               eidfrom=subject, rtype=rtype, eidto=object)
-        source.add_relation(session, subject, rtype, object)
-        rschema = self.schema.rschema(rtype)
-        session.update_rel_cache_add(subject, rtype, object, rschema.symmetric)
-        if source.should_call_hooks:
-            self.hm.call_hooks('after_add_relation', session,
-                               eidfrom=subject, rtype=rtype, eidto=object)
+        self.glob_add_relations(session, {rtype: [(subject, object)]})
+
+    def glob_add_relations(self, session, relations):
+        """add several relations to the repository
+
+        relations is a dictionary rtype: [(subj_eid, obj_eid), ...]
+        """
+        sources = {}
+        subjects_by_types = {}
+        objects_by_types = {}
+        activintegrity = session.is_hook_category_activated('activeintegrity')
+        for rtype, eids_subj_obj in relations.iteritems():
+            if server.DEBUG & server.DBG_REPO:
+                for subjeid, objeid in relations:
+                    print 'ADD relation', subjeid, rtype, objeid
+            for subjeid, objeid in eids_subj_obj:
+                source = self.locate_relation_source(session, subjeid, rtype, objeid)
+                if source not in sources:
+                    relations_by_rtype = {}
+                    sources[source] = relations_by_rtype
+                else:
+                    relations_by_rtype = sources[source]
+                if rtype in relations_by_rtype:
+                    relations_by_rtype[rtype].append((subjeid, objeid))
+                else:
+                    relations_by_rtype[rtype] = [(subjeid, objeid)]
+                if not activintegrity:
+                    continue
+                # take care to relation of cardinality '?1', as all eids will
+                # be inserted later, we've remove duplicated eids since they
+                # won't be catched by `del_existing_rel_if_needed`
+                rdef = session.rtype_eids_rdef(rtype, subjeid, objeid)
+                card = rdef.cardinality
+                if card[0] in '?1':
+                    with security_enabled(session, read=False):
+                        session.execute('DELETE X %s Y WHERE X eid %%(x)s, '
+                                        'NOT Y eid %%(y)s' % rtype,
+                                        {'x': subjeid, 'y': objeid})
+                    subjects = subjects_by_types.setdefault(rdef, {})
+                    if subjeid in subjects:
+                        del relations_by_rtype[rtype][subjects[subjeid]]
+                        subjects[subjeid] = len(relations_by_rtype[rtype]) - 1
+                        continue
+                    subjects[subjeid] = len(relations_by_rtype[rtype]) - 1
+                if card[1] in '?1':
+                    with security_enabled(session, read=False):
+                        session.execute('DELETE X %s Y WHERE Y eid %%(y)s, '
+                                        'NOT X eid %%(x)s' % rtype,
+                                        {'x': subjeid, 'y': objeid})
+                    objects = objects_by_types.setdefault(rdef, {})
+                    if objeid in objects:
+                        del relations_by_rtype[rtype][objects[objeid]]
+                        objects[objeid] = len(relations_by_rtype[rtype])
+                        continue
+                    objects[objeid] = len(relations_by_rtype[rtype])
+        for source, relations_by_rtype in sources.iteritems():
+            if source.should_call_hooks:
+                for rtype, source_relations in relations_by_rtype.iteritems():
+                    self.hm.call_hooks('before_add_relation', session,
+                                    rtype=rtype, eids_from_to=source_relations)
+            for rtype, source_relations in relations_by_rtype.iteritems():
+                source.add_relations(session, rtype, source_relations)
+                rschema = self.schema.rschema(rtype)
+                for subjeid, objeid in source_relations:
+                    session.update_rel_cache_add(subjeid, rtype, objeid, rschema.symmetric)
+            if source.should_call_hooks:
+                for rtype, source_relations in relations_by_rtype.iteritems():
+                    self.hm.call_hooks('after_add_relation', session,
+                                       rtype=rtype, eids_from_to=source_relations)
 
     def glob_delete_relation(self, session, subject, rtype, object):
         """delete a relation from the repository"""

@@ -78,18 +78,19 @@ def _annotate_select(annotator, rqlst):
                 continue
             lhs, rhs = rel.get_parts()
             onlhs = ref is lhs
+            role = 'subject' if onlhs else 'object'
             if rel.r_type == 'eid':
                 if not (onlhs and len(stinfo['relations']) > 1):
                     break
                 if not stinfo['constnode']:
-                    joins.add(rel)
+                    joins.add( (rel, role) )
                 continue
             elif rel.r_type == 'identity':
                 # identity can't be used as principal, so check other relation are used
                 # XXX explain rhs.operator == '='
                 if rhs.operator != '=' or len(stinfo['relations']) <= 1: #(stinfo['constnode'] and rhs.operator == '='):
                     break
-                joins.add(rel)
+                joins.add( (rel, role) )
                 continue
             rschema = getrschema(rel.r_type)
             if rel.optional:
@@ -116,7 +117,7 @@ def _annotate_select(annotator, rqlst):
                     # need join anyway if the variable appears in a final or
                     # inlined relation
                     break
-                joins.add(rel)
+                joins.add( (rel, role) )
                 continue
             if not stinfo['constnode']:
                 if rschema.inlined and rel.neged(strict=True):
@@ -129,7 +130,7 @@ def _annotate_select(annotator, rqlst):
                         break
                 elif rschema.symmetric and stinfo['selected']:
                     break
-            joins.add(rel)
+            joins.add( (rel, role) )
         else:
             # if there is at least one ambigous relation and no other to
             # restrict types, can't be invariant since we need to filter out
@@ -169,10 +170,15 @@ def _select_principal(scope, relations, _sort=lambda x:x):
     diffscope_rels = {}
     ored_rels = set()
     diffscope_rels = set()
-    for rel in _sort(relations):
+    for rel, role in _sort(relations):
         # note: only eid and has_text among all final relations may be there
         if rel.r_type in ('eid', 'identity'):
             continue
+        if rel.optional is not None and len(relations) > 1:
+            if role == 'subject' and rel.optional == 'right':
+                continue
+            if role == 'object' and rel.optional == 'left':
+                continue
         if rel.ored(traverse_scope=True):
             ored_rels.add(rel)
         elif rel.scope is scope:
@@ -265,9 +271,17 @@ class SQLGenAnnotator(object):
         return has_text_query
 
     def is_ambiguous(self, var):
-        # ignore has_text relation
-        if len([rel for rel in var.stinfo['relations']
-                if rel.scope is var.scope and rel.r_type == 'has_text']) == 1:
+        # ignore has_text relation when we know it will be used as principal.
+        # This is expected by the rql2sql generator which will use the `entities`
+        # table to filter out by type if necessary, This optimisation is very
+        # interesting in multi-sources cases, as it may avoid a costly query
+        # on sources to get all entities of a given type to achieve this, while
+        # we have all the necessary information.
+        root = var.stmt.root # Union node
+        # rel.scope -> Select or Exists node, so add .parent to get Union from
+        # Select node
+        rels = [rel for rel in var.stinfo['relations'] if rel.scope.parent is root]
+        if len(rels) == 1 and rels[0].r_type == 'has_text':
             return False
         try:
             data = var.stmt._deamb_data

@@ -69,11 +69,12 @@ class RepositoryTC(CubicWebTC):
             cu = self.session.system_sql('SELECT %s FROM %s WHERE %s=%%(final)s ORDER BY %s'
                                          % (namecol, table, finalcol, namecol), {'final': 'TRUE'})
             self.assertEqual(cu.fetchall(), [(u'Boolean',), (u'Bytes',),
-                                              (u'Date',), (u'Datetime',),
-                                              (u'Decimal',),(u'Float',),
-                                              (u'Int',),
-                                              (u'Interval',), (u'Password',),
-                                              (u'String',), (u'Time',)])
+                                             (u'Date',), (u'Datetime',),
+                                             (u'Decimal',),(u'Float',),
+                                             (u'Int',),
+                                             (u'Interval',), (u'Password',),
+                                             (u'String',),
+                                             (u'TZDatetime',), (u'TZTime',), (u'Time',)])
             sql = ("SELECT etype.cw_eid, etype.cw_name, cstr.cw_eid, rel.eid_to "
                    "FROM cw_CWUniqueTogetherConstraint as cstr, "
                    "     relations_relation as rel, "
@@ -276,13 +277,16 @@ class RepositoryTC(CubicWebTC):
         cnxid = repo.connect(self.admlogin, password=self.admpassword)
         repo.execute(cnxid, 'INSERT CWUser X: X login "toto", X upassword "tutu", X in_group G WHERE G name "users"')
         repo.commit(cnxid)
+        lock = threading.Lock()
+        lock.acquire()
         # close has to be in the thread due to sqlite limitations
         def close_in_a_few_moment():
-            time.sleep(0.1)
+            lock.acquire()
             repo.close(cnxid)
         t = threading.Thread(target=close_in_a_few_moment)
         t.start()
         def run_transaction():
+            lock.release()
             repo.execute(cnxid, 'DELETE CWUser X WHERE X login "toto"')
             repo.commit(cnxid)
         try:
@@ -327,7 +331,7 @@ class RepositoryTC(CubicWebTC):
         self.assertEqual(len(constraints), 1)
         cstr = constraints[0]
         self.assert_(isinstance(cstr, RQLConstraint))
-        self.assertEqual(cstr.restriction, 'O final TRUE')
+        self.assertEqual(cstr.expression, 'O final TRUE')
 
         ownedby = schema.rschema('owned_by')
         self.assertEqual(ownedby.objects('CWEType'), ('CWUser',))
@@ -683,6 +687,184 @@ class InlineRelHooksTC(CubicWebTC):
         with self.assertRaises(ValidationError) as cm:
             req.cnx.commit()
         self.assertEqual(cm.exception.errors, {'inline1-subject': u'RQLUniqueConstraint S type T, S inline1 A1, A1 todo_by C, Y type T, Y inline1 A2, A2 todo_by C failed'})
+
+    def test_add_relations_at_creation_with_del_existing_rel(self):
+        req = self.request()
+        person = req.create_entity('Personne', nom=u'Toto', prenom=u'Lanturlu', sexe=u'M')
+        users_rql = 'Any U WHERE U is CWGroup, U name "users"'
+        users = self.execute(users_rql).get_entity(0, 0)
+        req.create_entity('CWUser',
+                      login=u'Toto',
+                      upassword=u'firstname',
+                      firstname=u'firstname',
+                      surname=u'surname',
+                      reverse_login_user=person,
+                      in_group=users)
+        self.commit()
+
+
+class PerformanceTest(CubicWebTC):
+    def setup_database(self):
+        import logging
+        logger = logging.getLogger('cubicweb.session')
+        #logger.handlers = [logging.StreamHandler(sys.stdout)]
+        logger.setLevel(logging.INFO)
+        self.info = logger.info
+
+    def test_composite_deletion(self):
+        req = self.request()
+        personnes = []
+        t0 = time.time()
+        for i in xrange(2000):
+            p = req.create_entity('Personne', nom=u'Doe%03d'%i, prenom=u'John', sexe=u'M')
+            personnes.append(p)
+        abraham = req.create_entity('Personne', nom=u'Abraham', prenom=u'John', sexe=u'M')
+        for j in xrange(0, 2000, 100):
+            abraham.set_relations(personne_composite=personnes[j:j+100])
+        t1 = time.time()
+        self.info('creation: %.2gs', (t1 - t0))
+        req.cnx.commit()
+        t2 = time.time()
+        self.info('commit creation: %.2gs', (t2 - t1))
+        self.execute('DELETE Personne P WHERE P eid %(eid)s', {'eid': abraham.eid})
+        t3 = time.time()
+        self.info('deletion: %.2gs', (t3 - t2))
+        req.cnx.commit()
+        t4 = time.time()
+        self.info("commit deletion: %2gs", (t4 - t3))
+
+    def test_add_relation_non_inlined(self):
+        req = self.request()
+        personnes = []
+        for i in xrange(2000):
+            p = req.create_entity('Personne', nom=u'Doe%03d'%i, prenom=u'John', sexe=u'M')
+            personnes.append(p)
+        req.cnx.commit()
+        t0 = time.time()
+        abraham = req.create_entity('Personne', nom=u'Abraham', prenom=u'John', sexe=u'M',
+                                    personne_composite=personnes[:100])
+        t1 = time.time()
+        self.info('creation: %.2gs', (t1 - t0))
+        for j in xrange(100, 2000, 100):
+            abraham.set_relations(personne_composite=personnes[j:j+100])
+        t2 = time.time()
+        self.info('more relations: %.2gs', (t2-t1))
+        req.cnx.commit()
+        t3 = time.time()
+        self.info('commit creation: %.2gs', (t3 - t2))
+
+    def test_add_relation_inlined(self):
+        req = self.request()
+        personnes = []
+        for i in xrange(2000):
+            p = req.create_entity('Personne', nom=u'Doe%03d'%i, prenom=u'John', sexe=u'M')
+            personnes.append(p)
+        req.cnx.commit()
+        t0 = time.time()
+        abraham = req.create_entity('Personne', nom=u'Abraham', prenom=u'John', sexe=u'M',
+                                    personne_inlined=personnes[:100])
+        t1 = time.time()
+        self.info('creation: %.2gs', (t1 - t0))
+        for j in xrange(100, 2000, 100):
+            abraham.set_relations(personne_inlined=personnes[j:j+100])
+        t2 = time.time()
+        self.info('more relations: %.2gs', (t2-t1))
+        req.cnx.commit()
+        t3 = time.time()
+        self.info('commit creation: %.2gs', (t3 - t2))
+
+
+    def test_session_add_relation(self):
+        """ to be compared with test_session_add_relations"""
+        req = self.request()
+        personnes = []
+        for i in xrange(2000):
+            p = req.create_entity('Personne', nom=u'Doe%03d'%i, prenom=u'John', sexe=u'M')
+            personnes.append(p)
+        abraham = req.create_entity('Personne', nom=u'Abraham', prenom=u'John', sexe=u'M')
+        req.cnx.commit()
+        t0 = time.time()
+        add_relation = self.session.add_relation
+        for p in personnes:
+            add_relation(abraham.eid, 'personne_composite', p.eid)
+        req.cnx.commit()
+        t1 = time.time()
+        self.info('add relation: %.2gs', t1-t0)
+
+    def test_session_add_relations (self):
+        """ to be compared with test_session_add_relation"""
+        req = self.request()
+        personnes = []
+        for i in xrange(2000):
+            p = req.create_entity('Personne', nom=u'Doe%03d'%i, prenom=u'John', sexe=u'M')
+            personnes.append(p)
+        abraham = req.create_entity('Personne', nom=u'Abraham', prenom=u'John', sexe=u'M')
+        req.cnx.commit()
+        t0 = time.time()
+        add_relations = self.session.add_relations
+        relations = [('personne_composite', [(abraham.eid, p.eid) for p in personnes])]
+        add_relations(relations)
+        req.cnx.commit()
+        t1 = time.time()
+        self.info('add relations: %.2gs', t1-t0)
+    def test_session_add_relation_inlined(self):
+        """ to be compared with test_session_add_relations"""
+        req = self.request()
+        personnes = []
+        for i in xrange(2000):
+            p = req.create_entity('Personne', nom=u'Doe%03d'%i, prenom=u'John', sexe=u'M')
+            personnes.append(p)
+        abraham = req.create_entity('Personne', nom=u'Abraham', prenom=u'John', sexe=u'M')
+        req.cnx.commit()
+        t0 = time.time()
+        add_relation = self.session.add_relation
+        for p in personnes:
+            add_relation(abraham.eid, 'personne_inlined', p.eid)
+        req.cnx.commit()
+        t1 = time.time()
+        self.info('add relation (inlined): %.2gs', t1-t0)
+
+    def test_session_add_relations_inlined (self):
+        """ to be compared with test_session_add_relation"""
+        req = self.request()
+        personnes = []
+        for i in xrange(2000):
+            p = req.create_entity('Personne', nom=u'Doe%03d'%i, prenom=u'John', sexe=u'M')
+            personnes.append(p)
+        abraham = req.create_entity('Personne', nom=u'Abraham', prenom=u'John', sexe=u'M')
+        req.cnx.commit()
+        t0 = time.time()
+        add_relations = self.session.add_relations
+        relations = [('personne_inlined', [(abraham.eid, p.eid) for p in personnes])]
+        add_relations(relations)
+        req.cnx.commit()
+        t1 = time.time()
+        self.info('add relations (inlined): %.2gs', t1-t0)
+
+    def test_optional_relation_reset_1(self):
+        req = self.request()
+        p1 = req.create_entity('Personne', nom=u'Vincent')
+        p2 = req.create_entity('Personne', nom=u'Florent')
+        w = req.create_entity('Affaire', ref=u'wc')
+        w.set_relations(todo_by=[p1,p2])
+        w.clear_all_caches()
+        self.commit()
+        self.assertEqual(len(w.todo_by), 1)
+        self.assertEqual(w.todo_by[0].eid, p2.eid)
+
+    def test_optional_relation_reset_2(self):
+        req = self.request()
+        p1 = req.create_entity('Personne', nom=u'Vincent')
+        p2 = req.create_entity('Personne', nom=u'Florent')
+        w = req.create_entity('Affaire', ref=u'wc')
+        w.set_relations(todo_by=p1)
+        self.commit()
+        w.set_relations(todo_by=p2)
+        w.clear_all_caches()
+        self.commit()
+        self.assertEqual(len(w.todo_by), 1)
+        self.assertEqual(w.todo_by[0].eid, p2.eid)
+
 
 if __name__ == '__main__':
     unittest_main()

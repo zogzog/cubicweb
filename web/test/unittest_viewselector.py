@@ -180,7 +180,7 @@ class VRegistryTC(ViewSelectorTC):
         self.assertRaises(NoSelectableObject, self.vreg['views'].select, 'propertiesform', req1, rset=rset2)
 
     def test_propertiesform_jdoe(self):
-        self.create_user('jdoe')
+        self.create_user(self.request(), 'jdoe')
         self.login('jdoe')
         req1 = self.request()
         req2 = self.request()

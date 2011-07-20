@@ -57,7 +57,8 @@ class DataFeedSource(AbstractSource):
         )
     def __init__(self, repo, source_config, eid=None):
         AbstractSource.__init__(self, repo, source_config, eid)
-        self.update_config(None, self.check_conf_dict(eid, source_config))
+        self.update_config(None, self.check_conf_dict(eid, source_config,
+                                                      fail_if_unknown=False))
 
     def check_config(self, source_entity):
         """check configuration of source entity"""
@@ -118,9 +119,9 @@ class DataFeedSource(AbstractSource):
     def fresh(self):
         if self.latest_retrieval is None:
             return False
-        return datetime.now() < (self.latest_retrieval + self.synchro_interval)
+        return datetime.utcnow() < (self.latest_retrieval + self.synchro_interval)
 
-    def pull_data(self, session, force=False):
+    def pull_data(self, session, force=False, raise_on_error=False):
         if not force and self.fresh():
             return {}
         if self.config['delete-entities']:
@@ -135,6 +136,8 @@ class DataFeedSource(AbstractSource):
                 if parser.process(url):
                     error = True
             except IOError, exc:
+                if raise_on_error:
+                    raise
                 self.error('could not pull data while processing %s: %s',
                            url, exc)
                 error = True
@@ -148,7 +151,7 @@ class DataFeedSource(AbstractSource):
             for etype, eids in byetype.iteritems():
                 session.execute('DELETE %s X WHERE X eid IN (%s)'
                                 % (etype, ','.join(eids)))
-        self.latest_retrieval = datetime.now()
+        self.latest_retrieval = datetime.utcnow()
         session.execute('SET X latest_retrieval %(date)s WHERE X eid %(x)s',
                         {'x': self.eid, 'date': self.latest_retrieval})
         return parser.stats

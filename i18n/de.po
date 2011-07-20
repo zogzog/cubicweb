@@ -162,7 +162,7 @@ msgid "'%s' action doesn't take any options"
 msgstr ""
 
 #, python-format
-msgid "'%s' action require 'linkattr' option"
+msgid "'%s' action requires 'linkattr' option"
 msgstr ""
 
 msgid "(UNEXISTANT EID)"
@@ -737,6 +737,18 @@ msgstr "Fehlerbericht senden"
 msgid "Submit bug report by mail"
 msgstr "Diesen Bericht als E-Mail senden"
 
+msgid "TZDatetime"
+msgstr ""
+
+msgid "TZDatetime_plural"
+msgstr ""
+
+msgid "TZTime"
+msgstr ""
+
+msgid "TZTime_plural"
+msgstr ""
+
 #, python-format
 msgid "The view %s can not be applied to this query"
 msgstr "Die Ansicht %s ist auf diese Anfrage nicht anwendbar."
@@ -1049,10 +1061,6 @@ msgstr "Subworkflow Exit-Punkt"
 msgid "add WorkflowTransition transition_of Workflow object"
 msgstr "Workflow-Übergang"
 
-#, python-format
-msgid "add a %s"
-msgstr ""
-
 msgctxt "inlined:CWRelation.from_entity.subject"
 msgid "add a CWEType"
 msgstr "einen Entitätstyp hinzufügen"
@@ -1191,6 +1199,9 @@ msgstr "und/oder zwischen verschiedenen Werten"
 
 msgid "anonymous"
 msgstr "anonym"
+
+msgid "anyrsetview"
+msgstr ""
 
 msgid "april"
 msgstr "April"
@@ -2323,6 +2334,9 @@ msgstr "Entitätstypen, die diesen Workflow benutzen können."
 msgid "entity update"
 msgstr "Aktualisierung der Entität"
 
+msgid "entityview"
+msgstr ""
+
 msgid "error"
 msgstr ""
 
@@ -2742,6 +2756,9 @@ msgid ""
 msgstr ""
 "zeigt an, welcher Zustand standardmäßig benutzt werden soll, wenn eine "
 "Entität erstellt wird"
+
+msgid "indifferent"
+msgstr "gleichgültig"
 
 msgid "info"
 msgstr "Information"
@@ -3453,7 +3470,7 @@ msgstr ""
 
 #, python-format
 msgid ""
-"relation %s is supported but none if its definitions matches supported "
+"relation %s is supported but none of its definitions matches supported "
 "entities"
 msgstr ""
 
@@ -3748,6 +3765,9 @@ msgstr ""
 msgid "startup views"
 msgstr "Start-Ansichten"
 
+msgid "startupview"
+msgstr ""
+
 msgid "state"
 msgstr "Zustand"
 
@@ -4014,7 +4034,7 @@ msgctxt "TrInfo"
 msgid "tr_count"
 msgstr ""
 
-msgid "transaction undoed"
+msgid "transaction undone"
 msgstr "Transaktion rückgängig gemacht"
 
 #, python-format

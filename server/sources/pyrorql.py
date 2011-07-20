@@ -234,6 +234,7 @@ repository (default to 5 minutes).',
         etype, dexturi, dextid = cnx.describe(extid)
         if dexturi == 'system' or not (
             dexturi in self.repo.sources_by_uri or self._skip_externals):
+            assert etype in self.support_entities, etype
             return self.repo.extid2eid(self, str(extid), etype, session), True
         if dexturi in self.repo.sources_by_uri:
             source = self.repo.sources_by_uri[dexturi]
@@ -312,9 +313,8 @@ repository (default to 5 minutes).',
     def get_connection(self):
         try:
             return self._get_connection()
-        except (ConnectionError, PyroError):
-            self.critical("can't get connection to source %s", self.uri,
-                          exc_info=1)
+        except (ConnectionError, PyroError), ex:
+            self.critical("can't get connection to source %s: %s", self.uri, ex)
             return ConnectionWrapper()
 
     def check_connection(self, cnx):

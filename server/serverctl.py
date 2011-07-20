@@ -355,7 +355,7 @@ class CreateInstanceDBCommand(Command):
                         print '-> user %s created.' % user
                 if dbname in helper.list_databases(cursor):
                     if automatic or ASK.confirm('Database %s already exists -- do you want to drop it ?' % dbname):
-                        cursor.execute('DROP DATABASE %s' % dbname)
+                        cursor.execute('DROP DATABASE "%s"' % dbname)
                     else:
                         print ('you may want to run "cubicweb-ctl db-init '
                                '--drop %s" manually to continue.' % config.appid)
@@ -560,6 +560,15 @@ class ResetAdminPasswordCommand(Command):
     """
     name = 'reset-admin-pwd'
     arguments = '<instance>'
+    options = (
+        ('password',
+         {'short': 'p', 'type' : 'string', 'metavar' : '<new-password>',
+          'default' : None,
+          'help': 'Use this password instead of prompt for one.\n'
+                  '/!\ THIS IS AN INSECURE PRACTICE /!\ \n'
+                  'the password will appear in shell history'}
+         ),
+        )
 
     def run(self, args):
         """run the command with its specific arguments"""
@@ -586,15 +595,18 @@ class ResetAdminPasswordCommand(Command):
             print "   fix your sources file before running this command"
             cnx.close()
             sys.exit(1)
-        # ask for a new password
-        _, passwd = manager_userpasswd(adminlogin, confirm=True,
-                                       passwdmsg='new password for %s' % adminlogin)
+        if self.config.password is None:
+            # ask for a new password
+            msg = 'new password for %s' % adminlogin
+            _, pwd = manager_userpasswd(adminlogin, confirm=True, passwdmsg=msg)
+        else:
+            pwd = self.config.password
         try:
             cursor.execute("UPDATE cw_CWUser SET cw_upassword=%(p)s WHERE cw_login=%(l)s",
-                           {'p': dbhelper.binary_value(crypt_password(passwd)), 'l': adminlogin})
+                           {'p': dbhelper.binary_value(crypt_password(pwd)), 'l': adminlogin})
             sconfig = Configuration(options=USER_OPTIONS)
             sconfig['login'] = adminlogin
-            sconfig['password'] = passwd
+            sconfig['password'] = pwd
             sourcescfg['admin'] = sconfig
             config.write_sources_file(sourcescfg)
         except Exception, ex:
@@ -691,19 +703,20 @@ def _remote_dump(host, appid, output, sudo=False):
         'Continue anyway?' % filename):
         raise ExecutionError('Error while deleting remote dump at /tmp/%s' % filename)
 
-def _local_dump(appid, output):
+
+def _local_dump(appid, output, format='native'):
     config = ServerConfiguration.config_for(appid)
     config.quick_start = True
     mih = config.migration_handler(connect=False, verbosity=1)
-    mih.backup_database(output, askconfirm=False)
+    mih.backup_database(output, askconfirm=False, format=format)
     mih.shutdown()
 
-def _local_restore(appid, backupfile, drop, systemonly=True):
+def _local_restore(appid, backupfile, drop, systemonly=True, format='native'):
     config = ServerConfiguration.config_for(appid)
     config.verbosity = 1 # else we won't be asked for confirmation on problems
     config.quick_start = True
     mih = config.migration_handler(connect=False, verbosity=1)
-    mih.restore_database(backupfile, drop, systemonly, askconfirm=False)
+    mih.restore_database(backupfile, drop, systemonly, askconfirm=False, format=format)
     repo = mih.repo_connect()
     # version of the database
     dbversions = repo.get_versions()
@@ -777,6 +790,12 @@ class DBDumpCommand(Command):
           'default' : False,
           'help': 'Use sudo on the remote host.'}
          ),
+        ('format',
+         {'short': 'f', 'default': 'native', 'type': 'choice',
+          'choices': ('native', 'portable'),
+          'help': '"native" format uses db backend utilities to dump the database. '
+                  '"portable" format uses a database independent format'}
+         ),
         )
 
     def run(self, args):
@@ -785,7 +804,9 @@ class DBDumpCommand(Command):
             host, appid = appid.split(':')
             _remote_dump(host, appid, self.config.output, self.config.sudo)
         else:
-            _local_dump(appid, self.config.output)
+            _local_dump(appid, self.config.output, format=self.config.format)
+
+
 
 
 class DBRestoreCommand(Command):
@@ -811,13 +832,33 @@ class DBRestoreCommand(Command):
           'instance data. In that case, <backupfile> is expected to be the '
           'timestamp of the backup to restore, not a file'}
          ),
+        ('format',
+         {'short': 'f', 'default': 'native', 'type': 'choice',
+          'choices': ('native', 'portable'),
+          'help': 'the format used when dumping the database'}),
         )
 
     def run(self, args):
         appid, backupfile = args
+        if self.config.format == 'portable':
+            # we need to ensure a DB exist before restoring from portable format
+            if not self.config.no_drop:
+                try:
+                    CWCTL.run(['db-create', '--automatic', appid])
+                except SystemExit, exc:
+                    # continue if the command exited with status 0 (success)
+                    if exc.code:
+                        raise
         _local_restore(appid, backupfile,
                        drop=not self.config.no_drop,
-                       systemonly=not self.config.restore_all)
+                       systemonly=not self.config.restore_all,
+                       format=self.config.format)
+        if self.config.format == 'portable':
+            try:
+                CWCTL.run(['db-rebuild-fti', appid])
+            except SystemExit, exc:
+                if exc.code:
+                    raise
 
 
 class DBCopyCommand(Command):
@@ -850,6 +891,12 @@ class DBCopyCommand(Command):
           'default' : False,
           'help': 'Use sudo on the remote host.'}
          ),
+        ('format',
+         {'short': 'f', 'default': 'native', 'type': 'choice',
+          'choices': ('native', 'portable'),
+          'help': '"native" format uses db backend utilities to dump the database. '
+                  '"portable" format uses a database independent format'}
+         ),
         )
 
     def run(self, args):
@@ -861,8 +908,9 @@ class DBCopyCommand(Command):
             host, srcappid = srcappid.split(':')
             _remote_dump(host, srcappid, output, self.config.sudo)
         else:
-            _local_dump(srcappid, output)
-        _local_restore(destappid, output, not self.config.no_drop)
+            _local_dump(srcappid, output, format=self.config.format)
+        _local_restore(destappid, output, not self.config.no_drop,
+                       self.config.format)
         if self.config.keep_dump:
             print '-> you can get the dump file at', output
         else:

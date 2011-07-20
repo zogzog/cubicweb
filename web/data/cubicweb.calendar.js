@@ -15,9 +15,9 @@ TODAY = new Date();
 /**
  * .. class:: Calendar
  *
- * Calendar (graphical) widget
+ *   Calendar (graphical) widget
  *
- * public methods are :
+ *   public methods are :
  *
  *   __init__ :
  *    :attr:`containerId`: the DOM node's ID where the calendar will be displayed
@@ -74,7 +74,7 @@ Calendar = function(containerId, inputId, year, month, cssclass) {
     /**
      * .. function:: Calendar._uppercaseFirst(s)
      *
-     * utility function (the only use for now is inside the calendar)
+     *    utility function (the only use for now is inside the calendar)
      */
     this._uppercaseFirst = function(s) {
         return s.charAt(0).toUpperCase();
@@ -83,7 +83,7 @@ Calendar = function(containerId, inputId, year, month, cssclass) {
     /**
      * .. function:: Calendar._domForRows(rows)
      *
-     * accepts the cells data and builds the corresponding TR nodes
+     *    accepts the cells data and builds the corresponding TR nodes
      *
      * * `rows`, a list of list of couples (daynum, cssprops)
      */
@@ -98,7 +98,7 @@ Calendar = function(containerId, inputId, year, month, cssclass) {
     /**
      * .. function:: Calendar._headdisplay(row)
      *
-     * builds the calendar headers
+     *    builds the calendar headers
      */
     this._headdisplay = function(row) {
         if (_CAL_HEADER) {
@@ -224,13 +224,17 @@ Calendar = function(containerId, inputId, year, month, cssclass) {
     this.hide); // connect(inputId, 'onfocus', this, 'hide');
 };
 
-// keep track of each calendar created
+/**
+ * .. data:: Calendar.REGISTRY
+ *
+ *     keep track of each calendar created
+ */
 Calendar.REGISTRY = {};
 
 /**
  * .. function:: toggleCalendar(containerId, inputId, year, month)
  *
- * popup / hide calendar associated to `containerId`
+ *    popup / hide calendar associated to `containerId`
  */
 function toggleCalendar(containerId, inputId, year, month) {
     var cal = Calendar.REGISTRY[containerId];
@@ -251,7 +255,7 @@ function toggleCalendar(containerId, inputId, year, month) {
 /**
  * .. function:: toggleNextMonth(containerId)
  *
- * ask for next month to calendar displayed in `containerId`
+ *    ask for next month to calendar displayed in `containerId`
  */
 function toggleNextMonth(containerId) {
     var cal = Calendar.REGISTRY[containerId];
@@ -261,7 +265,7 @@ function toggleNextMonth(containerId) {
 /**
  * .. function:: togglePreviousMonth(containerId)
  *
- * ask for previous month to calendar displayed in `containerId`
+ *    ask for previous month to calendar displayed in `containerId`
  */
 function togglePreviousMonth(containerId) {
     var cal = Calendar.REGISTRY[containerId];
@@ -271,7 +275,7 @@ function togglePreviousMonth(containerId) {
 /**
  * .. function:: dateSelected(cell, containerId)
  *
- * Callback called when the user clicked on a cell in the popup calendar
+ *    callback called when the user clicked on a cell in the popup calendar
  */
 function dateSelected(cell, containerId) {
     var cal = Calendar.REGISTRY[containerId];

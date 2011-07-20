@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -35,15 +35,19 @@ OWL_CARD_MAP = {'1': '<rdf:type rdf:resource="&owl;FunctionalProperty"/>',
                 }
 
 OWL_TYPE_MAP = {'String': 'xsd:string',
-                'Datetime': 'xsd:dateTime',
                 'Bytes': 'xsd:byte',
-                'Float': 'xsd:float',
+                'Password': 'xsd:byte',
+
                 'Boolean': 'xsd:boolean',
                 'Int': 'xsd:int',
-                'Date':'xsd:date',
-                'Time': 'xsd:time',
-                'Password': 'xsd:byte',
+                'Float': 'xsd:float',
                 'Decimal' : 'xsd:decimal',
+
+                'Date':'xsd:date',
+                'Datetime': 'xsd:dateTime',
+                'TZDatetime': 'xsd:dateTime',
+                'Time': 'xsd:time',
+                'TZTime': 'xsd:time',
                 'Interval': 'xsd:duration'
                 }
 

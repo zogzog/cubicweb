@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: cubicweb 2.46.0\n"
-"PO-Revision-Date: 2011-01-03 14:35+0100\n"
+"PO-Revision-Date: 2011-06-23 10:23+0200\n"
 "Last-Translator: Logilab Team <contact@logilab.fr>\n"
 "Language-Team: fr <contact@logilab.fr>\n"
 "Language: \n"
@@ -162,7 +162,7 @@ msgid "'%s' action doesn't take any options"
 msgstr "l'action '%s' ne prend pas d'option"
 
 #, python-format
-msgid "'%s' action require 'linkattr' option"
+msgid "'%s' action requires 'linkattr' option"
 msgstr "l'action '%s' nécessite une option 'linkattr'"
 
 msgid "(UNEXISTANT EID)"
@@ -449,7 +449,7 @@ msgid "Datetime"
 msgstr "Date et heure"
 
 msgid "Datetime_plural"
-msgstr "Date et heure"
+msgstr "Dates et heures"
 
 msgid "Decimal"
 msgstr "Nombre décimal"
@@ -735,6 +735,18 @@ msgstr "Soumettre un rapport de bug"
 
 msgid "Submit bug report by mail"
 msgstr "Soumettre ce rapport par email"
+
+msgid "TZDatetime"
+msgstr "Date et heure internationale"
+
+msgid "TZDatetime_plural"
+msgstr "Dates et heures internationales"
+
+msgid "TZTime"
+msgstr "Heure internationale"
+
+msgid "TZTime_plural"
+msgstr "Heures internationales"
 
 #, python-format
 msgid "The view %s can not be applied to this query"
@@ -1057,10 +1069,6 @@ msgstr "sortie de sous-workflow"
 msgid "add WorkflowTransition transition_of Workflow object"
 msgstr "transition workflow"
 
-#, python-format
-msgid "add a %s"
-msgstr "ajouter un %s"
-
 msgctxt "inlined:CWRelation.from_entity.subject"
 msgid "add a CWEType"
 msgstr "ajouter un type d'entité sujet"
@@ -1198,6 +1206,9 @@ msgstr "et/ou entre les différentes valeurs"
 
 msgid "anonymous"
 msgstr "anonyme"
+
+msgid "anyrsetview"
+msgstr "vues \"tous les rset\""
 
 msgid "april"
 msgstr "avril"
@@ -1934,10 +1945,10 @@ msgid "cw_schema_object"
 msgstr "mappé par"
 
 msgid "cw_source"
-msgstr "from data source"
+msgstr "source"
 
 msgid "cw_source_object"
-msgstr "entities"
+msgstr "entités"
 
 msgid "cwetype-box"
 msgstr "vue \"boîte\""
@@ -2363,6 +2374,9 @@ msgstr "types d'entité pouvant utiliser ce workflow"
 msgid "entity update"
 msgstr "mise à jour d'entité"
 
+msgid "entityview"
+msgstr "vues d'entité"
+
 msgid "error"
 msgstr "erreur"
 
@@ -2782,6 +2796,9 @@ msgid ""
 "is created"
 msgstr ""
 "indique quel état devrait être utilisé par défaut lorsqu'une entité est créée"
+
+msgid "indifferent"
+msgstr "indifférent"
 
 msgid "info"
 msgstr "information"
@@ -3500,7 +3517,7 @@ msgstr ""
 
 #, python-format
 msgid ""
-"relation %s is supported but none if its definitions matches supported "
+"relation %s is supported but none of its definitions matches supported "
 "entities"
 msgstr ""
 "la relation %s est supportée mais aucune de ses définitions ne correspondent "
@@ -3799,6 +3816,9 @@ msgstr "spécifier %s est obligatoire"
 msgid "startup views"
 msgstr "vues de départ"
 
+msgid "startupview"
+msgstr "vues de départ"
+
 msgid "state"
 msgstr "état"
 
@@ -4065,8 +4085,8 @@ msgctxt "TrInfo"
 msgid "tr_count"
 msgstr "n° de transition"
 
-msgid "transaction undoed"
-msgstr "transaction annulées"
+msgid "transaction undone"
+msgstr "transaction annulée"
 
 #, python-format
 msgid "transition %(tr)s isn't allowed from %(st)s"
@@ -4534,6 +4554,9 @@ msgstr ""
 
 #~ msgid "Relation types"
 #~ msgstr "Types de relation"
+
+#~ msgid "add a %s"
+#~ msgstr "ajouter un %s"
 
 #~ msgid "am/pm calendar (month)"
 #~ msgstr "calendrier am/pm (mois)"

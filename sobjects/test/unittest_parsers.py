@@ -129,7 +129,7 @@ class CWEntityXMLParserTC(CubicWebTC):
                              }
                           })
         session = self.repo.internal_session()
-        stats = dfsource.pull_data(session, force=True)
+        stats = dfsource.pull_data(session, force=True, raise_on_error=True)
         self.assertEqual(sorted(stats.keys()), ['created', 'updated'])
         self.assertEqual(len(stats['created']), 2)
         self.assertEqual(stats['updated'], set())
@@ -156,12 +156,12 @@ class CWEntityXMLParserTC(CubicWebTC):
         self.assertEqual(tag.cwuri, 'http://testing.fr/cubicweb/%s' % tag.eid)
         self.assertEqual(tag.cw_source[0].name, 'system')
 
-        stats = dfsource.pull_data(session, force=True)
+        stats = dfsource.pull_data(session, force=True, raise_on_error=True)
         self.assertEqual(stats['created'], set())
         self.assertEqual(len(stats['updated']), 2)
         self.repo._type_source_cache.clear()
         self.repo._extid_cache.clear()
-        stats = dfsource.pull_data(session, force=True)
+        stats = dfsource.pull_data(session, force=True, raise_on_error=True)
         self.assertEqual(stats['created'], set())
         self.assertEqual(len(stats['updated']), 2)
 

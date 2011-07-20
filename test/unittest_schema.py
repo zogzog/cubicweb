@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -26,7 +26,7 @@ from logilab.common.testlib import TestCase, unittest_main
 
 from rql import RQLSyntaxError
 
-from yams import BadSchemaDefinition
+from yams import ValidationError, BadSchemaDefinition
 from yams.constraints import SizeConstraint, StaticVocabularyConstraint
 from yams.buildobjs import RelationDefinition, EntityType, RelationType
 from yams.reader import PyFileReader
@@ -37,6 +37,7 @@ from cubicweb.schema import (
     RQLExpression, ERQLExpression, RRQLExpression,
     normalize_expression, order_eschemas, guess_rrqlexpr_mainvars)
 from cubicweb.devtools import TestServerConfiguration as TestConfiguration
+from cubicweb.devtools.testlib import CubicWebTC
 
 DATADIR = join(dirname(__file__), 'data')
 
@@ -166,10 +167,11 @@ class SchemaReaderClassTest(TestCase):
                              'CWSource', 'CWSourceHostConfig', 'CWSourceSchemaConfig',
                              'CWUniqueTogetherConstraint', 'CWUser',
                              'ExternalUri', 'File', 'Float', 'Int', 'Interval', 'Note',
-                             'Password', 'Personne',
+                             'Password', 'Personne', 'Produit',
                              'RQLExpression',
-                             'Societe', 'State', 'StateFull', 'String', 'SubNote', 'SubWorkflowExitPoint',
-                             'Tag', 'Time', 'Transition', 'TrInfo',
+                             'Service', 'Societe', 'State', 'StateFull', 'String', 'SubNote', 'SubWorkflowExitPoint',
+                             'Tag', 'TZDatetime', 'TZTime', 'Time', 'Transition', 'TrInfo',
+                             'Usine',
                              'Workflow', 'WorkflowTransition']
         self.assertListEqual(sorted(expected_entities), entities)
         relations = sorted([str(r) for r in schema.relations()])
@@ -188,14 +190,14 @@ class SchemaReaderClassTest(TestCase):
 
                               'ecrit_par', 'eid', 'evaluee', 'expression', 'exprtype',
 
-                              'final', 'firstname', 'for_user',
+                              'fabrique_par', 'final', 'firstname', 'for_user', 'fournit',
                               'from_entity', 'from_state', 'fulltext_container', 'fulltextindexed',
 
                               'has_text',
                               'identity', 'in_group', 'in_state', 'indexed',
                               'initial_state', 'inlined', 'internationalizable', 'is', 'is_instance_of',
 
-                              'label', 'last_login_time', 'latest_retrieval', 'login',
+                              'label', 'last_login_time', 'latest_retrieval', 'lieu', 'login',
 
                               'mainvars', 'match_host', 'modification_date',
 
@@ -239,7 +241,7 @@ class SchemaReaderClassTest(TestCase):
         self.failUnlessEqual(len(constraints), 1, constraints)
         constraint = constraints[0]
         self.failUnless(isinstance(constraint, RQLConstraint))
-        self.failUnlessEqual(constraint.restriction, 'O final TRUE')
+        self.failUnlessEqual(constraint.expression, 'O final TRUE')
 
     def test_fulltext_container(self):
         schema = loader.load(config)
@@ -314,8 +316,17 @@ class RQLExpressionTC(TestCase):
 
 class GuessRrqlExprMainVarsTC(TestCase):
     def test_exists(self):
-        mainvars = guess_rrqlexpr_mainvars(normalize_expression('NOT EXISTS(O team_competition C, C level < 3)'))
-        self.assertEqual(mainvars, 'O')
+        mainvars = guess_rrqlexpr_mainvars(normalize_expression('NOT EXISTS(O team_competition C, C level < 3, C concerns S)'))
+        self.assertEqual(mainvars, set(['S', 'O']))
+
+
+class RQLConstraintTC(CubicWebTC):
+    def test_user_constraint(self):
+        cstr = RQLConstraint('U identity O')
+        anoneid = self.execute('Any X WHERE X login "anon"')[0][0]
+        self.assertRaises(ValidationError, cstr.repo_check, self.session, 1, 'rel', anoneid)
+        self.assertEqual(cstr.repo_check(self.session, 1, self.session.user.eid),
+        None) # no validation error, constraint checked
 
 
 if __name__ == '__main__':

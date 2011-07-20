@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -30,7 +30,7 @@ from warnings import warn
 from logilab.mtconverter import xml_escape
 from logilab.common.graph import escape
 
-from cubicweb import Unauthorized, view
+from cubicweb import Unauthorized
 from cubicweb.selectors import (has_related_entities, one_line_rset,
                                 relation_possible, match_form_params,
                                 score_entity, is_instance, adaptable)
@@ -39,7 +39,7 @@ from cubicweb.schema import display_name
 from cubicweb.web import uicfg, stdmsgs, action, component, form, action
 from cubicweb.web import formfields as ff, formwidgets as fwdgs
 from cubicweb.web.views import TmpFileViewMixin
-from cubicweb.web.views import forms, primary, autoform, ibreadcrumbs
+from cubicweb.web.views import forms, primary, ibreadcrumbs
 from cubicweb.web.views.tabs import TabbedPrimaryView, PrimaryTab
 from cubicweb.web.views.dotgraphview import DotGraphView, DotPropsHandler
 
@@ -72,11 +72,7 @@ _abaa.tag_object_of(('Transition', 'transition_of', 'Workflow'), True)
 _abaa.tag_object_of(('WorkflowTransition', 'transition_of', 'Workflow'), True)
 
 _afs = uicfg.autoform_section
-_afs.tag_subject_of(('TrInfo', 'to_state', '*'), 'main', 'hidden')
-_afs.tag_subject_of(('TrInfo', 'from_state', '*'), 'main', 'hidden')
-_afs.tag_attribute(('TrInfo', 'tr_count'), 'main', 'hidden')
-_afs.tag_object_of(('State', 'allowed_transition', '*'), 'main', 'attributes')
-
+_affk = uicfg.autoform_field_kwargs
 
 # IWorkflowable views #########################################################
 
@@ -90,7 +86,7 @@ class ChangeStateForm(forms.CompositeEntityForm):
                     fwdgs.Button(stdmsgs.BUTTON_CANCEL, cwaction='cancel')]
 
 
-class ChangeStateFormView(form.FormViewMixIn, view.EntityView):
+class ChangeStateFormView(form.FormViewMixIn, EntityView):
     __regid__ = 'statuschange'
     title = _('status change')
     __select__ = (one_line_rset()
@@ -114,7 +110,7 @@ class ChangeStateFormView(form.FormViewMixIn, view.EntityView):
 
     def get_form(self, entity, transition, **kwargs):
         # XXX used to specify both rset/row/col and entity in case implements
-        # selector (and not implements) is used on custom form
+        # selector (and not is_instance) is used on custom form
         form = self._cw.vreg['forms'].select(
             'changestate', self._cw, entity=entity, transition=transition,
             redirect_path=self.redirectpath(entity), **kwargs)
@@ -183,6 +179,15 @@ class WFHistoryVComponent(component.EntityCtxComponent):
             self.entity.view('wfhistory', w=w, title=None)
 
 
+class InContextWithStateView(EntityView):
+    """display incontext view for an entity as well as its current state"""
+    __regid__ = 'incontext-state'
+    __select__ = adaptable('IWorkflowable')
+    def entity_call(self, entity):
+        iwf = entity.cw_adapt_to('IWorkflowable')
+        self.w(u'%s [%s]' % (entity.view('incontext'), iwf.printable_state))
+
+
 # workflow actions #############################################################
 
 class WorkflowActions(action.Action):
@@ -242,7 +247,7 @@ class WorkflowPrimaryView(TabbedPrimaryView):
     default_tab = 'wf_tab_info'
 
 
-class CellView(view.EntityView):
+class CellView(EntityView):
     __regid__ = 'cell'
     __select__ = is_instance('TrInfo')
 
@@ -250,7 +255,7 @@ class CellView(view.EntityView):
         self.w(self.cw_rset.get_entity(row, col).view('reledit', rtype='comment'))
 
 
-class StateInContextView(view.EntityView):
+class StateInContextView(EntityView):
     """convenience trick, State's incontext view should not be clickable"""
     __regid__ = 'incontext'
     __select__ = is_instance('State')
@@ -285,7 +290,7 @@ class WorkflowTabTextView(PrimaryTab):
                    )
 
 
-class TransitionSecurityTextView(view.EntityView):
+class TransitionSecurityTextView(EntityView):
     __regid__ = 'trsecurity'
     __select__ = is_instance('Transition')
 
@@ -303,7 +308,7 @@ class TransitionSecurityTextView(view.EntityView):
                      u'<br/>'.join((e.dc_title() for e
                                 in entity.condition))))
 
-class TransitionAllowedTextView(view.EntityView):
+class TransitionAllowedTextView(EntityView):
     __regid__ = 'trfromstates'
     __select__ = is_instance('Transition')
 
@@ -315,51 +320,56 @@ class TransitionAllowedTextView(view.EntityView):
 
 # workflow entity types edition ################################################
 
-_afs = uicfg.autoform_section
-_afs.tag_subject_of(('TrInfo', 'to_state', '*'), 'main', 'hidden')
-_afs.tag_subject_of(('TrInfo', 'from_state', '*'), 'main', 'hidden')
-_afs.tag_object_of(('State', 'allowed_transition', '*'), 'main', 'attributes')
-_afs.tag_subject_of(('State', 'allowed_transition', '*'), 'main', 'attributes')
-
-def workflow_items_for_relation(req, wfeid, wfrelation, targetrelation):
+def _wf_items_for_relation(req, wfeid, wfrelation, field):
     wf = req.entity_from_eid(wfeid)
-    rschema = req.vreg.schema[targetrelation]
+    rschema = req.vreg.schema[field.name]
+    param = 'toeid' if field.role == 'subject' else 'fromeid'
     return sorted((e.view('combobox'), e.eid)
                   for e in getattr(wf, 'reverse_%s' % wfrelation)
-                  if rschema.has_perm(req, 'add', toeid=e.eid))
+                  if rschema.has_perm(req, 'add', **{param: e.eid}))
 
+# TrInfo
+_afs.tag_subject_of(('TrInfo', 'to_state', '*'), 'main', 'hidden')
+_afs.tag_subject_of(('TrInfo', 'from_state', '*'), 'main', 'hidden')
+_afs.tag_attribute(('TrInfo', 'tr_count'), 'main', 'hidden')
 
-class TransitionEditionForm(autoform.AutomaticEntityForm):
-    __select__ = is_instance('Transition')
+# BaseTransition
+# XXX * allowed_transition BaseTransition
+# XXX BaseTransition destination_state *
 
-    def workflow_states_for_relation(self, targetrelation):
-        eids = self.edited_entity.linked_to('transition_of', 'subject')
+def transition_states_vocabulary(form, field):
+    entity = form.edited_entity
+    if not entity.has_eid():
+        eids = entity.linked_to('transition_of', 'subject')
+        if not eids:
+            return []
+        return _wf_items_for_relation(form._cw, eids[0], 'state_of', field)
+    return ff.relvoc_unrelated(entity, field.name, field.role)
+
+_afs.tag_subject_of(('*', 'destination_state', '*'), 'main', 'attributes')
+_affk.tag_subject_of(('*', 'destination_state', '*'),
+                     {'choices': transition_states_vocabulary})
+_afs.tag_object_of(('*', 'allowed_transition', '*'), 'main', 'attributes')
+_affk.tag_object_of(('*', 'allowed_transition', '*'),
+                     {'choices': transition_states_vocabulary})
+
+# State
+
+def state_transitions_vocabulary(form, field):
+    entity = form.edited_entity
+    if not entity.has_eid():
+        eids = entity.linked_to('state_of', 'subject')
         if eids:
-            return workflow_items_for_relation(self._cw, eids[0], 'state_of',
-                                               targetrelation)
+            return _wf_items_for_relation(form._cw, eids[0], 'transition_of', field)
         return []
+    return ff.relvoc_unrelated(entity, field.name, field.role)
 
-    def subject_destination_state_vocabulary(self, rtype, limit=None):
-        if not self.edited_entity.has_eid():
-            return self.workflow_states_for_relation('destination_state')
-        return self.subject_relation_vocabulary(rtype, limit)
-
-    def object_allowed_transition_vocabulary(self, rtype, limit=None):
-        if not self.edited_entity.has_eid():
-            return self.workflow_states_for_relation('allowed_transition')
-        return self.object_relation_vocabulary(rtype, limit)
+_afs.tag_subject_of(('State', 'allowed_transition', '*'), 'main', 'attributes')
+_affk.tag_subject_of(('State', 'allowed_transition', '*'),
+                     {'choices': state_transitions_vocabulary})
 
 
-class StateEditionForm(autoform.AutomaticEntityForm):
-    __select__ = is_instance('State')
-
-    def subject_allowed_transition_vocabulary(self, rtype, limit=None):
-        if not self.edited_entity.has_eid():
-            eids = self.edited_entity.linked_to('state_of', 'subject')
-            if eids:
-                return workflow_items_for_relation(self._cw, eids[0], 'transition_of',
-                                                   'allowed_transition')
-        return []
+# adaptaters ###################################################################
 
 class WorkflowIBreadCrumbsAdapter(ibreadcrumbs.IBreadCrumbsAdapter):
     __select__ = is_instance('Workflow')
@@ -434,7 +444,7 @@ class WorkflowGraphView(DotGraphView):
         return WorkflowDotPropsHandler(self._cw)
 
 
-class TmpPngView(TmpFileViewMixin, view.EntityView):
+class TmpPngView(TmpFileViewMixin, EntityView):
     __regid__ = 'tmppng'
     __select__ = match_form_params('tmpfile')
     content_type = 'image/png'

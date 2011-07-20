@@ -1,5 +1,5 @@
 # coding: utf-8
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -63,6 +63,13 @@ class AttrDescIteratorTC(TestCase):
                 result = list(attr_desc_iterator(parse(rql).children[0], idx, idx))
                 self.assertEqual(result, relations)
 
+    def test_subquery_callfunc(self):
+        rql = ('Any A,B,C,COUNT(D) GROUPBY A,B,C WITH A,B,C,D BEING '
+               '(Any YEAR(CD), MONTH(CD), S, X WHERE X is CWUser, X creation_date CD, X in_state S)')
+        rqlst = parse(rql)
+        select, col = rqlst.locate_subquery(2, 'CWUser', None)
+        result = list(attr_desc_iterator(select, col, 2))
+        self.assertEqual(result, [])
 
 
 class ResultSetTC(CubicWebTC):
@@ -114,7 +121,6 @@ class ResultSetTC(CubicWebTC):
                        description=[['CWUser', 'String']] * 3)
         rs.req = self.request()
         rs.vreg = self.vreg
-
         self.assertEqual(rs.limit(2).rows, [[12000, 'adim'], [13000, 'syt']])
         rs2 = rs.limit(2, offset=1)
         self.assertEqual(rs2.rows, [[13000, 'syt'], [14000, 'nico']])

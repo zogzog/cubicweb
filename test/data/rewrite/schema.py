@@ -27,8 +27,8 @@ class Affaire(EntityType):
         'delete': ('managers', 'owners', ERQLExpression('X concerne S, S owned_by U')),
         }
     ref = String(fulltextindexed=True, indexed=True, maxsize=16)
-    documented_by = SubjectRelation('Card')
-    concerne = SubjectRelation(('Societe', 'Note'))
+    documented_by = SubjectRelation('Card', cardinality='1*')
+    concerne = SubjectRelation(('Societe', 'Note'), cardinality='1*')
 
 
 class Societe(EntityType):

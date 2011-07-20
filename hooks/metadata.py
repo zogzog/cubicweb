@@ -67,13 +67,12 @@ class SetCreatorOp(hook.DataOperationMixIn, hook.Operation):
 
     def precommit_event(self):
         session = self.session
-        for eid in self.get_data():
-            if session.deleted_in_transaction(eid):
-                # entity have been created and deleted in the same transaction
-                continue
-            entity = session.entity_from_eid(eid)
-            if not entity.created_by:
-                session.add_relation(eid, 'created_by', session.user.eid)
+        relations = [(eid, session.user.eid) for eid in self.get_data()
+                # don't consider entities that have been created and
+                # deleted in the same transaction
+                if not session.deleted_in_transaction(eid) and \
+                   not session.entity_from_eid(eid).created_by]
+        session.add_relations([('created_by', relations)])
 
 
 class SetOwnershipHook(MetaDataHook):
@@ -107,7 +106,7 @@ class SyncCompositeOwner(MetaDataHook):
             # skip this special composite relation # XXX (syt) why?
             return
         eidfrom, eidto = self.eidfrom, self.eidto
-        composite = self._cw.schema_rproperty(self.rtype, eidfrom, eidto, 'composite')
+        composite = self._cw.rtype_eids_rdef(self.rtype, eidfrom, eidto).composite
         if composite == 'subject':
             SyncOwnersOp.get_instance(self._cw).add_data( (eidfrom, eidto) )
         elif composite == 'object':

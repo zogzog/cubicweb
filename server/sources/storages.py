@@ -122,7 +122,7 @@ class BytesFileSystemStorage(Storage):
         fpath = source.binary_to_str(value)
         try:
             return Binary(file(fpath, 'rb').read())
-        except OSError, ex:
+        except EnvironmentError, ex:
             source.critical("can't open %s: %s", value, ex)
             return None
 
@@ -173,13 +173,15 @@ class BytesFileSystemStorage(Storage):
             entity.cw_edited.edited_attribute(attr, Binary(fpath))
             # Mark the old file as useless so the file will be removed at
             # commit.
-            DeleteFileOp.get_instance(entity._cw).add_data(oldpath)
+            if oldpath is not None:
+                DeleteFileOp.get_instance(entity._cw).add_data(oldpath)
         return binary
 
     def entity_deleted(self, entity, attr):
         """an entity using this storage for attr has been deleted"""
         fpath = self.current_fs_path(entity, attr)
-        DeleteFileOp.get_instance(entity._cw).add_data(fpath)
+        if fpath is not None:
+            DeleteFileOp.get_instance(entity._cw).add_data(fpath)
 
     def new_fs_path(self, entity, attr):
         # We try to get some hint about how to name the file using attribute's
@@ -199,13 +201,16 @@ class BytesFileSystemStorage(Storage):
         return fspath
 
     def current_fs_path(self, entity, attr):
+        """return the current fs_path of the tribute.
+
+        Return None is the attr is not stored yet."""
         sysource = entity._cw.pool.source('system')
         cu = sysource.doexec(entity._cw,
                              'SELECT cw_%s FROM cw_%s WHERE cw_eid=%s' % (
                              attr, entity.__regid__, entity.eid))
         rawvalue = cu.fetchone()[0]
         if rawvalue is None: # no previous value
-            return self.new_fs_path(entity, attr)
+            return None
         return sysource._process_value(rawvalue, cu.description[0],
                                        binarywrap=str)
 

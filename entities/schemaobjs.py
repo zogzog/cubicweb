@@ -45,10 +45,6 @@ class CWEType(AnyEntity):
             return u'%s <<%s>>' % (self.dc_title(), ', '.join(stereotypes))
         return self.dc_title()
 
-    def db_key_name(self):
-        """XXX goa specific"""
-        return self.get('name')
-
 
 class CWRType(AnyEntity):
     __regid__ = 'CWRType'
@@ -86,10 +82,6 @@ class CWRType(AnyEntity):
                                  "%(stype)s %(rtype)s %(otype)s "
                                  "has cardinality=%(card)s")
                 raise ValidationError(self.eid, {qname: msg % locals()})
-
-    def db_key_name(self):
-        """XXX goa specific"""
-        return self.get('name')
 
 
 class CWRelation(AnyEntity):

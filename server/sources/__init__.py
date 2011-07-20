@@ -139,11 +139,11 @@ class AbstractSource(object):
             return -1
         return cmp(self.uri, other.uri)
 
-    def backup(self, backupfile, confirm):
+    def backup(self, backupfile, confirm, format='native'):
         """method called to create a backup of source's data"""
         pass
 
-    def restore(self, backupfile, confirm, drop):
+    def restore(self, backupfile, confirm, drop, format='native'):
         """method called to restore a backup of source's data"""
         pass
 
@@ -434,6 +434,13 @@ class AbstractSource(object):
         """add a relation to the source"""
         raise NotImplementedError()
 
+    def add_relations(self, session,  rtype, subj_obj_list):
+        """add a relations to the source"""
+        # override in derived classes if you feel you can
+        # optimize
+        for subject, object in subj_obj_list:
+            self.add_relation(session, subject, rtype, object)
+
     def delete_relation(self, session, subject, rtype, object):
         """delete a relation from the source"""
         raise NotImplementedError()
@@ -455,18 +462,11 @@ class AbstractSource(object):
         """mark entity as being modified, fulltext reindex if needed"""
         raise NotImplementedError()
 
-    def delete_info(self, session, entity, uri, extid):
-        """delete system information on deletion of an entity by transfering
-        record from the entities table to the deleted_entities table
+    def delete_info_multi(self, session, entities, uri):
+        """delete system information on deletion of a list of entities with the
+        same etype and belinging to the same source
         """
         raise NotImplementedError()
-
-    def delete_info_multi(self, session, entities, uri, extids):
-        """ame as delete_info but accepts a list of entities with
-        the same etype and belinging to the same source.
-        """
-        for entity, extid in itertools.izip(entities, extids):
-            self.delete_info(session, entity, uri, extid)
 
     def modified_entities(self, session, etypes, mtime):
         """return a 2-uple:

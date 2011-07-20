@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -281,7 +281,7 @@ class JSonController(Controller):
         try:
             args = [json.loads(arg) for arg in args]
         except ValueError, exc:
-            self.exception('error while decoding json arguments for js_%s: %s',
+            self.exception('error while decoding json arguments for js_%s: %s (err: %s)',
                            fname, args, exc)
             raise RemoteCallFailed(exc_message(exc, self._cw.encoding))
         try:
@@ -455,13 +455,13 @@ class JSonController(Controller):
     def js_reledit_form(self):
         req = self._cw
         args = dict((x, req.form[x])
-                    for x in ('formid', 'rtype', 'role', 'reload'))
+                    for x in ('formid', 'rtype', 'role', 'reload', 'action'))
         rset = req.eid_rset(typed_eid(self._cw.form['eid']))
         try:
             args['reload'] = json.loads(args['reload'])
         except ValueError: # not true/false, an absolute url
             assert args['reload'].startswith('http')
-        view = req.vreg['views'].select('doreledit', req, rset=rset, rtype=args['rtype'])
+        view = req.vreg['views'].select('reledit', req, rset=rset, rtype=args['rtype'])
         return self._call_view(view, **args)
 
     @jsonize
@@ -603,16 +603,14 @@ class UndoController(Controller):
         errors = self._cw.cnx.undo_transaction(txuuid)
         if not errors:
             self.redirect()
-        return self._cw._('some errors occurred:') + self.view('pyvalist',
-                                                               pyvalue=errors)
+        raise ValidationError(None, {None: '\n'.join(errors)})
 
-    def redirect(self):
+    def redirect(self, msg=None):
         req = self._cw
+        msg = msg or req._("transaction undone")
         breadcrumbs = req.session.data.get('breadcrumbs', None)
         if breadcrumbs is not None and len(breadcrumbs) > 1:
-            url = req.rebuild_url(breadcrumbs[-2],
-                                  __message=req._('transaction undoed'))
+            url = req.rebuild_url(breadcrumbs[-2], __message=msg)
         else:
-            url = req.build_url(__message=req._('transaction undoed'))
+            url = req.build_url(__message=msg)
         raise Redirect(url)
-

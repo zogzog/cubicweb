@@ -152,16 +152,17 @@ class InstanceCommand(Command):
                 print '*'*72
                 if not ASK.confirm('%s instance %r ?' % (self.name, appid)):
                     continue
-            status = max(status, self.run_arg(appid))
+            try:
+                status = max(status, self.run_arg(appid))
+            except (KeyboardInterrupt, SystemExit):
+                print >> sys.stderr, '%s aborted' % self.name
+                return 2 # specific error code
         sys.exit(status)
 
     def run_arg(self, appid):
         cmdmeth = getattr(self, '%s_instance' % self.name)
         try:
             status = cmdmeth(appid)
-        except (KeyboardInterrupt, SystemExit):
-            print >> sys.stderr, '%s aborted' % self.name
-            return 2 # specific error code
         except (ExecutionError, ConfigurationError), ex:
             print >> sys.stderr, 'instance %s not %s: %s' % (
                 appid, self.actionverb, ex)
@@ -757,18 +758,16 @@ given, appropriate sources for migration will be automatically selected \
             applcubicwebversion = vcconf.get('cubicweb')
         if cubicwebversion > applcubicwebversion:
             toupgrade.append(('cubicweb', applcubicwebversion, cubicwebversion))
-        if not self.config.fs_only and not toupgrade:
-            print '-> no data migration needed for instance %s.' % appid
-            self.i18nupgrade(config)
-            mih.shutdown()
-            return
-        for cube, fromversion, toversion in toupgrade:
-            print '-> migration needed from %s to %s for %s' % (fromversion, toversion, cube)
         # only stop once we're sure we have something to do
         if not (CWDEV or self.config.nostartstop):
             StopInstanceCommand(self.logger).stop_instance(appid)
         # run cubicweb/componants migration scripts
-        mih.migrate(vcconf, reversed(toupgrade), self.config)
+        if self.config.fs_only or toupgrade:
+            for cube, fromversion, toversion in toupgrade:
+                print '-> migration needed from %s to %s for %s' % (fromversion, toversion, cube)
+            mih.migrate(vcconf, reversed(toupgrade), self.config)
+        else:
+            print '-> no data migration needed for instance %s.' % appid
         # rewrite main configuration file
         mih.rewrite_configuration()
         mih.shutdown()
@@ -905,6 +904,7 @@ sources for migration will be automatically selected.",
                 scripts, args = self.cmdline_parser.largs[1:], self.cmdline_parser.rargs
                 for script in scripts:
                     mih.cmd_process_script(script, scriptargs=args)
+                    mih.commit()
             else:
                 mih.interactive_shell()
         finally:

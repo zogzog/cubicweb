@@ -162,7 +162,7 @@ class ServerMigrationHelper(MigrationHelper):
 
     # server specific migration methods ########################################
 
-    def backup_database(self, backupfile=None, askconfirm=True):
+    def backup_database(self, backupfile=None, askconfirm=True, format='native'):
         config = self.config
         repo = self.repo_connect()
         # paths
@@ -185,16 +185,24 @@ class ServerMigrationHelper(MigrationHelper):
         # backup
         tmpdir = tempfile.mkdtemp()
         try:
+            failed = False
             for source in repo.sources:
                 try:
-                    source.backup(osp.join(tmpdir, source.uri), self.confirm)
+                    source.backup(osp.join(tmpdir, source.uri), self.confirm, format=format)
                 except Exception, ex:
                     print '-> error trying to backup %s [%s]' % (source.uri, ex)
                     if not self.confirm('Continue anyway?', default='n'):
                         raise SystemExit(1)
                     else:
-                        break
-            else:
+                        failed = True
+            with open(osp.join(tmpdir, 'format.txt'), 'w') as format_file:
+                format_file.write('%s\n' % format)
+            with open(osp.join(tmpdir, 'versions.txt'), 'w') as version_file:
+                versions = repo.get_versions()
+                for cube, version in versions.iteritems():
+                    version_file.write('%s %s\n' % (cube, version))
+                    
+            if not failed:
                 bkup = tarfile.open(backupfile, 'w|gz')
                 for filename in os.listdir(tmpdir):
                     bkup.add(osp.join(tmpdir, filename), filename)
@@ -207,7 +215,7 @@ class ServerMigrationHelper(MigrationHelper):
             shutil.rmtree(tmpdir)
 
     def restore_database(self, backupfile, drop=True, systemonly=True,
-                         askconfirm=True):
+                         askconfirm=True, format='native'):
         # check
         if not osp.exists(backupfile):
             raise ExecutionError("Backup file %s doesn't exist" % backupfile)
@@ -229,13 +237,18 @@ class ServerMigrationHelper(MigrationHelper):
             bkup = tarfile.open(backupfile, 'r|gz')
             bkup.extractall(path=tmpdir)
             bkup.close()
+        if osp.isfile(osp.join(tmpdir, 'format.txt')):
+            with open(osp.join(tmpdir, 'format.txt')) as format_file:
+                written_format = format_file.readline().strip()
+                if written_format in ('portable', 'native'):
+                    format = written_format
         self.config.open_connections_pools = False
         repo = self.repo_connect()
         for source in repo.sources:
             if systemonly and source.uri != 'system':
                 continue
             try:
-                source.restore(osp.join(tmpdir, source.uri), self.confirm, drop)
+                source.restore(osp.join(tmpdir, source.uri), self.confirm, drop, format)
             except Exception, exc:
                 print '-> error trying to restore %s [%s]' % (source.uri, exc)
                 if not self.confirm('Continue anyway?', default='n'):
@@ -438,7 +451,8 @@ class ServerMigrationHelper(MigrationHelper):
                                  'X expression %%(expr)s, X mainvars %%(vars)s, T %s X '
                                  'WHERE T eid %%(x)s' % perm,
                                  {'expr': expr, 'exprtype': exprtype,
-                                  'vars': expression.mainvars, 'x': teid},
+                                  'vars': u','.join(sorted(expression.mainvars)),
+                                  'x': teid},
                                  ask_confirm=False)
 
     def _synchronize_rschema(self, rtype, syncrdefs=True,
@@ -723,9 +737,15 @@ class ServerMigrationHelper(MigrationHelper):
 
         `attrname` is a string giving the name of the attribute to drop
         """
-        rschema = self.repo.schema.rschema(attrname)
-        attrtype = rschema.objects(etype)[0]
-        self.cmd_drop_relation_definition(etype, attrname, attrtype, commit=commit)
+        try:
+            rschema = self.repo.schema.rschema(attrname)
+            attrtype = rschema.objects(etype)[0]
+        except KeyError:
+            print 'warning: attribute %s %s is not known, skip deletion' % (
+                etype, attrname)
+        else:
+            self.cmd_drop_relation_definition(etype, attrname, attrtype,
+                                              commit=commit)
 
     def cmd_rename_attribute(self, etype, oldname, newname, commit=True):
         """rename an existing attribute of the given entity type
@@ -757,9 +777,10 @@ class ServerMigrationHelper(MigrationHelper):
         targeted type is known
         """
         instschema = self.repo.schema
-        assert not etype in instschema, \
-               '%s already defined in the instance schema' % etype
         eschema = self.fs_schema.eschema(etype)
+        if etype in instschema and not (eschema.final and eschema.eid is None):
+            print 'warning: %s already known, skip addition' % etype
+            return
         confirm = self.verbosity >= 2
         groupmap = self.group_mapping()
         cstrtypemap = self.cstrtype_mapping()
@@ -930,23 +951,19 @@ class ServerMigrationHelper(MigrationHelper):
             # triggered by schema synchronization hooks.
             session = self.session
             for rdeftype in ('CWRelation', 'CWAttribute'):
-                thispending = set()
-                for eid, in self.sqlexec('SELECT cw_eid FROM cw_%s '
-                                         'WHERE cw_from_entity=%%(eid)s OR '
-                                         ' cw_to_entity=%%(eid)s' % rdeftype,
-                                         {'eid': oldeid}, ask_confirm=False):
-                    # we should add deleted eids into pending eids else we may
-                    # get some validation error on commit since integrity hooks
-                    # may think some required relation is missing... This also ensure
-                    # repository caches are properly cleanup
-                    hook.CleanupDeletedEidsCacheOp.get_instance(session).add_data(eid)
-                    # and don't forget to remove record from system tables
-                    self.repo.system_source.delete_info(
-                        session, session.entity_from_eid(eid, rdeftype),
-                        'system', None)
-                    thispending.add(eid)
-                self.sqlexec('DELETE FROM cw_%s '
-                             'WHERE cw_from_entity=%%(eid)s OR '
+                thispending = set( (eid for eid, in self.sqlexec(
+                    'SELECT cw_eid FROM cw_%s WHERE cw_from_entity=%%(eid)s OR '
+                    ' cw_to_entity=%%(eid)s' % rdeftype,
+                    {'eid': oldeid}, ask_confirm=False)) )
+                # we should add deleted eids into pending eids else we may
+                # get some validation error on commit since integrity hooks
+                # may think some required relation is missing... This also ensure
+                # repository caches are properly cleanup
+                hook.CleanupDeletedEidsCacheOp.get_instance(session).union(thispending)
+                # and don't forget to remove record from system tables
+                entities = [session.entity_from_eid(eid, rdeftype) for eid in thispending]
+                self.repo.system_source.delete_info_multi(session, entities, 'system')
+                self.sqlexec('DELETE FROM cw_%s WHERE cw_from_entity=%%(eid)s OR '
                              'cw_to_entity=%%(eid)s' % rdeftype,
                              {'eid': oldeid}, ask_confirm=False)
                 # now we have to manually cleanup relations pointing to deleted
@@ -991,6 +1008,10 @@ class ServerMigrationHelper(MigrationHelper):
 
         """
         reposchema = self.repo.schema
+        if rtype in reposchema:
+            print 'warning: relation type %s is already known, skip addition' % (
+                rtype)
+            return
         rschema = self.fs_schema.rschema(rtype)
         execute = self._cw.execute
         # register the relation into CWRType and insert necessary relation
@@ -1057,6 +1078,10 @@ class ServerMigrationHelper(MigrationHelper):
         rschema = self.fs_schema.rschema(rtype)
         if not rtype in self.repo.schema:
             self.cmd_add_relation_type(rtype, addrdef=False, commit=True)
+        if (subjtype, objtype) in self.repo.schema.rschema(rtype).rdefs:
+            print 'warning: relation %s %s %s is already known, skip addition' % (
+                subjtype, rtype, objtype)
+            return
         execute = self._cw.execute
         rdef = self._get_rdef(rschema, subjtype, objtype)
         ss.execschemarql(execute, rdef,
@@ -1127,6 +1152,10 @@ class ServerMigrationHelper(MigrationHelper):
                                               syncprops=syncprops)
         else:
             for etype in self.repo.schema.entities():
+                if etype.eid is None:
+                     # not yet added final etype (thing to BigInt defined in
+                     # yams though 3.13 migration not done yet)
+                    continue
                 self._synchronize_eschema(etype, syncrdefs=syncrdefs,
                                           syncprops=syncprops, syncperms=syncperms)
         if commit:
@@ -1247,6 +1276,12 @@ class ServerMigrationHelper(MigrationHelper):
         if commit:
             self.commit()
         return wf
+
+    def cmd_get_workflow_for(self, etype):
+        """return default workflow for the given entity type"""
+        rset = self.rqlexec('Workflow X WHERE ET default_workflow X, ET name %(et)s',
+                            {'et': etype})
+        return rset.get_entity(0, 0)
 
     # XXX remove once cmd_add_[state|transition] are removed
     def _get_or_create_wf(self, etypes):
@@ -1404,7 +1439,7 @@ class ServerMigrationHelper(MigrationHelper):
         return self.cmd_create_entity(etype, *args, **kwargs).eid
 
     @contextmanager
-    def cmd_dropped_constraints(self, etype, attrname, cstrtype,
+    def cmd_dropped_constraints(self, etype, attrname, cstrtype=None,
                                 droprequired=False):
         """context manager to drop constraints temporarily on fs_schema
 
@@ -1424,8 +1459,9 @@ class ServerMigrationHelper(MigrationHelper):
         rdef = self.fs_schema.eschema(etype).rdef(attrname)
         original_constraints = rdef.constraints
         # remove constraints
-        rdef.constraints = [cstr for cstr in original_constraints
-                            if not (cstrtype and isinstance(cstr, cstrtype))]
+        if cstrtype:
+            rdef.constraints = [cstr for cstr in original_constraints
+                                if not (cstrtype and isinstance(cstr, cstrtype))]
         if droprequired:
             original_cardinality = rdef.cardinality
             rdef.cardinality = '?' + rdef.cardinality[1]
@@ -1495,13 +1531,13 @@ class ServerMigrationHelper(MigrationHelper):
         rschema = self.repo.schema.rschema(attr)
         oldtype = rschema.objects(etype)[0]
         rdefeid = rschema.rproperty(etype, oldtype, 'eid')
-        sql = ("UPDATE CWAttribute "
-               "SET to_entity=(SELECT eid FROM CWEType WHERE name='%s')"
-               "WHERE eid=%s") % (newtype, rdefeid)
+        sql = ("UPDATE cw_CWAttribute "
+               "SET cw_to_entity=(SELECT cw_eid FROM cw_CWEType WHERE cw_name='%s')"
+               "WHERE cw_eid=%s") % (newtype, rdefeid)
         self.sqlexec(sql, ask_confirm=False)
         dbhelper = self.repo.system_source.dbhelper
         sqltype = dbhelper.TYPE_MAPPING[newtype]
-        sql = 'ALTER TABLE %s ALTER COLUMN %s TYPE %s' % (etype, attr, sqltype)
+        sql = 'ALTER TABLE cw_%s ALTER COLUMN cw_%s TYPE %s' % (etype, attr, sqltype)
         self.sqlexec(sql, ask_confirm=False)
         if commit:
             self.commit()

@@ -364,8 +364,9 @@ class MigrationCommandsTC(CubicWebTC):
             'X from_entity FE, FE name "Personne",'
             'X ordernum O')]
         expected = [u'nom', u'prenom', u'sexe', u'promo', u'ass', u'adel', u'titre',
-                    u'web', u'tel', u'fax', u'datenaiss', u'test', 'description', u'firstname',
-                    u'creation_date', 'cwuri', u'modification_date']
+                    u'web', u'tel', u'fax', u'datenaiss', u'tzdatenaiss', u'test',
+                    u'description', u'firstname',
+                    u'creation_date', u'cwuri', u'modification_date']
         self.assertEqual(rinorder, expected)
 
         # test permissions synchronization ####################################

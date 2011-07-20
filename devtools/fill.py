@@ -1,5 +1,5 @@
 # -*- coding: iso-8859-1 -*-
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -152,6 +152,8 @@ title
         base = datetime(randint(2000, 2004), randint(1, 12), randint(1, 28), 11, index%60)
         return self._constrained_generate(entity, attrname, base, timedelta(hours=1), index)
 
+    generate_tzdatetime = generate_datetime # XXX implementation should add a timezone
+
     def generate_date(self, entity, attrname, index):
         """generates a random date (format is 'yyyy-mm-dd')"""
         base = date(randint(2000, 2010), 1, 1) + timedelta(randint(1, 365))
@@ -165,6 +167,8 @@ title
     def generate_time(self, entity, attrname, index):
         """generates a random time (format is ' HH:MM')"""
         return time(11, index%60) #'11:%02d' % (index % 60)
+
+    generate_tztime = generate_time # XXX implementation should add a timezone
 
     def generate_bytes(self, entity, attrname, index, format=None):
         fakefile = Binary("%s%s" % (attrname, index))
@@ -441,7 +445,7 @@ class RelationsQueriesGenerator(object):
         constraints = [c for c in rdef.constraints
                        if isinstance(c, RQLConstraint)]
         if constraints:
-            restrictions = ', '.join(c.restriction for c in constraints)
+            restrictions = ', '.join(c.expression for c in constraints)
             q += ', %s' % restrictions
             # restrict object eids if possible
             # XXX the attempt to restrict below in completely wrong

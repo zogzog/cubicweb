@@ -103,9 +103,10 @@ class UrlRewriteTC(CubicWebTC):
 class RgxActionRewriteTC(CubicWebTC):
 
     def setup_database(self):
-        self.p1 = self.create_user(u'user1')
+        req = self.request()
+        self.p1 = self.create_user(req, u'user1')
         self.p1.set_attributes(firstname=u'joe', surname=u'Dalton')
-        self.p2 = self.create_user(u'user2')
+        self.p2 = self.create_user(req, u'user2')
         self.p2.set_attributes(firstname=u'jack', surname=u'Dalton')
 
     def test_rgx_action_with_transforms(self):

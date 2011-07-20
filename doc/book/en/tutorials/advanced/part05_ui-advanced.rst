@@ -3,6 +3,8 @@ Building my photos web site with |cubicweb| part V: let's make it even more user
 
 We'll now see how to benefit from features introduced in 3.9 and 3.10 releases of CubicWeb
 
+.. _uiprops:
+
 Step 1: tired of the default look?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
