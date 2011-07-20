@@ -1172,6 +1172,9 @@ msgstr ""
 msgid "anonymous"
 msgstr ""
 
+msgid "anyrsetview"
+msgstr "rset views"
+
 msgid "april"
 msgstr ""
 
@@ -2292,6 +2295,9 @@ msgstr ""
 
 msgid "entity update"
 msgstr ""
+
+msgid "entityview"
+msgstr "entity views"
 
 msgid "error"
 msgstr ""
@@ -3682,6 +3688,9 @@ msgstr ""
 
 msgid "startup views"
 msgstr ""
+
+msgid "startupview"
+msgstr "startup views"
 
 msgid "state"
 msgstr ""

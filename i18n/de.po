@@ -1215,6 +1215,9 @@ msgstr "und/oder zwischen verschiedenen Werten"
 msgid "anonymous"
 msgstr "anonym"
 
+msgid "anyrsetview"
+msgstr ""
+
 msgid "april"
 msgstr "April"
 
@@ -2348,6 +2351,9 @@ msgstr "Entitätstypen, die diesen Workflow benutzen können."
 
 msgid "entity update"
 msgstr "Aktualisierung der Entität"
+
+msgid "entityview"
+msgstr ""
 
 msgid "error"
 msgstr ""
@@ -3782,6 +3788,9 @@ msgstr ""
 
 msgid "startup views"
 msgstr "Start-Ansichten"
+
+msgid "startupview"
+msgstr ""
 
 msgid "state"
 msgstr "Zustand"

@@ -371,7 +371,7 @@ class View(AppObject):
 class EntityView(View):
     """base class for views applying on an entity (i.e. uniform result set)"""
     __select__ = non_final_entity()
-    category = 'entityview'
+    category = _('entityview')
 
     def call(self, **kwargs):
         if self.cw_rset is None:
@@ -392,7 +392,7 @@ class StartupView(View):
     """
     __select__ = none_rset()
 
-    category = 'startupview'
+    category = _('startupview')
 
     def html_headers(self):
         """return a list of html headers (eg something to be inserted between
@@ -436,7 +436,7 @@ class AnyRsetView(View):
     """base class for views applying on any non empty result sets"""
     __select__ = nonempty_rset()
 
-    category = 'anyrsetview'
+    category = _('anyrsetview')
 
     def columns_labels(self, mainindex=0, tr=True):
         if tr:

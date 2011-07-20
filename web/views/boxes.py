@@ -185,7 +185,7 @@ class PossibleViewsBox(component.CtxComponent):
 
     def render_body(self, w):
         for category, views in box.sort_by_category(self.views):
-            menu = htmlwidgets.BoxMenu(category)
+            menu = htmlwidgets.BoxMenu(self._cw._(category))
             for view in views:
                 menu.append(self.action_link(view))
             self.append(menu)
@@ -207,6 +207,7 @@ class StartupViewsBox(PossibleViewsBox):
         if not self.views:
             raise component.EmptyComponent()
         self.items = []
+
 
 class RsetBox(component.CtxComponent):
     """helper view class to display an rset in a sidebox"""

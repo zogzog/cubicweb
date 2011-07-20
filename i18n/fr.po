@@ -1222,6 +1222,9 @@ msgstr "et/ou entre les différentes valeurs"
 msgid "anonymous"
 msgstr "anonyme"
 
+msgid "anyrsetview"
+msgstr "vues \"tous les rset\""
+
 msgid "april"
 msgstr "avril"
 
@@ -2387,6 +2390,9 @@ msgstr "types d'entité pouvant utiliser ce workflow"
 
 msgid "entity update"
 msgstr "mise à jour d'entité"
+
+msgid "entityview"
+msgstr "vues d'entité"
 
 msgid "error"
 msgstr "erreur"
@@ -3831,6 +3837,9 @@ msgid "specifying %s is mandatory"
 msgstr "spécifier %s est obligatoire"
 
 msgid "startup views"
+msgstr "vues de départ"
+
+msgid "startupview"
 msgstr "vues de départ"
 
 msgid "state"
