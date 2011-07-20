@@ -1643,11 +1643,25 @@ WHERE VERSION_DATA(_X.cw_eid)=1''')
                     '''SELECT (A || _X.cw_ref)
 FROM cw_Affaire AS _X''')
 
-    def test_or_having_fake_terms(self):
+    def test_or_having_fake_terms_base(self):
         self._check('Any X WHERE X is CWUser, X creation_date D HAVING YEAR(D) = "2010" OR D = NULL',
                     '''SELECT _X.cw_eid
 FROM cw_CWUser AS _X
 WHERE ((CAST(EXTRACT(YEAR from _X.cw_creation_date) AS INTEGER)=2010) OR (_X.cw_creation_date IS NULL))''')
+
+    def test_or_having_fake_terms_exists(self):
+        # crash with rql <= 0.29.0
+        self._check('Any X WHERE X is CWUser, EXISTS(B bookmarked_by X, B creation_date D) HAVING D=2010 OR D=NULL, D=1 OR D=NULL',
+                    '''SELECT _X.cw_eid
+FROM cw_CWUser AS _X
+WHERE EXISTS(SELECT 1 FROM bookmarked_by_relation AS rel_bookmarked_by0, cw_Bookmark AS _B WHERE rel_bookmarked_by0.eid_from=_B.cw_eid AND rel_bookmarked_by0.eid_to=_X.cw_eid AND ((_B.cw_creation_date=1) OR (_B.cw_creation_date IS NULL)) AND ((_B.cw_creation_date=2010) OR (_B.cw_creation_date IS NULL)))''')
+
+    def test_or_having_fake_terms_nocrash(self):
+        # crash with rql <= 0.29.0
+        self._check('Any X WHERE X is CWUser, X creation_date D HAVING D=2010 OR D=NULL, D=1 OR D=NULL',
+                    '''SELECT _X.cw_eid
+FROM cw_CWUser AS _X
+WHERE ((_X.cw_creation_date=1) OR (_X.cw_creation_date IS NULL)) AND ((_X.cw_creation_date=2010) OR (_X.cw_creation_date IS NULL))''')
 
     def test_not_no_where(self):
         # XXX will check if some in_group relation exists, that's it.
@@ -1699,7 +1713,7 @@ class SqlServer2005SQLGeneratorTC(PostgresSQLGeneratorTC):
     def test_regexp(self):
         self.skipTest('regexp-based pattern matching not implemented in sqlserver')
 
-    def test_or_having_fake_terms(self):
+    def test_or_having_fake_terms_base(self):
         self._check('Any X WHERE X is CWUser, X creation_date D HAVING YEAR(D) = "2010" OR D = NULL',
                     '''SELECT _X.cw_eid
 FROM cw_CWUser AS _X
@@ -1984,7 +1998,7 @@ WHERE appears0.word_id IN (SELECT word_id FROM word WHERE word in ('toto', 'tata
             yield t
 
 
-    def test_or_having_fake_terms(self):
+    def test_or_having_fake_terms_base(self):
         self._check('Any X WHERE X is CWUser, X creation_date D HAVING YEAR(D) = "2010" OR D = NULL',
                     '''SELECT _X.cw_eid
 FROM cw_CWUser AS _X
@@ -2095,7 +2109,7 @@ GROUP BY _A.cw_eid,rel_todo_by1.eid_to,rel_todo_by3.eid_to''')
 FROM cw_Personne AS _P''')
 
 
-    def test_or_having_fake_terms(self):
+    def test_or_having_fake_terms_base(self):
         self._check('Any X WHERE X is CWUser, X creation_date D HAVING YEAR(D) = "2010" OR D = NULL',
                     '''SELECT _X.cw_eid
 FROM cw_CWUser AS _X

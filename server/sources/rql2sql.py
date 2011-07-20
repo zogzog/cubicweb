@@ -56,6 +56,7 @@ from logilab.common.date import utcdatetime, utctime
 from logilab.database import FunctionDescr, SQL_FUNCTIONS_REGISTRY
 
 from rql import BadRQLQuery, CoercionError
+from rql.utils import common_parent
 from rql.stmts import Union, Select
 from rql.nodes import (SortTerm, VariableRef, Constant, Function, Variable, Or,
                        Not, Comparison, ColumnAlias, Relation, SubQuery, Exists)
@@ -669,7 +670,7 @@ def extract_fake_having_terms(having):
             else:
                 tocheck.append(compnode)
         # tocheck hold a set of comparison not implying an aggregat function
-        # put them in fakehaving if the don't share an Or node as ancestor
+        # put them in fakehaving if they don't share an Or node as ancestor
         # with another comparison containing an aggregat function
         for compnode in tocheck:
             parents = set()
@@ -784,7 +785,20 @@ class SQLGenerator(object):
         sorts = select.orderby
         groups = select.groupby
         having = select.having
-        morerestr = extract_fake_having_terms(having)
+        for restr in extract_fake_having_terms(having):
+            scope = None
+            for vref in restr.get_nodes(VariableRef):
+                vscope = vref.variable.scope
+                if vscope is select:
+                    continue # ignore select scope, so restriction is added to
+                             # the inner most scope possible
+                if scope is None:
+                    scope = vscope
+                elif vscope is not scope:
+                    scope = common_parent(scope, vscope).scope
+            if scope is None:
+                scope = select
+            scope.add_restriction(restr)
         # remember selection, it may be changed and have to be restored
         origselection = select.selection[:]
         # check if the query will have union subquery, if it need sort term
@@ -829,7 +843,7 @@ class SQLGenerator(object):
         self._in_wrapping_query = False
         self._state = state
         try:
-            sql = self._solutions_sql(select, morerestr, sols, distinct,
+            sql = self._solutions_sql(select, sols, distinct,
                                       needalias or needwrap)
             # generate groups / having before wrapping query selection to get
             # correct column aliases
@@ -900,15 +914,13 @@ class SQLGenerator(object):
                 except KeyError:
                     continue
 
-    def _solutions_sql(self, select, morerestr, solutions, distinct, needalias):
+    def _solutions_sql(self, select, solutions, distinct, needalias):
         sqls = []
         for solution in solutions:
             self._state.reset(solution)
             # visit restriction subtree
             if select.where is not None:
                 self._state.add_restriction(select.where.accept(self))
-            for restriction in morerestr:
-                self._state.add_restriction(restriction.accept(self))
             sql = [self._selection_sql(select.selection, distinct, needalias)]
             if self._state.restrictions:
                 sql.append('WHERE %s' % ' AND '.join(self._state.restrictions))
