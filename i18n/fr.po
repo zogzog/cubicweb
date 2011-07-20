@@ -1834,8 +1834,9 @@ msgid "ctxcomponents_facet.filterbox"
 msgstr "boîte à facettes"
 
 msgid "ctxcomponents_facet.filterbox_description"
-msgstr "boîte permettant de filtrer parmi les résultats d'une recherche à l'aide "
-"de facettes"
+msgstr ""
+"boîte permettant de filtrer parmi les résultats d'une recherche à l'aide de "
+"facettes"
 
 msgid "ctxcomponents_logo"
 msgstr "logo"
