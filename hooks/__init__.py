@@ -46,28 +46,26 @@ class ServerStartupHook(hook.Hook):
                 session.commit()
             finally:
                 session.close()
-        self.repo.looping_task(60*60*24, cleanup_old_transactions, self.repo)
+        if self.repo.config['undo-support']:
+            self.repo.looping_task(60*60*24, cleanup_old_transactions,
+                                   self.repo)
         def update_feeds(repo):
-            session = repo.internal_session()
-            try:
-                # don't iter on repo.sources which doesn't include copy based
-                # sources (the one we're looking for)
-                for source in repo.sources_by_eid.itervalues():
-                    if (not source.copy_based_source
-                        or not repo.config.source_enabled(source)
-                        or not source.config['synchronize']):
-                        continue
-                    try:
-                        stats = source.pull_data(session)
-                        if stats.get('created'):
-                            source.info('added %s entities', len(stats['created']))
-                        if stats.get('updated'):
-                            source.info('updated %s entities', len(stats['updated']))
-                        session.commit()
-                    except Exception, exc:
-                        session.exception('while trying to update feed %s', source)
-                        session.rollback()
-                    session.set_pool()
-            finally:
-                session.close()
+            # don't iter on repo.sources which doesn't include copy based
+            # sources (the one we're looking for)
+            for source in repo.sources_by_eid.itervalues():
+                if (not source.copy_based_source
+                    or not repo.config.source_enabled(source)
+                    or not source.config['synchronize']):
+                    continue
+                session = repo.internal_session()
+                try:
+                    stats = source.pull_data(session)
+                    if stats.get('created'):
+                        source.info('added %s entities', len(stats['created']))
+                    if stats.get('updated'):
+                        source.info('updated %s entities', len(stats['updated']))
+                except Exception, exc:
+                    session.exception('while trying to update feed %s', source)
+                finally:
+                    session.close()
         self.repo.looping_task(60, update_feeds, self.repo)

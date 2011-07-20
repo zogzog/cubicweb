@@ -200,7 +200,7 @@ else:
             context = state.document.settings.context
             context._cw.add_css('pygments.css')
         except AttributeError:
-            # used outside cubicweb
+            # used outside cubicweb XXX use hasattr instead
             pass
         return [nodes.raw('', parsed, format='html')]
 

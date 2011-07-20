@@ -23,6 +23,7 @@ from datetime import datetime
 
 from cubicweb.selectors import is_instance
 from cubicweb.server import hook
+from cubicweb.server.edition import EditedEntity
 
 
 class MetaDataHook(hook.Hook):
@@ -68,8 +69,9 @@ class SetCreatorOp(hook.DataOperationMixIn, hook.Operation):
     def precommit_event(self):
         session = self.session
         relations = [(eid, session.user.eid) for eid in self.get_data()
-                # don't consider entities that have been created and
-                # deleted in the same transaction
+                # don't consider entities that have been created and deleted in
+                # the same transaction, nor ones where created_by has been
+                # explicitly set
                 if not session.deleted_in_transaction(eid) and \
                    not session.entity_from_eid(eid).created_by]
         session.add_relations([('created_by', relations)])
@@ -141,3 +143,76 @@ class UpdateFTIHook(MetaDataHook):
             session.repo.system_source.index_entity(
                 session, session.entity_from_eid(self.eidto))
 
+
+
+# entity source handling #######################################################
+
+class ChangeEntityUpdateCaches(hook.Operation):
+    def postcommit_event(self):
+        self.oldsource.reset_caches()
+        repo = self.session.repo
+        entity = self.entity
+        extid = entity.cw_metainformation()['extid']
+        repo._type_source_cache[entity.eid] = (
+            entity.__regid__, self.newsource.uri, None, self.newsource.uri)
+        if self.oldsource.copy_based_source:
+            uri = 'system'
+        else:
+            uri = self.oldsource.uri
+        repo._extid_cache[(extid, uri)] = -entity.eid
+
+class ChangeEntitySourceDeleteHook(MetaDataHook):
+    """support for moving an entity from an external source by watching 'Any
+    cw_source CWSource' relation
+    """
+
+    __regid__ = 'cw.metadata.source-change'
+    __select__ = MetaDataHook.__select__ & hook.match_rtype('cw_source')
+    events = ('before_delete_relation',)
+
+    def __call__(self):
+        if (self._cw.deleted_in_transaction(self.eidfrom)
+            or self._cw.deleted_in_transaction(self.eidto)):
+            return
+        schange = self._cw.transaction_data.setdefault('cw_source_change', {})
+        schange[self.eidfrom] = self.eidto
+
+
+class ChangeEntitySourceAddHook(MetaDataHook):
+    __regid__ = 'cw.metadata.source-change'
+    __select__ = MetaDataHook.__select__ & hook.match_rtype('cw_source')
+    events = ('before_add_relation',)
+
+    def __call__(self):
+        schange = self._cw.transaction_data.get('cw_source_change')
+        if schange is not None and self.eidfrom in schange:
+            newsource = self._cw.entity_from_eid(self.eidto)
+            if newsource.name != 'system':
+                raise Exception('changing source to something else than the '
+                                'system source is unsupported')
+            syssource = newsource.repo_source
+            oldsource = self._cw.entity_from_eid(schange[self.eidfrom])
+            entity = self._cw.entity_from_eid(self.eidfrom)
+            # copy entity if necessary
+            if not oldsource.repo_source.copy_based_source:
+                entity.complete(skip_bytes=False)
+                entity.cw_edited = EditedEntity(entity, **entity.cw_attr_cache)
+                syssource.add_entity(self._cw, entity)
+            # we don't want the moved entity to be reimported later.  To
+            # distinguish this state, the trick is to change the associated
+            # record in the 'entities' system table with eid=-eid while leaving
+            # other fields unchanged, and to add a new record with eid=eid,
+            # source='system'. External source will then have consider case
+            # where `extid2eid` return a negative eid as 'this entity was known
+            # but has been moved, ignore it'.
+            self._cw.system_sql('UPDATE entities SET eid=-eid,source=%(source)s '
+                                'WHERE eid=%(eid)s',
+                                {'eid': self.eidfrom, 'source': newsource.name})
+            attrs = {'type': entity.__regid__, 'eid': entity.eid, 'extid': None,
+                     'source': 'system', 'asource': 'system',
+                     'mtime': datetime.now()}
+            self._cw.system_sql(syssource.sqlgen.insert('entities', attrs), attrs)
+            # register an operation to update repository/sources caches
+            ChangeEntityUpdateCaches(self._cw, entity=entity,
+                                     oldsource=oldsource.repo_source,
+                                     newsource=syssource)

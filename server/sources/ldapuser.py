@@ -310,7 +310,11 @@ directory (default to once a day).',
         except Exception:
             self.error('while trying to authenticate %s', user, exc_info=True)
             raise AuthenticationError()
-        return self.extid2eid(user['dn'], 'CWUser', session)
+        eid = self.extid2eid(user['dn'], 'CWUser', session)
+        if eid < 0:
+            # user has been moved away from this source
+            raise AuthenticationError()
+        return eid
 
     def ldap_name(self, var):
         if var.stinfo['relations']:
@@ -392,7 +396,7 @@ directory (default to once a day).',
                     break
         assert mainvars, rqlst
         columns, globtransforms = self.prepare_columns(mainvars, rqlst)
-        eidfilters = []
+        eidfilters = [lambda x: x > 0]
         allresults = []
         generator = RQL2LDAPFilter(self, session, args, mainvars)
         for mainvar in mainvars:
@@ -524,9 +528,9 @@ directory (default to once a day).',
         """make an ldap query"""
         self.debug('ldap search %s %s %s %s %s', self.uri, base, scope,
                    searchstr, list(attrs))
-        # XXX for now, we do not have connection pool support for LDAP, so
+        # XXX for now, we do not have connections set support for LDAP, so
         # this is always self._conn
-        cnx = session.pool.connection(self.uri).cnx
+        cnx = session.cnxset.connection(self.uri).cnx
         try:
             res = cnx.search_s(base, scope, searchstr, attrs)
         except ldap.PARTIAL_RESULTS:

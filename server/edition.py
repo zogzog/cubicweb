@@ -68,6 +68,11 @@ class EditedEntity(dict):
         super(EditedEntity, self).__delitem__(attr)
         self.entity.cw_attr_cache.pop(attr, None)
 
+    def __copy__(self):
+        # default copy protocol fails in EditedEntity.__setitem__ because
+        # copied entity has no skip_security attribute at this point
+        return EditedEntity(self.entity, **self)
+
     def pop(self, attr, *args):
         # don't update skip_security by design (think to storage api)
         assert not self.saved, 'too late to modify edited attributes'

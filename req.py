@@ -409,7 +409,7 @@ class RequestSessionBase(object):
 
     # abstract methods to override according to the web front-end #############
 
-    def describe(self, eid):
+    def describe(self, eid, asdict=False):
         """return a tuple (type, sourceuri, extid) for the entity with id <eid>"""
         raise NotImplementedError
 

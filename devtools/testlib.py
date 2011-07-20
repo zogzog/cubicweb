@@ -274,7 +274,7 @@ class CubicWebTC(TestCase):
     def session(self):
         """return current server side session (using default manager account)"""
         session = self.repo._sessions[self.cnx.sessionid]
-        session.set_pool()
+        session.set_cnxset()
         return session
 
     @property
@@ -458,7 +458,7 @@ class CubicWebTC(TestCase):
         try:
             return self.cnx.commit()
         finally:
-            self.session.set_pool() # ensure pool still set after commit
+            self.session.set_cnxset() # ensure cnxset still set after commit
 
     @nocoverage
     def rollback(self):
@@ -467,7 +467,7 @@ class CubicWebTC(TestCase):
         except dbapi.ProgrammingError:
             pass # connection closed
         finally:
-            self.session.set_pool() # ensure pool still set after commit
+            self.session.set_cnxset() # ensure cnxset still set after commit
 
     # # server side db api #######################################################
 
@@ -475,7 +475,7 @@ class CubicWebTC(TestCase):
         if eid_key is not None:
             warn('[3.8] eid_key is deprecated, you can safely remove this argument',
                  DeprecationWarning, stacklevel=2)
-        self.session.set_pool()
+        self.session.set_cnxset()
         return self.session.execute(rql, args)
 
     # other utilities #########################################################
@@ -499,6 +499,10 @@ class CubicWebTC(TestCase):
         it1 = set(getattr(x, 'eid', x) for x in it1)
         it2 = set(getattr(x, 'eid', x) for x in it2)
         super(CubicWebTC, self).assertItemsEqual(it1, it2, *args, **kwargs)
+
+    def assertMessageEqual(self, req, params, msg):
+        msg = req.session.data[params['_cwmsgid']]
+        self.assertEqual(msg, msg)
 
     # workflow utilities #######################################################
 
@@ -568,6 +572,8 @@ class CubicWebTC(TestCase):
             if views:
                 try:
                     view = viewsvreg._select_best(views, req, rset=rset)
+                    if view is None:
+                        raise NoSelectableObject((req,), {'rset':rset}, views)
                     if view.linkable():
                         yield view
                     else:
@@ -722,7 +728,7 @@ class CubicWebTC(TestCase):
         self.assertEqual(session.login, origsession.login)
         self.assertEqual(session.anonymous_session, False)
         self.assertEqual(path, 'view')
-        self.assertEqual(params, {'__message': 'welcome %s !' % req.user.login})
+        self.assertMessageEqual(req, params, 'welcome %s !' % req.user.login)
 
     def assertAuthFailure(self, req, nbsessions=0):
         self.app.connect(req)

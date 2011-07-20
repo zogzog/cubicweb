@@ -169,7 +169,7 @@ class ExecutionPlan(object):
         # session executing the query
         self.session = session
         # quick reference to the system source
-        self.syssource = session.pool.source('system')
+        self.syssource = session.cnxset.source('system')
         # execution steps
         self.steps = []
         # index of temporary tables created during execution
@@ -734,8 +734,8 @@ class QuerierHelper(object):
             # transaction must been rollbacked
             #
             # notes:
-            # * we should not reset the pool here, since we don't want the
-            #   session to loose its pool during processing
+            # * we should not reset the connections set here, since we don't want the
+            #   session to loose it during processing
             # * don't rollback if we're in the commit process, will be handled
             #   by the session
             if session.commit_state is None:

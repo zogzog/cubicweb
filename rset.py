@@ -475,43 +475,57 @@ class ResultSet(object):
         entity.eid = eid
         # cache entity
         req.set_entity_cache(entity)
-        eschema = entity.e_schema
         # try to complete the entity if there are some additional columns
         if len(rowvalues) > 1:
-            rqlst = self.syntax_tree()
-            if rqlst.TYPE == 'select':
-                # UNION query, find the subquery from which this entity has been
-                # found
-                select, col = rqlst.locate_subquery(col, etype, self.args)
-            else:
-                select = rqlst
-            # take care, due to outer join support, we may find None
-            # values for non final relation
-            for i, attr, role in attr_desc_iterator(select, col, entity.cw_col):
-                if role == 'subject':
-                    rschema = eschema.subjrels[attr]
-                    if rschema.final:
-                        if attr == 'eid':
-                            entity.eid = rowvalues[i]
-                        else:
-                            entity.cw_attr_cache[attr] = rowvalues[i]
-                        continue
+            eschema = entity.e_schema
+            eid_col, attr_cols, rel_cols = self._rset_structure(eschema, col)
+            entity.eid = rowvalues[eid_col]
+            for attr, col_idx in attr_cols.items():
+                entity.cw_attr_cache[attr] = rowvalues[col_idx]
+            for (rtype, role), col_idx in rel_cols.items():
+                value = rowvalues[col_idx]
+                if value is None:
+                    if role == 'subject':
+                        rql = 'Any Y WHERE X %s Y, X eid %s'
+                    else:
+                        rql = 'Any Y WHERE Y %s X, X eid %s'
+                    rrset = ResultSet([], rql % (rtype, entity.eid))
+                    rrset.req = req
                 else:
-                    rschema = eschema.objrels[attr]
+                    rrset = self._build_entity(row, col_idx).as_rset()
+                entity.cw_set_relation_cache(rtype, role, rrset)
+        return entity
+
+    @cached
+    def _rset_structure(self, eschema, entity_col):
+        eid_col = col = entity_col
+        rqlst = self.syntax_tree()
+        attr_cols = {}
+        rel_cols = {}
+        if rqlst.TYPE == 'select':
+            # UNION query, find the subquery from which this entity has been
+            # found
+            select, col = rqlst.locate_subquery(entity_col, eschema.type, self.args)
+        else:
+            select = rqlst
+        # take care, due to outer join support, we may find None
+        # values for non final relation
+        for i, attr, role in attr_desc_iterator(select, col, entity_col):
+            if role == 'subject':
+                rschema = eschema.subjrels[attr]
+            else:
+                rschema = eschema.objrels[attr]
+            if rschema.final:
+                if attr == 'eid':
+                    eid_col = i
+                else:
+                    attr_cols[attr] = i
+            else:
                 rdef = eschema.rdef(attr, role)
                 # only keep value if it can't be multivalued
                 if rdef.role_cardinality(role) in '1?':
-                    if rowvalues[i] is None:
-                        if role == 'subject':
-                            rql = 'Any Y WHERE X %s Y, X eid %s'
-                        else:
-                            rql = 'Any Y WHERE Y %s X, X eid %s'
-                        rrset = ResultSet([], rql % (attr, entity.eid))
-                        rrset.req = req
-                    else:
-                        rrset = self._build_entity(row, i).as_rset()
-                    entity.cw_set_relation_cache(attr, role, rrset)
-        return entity
+                    rel_cols[(attr, role)] = i
+        return eid_col, attr_cols, rel_cols
 
     @cached
     def syntax_tree(self):

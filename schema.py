@@ -544,10 +544,11 @@ class CubicWebSchema(Schema):
         rschema = self.add_relation_type(ybo.RelationType('identity'))
         rschema.final = False
 
+    etype_name_re = r'[A-Z][A-Za-z0-9]*[a-z]+[A-Za-z0-9]*$'
     def add_entity_type(self, edef):
         edef.name = edef.name.encode()
         edef.name = bw_normalize_etype(edef.name)
-        if not re.match(r'[A-Z][A-Za-z0-9]*[a-z]+[0-9]*$', edef.name):
+        if not re.match(self.etype_name_re, edef.name):
             raise BadSchemaDefinition(
                 '%r is not a valid name for an entity type. It should start '
                 'with an upper cased letter and be followed by at least a '

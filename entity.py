@@ -395,8 +395,10 @@ class Entity(AppObject):
 
     @cached
     def cw_metainformation(self):
-        res = dict(zip(('type', 'source', 'extid'), self._cw.describe(self.eid)))
-        res['source'] = self._cw.source_defs()[res['source']]
+        res = self._cw.describe(self.eid, asdict=True)
+        # use 'asource' and not 'source' since this is the actual source,
+        # while 'source' is the physical source (where it's stored)
+        res['source'] = self._cw.source_defs()[res.pop('asource')]
         return res
 
     def cw_check_perm(self, action):
@@ -431,9 +433,11 @@ class Entity(AppObject):
         use_ext_id = False
         if 'base_url' not in kwargs and \
                getattr(self._cw, 'search_state', ('normal',))[0] == 'normal':
-            baseurl = self.cw_metainformation()['source'].get('base-url')
-            if baseurl:
-                kwargs['base_url'] = baseurl
+            sourcemeta = self.cw_metainformation()['source']
+            if sourcemeta.get('use-cwuri-as-url'):
+                return self.cwuri # XXX consider kwargs?
+            if sourcemeta.get('base-url'):
+                kwargs['base_url'] = sourcemeta['base-url']
                 use_ext_id = True
         if method in (None, 'view'):
             try:
@@ -942,7 +946,7 @@ class Entity(AppObject):
             assert role
             self._cw_related_cache.pop('%s_%s' % (rtype, role), None)
 
-    def clear_all_caches(self): # XXX cw_clear_all_caches
+    def cw_clear_all_caches(self):
         """flush all caches on this entity. Further attributes/relations access
         will triggers new database queries to get back values.
 
@@ -1023,6 +1027,10 @@ class Entity(AppObject):
             self._cw.local_perm_cache.pop((rqlexpr.eid, (('x', self.eid),)), None)
 
     # deprecated stuff #########################################################
+
+    @deprecated('[3.13] use entity.cw_clear_all_caches()')
+    def clear_all_caches(self):
+        return self.cw_clear_all_caches()
 
     @deprecated('[3.9] use entity.cw_attr_value(attr)')
     def get_value(self, name):

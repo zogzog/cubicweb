@@ -229,7 +229,8 @@ class ManageSourcesAction(actions.ManagersAction):
 
 class CWSourceManagementView(StartupView):
     __regid__ = 'cw.source-management'
-    rql = ('Any S, ST, SN ORDERBY SN WHERE S is CWSource, S name SN, S type ST')
+    rql = ('Any S, ST, SP, SD, SN ORDERBY SN WHERE S is CWSource, S name SN, S type ST, '
+           'S latest_retrieval SD, S parser SP')
     title = _('data sources management')
 
     def call(self, **kwargs):
@@ -240,4 +241,4 @@ class CWSourceManagementView(StartupView):
                 self._cw.build_url('add/%s' % eschema),
                 self._cw._('add a CWSource')))
             self.w(u'<div class="clear"></div>')
-        self.wview('table', self._cw.execute(self.rql), displaycols=range(2))
+        self.wview('table', self._cw.execute(self.rql), displaycols=range(4))

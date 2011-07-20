@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 2.0\n"
 "POT-Creation-Date: 2006-01-12 17:35+CET\n"
-"PO-Revision-Date: 2010-09-15 14:55+0200\n"
+"PO-Revision-Date: 2011-04-29 12:57+0200\n"
 "Last-Translator: Sylvain Thenault <sylvain.thenault@logilab.fr>\n"
 "Language-Team: English <devel@logilab.fr.org>\n"
 "Language: en\n"
@@ -154,6 +154,11 @@ msgid "'%s' action doesn't take any options"
 msgstr ""
 
 #, python-format
+msgid ""
+"'%s' action for in_state relation should at least have 'linkattr=name' option"
+msgstr ""
+
+#, python-format
 msgid "'%s' action requires 'linkattr' option"
 msgstr ""
 
@@ -244,6 +249,12 @@ msgstr "Transition (abstract)"
 
 msgid "BaseTransition_plural"
 msgstr "Transitions (abstract)"
+
+msgid "BigInt"
+msgstr "Big integer"
+
+msgid "BigInt_plural"
+msgstr "Big integers"
 
 msgid "Bookmark"
 msgstr "Bookmark"
@@ -503,7 +514,7 @@ msgid "Interval"
 msgstr "Interval"
 
 msgid "IntervalBoundConstraint"
-msgstr "interval constraint"
+msgstr "Interval constraint"
 
 msgid "Interval_plural"
 msgstr "Intervals"
@@ -1109,6 +1120,10 @@ msgid "allowed options depends on the source type"
 msgstr ""
 
 msgid "allowed transitions from this state"
+msgstr ""
+
+#, python-format
+msgid "allowed values for \"action\" are %s"
 msgstr ""
 
 msgid "allowed_transition"
@@ -1742,10 +1757,10 @@ msgstr "actions box"
 msgid "ctxcomponents_edit_box_description"
 msgstr "box listing the applicable actions on the displayed data"
 
-msgid "ctxcomponents_facet.filters"
+msgid "ctxcomponents_facet.filterbox"
 msgstr "facets box"
 
-msgid "ctxcomponents_facet.filters_description"
+msgid "ctxcomponents_facet.filterbox_description"
 msgstr "box providing filter within current search results functionality"
 
 msgid "ctxcomponents_logo"
@@ -1806,6 +1821,9 @@ msgstr "show the workflow's history."
 
 msgid "ctxtoolbar"
 msgstr "toolbar"
+
+msgid "currently in synchronization"
+msgstr ""
 
 msgid "custom_workflow"
 msgstr "custom workflow"
@@ -2330,6 +2348,9 @@ msgstr "expression type"
 msgid "external page"
 msgstr ""
 
+msgid "facet-loading-msg"
+msgstr "processing, please wait"
+
 msgid "facet.filters"
 msgstr "filter"
 
@@ -2510,9 +2531,6 @@ msgstr ""
 msgid ""
 "generic relation to specify that an external entity represent the same "
 "object as a local one: http://www.w3.org/TR/owl-ref/#sameAs-def"
-msgstr ""
-
-msgid "go back to the index page"
 msgstr ""
 
 msgid "granted to groups"
@@ -3095,6 +3113,15 @@ msgstr ""
 msgid "no associated permissions"
 msgstr ""
 
+msgid "no content next link"
+msgstr ""
+
+msgid "no content prev link"
+msgstr ""
+
+msgid "no edited fields specified"
+msgstr ""
+
 #, python-format
 msgid "no edited fields specified for entity %s"
 msgstr ""
@@ -3624,9 +3651,6 @@ msgstr ""
 msgid "siteinfo"
 msgstr "site information"
 
-msgid "some errors occurred:"
-msgstr ""
-
 msgid "some later transaction(s) touch entity, undo them first"
 msgstr ""
 
@@ -3793,6 +3817,13 @@ msgstr "symmetric"
 msgid "synchronization-interval must be greater than 1 minute"
 msgstr ""
 
+msgid "synchronizing"
+msgstr ""
+
+msgctxt "CWSource"
+msgid "synchronizing"
+msgstr ""
+
 msgid "table"
 msgstr ""
 
@@ -3828,6 +3859,12 @@ msgstr ""
 
 #, python-format
 msgid "the value \"%s\" is already used, use another one"
+msgstr ""
+
+msgid "there is no next page"
+msgstr ""
+
+msgid "there is no previous page"
 msgstr ""
 
 msgid "this action is not reversible!"
@@ -4205,27 +4242,27 @@ msgctxt "CWProperty"
 msgid "value"
 msgstr ""
 
+#, python-format
+msgid "value %(value)s must be %(op)s %(boundary)s"
+msgstr ""
+
+#, python-format
+msgid "value %(value)s must be <= %(boundary)s"
+msgstr ""
+
+#, python-format
+msgid "value %(value)s must be >= %(boundary)s"
+msgstr ""
+
 msgid "value associated to this key is not editable manually"
 msgstr ""
 
 #, python-format
-msgid "value must be %(op)s %(boundary)s"
+msgid "value should have maximum size of %s but found %s"
 msgstr ""
 
 #, python-format
-msgid "value must be <= %(boundary)s"
-msgstr ""
-
-#, python-format
-msgid "value must be >= %(boundary)s"
-msgstr ""
-
-#, python-format
-msgid "value should have maximum size of %s"
-msgstr ""
-
-#, python-format
-msgid "value should have minimum size of %s"
+msgid "value should have minimum size of %s but found %s"
 msgstr ""
 
 msgid "vcard"
@@ -4370,10 +4407,3 @@ msgstr ""
 #, python-format
 msgid "you should un-inline relation %s which is supported and may be crossed "
 msgstr ""
-
-#~ msgctxt "CWAttribute"
-#~ msgid "relations_object"
-#~ msgstr "constrained by"
-
-#~ msgid "schema-security"
-#~ msgstr "permissions"

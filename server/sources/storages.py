@@ -204,7 +204,7 @@ class BytesFileSystemStorage(Storage):
         """return the current fs_path of the tribute.
 
         Return None is the attr is not stored yet."""
-        sysource = entity._cw.pool.source('system')
+        sysource = entity._cw.cnxset.source('system')
         cu = sysource.doexec(entity._cw,
                              'SELECT cw_%s FROM cw_%s WHERE cw_eid=%s' % (
                              attr, entity.__regid__, entity.eid))

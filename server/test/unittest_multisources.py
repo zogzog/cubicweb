@@ -160,11 +160,11 @@ cubicweb-password = gingkow
         # since they are orderd by eid, we know the 3 first one is coming from the system source
         # and the others from external source
         self.assertEqual(rset.get_entity(0, 0).cw_metainformation(),
-                          {'source': {'type': 'native', 'uri': 'system'},
+                          {'source': {'type': 'native', 'uri': 'system', 'use-cwuri-as-url': False},
                            'type': u'Card', 'extid': None})
         externent = rset.get_entity(3, 0)
         metainf = externent.cw_metainformation()
-        self.assertEqual(metainf['source'], {'type': 'pyrorql', 'base-url': 'http://extern.org/', 'uri': 'extern'})
+        self.assertEqual(metainf['source'], {'type': 'pyrorql', 'base-url': 'http://extern.org/', 'uri': 'extern', 'use-cwuri-as-url': False})
         self.assertEqual(metainf['type'], 'Card')
         self.assert_(metainf['extid'])
         etype = self.sexecute('Any ETN WHERE X is ET, ET name ETN, X eid %(x)s',
@@ -380,6 +380,13 @@ cubicweb-password = gingkow
 
     def test_nonregr3(self):
         self.sexecute('DELETE Card X WHERE X eid %(x)s, NOT X multisource_inlined_rel Y', {'x': self.ic1})
+
+    def test_delete_source(self):
+        req = self.request()
+        req.execute('DELETE CWSource S WHERE S name "extern"')
+        self.commit()
+        cu = self.session.system_sql("SELECT * FROM entities WHERE source='extern'")
+        self.failIf(cu.fetchall())
 
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main

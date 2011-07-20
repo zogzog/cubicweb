@@ -73,11 +73,13 @@ class XMLView(EntityView):
 class XMLItemView(EntityView):
     __regid__ = 'xmlitem'
 
-    def cell_call(self, row, col):
-        """ element as an item for an xml feed """
-        entity = self.cw_rset.complete_entity(row, col)
-        self.w(u'<%s eid="%s" cwuri="%s">\n'
-               % (entity.e_schema, entity.eid, xml_escape(entity.cwuri)))
+    def entity_call(self, entity):
+        """element as an item for an xml feed"""
+        entity.complete()
+        source = entity.cw_metainformation()['source']['uri']
+        self.w(u'<%s eid="%s" cwuri="%s" cwsource="%s">\n'
+               % (entity.__regid__, entity.eid, xml_escape(entity.cwuri),
+                  xml_escape(source)))
         for rschema, attrschema in entity.e_schema.attribute_definitions():
             attr = rschema.type
             if attr in ('eid', 'cwuri'):
@@ -114,15 +116,29 @@ class XMLItemView(EntityView):
                 continue
             self.w(u'  <%s role="%s">\n' % (rtype, role))
             for related in entity.related(rtype, role, entities=True):
-                # XXX put unique attributes as xml attribute, they are much
-                # probably used to search existing entities in client data feed,
-                # and putting it here may avoid an extra request to get those
-                # attributes values
-                self.w(u'    <%s eid="%s" cwuri="%s"/>\n'
-                       % (related.e_schema, related.eid,
-                          xml_escape(related.cwuri)))
+                related.view('xmlrelateditem', w=self.w)
             self.w(u'  </%s>\n' % rtype)
         self.w(u'</%s>\n' % (entity.e_schema))
+
+
+class XMLRelatedItemView(EntityView):
+    __regid__ = 'xmlrelateditem'
+
+    def entity_call(self, entity):
+        # XXX put unique attributes as xml attribute, they are much probably
+        # used to search existing entities in client data feed, and putting it
+        # here may avoid an extra request to get those attributes values
+        self.w(u'    <%s eid="%s" cwuri="%s"/>\n'
+               % (entity.e_schema, entity.eid, xml_escape(entity.cwuri)))
+
+
+class XMLRelatedItemStateView(XMLRelatedItemView):
+    __select__ = is_instance('State')
+
+    def entity_call(self, entity):
+        self.w(u'    <%s eid="%s" cwuri="%s" name="%s"/>\n'
+               % (entity.e_schema, entity.eid, xml_escape(entity.cwuri),
+                  xml_escape(entity.name)))
 
 
 class XMLRsetView(AnyRsetView):

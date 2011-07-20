@@ -728,11 +728,9 @@ given, appropriate sources for migration will be automatically selected \
         config = cwcfg.config_for(appid)
         config.repairing = True # notice we're not starting the server
         config.verbosity = self.config.verbosity
-        try:
-            config.set_sources_mode(self.config.ext_sources or ('migration',))
-        except AttributeError:
-            # not a server config
-            pass
+        set_sources_mode = getattr(config, 'set_sources_mode', None)
+        if set_sources_mode is not None:
+            set_sources_mode(self.config.ext_sources or ('migration',))
         # get instance and installed versions for the server and the componants
         mih = config.migration_handler()
         repo = mih.repo_connect()
@@ -801,6 +799,28 @@ given, appropriate sources for migration will be automatically selected \
                 print '-> migration not completed.'
                 return False
         return True
+
+
+class ListVersionsInstanceCommand(InstanceCommand):
+    """List versions used by an instance.
+
+    <instance>...
+      identifiers of the instances to list versions for.
+    """
+    name = 'versions'
+
+    def versions_instance(self, appid):
+        from logilab.common.changelog import Version
+        config = cwcfg.config_for(appid)
+        # should not raise error if db versions don't match fs versions
+        config.repairing = True
+        if hasattr(config, 'set_sources_mode'):
+            config.set_sources_mode(('migration',))
+        repo = config.migration_handler().repo_connect()
+        vcconf = repo.get_versions()
+        for key in sorted(vcconf):
+            print key+': %s.%s.%s' % vcconf[key]
+
 
 class ShellCommand(Command):
     """Run an interactive migration shell on an instance. This is a python shell
@@ -964,6 +984,7 @@ for cmdcls in (ListCommand,
                StartInstanceCommand, StopInstanceCommand, RestartInstanceCommand,
                ReloadConfigurationCommand, StatusCommand,
                UpgradeInstanceCommand,
+               ListVersionsInstanceCommand,
                ShellCommand,
                RecompileInstanceCatalogsCommand,
                ListInstancesCommand, ListCubesCommand,

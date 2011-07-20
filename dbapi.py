@@ -347,9 +347,9 @@ class DBAPIRequest(RequestSessionBase):
 
     # server session compat layer #############################################
 
-    def describe(self, eid):
+    def describe(self, eid, asdict=False):
         """return a tuple (type, sourceuri, extid) for the entity with id <eid>"""
-        return self.cnx.describe(eid)
+        return self.cnx.describe(eid, asdict)
 
     def source_defs(self):
         """return the definition of sources used by the repository."""
@@ -483,7 +483,7 @@ class LogCursor(Cursor):
 def check_not_closed(func):
     def decorator(self, *args, **kwargs):
         if self._closed is not None:
-            raise ProgrammingError('Closed connection')
+            raise ProgrammingError('Closed connection %s' % self.sessionid)
         return func(self, *args, **kwargs)
     return decorator
 
@@ -675,8 +675,15 @@ class Connection(object):
         return self._repo.get_option_value(option, foreid)
 
     @check_not_closed
-    def describe(self, eid):
-        return self._repo.describe(self.sessionid, eid, **self._txid())
+    def describe(self, eid, asdict=False):
+        metas = self._repo.describe(self.sessionid, eid, **self._txid())
+        if len(metas) == 3: # backward compat
+            metas = list(metas)
+            metas.append(metas[1])
+        if asdict:
+            return dict(zip(('type', 'source', 'extid', 'asource'), metas))
+        # XXX :-1 for cw compat, use asdict=True for full information
+        return metas[:-1]
 
     # db-api like interface ####################################################
 

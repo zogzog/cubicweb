@@ -5,104 +5,188 @@
 RQL syntax
 ----------
 
+.. _RQLKeywords:
+
 Reserved keywords
 ~~~~~~~~~~~~~~~~~
-The keywords are not case sensitive.
 
 ::
 
   AND, ASC, BEING, DELETE, DESC, DISTINCT, EXISTS, FALSE, GROUPBY,
-  HAVING, ILIKE, IN, INSERT, LIKE, LIMIT, NOT, NOW, NULL, OFFSET,
+  HAVING, ILIKE, INSERT, LIKE, LIMIT, NOT, NOW, NULL, OFFSET,
   OR, ORDERBY, SET, TODAY, TRUE, UNION, WHERE, WITH
 
+The keywords are not case sensitive. You should not use them when defining your
+schema, or as RQL variable names.
 
-Variables and Typing
+
+.. _RQLCase:
+
+Case
+~~~~
+
+* Variables should be all upper-cased.
+
+* Relation should be all lower-cased and match exactly names of relations defined
+  in the schema.
+
+* Entity types should start with an upper cased letter and be followed by at least
+  a lower cased latter.
+
+
+.. _RQLVariables:
+
+Variables and typing
 ~~~~~~~~~~~~~~~~~~~~
 
-With RQL, we do not distinguish between entities and attributes. The
-value of an attribute is considered an entity of a particular type (see
-below), linked to one (real) entity by a relation called the name of
-the attribute.
+Entities and values to browse and/or select are represented in the query by
+*variables* that must be written in capital letters.
 
-Entities and values to browse and/or select are represented in
-the query by *variables* that must be written in capital letters.
+With RQL, we do not distinguish between entities and attributes. The value of an
+attribute is considered as an entity of a particular type (see below), linked to
+one (real) entity by a relation called the name of the attribute, where the
+entity is the subject and the attribute the object.
 
-There is a special type **Any**, referring to a non specific type.
+The possible type(s) for each variable is derived from the schema according to
+the constraints expressed above and thanks to the relations between each
+variable.
 
-We can restrict the possible types for a variable using the
-special relation **is** in the constraints.
+We can restrict the possible types for a variable using the special relation
+**is** in the restrictions.
 
-The possible type(s) for each variable is derived from the schema
-according to the constraints expressed above and thanks to the relations
-between each variable.
 
-Built-in types
-``````````````
+Virtual relations
+~~~~~~~~~~~~~~~~~
 
-The base types supported are string (between double or single quotes),
-integers or floats (the separator is '.'), dates and
-boolean. We expect to receive a schema in which types String,
-Int, Float, Date and Boolean are defined.
+Those relations may only be used in RQL query but are not actual attributes of
+your entities.
 
-* `String` (literal: between double or single quotes).
-* `Int`, `Float` (separator being'.').
-* `Date`, `Datetime`, `Time` (literal: string YYYY/MM/DD [hh:mm] or keywords
-  `TODAY` and `NOW`).
-* `Boolean` (keywords `TRUE` and `FALSE`).
-* `Keyword` NULL.
+* `has_text`: relation to use to query the full text index (only for entities
+  having fulltextindexed attributes).
 
+* `identity`: relation to use to tell that a RQL variable is the same as another
+  when you've to use two different variables for querying purpose. On the
+  opposite it's also useful together with the :ref:`NOT` operator to tell that two
+  variables should not identify the same entity
+
+
+.. _RQLLiterals:
+
+Literal expressions
+~~~~~~~~~~~~~~~~~~~
+
+Bases types supported by RQL are those supported by yams schema. Literal values
+are expressed as explained below:
+
+* string should be between double or single quotes. If the value contains a
+  quote, it should be preceded by a backslash '\'
+
+* floats separator is dot '.'
+
+* boolean values are :keyword:`TRUE` and :keyword:`FALSE` keywords
+
+* date and time should be expressed as a string with ISO notation : YYYY/MM/DD
+  [hh:mm], or using keywords :keyword:`TODAY` and :keyword:`NOW`
+
+You may also use the :keyword:`NULL` keyword, meaning 'unspecified'.
+
+
+.. _RQLOperators:
 
 Operators
 ~~~~~~~~~
 
-Logical Operators
+.. _RQLLogicalOperators:
+
+Logical operators
 `````````````````
 ::
 
      AND, OR, NOT, ','
 
-  ',' is equivalent to 'AND' but with the smallest among the priority
-  of logical operators (see :ref:`PriorityOperators`).
+',' is equivalent to 'AND' but with the smallest among the priority of logical
+operators (see :ref:`RQLOperatorsPriority`).
 
-Mathematical Operators
+.. _RQLMathematicalOperators:
+
+Mathematical operators
 ``````````````````````
 ::
 
      +, -, *, /
 
+Those should behave as you expect.
+
+
+.. _RQLComparisonOperators:
+
 Comparison operators
 ````````````````````
-::
+ ::
 
-     =, <, <=, >=, >, ~=, IN, LIKE, ILIKE
+     =, !=, <, <=, >=, >, IN
 
-* Syntax to use comparison operator:
 
-    `VARIABLE relation operator VALUE`
+The syntax to use comparison operators is:
 
-* The operator `=` is the default operator and can be omitted.
+    `VARIABLE attribute <operator> VALUE`
 
-* `relation` name is always attended
+The `=` operator is the default operator and can be omitted, i.e. :
 
-* The operator `LIKE` equivalent to `~=` can be used with the
-  special character `%` in a string to indicate that the chain
-  must start or finish by a prefix/suffix:
-  ::
+    `VARIABLE attribute = VALUE`
 
-     Any X WHERE X name ~= 'Th%'
-     Any X WHERE X name LIKE '%lt'
+is equivalent to
 
-* The operator `ILIKE` is the case insensitive version of `LIKE`.
+    `VARIABLE attribute VALUE`
 
-* The operator `IN` provides a list of possible values:
-  ::
+
+The operator `IN` provides a list of possible values: ::
 
     Any X WHERE X name IN ('chauvat', 'fayolle', 'di mascio', 'thenault')
 
 
-.. XXX nico: "A trick <> 'bar'" wouldn't it be more convenient than "NOT A trick 'bar'" ?
+.. _RQLStringOperators:
 
-.. _PriorityOperators:
+String operators
+````````````````
+::
+
+  LIKE, ILIKE, ~=, REGEXP
+
+The :keyword:`LIKE` string operator can be used with the special character `%` in
+a string as wild-card: ::
+
+     # match every entity whose name starts with 'Th'
+     Any X WHERE X name ~= 'Th%'
+     # match every entity whose name endswith 'lt'
+     Any X WHERE X name LIKE '%lt'
+     # match every entity whose name contains a 'l' and a 't'
+     Any X WHERE X name LIKE '%l%t%'
+
+:keyword:`ILIKE` is the case insensitive version of :keyword:`LIKE`. It's not
+available on all backend (e.g. sqlite doesn't support it). If not available for
+your backend, :keyword:`ILIKE` will behave like :keyword:`LIKE`.
+
+`~=` is a shortcut version of :keyword:`ILIKE`, or of :keyword:`LIKE` when the
+former is not available on the back-end.
+
+
+The :keyword:`REGEXP` is an alternative to :keyword:`LIKE` that supports POSIX
+regular expressions::
+
+   # match entities whose title starts with a digit
+   Any X WHERE X title REGEXP "^[0-9].*"
+
+
+The underlying SQL operator used is back-end-dependent :
+
+- the ``~`` operator is used for postgresql,
+- the ``REGEXP`` operator for mysql and sqlite.
+
+Other back-ends are not supported yet.
+
+
+.. _RQLOperatorsPriority:
 
 Operators priority
 ``````````````````
@@ -116,177 +200,339 @@ Operators priority
 #. ','
 
 
+.. _RQLSearchQuery:
+
 Search Query
 ~~~~~~~~~~~~
 
-   [ `DISTINCT`] <entity type> V1 (, V2) \ *
-   [ `GROUPBY` V1 (V2) \*] [ `ORDERBY` <orderterms>]
+Simplified grammar of search query: ::
+
+   [ `DISTINCT`] `Any` V1 (, V2) \*
+   [ `GROUPBY` V1 (, V2) \*] [ `ORDERBY` <orderterms>]
    [ `LIMIT` <value>] [ `OFFSET` <value>]
-   [ `WHERE` <restriction>]
-   [ `WITH` V1 (, V2) \ * BEING (<query>)]
-   [ `HAVING` <restriction>]
+   [ `WHERE` <triplet restrictions>]
+   [ `WITH` V1 (, V2)\* BEING (<query>)]
+   [ `HAVING` <other restrictions>]
    [ `UNION` <query>]
 
-:entity type:
-   Type of selected variables.
-   The special type `Any` is equivalent to not specify a type.
-:restriction:
-   list of conditions to test successively
-     `V1 relation V2 | <static value>`
-:orderterms:
-   Definition of the selection order: variable or column number followed by
-   sorting method ( `ASC`, `DESC`), ASC is the default.
-:note for grouped queries:
-   For grouped queries (e.g., a clause `GROUPBY`), all
-   selected variables must be aggregated or grouped.
+Selection
+`````````
+
+The fist occuring clause is the selection of terms that should be in the result
+set.  Terms may be variable, literals, function calls, arithmetic, etc. and each
+term is separated by a comma.
+
+There will be as much column in the result set as term in this clause, respecting
+order.
+
+Syntax for function call is somewhat intuitive, for instance: ::
+
+    Any UPPER(N) WHERE P firstname N
 
 
-Sorting and groups
-``````````````````
+Grouping and aggregating
+````````````````````````
 
-- For grouped queries (e.g. with a GROUPBY clause), all
-  selected variables should be grouped at the right of the keyword.
+The :keyword:`GROUPBY` keyword is followed by a list of terms on which results
+should be grouped. They are usually used with aggregate functions, responsible to
+aggregate values for each group (see :ref:`RQLAggregateFunctions`).
 
-- If the sorting method (SORT_METHOD) is not specified, then the sorting is
-  ascendant (`ASC`).
-
-- Aggregate Functions: COUNT, MIN, MAX, AVG, SUM, GROUP_CONCAT
-
-.. note::
-   Aggregate functions will return None if there is no result row.
+For grouped queries, all selected variables must be either aggregated (i.e. used
+by an aggregate function) or grouped (i.e. listed in the :keyword:`GROUPBY`
+clause).
 
 
-Having
+Sorting
 ```````
 
-The HAVING clause, as in SQL, has been originally introduced to restrict a query
-according to value returned by an aggregate function, e.g.::
-
-    Any X GROUPBY X WHERE X relation Y HAVING COUNT(Y) > 10
-
-It may however be used for something else...
-
-In the WHERE clause, we are limited to 3-expression, such thing can't be
-expressed directly as in the SQL's way. But this can be expressed using HAVING
-comparison expression.
-
-For instance, let's say you want to get people whose uppercased first name equals
-to another person uppercased first name::
-
-    Person X WHERE X firstname XFN, Y firstname YFN HAVING X > Y, UPPER(XFN) = UPPER(YFN)
-
-This open some new possibilities. Another example::
-
-    Person X WHERE X birthday XB HAVING YEAR(XB) = 2000
-
-That lets you use transformation functions not only in selection but for
-restriction as well and to by-pass limitation of the WHERE clause, which was the
-major flaw in the RQL language.
-
-Notice that while we would like this to work without the HAVING clause, this
-can't be currently be done because it introduces an ambiguity in RQL's grammar
-that can't be handled by Yapps_, the parser's generator we're using.
-
-Negation
-````````
-
-* A query such as `Document X WHERE NOT X owned_by U` means "the documents have
-  no relation `owned_by`".
-
-* But the query `Document X WHERE NOT X owned_by U, U login "syt"` means "the
-  documents have no relation `owned_by` with the user syt". They may have a
-  relation "owned_by" with another user.
-
-Identity
-````````
-
-You can use the special relation `identity` in a query to
-add an identity constraint between two variables. This is equivalent
-to ``is`` in python::
-
-   Any A WHERE A comments B, A identity B
-
-return all objects that comment themselves. The relation `identity` is
-especially useful when defining the rules for securities with `RQLExpressions`.
+The :keyword:`ORDERBY` keyword if followed by the definition of the selection
+order: variable or column number followed by sorting method (:keyword:`ASC`,
+:keyword:`DESC`), :keyword:`ASC` being the default. If the sorting method is not
+specified, then the sorting is ascendant (`ASC`).
 
 
-Limit / offset
-``````````````
-::
+Pagination
+``````````
 
-    Any P ORDERBY N LIMIT 5 OFFSET 10 WHERE P is Person, P firstname N
+The :keyword:`LIMIT` and :keyword:`OFFSET` keywords may be respectively used to
+limit the number of results and to tell from which result line to start (for
+instance, use `LIMIT 20` to get the first 20 results, then `LIMIT 20 OFFSET 20`
+to get the next 20.
 
 
-Exists
-```````
+Restrictions
+````````````
 
-You can use `EXISTS` when you want to know if some expression is true and do not
-need the complete set of elements that make it true. Testing for existence is
-much faster than fetching the complete set of results.
+The :keyword:`WHERE` keyword introduce one of the "main" part of the query, where
+you "define" variables and add some restrictions telling what you're interested
+in.
+
+It's a list of triplets "subject relation object", e.g. `V1 relation
+(V2 | <static value>)`. Triplets are separated using :ref:`RQLLogicalOperators`.
+
+.. Note:
+
+  About the negation operator (:keyword:`NOT`):
+
+  * "NOT X relation Y" is equivalent to "NOT EXISTS(X relation Y)"
+
+  * `Any X WHERE NOT X owned_by U` means "entities that have no relation
+    `owned_by`".
+
+  * `Any X WHERE NOT X owned_by U, U login "syt"` means "the entity have no
+     relation `owned_by` with the user syt". They may have a relation "owned_by"
+     with another user.
+
+In this clause, you can also use :keyword:`EXISTS` when you want to know if some
+expression is true and do not need the complete set of elements that make it
+true. Testing for existence is much faster than fetching the complete set of
+results, especially when you think about using `OR` against several expressions. For instance
+if you want to retrieve versions which are in state "ready" or tagged by
+"priority", you should write :
 
 ::
 
     Any X ORDERBY PN,N
     WHERE X num N, X version_of P, P name PN,
-          EXISTS(X in_state S, S name IN ("dev", "ready"))
+          EXISTS(X in_state S, S name "ready")
           OR EXISTS(T tags X, T name "priority")
 
+not
 
-Optional relations
-``````````````````
+::
 
-It is a similar concept that the `Left outer join`_:
+    Any X ORDERBY PN,N
+    WHERE X num N, X version_of P, P name PN,
+          (X in_state S, S name "ready")
+          OR (T tags X, T name "priority")
+
+Both queries aren't at all equivalent :
+
+* the former will retrieve all versions, then check for each one which are in the
+  matching state of or tagged by the expected tag,
+
+* the later will retrieve all versions, state and tags (cartesian product!),
+  compute join and then exclude each row which are in the matching state of or
+  tagged by the expected tag. This implies that : you won't get any result if the
+  in_state or tag
+
+
+You can also use the question mark (`?`) to mark optional relations which allow
+you to select entities related **or not** to another. It is a similar concept
+that the `Left outer join`_:
 
     the result of a left outer join (or simply left join) for table A and B
     always contains all records of the "left" table (A), even if the
     join-condition does not find any matching record in the "right" table (B).
 
-* They allow you to select entities related or not to another.
+You must use the `?` behind a variable to specify that the relation toward it
+is optional. For instance:
 
-* You must use the `?` behind the variable to specify that the relation
-  toward it is optional:
-
-   - Anomalies of a project attached or not to a version ::
+- Anomalies of a project attached or not to a version ::
 
        Any X, V WHERE X concerns P, P eid 42, X corrected_in V?
 
-   - All cards and the project they document if necessary ::
+  You will get a result set containing all the project's tickets, with either the
+  version in which it's corrected or None for tickets not related to a version.
+
+
+- All cards and the project they document if any ::
 
        Any C, P WHERE C is Card, P? documented_by C
 
-    Any T,P,V WHERE T is Ticket, T concerns P, T done_in V?
+
+Having restrictions
+```````````````````
+
+The :keyword:`HAVING` clause, as in SQL, may be used to restrict a query
+according to value returned by an aggregate function, e.g.::
+
+    Any X GROUPBY X WHERE X relation Y HAVING COUNT(Y) > 10
+
+It may however be used for something else: In the :keyword:`WHERE` clause, we are
+limited to triplet expressions, so some things may not be expressed there. Let's
+take an example : if you want to get people whose upper-cased first name equals to
+another person upper-cased first name. There is no proper way to express this
+using triplet, so you should use something like: ::
+
+    Any X WHERE X firstname XFN, Y firstname YFN, NOT X identity Y HAVING UPPER(XFN) = UPPER(YFN)
+
+Another example: imagine you want person born in 2000: ::
+
+    Any X WHERE X birthday XB HAVING YEAR(XB) = 2000
+
+Notice that while we would like this to work without the HAVING clause, this
+can't be currently be done because it introduces an ambiguity in RQL's grammar
+that can't be handled by Yapps_, the parser's generator we're using.
 
 
-Subqueries
-``````````
+Sub-queries
+```````````
+
+The :keyword:`WITH` keyword introduce sub-queries clause. Each sub-query has the
+form:
+
+  V1(,V2) BEING (rql query)
+
+Variables at the left of the :keyword:`BEING` keyword defines into which
+variables results from the sub-query will be mapped to into the outer query.
+Sub-queries are separated from each other using a comma.
+
+Let's say we want to retrieve for each project its number of versions and its
+number of tickets. Due to the nature of relational algebra behind the scene, this
+can't be achieved using a single query. You have to write something along the
+line of: ::
+
+  Any X, VC, TC WHERE X identity XX
+  WITH X, VC BEING (Any X, COUNT(V) GROUPBY X WHERE V version_of X),
+       XX, TC BEING (Any X, COUNT(T) GROUPBY X WHERE T ticket_of X)
+
+Notice that we can't reuse a same variable name as alias for two different
+sub-queries, hence the usage of 'X' and 'XX' in this example, which are then
+unified using the special `identity` relation (see :ref:`XXX`).
+
+.. Warning:
+
+  Sub-queries define a new variable scope, so even if a variable has the same name
+  in the outer query and in the sub-query, they technically **aren't* the same
+  variable. So ::
+
+     Any W, REF WITH W, REF BEING
+         (Any W, REF WHERE W is Workcase, W ref REF,
+                           W concerned_by D, D name "Logilab")
+  could be written:
+
+     Any W, REF WITH W, REF BEING
+        (Any W1, REF1 WHERE W1 is Workcase, W1 ref REF1,
+                            W1 concerned_by D, D name "Logilab")
+
+  Also, when a variable is coming from a sub-query, you currently can't reference
+  its attribute or inlined relations in the outer query, you've to fetch them in
+  the sub-query. For instance, let's say we want to sort by project name in our
+  first example, we would have to write ::
+
+
+    Any X, VC, TC ORDERBY XN WHERE X identity XX
+    WITH X, XN, VC BEING (Any X, COUNT(V) GROUPBY X,XN WHERE V version_of X, X name XN),
+         XX, TC BEING (Any X, COUNT(T) GROUPBY X WHERE T ticket_of X)
+
+  instead of ::
+
+    Any X, VC, TC ORDERBY XN WHERE X identity XX, X name XN,
+    WITH X, XN, VC BEING (Any X, COUNT(V) GROUPBY X WHERE V version_of X),
+         XX, TC BEING (Any X, COUNT(T) GROUPBY X WHERE T ticket_of X)
+
+  which would result in a SQL execution error.
+
+
+Union
+`````
+
+You may get a result set containing the concatenation of several queries using
+the :keyword:`UNION`. The selection of each query should have the same number of
+columns.
+
 ::
 
-    (Any X WHERE X is Person) UNION (Any X WHERE X is Company)
+    (Any X, XN WHERE X is Person, X surname XN) UNION (Any X,XN WHERE X is Company, X name XN)
 
 
-     DISTINCT Any W, REF
-        WITH W, REF BEING
-            (
-              (Any W, REF WHERE W is Workcase, W ref REF,
-                                 W concerned_by D, D name "Logilab")
-               UNION
-              (Any W, REF WHERE W is Workcase, W ref REF, '
-                                W split_into WP, WP name "WP1")
-            )
+.. _RQLFunctions:
 
-Function calls
-``````````````
-::
+Available functions
+~~~~~~~~~~~~~~~~~~~
 
-    Any UPPER(N) WHERE P firstname N
-    Any LOWER(N) WHERE P firstname N
+Below is the list of aggregate and transformation functions that are supported
+nativly by the framework. Notice that cubes may define additional functions.
 
-Functions available on string: `UPPER`, `LOWER`
+.. _RQLAggregateFunctions:
 
-.. XXX retrieve available function automatically
+Aggregate functions
+```````````````````
++--------------------+----------------------------------------------------------+
+| :func:`COUNT`      | return the number of rows                                |
++--------------------+----------------------------------------------------------+
+| :func:`MIN`        | return the minimum value                                 |
++--------------------+----------------------------------------------------------+
+| :func:`MAX`        | return the maximum value                                 |
++--------------------+----------------------------------------------------------+
+| :func:`AVG`        | return the average value                                 |
++--------------------+----------------------------------------------------------+
+| :func:`SUM`        | return the sum of values                                 |
++--------------------+----------------------------------------------------------+
+| :func:`COMMA_JOIN` | return each value separated by a comma (for string only) |
++--------------------+----------------------------------------------------------+
 
-For a performance issue, you can enrich the RQL dialect by RDMS (Relational database management system) functions.
+All aggregate functions above take a single argument. Take care some aggregate
+functions (e.g. :keyword:`MAX`, :keyword:`MIN`) may return `None` if there is no
+result row.
 
+.. _RQLStringFunctions:
+
+String transformation functions
+```````````````````````````````
+
++-------------------------+-----------------------------------------------------------------+
+| :func:`UPPER(String)`   | upper case the string                                           |
++-------------------------+-----------------------------------------------------------------+
+| :func:`LOWER(String)`   | lower case the string                                           |
++-------------------------+-----------------------------------------------------------------+
+| :func:`LENGTH(String)`  | return the length of the string                                 |
++-------------------------+-----------------------------------------------------------------+
+| :func:`SUBSTRING(       | extract from the string a string starting at given index and of |
+|  String, start, length)`| given length                                                    |
++-------------------------+-----------------------------------------------------------------+
+| :func:`LIMIT_SIZE(      | if the length of the string is greater than given max size,     |
+|  String, max size)`     | strip it and add ellipsis ("..."). The resulting string will    |
+|                         | hence have max size + 3 characters                              |
++-------------------------+-----------------------------------------------------------------+
+| :func:`TEXT_LIMIT_SIZE( | similar to the above, but allow to specify the MIME type of the |
+|  String, format,        | text contained by the string. Supported formats are text/html,  |
+|  max size)`             | text/xhtml and text/xml. All others will be considered as plain |
+|                         | text. For non plain text format, sgml tags will be first removed|
+|                         | before limiting the string.                                     |
++-------------------------+-----------------------------------------------------------------+
+
+.. _RQLDateFunctions:
+
+Date extraction functions
+`````````````````````````
+
++--------------------------+----------------------------------------+
+| :func:`YEAR(Date)`       | return the year of a date or datetime  |
++--------------------------+----------------------------------------+
+| :func:`MONTH(Date)`      | return the year of a date or datetime  |
++--------------------------+----------------------------------------+
+| :func:`DAY(Date)`        | return the year of a date or datetime  |
++--------------------------+----------------------------------------+
+| :func:`HOUR(Datetime)`   | return the year of a datetime          |
++--------------------------+----------------------------------------+
+| :func:`MINUTE(Datetime)` | return the year of a datetime          |
++--------------------------+----------------------------------------+
+| :func:`SECOND(Datetime)` | return the year of a datetime          |
++--------------------------+----------------------------------------+
+
+.. _RQLOtherFunctions:
+
+Other functions
+```````````````
++-----------------------+--------------------------------------------------------------------+
+| :func:`ABS(num)`      |  return the absolute value of a number                             |
++-----------------------+--------------------------------------------------------------------+
+| :func:`RANDOM()`      | return a pseudo-random value from 0.0 to 1.0                       |
++-----------------------+--------------------------------------------------------------------+
+| :func:`FSPATH(X)`     | expect X to be an attribute whose value is stored in a             |
+|                       | :class:`BFSStorage` and return its path on the file system         |
++-----------------------+--------------------------------------------------------------------+
+| :func:`FTKIRANK(X)`   | expect X to be an entity used in a has_text relation, and return a |
+|                       | number corresponding to the rank order of each resulting entity    |
++-----------------------+--------------------------------------------------------------------+
+| :func:`CAST(Type, X)` | expect X to be an attribute and return it casted into the given    |
+|                       | final type                                                         |
++-----------------------+--------------------------------------------------------------------+
+
+
+.. _RQLExamples:
 
 Examples
 ~~~~~~~~
@@ -349,6 +595,8 @@ Examples
         Any X where X is in (FirstType, SecondType)
 
 
+.. _RQLInsertQuery:
+
 Insertion query
 ~~~~~~~~~~~~~~~
 
@@ -380,6 +628,8 @@ Caution, if a restriction is specified, the insertion is done for
 
         INSERT Person X: X name 'foo', X friend  Y WHERE name 'nice'
 
+.. _RQLSetQuery:
+
 Update and relation creation queries
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -401,6 +651,8 @@ each result line returned by the restriction*.
         SET X know Y  WHERE X friend Y
 
 
+.. _RQLDeleteQuery:
+
 Deletion query
 ~~~~~~~~~~~~~~
 
@@ -421,22 +673,6 @@ each line result returned by the restriction*.
         DELETE X friend Y WHERE X is Person, X name 'foo'
 
 
-Virtual RQL relations
-~~~~~~~~~~~~~~~~~~~~~
-
-Those relations may only be used in RQL query and are not actual
-attributes of your entities.
-
-* `has_text`: relation to use to query the full text index (only for
-  entities having fulltextindexed attributes).
-
-* `identity`: `Identity`_ relation to use to tell that a RQL variable should be
-  the same as another (but you've to use two different rql variables
-  for querying purpose)
-
-* `is`: relation to enforce possible types for a variable
-
-
-
 .. _Yapps: http://theory.stanford.edu/~amitp/yapps/
 .. _Left outer join: http://en.wikipedia.org/wiki/Join_(SQL)#Left_outer_join
+

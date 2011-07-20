@@ -201,7 +201,6 @@ class ServerMigrationHelper(MigrationHelper):
                 versions = repo.get_versions()
                 for cube, version in versions.iteritems():
                     version_file.write('%s %s\n' % (cube, version))
-                    
             if not failed:
                 bkup = tarfile.open(backupfile, 'w|gz')
                 for filename in os.listdir(tmpdir):
@@ -242,7 +241,7 @@ class ServerMigrationHelper(MigrationHelper):
                 written_format = format_file.readline().strip()
                 if written_format in ('portable', 'native'):
                     format = written_format
-        self.config.open_connections_pools = False
+        self.config.init_cnxset_pool = False
         repo = self.repo_connect()
         for source in repo.sources:
             if systemonly and source.uri != 'system':
@@ -255,7 +254,7 @@ class ServerMigrationHelper(MigrationHelper):
                     raise SystemExit(1)
         shutil.rmtree(tmpdir)
         # call hooks
-        repo.open_connections_pools()
+        repo.init_cnxset_pool()
         repo.hm.call_hooks('server_restore', repo=repo, timestamp=backupfile)
         print '-> database restored.'
 
@@ -288,7 +287,7 @@ class ServerMigrationHelper(MigrationHelper):
                 except (KeyboardInterrupt, EOFError):
                     print 'aborting...'
                     sys.exit(0)
-            self.session.keep_pool_mode('transaction')
+            self.session.keep_cnxset_mode('transaction')
             self.session.data['rebuild-infered'] = False
             return self._cnx
 
@@ -296,10 +295,10 @@ class ServerMigrationHelper(MigrationHelper):
     def session(self):
         if self.config is not None:
             session = self.repo._get_session(self.cnx.sessionid)
-            if session.pool is None:
+            if session.cnxset is None:
                 session.set_read_security(False)
                 session.set_write_security(False)
-            session.set_pool()
+            session.set_cnxset()
             return session
         # no access to session on remote instance
         return None
@@ -308,13 +307,13 @@ class ServerMigrationHelper(MigrationHelper):
         if hasattr(self, '_cnx'):
             self._cnx.commit()
         if self.session:
-            self.session.set_pool()
+            self.session.set_cnxset()
 
     def rollback(self):
         if hasattr(self, '_cnx'):
             self._cnx.rollback()
         if self.session:
-            self.session.set_pool()
+            self.session.set_cnxset()
 
     def rqlexecall(self, rqliter, ask_confirm=False):
         for rql, kwargs in rqliter:
@@ -374,18 +373,21 @@ class ServerMigrationHelper(MigrationHelper):
                     self.cmd_reactivate_verification_hooks()
 
     def install_custom_sql_scripts(self, directory, driver):
+        sql_scripts = []
         for fpath in glob(osp.join(directory, '*.sql.%s' % driver)):
             newname = osp.basename(fpath).replace('.sql.%s' % driver,
                                                   '.%s.sql' % driver)
             warn('[3.5.6] rename %s into %s' % (fpath, newname),
                  DeprecationWarning)
+            sql_scripts.append(fpath)
+        sql_scripts += glob(osp.join(directory, '*.%s.sql' % driver))
+        for fpath in sql_scripts:
             print '-> installing', fpath
-            sqlexec(open(fpath).read(), self.session.system_sql, False,
-                    delimiter=';;')
-        for fpath in glob(osp.join(directory, '*.%s.sql' % driver)):
-            print '-> installing', fpath
-            sqlexec(open(fpath).read(), self.session.system_sql, False,
-                    delimiter=';;')
+            try:
+                sqlexec(open(fpath).read(), self.session.system_sql, False,
+                        delimiter=';;')
+            except Exception, exc:
+                print '-> ERROR:', exc, ', skipping', fpath
 
     # schema synchronization internals ########################################
 
@@ -1375,7 +1377,7 @@ class ServerMigrationHelper(MigrationHelper):
     def _cw(self):
         session = self.session
         if session is not None:
-            session.set_pool()
+            session.set_cnxset()
             return session
         return self.cnx.request()
 

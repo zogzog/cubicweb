@@ -260,9 +260,8 @@ class ActionPathEvaluator(URLPathEvaluator):
             else:
                 try:
                     action = actionsreg._select_best(actions, req, rset=rset)
+                    if action is not None:
+                        raise Redirect(action.url())
                 except RegistryException:
-                    continue
-                else:
-                    # XXX avoid redirect
-                    raise Redirect(action.url())
+                    pass # continue searching
         raise PathDontMatch()

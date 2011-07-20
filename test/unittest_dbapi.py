@@ -32,7 +32,8 @@ class DBAPITC(CubicWebTC):
     def test_public_repo_api(self):
         cnx = self.login('anon')
         self.assertEqual(cnx.get_schema(), self.repo.schema)
-        self.assertEqual(cnx.source_defs(), {'system': {'type': 'native', 'uri': 'system'}})
+        self.assertEqual(cnx.source_defs(), {'system': {'type': 'native', 'uri': 'system',
+                                                        'use-cwuri-as-url': False}})
         self.restore_connection() # proper way to close cnx
         self.assertRaises(ProgrammingError, cnx.get_schema)
         self.assertRaises(ProgrammingError, cnx.source_defs)

@@ -159,15 +159,11 @@ def restrict_perms_to_user(filepath, log=None):
         print '-> set permissions to 0600 for %s' % filepath
     chmod(filepath, 0600)
 
-def read_config(config_file):
-    """read the instance configuration from a file and return it as a
-    dictionnary
-
-    :type config_file: str
-    :param config_file: path to the configuration file
-
-    :rtype: dict
-    :return: a dictionary with specified values associated to option names
+def read_config(config_file, raise_if_unreadable=False):
+    """read some simple configuration from `config_file` and return it as a
+    dictionary. If `raise_if_unreadable` is false (the default), an empty
+    dictionary will be returned if the file is inexistant or unreadable, else
+    :exc:`ExecutionError` will be raised.
     """
     from logilab.common.fileutils import lines
     config = current = {}
@@ -190,8 +186,12 @@ def read_config(config_file):
             value = value.strip()
             current[option] = value or None
     except IOError, ex:
-        warning('missing or non readable configuration file %s (%s)',
-                config_file, ex)
+        if raise_if_unreadable:
+            raise ExecutionError('%s. Are you logged with the correct user '
+                                 'to use this instance?' % ex)
+        else:
+            warning('missing or non readable configuration file %s (%s)',
+                    config_file, ex)
     return config
 
 

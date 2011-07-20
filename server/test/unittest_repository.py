@@ -24,6 +24,7 @@ import os
 import sys
 import threading
 import time
+import logging
 from copy import deepcopy
 from datetime import datetime
 
@@ -62,13 +63,13 @@ class RepositoryTC(CubicWebTC):
             table = SQL_PREFIX + 'CWEType'
             namecol = SQL_PREFIX + 'name'
             finalcol = SQL_PREFIX + 'final'
-            self.session.set_pool()
+            self.session.set_cnxset()
             cu = self.session.system_sql('SELECT %s FROM %s WHERE %s is NULL' % (
                 namecol, table, finalcol))
             self.assertEqual(cu.fetchall(), [])
             cu = self.session.system_sql('SELECT %s FROM %s WHERE %s=%%(final)s ORDER BY %s'
                                          % (namecol, table, finalcol, namecol), {'final': 'TRUE'})
-            self.assertEqual(cu.fetchall(), [(u'Boolean',), (u'Bytes',),
+            self.assertEqual(cu.fetchall(), [(u'BigInt',), (u'Boolean',), (u'Bytes',),
                                              (u'Date',), (u'Datetime',),
                                              (u'Decimal',),(u'Float',),
                                              (u'Int',),
@@ -259,7 +260,7 @@ class RepositoryTC(CubicWebTC):
         cnxid = repo.connect(self.admlogin, password=self.admpassword)
         # rollback state change which trigger TrInfo insertion
         session = repo._get_session(cnxid)
-        session.set_pool()
+        session.set_cnxset()
         user = session.user
         user.cw_adapt_to('IWorkflowable').fire_transition('deactivate')
         rset = repo.execute(cnxid, 'TrInfo T WHERE T wf_info_for X, X eid %(x)s', {'x': user.eid})
@@ -292,7 +293,7 @@ class RepositoryTC(CubicWebTC):
         try:
             with self.assertRaises(Exception) as cm:
                 run_transaction()
-            self.assertEqual(str(cm.exception), 'try to access pool on a closed session')
+            self.assertEqual(str(cm.exception), 'try to access connections set on a closed session %s' % cnxid)
         finally:
             t.join()
 
@@ -382,9 +383,9 @@ class RepositoryTC(CubicWebTC):
     def test_internal_api(self):
         repo = self.repo
         cnxid = repo.connect(self.admlogin, password=self.admpassword)
-        session = repo._get_session(cnxid, setpool=True)
+        session = repo._get_session(cnxid, setcnxset=True)
         self.assertEqual(repo.type_and_source_from_eid(2, session),
-                         ('CWGroup', 'system', None))
+                         ('CWGroup', 'system', None, 'system'))
         self.assertEqual(repo.type_from_eid(2, session), 'CWGroup')
         self.assertEqual(repo.source_from_eid(2, session).uri, 'system')
         self.assertEqual(repo.eid2extid(repo.system_source, 2, session), None)
@@ -394,7 +395,10 @@ class RepositoryTC(CubicWebTC):
 
     def test_public_api(self):
         self.assertEqual(self.repo.get_schema(), self.repo.schema)
-        self.assertEqual(self.repo.source_defs(), {'system': {'type': 'native', 'uri': 'system'}})
+        self.assertEqual(self.repo.source_defs(), {'system': {'type': 'native',
+                                                              'uri': 'system',
+                                                              'use-cwuri-as-url': False}
+                                                  })
         # .properties() return a result set
         self.assertEqual(self.repo.properties().rql, 'Any K,V WHERE P is CWProperty,P pkey K, P value V, NOT P for_user U')
 
@@ -402,7 +406,7 @@ class RepositoryTC(CubicWebTC):
         repo = self.repo
         cnxid = repo.connect(self.admlogin, password=self.admpassword)
         self.assertEqual(repo.user_info(cnxid), (6, 'admin', set([u'managers']), {}))
-        self.assertEqual(repo.describe(cnxid, 2), (u'CWGroup', u'system', None))
+        self.assertEqual(repo.describe(cnxid, 2), (u'CWGroup', u'system', None, 'system'))
         repo.close(cnxid)
         self.assertRaises(BadConnectionId, repo.user_info, cnxid)
         self.assertRaises(BadConnectionId, repo.describe, cnxid, 1)
@@ -519,38 +523,39 @@ class RepositoryTC(CubicWebTC):
 class DataHelpersTC(CubicWebTC):
 
     def test_create_eid(self):
-        self.session.set_pool()
+        self.session.set_cnxset()
         self.assert_(self.repo.system_source.create_eid(self.session))
 
     def test_source_from_eid(self):
-        self.session.set_pool()
+        self.session.set_cnxset()
         self.assertEqual(self.repo.source_from_eid(1, self.session),
                           self.repo.sources_by_uri['system'])
 
     def test_source_from_eid_raise(self):
-        self.session.set_pool()
+        self.session.set_cnxset()
         self.assertRaises(UnknownEid, self.repo.source_from_eid, -2, self.session)
 
     def test_type_from_eid(self):
-        self.session.set_pool()
+        self.session.set_cnxset()
         self.assertEqual(self.repo.type_from_eid(2, self.session), 'CWGroup')
 
     def test_type_from_eid_raise(self):
-        self.session.set_pool()
+        self.session.set_cnxset()
         self.assertRaises(UnknownEid, self.repo.type_from_eid, -2, self.session)
 
     def test_add_delete_info(self):
         entity = self.repo.vreg['etypes'].etype_class('Personne')(self.session)
         entity.eid = -1
         entity.complete = lambda x: None
-        self.session.set_pool()
+        self.session.set_cnxset()
         self.repo.add_info(self.session, entity, self.repo.system_source)
         cu = self.session.system_sql('SELECT * FROM entities WHERE eid = -1')
         data = cu.fetchall()
-        self.assertIsInstance(data[0][3], datetime)
+        self.assertIsInstance(data[0][4], datetime)
         data[0] = list(data[0])
-        data[0][3] = None
-        self.assertEqual(tuplify(data), [(-1, 'Personne', 'system', None, None)])
+        data[0][4] = None
+        self.assertEqual(tuplify(data), [(-1, 'Personne', 'system', 'system',
+                                          None, None)])
         self.repo.delete_info(self.session, entity, 'system', None)
         #self.repo.commit()
         cu = self.session.system_sql('SELECT * FROM entities WHERE eid = -1')
@@ -566,7 +571,7 @@ class FTITC(CubicWebTC):
         self.commit()
         ts = datetime.now()
         self.assertEqual(len(self.execute('Personne X WHERE X has_text "tutu"')), 1)
-        self.session.set_pool()
+        self.session.set_cnxset()
         cu = self.session.system_sql('SELECT mtime, eid FROM entities WHERE eid = %s' % eidp)
         omtime = cu.fetchone()[0]
         # our sqlite datetime adapter is ignore seconds fraction, so we have to
@@ -575,7 +580,7 @@ class FTITC(CubicWebTC):
         self.execute('SET X nom "tata" WHERE X eid %(x)s', {'x': eidp})
         self.commit()
         self.assertEqual(len(self.execute('Personne X WHERE X has_text "tutu"')), 1)
-        self.session.set_pool()
+        self.session.set_cnxset()
         cu = self.session.system_sql('SELECT mtime FROM entities WHERE eid = %s' % eidp)
         mtime = cu.fetchone()[0]
         self.failUnless(omtime < mtime)
@@ -646,7 +651,7 @@ class InlineRelHooksTC(CubicWebTC):
         CubicWebTC.setUp(self)
         CALLED[:] = ()
 
-    def _after_relation_hook(self, pool, fromeid, rtype, toeid):
+    def _after_relation_hook(self, cnxset, fromeid, rtype, toeid):
         self.called.append((fromeid, rtype, toeid))
 
     def test_inline_relation(self):
@@ -704,12 +709,17 @@ class InlineRelHooksTC(CubicWebTC):
 
 
 class PerformanceTest(CubicWebTC):
-    def setup_database(self):
-        import logging
+    def setUp(self):
+        super(PerformanceTest, self).setUp()
         logger = logging.getLogger('cubicweb.session')
         #logger.handlers = [logging.StreamHandler(sys.stdout)]
         logger.setLevel(logging.INFO)
         self.info = logger.info
+
+    def tearDown(self):
+        super(PerformanceTest, self).tearDown()
+        logger = logging.getLogger('cubicweb.session')
+        logger.setLevel(logging.CRITICAL)
 
     def test_composite_deletion(self):
         req = self.request()
@@ -807,6 +817,7 @@ class PerformanceTest(CubicWebTC):
         req.cnx.commit()
         t1 = time.time()
         self.info('add relations: %.2gs', t1-t0)
+
     def test_session_add_relation_inlined(self):
         """ to be compared with test_session_add_relations"""
         req = self.request()
@@ -847,7 +858,7 @@ class PerformanceTest(CubicWebTC):
         p2 = req.create_entity('Personne', nom=u'Florent')
         w = req.create_entity('Affaire', ref=u'wc')
         w.set_relations(todo_by=[p1,p2])
-        w.clear_all_caches()
+        w.cw_clear_all_caches()
         self.commit()
         self.assertEqual(len(w.todo_by), 1)
         self.assertEqual(w.todo_by[0].eid, p2.eid)
@@ -860,7 +871,7 @@ class PerformanceTest(CubicWebTC):
         w.set_relations(todo_by=p1)
         self.commit()
         w.set_relations(todo_by=p2)
-        w.clear_all_caches()
+        w.cw_clear_all_caches()
         self.commit()
         self.assertEqual(len(w.todo_by), 1)
         self.assertEqual(w.todo_by[0].eid, p2.eid)

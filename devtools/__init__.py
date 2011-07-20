@@ -28,15 +28,17 @@ import shutil
 import pickle
 import glob
 import warnings
+import hashlib
 from datetime import timedelta
 from os.path import (abspath, join, exists, basename, dirname, normpath, split,
                      isfile, isabs, splitext, isdir, expanduser)
 from functools import partial
-import hashlib
 
 from logilab.common.date import strptime
 from logilab.common.decorators import cached, clear_cache
-from cubicweb import CW_SOFTWARE_ROOT, ConfigurationError, schema, cwconfig, BadConnectionId
+
+from cubicweb import ConfigurationError, ExecutionError, BadConnectionId
+from cubicweb import CW_SOFTWARE_ROOT, schema, cwconfig
 from cubicweb.server.serverconfig import ServerConfiguration
 from cubicweb.etwist.twconfig import TwistedConfiguration
 
@@ -91,7 +93,7 @@ def turn_repo_off(repo):
     """ Idea: this is less costly than a full re-creation of the repo object.
     off:
     * session are closed,
-    * pools are closed
+    * cnxsets are closed
     * system source is shutdown
     """
     if not repo._needs_refresh:
@@ -102,8 +104,8 @@ def turn_repo_off(repo):
                 repo.close(sessionid)
             except BadConnectionId: #this is strange ? thread issue ?
                 print 'XXX unknown session', sessionid
-        for pool in repo.pools:
-            pool.close(True)
+        for cnxset in repo.cnxsets:
+            cnxset.close(True)
         repo.system_source.shutdown()
         repo._needs_refresh = True
         repo._has_started = False
@@ -111,12 +113,12 @@ def turn_repo_off(repo):
 def turn_repo_on(repo):
     """Idea: this is less costly than a full re-creation of the repo object.
     on:
-    * pools are connected
+    * cnxsets are connected
     * cache are cleared
     """
     if repo._needs_refresh:
-        for pool in repo.pools:
-            pool.reconnect()
+        for cnxset in repo.cnxsets:
+            cnxset.reconnect()
         repo._type_source_cache = {}
         repo._extid_cache = {}
         repo.querier._rql_cache = {}
@@ -197,7 +199,10 @@ class TestServerConfiguration(ServerConfiguration):
         directory from wich tests are launched or by specifying an alternative
         sources file using self.sourcefile.
         """
-        sources = super(TestServerConfiguration, self).sources()
+        try:
+            sources = super(TestServerConfiguration, self).sources()
+        except ExecutionError:
+            sources = {}
         if not sources:
             sources = DEFAULT_SOURCES
         if 'admin' not in sources:
@@ -206,9 +211,6 @@ class TestServerConfiguration(ServerConfiguration):
 
     # web config methods needed here for cases when we use this config as a web
     # config
-
-    def instance_md5_version(self):
-        return ''
 
     def default_base_url(self):
         return BASE_URL
@@ -475,12 +477,11 @@ class TestDataBaseHandler(object):
             repo = self.get_repo(startup=True)
             cnx = self.get_cnx()
             session = repo._sessions[cnx.sessionid]
-            session.set_pool()
+            session.set_cnxset()
             _commit = session.commit
-            def always_pooled_commit():
-                _commit()
-                session.set_pool()
-            session.commit = always_pooled_commit
+            def keep_cnxset_commit():
+                _commit(free_cnxset=False)
+            session.commit = keep_cnxset_commit
             pre_setup_func(session, self.config)
             session.commit()
             cnx.close()

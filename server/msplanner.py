@@ -370,7 +370,7 @@ class PartPlanInformation(object):
                     eid = const.eval(self.plan.args)
                     source = self._session.source_from_eid(eid)
                     if (source is self.system_source
-                        or (hasrel and
+                        or (hasrel and varobj._q_invariant and
                             not any(source.support_relation(r.r_type)
                                     for r in varobj.stinfo['relations']
                                     if not r is rel))):

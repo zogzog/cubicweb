@@ -8,7 +8,7 @@ Locate resources
 Static files handling
 ---------------------
 
-.. automethod:: cubicweb.web.webconfig.WebConfiguration.static_directory
+.. autoattribute:: cubicweb.web.webconfig.WebConfiguration.static_directory
 .. automethod:: cubicweb.web.webconfig.WebConfiguration.static_file_exists
 .. automethod:: cubicweb.web.webconfig.WebConfiguration.static_file_open
 .. automethod:: cubicweb.web.webconfig.WebConfiguration.static_file_add

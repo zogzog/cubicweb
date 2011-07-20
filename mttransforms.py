@@ -99,10 +99,10 @@ try:
 
     def patch_convert(cls):
         def _convert(self, trdata, origconvert=cls._convert):
-            try:
-                trdata.appobject._cw.add_css('pygments.css')
-            except AttributeError: # session has no add_css, only http request
-                pass
+            add_css = getattr(trdata.appobject._cw, 'add_css', None)
+            if add_css is not None:
+                # session has no add_css, only http request
+                add_css('pygments.css')
             return origconvert(self, trdata)
         cls._convert = _convert
     patch_convert(pygmentstransforms.PygmentsHTMLTransform)

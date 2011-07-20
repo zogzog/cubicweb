@@ -326,8 +326,8 @@ class WorkflowTransition(BaseTransition):
             result[ep.subwf_state.eid] = ep.destination and ep.destination.eid
         return result
 
-    def clear_all_caches(self):
-        super(WorkflowTransition, self).clear_all_caches()
+    def cw_clear_all_caches(self):
+        super(WorkflowTransition, self).cw_clear_all_caches()
         clear_cache(self, 'exit_points')
 
 

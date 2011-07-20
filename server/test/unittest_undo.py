@@ -153,8 +153,8 @@ class UndoableTransactionTC(CubicWebTC):
         txuuid = self.commit()
         actions = self.cnx.transaction_info(txuuid).actions_list()
         self.assertEqual(len(actions), 1)
-        toto.clear_all_caches()
-        e.clear_all_caches()
+        toto.cw_clear_all_caches()
+        e.cw_clear_all_caches()
         errors = self.cnx.undo_transaction(txuuid)
         undotxuuid = self.commit()
         self.assertEqual(undotxuuid, None) # undo not undoable
@@ -195,7 +195,7 @@ class UndoableTransactionTC(CubicWebTC):
         self.commit()
         errors = self.cnx.undo_transaction(txuuid)
         self.commit()
-        p.clear_all_caches()
+        p.cw_clear_all_caches()
         self.assertEqual(p.fiche[0].eid, c2.eid)
         self.assertEqual(len(errors), 1)
         self.assertEqual(errors[0],
@@ -235,7 +235,7 @@ class UndoableTransactionTC(CubicWebTC):
         self.failIf(self.execute('Any X WHERE X eid %(x)s', {'x': c.eid}))
         self.failIf(self.execute('Any X WHERE X eid %(x)s', {'x': p.eid}))
         self.failIf(self.execute('Any X,Y WHERE X fiche Y'))
-        self.session.set_pool()
+        self.session.set_cnxset()
         for eid in (p.eid, c.eid):
             self.failIf(session.system_sql(
                 'SELECT * FROM entities WHERE eid=%s' % eid).fetchall())

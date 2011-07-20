@@ -56,7 +56,7 @@ class _GroupOperation(hook.Operation):
 class _DeleteGroupOp(_GroupOperation):
     """synchronize user when a in_group relation has been deleted"""
     def postcommit_event(self):
-        """the observed connections pool has been commited"""
+        """the observed connections set has been commited"""
         groups = self.cnxuser.groups
         try:
             groups.remove(self.group)
@@ -67,7 +67,7 @@ class _DeleteGroupOp(_GroupOperation):
 class _AddGroupOp(_GroupOperation):
     """synchronize user when a in_group relation has been added"""
     def postcommit_event(self):
-        """the observed connections pool has been commited"""
+        """the observed connections set has been commited"""
         groups = self.cnxuser.groups
         if self.group in groups:
             self.warning('user %s already in group %s', self.cnxuser,
@@ -97,7 +97,7 @@ class _DelUserOp(hook.Operation):
         hook.Operation.__init__(self, session)
 
     def postcommit_event(self):
-        """the observed connections pool has been commited"""
+        """the observed connections set has been commited"""
         try:
             self.session.repo.close(self.cnxid)
         except BadConnectionId:
@@ -122,7 +122,7 @@ class _DelCWPropertyOp(hook.Operation):
     """a user's custom properties has been deleted"""
 
     def postcommit_event(self):
-        """the observed connections pool has been commited"""
+        """the observed connections set has been commited"""
         try:
             del self.cwpropdict[self.key]
         except KeyError:
@@ -133,7 +133,7 @@ class _ChangeCWPropertyOp(hook.Operation):
     """a user's custom properties has been added/changed"""
 
     def postcommit_event(self):
-        """the observed connections pool has been commited"""
+        """the observed connections set has been commited"""
         self.cwpropdict[self.key] = self.value
 
 
@@ -141,7 +141,7 @@ class _AddCWPropertyOp(hook.Operation):
     """a user's custom properties has been added/changed"""
 
     def postcommit_event(self):
-        """the observed connections pool has been commited"""
+        """the observed connections set has been commited"""
         cwprop = self.cwprop
         if not cwprop.for_user:
             self.session.vreg['propertyvalues'][cwprop.pkey] = cwprop.value

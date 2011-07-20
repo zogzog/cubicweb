@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -21,7 +21,7 @@ from xml.etree.ElementTree import fromstring
 from logilab.common.testlib import unittest_main, mock_object
 from logilab.common.compat import any
 
-from cubicweb import Binary
+from cubicweb import Binary, ValidationError
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.web.formfields import (IntField, StringField, RichTextField,
                                      PasswordField, DateTimeField,
@@ -40,6 +40,16 @@ class FieldsFormTC(CubicWebTC):
         self.execute('INSERT CWProperty X: X pkey "ui.default-text-format", X value "text/rest", X for_user U WHERE U login "admin"')
         self.commit()
         self.assertEqual(StringField().format(form), 'text/rest')
+
+
+    def test_process_posted(self):
+        class AForm(FieldsForm):
+            anint = IntField()
+            astring = StringField()
+        form = AForm(self.request(anint='1', astring='2', _cw_fields='anint,astring'))
+        self.assertEqual(form.process_posted(), {'anint': 1, 'astring': '2'})
+        form = AForm(self.request(anint='1a', astring='2b', _cw_fields='anint,astring'))
+        self.assertRaises(ValidationError, form.process_posted)
 
 
 class EntityFieldsFormTC(CubicWebTC):

@@ -137,7 +137,7 @@ class LDAPUserSourceTC(CubicWebTC):
 
     def test_authenticate(self):
         source = self.repo.sources_by_uri['ldapuser']
-        self.session.set_pool()
+        self.session.set_cnxset()
         self.assertRaises(AuthenticationError,
                           source.authenticate, self.session, 'toto', 'toto')
 
@@ -239,7 +239,7 @@ class LDAPUserSourceTC(CubicWebTC):
         iworkflowable.fire_transition('deactivate')
         try:
             cnx.commit()
-            adim.clear_all_caches()
+            adim.cw_clear_all_caches()
             self.assertEqual(adim.in_state[0].name, 'deactivated')
             trinfo = iworkflowable.latest_trinfo()
             self.assertEqual(trinfo.owned_by[0].login, SYT)
@@ -265,7 +265,7 @@ class LDAPUserSourceTC(CubicWebTC):
         self.failUnless(self.sexecute('Any X,Y WHERE X login %(syt)s, Y login "cochon"', {'syt': SYT}))
 
     def test_exists1(self):
-        self.session.set_pool()
+        self.session.set_cnxset()
         self.session.create_entity('CWGroup', name=u'bougloup1')
         self.session.create_entity('CWGroup', name=u'bougloup2')
         self.sexecute('SET U in_group G WHERE G name ~= "bougloup%", U login "admin"')
@@ -378,6 +378,23 @@ class LDAPUserSourceTC(CubicWebTC):
         rset = cu.execute('Any F WHERE X has_text "iaminguestsgrouponly", X firstname F')
         self.assertEqual(rset.rows, [[None]])
 
+    def test_copy_to_system_source(self):
+        eid = self.sexecute('CWUser X WHERE X login %(login)s', {'login': SYT})[0][0]
+        self.sexecute('SET X cw_source S WHERE X eid %(x)s, S name "system"', {'x': eid})
+        self.commit()
+        rset = self.sexecute('CWUser X WHERE X login %(login)s', {'login': SYT})
+        self.assertEqual(len(rset), 1)
+        e = rset.get_entity(0, 0)
+        self.assertEqual(e.eid, eid)
+        self.assertEqual(e.cw_metainformation(), {'source': {'type': u'native', 'uri': u'system', 'use-cwuri-as-url': False},
+                                                  'type': 'CWUser',
+                                                  'extid': None})
+        self.assertEqual(e.cw_source[0].name, 'system')
+        source = self.repo.sources_by_uri['ldapuser']
+        source.synchronize()
+        rset = self.sexecute('CWUser X WHERE X login %(login)s', {'login': SYT})
+        self.assertEqual(len(rset), 1)
+
     def test_nonregr1(self):
         self.sexecute('Any X,AA ORDERBY AA DESC WHERE E eid %(x)s, E owned_by X, '
                      'X modification_date AA',
@@ -465,8 +482,8 @@ class RQL2LDAPFilterTC(RQLGeneratorTC):
         self._schema = repo.schema
         super(RQL2LDAPFilterTC, self).setUp()
         ldapsource = repo.sources[-1]
-        self.pool = repo._get_pool()
-        session = mock_object(pool=self.pool)
+        self.cnxset = repo._get_cnxset()
+        session = mock_object(cnxset=self.cnxset)
         self.o = RQL2LDAPFilter(ldapsource, session)
         self.ldapclasses = ''.join(ldapsource.base_filters)
 

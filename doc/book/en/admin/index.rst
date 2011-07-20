@@ -23,7 +23,6 @@ instances based on that framework.
    multisources
    ldap
    pyro
-   gae
    migration
    additional-tips
    rql-logs

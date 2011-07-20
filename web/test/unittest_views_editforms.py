@@ -64,6 +64,7 @@ class AutomaticEntityFormTC(CubicWebTC):
                                ])
         self.assertListEqual(rbc(e, 'main', 'metadata'),
                               [('last_login_time', 'subject'),
+                               ('cw_source', 'subject'),
                                ('creation_date', 'subject'),
                                ('cwuri', 'subject'),
                                ('modification_date', 'subject'),
@@ -119,7 +120,8 @@ class AutomaticEntityFormTC(CubicWebTC):
                               [('nom', 'subject'),
                                ])
         self.assertListEqual(rbc(e, 'main', 'metadata'),
-                              [('creation_date', 'subject'),
+                              [('cw_source', 'subject'),
+                               ('creation_date', 'subject'),
                                ('cwuri', 'subject'),
                                ('modification_date', 'subject'),
                                ('created_by', 'subject'),

@@ -338,7 +338,7 @@ class MigrationCommandsTC(CubicWebTC):
     @tag('longrun')
     def test_sync_schema_props_perms(self):
         cursor = self.mh.session
-        cursor.set_pool()
+        cursor.set_cnxset()
         nbrqlexpr_start = cursor.execute('Any COUNT(X) WHERE X is RQLExpression')[0][0]
         migrschema['titre'].rdefs[('Personne', 'String')].order = 7
         migrschema['adel'].rdefs[('Personne', 'String')].order = 6

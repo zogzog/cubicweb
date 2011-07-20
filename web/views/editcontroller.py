@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -22,8 +22,6 @@ __docformat__ = "restructuredtext en"
 from warnings import warn
 
 from rql.utils import rqlvar_maker
-
-from logilab.common.textutils import splitstrip
 
 from cubicweb import Binary, ValidationError, typed_eid
 from cubicweb.view import EntityAdapter, implements_adapter_compat
@@ -190,23 +188,18 @@ class EditController(basecontrollers.ViewController):
             formid = 'edition'
         form = self._cw.vreg['forms'].select(formid, self._cw, entity=entity)
         eid = form.actual_eid(entity.eid)
-        form.formvalues = {} # init fields value cache
         try:
-            editedfields = formparams['_cw_edited_fields']
+            editedfields = formparams['_cw_entity_fields']
         except KeyError:
-            raise RequestError(self._cw._('no edited fields specified for entity %s' % entity.eid))
-        for editedfield in splitstrip(editedfields):
             try:
-                name, role = editedfield.split('-')
-            except:
-                name = editedfield
-                role = None
-            if form.field_by_name.im_func.func_code.co_argcount == 4: # XXX
-                field = form.field_by_name(name, role, eschema=entity.e_schema)
-            else:
-                field = form.field_by_name(name, role)
-            if field.has_been_modified(form):
-                self.handle_formfield(form, field, rqlquery)
+                editedfields = formparams['_cw_edited_fields']
+                warn('[3.13] _cw_edited_fields has been renamed _cw_entity_fields',
+                     DeprecationWarning)
+            except KeyError:
+                raise RequestError(self._cw._('no edited fields specified for entity %s' % entity.eid))
+        form.formvalues = {} # init fields value cache
+        for field in form.iter_modified_fields(editedfields, entity):
+            self.handle_formfield(form, field, rqlquery)
         if self.errors:
             errors = dict((f.role_name(), unicode(ex)) for f, ex in self.errors)
             raise ValidationError(valerror_eid(entity.eid), errors)

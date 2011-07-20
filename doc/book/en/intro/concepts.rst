@@ -1,4 +1,3 @@
-
 .. -*- coding: utf-8 -*-
 
 .. _Concepts:
@@ -31,7 +30,7 @@ and available under a free software license.
 .. note::
 
  The command :command:`cubicweb-ctl list` displays the list of cubes
-installed on your system.
+ installed on your system.
 
 .. _`CubicWeb.org Forge`: http://www.cubicweb.org/project/
 .. _`cubicweb-blog`: http://www.cubicweb.org/project/cubicweb-blog

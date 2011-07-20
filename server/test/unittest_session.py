@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -15,13 +15,12 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""
+from __future__ import with_statement
 
-"""
 from logilab.common.testlib import TestCase, unittest_main, mock_object
 
 from cubicweb.devtools.testlib import CubicWebTC
-from cubicweb.server.session import _make_description
+from cubicweb.server.session import _make_description, hooks_control
 
 class Variable:
     def __init__(self, name):
@@ -46,11 +45,38 @@ class MakeDescriptionTC(TestCase):
         self.assertEqual(_make_description((Function('max', 'A'), Variable('B')), {}, solution),
                           ['Int','CWUser'])
 
+
 class InternalSessionTC(CubicWebTC):
     def test_dbapi_query(self):
         session = self.repo.internal_session()
         self.assertFalse(session.running_dbapi_query)
         session.close()
+
+
+class SessionTC(CubicWebTC):
+
+    def test_hooks_control(self):
+        session = self.session
+        self.assertEqual(session.hooks_mode, session.HOOKS_ALLOW_ALL)
+        self.assertEqual(session.disabled_hook_categories, set())
+        self.assertEqual(session.enabled_hook_categories, set())
+        self.assertEqual(len(session._tx_data), 1)
+        with hooks_control(session, session.HOOKS_DENY_ALL, 'metadata'):
+            self.assertEqual(session.hooks_mode, session.HOOKS_DENY_ALL)
+            self.assertEqual(session.disabled_hook_categories, set())
+            self.assertEqual(session.enabled_hook_categories, set(('metadata',)))
+            session.commit()
+            self.assertEqual(session.hooks_mode, session.HOOKS_DENY_ALL)
+            self.assertEqual(session.disabled_hook_categories, set())
+            self.assertEqual(session.enabled_hook_categories, set(('metadata',)))
+            session.rollback()
+            self.assertEqual(session.hooks_mode, session.HOOKS_DENY_ALL)
+            self.assertEqual(session.disabled_hook_categories, set())
+            self.assertEqual(session.enabled_hook_categories, set(('metadata',)))
+        # leaving context manager with no transaction running should reset the
+        # transaction local storage (and associated cnxset)
+        self.assertEqual(session._tx_data, {})
+        self.assertEqual(session.cnxset, None)
 
 if __name__ == '__main__':
     unittest_main()

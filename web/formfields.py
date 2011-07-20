@@ -37,6 +37,7 @@ Basic fields
 .. autoclass:: cubicweb.web.formfields.StringField()
 .. autoclass:: cubicweb.web.formfields.PasswordField()
 .. autoclass:: cubicweb.web.formfields.IntField()
+.. autoclass:: cubicweb.web.formfields.BigIntField()
 .. autoclass:: cubicweb.web.formfields.FloatField()
 .. autoclass:: cubicweb.web.formfields.BooleanField()
 .. autoclass:: cubicweb.web.formfields.DateField()
@@ -829,21 +830,25 @@ class EditableFileField(FileField):
         return super(EditableFileField, self)._process_form_value(form)
 
 
-class IntField(Field):
-    """Use this field to edit integers (`Int` yams type). This field additionaly
-    support `min` and `max` attributes that specify a minimum and/or maximum
-    value for the integer (`None` meaning no boundary).
+class BigIntField(Field):
+    """Use this field to edit big integers (`BigInt` yams type). This field
+    additionaly support `min` and `max` attributes that specify a minimum and/or
+    maximum value for the integer (`None` meaning no boundary).
 
     Unless explicitly specified, the widget for this field will be a
     :class:`~cubicweb.web.formwidgets.TextInput`.
     """
+    default_text_input_size = 10
+
     def __init__(self, min=None, max=None, **kwargs):
-        super(IntField, self).__init__(**kwargs)
+        super(BigIntField, self).__init__(**kwargs)
         self.min = min
         self.max = max
+
+    def init_widget(self, widget):
+        super(BigIntField, self).init_widget(widget)
         if isinstance(self.widget, fw.TextInput):
-            self.widget.attrs.setdefault('size', 5)
-            self.widget.attrs.setdefault('maxlength', 15)
+            self.widget.attrs.setdefault('size', self.default_text_input_size)
 
     def _ensure_correctly_typed(self, form, value):
         if isinstance(value, basestring):
@@ -855,6 +860,19 @@ class IntField(Field):
             except ValueError:
                 raise ProcessFormError(form._cw._('an integer is expected'))
         return value
+
+
+class IntField(BigIntField):
+    """Use this field to edit integers (`Int` yams type). Similar to
+    :class:`~cubicweb.web.formfields.BigIntField` but set max length when text
+    input widget is used (the default).
+    """
+    default_text_input_size = 5
+
+    def init_widget(self, widget):
+        super(IntField, self).init_widget(widget)
+        if isinstance(self.widget, fw.TextInput):
+            self.widget.attrs.setdefault('maxlength', 15)
 
 
 class BooleanField(Field):
@@ -1207,6 +1225,7 @@ FIELDS = {
 
     'Boolean':  BooleanField,
     'Int':      IntField,
+    'BigInt':   BigIntField,
     'Float':    FloatField,
     'Decimal':  StringField,
 

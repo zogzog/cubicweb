@@ -163,6 +163,11 @@ msgid "'%s' action doesn't take any options"
 msgstr "la acción '%s'  no acepta opciones"
 
 #, python-format
+msgid ""
+"'%s' action for in_state relation should at least have 'linkattr=name' option"
+msgstr ""
+
+#, python-format
 msgid "'%s' action requires 'linkattr' option"
 msgstr "la acción '%s' requiere una opción 'linkattr'"
 
@@ -256,6 +261,12 @@ msgstr "Transición (abstracta)"
 
 msgid "BaseTransition_plural"
 msgstr "Transiciones (abstractas)"
+
+msgid "BigInt"
+msgstr ""
+
+msgid "BigInt_plural"
+msgstr ""
 
 msgid "Bookmark"
 msgstr "Favorito"
@@ -1163,6 +1174,10 @@ msgstr "las opciones permitidas dependen del tipo de fuente"
 msgid "allowed transitions from this state"
 msgstr "transiciones autorizadas desde este estado"
 
+#, python-format
+msgid "allowed values for \"action\" are %s"
+msgstr ""
+
 msgid "allowed_transition"
 msgstr "transiciones autorizadas"
 
@@ -1812,10 +1827,10 @@ msgstr "Caja de Acciones"
 msgid "ctxcomponents_edit_box_description"
 msgstr "Muestra las acciones posibles a ejecutar para los datos seleccionados"
 
-msgid "ctxcomponents_facet.filters"
+msgid "ctxcomponents_facet.filterbox"
 msgstr "Filtros"
 
-msgid "ctxcomponents_facet.filters_description"
+msgid "ctxcomponents_facet.filterbox_description"
 msgstr "Muestra los filtros aplicables a una búsqueda realizada"
 
 msgid "ctxcomponents_logo"
@@ -1880,6 +1895,9 @@ msgstr ""
 
 msgid "ctxtoolbar"
 msgstr "Barra de herramientas"
+
+msgid "currently in synchronization"
+msgstr ""
 
 msgid "custom_workflow"
 msgstr "Workflow específico"
@@ -2431,6 +2449,9 @@ msgstr "Tipo"
 msgid "external page"
 msgstr "Página externa"
 
+msgid "facet-loading-msg"
+msgstr ""
+
 msgid "facet.filters"
 msgstr "Filtros"
 
@@ -2614,9 +2635,6 @@ msgid ""
 msgstr ""
 "Relación genérica que indicar que una entidad es idéntica a otro recurso web "
 "(ver http://www.w3.org/TR/owl-ref/#sameAs-def)."
-
-msgid "go back to the index page"
-msgstr "Regresar a la página de inicio"
 
 msgid "granted to groups"
 msgstr "Otorgado a los grupos"
@@ -3152,11 +3170,11 @@ msgstr "Nombre"
 
 msgctxt "CWSource"
 msgid "name"
-msgstr "nombre"
+msgstr ""
 
 msgctxt "State"
 msgid "name"
-msgstr "Nombre"
+msgstr "nombre"
 
 msgctxt "Transition"
 msgid "name"
@@ -3224,6 +3242,15 @@ msgstr "No"
 
 msgid "no associated permissions"
 msgstr "No existe permiso asociado"
+
+msgid "no content next link"
+msgstr ""
+
+msgid "no content prev link"
+msgstr ""
+
+msgid "no edited fields specified"
+msgstr ""
 
 #, python-format
 msgid "no edited fields specified for entity %s"
@@ -3771,9 +3798,6 @@ msgstr "Una propiedad específica al Sistema no puede ser propia al usuario"
 msgid "siteinfo"
 msgstr "información"
 
-msgid "some errors occurred:"
-msgstr "Algunos errores encontrados :"
-
 msgid "some later transaction(s) touch entity, undo them first"
 msgstr ""
 "Las transacciones más recientes modificaron esta entidad, anúlelas primero"
@@ -3947,6 +3971,13 @@ msgstr "Simétrico"
 msgid "synchronization-interval must be greater than 1 minute"
 msgstr "synchronization-interval debe ser mayor a 1 minuto"
 
+msgid "synchronizing"
+msgstr ""
+
+msgctxt "CWSource"
+msgid "synchronizing"
+msgstr ""
+
 msgid "table"
 msgstr "Tabla"
 
@@ -3984,6 +4015,12 @@ msgstr ""
 #, python-format
 msgid "the value \"%s\" is already used, use another one"
 msgstr "El valor \"%s\" ya esta en uso, favor de utilizar otro"
+
+msgid "there is no next page"
+msgstr ""
+
+msgid "there is no previous page"
+msgstr ""
 
 msgid "this action is not reversible!"
 msgstr "Esta acción es irreversible!."
@@ -4085,7 +4122,7 @@ msgid "tr_count"
 msgstr "n° de transición"
 
 msgid "transaction undone"
-msgstr "Transacciones Anuladas"
+msgstr ""
 
 #, python-format
 msgid "transition %(tr)s isn't allowed from %(st)s"
@@ -4369,28 +4406,28 @@ msgctxt "CWProperty"
 msgid "value"
 msgstr "Vampr"
 
+#, python-format
+msgid "value %(value)s must be %(op)s %(boundary)s"
+msgstr ""
+
+#, python-format
+msgid "value %(value)s must be <= %(boundary)s"
+msgstr ""
+
+#, python-format
+msgid "value %(value)s must be >= %(boundary)s"
+msgstr ""
+
 msgid "value associated to this key is not editable manually"
 msgstr "El valor asociado a este elemento no es editable manualmente"
 
 #, python-format
-msgid "value must be %(op)s %(boundary)s"
-msgstr "El valor debe ser %(op)s %(boundary)s"
+msgid "value should have maximum size of %s but found %s"
+msgstr ""
 
 #, python-format
-msgid "value must be <= %(boundary)s"
-msgstr "El valor debe ser <= %(boundary)s"
-
-#, python-format
-msgid "value must be >= %(boundary)s"
-msgstr "El valor debe ser >= %(boundary)s"
-
-#, python-format
-msgid "value should have maximum size of %s"
-msgstr "El valor no debe exceder de %s"
-
-#, python-format
-msgid "value should have minimum size of %s"
-msgstr "El valor no puede ser menor a %s"
+msgid "value should have minimum size of %s but found %s"
+msgstr ""
 
 msgid "vcard"
 msgstr "vcard"
@@ -4539,6 +4576,3 @@ msgid "you should un-inline relation %s which is supported and may be crossed "
 msgstr ""
 "usted debe  quitar la puesta en línea de la relación %s que es aceptada y "
 "puede ser cruzada"
-
-#~ msgid "add a %s"
-#~ msgstr "agregar un %s"

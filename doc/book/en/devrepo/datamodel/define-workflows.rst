@@ -13,7 +13,7 @@ states. Hence we have a set of states, and a "transition graph", i.e. a set of
 possible transitions from one state to another state.
 
 We will define a simple workflow for a blog, with only the following two states:
-`submitted` and `published`. You may want to take a look at :ref:`_TutosBase` if
+`submitted` and `published`. You may want to take a look at :ref:`TutosBase` if
 you want to quickly setup an instance running a blog.
 
 Setting up a workflow

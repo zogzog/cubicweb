@@ -148,7 +148,7 @@ class _SubWorkflowExitOp(hook.Operation):
 
 class WorkflowHook(hook.Hook):
     __abstract__ = True
-    category = 'workflow'
+    category = 'metadata'
 
 
 class SetInitialStateHook(WorkflowHook):
@@ -160,21 +160,15 @@ class SetInitialStateHook(WorkflowHook):
         _SetInitialStateOp(self._cw, entity=self.entity)
 
 
-class PrepareStateChangeHook(WorkflowHook):
-    """record previous state information"""
-    __regid__ = 'cwdelstate'
-    __select__ = WorkflowHook.__select__ & hook.match_rtype('in_state')
-    events = ('before_delete_relation',)
-
-    def __call__(self):
-        self._cw.transaction_data.setdefault('pendingrelations', []).append(
-            (self.eidfrom, self.rtype, self.eidto))
-
-
 class FireTransitionHook(WorkflowHook):
-    """check the transition is allowed, add missing information. Expect that:
+    """check the transition is allowed and add missing information into the
+    TrInfo entity.
+
+    Expect that:
     * wf_info_for inlined relation is set
     * by_transition or to_state (managers only) inlined relation is set
+
+    Check for automatic transition to be fired at the end
     """
     __regid__ = 'wffiretransition'
     __select__ = WorkflowHook.__select__ & is_instance('TrInfo')
@@ -273,7 +267,7 @@ class FireTransitionHook(WorkflowHook):
 
 
 class FiredTransitionHook(WorkflowHook):
-    """change related entity state"""
+    """change related entity state and handle exit of subworkflow"""
     __regid__ = 'wffiretransition'
     __select__ = WorkflowHook.__select__ & is_instance('TrInfo')
     events = ('after_add_entity',)
@@ -296,6 +290,7 @@ class CheckInStateChangeAllowed(WorkflowHook):
     __regid__ = 'wfcheckinstate'
     __select__ = WorkflowHook.__select__ & hook.match_rtype('in_state')
     events = ('before_add_relation',)
+    category = 'integrity'
 
     def __call__(self):
         session = self._cw

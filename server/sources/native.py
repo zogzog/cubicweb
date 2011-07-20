@@ -313,9 +313,9 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             self.dbhelper.dbname = abspath(self.dbhelper.dbname)
             self.get_connection = lambda: ConnectionWrapper(self)
             self.check_connection = lambda cnx: cnx
-            def pool_reset(cnx):
+            def cnxset_freed(cnx):
                 cnx.close()
-            self.pool_reset = pool_reset
+            self.cnxset_freed = cnxset_freed
         if self.dbdriver == 'sqlite':
             self._create_eid = None
             self.create_eid = self._create_eid_sqlite
@@ -355,21 +355,21 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         """execute the query and return its result"""
         return self.process_result(self.doexec(session, sql, args))
 
-    def init_creating(self, pool=None):
+    def init_creating(self, cnxset=None):
         # check full text index availibility
         if self.do_fti:
-            if pool is None:
-                _pool = self.repo._get_pool()
-                _pool.pool_set()
+            if cnxset is None:
+                _cnxset = self.repo._get_cnxset()
+                _cnxset.cnxset_set()
             else:
-                _pool = pool
-            if not self.dbhelper.has_fti_table(_pool['system']):
+                _cnxset = cnxset
+            if not self.dbhelper.has_fti_table(_cnxset['system']):
                 if not self.repo.config.creating:
                     self.critical('no text index table')
                 self.do_fti = False
-            if pool is None:
-                _pool.pool_reset()
-                self.repo._free_pool(_pool)
+            if cnxset is None:
+                _cnxset.cnxset_freed()
+                self.repo._free_cnxset(_cnxset)
 
     def backup(self, backupfile, confirm, format='native'):
         """method called to create a backup of the source's data"""
@@ -377,25 +377,25 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             self.repo.fill_schema()
             self.set_schema(self.repo.schema)
             helper = DatabaseIndependentBackupRestore(self)
-            self.close_pool_connections()
+            self.close_source_connections()
             try:
                 helper.backup(backupfile)
             finally:
-                self.open_pool_connections()
+                self.open_source_connections()
         elif format == 'native':
-            self.close_pool_connections()
+            self.close_source_connections()
             try:
                 self.backup_to_file(backupfile, confirm)
             finally:
-                self.open_pool_connections()
+                self.open_source_connections()
         else:
             raise ValueError('Unknown format %r' % format)
 
 
     def restore(self, backupfile, confirm, drop, format='native'):
         """method called to restore a backup of source's data"""
-        if self.repo.config.open_connections_pools:
-            self.close_pool_connections()
+        if self.repo.config.init_cnxset_pool:
+            self.close_source_connections()
         try:
             if format == 'portable':
                 helper = DatabaseIndependentBackupRestore(self)
@@ -405,12 +405,16 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             else:
                 raise ValueError('Unknown format %r' % format)
         finally:
-            if self.repo.config.open_connections_pools:
-                self.open_pool_connections()
+            if self.repo.config.init_cnxset_pool:
+                self.open_source_connections()
 
 
     def init(self, activated, source_entity):
-        self.init_creating(source_entity._cw.pool)
+        self.init_creating(source_entity._cw.cnxset)
+        try:
+            source_entity._cw.system_sql('SELECT COUNT(asource) FROM entities')
+        except Exception, ex:
+            self.eid_type_source = self.eid_type_source_pre_131
 
     def shutdown(self):
         if self._eid_creation_cnx:
@@ -532,13 +536,13 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                 raise
             # FIXME: better detection of deconnection pb
             self.warning("trying to reconnect")
-            session.pool.reconnect(self)
+            session.cnxset.reconnect(self)
             cursor = self.doexec(session, sql, args)
         except (self.DbapiError,), exc:
             # We get this one with pyodbc and SQL Server when connection was reset
             if exc.args[0] == '08S01' and session.mode != 'write':
                 self.warning("trying to reconnect")
-                session.pool.reconnect(self)
+                session.cnxset.reconnect(self)
                 cursor = self.doexec(session, sql, args)
             else:
                 raise
@@ -585,7 +589,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             for table in temptables:
                 try:
                     self.doexec(session,'DROP TABLE %s' % table)
-                except:
+                except Exception:
                     pass
                 try:
                     del self._temp_table_data[table]
@@ -727,9 +731,9 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         """Execute a query.
         it's a function just so that it shows up in profiling
         """
-        cursor = session.pool[self.uri]
+        cursor = session.cnxset[self.uri]
         if server.DEBUG & server.DBG_SQL:
-            cnx = session.pool.connection(self.uri)
+            cnx = session.cnxset.connection(self.uri)
             # getattr to get the actual connection if cnx is a ConnectionWrapper
             # instance
             print 'exec', query, args, getattr(cnx, '_cnx', cnx)
@@ -744,7 +748,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                               query, args, ex.args[0])
             if rollback:
                 try:
-                    session.pool.connection(self.uri).rollback()
+                    session.cnxset.connection(self.uri).rollback()
                     if self.repo.config.mode != 'test':
                         self.critical('transaction has been rollbacked')
                 except Exception, ex:
@@ -773,7 +777,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         """
         if server.DEBUG & server.DBG_SQL:
             print 'execmany', query, 'with', len(args), 'arguments'
-        cursor = session.pool[self.uri]
+        cursor = session.cnxset[self.uri]
         try:
             # str(query) to avoid error if it's an unicode string
             cursor.executemany(str(query), args)
@@ -784,10 +788,10 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                 self.critical("sql many: %r\n args: %s\ndbms message: %r",
                               query, args, ex.args[0])
             try:
-                session.pool.connection(self.uri).rollback()
+                session.cnxset.connection(self.uri).rollback()
                 if self.repo.config.mode != 'test':
                     self.critical('transaction has been rollbacked')
-            except:
+            except Exception:
                 pass
             raise
 
@@ -802,7 +806,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             self.error("backend can't alter %s.%s to %s%s", table, column, coltype,
                        not allownull and 'NOT NULL' or '')
             return
-        self.dbhelper.change_col_type(LogCursor(session.pool[self.uri]),
+        self.dbhelper.change_col_type(LogCursor(session.cnxset[self.uri]),
                                       table, column, coltype, allownull)
         self.info('altered %s.%s: now %s%s', table, column, coltype,
                   not allownull and 'NOT NULL' or '')
@@ -817,7 +821,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             return
         table, column = rdef_table_column(rdef)
         coltype, allownull = rdef_physical_info(self.dbhelper, rdef)
-        self.dbhelper.set_null_allowed(LogCursor(session.pool[self.uri]),
+        self.dbhelper.set_null_allowed(LogCursor(session.cnxset[self.uri]),
                                        table, column, coltype, allownull)
 
     def update_rdef_indexed(self, session, rdef):
@@ -835,29 +839,49 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             self.drop_index(session, table, column, unique=True)
 
     def create_index(self, session, table, column, unique=False):
-        cursor = LogCursor(session.pool[self.uri])
+        cursor = LogCursor(session.cnxset[self.uri])
         self.dbhelper.create_index(cursor, table, column, unique)
 
     def drop_index(self, session, table, column, unique=False):
-        cursor = LogCursor(session.pool[self.uri])
+        cursor = LogCursor(session.cnxset[self.uri])
         self.dbhelper.drop_index(cursor, table, column, unique)
 
     # system source interface #################################################
 
-    def eid_type_source(self, session, eid):
-        """return a tuple (type, source, extid) for the entity with id <eid>"""
-        sql = 'SELECT type, source, extid FROM entities WHERE eid=%s' % eid
+    def _eid_type_source(self, session, eid, sql, _retry=True):
         try:
             res = self.doexec(session, sql).fetchone()
-        except:
-            assert session.pool, 'session has no pool set'
-            raise UnknownEid(eid)
-        if res is None:
-            raise UnknownEid(eid)
-        if res[-1] is not None:
+            if res is not None:
+                return res
+        except (self.OperationalError, self.InterfaceError):
+            if session.mode == 'read' and _retry:
+                self.warning("trying to reconnect (eid_type_source())")
+                session.cnxset.reconnect(self)
+                return self._eid_type_source(session, eid, sql, _retry=False)
+        except Exception:
+            assert session.cnxset, 'session has no connections set'
+            self.exception('failed to query entities table for eid %s', eid)
+        raise UnknownEid(eid)
+
+    def eid_type_source(self, session, eid):
+        """return a tuple (type, source, extid) for the entity with id <eid>"""
+        sql = 'SELECT type, source, extid, asource FROM entities WHERE eid=%s' % eid
+        res = self._eid_type_source(session, eid, sql)
+        if res[-2] is not None:
             if not isinstance(res, list):
                 res = list(res)
+            res[-2] = b64decode(res[-2])
+        return res
+
+    def eid_type_source_pre_131(self, session, eid):
+        """return a tuple (type, source, extid) for the entity with id <eid>"""
+        sql = 'SELECT type, source, extid FROM entities WHERE eid=%s' % eid
+        res = self._eid_type_source(session, eid, sql)
+        if not isinstance(res, list):
+            res = list(res)
+        if res[-1] is not None:
             res[-1] = b64decode(res[-1])
+        res.append(res[1])
         return res
 
     def extid2eid(self, session, source_uri, extid):
@@ -874,7 +898,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             result = cursor.fetchone()
             if result:
                 return result[0]
-        except:
+        except Exception:
             pass
         return None
 
@@ -929,7 +953,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                 return self._create_eid()
             else:
                 raise
-        except: # WTF?
+        except Exception: # WTF?
             cnx.rollback()
             self._eid_creation_cnx = None
             self.exception('create eid failed in an unforeseen way on SQL statement %s', sql)
@@ -946,7 +970,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             extid = b64encode(extid)
         uri = 'system' if source.copy_based_source else source.uri
         attrs = {'type': entity.__regid__, 'eid': entity.eid, 'extid': extid,
-                 'source': uri, 'mtime': datetime.now()}
+                 'source': uri, 'asource': source.uri, 'mtime': datetime.now()}
         self.doexec(session, self.sqlgen.insert('entities', attrs), attrs)
         # insert core relations: is, is_instance_of and cw_source
         try:
@@ -1127,7 +1151,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         important note: while undoing of a transaction, only hooks in the
         'integrity', 'activeintegrity' and 'undo' categories are called.
         """
-        # set mode so pool isn't released subsquently until commit/rollback
+        # set mode so connections set isn't released subsquently until commit/rollback
         session.mode = 'write'
         errors = []
         session.transaction_data['undoing_uuid'] = txuuid
@@ -1372,7 +1396,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
     def fti_unindex_entities(self, session, entities):
         """remove text content for entities from the full text index
         """
-        cursor = session.pool['system']
+        cursor = session.cnxset['system']
         cursor_unindex_object = self.dbhelper.cursor_unindex_object
         try:
             for entity in entities:
@@ -1385,7 +1409,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         """add text content of created/modified entities to the full text index
         """
         cursor_index_object = self.dbhelper.cursor_index_object
-        cursor = session.pool['system']
+        cursor = session.cnxset['system']
         try:
             # use cursor_index_object, not cursor_reindex_object since
             # unindexing done in the FTIndexEntityOp
@@ -1434,6 +1458,7 @@ CREATE TABLE entities (
   eid INTEGER PRIMARY KEY NOT NULL,
   type VARCHAR(64) NOT NULL,
   source VARCHAR(64) NOT NULL,
+  asource VARCHAR(64) NOT NULL,
   mtime %s NOT NULL,
   extid VARCHAR(256)
 );;

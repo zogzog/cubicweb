@@ -572,7 +572,7 @@ du :eid:`1:*ReST*`'''
         self.assertEqual(person.rest_path(), 'personne/doe')
         # ambiguity test
         person2 = req.create_entity('Personne', prenom=u'remi', nom=u'doe')
-        person.clear_all_caches()
+        person.cw_clear_all_caches()
         self.assertEqual(person.rest_path(), 'personne/eid/%s' % person.eid)
         self.assertEqual(person2.rest_path(), 'personne/eid/%s' % person2.eid)
         # unique attr with None value (wikiid in this case)
@@ -610,7 +610,9 @@ du :eid:`1:*ReST*`'''
         req = self.request()
         note = req.create_entity('Note', type=u'z')
         metainf = note.cw_metainformation()
-        self.assertEqual(metainf, {'source': {'type': 'native', 'uri': 'system'}, 'type': u'Note', 'extid': None})
+        self.assertEqual(metainf, {'source': {'type': 'native', 'uri': 'system',
+                                              'use-cwuri-as-url': False},
+                                   'type': u'Note', 'extid': None})
         self.assertEqual(note.absolute_url(), 'http://testing.fr/cubicweb/note/%s' % note.eid)
         metainf['source'] = metainf['source'].copy()
         metainf['source']['base-url']  = 'http://cubicweb2.com/'

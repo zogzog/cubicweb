@@ -31,7 +31,7 @@ from StringIO import StringIO
 from logilab.mtconverter import xml_escape, html_unescape
 from logilab.common.date import ustrftime
 
-from cubicweb.utils import json_dumps
+from cubicweb.utils import JSString, json_dumps
 
 
 def rql_for_eid(eid):
@@ -51,31 +51,65 @@ def eid_param(name, eid):
     assert eid is not None
     return '%s:%s' % (name, eid)
 
+def print_bytes(value, req, props, displaytime=True):
+    return u''
+
+def print_string(value, req, props, displaytime=True):
+    # don't translate empty value if you don't want strange results
+    if props is not None and value and props.get('internationalizable'):
+        return req._(value)
+    return value
+
+def print_date(value, req, props, displaytime=True):
+    return ustrftime(value, req.property_value('ui.date-format'))
+
+def print_time(value, req, props, displaytime=True):
+    return ustrftime(value, req.property_value('ui.time-format'))
+
+def print_tztime(value, req, props, displaytime=True):
+    return ustrftime(value, req.property_value('ui.time-format')) + u' UTC'
+
+def print_datetime(value, req, props, displaytime=True):
+    if displaytime:
+        return ustrftime(value, req.property_value('ui.datetime-format'))
+    return ustrftime(value, req.property_value('ui.date-format'))
+
+def print_tzdatetime(value, req, props, displaytime=True):
+    if displaytime:
+        return ustrftime(value, req.property_value('ui.datetime-format')) + u' UTC'
+    return ustrftime(value, req.property_value('ui.date-format'))
+
+def print_boolean(value, req, props, displaytime=True):
+    if value:
+        return req._('yes')
+    return req._('no')
+
+def print_float(value, req, props, displaytime=True):
+    return unicode(req.property_value('ui.float-format') % value)
+
+PRINTERS = {
+    'Bytes': print_bytes,
+    'String': print_string,
+    'Date': print_date,
+    'Time': print_time,
+    'TZTime': print_tztime,
+    'Datetime': print_datetime,
+    'TZDatetime': print_tzdatetime,
+    'Boolean': print_boolean,
+    'Float': print_float,
+    'Decimal': print_float,
+    # XXX Interval
+    }
+
 def printable_value(req, attrtype, value, props=None, displaytime=True):
     """return a displayable value (i.e. unicode string)"""
-    if value is None or attrtype == 'Bytes':
+    if value is None:
         return u''
-    if attrtype == 'String':
-        # don't translate empty value if you don't want strange results
-        if props is not None and value and props.get('internationalizable'):
-            return req._(value)
-        return value
-    if attrtype == 'Date':
-        return ustrftime(value, req.property_value('ui.date-format'))
-    if attrtype in ('Time', 'TZTime'):
-        return ustrftime(value, req.property_value('ui.time-format'))
-    if attrtype in ('Datetime', 'TZDatetime'):
-        if displaytime:
-            return ustrftime(value, req.property_value('ui.datetime-format'))
-        return ustrftime(value, req.property_value('ui.date-format'))
-    if attrtype == 'Boolean':
-        if value:
-            return req._('yes')
-        return req._('no')
-    if attrtype in ('Float', 'Decimal'):
-        value = req.property_value('ui.float-format') % value
-    # XXX Interval
-    return unicode(value)
+    try:
+        printer = PRINTERS[attrtype]
+    except KeyError:
+        return unicode(value)
+    return printer(value, req, props, displaytime)
 
 
 # text publishing #############################################################
@@ -275,16 +309,23 @@ class _JSCallArgs(_JSId):
         self.args = args
         self.parent = parent
     def __unicode__(self):
-        args = u','.join(json_dumps(arg) for arg in self.args)
+        args = []
+        for arg in self.args:
+            if isinstance(arg, JSString):
+                args.append(arg)
+            else:
+                args.append(json_dumps(arg))
         if self.parent:
-            return u'%s(%s)' % (self.parent, args)
-        return args
+            return u'%s(%s)' % (self.parent, ','.join(args))
+        return ','.join(args)
 
 class _JS(object):
     def __getattr__(self, attr):
         return _JSId(attr)
 
-"""magic object to return strings suitable to call some javascript function with
+js = _JS()
+js.__doc__ = """\
+magic object to return strings suitable to call some javascript function with
 the given arguments (which should be correctly typed).
 
 >>> str(js.pouet(1, "2"))
@@ -292,9 +333,10 @@ the given arguments (which should be correctly typed).
 >>> str(js.cw.pouet(1, "2"))
 'cw.pouet(1,"2")'
 >>> str(js.cw.pouet(1, "2").pouet(None))
-'cw.pouet(1,"2").pouet(null)')
+'cw.pouet(1,"2").pouet(null)'
+>>> str(js.cw.pouet(1, JSString("$")).pouet(None))
+'cw.pouet(1,$).pouet(null)'
 """
-js = _JS()
 
 def domid(string):
     """return a valid DOM id from a string (should also be usable in jQuery

@@ -311,6 +311,14 @@ class QuerierTC(BaseQuerierTC):
         seid = self.execute('State X WHERE X name "deactivated"')[0][0]
         rset = self.execute('Any U,L,S GROUPBY U,L,S WHERE X in_state S, U login L, S eid %s' % seid)
 
+    def test_select_groupby_funccall(self):
+        rset = self.execute('Any YEAR(CD), COUNT(X) GROUPBY YEAR(CD) WHERE X is CWUser, X creation_date CD')
+        self.assertListEqual(rset.rows, [[date.today().year, 2]])
+
+    def test_select_groupby_colnumber(self):
+        rset = self.execute('Any YEAR(CD), COUNT(X) GROUPBY 1 WHERE X is CWUser, X creation_date CD')
+        self.assertListEqual(rset.rows, [[date.today().year, 2]])
+
     def test_select_complex_orderby(self):
         rset1 = self.execute('Any N ORDERBY N WHERE X name N')
         self.assertEqual(sorted(rset1.rows), rset1.rows)
@@ -442,6 +450,15 @@ class QuerierTC(BaseQuerierTC):
             self.assertEqual(len(rset.rows), 1)
             self.assertEqual(rset.rows[0][0], result)
             self.assertEqual(rset.description, [('Int',)])
+
+    def test_regexp_based_pattern_matching(self):
+        peid1 = self.execute("INSERT Personne X: X nom 'bidule'")[0][0]
+        peid2 = self.execute("INSERT Personne X: X nom 'cidule'")[0][0]
+        rset = self.execute('Any X WHERE X is Personne, X nom REGEXP "^b"')
+        self.assertEqual(len(rset.rows), 1, rset.rows)
+        self.assertEqual(rset.rows[0][0], peid1)
+        rset = self.execute('Any X WHERE X is Personne, X nom REGEXP "idu"')
+        self.assertEqual(len(rset.rows), 2, rset.rows)
 
     def test_select_aggregat_count(self):
         rset = self.execute('Any COUNT(X)')
@@ -768,7 +785,7 @@ class QuerierTC(BaseQuerierTC):
     def test_select_boolean(self):
         rset = self.execute('Any N WHERE X is CWEType, X name N, X final %(val)s',
                             {'val': True})
-        self.assertEqual(sorted(r[0] for r in rset.rows), ['Boolean', 'Bytes',
+        self.assertEqual(sorted(r[0] for r in rset.rows), ['BigInt', 'Boolean', 'Bytes',
                                                            'Date', 'Datetime',
                                                            'Decimal', 'Float',
                                                            'Int', 'Interval',
@@ -776,7 +793,7 @@ class QuerierTC(BaseQuerierTC):
                                                            'TZDatetime', 'TZTime',
                                                            'Time'])
         rset = self.execute('Any N WHERE X is CWEType, X name N, X final TRUE')
-        self.assertEqual(sorted(r[0] for r in rset.rows), ['Boolean', 'Bytes',
+        self.assertEqual(sorted(r[0] for r in rset.rows), ['BigInt', 'Boolean', 'Bytes',
                                                            'Date', 'Datetime',
                                                            'Decimal', 'Float',
                                                            'Int', 'Interval',
@@ -1099,7 +1116,7 @@ Any P1,B,E WHERE P1 identity P2 WITH
         #'INSERT Email X: X messageid "<1234>", X subject "test", X sender Y, X recipients Y'
         eeid, = self.o.execute(s, 'INSERT Email X: X messageid "<1234>", X subject "test", X sender Y, X recipients Y WHERE Y is EmailAddress')[0]
         self.o.execute(s, "DELETE Email X")
-        sqlc = s.pool['system']
+        sqlc = s.cnxset['system']
         sqlc.execute('SELECT * FROM recipients_relation')
         self.assertEqual(len(sqlc.fetchall()), 0)
         sqlc.execute('SELECT * FROM owned_by_relation WHERE eid_from=%s'%eeid)
@@ -1212,7 +1229,7 @@ Any P1,B,E WHERE P1 identity P2 WITH
         self.assertEqual(rset.description, [('CWUser',)])
         self.assertRaises(Unauthorized,
                           self.execute, "Any P WHERE X is CWUser, X login 'bob', X upassword P")
-        cursor = self.pool['system']
+        cursor = self.cnxset['system']
         cursor.execute("SELECT %supassword from %sCWUser WHERE %slogin='bob'"
                        % (SQL_PREFIX, SQL_PREFIX, SQL_PREFIX))
         passwd = str(cursor.fetchone()[0])
@@ -1227,7 +1244,7 @@ Any P1,B,E WHERE P1 identity P2 WITH
         self.assertEqual(rset.description[0][0], 'CWUser')
         rset = self.execute("SET X upassword %(pwd)s WHERE X is CWUser, X login 'bob'",
                             {'pwd': 'tutu'})
-        cursor = self.pool['system']
+        cursor = self.cnxset['system']
         cursor.execute("SELECT %supassword from %sCWUser WHERE %slogin='bob'"
                        % (SQL_PREFIX, SQL_PREFIX, SQL_PREFIX))
         passwd = str(cursor.fetchone()[0])

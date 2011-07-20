@@ -221,7 +221,7 @@ class SecurityTC(BaseSecurityTC):
         rset = cu.execute('Personne P')
         self.assertEqual(len(rset), 1)
         ent = rset.get_entity(0, 0)
-        session.set_pool() # necessary
+        session.set_cnxset() # necessary
         self.assertRaises(Unauthorized, ent.cw_check_perm, 'update')
         self.assertRaises(Unauthorized,
                           cu.execute, "SET P travaille S WHERE P is Personne, S is Societe")
@@ -579,7 +579,7 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
         cnx = self.login('iaminusersgrouponly')
         session = self.session
         # needed to avoid check_perm error
-        session.set_pool()
+        session.set_cnxset()
         # needed to remove rql expr granting update perm to the user
         affaire_perms = self.schema['Affaire'].permissions.copy()
         self.schema['Affaire'].set_action_permissions('update', self.schema['Affaire'].get_groups('update'))

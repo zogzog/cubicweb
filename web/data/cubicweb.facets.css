@@ -109,11 +109,25 @@ div#filterboxTitle {
 div#facetLoading {
   display: none;
   position: fixed;
-  padding-left: 20px;
+  background: #f2f2f2;
   top: 400px;
   width: 200px;
-  height: 100px;
+  padding: 1em;
   font-size:      120%;
   font-weight:    bold;
   text-align:     center;
+}
+
+div.facetTitleSelected {
+  background: url("required.png") no-repeat right top;
+}
+
+table.filter {
+  background-color: #EBE8D9;
+  border: dotted grey 1px;
+}
+
+div.facet {
+ padding: none;
+ margin: .3em!important;
 }

@@ -120,6 +120,19 @@ img {
   border: none;
 }
 
+
+img.prevnext {
+  width: 22px;
+  height: 22px;
+}
+
+img.prevnext_nogo {
+  width: 22px;
+  height: 22px;
+  filter:alpha(opacity=25); /* IE */
+  opacity:.25;
+}
+
 fieldset {
   border: none;
 }
@@ -806,21 +819,29 @@ table.listing textarea {
  background: %(listingHihligthedBgColor)s;
 }
 
-table.htableForm {
+table.htableForm label, table.oneRowTableForm label {
   vertical-align: middle;
 }
-
-table.htableForm td{
+table.htableForm td {
   padding-left: 1em;
   padding-top: 0.5em;
 }
-table.htableForm th{
+table.htableForm th {
   padding-left: 1em;
 }
 table.htableForm .validateButton {
   margin-right: 0.2em;
-  vertical-align: top;
-  margin-bottom: 0.2em; /* because vertical-align doesn't seems to have any effect */
+  margin-bottom: 0.2em;
+}
+
+table.oneRowTableForm td {
+  padding-left: 0.5em;
+}
+table.oneRowTableForm th {
+  padding-left: 1em;
+}
+table.oneRowTableForm .validateButton {
+  margin: 0 0 0 1em ;
 }
 
 

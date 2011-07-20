@@ -27,7 +27,7 @@ synchronization with the directory.
 Credential checks are _always_ done against the LDAP server.
 
 The base functionality for this is in
-cubicweb/server/sources/ldapuser.py.
+:file:`cubicweb/server/sources/ldapuser.py`.
 
 Configurations options
 ----------------------
@@ -39,14 +39,14 @@ information, LDAP source internal configuration).
 
 LDAP server connection options:
 
-* host: may contain port information using <host>:<port> notation.
-* protocol (choices are ldap, ldaps, ldapi)
-* auth-mode (choices are simple, cram_md5, digest_md5, gssapi, support
+* `host`, may contain port information using <host>:<port> notation.
+* `protocol`, choices are ldap, ldaps, ldapi
+* `auth-mode`, (choices are simple, cram_md5, digest_md5, gssapi, support
   for the later being partial as of now)
-* auth-realm, realm to use when using gssapi/kerberos authentication
-* data-cnx-dn, user dn to use to open data connection to the ldap (eg
+* `auth-realm`, realm to use when using gssapi/kerberos authentication
+* `data-cnx-dn`, user dn to use to open data connection to the ldap (eg
   used to respond to rql queries)
-* data-cnx-password, password to use to open data connection to the
+* `data-cnx-password`, password to use to open data connection to the
   ldap (eg used to respond to rql queries)
 
 If the LDAP server accepts anonymous binds, then it is possible to
@@ -55,16 +55,30 @@ unlikely in practice.
 
 LDAP schema mapping:
 
-* user-base-dn, base DN to lookup for users
-* user-scope, user search scope
-* user-classes, classes of user
-* user-attrs-map, map from ldap user attributes to cubicweb attributes
-* user-login-attr, attribute used as login on authentication
+* `user-base-dn`, base DN to lookup for users
+* `user-scope`, user search scope
+* `user-classes`, classes of user
+* `user-attrs-map`, map from ldap user attributes to cubicweb attributes
+* `user-login-attr`, attribute used as login on authentication
 
 LDAP source internal configuration:
 
-* user-default-group, name of a group in which ldap users will be by
+* `user-default-group`, name of a group in which ldap users will be by
   default. You can set multiple groups by separating them by a comma
-* synchronization-interval, interval between synchronization with the
+* `synchronization-interval`, interval between synchronization with the
   ldap directory in seconds (default to once a day)
-* life time of query cache in minutes (default to two hours).
+* `cache-life-time`, life time of query cache in minutes (default to two hours).
+
+Other notes
+-----------
+
+* Yes, cubicweb is able to start if ldap cannot be reached, even on c-c start,
+  though that will slow down the instance, since it will indefinitly attempt
+  to connect to the ldap on each query on users.
+
+* Changing the name of the ldap server in your script is fine, changing the base
+  DN isn't since it's used to identify already known users from others
+
+* You can use the :class:`CWSourceHostConfig` to have variants for a source
+  configuration according to the host the instance is running on. To do so go on
+  the source's view from the sources management view.
