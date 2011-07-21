@@ -196,6 +196,16 @@ class ChangeEntitySourceAddHook(MetaDataHook):
             # copy entity if necessary
             if not oldsource.repo_source.copy_based_source:
                 entity.complete(skip_bytes=False)
+                if not entity.creation_date:
+                    entity.cw_attr_cache['creation_date'] = datetime.now()
+                if not entity.modification_date:
+                    entity.cw_attr_cache['modification_date'] = datetime.now()
+                entity.cw_attr_cache['cwuri'] = u'%s%s' % (self._cw.base_url(), entity.eid)
+                for rschema, attrschema in entity.e_schema.attribute_definitions():
+                    if attrschema == 'Password' and \
+                       rschema.rdef(entity.e_schema, attrschema).cardinality[0] == '1':
+                        from logilab.common.shellutils import generate_password
+                        entity.cw_attr_cache[rschema.type] = generate_password()
                 entity.cw_edited = EditedEntity(entity, **entity.cw_attr_cache)
                 syssource.add_entity(self._cw, entity)
             # we don't want the moved entity to be reimported later.  To
@@ -205,9 +215,8 @@ class ChangeEntitySourceAddHook(MetaDataHook):
             # source='system'. External source will then have consider case
             # where `extid2eid` return a negative eid as 'this entity was known
             # but has been moved, ignore it'.
-            self._cw.system_sql('UPDATE entities SET eid=-eid,source=%(source)s '
-                                'WHERE eid=%(eid)s',
-                                {'eid': self.eidfrom, 'source': newsource.name})
+            self._cw.system_sql('UPDATE entities SET eid=-eid WHERE eid=%(eid)s',
+                                {'eid': self.eidfrom})
             attrs = {'type': entity.__regid__, 'eid': entity.eid, 'extid': None,
                      'source': 'system', 'asource': 'system',
                      'mtime': datetime.now()}

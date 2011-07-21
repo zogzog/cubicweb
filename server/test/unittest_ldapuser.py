@@ -379,9 +379,11 @@ class LDAPUserSourceTC(CubicWebTC):
         self.assertEqual(rset.rows, [[None]])
 
     def test_copy_to_system_source(self):
+        source = self.repo.sources_by_uri['ldapuser']
         eid = self.sexecute('CWUser X WHERE X login %(login)s', {'login': SYT})[0][0]
         self.sexecute('SET X cw_source S WHERE X eid %(x)s, S name "system"', {'x': eid})
         self.commit()
+        source.reset_caches()
         rset = self.sexecute('CWUser X WHERE X login %(login)s', {'login': SYT})
         self.assertEqual(len(rset), 1)
         e = rset.get_entity(0, 0)
@@ -390,7 +392,9 @@ class LDAPUserSourceTC(CubicWebTC):
                                                   'type': 'CWUser',
                                                   'extid': None})
         self.assertEqual(e.cw_source[0].name, 'system')
-        source = self.repo.sources_by_uri['ldapuser']
+        self.failUnless(e.creation_date)
+        self.failUnless(e.modification_date)
+        # XXX test some password has been set
         source.synchronize()
         rset = self.sexecute('CWUser X WHERE X login %(login)s', {'login': SYT})
         self.assertEqual(len(rset), 1)
