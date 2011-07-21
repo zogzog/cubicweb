@@ -127,16 +127,16 @@ class ManageView(StartupView):
         for etype in self.add_etype_links:
             eschema = self._cw.vreg.schema.eschema(etype)
             if eschema.has_perm(self._cw, 'add'):
+                url = self._cw.vreg["etypes"].etype_class(etype).cw_create_url(self._cw)
                 self.w(u'<li><a href="%s">%s</a></li>' % (
-                        self._cw.build_url('add/%s' % eschema),
-                        self._cw.__('add a %s' % eschema).capitalize()))
+                        url, self._cw.__('New %s' % eschema).capitalize()))
         self.w(u'</ul>')
 
     def add_entity_link(self, etype):
         """creates a [+] link for adding an entity"""
         url = self._cw.vreg["etypes"].etype_class(etype).cw_create_url(self._cw)
         return u'[<a href="%s" title="%s">+</a>]' % (
-            xml_escape(url), self._cw.__('add a %s' % etype))
+            xml_escape(url), self._cw.__('New %s' % etype))
 
     @deprecated('[3.11] display_folders method is deprecated, backport it if needed')
     def display_folders(self):
