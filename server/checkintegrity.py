@@ -286,7 +286,7 @@ def check_mandatory_relations(schema, session, eids, fix=1):
                         entity.__regid__, entity.eid, role, rschema)
                     if fix:
                         #if entity.cw_describe()['source']['uri'] == 'system': XXX
-                        entity.delete()
+                        entity.cw_delete()
                     notify_fixed(fix)
 
 
@@ -306,7 +306,7 @@ def check_mandatory_attributes(schema, session, eids, fix=1):
                     print >> sys.stderr, '%s #%s is missing mandatory attribute %s' % (
                         entity.__regid__, entity.eid, rschema)
                     if fix:
-                        entity.delete()
+                        entity.cw_delete()
                     notify_fixed(fix)
 
 
