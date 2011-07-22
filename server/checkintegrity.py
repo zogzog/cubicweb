@@ -188,6 +188,18 @@ def check_entities(schema, session, eids, fix=1):
             if fix:
                 session.system_sql('DELETE FROM entities WHERE eid=%s;' % eid)
             notify_fixed(fix)
+    session.system_sql('INSERT INTO cw_source_relation (eid_from, eid_to) '
+                       'SELECT e.eid, s.cw_eid FROM entities as e, cw_CWSource as s '
+                       'WHERE s.cw_name=e.asource AND NOT EXISTS(SELECT 1 FROM cw_source_relation as cs '
+                       '  WHERE cs.eid_from=e.eid AND cs.eid_to=s.cw_eid)')
+    session.system_sql('INSERT INTO is_relation (eid_from, eid_to) '
+                       'SELECT e.eid, s.cw_eid FROM entities as e, cw_CWEType as s '
+                       'WHERE s.cw_name=e.type AND NOT EXISTS(SELECT 1 FROM is_relation as cs '
+                       '  WHERE cs.eid_from=e.eid AND cs.eid_to=s.cw_eid)')
+    session.system_sql('INSERT INTO is_instance_of_relation (eid_from, eid_to) '
+                       'SELECT e.eid, s.cw_eid FROM entities as e, cw_CWEType as s '
+                       'WHERE s.cw_name=e.type AND NOT EXISTS(SELECT 1 FROM is_instance_of_relation as cs '
+                       '  WHERE cs.eid_from=e.eid AND cs.eid_to=s.cw_eid)')
     print 'Checking entities tables'
     for eschema in schema.entities():
         if eschema.final:
