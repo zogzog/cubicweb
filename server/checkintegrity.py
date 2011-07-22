@@ -344,7 +344,7 @@ def check(repo, cnx, checks, reindex, fix, withpb=True):
     # yo, launch checks
     if checks:
         eids_cache = {}
-        with security_enabled(session, read=False): # ensure no read security
+        with security_enabled(session, read=False, write=False): # ensure no read security
             for check in checks:
                 check_func = globals()['check_%s' % check]
                 check_func(repo.schema, session, eids_cache, fix=fix)
