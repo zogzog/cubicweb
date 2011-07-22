@@ -333,22 +333,6 @@ def check_metadata(schema, session, eids, fix=1):
                                        % (table, column, eidcolumn, eid),
                                        {'v': default})
                 notify_fixed(fix)
-    cursor = session.system_sql('SELECT MIN(%s) FROM %sCWUser;' % (eidcolumn,
-                                                                  SQL_PREFIX))
-    default_user_eid = cursor.fetchone()[0]
-    assert default_user_eid is not None, 'no user defined !'
-    for rel, default in ( ('owned_by', default_user_eid), ):
-        cursor = session.system_sql("SELECT eid, type FROM entities "
-                                    "WHERE source='system' AND NOT EXISTS "
-                                    "(SELECT 1 FROM %s_relation WHERE eid_from=eid);"
-                                    % rel)
-        for eid, etype in cursor.fetchall():
-            msg = '  %s with eid %s has no %s relation'
-            print >> sys.stderr, msg % (etype, eid, rel),
-            if fix:
-                session.system_sql('INSERT INTO %s_relation VALUES (%s, %s) ;'
-                                   % (rel, eid, default))
-            notify_fixed(fix)
 
 
 def check(repo, cnx, checks, reindex, fix, withpb=True):
