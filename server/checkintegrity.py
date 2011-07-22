@@ -283,7 +283,7 @@ def check_mandatory_relations(schema, session, eids, fix=1):
                     rql = 'Any X WHERE NOT Y %s X, X is %s' % (rschema, etype)
                 for entity in session.execute(rql).entities():
                     print >> sys.stderr, '%s #%s is missing mandatory %s relation %s' % (
-                        entity.__regid__, entity.eid, role, rschema)
+                        entity.__regid__, entity.eid, role, rschema),
                     if fix:
                         #if entity.cw_describe()['source']['uri'] == 'system': XXX
                         entity.cw_delete()
@@ -304,7 +304,7 @@ def check_mandatory_attributes(schema, session, eids, fix=1):
                     rschema, rdef.subject)
                 for entity in session.execute(rql).entities():
                     print >> sys.stderr, '%s #%s is missing mandatory attribute %s' % (
-                        entity.__regid__, entity.eid, rschema)
+                        entity.__regid__, entity.eid, rschema),
                     if fix:
                         entity.cw_delete()
                     notify_fixed(fix)
