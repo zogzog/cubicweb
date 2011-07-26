@@ -1235,6 +1235,7 @@ def register_stored_procedures():
 
     class LIMIT_SIZE(FunctionDescr):
         supported_backends = ('postgres', 'sqlite',)
+        minargs = maxargs = 3
         rtype = 'String'
 
         def st_description(self, funcnode, mainindex, tr):
@@ -1245,6 +1246,7 @@ def register_stored_procedures():
 
     class TEXT_LIMIT_SIZE(LIMIT_SIZE):
         supported_backends = ('mysql', 'postgres', 'sqlite',)
+        minargs = maxargs = 2
 
     register_function(TEXT_LIMIT_SIZE)
 
