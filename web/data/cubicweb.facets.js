@@ -23,15 +23,24 @@ function facetFormContent($form) {
     var values = [];
     $form.find('.facet').each(function() {
         var facetName = jQuery(this).find('.facetTitle').attr('cubicweb:facetName');
-        var facetValues = jQuery(this).find('.facetValueSelected').each(function(x) {
+        // FacetVocabularyWidget
+        jQuery(this).find('.facetValueSelected').each(function(x) {
             names.push(facetName);
             values.push(this.getAttribute('cubicweb:value'));
         });
+        // FacetStringWidget (e.g. has-text)
+        jQuery(this).find('input:text').each(function(){
+            names.push(facetName);
+            values.push(this.value);
+        });
     });
-    $form.find('input').each(function() {
+    // pick up hidden inputs (required metadata inputs such as 'facets'
+    // but also RangeWidgets)
+    $form.find('input:hidden').each(function() {
         names.push(this.name);
         values.push(this.value);
     });
+    // And / Or operators
     $form.find('select option[selected]').each(function() {
         names.push(this.parentNode.name);
         values.push(this.value);
@@ -94,7 +103,7 @@ function buildRQL(divid, vid, paginate, vidargs) {
                 },
                 'ctxcomponents', 'edit_box'));
             }
-            $node = jQuery('#breadcrumbs')
+            $node = jQuery('#breadcrumbs');
             if ($node.length) {
                 $node.loadxhtml('json', ajaxFuncArgs('render', {
                     'rql': rql
