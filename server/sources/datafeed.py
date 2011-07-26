@@ -268,8 +268,11 @@ class DataFeedParser(AppObject):
         # if cwsource is specified and repository has a source with the same
         # name, call extid2eid on that source so entity will be properly seen as
         # coming from this source
-        source = session.repo.sources_by_uri.get(
-            sourceparams.pop('cwsource', None), self.source)
+        source_uri = sourceparams.pop('cwsource', None)
+        if source_uri is not None and source_uri != 'system':
+            source = session.repo.sources_by_uri.get(source_uri, self.source)
+        else:
+            source = self.source
         sourceparams['parser'] = self
         try:
             eid = session.repo.extid2eid(source, str(uri), etype, session,

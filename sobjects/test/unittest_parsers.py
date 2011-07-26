@@ -40,7 +40,7 @@ def tearDownModule():
 
 BASEXML = ''.join(u'''
 <rset size="1">
- <CWUser eid="5" cwuri="http://pouet.org/5">
+ <CWUser eid="5" cwuri="http://pouet.org/5" cwsource="system">
   <login>sthenault</login>
   <upassword>toto</upassword>
   <last_login_time>2011-01-25 14:14:06</last_login_time>
@@ -117,7 +117,12 @@ OTHERXML = ''.join(u'''
 </rset>
 '''.splitlines()
 )
+
+
 class CWEntityXMLParserTC(CubicWebTC):
+    """/!\ this test use a pre-setup database /!\, if you modify above xml,
+    REMOVE THE DATABASE TEMPLATE else it won't be considered
+    """
     test_db_id = 'xmlparser'
     @classmethod
     def pre_setup_database(cls, session, config):
