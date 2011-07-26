@@ -220,9 +220,6 @@ class DataFeedSource(AbstractSource):
         entity.cw_edited['cwuri'] = unicode(lid)
         entity.cw_edited.set_defaults()
         sourceparams['parser'].before_entity_copy(entity, sourceparams)
-        # avoid query to search full-text indexed attributes
-        for attr in entity.e_schema.indexable_attributes():
-            entity.cw_edited.setdefault(attr, u'')
         return entity
 
     def after_entity_insertion(self, session, lid, entity, sourceparams):
@@ -276,7 +273,8 @@ class DataFeedParser(AppObject):
         sourceparams['parser'] = self
         try:
             eid = session.repo.extid2eid(source, str(uri), etype, session,
-                                   sourceparams=sourceparams)
+                                         complete=False,
+                                         sourceparams=sourceparams)
         except ValidationError, ex:
             self.source.error('error while creating %s: %s', etype, ex)
             return None

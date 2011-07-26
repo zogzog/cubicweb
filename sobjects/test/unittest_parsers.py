@@ -256,6 +256,18 @@ class CWEntityXMLParserTC(CubicWebTC):
         self.assertEqual(user.cwuri, 'http://pouet.org/5')
         self.assertEqual(user.cw_source[0].name, 'myfeed')
 
+    def test_missing_fti_attribute(self):
+        dfsource = self.repo.sources_by_uri['myfeed']
+        session = self.repo.internal_session()
+        parser = dfsource._get_parser(session)
+        dfsource.process_urls(parser, ['''
+<rset size="1">
+ <Card eid="50" cwuri="http://pouet.org/50" cwsource="system">
+  <title>how-to</title>
+ </Card>
+</rset>
+'''], raise_on_error=True)
+
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main
     unittest_main()

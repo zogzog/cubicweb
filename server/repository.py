@@ -1030,7 +1030,7 @@ class Repository(object):
         return extid
 
     def extid2eid(self, source, extid, etype, session=None, insert=True,
-                  sourceparams=None):
+                  complete=True, sourceparams=None):
         """Return eid from a local id. If the eid is a negative integer, that
         means the entity is known but has been copied back to the system source
         hence should be ignored.
@@ -1089,8 +1089,7 @@ class Repository(object):
                 session, extid, etype, eid, sourceparams)
             if source.should_call_hooks:
                 self.hm.call_hooks('before_add_entity', session, entity=entity)
-            # XXX call add_info with complete=False ?
-            self.add_info(session, entity, source, extid)
+            self.add_info(session, entity, source, extid, complete=complete)
             source.after_entity_insertion(session, extid, entity, sourceparams)
             if source.should_call_hooks:
                 self.hm.call_hooks('after_add_entity', session, entity=entity)
