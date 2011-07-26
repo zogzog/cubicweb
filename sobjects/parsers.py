@@ -247,7 +247,7 @@ class CWEntityXMLParser(datafeed.DataFeedXMLParser):
             except ValueError:
                 return url + '?' + self._cw.build_url_params(**params)
             try:
-                etype = self._cw.vreg.case_insensitive_etypes[etype]
+                etype = self._cw.vreg.case_insensitive_etypes[etype.lower()]
             except KeyError:
                 return url + '?' + self._cw.build_url_params(**params)
         if add_relations:
