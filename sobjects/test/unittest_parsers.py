@@ -144,6 +144,10 @@ class CWEntityXMLParserTC(CubicWebTC):
                          'http://www.cubicweb.org/cwuser?relation=tags-object&relation=in_group-subject&relation=in_state-subject&relation=use_email-subject&vid=xml')
         self.assertEqual(parser.complete_url('http://www.cubicweb.org/cwuser?vid=rdf&relation=hop'),
                          'http://www.cubicweb.org/cwuser?relation=hop&relation=tags-object&relation=in_group-subject&relation=in_state-subject&relation=use_email-subject&vid=rdf')
+        self.assertEqual(parser.complete_url('http://www.cubicweb.org/?rql=cwuser&vid=rdf&relation=hop'),
+                         'http://www.cubicweb.org/?rql=cwuser&relation=hop&vid=rdf')
+        self.assertEqual(parser.complete_url('http://www.cubicweb.org/?rql=cwuser&relation=hop'),
+                         'http://www.cubicweb.org/?rql=cwuser&relation=hop&vid=xml')
 
 
     def test_actions(self):
