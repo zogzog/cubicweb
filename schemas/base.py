@@ -324,8 +324,9 @@ class CWSourceSchemaConfig(EntityType):
         'CWSource', inlined=True, cardinality='1*', composite='object',
         __permissions__=RELATION_MANAGERS_PERMISSIONS)
     cw_schema = SubjectRelation(
-        ('CWEType', 'CWRType', 'CWAttribute', 'CWRelation'),
+        ('CWEType', 'CWRType', 'CWRelation'),
         inlined=True, cardinality='1*', composite='object',
+        constraints=[RQLConstraint('NOT O final TRUE')],
         __permissions__=RELATION_MANAGERS_PERMISSIONS)
     options = String(description=_('allowed options depends on the source type'))
 
