@@ -19,7 +19,7 @@
 
 """
 import os
-import pwd
+import sys
 
 from logilab.common.pytest import PyTester
 
@@ -28,6 +28,9 @@ def getlogin():
     (man 3 getlogin)
     Another solution would be to use $LOGNAME, $USER or $USERNAME
     """
+    if sys.platform == 'win32':
+        return os.environ.get('USERNAME') or 'cubicweb'
+    import pwd
     return pwd.getpwuid(os.getuid())[0]
 
 
