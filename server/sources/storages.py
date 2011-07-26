@@ -148,6 +148,7 @@ class BytesFileSystemStorage(Storage):
             # We do not need to create it but we need to fetch the content of
             # the file as the actual content of the attribute
             fpath = entity.cw_edited[attr].getvalue()
+            assert fpath is not None
             binary = Binary(file(fpath, 'rb').read())
         else:
             # We must store the content of the attributes
@@ -160,17 +161,23 @@ class BytesFileSystemStorage(Storage):
             #
             # fetch the current attribute value in memory
             binary = entity.cw_edited.pop(attr)
-            # Get filename for it
-            fpath = self.new_fs_path(entity, attr)
-            assert not osp.exists(fpath)
-            # write attribute value on disk
-            file(fpath, 'wb').write(binary.getvalue())
-            # Mark the new file as added during the transaction.
-            # The file will be removed on rollback
-            AddFileOp.get_instance(entity._cw).add_data(fpath)
+            if binary is None:
+                fpath = None
+            else:
+                # Get filename for it
+                fpath = self.new_fs_path(entity, attr)
+                assert not osp.exists(fpath)
+                # write attribute value on disk
+                file(fpath, 'wb').write(binary.getvalue())
+                # Mark the new file as added during the transaction.
+                # The file will be removed on rollback
+                AddFileOp.get_instance(entity._cw).add_data(fpath)
         if oldpath != fpath:
             # register the new location for the file.
-            entity.cw_edited.edited_attribute(attr, Binary(fpath))
+            if fpath is None:
+                entity.cw_edited.edited_attribute(attr, None)
+            else:
+                entity.cw_edited.edited_attribute(attr, Binary(fpath))
             # Mark the old file as useless so the file will be removed at
             # commit.
             if oldpath is not None:

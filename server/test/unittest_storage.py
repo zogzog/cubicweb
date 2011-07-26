@@ -58,6 +58,7 @@ class StorageTC(CubicWebTC):
         self.tempdir = tempfile.mkdtemp()
         bfs_storage = storages.BytesFileSystemStorage(self.tempdir)
         storages.set_attribute_storage(self.repo, 'File', 'data', bfs_storage)
+        storages.set_attribute_storage(self.repo, 'BFSSTestable', 'opt_attr', bfs_storage)
 
     def tearDown(self):
         super(StorageTC, self).tearDown()
@@ -255,6 +256,14 @@ class StorageTC(CubicWebTC):
         self.assertEqual(osp.splitext(new_path)[1], '.txt')
         self.assertEqual(old_path, new_path)
         self.assertEqual(old_data, new_data)
+
+    @tag('update', 'NULL')
+    def test_bfss_update_to_None(self):
+        f = self.session.create_entity('BFSSTestable', opt_attr=Binary('toto'))
+        self.session.commit()
+        self.session.set_pool()
+        f.set_attributes(opt_attr=None)
+        self.session.commit()
 
     @tag('fs_importing', 'update')
     def test_bfss_update_with_fs_importing(self):

@@ -18,11 +18,14 @@
 
 from yams.buildobjs import (EntityType, RelationType, RelationDefinition,
                             SubjectRelation, RichString, String, Int, Float,
-                            Boolean, Datetime, TZDatetime)
+                            Boolean, Datetime, TZDatetime, Bytes)
 from yams.constraints import SizeConstraint
 from cubicweb.schema import (WorkflowableEntityType,
                              RQLConstraint, RQLUniqueConstraint,
                              ERQLExpression, RRQLExpression)
+
+class BFSSTestable(EntityType):
+    opt_attr = Bytes()
 
 class Affaire(WorkflowableEntityType):
     __permissions__ = {
