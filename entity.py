@@ -96,11 +96,12 @@ class Entity(AppObject):
                     If None is specified, the first non-meta attribute will
                     be used
 
-    :type skip_copy_for: list
-    :cvar skip_copy_for: a list of relations that should be skipped when copying
-                         this kind of entity. Note that some relations such
-                         as composite relations or relations that have '?1' as object
-                         cardinality are always skipped.
+    :type cw_skip_copy_for: list
+    :cvar cw_skip_copy_for: a list of couples (rtype, role) for each relation
+                            that should be skipped when copying
+                            this kind of entity. Note that some relations such
+                            as composite relations or relations that have '?1' as object
+                            cardinality are always skipped.
     """
     __registry__ = 'etypes'
     __select__ = yes()
@@ -108,7 +109,8 @@ class Entity(AppObject):
     # class attributes that must be set in class definition
     rest_attr = None
     fetch_attrs = None
-    skip_copy_for = ('in_state',) # XXX turn into a set
+    skip_copy_for = () # bw compat (< 3.14), use cw_skip_copy_for instead
+    cw_skip_copy_for = [('in_state', 'subject')]
     # class attributes set automatically at registration time
     e_schema = None
 
@@ -542,13 +544,22 @@ class Entity(AppObject):
         """
         assert self.has_eid()
         execute = self._cw.execute
+        skip_copy_for = {'subject': set(), 'object': set()}
+        for rtype in self.skip_copy_for:
+            skip_copy_for['subject'].add(rtype)
+            warn('[3.14] skip_copy_for on entity classes (%s) is deprecated, '
+                 'use cw_skip_for instead with list of couples (rtype, role)' % self.__regid__,
+                 DeprecationWarning)
+        for rtype, role in self.cw_skip_copy_for:
+            assert role in ('subject', 'object'), role
+            skip_copy_for[role].add(rtype)
         for rschema in self.e_schema.subject_relations():
             if rschema.final or rschema.meta:
                 continue
             # skip already defined relations
             if getattr(self, rschema.type):
                 continue
-            if rschema.type in self.skip_copy_for:
+            if rschema.type in skip_copy_for['subject']:
                 continue
             # skip composite relation
             rdef = self.e_schema.rdef(rschema)
@@ -567,6 +578,8 @@ class Entity(AppObject):
                 continue
             # skip already defined relations
             if self.related(rschema.type, 'object'):
+                continue
+            if rschema.type in skip_copy_for['object']:
                 continue
             rdef = self.e_schema.rdef(rschema, 'object')
             # skip composite relation

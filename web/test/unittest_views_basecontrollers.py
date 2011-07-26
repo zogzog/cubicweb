@@ -365,6 +365,43 @@ class EditControllerTC(CubicWebTC):
         self.assertEqual(path, 'view')
         self.assertIn('_cwmsgid', params)
 
+    def test_simple_copy(self):
+        req = self.request()
+        blog = req.create_entity('Blog', title=u'my-blog')
+        blogentry = req.create_entity('BlogEntry', title=u'entry1',
+                                      content=u'content1', entry_of=blog)
+        req = self.request()
+        req.form = {'__maineid' : 'X', 'eid': 'X',
+                    '__cloned_eid:X': blogentry.eid, '__type:X': 'BlogEntry',
+                    '_cw_entity_fields:X': 'title-subject,content-subject',
+                    'title-subject:X': u'entry1-copy',
+                    'content-subject:X': u'content1',
+                    }
+        self.expect_redirect_publish(req, 'edit')
+        blogentry2 = req.find_one_entity('BlogEntry', title=u'entry1-copy')
+        self.assertEqual(blogentry2.entry_of[0].eid, blog.eid)
+
+    def test_skip_copy_for(self):
+        req = self.request()
+        blog = req.create_entity('Blog', title=u'my-blog')
+        blogentry = req.create_entity('BlogEntry', title=u'entry1',
+                                      content=u'content1', entry_of=blog)
+        blogentry.__class__.cw_skip_copy_for = [('entry_of', 'subject')]
+        try:
+            req = self.request()
+            req.form = {'__maineid' : 'X', 'eid': 'X',
+                        '__cloned_eid:X': blogentry.eid, '__type:X': 'BlogEntry',
+                        '_cw_entity_fields:X': 'title-subject,content-subject',
+                        'title-subject:X': u'entry1-copy',
+                        'content-subject:X': u'content1',
+                        }
+            self.expect_redirect_publish(req, 'edit')
+            blogentry2 = req.find_one_entity('BlogEntry', title=u'entry1-copy')
+            # entry_of should not be copied
+            self.assertEqual(len(blogentry2.entry_of), 0)
+        finally:
+            blogentry.__class__.cw_skip_copy_for = []
+
     def test_nonregr_eetype_etype_editing(self):
         """non-regression test checking that a manager user can edit a CWEType entity
         """
