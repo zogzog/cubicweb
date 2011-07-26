@@ -323,12 +323,27 @@ class CWSourceSchemaConfig(EntityType):
     cw_for_source = SubjectRelation(
         'CWSource', inlined=True, cardinality='1*', composite='object',
         __permissions__=RELATION_MANAGERS_PERMISSIONS)
-    cw_schema = SubjectRelation(
-        ('CWEType', 'CWRType', 'CWAttribute', 'CWRelation'),
-        inlined=True, cardinality='1*', composite='object',
-        __permissions__=RELATION_MANAGERS_PERMISSIONS)
     options = String(description=_('allowed options depends on the source type'))
 
+
+class rtype_cw_schema(RelationDefinition):
+    __permissions__ = RELATION_MANAGERS_PERMISSIONS
+    name = 'cw_schema'
+    subject = 'CWSourceSchemaConfig'
+    object = ('CWEType', 'CWRType')
+    inlined = True
+    cardinality = '1*'
+    composite = 'object'
+    constraints = [RQLConstraint('NOT O final TRUE')]
+
+class rdef_cw_schema(RelationDefinition):
+    __permissions__ = RELATION_MANAGERS_PERMISSIONS
+    name = 'cw_schema'
+    subject = 'CWSourceSchemaConfig'
+    object = 'CWRelation'
+    inlined = True
+    cardinality = '1*'
+    composite = 'object'
 
 # "abtract" relation types, no definition in cubicweb itself ###################
 

@@ -188,6 +188,18 @@ def check_entities(schema, session, eids, fix=1):
             if fix:
                 session.system_sql('DELETE FROM entities WHERE eid=%s;' % eid)
             notify_fixed(fix)
+    session.system_sql('INSERT INTO cw_source_relation (eid_from, eid_to) '
+                       'SELECT e.eid, s.cw_eid FROM entities as e, cw_CWSource as s '
+                       'WHERE s.cw_name=e.asource AND NOT EXISTS(SELECT 1 FROM cw_source_relation as cs '
+                       '  WHERE cs.eid_from=e.eid AND cs.eid_to=s.cw_eid)')
+    session.system_sql('INSERT INTO is_relation (eid_from, eid_to) '
+                       'SELECT e.eid, s.cw_eid FROM entities as e, cw_CWEType as s '
+                       'WHERE s.cw_name=e.type AND NOT EXISTS(SELECT 1 FROM is_relation as cs '
+                       '  WHERE cs.eid_from=e.eid AND cs.eid_to=s.cw_eid)')
+    session.system_sql('INSERT INTO is_instance_of_relation (eid_from, eid_to) '
+                       'SELECT e.eid, s.cw_eid FROM entities as e, cw_CWEType as s '
+                       'WHERE s.cw_name=e.type AND NOT EXISTS(SELECT 1 FROM is_instance_of_relation as cs '
+                       '  WHERE cs.eid_from=e.eid AND cs.eid_to=s.cw_eid)')
     print 'Checking entities tables'
     for eschema in schema.entities():
         if eschema.final:
@@ -283,10 +295,10 @@ def check_mandatory_relations(schema, session, eids, fix=1):
                     rql = 'Any X WHERE NOT Y %s X, X is %s' % (rschema, etype)
                 for entity in session.execute(rql).entities():
                     print >> sys.stderr, '%s #%s is missing mandatory %s relation %s' % (
-                        entity.__regid__, entity.eid, role, rschema)
+                        entity.__regid__, entity.eid, role, rschema),
                     if fix:
                         #if entity.cw_describe()['source']['uri'] == 'system': XXX
-                        entity.delete()
+                        entity.cw_delete()
                     notify_fixed(fix)
 
 
@@ -304,9 +316,9 @@ def check_mandatory_attributes(schema, session, eids, fix=1):
                     rschema, rdef.subject)
                 for entity in session.execute(rql).entities():
                     print >> sys.stderr, '%s #%s is missing mandatory attribute %s' % (
-                        entity.__regid__, entity.eid, rschema)
+                        entity.__regid__, entity.eid, rschema),
                     if fix:
-                        entity.delete()
+                        entity.cw_delete()
                     notify_fixed(fix)
 
 
@@ -333,22 +345,6 @@ def check_metadata(schema, session, eids, fix=1):
                                        % (table, column, eidcolumn, eid),
                                        {'v': default})
                 notify_fixed(fix)
-    cursor = session.system_sql('SELECT MIN(%s) FROM %sCWUser;' % (eidcolumn,
-                                                                  SQL_PREFIX))
-    default_user_eid = cursor.fetchone()[0]
-    assert default_user_eid is not None, 'no user defined !'
-    for rel, default in ( ('owned_by', default_user_eid), ):
-        cursor = session.system_sql("SELECT eid, type FROM entities "
-                                    "WHERE source='system' AND NOT EXISTS "
-                                    "(SELECT 1 FROM %s_relation WHERE eid_from=eid);"
-                                    % rel)
-        for eid, etype in cursor.fetchall():
-            msg = '  %s with eid %s has no %s relation'
-            print >> sys.stderr, msg % (etype, eid, rel),
-            if fix:
-                session.system_sql('INSERT INTO %s_relation VALUES (%s, %s) ;'
-                                   % (rel, eid, default))
-            notify_fixed(fix)
 
 
 def check(repo, cnx, checks, reindex, fix, withpb=True):
@@ -360,7 +356,7 @@ def check(repo, cnx, checks, reindex, fix, withpb=True):
     # yo, launch checks
     if checks:
         eids_cache = {}
-        with security_enabled(session, read=False): # ensure no read security
+        with security_enabled(session, read=False, write=False): # ensure no read security
             for check in checks:
                 check_func = globals()['check_%s' % check]
                 check_func(repo.schema, session, eids_cache, fix=fix)

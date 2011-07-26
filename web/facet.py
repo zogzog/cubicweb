@@ -48,6 +48,7 @@ to skip those classes...
 __docformat__ = "restructuredtext en"
 _ = unicode
 
+from warnings import warn
 from copy import deepcopy
 from datetime import date, datetime, timedelta
 
@@ -745,7 +746,7 @@ class RelationFacet(VocabularyFacet):
                 self._add_not_rel_restr(rel)
             self._and_restriction(rel, restrvar, value.pop())
             while value:
-                restrvar, rtrel = _make_relation(self.select, filtered_variable,
+                restrvar, rtrel = _make_relation(self.select, self.filtered_variable,
                                                  self.rtype, self.role)
                 self._and_restriction(rel, restrvar, value.pop())
 

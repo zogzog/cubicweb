@@ -178,8 +178,10 @@ class CWEntityXMLParser(datafeed.DataFeedXMLParser):
 
     def process(self, url, raise_on_error=False, partialcommit=True):
         """IDataFeedParser main entry point"""
-        super(CWEntityXMLParser, self).process(self.complete_url(url),
-                                               raise_on_error, partialcommit)
+        if url.startswith('http'): # XXX similar loose test as in parse of sources.datafeed
+            url = self.complete_url(url)
+        super(CWEntityXMLParser, self).process(url, raise_on_error, partialcommit)
+
     def parse_etree(self, parent):
         for node in list(parent):
             builder = self._cw.vreg['components'].select(
@@ -226,24 +228,25 @@ class CWEntityXMLParser(datafeed.DataFeedXMLParser):
         be included in the resulting xml, according to source mapping.
 
         If etype is not specified, try to guess it using the last path part of
-        the url.
+        the url, i.e. the format used by default in cubicweb to map all entities
+        of a given type as in 'http://mysite.org/EntityType'.
         """
         try:
             url, qs = url.split('?', 1)
         except ValueError:
             qs = ''
+        params = parse_qs(qs)
+        if not 'vid' in params:
+            params['vid'] = ['xml']
         if etype is None:
             try:
                 etype = url.rsplit('/', 1)[1]
             except ValueError:
-                return url
+                return url + '?' + self._cw.build_url_params(**params)
             try:
                 etype = self._cw.vreg.case_insensitive_etypes[etype]
             except KeyError:
-                return url
-        params = parse_qs(qs)
-        if not 'vid' in params:
-            params['vid'] = ['xml']
+                return url + '?' + self._cw.build_url_params(**params)
         if add_relations:
             relations = params.setdefault('relation', [])
             for rtype, role, _ in self.source.mapping.get(etype, ()):
