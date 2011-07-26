@@ -267,14 +267,15 @@ class DataFeedParser(AppObject):
         """return an entity for the given uri. May return None if it should be
         skipped
         """
+        session = self._cw
         # if cwsource is specified and repository has a source with the same
         # name, call extid2eid on that source so entity will be properly seen as
         # coming from this source
-        source = self._cw.repo.sources_by_uri.get(
+        source = session.repo.sources_by_uri.get(
             sourceparams.pop('cwsource', None), self.source)
         sourceparams['parser'] = self
         try:
-            eid = source.extid2eid(str(uri), etype, self._cw,
+            eid = session.repo.extid2eid(source, str(uri), etype, session,
                                    sourceparams=sourceparams)
         except ValidationError, ex:
             self.source.error('error while creating %s: %s', etype, ex)
@@ -285,14 +286,14 @@ class DataFeedParser(AppObject):
             # Don't give etype to entity_from_eid so we get UnknownEid if the
             # entity has been removed
             try:
-                entity = self._cw.entity_from_eid(-eid)
+                entity = session.entity_from_eid(-eid)
             except UnknownEid:
                 return None
             self.notify_updated(entity) # avoid later update from the source's data
             return entity
         if self.sourceuris is not None:
             self.sourceuris.pop(str(uri), None)
-        return self._cw.entity_from_eid(eid, etype)
+        return session.entity_from_eid(eid, etype)
 
     def process(self, url, partialcommit=True):
         """main callback: process the url"""

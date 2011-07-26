@@ -25,6 +25,7 @@ from datetime import datetime, timedelta
 from logging import getLogger
 
 from logilab.common import configuration
+from logilab.common.deprecation import deprecated
 
 from yams.schema import role_name
 
@@ -268,12 +269,6 @@ class AbstractSource(object):
         pass
 
     # external source api ######################################################
-
-    def eid2extid(self, eid, session=None):
-        return self.repo.eid2extid(self, eid, session)
-
-    def extid2eid(self, value, etype, session=None, **kwargs):
-        return self.repo.extid2eid(self, value, etype, session, **kwargs)
 
     def support_entity(self, etype, write=False):
         """return true if the given entity's type is handled by this adapter
@@ -520,6 +515,15 @@ class AbstractSource(object):
     def clean_temp_data(self, session, temptables):
         """remove temporary data, usually associated to temporary tables"""
         pass
+
+
+    @deprecated('[3.13] use repo.eid2extid(source, eid, session)')
+    def eid2extid(self, eid, session=None):
+        return self.repo.eid2extid(self, eid, session)
+
+    @deprecated('[3.13] use extid2eid(source, value, etype, session, **kwargs)')
+    def extid2eid(self, value, etype, session=None, **kwargs):
+        return self.repo.extid2eid(self, value, etype, session, **kwargs)
 
 
 class TrFunc(object):
