@@ -1292,9 +1292,16 @@ class SQLGenerator(object):
                                                relation.r_type)
                 try:
                     self._state.ignore_varmap = True
-                    return '%s%s' % (lhssql, relation.children[1].accept(self))
+                    sql = lhssql + relation.children[1].accept(self)
                 finally:
                     self._state.ignore_varmap = False
+                if relation.optional == 'right':
+                    leftalias = self._var_table(principal.children[0].variable)
+                    rightalias = self._var_table(relation.children[0].variable)
+                    self._state.replace_tables_by_outer_join(
+                        leftalias, rightalias, 'LEFT', sql)
+                    return ''
+                return sql
         return ''
 
     def _visit_attribute_relation(self, rel):
@@ -1372,12 +1379,15 @@ class SQLGenerator(object):
 
     def visit_comparison(self, cmp):
         """generate SQL for a comparison"""
+        optional = getattr(cmp, 'optional', None) # rql < 0.30
         if len(cmp.children) == 2:
-            # XXX occurs ?
+            # simplified expression from HAVING clause
             lhs, rhs = cmp.children
         else:
             lhs = None
             rhs = cmp.children[0]
+            assert not optional
+        sql = None
         operator = cmp.operator
         if operator in ('LIKE', 'ILIKE'):
             if operator == 'ILIKE' and not self.dbhelper.ilike_support:
@@ -1385,18 +1395,39 @@ class SQLGenerator(object):
             else:
                 operator = ' %s ' % operator
         elif operator == 'REGEXP':
-            return ' %s' % self.dbhelper.sql_regexp_match_expression(rhs.accept(self))
+            sql = ' %s' % self.dbhelper.sql_regexp_match_expression(rhs.accept(self))
         elif (operator == '=' and isinstance(rhs, Constant)
               and rhs.eval(self._args) is None):
             if lhs is None:
-                return ' IS NULL'
-            return '%s IS NULL' % lhs.accept(self)
+                sql = ' IS NULL'
+            else:
+                sql = '%s IS NULL' % lhs.accept(self)
         elif isinstance(rhs, Function) and rhs.name == 'IN':
             assert operator == '='
             operator = ' '
-        if lhs is None:
-            return '%s%s'% (operator, rhs.accept(self))
-        return '%s%s%s'% (lhs.accept(self), operator, rhs.accept(self))
+        if sql is None:
+            if lhs is None:
+                sql = '%s%s'% (operator, rhs.accept(self))
+            else:
+                sql = '%s%s%s'% (lhs.accept(self), operator, rhs.accept(self))
+        if optional is None:
+            return sql
+        leftvars = cmp.children[0].get_nodes(VariableRef)
+        assert len(leftvars) == 1
+        leftalias = self._var_table(leftvars[0].variable.stinfo['attrvar'])
+        rightvars = cmp.children[1].get_nodes(VariableRef)
+        assert len(rightvars) == 1
+        rightalias = self._var_table(rightvars[0].variable.stinfo['attrvar'])
+        if optional == 'right':
+            self._state.replace_tables_by_outer_join(
+                leftalias, rightalias, 'LEFT', sql)
+        elif optional == 'left':
+            self._state.replace_tables_by_outer_join(
+                rightalias, leftalias, 'LEFT', sql)
+        else:
+            self._state.replace_tables_by_outer_join(
+                leftalias, rightalias, 'FULL', sql)
+        return ''
 
     def visit_mathexpression(self, mexpr):
         """generate SQL for a mathematic expression"""
