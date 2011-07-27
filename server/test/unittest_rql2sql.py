@@ -1871,7 +1871,7 @@ class SqliteSQLGeneratorTC(PostgresSQLGeneratorTC):
     backend = 'sqlite'
 
     def _norm_sql(self, sql):
-        return sql.strip().replace(' ILIKE ', ' LIKE ')
+        return sql.strip().replace(' ILIKE ', ' LIKE ').replace('TRUE', '1').replace('FALSE', '0')
 
     def test_date_extraction(self):
         self._check("Any MONTH(D) WHERE P is Personne, P creation_date D",
