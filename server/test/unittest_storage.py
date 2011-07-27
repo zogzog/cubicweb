@@ -259,7 +259,7 @@ class StorageTC(CubicWebTC):
 
     @tag('update', 'NULL')
     def test_bfss_update_to_None(self):
-        f = self.session.create_entity('BFSSTestable', opt_attr=Binary('toto'))
+        f = self.session.create_entity('Affaire', opt_attr=Binary('toto'))
         self.session.commit()
         self.session.set_pool()
         f.set_attributes(opt_attr=None)
