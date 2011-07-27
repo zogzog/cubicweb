@@ -296,7 +296,7 @@ div#pageContent .pagination{
 }
 
 div#contentmain{
-  margin-top: %(pageContentPadding)s
+  margin-top: %(pageContentPadding)s;
 }
 
 /*FIXME */
@@ -902,7 +902,7 @@ ul.startup {
 
 ul.startup li,
 ul.section li {
-  margin-left: 0px
+  margin-left: 0px;
 }
 
 ul.simple li,
