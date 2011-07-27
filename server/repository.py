@@ -1095,11 +1095,11 @@ class Repository(object):
             source.after_entity_insertion(session, extid, entity, sourceparams)
             if source.should_call_hooks:
                 self.hm.call_hooks('after_add_entity', session, entity=entity)
-            if commit:
+            if commit or free_cnxset:
                 session.commit(free_cnxset)
             return eid
         except Exception:
-            if commit:
+            if commit or free_cnxset:
                 session.rollback(free_cnxset)
             raise
 
