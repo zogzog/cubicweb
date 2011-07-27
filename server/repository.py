@@ -1032,7 +1032,7 @@ class Repository(object):
         return extid
 
     def extid2eid(self, source, extid, etype, session=None, insert=True,
-                  complete=True, sourceparams=None):
+                  complete=True, commit=True, sourceparams=None):
         """Return eid from a local id. If the eid is a negative integer, that
         means the entity is known but has been copied back to the system source
         hence should be ignored.
@@ -1095,10 +1095,12 @@ class Repository(object):
             source.after_entity_insertion(session, extid, entity, sourceparams)
             if source.should_call_hooks:
                 self.hm.call_hooks('after_add_entity', session, entity=entity)
-            session.commit(free_cnxset)
+            if commit:
+                session.commit(free_cnxset)
             return eid
-        except:
-            session.rollback(free_cnxset)
+        except Exception:
+            if commit:
+                session.rollback(free_cnxset)
             raise
 
     def add_info(self, session, entity, source, extid=None, complete=True):

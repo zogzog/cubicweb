@@ -42,8 +42,10 @@ class InitMetaAttrsHook(MetaDataHook):
     def __call__(self):
         timestamp = datetime.now()
         edited = self.entity.cw_edited
-        edited.setdefault('creation_date', timestamp)
-        edited.setdefault('modification_date', timestamp)
+        if not edited.get('creation_date'):
+            edited['creation_date'] = timestamp
+        if not edited.get('modification_date'):
+            edited['modification_date'] = timestamp
         if not self._cw.get_shared_data('do-not-insert-cwuri'):
             cwuri = u'%s%s' % (self._cw.base_url(), self.entity.eid)
             edited.setdefault('cwuri', cwuri)

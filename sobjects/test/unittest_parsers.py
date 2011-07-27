@@ -113,6 +113,9 @@ OTHERXML = ''.join(u'''
   <last_login_time>2011-01-25 14:14:06</last_login_time>
   <creation_date>2010-01-22 10:27:59</creation_date>
   <modification_date>2011-01-25 14:14:06</modification_date>
+  <in_group role="subject">
+    <CWGroup cwuri="http://pouet.org/7" eid="7"/>
+  </in_group>
  </CWUser>
 </rset>
 '''.splitlines()
@@ -126,12 +129,12 @@ class CWEntityXMLParserTC(CubicWebTC):
     test_db_id = 'xmlparser'
     @classmethod
     def pre_setup_database(cls, session, config):
-        source = session.create_entity('CWSource', name=u'myfeed', type=u'datafeed',
+        myfeed = session.create_entity('CWSource', name=u'myfeed', type=u'datafeed',
                                    parser=u'cw.entityxml', url=BASEXML)
-        session.create_entity('CWSource', name=u'myotherfeed', type=u'datafeed',
-                              parser=u'cw.entityxml', url=OTHERXML)
+        myotherfeed = session.create_entity('CWSource', name=u'myotherfeed', type=u'datafeed',
+                                            parser=u'cw.entityxml', url=OTHERXML)
         session.commit()
-        source.init_mapping([(('CWUser', 'use_email', '*'),
+        myfeed.init_mapping([(('CWUser', 'use_email', '*'),
                               u'role=subject\naction=copy'),
                              (('CWUser', 'in_group', '*'),
                               u'role=subject\naction=link\nlinkattr=name'),
@@ -140,6 +143,11 @@ class CWEntityXMLParserTC(CubicWebTC):
                              (('*', 'tags', 'CWUser'),
                               u'role=object\naction=link-or-create\nlinkattr=name'),
                             ])
+        myotherfeed.init_mapping([(('CWUser', 'in_group', '*'),
+                                   u'role=subject\naction=link\nlinkattr=name'),
+                                  (('CWUser', 'in_state', '*'),
+                                   u'role=subject\naction=link\nlinkattr=name'),
+                                  ])
         session.create_entity('Tag', name=u'hop')
 
     def test_complete_url(self):
@@ -171,7 +179,7 @@ class CWEntityXMLParserTC(CubicWebTC):
                                  (u'EmailAddress', {})]
                              }
                           })
-        session = self.repo.internal_session()
+        session = self.repo.internal_session(safe=True)
         stats = dfsource.pull_data(session, force=True, raise_on_error=True)
         self.assertEqual(sorted(stats.keys()), ['created', 'updated'])
         self.assertEqual(len(stats['created']), 2)
@@ -255,7 +263,7 @@ class CWEntityXMLParserTC(CubicWebTC):
 
     def test_external_entity(self):
         dfsource = self.repo.sources_by_uri['myotherfeed']
-        session = self.repo.internal_session()
+        session = self.repo.internal_session(safe=True)
         stats = dfsource.pull_data(session, force=True, raise_on_error=True)
         user = self.execute('CWUser X WHERE X login "sthenault"').get_entity(0, 0)
         self.assertEqual(user.creation_date, datetime(2010, 01, 22, 10, 27, 59))
@@ -265,7 +273,7 @@ class CWEntityXMLParserTC(CubicWebTC):
 
     def test_noerror_missing_fti_attribute(self):
         dfsource = self.repo.sources_by_uri['myfeed']
-        session = self.repo.internal_session()
+        session = self.repo.internal_session(safe=True)
         parser = dfsource._get_parser(session)
         dfsource.process_urls(parser, ['''
 <rset size="1">
@@ -277,7 +285,7 @@ class CWEntityXMLParserTC(CubicWebTC):
 
     def test_noerror_unspecified_date(self):
         dfsource = self.repo.sources_by_uri['myfeed']
-        session = self.repo.internal_session()
+        session = self.repo.internal_session(safe=True)
         parser = dfsource._get_parser(session)
         dfsource.process_urls(parser, ['''
 <rset size="1">

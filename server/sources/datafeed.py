@@ -147,6 +147,7 @@ class DataFeedSource(AbstractSource):
         return True
 
     def release_synchronization_lock(self, session):
+        session.set_cnxset()
         session.execute('SET X synchronizing FALSE WHERE X eid %(x)s',
                         {'x': self.eid})
         session.commit()
@@ -276,7 +277,7 @@ class DataFeedParser(AppObject):
         sourceparams['parser'] = self
         try:
             eid = session.repo.extid2eid(source, str(uri), etype, session,
-                                         complete=False,
+                                         complete=False, commit=False,
                                          sourceparams=sourceparams)
         except ValidationError, ex:
             self.source.error('error while creating %s: %s', etype, ex)
