@@ -1438,15 +1438,15 @@ class SQLGenerator(object):
         value = constant.value
         if constant.type == 'etype':
             return value
-        if constant.type == 'Int' and  isinstance(constant.parent, SortTerm):
-            return value
+        if constant.type == 'Int': # XXX Float?
+            return str(value)
         if constant.type in ('Date', 'Datetime'):
             rel = constant.relation()
             if rel is not None:
                 rel._q_needcast = value
             return self.keyword_map[value]()
         if constant.type == 'Boolean':
-            value = self.dbhelper.boolean_value(value)
+            return self.dbhelper.boolean_value(value)
         if constant.type == 'Substitute':
             try:
                 # we may found constant from simplified var in varmap
