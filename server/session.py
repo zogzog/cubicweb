@@ -1276,12 +1276,13 @@ class InternalSession(Session):
     is_internal_session = True
     running_dbapi_query = False
 
-    def __init__(self, repo, cnxprops=None):
+    def __init__(self, repo, cnxprops=None, safe=False):
         super(InternalSession, self).__init__(InternalManager(), repo, cnxprops,
                                               _id='internal')
         self.user._cw = self # XXX remove when "vreg = user._cw.vreg" hack in entity.py is gone
         self.cnxtype = 'inmemory'
-        self.disable_hook_categories('integrity')
+        if not safe:
+            self.disable_hook_categories('integrity')
 
     @property
     def cnxset(self):

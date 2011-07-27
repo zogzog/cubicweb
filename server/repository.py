@@ -927,14 +927,16 @@ class Repository(object):
                 nbclosed += 1
         return nbclosed
 
-    def internal_session(self, cnxprops=None):
-        """return a dbapi like connection/cursor using internal user which
-        have every rights on the repository. You'll *have to* commit/rollback
-        or close (rollback implicitly) the session once the job's done, else
-        you'll leak connections set up to the time where no one is
-        available, causing irremediable freeze...
+    def internal_session(self, cnxprops=None, safe=False):
+        """return a dbapi like connection/cursor using internal user which have
+        every rights on the repository. The `safe` argument is a boolean flag
+        telling if integrity hooks should be activated or not.
+
+        *YOU HAVE TO* commit/rollback or close (rollback implicitly) the
+        session once the job's done, else you'll leak connections set up to the
+        time where no one is available, causing irremediable freeze...
         """
-        session = InternalSession(self, cnxprops)
+        session = InternalSession(self, cnxprops, safe)
         session.set_cnxset()
         return session
 
