@@ -1477,7 +1477,7 @@ class SQLGenerator(object):
                 rel._q_needcast = value
             return self.keyword_map[value]()
         if constant.type == 'Boolean':
-            return self.dbhelper.boolean_value(value)
+            return str(self.dbhelper.boolean_value(value))
         if constant.type == 'Substitute':
             try:
                 # we may found constant from simplified var in varmap
