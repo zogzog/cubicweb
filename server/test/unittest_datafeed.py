@@ -96,9 +96,8 @@ class DataFeedTC(CubicWebTC):
 
         # test_delete_source
         req = self.request()
-        with self.debugged('DBG_RQL'):
-            req.execute('DELETE CWSource S WHERE S name "myfeed"')
-            self.commit()
+        req.execute('DELETE CWSource S WHERE S name "myfeed"')
+        self.commit()
         self.failIf(self.execute('Card X WHERE X title "cubicweb.org"'))
         self.failIf(self.execute('Any X WHERE X has_text "cubicweb.org"'))
 

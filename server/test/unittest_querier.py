@@ -800,6 +800,12 @@ class QuerierTC(BaseQuerierTC):
                                                            'Password', 'String',
                                                            'TZDatetime', 'TZTime',
                                                            'Time'])
+        req = self.session
+        req.create_entity('Personne', nom=u'louis', test=True)
+        self.assertEqual(len(req.execute('Any X WHERE X test %(val)s', {'val': True})), 1)
+        self.assertEqual(len(req.execute('Any X WHERE X test TRUE')), 1)
+        self.assertEqual(len(req.execute('Any X WHERE X test %(val)s', {'val': False})), 0)
+        self.assertEqual(len(req.execute('Any X WHERE X test FALSE')), 0)
 
     def test_select_constant(self):
         rset = self.execute('Any X, "toto" ORDERBY X WHERE X is CWGroup')

@@ -61,7 +61,7 @@ def nopwd_authenticate(self, session, login, password):
         # no such user
         raise AuthenticationError()
     # don't check upassword !
-    return self.extid2eid(user['dn'], 'CWUser', session)
+    return self.repo.extid2eid(self, user['dn'], 'CWUser', session)
 
 def setUpModule(*args):
     create_slapd_configuration(LDAPUserSourceTC.config)

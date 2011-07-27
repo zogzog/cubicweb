@@ -75,7 +75,10 @@ def extract_typed_attrs(eschema, stringdict, converters=DEFAULT_CONVERTERS):
             if rschema == 'eid':
                 continue
             attrtype = eschema.destination(rschema)
-            typeddict[rschema.type] = converters[attrtype](stringdict[rschema])
+            value = stringdict[rschema]
+            if value is not None:
+                value = converters[attrtype](value)
+            typeddict[rschema.type] = value
     return typeddict
 
 def rtype_role_rql(rtype, role):
@@ -244,7 +247,7 @@ class CWEntityXMLParser(datafeed.DataFeedXMLParser):
             except ValueError:
                 return url + '?' + self._cw.build_url_params(**params)
             try:
-                etype = self._cw.vreg.case_insensitive_etypes[etype]
+                etype = self._cw.vreg.case_insensitive_etypes[etype.lower()]
             except KeyError:
                 return url + '?' + self._cw.build_url_params(**params)
         if add_relations:
@@ -294,9 +297,12 @@ class CWEntityXMLItemBuilder(Component):
                 # relation
                 related = rels.setdefault(role, {}).setdefault(child.tag, [])
                 related += [ritem for ritem, _ in self.parser.parse_etree(child)]
-            else:
+            elif child.text:
                 # attribute
                 item[child.tag] = unicode(child.text)
+            else:
+                # None attribute (empty tag)
+                item[child.tag] = None
         return item, rels
 
 

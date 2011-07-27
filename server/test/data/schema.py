@@ -24,9 +24,6 @@ from cubicweb.schema import (WorkflowableEntityType,
                              RQLConstraint, RQLUniqueConstraint,
                              ERQLExpression, RRQLExpression)
 
-class BFSSTestable(EntityType):
-    opt_attr = Bytes()
-
 class Affaire(WorkflowableEntityType):
     __permissions__ = {
         'read':   ('managers',
@@ -45,6 +42,7 @@ class Affaire(WorkflowableEntityType):
 
     duration = Int()
     invoiced = Float()
+    opt_attr = Bytes()
 
     depends_on = SubjectRelation('Affaire')
     require_permission = SubjectRelation('CWPermission')

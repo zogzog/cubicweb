@@ -807,6 +807,11 @@ WHERE appears0.word_id IN (SELECT word_id FROM word WHERE word in ('toto', 'tata
 
 
 OUTER_JOIN = [
+
+    ('Any U,G WHERE U login L, G name L?, G is CWGroup',
+     '''SELECT _U.cw_eid, _G.cw_eid
+FROM cw_CWUser AS _U LEFT OUTER JOIN cw_CWGroup AS _G ON (_G.cw_name=_U.cw_login)'''),
+
     ('Any X,S WHERE X travaille S?',
      '''SELECT _X.cw_eid, rel_travaille0.eid_to
 FROM cw_Personne AS _X LEFT OUTER JOIN travaille_relation AS rel_travaille0 ON (rel_travaille0.eid_from=_X.cw_eid)'''
@@ -969,6 +974,18 @@ WHERE rel_tags0.eid_from=123'''),
      '''SELECT _CFG.cw_ecrit_par, _CALIBCFG.cw_eid, _CFG.cw_eid
 FROM cw_Note AS _CFG LEFT OUTER JOIN cw_Note AS _CALIBCFG ON (_CALIBCFG.cw_ecrit_par=_CFG.cw_ecrit_par)
 WHERE _CFG.cw_ecrit_par=1'''),
+
+    ('Any U,G WHERE U login UL, G name GL, G is CWGroup HAVING UPPER(UL)=UPPER(GL)?',
+     '''SELECT _U.cw_eid, _G.cw_eid
+FROM cw_CWUser AS _U LEFT OUTER JOIN cw_CWGroup AS _G ON (UPPER(_U.cw_login)=UPPER(_G.cw_name))'''),
+
+    ('Any U,G WHERE U login UL, G name GL, G is CWGroup HAVING UPPER(UL)?=UPPER(GL)',
+     '''SELECT _U.cw_eid, _G.cw_eid
+FROM cw_CWGroup AS _G LEFT OUTER JOIN cw_CWUser AS _U ON (UPPER(_U.cw_login)=UPPER(_G.cw_name))'''),
+
+    ('Any U,G WHERE U login UL, G name GL, G is CWGroup HAVING UPPER(UL)?=UPPER(GL)?',
+     '''SELECT _U.cw_eid, _G.cw_eid
+FROM cw_CWUser AS _U FULL OUTER JOIN cw_CWGroup AS _G ON (UPPER(_U.cw_login)=UPPER(_G.cw_name))'''),
     ]
 
 VIRTUAL_VARS = [
@@ -1871,7 +1888,7 @@ class SqliteSQLGeneratorTC(PostgresSQLGeneratorTC):
     backend = 'sqlite'
 
     def _norm_sql(self, sql):
-        return sql.strip().replace(' ILIKE ', ' LIKE ')
+        return sql.strip().replace(' ILIKE ', ' LIKE ').replace('TRUE', '1').replace('FALSE', '0')
 
     def test_date_extraction(self):
         self._check("Any MONTH(D) WHERE P is Personne, P creation_date D",

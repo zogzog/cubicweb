@@ -927,14 +927,16 @@ class Repository(object):
                 nbclosed += 1
         return nbclosed
 
-    def internal_session(self, cnxprops=None):
-        """return a dbapi like connection/cursor using internal user which
-        have every rights on the repository. You'll *have to* commit/rollback
-        or close (rollback implicitly) the session once the job's done, else
-        you'll leak connections set up to the time where no one is
-        available, causing irremediable freeze...
+    def internal_session(self, cnxprops=None, safe=False):
+        """return a dbapi like connection/cursor using internal user which have
+        every rights on the repository. The `safe` argument is a boolean flag
+        telling if integrity hooks should be activated or not.
+
+        *YOU HAVE TO* commit/rollback or close (rollback implicitly) the
+        session once the job's done, else you'll leak connections set up to the
+        time where no one is available, causing irremediable freeze...
         """
-        session = InternalSession(self, cnxprops)
+        session = InternalSession(self, cnxprops, safe)
         session.set_cnxset()
         return session
 
@@ -1030,7 +1032,7 @@ class Repository(object):
         return extid
 
     def extid2eid(self, source, extid, etype, session=None, insert=True,
-                  sourceparams=None):
+                  complete=True, commit=True, sourceparams=None):
         """Return eid from a local id. If the eid is a negative integer, that
         means the entity is known but has been copied back to the system source
         hence should be ignored.
@@ -1089,15 +1091,16 @@ class Repository(object):
                 session, extid, etype, eid, sourceparams)
             if source.should_call_hooks:
                 self.hm.call_hooks('before_add_entity', session, entity=entity)
-            # XXX call add_info with complete=False ?
-            self.add_info(session, entity, source, extid)
+            self.add_info(session, entity, source, extid, complete=complete)
             source.after_entity_insertion(session, extid, entity, sourceparams)
             if source.should_call_hooks:
                 self.hm.call_hooks('after_add_entity', session, entity=entity)
-            session.commit(free_cnxset)
+            if commit or free_cnxset:
+                session.commit(free_cnxset)
             return eid
-        except:
-            session.rollback(free_cnxset)
+        except Exception:
+            if commit or free_cnxset:
+                session.rollback(free_cnxset)
             raise
 
     def add_info(self, session, entity, source, extid=None, complete=True):

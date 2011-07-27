@@ -310,7 +310,7 @@ directory (default to once a day).',
         except Exception:
             self.error('while trying to authenticate %s', user, exc_info=True)
             raise AuthenticationError()
-        eid = self.extid2eid(user['dn'], 'CWUser', session)
+        eid = self.repo.extid2eid(self, user['dn'], 'CWUser', session)
         if eid < 0:
             # user has been moved away from this source
             raise AuthenticationError()
@@ -423,7 +423,7 @@ directory (default to once a day).',
             filteredres = []
             for resdict in res:
                 # get sure the entity exists in the system table
-                eid = self.extid2eid(resdict['dn'], 'CWUser', session)
+                eid = self.repo.extid2eid(self, resdict['dn'], 'CWUser', session)
                 for eidfilter in eidfilters:
                     if not eidfilter(eid):
                         break
@@ -537,7 +537,7 @@ directory (default to once a day).',
             res = cnx.result(all=0)[1]
         except ldap.NO_SUCH_OBJECT:
             self.info('ldap NO SUCH OBJECT')
-            eid = self.extid2eid(base, 'CWUser', session, insert=False)
+            eid = self.repo.extid2eid(self, base, 'CWUser', session, insert=False)
             if eid:
                 self.warning('deleting ldap user with eid %s and dn %s',
                              eid, base)
@@ -646,6 +646,7 @@ class RQL2LDAPFilter(object):
     """generate an LDAP filter for a rql query"""
     def __init__(self, source, session, args=None, mainvars=()):
         self.source = source
+        self.repo = source.repo
         self._ldap_attrs = source.user_rev_attrs
         self._base_filters = source.base_filters
         self._session = session
@@ -751,7 +752,7 @@ class RQL2LDAPFilter(object):
                           }[rhs.operator]
                 self._eidfilters.append(filter)
                 return
-            dn = self.source.eid2extid(eid, self._session)
+            dn = self.repo.eid2extid(self.source, eid, self._session)
             raise GotDN(dn)
         try:
             filter = '(%s%s)' % (self._ldap_attrs[relation.r_type],

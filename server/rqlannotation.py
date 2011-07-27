@@ -211,16 +211,22 @@ def _select_main_var(relations):
     relation for the rhs variable
     """
     principal = None
+    others = []
     # sort for test predictability
     for rel in sorted(relations, key=lambda x: (x.children[0].name, x.r_type)):
         # only equality relation with a variable as rhs may be principal
         if rel.operator() not in ('=', 'IS') \
                or not isinstance(rel.children[1].children[0], VariableRef) or rel.neged(strict=True):
             continue
+        if rel.optional:
+            others.append(rel)
+            continue
         if rel.scope is rel.stmt:
             return rel
         principal = rel
     if principal is None:
+        if others:
+            return others[0]
         raise BadRQLQuery('unable to find principal in %s' % ', '.join(
             r.as_string() for r in relations))
     return principal

@@ -147,6 +147,7 @@ class DataFeedSource(AbstractSource):
         return True
 
     def release_synchronization_lock(self, session):
+        session.set_cnxset()
         session.execute('SET X synchronizing FALSE WHERE X eid %(x)s',
                         {'x': self.eid})
         session.commit()
@@ -220,9 +221,6 @@ class DataFeedSource(AbstractSource):
         entity.cw_edited['cwuri'] = unicode(lid)
         entity.cw_edited.set_defaults()
         sourceparams['parser'].before_entity_copy(entity, sourceparams)
-        # avoid query to search full-text indexed attributes
-        for attr in entity.e_schema.indexable_attributes():
-            entity.cw_edited.setdefault(attr, u'')
         return entity
 
     def after_entity_insertion(self, session, lid, entity, sourceparams):
@@ -267,15 +265,20 @@ class DataFeedParser(AppObject):
         """return an entity for the given uri. May return None if it should be
         skipped
         """
+        session = self._cw
         # if cwsource is specified and repository has a source with the same
         # name, call extid2eid on that source so entity will be properly seen as
         # coming from this source
-        source = self._cw.repo.sources_by_uri.get(
-            sourceparams.pop('cwsource', None), self.source)
+        source_uri = sourceparams.pop('cwsource', None)
+        if source_uri is not None and source_uri != 'system':
+            source = session.repo.sources_by_uri.get(source_uri, self.source)
+        else:
+            source = self.source
         sourceparams['parser'] = self
         try:
-            eid = source.extid2eid(str(uri), etype, self._cw,
-                                   sourceparams=sourceparams)
+            eid = session.repo.extid2eid(source, str(uri), etype, session,
+                                         complete=False, commit=False,
+                                         sourceparams=sourceparams)
         except ValidationError, ex:
             self.source.error('error while creating %s: %s', etype, ex)
             return None
@@ -285,14 +288,14 @@ class DataFeedParser(AppObject):
             # Don't give etype to entity_from_eid so we get UnknownEid if the
             # entity has been removed
             try:
-                entity = self._cw.entity_from_eid(-eid)
+                entity = session.entity_from_eid(-eid)
             except UnknownEid:
                 return None
             self.notify_updated(entity) # avoid later update from the source's data
             return entity
         if self.sourceuris is not None:
             self.sourceuris.pop(str(uri), None)
-        return self._cw.entity_from_eid(eid, etype)
+        return session.entity_from_eid(eid, etype)
 
     def process(self, url, partialcommit=True):
         """main callback: process the url"""

@@ -1914,10 +1914,6 @@ msgstr ""
 msgid "cw_schema_object"
 msgstr ""
 
-msgctxt "CWAttribute"
-msgid "cw_schema_object"
-msgstr ""
-
 msgctxt "CWEType"
 msgid "cw_schema_object"
 msgstr ""

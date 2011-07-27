@@ -68,7 +68,7 @@ class RepositoryTC(CubicWebTC):
                 namecol, table, finalcol))
             self.assertEqual(cu.fetchall(), [])
             cu = self.session.system_sql('SELECT %s FROM %s WHERE %s=%%(final)s ORDER BY %s'
-                                         % (namecol, table, finalcol, namecol), {'final': 'TRUE'})
+                                         % (namecol, table, finalcol, namecol), {'final': True})
             self.assertEqual(cu.fetchall(), [(u'BigInt',), (u'Boolean',), (u'Bytes',),
                                              (u'Date',), (u'Datetime',),
                                              (u'Decimal',),(u'Float',),

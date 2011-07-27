@@ -40,7 +40,7 @@ def tearDownModule():
 
 BASEXML = ''.join(u'''
 <rset size="1">
- <CWUser eid="5" cwuri="http://pouet.org/5">
+ <CWUser eid="5" cwuri="http://pouet.org/5" cwsource="system">
   <login>sthenault</login>
   <upassword>toto</upassword>
   <last_login_time>2011-01-25 14:14:06</last_login_time>
@@ -113,20 +113,28 @@ OTHERXML = ''.join(u'''
   <last_login_time>2011-01-25 14:14:06</last_login_time>
   <creation_date>2010-01-22 10:27:59</creation_date>
   <modification_date>2011-01-25 14:14:06</modification_date>
+  <in_group role="subject">
+    <CWGroup cwuri="http://pouet.org/7" eid="7"/>
+  </in_group>
  </CWUser>
 </rset>
 '''.splitlines()
 )
+
+
 class CWEntityXMLParserTC(CubicWebTC):
+    """/!\ this test use a pre-setup database /!\, if you modify above xml,
+    REMOVE THE DATABASE TEMPLATE else it won't be considered
+    """
     test_db_id = 'xmlparser'
     @classmethod
     def pre_setup_database(cls, session, config):
-        source = session.create_entity('CWSource', name=u'myfeed', type=u'datafeed',
+        myfeed = session.create_entity('CWSource', name=u'myfeed', type=u'datafeed',
                                    parser=u'cw.entityxml', url=BASEXML)
-        session.create_entity('CWSource', name=u'myotherfeed', type=u'datafeed',
-                              parser=u'cw.entityxml', url=OTHERXML)
+        myotherfeed = session.create_entity('CWSource', name=u'myotherfeed', type=u'datafeed',
+                                            parser=u'cw.entityxml', url=OTHERXML)
         session.commit()
-        source.init_mapping([(('CWUser', 'use_email', '*'),
+        myfeed.init_mapping([(('CWUser', 'use_email', '*'),
                               u'role=subject\naction=copy'),
                              (('CWUser', 'in_group', '*'),
                               u'role=subject\naction=link\nlinkattr=name'),
@@ -135,11 +143,18 @@ class CWEntityXMLParserTC(CubicWebTC):
                              (('*', 'tags', 'CWUser'),
                               u'role=object\naction=link-or-create\nlinkattr=name'),
                             ])
+        myotherfeed.init_mapping([(('CWUser', 'in_group', '*'),
+                                   u'role=subject\naction=link\nlinkattr=name'),
+                                  (('CWUser', 'in_state', '*'),
+                                   u'role=subject\naction=link\nlinkattr=name'),
+                                  ])
         session.create_entity('Tag', name=u'hop')
 
     def test_complete_url(self):
         dfsource = self.repo.sources_by_uri['myfeed']
         parser = dfsource._get_parser(self.session)
+        self.assertEqual(parser.complete_url('http://www.cubicweb.org/CWUser'),
+                         'http://www.cubicweb.org/CWUser?relation=tags-object&relation=in_group-subject&relation=in_state-subject&relation=use_email-subject&vid=xml')
         self.assertEqual(parser.complete_url('http://www.cubicweb.org/cwuser'),
                          'http://www.cubicweb.org/cwuser?relation=tags-object&relation=in_group-subject&relation=in_state-subject&relation=use_email-subject&vid=xml')
         self.assertEqual(parser.complete_url('http://www.cubicweb.org/cwuser?vid=rdf&relation=hop'),
@@ -164,7 +179,7 @@ class CWEntityXMLParserTC(CubicWebTC):
                                  (u'EmailAddress', {})]
                              }
                           })
-        session = self.repo.internal_session()
+        session = self.repo.internal_session(safe=True)
         stats = dfsource.pull_data(session, force=True, raise_on_error=True)
         self.assertEqual(sorted(stats.keys()), ['created', 'updated'])
         self.assertEqual(len(stats['created']), 2)
@@ -248,13 +263,40 @@ class CWEntityXMLParserTC(CubicWebTC):
 
     def test_external_entity(self):
         dfsource = self.repo.sources_by_uri['myotherfeed']
-        session = self.repo.internal_session()
+        session = self.repo.internal_session(safe=True)
         stats = dfsource.pull_data(session, force=True, raise_on_error=True)
         user = self.execute('CWUser X WHERE X login "sthenault"').get_entity(0, 0)
         self.assertEqual(user.creation_date, datetime(2010, 01, 22, 10, 27, 59))
         self.assertEqual(user.modification_date, datetime(2011, 01, 25, 14, 14, 06))
         self.assertEqual(user.cwuri, 'http://pouet.org/5')
         self.assertEqual(user.cw_source[0].name, 'myfeed')
+
+    def test_noerror_missing_fti_attribute(self):
+        dfsource = self.repo.sources_by_uri['myfeed']
+        session = self.repo.internal_session(safe=True)
+        parser = dfsource._get_parser(session)
+        dfsource.process_urls(parser, ['''
+<rset size="1">
+ <Card eid="50" cwuri="http://pouet.org/50" cwsource="system">
+  <title>how-to</title>
+ </Card>
+</rset>
+'''], raise_on_error=True)
+
+    def test_noerror_unspecified_date(self):
+        dfsource = self.repo.sources_by_uri['myfeed']
+        session = self.repo.internal_session(safe=True)
+        parser = dfsource._get_parser(session)
+        dfsource.process_urls(parser, ['''
+<rset size="1">
+ <Card eid="50" cwuri="http://pouet.org/50" cwsource="system">
+  <title>how-to</title>
+  <content>how-to</content>
+  <synopsis>how-to</synopsis>
+  <creation_date/>
+ </Card>
+</rset>
+'''], raise_on_error=True)
 
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main

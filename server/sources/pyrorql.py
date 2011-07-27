@@ -281,8 +281,8 @@ repository (default to 5 minutes).',
                     continue
             for etype, extid in deleted:
                 try:
-                    eid = self.extid2eid(str(extid), etype, session,
-                                         insert=False)
+                    eid = self.repo.extid2eid(self, str(extid), etype, session,
+                                              insert=False)
                     # entity has been deleted from external repository but is not known here
                     if eid is not None:
                         entity = session.entity_from_eid(eid, etype)
@@ -423,7 +423,7 @@ repository (default to 5 minutes).',
 
     def _entity_relations_and_kwargs(self, session, entity):
         relations = []
-        kwargs = {'x': self.eid2extid(entity.eid, session)}
+        kwargs = {'x': self.repo.eid2extid(self, entity.eid, session)}
         for key, val in entity.cw_attr_cache.iteritems():
             relations.append('X %s %%(%s)s' % (key, key))
             kwargs[key] = val
@@ -449,15 +449,15 @@ repository (default to 5 minutes).',
             return
         cu = session.cnxset[self.uri]
         cu.execute('DELETE %s X WHERE X eid %%(x)s' % entity.__regid__,
-                   {'x': self.eid2extid(entity.eid, session)})
+                   {'x': self.repo.eid2extid(self, entity.eid, session)})
         self._query_cache.clear()
 
     def add_relation(self, session, subject, rtype, object):
         """add a relation to the source"""
         cu = session.cnxset[self.uri]
         cu.execute('SET X %s Y WHERE X eid %%(x)s, Y eid %%(y)s' % rtype,
-                   {'x': self.eid2extid(subject, session),
-                    'y': self.eid2extid(object, session)})
+                   {'x': self.repo.eid2extid(self, subject, session),
+                    'y': self.repo.eid2extid(self, object, session)})
         self._query_cache.clear()
         session.entity_from_eid(subject).cw_clear_all_caches()
         session.entity_from_eid(object).cw_clear_all_caches()
@@ -470,8 +470,8 @@ repository (default to 5 minutes).',
             return
         cu = session.cnxset[self.uri]
         cu.execute('DELETE X %s Y WHERE X eid %%(x)s, Y eid %%(y)s' % rtype,
-                   {'x': self.eid2extid(subject, session),
-                    'y': self.eid2extid(object, session)})
+                   {'x': self.repo.eid2extid(self, subject, session),
+                    'y': self.repo.eid2extid(self, object, session)})
         self._query_cache.clear()
         session.entity_from_eid(subject).cw_clear_all_caches()
         session.entity_from_eid(object).cw_clear_all_caches()
@@ -481,6 +481,7 @@ class RQL2RQL(object):
     """translate a local rql query to be executed on a distant repository"""
     def __init__(self, source):
         self.source = source
+        self.repo = source.repo
         self.current_operator = None
 
     def _accept_children(self, node):
@@ -676,7 +677,7 @@ class RQL2RQL(object):
 
     def eid2extid(self, eid):
         try:
-            return self.source.eid2extid(eid, self._session)
+            return self.repo.eid2extid(self.source, eid, self._session)
         except UnknownEid:
             operator = self.current_operator
             if operator is not None and operator != '=':

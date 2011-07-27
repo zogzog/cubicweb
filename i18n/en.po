@@ -1869,10 +1869,6 @@ msgstr "maps"
 msgid "cw_schema_object"
 msgstr "mapped by"
 
-msgctxt "CWAttribute"
-msgid "cw_schema_object"
-msgstr "mapped by"
-
 msgctxt "CWEType"
 msgid "cw_schema_object"
 msgstr "mapped by"
@@ -4407,3 +4403,7 @@ msgstr ""
 #, python-format
 msgid "you should un-inline relation %s which is supported and may be crossed "
 msgstr ""
+
+#~ msgctxt "CWAttribute"
+#~ msgid "cw_schema_object"
+#~ msgstr "mapped by"

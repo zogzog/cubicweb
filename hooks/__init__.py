@@ -57,7 +57,7 @@ class ServerStartupHook(hook.Hook):
                     or not repo.config.source_enabled(source)
                     or not source.config['synchronize']):
                     continue
-                session = repo.internal_session()
+                session = repo.internal_session(safe=True)
                 try:
                     stats = source.pull_data(session)
                     if stats.get('created'):
