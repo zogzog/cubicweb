@@ -1494,8 +1494,6 @@ class SQLGenerator(object):
                     self._query_attrs[_id] = utcdatetime(value)
                 elif isinstance(value, time) and value.tzinfo is not None:
                     self._query_attrs[_id] = utctime(value)
-                elif isinstance(value, bool):
-                    return self.dbhelper.boolean_value(value)
         else:
             _id = str(id(constant)).replace('-', '', 1)
             self._query_attrs[_id] = value
