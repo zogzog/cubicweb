@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -17,7 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """cw.server.migraction test"""
 from yams.buildobjs import (EntityType, RelationType, RelationDefinition,
-                            SubjectRelation,
+                            SubjectRelation, Bytes,
                             RichString, String, Int, Boolean, Datetime, Date)
 from yams.constraints import SizeConstraint, UniqueConstraint
 from cubicweb.schema import (WorkflowableEntityType, RQLConstraint,
@@ -36,6 +36,7 @@ class Affaire(EntityType):
     sujet = String(fulltextindexed=True,
                  constraints=[SizeConstraint(256)])
     concerne = SubjectRelation('Societe')
+    opt_attr = Bytes()
 
 class concerne(RelationType):
     __permissions__ = {
