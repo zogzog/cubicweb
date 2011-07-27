@@ -1946,10 +1946,6 @@ msgstr "schéma"
 msgid "cw_schema_object"
 msgstr "mappé par"
 
-msgctxt "CWAttribute"
-msgid "cw_schema_object"
-msgstr "mappé par"
-
 msgctxt "CWEType"
 msgid "cw_schema_object"
 msgstr "mappé par"
@@ -4576,3 +4572,7 @@ msgid "you should un-inline relation %s which is supported and may be crossed "
 msgstr ""
 "vous devriez enlevé la mise en ligne de la relation %s qui est supportée et "
 "peut-être croisée"
+
+#~ msgctxt "CWAttribute"
+#~ msgid "cw_schema_object"
+#~ msgstr "mappé par"
