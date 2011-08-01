@@ -1721,7 +1721,7 @@ ORDER BY 1'''),
 class SqlServer2005SQLGeneratorTC(PostgresSQLGeneratorTC):
     backend = 'sqlserver2005'
     def _norm_sql(self, sql):
-        return sql.strip().replace(' SUBSTR', ' SUBSTRING').replace(' || ', ' + ').replace(' ILIKE ', ' LIKE ')
+        return sql.strip().replace(' SUBSTR', ' SUBSTRING').replace(' || ', ' + ').replace(' ILIKE ', ' LIKE ').replace('TRUE', '1').replace('FALSE', '0')
 
     def test_has_text(self):
         for t in self._parse(HAS_TEXT_LG_INDEXER):
