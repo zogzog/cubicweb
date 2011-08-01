@@ -657,6 +657,24 @@ class SQLServerTestDataBaseHandler(TestDataBaseHandler):
 class SQLiteTestDataBaseHandler(TestDataBaseHandler):
     DRIVER = 'sqlite'
 
+    __TMPDB = set()
+
+    @classmethod
+    def _cleanup_all_tmpdb(cls):
+        for dbpath in cls.__TMPDB:
+            cls._cleanup_database(dbpath)
+
+
+
+    def __init__(self, *args, **kwargs):
+        super(SQLiteTestDataBaseHandler, self).__init__(*args, **kwargs)
+        # use a dedicated base for each process.
+        if 'global-db-name' not in self.system_source:
+            self.system_source['global-db-name'] = self.system_source['db-name']
+            process_db = self.system_source['db-name'] + str(os.getpid())
+            self.__TMPDB.add(process_db)
+            self.system_source['db-name'] = process_db
+
     @staticmethod
     def _cleanup_database(dbfile):
         try:
@@ -664,6 +682,10 @@ class SQLiteTestDataBaseHandler(TestDataBaseHandler):
             os.remove('%s-journal' % dbfile)
         except OSError:
             pass
+
+    @property
+    def dbname(self):
+        return self.system_source['global-db-name']
 
     def absolute_dbfile(self):
         """absolute path of current database file"""
@@ -706,6 +728,9 @@ class SQLiteTestDataBaseHandler(TestDataBaseHandler):
         from cubicweb.server import init_repository
         self._cleanup_database(self.absolute_dbfile())
         init_repository(self.config, interactive=False)
+
+import atexit
+atexit.register(SQLiteTestDataBaseHandler._cleanup_all_tmpdb)
 
 
 def install_sqlite_patch(querier):
