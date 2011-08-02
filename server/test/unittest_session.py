@@ -78,5 +78,15 @@ class SessionTC(CubicWebTC):
         self.assertEqual(session._tx_data, {})
         self.assertEqual(session.cnxset, None)
 
+    def test_build_descr(self):
+        rset = self.execute('(Any U,L WHERE U login L) UNION (Any G,N WHERE G name N, G is CWGroup)')
+        orig_length = len(rset)
+        rset.rows[0][0] = 9999999
+        description = self.session.build_description(rset.syntax_tree(), None, rset.rows)
+        self.assertEqual(len(description), orig_length - 1)
+        self.assertEqual(len(rset.rows), orig_length - 1)
+        self.failIf(rset.rows[0][0] == 9999999)
+
+
 if __name__ == '__main__':
     unittest_main()
