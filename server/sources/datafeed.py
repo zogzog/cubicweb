@@ -351,10 +351,10 @@ class DataFeedXMLParser(DataFeedParser):
 
     def parse(self, url):
         if url.startswith('http'):
-            from cubicweb.sobjects.parsers import HOST_MAPPING
-            for mappedurl in HOST_MAPPING:
+            from cubicweb.sobjects.parsers import URL_MAPPING
+            for mappedurl in URL_MAPPING:
                 if url.startswith(mappedurl):
-                    url = url.replace(mappedurl, HOST_MAPPING[mappedurl], 1)
+                    url = url.replace(mappedurl, URL_MAPPING[mappedurl], 1)
                     break
             self.source.info('GET %s', url)
             stream = _OPENER.open(url)
