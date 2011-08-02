@@ -1442,6 +1442,10 @@ class SQLGenerator(object):
             pass
         return '(%s %s %s)'% (lhs.accept(self), operator, rhs.accept(self))
 
+    def visit_unaryexpression(self, uexpr):
+        """generate SQL for a unary expression"""
+        return '%s%s'% (uexpr.operator, uexpr.children[0].accept(self))
+
     def visit_function(self, func):
         """generate SQL name for a function"""
         if func.name == 'FTIRANK':
