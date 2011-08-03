@@ -46,8 +46,6 @@ class CWUser(WorkflowableEntityType):
     # test at least :-/
     primary_email = SubjectRelation('EmailAddress', cardinality='??',
                                     description=_('email address to use for notification'))
-    use_email     = SubjectRelation('EmailAddress', cardinality='*?', composite='subject')
-
     in_group = SubjectRelation('CWGroup', cardinality='+*',
                                constraints=[RQLConstraint('NOT O name "owners"')],
                                description=_('groups grant permissions to the user'))
@@ -71,13 +69,20 @@ class EmailAddress(EntityType):
 to indicate which is the preferred form.'))
 
 class use_email(RelationType):
-    """ """
+    fulltext_container = 'subject'
+
+class use_email_relation(RelationDefinition):
+    """user's email account"""
+    name = "use_email"
     __permissions__ = {
         'read':   ('managers', 'users', 'guests',),
         'add':    ('managers', RRQLExpression('U has_update_permission S'),),
         'delete': ('managers', RRQLExpression('U has_update_permission S'),),
         }
-    fulltext_container = 'subject'
+    subject = "CWUser"
+    object = "EmailAddress"
+    cardinality = '*?'
+    composite = 'subject'
 
 class primary_email(RelationType):
     """the prefered email"""
