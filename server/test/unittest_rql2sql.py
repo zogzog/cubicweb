@@ -976,7 +976,7 @@ WHERE rel_tags0.eid_from=123'''),
     ('Any CASE, CALIBCFG, CFG '
      'WHERE CASE eid 1, CFG ecrit_par CASE, CALIBCFG? ecrit_par CASE',
      '''SELECT _CFG.cw_ecrit_par, _CALIBCFG.cw_eid, _CFG.cw_eid
-FROM cw_Note AS _CFG LEFT OUTER JOIN cw_Note AS _CALIBCFG ON (_CALIBCFG.cw_ecrit_par=_CFG.cw_ecrit_par)
+FROM cw_Note AS _CFG LEFT OUTER JOIN cw_Note AS _CALIBCFG ON (_CALIBCFG.cw_ecrit_par=1)
 WHERE _CFG.cw_ecrit_par=1'''),
 
     ('Any U,G WHERE U login UL, G name GL, G is CWGroup HAVING UPPER(UL)=UPPER(GL)?',
@@ -990,6 +990,17 @@ FROM cw_CWGroup AS _G LEFT OUTER JOIN cw_CWUser AS _U ON (UPPER(_U.cw_login)=UPP
     ('Any U,G WHERE U login UL, G name GL, G is CWGroup HAVING UPPER(UL)?=UPPER(GL)?',
      '''SELECT _U.cw_eid, _G.cw_eid
 FROM cw_CWUser AS _U FULL OUTER JOIN cw_CWGroup AS _G ON (UPPER(_U.cw_login)=UPPER(_G.cw_name))'''),
+
+    ('Any H, COUNT(X), SUM(XCE)/1000 '
+     'WHERE X type "0", X date XSCT, X para XCE, X? ecrit_par F, F eid 999999, F is Personne, '
+     'DH is Affaire, DH ref H '
+     'HAVING XSCT?=H',
+     '''SELECT _DH.cw_ref, COUNT(_X.cw_eid), (SUM(_X.cw_para) / 1000)
+FROM cw_Affaire AS _DH LEFT OUTER JOIN cw_Note AS _X ON (_X.cw_date=_DH.cw_ref AND _X.cw_type=0 AND _X.cw_ecrit_par=999999)'''),
+
+    ('Any C WHERE X ecrit_par C?, X? inline1 F, F eid 1, X type XT, Z is Personne, Z nom ZN HAVING ZN=XT?',
+     '''SELECT _X.cw_ecrit_par
+FROM cw_Personne AS _Z LEFT OUTER JOIN cw_Note AS _X ON (_Z.cw_nom=_X.cw_type AND _X.cw_inline1=1)'''),
     ]
 
 VIRTUAL_VARS = [

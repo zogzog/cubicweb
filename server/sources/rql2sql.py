@@ -1238,35 +1238,47 @@ class SQLGenerator(object):
 
 
     def _visit_outer_join_inlined_relation(self, relation, rschema):
-        leftvar, leftconst, rightvar, rightconst = relation_info(relation)
-        assert not (leftconst and rightconst), "doesn't make sense"
-        if relation.optional != 'right':
-            leftvar, rightvar = rightvar, leftvar
-            leftconst, rightconst = rightconst, leftconst
-        outertype = 'FULL' if relation.optional == 'both' else 'LEFT'
-        leftalias = self._var_table(leftvar)
+        lhsvar, lhsconst, rhsvar, rhsconst = relation_info(relation)
+        assert not (lhsconst and rhsconst), "doesn't make sense"
         attr = 'eid' if relation.r_type == 'identity' else relation.r_type
-        lhs, rhs = relation.get_variable_parts()
+        lhsalias = self._var_table(lhsvar)
+        rhsalias = rhsvar and self._var_table(rhsvar)
         try:
-            lhssql = self._varmap['%s.%s' % (lhs.name, attr)]
+            lhssql = self._varmap['%s.%s' % (lhsvar.name, attr)]
         except KeyError:
-            lhssql = '%s.%s%s' % (self._var_table(lhs.variable), SQL_PREFIX, attr)
-        if rightvar is not None:
-            rightalias = self._var_table(rightvar)
-            if rightalias is None:
-                if rightconst is not None:
-                    # inlined relation with invariant as rhs
-                    condition = '%s=%s' % (lhssql, rightconst.accept(self))
-                    if relation.r_type != 'identity':
-                        condition = '(%s OR %s IS NULL)' % (condition, lhssql)
-                    if not leftvar.stinfo.get('optrelations'):
-                        return condition
-                    self._state.add_outer_join_condition(leftalias, condition)
-                return
-        if leftalias is None:
-            leftalias = leftvar._q_sql.split('.', 1)[0]
-        self._state.replace_tables_by_outer_join(
-            leftalias, rightalias, outertype, '%s=%s' % (lhssql, rhs.accept(self)))
+            if lhsalias is None:
+                lhssql = lhsconst.accept(self)
+            else:
+                lhssql = '%s.%s%s' % (lhsalias, SQL_PREFIX, attr)
+        condition = '%s=%s' % (lhssql, (rhsconst or rhsvar).accept(self))
+        # this is not a typo, rhs optional variable means lhs outer join and vice-versa
+        if relation.optional == 'left':
+            lhsvar, rhsvar = rhsvar, lhsvar
+            lhsconst, rhsconst = rhsconst, lhsconst
+            lhsalias, rhsalias = rhsalias, lhsalias
+            outertype = 'LEFT'
+        elif relation.optional == 'both':
+            outertype = 'FULL'
+        else:
+            outertype = 'LEFT'
+        if rhsalias is None:
+            if rhsconst is not None:
+                # inlined relation with invariant as rhs
+                if relation.r_type != 'identity':
+                    condition = '(%s OR %s IS NULL)' % (condition, lhssql)
+                if not lhsvar.stinfo.get('optrelations'):
+                    return condition
+                self._state.add_outer_join_condition(lhsalias, condition)
+            return
+        if lhsalias is None:
+            if lhsconst is not None and not rhsvar.stinfo.get('optrelations'):
+                return condition
+            lhsalias = lhsvar._q_sql.split('.', 1)[0]
+        if lhsalias == rhsalias:
+            self._state.add_outer_join_condition(lhsalias, condition)
+        else:
+            self._state.replace_tables_by_outer_join(
+                lhsalias, rhsalias, outertype, condition)
         return ''
 
     def _visit_var_attr_relation(self, relation, rhs_vars):
