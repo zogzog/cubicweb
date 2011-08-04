@@ -113,9 +113,38 @@ Mathematical operators
 ``````````````````````
 ::
 
-     +, -, *, /
++==========+=====================+===========+========+
+| Operator |    Description      | Example   | Result |
++==========+=====================+===========+========+
+|  +       | addition            | 2 + 3     | 5      |
++----------+---------------------+-----------+--------+
+|  -       | subtraction         | 2 - 3     | -1     |
++----------+---------------------+-----------+--------+
+|  *       | multiplication      | 2 * 3     | 6      |
++----------+---------------------+-----------+--------+
+|  /       | division            | 4 / 2     | 2      |
++----------+---------------------+-----------+--------+
+|  %       | modulo (remainder)  | 5 % 4     | 1      |
++----------+---------------------+-----------+--------+
+|  ^       | exponentiation      | 2.0 ^ 3.0 | 8      |
++----------+---------------------+-----------+--------+
+|  &       | bitwise AND         | 91 & 15   | 11     |
++----------+---------------------+-----------+--------+
+|  |       | bitwise OR          | 32 | 3    | 35     |
++----------+---------------------+-----------+--------+
+|  #       | bitwise XOR         | 17 # 5    | 20     |
++----------+---------------------+-----------+--------+
+|  ~       | bitwise NOT         | ~1        | -2     |
++----------+---------------------+-----------+--------+
+|  <<      | bitwise shift left  | 1 << 4    | 16     |
++----------+---------------------+-----------+--------+
+|  >>      | bitwise shift right | 8 >> 2    | 2      |
++----------+---------------------+-----------+--------+
 
-Those should behave as you expect.
+  +, -, *, /
+
+Notice integer division truncates results depending on the backend behaviour. For
+instance, postgresql does.
 
 
 .. _RQLComparisonOperators:
@@ -191,13 +220,14 @@ Other back-ends are not supported yet.
 Operators priority
 ``````````````````
 
-#. "(", ")"
-#. '*', '/'
-#. '+', '-'
-#. 'NOT'
-#. 'AND'
-#. 'OR'
-#. ','
+#. `(`, `)`
+#. `^`, `<<`, `>>`
+#. `*`, `/`, `%`, `&`
+#. `+`, `-`, `|`, `#`
+#. `NOT`
+#. `AND`
+#. `OR`
+#. `,`
 
 
 .. _RQLSearchQuery:
@@ -328,7 +358,7 @@ that the `Left outer join`_:
 You must use the `?` behind a variable to specify that the relation toward it
 is optional. For instance:
 
-- Anomalies of a project attached or not to a version ::
+- Bugs of a project attached or not to a version ::
 
        Any X, V WHERE X concerns P, P eid 42, X corrected_in V?
 
@@ -339,6 +369,28 @@ is optional. For instance:
 - All cards and the project they document if any ::
 
        Any C, P WHERE C is Card, P? documented_by C
+
+Notice you may also use outer join:
+
+- on the RHS of attribute relation, e.g. ::
+
+       Any X WHERE X ref XR, Y name XR?
+
+  so that Y is outer joined on X by ref/name attributes comparison
+
+
+- on any side of an `HAVING` expression, e.g. ::
+
+       Any X WHERE X creation_date XC, Y creation_date YC
+       HAVING YEAR(XC)=YEAR(YC)?
+
+  so that Y is outer joined on X by comparison of the year extracted from their
+  creation date. ::
+
+       Any X WHERE X creation_date XC, Y creation_date YC
+       HAVING YEAR(XC)?=YEAR(YC)
+
+  would outer join X on Y instead.
 
 
 Having restrictions
