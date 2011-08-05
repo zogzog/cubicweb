@@ -1205,6 +1205,9 @@ msgstr ""
 msgid "auto"
 msgstr "automatic"
 
+msgid "autocomputed attribute used to ensure transition coherency"
+msgstr ""
+
 msgid "automatic"
 msgstr ""
 
@@ -2233,9 +2236,6 @@ msgstr ""
 msgid "eid"
 msgstr ""
 
-msgid "email address to use for notification"
-msgstr ""
-
 msgid "emails successfully sent"
 msgstr ""
 
@@ -2552,6 +2552,18 @@ msgid "group in which a user should be to be allowed to pass this transition"
 msgstr ""
 
 msgid "groups"
+msgstr ""
+
+msgid "groups allowed to add entities/relations of this type"
+msgstr ""
+
+msgid "groups allowed to delete entities/relations of this type"
+msgstr ""
+
+msgid "groups allowed to read entities/relations of this type"
+msgstr ""
+
+msgid "groups allowed to update entities/relations of this type"
 msgstr ""
 
 msgid "groups grant permissions to the user"
@@ -3511,6 +3523,18 @@ msgstr ""
 msgid "right"
 msgstr ""
 
+msgid "rql expression allowing to add entities/relations of this type"
+msgstr ""
+
+msgid "rql expression allowing to delete entities/relations of this type"
+msgstr ""
+
+msgid "rql expression allowing to read entities/relations of this type"
+msgstr ""
+
+msgid "rql expression allowing to update entities/relations of this type"
+msgstr ""
+
 msgid "rql expressions"
 msgstr ""
 
@@ -4207,6 +4231,9 @@ msgid "user interface encoding"
 msgstr ""
 
 msgid "user preferences"
+msgstr ""
+
+msgid "user's email account"
 msgstr ""
 
 msgid "users"

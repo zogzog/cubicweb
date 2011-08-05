@@ -83,7 +83,7 @@ class use_email_relation(RelationDefinition):
 
 
 class primary_email(RelationDefinition):
-    """user's primary email"""
+    """the prefered email"""
     __permissions__ = {
         'read':   ('managers', 'users', 'guests',),
         'add':    ('managers', RRQLExpression('U has_update_permission S'),),
