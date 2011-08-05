@@ -3659,7 +3659,7 @@ msgstr ""
 msgid "site documentation"
 msgstr ""
 
-msgid "site schema"
+msgid "data model schema"
 msgstr ""
 
 msgid "site title"

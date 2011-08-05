@@ -697,7 +697,7 @@ class ViewSchemaAction(action.Action):
     __regid__ = 'schema'
     __select__ = yes()
 
-    title = _("site schema")
+    title = _("data model schema")
     order = 30
     category = 'manage'
 

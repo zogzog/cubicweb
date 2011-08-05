@@ -3806,7 +3806,7 @@ msgstr "Configuración Sistema"
 msgid "site documentation"
 msgstr "Documentación Sistema"
 
-msgid "site schema"
+msgid "data model schema"
 msgstr "Esquema del Sistema"
 
 msgid "site title"
