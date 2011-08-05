@@ -77,9 +77,9 @@ class AutomaticEntityFormTC(CubicWebTC):
         # (appears here while expected in hidden
         self.assertListEqual([x for x in rbc(e, 'main', 'relations')
                                if x != ('tags', 'object')],
-                              [('primary_email', 'subject'),
-                               ('connait', 'subject'),
+                              [('connait', 'subject'),
                                ('custom_workflow', 'subject'),
+                               ('primary_email', 'subject'),
                                ('checked_by', 'object'),
                                ])
         self.assertListEqual(rbc(e, 'main', 'inlined'),
