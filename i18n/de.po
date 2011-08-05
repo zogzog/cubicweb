@@ -1250,6 +1250,9 @@ msgstr "Nutzername oder Passwort falsch"
 msgid "auto"
 msgstr "automatisch"
 
+msgid "autocomputed attribute used to ensure transition coherency"
+msgstr ""
+
 msgid "automatic"
 msgstr "automatisch"
 
@@ -2288,9 +2291,6 @@ msgstr "bearbeitbare Tabelle"
 msgid "eid"
 msgstr ""
 
-msgid "email address to use for notification"
-msgstr "E-Mail-Adresse für Mitteilungen."
-
 msgid "emails successfully sent"
 msgstr "E-Mails erfolgreich versandt."
 
@@ -2618,6 +2618,18 @@ msgstr ""
 
 msgid "groups"
 msgstr "Gruppen"
+
+msgid "groups allowed to add entities/relations of this type"
+msgstr ""
+
+msgid "groups allowed to delete entities/relations of this type"
+msgstr ""
+
+msgid "groups allowed to read entities/relations of this type"
+msgstr ""
+
+msgid "groups allowed to update entities/relations of this type"
+msgstr ""
 
 msgid "groups grant permissions to the user"
 msgstr "die Gruppen geben dem Nutzer Rechte"
@@ -3604,6 +3616,18 @@ msgstr "Änderungen rückgängig machen"
 msgid "right"
 msgstr "rechts"
 
+msgid "rql expression allowing to add entities/relations of this type"
+msgstr ""
+
+msgid "rql expression allowing to delete entities/relations of this type"
+msgstr ""
+
+msgid "rql expression allowing to read entities/relations of this type"
+msgstr ""
+
+msgid "rql expression allowing to update entities/relations of this type"
+msgstr ""
+
 msgid "rql expressions"
 msgstr "RQL-Ausdrücke"
 
@@ -4323,6 +4347,9 @@ msgstr "Kodierung für die Nutzerschnittstelle"
 msgid "user preferences"
 msgstr "Nutzereinstellungen"
 
+msgid "user's email account"
+msgstr ""
+
 msgid "users"
 msgstr "Nutzer"
 
@@ -4521,3 +4548,6 @@ msgstr "Sie sollten diese Eigenschaft wahrscheinlich löschen."
 #, python-format
 msgid "you should un-inline relation %s which is supported and may be crossed "
 msgstr ""
+
+#~ msgid "email address to use for notification"
+#~ msgstr "E-Mail-Adresse für Mitteilungen."

@@ -218,7 +218,7 @@ class DataFeedSource(AbstractSource):
         """
         entity = super(DataFeedSource, self).before_entity_insertion(
             session, lid, etype, eid, sourceparams)
-        entity.cw_edited['cwuri'] = unicode(lid)
+        entity.cw_edited['cwuri'] = lid.decode('utf-8')
         entity.cw_edited.set_defaults()
         sourceparams['parser'].before_entity_copy(entity, sourceparams)
         return entity
@@ -275,6 +275,8 @@ class DataFeedParser(AppObject):
         else:
             source = self.source
         sourceparams['parser'] = self
+        if isinstance(uri, unicode):
+            uri = uri.encode('utf-8')
         try:
             eid = session.repo.extid2eid(source, str(uri), etype, session,
                                          complete=False, commit=False,
@@ -351,10 +353,10 @@ class DataFeedXMLParser(DataFeedParser):
 
     def parse(self, url):
         if url.startswith('http'):
-            from cubicweb.sobjects.parsers import HOST_MAPPING
-            for mappedurl in HOST_MAPPING:
+            from cubicweb.sobjects.parsers import URL_MAPPING
+            for mappedurl in URL_MAPPING:
                 if url.startswith(mappedurl):
-                    url = url.replace(mappedurl, HOST_MAPPING[mappedurl], 1)
+                    url = url.replace(mappedurl, URL_MAPPING[mappedurl], 1)
                     break
             self.source.info('GET %s', url)
             stream = _OPENER.open(url)

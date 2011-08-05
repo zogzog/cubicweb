@@ -40,6 +40,7 @@ def mangle_email(address):
 class EmailAddress(AnyEntity):
     __regid__ = 'EmailAddress'
     fetch_attrs, fetch_order = fetch_config(['address', 'alias'])
+    rest_attr = 'eid'
 
     def dc_title(self):
         if self.alias:

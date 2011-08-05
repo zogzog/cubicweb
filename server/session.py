@@ -1180,7 +1180,8 @@ class Session(RequestSessionBase):
     def _build_descr(self, result, basedescription, todetermine):
         description = []
         etype_from_eid = self.describe
-        for row in result:
+        todel = []
+        for i, row in enumerate(result):
             row_descr = basedescription[:]
             for index, isfinal in todetermine:
                 value = row[index]
@@ -1194,10 +1195,14 @@ class Session(RequestSessionBase):
                     try:
                         row_descr[index] = etype_from_eid(value)[0]
                     except UnknownEid:
-                        self.critical('wrong eid %s in repository, you should '
-                                      'db-check the database' % value)
-                        row_descr[index] = row[index] = None
-            description.append(tuple(row_descr))
+                        self.error('wrong eid %s in repository, you should '
+                                   'db-check the database' % value)
+                        todel.append(i)
+                        break
+            else:
+                description.append(tuple(row_descr))
+        for i in reversed(todel):
+            del result[i]
         return description
 
     # deprecated ###############################################################

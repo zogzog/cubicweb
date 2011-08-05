@@ -135,8 +135,13 @@ class ViewAction(action.Action):
         params = self._cw.form.copy()
         for param in ('vid', '__message') + controller.NAV_FORM_PARAMETERS:
             params.pop(param, None)
-        return self._cw.build_url(self._cw.relative_path(includeparams=False),
-                                  **params)
+        if self._cw.json_request:
+            path = 'view'
+            if self.cw_rset is not None:
+                params = {'rql': self.cw_rset.printable_rql()}
+        else:
+            path = self._cw.relative_path(includeparams=False)
+        return self._cw.build_url(path, **params)
 
 
 class ModifyAction(action.Action):
@@ -163,7 +168,7 @@ class MultipleEditAction(action.Action):
     order = 10
 
     def url(self):
-        return self._cw.build_url('view', rql=self.cw_rset.rql, vid='muledit')
+        return self._cw.build_url('view', rql=self.cw_rset.printable_rql(), vid='muledit')
 
 
 # generic "more" actions #######################################################

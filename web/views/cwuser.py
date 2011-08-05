@@ -168,6 +168,10 @@ class ManageUsersAction(actions.ManagersAction):
 
 class CWUserManagementView(StartupView):
     __regid__ = 'cw.user-management'
+    # XXX one could wish to display for instance only user's firstname/surname
+    # for non managers but filtering out NULL cause crash with an ldapuser
+    # source.
+    __select__ = StartupView.__select__ & match_user_groups('managers')
     rql = ('Any U,USN,F,S,U,UAA,UDS, L,UAA,UDSN ORDERBY L WHERE U is CWUser, '
            'U login L, U firstname F, U surname S, '
            'U in_state US, US name USN, '

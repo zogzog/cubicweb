@@ -505,12 +505,7 @@ class Repository(object):
 
         This is a public method, not requiring a session id.
         """
-        try:
-            # necessary to support pickling used by pyro
-            self.schema.__hashmode__ = 'pickle'
-            return self.schema
-        finally:
-            self.schema.__hashmode__ = None
+        return self.schema
 
     def get_cubes(self):
         """Return the list of cubes used by this instance.

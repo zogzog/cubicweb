@@ -384,7 +384,8 @@ class EntityFieldsForm(FieldsForm):
                 else:
                     msg = self._cw._('entity linked')
         if msg:
-            self.add_hidden('__message', msg)
+            msgid = self._cw.set_redirect_message(msg)
+            self.add_hidden('_cwmsgid', msgid)
 
     def session_key(self):
         """return the key that may be used to store / retreive data about a

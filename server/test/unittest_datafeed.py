@@ -94,9 +94,26 @@ class DataFeedTC(CubicWebTC):
         self.assertTrue(dfsource.latest_retrieval)
         self.assertTrue(dfsource.fresh())
 
+        # test_rename_source
+        req = self.request()
+        req.execute('SET S name "myrenamedfeed" WHERE S is CWSource, S name "myfeed"')
+        self.commit()
+        entity = self.execute('Card X').get_entity(0, 0)
+        self.assertEqual(entity.cwuri, 'http://www.cubicweb.org/')
+        self.assertEqual(entity.cw_source[0].name, 'myrenamedfeed')
+        self.assertEqual(entity.cw_metainformation(),
+                         {'type': 'Card',
+                          'source': {'uri': 'myrenamedfeed', 'type': 'datafeed', 'use-cwuri-as-url': True},
+                          'extid': 'http://www.cubicweb.org/'}
+                         )
+        self.assertEqual(self.repo._type_source_cache[entity.eid],
+                         ('Card', 'system', 'http://www.cubicweb.org/', 'myrenamedfeed'))
+        self.assertEqual(self.repo._extid_cache[('http://www.cubicweb.org/', 'system')],
+                         entity.eid)
+
         # test_delete_source
         req = self.request()
-        req.execute('DELETE CWSource S WHERE S name "myfeed"')
+        req.execute('DELETE CWSource S WHERE S name "myrenamedfeed"')
         self.commit()
         self.failIf(self.execute('Card X WHERE X title "cubicweb.org"'))
         self.failIf(self.execute('Any X WHERE X has_text "cubicweb.org"'))

@@ -366,7 +366,6 @@ class RepositoryTC(CubicWebTC):
             schema = cnx.get_schema()
             self.failUnless(cnx.vreg)
             self.failUnless('etypes'in cnx.vreg)
-            self.assertEqual(schema.__hashmode__, None)
             cu = cnx.cursor()
             rset = cu.execute('Any U,G WHERE U in_group G')
             user = iter(rset.entities()).next()

@@ -105,11 +105,17 @@ def rql_role(role, rawtext, text, lineno, inliner, options={}, content=[]):
     else:
         rql, vid = text, None
     _cw.ensure_ro_rql(rql)
-    rset = _cw.execute(rql, {'userid': _cw.user.eid})
-    if vid is None:
-        vid = vid_from_rset(_cw, rset, _cw.vreg.schema)
-    view = _cw.vreg['views'].select(vid, _cw, rset=rset)
-    content = view.render()
+    try:
+        rset = _cw.execute(rql, {'userid': _cw.user.eid})
+        if rset:
+            if vid is None:
+                vid = vid_from_rset(_cw, rset, _cw.vreg.schema)
+        else:
+            vid = 'noresult'
+        view = _cw.vreg['views'].select(vid, _cw, rset=rset)
+        content = view.render()
+    except Exception, exc:
+        content = 'an error occured while interpreting this rql directive: %r' % exc
     set_classes(options)
     return [nodes.raw('', content, format='html')], []
 

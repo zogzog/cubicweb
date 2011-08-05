@@ -1261,6 +1261,9 @@ msgstr "Usuario o contraseña incorrecta"
 msgid "auto"
 msgstr "Automático"
 
+msgid "autocomputed attribute used to ensure transition coherency"
+msgstr ""
+
 msgid "automatic"
 msgstr "Automático"
 
@@ -2327,9 +2330,6 @@ msgstr "Tabla modificable"
 msgid "eid"
 msgstr "eid"
 
-msgid "email address to use for notification"
-msgstr "Dirección electrónica a utilizarse para notificar"
-
 msgid "emails successfully sent"
 msgstr "Mensajes enviados con éxito"
 
@@ -2660,6 +2660,18 @@ msgstr "Grupo en el cual el usuario debe estar lograr la transición"
 
 msgid "groups"
 msgstr "Grupos"
+
+msgid "groups allowed to add entities/relations of this type"
+msgstr ""
+
+msgid "groups allowed to delete entities/relations of this type"
+msgstr ""
+
+msgid "groups allowed to read entities/relations of this type"
+msgstr ""
+
+msgid "groups allowed to update entities/relations of this type"
+msgstr ""
 
 msgid "groups grant permissions to the user"
 msgstr "Los grupos otorgan los permisos al usuario"
@@ -3654,6 +3666,18 @@ msgstr "Anular modificación"
 msgid "right"
 msgstr "Derecha"
 
+msgid "rql expression allowing to add entities/relations of this type"
+msgstr ""
+
+msgid "rql expression allowing to delete entities/relations of this type"
+msgstr ""
+
+msgid "rql expression allowing to read entities/relations of this type"
+msgstr ""
+
+msgid "rql expression allowing to update entities/relations of this type"
+msgstr ""
+
 msgid "rql expressions"
 msgstr "Expresiones RQL"
 
@@ -4373,6 +4397,9 @@ msgstr "Encoding de la interfaz de usuario"
 msgid "user preferences"
 msgstr "Preferencias"
 
+msgid "user's email account"
+msgstr ""
+
 msgid "users"
 msgstr "Usuarios"
 
@@ -4576,3 +4603,6 @@ msgstr ""
 #~ msgctxt "CWAttribute"
 #~ msgid "cw_schema_object"
 #~ msgstr "mapeado por"
+
+#~ msgid "email address to use for notification"
+#~ msgstr "Dirección electrónica a utilizarse para notificar"
