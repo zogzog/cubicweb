@@ -155,7 +155,7 @@ class InstanceCommand(Command):
             try:
                 status = max(status, self.run_arg(appid))
             except (KeyboardInterrupt, SystemExit):
-                print >> sys.stderr, '%s aborted' % self.name
+                sys.stderr.write('%s aborted\n' % self.name)
                 return 2 # specific error code
         sys.exit(status)
 
@@ -164,14 +164,14 @@ class InstanceCommand(Command):
         try:
             status = cmdmeth(appid)
         except (ExecutionError, ConfigurationError), ex:
-            print >> sys.stderr, 'instance %s not %s: %s' % (
-                appid, self.actionverb, ex)
+            sys.stderr.write('instance %s not %s: %s\n' % (
+                    appid, self.actionverb, ex))
             status = 4
         except Exception, ex:
             import traceback
             traceback.print_exc()
-            print >> sys.stderr, 'instance %s not %s: %s' % (
-                appid, self.actionverb, ex)
+            sys.stderr.write('instance %s not %s: %s\n' % (
+                    appid, self.actionverb, ex))
             status = 8
         return status
 
@@ -548,20 +548,19 @@ class StopInstanceCommand(InstanceCommand):
         helper.poststop() # do this anyway
         pidf = config['pid-file']
         if not exists(pidf):
-            print >> sys.stderr, "%s doesn't exist." % pidf
+            sys.stderr.write("%s doesn't exist.\n" % pidf)
             return
         import signal
         pid = int(open(pidf).read().strip())
         try:
             kill(pid, signal.SIGTERM)
         except Exception:
-            print >> sys.stderr, "process %s seems already dead." % pid
+            sys.stderr.write("process %s seems already dead.\n" % pid)
         else:
             try:
                 wait_process_end(pid)
             except ExecutionError, ex:
-                print >> sys.stderr, ex
-                print >> sys.stderr, 'trying SIGKILL'
+                sys.stderr.write('%s\ntrying SIGKILL\n' % ex)
                 try:
                     kill(pid, signal.SIGKILL)
                 except Exception:

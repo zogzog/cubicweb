@@ -36,9 +36,8 @@ from cubicweb.server.session import security_enabled
 
 def notify_fixed(fix):
     if fix:
-        print >> sys.stderr, ' [FIXED]'
-    else:
-        print >> sys.stderr
+        sys.stderr.write(' [FIXED]')
+    sys.stderr.write('\n')
 
 def has_eid(session, sqlcursor, eid, eids):
     """return true if the eid is a valid eid"""
@@ -69,9 +68,9 @@ def has_eid(session, sqlcursor, eid, eids):
         eids[eid] = False
         return False
     elif len(result) > 1:
-        msg = '  More than one entity with eid %s exists in source !'
-        print >> sys.stderr, msg % eid
-        print >> sys.stderr, '  WARNING : Unable to fix this, do it yourself !'
+        msg = ('  More than one entity with eid %s exists in source !\n'
+               '  WARNING : Unable to fix this, do it yourself !\n')
+        sys.stderr.write(msg % eid)
     eids[eid] = True
     return True
 
@@ -169,8 +168,8 @@ def check_text_index(schema, session, eids, fix=1):
     for row in cursor.fetchall():
         eid = row[0]
         if not has_eid(session, cursor, eid, eids):
-            msg = '  Entity with eid %s exists in the text index but in no source'
-            print >> sys.stderr, msg % eid,
+            msg = '  Entity with eid %s exists in the text index but in no source\n'
+            sys.stderr.write(msg % eid)
             if fix:
                 session.system_sql('DELETE FROM appears WHERE uid=%s;' % eid)
             notify_fixed(fix)
@@ -183,8 +182,8 @@ def check_entities(schema, session, eids, fix=1):
     for row in cursor.fetchall():
         eid = row[0]
         if not has_eid(session, cursor, eid, eids):
-            msg = '  Entity with eid %s exists in the system table but in no source'
-            print >> sys.stderr, msg % eid,
+            msg = '  Entity with eid %s exists in the system table but in no source\n'
+            sys.stderr.write(msg % eid)
             if fix:
                 session.system_sql('DELETE FROM entities WHERE eid=%s;' % eid)
             notify_fixed(fix)
@@ -213,7 +212,7 @@ def check_entities(schema, session, eids, fix=1):
             # no need to call has_eid
             if not eid in eids or not eids[eid]:
                 msg = '  Entity with eid %s exists in the %s table but not in the system table'
-                print >> sys.stderr, msg % (eid, eschema.type),
+                sys.stderr.write(msg % (eid, eschema.type))
                 if fix:
                     session.system_sql('DELETE FROM %s WHERE %s=%s;' % (table, column, eid))
                 notify_fixed(fix)
@@ -221,7 +220,7 @@ def check_entities(schema, session, eids, fix=1):
 
 def bad_related_msg(rtype, target, eid, fix):
     msg = '  A relation %s with %s eid %s exists but no such entity in sources'
-    print >> sys.stderr, msg % (rtype, target, eid),
+    sys.stderr.write(msg % (rtype, target, eid))
     notify_fixed(fix)
 
 
@@ -294,8 +293,8 @@ def check_mandatory_relations(schema, session, eids, fix=1):
                 else:
                     rql = 'Any X WHERE NOT Y %s X, X is %s' % (rschema, etype)
                 for entity in session.execute(rql).entities():
-                    print >> sys.stderr, '%s #%s is missing mandatory %s relation %s' % (
-                        entity.__regid__, entity.eid, role, rschema),
+                    sys.stderr.write('%s #%s is missing mandatory %s relation %s' % (
+                            entity.__regid__, entity.eid, role, rschema))
                     if fix:
                         #if entity.cw_describe()['source']['uri'] == 'system': XXX
                         entity.cw_delete()
@@ -315,8 +314,8 @@ def check_mandatory_attributes(schema, session, eids, fix=1):
                 rql = 'Any X WHERE X %s NULL, X is %s, X cw_source S, S name "system"' % (
                     rschema, rdef.subject)
                 for entity in session.execute(rql).entities():
-                    print >> sys.stderr, '%s #%s is missing mandatory attribute %s' % (
-                        entity.__regid__, entity.eid, rschema),
+                    sys.stderr.write('%s #%s is missing mandatory attribute %s' % (
+                            entity.__regid__, entity.eid, rschema))
                     if fix:
                         entity.cw_delete()
                     notify_fixed(fix)
@@ -339,7 +338,7 @@ def check_metadata(schema, session, eids, fix=1):
                                         % (eidcolumn, table, column))
             for eid, in cursor.fetchall():
                 msg = '  %s with eid %s has no %s'
-                print >> sys.stderr, msg % (etype, eid, rel),
+                sys.stderr.write(msg % (etype, eid, rel))
                 if fix:
                     session.system_sql("UPDATE %s SET %s=%%(v)s WHERE %s=%s ;"
                                        % (table, column, eidcolumn, eid),

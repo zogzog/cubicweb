@@ -33,7 +33,7 @@ def extract_from_tal(files, output_file):
     output = open(output_file, 'w')
     for filepath in files:
         for match in re.finditer('i18n:(content|replace)="([^"]+)"', open(filepath).read()):
-            print >> output, '_("%s")' % match.group(2)
+            output.write('_("%s")' % match.group(2))
     output.close()
 
 

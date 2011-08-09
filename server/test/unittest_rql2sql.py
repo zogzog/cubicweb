@@ -46,12 +46,12 @@ def monkey_patch_import_driver_module(driver, drivers, quiet=True):
     for modname in drivers[driver]:
         try:
             if not quiet:
-                print >> sys.stderr, 'Trying %s' % modname
+                sys.stderr.write('Trying %s\n' % modname)
             module = db.load_module_from_name(modname, use_sys=False)
             break
         except ImportError:
             if not quiet:
-                print >> sys.stderr, '%s is not available' % modname
+                sys.stderr.write('%s is not available\n' % modname)
             continue
     else:
         return mock_object(STRING=1, BOOLEAN=2, BINARY=3, DATETIME=4, NUMBER=5), drivers[driver][0]

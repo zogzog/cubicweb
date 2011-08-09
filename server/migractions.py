@@ -160,7 +160,7 @@ class ServerMigrationHelper(MigrationHelper):
             return super(ServerMigrationHelper, self).cmd_process_script(
                   migrscript, funcname, *args, **kwargs)
         except ExecutionError, err:
-            print >> sys.stderr, "-> %s" % err
+            sys.stderr.write("-> %s\n" % err)
         except BaseException:
             self.rollback()
             raise
