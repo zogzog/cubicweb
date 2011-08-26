@@ -1711,21 +1711,24 @@ class DatabaseIndependentBackupRestore(object):
         archive.writestr('sequences/%s' % seq, serialized)
 
     def write_table(self, archive, table):
+        nb_lines_sql = 'SELECT COUNT(*) FROM %s' % table
+        self.cursor.execute(nb_lines_sql)
+        rowcount = self.cursor.fetchone()[0]
         sql = 'SELECT * FROM %s' % table
         columns, rows_iterator = self._get_cols_and_rows(sql)
-        self.logger.info('number of rows: %d', self.cursor.rowcount)
+        self.logger.info('number of rows: %d', rowcount)
         if table.startswith('cw_'): # entities
             blocksize = 2000
         else: # relations and metadata
             blocksize = 10000
-        if self.cursor.rowcount > 0:
-            for i, start in enumerate(xrange(0, self.cursor.rowcount, blocksize)):
+        if rowcount > 0:
+            for i, start in enumerate(xrange(0, rowcount, blocksize)):
                 rows = list(itertools.islice(rows_iterator, blocksize))
                 serialized = self._serialize(table, columns, rows)
                 archive.writestr('tables/%s.%04d' % (table, i), serialized)
                 self.logger.debug('wrote rows %d to %d (out of %d) to %s.%04d',
                                   start, start+len(rows)-1,
-                                  self.cursor.rowcount,
+                                  rowcount,
                                   table, i)
         else:
             rows = []
