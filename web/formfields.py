@@ -148,7 +148,9 @@ class Field(object):
        bool flag telling if this field is linked to a specific entity
     :attr:`role`
        when the field is linked to an entity attribute or relation, tells the
-       role of the entity in the relation (eg 'subject' or 'object')
+       role of the entity in the relation (eg 'subject' or 'object'). If this is
+       not an attribute or relation of the edited entity, `role` should be
+       `None`.
     :attr:`fieldset`
        optional fieldset to which this field belongs to
     :attr:`order`
