@@ -92,7 +92,7 @@ class CubicWebRequestBase(DBAPIRequest):
             self.uiprops = vreg.config.uiprops
             self.datadir_url = vreg.config.datadir_url
         # raw html headers that can be added from any view
-        self.html_headers = HTMLHead(self.datadir_url)
+        self.html_headers = HTMLHead(self)
         # form parameters
         self.setup_params(form)
         # dictionnary that may be used to store request data that has to be
@@ -262,7 +262,7 @@ class CubicWebRequestBase(DBAPIRequest):
         """used by AutomaticWebTest to clear html headers between tests on
         the same resultset
         """
-        self.html_headers = HTMLHead(self.datadir_url)
+        self.html_headers = HTMLHead(self)
         return self
 
     # web state helpers #######################################################

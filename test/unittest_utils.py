@@ -159,9 +159,17 @@ class JSONEncoderTC(TestCase):
         self.assertEqual(self.encode(TestCase), 'null')
 
 class HTMLHeadTC(CubicWebTC):
+
+    def htmlhead(self, datadir_url):
+        req = self.request()
+        base_url = u'http://test.fr/data/'
+        req.datadir_url = base_url
+        head = HTMLHead(req)
+        return head
+
     def test_concat_urls(self):
         base_url = u'http://test.fr/data/'
-        head = HTMLHead(base_url)
+        head = self.htmlhead(base_url)
         urls = [base_url + u'bob1.js',
                 base_url + u'bob2.js',
                 base_url + u'bob3.js']
@@ -171,7 +179,7 @@ class HTMLHeadTC(CubicWebTC):
 
     def test_group_urls(self):
         base_url = u'http://test.fr/data/'
-        head = HTMLHead(base_url)
+        head = self.htmlhead(base_url)
         urls_spec = [(base_url + u'bob0.js', None),
                      (base_url + u'bob1.js', None),
                      (u'http://ext.com/bob2.js', None),
@@ -196,7 +204,7 @@ class HTMLHeadTC(CubicWebTC):
 
     def test_getvalue_with_concat(self):
         base_url = u'http://test.fr/data/'
-        head = HTMLHead(base_url)
+        head = self.htmlhead(base_url)
         head.add_js(base_url + u'bob0.js')
         head.add_js(base_url + u'bob1.js')
         head.add_js(u'http://ext.com/bob2.js')
@@ -224,20 +232,22 @@ class HTMLHeadTC(CubicWebTC):
         self.assertEqual(result, expected)
 
     def test_getvalue_without_concat(self):
-        base_url = u'http://test.fr/data/'
-        head = HTMLHead()
-        head.add_js(base_url + u'bob0.js')
-        head.add_js(base_url + u'bob1.js')
-        head.add_js(u'http://ext.com/bob2.js')
-        head.add_js(u'http://ext.com/bob3.js')
-        head.add_css(base_url + u'bob4.css')
-        head.add_css(base_url + u'bob5.css')
-        head.add_css(base_url + u'bob6.css', 'print')
-        head.add_css(base_url + u'bob7.css', 'print')
-        head.add_ie_css(base_url + u'bob8.css')
-        head.add_ie_css(base_url + u'bob9.css', 'print', u'[if lt IE 7]')
-        result = head.getvalue()
-        expected = u"""<head>
+        self.config.global_set_option('concat-resources', False)
+        try:
+            base_url = u'http://test.fr/data/'
+            head = self.htmlhead(base_url)
+            head.add_js(base_url + u'bob0.js')
+            head.add_js(base_url + u'bob1.js')
+            head.add_js(u'http://ext.com/bob2.js')
+            head.add_js(u'http://ext.com/bob3.js')
+            head.add_css(base_url + u'bob4.css')
+            head.add_css(base_url + u'bob5.css')
+            head.add_css(base_url + u'bob6.css', 'print')
+            head.add_css(base_url + u'bob7.css', 'print')
+            head.add_ie_css(base_url + u'bob8.css')
+            head.add_ie_css(base_url + u'bob9.css', 'print', u'[if lt IE 7]')
+            result = head.getvalue()
+            expected = u"""<head>
 <link rel="stylesheet" type="text/css" media="all" href="http://test.fr/data/bob4.css"/>
 <link rel="stylesheet" type="text/css" media="all" href="http://test.fr/data/bob5.css"/>
 <link rel="stylesheet" type="text/css" media="print" href="http://test.fr/data/bob6.css"/>
@@ -253,7 +263,9 @@ class HTMLHeadTC(CubicWebTC):
 <script type="text/javascript" src="http://ext.com/bob3.js"></script>
 </head>
 """
-        self.assertEqual(result, expected)
+            self.assertEqual(result, expected)
+        finally:
+            self.config.global_set_option('concat-resources', True)
 
 class DocTest(DocTest):
     from cubicweb import utils as module

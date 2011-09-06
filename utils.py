@@ -227,7 +227,7 @@ class HTMLHead(UStringIO):
     xhtml_safe_script_opening = u'<script type="text/javascript"><!--//--><![CDATA[//><!--\n'
     xhtml_safe_script_closing = u'\n//--><!]]></script>'
 
-    def __init__(self, datadir_url=None):
+    def __init__(self, req):
         super(HTMLHead, self).__init__()
         self.jsvars = []
         self.jsfiles = []
@@ -235,8 +235,8 @@ class HTMLHead(UStringIO):
         self.ie_cssfiles = []
         self.post_inlined_scripts = []
         self.pagedata_unload = False
-        self.datadir_url = datadir_url
-
+        self._cw = req
+        self.datadir_url = req.datadir_url
 
     def add_raw(self, rawheader):
         self.write(rawheader)
@@ -348,20 +348,26 @@ class HTMLHead(UStringIO):
                 w(vardecl + u'\n')
             w(self.xhtml_safe_script_closing)
         # 2/ css files
-        for cssfile, media in (self.group_urls(self.cssfiles) if self.datadir_url else self.cssfiles):
+        ie_cssfiles = ((x, (y, z)) for x, y, z in self.ie_cssfiles)
+        if self.datadir_url and self._cw.vreg.config['concat-resources']:
+            cssfiles = self.group_urls(self.cssfiles)
+            ie_cssfiles = self.group_urls(ie_cssfiles)
+            jsfiles = (x for x, _ in self.group_urls((x, None) for x in self.jsfiles))
+        else:
+            cssfiles = self.cssfiles
+            jsfiles = self.jsfiles
+        for cssfile, media in cssfiles:
             w(u'<link rel="stylesheet" type="text/css" media="%s" href="%s"/>\n' %
               (media, xml_escape(cssfile)))
         # 3/ ie css if necessary
-        if self.ie_cssfiles:
-            ie_cssfiles = ((x, (y, z)) for x, y, z in self.ie_cssfiles)
-            for cssfile, (media, iespec) in (self.group_urls(ie_cssfiles) if self.datadir_url else ie_cssfiles):
+        if self.ie_cssfiles: # use self.ie_cssfiles because `ie_cssfiles` is a genexp
+            for cssfile, (media, iespec) in ie_cssfiles:
                 w(u'<!--%s>\n' % iespec)
                 w(u'<link rel="stylesheet" type="text/css" media="%s" href="%s"/>\n' %
                   (media, xml_escape(cssfile)))
             w(u'<![endif]--> \n')
         # 4/ js files
-        jsfiles = ((x, None) for x in self.jsfiles)
-        for jsfile, media in self.group_urls(jsfiles) if self.datadir_url else jsfiles:
+        for jsfile in jsfiles:
             if skiphead:
                 # Don't insert <script> tags directly as they would be
                 # interpreted directly by some browsers (e.g. IE).
