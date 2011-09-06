@@ -636,12 +636,14 @@ class Session(RequestSessionBase):
         if txstore.ctx_count == 0:
             self._clear_thread_storage(txstore)
         else:
-            if categories:
-                if mode is self.HOOKS_DENY_ALL:
-                    return self.disable_hook_categories(*categories)
-                else:
-                    return self.enable_hook_categories(*categories)
-            self.set_hooks_mode(oldmode)
+            try:
+                if categories:
+                    if mode is self.HOOKS_DENY_ALL:
+                        return self.disable_hook_categories(*categories)
+                    else:
+                        return self.enable_hook_categories(*categories)
+            finally:
+                self.set_hooks_mode(oldmode)
 
     @property
     def disabled_hook_categories(self):
