@@ -25,7 +25,6 @@ import sys
 import os
 import os.path as osp
 import select
-import errno
 import traceback
 import threading
 import re
@@ -523,12 +522,8 @@ def run(config, vreg=None, debug=None):
             return whichproc # parent process
     root_resource.init_publisher() # before changing uid
     if config['uid'] is not None:
-        try:
-            uid = int(config['uid'])
-        except ValueError:
-            from pwd import getpwnam
-            uid = getpwnam(config['uid']).pw_uid
-        os.setuid(uid)
+        from logilab.common.daemon import setugid
+        setugid(config['uid'])
     root_resource.start_service()
     LOGGER.info('instance started on %s', root_resource.base_url)
     # avoid annoying warnign if not in Main Thread

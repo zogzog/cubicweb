@@ -651,7 +651,7 @@ class StartRepositoryCommand(Command):
         )
 
     def run(self, args):
-        from logilab.common.daemon import daemonize
+        from logilab.common.daemon import daemonize, setugid
         from cubicweb.cwctl import init_cmdline_log_threshold
         from cubicweb.server.server import RepositoryServer
         appid = args[0]
@@ -675,12 +675,7 @@ class StartRepositoryCommand(Command):
             return
         uid = config['uid']
         if uid is not None:
-            try:
-                uid = int(uid)
-            except ValueError:
-                from pwd import getpwnam
-                uid = getpwnam(uid).pw_uid
-            os.setuid(uid)
+            setugid(uid)
         server.install_sig_handlers()
         server.connect(config['host'], 0)
         server.run()
