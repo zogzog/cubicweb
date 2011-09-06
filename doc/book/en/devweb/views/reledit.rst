@@ -116,7 +116,14 @@ eid, then, forces to reload on something like http://myapp/company/42,
 which always work.
 
 
+Disable `reledit`
+*****************
 
+By default, this feature is available on all attributes of every entity primary view.
+If you want to disable `reledit` feature, you have to override by using uicfg:
 
+.. sourcecode:: python
 
+    import uicfg.primaryview_display_ctrl as _pvdc
+    _pvdc.tag_attribute(('Company', 'name'), {'vid': 'incontext'})
 
