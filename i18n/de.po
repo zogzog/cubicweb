@@ -3755,7 +3755,7 @@ msgstr "Konfiguration der Website"
 msgid "site documentation"
 msgstr "Dokumentation der Website"
 
-msgid "site schema"
+msgid "data model schema"
 msgstr "Schema der Website"
 
 msgid "site title"

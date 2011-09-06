@@ -88,6 +88,9 @@ def cleanup_sys_modules(config):
             continue
         if not hasattr(mod, '__file__'):
             continue
+        if mod.__file__ is None:
+            # odd/rare but real
+            continue
         for path in config.vregistry_path():
             if mod.__file__.startswith(path):
                 del sys.modules[name]

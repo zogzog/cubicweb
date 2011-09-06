@@ -73,10 +73,20 @@ class SessionTC(CubicWebTC):
             self.assertEqual(session.hooks_mode, session.HOOKS_DENY_ALL)
             self.assertEqual(session.disabled_hook_categories, set())
             self.assertEqual(session.enabled_hook_categories, set(('metadata',)))
+            with hooks_control(session, session.HOOKS_ALLOW_ALL, 'integrity'):
+                self.assertEqual(session.hooks_mode, session.HOOKS_ALLOW_ALL)
+                self.assertEqual(session.disabled_hook_categories, set(('integrity',)))
+                self.assertEqual(session.enabled_hook_categories, set(('metadata',))) # not changed in such case
+            self.assertEqual(session.hooks_mode, session.HOOKS_DENY_ALL)
+            self.assertEqual(session.disabled_hook_categories, set())
+            self.assertEqual(session.enabled_hook_categories, set(('metadata',)))
         # leaving context manager with no transaction running should reset the
         # transaction local storage (and associated cnxset)
         self.assertEqual(session._tx_data, {})
         self.assertEqual(session.cnxset, None)
+        self.assertEqual(session.hooks_mode, session.HOOKS_ALLOW_ALL)
+        self.assertEqual(session.disabled_hook_categories, set())
+        self.assertEqual(session.enabled_hook_categories, set())
 
     def test_build_descr(self):
         rset = self.execute('(Any U,L WHERE U login L) UNION (Any G,N WHERE G name N, G is CWGroup)')

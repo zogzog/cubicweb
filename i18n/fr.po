@@ -3806,8 +3806,8 @@ msgstr "configuration du site"
 msgid "site documentation"
 msgstr "documentation du site"
 
-msgid "site schema"
-msgstr "schéma du site"
+msgid "data model schema"
+msgstr "schéma modèle de données"
 
 msgid "site title"
 msgstr "titre du site"
