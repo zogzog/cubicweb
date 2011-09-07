@@ -211,6 +211,14 @@ class NextPrevNavigationComponent(EntityCtxComponent):
     context = 'navbottom'
     order = 10
 
+    @property
+    def prev_icon(self):
+        return '<img src="%s"/>' % xml_escape(self._cw.data_url('go_prev.png'))
+
+    @property
+    def next_icon(self):
+        return '<img src="%s"/>' % xml_escape(self._cw.data_url('go_next.png'))
+
     def init_rendering(self):
         adapter = self.entity.cw_adapt_to('IPrevNext')
         self.previous = adapter.previous_entity()
@@ -232,16 +240,19 @@ class NextPrevNavigationComponent(EntityCtxComponent):
 
     def prevnext_entity(self, w, entity, type):
         textsize = self._cw.property_value('navigation.short-line-size')
+        content = xml_escape(cut(entity.dc_title(), textsize))
         if type == 'prev':
             title = self._cw._('i18nprevnext_previous')
-            icon = u'&lt;&lt; '
+            icon = self.prev_icon
             cssclass = u'previousEntity left'
+            content = icon + content
         else:
             title = self._cw._('i18nprevnext_next')
-            icon = u'&gt;&gt; '
+            icon = self.next_icon
             cssclass = u'nextEntity right'
+            content = content + '&#160;&#160;' + icon
         self.prevnext_div(w, type, cssclass, entity.absolute_url(),
-                          title, icon + xml_escape(cut(entity.dc_title(), textsize)))
+                          title, content)
 
     def prevnext_div(self, w, type, cssclass, url, title, content):
         w(u'<div class="%s">' % cssclass)
