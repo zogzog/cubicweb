@@ -1974,6 +1974,9 @@ msgstr "interner URI"
 msgid "data directory url"
 msgstr "URL des Daten-Pools"
 
+msgid "data model schema"
+msgstr "Schema der Website"
+
 msgid "data sources"
 msgstr ""
 
@@ -3754,9 +3757,6 @@ msgstr "Konfiguration der Website"
 
 msgid "site documentation"
 msgstr "Dokumentation der Website"
-
-msgid "data model schema"
-msgstr "Schema der Website"
 
 msgid "site title"
 msgstr "Titel der Website"

@@ -164,7 +164,9 @@ msgstr "l'action '%s' ne prend pas d'option"
 #, python-format
 msgid ""
 "'%s' action for in_state relation should at least have 'linkattr=name' option"
-msgstr "l'action '%s' pour la relation in_state doit au moins avoir l'option 'linkattr=name'"
+msgstr ""
+"l'action '%s' pour la relation in_state doit au moins avoir l'option "
+"'linkattr=name'"
 
 #, python-format
 msgid "'%s' action requires 'linkattr' option"
@@ -1260,7 +1262,8 @@ msgid "auto"
 msgstr "automatique"
 
 msgid "autocomputed attribute used to ensure transition coherency"
-msgstr "attribut calculé automatiquement pour assurer la cohérence de la transition"
+msgstr ""
+"attribut calculé automatiquement pour assurer la cohérence de la transition"
 
 msgid "automatic"
 msgstr "automatique"
@@ -2005,6 +2008,9 @@ msgstr "uri interne"
 
 msgid "data directory url"
 msgstr "url du répertoire de données"
+
+msgid "data model schema"
+msgstr "schéma du modèle de données"
 
 msgid "data sources"
 msgstr "sources de données"
@@ -3677,7 +3683,8 @@ msgid "rql expression allowing to read entities/relations of this type"
 msgstr "expression rql autorisant à lire des entités/relations de ce type"
 
 msgid "rql expression allowing to update entities/relations of this type"
-msgstr "expression rql autorisant à mettre à jour des entités/relations de ce type"
+msgstr ""
+"expression rql autorisant à mettre à jour des entités/relations de ce type"
 
 msgid "rql expressions"
 msgstr "conditions rql"
@@ -3805,9 +3812,6 @@ msgstr "configuration du site"
 
 msgid "site documentation"
 msgstr "documentation du site"
-
-msgid "data model schema"
-msgstr "schéma modèle de données"
 
 msgid "site title"
 msgstr "titre du site"

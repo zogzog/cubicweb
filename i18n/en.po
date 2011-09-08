@@ -1929,6 +1929,9 @@ msgstr "internal uri"
 msgid "data directory url"
 msgstr ""
 
+msgid "data model schema"
+msgstr ""
+
 msgid "data sources"
 msgstr ""
 
@@ -3657,9 +3660,6 @@ msgid "site configuration"
 msgstr ""
 
 msgid "site documentation"
-msgstr ""
-
-msgid "data model schema"
 msgstr ""
 
 msgid "site title"

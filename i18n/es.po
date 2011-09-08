@@ -2003,6 +2003,9 @@ msgstr "Uri Interna"
 msgid "data directory url"
 msgstr "Url del repertorio de datos"
 
+msgid "data model schema"
+msgstr "Esquema del Sistema"
+
 msgid "data sources"
 msgstr "fuente de datos"
 
@@ -3805,9 +3808,6 @@ msgstr "Configuración Sistema"
 
 msgid "site documentation"
 msgstr "Documentación Sistema"
-
-msgid "data model schema"
-msgstr "Esquema del Sistema"
 
 msgid "site title"
 msgstr "Nombre del Sistema"
