@@ -1212,12 +1212,12 @@ class MSPlannerTC(BaseMSPlannerTC):
                                     [{'X': 'Note', 'S': 'State'}])],
                      [self.cards, self.system], None, {'X': 'table0.C0', 'S': 'table0.C1'}, []),
                      ('UnionStep', None, None,
-                      [('OneFetchStep', [('Any X,S,U WHERE X in_state S, X todo_by U, S is State, U is CWUser, X is Note',
-                                          [{'X': 'Note', 'S': 'State', 'U': 'CWUser'}])],
-                        None, None, [self.system], {'X': 'table0.C0', 'S': 'table0.C1'}, []),
-                       ('OneFetchStep', [('Any X,S,U WHERE X in_state S, X todo_by U, S is State, U is Personne, X is Affaire',
+                      [('OneFetchStep', [('Any X,S,U WHERE X in_state S, X todo_by U, S is State, U is Personne, X is Affaire',
                                           [{'X': 'Affaire', 'S': 'State', 'U': 'Personne'}])],
                         None, None, [self.system], {}, []),
+                       ('OneFetchStep', [('Any X,S,U WHERE X todo_by U, S is State, U is CWUser, X is Note',
+                                          [{'X': 'Note', 'S': 'State', 'U': 'CWUser'}])],
+                        None, None, [self.system], {'X': 'table0.C0', 'S': 'table0.C1'}, []),
                        ])
                     ])
 
@@ -2456,6 +2456,21 @@ class MSPlannerTC(BaseMSPlannerTC):
                      [])],
                    {'x': 999999})
 
+    def test_nonregr_dont_readd_already_processed_relation(self):
+        self._test('Any WO,D,SO WHERE WO is Note, D tags WO, WO in_state SO',
+                   [('FetchStep',
+                     [('Any WO,SO WHERE WO in_state SO, SO is State, WO is Note',
+                       [{'SO': 'State', 'WO': 'Note'}])],
+                     [self.cards, self.system], None,
+                     {'SO': 'table0.C1', 'WO': 'table0.C0'},
+                     []),
+                    ('OneFetchStep',
+                     [('Any WO,D,SO WHERE D tags WO, D is Tag, SO is State, WO is Note',
+                       [{'D': 'Tag', 'SO': 'State', 'WO': 'Note'}])],
+                     None, None, [self.system],
+                     {'SO': 'table0.C1', 'WO': 'table0.C0'},
+                     [])
+                    ])
 
 class MSPlannerTwoSameExternalSourcesTC(BasePlannerTC):
     """test planner related feature on a 3-sources repository:
