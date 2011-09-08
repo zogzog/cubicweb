@@ -66,7 +66,7 @@ from cubicweb.schema import display_name
 from cubicweb.utils import make_uid
 from cubicweb.selectors import match_context_prop, partial_relation_possible
 from cubicweb.appobject import AppObject
-from cubicweb.web.htmlwidgets import HTMLWidget
+from cubicweb.web import RequestError, htmlwidgets
 
 
 def rtype_facet_title(facet):
@@ -431,7 +431,7 @@ class AbstractFacet(AppObject):
         values are selected.
         """
         # OR between selected values by default
-        return self._cw.form.get(self.__regid__ + '_andor', 'OR')
+        return self._cw.form.get(xml_escape(self.__regid__) + '_andor', 'OR')
 
     def rqlexec(self, rql, args=None):
         """Utility method to execute some rql queries, and simply returning an
@@ -720,6 +720,7 @@ class RelationFacet(VocabularyFacet):
         return support
 
     def value_restriction(self, restrvar, rel, value):
+        # XXX handle rel is None case in RQLPathFacet?
         if self.restr_attr != 'eid':
             self.select.set_distinct(True)
         if isinstance(value, basestring):
@@ -740,14 +741,19 @@ class RelationFacet(VocabularyFacet):
                 self._add_not_rel_restr(rel)
             self._and_restriction(rel, restrvar, value)
         else:
-            # multiple values with AND operator
+            # multiple values with AND operator. We've to generate a query like
+            # "X relation A, A eid 1, X relation B, B eid 1", hence the new
+            # relations at each iteration in the while loop below 
             if '' in value:
-                value.remove('')
-                self._add_not_rel_restr(rel)
+                raise RequestError("this doesn't make sense")
             self._and_restriction(rel, restrvar, value.pop())
             while value:
                 restrvar, rtrel = _make_relation(self.select, self.filtered_variable,
                                                  self.rtype, self.role)
+                if rel is None:
+                    select.add_restriction(rtrel)
+                else:
+                    rel.parent.replace(rel, nodes.And(rel, rtrel))
                 self._and_restriction(rel, restrvar, value.pop())
 
     def _and_restriction(self, rel, restrvar, value):
@@ -1331,7 +1337,7 @@ class HasRelationFacet(AbstractFacet):
 
 ## html widets ################################################################
 
-class FacetVocabularyWidget(HTMLWidget):
+class FacetVocabularyWidget(htmlwidgets.HTMLWidget):
 
     def __init__(self, facet):
         self.facet = facet
@@ -1355,7 +1361,7 @@ class FacetVocabularyWidget(HTMLWidget):
             w(u'''<select name="%s" class="radio facetOperator" title="%s">
   <option value="OR">%s</option>
   <option value="AND">%s</option>
-</select>''' % (facetid + '_andor', _('and/or between different values'),
+</select>''' % (xml_escape(self.facet.__regid__) + '_andor', _('and/or between different values'),
                 _('OR'), _('AND')))
         cssclass = 'facetBody'
         if not self.facet.start_unfolded:
@@ -1369,7 +1375,7 @@ class FacetVocabularyWidget(HTMLWidget):
         w(u'</div>\n')
 
 
-class FacetStringWidget(HTMLWidget):
+class FacetStringWidget(htmlwidgets.HTMLWidget):
     def __init__(self, facet):
         self.facet = facet
         self.value = None
@@ -1388,7 +1394,7 @@ class FacetStringWidget(HTMLWidget):
         w(u'</div>\n')
 
 
-class FacetRangeWidget(HTMLWidget):
+class FacetRangeWidget(htmlwidgets.HTMLWidget):
     formatter = 'function (value) {return value;}'
     onload = u'''
     var _formatter = %(formatter)s;
@@ -1478,7 +1484,7 @@ class DateFacetRangeWidget(FacetRangeWidget):
         facet._cw.html_headers.define_var('DATE_FMT', fmt)
 
 
-class FacetItem(HTMLWidget):
+class FacetItem(htmlwidgets.HTMLWidget):
 
     selected_img = "black-check.png"
     unselected_img = "no-check-no-border.png"
@@ -1506,7 +1512,7 @@ class FacetItem(HTMLWidget):
         w(u'</div>')
 
 
-class CheckBoxFacetWidget(HTMLWidget):
+class CheckBoxFacetWidget(htmlwidgets.HTMLWidget):
     selected_img = "black-check.png"
     unselected_img = "black-uncheck.png"
 
@@ -1543,7 +1549,7 @@ class CheckBoxFacetWidget(HTMLWidget):
         w(u'</div>\n')
 
 
-class FacetSeparator(HTMLWidget):
+class FacetSeparator(htmlwidgets.HTMLWidget):
     def __init__(self, label=None):
         self.label = label or u'&#160;'
 

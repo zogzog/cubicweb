@@ -1623,17 +1623,7 @@ class TermsFiltererVisitor(object):
     def visit_relation(self, node, newroot, terms):
         if not node.is_types_restriction():
             if not node in terms and node in self.skip and self.solindices.issubset(self.skip[node]):
-                if not self.schema.rschema(node.r_type).final:
-                    # can't really skip the relation if one variable is selected
-                    # and only referenced by this relation
-                    for vref in node.iget_nodes(VariableRef):
-                        stinfo = vref.variable.stinfo
-                        if stinfo['selected'] and len(stinfo['relations']) == 1:
-                            break
-                    else:
-                        return None, node
-                else:
-                    return None, node
+                return None, node
             if not self._relation_supported(node):
                 raise UnsupportedBranch()
         # don't copy type restriction unless this is the only supported relation

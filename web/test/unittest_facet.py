@@ -50,6 +50,22 @@ class BaseFacetTC(CubicWebTC):
         self.assertEqual(f.select.as_string(),
                          'DISTINCT Any  WHERE X is CWUser, X in_group D, D eid %s' % guests)
 
+    def test_relation_multiple_and(self):
+        f, (guests, managers) = self._in_group_facet()
+        f._cw.form[f.__regid__] = [str(guests), str(managers)]
+        f._cw.form[f.__regid__ + '_andor'] = 'AND'
+        f.add_rql_restrictions()
+        self.assertEqual(f.select.as_string(),
+                         'DISTINCT Any  WHERE X is CWUser, X in_group A, B eid %s, X in_group B, A eid %s' % (guests, managers))
+
+    def test_relation_multiple_or(self):
+        f, (guests, managers) = self._in_group_facet()
+        f._cw.form[f.__regid__] = [str(guests), str(managers)]
+        f._cw.form[f.__regid__ + '_andor'] = 'OR'
+        f.add_rql_restrictions()
+        self.assertEqual(f.select.as_string(),
+                         'DISTINCT Any  WHERE X is CWUser, X in_group A, A eid IN(%s, %s)' % (guests, managers))
+
     def test_relation_optional_rel(self):
         req = self.request()
         rset = self.execute('Any X,GROUP_CONCAT(GN) GROUPBY X '

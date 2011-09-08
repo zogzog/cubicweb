@@ -672,8 +672,9 @@ class SQLiteTestDataBaseHandler(TestDataBaseHandler):
         if 'global-db-name' not in self.system_source:
             self.system_source['global-db-name'] = self.system_source['db-name']
             process_db = self.system_source['db-name'] + str(os.getpid())
-            self.__TMPDB.add(process_db)
             self.system_source['db-name'] = process_db
+        process_db = self.absolute_dbfile() # update db-name to absolute path
+        self.__TMPDB.add(process_db)
 
     @staticmethod
     def _cleanup_database(dbfile):
@@ -693,7 +694,6 @@ class SQLiteTestDataBaseHandler(TestDataBaseHandler):
                       self.config.sources()['system']['db-name'])
         self.config.sources()['system']['db-name'] = dbfile
         return dbfile
-
 
     def process_cache_entry(self, directory, dbname, db_id, entry):
         return entry.get('sqlite')

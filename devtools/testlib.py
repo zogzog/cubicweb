@@ -493,7 +493,7 @@ class CubicWebTC(TestCase):
 
     def assertModificationDateGreater(self, entity, olddate):
         entity.cw_attr_cache.pop('modification_date', None)
-        self.failUnless(entity.modification_date > olddate)
+        self.assertTrue(entity.modification_date > olddate)
 
     def assertItemsEqual(self, it1, it2, *args, **kwargs):
         it1 = set(getattr(x, 'eid', x) for x in it1)

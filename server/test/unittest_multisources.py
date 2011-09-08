@@ -381,6 +381,9 @@ cubicweb-password = gingkow
     def test_nonregr3(self):
         self.sexecute('DELETE Card X WHERE X eid %(x)s, NOT X multisource_inlined_rel Y', {'x': self.ic1})
 
+    def test_nonregr4(self):
+        self.sexecute('Any X,S,U WHERE X in_state S, X todo_by U')
+
     def test_delete_source(self):
         req = self.request()
         req.execute('DELETE CWSource S WHERE S name "extern"')
