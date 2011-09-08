@@ -27,6 +27,7 @@ from warnings import warn
 from logilab.common.decorators import cached
 from logilab.common.deprecation import deprecated
 
+from cubicweb import ConfigurationError
 from cubicweb.toolsutils import read_config
 from cubicweb.cwconfig import CubicWebConfiguration, register_persistent_options, merge_options
 
@@ -233,16 +234,20 @@ have the python imaging library installed to use captcha)',
         return self.repository().get_versions()
 
     def anonymous_user(self):
-        """return a login and password to use for anonymous users. None
-        may be returned for both if anonymous connections are not allowed
+        """return a login and password to use for anonymous users.
+        
+        None may be returned for both if anonymous connection is not
+        allowed or if an empty login is used in configuration
         """
         try:
-            user = self['anonymous-user']
+            user   = self['anonymous-user'] or None
             passwd = self['anonymous-password']
+            if user:
+                user = unicode(user)
         except KeyError:
             user, passwd = None, None
-        if user is not None:
-            user = unicode(user)
+        except UnicodeDecodeError:
+            raise ConfigurationError("anonymous information should only contains ascii")
         return user, passwd
 
     def locate_resource(self, rid):
