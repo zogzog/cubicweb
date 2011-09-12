@@ -178,6 +178,7 @@ class CWUserManagementView(StartupView):
            'U primary_email UA?, UA address UAA, '
            'U cw_source UDS, US name UDSN')
     title = _('users and groups management')
+    cache_max_age = 0 # disable caching
 
     def call(self, **kwargs):
         self.w('<h1>%s</h1>' % self._cw._(self.title))
