@@ -1651,7 +1651,7 @@ class DatabaseIndependentBackupRestore(object):
         return self._source.get_connection()
 
     def backup(self, backupfile):
-        archive=zipfile.ZipFile(backupfile, 'w')
+        archive=zipfile.ZipFile(backupfile, 'w', allowZip64=True)
         self.cnx = self.get_connection()
         try:
             self.cursor = self.cnx.cursor()
@@ -1747,7 +1747,7 @@ class DatabaseIndependentBackupRestore(object):
         return dumps((name, columns, rows), pickle.HIGHEST_PROTOCOL)
 
     def restore(self, backupfile):
-        archive = zipfile.ZipFile(backupfile, 'r')
+        archive = zipfile.ZipFile(backupfile, 'r', allowZip64=True)
         self.cnx = self.get_connection()
         self.cursor = self.cnx.cursor()
         sequences, tables, table_chunks = self.read_metadata(archive, backupfile)
