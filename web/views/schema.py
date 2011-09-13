@@ -676,6 +676,14 @@ class RQLExpressionIBreadCrumbsAdapter(ibreadcrumbs.IBreadCrumbsAdapter):
     def parent_entity(self):
         return self.entity.expression_of
 
+class CWPermissionIBreadCrumbsAdapter(ibreadcrumbs.IBreadCrumbsAdapter):
+    __select__ = is_instance('CWPermission')
+    def parent_entity(self):
+        # XXX useless with permission propagation
+        permissionof = getattr(self.entity, 'reverse_require_permission', ())
+        if len(permissionof) == 1:
+            return permissionof[0]
+
 
 # misc: facets, actions ########################################################
 

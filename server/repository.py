@@ -60,7 +60,8 @@ from cubicweb.server.session import Session, InternalSession, InternalManager, \
      security_enabled
 from cubicweb.server.ssplanner import EditedEntity
 
-NO_CACHE_RELATIONS = set( [('owned_by', 'object'),
+NO_CACHE_RELATIONS = set( [('require_permission', 'object'),
+                           ('owned_by', 'object'),
                            ('created_by', 'object'),
                            ('cw_source', 'object'),
                            ])

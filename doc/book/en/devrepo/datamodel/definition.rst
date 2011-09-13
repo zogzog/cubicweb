@@ -646,7 +646,68 @@ the entity type for the object of the relation.
   RelationType declaration which offers some advantages in the context
   of reusable cubes.
 
-  
+Definition of permissions
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+The entity type `CWPermission` from the standard library
+allows to build very complex and dynamic security architectures. The schema of
+this entity type is as follow:
+
+.. sourcecode:: python
+
+    class CWPermission(EntityType):
+        """entity type that may be used to construct some advanced security configuration
+        """
+        name = String(required=True, indexed=True, internationalizable=True, maxsize=100)
+        require_group = SubjectRelation('CWGroup', cardinality='+*',
+                                        description=_('groups to which the permission is granted'))
+        require_state = SubjectRelation('State',
+                                        description=_("entity's state in which the permission is applicable"))
+        # can be used on any entity
+        require_permission = ObjectRelation('**', cardinality='*1', composite='subject',
+                                            description=_("link a permission to the entity. This "
+                                                          "permission should be used in the security "
+                                                          "definition of the entity's type to be useful."))
+
+
+Example of configuration:
+
+.. sourcecode:: python
+
+    class Version(EntityType):
+        """a version is defining the content of a particular project's release"""
+
+        __permissions__ = {'read':   ('managers', 'users', 'guests',),
+                           'update': ('managers', 'logilab', 'owners',),
+                           'delete': ('managers', ),
+                           'add':    ('managers', 'logilab',
+                                       ERQLExpression('X version_of PROJ, U in_group G,'
+                                                 'PROJ require_permission P, P name "add_version",'
+                                                 'P require_group G'),)}
+
+
+    class version_of(RelationType):
+        """link a version to its project. A version is necessarily linked to one and only one project.
+        """
+        __permissions__ = {'read':   ('managers', 'users', 'guests',),
+                           'delete': ('managers', ),
+                           'add':    ('managers', 'logilab',
+                                  RRQLExpression('O require_permission P, P name "add_version",'
+                                                 'U in_group G, P require_group G'),)
+                       }
+        inlined = True
+
+
+This configuration indicates that an entity `CWPermission` named
+"add_version" can be associated to a project and provides rights to create
+new versions on this project to specific groups. It is important to notice that:
+
+* in such case, we have to protect both the entity type "Version" and the relation
+  associating a version to a project ("version_of")
+
+* because of the genericity of the entity type `CWPermission`, we have to execute
+  a unification with the groups and/or the states if necessary in the expression
+  ("U in_group G, P require_group G" in the above example)
+
 
 
 Handling schema changes

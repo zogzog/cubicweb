@@ -19,6 +19,7 @@ Entity types used to manage users and permissions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 * _`CWUser`, system users
 * _`CWGroup`, users groups
+* _`CWPermission`, used to configure the security of the instance
 
 Entity types used to manage workflows
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

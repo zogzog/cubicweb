@@ -117,15 +117,7 @@ class ServerMigrationHelper(MigrationHelper):
             # which is called on regular start
             repo.hm.call_hooks('server_maintenance', repo=repo)
         if not schema and not getattr(config, 'quick_start', False):
-            insert_lperms = self.repo.get_versions()['cubicweb'] < (3, 14, 0) and 'localperms' in config.available_cubes()
-            if insert_lperms:
-                cubes = config._cubes
-                config._cubes += ('localperms',)
-            try:
-                schema = config.load_schema(expand_cubes=True)
-            finally:
-                if insert_lperms:
-                    config._cubes = cubes
+            schema = config.load_schema(expand_cubes=True)
         self.fs_schema = schema
         self._synchronized = set()
 

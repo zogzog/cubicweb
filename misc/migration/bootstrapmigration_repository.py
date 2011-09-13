@@ -41,15 +41,6 @@ if applcubicwebversion <= (3, 13, 0) and cubicwebversion >= (3, 13, 1):
         'FROM cw_CWSource, cw_source_relation '
         'WHERE entities.eid=cw_source_relation.eid_from AND cw_source_relation.eid_to=cw_CWSource.cw_eid')
 
-if applcubicwebversion <= (3, 14, 0) and cubicwebversion >= (3, 14, 0):
-    if 'require_permission' in schema and not 'localperms'in repo.config.cubes():
-        from cubicweb import ExecutionError
-        try:
-            add_cube('localperms', update_database=False)
-        except ImportError:
-            raise ExecutionError('In cubicweb 3.14, CWPermission and related stuff '
-                                 'has been moved to cube localperms. Install it first.')
-
 if applcubicwebversion == (3, 6, 0) and cubicwebversion >= (3, 6, 0):
     CSTRMAP = dict(rql('Any T, X WHERE X is CWConstraintType, X name T',
                        ask_confirm=False))

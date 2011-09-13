@@ -176,3 +176,13 @@ class RQLExpression(AnyEntity):
 
     def check_expression(self, *args, **kwargs):
         return self._rqlexpr().check(*args, **kwargs)
+
+
+class CWPermission(AnyEntity):
+    __regid__ = 'CWPermission'
+    fetch_attrs, fetch_order = fetch_config(['name', 'label'])
+
+    def dc_title(self):
+        if self.label:
+            return '%s (%s)' % (self._cw._(self.name), self.label)
+        return self._cw._(self.name)

@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -69,3 +69,10 @@ if interactive_mode:
             if value != default:
                 rql('INSERT CWProperty X: X pkey %(k)s, X value %(v)s',
                     {'k': key, 'v': value})
+
+# add PERM_USE_TEMPLATE_FORMAT permission
+from cubicweb.schema import PERM_USE_TEMPLATE_FORMAT
+usetmplperm = create_entity('CWPermission', name=PERM_USE_TEMPLATE_FORMAT,
+                            label=_('use template languages'))
+rql('SET X require_group G WHERE G name "managers", X eid %(x)s',
+    {'x': usetmplperm.eid})

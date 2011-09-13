@@ -182,6 +182,15 @@ class ManagePermissionsAction(action.Action):
     category = 'moreactions'
     order = 15
 
+    @classmethod
+    def __registered__(cls, reg):
+        if 'require_permission' in reg.schema:
+            cls.__select__ = (one_line_rset() & non_final_entity() &
+                              (match_user_groups('managers')
+                               | relation_possible('require_permission', 'subject', 'CWPermission',
+                                                   action='add')))
+        return super(ManagePermissionsAction, cls).__registered__(reg)
+
     def url(self):
         return self.cw_rset.get_entity(self.cw_row or 0, self.cw_col or 0).absolute_url(vid='security')
 
@@ -427,6 +436,7 @@ class GotRhythmAction(action.Action):
 ## default actions ui configuration ###########################################
 
 addmenu = uicfg.actionbox_appearsin_addmenu
+addmenu.tag_subject_of(('*', 'require_permission', '*'), False)
 addmenu.tag_object_of(('*', 'relation_type', 'CWRType'), True)
 addmenu.tag_object_of(('*', 'from_entity', 'CWEType'), False)
 addmenu.tag_object_of(('*', 'to_entity', 'CWEType'), False)

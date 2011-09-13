@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -396,3 +396,5 @@ _pvs = uicfg.primaryview_section
 for rtype in META_RTYPES:
     _pvs.tag_subject_of(('*', rtype, '*'), 'hidden')
     _pvs.tag_object_of(('*', rtype, '*'), 'hidden')
+_pvs.tag_subject_of(('*', 'require_permission', '*'), 'hidden')
+_pvs.tag_object_of(('*', 'require_permission', '*'), 'hidden')

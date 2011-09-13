@@ -180,6 +180,31 @@ class for_user(RelationType):
     cardinality = '?*'
 
 
+class CWPermission(EntityType):
+    """entity type that may be used to construct some advanced security configuration
+    """
+    __permissions__ = PUB_SYSTEM_ENTITY_PERMS
+
+    name = String(required=True, indexed=True, internationalizable=True, maxsize=100,
+                  description=_('name or identifier of the permission'))
+    label = String(required=True, internationalizable=True, maxsize=100,
+                   description=_('distinct label to distinguate between other '
+                                 'permission entity of the same name'))
+    require_group = SubjectRelation('CWGroup',
+                                    description=_('groups to which the permission is granted'))
+
+# explicitly add X require_permission CWPermission for each entity that should have
+# configurable security
+class require_permission(RelationType):
+    """link a permission to the entity. This permission should be used in the
+    security definition of the entity's type to be useful.
+    """
+    __permissions__ = PUB_SYSTEM_REL_PERMS
+
+class require_group(RelationType):
+    """used to grant a permission to a group"""
+    __permissions__ = PUB_SYSTEM_REL_PERMS
+
 
 class ExternalUri(EntityType):
     """a URI representing an object in external data store"""
@@ -357,5 +382,3 @@ class see_also(RelationType):
         'add':    ('managers', RRQLExpression('U has_update_permission S'),),
         'delete': ('managers', RRQLExpression('U has_update_permission S'),),
         }
-
-
