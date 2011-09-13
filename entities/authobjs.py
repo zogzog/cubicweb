@@ -29,22 +29,6 @@ class CWGroup(AnyEntity):
     fetch_attrs, fetch_order = fetch_config(['name'])
     fetch_unrelated_order = fetch_order
 
-    def grant_permission(self, entity, pname, plabel=None):
-        """grant local `pname` permission on `entity` to this group using
-        :class:`CWPermission`.
-
-        If a similar permission already exists, add the group to it, else create
-        a new one.
-        """
-        if not self._cw.execute(
-            'SET X require_group G WHERE E eid %(e)s, G eid %(g)s, '
-            'E require_permission X, X name %(name)s, X label %(label)s',
-            {'e': entity.eid, 'g': self.eid,
-             'name': pname, 'label': plabel}):
-            self._cw.create_entity('CWPermission', name=pname, label=plabel,
-                                   require_group=self,
-                                   reverse_require_permission=entity)
-
 
 class CWUser(AnyEntity):
     __regid__ = 'CWUser'
@@ -138,18 +122,6 @@ class CWUser(AnyEntity):
         except Unauthorized:
             return False
     owns = cached(owns, keyarg=1)
-
-    def has_permission(self, pname, contexteid=None):
-        rql = 'Any P WHERE P is CWPermission, U eid %(u)s, U in_group G, '\
-              'P name %(pname)s, P require_group G'
-        kwargs = {'pname': pname, 'u': self.eid}
-        if contexteid is not None:
-            rql += ', X require_permission P, X eid %(x)s'
-            kwargs['x'] = contexteid
-        try:
-            return self._cw.execute(rql, kwargs)
-        except Unauthorized:
-            return False
 
     # presentation utilities ##################################################
 
