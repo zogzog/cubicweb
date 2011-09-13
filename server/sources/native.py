@@ -412,7 +412,8 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
     def init(self, activated, source_entity):
         self.init_creating(source_entity._cw.cnxset)
         try:
-            source_entity._cw.system_sql('SELECT COUNT(asource) FROM entities')
+            # test if 'asource' column exists
+            source_entity._cw.system_sql('SELECT asource FROM entities LIMIT 1')
         except Exception, ex:
             self.eid_type_source = self.eid_type_source_pre_131
 
