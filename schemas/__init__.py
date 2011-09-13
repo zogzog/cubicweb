@@ -48,4 +48,4 @@ class MyLazyObject(LazyObject):
 for name in ('xperm', 'xexpr', 'xrexpr', 'xorexpr', 'sexpr', 'restricted_sexpr',
              'restricted_oexpr', 'oexpr', 'relxperm', 'relxexpr', '_perm'):
     msg = '[3.14] import %s from cubes.localperms' % name
-    globals()[name] = deprecated(msg)(MyLazyObject('cubes.localperms', name))
+    globals()[name] = deprecated(msg, name=name, doc='deprecated')(MyLazyObject('cubes.localperms', name))
