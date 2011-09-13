@@ -666,7 +666,7 @@ class QuerierHelper(object):
         if server.DEBUG & (server.DBG_RQL | server.DBG_SQL):
             if server.DEBUG & (server.DBG_MORE | server.DBG_SQL):
                 print '*'*80
-            print 'querier input', rql, args
+            print 'querier input', repr(rql), repr(args)
         # parse the query and binds variables
         cachekey = rql
         try:
