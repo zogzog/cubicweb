@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -21,14 +21,15 @@
 __docformat__ = "restructuredtext en"
 _ = unicode
 
-from yams.buildobjs import (EntityType, RelationType, SubjectRelation,
+from yams.buildobjs import (EntityType, RelationType, RelationDefinition,
+                            SubjectRelation,
                             RichString, String, Int)
 from cubicweb.schema import RQLConstraint, RQLUniqueConstraint
-from cubicweb.schemas import (META_ETYPE_PERMS, META_RTYPE_PERMS,
-                              HOOKS_RTYPE_PERMS)
+from cubicweb.schemas import (PUB_SYSTEM_ENTITY_PERMS, PUB_SYSTEM_REL_PERMS,
+                              RO_REL_PERMS)
 
 class Workflow(EntityType):
-    __permissions__ = META_ETYPE_PERMS
+    __permissions__ = PUB_SYSTEM_ENTITY_PERMS
 
     name = String(required=True, indexed=True, internationalizable=True,
                   maxsize=256)
@@ -47,7 +48,7 @@ class Workflow(EntityType):
 
 class default_workflow(RelationType):
     """default workflow for an entity type"""
-    __permissions__ = META_RTYPE_PERMS
+    __permissions__ = PUB_SYSTEM_REL_PERMS
 
     subject = 'CWEType'
     object = 'Workflow'
@@ -60,7 +61,7 @@ class State(EntityType):
     """used to associate simple states to an entity type and/or to define
     workflows
     """
-    __permissions__ = META_ETYPE_PERMS
+    __permissions__ = PUB_SYSTEM_ENTITY_PERMS
 
     name = String(required=True, indexed=True, internationalizable=True,
                   maxsize=256,
@@ -83,7 +84,7 @@ class State(EntityType):
 
 class BaseTransition(EntityType):
     """abstract base class for transitions"""
-    __permissions__ = META_ETYPE_PERMS
+    __permissions__ = PUB_SYSTEM_ENTITY_PERMS
 
     name = String(required=True, indexed=True, internationalizable=True,
                   maxsize=256,
@@ -91,20 +92,32 @@ class BaseTransition(EntityType):
                                                    _('workflow already have a transition of that name'))])
     type = String(vocabulary=(_('normal'), _('auto')), default='normal')
     description = RichString(description=_('semantic description of this transition'))
-    condition = SubjectRelation('RQLExpression', cardinality='*?', composite='subject',
-                                description=_('a RQL expression which should return some results, '
-                                              'else the transition won\'t be available. '
-                                              'This query may use X and U variables '
-                                              'that will respectivly represents '
-                                              'the current entity and the current user'))
 
-    require_group = SubjectRelation('CWGroup', cardinality='**',
-                                    description=_('group in which a user should be to be '
-                                                  'allowed to pass this transition'))
     transition_of = SubjectRelation('Workflow', cardinality='1*', composite='object',
                                     description=_('workflow to which this transition belongs'),
                                     constraints=[RQLUniqueConstraint('S name N, Y transition_of O, Y name N', 'Y',
                                                                      _('workflow already have a transition of that name'))])
+
+
+class require_group(RelationDefinition):
+    """group in which a user should be to be allowed to pass this transition"""
+    __permissions__ = PUB_SYSTEM_REL_PERMS
+    subject = 'BaseTransition'
+    object = 'CWGroup'
+
+
+class condition(RelationDefinition):
+    """a RQL expression which should return some results, else the transition
+    won't be available.
+
+    This query may use X and U variables that will respectivly represents the
+    current entity and the current user.
+    """
+    __permissions__ = PUB_SYSTEM_REL_PERMS
+    subject = 'BaseTransition'
+    object = 'RQLExpression'
+    cardinality = '*?'
+    composite = 'subject'
 
 
 class Transition(BaseTransition):
@@ -177,11 +190,11 @@ class TrInfo(EntityType):
     # get actor and date time using owned_by and creation_date
 
 class from_state(RelationType):
-    __permissions__ = HOOKS_RTYPE_PERMS.copy()
+    __permissions__ = RO_REL_PERMS.copy()
     inlined = True
 
 class to_state(RelationType):
-    __permissions__ = HOOKS_RTYPE_PERMS.copy()
+    __permissions__ = RO_REL_PERMS.copy()
     inlined = True
 
 class by_transition(RelationType):
@@ -196,60 +209,52 @@ class by_transition(RelationType):
 
 class workflow_of(RelationType):
     """link a workflow to one or more entity type"""
-    __permissions__ = META_RTYPE_PERMS
+    __permissions__ = PUB_SYSTEM_REL_PERMS
 
 class state_of(RelationType):
     """link a state to one or more workflow"""
-    __permissions__ = META_RTYPE_PERMS
+    __permissions__ = PUB_SYSTEM_REL_PERMS
     inlined = True
 
 class transition_of(RelationType):
     """link a transition to one or more workflow"""
-    __permissions__ = META_RTYPE_PERMS
+    __permissions__ = PUB_SYSTEM_REL_PERMS
     inlined = True
 
 class destination_state(RelationType):
     """destination state of a transition"""
-    __permissions__ = META_RTYPE_PERMS
+    __permissions__ = PUB_SYSTEM_REL_PERMS
     inlined = True
 
 class allowed_transition(RelationType):
     """allowed transitions from this state"""
-    __permissions__ = META_RTYPE_PERMS
+    __permissions__ = PUB_SYSTEM_REL_PERMS
 
 class initial_state(RelationType):
     """indicate which state should be used by default when an entity using
     states is created
     """
-    __permissions__ = META_RTYPE_PERMS
+    __permissions__ = PUB_SYSTEM_REL_PERMS
     inlined = True
 
 
 class subworkflow(RelationType):
-    __permissions__ = META_RTYPE_PERMS
+    __permissions__ = PUB_SYSTEM_REL_PERMS
     inlined = True
 
 class exit_point(RelationType):
-    __permissions__ = META_RTYPE_PERMS
+    __permissions__ = PUB_SYSTEM_REL_PERMS
 
 class subworkflow_state(RelationType):
-    __permissions__ = META_RTYPE_PERMS
+    __permissions__ = PUB_SYSTEM_REL_PERMS
     inlined = True
-
-
-class condition(RelationType):
-    __permissions__ = META_RTYPE_PERMS
-
-# already defined in base.py
-# class require_group(RelationType):
-#     __permissions__ = META_RTYPE_PERMS
 
 
 # "abstract" relations, set by WorkflowableEntityType ##########################
 
 class custom_workflow(RelationType):
     """allow to set a specific workflow for an entity"""
-    __permissions__ = META_RTYPE_PERMS
+    __permissions__ = PUB_SYSTEM_REL_PERMS
 
     cardinality = '?*'
     constraints = [RQLConstraint('S is ET, O workflow_of ET',
@@ -275,7 +280,7 @@ class wf_info_for(RelationType):
 
 class in_state(RelationType):
     """indicate the current state of an entity"""
-    __permissions__ = HOOKS_RTYPE_PERMS
+    __permissions__ = RO_REL_PERMS
 
     # not inlined intentionnaly since when using ldap sources, user'state
     # has to be stored outside the CWUser table

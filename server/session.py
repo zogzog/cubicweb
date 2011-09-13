@@ -1319,9 +1319,6 @@ class InternalManager(object):
     def owns(self, eid):
         return True
 
-    def has_permission(self, pname, contexteid=None):
-        return True
-
     def property_value(self, key):
         if key == 'ui.language':
             return 'en'

@@ -920,7 +920,6 @@ for rtype in ('creation_date', 'modification_date', 'cwuri',
               'owned_by', 'created_by', 'cw_source'):
     _AFS.tag_subject_of(('*', rtype, '*'), 'main', 'metadata')
 
-_AFS.tag_subject_of(('*', 'require_permission', '*'), 'main', 'hidden')
 _AFS.tag_subject_of(('*', 'by_transition', '*'), 'main', 'attributes')
 _AFS.tag_subject_of(('*', 'by_transition', '*'), 'muledit', 'attributes')
 _AFS.tag_object_of(('*', 'by_transition', '*'), 'main', 'hidden')
@@ -929,8 +928,6 @@ _AFS.tag_object_of(('*', 'to_state', '*'), 'main', 'hidden')
 _AFS.tag_subject_of(('*', 'wf_info_for', '*'), 'main', 'attributes')
 _AFS.tag_subject_of(('*', 'wf_info_for', '*'), 'muledit', 'attributes')
 _AFS.tag_object_of(('*', 'wf_info_for', '*'), 'main', 'hidden')
-_AFS.tag_subject_of(('CWPermission', 'require_group', '*'), 'main', 'attributes')
-_AFS.tag_subject_of(('CWPermission', 'require_group', '*'), 'muledit', 'attributes')
 _AFS.tag_attribute(('CWEType', 'final'), 'main', 'hidden')
 _AFS.tag_attribute(('CWRType', 'final'), 'main', 'hidden')
 _AFS.tag_attribute(('CWUser', 'firstname'), 'main', 'attributes')

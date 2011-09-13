@@ -387,31 +387,6 @@ class CubicWebTC(TestCase):
                 req.cnx.commit()
         return user
 
-    @iclassmethod # XXX turn into a class method
-    def grant_permission(self, session, entity, group, pname=None, plabel=None):
-        """insert a permission on an entity. Will have to commit the main
-        connection to be considered
-        """
-        if not isinstance(session, Session):
-            warn('[3.12] grant_permission arguments are now (session, entity, group, pname[, plabel])',
-                 DeprecationWarning, stacklevel=2)
-            plabel = pname
-            pname = group
-            group = entity
-            entity = session
-            assert not isinstance(self, type)
-            session = self.session
-        pname = unicode(pname)
-        plabel = plabel and unicode(plabel) or unicode(group)
-        e = getattr(entity, 'eid', entity)
-        with security_enabled(session, False, False):
-            peid = session.execute(
-            'INSERT CWPermission X: X name %(pname)s, X label %(plabel)s,'
-            'X require_group G, E require_permission X '
-            'WHERE G name %(group)s, E eid %(e)s',
-            locals())[0][0]
-        return peid
-
     def login(self, login, **kwargs):
         """return a connection for the given login/password"""
         if login == self.admlogin:
