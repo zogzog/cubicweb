@@ -51,7 +51,7 @@ class EmailAddressHooksTC(CubicWebTC):
         self.execute('SET U primary_email E WHERE U login "anon", E address "client@client.com"')
         self.commit()
         rset = self.execute('Any X WHERE X use_email E, E eid %(e)s', {'e': email1})
-        self.failIf(rset.rowcount != 1, rset)
+        self.assertFalse(rset.rowcount != 1, rset)
 
     def test_security_check(self):
         req = self.request()

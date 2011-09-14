@@ -43,13 +43,13 @@ class UndoableTransactionTC(CubicWebTC):
         # also check transaction actions have been properly deleted
         cu = self.session.system_sql(
             "SELECT * from tx_entity_actions WHERE tx_uuid='%s'" % txuuid)
-        self.failIf(cu.fetchall())
+        self.assertFalse(cu.fetchall())
         cu = self.session.system_sql(
             "SELECT * from tx_relation_actions WHERE tx_uuid='%s'" % txuuid)
-        self.failIf(cu.fetchall())
+        self.assertFalse(cu.fetchall())
 
     def test_undo_api(self):
-        self.failUnless(self.txuuid)
+        self.assertTrue(self.txuuid)
         # test transaction api
         self.assertRaises(NoSuchTransaction,
                           self.cnx.transaction_info, 'hop')
@@ -58,7 +58,7 @@ class UndoableTransactionTC(CubicWebTC):
         self.assertRaises(NoSuchTransaction,
                           self.cnx.undo_transaction, 'hop')
         txinfo = self.cnx.transaction_info(self.txuuid)
-        self.failUnless(txinfo.datetime)
+        self.assertTrue(txinfo.datetime)
         self.assertEqual(txinfo.user_eid, self.session.user.eid)
         self.assertEqual(txinfo.user().login, 'admin')
         actions = txinfo.actions_list()
@@ -159,9 +159,9 @@ class UndoableTransactionTC(CubicWebTC):
         undotxuuid = self.commit()
         self.assertEqual(undotxuuid, None) # undo not undoable
         self.assertEqual(errors, [])
-        self.failUnless(self.execute('Any X WHERE X eid %(x)s', {'x': toto.eid}))
-        self.failUnless(self.execute('Any X WHERE X eid %(x)s', {'x': e.eid}))
-        self.failUnless(self.execute('Any X WHERE X has_text "toto@logilab"'))
+        self.assertTrue(self.execute('Any X WHERE X eid %(x)s', {'x': toto.eid}))
+        self.assertTrue(self.execute('Any X WHERE X eid %(x)s', {'x': e.eid}))
+        self.assertTrue(self.execute('Any X WHERE X has_text "toto@logilab"'))
         self.assertEqual(toto.cw_adapt_to('IWorkflowable').state, 'activated')
         self.assertEqual(toto.cw_adapt_to('IEmailable').get_email(), 'toto@logilab.org')
         self.assertEqual([(p.pkey, p.value) for p in toto.reverse_for_user],
@@ -231,20 +231,20 @@ class UndoableTransactionTC(CubicWebTC):
         txuuid = self.commit()
         errors = self.cnx.undo_transaction(txuuid)
         self.commit()
-        self.failIf(errors)
-        self.failIf(self.execute('Any X WHERE X eid %(x)s', {'x': c.eid}))
-        self.failIf(self.execute('Any X WHERE X eid %(x)s', {'x': p.eid}))
-        self.failIf(self.execute('Any X,Y WHERE X fiche Y'))
+        self.assertFalse(errors)
+        self.assertFalse(self.execute('Any X WHERE X eid %(x)s', {'x': c.eid}))
+        self.assertFalse(self.execute('Any X WHERE X eid %(x)s', {'x': p.eid}))
+        self.assertFalse(self.execute('Any X,Y WHERE X fiche Y'))
         self.session.set_cnxset()
         for eid in (p.eid, c.eid):
-            self.failIf(session.system_sql(
+            self.assertFalse(session.system_sql(
                 'SELECT * FROM entities WHERE eid=%s' % eid).fetchall())
-            self.failIf(session.system_sql(
+            self.assertFalse(session.system_sql(
                 'SELECT 1 FROM owned_by_relation WHERE eid_from=%s' % eid).fetchall())
             # added by sql in hooks (except when using dataimport)
-            self.failIf(session.system_sql(
+            self.assertFalse(session.system_sql(
                 'SELECT 1 FROM is_relation WHERE eid_from=%s' % eid).fetchall())
-            self.failIf(session.system_sql(
+            self.assertFalse(session.system_sql(
                 'SELECT 1 FROM is_instance_of_relation WHERE eid_from=%s' % eid).fetchall())
         self.check_transaction_deleted(txuuid)
 

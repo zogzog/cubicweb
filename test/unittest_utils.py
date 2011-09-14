@@ -67,7 +67,7 @@ class RepeatListTC(TestCase):
         # XXX
         self.assertEqual(l[4], (1, 3))
 
-        self.failIf(RepeatList(0, None))
+        self.assertFalse(RepeatList(0, None))
 
     def test_slice(self):
         l = RepeatList(3, (1, 3))

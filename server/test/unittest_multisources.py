@@ -180,10 +180,10 @@ cubicweb-password = gingkow
 
     def test_has_text(self):
         self.repo.sources_by_uri['extern'].synchronize(MTIME) # in case fti_update has been run before
-        self.failUnless(self.sexecute('Any X WHERE X has_text "affref"'))
-        self.failUnless(self.sexecute('Affaire X WHERE X has_text "affref"'))
-        self.failUnless(self.sexecute('Any X ORDERBY FTIRANK(X) WHERE X has_text "affref"'))
-        self.failUnless(self.sexecute('Affaire X ORDERBY FTIRANK(X) WHERE X has_text "affref"'))
+        self.assertTrue(self.sexecute('Any X WHERE X has_text "affref"'))
+        self.assertTrue(self.sexecute('Affaire X WHERE X has_text "affref"'))
+        self.assertTrue(self.sexecute('Any X ORDERBY FTIRANK(X) WHERE X has_text "affref"'))
+        self.assertTrue(self.sexecute('Affaire X ORDERBY FTIRANK(X) WHERE X has_text "affref"'))
 
     def test_anon_has_text(self):
         self.repo.sources_by_uri['extern'].synchronize(MTIME) # in case fti_update has been run before
@@ -210,13 +210,13 @@ cubicweb-password = gingkow
         try:
             # force sync
             self.repo.sources_by_uri['extern'].synchronize(MTIME)
-            self.failUnless(self.sexecute('Any X WHERE X has_text "blah"'))
-            self.failUnless(self.sexecute('Any X WHERE X has_text "affreux"'))
+            self.assertTrue(self.sexecute('Any X WHERE X has_text "blah"'))
+            self.assertTrue(self.sexecute('Any X WHERE X has_text "affreux"'))
             cu.execute('DELETE Affaire X WHERE X eid %(x)s', {'x': aff2})
             self.cnx2.commit()
             self.repo.sources_by_uri['extern'].synchronize(MTIME)
             rset = self.sexecute('Any X WHERE X has_text "affreux"')
-            self.failIf(rset)
+            self.assertFalse(rset)
         finally:
             # restore state
             cu.execute('SET X ref "AFFREF" WHERE X eid %(x)s', {'x': self.aff1})
@@ -389,7 +389,7 @@ cubicweb-password = gingkow
         req.execute('DELETE CWSource S WHERE S name "extern"')
         self.commit()
         cu = self.session.system_sql("SELECT * FROM entities WHERE source='extern'")
-        self.failIf(cu.fetchall())
+        self.assertFalse(cu.fetchall())
 
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main

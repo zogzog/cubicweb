@@ -274,8 +274,8 @@ class ApplicationTC(CubicWebTC):
     def _test_cleaned(self, kwargs, injected, cleaned):
         req = self.request(**kwargs)
         page = self.app.publish('view', req)
-        self.failIf(injected in page, (kwargs, injected))
-        self.failUnless(cleaned in page, (kwargs, cleaned))
+        self.assertFalse(injected in page, (kwargs, injected))
+        self.assertTrue(cleaned in page, (kwargs, cleaned))
 
     def test_nonregr_script_kiddies(self):
         """test against current script injection"""
@@ -321,9 +321,9 @@ class ApplicationTC(CubicWebTC):
         origcnx = req.cnx
         req.form['__fblogin'] = u'turlututu'
         page = self.app_publish(req)
-        self.failIf(req.cnx is origcnx)
+        self.assertFalse(req.cnx is origcnx)
         self.assertEqual(req.user.login, 'turlututu')
-        self.failUnless('turlututu' in page, page)
+        self.assertTrue('turlututu' in page, page)
         req.cnx.close() # avoid warning
 
     # authentication tests ####################################################
@@ -343,8 +343,8 @@ class ApplicationTC(CubicWebTC):
         req, origsession = self.init_authentication('cookie')
         self.assertAuthFailure(req)
         form = self.app_publish(req, 'login')
-        self.failUnless('__login' in form)
-        self.failUnless('__password' in form)
+        self.assertTrue('__login' in form)
+        self.assertTrue('__password' in form)
         self.assertEqual(req.cnx, None)
         req.form['__login'] = self.admlogin
         req.form['__password'] = self.admpassword
@@ -389,7 +389,7 @@ class ApplicationTC(CubicWebTC):
         asession = req.session
         self.assertEqual(len(self.open_sessions), 1)
         self.assertEqual(asession.login, 'anon')
-        self.failUnless(asession.anonymous_session)
+        self.assertTrue(asession.anonymous_session)
         self._reset_cookie(req)
 
     def _test_anon_auth_fail(self, req):

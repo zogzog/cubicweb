@@ -115,8 +115,8 @@ class DataFeedTC(CubicWebTC):
         req = self.request()
         req.execute('DELETE CWSource S WHERE S name "myrenamedfeed"')
         self.commit()
-        self.failIf(self.execute('Card X WHERE X title "cubicweb.org"'))
-        self.failIf(self.execute('Any X WHERE X has_text "cubicweb.org"'))
+        self.assertFalse(self.execute('Card X WHERE X title "cubicweb.org"'))
+        self.assertFalse(self.execute('Any X WHERE X has_text "cubicweb.org"'))
 
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main

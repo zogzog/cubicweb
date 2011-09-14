@@ -89,10 +89,10 @@ class StorageTC(CubicWebTC):
         f1 = self.create_file()
         expected_filepath = osp.join(self.tempdir, '%s_data_%s' %
                                      (f1.eid, f1.data_name))
-        self.failUnless(osp.isfile(expected_filepath))
+        self.assertTrue(osp.isfile(expected_filepath))
         self.assertEqual(file(expected_filepath).read(), 'the-data')
         self.rollback()
-        self.failIf(osp.isfile(expected_filepath))
+        self.assertFalse(osp.isfile(expected_filepath))
         f1 = self.create_file()
         self.commit()
         self.assertEqual(file(expected_filepath).read(), 'the-data')
@@ -100,12 +100,12 @@ class StorageTC(CubicWebTC):
         self.rollback()
         self.assertEqual(file(expected_filepath).read(), 'the-data')
         f1.cw_delete()
-        self.failUnless(osp.isfile(expected_filepath))
+        self.assertTrue(osp.isfile(expected_filepath))
         self.rollback()
-        self.failUnless(osp.isfile(expected_filepath))
+        self.assertTrue(osp.isfile(expected_filepath))
         f1.cw_delete()
         self.commit()
-        self.failIf(osp.isfile(expected_filepath))
+        self.assertFalse(osp.isfile(expected_filepath))
 
     def test_bfss_sqlite_fspath(self):
         f1 = self.create_file()
@@ -219,7 +219,7 @@ class StorageTC(CubicWebTC):
         #       update f1's local dict. We want the pure rql version to work
         self.commit()
         old_path = self.fspath(f1)
-        self.failUnless(osp.isfile(old_path))
+        self.assertTrue(osp.isfile(old_path))
         self.assertEqual(osp.splitext(old_path)[1], '.txt')
         self.execute('SET F data %(d)s, F data_name %(dn)s, F data_format %(df)s WHERE F eid %(f)s',
                      {'d': Binary('some other data'), 'f': f1.eid, 'dn': u'bar.jpg', 'df': u'image/jpeg'})
@@ -228,8 +228,8 @@ class StorageTC(CubicWebTC):
         # the old file is dead
         f2 = self.execute('Any F WHERE F eid %(f)s, F is File', {'f': f1.eid}).get_entity(0, 0)
         new_path = self.fspath(f2)
-        self.failIf(osp.isfile(old_path))
-        self.failUnless(osp.isfile(new_path))
+        self.assertFalse(osp.isfile(old_path))
+        self.assertTrue(osp.isfile(new_path))
         self.assertEqual(osp.splitext(new_path)[1], '.jpg')
 
     @tag('update', 'extension', 'rollback')
@@ -242,7 +242,7 @@ class StorageTC(CubicWebTC):
         self.commit()
         old_path = self.fspath(f1)
         old_data = f1.data.getvalue()
-        self.failUnless(osp.isfile(old_path))
+        self.assertTrue(osp.isfile(old_path))
         self.assertEqual(osp.splitext(old_path)[1], '.txt')
         self.execute('SET F data %(d)s, F data_name %(dn)s, F data_format %(df)s WHERE F eid %(f)s',
                      {'d': Binary('some other data'), 'f': f1.eid, 'dn': u'bar.jpg', 'df': u'image/jpeg'})
@@ -252,7 +252,7 @@ class StorageTC(CubicWebTC):
         f2 = self.execute('Any F WHERE F eid %(f)s, F is File', {'f': f1.eid}).get_entity(0, 0)
         new_path = self.fspath(f2)
         new_data = f2.data.getvalue()
-        self.failUnless(osp.isfile(new_path))
+        self.assertTrue(osp.isfile(new_path))
         self.assertEqual(osp.splitext(new_path)[1], '.txt')
         self.assertEqual(old_path, new_path)
         self.assertEqual(old_data, new_data)
@@ -279,7 +279,7 @@ class StorageTC(CubicWebTC):
         self.commit()
         self.assertEqual(f1.data.getvalue(), 'the new data')
         self.assertEqual(self.fspath(f1), new_fspath)
-        self.failIf(osp.isfile(old_fspath))
+        self.assertFalse(osp.isfile(old_fspath))
 
     @tag('fsimport')
     def test_clean(self):

@@ -72,7 +72,7 @@ class ValueGeneratorTC(TestCase):
         """test value generation from a given domain value"""
         firstname = self.person_valgen.generate_attribute_value({}, 'firstname', 12)
         possible_choices = self._choice_func('Person', 'firstname')
-        self.failUnless(firstname in possible_choices,
+        self.assertTrue(firstname in possible_choices,
                         '%s not in %s' % (firstname, possible_choices))
 
     def test_choice(self):
@@ -80,21 +80,21 @@ class ValueGeneratorTC(TestCase):
         # Test for random index
         for index in range(5):
             sx_value = self.person_valgen.generate_attribute_value({}, 'civility', index)
-            self.failUnless(sx_value in ('Mr', 'Mrs', 'Ms'))
+            self.assertTrue(sx_value in ('Mr', 'Mrs', 'Ms'))
 
     def test_integer(self):
         """test integer generation"""
         # Test for random index
         for index in range(5):
             cost_value = self.bug_valgen.generate_attribute_value({}, 'cost', index)
-            self.failUnless(cost_value in range(index+1))
+            self.assertTrue(cost_value in range(index+1))
 
     def test_date(self):
         """test date generation"""
         # Test for random index
         for index in range(10):
             date_value = self.person_valgen.generate_attribute_value({}, 'birthday', index)
-            self.failUnless(isinstance(date_value, datetime.date))
+            self.assertTrue(isinstance(date_value, datetime.date))
 
     def test_phone(self):
         """tests make_tel utility"""

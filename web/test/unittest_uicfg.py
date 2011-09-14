@@ -24,7 +24,7 @@ abaa = uicfg.actionbox_appearsin_addmenu
 class UICFGTC(CubicWebTC):
 
     def test_default_actionbox_appearsin_addmenu_config(self):
-        self.failIf(abaa.etype_get('TrInfo', 'wf_info_for', 'object', 'CWUser'))
+        self.assertFalse(abaa.etype_get('TrInfo', 'wf_info_for', 'object', 'CWUser'))
 
 
 

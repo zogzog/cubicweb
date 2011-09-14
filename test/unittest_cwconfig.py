@@ -123,7 +123,7 @@ class CubicWebConfigurationTC(TestCase):
         self.assertEqual(self.config.cubes_search_path(),
                           [CUSTOM_CUBES_DIR,
                            self.config.CUBES_DIR])
-        self.failUnless('mycube' in self.config.available_cubes())
+        self.assertTrue('mycube' in self.config.available_cubes())
         # test cubes python path
         self.config.adjust_sys_path()
         import cubes

@@ -42,7 +42,7 @@ class EntityTC(CubicWebTC):
 
     def test_boolean_value(self):
         e = self.vreg['etypes'].etype_class('CWUser')(self.request())
-        self.failUnless(e)
+        self.assertTrue(e)
 
     def test_yams_inheritance(self):
         from entities import Note
@@ -87,8 +87,8 @@ class EntityTC(CubicWebTC):
                      {'t': oe.eid, 'u': p.eid})
         e = req.create_entity('Note', type=u'z')
         e.copy_relations(oe.eid)
-        self.failIf(e.ecrit_par)
-        self.failUnless(oe.ecrit_par)
+        self.assertFalse(e.ecrit_par)
+        self.assertTrue(oe.ecrit_par)
 
     def test_copy_with_composite(self):
         user = self.user()
@@ -100,8 +100,8 @@ class EntityTC(CubicWebTC):
                                'WHERE G name "users"')[0][0]
         e = self.execute('Any X WHERE X eid %(x)s', {'x': usereid}).get_entity(0, 0)
         e.copy_relations(user.eid)
-        self.failIf(e.use_email)
-        self.failIf(e.primary_email)
+        self.assertFalse(e.use_email)
+        self.assertFalse(e.primary_email)
 
     def test_copy_with_non_initial_state(self):
         user = self.user()
@@ -128,7 +128,7 @@ class EntityTC(CubicWebTC):
         groups = user.in_group
         self.assertEqual(sorted(user._cw_related_cache), ['in_group_subject', 'primary_email_subject'])
         for group in groups:
-            self.failIf('in_group_subject' in group._cw_related_cache, group._cw_related_cache.keys())
+            self.assertFalse('in_group_subject' in group._cw_related_cache, group._cw_related_cache.keys())
 
     def test_related_limit(self):
         req = self.request()
@@ -227,7 +227,7 @@ class EntityTC(CubicWebTC):
         Personne = self.vreg['etypes'].etype_class('Personne')
         Note = self.vreg['etypes'].etype_class('Note')
         SubNote = self.vreg['etypes'].etype_class('SubNote')
-        self.failUnless(issubclass(self.vreg['etypes'].etype_class('SubNote'), Note))
+        self.assertTrue(issubclass(self.vreg['etypes'].etype_class('SubNote'), Note))
         Personne.fetch_attrs, Personne.fetch_order = fetch_config(('nom', 'type'))
         Note.fetch_attrs, Note.fetch_order = fetch_config(('type',))
         SubNote.fetch_attrs, SubNote.fetch_order = fetch_config(('type',))
@@ -364,13 +364,13 @@ class EntityTC(CubicWebTC):
         p = req.create_entity('Personne', nom=u'di mascio', prenom=u'adrien')
         e = req.create_entity('Tag', name=u'x')
         related = [r.eid for r in e.tags]
-        self.failUnlessEqual(related, [])
+        self.assertEqual(related, [])
         unrelated = [r[0] for r in e.unrelated('tags', 'Personne', 'subject')]
-        self.failUnless(p.eid in unrelated)
+        self.assertTrue(p.eid in unrelated)
         self.execute('SET X tags Y WHERE X is Tag, Y is Personne')
         e = self.execute('Any X WHERE X is Tag').get_entity(0, 0)
         unrelated = [r[0] for r in e.unrelated('tags', 'Personne', 'subject')]
-        self.failIf(p.eid in unrelated)
+        self.assertFalse(p.eid in unrelated)
 
     def test_unrelated_limit(self):
         req = self.request()
@@ -538,7 +538,7 @@ du :eid:`1:*ReST*`'''
         p2 = req.create_entity('Personne', nom=u'toto')
         self.execute('SET X evaluee Y WHERE X nom "di mascio", Y nom "toto"')
         self.assertEqual(p1.evaluee[0].nom, "toto")
-        self.failUnless(not p1.reverse_evaluee)
+        self.assertTrue(not p1.reverse_evaluee)
 
     def test_complete_relation(self):
         session = self.session
@@ -547,10 +547,10 @@ du :eid:`1:*ReST*`'''
             'WHERE U login "admin", S1 name "activated", S2 name "deactivated"')[0][0]
         trinfo = self.execute('Any X WHERE X eid %(x)s', {'x': eid}).get_entity(0, 0)
         trinfo.complete()
-        self.failUnless(isinstance(trinfo.cw_attr_cache['creation_date'], datetime))
-        self.failUnless(trinfo.cw_relation_cached('from_state', 'subject'))
-        self.failUnless(trinfo.cw_relation_cached('to_state', 'subject'))
-        self.failUnless(trinfo.cw_relation_cached('wf_info_for', 'subject'))
+        self.assertTrue(isinstance(trinfo.cw_attr_cache['creation_date'], datetime))
+        self.assertTrue(trinfo.cw_relation_cached('from_state', 'subject'))
+        self.assertTrue(trinfo.cw_relation_cached('to_state', 'subject'))
+        self.assertTrue(trinfo.cw_relation_cached('wf_info_for', 'subject'))
         self.assertEqual(trinfo.by_transition, ())
 
     def test_request_cache(self):
@@ -558,7 +558,7 @@ du :eid:`1:*ReST*`'''
         user = self.execute('CWUser X WHERE X login "admin"', req=req).get_entity(0, 0)
         state = user.in_state[0]
         samestate = self.execute('State X WHERE X name "activated"', req=req).get_entity(0, 0)
-        self.failUnless(state is samestate)
+        self.assertTrue(state is samestate)
 
     def test_rest_path(self):
         req = self.request()

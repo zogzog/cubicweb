@@ -74,13 +74,13 @@ class MigrationCommandsTC(CubicWebTC):
         self.repo.vreg['etypes'].clear_caches()
 
     def test_add_attribute_int(self):
-        self.failIf('whatever' in self.schema)
+        self.assertFalse('whatever' in self.schema)
         self.request().create_entity('Note')
         self.commit()
         orderdict = dict(self.mh.rqlexec('Any RTN, O WHERE X name "Note", RDEF from_entity X, '
                                          'RDEF relation_type RT, RDEF ordernum O, RT name RTN'))
         self.mh.cmd_add_attribute('Note', 'whatever')
-        self.failUnless('whatever' in self.schema)
+        self.assertTrue('whatever' in self.schema)
         self.assertEqual(self.schema['whatever'].subjects(), ('Note',))
         self.assertEqual(self.schema['whatever'].objects(), ('Int',))
         self.assertEqual(self.schema['Note'].default('whatever'), 2)
@@ -108,12 +108,12 @@ class MigrationCommandsTC(CubicWebTC):
         self.mh.rollback()
 
     def test_add_attribute_varchar(self):
-        self.failIf('whatever' in self.schema)
+        self.assertFalse('whatever' in self.schema)
         self.request().create_entity('Note')
         self.commit()
-        self.failIf('shortpara' in self.schema)
+        self.assertFalse('shortpara' in self.schema)
         self.mh.cmd_add_attribute('Note', 'shortpara')
-        self.failUnless('shortpara' in self.schema)
+        self.assertTrue('shortpara' in self.schema)
         self.assertEqual(self.schema['shortpara'].subjects(), ('Note', ))
         self.assertEqual(self.schema['shortpara'].objects(), ('String', ))
         # test created column is actually a varchar(64)
@@ -128,10 +128,10 @@ class MigrationCommandsTC(CubicWebTC):
         self.mh.rollback()
 
     def test_add_datetime_with_default_value_attribute(self):
-        self.failIf('mydate' in self.schema)
-        self.failIf('shortpara' in self.schema)
+        self.assertFalse('mydate' in self.schema)
+        self.assertFalse('shortpara' in self.schema)
         self.mh.cmd_add_attribute('Note', 'mydate')
-        self.failUnless('mydate' in self.schema)
+        self.assertTrue('mydate' in self.schema)
         self.assertEqual(self.schema['mydate'].subjects(), ('Note', ))
         self.assertEqual(self.schema['mydate'].objects(), ('Date', ))
         testdate = date(2005, 12, 13)
@@ -167,17 +167,17 @@ class MigrationCommandsTC(CubicWebTC):
         self.mh.rollback()
 
     def test_rename_attribute(self):
-        self.failIf('civility' in self.schema)
+        self.assertFalse('civility' in self.schema)
         eid1 = self.mh.rqlexec('INSERT Personne X: X nom "lui", X sexe "M"')[0][0]
         eid2 = self.mh.rqlexec('INSERT Personne X: X nom "l\'autre", X sexe NULL')[0][0]
         self.mh.cmd_rename_attribute('Personne', 'sexe', 'civility')
-        self.failIf('sexe' in self.schema)
-        self.failUnless('civility' in self.schema)
+        self.assertFalse('sexe' in self.schema)
+        self.assertTrue('civility' in self.schema)
         # test data has been backported
         c1 = self.mh.rqlexec('Any C WHERE X eid %s, X civility C' % eid1)[0][0]
-        self.failUnlessEqual(c1, 'M')
+        self.assertEqual(c1, 'M')
         c2 = self.mh.rqlexec('Any C WHERE X eid %s, X civility C' % eid2)[0][0]
-        self.failUnlessEqual(c2, None)
+        self.assertEqual(c2, None)
 
 
     def test_workflow_actions(self):
@@ -192,13 +192,13 @@ class MigrationCommandsTC(CubicWebTC):
             self.assertEqual(s1, "foo")
 
     def test_add_entity_type(self):
-        self.failIf('Folder2' in self.schema)
-        self.failIf('filed_under2' in self.schema)
+        self.assertFalse('Folder2' in self.schema)
+        self.assertFalse('filed_under2' in self.schema)
         self.mh.cmd_add_entity_type('Folder2')
-        self.failUnless('Folder2' in self.schema)
-        self.failUnless(self.execute('CWEType X WHERE X name "Folder2"'))
-        self.failUnless('filed_under2' in self.schema)
-        self.failUnless(self.execute('CWRType X WHERE X name "filed_under2"'))
+        self.assertTrue('Folder2' in self.schema)
+        self.assertTrue(self.execute('CWEType X WHERE X name "Folder2"'))
+        self.assertTrue('filed_under2' in self.schema)
+        self.assertTrue(self.execute('CWRType X WHERE X name "filed_under2"'))
         self.schema.rebuild_infered_relations()
         self.assertEqual(sorted(str(rs) for rs in self.schema['Folder2'].subject_relations()),
                           ['created_by', 'creation_date', 'cw_source', 'cwuri',
@@ -214,7 +214,7 @@ class MigrationCommandsTC(CubicWebTC):
         self.assertEqual(self.schema['filed_under2'].objects(), ('Folder2',))
         eschema = self.schema.eschema('Folder2')
         for cstr in eschema.rdef('name').constraints:
-            self.failUnless(hasattr(cstr, 'eid'))
+            self.assertTrue(hasattr(cstr, 'eid'))
 
     def test_add_drop_entity_type(self):
         self.mh.cmd_add_entity_type('Folder2')
@@ -227,23 +227,23 @@ class MigrationCommandsTC(CubicWebTC):
         self.commit()
         eschema = self.schema.eschema('Folder2')
         self.mh.cmd_drop_entity_type('Folder2')
-        self.failIf('Folder2' in self.schema)
-        self.failIf(self.execute('CWEType X WHERE X name "Folder2"'))
+        self.assertFalse('Folder2' in self.schema)
+        self.assertFalse(self.execute('CWEType X WHERE X name "Folder2"'))
         # test automatic workflow deletion
-        self.failIf(self.execute('Workflow X WHERE NOT X workflow_of ET'))
-        self.failIf(self.execute('State X WHERE NOT X state_of WF'))
-        self.failIf(self.execute('Transition X WHERE NOT X transition_of WF'))
+        self.assertFalse(self.execute('Workflow X WHERE NOT X workflow_of ET'))
+        self.assertFalse(self.execute('State X WHERE NOT X state_of WF'))
+        self.assertFalse(self.execute('Transition X WHERE NOT X transition_of WF'))
 
     def test_add_drop_relation_type(self):
         self.mh.cmd_add_entity_type('Folder2', auto=False)
         self.mh.cmd_add_relation_type('filed_under2')
         self.schema.rebuild_infered_relations()
-        self.failUnless('filed_under2' in self.schema)
+        self.assertTrue('filed_under2' in self.schema)
         self.assertEqual(sorted(str(e) for e in self.schema['filed_under2'].subjects()),
                           sorted(str(e) for e in self.schema.entities() if not e.final))
         self.assertEqual(self.schema['filed_under2'].objects(), ('Folder2',))
         self.mh.cmd_drop_relation_type('filed_under2')
-        self.failIf('filed_under2' in self.schema)
+        self.assertFalse('filed_under2' in self.schema)
 
     def test_add_relation_definition_nortype(self):
         self.mh.cmd_add_relation_definition('Personne', 'concerne2', 'Affaire')
@@ -260,9 +260,9 @@ class MigrationCommandsTC(CubicWebTC):
         self.mh.rqlexec('SET X concerne2 Y WHERE X is Personne, Y is Affaire')
         self.commit()
         self.mh.cmd_drop_relation_definition('Personne', 'concerne2', 'Affaire')
-        self.failUnless('concerne2' in self.schema)
+        self.assertTrue('concerne2' in self.schema)
         self.mh.cmd_drop_relation_definition('Personne', 'concerne2', 'Note')
-        self.failIf('concerne2' in self.schema)
+        self.assertFalse('concerne2' in self.schema)
 
     def test_drop_relation_definition_existant_rtype(self):
         self.assertEqual(sorted(str(e) for e in self.schema['concerne'].subjects()),
@@ -380,8 +380,8 @@ class MigrationCommandsTC(CubicWebTC):
         self.assertEqual(eexpr.reverse_delete_permission, ())
         self.assertEqual(eexpr.reverse_update_permission, ())
         # no more rqlexpr to delete and add para attribute
-        self.failIf(self._rrqlexpr_rset('add', 'para'))
-        self.failIf(self._rrqlexpr_rset('delete', 'para'))
+        self.assertFalse(self._rrqlexpr_rset('add', 'para'))
+        self.assertFalse(self._rrqlexpr_rset('delete', 'para'))
         # new rql expr to add ecrit_par relation
         rexpr = self._rrqlexpr_entity('add', 'ecrit_par')
         self.assertEqual(rexpr.expression,
@@ -391,13 +391,13 @@ class MigrationCommandsTC(CubicWebTC):
         self.assertEqual(rexpr.reverse_read_permission, ())
         self.assertEqual(rexpr.reverse_delete_permission, ())
         # no more rqlexpr to delete and add travaille relation
-        self.failIf(self._rrqlexpr_rset('add', 'travaille'))
-        self.failIf(self._rrqlexpr_rset('delete', 'travaille'))
+        self.assertFalse(self._rrqlexpr_rset('add', 'travaille'))
+        self.assertFalse(self._rrqlexpr_rset('delete', 'travaille'))
         # no more rqlexpr to delete and update Societe entity
-        self.failIf(self._erqlexpr_rset('update', 'Societe'))
-        self.failIf(self._erqlexpr_rset('delete', 'Societe'))
+        self.assertFalse(self._erqlexpr_rset('update', 'Societe'))
+        self.assertFalse(self._erqlexpr_rset('delete', 'Societe'))
         # no more rqlexpr to read Affaire entity
-        self.failIf(self._erqlexpr_rset('read', 'Affaire'))
+        self.assertFalse(self._erqlexpr_rset('read', 'Affaire'))
         # rqlexpr to update Affaire entity has been updated
         eexpr = self._erqlexpr_entity('update', 'Affaire')
         self.assertEqual(eexpr.expression, 'X concerne S, S owned_by U')
@@ -470,13 +470,13 @@ class MigrationCommandsTC(CubicWebTC):
             try:
                 self.mh.cmd_remove_cube('email', removedeps=True)
                 # file was there because it's an email dependancy, should have been removed
-                self.failIf('email' in self.config.cubes())
-                self.failIf(self.config.cube_dir('email') in self.config.cubes_path())
-                self.failIf('file' in self.config.cubes())
-                self.failIf(self.config.cube_dir('file') in self.config.cubes_path())
+                self.assertFalse('email' in self.config.cubes())
+                self.assertFalse(self.config.cube_dir('email') in self.config.cubes_path())
+                self.assertFalse('file' in self.config.cubes())
+                self.assertFalse(self.config.cube_dir('file') in self.config.cubes_path())
                 for ertype in ('Email', 'EmailThread', 'EmailPart', 'File',
                                'sender', 'in_thread', 'reply_to', 'data_format'):
-                    self.failIf(ertype in schema, ertype)
+                    self.assertFalse(ertype in schema, ertype)
                 self.assertEqual(sorted(schema['see_also'].rdefs.keys()),
                                   sorted([('Folder', 'Folder'),
                                           ('Bookmark', 'Bookmark'),
@@ -493,13 +493,13 @@ class MigrationCommandsTC(CubicWebTC):
                 raise
         finally:
             self.mh.cmd_add_cube('email')
-            self.failUnless('email' in self.config.cubes())
-            self.failUnless(self.config.cube_dir('email') in self.config.cubes_path())
-            self.failUnless('file' in self.config.cubes())
-            self.failUnless(self.config.cube_dir('file') in self.config.cubes_path())
+            self.assertTrue('email' in self.config.cubes())
+            self.assertTrue(self.config.cube_dir('email') in self.config.cubes_path())
+            self.assertTrue('file' in self.config.cubes())
+            self.assertTrue(self.config.cube_dir('file') in self.config.cubes_path())
             for ertype in ('Email', 'EmailThread', 'EmailPart', 'File',
                            'sender', 'in_thread', 'reply_to', 'data_format'):
-                self.failUnless(ertype in schema, ertype)
+                self.assertTrue(ertype in schema, ertype)
             self.assertEqual(sorted(schema['see_also'].rdefs.keys()),
                               sorted([('EmailThread', 'EmailThread'), ('Folder', 'Folder'),
                                       ('Bookmark', 'Bookmark'),
@@ -530,18 +530,18 @@ class MigrationCommandsTC(CubicWebTC):
             try:
                 self.mh.cmd_remove_cube('email')
                 cubes.remove('email')
-                self.failIf('email' in self.config.cubes())
-                self.failUnless('file' in self.config.cubes())
+                self.assertFalse('email' in self.config.cubes())
+                self.assertTrue('file' in self.config.cubes())
                 for ertype in ('Email', 'EmailThread', 'EmailPart',
                                'sender', 'in_thread', 'reply_to'):
-                    self.failIf(ertype in schema, ertype)
+                    self.assertFalse(ertype in schema, ertype)
             except :
                 import traceback
                 traceback.print_exc()
                 raise
         finally:
             self.mh.cmd_add_cube('email')
-            self.failUnless('email' in self.config.cubes())
+            self.assertTrue('email' in self.config.cubes())
             # trick: overwrite self.maxeid to avoid deletion of just reintroduced
             #        types (and their associated tables!)
             self.maxeid = self.execute('Any MAX(X)')[0][0]
@@ -570,13 +570,13 @@ class MigrationCommandsTC(CubicWebTC):
         text = self.execute('INSERT Text X: X para "hip", X summary "hop", X newattr "momo"').get_entity(0, 0)
         note = self.execute('INSERT Note X: X para "hip", X shortpara "hop", X newattr "momo", X unique_id "x"').get_entity(0, 0)
         aff = self.execute('INSERT Affaire X').get_entity(0, 0)
-        self.failUnless(self.execute('SET X newnotinlined Y WHERE X eid %(x)s, Y eid %(y)s',
+        self.assertTrue(self.execute('SET X newnotinlined Y WHERE X eid %(x)s, Y eid %(y)s',
                                      {'x': text.eid, 'y': aff.eid}))
-        self.failUnless(self.execute('SET X newnotinlined Y WHERE X eid %(x)s, Y eid %(y)s',
+        self.assertTrue(self.execute('SET X newnotinlined Y WHERE X eid %(x)s, Y eid %(y)s',
                                      {'x': note.eid, 'y': aff.eid}))
-        self.failUnless(self.execute('SET X newinlined Y WHERE X eid %(x)s, Y eid %(y)s',
+        self.assertTrue(self.execute('SET X newinlined Y WHERE X eid %(x)s, Y eid %(y)s',
                                      {'x': text.eid, 'y': aff.eid}))
-        self.failUnless(self.execute('SET X newinlined Y WHERE X eid %(x)s, Y eid %(y)s',
+        self.assertTrue(self.execute('SET X newinlined Y WHERE X eid %(x)s, Y eid %(y)s',
                                      {'x': note.eid, 'y': aff.eid}))
         # XXX remove specializes by ourselves, else tearDown fails when removing
         # Para because of Note inheritance. This could be fixed by putting the
@@ -601,11 +601,11 @@ class MigrationCommandsTC(CubicWebTC):
     def test_add_symmetric_relation_type(self):
         same_as_sql = self.mh.sqlexec("SELECT sql FROM sqlite_master WHERE type='table' "
                                       "and name='same_as_relation'")
-        self.failIf(same_as_sql)
+        self.assertFalse(same_as_sql)
         self.mh.cmd_add_relation_type('same_as')
         same_as_sql = self.mh.sqlexec("SELECT sql FROM sqlite_master WHERE type='table' "
                                       "and name='same_as_relation'")
-        self.failUnless(same_as_sql)
+        self.assertTrue(same_as_sql)
 
 if __name__ == '__main__':
     unittest_main()

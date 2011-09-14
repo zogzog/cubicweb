@@ -87,11 +87,11 @@ class SelectorsTC(TestCase):
 
     def test_composition(self):
         selector = (_1_() & _1_()) & (_1_() & _1_())
-        self.failUnless(isinstance(selector, AndSelector))
+        self.assertTrue(isinstance(selector, AndSelector))
         self.assertEqual(len(selector.selectors), 4)
         self.assertEqual(selector(None), 4)
         selector = (_1_() & _0_()) | (_1_() & _1_())
-        self.failUnless(isinstance(selector, OrSelector))
+        self.assertTrue(isinstance(selector, OrSelector))
         self.assertEqual(len(selector.selectors), 2)
         self.assertEqual(selector(None), 2)
 
@@ -151,13 +151,13 @@ class ImplementsSelectorTC(CubicWebTC):
         rset = f.as_rset()
         anyscore = is_instance('Any')(f.__class__, req, rset=rset)
         idownscore = adaptable('IDownloadable')(f.__class__, req, rset=rset)
-        self.failUnless(idownscore > anyscore, (idownscore, anyscore))
+        self.assertTrue(idownscore > anyscore, (idownscore, anyscore))
         filescore = is_instance('File')(f.__class__, req, rset=rset)
-        self.failUnless(filescore > idownscore, (filescore, idownscore))
+        self.assertTrue(filescore > idownscore, (filescore, idownscore))
 
     def test_etype_inheritance_no_yams_inheritance(self):
         cls = self.vreg['etypes'].etype_class('Personne')
-        self.failIf(is_instance('Societe').score_class(cls, self.request()))
+        self.assertFalse(is_instance('Societe').score_class(cls, self.request()))
 
     def test_yams_inheritance(self):
         cls = self.vreg['etypes'].etype_class('Transition')
@@ -321,7 +321,7 @@ class MatchUserGroupsTC(CubicWebTC):
         self.vreg._loadedmods[__name__] = {}
         self.vreg.register(SomeAction)
         SomeAction.__registered__(self.vreg['actions'])
-        self.failUnless(SomeAction in self.vreg['actions']['yo'], self.vreg['actions'])
+        self.assertTrue(SomeAction in self.vreg['actions']['yo'], self.vreg['actions'])
         try:
             # login as a simple user
             req = self.request()
@@ -330,18 +330,18 @@ class MatchUserGroupsTC(CubicWebTC):
             # it should not be possible to use SomeAction not owned objects
             req = self.request()
             rset = req.execute('Any G WHERE G is CWGroup, G name "managers"')
-            self.failIf('yo' in dict(self.pactions(req, rset)))
+            self.assertFalse('yo' in dict(self.pactions(req, rset)))
             # insert a new card, and check that we can use SomeAction on our object
             self.execute('INSERT Card C: C title "zoubidou"')
             self.commit()
             req = self.request()
             rset = req.execute('Card C WHERE C title "zoubidou"')
-            self.failUnless('yo' in dict(self.pactions(req, rset)), self.pactions(req, rset))
+            self.assertTrue('yo' in dict(self.pactions(req, rset)), self.pactions(req, rset))
             # make sure even managers can't use the action
             self.restore_connection()
             req = self.request()
             rset = req.execute('Card C WHERE C title "zoubidou"')
-            self.failIf('yo' in dict(self.pactions(req, rset)))
+            self.assertFalse('yo' in dict(self.pactions(req, rset)))
         finally:
             del self.vreg[SomeAction.__registry__][SomeAction.__regid__]
 
