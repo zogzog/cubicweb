@@ -344,21 +344,21 @@ class VRegistryTC(ViewSelectorTC):
         req = self.request()
         self.assertIsInstance(self.vreg['views'].select('index', req, rset=rset),
                              startup.IndexView)
-        self.assertTrueRaises(NoSelectableObject,
+        self.assertRaises(NoSelectableObject,
                              self.vreg['views'].select, 'primary', req, rset=rset)
-        self.assertTrueRaises(NoSelectableObject,
+        self.assertRaises(NoSelectableObject,
                              self.vreg['views'].select, 'table', req, rset=rset)
 
         # no entity
         req = self.request()
         rset = req.execute('Any X WHERE X eid 999999')
-        self.assertTrueRaises(NoSelectableObject,
+        self.assertRaises(NoSelectableObject,
                               self.vreg['views'].select, 'index', req, rset=rset)
-        self.assertTrueRaises(NoSelectableObject,
+        self.assertRaises(NoSelectableObject,
                               self.vreg['views'].select, 'creation', req, rset=rset)
-        self.assertTrueRaises(NoSelectableObject,
+        self.assertRaises(NoSelectableObject,
                               self.vreg['views'].select, 'primary', req, rset=rset)
-        self.assertTrueRaises(NoSelectableObject,
+        self.assertRaises(NoSelectableObject,
                              self.vreg['views'].select, 'table', req, rset=rset)
         # one entity
         req = self.request()
@@ -371,9 +371,9 @@ class VRegistryTC(ViewSelectorTC):
                              editforms.EditionFormView)
         self.assertIsInstance(self.vreg['views'].select('table', req, rset=rset),
                              tableview.TableView)
-        self.assertTrueRaises(NoSelectableObject,
+        self.assertRaises(NoSelectableObject,
                               self.vreg['views'].select, 'creation', req, rset=rset)
-        self.assertTrueRaises(NoSelectableObject,
+        self.assertRaises(NoSelectableObject,
                               self.vreg['views'].select, 'index', req, rset=rset)
         # list of entities of the same type
         req = self.request()
@@ -384,7 +384,7 @@ class VRegistryTC(ViewSelectorTC):
                              baseviews.ListView)
         self.assertIsInstance(self.vreg['views'].select('table', req, rset=rset),
                              tableview.TableView)
-        self.assertTrueRaises(NoSelectableObject,
+        self.assertRaises(NoSelectableObject,
                               self.vreg['views'].select, 'creation', req, rset=rset)
         # list of entities of different types
         req = self.request()
@@ -395,31 +395,31 @@ class VRegistryTC(ViewSelectorTC):
                                   baseviews.ListView)
         self.assertIsInstance(self.vreg['views'].select('table', req, rset=rset),
                                   tableview.TableView)
-        self.assertTrueRaises(NoSelectableObject,
+        self.assertRaises(NoSelectableObject,
                              self.vreg['views'].select, 'creation', req, rset=rset)
-        self.assertTrueRaises(NoSelectableObject,
+        self.assertRaises(NoSelectableObject,
                               self.vreg['views'].select, 'index', req, rset=rset)
         # whatever
         req = self.request()
         rset = req.execute('Any N, X WHERE X in_group Y, Y name N')
         self.assertIsInstance(self.vreg['views'].select('table', req, rset=rset),
                                   tableview.TableView)
-        self.assertTrueRaises(NoSelectableObject,
+        self.assertRaises(NoSelectableObject,
                               self.vreg['views'].select, 'index', req, rset=rset)
-        self.assertTrueRaises(NoSelectableObject,
+        self.assertRaises(NoSelectableObject,
                               self.vreg['views'].select, 'creation', req, rset=rset)
-        self.assertTrueRaises(NoSelectableObject,
+        self.assertRaises(NoSelectableObject,
                              self.vreg['views'].select, 'primary', req, rset=rset)
-        self.assertTrueRaises(NoSelectableObject,
+        self.assertRaises(NoSelectableObject,
                              self.vreg['views'].select, 'list', req, rset=rset)
-        self.assertTrueRaises(NoSelectableObject,
+        self.assertRaises(NoSelectableObject,
                              self.vreg['views'].select, 'edition', req, rset=rset)
         # mixed query
         req = self.request()
         rset = req.execute('Any U,G WHERE U is CWUser, G is CWGroup')
-        self.assertTrueRaises(NoSelectableObject,
+        self.assertRaises(NoSelectableObject,
                               self.vreg['views'].select, 'edition', req, rset=rset)
-        self.assertTrueRaises(NoSelectableObject,
+        self.assertRaises(NoSelectableObject,
                               self.vreg['views'].select, 'creation', req, rset=rset)
         self.assertIsInstance(self.vreg['views'].select('table', req, rset=rset),
                               tableview.TableView)
