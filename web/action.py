@@ -15,7 +15,54 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""abstract action classes for CubicWeb web client"""
+"""abstract action classes for CubicWeb web client
+
+Actions are typically displayed in an action box, but can also be used
+in other parts of the interface (the user menu, the footer, etc.). The
+'order', 'category' and 'title' class attributes control how the action will
+be displayed. The 'submenu' attribute is only used for actions in the
+action box.
+
+The most important method from a developper point of view in the
+:meth:'Action.url' method, which returns a URL on which the navigation
+should directed to perform the action.  There are two common ways of
+writing that method:
+
+* do nothing special and simply return a URL to the current rset with
+  a special view (with `self._cw.build_url(...)` for instance)
+
+* define an inner function `callback_func(req, *args)` which will do
+  the work and call it through `self._cw.user_callback(callback_func,
+  args, msg)`: this method will return a URL which calls the inner
+  function, and displays the message in the web interface when the
+  callback has completed (and report any exception occuring in the
+  callback too)
+
+Many examples of the first approach are available in :mod:`cubicweb.web.views.actions`.
+
+Here is an example of the second approach:
+
+.. sourcecode:: python
+
+ from cubicweb.web import action
+ class SomeAction(action.Action):
+     __regid__ = 'mycube_some_action'
+     title = _(some action)
+     __select__ = action.Action.__select__ & is_instance('TargetEntity')
+ 
+     def url(self):
+         if self.cw_row is None:
+             eids = [row[0] for row in self.cw_rset]
+         else:
+             eids = (self.cw_rset[self.cw_row][self.cw_col or 0],)
+         def do_action(req, eids):
+             for eid in eids:
+                 entity = req.entity_from_eid(eid, 'TargetEntity')
+                 entity.perform_action()
+         msg = self._cw._('some_action performed')
+         return self._cw.user_callback(do_action, (eids,), msg)
+
+"""
 
 __docformat__ = "restructuredtext en"
 _ = unicode
