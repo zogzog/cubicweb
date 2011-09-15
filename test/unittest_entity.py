@@ -179,7 +179,7 @@ class EntityTC(CubicWebTC):
         try:
             # testing basic fetch_attrs attribute
             self.assertEqual(Personne.fetch_rql(user),
-                              'Any X,AA,AB,AC ORDERBY AA ASC '
+                              'Any X,AA,AB,AC ORDERBY AA '
                               'WHERE X is Personne, X nom AA, X prenom AB, X modification_date AC')
             # testing unknown attributes
             Personne.fetch_attrs = ('bloug', 'beep')
@@ -187,36 +187,36 @@ class EntityTC(CubicWebTC):
             # testing one non final relation
             Personne.fetch_attrs = ('nom', 'prenom', 'travaille')
             self.assertEqual(Personne.fetch_rql(user),
-                              'Any X,AA,AB,AC,AD ORDERBY AA ASC '
+                              'Any X,AA,AB,AC,AD ORDERBY AA '
                               'WHERE X is Personne, X nom AA, X prenom AB, X travaille AC?, AC nom AD')
             # testing two non final relations
             Personne.fetch_attrs = ('nom', 'prenom', 'travaille', 'evaluee')
             self.assertEqual(Personne.fetch_rql(user),
-                             'Any X,AA,AB,AC,AD,AE ORDERBY AA ASC '
+                             'Any X,AA,AB,AC,AD,AE ORDERBY AA '
                              'WHERE X is Personne, X nom AA, X prenom AB, X travaille AC?, AC nom AD, '
                              'X evaluee AE?')
             # testing one non final relation with recursion
             Personne.fetch_attrs = ('nom', 'prenom', 'travaille')
             Societe.fetch_attrs = ('nom', 'evaluee')
             self.assertEqual(Personne.fetch_rql(user),
-                              'Any X,AA,AB,AC,AD,AE,AF ORDERBY AA ASC,AF DESC '
+                              'Any X,AA,AB,AC,AD,AE,AF ORDERBY AA,AF DESC '
                               'WHERE X is Personne, X nom AA, X prenom AB, X travaille AC?, AC nom AD, '
                               'AC evaluee AE?, AE modification_date AF'
                               )
             # testing symmetric relation
             Personne.fetch_attrs = ('nom', 'connait')
-            self.assertEqual(Personne.fetch_rql(user), 'Any X,AA,AB ORDERBY AA ASC '
+            self.assertEqual(Personne.fetch_rql(user), 'Any X,AA,AB ORDERBY AA '
                               'WHERE X is Personne, X nom AA, X connait AB?')
             # testing optional relation
             peschema.subjrels['travaille'].rdef(peschema, seschema).cardinality = '?*'
             Personne.fetch_attrs = ('nom', 'prenom', 'travaille')
             Societe.fetch_attrs = ('nom',)
             self.assertEqual(Personne.fetch_rql(user),
-                              'Any X,AA,AB,AC,AD ORDERBY AA ASC WHERE X is Personne, X nom AA, X prenom AB, X travaille AC?, AC nom AD')
+                              'Any X,AA,AB,AC,AD ORDERBY AA WHERE X is Personne, X nom AA, X prenom AB, X travaille AC?, AC nom AD')
             # testing relation with cardinality > 1
             peschema.subjrels['travaille'].rdef(peschema, seschema).cardinality = '**'
             self.assertEqual(Personne.fetch_rql(user),
-                              'Any X,AA,AB ORDERBY AA ASC WHERE X is Personne, X nom AA, X prenom AB')
+                              'Any X,AA,AB ORDERBY AA WHERE X is Personne, X nom AA, X prenom AB')
             # XXX test unauthorized attribute
         finally:
             # fetch_attrs restored by generic tearDown
@@ -233,8 +233,14 @@ class EntityTC(CubicWebTC):
         SubNote.fetch_attrs, SubNote.fetch_order = fetch_config(('type',))
         p = self.request().create_entity('Personne', nom=u'pouet')
         self.assertEqual(p.cw_related_rql('evaluee'),
-                          'Any X,AA,AB ORDERBY AA ASC WHERE E eid %(x)s, E evaluee X, '
-                          'X type AA, X modification_date AB')
+                         'Any X,AA,AB ORDERBY AA WHERE E eid %(x)s, E evaluee X, '
+                         'X type AA, X modification_date AB')
+        n = self.request().create_entity('Note')
+        self.assertEqual(n.cw_related_rql('evaluee', role='object',
+                                          targettypes=('Societe', 'Personne')),
+                         "Any X,AA ORDERBY AB DESC WHERE E eid %(x)s, X evaluee E, "
+                         "X is IN('Personne', 'Societe'), X nom AA, "
+                         "X modification_date AB")
         Personne.fetch_attrs, Personne.fetch_order = fetch_config(('nom', ))
         # XXX
         self.assertEqual(p.cw_related_rql('evaluee'),
@@ -246,8 +252,8 @@ class EntityTC(CubicWebTC):
                           'Any X,AA ORDERBY AA DESC '
                           'WHERE E eid %(x)s, E tags X, X modification_date AA')
         self.assertEqual(tag.cw_related_rql('tags', 'subject', ('Personne',)),
-                          'Any X,AA,AB ORDERBY AA ASC '
-                          'WHERE E eid %(x)s, E tags X, X is IN (Personne), X nom AA, '
+                          'Any X,AA,AB ORDERBY AA '
+                          'WHERE E eid %(x)s, E tags X, X is Personne, X nom AA, '
                           'X modification_date AB')
 
     def test_related_rql_ambiguous_cant_use_fetch_order(self):
@@ -274,7 +280,7 @@ class EntityTC(CubicWebTC):
         user = self.request().user
         rql = user.cw_unrelated_rql('use_email', 'EmailAddress', 'subject')[0]
         self.assertEqual(rql, 'Any O,AA,AB,AC ORDERBY AC DESC '
-                         'WHERE NOT EXISTS(ZZ use_email O), S eid %(x)s, '
+                         'WHERE NOT ZZ use_email O, S eid %(x)s, '
                          'O is EmailAddress, O address AA, O alias AB, O modification_date AC')
 
     def test_unrelated_rql_security_1_user(self):
@@ -284,37 +290,37 @@ class EntityTC(CubicWebTC):
         user = req.user
         rql = user.cw_unrelated_rql('use_email', 'EmailAddress', 'subject')[0]
         self.assertEqual(rql, 'Any O,AA,AB,AC ORDERBY AC DESC '
-                         'WHERE NOT EXISTS(ZZ use_email O), S eid %(x)s, '
+                         'WHERE NOT ZZ use_email O, S eid %(x)s, '
                          'O is EmailAddress, O address AA, O alias AB, O modification_date AC')
         user = self.execute('Any X WHERE X login "admin"').get_entity(0, 0)
         rql = user.cw_unrelated_rql('use_email', 'EmailAddress', 'subject')[0]
         self.assertEqual(rql, 'Any O,AA,AB,AC ORDERBY AC DESC '
-                         'WHERE NOT EXISTS(ZZ use_email O, ZZ is CWUser), S eid %(x)s, '
-                         'O is EmailAddress, O address AA, O alias AB, O modification_date AC, A eid %(B)s, '
-                         'EXISTS(S identity A, NOT A in_group C, C name "guests", C is CWGroup)')
+                         'WHERE NOT ZZ use_email O, S eid %(x)s, '
+                         'O is EmailAddress, O address AA, O alias AB, O modification_date AC, AD eid %(AE)s, '
+                         'EXISTS(S identity AD, NOT AD in_group AF, AF name "guests", AF is CWGroup), ZZ is CWUser')
 
     def test_unrelated_rql_security_1_anon(self):
         self.login('anon')
         user = self.request().user
         rql = user.cw_unrelated_rql('use_email', 'EmailAddress', 'subject')[0]
         self.assertEqual(rql, 'Any O,AA,AB,AC ORDERBY AC DESC '
-                         'WHERE NOT EXISTS(ZZ use_email O, ZZ is CWUser), S eid %(x)s, '
-                         'O is EmailAddress, O address AA, O alias AB, O modification_date AC, A eid %(B)s, '
-                         'EXISTS(S identity A, NOT A in_group C, C name "guests", C is CWGroup)')
+                         'WHERE NOT ZZ use_email O, S eid %(x)s, '
+                         'O is EmailAddress, O address AA, O alias AB, O modification_date AC, AD eid %(AE)s, '
+                         'EXISTS(S identity AD, NOT AD in_group AF, AF name "guests", AF is CWGroup), ZZ is CWUser')
 
     def test_unrelated_rql_security_2(self):
         email = self.execute('INSERT EmailAddress X: X address "hop"').get_entity(0, 0)
         rql = email.cw_unrelated_rql('use_email', 'CWUser', 'object')[0]
         self.assertEqual(rql, 'Any S,AA,AB,AC,AD ORDERBY AA '
-                         'WHERE NOT EXISTS(S use_email O), O eid %(x)s, S is CWUser, '
+                         'WHERE NOT S use_email O, O eid %(x)s, S is CWUser, '
                          'S login AA, S firstname AB, S surname AC, S modification_date AD')
         self.login('anon')
         email = self.execute('Any X WHERE X eid %(x)s', {'x': email.eid}).get_entity(0, 0)
         rql = email.cw_unrelated_rql('use_email', 'CWUser', 'object')[0]
         self.assertEqual(rql, 'Any S,AA,AB,AC,AD ORDERBY AA '
-                         'WHERE NOT EXISTS(S use_email O), O eid %(x)s, S is CWUser, '
+                         'WHERE NOT S use_email O, O eid %(x)s, S is CWUser, '
                          'S login AA, S firstname AB, S surname AC, S modification_date AD, '
-                         'A eid %(B)s, EXISTS(S identity A, NOT A in_group C, C name "guests", C is CWGroup)')
+                         'AE eid %(AF)s, EXISTS(S identity AE, NOT AE in_group AG, AG name "guests", AG is CWGroup)')
 
     def test_unrelated_rql_security_nonexistant(self):
         self.login('anon')
@@ -323,7 +329,7 @@ class EntityTC(CubicWebTC):
         self.assertEqual(rql, 'Any S,AA,AB,AC,AD ORDERBY AA '
                          'WHERE S is CWUser, '
                          'S login AA, S firstname AB, S surname AC, S modification_date AD, '
-                         'A eid %(B)s, EXISTS(S identity A, NOT A in_group C, C name "guests", C is CWGroup)')
+                         'AE eid %(AF)s, EXISTS(S identity AE, NOT AE in_group AG, AG name "guests", AG is CWGroup)')
 
     def test_unrelated_rql_constraints_creation_subject(self):
         person = self.vreg['etypes'].etype_class('Personne')(self.request())
@@ -338,14 +344,15 @@ class EntityTC(CubicWebTC):
         self.assertEqual(
             rql, 'Any S,AA,AB,AC ORDERBY AC DESC WHERE '
             'S is Personne, S nom AA, S prenom AB, S modification_date AC, '
-            'NOT (S connait A, A nom "toto"), A is Personne, EXISTS(S travaille B, B nom "tutu")')
+            'NOT (S connait AD, AD nom "toto"), AD is Personne, '
+            'EXISTS(S travaille AE, AE nom "tutu")')
 
     def test_unrelated_rql_constraints_edition_subject(self):
         person = self.request().create_entity('Personne', nom=u'sylvain')
         rql = person.cw_unrelated_rql('connait', 'Personne', 'subject')[0]
         self.assertEqual(
             rql, 'Any O,AA,AB,AC ORDERBY AC DESC WHERE '
-            'NOT EXISTS(S connait O), S eid %(x)s, O is Personne, '
+            'NOT S connait O, S eid %(x)s, O is Personne, '
             'O nom AA, O prenom AB, O modification_date AC, '
             'NOT S identity O')
 
@@ -354,10 +361,10 @@ class EntityTC(CubicWebTC):
         rql = person.cw_unrelated_rql('connait', 'Personne', 'object')[0]
         self.assertEqual(
             rql, 'Any S,AA,AB,AC ORDERBY AC DESC WHERE '
-            'NOT EXISTS(S connait O), O eid %(x)s, S is Personne, '
+            'NOT S connait O, O eid %(x)s, S is Personne, '
             'S nom AA, S prenom AB, S modification_date AC, '
-            'NOT S identity O, NOT (S connait A, A nom "toto"), '
-            'EXISTS(S travaille B, B nom "tutu")')
+            'NOT S identity O, NOT (S connait AD, AD nom "toto"), '
+            'EXISTS(S travaille AE, AE nom "tutu")')
 
     def test_unrelated_base(self):
         req = self.request()

@@ -459,8 +459,9 @@ class Repository(object):
     def _build_user(self, session, eid):
         """return a CWUser entity for user with the given eid"""
         cls = self.vreg['etypes'].etype_class('CWUser')
-        rql = cls.fetch_rql(session.user, ['X eid %(x)s'])
-        rset = session.execute(rql, {'x': eid})
+        st = cls.fetch_rqlst(session.user, ordermethod=None)
+        st.add_eid_restriction(st.get_variable('X'), 'x', 'Substitute')
+        rset = session.execute(st.as_string(), {'x': eid})
         assert len(rset) == 1, rset
         cwuser = rset.get_entity(0, 0)
         # pylint: disable=W0104

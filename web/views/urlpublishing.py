@@ -195,16 +195,17 @@ class RestPathEvaluator(URLPathEvaluator):
         return None, rset
 
     def handle_etype_attr(self, req, cls, attrname, value):
-        rql = cls.fetch_rql(req.user, ['X %s %%(x)s' % (attrname)],
-                            mainvar='X', ordermethod=None)
+        st = cls.fetch_rqlst(req.user, ordermethod=None)
+        st.add_constant_restriction(st.get_variable('X'), attrname,
+                                    'x', 'Substitute')
         if attrname == 'eid':
             try:
-                rset = req.execute(rql, {'x': typed_eid(value)})
+                rset = req.execute(st.as_string(), {'x': typed_eid(value)})
             except (ValueError, TypeResolverException):
                 # conflicting eid/type
                 raise PathDontMatch()
         else:
-            rset = req.execute(rql, {'x': value})
+            rset = req.execute(st.as_string(), {'x': value})
         self.set_vid_for_rset(req, cls, rset)
         return None, rset
 
