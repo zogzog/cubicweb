@@ -3239,7 +3239,7 @@ msgid "navigation.related-limit"
 msgstr "nombre d'entités dans la vue primaire"
 
 msgid "navigation.short-line-size"
-msgstr "description courtes"
+msgstr "taille des descriptions courtes"
 
 msgid "navtop"
 msgstr "haut de page du contenu principal"

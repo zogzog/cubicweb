@@ -362,10 +362,13 @@ class CubicWebRequestBase(DBAPIRequest):
         return self.base_url()
 
     def user_rql_callback(self, rqlargs, *args, **kwargs):
-        """register a user callback to execute some rql query and return an url
-        to call it ready to be inserted in html.
+        """register a user callback to execute some rql query, and return a URL
+        to call that callback which can be inserted in an HTML view.
 
-        rqlargs should be a tuple containing argument to give to the execute function.
+        `rqlargs` should be a tuple containing argument to give to the execute function.
+
+        The first argument following rqlargs must be the message to be
+        displayed after the callback is called.
 
         For other allowed arguments, see :meth:`user_callback` method
         """
@@ -374,8 +377,11 @@ class CubicWebRequestBase(DBAPIRequest):
         return self.user_callback(rqlexec, rqlargs, *args, **kwargs)
 
     def user_callback(self, cb, cbargs, *args, **kwargs):
-        """register the given user callback and return an url to call it ready
-        to be inserted in html.
+        """register the given user callback and return a URL which can
+        be inserted in an HTML view. When the URL is accessed, the
+        callback function will be called (as 'cb(req, *cbargs)', and a
+        message will be displayed in the web interface. The third
+        positional argument must be 'msg', containing the message.
 
         You can specify the underlying js function to call using a 'jsfunc'
         named args, to one of :func:`userCallback`,
