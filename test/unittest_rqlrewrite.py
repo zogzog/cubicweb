@@ -210,8 +210,8 @@ class RQLRewriteTC(TestCase):
                         }, {})
         # XXX suboptimal
         self.assertEqual(rqlst.as_string(),
-                             "Any C,A,R WITH A,C,R BEING "
-                             "(Any A,C,R WHERE A? inlined_card C, A ref R, "
+                             "Any C,A,R WITH A,R,C BEING "
+                             "(Any A,R,C WHERE A ref R, A? inlined_card C, "
                              "(A is NULL) OR (EXISTS(A inlined_card B, B require_permission D, "
                              "B is Card, D is CWPermission)), "
                              "A is Affaire, C is Card, EXISTS(C require_permission E, E is CWPermission))")

@@ -193,7 +193,7 @@ class SchemaReaderClassTest(TestCase):
                               'fabrique_par', 'final', 'firstname', 'for_user', 'fournit',
                               'from_entity', 'from_state', 'fulltext_container', 'fulltextindexed',
 
-                              'has_text',
+                              'has_group_permission', 'has_text',
                               'identity', 'in_group', 'in_state', 'indexed',
                               'initial_state', 'inlined', 'internationalizable', 'is', 'is_instance_of',
 
@@ -225,12 +225,13 @@ class SchemaReaderClassTest(TestCase):
         rels = sorted(str(r) for r in eschema.subject_relations())
         self.assertListEqual(rels, ['created_by', 'creation_date', 'custom_workflow',
                                     'cw_source', 'cwuri', 'eid',
-                                     'evaluee', 'firstname', 'has_text', 'identity',
-                                     'in_group', 'in_state', 'is',
-                                     'is_instance_of', 'last_login_time',
-                                     'login', 'modification_date', 'owned_by',
-                                     'primary_email', 'surname', 'upassword',
-                                     'use_email'])
+                                    'evaluee', 'firstname', 'has_group_permission',
+                                    'has_text', 'identity',
+                                    'in_group', 'in_state', 'is',
+                                    'is_instance_of', 'last_login_time',
+                                    'login', 'modification_date', 'owned_by',
+                                    'primary_email', 'surname', 'upassword',
+                                    'use_email'])
         rels = sorted(r.type for r in eschema.object_relations())
         self.assertListEqual(rels, ['bookmarked_by', 'created_by', 'for_user',
                                      'identity', 'owned_by', 'wf_info_for'])
