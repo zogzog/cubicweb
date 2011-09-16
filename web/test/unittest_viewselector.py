@@ -91,7 +91,7 @@ class VRegistryTC(ViewSelectorTC):
         self.assertListEqual(self.pviews(req, None),
                              [('changelog', wdoc.ChangeLogView),
                               ('cw.source-management', cwsources.CWSourceManagementView),
-                              ('cw.user-management', cwuser.CWUserManagementView),
+                              ('cw.users-and-groups-management', cwuser.UsersAndGroupsManagementView),
                               ('gc', debug.GCView),
                               ('index', startup.IndexView),
                               ('info', debug.ProcessInformationView),
@@ -228,7 +228,7 @@ class VRegistryTC(ViewSelectorTC):
         rset = req.execute('CWUser X')
         self.assertListEqual(self.pviews(req, rset),
                              [('csvexport', csvexport.CSVRsetView),
-                              ('cw.user-table', cwuser.CWUserTable),
+                              ('cw.users-table', cwuser.CWUsersTable),
                               ('ecsvexport', csvexport.CSVEntityView),
                               ('editable-table', tableview.EditableTableView),
                               ('filetree', treeview.FileTreeView),

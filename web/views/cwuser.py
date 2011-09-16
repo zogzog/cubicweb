@@ -122,6 +122,7 @@ class CWGroupMainTab(tabs.PrimaryTab):
         self.wview('editable-table', rset, 'null', displayfilter=True,
                    displaycols=range(5), mainindex=0, headers=headers)
 
+
 class CWGroupPermTab(EntityView):
     __regid__ = 'cwgroup-permissions'
     __select__ = is_instance('CWGroup')
