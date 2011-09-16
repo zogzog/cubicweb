@@ -248,7 +248,7 @@ class CWPropertiesForm(SystemCWPropertiesForm):
         | (one_line_rset() & match_user_groups('managers') & is_instance('CWUser'))
         )
 
-    title = _('preferences')
+    title = _('user preferences')
 
     @property
     def user(self):

@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -141,7 +141,7 @@ class LinkToEntityAction(Action):
             ttype = self.target_etype
         entity = self.cw_rset.get_entity(self.cw_row or 0, self.cw_col or 0)
         linkto = '%s:%s:%s' % (self.rtype, entity.eid, target(self))
-        return self._cw.build_url('add/%s' % ttype, __linkto=linkto,
-                                  __redirectpath=entity.rest_path(),
+        return self._cw.vreg["etypes"].etype_class(ttype).cw_create_url(self._cw,
+                                  __redirectpath=entity.rest_path(), __linkto=linkto,
                                   __redirectvid=self._cw.form.get('__redirectvid', ''))
 
