@@ -20,29 +20,23 @@ h1, h2, h3 { margin-top:0; margin-bottom:0; }
 /* got rhythm ? beat of 12*1.25 = 15 px */
 .rhythm_bg { background: url("%(baseRhythmBg)s") repeat ! important; }
 
-/* scale 3:5 stranded */
-/* h1 { font-size:2em; } */
-/* h2 { font-size:1.61538em; } */
-/* h3 { font-size:1.23077em; } */
-
-/* scale le corbusier */
-/* h1 { font-size:2.11538em; } */
-/* h2 { font-size:1.61538em; } */
-/* h3 { font-size:1.30769em; } */
-
-/* scale traditional */
-h1,
-.vtitle { font-size: %(h1FontSize)s; }
-h2 { font-size: %(h2FontSize)s; }
-h3 { font-size: %(h3FontSize)s; }
-
-/* paddings */
 h1,
 .vtitle {
+  font-size: %(h1FontSize)s;
   border-bottom: %(h1BorderBottomStyle)s;
   padding: %(h1Padding)s;
   margin: %(h1Margin)s;
   color: %(h1Color)s;
+}
+
+h2 {
+  font-size: %(h2FontSize)s;
+  padding: %(h2Padding)s;
+}
+
+h3 {
+  font-size: %(h3FontSize)s;
+  padding: %(h3Padding)s;
 }
 
 div.tabbedprimary + h1,
@@ -50,8 +44,6 @@ h1.plain {
  border-bottom: none;
 }
 
-h2 { padding: %(h2Padding)s; }
-h3 { padding: %(h3Padding)s; }
 
 html, body {
   background: %(pageBgColor)s;
