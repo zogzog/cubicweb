@@ -72,7 +72,8 @@ class CWSourceMappingTab(EntityView):
         eschema = self._cw.vreg.schema.eschema('CWSourceSchemaConfig')
         if eschema.has_perm(self._cw, 'add'):
             self.w(u'<a href="%s" class="addButton right">%s</a>' % (
-                self._cw.build_url('add/%s' % eschema),
+                self._cw.build_url('add/%s' % eschema,
+                                   __linkto='cw_for_source:%s:subject' % entity.eid),
                 self._cw._('add a CWSourceSchemaConfig')))
             self.w(u'<div class="clear"></div>')
         rset = self._cw.execute(
