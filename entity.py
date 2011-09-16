@@ -269,7 +269,7 @@ class Entity(AppObject):
                 if len(targettypes) > 1:
                     # find fetch_attrs common to all destination types
                     fetchattrs = vreg['etypes'].fetch_attrs(targettypes)
-                    # .. and handle ambiguous relations
+                    # ... and handle ambiguous relations
                     cls._fetch_ambiguous_rtypes(select, var, fetchattrs,
                                                 targettypes, vreg.schema)
                 else:
