@@ -29,7 +29,7 @@ from cubicweb.schema import display_name
 from cubicweb.selectors import one_line_rset, is_instance, match_user_groups
 from cubicweb.view import EntityView, StartupView
 from cubicweb.web import action, uicfg, formwidgets
-from cubicweb.web.views import tabs, tableview, actions
+from cubicweb.web.views import tabs, tableview, actions, add_etype_button
 
 _pvs = uicfg.primaryview_section
 _pvs.tag_attribute(('CWUser', 'login'), 'hidden')
@@ -182,12 +182,8 @@ class CWUserManagementView(StartupView):
 
     def call(self, **kwargs):
         self.w('<h1>%s</h1>' % self._cw._(self.title))
-        for etype in ('CWUser', 'CWGroup'):
-            eschema = self._cw.vreg.schema.eschema(etype)
-            if eschema.has_perm(self._cw, 'add'):
-                self.w(u'<a href="%s" class="addButton right">%s</a>' % (
-                    self._cw.build_url('add/%s' % eschema),
-                    self._cw.__('New %s' % etype).capitalize()))
+        self.w(add_etype_button(self._cw, 'CWUser'))
+        self.w(add_etype_button(self._cw, 'CWGroup'))
         self.w(u'<div class="clear"></div>')
         self.wview('cw.user-table', self._cw.execute(self.rql))
 

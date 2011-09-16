@@ -248,7 +248,7 @@ class AddNewAction(MultipleEditAction):
         return self._cw.__('add a %s' % self.rsettype) # generated msgid
 
     def url(self):
-        return self._cw.build_url('add/%s' % self.rsettype)
+        return self._cw.vreg["etypes"].etype_class(self.rsettype).cw_create_url(self._cw)
 
 
 class AddRelatedActions(action.Action):
@@ -319,8 +319,9 @@ class AddRelatedActions(action.Action):
                         yield rschema, teschema, role
 
     def linkto_url(self, entity, rtype, etype, target, **kwargs):
-        return self._cw.build_url('add/%s' % etype,
-                                  __linkto='%s:%s:%s' % (rtype, entity.eid, target), **kwargs)
+        return self._cw.vreg["etypes"].etype_class(etype).cw_create_url(
+                self._cw, __linkto='%s:%s:%s' % (rtype, entity.eid, target),
+                **kwargs)
 
 
 class ViewSameCWEType(action.Action):

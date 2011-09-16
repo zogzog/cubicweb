@@ -28,7 +28,7 @@ from cubicweb.selectors import is_instance, score_entity, match_user_groups
 from cubicweb.view import EntityView, StartupView
 from cubicweb.schema import META_RTYPES, VIRTUAL_RTYPES, display_name
 from cubicweb.web import uicfg, formwidgets as wdgs
-from cubicweb.web.views import tabs, actions
+from cubicweb.web.views import tabs, actions, add_etype_button
 
 
 _abaa = uicfg.actionbox_appearsin_addmenu
@@ -69,13 +69,9 @@ class CWSourceMappingTab(EntityView):
     def entity_call(self, entity):
         _ = self._cw._
         self.w('<h3>%s</h3>' % _('Entity and relation supported by this source'))
-        eschema = self._cw.vreg.schema.eschema('CWSourceSchemaConfig')
-        if eschema.has_perm(self._cw, 'add'):
-            self.w(u'<a href="%s" class="addButton right">%s</a>' % (
-                self._cw.build_url('add/%s' % eschema,
-                                   __linkto='cw_for_source:%s:subject' % entity.eid),
-                self._cw._('add a CWSourceSchemaConfig')))
-            self.w(u'<div class="clear"></div>')
+        self.w(add_etype_button(self._cw, 'CWSourceSchemaConfig',
+                                __linkto='cw_for_source:%s:subject' % entity.eid))
+        self.w(u'<div class="clear"></div>')
         rset = self._cw.execute(
             'Any X, SCH, XO ORDERBY ET WHERE X options XO, X cw_for_source S, S eid %(s)s, '
             'X cw_schema SCH, SCH is ET', {'s': entity.eid})
@@ -97,11 +93,11 @@ class CWSourceMappingTab(EntityView):
         checker = MAPPING_CHECKERS.get(entity.type, MappingChecker)(entity)
         checker.check()
         if (checker.errors or checker.warnings or checker.infos):
-                self.w('<h2>%s</h2>' % _('Detected problems'))
-                errors = zip(repeat(_('error')), checker.errors)
-                warnings = zip(repeat(_('warning')), checker.warnings)
-                infos = zip(repeat(_('warning')), checker.infos)
-                self.wview('pyvaltable', pyvalue=chain(errors, warnings, infos))
+            self.w('<h2>%s</h2>' % _('Detected problems'))
+            errors = zip(repeat(_('error')), checker.errors)
+            warnings = zip(repeat(_('warning')), checker.warnings)
+            infos = zip(repeat(_('warning')), checker.infos)
+            self.wview('pyvaltable', pyvalue=chain(errors, warnings, infos))
 
 
 class MappingChecker(object):
