@@ -65,23 +65,6 @@ def can_use_rest_path(value):
     return True
 
 
-def remove_ambiguous_rels(attr_set, subjtypes, schema):
-    '''remove from `attr_set` the relations of entity types `subjtypes` that have
-    different entity type sets as target'''
-    for attr in attr_set.copy():
-        rschema = schema.rschema(attr)
-        if rschema.final:
-            continue
-        ttypes = None
-        for subjtype in subjtypes:
-            cur_ttypes = rschema.objects(subjtype)
-            if ttypes is None:
-                ttypes = cur_ttypes
-            elif cur_ttypes != ttypes:
-                attr_set.remove(attr)
-                break
-
-
 class Entity(AppObject):
     """an entity instance has e_schema automagically set on
     the class and instances has access to their issuing cursor.
@@ -215,6 +198,35 @@ class Entity(AppObject):
         return select
 
     @classmethod
+    def _fetch_ambiguous_rtypes(cls, select, var, fetchattrs, subjtypes, schema):
+        """find rtypes in `fetchattrs` that relate different subject etypes
+        taken from (`subjtypes`) to different target etypes; these so called
+        "ambiguous" relations, are added directly to the `select` syntax tree
+        selection but removed from `fetchattrs` to avoid the fetch recursion
+        because we have to choose only one targettype for the recursion and
+        adding its own fetch attrs to the selection -when we recurse- would
+        filter out the other possible target types from the result set
+        """
+        for attr in fetchattrs.copy():
+            rschema = schema.rschema(attr)
+            if rschema.final:
+                continue
+            ttypes = None
+            for subjtype in subjtypes:
+                cur_ttypes = set(rschema.objects(subjtype))
+                if ttypes is None:
+                    ttypes = cur_ttypes
+                elif cur_ttypes != ttypes:
+                    # we found an ambiguous relation: remove it from fetchattrs
+                    fetchattrs.remove(attr)
+                    # ... and add it to the selection
+                    targetvar = select.make_variable()
+                    select.add_selected(targetvar)
+                    rel = make_relation(var, attr, (targetvar,), VariableRef)
+                    select.add_restriction(rel)
+                    break
+
+    @classmethod
     def _fetch_restrictions(cls, mainvar, select, fetchattrs,
                             user, ordermethod='fetch_order', visited=None):
         eschema = cls.e_schema
@@ -252,12 +264,14 @@ class Entity(AppObject):
                 # later information here, systematically add it.
                 rel.change_optional('right')
                 targettypes = rschema.objects(eschema.type)
-                # XXX user._cw.vreg iiiirk
-                etypecls = user._cw.vreg['etypes'].etype_class(targettypes[0])
+                vreg = user._cw.vreg # XXX user._cw.vreg iiiirk
+                etypecls = vreg['etypes'].etype_class(targettypes[0])
                 if len(targettypes) > 1:
                     # find fetch_attrs common to all destination types
-                    fetchattrs = user._cw.vreg['etypes'].fetch_attrs(targettypes)
-                    remove_ambiguous_rels(fetchattrs, targettypes, user._cw.vreg.schema)
+                    fetchattrs = vreg['etypes'].fetch_attrs(targettypes)
+                    # .. and handle ambiguous relations
+                    cls._fetch_ambiguous_rtypes(select, var, fetchattrs,
+                                                targettypes, vreg.schema)
                 else:
                     fetchattrs = etypecls.fetch_attrs
                 etypecls._fetch_restrictions(var, select, fetchattrs,
@@ -772,7 +786,8 @@ class Entity(AppObject):
         return self.related(rtype, role, limit, entities)
 
     def cw_related_rql(self, rtype, role='subject', targettypes=None):
-        rschema = self._cw.vreg.schema[rtype]
+        vreg = self._cw.vreg
+        rschema = vreg.schema[rtype]
         select = Select()
         mainvar, evar = select.get_variable('X'), select.get_variable('E')
         select.add_selected(mainvar)
@@ -795,13 +810,11 @@ class Entity(AppObject):
                 select.add_constant_restriction(mainvar, 'is', targettypes,
                                                 'String')
             gcard = greater_card(rschema, targettypes, (self.e_schema,), 1)
-        etypecls = self._cw.vreg['etypes'].etype_class(targettypes[0])
+        etypecls = vreg['etypes'].etype_class(targettypes[0])
         if len(targettypes) > 1:
-            fetchattrs = self._cw.vreg['etypes'].fetch_attrs(targettypes)
-            # XXX we should fetch ambiguous relation objects too but not
-            # recurse on them in _fetch_restrictions; it is easier to remove
-            # them completely for now, as it would require a deeper api rewrite
-            remove_ambiguous_rels(fetchattrs, targettypes, self._cw.vreg.schema)
+            fetchattrs = vreg['etypes'].fetch_attrs(targettypes)
+            self._fetch_ambiguous_rtypes(select, mainvar, fetchattrs,
+                                         targettypes, vreg.schema)
         else:
             fetchattrs = etypecls.fetch_attrs
         etypecls.fetch_rqlst(self._cw.user, select, mainvar, fetchattrs,

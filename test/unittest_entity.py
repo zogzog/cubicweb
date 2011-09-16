@@ -264,7 +264,7 @@ class EntityTC(CubicWebTC):
                           'Any X,AA ORDERBY AA DESC '
                           'WHERE E eid %(x)s, E tags X, X modification_date AA')
 
-    def test_related_rql_cant_fetch_ambiguous_rtype(self):
+    def test_related_rql_fetch_ambiguous_rtype(self):
         soc_etype = self.vreg['etypes'].etype_class('Societe')
         soc = soc_etype(self.request())
         soc_etype.fetch_attrs = ('fournit',)
@@ -272,9 +272,8 @@ class EntityTC(CubicWebTC):
         self.vreg['etypes'].etype_class('Produit').fetch_attrs = ('fabrique_par',)
         self.vreg['etypes'].etype_class('Usine').fetch_attrs = ('lieu',)
         self.vreg['etypes'].etype_class('Personne').fetch_attrs = ('nom',)
-        # XXX should be improved: we could fetch fabrique_par object too
         self.assertEqual(soc.cw_related_rql('fournit', 'subject'),
-                         'Any X WHERE E eid %(x)s, E fournit X')
+                         'Any X,A WHERE E eid %(x)s, E fournit X, X fabrique_par A')
 
     def test_unrelated_rql_security_1_manager(self):
         user = self.request().user
