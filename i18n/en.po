@@ -525,6 +525,9 @@ msgstr ""
 msgid "Manage"
 msgstr ""
 
+msgid "Manage security"
+msgstr ""
+
 msgid "Most referenced classes"
 msgstr ""
 
@@ -619,6 +622,9 @@ msgstr ""
 msgid "OR"
 msgstr ""
 
+msgid "Ownership"
+msgstr ""
+
 msgid "Parent class:"
 msgstr ""
 
@@ -669,6 +675,9 @@ msgid "Schema %s"
 msgstr ""
 
 msgid "Schema of the data model"
+msgstr ""
+
+msgid "Schema's permissions definitions"
 msgstr ""
 
 msgid "Search for"
@@ -2949,9 +2958,6 @@ msgstr ""
 msgid "manage permissions"
 msgstr ""
 
-msgid "manage security"
-msgstr ""
-
 msgid "managers"
 msgstr ""
 
@@ -3235,9 +3241,6 @@ msgid "owned_by_object"
 msgstr "owns"
 
 msgid "owners"
-msgstr ""
-
-msgid "ownership"
 msgstr ""
 
 msgid "ownerships have been changed"
@@ -3551,9 +3554,6 @@ msgid "sample format"
 msgstr ""
 
 msgid "saturday"
-msgstr ""
-
-msgid "schema's permissions definitions"
 msgstr ""
 
 msgid "schema-diagram"

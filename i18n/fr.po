@@ -549,6 +549,9 @@ msgstr "Classes recherchées"
 msgid "Manage"
 msgstr "Administration"
 
+msgid "Manage security"
+msgstr "Gestion de la sécurité"
+
 msgid "Most referenced classes"
 msgstr "Classes les plus référencées"
 
@@ -643,6 +646,9 @@ msgstr "Liste non exhaustive des vues s'appliquant à ce type d'entité"
 msgid "OR"
 msgstr "OU"
 
+msgid "Ownership"
+msgstr "Propriété"
+
 msgid "Parent class:"
 msgstr "Classe parente"
 
@@ -694,6 +700,9 @@ msgstr "Schéma %s"
 
 msgid "Schema of the data model"
 msgstr "Schéma du modèle de données"
+
+msgid "Schema's permissions definitions"
+msgstr "Permissions définies dans le schéma"
 
 msgid "Search for"
 msgstr "Rechercher"
@@ -3079,9 +3088,6 @@ msgstr "gérer les signets"
 msgid "manage permissions"
 msgstr "gestion des permissions"
 
-msgid "manage security"
-msgstr "gestion de la sécurité"
-
 msgid "managers"
 msgstr "administrateurs"
 
@@ -3368,9 +3374,6 @@ msgstr "possède"
 
 msgid "owners"
 msgstr "propriétaires"
-
-msgid "ownership"
-msgstr "propriété"
 
 msgid "ownerships have been changed"
 msgstr "les droits de propriété ont été modifiés"
@@ -3700,9 +3703,6 @@ msgstr "exemple"
 
 msgid "saturday"
 msgstr "samedi"
-
-msgid "schema's permissions definitions"
-msgstr "permissions définies dans le schéma"
 
 msgid "schema-diagram"
 msgstr "diagramme"

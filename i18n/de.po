@@ -549,6 +549,9 @@ msgstr "gesuchte Klassen"
 msgid "Manage"
 msgstr ""
 
+msgid "Manage security"
+msgstr "Sicherheitsverwaltung"
+
 msgid "Most referenced classes"
 msgstr "meist-referenzierte Klassen"
 
@@ -645,6 +648,9 @@ msgstr ""
 msgid "OR"
 msgstr "oder"
 
+msgid "Ownership"
+msgstr "Eigentum"
+
 msgid "Parent class:"
 msgstr "Elternklasse"
 
@@ -696,6 +702,9 @@ msgstr "Schema %s"
 
 msgid "Schema of the data model"
 msgstr "Schema des Datenmodells"
+
+msgid "Schema's permissions definitions"
+msgstr "Im Schema definierte Rechte"
 
 msgid "Search for"
 msgstr "Suchen"
@@ -3036,9 +3045,6 @@ msgstr "Lesezeichen verwalten"
 msgid "manage permissions"
 msgstr "Rechte verwalten"
 
-msgid "manage security"
-msgstr "Sicherheitsverwaltung"
-
 msgid "managers"
 msgstr "Administratoren"
 
@@ -3325,9 +3331,6 @@ msgstr "besitzt"
 
 msgid "owners"
 msgstr "Besitzer"
-
-msgid "ownership"
-msgstr "Eigentum"
 
 msgid "ownerships have been changed"
 msgstr "Die Eigentumsrechte sind geändert worden."
@@ -3645,9 +3648,6 @@ msgstr "Beispiel"
 
 msgid "saturday"
 msgstr "Samstag"
-
-msgid "schema's permissions definitions"
-msgstr "Im Schema definierte Rechte"
 
 msgid "schema-diagram"
 msgstr "Diagramm"

@@ -55,9 +55,9 @@ class SecurityManagementView(SecurityViewMixIn, EntityView):
              xml_escape(entity.absolute_url()),
              xml_escape(entity.dc_title())))
         # first show permissions defined by the schema
-        self.w('<h2>%s</h2>' % _('schema\'s permissions definitions'))
+        self.w('<h2>%s</h2>' % _('Schema\'s permissions definitions'))
         self.permissions_table(entity.e_schema)
-        self.w('<h2>%s</h2>' % _('manage security'))
+        self.w('<h2>%s</h2>' % _('Manage security'))
         # ownership information
         if self._cw.vreg.schema.rschema('owned_by').has_perm(self._cw, 'add',
                                                     fromeid=entity.eid):
@@ -66,10 +66,10 @@ class SecurityManagementView(SecurityViewMixIn, EntityView):
             self.owned_by_information(entity)
 
     def owned_by_edit_form(self, entity):
-        self.w('<h3>%s</h3>' % self._cw._('ownership'))
+        self.w('<h3>%s</h3>' % self._cw._('Ownership'))
         msg = self._cw._('ownerships have been changed')
         form = self._cw.vreg['forms'].select('base', self._cw, entity=entity,
-                                         form_renderer_id='base', submitmsg=msg,
+                                         form_renderer_id='onerowtable', submitmsg=msg,
                                          form_buttons=[wdgs.SubmitButton()],
                                          domid='ownership%s' % entity.eid,
                                          __redirectvid='security',
@@ -81,7 +81,7 @@ class SecurityManagementView(SecurityViewMixIn, EntityView):
     def owned_by_information(self, entity):
         ownersrset = entity.related('owned_by')
         if ownersrset:
-            self.w('<h3>%s</h3>' % self._cw._('ownership'))
+            self.w('<h3>%s</h3>' % self._cw._('Ownership'))
             self.w(u'<div class="ownerInfo">')
             self.w(self._cw._('this entity is currently owned by') + ' ')
             self.wview('csv', entity.related('owned_by'), 'null')
