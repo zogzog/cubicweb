@@ -143,13 +143,13 @@ class SecurityViewMixIn(object):
 class SchemaView(tabs.TabsMixin, StartupView):
     """display schema information (graphically, listing tables...) in tabs"""
     __regid__ = 'schema'
-    title = _('instance schema')
+    title = _('data model schema')
     tabs = [_('schema-diagram'), _('schema-entity-types'),
             _('schema-relation-types')]
     default_tab = 'schema-diagram'
 
     def call(self):
-        self.w(u'<h1>%s</h1>' % self._cw._('Schema of the data model'))
+        self.w(u'<h1>%s</h1>' % self._cw._(self.title))
         self.render_tabs(self.tabs, self.default_tab)
 
 
@@ -689,7 +689,7 @@ class ViewSchemaAction(action.Action):
     __regid__ = 'schema'
     __select__ = yes()
 
-    title = _("data model schema")
+    title = _('data model schema')
     order = 30
     category = 'manage'
 
