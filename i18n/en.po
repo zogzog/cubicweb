@@ -330,12 +330,6 @@ msgstr "Group"
 msgid "CWGroup_plural"
 msgstr "Groups"
 
-msgid "CWPermission"
-msgstr "Permission"
-
-msgid "CWPermission_plural"
-msgstr "Permissions"
-
 msgid "CWProperty"
 msgstr "Property"
 
@@ -554,9 +548,6 @@ msgstr "New entity type"
 
 msgid "New CWGroup"
 msgstr "New group"
-
-msgid "New CWPermission"
-msgstr "New permission"
 
 msgid "New CWProperty"
 msgstr "New property"
@@ -778,9 +769,6 @@ msgstr "This entity type"
 msgid "This CWGroup"
 msgstr "This group"
 
-msgid "This CWPermission"
-msgstr "This permission"
-
 msgid "This CWProperty"
 msgstr "This property"
 
@@ -917,7 +905,7 @@ msgstr ""
 msgid ""
 "a RQL expression which should return some results, else the transition won't "
 "be available. This query may use X and U variables that will respectivly "
-"represents the current entity and the current user"
+"represents the current entity and the current user."
 msgstr ""
 
 msgid "a URI representing an object in external data store"
@@ -1062,9 +1050,6 @@ msgstr "add an item to mapping "
 msgctxt "inlined:CWUser.use_email.subject"
 msgid "add a EmailAddress"
 msgstr "add an email address"
-
-msgid "add a new permission"
-msgstr ""
 
 # subject and object forms for each relation type
 # (no object form for final relation types)
@@ -2046,9 +2031,6 @@ msgstr ""
 msgid "delete this bookmark"
 msgstr ""
 
-msgid "delete this permission"
-msgstr ""
-
 msgid "delete this relation"
 msgstr ""
 
@@ -2218,11 +2200,6 @@ msgstr ""
 msgid "display the facet or not"
 msgstr ""
 
-msgid ""
-"distinct label to distinguate between other permission entity of the same "
-"name"
-msgstr ""
-
 msgid "download"
 msgstr ""
 
@@ -2291,11 +2268,6 @@ msgid "entity linked"
 msgstr ""
 
 msgid "entity type"
-msgstr ""
-
-msgid ""
-"entity type that may be used to construct some advanced security "
-"configuration"
 msgstr ""
 
 msgid "entity types which may use this workflow"
@@ -2581,9 +2553,6 @@ msgstr ""
 msgid "groups grant permissions to the user"
 msgstr ""
 
-msgid "groups to which the permission is granted"
-msgstr ""
-
 msgid "guests"
 msgstr ""
 
@@ -2825,13 +2794,6 @@ msgstr ""
 msgid "june"
 msgstr ""
 
-msgid "label"
-msgstr ""
-
-msgctxt "CWPermission"
-msgid "label"
-msgstr "label"
-
 msgid "language of the user interface"
 msgstr ""
 
@@ -2871,11 +2833,6 @@ msgid "latest_retrieval"
 msgstr "latest retrieval"
 
 msgid "left"
-msgstr ""
-
-msgid ""
-"link a permission to the entity. This permission should be used in the "
-"security definition of the entity's type to be useful."
 msgstr ""
 
 msgid ""
@@ -3049,10 +3006,6 @@ msgctxt "CWGroup"
 msgid "name"
 msgstr "name"
 
-msgctxt "CWPermission"
-msgid "name"
-msgstr "name"
-
 msgctxt "CWRType"
 msgid "name"
 msgstr "name"
@@ -3086,9 +3039,6 @@ msgid ""
 msgstr ""
 
 msgid "name of the source"
-msgstr ""
-
-msgid "name or identifier of the permission"
 msgstr ""
 
 msgid "navbottom"
@@ -3125,9 +3075,6 @@ msgid "next_results"
 msgstr "next results"
 
 msgid "no"
-msgstr ""
-
-msgid "no associated permissions"
 msgstr ""
 
 msgid "no content next link"
@@ -3277,9 +3224,6 @@ msgid "permission"
 msgstr ""
 
 msgid "permissions"
-msgstr ""
-
-msgid "permissions for this entity"
 msgstr ""
 
 msgid "pick existing bookmarks"
@@ -3479,10 +3423,6 @@ msgctxt "BaseTransition"
 msgid "require_group"
 msgstr "require group"
 
-msgctxt "CWPermission"
-msgid "require_group"
-msgstr "require group"
-
 msgctxt "Transition"
 msgid "require_group"
 msgstr "require group"
@@ -3496,12 +3436,6 @@ msgstr "required by"
 
 msgctxt "CWGroup"
 msgid "require_group_object"
-msgstr "required by"
-
-msgid "require_permission"
-msgstr "require permission"
-
-msgid "require_permission_object"
 msgstr "required by"
 
 msgid "required"
@@ -4180,9 +4114,6 @@ msgctxt "CWSource"
 msgid "url"
 msgstr "url"
 
-msgid "use template languages"
-msgstr ""
-
 msgid ""
 "use to define a transition from one or multiple states to a destination "
 "states in workflow's definitions. Transition without destination state will "
@@ -4203,9 +4134,6 @@ msgctxt "EmailAddress"
 msgid "use_email_object"
 msgstr "used by"
 
-msgid "use_template_format"
-msgstr "use template format"
-
 msgid ""
 "used for cubicweb configuration. Once a property has been created you can't "
 "change the key."
@@ -4213,9 +4141,6 @@ msgstr ""
 
 msgid ""
 "used to associate simple states to an entity type and/or to define workflows"
-msgstr ""
-
-msgid "used to grant a permission to a group"
 msgstr ""
 
 msgid "user"
@@ -4430,7 +4355,3 @@ msgstr ""
 #, python-format
 msgid "you should un-inline relation %s which is supported and may be crossed "
 msgstr ""
-
-#~ msgctxt "CWAttribute"
-#~ msgid "cw_schema_object"
-#~ msgstr "mapped by"

@@ -342,12 +342,6 @@ msgstr "Groupe"
 msgid "CWGroup_plural"
 msgstr "Groupes"
 
-msgid "CWPermission"
-msgstr "Permission"
-
-msgid "CWPermission_plural"
-msgstr "Permissions"
-
 msgid "CWProperty"
 msgstr "Propriété"
 
@@ -579,9 +573,6 @@ msgstr "Nouveau type d'entité"
 msgid "New CWGroup"
 msgstr "Nouveau groupe"
 
-msgid "New CWPermission"
-msgstr "Nouvelle permission"
-
 msgid "New CWProperty"
 msgstr "Nouvelle propriété"
 
@@ -805,9 +796,6 @@ msgstr "Ce type d'entité"
 msgid "This CWGroup"
 msgstr "Ce groupe"
 
-msgid "This CWPermission"
-msgstr "Cette permission"
-
 msgid "This CWProperty"
 msgstr "Cette propriété"
 
@@ -958,7 +946,7 @@ msgstr "[%s supervision] description des changements"
 msgid ""
 "a RQL expression which should return some results, else the transition won't "
 "be available. This query may use X and U variables that will respectivly "
-"represents the current entity and the current user"
+"represents the current entity and the current user."
 msgstr ""
 "une expression RQL devant retourner des résultats pour que la transition "
 "puisse être passée. Cette expression peut utiliser les variables X et U qui "
@@ -1112,9 +1100,6 @@ msgstr "ajouter une partie de mapping"
 msgctxt "inlined:CWUser.use_email.subject"
 msgid "add a EmailAddress"
 msgstr "ajouter une adresse électronique"
-
-msgid "add a new permission"
-msgstr "ajouter une permission"
 
 # subject and object forms for each relation type
 # (no object form for final relation types)
@@ -2133,9 +2118,6 @@ msgstr "supprimer"
 msgid "delete this bookmark"
 msgstr "supprimer ce signet"
 
-msgid "delete this permission"
-msgstr "supprimer cette permission"
-
 msgid "delete this relation"
 msgstr "supprimer cette relation"
 
@@ -2312,13 +2294,6 @@ msgstr "afficher le composant ou non"
 msgid "display the facet or not"
 msgstr "afficher la facette ou non"
 
-msgid ""
-"distinct label to distinguate between other permission entity of the same "
-"name"
-msgstr ""
-"libellé permettant de distinguer cette permission des autres ayant le même "
-"nom"
-
 msgid "download"
 msgstr "télécharger"
 
@@ -2390,12 +2365,6 @@ msgstr "entité liée"
 
 msgid "entity type"
 msgstr "type d'entité"
-
-msgid ""
-"entity type that may be used to construct some advanced security "
-"configuration"
-msgstr ""
-"type d'entité à utiliser pour définir une configuration de sécurité avancée"
 
 msgid "entity types which may use this workflow"
 msgstr "types d'entité pouvant utiliser ce workflow"
@@ -2690,9 +2659,6 @@ msgstr "groupes autorisés à mettre à jour des entités/relations de ce type"
 msgid "groups grant permissions to the user"
 msgstr "les groupes donnent des permissions à l'utilisateur"
 
-msgid "groups to which the permission is granted"
-msgstr "groupes auquels cette permission est donnée"
-
 msgid "guests"
 msgstr "invités"
 
@@ -2950,13 +2916,6 @@ msgstr "juillet"
 msgid "june"
 msgstr "juin"
 
-msgid "label"
-msgstr "libellé"
-
-msgctxt "CWPermission"
-msgid "label"
-msgstr "libellé"
-
 msgid "language of the user interface"
 msgstr "langue pour l'interface utilisateur"
 
@@ -2997,13 +2956,6 @@ msgstr "date de la dernière synchronisation de la source."
 
 msgid "left"
 msgstr "gauche"
-
-msgid ""
-"link a permission to the entity. This permission should be used in the "
-"security definition of the entity's type to be useful."
-msgstr ""
-"lie une permission à une entité. Cette permission doit généralement être "
-"utilisée dans la définition de sécurité du type d'entité pour être utile."
 
 msgid ""
 "link a property to the user which want this property customization. Unless "
@@ -3179,10 +3131,6 @@ msgctxt "CWGroup"
 msgid "name"
 msgstr "nom"
 
-msgctxt "CWPermission"
-msgid "name"
-msgstr "nom"
-
 msgctxt "CWRType"
 msgid "name"
 msgstr "nom"
@@ -3220,9 +3168,6 @@ msgstr ""
 msgid "name of the source"
 msgstr "nom de la source"
 
-msgid "name or identifier of the permission"
-msgstr "nom (identifiant) de la permission"
-
 msgid "navbottom"
 msgstr "bas de page"
 
@@ -3258,9 +3203,6 @@ msgstr "résultats suivants"
 
 msgid "no"
 msgstr "non"
-
-msgid "no associated permissions"
-msgstr "aucune permission associée"
 
 msgid "no content next link"
 msgstr "pas de lien 'suivant'"
@@ -3413,9 +3355,6 @@ msgstr "permission"
 
 msgid "permissions"
 msgstr "permissions"
-
-msgid "permissions for this entity"
-msgstr "permissions pour cette entité"
 
 msgid "pick existing bookmarks"
 msgstr "récupérer des signets existants"
@@ -3621,10 +3560,6 @@ msgctxt "BaseTransition"
 msgid "require_group"
 msgstr "restreinte au groupe"
 
-msgctxt "CWPermission"
-msgid "require_group"
-msgstr "restreinte au groupe"
-
 msgctxt "Transition"
 msgid "require_group"
 msgstr "restreinte au groupe"
@@ -3639,12 +3574,6 @@ msgstr "a les droits"
 msgctxt "CWGroup"
 msgid "require_group_object"
 msgstr "a les droits"
-
-msgid "require_permission"
-msgstr "require permission"
-
-msgid "require_permission_object"
-msgstr "permission of"
 
 msgid "required"
 msgstr "requis"
@@ -4340,9 +4269,6 @@ msgctxt "CWSource"
 msgid "url"
 msgstr "url"
 
-msgid "use template languages"
-msgstr "utiliser les langages de template"
-
 msgid ""
 "use to define a transition from one or multiple states to a destination "
 "states in workflow's definitions. Transition without destination state will "
@@ -4366,9 +4292,6 @@ msgctxt "EmailAddress"
 msgid "use_email_object"
 msgstr "utilisée par"
 
-msgid "use_template_format"
-msgstr "utilisation du format 'cubicweb template'"
-
 msgid ""
 "used for cubicweb configuration. Once a property has been created you can't "
 "change the key."
@@ -4379,9 +4302,6 @@ msgstr ""
 msgid ""
 "used to associate simple states to an entity type and/or to define workflows"
 msgstr "associe les états à un type d'entité pour définir un workflow"
-
-msgid "used to grant a permission to a group"
-msgstr "utiliser pour donner une permission à un groupe"
 
 msgid "user"
 msgstr "utilisateur"
