@@ -689,9 +689,6 @@ msgstr "Entrepôt de données"
 msgid "Schema %s"
 msgstr "Schéma %s"
 
-msgid "Schema of the data model"
-msgstr "Schéma du modèle de données"
-
 msgid "Schema's permissions definitions"
 msgstr "Permissions définies dans le schéma"
 
@@ -881,6 +878,9 @@ msgstr "Objets inaccessibles"
 
 msgid "Used by:"
 msgstr "Utilisé par :"
+
+msgid "Users and groups management"
+msgstr "Gestion des utilisateurs et groupes"
 
 msgid "Web server"
 msgstr "Serveur web"
@@ -1093,9 +1093,6 @@ msgstr "ajouter un type de relation"
 
 msgid "add a CWSource"
 msgstr "ajouter une source"
-
-msgid "add a CWSourceSchemaConfig"
-msgstr "ajouter une partie de mapping"
 
 msgctxt "inlined:CWUser.use_email.subject"
 msgid "add a EmailAddress"
@@ -1907,6 +1904,12 @@ msgstr "workflow spécifique"
 
 msgid "custom_workflow_object"
 msgstr "workflow de"
+
+msgid "cw.groups-management"
+msgstr "groupes"
+
+msgid "cw.users-management"
+msgstr "utilisateurs"
 
 msgid "cw_for_source"
 msgstr "source"
@@ -2847,9 +2850,6 @@ msgstr ""
 msgid "instance home"
 msgstr "répertoire de l'instance"
 
-msgid "instance schema"
-msgstr "schéma de l'instance"
-
 msgid "internal entity uri"
 msgstr "uri interne"
 
@@ -3748,9 +3748,6 @@ msgstr "titre du site"
 msgid "site-wide property can't be set for user"
 msgstr "une propriété spécifique au site ne peut être propre à un utilisateur"
 
-msgid "siteinfo"
-msgstr "informations"
-
 msgid "some later transaction(s) touch entity, undo them first"
 msgstr ""
 "des transactions plus récentes modifient cette entité, annulez les d'abord"
@@ -4328,9 +4325,6 @@ msgstr "utilisateurs"
 
 msgid "users and groups"
 msgstr "utilisateurs et groupes"
-
-msgid "users and groups management"
-msgstr "gestion des utilisateurs et groupes"
 
 msgid "users using this bookmark"
 msgstr "utilisateurs utilisant ce signet"

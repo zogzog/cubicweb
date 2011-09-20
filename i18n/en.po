@@ -665,9 +665,6 @@ msgstr ""
 msgid "Schema %s"
 msgstr ""
 
-msgid "Schema of the data model"
-msgstr ""
-
 msgid "Schema's permissions definitions"
 msgstr ""
 
@@ -851,6 +848,9 @@ msgid "Unreachable objects"
 msgstr ""
 
 msgid "Used by:"
+msgstr ""
+
+msgid "Users and groups management"
 msgstr ""
 
 msgid "Web server"
@@ -1043,9 +1043,6 @@ msgstr "add a relation type"
 
 msgid "add a CWSource"
 msgstr "add a source"
-
-msgid "add a CWSourceSchemaConfig"
-msgstr "add an item to mapping "
 
 msgctxt "inlined:CWUser.use_email.subject"
 msgid "add a EmailAddress"
@@ -1827,6 +1824,12 @@ msgstr "custom workflow"
 
 msgid "custom_workflow_object"
 msgstr "custom workflow of"
+
+msgid "cw.groups-management"
+msgstr "groups"
+
+msgid "cw.users-management"
+msgstr "users"
 
 msgid "cw_for_source"
 msgstr "for source"
@@ -2730,9 +2733,6 @@ msgstr ""
 msgid "instance home"
 msgstr ""
 
-msgid "instance schema"
-msgstr ""
-
 msgid "internal entity uri"
 msgstr ""
 
@@ -3602,9 +3602,6 @@ msgstr ""
 msgid "site-wide property can't be set for user"
 msgstr ""
 
-msgid "siteinfo"
-msgstr "site information"
-
 msgid "some later transaction(s) touch entity, undo them first"
 msgstr ""
 
@@ -4167,9 +4164,6 @@ msgstr ""
 msgid "users and groups"
 msgstr ""
 
-msgid "users and groups management"
-msgstr ""
-
 msgid "users using this bookmark"
 msgstr ""
 
@@ -4355,3 +4349,9 @@ msgstr ""
 #, python-format
 msgid "you should un-inline relation %s which is supported and may be crossed "
 msgstr ""
+
+#~ msgid "add a CWSourceSchemaConfig"
+#~ msgstr "add an item to mapping "
+
+#~ msgid "siteinfo"
+#~ msgstr "site information"

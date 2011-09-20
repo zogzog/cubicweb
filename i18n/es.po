@@ -689,9 +689,6 @@ msgstr "Repositorio"
 msgid "Schema %s"
 msgstr "Esquema %s"
 
-msgid "Schema of the data model"
-msgstr "Esquema del modelo de datos"
-
 msgid "Schema's permissions definitions"
 msgstr "Definiciones de permisos del esquema"
 
@@ -881,6 +878,9 @@ msgstr "Objetos inaccesibles"
 
 msgid "Used by:"
 msgstr "Utilizado por :"
+
+msgid "Users and groups management"
+msgstr "Usuarios y grupos de administradores"
 
 msgid "Web server"
 msgstr "Servidor web"
@@ -1093,9 +1093,6 @@ msgstr "Agregar un tipo de relación"
 
 msgid "add a CWSource"
 msgstr "agregar una fuente"
-
-msgid "add a CWSourceSchemaConfig"
-msgstr "agregar una parte de mapeo"
 
 msgctxt "inlined:CWUser.use_email.subject"
 msgid "add a EmailAddress"
@@ -1901,6 +1898,12 @@ msgstr "Workflow específico"
 
 msgid "custom_workflow_object"
 msgstr "Workflow de"
+
+msgid "cw.groups-management"
+msgstr ""
+
+msgid "cw.users-management"
+msgstr ""
 
 msgid "cw_for_source"
 msgstr "fuente"
@@ -2845,9 +2848,6 @@ msgstr ""
 msgid "instance home"
 msgstr "Repertorio de la Instancia"
 
-msgid "instance schema"
-msgstr "Esquema de la Instancia"
-
 msgid "internal entity uri"
 msgstr "Uri Interna"
 
@@ -3743,9 +3743,6 @@ msgstr "Nombre del Sistema"
 msgid "site-wide property can't be set for user"
 msgstr "Una propiedad específica al Sistema no puede ser propia al usuario"
 
-msgid "siteinfo"
-msgstr "información"
-
 msgid "some later transaction(s) touch entity, undo them first"
 msgstr ""
 "Las transacciones más recientes modificaron esta entidad, anúlelas primero"
@@ -4325,9 +4322,6 @@ msgstr "Usuarios"
 msgid "users and groups"
 msgstr "usuarios y grupos"
 
-msgid "users and groups management"
-msgstr "usuarios y grupos de administradores"
-
 msgid "users using this bookmark"
 msgstr "Usuarios utilizando este Favorito"
 
@@ -4518,3 +4512,15 @@ msgid "you should un-inline relation %s which is supported and may be crossed "
 msgstr ""
 "usted debe  quitar la puesta en línea de la relación %s que es aceptada y "
 "puede ser cruzada"
+
+#~ msgid "Schema of the data model"
+#~ msgstr "Esquema del modelo de datos"
+
+#~ msgid "add a CWSourceSchemaConfig"
+#~ msgstr "agregar una parte de mapeo"
+
+#~ msgid "instance schema"
+#~ msgstr "Esquema de la Instancia"
+
+#~ msgid "siteinfo"
+#~ msgstr "información"

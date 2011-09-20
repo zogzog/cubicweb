@@ -691,9 +691,6 @@ msgstr "Ablage"
 msgid "Schema %s"
 msgstr "Schema %s"
 
-msgid "Schema of the data model"
-msgstr "Schema des Datenmodells"
-
 msgid "Schema's permissions definitions"
 msgstr "Im Schema definierte Rechte"
 
@@ -878,6 +875,9 @@ msgstr "unzugängliche Objekte"
 
 msgid "Used by:"
 msgstr "benutzt von:"
+
+msgid "Users and groups management"
+msgstr ""
 
 msgid "Web server"
 msgstr "Web-Server"
@@ -1082,9 +1082,6 @@ msgid "add a CWRType"
 msgstr "einen Relationstyp hinzufügen"
 
 msgid "add a CWSource"
-msgstr ""
-
-msgid "add a CWSourceSchemaConfig"
 msgstr ""
 
 msgctxt "inlined:CWUser.use_email.subject"
@@ -1872,6 +1869,12 @@ msgstr "angepasster Workflow"
 
 msgid "custom_workflow_object"
 msgstr "angepasster Workflow von"
+
+msgid "cw.groups-management"
+msgstr ""
+
+msgid "cw.users-management"
+msgstr ""
 
 msgid "cw_for_source"
 msgstr ""
@@ -2802,9 +2805,6 @@ msgstr ""
 msgid "instance home"
 msgstr "Startseite der Instanz"
 
-msgid "instance schema"
-msgstr "Schema der Instanz"
-
 msgid "internal entity uri"
 msgstr "interner URI"
 
@@ -3694,9 +3694,6 @@ msgstr ""
 "Eine Eigenschaft für die gesamte Website kann nicht für einen Nutzer gesetzt "
 "werden."
 
-msgid "siteinfo"
-msgstr ""
-
 msgid "some later transaction(s) touch entity, undo them first"
 msgstr ""
 "Eine oder mehrere frühere Transaktion(en) betreffen die Tntität. Machen Sie "
@@ -4275,9 +4272,6 @@ msgstr "Nutzer"
 msgid "users and groups"
 msgstr ""
 
-msgid "users and groups management"
-msgstr ""
-
 msgid "users using this bookmark"
 msgstr "Nutzer, die dieses Lesezeichen verwenden"
 
@@ -4467,3 +4461,9 @@ msgstr "Sie sollten diese Eigenschaft wahrscheinlich löschen."
 #, python-format
 msgid "you should un-inline relation %s which is supported and may be crossed "
 msgstr ""
+
+#~ msgid "Schema of the data model"
+#~ msgstr "Schema des Datenmodells"
+
+#~ msgid "instance schema"
+#~ msgstr "Schema der Instanz"
