@@ -257,14 +257,17 @@ class CellView(EntityView):
         :param cellvid: cell view (defaults to 'outofcontext')
         """
         etype, val = self.cw_rset.description[row][col], self.cw_rset[row][col]
-        if val is not None and etype is not None and not self._cw.vreg.schema.eschema(etype).final:
-            self.wview(cellvid or 'outofcontext', self.cw_rset, row=row, col=col)
-        elif val is None:
-            # This is usually caused by a left outer join and in that case,
-            # regular views will most certainly fail if they don't have
-            # a real eid
-            self.wview('final', self.cw_rset, row=row, col=col)
+        if etype is None or not self._cw.vreg.schema.eschema(etype).final:
+            if val is None:
+                # This is usually caused by a left outer join and in that case,
+                # regular views will most certainly fail if they don't have
+                # a real eid
+                # XXX if cellvid is e.g. reledit, we may wanna call it anyway
+                self.w(u'&#160;')
+            else:
+                self.wview(cellvid or 'outofcontext', self.cw_rset, row=row, col=col)
         else:
+            # XXX why do we need a fallback view here?
             self.wview(cellvid or 'final', self.cw_rset, 'null', row=row, col=col)
 
 
