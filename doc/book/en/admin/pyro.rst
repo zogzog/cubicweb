@@ -1,14 +1,19 @@
 Working with a distributed client (using Pyro)
 ==============================================
 
+.. _UsingPyro:
+
 In some circumstances, it is practical to split the repository and
-web-client parts of the application, for load-balancing reasons. Or
+web-client parts of the application for load-balancing reasons. Or
 one wants to access the repository from independant scripts to consult
 or update the database.
 
+Prerequisites
+-------------
+
 For this to work, several steps have to be taken in order.
 
-You must first ensure that the apropriate software is installed and
+You must first ensure that the appropriate software is installed and
 running (see ref:`setup`)::
 
   pyro-nsd -x -p 6969
@@ -21,19 +26,40 @@ instance::
 
   pyro-instance-id=myinstancename
 
-Finally, the client (for instance in the case of a script) must
-connect specifically, as in the following example code:
+Connect to the CubicWeb repository from a python script
+-------------------------------------------------------
+
+Assuming pyro-nsd is running and your instance is configured with ``pyro-server=yes``,
+you will be able to use :mod:`cubicweb.dbapi` api to initiate the connection.
+
+.. note::
+    Regardless of whether your instance is pyro activated or not, you can still
+    achieve this by using cubicweb-ctl shell scripts in a simpler way, as by default
+    it creates a repository 'in-memory' instead of connecting through pyro. That
+    also means you've to be on the host where the instance is running.
+
+Finally, the client (for instance a python script) must connect specifically
+as in the following example code:
 
 .. sourcecode:: python
 
     from cubicweb import dbapi
 
-    def pyro_connect(instname, login, password, pyro_ns_host):
-        cnx = dbapi.connect(instname, login, password, pyro_ns_host)
-        cnx.load_appobjects()
-        return cnx
+    cnx = dbapi.connect(database='instance-id', user='admin', password='admin')
+    cnx.load_appobjects()
+    cur = cnx.cursor()
+    for name in (u'Personal', u'Professional', u'Computers'):
+        cur.execute('INSERT Tag T: T name %(n)s', {'n': name})
+    cnx.commit()
 
-The 'cnx.load_appobjects()' line is optional. Without it you will get
-data through the connection roughly as you would from a DBAPI
-connection. With it, provided the cubicweb-client part is installed
-and accessible, you get the ORM goodies.
+Calling :meth:`cubicweb.dbapi.load_appobjects`, will populates The `cubicweb
+registries`_ with the application objects installed on the host where the script
+runs. You'll then be allowed to use the ORM goodies and custom entity methods and
+views. Of course this is optional, without it you can still get the repository
+data through the connection but in a roughly way: only RQL cursors will be
+available, e.g. you can't even build entity objects from the result set.
+
+
+
+.. _cubicweb registries: VRegistryIntro_
+

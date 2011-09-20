@@ -148,25 +148,12 @@ interface of your instance by adding a user with in the group `guests`.
     to anonymous user, which will automatically execute what is
     decribed above.
 
-How to load data from a script ?
---------------------------------
+How to load data from a python script ?
+---------------------------------------
+Please, refer to the `Pyro chapter`_.
 
-The following script aims at loading data within a script assuming pyro-nsd is
-running and your instance is configured with ``pyro-server=yes``, otherwise
-you would not be able to use dbapi.
+.. _`Pyro chapter`: UsingPyro_
 
-.. sourcecode:: python
-
-    from cubicweb import dbapi
-
-    cnx = dbapi.connect(database='instance-id', user='admin', password='admin')
-    cur = cnx.cursor()
-    for name in (u'Personal', u'Professional', u'Computers'):
-        cur.execute('INSERT Tag T: T name %(n)s', {'n': name})
-    cnx.commit()
-
-Wether your instance as pyro activated or not, you can still acheive this by
-using cubicweb-ctl shell scripts.
 
 How to format an entity date attribute ?
 ----------------------------------------
