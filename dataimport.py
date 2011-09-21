@@ -554,7 +554,7 @@ class CWImportController(object):
             self.tell("Run import function '%s'..." % func_name)
             try:
                 func(self)
-            except:
+            except Exception:
                 if self.catcherrors:
                     self.record_error(func_name, 'While calling %s' % func.__name__)
                 else:

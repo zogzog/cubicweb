@@ -618,7 +618,7 @@ this option is set to yes",
                 try:
                     __import__('cubes.%s.ccplugin' % cube)
                     cls.info('loaded cubicweb-ctl plugin from %s', cube)
-                except:
+                except Exception:
                     cls.exception('while loading plugin %s', pluginfile)
             elif exists(oldpluginfile):
                 warn('[3.6] %s: ecplugin module should be renamed to ccplugin' % cube,
@@ -626,12 +626,12 @@ this option is set to yes",
                 try:
                     __import__('cubes.%s.ecplugin' % cube)
                     cls.info('loaded cubicweb-ctl plugin from %s', cube)
-                except:
+                except Exception:
                     cls.exception('while loading plugin %s', oldpluginfile)
             elif exists(initfile):
                 try:
                     __import__('cubes.%s' % cube)
-                except:
+                except Exception:
                     cls.exception('while loading cube %s', cube)
             else:
                 cls.warning('no __init__ file in cube %s', cube)

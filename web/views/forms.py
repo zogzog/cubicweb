@@ -277,7 +277,7 @@ class FieldsForm(form.Form):
         for editedfield in splitstrip(editedfields):
             try:
                 name, role = editedfield.split('-')
-            except:
+            except Exception:
                 name = editedfield
                 role = None
             if entityform:

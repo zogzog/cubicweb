@@ -352,7 +352,7 @@ def select(constraints, cursor, selectvar='O', objtype=None):
         if objtype:
             rql += ', %s is %s' % (selectvar, objtype)
         rset = cursor.execute(rql)
-    except:
+    except Exception:
         print "could restrict eid_list with given constraints (%r)" % constraints
         return []
     return set(eid for eid, in rset.rows)

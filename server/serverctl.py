@@ -248,7 +248,7 @@ class RepositoryDeleteHandler(CommandHandler):
                         cursor.execute, 'DROP USER %s' % user) is not ERROR:
                         print '-> user %s dropped.' % user
                 cnx.commit()
-            except:
+            except BaseException:
                 cnx.rollback()
                 raise
 
@@ -363,7 +363,7 @@ class CreateInstanceDBCommand(Command):
                 createdb(helper, source, dbcnx, cursor)
                 dbcnx.commit()
                 print '-> database %s created.' % dbname
-            except:
+            except BaseException:
                 dbcnx.rollback()
                 raise
         cnx = system_source_cnx(source, special_privs='CREATE LANGUAGE',

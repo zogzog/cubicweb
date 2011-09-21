@@ -413,7 +413,7 @@ class Repository(object):
             cnxset = self._cnxsets_pool.get_nowait()
             try:
                 cnxset.close(True)
-            except:
+            except Exception:
                 self.exception('error while closing %s' % cnxset)
                 continue
         if self.pyro_registered:
@@ -791,7 +791,7 @@ class Repository(object):
             return session.commit()
         except (ValidationError, Unauthorized):
             raise
-        except:
+        except Exception:
             self.exception('unexpected error')
             raise
 
@@ -802,7 +802,7 @@ class Repository(object):
             session = self._get_session(sessionid)
             session.set_tx_data(txid)
             session.rollback()
-        except:
+        except Exception:
             self.exception('unexpected error')
             raise
 
@@ -905,7 +905,7 @@ class Repository(object):
         for sessionid in self._sessions.keys():
             try:
                 self.close(sessionid, checkshuttingdown=False)
-            except:
+            except Exception: # XXX BaseException?
                 self.exception('error while closing session %s' % sessionid)
 
     def clean_sessions(self):

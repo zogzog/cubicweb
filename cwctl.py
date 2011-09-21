@@ -554,7 +554,7 @@ class StopInstanceCommand(InstanceCommand):
         pid = int(open(pidf).read().strip())
         try:
             kill(pid, signal.SIGTERM)
-        except:
+        except Exception:
             print >> sys.stderr, "process %s seems already dead." % pid
         else:
             try:
@@ -564,7 +564,7 @@ class StopInstanceCommand(InstanceCommand):
                 print >> sys.stderr, 'trying SIGKILL'
                 try:
                     kill(pid, signal.SIGKILL)
-                except:
+                except Exception:
                     # probably dead now
                     pass
                 wait_process_end(pid)

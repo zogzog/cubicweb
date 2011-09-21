@@ -47,7 +47,7 @@ def has_eid(session, sqlcursor, eid, eids):
     sqlcursor.execute('SELECT type, source FROM entities WHERE eid=%s' % eid)
     try:
         etype, source = sqlcursor.fetchone()
-    except:
+    except Exception:
         eids[eid] = False
         return False
     if source and source != 'system':
@@ -58,7 +58,7 @@ def has_eid(session, sqlcursor, eid, eids):
                                {'x': eid}):
                 eids[eid] = True
                 return True
-        except: # TypeResolverError, Unauthorized...
+        except Exception: # TypeResolverError, Unauthorized...
             pass
         eids[eid] = False
         return False

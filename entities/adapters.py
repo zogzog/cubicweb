@@ -1,4 +1,4 @@
-# copyright 2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2010-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -137,7 +137,7 @@ class IFTIndexableAdapter(EntityAdapter):
                 value = entity.printable_value(rschema, format='text/plain')
             except TransformError:
                 continue
-            except:
+            except Exception:
                 self.exception("can't add value of %s to text index for entity %s",
                                rschema, entity.eid)
                 continue

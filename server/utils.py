@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Some utilities for the CubicWeb server."""
+
 __docformat__ = "restructuredtext en"
 
 import sys
@@ -167,7 +168,7 @@ class RepoThread(Thread):
         def auto_remove_func(self=self, func=target):
             try:
                 func()
-            except:
+            except Exception:
                 logger = logging.getLogger('cubicweb.repository')
                 logger.exception('Unhandled exception in RepoThread %s', self._name)
                 raise

@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -67,7 +67,7 @@ def parse_message_id(msgid, appid):
         values = b64decode(str(values + '='*padding), '.-')
         values = dict(v.split('=') for v in values.split('&'))
         fromappid, host = qualif.split('.', 1)
-    except:
+    except Exception:
         return None
     if appid != fromappid or host != gethostname():
         return None

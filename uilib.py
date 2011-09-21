@@ -406,10 +406,10 @@ import traceback
 def exc_message(ex, encoding):
     try:
         return unicode(ex)
-    except:
+    except Exception:
         try:
             return unicode(str(ex), encoding, 'replace')
-        except:
+        except Exception:
             return unicode(repr(ex), encoding, 'replace')
 
 
@@ -423,7 +423,7 @@ def rest_traceback(info, exception):
     res.append(u'\n')
     try:
         res.append(u'\t Error: %s\n' % exception)
-    except:
+    except Exception:
         pass
     return u'\n'.join(res)
 

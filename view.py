@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -174,7 +174,7 @@ class View(AppObject):
         stream = self.set_stream(w)
         try:
             view_func(**context)
-        except:
+        except Exception:
             self.debug('view call %s failed (context=%s)', view_func, context)
             raise
         # return stream content if we have created it

@@ -423,7 +423,7 @@ class CubicWebPublisher(object):
             if req.cnx and not commited:
                 try:
                     req.cnx.rollback()
-                except:
+                except Exception:
                     pass # ignore rollback error at this point
         self.info('query %s executed in %s sec', req.relative_path(), clock() - tstart)
         return result
@@ -460,7 +460,7 @@ class CubicWebPublisher(object):
             errview = self.vreg['views'].select('error', req)
             template = self.main_template_id(req)
             content = self.vreg['views'].main_template(req, template, view=errview)
-        except:
+        except Exception:
             content = self.vreg['views'].main_template(req, 'error-template')
         raise StatusResponse(code, content)
 

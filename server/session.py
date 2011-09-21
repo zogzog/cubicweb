@@ -573,7 +573,7 @@ class Session(RequestSessionBase):
             return self.DEFAULT_SECURITY
         try:
             return txstore.write_security
-        except:
+        except AttributeError:
             txstore.write_security = self.DEFAULT_SECURITY
             return txstore.write_security
 
@@ -775,7 +775,7 @@ class Session(RequestSessionBase):
                 self._threaddata.ctx_count += 1
                 try:
                     cnxset.cnxset_set()
-                except:
+                except Exception:
                     self._threaddata.cnxset = None
                     self.repo._free_cnxset(cnxset)
                     raise
@@ -969,7 +969,7 @@ class Session(RequestSessionBase):
                         operation.handle_event('precommit_event')
                     self.pending_operations[:] = processed
                     self.debug('precommit session %s done', self.id)
-                except:
+                except BaseException:
                     # if error on [pre]commit:
                     #
                     # * set .failed = True on the operation causing the failure
@@ -984,7 +984,7 @@ class Session(RequestSessionBase):
                     for operation in reversed(processed):
                         try:
                             operation.handle_event('revertprecommit_event')
-                        except:
+                        except BaseException:
                             self.critical('error while reverting precommit',
                                           exc_info=True)
                     # XXX use slice notation since self.pending_operations is a
@@ -999,7 +999,7 @@ class Session(RequestSessionBase):
                     operation.processed = 'postcommit'
                     try:
                         operation.handle_event('postcommit_event')
-                    except:
+                    except BaseException:
                         self.critical('error while postcommit',
                                       exc_info=sys.exc_info())
                 self.debug('postcommit session %s done', self.id)
@@ -1030,7 +1030,7 @@ class Session(RequestSessionBase):
                     try:
                         operation = self.pending_operations.pop(0)
                         operation.handle_event('rollback_event')
-                    except:
+                    except BaseException:
                         self.critical('rollback error', exc_info=sys.exc_info())
                         continue
                 cnxset.rollback()

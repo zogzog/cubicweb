@@ -153,7 +153,7 @@ class ServerMigrationHelper(MigrationHelper):
                   migrscript, funcname, *args, **kwargs)
         except ExecutionError, err:
             print >> sys.stderr, "-> %s" % err
-        except:
+        except BaseException:
             self.rollback()
             raise
 
@@ -1366,7 +1366,7 @@ class ServerMigrationHelper(MigrationHelper):
             prop = self.rqlexec(
                 'CWProperty X WHERE X pkey %(k)s, NOT X for_user U',
                 {'k': pkey}, ask_confirm=False).get_entity(0, 0)
-        except:
+        except Exception:
             self.cmd_create_entity('CWProperty', pkey=unicode(pkey), value=value)
         else:
             prop.set_attributes(value=value)
@@ -1484,14 +1484,14 @@ class ServerMigrationHelper(MigrationHelper):
         if not ask_confirm or self.confirm('Execute sql: %s ?' % sql):
             try:
                 cu = self.session.system_sql(sql, args)
-            except:
+            except Exception:
                 ex = sys.exc_info()[1]
                 if self.confirm('Error: %s\nabort?' % ex, pdb=True):
                     raise
                 return
             try:
                 return cu.fetchall()
-            except:
+            except Exception:
                 # no result to fetch
                 return
 

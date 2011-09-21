@@ -308,7 +308,7 @@ class CubicWebRootResource(resource.Resource):
             # so we deferred that part to the cubicweb thread
             request.process_multipart()
             return self._render_request(request)
-        except:
+        except Exception:
             errorstream = StringIO()
             traceback.print_exc(file=errorstream)
             return HTTPResponse(stream='<pre>%s</pre>' % errorstream.getvalue(),

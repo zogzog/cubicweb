@@ -119,7 +119,7 @@ class InMemoryRepositorySessionManager(AbstractSessionManager):
             req.cnx.commit()
         except (RepositoryError, Unauthorized):
             req.cnx.rollback()
-        except:
+        except Exception:
             req.cnx.rollback()
             raise
 
@@ -130,10 +130,5 @@ class InMemoryRepositorySessionManager(AbstractSessionManager):
         self.info('closing http session %s' % session.sessionid)
         del self._sessions[session.sessionid]
         if session.cnx:
-            try:
-                session.cnx.close()
-            except:
-                # already closed, may occur if the repository session expired
-                # but not the web session
-                pass
+            session.cnx.close()
             session.cnx = None

@@ -76,7 +76,7 @@ class VRegistryTC(ViewSelectorTC):
             return
         try:
             self.assertSetEqual(content.keys(), expected)
-        except:
+        except Exception:
             print registry, sorted(expected), sorted(content.keys())
             print 'no more', [v for v in expected if not v in content.keys()]
             print 'missing', [v for v in content.keys() if not v in expected]
@@ -468,7 +468,7 @@ class VRegistryTC(ViewSelectorTC):
         try:
             obj = self.vreg['views'].select(vid, req, rset=rset, **args)
             return obj.render(**args)
-        except:
+        except Exception:
             print vid, rset, args
             raise
 

@@ -577,7 +577,7 @@ class PostgresTestDataBaseHandler(TestDataBaseHandler):
                 templcursor.close()
                 cnx.close()
             init_repository(self.config, interactive=False)
-        except:
+        except BaseException:
             if self.dbcnx is not None:
                 self.dbcnx.rollback()
             print >> sys.stderr, 'building', self.dbname, 'failed'
@@ -752,13 +752,13 @@ def install_sqlite_patch(querier):
                             value = value.rsplit('.', 1)[0]
                             try:
                                 row[cellindex] = strptime(value, '%Y-%m-%d %H:%M:%S')
-                            except:
+                            except Exception:
                                 row[cellindex] = strptime(value, '%Y-%m-%d')
                         if vtype == 'Time' and type(value) is unicode:
                             found_date = True
                             try:
                                 row[cellindex] = strptime(value, '%H:%M:%S')
-                            except:
+                            except Exception:
                                 # DateTime used as Time?
                                 row[cellindex] = strptime(value, '%Y-%m-%d %H:%M:%S')
                         if vtype == 'Interval' and type(value) is int:

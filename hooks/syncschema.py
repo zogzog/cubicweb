@@ -87,7 +87,7 @@ def add_inline_relation_column(session, etype, rtype):
         session.system_sql(str('ALTER TABLE %s ADD %s integer'
                                % (table, column)), rollback_on_failure=False)
         session.info('added column %s to table %s', column, table)
-    except:
+    except Exception:
         # silent exception here, if this error has not been raised because the
         # column already exists, index creation will fail anyway
         session.exception('error while adding column %s to table %s',
@@ -221,8 +221,8 @@ class MemSchemaNotifyChanges(hook.SingleLastOperation):
             cwuser_cls = self.session.vreg['etypes'].etype_class('CWUser')
             for session in repo._sessions.values():
                 session.user.__class__ = cwuser_cls
-        except:
-            self.critical('error while setting schmea', exc_info=True)
+        except Exception:
+            self.critical('error while setting schema', exc_info=True)
 
     def rollback_event(self):
         self.precommit_event()

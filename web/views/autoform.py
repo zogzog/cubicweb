@@ -325,7 +325,7 @@ class InlineEntityCreationFormView(InlineEntityEditionFormView):
     def _entity(self):
         try:
             cls = self._cw.vreg['etypes'].etype_class(self.etype)
-        except:
+        except Exception:
             self.w(self._cw._('no such entity type %s') % self.etype)
             return
         entity = cls(self._cw)
