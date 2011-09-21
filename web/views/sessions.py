@@ -21,7 +21,8 @@ object :/
 
 __docformat__ = "restructuredtext en"
 
-from cubicweb import RepositoryError, Unauthorized, AuthenticationError
+from cubicweb import (RepositoryError, Unauthorized, AuthenticationError,
+                      BadConnectionId)
 from cubicweb.web import InvalidSession, Redirect
 from cubicweb.web.application import AbstractSessionManager
 from cubicweb.dbapi import DBAPISession
@@ -130,5 +131,8 @@ class InMemoryRepositorySessionManager(AbstractSessionManager):
         self.info('closing http session %s' % session.sessionid)
         del self._sessions[session.sessionid]
         if session.cnx:
-            session.cnx.close()
+            try:
+                session.cnx.close()
+            except BadConnectionId: # expired on the repository side
+                pass
             session.cnx = None
