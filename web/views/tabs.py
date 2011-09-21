@@ -128,7 +128,7 @@ class TabsMixin(LazyViewMixin):
             entity.view(default, w=self.w)
             return
         self._cw.add_css('jquery.ui.css')
-        self._cw.add_js(('jquery.ui.js', 'cubicweb.ajax.js'))
+        self._cw.add_js(('jquery.ui.js', 'cubicweb.ajax.js', 'jquery.cookie.js'))
         # prune tabs : not all are to be shown
         tabs, active_tab = self.prune_tabs(tabs, default)
         # build the html structure
