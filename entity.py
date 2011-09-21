@@ -77,17 +77,16 @@ class Entity(AppObject):
     :type e_schema: `cubicweb.schema.EntitySchema`
     :ivar e_schema: the entity's schema
 
-    :type rest_var: str
-    :cvar rest_var: indicates which attribute should be used to build REST urls
-                    If None is specified, the first non-meta attribute will
-                    be used
+    :type rest_attr: str
+    :cvar rest_attr: indicates which attribute should be used to build REST urls
+       If `None` is specified (the default), the first unique attribute will
+       be used ('eid' if none found)
 
     :type cw_skip_copy_for: list
     :cvar cw_skip_copy_for: a list of couples (rtype, role) for each relation
-                            that should be skipped when copying
-                            this kind of entity. Note that some relations such
-                            as composite relations or relations that have '?1' as object
-                            cardinality are always skipped.
+       that should be skipped when copying this kind of entity. Note that some
+       relations such as composite relations or relations that have '?1' as
+       object cardinality are always skipped.
     """
     __registry__ = 'etypes'
     __select__ = yes()
