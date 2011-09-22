@@ -331,7 +331,6 @@ class cw_source(RelationDefinition):
 
 class CWSourceSchemaConfig(EntityType):
     __permissions__ = ENTITY_MANAGERS_PERMISSIONS
-    __unique_together__ = [('cw_for_source', 'cw_schema')]
     cw_for_source = SubjectRelation(
         'CWSource', inlined=True, cardinality='1*', composite='object',
         __permissions__=RELATION_MANAGERS_PERMISSIONS)
