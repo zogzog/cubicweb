@@ -23,3 +23,9 @@ API changes in cubicweb 3.14
   - client code use direct access to one of those methods on an entity (no code
     known to do that)
 
+* `Entity._rest_attr_info` class method has been renamed to
+  `Entity.cw_rest_attr_info`
+
+  No backward compat yet since this is a protected method an no code is known to
+  use it outside cubicweb itself.
+

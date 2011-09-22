@@ -174,7 +174,7 @@ class RestPathEvaluator(URLPathEvaluator):
                 except KeyError:
                     raise PathDontMatch()
             else:
-                attrname = cls._rest_attr_info()[0]
+                attrname = cls.cw_rest_attr_info()[0]
             value = req.url_unquote(parts.pop(0))
             return self.handle_etype_attr(req, cls, attrname, value)
         return self.handle_etype(req, cls)

@@ -345,14 +345,25 @@ class Entity(AppObject):
 
     @classmethod
     @cached
-    def _rest_attr_info(cls):
+    def cw_rest_attr_info(cls):
+        """this class method return an attribute name to be used in URL for
+        entities of this type and a boolean flag telling if its value should be
+        checked for uniqness.
+
+        The attribute returned is, in order of priority:
+
+        * class's `rest_attr` class attribute
+        * an attribute defined as unique in the class'schema
+        * 'eid'
+        """
         mainattr, needcheck = 'eid', True
         if cls.rest_attr:
             mainattr = cls.rest_attr
             needcheck = not cls.e_schema.has_unique_values(mainattr)
         else:
             for rschema in cls.e_schema.subject_relations():
-                if rschema.final and rschema != 'eid' and cls.e_schema.has_unique_values(rschema):
+                if rschema.final and rschema != 'eid' \
+                        and cls.e_schema.has_unique_values(rschema):
                     mainattr = str(rschema)
                     needcheck = False
                     break
@@ -544,7 +555,7 @@ class Entity(AppObject):
 
     def rest_path(self, use_ext_eid=False): # XXX cw_rest_path
         """returns a REST-like (relative) path for this entity"""
-        mainattr, needcheck = self._rest_attr_info()
+        mainattr, needcheck = self.cw_rest_attr_info()
         etype = str(self.e_schema)
         path = etype.lower()
         if mainattr != 'eid':
