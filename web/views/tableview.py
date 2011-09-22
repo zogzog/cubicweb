@@ -42,6 +42,9 @@ class TableView(AnyRsetView):
     title = _('table')
     finalview = 'final'
 
+    table_widget_class = TableWidget
+    table_column_class = TableColumn
+
     def form_filter(self, divid, displaycols, displayactions, displayfilter,
                     paginate, hidden=True):
         try:
@@ -144,7 +147,7 @@ class TableView(AnyRsetView):
         if paginate:
             self.divid = divid # XXX iirk (see usage in page_navigation_url)
             self.paginate(page_size=page_size, show_all_option=False)
-        table = TableWidget(self)
+        table = self.table_widget_class(self)
         for column in self.get_columns(computed_labels, displaycols, headers,
                                        subvid, cellvids, cellattrs, mainindex):
             table.append_column(column)
@@ -195,7 +198,7 @@ class TableView(AnyRsetView):
                 label = headers[displaycols.index(colindex)]
             if colindex == mainindex and label is not None:
                 label += ' (%s)' % self.cw_rset.rowcount
-            column = TableColumn(label, colindex)
+            column = self.table_column_class(label, colindex)
             coltype = self.cw_rset.description[0][colindex]
             # compute column cell view (if coltype is None, it's a left outer
             # join, use the default non final subvid)
