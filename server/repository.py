@@ -344,7 +344,7 @@ class Repository(object):
             self.looping_task(cleanup_session_interval, self.clean_sessions)
         assert isinstance(self._looping_tasks, list), 'already started'
         for i, (interval, func, args) in enumerate(self._looping_tasks):
-            self._looping_tasks[i] = task = utils.LoopTask(interval, func, args)
+            self._looping_tasks[i] = task = utils.LoopTask(self, interval, func, args)
             self.info('starting task %s with interval %.2fs', task.name,
                       interval)
             task.start()
