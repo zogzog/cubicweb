@@ -452,7 +452,7 @@ class GroupByView(EntityView):
     For each group, display a link to entities of this group by generating url
     like <basepath>/<key> or <basepath>/<key item 1>/<key item 2>.
     """
-    __abstrack__ = True
+    __abstract__ = True
     __select__ = EntityView.__select__ & match_kwargs('basepath')
     entity_attribute = None
     reversed = False
