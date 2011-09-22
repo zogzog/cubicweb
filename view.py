@@ -375,7 +375,19 @@ class EntityView(View):
 
     def call(self, **kwargs):
         if self.cw_rset is None:
-            self.entity_call(self.cw_extra_kwargs.pop('entity'))
+            # * cw_extra_kwargs is the place where extra selection arguments are
+            #   stored
+            # * when calling req.view('somevid', entity=entity), 'entity' ends
+            #   up in cw_extra_kwargs and kwargs
+            #
+            # handle that to avoid a TypeError with a sanity check
+            #
+            # Notice that could probably be avoided by handling entity_call in
+            # .render
+            entity = self.cw_extra_kwargs.pop('entity')
+            if 'entity' in kwargs:
+                assert kwargs.pop('entity') is entity
+            self.entity_call(entity, **kwargs)
         else:
             super(EntityView, self).call(**kwargs)
 
