@@ -26,14 +26,14 @@ from cubicweb.entities import AnyEntity, fetch_config
 
 class CWGroup(AnyEntity):
     __regid__ = 'CWGroup'
-    fetch_attrs, fetch_order = fetch_config(['name'])
-    fetch_unrelated_order = fetch_order
+    fetch_attrs, cw_fetch_order = fetch_config(['name'])
+    cw_fetch_unrelated_order = cw_fetch_order
 
 
 class CWUser(AnyEntity):
     __regid__ = 'CWUser'
-    fetch_attrs, fetch_order = fetch_config(['login', 'firstname', 'surname'])
-    fetch_unrelated_order = fetch_order
+    fetch_attrs, cw_fetch_order = fetch_config(['login', 'firstname', 'surname'])
+    cw_fetch_unrelated_order = cw_fetch_order
 
     # used by repository to check if  the user can log in or not
     AUTHENTICABLE_STATES = ('activated',)

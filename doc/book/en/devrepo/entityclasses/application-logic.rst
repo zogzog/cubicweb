@@ -67,8 +67,8 @@ cube. Let us begin to study the entities/project.py content.
 
     class Project(AnyEntity):
         __regid__ = 'Project'
-        fetch_attrs, fetch_order = fetch_config(('name', 'description',
-                                                 'description_format', 'summary'))
+        fetch_attrs, cw_fetch_order = fetch_config(('name', 'description',
+                                                    'description_format', 'summary'))
 
         TICKET_DEFAULT_STATE_RESTR = 'S name IN ("created","identified","released","scheduled")'
 
@@ -95,11 +95,9 @@ fully and portably expressed at the level of database entities (think
 about the transitive closure of the child relation). This is a further
 argument to implement it at entity class level.
 
-The fetch_attrs, fetch_order class attributes are parameters of the
-`ORM`_ layer. They tell which attributes should be loaded at once on
-entity object instantiation (by default, only the eid is known, other
-attributes are loaded on demand), and which attribute is to be used to
-order the .related() and .unrelated() methods output.
+`fetch_attrs` configures which attributes should be prefetched when using ORM
+methods retrieving entity of this type. In a same manner, the `cw_fetch_order` is
+a class method allowing to control sort order. More on this in :ref:FetchAttrs.
 
 We can observe the big TICKET_DEFAULT_STATE_RESTR is a pure
 application domain piece of data. There is, of course, no limitation

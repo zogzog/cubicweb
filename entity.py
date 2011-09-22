@@ -32,6 +32,7 @@ from rql.nodes import (Not, VariableRef, Constant, make_relation,
                        Relation as RqlRelation)
 
 from cubicweb import Unauthorized, typed_eid, neg_role
+from cubicweb.utils import support_args
 from cubicweb.rset import ResultSet
 from cubicweb.selectors import yes
 from cubicweb.appobject import AppObject
@@ -140,22 +141,59 @@ class Entity(AppObject):
             cls.info('plugged %s mixins on %s', mixins, cls)
 
     fetch_attrs = ('modification_date',)
-    @classmethod
-    def fetch_order(cls, attr, var):
-        """class method used to control sort order when multiple entities of
-        this type are fetched
-        """
-        return cls.fetch_unrelated_order(attr, var)
 
     @classmethod
-    def fetch_unrelated_order(cls, attr, var):
-        """class method used to control sort order when multiple entities of
-        this type are fetched to use in edition (eg propose them to create a
+    def cw_fetch_order(cls, select, attr, var):
+        """This class method may be used to control sort order when multiple
+        entities of this type are fetched through ORM methods. Its arguments
+        are:
+
+        * `select`, the RQL syntax tree
+
+        * `attr`, the attribute being watched
+
+        * `var`, the variable through which this attribute's value may be
+          accessed in the query
+
+        When you want to do some sorting on the given attribute, you should
+        modify the syntax tree accordingly. For instance:
+
+        .. sourcecode:: python
+
+          from rql import nodes
+
+          class Version(AnyEntity):
+              __regid__ = 'Version'
+
+              fetch_attrs = ('num', 'description', 'in_state')
+
+              @classmethod
+              def cw_fetch_order(cls, select, attr, var):
+                  if attr == 'num':
+                      func = nodes.Function('version_sort_value')
+                      func.append(nodes.variable_ref(var))
+                      sterm = nodes.SortTerm(func, asc=False)
+                      select.add_sort_term(sterm)
+
+        The default implementation call
+        :meth:`~cubicweb.entity.Entity.cw_fetch_unrelated_order`
+        """
+        cls.cw_fetch_unrelated_order(select, attr, var)
+
+    @classmethod
+    def cw_fetch_unrelated_order(cls, select, attr, var):
+        """This class method may be used to control sort order when multiple entities of
+        this type are fetched to use in edition (e.g. propose them to create a
         new relation on an edited entity).
+
+        See :meth:`~cubicweb.entity.Entity.cw_fetch_unrelated_order` for a
+        description of its arguments and usage.
+
+        By default entities will be listed on their modification date descending,
+        i.e. you'll get entities recently modified first.
         """
         if attr == 'modification_date':
-            return '%s DESC' % var
-        return None
+            select.add_sort_var(var, asc=False)
 
     @classmethod
     def fetch_rql(cls, user, restriction=None, fetchattrs=None, mainvar='X',
@@ -276,10 +314,34 @@ class Entity(AppObject):
                 etypecls._fetch_restrictions(var, select, fetchattrs,
                                              user, ordermethod, visited=visited)
             if ordermethod is not None:
-                orderterm = getattr(cls, ordermethod)(attr, var.name)
-                if orderterm:
-                    var, order = orderterm.split()
-                    select.add_sort_var(select.get_variable(var), order=='ASC')
+                try:
+                    cmeth = getattr(cls, ordermethod)
+                    warn('[3.14] %s %s class method should be renamed to cw_%s'
+                         % (cls.__regid__, ordermethod, ordermethod),
+                         DeprecationWarning)
+                except AttributeError:
+                    cmeth = getattr(cls, 'cw_' + ordermethod)
+                if support_args(cmeth, 'select'):
+                    cmeth(select, attr, var)
+                else:
+                    warn('[3.14] %s should now take (select, attr, var) and '
+                         'modify the syntax tree when desired instead of '
+                         'returning something' % cmeth, DeprecationWarning)
+                    orderterm = cmeth(attr, var.name)
+                    if orderterm is not None:
+                        try:
+                            var, order = orderterm.split()
+                        except ValueError:
+                            if '(' in orderterm:
+                                self.error('ignore %s until %s is upgraded',
+                                           orderterm, cmeth)
+                                orderterm = None
+                            elif not ' ' in orderterm.strip():
+                                var = orderterm
+                                order = 'ASC'
+                        if orderterm is not None:
+                            select.add_sort_var(select.get_variable(var),
+                                                order=='ASC')
 
     @classmethod
     @cached

@@ -389,7 +389,7 @@ method, etc...
         """customized class for Community entities"""
         __regid__ = 'Community'
 
-        fetch_attrs, fetch_order = fetch_config(['name'])
+        fetch_attrs, cw_fetch_order = fetch_config(['name'])
 
         def dc_title(self):
             return self.name

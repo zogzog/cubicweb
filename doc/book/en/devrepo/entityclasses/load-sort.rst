@@ -4,50 +4,36 @@
 Loaded attributes and default sorting management
 ````````````````````````````````````````````````
 
-* The class attribute `fetch_attrs` allows to define in an entity class a list
-  of names of attributes or relations that should be automatically loaded when
-  entities of this type are fetched from the database. In the case of relations,
-  we are limited to *subject of cardinality `?` or `1`* relations.
+* The class attribute `fetch_attrs` allows to define in an entity class a list of
+  names of attributes that should be automatically loaded when entities of this
+  type are fetched from the database using ORM methods retrieving entity of this
+  type (such as :meth:`related` and :meth:`unrelated`). You can also put relation
+  names in there, but we are limited to *subject relations of cardinality `?` or
+  `1`*.
 
-* The class method `fetch_order(attr, var)` expects an attribute (or relation)
-  name as a parameter and a variable name, and it should return a string
-  to use in the requirement `ORDERBY` of an RQL query to automatically
-  sort the list of entities of such type according to this attribute, or
-  `None` if we do not want to sort on the attribute given in the parameter.
-  By default, the entities are sorted according to their creation date.
+* The :meth:`cw_fetch_order` and :meth:`cw_fetch_unrelated_order` class methods
+  are respectively responsible to control how entities will be sorted when:
 
-* The class method `fetch_unrelated_order(attr, var)` is similar to
-  the method `fetch_order` except that it is essentially used to
-  control the sorting of drop-down lists enabling relations creation
-  in the editing view of an entity. The default implementation uses
-  the modification date. Here's how to adapt it for one entity (sort
-  on the name attribute): ::
+  - retrieving all entities of a given type, or entities related to another
 
-   class MyEntity(AnyEntity):
-       __regid__ = 'MyEntity'
-       fetch_attrs = ('modification_date', 'name')
+  - retrieving a list of entities for use in drop-down lists enabling relations
+    creation in the editing view of an entity
 
-       @classmethod
-       def fetch_unrelated_order(cls, attr, var):
-           if attr == 'name':
-              return '%s ASC' % var
-           return None
+By default entities will be listed on their modification date descending,
+i.e. you'll get entities recently modified first. While this is usually a good
+default in drop-down list, you'll probably want to change `cw_fetch_order`.
 
+This may easily be done using the :func:`~cubicweb.entities.fetch_config`
+function, which simplifies the definition of attributes to load and sorting by
+returning a list of attributes to pre-load (considering automatically the
+attributes of `AnyEntity`) and a sorting function as described below:
 
-The function `fetch_config(fetchattrs, mainattr=None)` simplifies the
-definition of the attributes to load and the sorting by returning a
-list of attributes to pre-load (considering automatically the
-attributes of `AnyEntity`) and a sorting function based on the main
-attribute (the second parameter if specified, otherwise the first
-attribute from the list `fetchattrs`). This function is defined in
-`cubicweb.entities`.
+.. autofunction:: cubicweb.entities.fetch_config
 
-For example: ::
+In you want something else (such as sorting on the result of a registered
+procedure), here is the prototype of those methods:
 
-  class Transition(AnyEntity):
-    """..."""
-    __regid__ = 'Transition'
-    fetch_attrs, fetch_order = fetch_config(['name'])
+.. autofunction:: cubicweb.entity.Entity.cw_fetch_order
 
-Indicates that for the entity type "Transition", you have to pre-load
-the attribute `name` and sort by default on this attribute.
+.. autofunction:: cubicweb.entity.Entity.cw_fetch_unrelated_order
+

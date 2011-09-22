@@ -54,7 +54,7 @@ class _CWSourceCfgMixIn(object):
 
 class CWSource(_CWSourceCfgMixIn, AnyEntity):
     __regid__ = 'CWSource'
-    fetch_attrs, fetch_order = fetch_config(['name', 'type'])
+    fetch_attrs, cw_fetch_order = fetch_config(['name', 'type'])
 
     @property
     def host_config(self):
@@ -107,7 +107,7 @@ class CWSource(_CWSourceCfgMixIn, AnyEntity):
 
 class CWSourceHostConfig(_CWSourceCfgMixIn, AnyEntity):
     __regid__ = 'CWSourceHostConfig'
-    fetch_attrs, fetch_order = fetch_config(['match_host', 'config'])
+    fetch_attrs, cw_fetch_order = fetch_config(['match_host', 'config'])
 
     @property
     def cwsource(self):
@@ -119,7 +119,7 @@ class CWSourceHostConfig(_CWSourceCfgMixIn, AnyEntity):
 
 class CWSourceSchemaConfig(AnyEntity):
     __regid__ = 'CWSourceSchemaConfig'
-    fetch_attrs, fetch_order = fetch_config(['cw_for_source', 'cw_schema', 'options'])
+    fetch_attrs, cw_fetch_order = fetch_config(['cw_for_source', 'cw_schema', 'options'])
 
     def dc_title(self):
         return self._cw._(self.__regid__) + ' #%s' % self.eid

@@ -183,7 +183,7 @@ class BaseTransition(AnyEntity):
     fired by the logged user
     """
     __regid__ = 'BaseTransition'
-    fetch_attrs, fetch_order = fetch_config(['name', 'type'])
+    fetch_attrs, cw_fetch_order = fetch_config(['name', 'type'])
 
     def __init__(self, *args, **kwargs):
         if self.__regid__ == 'BaseTransition':
@@ -347,7 +347,7 @@ class SubWorkflowExitPoint(AnyEntity):
 class State(AnyEntity):
     """customized class for State entities"""
     __regid__ = 'State'
-    fetch_attrs, fetch_order = fetch_config(['name'])
+    fetch_attrs, cw_fetch_order = fetch_config(['name'])
     rest_attr = 'eid'
 
     @property
@@ -360,8 +360,8 @@ class TrInfo(AnyEntity):
     """customized class for Transition information entities
     """
     __regid__ = 'TrInfo'
-    fetch_attrs, fetch_order = fetch_config(['creation_date', 'comment'],
-                                            pclass=None) # don't want modification_date
+    fetch_attrs, cw_fetch_order = fetch_config(['creation_date', 'comment'],
+                                               pclass=None) # don't want modification_date
     @property
     def for_entity(self):
         return self.wf_info_for[0]

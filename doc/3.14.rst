@@ -1,0 +1,25 @@
+API changes in cubicweb 3.14
+----------------------------
+
+* `Entity.fetch_order` and `Entity.fetch_unrelated_order` class methods have been
+  replaced by `Entity.cw_fetch_order` and `Entity.cw_fetch_unrelated_order` with
+  a different prototype:
+
+  - instead of taking (attr, var) as two string argument, they now take (select,
+    attr, var) where select is the rql syntax tree beinx constructed and var the
+    variable *node*.
+
+  - instead of returning some string to be inserted in the ORDERBY clause, it has
+    to modify the syntax tree
+
+  Backward compat is kept with proper warning, BESIDE cases below:
+
+  - custom order method return **something else the a variable name with or
+    without the sorting order** (e.g. cases where you sort on the value of a
+    registered procedure as it was done in the tracker for instance). In such
+    case, an error is logged telling that this sorting is ignored until API
+    upgrade.
+
+  - client code use direct access to one of those methods on an entity (no code
+    known to do that)
+

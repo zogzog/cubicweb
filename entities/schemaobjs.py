@@ -31,7 +31,7 @@ from cubicweb.entities import AnyEntity, fetch_config
 
 class CWEType(AnyEntity):
     __regid__ = 'CWEType'
-    fetch_attrs, fetch_order = fetch_config(['name'])
+    fetch_attrs, cw_fetch_order = fetch_config(['name'])
 
     def dc_title(self):
         return u'%s (%s)' % (self.name, self._cw._(self.name))
@@ -48,7 +48,7 @@ class CWEType(AnyEntity):
 
 class CWRType(AnyEntity):
     __regid__ = 'CWRType'
-    fetch_attrs, fetch_order = fetch_config(['name'])
+    fetch_attrs, cw_fetch_order = fetch_config(['name'])
 
     def dc_title(self):
         return u'%s (%s)' % (self.name, self._cw._(self.name))
@@ -139,7 +139,7 @@ class CWAttribute(CWRelation):
 
 class CWConstraint(AnyEntity):
     __regid__ = 'CWConstraint'
-    fetch_attrs, fetch_order = fetch_config(['value'])
+    fetch_attrs, cw_fetch_order = fetch_config(['value'])
 
     def dc_title(self):
         return '%s(%s)' % (self.cstrtype[0].name, self.value or u'')
@@ -151,7 +151,7 @@ class CWConstraint(AnyEntity):
 
 class RQLExpression(AnyEntity):
     __regid__ = 'RQLExpression'
-    fetch_attrs, fetch_order = fetch_config(['exprtype', 'mainvars', 'expression'])
+    fetch_attrs, cw_fetch_order = fetch_config(['exprtype', 'mainvars', 'expression'])
 
     def dc_title(self):
         return self.expression or u''

@@ -33,12 +33,12 @@ class EntityTC(CubicWebTC):
         super(EntityTC, self).setUp()
         self.backup_dict = {}
         for cls in self.vreg['etypes'].iter_classes():
-            self.backup_dict[cls] = (cls.fetch_attrs, cls.fetch_order)
+            self.backup_dict[cls] = (cls.fetch_attrs, cls.cw_fetch_order)
 
     def tearDown(self):
         super(EntityTC, self).tearDown()
         for cls in self.vreg['etypes'].iter_classes():
-            cls.fetch_attrs, cls.fetch_order = self.backup_dict[cls]
+            cls.fetch_attrs, cls.cw_fetch_order = self.backup_dict[cls]
 
     def test_boolean_value(self):
         e = self.vreg['etypes'].etype_class('CWUser')(self.request())
@@ -228,9 +228,9 @@ class EntityTC(CubicWebTC):
         Note = self.vreg['etypes'].etype_class('Note')
         SubNote = self.vreg['etypes'].etype_class('SubNote')
         self.assertTrue(issubclass(self.vreg['etypes'].etype_class('SubNote'), Note))
-        Personne.fetch_attrs, Personne.fetch_order = fetch_config(('nom', 'type'))
-        Note.fetch_attrs, Note.fetch_order = fetch_config(('type',))
-        SubNote.fetch_attrs, SubNote.fetch_order = fetch_config(('type',))
+        Personne.fetch_attrs, Personne.cw_fetch_order = fetch_config(('nom', 'type'))
+        Note.fetch_attrs, Note.cw_fetch_order = fetch_config(('type',))
+        SubNote.fetch_attrs, SubNote.cw_fetch_order = fetch_config(('type',))
         p = self.request().create_entity('Personne', nom=u'pouet')
         self.assertEqual(p.cw_related_rql('evaluee'),
                          'Any X,AA,AB ORDERBY AA WHERE E eid %(x)s, E evaluee X, '
@@ -241,7 +241,7 @@ class EntityTC(CubicWebTC):
                          "Any X,AA ORDERBY AB DESC WHERE E eid %(x)s, X evaluee E, "
                          "X is IN('Personne', 'Societe'), X nom AA, "
                          "X modification_date AB")
-        Personne.fetch_attrs, Personne.fetch_order = fetch_config(('nom', ))
+        Personne.fetch_attrs, Personne.cw_fetch_order = fetch_config(('nom', ))
         # XXX
         self.assertEqual(p.cw_related_rql('evaluee'),
                           'Any X,AA ORDERBY AA DESC '

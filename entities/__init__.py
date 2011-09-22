@@ -151,21 +151,34 @@ class AnyEntity(Entity):
 
     # server side helpers #####################################################
 
-# XXX:  store a reference to the AnyEntity class since it is hijacked in goa
-#       configuration and we need the actual reference to avoid infinite loops
-#       in mro
-ANYENTITY = AnyEntity
-
 def fetch_config(fetchattrs, mainattr=None, pclass=AnyEntity, order='ASC'):
-    if pclass is ANYENTITY:
-        pclass = AnyEntity # AnyEntity and ANYENTITY may be different classes
+    """function to ease basic configuration of an entity class ORM. Basic usage
+    is:
+
+    .. sourcecode:: python
+
+      class MyEntity(AnyEntity):
+
+          fetch_attrs, cw_fetch_order = fetch_config(['attr1', 'attr2'])
+          # uncomment line below if you want the same sorting for 'unrelated' entities
+          # cw_fetch_unrelated_order = cw_fetch_order
+
+    Using this, when using ORM methods retrieving this type of entity, 'attr1'
+    and 'attr2' will be automatically prefetched and results will be sorted on
+    'attr1' ascending (ie the first attribute in the list).
+
+    This function will automatically add to fetched attributes those defined in
+    parent class given using the `pclass` argument.
+
+    Also, You can use `mainattr` and `order` argument to have a different
+    sorting.
+    """
     if pclass is not None:
         fetchattrs += pclass.fetch_attrs
     if mainattr is None:
         mainattr = fetchattrs[0]
     @classmethod
-    def fetch_order(cls, attr, var):
+    def fetch_order(cls, select, attr, var):
         if attr == mainattr:
-            return '%s %s' % (var, order)
-        return None
+            select.add_sort_var(var, order=='ASC')
     return fetchattrs, fetch_order
