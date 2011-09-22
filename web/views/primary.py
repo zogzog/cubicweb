@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -353,8 +353,7 @@ class URLAttributeView(EntityView):
     __regid__ = 'urlattr'
     __select__ = EntityView.__select__ & match_kwargs('rtype')
 
-    def cell_call(self, row, col, rtype, **kwargs):
-        entity = self.cw_rset.get_entity(row, col)
+    def entity_call(self, entity, rtype, **kwargs):
         url = entity.printable_value(rtype)
         if url:
             self.w(u'<a href="%s">%s</a>' % (url, url))
@@ -370,8 +369,7 @@ class AttributeView(EntityView):
     __regid__ = 'attribute'
     __select__ = EntityView.__select__ & match_kwargs('rtype')
 
-    def cell_call(self, row, col, rtype, role, **kwargs):
-        entity = self.cw_rset.get_entity(row, col)
+    def entity_call(self, entity, rtype, **kwargs):
         if self._cw.vreg.schema.rschema(rtype).final:
             self.w(entity.printable_value(rtype))
         else:
