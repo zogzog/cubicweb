@@ -15,12 +15,64 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""Set of HTML generic base views:
+"""
+HTML views
+~~~~~~~~~~
 
-* noresult, final
-* primary, sidebox
-* oneline, incontext, outofcontext, text
-* list
+Special views
+`````````````
+
+.. autoclass:: NullView
+.. autoclass:: NoResultView
+.. autoclass:: FinalView
+
+
+Base entity views
+`````````````````
+
+.. autoclass:: InContextView
+.. autoclass:: OutOfContextView
+.. autoclass:: OneLineView
+
+Those are used to display a link to an entity, whose label depends on the entity
+having to be displayed in or out of context (of another entity): some entities
+make sense in the context of another entity. For instance, the `Version` of a
+`Project` in forge. So one may expect that 'incontext' will be called when
+display a version from within the context of a project, while 'outofcontext"'
+will be called in other cases. In our example, the 'incontext' view of the
+version would be something like '0.1.2', while the 'outofcontext' view would
+include the project name, e.g. 'baz 0.1.2' (since only a version number without
+the associated project doesn't make sense if you don't know yet that you're
+talking about the famous 'baz' project. |cubicweb| tries to make guess and call
+'incontext'/'outofcontext' nicely. When it can't know, the 'oneline' view should
+be used.
+
+
+List entity views
+`````````````````
+
+.. autoclass:: ListView
+.. autoclass:: SimpleListView
+.. autoclass:: SameETypeListView
+.. autoclass:: CSVView
+
+Those list views can be given a 'subvid' arguments, telling the view to use of
+each item in the list. When not specified, the value of the 'redirect_vid'
+attribute of :class:`ListItemView` (for 'listview') or of
+:class:`SimpleListView` will be used. This default to 'outofcontext' for 'list'
+/ 'incontext' for 'simplelist'
+
+
+Text entity views
+~~~~~~~~~~~~~~~~~
+
+Basic HTML view have some variants to be used when generating raw text, not HTML
+(for notifications for instance). Also, as explained above, some of the HTML
+views use those text views as a basis.
+
+.. autoclass:: TextView
+.. autoclass:: InContextTextView
+.. autoclass:: OutOfContextView
 """
 
 __docformat__ = "restructuredtext en"
@@ -42,7 +94,12 @@ from cubicweb.web.views import calendar
 
 
 class NullView(AnyRsetView):
-    """default view when no result has been found"""
+    """:__regid__: *null*
+
+    This view is the default view used when nothing needs to be rendered. It is
+    always applicable and is usually used as fallback view when calling
+    :meth:`_cw.view` to display nothing if the result set is empty.
+    """
     __regid__ = 'null'
     __select__ = yes()
     def call(self, **kwargs):
@@ -51,9 +108,16 @@ class NullView(AnyRsetView):
 
 
 class NoResultView(View):
-    """default view when no result has been found"""
-    __select__ = empty_rset()
+    """:__regid__: *noresult*
+
+    This view is the default view to be used when no result has been found
+    (i.e. empty result set).
+
+    It's usually used as fallback view when calling :meth:`_cw.view` to display
+    "no results" if the result set is empty.
+    """
     __regid__ = 'noresult'
+    __select__ = empty_rset()
 
     def call(self, **kwargs):
         self.w(u'<div class="searchMessage"><strong>%s</strong></div>\n'
@@ -61,8 +125,11 @@ class NoResultView(View):
 
 
 class FinalView(AnyRsetView):
-    """display values without any transformation (i.e. get a number for
-    entities)
+    """:__regid__: *final*
+
+    Display the value of a result set cell with minimal transformations
+    (i.e. you'll get a number for entities). It is applicable on any result set,
+    though usually dedicated for cells containing an attribute's value.
     """
     __regid__ = 'final'
     # record generated i18n catalog messages
@@ -126,21 +193,51 @@ class FinalView(AnyRsetView):
         self.wdata(printable_value(self._cw, etype, value, props))
 
 
-# XXX deprecated
-class SecondaryView(EntityView):
-    __regid__ = 'secondary'
-    title = _('secondary')
+class InContextView(EntityView):
+    """:__regid__: *incontext*
 
-    def cell_call(self, row, col, **kwargs):
-        """the secondary view for an entity
-        secondary = icon + view(oneline)
-        """
+    This view is used whenthe entity should be considered as displayed in its
+    context. By default it produces the result of `textincontext` wrapped in a
+    link leading to the primary view of the entity.
+    """
+    __regid__ = 'incontext'
+
+    def cell_call(self, row, col):
         entity = self.cw_rset.get_entity(row, col)
-        self.w(u'&#160;')
-        self.wview('oneline', self.cw_rset, row=row, col=col)
+        desc = cut(entity.dc_description(), 50)
+        self.w(u'<a href="%s" title="%s">' % (
+            xml_escape(entity.absolute_url()), xml_escape(desc)))
+        self.w(xml_escape(self._cw.view('textincontext', self.cw_rset,
+                                        row=row, col=col)))
+        self.w(u'</a>')
+
+
+class OutOfContextView(EntityView):
+    """:__regid__: *outofcontext*
+
+    This view is used whenthe entity should be considered as displayed out of
+    its context. By default it produces the result of `textoutofcontext` wrapped
+    in a link leading to the primary view of the entity.
+    """
+    __regid__ = 'outofcontext'
+
+    def cell_call(self, row, col):
+        entity = self.cw_rset.get_entity(row, col)
+        desc = cut(entity.dc_description(), 50)
+        self.w(u'<a href="%s" title="%s">' % (
+            xml_escape(entity.absolute_url()), xml_escape(desc)))
+        self.w(xml_escape(self._cw.view('textoutofcontext', self.cw_rset,
+                                        row=row, col=col)))
+        self.w(u'</a>')
 
 
 class OneLineView(EntityView):
+    """:__regid__: *oneline*
+
+    This view is used when we can't tell if the entity should be considered as
+    displayed in or out of context. By default it produces the result of the
+    `text` view in a link leading to the primary view of the entity.
+    """
     __regid__ = 'oneline'
     title = _('oneline')
 
@@ -153,18 +250,25 @@ class OneLineView(EntityView):
         self.w(u'</a>')
 
 
+# text views ###################################################################
+
 class TextView(EntityView):
-    """the simplest text view for an entity"""
+    """:__regid__: *text*
+
+    This is the simplest text view for an entity. By default it returns the
+    result of the entity's `dc_title()` method, which is cut to fit the
+    `navigation.short-line-size` property if necessary.
+    """
     __regid__ = 'text'
     title = _('text')
     content_type = 'text/plain'
 
     def call(self, **kwargs):
-        """the view is called for an entire result set, by default loop
-        other rows of the result set and call the same view on the
-        particular row
+        """The view is called for an entire result set, by default loop other
+        rows of the result set and call the same view on the particular row.
 
-        Views applicable on None result sets have to override this method
+        Subclasses views that are applicable on None result sets will have to
+        override this method.
         """
         rset = self.cw_rset
         if rset is None:
@@ -180,40 +284,14 @@ class TextView(EntityView):
                    self._cw.property_value('navigation.short-line-size')))
 
 
-class MetaDataView(EntityView):
-    """paragraph view of some metadata"""
-    __regid__ = 'metadata'
-    show_eid = True
-
-    def cell_call(self, row, col):
-        _ = self._cw._
-        entity = self.cw_rset.get_entity(row, col)
-        self.w(u'<div>')
-        if self.show_eid:
-            self.w(u'%s #%s - ' % (entity.dc_type(), entity.eid))
-        if entity.modification_date != entity.creation_date:
-            self.w(u'<span>%s</span> ' % _('latest update on'))
-            self.w(u'<span class="value">%s</span>, '
-                   % self._cw.format_date(entity.modification_date))
-        # entities from external source may not have a creation date (eg ldap)
-        if entity.creation_date:
-            self.w(u'<span>%s</span> ' % _('created on'))
-            self.w(u'<span class="value">%s</span>'
-                   % self._cw.format_date(entity.creation_date))
-        if entity.creator:
-            if entity.creation_date:
-                self.w(u' <span>%s</span> ' % _('by'))
-            else:
-                self.w(u' <span>%s</span> ' % _('created_by'))
-            self.w(u'<span class="value">%s</span>' % entity.creator.name())
-        meta = entity.cw_metainformation()
-        if meta['source']['uri'] != 'system':
-            self.w(u' (<span>%s</span>' % _('cw_source'))
-            self.w(u' <span class="value">%s</span>)' % meta['source']['uri'])
-        self.w(u'</div>')
-
-
 class InContextTextView(TextView):
+    """:__regid__: *textincontext*
+
+    Similar to the `text` view, but called when an entity is considered in
+    context (see description of incontext HTML view for more information on
+    this). By default it displays what's returned by the `dc_title()` method of
+    the entity.
+    """
     __regid__ = 'textincontext'
     title = None # not listed as a possible view
     def cell_call(self, row, col):
@@ -222,6 +300,13 @@ class InContextTextView(TextView):
 
 
 class OutOfContextTextView(InContextTextView):
+    """:__regid__: *textoutofcontext*
+
+    Similar to the `text` view, but called when an entity is considered out of
+    context (see description of outofcontext HTML view for more information on
+    this). By default it displays what's returned by the `dc_long_title()`
+    method of the entity.
+    """
     __regid__ = 'textoutofcontext'
 
     def cell_call(self, row, col):
@@ -229,35 +314,26 @@ class OutOfContextTextView(InContextTextView):
         self.w(entity.dc_long_title())
 
 
-class InContextView(EntityView):
-    __regid__ = 'incontext'
-
-    def cell_call(self, row, col):
-        entity = self.cw_rset.get_entity(row, col)
-        desc = cut(entity.dc_description(), 50)
-        self.w(u'<a href="%s" title="%s">' % (
-            xml_escape(entity.absolute_url()), xml_escape(desc)))
-        self.w(xml_escape(self._cw.view('textincontext', self.cw_rset,
-                                        row=row, col=col)))
-        self.w(u'</a>')
-
-
-class OutOfContextView(EntityView):
-    __regid__ = 'outofcontext'
-
-    def cell_call(self, row, col):
-        entity = self.cw_rset.get_entity(row, col)
-        desc = cut(entity.dc_description(), 50)
-        self.w(u'<a href="%s" title="%s">' % (
-            xml_escape(entity.absolute_url()), xml_escape(desc)))
-        self.w(xml_escape(self._cw.view('textoutofcontext', self.cw_rset,
-                                        row=row, col=col)))
-        self.w(u'</a>')
-
-
 # list views ##################################################################
 
 class ListView(EntityView):
+    """:__regid__: *list*
+
+    This view displays a list of entities by creating a HTML list (`<ul>`) and
+    call the view `listitem` for each entity of the result set. The 'list' view
+    will generate HTML like:
+
+    .. sourcecode:: html
+
+      <ul class="section">
+        <li>"result of 'subvid' view for a row</li>
+        ...
+      </ul>
+
+    If you wish to use a different view for each entity, either subclass and
+    change the :attr:`item_vid` class attribute or specify a `subvid` argument
+    when calling this view.
+    """
     __regid__ = 'list'
     title = _('list')
     item_vid = 'listitem'
@@ -312,7 +388,21 @@ class ListItemView(EntityView):
 
 
 class SimpleListView(ListItemView):
-    """list without bullets"""
+    """:__regid__: *simplelist*
+
+    Similar to :class:~cubicweb.web.views.baseviews.ListView but using '<div>'
+    instead of '<ul>'. It rely on '<div>' behaviour to separate items. HTML will
+    look like
+
+    .. sourcecode:: html
+
+      <div class="section">"result of 'subvid' view for a row</div>
+      ...
+
+
+    It relies on base :class:`~cubicweb.view.View` class implementation of the
+    :meth:`call` method to insert those <div>.
+    """
     __regid__ = 'simplelist'
     redirect_vid = 'incontext'
 
@@ -330,8 +420,13 @@ class SimpleListView(ListItemView):
 
 
 class SameETypeListView(EntityView):
-    """list of entities of the same type, when asked explicitly for same etype list
-    view (for instance, display gallery if only images)
+    """:__regid__: *sameetypelist*
+
+    This view displays a list of entities of the same type, in HTML section
+    ('<div>') and call the view `sameetypelistitem` for each entity of the
+    result set. It's designed to get a more adapted global list when displayed
+    entities are all of the same type (for instance, display gallery if there
+    are only images entities).
     """
     __regid__ = 'sameetypelist'
     __select__ = EntityView.__select__ & one_etype_rset()
@@ -361,6 +456,11 @@ class SameETypeListItemView(EntityView):
 
 
 class CSVView(SimpleListView):
+    """:__regid__: *csv*
+
+    This view displays each entity in a coma separated list. It is NOT related
+    to the well-known text file format.
+    """
     __regid__ = 'csv'
     redirect_vid = 'incontext'
 
@@ -377,11 +477,47 @@ class CSVView(SimpleListView):
                 self.w(u", ")
 
 
+# XXX to be documented views ###################################################
+
+class MetaDataView(EntityView):
+    """paragraph view of some metadata"""
+    __regid__ = 'metadata'
+    show_eid = True
+
+    def cell_call(self, row, col):
+        _ = self._cw._
+        entity = self.cw_rset.get_entity(row, col)
+        self.w(u'<div>')
+        if self.show_eid:
+            self.w(u'%s #%s - ' % (entity.dc_type(), entity.eid))
+        if entity.modification_date != entity.creation_date:
+            self.w(u'<span>%s</span> ' % _('latest update on'))
+            self.w(u'<span class="value">%s</span>, '
+                   % self._cw.format_date(entity.modification_date))
+        # entities from external source may not have a creation date (eg ldap)
+        if entity.creation_date:
+            self.w(u'<span>%s</span> ' % _('created on'))
+            self.w(u'<span class="value">%s</span>'
+                   % self._cw.format_date(entity.creation_date))
+        if entity.creator:
+            if entity.creation_date:
+                self.w(u' <span>%s</span> ' % _('by'))
+            else:
+                self.w(u' <span>%s</span> ' % _('created_by'))
+            self.w(u'<span class="value">%s</span>' % entity.creator.name())
+        meta = entity.cw_metainformation()
+        if meta['source']['uri'] != 'system':
+            self.w(u' (<span>%s</span>' % _('cw_source'))
+            self.w(u' <span class="value">%s</span>)' % meta['source']['uri'])
+        self.w(u'</div>')
+
+
 class TreeItemView(ListItemView):
     __regid__ = 'treeitem'
 
     def cell_call(self, row, col):
         self.wview('incontext', self.cw_rset, row=row, col=col)
+
 
 class TextSearchResultView(EntityView):
     """this view is used to display full-text search
@@ -423,26 +559,6 @@ class TooltipView(EntityView):
     __regid__ = 'tooltip'
     def cell_call(self, row, col):
         self.wview('oneline', self.cw_rset, row=row, col=col)
-
-
-# XXX bw compat
-
-from logilab.common.deprecation import class_moved
-
-try:
-    from cubicweb.web.views.tableview import TableView
-    TableView = class_moved(TableView)
-except ImportError:
-    pass # gae has no tableview module (yet)
-
-from cubicweb.web.views import boxes, xmlrss, primary
-PrimaryView = class_moved(primary.PrimaryView)
-SideBoxView = class_moved(boxes.SideBoxView)
-XmlView = class_moved(xmlrss.XMLView)
-XmlItemView = class_moved(xmlrss.XMLItemView)
-XmlRsetView = class_moved(xmlrss.XMLRsetView)
-RssView = class_moved(xmlrss.RSSView)
-RssItemView = class_moved(xmlrss.RSSItemView)
 
 
 class GroupByView(EntityView):
@@ -550,3 +666,30 @@ class AuthorView(GroupByView):
         url = self.index_url(basepath, key, vtitle=vtitle)
         title = self._cw._('archive for %(author)s') % {'author': key}
         return tags.a(label, href=url, title=title)
+
+
+# bw compat ####################################################################
+
+from logilab.common.deprecation import class_moved, class_deprecated
+
+from cubicweb.web.views import boxes, xmlrss, primary, tableview
+PrimaryView = class_moved(primary.PrimaryView)
+SideBoxView = class_moved(boxes.SideBoxView)
+XmlView = class_moved(xmlrss.XMLView)
+XmlItemView = class_moved(xmlrss.XMLItemView)
+XmlRsetView = class_moved(xmlrss.XMLRsetView)
+RssView = class_moved(xmlrss.RSSView)
+RssItemView = class_moved(xmlrss.RSSItemView)
+TableView = class_moved(tableview.TableView)
+
+
+class SecondaryView(EntityView):
+    __metaclass__ = class_deprecated
+    __deprecation_warning__ = '[3.9] the secondary view is deprecated, use one of oneline/incontext/outofcontext'
+    __regid__ = 'secondary'
+    title = _('secondary')
+
+    def cell_call(self, row, col, **kwargs):
+        entity = self.cw_rset.get_entity(row, col)
+        self.w(u'&#160;')
+        self.wview('oneline', self.cw_rset, row=row, col=col)
