@@ -207,6 +207,7 @@ class FilterTable(FacetFilterMixIn, AnyRsetView):
     __regid__ = 'facet.filtertable'
     __select__ = has_facets()
     wdg_stack_size = 8
+    compact_layout_threshold = 5
 
     def call(self, vid, divid, vidargs, cssclass=''):
         self.generate_form(self.w, self.cw_rset, divid, vid, vidargs,
@@ -214,10 +215,23 @@ class FilterTable(FacetFilterMixIn, AnyRsetView):
                            # divid=divid XXX
                            )
 
+    def _simple_horizontal_layout(self, w, wdgs):
+        w(u'<table class="filter">\n')
+        w(u'<tr>\n')
+        for wdg in wdgs:
+            w(u'<td>')
+            wdg.render(w=w)
+            w(u'</td>')
+        w(u'</tr>\n')
+        w(u'</table>\n')
+
     def layout_widgets(self, w, wdgs):
         """layout widgets: put them in a table where each column should have
         sum(wdg.height()) < wdg_stack_size.
         """
+        if len(wdgs) < self.compact_layout_threshold:
+            self._simple_horizontal_layout(w, wdgs)
+            return
         w(u'<table class="filter">\n')
         widget_queue = []
         queue_height = 0
