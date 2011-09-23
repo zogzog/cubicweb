@@ -687,7 +687,6 @@ class SecondaryView(EntityView):
     __metaclass__ = class_deprecated
     __deprecation_warning__ = '[3.9] the secondary view is deprecated, use one of oneline/incontext/outofcontext'
     __regid__ = 'secondary'
-    title = _('secondary')
 
     def cell_call(self, row, col, **kwargs):
         entity = self.cw_rset.get_entity(row, col)
