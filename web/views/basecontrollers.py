@@ -535,24 +535,20 @@ class JSonController(Controller):
         statename = treecookiename(treeid)
         treestate = cookies.get(statename)
         if treestate is None:
-            cookies[statename] = nodeeid
-            self._cw.set_cookie(cookies, statename)
+            self._cw.set_cookie(statename, nodeeid)
         else:
             marked = set(filter(None, treestate.value.split(':')))
             if nodeeid in marked:
                 marked.remove(nodeeid)
             else:
                 marked.add(nodeeid)
-            cookies[statename] = ':'.join(marked)
-            self._cw.set_cookie(cookies, statename)
+            self._cw.set_cookie(statename, ':'.join(marked))
 
     @jsonize
     @deprecated("[3.13] use jQuery.cookie(cookiename, cookievalue, {path: '/'}) in js land instead")
     def js_set_cookie(self, cookiename, cookievalue):
         cookiename, cookievalue = str(cookiename), str(cookievalue)
-        cookies = self._cw.get_cookie()
-        cookies[cookiename] = cookievalue
-        self._cw.set_cookie(cookies, cookiename)
+        self._cw.set_cookie(cookiename, cookievalue)
 
     # relations edition stuff ##################################################
 

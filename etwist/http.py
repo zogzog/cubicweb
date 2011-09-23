@@ -1,7 +1,7 @@
 """twisted server for CubicWeb web instances
 
 :organization: Logilab
-:copyright: 2001-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
+:copyright: 2001-2011 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
@@ -25,24 +25,13 @@ class HTTPResponse(object):
     def _init_headers(self):
         if self._headers_out is None:
             return
-
-        # initialize cookies
-        cookies = self._headers_out.getHeader('set-cookie') or []
-        for cookie in cookies:
-            self._twreq.addCookie(cookie.name, cookie.value, cookie.expires,
-                                  cookie.domain, cookie.path, #TODO max-age
-                                  comment = cookie.comment, secure=cookie.secure)
-        self._headers_out.removeHeader('set-cookie')
-
-        # initialize other headers
-        for k, v in self._headers_out.getAllRawHeaders():
-            self._twreq.setHeader(k, v[0])
-
+        # initialize headers
+        for k, values in self._headers_out.getAllRawHeaders():
+            self._twreq.responseHeaders.setRawHeaders(k, values)
         # add content-length if not present
         if (self._headers_out.getHeader('content-length') is None
             and self._stream is not None):
            self._twreq.setHeader('content-length', len(self._stream))
-
 
     def _finalize(self):
         # we must set code before writing anything, else it's too late

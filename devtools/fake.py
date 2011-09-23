@@ -63,8 +63,8 @@ class FakeRequest(CubicWebRequestBase):
         self._session_data = {}
         self._headers_in = Headers()
 
-    def set_cookie(self, cookie, key, maxage=300, expires=None):
-        super(FakeRequest, self).set_cookie(cookie, key, maxage=300, expires=None)
+    def set_cookie(self, name, value, maxage=300, expires=None, secure=False):
+        super(FakeRequest, self).set_cookie(name, value, maxage, expires, secure)
         cookie = self.get_response_header('Set-Cookie')
         self._headers_in.setHeader('Cookie', cookie)
 

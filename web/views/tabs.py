@@ -93,8 +93,7 @@ class TabsMixin(LazyViewMixin):
         activetab = cookies.get(cookiename)
         if activetab is None:
             domid = uilib.domid(default)
-            cookies[cookiename] = domid
-            self._cw.set_cookie(cookies, cookiename)
+            self._cw.set_cookie(cookiename, domid)
             return domid
         return activetab.value
 
