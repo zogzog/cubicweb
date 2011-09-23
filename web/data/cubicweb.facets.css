@@ -15,7 +15,7 @@ div.facetTitle, div.bkSearch  {
  color: #000;
  margin-bottom: 2px;
  cursor: pointer;
- font: bold 100% Georgia;
+ font: %(facet_titleFont)s;
 }
 
 div.facetTitle a {
@@ -30,8 +30,8 @@ div.facetBody {
  color: #000 !important;
 }
 
-div.overflowed{
-  height: 12em;
+div.overflowed {
+  height: %(facet_overflowedHeight)s;
   overflow-y: auto;
 }
 
