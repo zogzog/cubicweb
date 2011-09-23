@@ -56,9 +56,9 @@ _pvdc = uicfg.primaryview_display_ctrl
 _pvdc.tag_attribute(('CWSource', 'type'), {'vid': 'attribute'})# disable reledit
 
 _rc = uicfg.reledit_ctrl
-_rc.tag_attribute(('CWSource', 'config'), {'rvid': 'verbatim'})
-_rc.tag_attribute(('CWSourceHostConfig', 'config'), {'rvid': 'verbatim'})
-_rc.tag_attribute(('CWSourceSchemaConfig', 'options'), {'rvid': 'verbatim'})
+_rc.tag_attribute(('CWSource', 'config'), {'rvid': 'verbatimattr'})
+_rc.tag_attribute(('CWSourceHostConfig', 'config'), {'rvid': 'verbatimattr'})
+_rc.tag_attribute(('CWSourceSchemaConfig', 'options'), {'rvid': 'verbatimattr'})
 
 
 class CWSourcePrimaryView(tabs.TabbedPrimaryView):
