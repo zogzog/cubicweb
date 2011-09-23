@@ -21,9 +21,8 @@ from logilab.common.testlib import mock_object
 from yams import BadSchemaDefinition
 from rql import parse, nodes, RQLHelper
 
-from cubicweb import Unauthorized
+from cubicweb import Unauthorized, rqlrewrite
 from cubicweb.schema import RRQLExpression, ERQLExpression
-from cubicweb.rqlrewrite import RQLRewriter
 from cubicweb.devtools import repotest, TestServerConfiguration
 
 
@@ -62,9 +61,10 @@ def rewrite(rqlst, snippets_map, kwargs, existingvars=None):
             @staticmethod
             def simplify(mainrqlst, needcopy=False):
                 rqlhelper.simplify(rqlst, needcopy)
-    rewriter = RQLRewriter(mock_object(vreg=FakeVReg, user=(mock_object(eid=1))))
+    rewriter = rqlrewrite.RQLRewriter(
+        mock_object(vreg=FakeVReg, user=(mock_object(eid=1))))
     snippets = []
-    for v, exprs in snippets_map.items():
+    for v, exprs in sorted(snippets_map.items()):
         rqlexprs = [isinstance(snippet, basestring)
                     and mock_object(snippet_rqlst=parse('Any X WHERE '+snippet).children[0],
                                     expression='Any X WHERE '+snippet)
@@ -210,8 +210,8 @@ class RQLRewriteTC(TestCase):
                         }, {})
         # XXX suboptimal
         self.failUnlessEqual(rqlst.as_string(),
-                             "Any C,A,R WITH A,R,C BEING "
-                             "(Any A,R,C WHERE A ref R, A? inlined_card C, "
+                             "Any C,A,R WITH A,C,R BEING "
+                             "(Any A,C,R WHERE A? inlined_card C, A ref R, "
                              "(A is NULL) OR (EXISTS(A inlined_card B, B require_permission D, "
                              "B is Card, D is CWPermission)), "
                              "A is Affaire, C is Card, EXISTS(C require_permission E, E is CWPermission))")

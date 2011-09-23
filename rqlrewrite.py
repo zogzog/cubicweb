@@ -119,6 +119,10 @@ def remove_solutions(origsolutions, solutions, defined):
     return newsolutions
 
 
+def iter_relations(stinfo):
+    # this is a function so that test may return relation in a predictable order
+    return stinfo['relations'] - stinfo['rhsrelations']
+
 class Unsupported(Exception):
     """raised when an rql expression can't be inserted in some rql query
     because it create an unresolvable query (eg no solutions found)
@@ -349,7 +353,7 @@ class RQLRewriter(object):
             while todo:
                 varname, stinfo = todo.pop()
                 done.add(varname)
-                for rel in stinfo['relations'] - stinfo['rhsrelations']:
+                for rel in iter_relations(stinfo):
                     if rel in done:
                         continue
                     done.add(rel)
@@ -380,7 +384,7 @@ class RQLRewriter(object):
                         if vref.name not in done and rschema.inlined:
                             # we can use vref here define in above for loop
                             ostinfo = vref.variable.stinfo
-                            for orel in ostinfo['relations'] - ostinfo['rhsrelations']:
+                            for orel in iter_relations(ostinfo):
                                 orschema = get_rschema(orel.r_type)
                                 if orschema.final or orschema.inlined:
                                     todo.append( (vref.name, ostinfo) )
