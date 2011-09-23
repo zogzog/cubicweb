@@ -34,6 +34,7 @@ views describled below. For instance:
 
 .. autoclass:: AttributeView
 .. autoclass:: URLAttributeView
+.. autoclass:: VerbatimAttributeView
 """
 
 __docformat__ = "restructuredtext en"
@@ -421,20 +422,6 @@ class RelatedView(EntityView):
                 self.w(u'</div>')
 
 
-class URLAttributeView(EntityView):
-    """:__regid__: *urlattr*
-
-    This view will wrap an attribute value (hence expect a string) into an '<a>'
-    HTML tag to display a clickable link.
-    """
-    __regid__ = 'urlattr'
-    __select__ = EntityView.__select__ & match_kwargs('rtype')
-
-    def entity_call(self, entity, rtype, **kwargs):
-        url = entity.printable_value(rtype)
-        if url:
-            self.w(u'<a href="%s">%s</a>' % (url, url))
-
 class AttributeView(EntityView):
     """:__regid__: *attribute*
 
@@ -453,6 +440,39 @@ class AttributeView(EntityView):
             rset = entity.related(rtype, role)
             if rset:
                 self.wview('autolimited', rset, initargs={'dispctrl': dispctrl})
+
+
+class URLAttributeView(EntityView):
+    """:__regid__: *urlattr*
+
+    This view will wrap an attribute value (hence expect a string) into an '<a>'
+    HTML tag to display a clickable link.
+    """
+    __regid__ = 'urlattr'
+    __select__ = EntityView.__select__ & match_kwargs('rtype')
+
+    def entity_call(self, entity, rtype, **kwargs):
+        url = entity.printable_value(rtype)
+        if url:
+            self.w(u'<a href="%s">%s</a>' % (url, url))
+
+
+class VerbatimAttributeView(EntityView):
+    """:__regid__: *verbatimattr*
+
+    This view will wrap an attribute value into an '<pre>' HTML tag to display
+    arbitrary text where EOL will be respected. It usually make sense for
+    attributes whose value is a multi-lines string where new lines matters.
+    """
+    __regid__ = 'verbatimattr'
+    __select__ = EntityView.__select__ & match_kwargs('rtype')
+
+    def entity_call(self, entity, rtype, **kwargs):
+        value = entity.printable_value(rtype)
+        if value:
+            self.w(u'<pre>%s</pre>' % value)
+
+
 
 
 
