@@ -53,7 +53,13 @@ jQuery.extend(cw, {
     },
 
     evalJSON: function (json) { // trust source
-        return eval("(" + json + ")");
+        try {
+            return eval("(" + json + ")");
+        } catch(e) {
+          cw.log(e);
+          cw.log('The faulty json source was', json);
+          throw (e);
+       }
     },
 
     urlEncode: function (str) {

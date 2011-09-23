@@ -15,9 +15,6 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""
-
-"""
 import webbrowser
 reload(webbrowser)
 
@@ -89,7 +86,7 @@ class RQLSensor(Sensor):
         cursor = cnx.cursor()
         try:
             rset = cursor.execute(rql)
-        except:
+        except Exception:
             del self._v_cnx
             raise
         self._urls = []
@@ -101,7 +98,7 @@ class RQLSensor(Sensor):
             output.set('resultbg[%s]' % i, 'black')
             try:
                 self._urls.append(base % 'Any X WHERE X eid %s' % line[0])
-            except:
+            except Exception:
                 self._urls.append('')
             i += 1
 

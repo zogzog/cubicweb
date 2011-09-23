@@ -273,7 +273,7 @@ directory (default to once a day).',
         if self._conn is None:
             try:
                 self._connect()
-            except:
+            except Exception:
                 self.exception('unable to connect to ldap:')
         return ConnectionWrapper(self._conn)
 
@@ -570,7 +570,7 @@ directory (default to once a day).',
                     try:
                         for i in range(len(value)):
                             value[i] = unicode(value[i], 'utf8')
-                    except:
+                    except Exception:
                         pass
                 if isinstance(value, list) and len(value) == 1:
                     rec_dict[key] = value = value[0]

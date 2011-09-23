@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -488,7 +488,7 @@ class ConfigurationProblem(object):
                     try:
                         oper, version = constraint.split()
                         self.reverse_dependencies[name].add( (oper, version, cube) )
-                    except:
+                    except Exception:
                         self.warnings.append(
                             'cube %s depends on %s but constraint badly '
                             'formatted: %s' % (cube, name, constraint))

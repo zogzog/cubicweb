@@ -177,7 +177,7 @@ class AbstractSource(object):
         # cw < 3.10 bw compat
         try:
             processed['adapter'] = confdict['adapter']
-        except:
+        except KeyError:
             pass
         # check for unknown options
         if confdict and not confdict.keys() == ['adapter']:

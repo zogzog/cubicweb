@@ -128,7 +128,7 @@ class TabsMixin(LazyViewMixin):
             entity.view(default, w=self.w)
             return
         self._cw.add_css('jquery.ui.css')
-        self._cw.add_js(('jquery.ui.js', 'cubicweb.ajax.js'))
+        self._cw.add_js(('jquery.ui.js', 'cubicweb.ajax.js', 'jquery.cookie.js'))
         # prune tabs : not all are to be shown
         tabs, active_tab = self.prune_tabs(tabs, default)
         # build the html structure
@@ -140,9 +140,7 @@ class TabsMixin(LazyViewMixin):
         for i, (tabid, domid, tabkwargs) in enumerate(tabs):
             w(u'<li>')
             w(u'<a href="#%s">' % domid)
-            w(u'<span onclick="%s">' % xml_escape(unicode(uilib.js.setTab(domid, self.cookie_name))))
             w(tabkwargs.pop('label', self._cw._(tabid)))
-            w(u'</span>')
             w(u'</a>')
             w(u'</li>')
             if domid == active_tab:
@@ -160,7 +158,12 @@ class TabsMixin(LazyViewMixin):
         # because the callback binding needs to be done before
         # XXX make work history: true
         self._cw.add_onload(u"""
-  jQuery('#entity-tabs-%(eeid)s').tabs( { selected: %(tabindex)s });
+  jQuery('#entity-tabs-%(eeid)s').tabs(
+    { selected: %(tabindex)s,
+      select: function(event, ui) {
+        setTab(ui.panel.id, '%(cookiename)s');
+      }
+    });
   setTab('%(domid)s', '%(cookiename)s');
 """ % {'tabindex'   : active_tab_idx,
        'domid'        : active_tab,

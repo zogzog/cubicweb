@@ -236,6 +236,18 @@ class RQLRewriteTC(TestCase):
                                            ('A2', 'X'): (c2,),
                                            }, {})
 
+    def test_optional_var_inlined_linked(self):
+        c1 = ('X require_permission P')
+        c2 = ('X inlined_card O, O require_permission P')
+        rqlst = parse('Any A,W WHERE A inlined_card C?, C inlined_note N, '
+                      'N inlined_affaire W')
+        rewrite(rqlst, {('C', 'X'): (c1,)}, {})
+        self.failUnlessEqual(rqlst.as_string(),
+                             'Any A,W WHERE A inlined_card C?, A is Affaire '
+                             'WITH C,N,W BEING (Any C,N,W WHERE C inlined_note N, '
+                             'N inlined_affaire W, EXISTS(C require_permission B), '
+                             'C is Card, N is Note, W is Affaire)')
+
     def test_relation_optimization_1_lhs(self):
         # since Card in_state State as monovalued cardinality, the in_state
         # relation used in the rql expression can be ignored and S replaced by
@@ -246,6 +258,7 @@ class RQLRewriteTC(TestCase):
         self.assertEqual(rqlst.as_string(),
                              "Any C WHERE C in_state STATE, C is Card, "
                              "EXISTS(STATE name 'hop'), STATE is State")
+
     def test_relation_optimization_1_rhs(self):
         snippet = ('TW subworkflow_exit X, TW name "hop"')
         rqlst = parse('WorkflowTransition C WHERE C subworkflow_exit EXIT')

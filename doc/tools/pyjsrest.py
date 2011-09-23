@@ -102,7 +102,7 @@ def parse_js_files(args=sys.argv):
     for fileid in INDEX_IN_ORDER:
         try:
             index.remove(fileid)
-        except:
+        except Exception:
             raise Exception(
         'Bad file id %s referenced in INDEX_IN_ORDER in %s, '
         'fix this please' % (fileid, __file__))

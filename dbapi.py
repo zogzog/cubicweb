@@ -301,7 +301,7 @@ class DBAPIRequest(RequestSessionBase):
     def set_default_language(self, vreg):
         try:
             self.lang = vreg.property_value('ui.language')
-        except: # property may not be registered
+        except Exception: # property may not be registered
             self.lang = 'en'
         # use req.__ to translate a message without registering it to the catalog
         try:
@@ -532,7 +532,7 @@ class Connection(object):
         if self._closed is None and self._close_on_del:
             try:
                 self.close()
-            except:
+            except Exception:
                 pass
 
     # connection initialization methods ########################################

@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Some utilities for the CubicWeb server."""
+
 __docformat__ = "restructuredtext en"
 
 import sys
@@ -121,11 +122,12 @@ def func_name(func):
 
 class LoopTask(object):
     """threaded task restarting itself once executed"""
-    def __init__(self, interval, func, args):
+    def __init__(self, repo, interval, func, args):
         if interval <= 0:
             raise ValueError('Loop task interval must be > 0 '
                              '(current value: %f for %s)' % \
                              (interval, func_name(func)))
+        self.repo = repo
         self.interval = interval
         def auto_restart_func(self=self, func=func, args=args):
             restart = True
@@ -138,7 +140,7 @@ class LoopTask(object):
             except BaseException:
                 restart = False
             finally:
-                if restart:
+                if restart and not self.repo.shutting_down:
                     self.start()
         self.func = auto_restart_func
         self.name = func_name(func)
@@ -167,7 +169,7 @@ class RepoThread(Thread):
         def auto_remove_func(self=self, func=target):
             try:
                 func()
-            except:
+            except Exception:
                 logger = logging.getLogger('cubicweb.repository')
                 logger.exception('Unhandled exception in RepoThread %s', self._name)
                 raise

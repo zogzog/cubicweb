@@ -102,7 +102,7 @@ class SecurityViewMixIn(object):
             # XXX get group entity and call it's incontext view
             groups = [u'<a class="%s" href="%s">%s</a>' % (
                 group, self._cw.build_url('cwgroup/%s' % group), label)
-                      for group, label in sorted((_(g), g) for g in groups)]
+                      for label, group in sorted((_(g), g) for g in groups)]
             w(u'<br/>'.join(groups))
             w(u'</td><td>')
             w(u'<br/>'.join(rqlexprs))

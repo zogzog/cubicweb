@@ -10,10 +10,10 @@ modifying. It is also one of the richest and most complex.
 It is automatically selected on a one line result set containing an
 entity.
 
-This view is supposed to render a maximum of informations about the
-entity.
-
 It lives in the :mod:`cubicweb.web.views.primary` module.
+
+The *primary* view is supposed to render a maximum of informations about the
+entity.
 
 .. _primary_view_layout:
 
@@ -139,8 +139,6 @@ result set as argument and returning it filtered, to do some arbitrary filtering
 that can't be done using rql for instance.
 
 
-
-
 .. sourcecode:: python
 
    pv_section = uicfg.primaryview_section
@@ -163,62 +161,8 @@ that can't be done using rql for instance.
    ``tag_subject_of``. To avoid warnings during execution, they should be set to
    ``'*'``.
 
-Rendering methods and attributes
-````````````````````````````````
 
-The basic layout of a primary view is as in the
-:ref:`primary_view_layout` section. This layout is actually drawn by
-the `render_entity` method.
-
-The methods you may want to modify while customizing a ``PrimaryView``
-are:
-
-*render_entity_title(self, entity)*
-    Renders the entity title, by default using entity's :meth:`dc_title()` method.
-
-*render_entity_attributes(self, entity)*
-    Renders all attributes and relations in the 'attributes' section . The
-    :attr:`skip_none` attribute controls the display of `None` valued attributes.
-
-*render_entity_relations(self, entity)*
-    Renders all relations in the 'relations' section.
-
-*render_side_boxes(self, entity, boxes)*
-    Renders side boxes on the right side of the content. This will generate a box
-    for each relation in the 'sidebox' section, as well as explicit box
-    appobjects selectable in this context.
-
-The placement of relations in the relations section or in side boxes
-can be controlled through the :ref:`primary_view_configuration` mechanism.
-
-*content_navigation_components(self, context)*
-    This method is applicable only for entity type implementing the interface
-    `IPrevNext`. This interface is for entities which can be linked to a previous
-    and/or next entity. This method will render the navigation links between
-    entities of this type, either at the top or at the bottom of the page
-    given the context (navcontent{top|bottom}).
-
-Also, please note that by setting the following attributes in your
-subclass, you can already customize some of the rendering:
-
-*show_attr_label*
-    Renders the attribute label next to the attribute value if set to `True`.
-    Otherwise, does only display the attribute value.
-
-*show_rel_label*
-    Renders the relation label next to the relation value if set to `True`.
-    Otherwise, does only display the relation value.
-
-*skip_none*
-    Does not render an attribute value that is None if set to `True`.
-
-*main_related_section*
-    Renders the relations of the entity if set to `True`.
-
-A good practice is for you to identify the content of your entity type for which
-the default rendering does not answer your need so that you can focus on the specific
-method (from the list above) that needs to be modified. We do not advise you to
-overwrite ``render_entity`` unless you want a completely different layout.
+.. automodule:: cubicweb.web.views.primary
 
 
 Example of customization and creation
@@ -329,3 +273,4 @@ now allows to read its description and all its entries.
 
 .. image:: ../../images/lax-book_10-blog-with-two-entries_en.png
    :alt: a blog and all its entries
+

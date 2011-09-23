@@ -73,7 +73,7 @@ class ConnectionsSet(object):
             # catch exceptions, rollback other sources anyway
             try:
                 cnx.rollback()
-            except:
+            except Exception:
                 source.critical('rollback error', exc_info=sys.exc_info())
                 # error on rollback, the connection is much probably in a really
                 # bad state. Replace it by a new one.
@@ -86,12 +86,12 @@ class ConnectionsSet(object):
         for cu in self._cursors.values():
             try:
                 cu.close()
-            except:
+            except Exception:
                 continue
         for _, cnx in self.source_cnxs.values():
             try:
                 cnx.close()
-            except:
+            except Exception:
                 continue
 
     # internals ###############################################################
@@ -135,7 +135,7 @@ class ConnectionsSet(object):
             try:
                 # properly close existing connection if any
                 self.source_cnxs[source.uri][1].close()
-            except:
+            except Exception:
                 pass
             source.info('trying to reconnect')
             self.source_cnxs[source.uri] = (source, source.get_connection())

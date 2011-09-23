@@ -66,7 +66,7 @@ class RequestSessionBase(object):
         self.vreg = vreg
         try:
             encoding = vreg.property_value('ui.encoding')
-        except: # no vreg or property not registered
+        except Exception: # no vreg or property not registered
             encoding = 'utf-8'
         self.encoding = encoding
         # cache result of execution for (rql expr / eids),

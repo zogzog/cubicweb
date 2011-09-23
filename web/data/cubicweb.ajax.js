@@ -705,7 +705,7 @@ function reload(domid, compid, registry, formparams  /* ... */) {
 
 function setTab(tabname, cookiename) {
     // set appropriate cookie
-    loadRemote('json', ajaxFuncArgs('set_cookie', null, cookiename, tabname));
+    jQuery.cookie(cookiename, tabname, {path: '/'});
     // trigger show + tabname event
     triggerLoad(tabname);
 }

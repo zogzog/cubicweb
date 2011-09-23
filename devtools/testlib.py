@@ -233,7 +233,7 @@ class CubicWebTC(TestCase):
         # web resources
         try:
             config.global_set_option('embed-allowed', re.compile('.*'))
-        except: # not in server only configuration
+        except Exception: # not in server only configuration
             pass
 
     #XXX this doesn't need to a be classmethod anymore
@@ -787,15 +787,13 @@ class CubicWebTC(TestCase):
         """
         try:
             output = viewfunc(**kwargs)
-        except (SystemExit, KeyboardInterrupt):
-            raise
-        except:
+        except Exception:
             # hijack exception: generative tests stop when the exception
             # is not an AssertionError
             klass, exc, tcbk = sys.exc_info()
             try:
                 msg = '[%s in %s] %s' % (klass, view.__regid__, exc)
-            except:
+            except Exception:
                 msg = '[%s in %s] undisplayable exception' % (klass, view.__regid__)
             raise AssertionError, msg, tcbk
         return self._check_html(output, view, template)
@@ -837,9 +835,7 @@ class CubicWebTC(TestCase):
     def assertWellFormed(self, validator, content, context=None):
         try:
             return validator.parse_string(content)
-        except (SystemExit, KeyboardInterrupt):
-            raise
-        except:
+        except Exception:
             # hijack exception: generative tests stop when the exception
             # is not an AssertionError
             klass, exc, tcbk = sys.exc_info()
@@ -851,7 +847,7 @@ class CubicWebTC(TestCase):
 
             try:
                 str_exc = str(exc)
-            except:
+            except Exception:
                 str_exc = 'undisplayable exception'
             msg += str_exc
             if content is not None:
@@ -1154,7 +1150,7 @@ def vreg_instrumentize(testclass):
         reg._selected = {}
         try:
             orig_select_best = reg.__class__.__orig_select_best
-        except:
+        except Exception:
             orig_select_best = reg.__class__._select_best
         def instr_select_best(self, *args, **kwargs):
             selected = orig_select_best(self, *args, **kwargs)

@@ -1640,7 +1640,7 @@ class TermsFiltererVisitor(object):
         self._pending_vrefs = []
         try:
             res = self.visit_default(node, newroot, terms)[0]
-        except:
+        except Exception:
             # when a relation isn't supported, we should dereference potentially
             # introduced variable refs
             for vref in self._pending_vrefs:

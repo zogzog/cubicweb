@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -174,7 +174,7 @@ class View(AppObject):
         stream = self.set_stream(w)
         try:
             view_func(**context)
-        except:
+        except Exception:
             self.debug('view call %s failed (context=%s)', view_func, context)
             raise
         # return stream content if we have created it
@@ -375,7 +375,19 @@ class EntityView(View):
 
     def call(self, **kwargs):
         if self.cw_rset is None:
-            self.entity_call(self.cw_extra_kwargs.pop('entity'))
+            # * cw_extra_kwargs is the place where extra selection arguments are
+            #   stored
+            # * when calling req.view('somevid', entity=entity), 'entity' ends
+            #   up in cw_extra_kwargs and kwargs
+            #
+            # handle that to avoid a TypeError with a sanity check
+            #
+            # Notice that could probably be avoided by handling entity_call in
+            # .render
+            entity = self.cw_extra_kwargs.pop('entity')
+            if 'entity' in kwargs:
+                assert kwargs.pop('entity') is entity
+            self.entity_call(entity, **kwargs)
         else:
             super(EntityView, self).call(**kwargs)
 

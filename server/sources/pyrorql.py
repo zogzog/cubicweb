@@ -226,7 +226,7 @@ repository (default to 5 minutes).',
                         self.cross_relations.remove(ertype)
                 else:
                     self.dont_cross_relations.remove(ertype)
-        except:
+        except Exception:
             self.error('while updating mapping consequently to removal of %s',
                        schemacfg)
 
@@ -275,7 +275,7 @@ repository (default to 5 minutes).',
                         entity = rset.get_entity(0, 0)
                         entity.complete(entity.e_schema.indexable_attributes())
                         source.index_entity(session, entity)
-                except:
+                except Exception:
                     self.exception('while updating %s with external id %s of source %s',
                                    etype, extid, self.uri)
                     continue
@@ -288,7 +288,7 @@ repository (default to 5 minutes).',
                         entity = session.entity_from_eid(eid, etype)
                         repo.delete_info(session, entity, self.uri, extid,
                                          scleanup=self.eid)
-                except:
+                except Exception:
                     self.exception('while updating %s with external id %s of source %s',
                                    etype, extid, self.uri)
                     continue
@@ -667,7 +667,7 @@ class RQL2RQL(object):
         value = const.eval(self.kwargs)
         try:
             return None, self._const_var[value]
-        except:
+        except Exception:
             var = self._varmaker.next()
             self.need_translation = True
             restr = '%s eid %s' % (var, self.visit_constant(const))

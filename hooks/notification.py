@@ -191,7 +191,7 @@ class EntityDeleteHook(SomethingChangedHook):
     def _call(self):
         try:
             title = self.entity.dc_title()
-        except:
+        except Exception:
             # may raise an error during deletion process, for instance due to
             # missing required relation
             title = '#%s' % self.entity.eid

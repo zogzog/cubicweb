@@ -23,6 +23,7 @@ __docformat__ = "restructuredtext en"
 _ = unicode
 
 from logilab.common.date import strptime
+from logilab.common.deprecation import deprecated
 
 from cubicweb import (NoSelectableObject, ObjectNotFound, ValidationError,
                       AuthenticationError, typed_eid)
@@ -546,8 +547,8 @@ class JSonController(Controller):
             self._cw.set_cookie(cookies, statename)
 
     @jsonize
+    @deprecated("[3.13] use jQuery.cookie(cookiename, cookievalue, {path: '/'}) in js land instead")
     def js_set_cookie(self, cookiename, cookievalue):
-        # XXX we should consider jQuery.Cookie
         cookiename, cookievalue = str(cookiename), str(cookievalue)
         cookies = self._cw.get_cookie()
         cookies[cookiename] = cookievalue
