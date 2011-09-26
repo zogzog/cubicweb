@@ -587,7 +587,7 @@ class RelationFacet(VocabularyFacet):
     _select_target_entity = True
 
     title = property(rtype_facet_title)
-    no_relation_label = '<no relation>'
+    no_relation_label = _('<no relation>')
 
     def __repr__(self):
         return '<%s on (%s-%s)>' % (self.__class__.__name__, self.rtype, self.role)

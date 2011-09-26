@@ -226,6 +226,9 @@ msgstr ""
 "pero se puede ver a un <a href=\"%s\">modelo completo con meta-datos</a>.</"
 "div>"
 
+msgid "<no relation>"
+msgstr ""
+
 msgid "<not specified>"
 msgstr "<no especificado>"
 

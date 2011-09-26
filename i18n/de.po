@@ -225,6 +225,9 @@ msgstr ""
 "können ein <a href=\"%s\">vollständiges Schema</a> mit Meta-Daten anzeigen.</"
 "div>"
 
+msgid "<no relation>"
+msgstr ""
+
 msgid "<not specified>"
 msgstr "<nicht spezifiziert>"
 

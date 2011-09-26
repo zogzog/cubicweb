@@ -226,6 +226,9 @@ msgstr ""
 "<div>Ce schéma du modèle de données <em>exclue</em> les méta-données, mais "
 "vous pouvez afficher un <a href=\"%s\">schéma complet</a>.</div>"
 
+msgid "<no relation>"
+msgstr "<pas de relation>"
+
 msgid "<not specified>"
 msgstr "<non spécifié>"
 

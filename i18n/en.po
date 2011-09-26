@@ -214,6 +214,9 @@ msgid ""
 "can also display a <a href=\"%s\">complete schema with meta-data</a>.</div>"
 msgstr ""
 
+msgid "<no relation>"
+msgstr ""
+
 msgid "<not specified>"
 msgstr ""
 
