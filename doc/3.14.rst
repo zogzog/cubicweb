@@ -1,6 +1,13 @@
 API changes in cubicweb 3.14
 ----------------------------
 
+* `Entity.fetch_rql` `restriction` argument has been deprecated and should be
+  replaced with a call to the new `Entity.fetch_rqlst` method, get the returned
+  value (a rql `Select` node) and use the RQL syntax tree API to include the
+  above-mentionned restrictions.
+
+  Backward compat is kept with proper warning.
+
 * `Entity.fetch_order` and `Entity.fetch_unrelated_order` class methods have been
   replaced by `Entity.cw_fetch_order` and `Entity.cw_fetch_unrelated_order` with
   a different prototype:
