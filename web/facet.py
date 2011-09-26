@@ -991,7 +991,7 @@ class RQLPathFacet(RelationFacet):
       class AgencyFacet(RQLPathFacet):
           __regid__ = 'agency'
           # this facet should only be selected when visualizing offices
-          __select__ = RelationFacet.__select__ & is_instance('Office')
+          __select__ = is_instance('Office')
           # this facet is a filter on the 'Agency' entities linked to the office
           # through the 'proposed_by' relation, where the office is the subject
           # of the relation
@@ -1002,7 +1002,7 @@ class RQLPathFacet(RelationFacet):
       class PostalCodeFacet(RQLPathFacet):
           __regid__ = 'postalcode'
           # this facet should only be selected when visualizing offices
-          __select__ = RelationAttributeFacet.__select__ & is_instance('Office')
+          __select__ = is_instance('Office')
           # this facet is a filter on the PostalAddress entities linked to the
           # office through the 'has_address' relation, where the office is the
           # subject of the relation
