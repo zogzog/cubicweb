@@ -1047,12 +1047,6 @@ msgctxt "inlined:CWRelation.relation_type.subject"
 msgid "add a CWRType"
 msgstr "add a relation type"
 
-msgid "add a CWSource"
-msgstr "add a source"
-
-msgid "add a CWSourceSchemaConfig"
-msgstr "add an item to mapping "
-
 msgctxt "inlined:CWUser.use_email.subject"
 msgid "add a EmailAddress"
 msgstr "add an email address"
@@ -3577,9 +3571,6 @@ msgstr ""
 msgid "searching for"
 msgstr ""
 
-msgid "secondary"
-msgstr ""
-
 msgid "security"
 msgstr ""
 
@@ -4433,7 +4424,3 @@ msgstr ""
 #, python-format
 msgid "you should un-inline relation %s which is supported and may be crossed "
 msgstr ""
-
-#~ msgctxt "CWAttribute"
-#~ msgid "cw_schema_object"
-#~ msgstr "mapped by"

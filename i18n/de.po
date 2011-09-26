@@ -1087,12 +1087,6 @@ msgctxt "inlined:CWRelation.relation_type.subject"
 msgid "add a CWRType"
 msgstr "einen Relationstyp hinzufügen"
 
-msgid "add a CWSource"
-msgstr ""
-
-msgid "add a CWSourceSchemaConfig"
-msgstr ""
-
 msgctxt "inlined:CWUser.use_email.subject"
 msgid "add a EmailAddress"
 msgstr "Email-Adresse hinzufügen"
@@ -3670,9 +3664,6 @@ msgstr "nach verwandten Ergebnissen suchen"
 msgid "searching for"
 msgstr "Suche nach"
 
-msgid "secondary"
-msgstr "sekundär"
-
 msgid "security"
 msgstr "Sicherheit"
 
@@ -4551,6 +4542,3 @@ msgstr "Sie sollten diese Eigenschaft wahrscheinlich löschen."
 #, python-format
 msgid "you should un-inline relation %s which is supported and may be crossed "
 msgstr ""
-
-#~ msgid "email address to use for notification"
-#~ msgstr "E-Mail-Adresse für Mitteilungen."

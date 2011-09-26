@@ -1097,12 +1097,6 @@ msgctxt "inlined:CWRelation.relation_type.subject"
 msgid "add a CWRType"
 msgstr "ajouter un type de relation"
 
-msgid "add a CWSource"
-msgstr "ajouter une source"
-
-msgid "add a CWSourceSchemaConfig"
-msgstr "ajouter une partie de mapping"
-
 msgctxt "inlined:CWUser.use_email.subject"
 msgid "add a EmailAddress"
 msgstr "ajouter une adresse électronique"
@@ -3724,9 +3718,6 @@ msgstr "rechercher pour associer"
 
 msgid "searching for"
 msgstr "Recherche de"
-
-msgid "secondary"
-msgstr "secondaire"
 
 msgid "security"
 msgstr "sécurité"

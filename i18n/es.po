@@ -1097,12 +1097,6 @@ msgctxt "inlined:CWRelation.relation_type.subject"
 msgid "add a CWRType"
 msgstr "Agregar un tipo de relación"
 
-msgid "add a CWSource"
-msgstr "agregar una fuente"
-
-msgid "add a CWSourceSchemaConfig"
-msgstr "agregar una parte de mapeo"
-
 msgctxt "inlined:CWUser.use_email.subject"
 msgid "add a EmailAddress"
 msgstr "Agregar correo electrónico"
@@ -3720,9 +3714,6 @@ msgstr "Búsqueda por asociación"
 msgid "searching for"
 msgstr "Buscando"
 
-msgid "secondary"
-msgstr "Secundaria"
-
 msgid "security"
 msgstr "Seguridad"
 
@@ -4602,10 +4593,3 @@ msgid "you should un-inline relation %s which is supported and may be crossed "
 msgstr ""
 "usted debe  quitar la puesta en línea de la relación %s que es aceptada y "
 "puede ser cruzada"
-
-#~ msgctxt "CWAttribute"
-#~ msgid "cw_schema_object"
-#~ msgstr "mapeado por"
-
-#~ msgid "email address to use for notification"
-#~ msgstr "Dirección electrónica a utilizarse para notificar"
