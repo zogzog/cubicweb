@@ -1094,12 +1094,6 @@ msgctxt "inlined:CWRelation.relation_type.subject"
 msgid "add a CWRType"
 msgstr "Agregar un tipo de relación"
 
-<<<<<<< /home/syt/src/cubicweb/i18n/es.po
-msgid "add a CWSource"
-msgstr "agregar una fuente"
-
-=======
->>>>>>> /tmp/es.po~other.Yb6Y5q
 msgctxt "inlined:CWUser.use_email.subject"
 msgid "add a EmailAddress"
 msgstr "Agregar correo electrónico"

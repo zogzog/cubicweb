@@ -22,11 +22,7 @@ software
 
 modname = distname = "cubicweb"
 
-<<<<<<< /home/syt/src/cubicweb/__pkginfo__.py
 numversion = (3, 14, 0)
-=======
-numversion = (3, 13, 6)
->>>>>>> /tmp/__pkginfo__.py~other.Prvgd6
 version = '.'.join(str(num) for num in numversion)
 
 description = "a repository of entities / relations for knowledge management"
