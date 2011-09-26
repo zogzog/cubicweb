@@ -547,8 +547,8 @@ class CubicWebRequestBase(DBAPIRequest):
         else:
             expires = None
         # make sure cookie is set on the correct path
-        cookie = Cookie(name, value, self.base_url_path(), expires=expires,
-                        secure=secure)
+        cookie = Cookie(str(name), str(value), self.base_url_path(),
+                        expires=expires, secure=secure)
         self.headers_out.addHeader('Set-cookie', cookie)
 
     def remove_cookie(self, name, bwcompat=None):
