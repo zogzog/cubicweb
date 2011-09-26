@@ -263,12 +263,8 @@ class CWSourceManagementView(StartupView):
 
     def call(self, **kwargs):
         self.w('<h1>%s</h1>' % self._cw._(self.title))
-        eschema = self._cw.vreg.schema.eschema('CWSource')
-        if eschema.has_perm(self._cw, 'add'):
-            self.w(u'<a href="%s" class="addButton right">%s</a>' % (
-                self._cw.build_url('add/%s' % eschema),
-                self._cw._('add a CWSource')))
-            self.w(u'<div class="clear"></div>')
+        self.w(add_etype_button(self._cw, 'CWSource'))
+        self.w(u'<div class="clear"></div>')
         self.wview('table', self._cw.execute(self.rql), displaycols=range(4))
 
 
