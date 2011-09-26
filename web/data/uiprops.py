@@ -165,3 +165,9 @@ msgBgColor = '#f8f8ee'
 infoMsgBgImg = 'url("information.png") 5px center no-repeat'
 errorMsgBgImg = 'url("error.png") 100% 50% no-repeat'
 errorMsgColor = '#ed0d0d'
+
+# facets
+facet_titleFont = 'bold 100% Georgia'
+facet_overflowedHeight = '12em'
+
+

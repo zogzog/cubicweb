@@ -102,8 +102,7 @@ class SystemCWPropertiesForm(FormViewMixIn, StartupView):
         cookiename = self._cookie_name(group)
         cookie = cookies.get(cookiename)
         if cookie is None:
-            cookies[cookiename] = default
-            self._cw.set_cookie(cookies, cookiename, maxage=None)
+            self._cw.set_cookie(cookiename, default, maxage=None)
             status = default
         else:
             status = cookie.value

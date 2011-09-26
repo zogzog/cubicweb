@@ -214,6 +214,9 @@ msgid ""
 "can also display a <a href=\"%s\">complete schema with meta-data</a>.</div>"
 msgstr ""
 
+msgid "<no relation>"
+msgstr ""
+
 msgid "<not specified>"
 msgstr ""
 
@@ -1040,9 +1043,6 @@ msgstr "add an entity type"
 msgctxt "inlined:CWRelation.relation_type.subject"
 msgid "add a CWRType"
 msgstr "add a relation type"
-
-msgid "add a CWSource"
-msgstr "add a source"
 
 msgctxt "inlined:CWUser.use_email.subject"
 msgid "add a EmailAddress"
@@ -3508,9 +3508,6 @@ msgstr ""
 msgid "searching for"
 msgstr ""
 
-msgid "secondary"
-msgstr ""
-
 msgid "security"
 msgstr ""
 
@@ -4349,9 +4346,12 @@ msgstr ""
 #, python-format
 msgid "you should un-inline relation %s which is supported and may be crossed "
 msgstr ""
+<<<<<<< /home/syt/src/cubicweb/i18n/en.po
 
 #~ msgid "add a CWSourceSchemaConfig"
 #~ msgstr "add an item to mapping "
 
 #~ msgid "siteinfo"
 #~ msgstr "site information"
+=======
+>>>>>>> /tmp/en.po~other.NvgtGM

@@ -1354,9 +1354,25 @@ class Headers(object):
         raw_header.append(value)
         self._headers[name] = _RecalcNeeded
 
+    def addHeader(self, name, value):
+        """
+        Add a parsed representatoin to a header that may or may not already exist.
+        If it exists, add it as a separate header to output; do not
+        replace anything.
+        """
+        name=name.lower()
+        header = self._headers.get(name)
+        if header is None:
+            # No header yet
+            header = []
+            self._headers[name] = header
+        elif header is _RecalcNeeded:
+            header = self._toParsed(name)
+        header.append(value)
+        self._raw_headers[name] = _RecalcNeeded
+
     def removeHeader(self, name):
         """Removes the header named."""
-
         name=name.lower()
         if self._raw_headers.has_key(name):
             del self._raw_headers[name]

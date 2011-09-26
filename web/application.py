@@ -236,12 +236,10 @@ class CookieSessionHandler(object):
 
     def open_session(self, req, allow_no_cnx=True):
         session = self.session_manager.open_session(req, allow_no_cnx=allow_no_cnx)
-        cookie = req.get_cookie()
         sessioncookie = self.session_cookie(req)
-        cookie[sessioncookie] = session.sessionid
-        if req.https and req.base_url().startswith('https://'):
-            cookie[sessioncookie]['secure'] = True
-        req.set_cookie(cookie, sessioncookie, maxage=None)
+        secure = req.https and req.base_url().startswith('https://')
+        req.set_cookie(sessioncookie, session.sessionid,
+                       maxage=None, secure=secure)
         if not session.anonymous_session:
             self.session_manager.postlogin(req)
         return session
@@ -251,8 +249,7 @@ class CookieSessionHandler(object):
         `AuthenticationError`
         """
         self.session_manager.close_session(req.session)
-        sessioncookie = self.session_cookie(req)
-        req.remove_cookie(req.get_cookie(), sessioncookie)
+        req.remove_cookie(self.session_cookie(req))
         raise LogOut(url=goto_url)
 
     # these are overridden by set_log_methods below

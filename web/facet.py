@@ -587,7 +587,7 @@ class RelationFacet(VocabularyFacet):
     _select_target_entity = True
 
     title = property(rtype_facet_title)
-    no_relation_label = '<no relation>'
+    no_relation_label = _('<no relation>')
 
     def __repr__(self):
         return '<%s on (%s-%s)>' % (self.__class__.__name__, self.rtype, self.role)
@@ -991,7 +991,7 @@ class RQLPathFacet(RelationFacet):
       class AgencyFacet(RQLPathFacet):
           __regid__ = 'agency'
           # this facet should only be selected when visualizing offices
-          __select__ = RelationFacet.__select__ & is_instance('Office')
+          __select__ = is_instance('Office')
           # this facet is a filter on the 'Agency' entities linked to the office
           # through the 'proposed_by' relation, where the office is the subject
           # of the relation
@@ -1002,7 +1002,7 @@ class RQLPathFacet(RelationFacet):
       class PostalCodeFacet(RQLPathFacet):
           __regid__ = 'postalcode'
           # this facet should only be selected when visualizing offices
-          __select__ = RelationAttributeFacet.__select__ & is_instance('Office')
+          __select__ = is_instance('Office')
           # this facet is a filter on the PostalAddress entities linked to the
           # office through the 'has_address' relation, where the office is the
           # subject of the relation
@@ -1336,6 +1336,24 @@ class HasRelationFacet(AbstractFacet):
 
 
 ## html widets ################################################################
+_DEFAULT_CONSTANT_VOCAB_WIDGET_HEIGHT = 9
+
+@cached
+def _css_height_to_line_count(vreg):
+    cssprop = vreg.config.uiprops['facet_overflowedHeight'].lower().strip()
+    # let's talk a bit ...
+    # we try to deduce a number of displayed lines from a css property
+    # there is a linear (rough empiric coefficient == 0.73) relation between
+    # css _em_ value and line qty
+    # if we get another unit we're out of luck and resort to one constant
+    # hence, it is strongly advised not to specify but ems for this css prop
+    if cssprop.endswith('em'):
+        try:
+            return int(cssprop[:-2]) * .73
+        except Exception:
+            vreg.warning('css property facet_overflowedHeight looks malformed (%r)',
+                         cssprop)
+    return _DEFAULT_CONSTANT_VOCAB_WIDGET_HEIGHT
 
 class FacetVocabularyWidget(htmlwidgets.HTMLWidget):
 
@@ -1343,8 +1361,10 @@ class FacetVocabularyWidget(htmlwidgets.HTMLWidget):
         self.facet = facet
         self.items = []
 
+    @cached
     def height(self):
-        return len(self.items) + 1
+        maxheight = _css_height_to_line_count(self.facet._cw.vreg)
+        return 1 + min(len(self.items), maxheight) + int(self.facet._support_and_compat())
 
     def append(self, item):
         self.items.append(item)

@@ -99,10 +99,10 @@ class InMemoryRepositorySessionManager(AbstractSessionManager):
         for forminternal_key in ('__form_id', '__domid', '__errorurl'):
             args.pop(forminternal_key, None)
         path = req.relative_path(False)
-        if path == 'login':
+        if path in ('login', 'logout') or req.form.get('vid') == 'loggedout':
             path = 'view'
             args['__message'] = req._('welcome %s !') % req.user.login
-            if 'vid' in req.form:
+            if 'vid' in req.form and req.form['vid'] != 'loggedout':
                 args['vid'] = req.form['vid']
             if 'rql' in req.form:
                 args['rql'] = req.form['rql']

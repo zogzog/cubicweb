@@ -226,6 +226,9 @@ msgstr ""
 "pero se puede ver a un <a href=\"%s\">modelo completo con meta-datos</a>.</"
 "div>"
 
+msgid "<no relation>"
+msgstr ""
+
 msgid "<not specified>"
 msgstr "<no especificado>"
 
@@ -1091,9 +1094,12 @@ msgctxt "inlined:CWRelation.relation_type.subject"
 msgid "add a CWRType"
 msgstr "Agregar un tipo de relación"
 
+<<<<<<< /home/syt/src/cubicweb/i18n/es.po
 msgid "add a CWSource"
 msgstr "agregar una fuente"
 
+=======
+>>>>>>> /tmp/es.po~other.Yb6Y5q
 msgctxt "inlined:CWUser.use_email.subject"
 msgid "add a EmailAddress"
 msgstr "Agregar correo electrónico"
@@ -3645,9 +3651,6 @@ msgstr "Búsqueda por asociación"
 msgid "searching for"
 msgstr "Buscando"
 
-msgid "secondary"
-msgstr "Secundaria"
-
 msgid "security"
 msgstr "Seguridad"
 
@@ -4512,6 +4515,7 @@ msgid "you should un-inline relation %s which is supported and may be crossed "
 msgstr ""
 "usted debe  quitar la puesta en línea de la relación %s que es aceptada y "
 "puede ser cruzada"
+<<<<<<< /home/syt/src/cubicweb/i18n/es.po
 
 #~ msgid "Schema of the data model"
 #~ msgstr "Esquema del modelo de datos"
@@ -4524,3 +4528,5 @@ msgstr ""
 
 #~ msgid "siteinfo"
 #~ msgstr "información"
+=======
+>>>>>>> /tmp/es.po~other.Yb6Y5q

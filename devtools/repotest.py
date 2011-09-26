@@ -329,9 +329,10 @@ class BasePlannerTC(BaseQuerierTC):
 
 # monkey patch some methods to get predicatable results #######################
 
-from cubicweb.rqlrewrite import RQLRewriter
-_orig_insert_snippets = RQLRewriter.insert_snippets
-_orig_build_variantes = RQLRewriter.build_variantes
+from cubicweb import rqlrewrite
+_orig_iter_relations = rqlrewrite.iter_relations
+_orig_insert_snippets = rqlrewrite.RQLRewriter.insert_snippets
+_orig_build_variantes = rqlrewrite.RQLRewriter.build_variantes
 
 def _insert_snippets(self, snippets, varexistsmap=None):
     _orig_insert_snippets(self, sorted(snippets, snippet_cmp), varexistsmap)
@@ -415,9 +416,13 @@ _orig_syntax_tree_search = PyroRQLSource.syntax_tree_search
 def _syntax_tree_search(*args, **kwargs):
     return deepcopy(_orig_syntax_tree_search(*args, **kwargs))
 
+def _ordered_iter_relations(stinfo):
+    return sorted(_orig_iter_relations(stinfo), key=lambda x:x.r_type)
+
 def do_monkey_patch():
-    RQLRewriter.insert_snippets = _insert_snippets
-    RQLRewriter.build_variantes = _build_variantes
+    rqlrewrite.iter_relations = _ordered_iter_relations
+    rqlrewrite.RQLRewriter.insert_snippets = _insert_snippets
+    rqlrewrite.RQLRewriter.build_variantes = _build_variantes
     ExecutionPlan._check_permissions = _check_permissions
     ExecutionPlan.tablesinorder = None
     ExecutionPlan.init_temp_table = _init_temp_table
@@ -426,8 +431,9 @@ def do_monkey_patch():
     PyroRQLSource.syntax_tree_search = _syntax_tree_search
 
 def undo_monkey_patch():
-    RQLRewriter.insert_snippets = _orig_insert_snippets
-    RQLRewriter.build_variantes = _orig_build_variantes
+    rqlrewrite.iter_relations = _orig_iter_relations
+    rqlrewrite.RQLRewriter.insert_snippets = _orig_insert_snippets
+    rqlrewrite.RQLRewriter.build_variantes = _orig_build_variantes
     ExecutionPlan._check_permissions = _orig_check_permissions
     ExecutionPlan.init_temp_table = _orig_init_temp_table
     PartPlanInformation.merge_input_maps = _orig_merge_input_maps

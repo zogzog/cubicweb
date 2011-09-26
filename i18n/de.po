@@ -225,6 +225,9 @@ msgstr ""
 "können ein <a href=\"%s\">vollständiges Schema</a> mit Meta-Daten anzeigen.</"
 "div>"
 
+msgid "<no relation>"
+msgstr ""
+
 msgid "<not specified>"
 msgstr "<nicht spezifiziert>"
 
@@ -3595,9 +3598,6 @@ msgstr "nach verwandten Ergebnissen suchen"
 msgid "searching for"
 msgstr "Suche nach"
 
-msgid "secondary"
-msgstr "sekundär"
-
 msgid "security"
 msgstr "Sicherheit"
 
@@ -4461,9 +4461,12 @@ msgstr "Sie sollten diese Eigenschaft wahrscheinlich löschen."
 #, python-format
 msgid "you should un-inline relation %s which is supported and may be crossed "
 msgstr ""
+<<<<<<< /home/syt/src/cubicweb/i18n/de.po
 
 #~ msgid "Schema of the data model"
 #~ msgstr "Schema des Datenmodells"
 
 #~ msgid "instance schema"
 #~ msgstr "Schema der Instanz"
+=======
+>>>>>>> /tmp/de.po~other.fn7YK0

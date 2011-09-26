@@ -206,7 +206,6 @@ from cubicweb.view import AnyRsetView
 class FilterTable(FacetFilterMixIn, AnyRsetView):
     __regid__ = 'facet.filtertable'
     __select__ = has_facets()
-    wdg_stack_size = 8
     compact_layout_threshold = 5
 
     def call(self, vid, divid, vidargs, cssclass=''):
@@ -235,10 +234,11 @@ class FilterTable(FacetFilterMixIn, AnyRsetView):
         w(u'<table class="filter">\n')
         widget_queue = []
         queue_height = 0
+        wdg_stack_size = max(wdgs, key=lambda wdg:wdg.height()).height()
         w(u'<tr>\n')
         for wdg in wdgs:
             height = wdg.height()
-            if queue_height + height <= self.wdg_stack_size:
+            if queue_height + height <= wdg_stack_size:
                 widget_queue.append(wdg)
                 queue_height += height
                 continue

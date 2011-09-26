@@ -19,11 +19,12 @@
 
 __docformat__ = "restructuredtext en"
 
-import Cookie
 import hashlib
 import time
 import random
 import base64
+from Cookie import SimpleCookie
+from calendar import timegm
 from datetime import date
 from urlparse import urlsplit
 from itertools import count
@@ -42,7 +43,8 @@ from cubicweb.utils import SizeConstrainedList, HTMLHead, make_uid
 from cubicweb.view import STRICT_DOCTYPE, TRANSITIONAL_DOCTYPE_NOEXT
 from cubicweb.web import (INTERNAL_FIELD_VALUE, LOGGER, NothingToEdit,
                           RequestError, StatusResponse)
-from cubicweb.web.http_headers import Headers
+from cubicweb.web.httpcache import GMTOFFSET
+from cubicweb.web.http_headers import Headers, Cookie
 
 _MARKER = object()
 
@@ -518,30 +520,44 @@ class CubicWebRequestBase(DBAPIRequest):
 
     def get_cookie(self):
         """retrieve request cookies, returns an empty cookie if not found"""
+        # XXX use http_headers implementation
         try:
-            return Cookie.SimpleCookie(self.get_header('Cookie'))
+            return SimpleCookie(self.get_header('Cookie'))
         except KeyError:
-            return Cookie.SimpleCookie()
+            return SimpleCookie()
 
-    def set_cookie(self, cookie, key, maxage=300, expires=None):
-        """set / update a cookie key
+    def set_cookie(self, name, value, maxage=300, expires=None, secure=False):
+        """set / update a cookie
 
         by default, cookie will be available for the next 5 minutes.
         Give maxage = None to have a "session" cookie expiring when the
         client close its browser
         """
-        morsel = cookie[key]
-        if maxage is not None:
-            morsel['Max-Age'] = maxage
-        if expires:
-            morsel['expires'] = expires.strftime('%a, %d %b %Y %H:%M:%S %z')
+        if isinstance(name, SimpleCookie):
+            warn('[3.13] set_cookie now takes name and value as two first '
+                 'argument, not anymore cookie object and name',
+                 DeprecationWarning, stacklevel=2)
+            secure = name[value]['secure']
+            name, value = value, name[value].value
+        if maxage: # don't check is None, 0 may be specified
+            assert expires is None, 'both max age and expires cant be specified'
+            expires = maxage + time.time()
+        elif expires:
+            expires = timegm((expires + GMTOFFSET).timetuple())
+        else:
+            expires = None
         # make sure cookie is set on the correct path
-        morsel['path'] = self.base_url_path()
-        self.add_header('Set-Cookie', morsel.OutputString())
+        cookie = Cookie(name, value, self.base_url_path(), expires=expires,
+                        secure=secure)
+        self.headers_out.addHeader('Set-cookie', cookie)
 
-    def remove_cookie(self, cookie, key):
+    def remove_cookie(self, name, bwcompat=None):
         """remove a cookie by expiring it"""
-        self.set_cookie(cookie, key, maxage=0, expires=date(1970, 1, 1))
+        if bwcompat is not None:
+            warn('[3.13] remove_cookie now take only a name as argument',
+                 DeprecationWarning, stacklevel=2)
+            name = bwcompat
+        self.set_cookie(key, '', maxage=0, expires=date(1970, 1, 1))
 
     def set_content_type(self, content_type, filename=None, encoding=None):
         """set output content type for this request. An optional filename
