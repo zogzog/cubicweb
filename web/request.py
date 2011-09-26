@@ -540,8 +540,8 @@ class CubicWebRequestBase(DBAPIRequest):
             secure = name[value]['secure']
             name, value = value, name[value].value
         if maxage: # don't check is None, 0 may be specified
-            expires = maxage + time.time()
             assert expires is None, 'both max age and expires cant be specified'
+            expires = maxage + time.time()
         elif expires:
             expires = timegm((expires + GMTOFFSET).timetuple())
         else:
