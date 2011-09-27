@@ -1018,59 +1018,6 @@ class CompoundField(Field):
         return list(self.fields)
 
 
-# relation vocabulary helper functions #########################################
-
-def relvoc_linkedto(entity, rtype, role):
-    # first see if its specified by __linkto form parameters
-    linkedto = entity.linked_to(rtype, role)
-    if linkedto:
-        buildent = entity._cw.entity_from_eid
-        return [(buildent(eid).view('combobox'), unicode(eid)) for eid in linkedto]
-    return []
-
-def relvoc_init(entity, rtype, role, required=False):
-    # it isn't, check if the entity provides a method to get correct values
-    vocab = []
-    if not required:
-        vocab.append(('', INTERNAL_FIELD_VALUE))
-    # vocabulary doesn't include current values, add them
-    if entity.has_eid():
-        rset = entity.related(rtype, role)
-        vocab += [(e.view('combobox'), unicode(e.eid)) for e in rset.entities()]
-    return vocab
-
-def relvoc_unrelated(entity, rtype, role, limit=None):
-    if isinstance(rtype, basestring):
-        rtype = entity._cw.vreg.schema.rschema(rtype)
-    if entity.has_eid():
-        done = set(row[0] for row in entity.related(rtype, role))
-    else:
-        done = None
-    result = []
-    rsetsize = None
-    for objtype in rtype.targets(entity.e_schema, role):
-        if limit is not None:
-            rsetsize = limit - len(result)
-        result += _relvoc_unrelated(entity, rtype, objtype, role, rsetsize, done)
-        if limit is not None and len(result) >= limit:
-            break
-    return result
-
-def _relvoc_unrelated(entity, rtype, targettype, role, limit, done):
-    """return unrelated entities for a given relation and target entity type
-    for use in vocabulary
-    """
-    if done is None:
-        done = set()
-    res = []
-    for entity in entity.unrelated(rtype, targettype, role, limit).entities():
-        if entity.eid in done:
-            continue
-        done.add(entity.eid)
-        res.append((entity.view('combobox'), unicode(entity.eid)))
-    return res
-
-
 class RelationField(Field):
     """Use this field to edit a relation of an entity.
 
@@ -1095,10 +1042,10 @@ class RelationField(Field):
         entity = form.edited_entity
         # first see if its specified by __linkto form parameters
         if limit is None:
-            linkedto = relvoc_linkedto(entity, self.name, self.role)
+            linkedto = self.relvoc_linkedto(form)
             if linkedto:
                 return linkedto
-            vocab = relvoc_init(entity, self.name, self.role, self.required)
+            vocab = self.relvoc_init(form)
         else:
             vocab = []
         # it isn't, check if the entity provides a method to get correct values
@@ -1108,22 +1055,63 @@ class RelationField(Field):
             warn('[3.6] found %s on %s, should override field.choices instead (need tweaks)'
                  % (method, form), DeprecationWarning)
         except AttributeError:
-            vocab += relvoc_unrelated(entity, self.name, self.role, limit)
+            vocab += self.relvoc_unrelated(form, limit)
         if self.sort:
             vocab = vocab_sort(vocab)
         return vocab
 
-    def form_init(self, form):
-        #if not self.display_value(form):
-        value = form.edited_entity.linked_to(self.name, self.role)
-        if value:
-            searchedvalues = ['%s:%s:%s' % (self.name, eid, self.role)
-                              for eid in value]
-            # remove associated __linkto hidden fields
-            for field in form.root_form.fields_by_name('__linkto'):
-                if field.value in searchedvalues:
-                    form.root_form.remove_field(field)
-            form.formvalues[(self, form)] = value
+    def relvoc_linkedto(self, form):
+        linkedto = form.linked_to.get((self.name, self.role))
+        if linkedto:
+            buildent = form._cw.entity_from_eid
+            return [(buildent(eid).view('combobox'), unicode(eid))
+                    for eid in linkedto]
+        return []
+
+    def relvoc_init(self, form):
+        entity, rtype, role = form.edited_entity, self.name, self.role
+        vocab = []
+        if not self.required:
+            vocab.append(('', INTERNAL_FIELD_VALUE))
+        # vocabulary doesn't include current values, add them
+        if form.edited_entity.has_eid():
+            rset = form.edited_entity.related(self.name, self.role)
+            vocab += [(e.view('combobox'), unicode(e.eid))
+                      for e in rset.entities()]
+        return vocab
+
+    def relvoc_unrelated(self, form, limit=None):
+        entity = form.edited_entity
+        rtype = entity._cw.vreg.schema.rschema(self.name)
+        if entity.has_eid():
+            done = set(row[0] for row in entity.related(rtype, self.role))
+        else:
+            done = None
+        result = []
+        rsetsize = None
+        for objtype in rtype.targets(entity.e_schema, self.role):
+            if limit is not None:
+                rsetsize = limit - len(result)
+            result += self._relvoc_unrelated(form, objtype, rsetsize, done)
+            if limit is not None and len(result) >= limit:
+                break
+        return result
+
+    def _relvoc_unrelated(self, form, targettype, limit, done):
+        """return unrelated entities for a given relation and target entity type
+        for use in vocabulary
+        """
+        if done is None:
+            done = set()
+        res = []
+        entity = form.edited_entity
+        for entity in entity.unrelated(self.name, targettype,
+                                       self.role, limit).entities():
+            if entity.eid in done:
+                continue
+            done.add(entity.eid)
+            res.append((entity.view('combobox'), unicode(entity.eid)))
+        return res
 
     def format_single_value(self, req, value):
         return unicode(value)

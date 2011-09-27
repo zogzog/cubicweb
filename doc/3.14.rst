@@ -36,3 +36,15 @@ API changes in cubicweb 3.14
   No backward compat yet since this is a protected method an no code is known to
   use it outside cubicweb itself.
 
+* `AnyEntity.linked_to` has been removed as part of a refactoring of this
+  functionality (link a entity to another one at creation step). It was replaced
+  by a `EntityFieldsForm.linked_to` property.
+
+  In the same refactoring, `cubicweb.web.formfield.relvoc_linkedto`,
+  `cubicweb.web.formfield.relvoc_init` and
+  `cubicweb.web.formfield.relvoc_unrelated` were removed and replaced by
+  RelationField methods with the same names, that take a form as a parameter.
+
+  **No backward compatibility yet**. It's still time to cry for it.
+  Cubes known to be affected: tracker, vcsfile, vcreview
+

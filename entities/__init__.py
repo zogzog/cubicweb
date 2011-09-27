@@ -118,38 +118,6 @@ class AnyEntity(Entity):
             return self.printable_value(rtype, format='text/plain').lower()
         return value
 
-    # edition helper functions ################################################
-
-    def linked_to(self, rtype, role, remove=True):
-        """if entity should be linked to another using '__linkto' form param for
-        the given relation/role, return eids of related entities
-
-        This method is consuming matching link-to information from form params
-        if `remove` is True (by default). Computed values are stored into a
-        `cw_linkto` attribute, a dictionary with (relation, role) as key and
-        linked eids as value.
-        """
-        try:
-            return self.cw_linkto[(rtype, role)]
-        except AttributeError:
-            self.cw_linkto = {}
-        except KeyError:
-            pass
-        linktos = list(self._cw.list_form_param('__linkto'))
-        linkedto = []
-        for linkto in linktos[:]:
-            ltrtype, eid, ltrole = linkto.split(':')
-            if rtype == ltrtype and role == ltrole:
-                # delete __linkto from form param to avoid it being added as
-                # hidden input
-                if remove:
-                    linktos.remove(linkto)
-                    self._cw.form['__linkto'] = linktos
-                linkedto.append(typed_eid(eid))
-        self.cw_linkto[(rtype, role)] = linkedto
-        return linkedto
-
-    # server side helpers #####################################################
 
 def fetch_config(fetchattrs, mainattr=None, pclass=AnyEntity, order='ASC'):
     """function to ease basic configuration of an entity class ORM. Basic usage

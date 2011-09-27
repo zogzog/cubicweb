@@ -340,7 +340,7 @@ _afs.tag_attribute(('TrInfo', 'tr_count'), 'main', 'hidden')
 def transition_states_vocabulary(form, field):
     entity = form.edited_entity
     if not entity.has_eid():
-        eids = entity.linked_to('transition_of', 'subject')
+        eids = form.linked_to.get(('transition_of', 'subject'))
         if not eids:
             return []
         return _wf_items_for_relation(form._cw, eids[0], 'state_of', field)
@@ -358,7 +358,7 @@ _affk.tag_object_of(('*', 'allowed_transition', '*'),
 def state_transitions_vocabulary(form, field):
     entity = form.edited_entity
     if not entity.has_eid():
-        eids = entity.linked_to('state_of', 'subject')
+        eids = form.linked_to.get(('state_of', 'subject'))
         if eids:
             return _wf_items_for_relation(form._cw, eids[0], 'transition_of', field)
         return []
