@@ -94,6 +94,8 @@ class TableView(AnyRsetView):
         :param subvid: cell view
         :param displayfilter: filter that selects rows to display
         :param headers: columns' titles
+        :param displaycols: indexes of columns to display (first column is 0)
+        :param displayactions: if True, display action menu
         """
         req = self._cw
         req.add_js('jquery.tablesorter.js')
