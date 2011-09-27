@@ -457,7 +457,7 @@ class Entity(AppObject):
         """custom json dumps hook to dump the entity's eid
         which is not part of dict structure itself
         """
-        dumpable = dict(self)
+        dumpable = self.cw_attr_cache.copy()
         dumpable['eid'] = self.eid
         return dumpable
 

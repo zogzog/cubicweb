@@ -31,6 +31,7 @@ from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.devtools.fake import FakeRequest
 from cubicweb.web import LogOut, Redirect, INTERNAL_FIELD_VALUE
 from cubicweb.web.views.basecontrollers import ViewController
+from cubicweb.web.application import anonymized_request
 
 class FakeMapping:
     """emulates a mapping module"""
@@ -423,6 +424,18 @@ class ApplicationTC(CubicWebTC):
         self.assertAuthSuccess(req, origsession)
         self.assertRaises(LogOut, self.app_publish, req, 'logout')
         self.assertEqual(len(self.open_sessions), 0)
+
+    def test_anonymized_request(self):
+        req = self.request()
+        self.assertEqual(req.session.login, self.admlogin)
+        # admin should see anon + admin
+        self.assertEqual(len(list(req.find_entities('CWUser'))), 2)
+        with anonymized_request(req):
+            self.assertEqual(req.session.login, 'anon')
+            # anon should only see anon user
+            self.assertEqual(len(list(req.find_entities('CWUser'))), 1)
+        self.assertEqual(req.session.login, self.admlogin)
+        self.assertEqual(len(list(req.find_entities('CWUser'))), 2)
 
     def test_non_regr_optional_first_var(self):
         req = self.request()

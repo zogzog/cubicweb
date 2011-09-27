@@ -479,10 +479,8 @@ else:
         """define a json encoder to be able to encode yams std types"""
 
         def default(self, obj):
-            if hasattr(obj, 'eid'):
-                d = obj.cw_attr_cache.copy()
-                d['eid'] = obj.eid
-                return d
+            if hasattr(obj, '__json_encode__'):
+                return obj.__json_encode__()
             if isinstance(obj, datetime.datetime):
                 return ustrftime(obj, '%Y/%m/%d %H:%M:%S')
             elif isinstance(obj, datetime.date):
@@ -500,8 +498,8 @@ else:
                 # just return None in those cases.
                 return None
 
-    def json_dumps(value):
-        return json.dumps(value, cls=CubicWebJsonEncoder)
+    def json_dumps(value, **kwargs):
+        return json.dumps(value, cls=CubicWebJsonEncoder, **kwargs)
 
 
     class JSString(str):
