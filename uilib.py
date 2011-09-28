@@ -161,94 +161,84 @@ fallback_safe_cut = safe_cut
 
 REM_ROOT_HTML_TAGS = re.compile('</(body|html)>', re.U)
 
-try:
-    from lxml import etree, html
-    from lxml.html import clean, defs
+from lxml import etree, html
+from lxml.html import clean, defs
 
-    ALLOWED_TAGS = (defs.general_block_tags | defs.list_tags | defs.table_tags |
-                    defs.phrase_tags | defs.font_style_tags |
-                    set(('span', 'a', 'br', 'img', 'map', 'area', 'sub', 'sup'))
-                    )
+ALLOWED_TAGS = (defs.general_block_tags | defs.list_tags | defs.table_tags |
+                defs.phrase_tags | defs.font_style_tags |
+                set(('span', 'a', 'br', 'img', 'map', 'area', 'sub', 'sup'))
+                )
 
-    CLEANER = clean.Cleaner(allow_tags=ALLOWED_TAGS, remove_unknown_tags=False,
-                            style=True, safe_attrs_only=True,
-                            add_nofollow=False,
-                            )
+CLEANER = clean.Cleaner(allow_tags=ALLOWED_TAGS, remove_unknown_tags=False,
+                        style=True, safe_attrs_only=True,
+                        add_nofollow=False,
+                        )
 
-    def soup2xhtml(data, encoding):
-        """tidy html soup by allowing some element tags and return the result
+def soup2xhtml(data, encoding):
+    """tidy html soup by allowing some element tags and return the result
+    """
+    # remove spurious </body> and </html> tags, then normalize line break
+    # (see http://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.7.1)
+    data = REM_ROOT_HTML_TAGS.sub('', u'\n'.join(data.splitlines()))
+    xmltree = etree.HTML(CLEANER.clean_html('<div>%s</div>' % data))
+    # NOTE: lxml 2.0 does support encoding='unicode', but last time I (syt)
+    # tried I got weird results (lxml 2.2.8)
+    body = etree.tostring(xmltree[0], encoding=encoding)
+    # remove <body> and </body> and decode to unicode
+    snippet = body[6:-7].decode(encoding)
+    # take care to bad xhtml (for instance starting with </div>) which
+    # may mess with the <div> we added below. Only remove it if it's
+    # still there...
+    if snippet.startswith('<div>') and snippet.endswith('</div>'):
+        snippet = snippet[5:-6]
+    return snippet
+
+    # lxml.Cleaner envelops text elements by internal logic (not accessible)
+    # see http://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.7.1
+    # TODO drop attributes in elements
+    # TODO add policy configuration (content only, embedded content, ...)
+    # XXX this is buggy for "<p>text1</p><p>text2</p>"...
+    # XXX drop these two snippets action and follow the lxml behaviour
+    # XXX (tests need to be updated)
+    # if snippet.startswith('<div>') and snippet.endswith('</div>'):
+    #     snippet = snippet[5:-6]
+    # if snippet.startswith('<p>') and snippet.endswith('</p>'):
+    #     snippet = snippet[3:-4]
+    return snippet.decode(encoding)
+
+if hasattr(etree.HTML('<div>test</div>'), 'iter'): # XXX still necessary?
+    # pylint: disable=E0102
+    def safe_cut(text, length):
+        """returns an html document of length <length> based on <text>,
+        and cut is necessary.
         """
-        # remove spurious </body> and </html> tags, then normalize line break
-        # (see http://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.7.1)
-        data = REM_ROOT_HTML_TAGS.sub('', u'\n'.join(data.splitlines()))
-        xmltree = etree.HTML(CLEANER.clean_html('<div>%s</div>' % data))
-        # NOTE: lxml 2.0 does support encoding='unicode', but last time I (syt)
-        # tried I got weird results (lxml 2.2.8)
-        body = etree.tostring(xmltree[0], encoding=encoding)
-        # remove <body> and </body> and decode to unicode
-        snippet = body[6:-7].decode(encoding)
-        # take care to bad xhtml (for instance starting with </div>) which
-        # may mess with the <div> we added below. Only remove it if it's
-        # still there...
-        if snippet.startswith('<div>') and snippet.endswith('</div>'):
-            snippet = snippet[5:-6]
-        return snippet
-
-        # lxml.Cleaner envelops text elements by internal logic (not accessible)
-        # see http://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.7.1
-        # TODO drop attributes in elements
-        # TODO add policy configuration (content only, embedded content, ...)
-        # XXX this is buggy for "<p>text1</p><p>text2</p>"...
-        # XXX drop these two snippets action and follow the lxml behaviour
-        # XXX (tests need to be updated)
-        # if snippet.startswith('<div>') and snippet.endswith('</div>'):
-        #     snippet = snippet[5:-6]
-        # if snippet.startswith('<p>') and snippet.endswith('</p>'):
-        #     snippet = snippet[3:-4]
-        return snippet.decode(encoding)
-
-except (ImportError, AttributeError):
-    # gae environment: lxml not available
-    # fallback implementation
-    def soup2xhtml(data, encoding):
-        # normalize line break
-        # see http://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.7.1
-        return u'\n'.join(data.splitlines())
-else:
-
-    if hasattr(etree.HTML('<div>test</div>'), 'iter'): # XXX still necessary?
-
-        def safe_cut(text, length):
-            """returns an html document of length <length> based on <text>,
-            and cut is necessary.
-            """
-            if text is None:
-                return u''
-            dom = etree.HTML(text)
-            curlength = 0
-            add_ellipsis = False
-            for element in dom.iter():
-                if curlength >= length:
-                    parent = element.getparent()
-                    parent.remove(element)
-                    if curlength == length and (element.text or element.tail):
-                        add_ellipsis = True
-                else:
-                    if element.text is not None:
-                        element.text = cut(element.text, length - curlength)
-                        curlength += len(element.text)
-                    if element.tail is not None:
-                        if curlength < length:
-                            element.tail = cut(element.tail, length - curlength)
-                            curlength += len(element.tail)
-                        elif curlength == length:
-                            element.tail = '...'
-                        else:
-                            element.tail = ''
-            text = etree.tounicode(dom[0])[6:-7] # remove wrapping <body></body>
-            if add_ellipsis:
-                return text + u'...'
-            return text
+        if text is None:
+            return u''
+        dom = etree.HTML(text)
+        curlength = 0
+        add_ellipsis = False
+        for element in dom.iter():
+            if curlength >= length:
+                parent = element.getparent()
+                parent.remove(element)
+                if curlength == length and (element.text or element.tail):
+                    add_ellipsis = True
+            else:
+                if element.text is not None:
+                    element.text = cut(element.text, length - curlength)
+                    curlength += len(element.text)
+                if element.tail is not None:
+                    if curlength < length:
+                        element.tail = cut(element.tail, length - curlength)
+                        curlength += len(element.tail)
+                    elif curlength == length:
+                        element.tail = '...'
+                    else:
+                        element.tail = ''
+        text = etree.tounicode(dom[0])[6:-7] # remove wrapping <body></body>
+        if add_ellipsis:
+            return text + u'...'
+        return text
 
 def text_cut(text, nbwords=30, gotoperiod=True):
     """from the given plain text, return a text with at least <nbwords> words,

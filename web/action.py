@@ -133,10 +133,13 @@ class LinkToEntityAction(Action):
                   & partial_relation_possible(action='add', strict=True))
 
     submenu = 'addrelated'
+    # to be defined in concrete classes
+    target_etype = rtype = None
 
     def url(self):
         try:
-            ttype = self.etype # deprecated in 3.6, already warned by the selector
+            # deprecated in 3.6, already warned by the selector
+            ttype = self.etype # pylint: disable=E1101
         except AttributeError:
             ttype = self.target_etype
         entity = self.cw_rset.get_entity(self.cw_row or 0, self.cw_col or 0)

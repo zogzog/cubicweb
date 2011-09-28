@@ -19,10 +19,10 @@
 
 __docformat__ = "restructuredtext en"
 
-import hashlib
 import time
 import random
 import base64
+from hashlib import sha1 # pylint: disable=E0611
 from Cookie import SimpleCookie
 from calendar import timegm
 from datetime import date
@@ -49,7 +49,7 @@ from cubicweb.web.http_headers import Headers, Cookie
 _MARKER = object()
 
 def build_cb_uid(seed):
-    sha = hashlib.sha1('%s%s%s' % (time.time(), seed, random.random()))
+    sha = sha1('%s%s%s' % (time.time(), seed, random.random()))
     return 'cb_%s' % (sha.hexdigest())
 
 

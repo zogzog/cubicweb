@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -302,6 +302,7 @@ class PropertyKeyField(StringField):
 
     def render(self, form, renderer):
         wdg = self.get_widget(form)
+        # pylint: disable=E1101
         wdg.attrs['tabindex'] = form._cw.next_tabindex()
         wdg.attrs['onchange'] = "javascript:setPropValueWidget('%s', %s)" % (
             form.edited_entity.eid, form._cw.next_tabindex())
@@ -337,7 +338,7 @@ class PropertyValueField(StringField):
         try:
             pdef = form._cw.vreg.property_info(entity.pkey)
         except UnknownProperty, ex:
-            self.warning('%s (you should probably delete that property '
+            form.warning('%s (you should probably delete that property '
                          'from the database)', ex)
             msg = form._cw._('you should probably delete that property')
             self.widget = NotEditableWidget(entity.printable_value('value'),

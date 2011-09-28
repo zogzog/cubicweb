@@ -32,7 +32,7 @@ Example of mapping for CWEntityXMLParser::
 """
 
 import os.path as osp
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 from urllib import urlencode
 from cgi import parse_qs # in urlparse with python >= 2.6
 
@@ -151,7 +151,7 @@ class CWEntityXMLParser(datafeed.DataFeedXMLParser):
             linker.check_options(options, schemacfg.eid)
         except KeyError:
             msg = _('"action" must be specified in options; allowed values are '
-                    '%s') % ', '.join(self.action_methods)
+                    '%s') % ', '.join(self.list_actions())
             raise ValidationError(schemacfg.eid, {rn('options', 'subject'): msg})
         except RegistryException:
             msg = _('allowed values for "action" are %s') % ', '.join(self.list_actions())

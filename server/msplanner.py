@@ -1438,7 +1438,7 @@ class MSPlanner(SSPlanner):
                                                          for step in steps
                                                          for select in step.union.children):
                 if temptable:
-                    step = IntersectFetchStep(plan) # XXX not implemented
+                    raise NotImplementedError('oops') # IntersectFetchStep(plan)
                 else:
                     step = IntersectStep(plan)
             else:

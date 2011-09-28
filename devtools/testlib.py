@@ -1167,34 +1167,34 @@ def not_selected(vreg, appobject):
         pass
 
 
-def vreg_instrumentize(testclass):
-    # XXX broken
-    from cubicweb.devtools.apptest import TestEnvironment
-    env = testclass._env = TestEnvironment('data', configcls=testclass.configcls)
-    for reg in env.vreg.values():
-        reg._selected = {}
-        try:
-            orig_select_best = reg.__class__.__orig_select_best
-        except Exception:
-            orig_select_best = reg.__class__._select_best
-        def instr_select_best(self, *args, **kwargs):
-            selected = orig_select_best(self, *args, **kwargs)
-            try:
-                self._selected[selected.__class__] += 1
-            except KeyError:
-                self._selected[selected.__class__] = 1
-            except AttributeError:
-                pass # occurs on reg used to restore database
-            return selected
-        reg.__class__._select_best = instr_select_best
-        reg.__class__.__orig_select_best = orig_select_best
+# def vreg_instrumentize(testclass):
+#     # XXX broken
+#     from cubicweb.devtools.apptest import TestEnvironment
+#     env = testclass._env = TestEnvironment('data', configcls=testclass.configcls)
+#     for reg in env.vreg.values():
+#         reg._selected = {}
+#         try:
+#             orig_select_best = reg.__class__.__orig_select_best
+#         except Exception:
+#             orig_select_best = reg.__class__._select_best
+#         def instr_select_best(self, *args, **kwargs):
+#             selected = orig_select_best(self, *args, **kwargs)
+#             try:
+#                 self._selected[selected.__class__] += 1
+#             except KeyError:
+#                 self._selected[selected.__class__] = 1
+#             except AttributeError:
+#                 pass # occurs on reg used to restore database
+#             return selected
+#         reg.__class__._select_best = instr_select_best
+#         reg.__class__.__orig_select_best = orig_select_best
 
 
-def print_untested_objects(testclass, skipregs=('hooks', 'etypes')):
-    for regname, reg in testclass._env.vreg.iteritems():
-        if regname in skipregs:
-            continue
-        for appobjects in reg.itervalues():
-            for appobject in appobjects:
-                if not reg._selected.get(appobject):
-                    print 'not tested', regname, appobject
+# def print_untested_objects(testclass, skipregs=('hooks', 'etypes')):
+#     for regname, reg in testclass._env.vreg.iteritems():
+#         if regname in skipregs:
+#             continue
+#         for appobjects in reg.itervalues():
+#             for appobject in appobjects:
+#                 if not reg._selected.get(appobject):
+#                     print 'not tested', regname, appobject

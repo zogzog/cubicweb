@@ -292,7 +292,7 @@ class DBAPIRequest(RequestSessionBase):
             self.user = user
             self.set_entity_cache(user)
 
-    def execute(self, *args, **kwargs):
+    def execute(self, *args, **kwargs): # pylint: disable=E0202
         """overriden when session is set. By default raise authentication error
         so authentication is requested.
         """
@@ -621,7 +621,8 @@ class Connection(object):
         """
         return self._repo.check_session(self.sessionid)
 
-    def _txid(self, cursor=None): # XXX could now handle various isolation level!
+    def _txid(self, cursor=None): # pylint: disable=E0202
+        # XXX could now handle various isolation level!
         # return a dict as bw compat trick
         return {'txid': currentThread().getName()}
 

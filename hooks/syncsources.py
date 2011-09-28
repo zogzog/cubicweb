@@ -34,6 +34,7 @@ class SourceHook(hook.Hook):
 # repo sources synchronization #################################################
 
 class SourceAddedOp(hook.Operation):
+    entity = None # make pylint happy
     def postcommit_event(self):
         self.session.repo.add_source(self.entity)
 
@@ -54,6 +55,7 @@ class SourceAddedHook(SourceHook):
 
 
 class SourceRemovedOp(hook.Operation):
+    uri = None # make pylint happy
     def postcommit_event(self):
         self.session.repo.remove_source(self.uri)
 
@@ -82,6 +84,7 @@ class SourceConfigUpdatedOp(hook.DataOperationMixIn, hook.Operation):
 
 
 class SourceRenamedOp(hook.LateOperation):
+    oldname = newname = None # make pylint happy
 
     def precommit_event(self):
         source = self.session.repo.sources_by_uri[self.oldname]
@@ -141,12 +144,12 @@ class SourceHostConfigUpdatedHook(SourceHook):
 # Expect cw_for_source/cw_schema are immutable relations (i.e. can't change from
 # a source or schema to another).
 
-class SourceMappingDeleteHook(SourceHook):
+class SourceMappingImmutableHook(SourceHook):
     """check cw_for_source and cw_schema are immutable relations
 
     XXX empty delete perms would be enough?
     """
-    __regid__ = 'cw.sources.delschemaconfig'
+    __regid__ = 'cw.sources.mapping.immutable'
     __select__ = SourceHook.__select__ & hook.match_rtype('cw_for_source', 'cw_schema')
     events = ('before_add_relation',)
     def __call__(self):

@@ -130,7 +130,8 @@ class PrimaryView(EntityView):
         if hasattr(self, 'render_entity_summary'):
             warn('[3.10] render_entity_summary method is deprecated (%s)' % self,
                  DeprecationWarning)
-            self.render_entity_summary(entity)
+            self.render_entity_summary(entity) # pylint: disable=E1101
+
         summary = self.summary(entity)
         if summary:
             warn('[3.10] summary method is deprecated (%s)' % self,
@@ -149,7 +150,7 @@ class PrimaryView(EntityView):
             self.w(u'<div class="primaryRight">')
             if hasattr(self, 'render_side_related'):
                 warn('[3.2] render_side_related is deprecated')
-                self.render_side_related(entity, [])
+                self.render_side_related(entity, []) # pylint: disable=E1101
             self.render_side_boxes(boxes)
             self.w(u'</div>')
             self.w(u'</td></tr></table>')
@@ -217,20 +218,21 @@ class PrimaryView(EntityView):
         if display_attributes:
             self.w(u'<table>')
             for rschema, role, dispctrl, value in display_attributes:
+                # pylint: disable=E1101
                 if not hasattr(self, '_render_attribute'):
                     label = self._rel_label(entity, rschema, role, dispctrl)
                     self.render_attribute(label, value, table=True)
                 elif support_args(self._render_attribute, 'dispctrl'):
                     warn('[3.9] _render_attribute prototype has changed and '
                          'renamed to render_attribute, please update %s'
-                         % self.__class___, DeprecationWarning)
+                         % self.__class__, DeprecationWarning)
                     self._render_attribute(dispctrl, rschema, value, role=role,
                                            table=True)
                 else:
                     self._render_attribute(rschema, value, role=role, table=True)
                     warn('[3.6] _render_attribute prototype has changed and '
                          'renamed to render_attribute, please update %s'
-                         % self.__class___, DeprecationWarning)
+                         % self.__class__, DeprecationWarning)
             self.w(u'</table>')
 
     def render_attribute(self, label, value, table=False):
@@ -255,6 +257,7 @@ class PrimaryView(EntityView):
                 if not rset:
                     continue
                 if hasattr(self, '_render_relation'):
+                    # pylint: disable=E1101
                     if not support_args(self._render_relation, 'showlabel'):
                         self._render_relation(dispctrl, rset, 'autolimited')
                         warn('[3.9] _render_relation prototype has changed and has '
@@ -431,7 +434,7 @@ class AttributeView(EntityView):
     __regid__ = 'attribute'
     __select__ = EntityView.__select__ & match_kwargs('rtype')
 
-    def entity_call(self, entity, rtype, **kwargs):
+    def entity_call(self, entity, rtype, role, **kwargs):
         if self._cw.vreg.schema.rschema(rtype).final:
             self.w(entity.printable_value(rtype))
         else:

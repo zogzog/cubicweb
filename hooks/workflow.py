@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -45,6 +45,7 @@ def _change_state(session, x, oldstate, newstate):
 
 class _SetInitialStateOp(hook.Operation):
     """make initial state be a default state"""
+    entity = None # make pylint happy
 
     def precommit_event(self):
         session = self.session
@@ -61,6 +62,7 @@ class _SetInitialStateOp(hook.Operation):
 
 class _FireAutotransitionOp(hook.Operation):
     """try to fire auto transition after state changes"""
+    entity = None # make pylint happy
 
     def precommit_event(self):
         entity = self.entity
@@ -73,6 +75,7 @@ class _FireAutotransitionOp(hook.Operation):
 
 class _WorkflowChangedOp(hook.Operation):
     """fix entity current state when changing its workflow"""
+    eid = wfeid = None # make pylint happy
 
     def precommit_event(self):
         # notice that enforcement that new workflow apply to the entity's type is
@@ -109,6 +112,7 @@ class _WorkflowChangedOp(hook.Operation):
 
 
 class _CheckTrExitPoint(hook.Operation):
+    treid = None # make pylint happy
 
     def precommit_event(self):
         tr = self.session.entity_from_eid(self.treid)
@@ -122,6 +126,7 @@ class _CheckTrExitPoint(hook.Operation):
 
 
 class _SubWorkflowExitOp(hook.Operation):
+    forentity = trinfo = None # make pylint happy
 
     def precommit_event(self):
         session = self.session

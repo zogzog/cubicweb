@@ -148,8 +148,7 @@ from cubicweb.server.session import Session
 from cubicweb.server.sources.rql2sql import SQLGenerator, remove_unused_solutions
 
 class RQLGeneratorTC(TestCase):
-    schema = backend = None # set this in concret test
-
+    schema = backend = None # set this in concrete class
 
     @classmethod
     def setUpClass(cls):
@@ -197,7 +196,7 @@ class RQLGeneratorTC(TestCase):
 
 
 class BaseQuerierTC(TestCase):
-    repo = None # set this in concret test
+    repo = None # set this in concrete class
 
     def setUp(self):
         self.o = self.repo.querier

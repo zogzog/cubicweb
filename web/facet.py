@@ -82,9 +82,9 @@ def get_facet(req, facetid, select, filtered_variable):
 
 @deprecated('[3.13] filter_hiddens moved to cubicweb.web.views.facets with '
             'slightly modified prototype')
-def filter_hiddens(w, **kwargs):
+def filter_hiddens(w, baserql, **kwargs):
     from cubicweb.web.views.facets import filter_hiddens
-    return filter_hiddens(w, wdgs=kwargs.pop('facets'))
+    return filter_hiddens(w, baserql, wdgs=kwargs.pop('facets'), **kwargs)
 
 
 ## rqlst manipulation functions used by facets ################################
@@ -502,7 +502,7 @@ class VocabularyFacet(AbstractFacet):
 
 class RelationFacet(VocabularyFacet):
     """Base facet to filter some entities according to other entities to which
-    they are related. Create concret facet by inheriting from this class an then
+    they are related. Create concrete facet by inheriting from this class an then
     configuring it by setting class attribute described below.
 
     The relation is defined by the `rtype` and `role` attributes.
@@ -751,7 +751,7 @@ class RelationFacet(VocabularyFacet):
                 restrvar, rtrel = _make_relation(self.select, self.filtered_variable,
                                                  self.rtype, self.role)
                 if rel is None:
-                    select.add_restriction(rtrel)
+                    self.select.add_restriction(rtrel)
                 else:
                     rel.parent.replace(rel, nodes.And(rel, rtrel))
                 self._and_restriction(rel, restrvar, value.pop())

@@ -28,6 +28,8 @@ from cubicweb.sobjects.supervising import SupervisionMailOp
 
 class RenderAndSendNotificationView(hook.Operation):
     """delay rendering of notification view until precommit"""
+    view = None # make pylint happy
+
     def precommit_event(self):
         view = self.view
         if view.cw_rset is not None and not view.cw_rset:

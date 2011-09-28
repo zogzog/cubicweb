@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -109,6 +109,8 @@ class ContentAddedView(NotificationView):
 
 url: %(url)s
 """
+    # to be defined on concrete sub-classes
+    content_attr = None
 
     def context(self, **kwargs):
         entity = self.cw_rset.get_entity(self.cw_row or 0, self.cw_col or 0)

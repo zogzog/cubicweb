@@ -114,7 +114,7 @@ class Controller(AppObject):
                           [recipient], body, subject)
         if not self._cw.vreg.config.sendmails([(msg, [recipient])]):
             msg = self._cw._('could not connect to the SMTP server')
-            url = self._cw.build_url(__message=msgid)
+            url = self._cw.build_url(__message=msg)
             raise Redirect(url)
 
     def reset(self):

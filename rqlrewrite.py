@@ -638,7 +638,7 @@ class RQLRewriter(object):
 
     def visit_mathexpression(self, node):
         cmp_ = n.MathExpression(node.operator)
-        for c in cmp.children:
+        for c in node.children:
             cmp_.append(c.accept(self))
         return cmp_
 

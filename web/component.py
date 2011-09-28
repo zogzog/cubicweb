@@ -321,7 +321,7 @@ class CtxComponent(AppObject):
             def wview(__vid, rset=None, __fallback_vid=None, **kwargs):
                 self._cw.view(__vid, rset, __fallback_vid, w=self.w, **kwargs)
             self.wview = wview
-            self.call(**kwargs)
+            self.call(**kwargs) # pylint: disable=E1101
             return
         getlayout = self._cw.vreg['components'].select
         layout = getlayout('layout', self._cw, **self.layout_select_args())
@@ -539,6 +539,9 @@ class EditRelationCtxComponent(EditRelationMixIn, EntityCtxComponent):
 
     subclasses should define at least id, rtype and target class attributes.
     """
+    # to be defined in concrete classes
+    rtype = None
+
     def render_title(self, w):
         w(display_name(self._cw, self.rtype, role(self),
                        context=self.entity.__regid__))
@@ -566,7 +569,9 @@ class AjaxEditRelationCtxComponent(EntityCtxComponent):
     added_msg = None
     removed_msg = None
 
-    # class attributes below *must* be set in concret classes (additionaly to
+    # to be defined in concrete classes
+    rtype = role = target_etype = None
+    # class attributes below *must* be set in concrete classes (additionaly to
     # rtype / role [/ target_etype]. They should correspond to js_* methods on
     # the json controller
 
@@ -706,6 +711,8 @@ class RelatedObjectsVComponent(EntityVComponent):
     __select__ = EntityVComponent.__select__ & partial_has_related_entities()
 
     vid = 'list'
+    # to be defined in concrete classes
+    rtype = title = None
 
     def rql(self):
         """override this method if you want to use a custom rql query"""
