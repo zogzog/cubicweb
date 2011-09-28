@@ -4346,12 +4346,3 @@ msgstr ""
 #, python-format
 msgid "you should un-inline relation %s which is supported and may be crossed "
 msgstr ""
-<<<<<<< /home/syt/src/cubicweb/i18n/en.po
-
-#~ msgid "add a CWSourceSchemaConfig"
-#~ msgstr "add an item to mapping "
-
-#~ msgid "siteinfo"
-#~ msgstr "site information"
-=======
->>>>>>> /tmp/en.po~other.NvgtGM
