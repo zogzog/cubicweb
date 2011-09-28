@@ -4461,12 +4461,9 @@ msgstr "Sie sollten diese Eigenschaft wahrscheinlich löschen."
 #, python-format
 msgid "you should un-inline relation %s which is supported and may be crossed "
 msgstr ""
-<<<<<<< /home/syt/src/cubicweb/i18n/de.po
 
 #~ msgid "Schema of the data model"
 #~ msgstr "Schema des Datenmodells"
 
 #~ msgid "instance schema"
 #~ msgstr "Schema der Instanz"
-=======
->>>>>>> /tmp/de.po~other.fn7YK0
