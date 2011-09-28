@@ -804,7 +804,7 @@ class MemSchemaPermissionAdd(MemSchemaOperation):
             self.warning('no schema for %s', self.eid)
             return
         perms = list(erschema.action_permissions(self.action))
-        if hasattr(self, 'group_eid'):
+        if self.group_eid is not None:
             perm = self.session.entity_from_eid(self.group_eid).name
         else:
             perm = erschema.rql_expression(self.expr)
@@ -838,7 +838,7 @@ class MemSchemaPermissionDel(MemSchemaPermissionAdd):
                self.action in ('delete', 'add'): # XXX 3.6.1 migration
             return
         perms = list(erschema.action_permissions(self.action))
-        if hasattr(self, 'group_eid'):
+        if self.group_eid is not None:
             perm = self.session.entity_from_eid(self.group_eid).name
         else:
             perm = erschema.rql_expression(self.expr)
