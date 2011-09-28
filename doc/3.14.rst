@@ -1,5 +1,8 @@
-API changes in cubicweb 3.14
-----------------------------
+Whats new in CubicWeb 3.14
+==========================
+
+API changes
+-----------
 
 * `Entity.fetch_rql` `restriction` argument has been deprecated and should be
   replaced with a call to the new `Entity.fetch_rqlst` method, get the returned
@@ -48,3 +51,51 @@ API changes in cubicweb 3.14
   **No backward compatibility yet**. It's still time to cry for it.
   Cubes known to be affected: tracker, vcsfile, vcreview
 
+* `CWPermission` entity type and its associated require_permission relation type
+  (abstract) and require_group relation definitions have been moved to a new
+  `localperms` cube. With this have gone some functions from the
+  `cubicweb.schemas` package as well as some views. This makes cubicweb itself
+  smaller while you get all the local permissions stuff into a single,
+  documented, place.
+
+  Backward compat is kept for existing instances, **though you should have
+  installed the localperms cubes**. A proper error should be displayed when
+  trying to migrate to 3.14 an instance the use `CWPermission` without the new
+  cube installed. For new instances / test, you should add a dependancy on the
+  new cube in cubes using this feature, along with a dependancy on cubicweb >=
+  3.14.
+
+* jQuery has been updated to 1.6.4. No backward compat issue known (yet...)
+
+
+Unintrusive API changes
+-----------------------
+
+* refactored properties forms (eg user preferences and site wide properties) to
+  ease overridding
+
+* table view allows to set None in 'headers', meaning the label should be fetched
+  from the result set as done by default
+
+* new `anonymized_request` decorator to temporary run stuff as an anonymous
+  user, whatever the currently logged in user
+
+* new 'verbatimattr' attribute view
+
+
+User interface changes
+----------------------
+
+* breadcrumb is properly kept when creating an entity with __linkto
+
+* users and groups management now really lead to that (i.e. includes *groups*
+  management)
+
+* new 'jsonp' controller with 'jsonexport' and 'ejsonexport' views
+
+
+Configuration
+------------
+
+* add option 'resources-concat' to make javascript/css files concatenation
+  optional
