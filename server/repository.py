@@ -1106,20 +1106,28 @@ class Repository(object):
         hook.CleanupNewEidsCacheOp.get_instance(session).add_data(entity.eid)
         self.system_source.add_info(session, entity, source, extid, complete)
 
-    def delete_info(self, session, entity, sourceuri, extid, scleanup=None):
+    def delete_info(self, session, entity, sourceuri, scleanup=None):
         """called by external source when some entity known by the system source
         has been deleted in the external source
         """
         # mark eid as being deleted in session info and setup cache update
         # operation
         hook.CleanupDeletedEidsCacheOp.get_instance(session).add_data(entity.eid)
-        self._delete_info(session, entity, sourceuri, extid, scleanup)
+        self._delete_info(session, entity, sourceuri, scleanup)
 
-    def _delete_info(self, session, entity, sourceuri, extid, scleanup=None):
+    def _delete_info(self, session, entity, sourceuri, scleanup=None):
         """delete system information on deletion of an entity:
+
         * delete all remaining relations from/to this entity
+
         * call delete info on the system source which will transfer record from
           the entities table to the deleted_entities table
+
+        When scleanup is specified, it's expected to be the source's eid, in
+        which case we'll specify the target's relation source so that this
+        source is ignored. E.g. we want to delete relations stored locally, as
+        the deletion information comes from the external source, it's its
+        responsability to have cleaned-up its own relations.
         """
         pendingrtypes = session.transaction_data.get('pendingrtypes', ())
         # delete remaining relations: if user can delete the entity, he can

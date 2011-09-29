@@ -542,7 +542,7 @@ directory (default to once a day).',
                 self.warning('deleting ldap user with eid %s and dn %s',
                              eid, base)
                 entity = session.entity_from_eid(eid, 'CWUser')
-                self.repo.delete_info(session, entity, self.uri, base)
+                self.repo.delete_info(session, entity, self.uri)
                 self.reset_caches()
             return []
         # except ldap.REFERRAL, e:
