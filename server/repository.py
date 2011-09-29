@@ -1177,8 +1177,7 @@ class Repository(object):
         # delete remaining relations: if user can delete the entity, he can
         # delete all its relations without security checking
         with security_enabled(session, read=False, write=False):
-            eids = [_e.eid for _e in entities]
-            in_eids = ','.join((str(eid) for eid in eids))
+            in_eids = ','.join([str(_e.eid) for _e in entities])
             for rschema, _, role in entities[0].e_schema.relation_definitions():
                 rtype = rschema.type
                 if rtype in schema.VIRTUAL_RTYPES or rtype in pendingrtypes:
