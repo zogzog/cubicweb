@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -15,12 +15,14 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
+
 from logilab.common.testlib import TestCase, unittest_main
+from cubicweb import ObjectNotFound
 from cubicweb.req import RequestSessionBase
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb import Unauthorized
 
-class RebuildURLTC(TestCase):
+class RequestTC(TestCase):
     def test_rebuild_url(self):
         rebuild_url = RequestSessionBase(None).rebuild_url
         self.assertEqual(rebuild_url('http://logilab.fr?__message=pouet', __message='hop'),
@@ -48,6 +50,14 @@ class RebuildURLTC(TestCase):
         self.assertEqual(req.ensure_ro_rql('  Any X WHERE X is CWUser  '), None)
         self.assertRaises(Unauthorized, req.ensure_ro_rql, 'SET X login "toto" WHERE X is CWUser')
         self.assertRaises(Unauthorized, req.ensure_ro_rql, '   SET X login "toto" WHERE X is CWUser   ')
+
+
+class RequestCWTC(CubicWebTC):
+    def test_view_catch_ex(self):
+        req = self.request()
+        rset = self.execute('CWUser X WHERE X login "hop"')
+        self.assertEqual(req.view('oneline', rset, 'null'), '')
+        self.assertRaises(ObjectNotFound, req.view, 'onelinee', rset, 'null')
 
 if __name__ == '__main__':
     unittest_main()

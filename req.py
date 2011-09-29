@@ -29,7 +29,7 @@ from logilab.common.decorators import cached
 from logilab.common.deprecation import deprecated
 from logilab.common.date import ustrftime, strptime, todate, todatetime
 
-from cubicweb import Unauthorized, RegistryException, typed_eid
+from cubicweb import Unauthorized, NoSelectableObject, typed_eid
 from cubicweb.rset import ResultSet
 
 ONESECOND = timedelta(0, 1, 0)
@@ -336,7 +336,7 @@ class RequestSessionBase(object):
             initargs.update(kwargs)
         try:
             view =  self.vreg[__registry].select(__vid, self, rset=rset, **initargs)
-        except RegistryException:
+        except NoSelectableObject:
             if __fallback_oid is None:
                 raise
             view =  self.vreg[__registry].select(__fallback_oid, self,
