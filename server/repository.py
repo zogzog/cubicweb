@@ -1130,6 +1130,8 @@ class Repository(object):
         responsability to have cleaned-up its own relations.
         """
         pendingrtypes = session.transaction_data.get('pendingrtypes', ())
+        if scleanup is not None:
+            source = self.sources_by_eid[scleanup]
         # delete remaining relations: if user can delete the entity, he can
         # delete all its relations without security checking
         with security_enabled(session, read=False, write=False):
@@ -1145,6 +1147,13 @@ class Repository(object):
                 else:
                     rql = 'DELETE Y %s X WHERE X eid %%(x)s' % rtype
                 if scleanup is not None:
+                    # if the relation can't be crossed, nothing to cleanup (we
+                    # would get a BadRQLQuery from the multi-sources planner).
+                    # This may still leave some junk if the mapping has changed
+                    # at some point, but one can still run db-check to catch
+                    # those
+                    if not source in self.can_cross_relation(rtype):
+                        continue
                     # source cleaning: only delete relations stored locally
                     # (here, scleanup
                     rql += ', NOT (Y cw_source S, S eid %(seid)s)'
@@ -1163,6 +1172,8 @@ class Repository(object):
         the same etype and belinging to the same source.
         """
         pendingrtypes = session.transaction_data.get('pendingrtypes', ())
+        if scleanup is not None:
+            source = self.sources_by_eid[scleanup]
         # delete remaining relations: if user can delete the entity, he can
         # delete all its relations without security checking
         with security_enabled(session, read=False, write=False):
@@ -1179,6 +1190,13 @@ class Repository(object):
                 else:
                     rql = 'DELETE Y %s X WHERE X eid IN (%s)' % (rtype, in_eids)
                 if scleanup is not None:
+                    # if the relation can't be crossed, nothing to cleanup (we
+                    # would get a BadRQLQuery from the multi-sources planner).
+                    # This may still leave some junk if the mapping has changed
+                    # at some point, but one can still run db-check to catch
+                    # those
+                    if not source in self.can_cross_relation(rtype):
+                        continue
                     # source cleaning: only delete relations stored locally
                     rql += ', NOT (Y cw_source S, S eid %(seid)s)'
                 try:
