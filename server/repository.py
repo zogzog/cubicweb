@@ -1152,6 +1152,8 @@ class Repository(object):
                     session.execute(rql, {'x': eid, 'seid': scleanup},
                                     build_descr=False)
                 except Exception:
+                    if self.config.mode == 'test':
+                        raise
                     self.exception('error while cascading delete for entity %s '
                                    'from %s. RQL: %s', entity, sourceuri, rql)
         self.system_source.delete_info_multi(session, [entity], sourceuri)
@@ -1182,6 +1184,8 @@ class Repository(object):
                 try:
                     session.execute(rql, {'seid': scleanup}, build_descr=False)
                 except Exception:
+                    if self.config.mode == 'test':
+                        raise
                     self.exception('error while cascading delete for entity %s '
                                    'from %s. RQL: %s', entities, sourceuri, rql)
         self.system_source.delete_info_multi(session, entities, sourceuri)

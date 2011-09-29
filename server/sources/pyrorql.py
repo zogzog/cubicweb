@@ -289,6 +289,8 @@ repository (default to 5 minutes).',
                         repo.delete_info(session, entity, self.uri,
                                          scleanup=self.eid)
                 except Exception:
+                    if self.repo.config.mode == 'test':
+                        raise
                     self.exception('while updating %s with external id %s of source %s',
                                    etype, extid, self.uri)
                     continue
