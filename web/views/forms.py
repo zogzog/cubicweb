@@ -386,15 +386,12 @@ class EntityFieldsForm(FieldsForm):
             self.add_hidden('_cwmsgid', msgid)
 
     def add_linkto_hidden(self):
-        '''add the __linkto hidden field used to directly attach the new object
+        """add the __linkto hidden field used to directly attach the new object
         to an existing other one when the relation between those two is not
         already present in the form.
-        Warning: this method must be called only when all form fields are setup'''
-        # if current form is not the main form, exit immediately
-        try:
-            self.field_by_name('__maineid')
-        except form.FieldNotFound:
-            return
+
+        Warning: this method must be called only when all form fields are setup
+        """
         for (rtype, role), eids in self.linked_to.iteritems():
             # if the relation is already setup by a form field, do not add it
             # in a __linkto hidden to avoid setting it twice in the controller
@@ -411,6 +408,11 @@ class EntityFieldsForm(FieldsForm):
     @property
     @cached
     def linked_to(self):
+        # if current form is not the main form, exit immediately
+        try:
+            self.field_by_name('__maineid')
+        except form.FieldNotFound:
+            return {}
         linked_to = {}
         for linkto in self._cw.list_form_param('__linkto'):
             ltrtype, eid, ltrole = linkto.split(':')
