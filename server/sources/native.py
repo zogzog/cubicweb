@@ -865,7 +865,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             self.exception('failed to query entities table for eid %s', eid)
         raise UnknownEid(eid)
 
-    def eid_type_source(self, session, eid):
+    def eid_type_source(self, session, eid): # pylint: disable=E0202
         """return a tuple (type, source, extid) for the entity with id <eid>"""
         sql = 'SELECT type, source, extid, asource FROM entities WHERE eid=%s' % eid
         res = self._eid_type_source(session, eid, sql)
@@ -924,13 +924,13 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             return cursor.fetchone()[0]
 
 
-    def create_eid(self, session):
+    def create_eid(self, session): # pylint: disable=E0202
         # lock needed to prevent 'Connection is busy with results for another
         # command (0)' errors with SQLServer
         with self._eid_cnx_lock:
-            return self._create_eid()
+            return self._create_eid() # pylint: disable=E1102
 
-    def _create_eid(self):
+    def _create_eid(self): # pylint: disable=E0202
         # internal function doing the eid creation without locking.
         # needed for the recursive handling of disconnections (otherwise we
         # deadlock on self._eid_cnx_lock
@@ -946,13 +946,13 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             # FIXME: better detection of deconnection pb
             self.warning("trying to reconnect create eid connection")
             self._eid_creation_cnx = None
-            return self._create_eid()
+            return self._create_eid() # pylint: disable=E1102
         except (self.DbapiError,), exc:
             # We get this one with pyodbc and SQL Server when connection was reset
             if exc.args[0] == '08S01':
                 self.warning("trying to reconnect create eid connection")
                 self._eid_creation_cnx = None
-                return self._create_eid()
+                return self._create_eid() # pylint: disable=E1102
             else:
                 raise
         except Exception: # WTF?

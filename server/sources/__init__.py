@@ -118,6 +118,10 @@ class AbstractSource(object):
     # source configuration options
     options = ()
 
+    # these are overridden by set_log_methods below
+    # only defining here to prevent pylint from complaining
+    info = warning = error = critical = exception = debug = lambda msg,*a,**kw: None
+
     def __init__(self, repo, source_config, eid=None):
         self.repo = repo
         self.set_schema(repo.schema)

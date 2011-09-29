@@ -150,6 +150,8 @@ class UpdateFTIHook(MetaDataHook):
 # entity source handling #######################################################
 
 class ChangeEntityUpdateCaches(hook.Operation):
+    oldsource = newsource = entity = None # make pylint happy
+
     def postcommit_event(self):
         self.oldsource.reset_caches()
         repo = self.session.repo

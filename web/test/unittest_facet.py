@@ -197,13 +197,12 @@ class BaseFacetTC(CubicWebTC):
 
     def test_rql_path_eid(self):
         req, rset, rqlst, filtered_variable = self.prepare_rqlst()
-        facet.RQLPathFacet.path = [('X created_by U'), ('U owned_by O'), ('O login OL')]
-        f = facet.RQLPathFacet(req, rset=rset,
-                               select=rqlst.children[0],
-                               filtered_variable=filtered_variable)
-        f.filter_variable = 'O'
-        f.label_variable = 'OL'
-
+        class RPF(facet.RQLPathFacet):
+            path = [('X created_by U'), ('U owned_by O'), ('O login OL')]
+            filter_variable = 'O'
+            label_variable = 'OL'
+        f = RPF(req, rset=rset, select=rqlst.children[0],
+                filtered_variable=filtered_variable)
         self.assertEqual(f.vocabulary(), [(u'admin', self.user().eid),])
         # ensure rqlst is left unmodified
         self.assertEqual(rqlst.as_string(), 'DISTINCT Any  WHERE X is CWUser')
@@ -219,18 +218,26 @@ class BaseFacetTC(CubicWebTC):
         self.assertEqual(f.select.as_string(),
                          "DISTINCT Any  WHERE X is CWUser, X created_by F, F owned_by G, G eid 1")
 
+    def test_rql_path_eid_no_label(self):
+        req, rset, rqlst, filtered_variable = self.prepare_rqlst()
+        class RPF(facet.RQLPathFacet):
+            path = [('X created_by U'), ('U owned_by O'), ('O login OL')]
+            filter_variable = 'O'
+        f = RPF(req, rset=rset, select=rqlst.children[0],
+                filtered_variable=filtered_variable)
+        self.assertEqual(f.vocabulary(), [(str(self.user().eid), self.user().eid),])
+
     def test_rql_path_attr(self):
         req, rset, rqlst, filtered_variable = self.prepare_rqlst()
-        facet.RQLPathFacet.path = [('X created_by U'), ('U owned_by O'), ('O login OL')]
-        f = facet.RQLPathFacet(req, rset=rset,
-                               select=rqlst.children[0],
-                               filtered_variable=filtered_variable)
-        f.filter_variable = 'OL'
+        class RPF(facet.RQLPathFacet):
+            path = [('X created_by U'), ('U owned_by O'), ('O login OL')]
+            filter_variable = 'OL'
+        f = RPF(req, rset=rset, select=rqlst.children[0],
+                filtered_variable=filtered_variable)
 
         self.assertEqual(f.vocabulary(), [(u'admin', 'admin'),])
         # ensure rqlst is left unmodified
         self.assertEqual(rqlst.as_string(), 'DISTINCT Any  WHERE X is CWUser')
-        #rqlst = rset.syntax_tree()
         self.assertEqual(f.possible_values(), ['admin',])
         # ensure rqlst is left unmodified
         self.assertEqual(rqlst.as_string(), 'DISTINCT Any  WHERE X is CWUser')
@@ -240,6 +247,16 @@ class BaseFacetTC(CubicWebTC):
         # is not in real life)
         self.assertEqual(f.select.as_string(),
                          "DISTINCT Any  WHERE X is CWUser, X created_by G, G owned_by H, H login 'admin'")
+
+    def test_rql_path_check_filter_label_variable(self):
+        req, rset, rqlst, filtered_variable = self.prepareg_aggregat_rqlst()
+        class RPF(facet.RQLPathFacet):
+            path = [('X created_by U'), ('U owned_by O'), ('O login OL')]
+            filter_variable = 'OL'
+            label_variable = 'OL'
+        self.assertRaises(AssertionError, RPF, req, rset=rset,
+                          select=rqlst.children[0],
+                          filtered_variable=filtered_variable)
 
     def prepareg_aggregat_rqlst(self):
         return self.prepare_rqlst(
@@ -265,11 +282,11 @@ class BaseFacetTC(CubicWebTC):
 
     def test_aggregat_query_rql_path(self):
         req, rset, rqlst, filtered_variable = self.prepareg_aggregat_rqlst()
-        facet.RQLPathFacet.path = [('X created_by U'), ('U owned_by O'), ('O login OL')]
-        f = facet.RQLPathFacet(req, rset=rset,
-                               select=rqlst.children[0],
-                               filtered_variable=filtered_variable)
-        f.filter_variable = 'OL'
+        class RPF(facet.RQLPathFacet):
+            path = [('X created_by U'), ('U owned_by O'), ('O login OL')]
+            filter_variable = 'OL'
+        f = RPF(req, rset=rset, select=rqlst.children[0],
+                filtered_variable=filtered_variable)
         self.assertEqual(f.vocabulary(), [(u'admin', u'admin')])
         self.assertEqual(f.possible_values(), ['admin'])
         req.form[f.__regid__] = 'admin'

@@ -665,6 +665,8 @@ class RQLExpression(object):
     # these are overridden by set_log_methods below
     # only defining here to prevent pylint from complaining
     info = warning = error = critical = exception = debug = lambda msg,*a,**kw: None
+    # to be defined in concrete classes
+    full_rql = None
 
     def __init__(self, expression, mainvars, eid):
         self.eid = eid # eid of the entity representing this rql expression

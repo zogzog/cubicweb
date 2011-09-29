@@ -15,7 +15,7 @@ for e in rql('Any X WHERE X cw_source S, S name %(name)s', {'name': source}).ent
     if suri != 'system':
         try:
             print 'deleting', e.__regid__, e.eid, suri, e.dc_title().encode('utf8')
-            repo.delete_info(session, e, suri, meta['extid'], scleanup=True)
+            repo.delete_info(session, e, suri, scleanup=e.eid)
         except UnknownEid:
             print '  cant delete', e.__regid__, e.eid, meta
 

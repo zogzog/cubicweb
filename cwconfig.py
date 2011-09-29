@@ -830,6 +830,13 @@ this option is set to yes",
         """
         return [self.cube_dir(p) for p in self.cubes()]
 
+    # these are overridden by set_log_methods below
+    # only defining here to prevent pylint from complaining
+    @classmethod
+    def debug(cls, msg, *a, **kw):
+        pass
+    info = warning = error = critical = exception = debug
+
 
 class CubicWebConfiguration(CubicWebNoAppConfiguration):
     """base class for cubicweb server and web configurations"""
@@ -852,6 +859,9 @@ class CubicWebConfiguration(CubicWebNoAppConfiguration):
     # set to true during repair (shell, migration) to allow some things which
     # wouldn't be possible otherwise
     repairing = False
+
+    # set by upgrade command
+    verbosity = 0
 
     options = CubicWebNoAppConfiguration.options + (
         ('log-file',
@@ -1072,13 +1082,13 @@ the repository',
 
     @cached
     def instance_md5_version(self):
-        import hashlib
+        from hashlib import md5 # pylint: disable=E0611
         infos = []
         for pkg in sorted(self.cubes()):
             version = self.cube_version(pkg)
             infos.append('%s-%s' % (pkg, version))
         infos.append('cubicweb-%s' % str(self.cubicweb_version()))
-        return hashlib.md5(';'.join(infos)).hexdigest()
+        return md5(';'.join(infos)).hexdigest()
 
     def load_configuration(self):
         """load instance's configuration files"""
@@ -1188,13 +1198,6 @@ the repository',
             SMTP_LOCK.release()
         return True
 
-    # these are overridden by set_log_methods below
-    # only defining here to prevent pylint from complaining
-    @classmethod
-    def debug(cls, msg, *a, **kw):
-        pass
-    info = warning = error = critical = exception = debug 
-
 set_log_methods(CubicWebNoAppConfiguration,
                 logging.getLogger('cubicweb.configuration'))
 
@@ -1303,7 +1306,7 @@ def register_stored_procedures():
             try:
                 return Binary(fpath)
             except OSError, ex:
-                self.critical("can't open %s: %s", fpath, ex)
+                source.critical("can't open %s: %s", fpath, ex)
                 return None
 
     register_function(FSPATH)

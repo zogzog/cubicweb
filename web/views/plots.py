@@ -79,6 +79,9 @@ class PlotWidget(object):
         if w is None:
             return self._stream.getvalue()
 
+    def _render(self, *args, **kwargs):
+        raise NotImplementedError
+
 class FlotPlotWidget(PlotWidget):
     """PlotRenderer widget using Flot"""
     onload = u"""

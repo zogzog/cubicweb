@@ -194,7 +194,7 @@ class AbstractEmbeddedView(EntityView):
     def cell_call(self, row, col, link=False, **kwargs):
         entity = self.cw_rset.get_entity(row, col)
         adapter = entity.cw_adapt_to('IDownloadable')
-        tag = self._embedding_tag(src=adapter.download_url(),
+        tag = self._embedding_tag(src=adapter.download_url(), # pylint: disable=E1102
                                   alt=(self._cw._('download %s') % adapter.download_file_name()),
                                   **kwargs)
         if link:

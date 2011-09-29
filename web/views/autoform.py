@@ -198,6 +198,9 @@ class InlineEntityEditionFormView(f.FormViewMixIn, EntityView):
     _select_attrs = ('peid', 'rtype', 'role', 'pform', 'etype')
     removejs = "removeInlinedEntity('%s', '%s', '%s')"
 
+    # make pylint happy
+    peid = rtype = role = pform = etype = None
+
     def __init__(self, *args, **kwargs):
         for attr in self._select_attrs:
             # don't pop attributes from kwargs, so the end-up in
@@ -304,6 +307,9 @@ class InlineEntityCreationFormView(InlineEntityEditionFormView):
                   & specified_etype_implements('Any'))
     _select_attrs = InlineEntityEditionFormView._select_attrs + ('petype',)
 
+    # make pylint happy
+    petype = None
+
     @property
     def removejs(self):
         entity = self._entity()
@@ -345,6 +351,7 @@ class InlineAddNewLinkView(InlineEntityCreationFormView):
                   & specified_etype_implements('Any'))
 
     _select_attrs = InlineEntityCreationFormView._select_attrs + ('card',)
+    card = None # make pylint happy
     form = None # no actual form wrapped
 
     def call(self, i18nctx, **kwargs):
@@ -752,6 +759,7 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
 
     def _generic_relations_field(self):
         try:
+            # pylint: disable=E1101
             srels_by_cat = self.srelations_by_category('generic', 'add', strict=True)
             warn('[3.6] %s: srelations_by_category is deprecated, use uicfg or '
                  'override editable_relations instead' % classid(self),

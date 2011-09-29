@@ -174,6 +174,7 @@ class WFHistoryVComponent(component.EntityCtxComponent):
             warn('[3.10] %s should now implement render_body instead of cell_call'
                  % self.__class__, DeprecationWarning)
             self.w = w
+            # pylint: disable=E1101
             self.cell_call(self.entity.cw_row, self.entity.cw_col)
         else:
             self.entity.view('wfhistory', w=w, title=None)

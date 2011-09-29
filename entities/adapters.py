@@ -366,8 +366,8 @@ class ITreeAdapter(EntityAdapter):
 class IProgressAdapter(EntityAdapter):
     """something that has a cost, a state and a progression.
 
-    You should at least override progress_info an in_progress methods on concret
-    implementations.
+    You should at least override progress_info an in_progress methods on
+    concrete implementations.
     """
     __needs_bw_compat__ = True
     __regid__ = 'IProgress'

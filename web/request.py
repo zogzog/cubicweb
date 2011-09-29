@@ -19,10 +19,10 @@
 
 __docformat__ = "restructuredtext en"
 
-import hashlib
 import time
 import random
 import base64
+from hashlib import sha1 # pylint: disable=E0611
 from Cookie import SimpleCookie
 from calendar import timegm
 from datetime import date
@@ -49,7 +49,7 @@ from cubicweb.web.http_headers import Headers, Cookie
 _MARKER = object()
 
 def build_cb_uid(seed):
-    sha = hashlib.sha1('%s%s%s' % (time.time(), seed, random.random()))
+    sha = sha1('%s%s%s' % (time.time(), seed, random.random()))
     return 'cb_%s' % (sha.hexdigest())
 
 
@@ -557,7 +557,7 @@ class CubicWebRequestBase(DBAPIRequest):
             warn('[3.13] remove_cookie now take only a name as argument',
                  DeprecationWarning, stacklevel=2)
             name = bwcompat
-        self.set_cookie(key, '', maxage=0, expires=date(1970, 1, 1))
+        self.set_cookie(name, '', maxage=0, expires=date(1970, 1, 1))
 
     def set_content_type(self, content_type, filename=None, encoding=None):
         """set output content type for this request. An optional filename

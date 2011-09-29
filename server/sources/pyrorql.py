@@ -191,7 +191,7 @@ repository (default to 5 minutes).',
                 self.support_entities[ertype] = 'write' in options
         else: # CWRType
             if ertype in ('is', 'is_instance_of', 'cw_source') or ertype in VIRTUAL_RTYPES:
-                msg = schemacfg._cw._('%s relation should not be in mapped') % rtype
+                msg = schemacfg._cw._('%s relation should not be in mapped') % ertype
                 raise ValidationError(schemacfg.eid, {role_name('cw_for_schema', 'subject'): msg})
             options = self._check_options(schemacfg, self.rtype_options)
             if 'dontcross' in options:
@@ -286,9 +286,11 @@ repository (default to 5 minutes).',
                     # entity has been deleted from external repository but is not known here
                     if eid is not None:
                         entity = session.entity_from_eid(eid, etype)
-                        repo.delete_info(session, entity, self.uri, extid,
+                        repo.delete_info(session, entity, self.uri,
                                          scleanup=self.eid)
                 except Exception:
+                    if self.repo.config.mode == 'test':
+                        raise
                     self.exception('while updating %s with external id %s of source %s',
                                    etype, extid, self.uri)
                     continue

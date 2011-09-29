@@ -40,7 +40,8 @@ class SyncSessionHook(hook.Hook):
 
 class _GroupOperation(hook.Operation):
     """base class for group operation"""
-    geid = None
+    cnxuser = None # make pylint happy
+
     def __init__(self, session, *args, **kwargs):
         """override to get the group name before actual groups manipulation:
 
@@ -55,6 +56,7 @@ class _GroupOperation(hook.Operation):
 
 class _DeleteGroupOp(_GroupOperation):
     """synchronize user when a in_group relation has been deleted"""
+
     def postcommit_event(self):
         """the observed connections set has been commited"""
         groups = self.cnxuser.groups
@@ -117,9 +119,9 @@ class CloseDeletedUserSessionsHook(SyncSessionHook):
 
 # CWProperty hooks #############################################################
 
-
 class _DelCWPropertyOp(hook.Operation):
     """a user's custom properties has been deleted"""
+    cwpropdict = key = None # make pylint happy
 
     def postcommit_event(self):
         """the observed connections set has been commited"""
@@ -131,6 +133,7 @@ class _DelCWPropertyOp(hook.Operation):
 
 class _ChangeCWPropertyOp(hook.Operation):
     """a user's custom properties has been added/changed"""
+    cwpropdict = key = value = None # make pylint happy
 
     def postcommit_event(self):
         """the observed connections set has been commited"""
@@ -139,6 +142,7 @@ class _ChangeCWPropertyOp(hook.Operation):
 
 class _AddCWPropertyOp(hook.Operation):
     """a user's custom properties has been added/changed"""
+    cwprop = None # make pylint happy
 
     def postcommit_event(self):
         """the observed connections set has been commited"""

@@ -144,6 +144,17 @@ class MoreFieldsTC(CubicWebTC):
         self.assertEqual(description_format_field.value(form), 'text/rest')
 
 
+    def test_property_key_field(self):
+        from cubicweb.web.views.cwproperties import PropertyKeyField
+        req = self.request()
+        field = PropertyKeyField()
+        e = self.vreg['etypes'].etype_class('CWProperty')(req)
+        renderer = self.vreg['formrenderers'].select('base', req)
+        form = EntityFieldsForm(req, entity=e)
+        form.formvalues = {}
+        field.render(form, renderer)
+
+
 class UtilsTC(TestCase):
     def test_vocab_sort(self):
         self.assertEqual(vocab_sort([('Z', 1), ('A', 2),

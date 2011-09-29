@@ -246,6 +246,7 @@ class CWETypeAddOp(MemSchemaOperation):
       CWAttribute entities
     * add owned_by relation by creating the necessary CWRelation entity
     """
+    entity = None # make pylint happy
 
     def precommit_event(self):
         session = self.session
@@ -759,6 +760,8 @@ class CWUniqueTogetherConstraintDelOp(MemSchemaOperation):
 
 class MemSchemaCWETypeDel(MemSchemaOperation):
     """actually remove the entity type from the instance's schema"""
+    etype = None # make pylint happy
+
     def postcommit_event(self):
         # del_entity_type also removes entity's relations
         self.session.vreg.schema.del_entity_type(self.etype)
@@ -766,6 +769,8 @@ class MemSchemaCWETypeDel(MemSchemaOperation):
 
 class MemSchemaCWRTypeAdd(MemSchemaOperation):
     """actually add the relation type to the instance's schema"""
+    rtypedef = None # make pylint happy
+
     def precommit_event(self):
         self.session.vreg.schema.add_relation_type(self.rtypedef)
 
@@ -775,6 +780,8 @@ class MemSchemaCWRTypeAdd(MemSchemaOperation):
 
 class MemSchemaCWRTypeDel(MemSchemaOperation):
     """actually remove the relation type from the instance's schema"""
+    rtype = None # make pylint happy
+
     def postcommit_event(self):
         try:
             self.session.vreg.schema.del_relation_type(self.rtype)
@@ -786,6 +793,7 @@ class MemSchemaCWRTypeDel(MemSchemaOperation):
 class MemSchemaPermissionAdd(MemSchemaOperation):
     """synchronize schema when a *_permission relation has been added on a group
     """
+    eid = action = group_eid = expr = None # make pylint happy
 
     def precommit_event(self):
         """the observed connections.cnxset has been commited"""
@@ -796,7 +804,7 @@ class MemSchemaPermissionAdd(MemSchemaOperation):
             self.warning('no schema for %s', self.eid)
             return
         perms = list(erschema.action_permissions(self.action))
-        if hasattr(self, 'group_eid'):
+        if self.group_eid is not None:
             perm = self.session.entity_from_eid(self.group_eid).name
         else:
             perm = erschema.rql_expression(self.expr)
@@ -830,7 +838,7 @@ class MemSchemaPermissionDel(MemSchemaPermissionAdd):
                self.action in ('delete', 'add'): # XXX 3.6.1 migration
             return
         perms = list(erschema.action_permissions(self.action))
-        if hasattr(self, 'group_eid'):
+        if self.group_eid is not None:
             perm = self.session.entity_from_eid(self.group_eid).name
         else:
             perm = erschema.rql_expression(self.expr)
@@ -845,6 +853,7 @@ class MemSchemaPermissionDel(MemSchemaPermissionAdd):
 
 
 class MemSchemaSpecializesAdd(MemSchemaOperation):
+    etypeeid = parentetypeeid = None # make pylint happy
 
     def precommit_event(self):
         eschema = self.session.vreg.schema.schema_by_eid(self.etypeeid)
@@ -856,6 +865,7 @@ class MemSchemaSpecializesAdd(MemSchemaOperation):
 
 
 class MemSchemaSpecializesDel(MemSchemaOperation):
+    etypeeid = parentetypeeid = None # make pylint happy
 
     def precommit_event(self):
         try:

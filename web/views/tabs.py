@@ -190,6 +190,8 @@ class EntityRelationView(EntityView):
     """
     __select__ = EntityView.__select__ & partial_has_related_entities()
     vid = 'list'
+    # to be defined in concrete classes
+    rtype = title = None
 
     def cell_call(self, row, col):
         rset = self.cw_rset.get_entity(row, col).related(self.rtype, role(self))

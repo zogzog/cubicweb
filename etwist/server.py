@@ -28,7 +28,7 @@ import select
 import traceback
 import threading
 import re
-import hashlib
+from hashlib import md5 # pylint: disable=E0611
 from os.path import join
 from time import mktime
 from datetime import date, timedelta
@@ -77,6 +77,11 @@ class ForbiddenDirectoryLister(resource.Resource):
 
 
 class NoListingFile(static.File):
+    def __init__(self, config, path=None):
+        if path is None:
+            path = config.static_directory
+        static.File.__init__(self, path)
+        self.config = config
 
     def set_expires(self, request):
         if not self.config.debugmode:
@@ -93,8 +98,7 @@ class NoListingFile(static.File):
 class DataLookupDirectory(NoListingFile):
     def __init__(self, config, path):
         self.md5_version = config.instance_md5_version()
-        NoListingFile.__init__(self, path)
-        self.config = config
+        NoListingFile.__init__(self, config, path)
         self.here = path
         self._defineChildResources()
         if self.config.debugmode:
@@ -134,13 +138,10 @@ class DataLookupDirectory(NoListingFile):
             return resource
         else:
             self.set_expires(request)
-            return NoListingFile(filepath)
+            return NoListingFile(self.config, filepath)
 
 
 class FCKEditorResource(NoListingFile):
-    def __init__(self, config, path):
-        NoListingFile.__init__(self, path)
-        self.config = config
 
     def getChild(self, path, request):
         pre_path = request.path.split('/')[1:]
@@ -179,7 +180,7 @@ class ConcatFiles(LongTimeExpiringFile):
         # create a unique / predictable filename. We don't consider cubes
         # version since uicache is cleared at server startup, and file's dates
         # are checked in debug mode
-        fname = 'cache_concat_' + hashlib.md5(';'.join(paths)).hexdigest() + ext
+        fname = 'cache_concat_' + md5(';'.join(paths)).hexdigest() + ext
         filepath = osp.join(config.appdatahome, 'uicache', fname)
         LongTimeExpiringFile.__init__(self, config, filepath)
         self._concat_cached_filepath(filepath, paths)
@@ -239,7 +240,7 @@ class CubicWebRootResource(resource.Resource):
         self.https_url = config['https-url']
         global MAX_POST_LENGTH
         MAX_POST_LENGTH = config['max-post-length']
-        self.putChild('static', NoListingFile(config.static_directory))
+        self.putChild('static', NoListingFile(config))
         self.putChild('fckeditor', FCKEditorResource(self.config, ''))
         self.putChild('data', DataLookupDirectory(self.config, ''))
 
@@ -401,6 +402,13 @@ class CubicWebRootResource(resource.Resource):
         return HTTPResponse(twisted_request=request._twreq,
                             stream=content, code=code,
                             headers=request.headers_out)
+
+    # these are overridden by set_log_methods below
+    # only defining here to prevent pylint from complaining
+    @classmethod
+    def debug(cls, msg, *a, **kw):
+        pass
+    info = warning = error = critical = exception = debug
 
 
 JSON_PATHS = set(('json',))

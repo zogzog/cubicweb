@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -36,7 +36,7 @@ from logilab.common.clcommands import Command as BaseCommand
 from logilab.common.compat import any
 from logilab.common.shellutils import ASK
 
-from cubicweb import warning
+from cubicweb import warning # pylint: disable=E0611
 from cubicweb import ConfigurationError, ExecutionError
 
 def underline_title(title, car='-'):

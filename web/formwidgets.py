@@ -110,8 +110,8 @@ class FieldWidget(object):
 
     **Attributes**
 
-    Here are standard attributes of a widget, that may be set on concret
-    class to override default behaviours:
+    Here are standard attributes of a widget, that may be set on concrete class
+    to override default behaviours:
 
     :attr:`needs_js`
        list of javascript files needed by the widget.
@@ -134,7 +134,7 @@ class FieldWidget(object):
 
     Also, widget instances takes as first argument a `attrs` dictionary which
     will be stored in the attribute of the same name. It contains HTML
-    attributes that should be set in the widget's input tag (though concret
+    attributes that should be set in the widget's input tag (though concrete
     classes may ignore it).
 
     .. currentmodule:: cubicweb.web.formwidgets
@@ -190,7 +190,7 @@ class FieldWidget(object):
         return self._render(form, field, renderer)
 
     def _render(self, form, field, renderer):
-        """This is the method you have to implement in concret widget classes.
+        """This is the method you have to implement in concrete widget classes.
         """
         raise NotImplementedError()
 
@@ -232,7 +232,7 @@ class FieldWidget(object):
         correctly typed value.
 
         3 and 4 are handle by the :meth:`typed_value` method to ease reuse in
-        concret classes.
+        concrete classes.
         """
         values = None
         if not field.ignore_req_params:

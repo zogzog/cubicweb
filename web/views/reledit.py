@@ -106,13 +106,15 @@ class AutoClickAndEditFormView(EntityView):
     def _handle_attribute(self, rschema, role, divid, reload, action):
         rvid = self._rules.get('rvid', None)
         if rvid is not None:
-            value = self._cw.view(rvid, entity=self.entity, rtype=rschema.type)
+            value = self._cw.view(rvid, entity=self.entity,
+                                  rtype=rschema.type, role=role)
         else:
             value = self.entity.printable_value(rschema.type)
         if not self._should_edit_attribute(rschema):
             self.w(value)
             return
-        form, renderer = self._build_form(self.entity, rschema, role, divid, 'base', reload, action)
+        form, renderer = self._build_form(self.entity, rschema, role, divid,
+                                          'base', reload, action)
         value = value or self._compute_default_value(rschema, role)
         self.view_form(divid, value, form, renderer)
 

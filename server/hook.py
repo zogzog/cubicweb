@@ -537,7 +537,7 @@ class Hook(AppObject):
     # XXX deprecated
     enabled = True
     # stop pylint from complaining about missing attributes in Hooks classes
-    eidfrom = eidto = entity = rtype = None
+    eidfrom = eidto = entity = rtype = repo = None
 
     @classmethod
     @cached
@@ -580,7 +580,7 @@ class Hook(AppObject):
             warn('[3.6] %s: accepts is deprecated, define proper __select__'
                  % classid(cls), DeprecationWarning)
             rtypes = []
-            for ertype in cls.accepts:
+            for ertype in cls.accepts: # pylint: disable=E1101
                 if ertype.islower():
                     rtypes.append(ertype)
                 else:
@@ -601,6 +601,7 @@ class Hook(AppObject):
         if hasattr(self, 'call'):
             warn('[3.6] %s: call is deprecated, implement __call__'
                  % classid(self.__class__), DeprecationWarning)
+            # pylint: disable=E1101
             if self.event.endswith('_relation'):
                 self.call(self._cw, self.eidfrom, self.rtype, self.eidto)
             elif 'delete' in self.event:
@@ -628,7 +629,7 @@ class PropagateRelationHook(Hook):
     Notice there are no default behaviour defined when a watched relation is
     deleted, you'll have to handle this by yourself.
 
-    You usually want to use the :class:`match_rtype_sets` selector on concret
+    You usually want to use the :class:`match_rtype_sets` selector on concrete
     classes.
     """
     events = ('after_add_relation',)
@@ -808,7 +809,7 @@ class Operation(object):
         if event == 'postcommit_event' and hasattr(self, 'commit_event'):
             warn('[3.10] %s: commit_event method has been replaced by postcommit_event'
                  % classid(self.__class__), DeprecationWarning)
-            self.commit_event()
+            self.commit_event() # pylint: disable=E1101
         getattr(self, event)()
 
     def precommit_event(self):
@@ -1092,6 +1093,9 @@ class SendMailOp(SingleLastOperation):
 
 
 class RQLPrecommitOperation(Operation):
+    # to be defined in concrete classes
+    rqls = None
+
     def precommit_event(self):
         execute = self.session.execute
         for rql in self.rqls:

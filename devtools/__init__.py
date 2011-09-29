@@ -28,7 +28,7 @@ import shutil
 import pickle
 import glob
 import warnings
-import hashlib
+from hashlib import sha1 # pylint: disable=E0611
 from datetime import timedelta
 from os.path import (abspath, join, exists, basename, dirname, normpath, split,
                      isfile, isabs, splitext, isdir, expanduser)
@@ -598,7 +598,7 @@ class PostgresTestDataBaseHandler(TestDataBaseHandler):
 
     @property
     def _config_id(self):
-        return hashlib.sha1(self.config.apphome).hexdigest()[:10]
+        return sha1(self.config.apphome).hexdigest()[:10]
 
     def _backup_name(self, db_id): # merge me with parent
         backup_name = '_'.join(('cache', self._config_id, self.dbname, db_id))

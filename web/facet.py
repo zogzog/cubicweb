@@ -64,7 +64,7 @@ from rql import parse, nodes, utils
 from cubicweb import Unauthorized, typed_eid
 from cubicweb.schema import display_name
 from cubicweb.utils import make_uid
-from cubicweb.selectors import match_context_prop, partial_relation_possible
+from cubicweb.selectors import match_context_prop, partial_relation_possible, yes
 from cubicweb.appobject import AppObject
 from cubicweb.web import RequestError, htmlwidgets
 
@@ -82,9 +82,9 @@ def get_facet(req, facetid, select, filtered_variable):
 
 @deprecated('[3.13] filter_hiddens moved to cubicweb.web.views.facets with '
             'slightly modified prototype')
-def filter_hiddens(w, **kwargs):
+def filter_hiddens(w, baserql, **kwargs):
     from cubicweb.web.views.facets import filter_hiddens
-    return filter_hiddens(w, wdgs=kwargs.pop('facets'))
+    return filter_hiddens(w, baserql, wdgs=kwargs.pop('facets'), **kwargs)
 
 
 ## rqlst manipulation functions used by facets ################################
@@ -502,7 +502,7 @@ class VocabularyFacet(AbstractFacet):
 
 class RelationFacet(VocabularyFacet):
     """Base facet to filter some entities according to other entities to which
-    they are related. Create concret facet by inheriting from this class an then
+    they are related. Create concrete facet by inheriting from this class an then
     configuring it by setting class attribute described below.
 
     The relation is defined by the `rtype` and `role` attributes.
@@ -751,7 +751,7 @@ class RelationFacet(VocabularyFacet):
                 restrvar, rtrel = _make_relation(self.select, self.filtered_variable,
                                                  self.rtype, self.role)
                 if rel is None:
-                    select.add_restriction(rtrel)
+                    self.select.add_restriction(rtrel)
                 else:
                     rel.parent.replace(rel, nodes.And(rel, rtrel))
                 self._and_restriction(rel, restrvar, value.pop())
@@ -1015,6 +1015,7 @@ class RQLPathFacet(RelationFacet):
     (e.g when you want to filter on entities where are not directly linked to
     the filtered entities).
     """
+    __select__ = yes() # we don't want RelationFacet's selector
     # must be specified
     path = None
     filter_variable = None
@@ -1031,8 +1032,11 @@ class RQLPathFacet(RelationFacet):
 
     def __init__(self, *args, **kwargs):
         super(RQLPathFacet, self).__init__(*args, **kwargs)
+        assert self.filter_variable != self.label_variable, \
+            ('filter_variable and label_variable should be different. '
+             'You may want to let label_variable undefined (ie None).')
         assert self.path and isinstance(self.path, (list, tuple)), \
-               'path should be a list of 3-uples, not %s' % self.path
+            'path should be a list of 3-uples, not %s' % self.path
         for part in self.path:
             if isinstance(part, basestring):
                 part = part.split()
@@ -1044,8 +1048,7 @@ class RQLPathFacet(RelationFacet):
                             ','.join(str(p) for p in self.path))
 
     def vocabulary(self):
-        """return vocabulary for this facet, eg a list of 2-uple (label, value)
-        """
+        """return vocabulary for this facet, eg a list of (label, value)"""
         select = self.select
         select.save_state()
         if self.rql_sort:

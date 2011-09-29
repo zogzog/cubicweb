@@ -1571,8 +1571,7 @@ class ServerMigrationHelper(MigrationHelper):
         This may be useful on accidental desync between the repository schema
         and a sql database
         """
-        dbhelper = self.repo.system_source.dbhelper
-        tablesql = rschema2sql(dbhelper, self.repo.schema.rschema(rtype))
+        tablesql = rschema2sql(self.repo.schema.rschema(rtype))
         for sql in tablesql.split(';'):
             if sql.strip():
                 self.sqlexec(sql)

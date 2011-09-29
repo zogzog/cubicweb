@@ -324,7 +324,7 @@ class AppObject(object):
     selected according to a context (usually at least a request and a result
     set).
 
-    The following attributes should be set on concret appobject classes:
+    The following attributes should be set on concrete appobject classes:
 
     :attr:`__registry__`
       name of the registry for this object (string like 'views',
@@ -415,7 +415,7 @@ class AppObject(object):
         appobject is returned without any transformation.
         """
         try: # XXX < 3.6 bw compat
-            pdefs = cls.property_defs
+            pdefs = cls.property_defs # pylint: disable=E1101
         except AttributeError:
             pdefs = getattr(cls, 'cw_property_defs', {})
         else:

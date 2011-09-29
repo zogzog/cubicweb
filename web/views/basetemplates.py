@@ -56,6 +56,9 @@ class LogInOutTemplate(MainTemplate):
         self.wview('htmlheader', rset=self.cw_rset)
         w(u'<title>%s</title>\n' % xml_escape(page_title))
 
+    def content(self):
+        raise NotImplementedError()
+
 
 class LogInTemplate(LogInOutTemplate):
     __regid__ = 'login'

@@ -28,7 +28,7 @@ Let first see the base class for fields:
 
 .. autoclass:: cubicweb.web.formfields.Field
 
-Now, you usually don't use that class but one of the concret field classes
+Now, you usually don't use that class but one of the concrete field classes
 described below, according to what you want to edit.
 
 Basic fields
@@ -107,7 +107,7 @@ _MARKER = nullobject()
 class Field(object):
     """This class is the abstract base class for all fields. It hold a bunch
     of attributes which may be used for fine control of the behaviour of a
-    concret field.
+    concrete field.
 
     **Attributes**
 
@@ -349,6 +349,7 @@ class Field(object):
     def initial_typed_value(self, form, load_bytes):
         if self.value is not _MARKER:
             if callable(self.value):
+                # pylint: disable=E1102
                 if support_args(self.value, 'form', 'field'):
                     return self.value(form, self)
                 else:
@@ -389,6 +390,7 @@ class Field(object):
         """
         assert self.choices is not None
         if callable(self.choices):
+            # pylint: disable=E1102
             if getattr(self.choices, 'im_self', None) is self:
                 vocab = self.choices(form=form, **kwargs)
             elif support_args(self.choices, 'form', 'field'):
@@ -396,11 +398,11 @@ class Field(object):
             else:
                 try:
                     vocab = self.choices(form=form, **kwargs)
-                    warn('[3.6]  %s: choices should now take '
+                    warn('[3.6] %s: choices should now take '
                          'the form and field as named arguments' % self,
                          DeprecationWarning)
                 except TypeError:
-                    warn('[3.3]  %s: choices should now take '
+                    warn('[3.3] %s: choices should now take '
                          'the form and field as named arguments' % self,
                          DeprecationWarning)
                     vocab = self.choices(req=form._cw, **kwargs)

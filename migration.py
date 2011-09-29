@@ -201,8 +201,8 @@ class MigrationHelper(object):
         if not ask_confirm or self.confirm(msg):
             return meth(*args, **kwargs)
 
-    def confirm(self, question, shell=True, abort=True, retry=False, pdb=False,
-                default='y'):
+    def confirm(self, question, # pylint: disable=E0202
+                shell=True, abort=True, retry=False, pdb=False, default='y'):
         """ask for confirmation and return true on positive answer
 
         if `retry` is true the r[etry] answer may return 2

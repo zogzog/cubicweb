@@ -1106,22 +1106,32 @@ class Repository(object):
         hook.CleanupNewEidsCacheOp.get_instance(session).add_data(entity.eid)
         self.system_source.add_info(session, entity, source, extid, complete)
 
-    def delete_info(self, session, entity, sourceuri, extid, scleanup=None):
+    def delete_info(self, session, entity, sourceuri, scleanup=None):
         """called by external source when some entity known by the system source
         has been deleted in the external source
         """
         # mark eid as being deleted in session info and setup cache update
         # operation
         hook.CleanupDeletedEidsCacheOp.get_instance(session).add_data(entity.eid)
-        self._delete_info(session, entity, sourceuri, extid, scleanup)
+        self._delete_info(session, entity, sourceuri, scleanup)
 
-    def _delete_info(self, session, entity, sourceuri, extid, scleanup=None):
+    def _delete_info(self, session, entity, sourceuri, scleanup=None):
         """delete system information on deletion of an entity:
+
         * delete all remaining relations from/to this entity
+
         * call delete info on the system source which will transfer record from
           the entities table to the deleted_entities table
+
+        When scleanup is specified, it's expected to be the source's eid, in
+        which case we'll specify the target's relation source so that this
+        source is ignored. E.g. we want to delete relations stored locally, as
+        the deletion information comes from the external source, it's its
+        responsability to have cleaned-up its own relations.
         """
         pendingrtypes = session.transaction_data.get('pendingrtypes', ())
+        if scleanup is not None:
+            source = self.sources_by_eid[scleanup]
         # delete remaining relations: if user can delete the entity, he can
         # delete all its relations without security checking
         with security_enabled(session, read=False, write=False):
@@ -1137,6 +1147,13 @@ class Repository(object):
                 else:
                     rql = 'DELETE Y %s X WHERE X eid %%(x)s' % rtype
                 if scleanup is not None:
+                    # if the relation can't be crossed, nothing to cleanup (we
+                    # would get a BadRQLQuery from the multi-sources planner).
+                    # This may still leave some junk if the mapping has changed
+                    # at some point, but one can still run db-check to catch
+                    # those
+                    if not source in self.can_cross_relation(rtype):
+                        continue
                     # source cleaning: only delete relations stored locally
                     # (here, scleanup
                     rql += ', NOT (Y cw_source S, S eid %(seid)s)'
@@ -1144,6 +1161,8 @@ class Repository(object):
                     session.execute(rql, {'x': eid, 'seid': scleanup},
                                     build_descr=False)
                 except Exception:
+                    if self.config.mode == 'test':
+                        raise
                     self.exception('error while cascading delete for entity %s '
                                    'from %s. RQL: %s', entity, sourceuri, rql)
         self.system_source.delete_info_multi(session, [entity], sourceuri)
@@ -1153,6 +1172,8 @@ class Repository(object):
         the same etype and belinging to the same source.
         """
         pendingrtypes = session.transaction_data.get('pendingrtypes', ())
+        if scleanup is not None:
+            source = self.sources_by_eid[scleanup]
         # delete remaining relations: if user can delete the entity, he can
         # delete all its relations without security checking
         with security_enabled(session, read=False, write=False):
@@ -1169,11 +1190,20 @@ class Repository(object):
                 else:
                     rql = 'DELETE Y %s X WHERE X eid IN (%s)' % (rtype, in_eids)
                 if scleanup is not None:
+                    # if the relation can't be crossed, nothing to cleanup (we
+                    # would get a BadRQLQuery from the multi-sources planner).
+                    # This may still leave some junk if the mapping has changed
+                    # at some point, but one can still run db-check to catch
+                    # those
+                    if not source in self.can_cross_relation(rtype):
+                        continue
                     # source cleaning: only delete relations stored locally
                     rql += ', NOT (Y cw_source S, S eid %(seid)s)'
                 try:
                     session.execute(rql, {'seid': scleanup}, build_descr=False)
                 except Exception:
+                    if self.config.mode == 'test':
+                        raise
                     self.exception('error while cascading delete for entity %s '
                                    'from %s. RQL: %s', entities, sourceuri, rql)
         self.system_source.delete_info_multi(session, entities, sourceuri)

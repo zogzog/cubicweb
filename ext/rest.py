@@ -187,7 +187,7 @@ winclude_directive.options = {'literal': directives.flag,
 try:
     from pygments import highlight
     from pygments.lexers import get_lexer_by_name
-    from pygments.formatters import HtmlFormatter
+    from pygments.formatters.html import HtmlFormatter
 except ImportError:
     pygments_directive = None
 else:

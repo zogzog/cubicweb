@@ -20,7 +20,7 @@
 __docformat__ = "restructuredtext en"
 _ = unicode
 
-import hashlib
+from hashlib import sha1 # pylint: disable=E0611
 
 from logilab.mtconverter import xml_escape
 
@@ -86,7 +86,7 @@ class FoafView(EntityView):
         emailaddr = entity.cw_adapt_to('IEmailable').get_email()
         if emailaddr:
             self.w(u'<foaf:mbox_sha1sum>%s</foaf:mbox_sha1sum>\n'
-                   % hashlib.sha1(emailaddr.encode('utf-8')).hexdigest())
+                   % sha1(emailaddr.encode('utf-8')).hexdigest())
         self.w(u'</foaf:Person>\n')
 
 

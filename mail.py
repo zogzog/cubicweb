@@ -21,10 +21,10 @@ __docformat__ = "restructuredtext en"
 
 from base64 import b64encode, b64decode
 from time import time
-from email.MIMEMultipart import MIMEMultipart
-from email.MIMEText import MIMEText
-from email.MIMEImage import MIMEImage
-from email.Header import Header
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.image import MIMEImage
+from email.header import Header
 try:
     from socket import gethostname
 except ImportError:
@@ -155,6 +155,10 @@ class NotificationView(EntityView):
     # XXX refactor this class to work with len(rset) > 1
 
     msgid_timestamp = True
+
+    # to be defined on concrete sub-classes
+    content = None # body of the mail
+    message = None # action verb of the subject
 
     # this is usually the method to call
     def render_and_send(self, **kwargs):
