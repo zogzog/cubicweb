@@ -164,11 +164,11 @@ def check_schema(schema, session, eids, fix=1):
 def check_text_index(schema, session, eids, fix=1):
     """check all entities registered in the text index"""
     print 'Checking text index'
+    msg = '  Entity with eid %s exists in the text index but in no source (autofix will remove from text index)'
     cursor = session.system_sql('SELECT uid FROM appears;')
     for row in cursor.fetchall():
         eid = row[0]
         if not has_eid(session, cursor, eid, eids):
-            msg = '  Entity with eid %s exists in the text index but in no source\n'
             sys.stderr.write(msg % eid)
             if fix:
                 session.system_sql('DELETE FROM appears WHERE uid=%s;' % eid)
@@ -178,28 +178,64 @@ def check_text_index(schema, session, eids, fix=1):
 def check_entities(schema, session, eids, fix=1):
     """check all entities registered in the repo system table"""
     print 'Checking entities system table'
+    # system table but no source
+    msg = '  Entity with eid %s exists in the system table but in no source (autofix will delete the entity)'
     cursor = session.system_sql('SELECT eid FROM entities;')
     for row in cursor.fetchall():
         eid = row[0]
         if not has_eid(session, cursor, eid, eids):
-            msg = '  Entity with eid %s exists in the system table but in no source\n'
             sys.stderr.write(msg % eid)
             if fix:
                 session.system_sql('DELETE FROM entities WHERE eid=%s;' % eid)
             notify_fixed(fix)
-    session.system_sql('INSERT INTO cw_source_relation (eid_from, eid_to) '
-                       'SELECT e.eid, s.cw_eid FROM entities as e, cw_CWSource as s '
-                       'WHERE s.cw_name=e.asource AND NOT EXISTS(SELECT 1 FROM cw_source_relation as cs '
-                       '  WHERE cs.eid_from=e.eid AND cs.eid_to=s.cw_eid)')
-    session.system_sql('INSERT INTO is_relation (eid_from, eid_to) '
-                       'SELECT e.eid, s.cw_eid FROM entities as e, cw_CWEType as s '
-                       'WHERE s.cw_name=e.type AND NOT EXISTS(SELECT 1 FROM is_relation as cs '
-                       '  WHERE cs.eid_from=e.eid AND cs.eid_to=s.cw_eid)')
-    session.system_sql('INSERT INTO is_instance_of_relation (eid_from, eid_to) '
-                       'SELECT e.eid, s.cw_eid FROM entities as e, cw_CWEType as s '
-                       'WHERE s.cw_name=e.type AND NOT EXISTS(SELECT 1 FROM is_instance_of_relation as cs '
-                       '  WHERE cs.eid_from=e.eid AND cs.eid_to=s.cw_eid)')
+    # source in entities, but no relation cw_source
+    applcwversion = session.repo.get_versions().get('cubicweb')
+    if applcwversion >= (3,13,1): # entities.asource appeared in 3.13.1
+        cursor = session.system_sql('SELECT e.eid FROM entities as e, cw_CWSource as s '
+                                    'WHERE s.cw_name=e.asource AND '
+                                    'NOT EXISTS(SELECT 1 FROM cw_source_relation as cs '
+                                    '  WHERE cs.eid_from=e.eid AND cs.eid_to=s.cw_eid) '
+                                    'ORDER BY e.eid')
+        msg = ('  Entity with eid %s refers to source in entities table, '
+               'but is missing relation cw_source (autofix will create the relation)\n')
+        for row in cursor.fetchall():
+            sys.stderr.write(msg % row[0])
+        if fix:
+            session.system_sql('INSERT INTO cw_source_relation (eid_from, eid_to) '
+                               'SELECT e.eid, s.cw_eid FROM entities as e, cw_CWSource as s '
+                               'WHERE s.cw_name=e.asource AND NOT EXISTS(SELECT 1 FROM cw_source_relation as cs '
+                               '  WHERE cs.eid_from=e.eid AND cs.eid_to=s.cw_eid)')
+            notify_fixed(True)
+    # inconsistencies for 'is'
+    msg = '  %s #%s is missing relation "is" (autofix will create the relation)\n'
+    cursor = session.system_sql('SELECT e.type, e.eid FROM entities as e, cw_CWEType as s '
+                                'WHERE s.cw_name=e.type AND NOT EXISTS(SELECT 1 FROM is_relation as cs '
+                                '  WHERE cs.eid_from=e.eid AND cs.eid_to=s.cw_eid) '
+                                'ORDER BY e.eid')
+    for row in cursor.fetchall():
+        sys.stderr.write(msg % row)
+    if fix:
+        session.system_sql('INSERT INTO is_relation (eid_from, eid_to) '
+                           'SELECT e.eid, s.cw_eid FROM entities as e, cw_CWEType as s '
+                           'WHERE s.cw_name=e.type AND NOT EXISTS(SELECT 1 FROM is_relation as cs '
+                           '  WHERE cs.eid_from=e.eid AND cs.eid_to=s.cw_eid)')
+        notify_fixed(True)
+    # inconsistencies for 'is_instance_of'
+    msg = '  %s #%s is missing relation "is_instance_of" (autofix will create the relation)\n'
+    cursor = session.system_sql('SELECT e.type, e.eid FROM entities as e, cw_CWEType as s '
+                                'WHERE s.cw_name=e.type AND NOT EXISTS(SELECT 1 FROM is_instance_of_relation as cs '
+                                '  WHERE cs.eid_from=e.eid AND cs.eid_to=s.cw_eid) '
+                                'ORDER BY e.eid')
+    for row in cursor.fetchall():
+        sys.stderr.write(msg % row)
+    if fix:
+        session.system_sql('INSERT INTO is_instance_of_relation (eid_from, eid_to) '
+                           'SELECT e.eid, s.cw_eid FROM entities as e, cw_CWEType as s '
+                           'WHERE s.cw_name=e.type AND NOT EXISTS(SELECT 1 FROM is_instance_of_relation as cs '
+                           '  WHERE cs.eid_from=e.eid AND cs.eid_to=s.cw_eid)')
+        notify_fixed(True)
     print 'Checking entities tables'
+    msg = '  Entity with eid %s exists in the %s table but not in the system table (autofix will delete the entity)'
     for eschema in schema.entities():
         if eschema.final:
             continue
@@ -211,7 +247,6 @@ def check_entities(schema, session, eids, fix=1):
             # eids is full since we have fetched everything from the entities table,
             # no need to call has_eid
             if not eid in eids or not eids[eid]:
-                msg = '  Entity with eid %s exists in the %s table but not in the system table'
                 sys.stderr.write(msg % (eid, eschema.type))
                 if fix:
                     session.system_sql('DELETE FROM %s WHERE %s=%s;' % (table, column, eid))
@@ -230,7 +265,7 @@ def check_relations(schema, session, eids, fix=1):
     """
     print 'Checking relations'
     for rschema in schema.relations():
-        if rschema.final or rschema in PURE_VIRTUAL_RTYPES:
+        if rschema.final or rschema.type in PURE_VIRTUAL_RTYPES:
             continue
         if rschema.inlined:
             for subjtype in rschema.subjects():
@@ -276,8 +311,9 @@ def check_relations(schema, session, eids, fix=1):
 def check_mandatory_relations(schema, session, eids, fix=1):
     """check entities missing some mandatory relation"""
     print 'Checking mandatory relations'
+    msg = '%s #%s is missing mandatory %s relation %s (autofix will delete the entity)'
     for rschema in schema.relations():
-        if rschema.final or rschema in PURE_VIRTUAL_RTYPES:
+        if rschema.final or rschema.type in PURE_VIRTUAL_RTYPES:
             continue
         smandatory = set()
         omandatory = set()
@@ -293,11 +329,10 @@ def check_mandatory_relations(schema, session, eids, fix=1):
                 else:
                     rql = 'Any X WHERE NOT Y %s X, X is %s' % (rschema, etype)
                 for entity in session.execute(rql).entities():
-                    sys.stderr.write('%s #%s is missing mandatory %s relation %s' % (
-                            entity.__regid__, entity.eid, role, rschema))
+                    sys.stderr.write(msg % (entity.__regid__, entity.eid, role, rschema))
                     if fix:
                         #if entity.cw_describe()['source']['uri'] == 'system': XXX
-                        entity.cw_delete()
+                        entity.cw_delete() # XXX this is BRUTAL!
                     notify_fixed(fix)
 
 
@@ -306,6 +341,7 @@ def check_mandatory_attributes(schema, session, eids, fix=1):
     attribute
     """
     print 'Checking mandatory attributes'
+    msg = '%s #%s is missing mandatory attribute %s (autofix will delete the entity)'
     for rschema in schema.relations():
         if not rschema.final or rschema in VIRTUAL_RTYPES:
             continue
@@ -314,8 +350,7 @@ def check_mandatory_attributes(schema, session, eids, fix=1):
                 rql = 'Any X WHERE X %s NULL, X is %s, X cw_source S, S name "system"' % (
                     rschema, rdef.subject)
                 for entity in session.execute(rql).entities():
-                    sys.stderr.write('%s #%s is missing mandatory attribute %s' % (
-                            entity.__regid__, entity.eid, rschema))
+                    sys.stderr.write(msg % (entity.__regid__, entity.eid, rschema))
                     if fix:
                         entity.cw_delete()
                     notify_fixed(fix)
@@ -329,6 +364,7 @@ def check_metadata(schema, session, eids, fix=1):
     print 'Checking metadata'
     cursor = session.system_sql("SELECT DISTINCT type FROM entities;")
     eidcolumn = SQL_PREFIX + 'eid'
+    msg = '  %s with eid %s has no %s (autofix will set it to now)'
     for etype, in cursor.fetchall():
         table = SQL_PREFIX + etype
         for rel, default in ( ('creation_date', datetime.now()),
@@ -337,7 +373,6 @@ def check_metadata(schema, session, eids, fix=1):
             cursor = session.system_sql("SELECT %s FROM %s WHERE %s is NULL"
                                         % (eidcolumn, table, column))
             for eid, in cursor.fetchall():
-                msg = '  %s with eid %s has no %s'
                 sys.stderr.write(msg % (etype, eid, rel))
                 if fix:
                     session.system_sql("UPDATE %s SET %s=%%(v)s WHERE %s=%s ;"
