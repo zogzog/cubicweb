@@ -777,7 +777,7 @@ class Entity(AppObject):
                                        rql.split(' WHERE ', 1)[1])
         elif not ' ORDERBY ' in rql:
             args = rql.split(' WHERE ', 1)
-            # if modification_date already retreived, we should use it instead
+            # if modification_date already retrieved, we should use it instead
             # of adding another variable for sort. This should be be problematic
             # but it's actually with sqlserver, see ticket #694445
             if 'X modification_date ' in args[1]:
