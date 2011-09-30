@@ -1422,7 +1422,11 @@ class Repository(object):
             source = self.sources_by_uri[sourceuri]
             if source.should_call_hooks:
                 self.hm.call_hooks('before_delete_entity', session, entities=entities)
-            self._delete_info_multi(session, entities, sourceuri)
+            if session.deleted_in_transaction(source.eid):
+                # source is being deleted, think to give scleanup argument
+                self._delete_info_multi(session, entities, sourceuri, scleanup=source.eid)
+            else:
+                self._delete_info_multi(session, entities, sourceuri)
             source.delete_entities(session, entities)
             if source.should_call_hooks:
                 self.hm.call_hooks('after_delete_entity', session, entities=entities)
