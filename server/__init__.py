@@ -148,20 +148,21 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     repo = Repository(config, vreg=vreg)
     schema = repo.schema
     sourcescfg = config.sources()
-    _title = '-> creating tables '
-    print _title,
     source = sourcescfg['system']
     driver = source['db-driver']
     sqlcnx = repo.system_source.get_connection()
     sqlcursor = sqlcnx.cursor()
     execute = sqlcursor.execute
     if drop:
+        _title = '-> drop tables '
         dropsql = sqldropschema(schema, driver)
         try:
-            sqlexec(dropsql, execute)
+            sqlexec(dropsql, execute, pbtitle=_title)
         except Exception, ex:
             print '-> drop failed, skipped (%s).' % ex
             sqlcnx.rollback()
+    _title = '-> creating tables '
+    print _title,
     # schema entities and relations tables
     # can't skip entities table even if system source doesn't support them,
     # they are used sometimes by generated sql. Keeping them empty is much
