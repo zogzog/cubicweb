@@ -1,15 +1,18 @@
 Startup views
 -------------
 
-(:mod:`cubicweb.web.views.startup`)
+Startup views are views requiring no context, from which you usually start
+browsing (for instance the index page). The usual selectors are
+:class:`~cubicweb.selectors.none_rset` or :class:`~cubicweb.selectors.yes`.
 
-The usual selectors are no_rset or yes. These views don't apply to a
-result set.
+You'll find here a description of startup views provided by the framework.
 
-*index*
-    This view defines the home page of your application. It does not require
-    a result set to apply to.
+.. automodule:: cubicweb.web.views.startup
+
+
+Other startup views:
 
 *schema*
     A view dedicated to the display of the schema of the instance
 
+.. XXX to be continued
