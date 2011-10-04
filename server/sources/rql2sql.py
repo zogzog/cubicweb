@@ -1426,10 +1426,18 @@ class SQLGenerator(object):
             return sql
         leftvars = cmp.children[0].get_nodes(VariableRef)
         assert len(leftvars) == 1
-        leftalias = self._var_table(leftvars[0].variable.stinfo['attrvar'])
+        if leftvars[0].variable.stinfo['attrvar'] is None:
+            assert isinstance(leftvars[0].variable, ColumnAlias)
+            leftalias = leftvars[0].variable._q_sqltable
+        else:
+            leftalias = self._var_table(leftvars[0].variable.stinfo['attrvar'])
         rightvars = cmp.children[1].get_nodes(VariableRef)
         assert len(rightvars) == 1
-        rightalias = self._var_table(rightvars[0].variable.stinfo['attrvar'])
+        if rightvars[0].variable.stinfo['attrvar'] is None:
+            assert isinstance(rightvars[0].variable, ColumnAlias)
+            rightalias = rightvars[0].variable._q_sqltable
+        else:
+            rightalias = self._var_table(rightvars[0].variable.stinfo['attrvar'])
         if optional == 'right':
             self._state.replace_tables_by_outer_join(
                 leftalias, rightalias, 'LEFT', sql)

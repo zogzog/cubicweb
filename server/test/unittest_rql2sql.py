@@ -1524,6 +1524,12 @@ GROUP BY _ET.cw_name'''),
 FROM (SELECT MAX(_A.cw_ordernum) AS C0
 FROM cw_CWAttribute AS _A) AS _T0, cw_CWAttribute AS _A
 WHERE _A.cw_ordernum=_T0.C0'''),
+
+            ('Any O1 HAVING O1=O2? WITH O1 BEING (Any MAX(O) WHERE A ordernum O, A is CWAttribute), O2 BEING (Any MAX(O) WHERE A ordernum O, A is CWRelation)',
+             '''SELECT _T0.C0
+FROM (SELECT MAX(_A.cw_ordernum) AS C0
+FROM cw_CWAttribute AS _A) AS _T0 LEFT OUTER JOIN (SELECT MAX(_A.cw_ordernum) AS C0
+FROM cw_CWRelation AS _A) AS _T1 ON (_T0.C0=_T1.C0)'''),
             )):
             yield t
 
