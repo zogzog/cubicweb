@@ -1396,6 +1396,11 @@ WHERE _X.cw_login IS NULL''')
                     '''SELECT CAST(EXTRACT(MONTH from _P.cw_creation_date) AS INTEGER)
 FROM cw_Personne AS _P''')
 
+    def test_weekday_extraction(self):
+        self._check("Any WEEKDAY(D) WHERE P is Personne, P creation_date D",
+                    '''SELECT (CAST(EXTRACT(DOW from _P.cw_creation_date) AS INTEGER) + 1)
+FROM cw_Personne AS _P''')
+
     def test_substring(self):
         self._check("Any SUBSTRING(N, 1, 1) WHERE P nom N, P is Personne",
                     '''SELECT SUBSTR(_P.cw_nom, 1, 1)
@@ -1759,7 +1764,12 @@ WHERE ((YEAR(_X.cw_creation_date)=2010) OR (_X.cw_creation_date IS NULL))''')
 
     def test_date_extraction(self):
         self._check("Any MONTH(D) WHERE P is Personne, P creation_date D",
-                    '''SELECT MONTH(_P.cw_creation_date)
+                    '''SELECT DATEPART(MONTH, _P.cw_creation_date)
+FROM cw_Personne AS _P''')
+
+    def test_weekday_extraction(self):
+        self._check("Any WEEKDAY(D) WHERE P is Personne, P creation_date D",
+                    '''SELECT DATEPART(WEEKDAY, _P.cw_creation_date)
 FROM cw_Personne AS _P''')
 
     def test_symmetric(self):
@@ -1914,6 +1924,12 @@ class SqliteSQLGeneratorTC(PostgresSQLGeneratorTC):
     def test_date_extraction(self):
         self._check("Any MONTH(D) WHERE P is Personne, P creation_date D",
                     '''SELECT MONTH(_P.cw_creation_date)
+FROM cw_Personne AS _P''')
+
+    def test_weekday_extraction(self):
+        # custom impl. in cw.server.sqlutils
+        self._check("Any WEEKDAY(D) WHERE P is Personne, P creation_date D",
+                    '''SELECT WEEKDAY(_P.cw_creation_date)
 FROM cw_Personne AS _P''')
 
     def test_regexp(self):
@@ -2072,6 +2088,11 @@ class MySQLGenerator(PostgresSQLGeneratorTC):
     def test_date_extraction(self):
         self._check("Any MONTH(D) WHERE P is Personne, P creation_date D",
                     '''SELECT EXTRACT(MONTH from _P.cw_creation_date)
+FROM cw_Personne AS _P''')
+
+    def test_weekday_extraction(self):
+        self._check("Any WEEKDAY(D) WHERE P is Personne, P creation_date D",
+                    '''SELECT DAYOFWEEK(_P.cw_creation_date)
 FROM cw_Personne AS _P''')
 
     def test_cast(self):
