@@ -25,7 +25,7 @@ from cubicweb import (RepositoryError, Unauthorized, AuthenticationError,
                       BadConnectionId)
 from cubicweb.web import InvalidSession, Redirect
 from cubicweb.web.application import AbstractSessionManager
-from cubicweb.dbapi import DBAPISession
+from cubicweb.dbapi import ProgrammingError, DBAPISession
 
 
 class InMemoryRepositorySessionManager(AbstractSessionManager):
@@ -133,6 +133,6 @@ class InMemoryRepositorySessionManager(AbstractSessionManager):
         if session.cnx:
             try:
                 session.cnx.close()
-            except BadConnectionId: # expired on the repository side
+            except (ProgrammingError, BadConnectionId): # expired on the repository side
                 pass
             session.cnx = None
