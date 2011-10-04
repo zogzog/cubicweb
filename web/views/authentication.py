@@ -65,6 +65,14 @@ class WebAuthInfoRetreiver(Component):
         """
         raise NotImplementedError()
 
+    def cleanup_authentication_information(self, req):
+        """called when the retriever has returned some authentication
+        information but we get an authentication error when using them, so it
+        get a chance to cleanup things (e.g. remove cookie)
+        """
+        pass
+
+
 class LoginPasswordRetreiver(WebAuthInfoRetreiver):
     __regid__ = 'loginpwdauth'
     order = 10
@@ -144,6 +152,7 @@ class RepositoryAuthenticationManager(AbstractAuthenticationManager):
             try:
                 cnx = self._authenticate(login, authinfo)
             except AuthenticationError:
+                retriever.cleanup_authentication_information(req)
                 continue # the next one may succeed
             for retriever_ in self.authinforetrievers:
                 retriever_.authenticated(retriever, req, cnx, login, authinfo)
