@@ -443,7 +443,7 @@ class QuerierTC(BaseQuerierTC):
         self.execute("INSERT Personne X: X nom 'foo', X datenaiss %(d)s",
                      {'d': datetime(2001, 2,3, 12,13)})
         test_data = [('YEAR', 2001), ('MONTH', 2), ('DAY', 3),
-                     ('HOUR', 12), ('MINUTE', 13)]
+                     ('HOUR', 12), ('MINUTE', 13), ('WEEKDAY', 6)]
         for funcname, result in test_data:
             rset = self.execute('Any %s(D) WHERE X is Personne, X datenaiss D'
                                 % funcname)

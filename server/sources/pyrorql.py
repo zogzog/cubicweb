@@ -445,7 +445,7 @@ repository (default to 5 minutes).',
 
     def delete_entity(self, session, entity):
         """delete an entity from the source"""
-        if session.deleted_in_transaction (self.eid):
+        if session.deleted_in_transaction(self.eid):
             # source is being deleted, don't propagate
             self._query_cache.clear()
             return
@@ -466,7 +466,7 @@ repository (default to 5 minutes).',
 
     def delete_relation(self, session, subject, rtype, object):
         """delete a relation from the source"""
-        if session.deleted_in_transaction (self.eid):
+        if session.deleted_in_transaction(self.eid):
             # source is being deleted, don't propagate
             self._query_cache.clear()
             return

@@ -30,6 +30,16 @@ Index view configuration
       * ``schema``
       * ``subobject`` (not displayed by default)
 
+   By default only entities on the ``application`` category are shown.
+
+.. sourcecode:: python
+
+    from cubicweb.web import uicfg
+    # force hiding
+    uicfg.indexview_etype_section['HideMe'] = 'subobject'
+    # force display
+    uicfg.indexview_etype_section['ShowMe'] = 'application'
+
 
 Actions box configuration
 `````````````````````````

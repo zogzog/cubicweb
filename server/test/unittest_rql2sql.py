@@ -1396,6 +1396,11 @@ WHERE _X.cw_login IS NULL''')
                     '''SELECT CAST(EXTRACT(MONTH from _P.cw_creation_date) AS INTEGER)
 FROM cw_Personne AS _P''')
 
+    def test_weekday_extraction(self):
+        self._check("Any WEEKDAY(D) WHERE P is Personne, P creation_date D",
+                    '''SELECT (CAST(EXTRACT(DOW from _P.cw_creation_date) AS INTEGER) + 1)
+FROM cw_Personne AS _P''')
+
     def test_substring(self):
         self._check("Any SUBSTRING(N, 1, 1) WHERE P nom N, P is Personne",
                     '''SELECT SUBSTR(_P.cw_nom, 1, 1)
@@ -1524,6 +1529,12 @@ GROUP BY _ET.cw_name'''),
 FROM (SELECT MAX(_A.cw_ordernum) AS C0
 FROM cw_CWAttribute AS _A) AS _T0, cw_CWAttribute AS _A
 WHERE _A.cw_ordernum=_T0.C0'''),
+
+            ('Any O1 HAVING O1=O2? WITH O1 BEING (Any MAX(O) WHERE A ordernum O, A is CWAttribute), O2 BEING (Any MAX(O) WHERE A ordernum O, A is CWRelation)',
+             '''SELECT _T0.C0
+FROM (SELECT MAX(_A.cw_ordernum) AS C0
+FROM cw_CWAttribute AS _A) AS _T0 LEFT OUTER JOIN (SELECT MAX(_A.cw_ordernum) AS C0
+FROM cw_CWRelation AS _A) AS _T1 ON (_T0.C0=_T1.C0)'''),
             )):
             yield t
 
@@ -1749,11 +1760,16 @@ class SqlServer2005SQLGeneratorTC(PostgresSQLGeneratorTC):
         self._check('Any X WHERE X is CWUser, X creation_date D HAVING YEAR(D) = "2010" OR D = NULL',
                     '''SELECT _X.cw_eid
 FROM cw_CWUser AS _X
-WHERE ((YEAR(_X.cw_creation_date)=2010) OR (_X.cw_creation_date IS NULL))''')
+WHERE ((DATEPART(YEAR, _X.cw_creation_date)=2010) OR (_X.cw_creation_date IS NULL))''')
 
     def test_date_extraction(self):
         self._check("Any MONTH(D) WHERE P is Personne, P creation_date D",
-                    '''SELECT MONTH(_P.cw_creation_date)
+                    '''SELECT DATEPART(MONTH, _P.cw_creation_date)
+FROM cw_Personne AS _P''')
+
+    def test_weekday_extraction(self):
+        self._check("Any WEEKDAY(D) WHERE P is Personne, P creation_date D",
+                    '''SELECT DATEPART(WEEKDAY, _P.cw_creation_date)
 FROM cw_Personne AS _P''')
 
     def test_symmetric(self):
@@ -1893,9 +1909,9 @@ FROM cw_Personne AS _P''')
                     'GROUPBY YEAR(XECT),MONTH(XECT) ORDERBY 1 '
                     'WHERE X creation_date XSCT, X modification_date XECT, '
                     'X ordernum XCE, X is CWAttribute',
-                    '''SELECT ((YEAR(_X.cw_modification_date) * 100) + MONTH(_X.cw_modification_date)), COUNT(_X.cw_eid), SUM(_X.cw_ordernum), AVG((_X.cw_creation_date - _X.cw_modification_date))
+                    '''SELECT ((DATEPART(YEAR, _X.cw_modification_date) * 100) + DATEPART(MONTH, _X.cw_modification_date)), COUNT(_X.cw_eid), SUM(_X.cw_ordernum), AVG((_X.cw_creation_date - _X.cw_modification_date))
 FROM cw_CWAttribute AS _X
-GROUP BY YEAR(_X.cw_modification_date),MONTH(_X.cw_modification_date)
+GROUP BY DATEPART(YEAR, _X.cw_modification_date),DATEPART(MONTH, _X.cw_modification_date)
 ORDER BY 1'''),
 
 
@@ -1908,6 +1924,12 @@ class SqliteSQLGeneratorTC(PostgresSQLGeneratorTC):
     def test_date_extraction(self):
         self._check("Any MONTH(D) WHERE P is Personne, P creation_date D",
                     '''SELECT MONTH(_P.cw_creation_date)
+FROM cw_Personne AS _P''')
+
+    def test_weekday_extraction(self):
+        # custom impl. in cw.server.sqlutils
+        self._check("Any WEEKDAY(D) WHERE P is Personne, P creation_date D",
+                    '''SELECT WEEKDAY(_P.cw_creation_date)
 FROM cw_Personne AS _P''')
 
     def test_regexp(self):
@@ -2066,6 +2088,11 @@ class MySQLGenerator(PostgresSQLGeneratorTC):
     def test_date_extraction(self):
         self._check("Any MONTH(D) WHERE P is Personne, P creation_date D",
                     '''SELECT EXTRACT(MONTH from _P.cw_creation_date)
+FROM cw_Personne AS _P''')
+
+    def test_weekday_extraction(self):
+        self._check("Any WEEKDAY(D) WHERE P is Personne, P creation_date D",
+                    '''SELECT DAYOFWEEK(_P.cw_creation_date)
 FROM cw_Personne AS _P''')
 
     def test_cast(self):

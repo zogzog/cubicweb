@@ -372,6 +372,7 @@ class EntityAttributesTableView(EntityView):
     def cell_call(self, row, col):
         _ = self._cw._
         entity = self.cw_rset.get_entity(row, col)
+        entity.complete()
         infos = {}
         for col in self.columns:
             meth = getattr(self, 'build_%s_cell' % col, None)
