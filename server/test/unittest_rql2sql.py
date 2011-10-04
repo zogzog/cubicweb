@@ -1760,7 +1760,7 @@ class SqlServer2005SQLGeneratorTC(PostgresSQLGeneratorTC):
         self._check('Any X WHERE X is CWUser, X creation_date D HAVING YEAR(D) = "2010" OR D = NULL',
                     '''SELECT _X.cw_eid
 FROM cw_CWUser AS _X
-WHERE ((YEAR(_X.cw_creation_date)=2010) OR (_X.cw_creation_date IS NULL))''')
+WHERE ((DATEPART(YEAR, _X.cw_creation_date)=2010) OR (_X.cw_creation_date IS NULL))''')
 
     def test_date_extraction(self):
         self._check("Any MONTH(D) WHERE P is Personne, P creation_date D",
@@ -1909,9 +1909,9 @@ FROM cw_Personne AS _P''')
                     'GROUPBY YEAR(XECT),MONTH(XECT) ORDERBY 1 '
                     'WHERE X creation_date XSCT, X modification_date XECT, '
                     'X ordernum XCE, X is CWAttribute',
-                    '''SELECT ((YEAR(_X.cw_modification_date) * 100) + MONTH(_X.cw_modification_date)), COUNT(_X.cw_eid), SUM(_X.cw_ordernum), AVG((_X.cw_creation_date - _X.cw_modification_date))
+                    '''SELECT ((DATEPART(YEAR, _X.cw_modification_date) * 100) + DATEPART(MONTH, _X.cw_modification_date)), COUNT(_X.cw_eid), SUM(_X.cw_ordernum), AVG((_X.cw_creation_date - _X.cw_modification_date))
 FROM cw_CWAttribute AS _X
-GROUP BY YEAR(_X.cw_modification_date),MONTH(_X.cw_modification_date)
+GROUP BY DATEPART(YEAR, _X.cw_modification_date),DATEPART(MONTH, _X.cw_modification_date)
 ORDER BY 1'''),
 
 
