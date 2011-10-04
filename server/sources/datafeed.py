@@ -82,9 +82,11 @@ class DataFeedSource(AbstractSource):
         source_entity.complete()
         self.parser_id = source_entity.parser
         self.latest_retrieval = source_entity.latest_retrieval
-        self.urls = [url.strip() for url in source_entity.url.splitlines()
-                     if url.strip()]
-
+        if source_entity.url:
+            self.urls = [url.strip() for url in source_entity.url.splitlines()
+                         if url.strip()]
+        else:
+            self.urls = []
     def update_config(self, source_entity, typedconfig):
         """update configuration from source entity. `typedconfig` is config
         properly typed with defaults set
