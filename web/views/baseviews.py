@@ -89,7 +89,7 @@ from cubicweb import NoSelectableObject, tags
 from cubicweb.selectors import yes, empty_rset, one_etype_rset, match_kwargs
 from cubicweb.schema import display_name
 from cubicweb.view import EntityView, AnyRsetView, View
-from cubicweb.uilib import cut, printable_value
+from cubicweb.uilib import cut
 from cubicweb.web.views import calendar
 
 
@@ -161,7 +161,7 @@ class FinalView(AnyRsetView):
                 # about string format & all
                 self.w(entity.printable_value(rtype, value, format=format))
                 return
-        value = printable_value(self._cw, etype, value, props)
+        value = self._cw.printable_value(etype, value, props)
         if etype in ('Time', 'Interval'):
             value = value.replace(' ', '&#160;')
         self.wdata(value)
