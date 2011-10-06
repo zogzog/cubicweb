@@ -149,48 +149,22 @@ class FinalView(AnyRsetView):
     _('%d seconds')
 
     def cell_call(self, row, col, props=None, format='text/html'):
-        etype = self.cw_rset.description[row][col]
         value = self.cw_rset.rows[row][col]
-
         if value is None:
             self.w(u'')
             return
+        etype = self.cw_rset.description[row][col]
         if etype == 'String':
             entity, rtype = self.cw_rset.related_entity(row, col)
             if entity is not None:
-                # yes !
+                # call entity's printable_value which may have more information
+                # about string format & all
                 self.w(entity.printable_value(rtype, value, format=format))
                 return
-        elif etype in ('Time', 'Interval'):
-            if etype == 'Interval' and isinstance(value, (int, long)):
-                # `date - date`, unlike `datetime - datetime` gives an int
-                # (number of days), not a timedelta
-                # XXX should rql be fixed to return Int instead of Interval in
-                #     that case? that would be probably the proper fix but we
-                #     loose information on the way...
-                value = timedelta(days=value)
-            # value is DateTimeDelta but we have no idea about what is the
-            # reference date here, so we can only approximate years and months
-            if format == 'text/html':
-                space = '&#160;'
-            else:
-                space = ' '
-            if value.days > 730: # 2 years
-                self.w(self._cw.__('%%d%syears' % space) % (value.days // 365))
-            elif value.days > 60: # 2 months
-                self.w(self._cw.__('%%d%smonths' % space) % (value.days // 30))
-            elif value.days > 14: # 2 weeks
-                self.w(self._cw.__('%%d%sweeks' % space) % (value.days // 7))
-            elif value.days > 2:
-                self.w(self._cw.__('%%d%sdays' % space) % int(value.days))
-            elif value.seconds > 3600:
-                self.w(self._cw.__('%%d%shours' % space) % int(value.seconds // 3600))
-            elif value.seconds >= 120:
-                self.w(self._cw.__('%%d%sminutes' % space) % int(value.seconds // 60))
-            else:
-                self.w(self._cw.__('%%d%sseconds' % space) % int(value.seconds))
-            return
-        self.wdata(printable_value(self._cw, etype, value, props))
+        value = printable_value(self._cw, etype, value, props)
+        if etype in ('Time', 'Interval'):
+            value = value.replace(' ', '&#160;')
+        self.wdata(value)
 
 
 class InContextView(EntityView):
