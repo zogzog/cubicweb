@@ -210,9 +210,9 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     handler = config.migration_handler(schema, interactive=False,
                                        cnx=cnx, repo=repo)
     # install additional driver specific sql files
-    handler.install_custom_sql_scripts(join(CW_SOFTWARE_ROOT, 'schemas'), driver)
-    for directory in reversed(config.cubes_path()):
-        handler.install_custom_sql_scripts(join(directory, 'schema'), driver)
+    handler.cmd_install_custom_sql_scripts()
+    for cube in reversed(config.cubes()):
+        handler.cmd_install_custom_sql_scripts(cube)
     # serialize the schema
     initialize_schema(config, schema, handler)
     # yoo !
@@ -231,8 +231,7 @@ def initialize_schema(config, schema, mhandler, event='create'):
     from cubicweb.server.schemaserial import serialize_schema
     from cubicweb.server.session import hooks_control
     session = mhandler.session
-    paths = [p for p in config.cubes_path() + [config.apphome]
-             if exists(join(p, 'migration'))]
+    cubes = config.cubes()
     # deactivate every hooks but those responsible to set metadata
     # so, NO INTEGRITY CHECKS are done, to have quicker db creation.
     # Active integrity is kept else we may pb such as two default
@@ -240,18 +239,18 @@ def initialize_schema(config, schema, mhandler, event='create'):
     with hooks_control(session, session.HOOKS_DENY_ALL, 'metadata',
                        'activeintegrity'):
         # execute cubicweb's pre<event> script
-        mhandler.exec_event_script('pre%s' % event)
+        mhandler.cmd_exec_event_script('pre%s' % event)
         # execute cubes pre<event> script if any
-        for path in reversed(paths):
-            mhandler.exec_event_script('pre%s' % event, path)
+        for cube in reversed(cubes):
+            mhandler.cmd_exec_event_script('pre%s' % event, cube)
         # enter instance'schema into the database
         session.set_cnxset()
         serialize_schema(session, schema)
         # execute cubicweb's post<event> script
-        mhandler.exec_event_script('post%s' % event)
+        mhandler.cmd_exec_event_script('post%s' % event)
         # execute cubes'post<event> script if any
-        for path in reversed(paths):
-            mhandler.exec_event_script('post%s' % event, path)
+        for cube in reversed(cubes):
+            mhandler.cmd_exec_event_script('post%s' % event, cube)
 
 
 # sqlite'stored procedures have to be registered at connection opening time
