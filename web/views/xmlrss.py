@@ -115,14 +115,14 @@ class XMLItemView(EntityView):
                 self.error('unexisting relation %r', relstr)
                 continue
             self.w(u'  <%s role="%s">\n' % (rtype, role))
-            for related in entity.related(rtype, role, entities=True):
-                related.view('xmlrelateditem', w=self.w)
+            self.wview('xmlrelateditem', entity.related(rtype, role, safe=True), 'null')
             self.w(u'  </%s>\n' % rtype)
         self.w(u'</%s>\n' % (entity.e_schema))
 
 
 class XMLRelatedItemView(EntityView):
     __regid__ = 'xmlrelateditem'
+    add_div_section = False
 
     def entity_call(self, entity):
         # XXX put unique attributes as xml attribute, they are much probably

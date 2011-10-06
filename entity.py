@@ -722,12 +722,21 @@ class Entity(AppObject):
                         self.cw_attr_cache[name] = value = None
             return value
 
-    def related(self, rtype, role='subject', limit=None, entities=False): # XXX .cw_related
+    def related(self, rtype, role='subject', limit=None, entities=False, # XXX .cw_related
+                safe=False):
         """returns a resultset of related entities
 
-        :param role: is the role played by 'self' in the relation ('subject' or 'object')
-        :param limit: resultset's maximum size
-        :param entities: if True, the entites are returned; if False, a result set is returned
+        :param rtype:
+          the name of the relation, aka relation type
+        :param role:
+          the role played by 'self' in the relation ('subject' or 'object')
+        :param limit:
+          resultset's maximum size
+        :param entities:
+          if True, the entites are returned; if False, a result set is returned
+        :param safe:
+          if True, an empty rset/list of entities will be returned in case of
+          :exc:`Unauthorized`, else (the default), the exception is propagated
         """
         try:
             return self._cw_relation_cache(rtype, role, entities, limit)
@@ -738,7 +747,12 @@ class Entity(AppObject):
                 return []
             return self._cw.empty_rset()
         rql = self.cw_related_rql(rtype, role)
-        rset = self._cw.execute(rql, {'x': self.eid})
+        try:
+            rset = self._cw.execute(rql, {'x': self.eid})
+        except Unauthorized:
+            if not safe:
+                raise
+            rset = self._cw.empty_rset()
         self.cw_set_relation_cache(rtype, role, rset)
         return self.related(rtype, role, limit, entities)
 
