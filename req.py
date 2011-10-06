@@ -29,7 +29,7 @@ from logilab.common.decorators import cached
 from logilab.common.deprecation import deprecated
 from logilab.common.date import ustrftime, strptime, todate, todatetime
 
-from cubicweb import Unauthorized, NoSelectableObject, typed_eid
+from cubicweb import Unauthorized, NoSelectableObject, typed_eid, uilib
 from cubicweb.rset import ResultSet
 
 ONESECOND = timedelta(0, 1, 0)
@@ -342,6 +342,18 @@ class RequestSessionBase(object):
             view =  self.vreg[__registry].select(__fallback_oid, self,
                                                  rset=rset, **initargs)
         return view.render(w=w, **kwargs)
+
+    def printable_value(self, attrtype, value, props=None, displaytime=True,
+                        formatters=uilib.PRINTERS):
+        """return a displayablye value (i.e. unicode string)"""
+        if value is None:
+            return u''
+        try:
+            as_string = formatters[attrtype]
+        except KeyError:
+            self.error('given bad attrtype %s', attrtype)
+            return unicode(value)
+        return as_string(value, self, props, displaytime)
 
     def format_date(self, date, date_format=None, time=False):
         """return a string for a date time according to instance's

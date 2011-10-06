@@ -30,6 +30,7 @@ from StringIO import StringIO
 
 from logilab.mtconverter import xml_escape, html_unescape
 from logilab.common.date import ustrftime
+from logilab.common.deprecation import deprecated
 
 from cubicweb.utils import JSString, json_dumps
 
@@ -134,15 +135,9 @@ PRINTERS = {
     'Interval': print_timedelta,
     }
 
+@deprecated('[3.14] use req.printable_value(attrtype, value, ...)')
 def printable_value(req, attrtype, value, props=None, displaytime=True):
-    """return a displayable value (i.e. unicode string)"""
-    if value is None:
-        return u''
-    try:
-        printer = PRINTERS[attrtype]
-    except KeyError:
-        return unicode(value)
-    return printer(value, req, props, displaytime)
+    return req.printable_value(attrtype, value, props, displaytime)
 
 
 # text publishing #############################################################

@@ -40,7 +40,7 @@ from cubicweb.req import _check_cw_unsafe
 from cubicweb.schema import RQLVocabularyConstraint, RQLConstraint
 from cubicweb.rqlrewrite import RQLRewriter
 
-from cubicweb.uilib import printable_value, soup2xhtml
+from cubicweb.uilib import soup2xhtml
 from cubicweb.mixins import MI_REL_TRIGGERS
 from cubicweb.mttransforms import ENGINE
 
@@ -619,8 +619,8 @@ class Entity(AppObject):
                 return self._cw_mtc_transform(value.getvalue(), attrformat, format,
                                               encoding)
             return u''
-        value = printable_value(self._cw, attrtype, value, props,
-                                displaytime=displaytime)
+        value = self._cw.printable_value(attrtype, value, props,
+                                         displaytime=displaytime)
         if format == 'text/html':
             value = xml_escape(value)
         return value
