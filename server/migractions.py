@@ -1545,7 +1545,7 @@ class ServerMigrationHelper(MigrationHelper):
         """
         rschema = self.repo.schema.rschema(attr)
         oldtype = rschema.objects(etype)[0]
-        rdefeid = rschema.rproperty(etype, oldtype, 'eid')
+        rdefeid = rschema.rdef(etype, oldtype).eid
         sql = ("UPDATE cw_CWAttribute "
                "SET cw_to_entity=(SELECT cw_eid FROM cw_CWEType WHERE cw_name='%s')"
                "WHERE cw_eid=%s") % (newtype, rdefeid)
