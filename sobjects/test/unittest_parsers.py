@@ -71,6 +71,9 @@ RELATEDXML = {
   <address>syt@logilab.fr</address>
   <modification_date>2010-04-13 14:35:56</modification_date>
   <creation_date>2010-04-13 14:35:56</creation_date>
+  <tags role="object">
+    <Tag cwuri="http://pouet.org/9" eid="9"/>
+  </tags>
  </EmailAddress>
 </rset>
 ''',
@@ -78,6 +81,9 @@ RELATEDXML = {
 <rset size="1">
  <CWGroup eid="7" cwuri="http://pouet.org/7">
   <name>users</name>
+  <tags role="object">
+    <Tag cwuri="http://pouet.org/9" eid="9"/>
+  </tags>
  </CWGroup>
 </rset>
 ''',
@@ -140,7 +146,7 @@ class CWEntityXMLParserTC(CubicWebTC):
                               u'role=subject\naction=link\nlinkattr=name'),
                              (('CWUser', 'in_state', '*'),
                               u'role=subject\naction=link\nlinkattr=name'),
-                             (('*', 'tags', 'CWUser'),
+                             (('*', 'tags', '*'),
                               u'role=object\naction=link-or-create\nlinkattr=name'),
                             ])
         myotherfeed.init_mapping([(('CWUser', 'in_group', '*'),
@@ -177,7 +183,15 @@ class CWEntityXMLParserTC(CubicWebTC):
                                  (u'Tag', {u'linkattr': u'name'})],
                              (u'use_email', u'subject', u'copy'): [
                                  (u'EmailAddress', {})]
-                             }
+                             },
+                          u'CWGroup': {
+                             (u'tags', u'object', u'link-or-create'): [
+                                 (u'Tag', {u'linkattr': u'name'})],
+                             },
+                          u'EmailAddress': {
+                             (u'tags', u'object', u'link-or-create'): [
+                                 (u'Tag', {u'linkattr': u'name'})],
+                             },
                           })
         session = self.repo.internal_session(safe=True)
         stats = dfsource.pull_data(session, force=True, raise_on_error=True)
@@ -198,17 +212,21 @@ class CWEntityXMLParserTC(CubicWebTC):
         self.assertEqual(email.cwuri, 'http://pouet.org/6')
         self.assertEqual(email.absolute_url(), 'http://pouet.org/6')
         self.assertEqual(email.cw_source[0].name, 'myfeed')
+        self.assertEqual(len(email.reverse_tags), 1)
+        self.assertEqual(email.reverse_tags[0].name, 'hop')
         # link action
         self.assertFalse(self.execute('CWGroup X WHERE X name "unknown"'))
         groups = sorted([g.name for g in user.in_group])
         self.assertEqual(groups, ['users'])
+        group = user.in_group[0]
+        self.assertEqual(len(group.reverse_tags), 1)
+        self.assertEqual(group.reverse_tags[0].name, 'hop')
         # link or create action
-        tags = sorted([t.name for t in user.reverse_tags])
-        self.assertEqual(tags, ['hop', 'unknown'])
-        tag = self.execute('Tag X WHERE X name "unknown"').get_entity(0, 0)
-        self.assertEqual(tag.cwuri, 'http://testing.fr/cubicweb/%s' % tag.eid)
-        self.assertEqual(tag.cw_source[0].name, 'system')
-
+        tags = set([(t.name, t.cwuri.replace(str(t.eid), ''), t.cw_source[0].name)
+                    for t in user.reverse_tags])
+        self.assertEqual(tags, set((('hop', 'http://testing.fr/cubicweb/', 'system'),
+                                    ('unknown', 'http://testing.fr/cubicweb/', 'system')))
+                         )
         session.set_cnxset()
         stats = dfsource.pull_data(session, force=True, raise_on_error=True)
         self.assertEqual(stats['created'], set())

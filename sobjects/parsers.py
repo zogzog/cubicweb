@@ -193,6 +193,13 @@ class CWEntityXMLParser(datafeed.DataFeedXMLParser):
             yield builder.build_item()
 
     def process_item(self, item, rels):
+        """
+        item and rels are what's returned by the item builder `build_item` method:
+
+        * `item` is an {attribute: value} dictionary
+        * `rels` is for relations and structured as
+           {role: {relation: [(related item, related rels)...]}
+        """
         entity = self.extid2entity(str(item.pop('cwuri')),  item.pop('cwtype'),
                                    cwsource=item.pop('cwsource'), item=item)
         if entity is None:
@@ -206,12 +213,17 @@ class CWEntityXMLParser(datafeed.DataFeedXMLParser):
             # XXX check modification date
             attrs = extract_typed_attrs(entity.e_schema, item)
             entity.set_attributes(**attrs)
-        for (rtype, role, action), rules in self.source.mapping.get(entity.__regid__, {}).iteritems():
+        self.process_relations(entity, rels)
+        return entity
+
+    def process_relations(self, entity, rels):
+        etype = entity.__regid__
+        for (rtype, role, action), rules in self.source.mapping.get(etype, {}).iteritems():
             try:
                 related_items = rels[role][rtype]
             except KeyError:
                 self.source.error('relation %s-%s not found in xml export of %s',
-                                  rtype, role, entity.__regid__)
+                                  rtype, role, etype)
                 continue
             try:
                 linker = self.select_linker(action, rtype, role, entity)
@@ -219,20 +231,22 @@ class CWEntityXMLParser(datafeed.DataFeedXMLParser):
                 self.source.error('no linker for action %s', action)
             else:
                 linker.link_items(related_items, rules)
-        return entity
 
     def before_entity_copy(self, entity, sourceparams):
         """IDataFeedParser callback"""
         attrs = extract_typed_attrs(entity.e_schema, sourceparams['item'])
         entity.cw_edited.update(attrs)
 
-    def complete_url(self, url, etype=None, add_relations=True):
+    def complete_url(self, url, etype=None, known_relations=None):
         """append to the url's query string information about relation that should
         be included in the resulting xml, according to source mapping.
 
         If etype is not specified, try to guess it using the last path part of
         the url, i.e. the format used by default in cubicweb to map all entities
         of a given type as in 'http://mysite.org/EntityType'.
+
+        If `known_relations` is given, it should be a dictionary of already
+        known relations, so they don't get queried again.
         """
         try:
             url, qs = url.split('?', 1)
@@ -250,24 +264,29 @@ class CWEntityXMLParser(datafeed.DataFeedXMLParser):
                 etype = self._cw.vreg.case_insensitive_etypes[etype.lower()]
             except KeyError:
                 return url + '?' + self._cw.build_url_params(**params)
-        if add_relations:
-            relations = params.setdefault('relation', [])
-            for rtype, role, _ in self.source.mapping.get(etype, ()):
-                reldef = '%s-%s' % (rtype, role)
-                if not reldef in relations:
-                    relations.append(reldef)
+        relations = params.setdefault('relation', [])
+        for rtype, role, _ in self.source.mapping.get(etype, ()):
+            if known_relations and rtype in known_relations.get('role', ()):
+                continue
+            reldef = '%s-%s' % (rtype, role)
+            if not reldef in relations:
+                relations.append(reldef)
         return url + '?' + self._cw.build_url_params(**params)
 
-    def complete_item(self, item, add_relations=True):
+    def complete_item(self, item, rels):
         try:
-            return self._parsed_urls[(item['cwuri'], add_relations)]
+            return self._parsed_urls[item['cwuri']]
         except KeyError:
-            itemurl = self.complete_url(item['cwuri'], item['cwtype'],
-                                        add_relations)
+            itemurl = self.complete_url(item['cwuri'], item['cwtype'], rels)
             item_rels = list(self.parse(itemurl))
             assert len(item_rels) == 1, 'url %s expected to bring back one '\
                    'and only one entity, got %s' % (itemurl, len(item_rels))
-            self._parsed_urls[(item['cwuri'], add_relations)] = item_rels[0]
+            self._parsed_urls[item['cwuri']] = item_rels[0]
+            if rels:
+                # XXX (do it better) merge relations
+                new_rels = item_rels[0][1]
+                new_rels.get('subject', {}).update(rels.get('subject', {}))
+                new_rels.get('object', {}).update(rels.get('object', {}))
             return item_rels[0]
 
 
@@ -280,6 +299,12 @@ class CWEntityXMLItemBuilder(Component):
         self.node = node
 
     def build_item(self):
+        """parse a XML document node and return two dictionaries defining (part
+        of) an entity:
+
+        - {attribute: value}
+        - {role: {relation: [(related item, related rels)...]}
+        """
         node = self.node
         item = dict(node.attrib.items())
         item['cwtype'] = unicode(node.tag)
@@ -296,7 +321,7 @@ class CWEntityXMLItemBuilder(Component):
             if role:
                 # relation
                 related = rels.setdefault(role, {}).setdefault(child.tag, [])
-                related += [ritem for ritem, _ in self.parser.parse_etree(child)]
+                related += self.parser.parse_etree(child)
             elif child.text:
                 # attribute
                 item[child.tag] = unicode(child.text)
@@ -337,10 +362,10 @@ class CWEntityXMLActionCopy(Component):
         assert not any(x[1] for x in rules), "'copy' action takes no option"
         ttypes = frozenset([x[0] for x in rules])
         eids = [] # local eids
-        for item in others:
+        for item, rels in others:
             if item['cwtype'] in ttypes:
-                item = self.parser.complete_item(item)[0]
-                other_entity = self.parser.process_item(item, [])
+                item, rels = self.parser.complete_item(item, rels)
+                other_entity = self.parser.process_item(item, rels)
                 if other_entity is not None:
                     eids.append(other_entity.eid)
         if eids:
@@ -395,11 +420,11 @@ class CWEntityXMLActionLink(CWEntityXMLActionCopy):
             return all(z in y for z in x)
         eids = [] # local eids
         source = self.parser.source
-        for item in others:
+        for item, rels in others:
             if item['cwtype'] != ttype:
                 continue
             if not issubset(searchattrs, item):
-                item = self.parser.complete_item(item, False)[0]
+                item, rels = self.parser.complete_item(item, rels)
                 if not issubset(searchattrs, item):
                     source.error('missing attribute, got %s expected keys %s',
                                  item, searchattrs)
@@ -407,16 +432,20 @@ class CWEntityXMLActionLink(CWEntityXMLActionCopy):
             # XXX str() needed with python < 2.6
             kwargs = dict((str(attr), item[attr]) for attr in searchattrs)
             targets = self._find_entities(item, kwargs)
-            if len(targets) > 1:
-                source.error('ambiguous link: found %s entity %s with attributes %s',
-                             len(targets), item['cwtype'], kwargs)
-            elif len(targets) == 1:
-                eids.append(targets[0].eid)
-            elif self.create_when_not_found:
-                eids.append(self._cw.create_entity(item['cwtype'], **kwargs).eid)
+            if len(targets) == 1:
+                entity = targets[0]
+            elif not targets and self.create_when_not_found:
+                entity = self._cw.create_entity(item['cwtype'], **kwargs)
             else:
-                source.error('can not find %s entity with attributes %s',
-                             item['cwtype'], kwargs)
+                if len(targets) > 1:
+                    source.error('ambiguous link: found %s entity %s with attributes %s',
+                                 len(targets), item['cwtype'], kwargs)
+                else:
+                    source.error('can not find %s entity with attributes %s',
+                                 item['cwtype'], kwargs)
+                continue
+            eids.append(entity.eid)
+            self.parser.process_relations(entity, rels)
         if eids:
             self._set_relation(eids)
         else:
