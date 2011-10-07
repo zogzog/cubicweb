@@ -25,4 +25,4 @@ class comments(RelationDefinition):
 
 class Tag(EntityType):
     name = String(unique=True)
-    tags = SubjectRelation('CWUser')
+    tags = SubjectRelation(('CWUser', 'CWGroup', 'EmailAddress'))

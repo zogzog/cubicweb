@@ -50,7 +50,7 @@ from yams.constraints import SizeConstraint
 from yams.schema2sql import eschema2sql, rschema2sql
 from yams.schema import RelationDefinitionSchema
 
-from cubicweb import AuthenticationError, ExecutionError
+from cubicweb import CW_SOFTWARE_ROOT, AuthenticationError, ExecutionError
 from cubicweb.selectors import is_instance
 from cubicweb.schema import (ETYPE_NAME_MAP, META_RTYPES, VIRTUAL_RTYPES,
                              PURE_VIRTUAL_RTYPES,
@@ -358,9 +358,14 @@ class ServerMigrationHelper(MigrationHelper):
         """cached constraint types mapping"""
         return ss.cstrtype_mapping(self._cw)
 
-    def exec_event_script(self, event, cubepath=None, funcname=None,
-                          *args, **kwargs):
-        if cubepath:
+    def cmd_exec_event_script(self, event, cube=None, funcname=None,
+                              *args, **kwargs):
+        """execute a cube event scripts  `migration/<event>.py` where event
+        is one of 'precreate', 'postcreate', 'preremove' and 'postremove'.
+        """
+        assert event in ('precreate', 'postcreate', 'preremove', 'postremove')
+        if cube:
+            cubepath = self.config.cube_dir(cube)
             apc = osp.join(cubepath, 'migration', '%s.py' % event)
         else:
             apc = osp.join(self.config.migration_scripts_dir(), '%s.py' % event)
@@ -380,7 +385,16 @@ class ServerMigrationHelper(MigrationHelper):
                 if self.config.free_wheel:
                     self.cmd_reactivate_verification_hooks()
 
-    def install_custom_sql_scripts(self, directory, driver):
+    def cmd_install_custom_sql_scripts(self, cube=None):
+        """install a cube custom sql scripts `schema/*.<driver>.sql` where
+        <driver> depends on the instance main database backend (eg 'postgres',
+        'mysql'...)
+        """
+        driver = self.repo.system_source.dbdriver
+        if cube is None:
+            directory = osp.join(CW_SOFTWARE_ROOT, 'schemas')
+        else:
+            directory = self.config.cube_dir(cube)
         sql_scripts = []
         for fpath in glob(osp.join(directory, '*.sql.%s' % driver)):
             newname = osp.basename(fpath).replace('.sql.%s' % driver,
@@ -667,10 +681,9 @@ class ServerMigrationHelper(MigrationHelper):
         new = set()
         # execute pre-create files
         driver = self.repo.system_source.dbdriver
-        for pack in reversed(newcubes):
-            cubedir = self.config.cube_dir(pack)
-            self.install_custom_sql_scripts(osp.join(cubedir, 'schema'), driver)
-            self.exec_event_script('precreate', cubedir)
+        for cube in reversed(newcubes):
+            self.cmd_install_custom_sql_scripts(cube)
+            self.cmd_exec_event_script('precreate', cube)
         # add new entity and relation types
         for rschema in newcubes_schema.relations():
             if not rschema in self.repo.schema:
@@ -693,8 +706,8 @@ class ServerMigrationHelper(MigrationHelper):
                 self.cmd_add_relation_definition(str(fromtype), rschema.type,
                                                  str(totype))
         # execute post-create files
-        for pack in reversed(newcubes):
-            self.exec_event_script('postcreate', self.config.cube_dir(pack))
+        for cube in reversed(newcubes):
+            self.cmd_exec_event_script('postcreate', cube)
             self.commit()
 
     def cmd_remove_cube(self, cube, removedeps=False):
@@ -706,8 +719,8 @@ class ServerMigrationHelper(MigrationHelper):
         removedcubes_schema = self.config.load_schema(construction_mode='non-strict')
         reposchema = self.repo.schema
         # execute pre-remove files
-        for pack in reversed(removedcubes):
-            self.exec_event_script('preremove', self.config.cube_dir(pack))
+        for cube in reversed(removedcubes):
+            self.cmd_exec_event_script('preremove', cube)
         # remove cubes'entity and relation types
         for rschema in fsschema.relations():
             if not rschema in removedcubes_schema and rschema in reposchema:
@@ -728,7 +741,7 @@ class ServerMigrationHelper(MigrationHelper):
                             str(fromtype), rschema.type, str(totype))
         # execute post-remove files
         for cube in reversed(removedcubes):
-            self.exec_event_script('postremove', self.config.cube_dir(cube))
+            self.cmd_exec_event_script('postremove', cube)
             self.rqlexec('DELETE CWProperty X WHERE X pkey %(pk)s',
                          {'pk': u'system.version.'+cube}, ask_confirm=False)
             self.commit()

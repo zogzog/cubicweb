@@ -111,17 +111,17 @@ function buildRQL(divid, vid, paginate, vidargs) {
                 'ctxcomponents', 'breadcrumbs'));
             }
         }
-	var mainvar = null;
-	var index = jQuery.inArray('mainvar', zipped[0]);
-	if (index > - 1) {
+        var mainvar = null;
+        var index = jQuery.inArray('mainvar', zipped[0]);
+        if (index > - 1) {
             mainvar = zipped[1][index];
-	}
+        }
 
         var d = loadRemote('json', ajaxFuncArgs('filter_select_content', null, toupdate, rql, mainvar));
         d.addCallback(function(updateMap) {
             for (facetName in updateMap) {
                 var values = updateMap[facetName];
-		// XXX fine with jquery 1.6
+                // XXX fine with jquery 1.6
                 //$form.find('div[cubicweb\\:facetName="' + facetName + '"] ~ div .facetCheckBox').each(function() {
                 $form.find('div').filter(function () {return $(this).attr('cubicweb:facetName') == facetName}).parent().find('.facetCheckBox').each(function() {
                     var value = this.getAttribute('cubicweb:value');
@@ -151,19 +151,19 @@ function initFacetBoxEvents(root) {
         //       called, not when the page is initialized
         var facetargs = form.attr('cubicweb:facetargs');
         if (facetargs != undefined && !form.attr('cubicweb:initialized')) {
-	    form.attr('cubicweb:initialized', '1');
-	    var jsfacetargs = cw.evalJSON(form.attr('cubicweb:facetargs'));
+            form.attr('cubicweb:initialized', '1');
+            var jsfacetargs = cw.evalJSON(form.attr('cubicweb:facetargs'));
             form.submit(function() {
                 buildRQL.apply(null, jsfacetargs);
                 return false;
             });
-	    var divid = jsfacetargs[0];
-	    if (jQuery('#'+divid).length) {
-		var $loadingDiv = $(DIV({id:'facetLoading'},
-					facetLoadingMsg));
-		$loadingDiv.corner();
-		$(jQuery('#'+divid).get(0).parentNode).append($loadingDiv);
-	    }
+            var divid = jsfacetargs[0];
+            if (jQuery('#'+divid).length) {
+                var $loadingDiv = $(DIV({id:'facetLoading'},
+                                        facetLoadingMsg));
+                $loadingDiv.corner();
+                $(jQuery('#'+divid).get(0).parentNode).append($loadingDiv);
+           }
             form.find('div.facet').each(function() {
                 var facet = jQuery(this);
                 facet.find('div.facetCheckBox').each(function(i) {

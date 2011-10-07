@@ -273,6 +273,8 @@ class DBAPISession(object):
     def anonymous_session(self):
         return not self.cnx or self.cnx.anonymous_connection
 
+    def __repr__(self):
+        return '<DBAPISession %r>' % self.sessionid
 
 class DBAPIRequest(RequestSessionBase):
 
