@@ -22,7 +22,8 @@ _ = unicode
 
 from yams.buildobjs import (EntityType, RelationType, RelationDefinition,
                             SubjectRelation,
-                            String, Datetime, Password, Interval, Boolean)
+                            String, TZDatetime, Datetime, Password, Interval,
+                            Boolean)
 from cubicweb.schema import (
     RQLConstraint, WorkflowableEntityType, ERQLExpression, RRQLExpression,
     PUB_SYSTEM_ENTITY_PERMS, PUB_SYSTEM_REL_PERMS, PUB_SYSTEM_ATTR_PERMS)
