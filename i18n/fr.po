@@ -1902,9 +1902,6 @@ msgstr ""
 msgid "ctxtoolbar"
 msgstr "barre d'outils"
 
-msgid "currently in synchronization"
-msgstr "en cours de synchronisation"
-
 msgid "custom_workflow"
 msgstr "workflow spécifique"
 
@@ -2796,6 +2793,13 @@ msgstr "état"
 
 msgid "in_state_object"
 msgstr "état de"
+
+msgid "in_synchronization"
+msgstr "en cours de synchronisation"
+
+msgctxt "CWSource"
+msgid "in_synchronization"
+msgstr "en cours de synchronisation"
 
 msgid "incontext"
 msgstr "dans le contexte"
@@ -3855,6 +3859,12 @@ msgstr "parent de"
 msgid "specifying %s is mandatory"
 msgstr "spécifier %s est obligatoire"
 
+msgid ""
+"start timestamp of the currently in synchronization, or NULL when no "
+"synchronization in progress."
+msgstr ""
+"horodate de départ de la synchronisation en cours, ou NULL s'il n'y en a pas."
+
 msgid "startup views"
 msgstr "vues de départ"
 
@@ -3989,13 +3999,6 @@ msgstr "symétrique"
 
 msgid "synchronization-interval must be greater than 1 minute"
 msgstr "synchronization-interval doit être supérieur à 1 minute"
-
-msgid "synchronizing"
-msgstr "synchronisation"
-
-msgctxt "CWSource"
-msgid "synchronizing"
-msgstr "synchronisation"
 
 msgid "table"
 msgstr "table"

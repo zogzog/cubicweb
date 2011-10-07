@@ -1867,9 +1867,6 @@ msgstr "Zeite die Workflow-Chronik."
 msgid "ctxtoolbar"
 msgstr "Werkzeugleiste"
 
-msgid "currently in synchronization"
-msgstr ""
-
 msgid "custom_workflow"
 msgstr "angepasster Workflow"
 
@@ -2752,6 +2749,13 @@ msgstr "Zustand"
 
 msgid "in_state_object"
 msgstr "Zustand von"
+
+msgid "in_synchronization"
+msgstr ""
+
+msgctxt "CWSource"
+msgid "in_synchronization"
+msgstr ""
 
 msgid "incontext"
 msgstr "im Kontext"
@@ -3800,6 +3804,11 @@ msgstr "Vorgänger von"
 msgid "specifying %s is mandatory"
 msgstr ""
 
+msgid ""
+"start timestamp of the currently in synchronization, or NULL when no "
+"synchronization in progress."
+msgstr ""
+
 msgid "startup views"
 msgstr "Start-Ansichten"
 
@@ -3933,13 +3942,6 @@ msgid "symmetric"
 msgstr "symmetrisch"
 
 msgid "synchronization-interval must be greater than 1 minute"
-msgstr ""
-
-msgid "synchronizing"
-msgstr ""
-
-msgctxt "CWSource"
-msgid "synchronizing"
 msgstr ""
 
 msgid "table"
