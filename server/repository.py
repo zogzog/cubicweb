@@ -890,7 +890,7 @@ class Repository(object):
           deleted since the given timestamp
         """
         session = self.internal_session()
-        updatetime = datetime.now()
+        updatetime = datetime.utcnow()
         try:
             modentities, delentities = self.system_source.modified_entities(
                 session, etypes, mtime)

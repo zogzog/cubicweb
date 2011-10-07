@@ -972,7 +972,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             extid = b64encode(extid)
         uri = 'system' if source.copy_based_source else source.uri
         attrs = {'type': entity.__regid__, 'eid': entity.eid, 'extid': extid,
-                 'source': uri, 'asource': source.uri, 'mtime': datetime.now()}
+                 'source': uri, 'asource': source.uri, 'mtime': datetime.utcnow()}
         self.doexec(session, self.sqlgen.insert('entities', attrs), attrs)
         # insert core relations: is, is_instance_of and cw_source
         try:
@@ -1002,7 +1002,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             self.index_entity(session, entity=entity)
         # update entities.mtime.
         # XXX Only if entity.__regid__ in self.multisources_etypes?
-        attrs = {'eid': entity.eid, 'mtime': datetime.now()}
+        attrs = {'eid': entity.eid, 'mtime': datetime.utcnow()}
         self.doexec(session, self.sqlgen.update('entities', attrs, ['eid']), attrs)
 
     def delete_info_multi(self, session, entities, uri):
@@ -1019,7 +1019,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         if entities[0].__regid__ not in self.multisources_etypes:
             return
         attrs = {'type': entities[0].__regid__,
-                 'source': uri, 'dtime': datetime.now()}
+                 'source': uri, 'dtime': datetime.utcnow()}
         for entity in entities:
             extid = entity.cw_metainformation()['extid']
             if extid is not None:
@@ -1173,7 +1173,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         table when some undoable transaction is started
         """
         ueid = session.user.eid
-        attrs = {'tx_uuid': uuid, 'tx_user': ueid, 'tx_time': datetime.now()}
+        attrs = {'tx_uuid': uuid, 'tx_user': ueid, 'tx_time': datetime.utcnow()}
         self.doexec(session, self.sqlgen.insert('transactions', attrs), attrs)
 
     def _save_attrs(self, session, entity, attrs):
