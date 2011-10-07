@@ -60,11 +60,11 @@ function buildRQL(divid, vid, paginate, vidargs) {
         var rql = result[0];
         var $bkLink = jQuery('#facetBkLink');
         if ($bkLink.length) {
-            var bkPath = 'view?rql=' + escape(rql);
+            var bkPath = 'view?rql=' + encodeURIComponent(rql);
             if (vid) {
-                bkPath += '&vid=' + escape(vid);
+                bkPath += '&vid=' + encodeURIComponent(vid);
             }
-            var bkUrl = $bkLink.attr('cubicweb:target') + '&path=' + escape(bkPath);
+            var bkUrl = $bkLink.attr('cubicweb:target') + '&path=' + encodeURIComponent(bkPath);
             $bkLink.attr('href', bkUrl);
         }
         var toupdate = result[1];
