@@ -399,7 +399,7 @@ class EntityFieldsForm(FieldsForm):
                 self.field_by_name(rtype, role)
             except form.FieldNotFound:
                 for eid in eids:
-                    self.add_hidden('__linkto', '%s:%s:%s' % (rtype, role, eid))
+                    self.add_hidden('__linkto', '%s:%s:%s' % (rtype, eid, role))
 
     def render(self, *args, **kwargs):
         self.add_linkto_hidden()
