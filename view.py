@@ -23,6 +23,7 @@ _ = unicode
 import types, new
 from cStringIO import StringIO
 from warnings import warn
+from functools import partial
 
 from logilab.common.deprecation import deprecated
 from logilab.mtconverter import xml_escape
@@ -451,24 +452,53 @@ class AnyRsetView(View):
     category = _('anyrsetview')
 
     def columns_labels(self, mainindex=0, tr=True):
+        """compute the label of the rset colums
+
+        The logic is based on :meth:`~rql.stmts.Union.get_description`.
+
+        :param mainindex: The index of the main variable. This is an hint to get
+                          more accurate label for various situation
+        :type mainindex:  int
+
+        :param tr: Should the label be translated ?
+        :type tr: boolean
+        """
         if tr:
-            translate = lambda val, req=self._cw: display_name(req, val)
+            translate = partial(display_name, self._cw)
         else:
             translate = lambda val: val
         # XXX [0] because of missing Union support
-        rqlstdescr = self.cw_rset.syntax_tree().get_description(mainindex,
-                                                                translate)[0]
+        rql_syntax_tree = self.cw_rset.syntax_tree()
+        rqlstdescr = rql_syntax_tree.get_description(mainindex)[0]
         labels = []
         for colidx, label in enumerate(rqlstdescr):
-            try:
-                label = getattr(self, 'label_column_%s' % colidx)()
-            except AttributeError:
-                # compute column header
-                if label == 'Any': # find a better label
-                    label = ','.join(translate(et)
-                                     for et in self.cw_rset.column_types(colidx))
-            labels.append(label)
+            labels.append(self.column_label(colidx, label, translate))
         return labels
+
+    def column_label(self, colidx, default, translate_func=None):
+        """return the label of a specified columns index
+
+        Overwrite me if you need to compute specific label.
+
+        :param colidx: The index of the column the call computes a label for.
+        :type colidx:  int
+
+        :param default: Default value. If ``"Any"`` the default value will be
+                        recomputed as coma separated list for all possible
+                        etypes name.
+        :type colidx:  string
+
+        :param translate_func: A function used to translate name.
+        :type colidx:  function
+        """
+        label = default
+        if label == 'Any':
+            etypes = self.cw_rset.column_types(colidx)
+            if translate_func is not None:
+                etypes = map(translate_func, etypes)
+            label = ','.join(etypes)
+        return label
+
 
 
 # concrete template base classes ##############################################
