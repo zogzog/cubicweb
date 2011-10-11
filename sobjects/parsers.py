@@ -72,7 +72,7 @@ def extract_typed_attrs(eschema, stringdict, converters=DEFAULT_CONVERTERS):
     typeddict = {}
     for rschema in eschema.subject_relations():
         if rschema.final and rschema in stringdict:
-            if rschema == 'eid':
+            if rschema in ('eid', 'cwuri', 'cwtype', 'cwsource'):
                 continue
             attrtype = eschema.destination(rschema)
             value = stringdict[rschema]
@@ -200,8 +200,8 @@ class CWEntityXMLParser(datafeed.DataFeedXMLParser):
         * `rels` is for relations and structured as
            {role: {relation: [(related item, related rels)...]}
         """
-        entity = self.extid2entity(str(item.pop('cwuri')),  item.pop('cwtype'),
-                                   cwsource=item.pop('cwsource'), item=item)
+        entity = self.extid2entity(str(item['cwuri']),  item['cwtype'],
+                                   cwsource=item['cwsource'], item=item)
         if entity is None:
             return None
         if entity.eid in self._processed_entities:
@@ -209,10 +209,16 @@ class CWEntityXMLParser(datafeed.DataFeedXMLParser):
         self._processed_entities.add(entity.eid)
         if not (self.created_during_pull(entity) or self.updated_during_pull(entity)):
             self.notify_updated(entity)
-            item.pop('eid')
-            # XXX check modification date
             attrs = extract_typed_attrs(entity.e_schema, item)
-            entity.set_attributes(**attrs)
+            # check modification date and compare attribute values to only
+            # update what's actually needed
+            entity.complete(tuple(attrs))
+            mdate = attrs.get('modification_date')
+            if not mdate or mdate > entity.modification_date:
+                attrs = dict( (k, v) for k, v in attrs.iteritems()
+                              if v != getattr(entity, k))
+                if attrs:
+                    entity.set_attributes(**attrs)
         self.process_relations(entity, rels)
         return entity
 
