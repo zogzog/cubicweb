@@ -100,7 +100,8 @@ class TableView(AnyRsetView):
         req = self._cw
         req.add_js('jquery.tablesorter.js')
         req.add_onload('jQuery("table.listing").tablesorter({'
-                           'textExtraction: cubicwebSortValueExtraction' # use our own function
+                           'textExtraction: cubicwebSortValueExtraction,' # use our own function
+                           'selectorHeaders: "thead tr:first th"' # only plug on the first row
                        '});')
         req.add_css(('cubicweb.tablesorter.css', 'cubicweb.tableview.css'))
         # compute label first  since the filter form may remove some necessary
