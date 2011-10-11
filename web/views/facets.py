@@ -133,6 +133,20 @@ class FacetFilterMixIn(object):
             hiddens['mainvar'] = mainvar
         filter_hiddens(w, baserql, wdgs, **hiddens)
         self.layout_widgets(w, self.sorted_widgets(wdgs))
+
+        # <Enter> is supposed to submit the form only if there is a single
+        # input:text field. However most browsers will submit the form
+        # on <Enter> anyway if there is an input:submit field.
+        #
+        # see: http://www.w3.org/MarkUp/html-spec/html-spec_8.html#SEC8.2
+        #
+        # Firefox 7.0.1 does not submit form on <Enter> if there is more than a
+        # input:text field and not input:submit but does it if there is an
+        # input:submit.
+        #
+        # IE 6 or Firefox 2 behave the same way.
+        w(u'<input type="submit" class="hidden" />')
+        #
         w(u'</fieldset>\n')
         w(u'</form>\n')
 
