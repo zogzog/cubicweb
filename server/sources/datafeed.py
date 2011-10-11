@@ -151,10 +151,10 @@ class DataFeedSource(AbstractSource):
         # XXX race condition until WHERE of SET queries is executed using
         # 'SELECT FOR UPDATE'
         now = datetime.utcnow()
-        if not session.execute('SET X in_synchronizaton %(now)s WHERE X eid %(x)s, X synchronizing NULL OR X synchronizing < %(maxdt)s',
-                               {'x': self.eid,
-                                'now': now,
-                                'maxdt': now - self.max_lock_lifetime}):
+        if not session.execute(
+            'SET X in_synchronization %(now)s WHERE X eid %(x)s, '
+            'X in_synchronization NULL OR X in_synchronization < %(maxdt)s',
+            {'x': self.eid, 'now': now, 'maxdt': now - self.max_lock_lifetime}):
             self.error('concurrent synchronization detected, skip pull')
             session.commit(free_cnxset=False)
             return False
@@ -163,7 +163,7 @@ class DataFeedSource(AbstractSource):
 
     def release_synchronization_lock(self, session):
         session.set_cnxset()
-        session.execute('SET X synchronizing None WHERE X eid %(x)s',
+        session.execute('SET X in_synchronization NULL WHERE X eid %(x)s',
                         {'x': self.eid})
         session.commit()
 
