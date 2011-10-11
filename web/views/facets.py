@@ -27,6 +27,7 @@ from cubicweb.selectors import (non_final_entity, multi_lines_rset,
                                 match_context_prop, yes, relation_possible)
 from cubicweb.utils import json_dumps
 from cubicweb.web import component, facet as facetbase
+from cubicweb.rqlrewrite import add_types_restriction
 
 def facets(req, rset, context, mainvar=None):
     """return the base rql and a list of widgets for facets applying to the
@@ -53,6 +54,17 @@ def _facets(req, rset, context, mainvar):
     # union not yet supported
     if len(origqlst.children) != 1:
         return None, ()
+
+    # Add type restriction to rql. This allow the get_type() method to return
+    # useful value on variable extracted from a select statement.
+    #
+    # This is done on origqlst to ensure all rql related objects are properly
+    # enriched when handled by a Facet:
+    #    - the rset.syntax_tree() during selection
+    #    - the select during selection
+    #    - the select during filtering
+
+    add_types_restriction(req.vreg.schema, origqlst.children[0])
     rqlst = origqlst.copy()
     select = rqlst.children[0]
     filtered_variable, baserql = facetbase.init_facets(rset, select, mainvar)
