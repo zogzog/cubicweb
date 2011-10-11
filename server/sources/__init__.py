@@ -65,13 +65,13 @@ class TimedCache(dict):
         self.ttl = timedelta(seconds=ttl)
 
     def __setitem__(self, key, value):
-        dict.__setitem__(self, key, (datetime.now(), value))
+        dict.__setitem__(self, key, (datetime.utcnow(), value))
 
     def __getitem__(self, key):
         return dict.__getitem__(self, key)[1]
 
     def clear_expired(self):
-        now_ = datetime.now()
+        now_ = datetime.utcnow()
         ttl = self.ttl
         for key, (timestamp, value) in self.items():
             if now_ - timestamp > ttl:

@@ -22,7 +22,8 @@ _ = unicode
 
 from yams.buildobjs import (EntityType, RelationType, RelationDefinition,
                             SubjectRelation,
-                            String, Datetime, Password, Interval, Boolean)
+                            String, TZDatetime, Datetime, Password, Interval,
+                            Boolean)
 from cubicweb.schema import (
     RQLConstraint, WorkflowableEntityType, ERQLExpression, RRQLExpression,
     PUB_SYSTEM_ENTITY_PERMS, PUB_SYSTEM_REL_PERMS, PUB_SYSTEM_ATTR_PERMS)
@@ -41,7 +42,7 @@ class CWUser(WorkflowableEntityType):
     upassword = Password(required=True) # password is a reserved word for mysql
     firstname = String(maxsize=64)
     surname   = String(maxsize=64)
-    last_login_time  = Datetime(description=_('last connection date'))
+    last_login_time = TZDatetime(description=_('last connection date'))
     in_group = SubjectRelation('CWGroup', cardinality='+*',
                                constraints=[RQLConstraint('NOT O name "owners"')],
                                description=_('groups grant permissions to the user'))
@@ -226,7 +227,7 @@ class CWCache(EntityType):
 
     name = String(required=True, unique=True, maxsize=128,
                   description=_('name of the cache'))
-    timestamp = Datetime(default='NOW')
+    timestamp = TZDatetime(default='NOW')
 
 
 class CWSource(EntityType):
@@ -252,9 +253,9 @@ class CWSource(EntityType):
     # may changes when sources are specified
     url = String(description=_('URLs from which content will be imported. You can put one url per line'))
     parser = String(description=_('parser to use to extract entities from content retrieved at given URLs.'))
-    latest_retrieval = Datetime(description=_('latest synchronization time'))
-    synchronizing = Boolean(description=_('currently in synchronization'),
-                            default=False)
+    latest_retrieval = TZDatetime(description=_('latest synchronization time'))
+    in_synchronization = TZDatetime(description=_('start timestamp of the currently in synchronization, or NULL when no synchronization in progress.'))
+
 
 ENTITY_MANAGERS_PERMISSIONS = {
     'read':   ('managers',),
