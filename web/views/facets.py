@@ -30,7 +30,12 @@ from cubicweb.web import component, facet as facetbase
 
 def facets(req, rset, context, mainvar=None):
     """return the base rql and a list of widgets for facets applying to the
-    given rset/context (cached version)
+    given rset/context (cached version of :func:`_facet`)
+
+    :param req: A :class:`~cubicweb.req.RequestSessionBase` object
+    :param rset: A :class:`~cubicweb.rset.ResultSet`
+    :param context: A string that match the ``__regid__`` of a ``FacetFilter``
+    :param mainvar: A string that match a select var from the rset
     """
     try:
         cache = req.__rset_facets
@@ -46,19 +51,32 @@ def facets(req, rset, context, mainvar=None):
 def _facets(req, rset, context, mainvar):
     """return the base rql and a list of widgets for facets applying to the
     given rset/context
+
+    :param req: A :class:`~cubicweb.req.RequestSessionBase` object
+    :param rset: A :class:`~cubicweb.rset.ResultSet`
+    :param context: A string that match the ``__regid__`` of a ``FacetFilter``
+    :param mainvar: A string that match a select var from the rset
     """
+    ### initialisation
     # XXX done by selectors, though maybe necessary when rset has been hijacked
     # (e.g. contextview_selector matched)
     origqlst = rset.syntax_tree()
     # union not yet supported
     if len(origqlst.children) != 1:
+        req.debug('facette disabled on union request %s', origqlst)
         return None, ()
     rqlst = origqlst.copy()
     select = rqlst.children[0]
     filtered_variable, baserql = facetbase.init_facets(rset, select, mainvar)
-    wdgs = [(facet, facet.get_widget()) for facet in req.vreg['facets'].poss_visible_objects(
-        req, rset=rset, rqlst=origqlst, select=select, context=context,
-        filtered_variable=filtered_variable)]
+    ### Selection
+    possible_facets = req.vreg['facets'].poss_visible_objects(
+                        req,
+                        rset=rset,
+                        rqlst=origqlst,
+                        select=select,
+                        context=context,
+                        filtered_variable=filtered_variable)
+    wdgs = [(facet, facet.get_widget()) for facet in possible_facets]
     return baserql, [wdg for facet, wdg in wdgs if wdg is not None]
 
 
@@ -94,13 +112,45 @@ def filter_hiddens(w, baserql, wdgs, **kwargs):
 
 
 class FacetFilterMixIn(object):
+    """Mixin Class to generate Facet Filter Form
+
+    To generate the form, you need to explicitly the following methode with the
+    right argument:
+
+    .. automethod:: generate_form
+
+    The most useful function to overwrite is:
+
+    .. automethod:: layout_widgets
+
+    """
     needs_js = ['cubicweb.ajax.js', 'cubicweb.facets.js']
     needs_css = ['cubicweb.facets.css']
     roundcorners = True
 
     def generate_form(self, w, rset, divid, vid, vidargs,
                       paginate=False, cssclass='', **hiddens):
-        """display a form to filter some view's content"""
+        """display a form to filter some view's content
+
+        :param w:        Write function
+
+        :param rset:     ResultSet to be filtered
+
+        :param divid:    Dom ID of the div where the rendering of the view is done.
+        :type divid:     string
+
+        :param vid:      ID of the view display in the div
+        :type vid:       string
+
+        :param paginate: Is the view paginated ?
+        :type paginate:  boolean
+
+        :param cssclass: Additional css classes to put on the form.
+        :type cssclass:  string
+
+        :param hiddens:  other hidden parametters to include in the forms.
+        :type hiddens:   dict from extra keyword argument
+        """
         mainvar = self.cw_extra_kwargs.get('mainvar')
         baserql, wdgs = facets(self._cw, rset, self.__regid__, mainvar)
         assert wdgs
