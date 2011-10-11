@@ -279,8 +279,7 @@ class CWSource(EntityType):
     url = String(description=_('URLs from which content will be imported. You can put one url per line'))
     parser = String(description=_('parser to use to extract entities from content retrieved at given URLs.'))
     latest_retrieval = TZDatetime(description=_('latest synchronization time'))
-    in_synchronization = TZDatetime(description=_('start timestamp of the currently in synchronization, or NULL when no synchronization in progress.'),
-                                    default=False)
+    in_synchronization = TZDatetime(description=_('start timestamp of the currently in synchronization, or NULL when no synchronization in progress.'))
 
 
 ENTITY_MANAGERS_PERMISSIONS = {
