@@ -132,21 +132,6 @@ class FinalView(AnyRsetView):
     though usually dedicated for cells containing an attribute's value.
     """
     __regid__ = 'final'
-    # record generated i18n catalog messages
-    _('%d&#160;years')
-    _('%d&#160;months')
-    _('%d&#160;weeks')
-    _('%d&#160;days')
-    _('%d&#160;hours')
-    _('%d&#160;minutes')
-    _('%d&#160;seconds')
-    _('%d years')
-    _('%d months')
-    _('%d weeks')
-    _('%d days')
-    _('%d hours')
-    _('%d minutes')
-    _('%d seconds')
 
     def cell_call(self, row, col, props=None, format='text/html'):
         value = self.cw_rset.rows[row][col]
@@ -163,8 +148,9 @@ class FinalView(AnyRsetView):
                 return
         value = self._cw.printable_value(etype, value, props)
         if etype in ('Time', 'Interval'):
-            value = value.replace(' ', '&#160;')
-        self.wdata(value)
+            self.w(value.replace(' ', '&#160;'))
+        else:
+            self.wdata(value)
 
 
 class InContextView(EntityView):
