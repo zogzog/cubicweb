@@ -47,7 +47,7 @@ class IEditControlAdapter(EntityAdapter):
         return str(self.entity.e_schema).lower(), {}
 
     @implements_adapter_compat('IEditControl')
-    def pre_web_edit(self):
+    def pre_web_edit(self, form):
         """callback called by the web editcontroller when an entity will be
         created/modified, to let a chance to do some entity specific stuff.
 
@@ -173,13 +173,6 @@ class EditController(basecontrollers.ViewController):
         entity = self._cw.vreg['etypes'].etype_class(etype)(self._cw)
         entity.eid = valerror_eid(formparams['eid'])
         is_main_entity = self._cw.form.get('__maineid') == formparams['eid']
-        # let a chance to do some entity specific stuff
-        entity.cw_adapt_to('IEditControl').pre_web_edit()
-        # create a rql query from parameters
-        rqlquery = RqlQuery()
-        # process inlined relations at the same time as attributes
-        # this will generate less rql queries and might be useful in
-        # a few dark corners
         if is_main_entity:
             formid = self._cw.form.get('__form_id', 'edition')
         else:
@@ -187,6 +180,13 @@ class EditController(basecontrollers.ViewController):
             # inbetween, use cubicweb standard formid for inlined forms
             formid = 'edition'
         form = self._cw.vreg['forms'].select(formid, self._cw, entity=entity)
+        # let a chance to do some entity specific stuff
+        entity.cw_adapt_to('IEditControl').pre_web_edit(form)
+        # create a rql query from parameters
+        rqlquery = RqlQuery()
+        # process inlined relations at the same time as attributes
+        # this will generate less rql queries and might be useful in
+        # a few dark corners
         eid = form.actual_eid(entity.eid)
         try:
             editedfields = formparams['_cw_entity_fields']
