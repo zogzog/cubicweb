@@ -50,7 +50,7 @@ _ = unicode
 
 from warnings import warn
 from copy import deepcopy
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 
 from logilab.mtconverter import xml_escape
 from logilab.common.graph import has_path
@@ -59,7 +59,7 @@ from logilab.common.date import datetime2ticks, ustrftime, ticks2datetime
 from logilab.common.compat import all
 from logilab.common.deprecation import deprecated
 
-from rql import parse, nodes, utils
+from rql import nodes, utils
 
 from cubicweb import Unauthorized, typed_eid
 from cubicweb.schema import display_name
@@ -469,6 +469,10 @@ class VocabularyFacet(AbstractFacet):
     def wdgclass(self):
         return FacetVocabularyWidget
 
+    def get_selected(self):
+        return frozenset(typed_eid(eid)
+                         for eid in self._cw.list_form_param(self.__regid__))
+
     def get_widget(self):
         """Return the widget instance to use to display this facet.
 
@@ -479,12 +483,9 @@ class VocabularyFacet(AbstractFacet):
         if len(vocab) <= 1:
             return None
         wdg = self.wdgclass(self)
-        selected = frozenset(typed_eid(eid) for eid in self._cw.list_form_param(self.__regid__))
+        selected = self.get_selected()
         for label, value in vocab:
-            if value is None:
-                wdg.append(FacetSeparator(label))
-            else:
-                wdg.append(FacetItem(self._cw, label, value, value in selected))
+            wdg.items.append((value, label, value in selected))
         return wdg
 
     def vocabulary(self):
@@ -497,7 +498,6 @@ class VocabularyFacet(AbstractFacet):
         compare to a form value in javascript) for this facet.
         """
         raise NotImplementedError
-
 
 
 class RelationFacet(VocabularyFacet):
@@ -711,6 +711,7 @@ class RelationFacet(VocabularyFacet):
 
     # internal utilities #######################################################
 
+    @cached
     def _support_and_compat(self):
         support = self.support_and
         if callable(support):
@@ -1339,24 +1340,7 @@ class HasRelationFacet(AbstractFacet):
 
 
 ## html widets ################################################################
-_DEFAULT_CONSTANT_VOCAB_WIDGET_HEIGHT = 9
-
-@cached
-def _css_height_to_line_count(vreg):
-    cssprop = vreg.config.uiprops['facet_overflowedHeight'].lower().strip()
-    # let's talk a bit ...
-    # we try to deduce a number of displayed lines from a css property
-    # there is a linear (rough empiric coefficient == 0.73) relation between
-    # css _em_ value and line qty
-    # if we get another unit we're out of luck and resort to one constant
-    # hence, it is strongly advised not to specify but ems for this css prop
-    if cssprop.endswith('em'):
-        try:
-            return int(cssprop[:-2]) * .73
-        except Exception:
-            vreg.warning('css property facet_overflowedHeight looks malformed (%r)',
-                         cssprop)
-    return _DEFAULT_CONSTANT_VOCAB_WIDGET_HEIGHT
+_DEFAULT_CONSTANT_VOCAB_WIDGET_HEIGHT = 12
 
 class FacetVocabularyWidget(htmlwidgets.HTMLWidget):
 
@@ -1364,13 +1348,35 @@ class FacetVocabularyWidget(htmlwidgets.HTMLWidget):
         self.facet = facet
         self.items = []
 
+    @property
+    @cached
+    def css_overflow_limit(self):
+        """ we try to deduce a number of displayed lines from a css property
+        if we get another unit we're out of luck and resort to one constant
+        hence, it is strongly advised not to specify but ems for this css prop
+        """
+        vreg = self.facet._cw.vreg
+        cssprop = vreg.config.uiprops['facet_overflowedHeight'].lower().strip()
+        if cssprop.endswith('em'):
+            try:
+                return int(cssprop[:-2])
+            except Exception:
+                vreg.warning('css property facet_overflowedHeight looks malformed (%r)',
+                             cssprop)
+        return _DEFAULT_CONSTANT_VOCAB_WIDGET_HEIGHT
+
+    @property
     @cached
     def height(self):
-        maxheight = _css_height_to_line_count(self.facet._cw.vreg)
-        return 1 + min(len(self.items), maxheight) + int(self.facet._support_and_compat())
+        return 1 + min(len(self.items),
+                       self.css_overflow_limit + int(self.facet._support_and_compat()))
 
-    def append(self, item):
-        self.items.append(item)
+    @property
+    @cached
+    def overflows(self):
+        return len(self.items) >= self.css_overflow_limit
+
+    scrollbar_padding_factor = 4
 
     def _render(self):
         w = self.w
@@ -1380,29 +1386,52 @@ class FacetVocabularyWidget(htmlwidgets.HTMLWidget):
         w(u'<div class="facetTitle" cubicweb:facetName="%s">%s</div>\n' %
           (xml_escape(self.facet.__regid__), title))
         if self.facet._support_and_compat():
-            _ = self.facet._cw._
-            w(u'''<select name="%s" class="radio facetOperator" title="%s">
-  <option value="OR">%s</option>
-  <option value="AND">%s</option>
-</select>''' % (xml_escape(self.facet.__regid__) + '_andor', _('and/or between different values'),
-                _('OR'), _('AND')))
-        cssclass = 'facetBody'
+            self._render_and_or(w)
+        cssclass = 'vocabularyFacet'
         if not self.facet.start_unfolded:
             cssclass += ' hidden'
-        if len(self.items) > 6:
-            cssclass += ' overflowed'
+        overflow = self.overflows
+        if overflow:
+            if self.facet._support_and_compat():
+                cssclass += ' vocabularyFacetBodyWithLogicalSelector'
+            else:
+                cssclass += ' vocabularyFacetBody'
         w(u'<div class="%s">\n' % cssclass)
-        for item in self.items:
-            item.render(w=w)
+        for value, label, selected in self.items:
+            if value is None:
+                continue
+            self._render_value(w, value, label, selected, overflow)
         w(u'</div>\n')
         w(u'</div>\n')
 
+    def _render_and_or(self, w):
+        _ = self.facet._cw._
+        w(u"""<select name='%s' class='radio facetOperator' title='%s'>
+  <option value='OR'>%s</option>
+  <option value='AND'>%s</option>
+</select>""" % (xml_escape(self.facet.__regid__) + '_andor',
+                _('and/or between different values'),
+                _('OR'), _('AND')))
+
+    def _render_value(self, w, value, label, selected, overflow):
+        cssclass = 'facetValue facetCheckBox'
+        if selected:
+            cssclass += ' facetValueSelected'
+        w(u'<div class="%s" cubicweb:value="%s">\n'
+          % (cssclass, xml_escape(unicode(value))))
+        # If it is overflowed one must add padding to compensate for the vertical
+        # scrollbar; given current css values, 4 blanks work perfectly ...
+        padding = u'&#160;' * self.scrollbar_padding_factor if overflow else u''
+        w('<span>%s</span>' % xml_escape(label))
+        w(padding)
+        w(u'</div>')
 
 class FacetStringWidget(htmlwidgets.HTMLWidget):
     def __init__(self, facet):
         self.facet = facet
         self.value = None
 
+    @property
     def height(self):
         return 3
 
@@ -1447,6 +1476,7 @@ class FacetRangeWidget(htmlwidgets.HTMLWidget):
         self.minvalue = minvalue
         self.maxvalue = maxvalue
 
+    @property
     def height(self):
         return 3
 
@@ -1507,34 +1537,6 @@ class DateFacetRangeWidget(FacetRangeWidget):
         facet._cw.html_headers.define_var('DATE_FMT', fmt)
 
 
-class FacetItem(htmlwidgets.HTMLWidget):
-
-    selected_img = "black-check.png"
-    unselected_img = "no-check-no-border.png"
-
-    def __init__(self, req, label, value, selected=False):
-        self._cw = req
-        self.label = label
-        self.value = value
-        self.selected = selected
-
-    def _render(self):
-        w = self.w
-        cssclass = 'facetValue facetCheckBox'
-        if self.selected:
-            cssclass += ' facetValueSelected'
-            imgsrc = self._cw.data_url(self.selected_img)
-            imgalt = self._cw._('selected')
-        else:
-            imgsrc = self._cw.data_url(self.unselected_img)
-            imgalt = self._cw._('not selected')
-        w(u'<div class="%s" cubicweb:value="%s">\n'
-          % (cssclass, xml_escape(unicode(self.value))))
-        w(u'<img src="%s" alt="%s"/>&#160;' % (imgsrc, imgalt))
-        w(u'<a href="javascript: {}">%s</a>' % xml_escape(self.label))
-        w(u'</div>')
-
-
 class CheckBoxFacetWidget(htmlwidgets.HTMLWidget):
     selected_img = "black-check.png"
     unselected_img = "black-uncheck.png"
@@ -1545,6 +1547,7 @@ class CheckBoxFacetWidget(htmlwidgets.HTMLWidget):
         self.value = value
         self.selected = selected
 
+    @property
     def height(self):
         return 2
 
@@ -1563,9 +1566,9 @@ class CheckBoxFacetWidget(htmlwidgets.HTMLWidget):
             imgalt = self._cw._('not selected')
         w(u'<div class="%s" cubicweb:value="%s">\n'
           % (cssclass, xml_escape(unicode(self.value))))
-        w(u'<div class="facetCheckBoxWidget">')
+        w(u'<div>')
         w(u'<img src="%s" alt="%s" cubicweb:unselimg="true" />&#160;' % (imgsrc, imgalt))
-        w(u'<label class="facetTitle" cubicweb:facetName="%s"><a href="javascript: {}">%s</a></label>'
+        w(u'<label class="facetTitle" cubicweb:facetName="%s">%s</label>'
           % (xml_escape(self.facet.__regid__), title))
         w(u'</div>\n')
         w(u'</div>\n')

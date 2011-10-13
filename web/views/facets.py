@@ -178,7 +178,7 @@ class FacetFilterMixIn(object):
         """sort widgets: by default sort by widget height, then according to
         widget.order (the original widgets order)
         """
-        return sorted(wdgs, key=lambda x: x.height())
+        return sorted(wdgs, key=lambda x: x.height)
 
     def layout_widgets(self, w, wdgs):
         """layout widgets: by default simply render each of them
@@ -276,7 +276,7 @@ class FilterTable(FacetFilterMixIn, AnyRsetView):
 
     def layout_widgets(self, w, wdgs):
         """layout widgets: put them in a table where each column should have
-        sum(wdg.height()) < wdg_stack_size.
+        sum(wdg.height) < wdg_stack_size.
         """
         if len(wdgs) < self.compact_layout_threshold:
             self._simple_horizontal_layout(w, wdgs)
@@ -284,10 +284,10 @@ class FilterTable(FacetFilterMixIn, AnyRsetView):
         w(u'<table class="filter">\n')
         widget_queue = []
         queue_height = 0
-        wdg_stack_size = max(wdgs, key=lambda wdg:wdg.height()).height()
+        wdg_stack_size = max(wdgs, key=lambda wdg:wdg.height).height
         w(u'<tr>\n')
         for wdg in wdgs:
-            height = wdg.height()
+            height = wdg.height
             if queue_height + height <= wdg_stack_size:
                 widget_queue.append(wdg)
                 queue_height += height
