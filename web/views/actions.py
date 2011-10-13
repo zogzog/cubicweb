@@ -147,7 +147,7 @@ class ViewAction(action.Action):
 class ModifyAction(action.Action):
     __regid__ = 'edit'
     __select__ = (action.Action.__select__
-                  & one_line_rset() & has_editable_relation('add'))
+                  & one_line_rset() & has_editable_relation())
 
     title = _('modify')
     category = 'mainactions'
