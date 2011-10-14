@@ -16,7 +16,9 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Some utilities for CubicWeb server/clients."""
-from __future__ import division
+
+from __future__ import division, with_statement
+
 __docformat__ = "restructuredtext en"
 
 import sys

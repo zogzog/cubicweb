@@ -20,6 +20,8 @@
 __docformat__ = "restructuredtext en"
 _ = unicode
 
+from warnings import warn
+
 from logilab.mtconverter import xml_escape
 
 from cubicweb.appobject import objectify_selector
