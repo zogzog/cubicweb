@@ -194,7 +194,7 @@ class SchemaReaderClassTest(TestCase):
                               'from_entity', 'from_state', 'fulltext_container', 'fulltextindexed',
 
                               'has_text',
-                              'identity', 'in_group', 'in_state', 'indexed',
+                              'identity', 'in_group', 'in_state', 'in_synchronization', 'indexed',
                               'initial_state', 'inlined', 'internationalizable', 'is', 'is_instance_of',
 
                               'label', 'last_login_time', 'latest_retrieval', 'lieu', 'login',
@@ -209,7 +209,7 @@ class SchemaReaderClassTest(TestCase):
 
                               'read_permission', 'relation_type', 'relations', 'require_group',
 
-                              'specializes', 'state_of', 'subworkflow', 'subworkflow_exit', 'subworkflow_state', 'surname', 'symmetric', 'synchronizing', 'synopsis',
+                              'specializes', 'state_of', 'subworkflow', 'subworkflow_exit', 'subworkflow_state', 'surname', 'symmetric', 'synopsis',
 
                               'tags', 'timestamp', 'title', 'to_entity', 'to_state', 'transition_of', 'travaille', 'type',
 
