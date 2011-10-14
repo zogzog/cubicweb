@@ -47,7 +47,7 @@ class TableView(AnyRsetView):
 
     tablesorter_settings = {
         'textExtraction': JSString('cw.sortValueExtraction'),
-        'selectorHeaders: "thead tr:first th"' # only plug on the first row
+        'selectorHeaders': 'thead tr:first th', # only plug on the first row
         }
 
     def form_filter(self, divid, displaycols, displayactions, displayfilter,
