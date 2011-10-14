@@ -313,7 +313,7 @@ class DBAPIRequest(RequestSessionBase):
         except KeyError:
             # this occurs usually during test execution
             self._ = self.__ = unicode
-            self.pgettext = lambda x, y: y
+            self.pgettext = lambda x, y: unicode(y)
         self.debug('request default language: %s', self.lang)
 
     # entities cache management ###############################################
