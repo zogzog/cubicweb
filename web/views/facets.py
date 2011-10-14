@@ -128,7 +128,7 @@ class FacetFilterMixIn(object):
     needs_css = ['cubicweb.facets.css']
     roundcorners = True
 
-    def generate_form(self, w, rset, divid, vid, vidargs,
+    def generate_form(self, w, rset, divid, vid, vidargs=None,
                       paginate=False, cssclass='', **hiddens):
         """display a form to filter some view's content
 
@@ -161,7 +161,11 @@ class FacetFilterMixIn(object):
         if self.roundcorners:
             self._cw.html_headers.add_onload(
                 'jQuery(".facet").corner("tl br 10px");')
-        # drop False / None values from vidargs
+        if vidargs is not None:
+            warn("[3.14] vidargs is deprecated. Maybe you're using some TableView?",
+                 DeprecationWarning, stacklevel=2)
+        else:
+            vidargs = {}
         vidargs = dict((k, v) for k, v in vidargs.iteritems() if v)
         facetargs = xml_escape(json_dumps([divid, vid, paginate, vidargs]))
         w(u'<form id="%sForm" class="%s" method="post" action="" '
@@ -213,8 +217,7 @@ class FilterBox(FacetFilterMixIn, component.CtxComponent):
         for param in ('subvid', 'vtitle'):
             if param in req.form:
                 hiddens[param] = req.form[param]
-        self.generate_form(w, rset, divid, vid, self.vidargs(),
-                           paginate=paginate, **hiddens)
+        self.generate_form(w, rset, divid, vid, paginate=paginate, **hiddens)
 
     def _get_context(self):
         view = self.cw_extra_kwargs.get('view')
@@ -244,12 +247,6 @@ class FilterBox(FacetFilterMixIn, component.CtxComponent):
                 req._('bookmark this search'))
         return self.bk_linkbox_template % bk_link
 
-    def vidargs(self):
-        """this method returns the list of extra arguments that should be used
-        by the filter or the view using it
-        """
-        return {}
-
 
 from cubicweb.view import AnyRsetView
 
@@ -258,11 +255,9 @@ class FilterTable(FacetFilterMixIn, AnyRsetView):
     __select__ = has_facets()
     compact_layout_threshold = 5
 
-    def call(self, vid, divid, vidargs, cssclass=''):
-        self.generate_form(self.w, self.cw_rset, divid, vid, vidargs,
-                           cssclass=cssclass, fromformfilter='1',
-                           # divid=divid XXX
-                           )
+    def call(self, vid, divid, vidargs=None, cssclass=''):
+        self.generate_form(self.w, self.cw_rset, divid, vid, vidargs=vidargs,
+                           cssclass=cssclass, fromformfilter='1')
 
     def _simple_horizontal_layout(self, w, wdgs):
         w(u'<table class="filter">\n')
