@@ -24,7 +24,7 @@ from logilab.common.testlib import TestCase, unittest_main
 from cubicweb import Binary
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.appobject import Selector, AndSelector, OrSelector
-from cubicweb.selectors import (is_instance, adaptable, match_user_groups,
+from cubicweb.selectors import (is_instance, adaptable, match_kwargs, match_user_groups,
                                 multi_lines_rset, score_entity, is_in_state,
                                 on_transition, rql_condition, relation_possible)
 from cubicweb.web import action
@@ -397,6 +397,20 @@ class MultiLinesRsetSelectorTC(CubicWebTC):
             selector = multi_lines_rset(expected, operator)
             yield self.assertEqual, selector(None, self.req, rset=self.rset), assertion
 
+    def test_match_kwargs_default(self):
+        selector = match_kwargs( set( ('a', 'b') ) )
+        self.assertEqual(selector(None, None, a=1, b=2), 2)
+        self.assertEqual(selector(None, None, a=1), 0)
+        self.assertEqual(selector(None, None, c=1), 0)
+        self.assertEqual(selector(None, None, a=1, c=1), 0)
+
+    def test_match_kwargs_any(self):
+        selector = match_kwargs( set( ('a', 'b') ), mode='any')
+        self.assertEqual(selector(None, None, a=1, b=2), 2)
+        self.assertEqual(selector(None, None, a=1), 1)
+        self.assertEqual(selector(None, None, c=1), 0)
+        self.assertEqual(selector(None, None, a=1, c=1), 1)
+
 
 class ScoreEntitySelectorTC(CubicWebTC):
 
@@ -412,7 +426,7 @@ class ScoreEntitySelectorTC(CubicWebTC):
         rset = req.execute('Any G LIMIT 2 WHERE G is CWGroup')
         selector = score_entity(lambda x: 10)
         self.assertEqual(selector(None, req, rset=rset), 20)
-        selector = score_entity(lambda x: 10, once_is_enough=True)
+        selector = score_entity(lambda x: 10, mode='any')
         self.assertEqual(selector(None, req, rset=rset), 10)
 
     def test_rql_condition_entity(self):

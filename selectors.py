@@ -269,17 +269,23 @@ class EClassSelector(Selector):
     When there are several classes to be evaluated, return the sum of scores for
     each entity class unless:
 
-      - `once_is_enough` is False (the default) and some entity class is scored
+      - `mode` == 'all' (the default) and some entity class is scored
         to 0, in which case 0 is returned
 
-      - `once_is_enough` is True, in which case the first non-zero score is
+      - `mode` == 'any', in which case the first non-zero score is
         returned
 
       - `accept_none` is False and some cell in the column has a None value
         (this may occurs with outer join)
     """
-    def __init__(self, once_is_enough=False, accept_none=True):
-        self.once_is_enough = once_is_enough
+    def __init__(self, once_is_enough=None, accept_none=True, mode='all'):
+        if once_is_enough is not None:
+            warn("[3.14] once_is_enough is deprecated, use mode='any'",
+                 DeprecationWarning, stacklevel=2)
+            if once_is_enough:
+                mode = 'any'
+        assert mode in ('any', 'all'), 'bad mode %s' % mode
+        self.once_is_enough = mode == 'any'
         self.accept_none = accept_none
 
     @lltrace
@@ -340,10 +346,10 @@ class EntitySelector(EClassSelector):
       specified specified by the `col` argument or in column 0 if not specified,
       unless:
 
-      - `once_is_enough` is False (the default) and some entity is scored
+      - `mode` == 'all' (the default) and some entity class is scored
         to 0, in which case 0 is returned
 
-      - `once_is_enough` is True, in which case the first non-zero score is
+      - `mode` == 'any', in which case the first non-zero score is
         returned
 
       - `accept_none` is False and some cell in the column has a None value
@@ -401,18 +407,35 @@ class ExpectedValueSelector(Selector):
     """Take a list of expected values as initializer argument and store them
     into the :attr:`expected` set attribute. You may also give a set as single
     argument, which will be then be referenced as set of expected values,
-    allowing modification to the given set to be considered.
+    allowing modifications to the given set to be considered.
 
-    You should implement the :meth:`_get_value(cls, req, **kwargs)` method
-    which should return the value for the given context. The selector will then
-    return 1 if the value is expected, else 0.
+    You should implement one of :meth:`_values_set(cls, req, **kwargs)` or
+    :meth:`_get_value(cls, req, **kwargs)` method which should respectivly
+    return the set of values or the unique possible value for the given context.
+
+    You may also specify a `mode` behaviour as argument, as explained below.
+
+    Returned score is:
+
+    - 0 if `mode` == 'all' (the default) and at least one expected
+      values isn't found
+
+    - 0 if `mode` == 'any' and no expected values isn't found at all
+
+    - else the number of matching values
+
+    Notice `mode`='any' with a single expected value has no effect at all.
     """
-    def __init__(self, *expected):
+    def __init__(self, *expected, **kwargs):
         assert expected, self
         if len(expected) == 1 and isinstance(expected[0], set):
             self.expected = expected[0]
         else:
             self.expected = frozenset(expected)
+        mode = kwargs.pop('mode', 'all')
+        assert mode in ('any', 'all'), 'bad mode %s' % mode
+        self.once_is_enough = mode == 'any'
+        assert not kwargs, 'unexpected arguments %s' % kwargs
 
     def __str__(self):
         return '%s(%s)' % (self.__class__.__name__,
@@ -420,9 +443,16 @@ class ExpectedValueSelector(Selector):
 
     @lltrace
     def __call__(self, cls, req, **kwargs):
-        if self._get_value(cls, req, **kwargs) in self.expected:
-            return 1
+        values = self._values_set(cls, req, **kwargs)
+        matching = len(values & self.expected)
+        if self.once_is_enough:
+            return matching
+        if matching == len(self.expected):
+            return matching
         return 0
+
+    def _values_set(self, cls, req, **kwargs):
+        return frozenset( (self._get_value(cls, req, **kwargs),) )
 
     def _get_value(self, cls, req, **kwargs):
         raise NotImplementedError()
@@ -432,17 +462,18 @@ class ExpectedValueSelector(Selector):
 
 class match_kwargs(ExpectedValueSelector):
     """Return non-zero score if parameter names specified as initializer
-    arguments are specified in the input context. When multiple parameters are
-    specified, all of them should be specified in the input context. Return a
-    score corresponding to the number of expected parameters.
+    arguments are specified in the input context.
+
+
+    Return a score corresponding to the number of expected parameters.
+
+    When multiple parameters are expected, all of them should be found in
+    the input context unless `mode` keyword argument is given to 'any',
+    in which case a single matching parameter is enough.
     """
 
-    @lltrace
-    def __call__(self, cls, req, **kwargs):
-        for arg in self.expected:
-            if not arg in kwargs:
-                return 0
-        return len(self.expected)
+    def _values_set(self, cls, req, **kwargs):
+        return frozenset(kwargs)
 
 
 class appobject_selectable(Selector):
@@ -842,8 +873,8 @@ class score_entity(EntitySelector):
     See :class:`~cubicweb.selectors.EntitySelector` documentation for entity
     lookup / score rules according to the input context.
     """
-    def __init__(self, scorefunc, once_is_enough=False):
-        super(score_entity, self).__init__(once_is_enough)
+    def __init__(self, scorefunc, once_is_enough=None, mode='all'):
+        super(score_entity, self).__init__(mode=mode, once_is_enough=once_is_enough)
         def intscore(*args, **kwargs):
             score = scorefunc(*args, **kwargs)
             if not score:
@@ -860,8 +891,8 @@ class has_mimetype(EntitySelector):
     You can give 'image/' to match any image for instance, or 'image/png' to match
     only PNG images.
     """
-    def __init__(self, mimetype, once_is_enough=False):
-        super(has_mimetype, self).__init__(once_is_enough)
+    def __init__(self, mimetype, once_is_enough=None, mode='all'):
+        super(has_mimetype, self).__init__(mode=mode, once_is_enough=once_is_enough)
         self.mimetype = mimetype
 
     def score_entity(self, entity):
@@ -1173,8 +1204,8 @@ class rql_condition(EntitySelector):
     See :class:`~cubicweb.selectors.EntitySelector` documentation for entity
     lookup / score rules according to the input context.
     """
-    def __init__(self, expression, once_is_enough=False, user_condition=False):
-        super(rql_condition, self).__init__(once_is_enough)
+    def __init__(self, expression, once_is_enough=None, mode='all', user_condition=False):
+        super(rql_condition, self).__init__(mode=mode, once_is_enough=once_is_enough)
         self.user_condition = user_condition
         if user_condition:
             rql = 'Any COUNT(U) WHERE U eid %%(u)s, %s' % expression
@@ -1417,11 +1448,8 @@ class match_context(ExpectedValueSelector):
 
     @lltrace
     def __call__(self, cls, req, context=None, **kwargs):
-        try:
-            if not context in self.expected:
-                return 0
-        except AttributeError:
-            return 1 # class doesn't care about search state, accept it
+        if not context in self.expected:
+            return 0
         return 1
 
 
@@ -1474,17 +1502,17 @@ class match_search_state(ExpectedValueSelector):
 
 class match_form_params(ExpectedValueSelector):
     """Return non-zero score if parameter names specified as initializer
-    arguments are specified in request's form parameters. When multiple
-    parameters are specified, all of them should be found in req.form. Return a
-    score corresponding to the number of expected parameters.
+    arguments are specified in request's form parameters.
+
+    Return a score corresponding to the number of expected parameters.
+
+    When multiple parameters are expected, all of them should be found in
+    the input context unless `mode` keyword argument is given to 'any',
+    in which case a single matching parameter is enough.
     """
 
-    @lltrace
-    def __call__(self, cls, req, **kwargs):
-        for param in self.expected:
-            if not param in req.form:
-                return 0
-        return len(self.expected)
+    def _values_set(self, cls, req, **kwargs):
+        return frozenset(req.form)
 
 
 class specified_etype_implements(is_instance):
@@ -1537,8 +1565,8 @@ class attribute_edited(EntitySelector):
      is_instance('Version') & (match_transition('ready') |
                                attribute_edited('publication_date'))
     """
-    def __init__(self, attribute, once_is_enough=False):
-        super(attribute_edited, self).__init__(once_is_enough)
+    def __init__(self, attribute, once_is_enough=None, mode='all'):
+        super(attribute_edited, self).__init__(mode=mode, once_is_enough=once_is_enough)
         self._attribute = attribute
 
     def score_entity(self, entity):
@@ -1547,13 +1575,13 @@ class attribute_edited(EntitySelector):
 
 # Other selectors ##############################################################
 
-
 class match_exception(ExpectedValueSelector):
-    """Return 1 if a view is specified an as its registry id is in one of the
-    expected view id given to the initializer.
+    """Return 1 if exception given as `exc` in the input context is an instance
+    of one of the class given on instanciation of this predicate.
     """
     def __init__(self, *expected):
         assert expected, self
+        # we want a tuple, not a set as done in the parent class
         self.expected = expected
 
     @lltrace
@@ -1567,6 +1595,7 @@ class match_exception(ExpectedValueSelector):
 def debug_mode(cls, req, rset=None, **kwargs):
     """Return 1 if running in debug mode."""
     return req.vreg.config.debugmode and 1 or 0
+
 
 ## deprecated stuff ############################################################
 
