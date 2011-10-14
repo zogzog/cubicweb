@@ -24,7 +24,7 @@ from logilab.mtconverter import xml_escape
 
 from cubicweb import NoSelectableObject, tags
 from cubicweb.selectors import nonempty_rset
-from cubicweb.utils import make_uid, json_dumps
+from cubicweb.utils import make_uid, js_dumps, JSString
 from cubicweb.view import EntityView, AnyRsetView
 from cubicweb.uilib import toggle_action, limitsize, htmlescape
 from cubicweb.web import jsonize, component, facet
@@ -44,6 +44,11 @@ class TableView(AnyRsetView):
 
     table_widget_class = TableWidget
     table_column_class = TableColumn
+
+    tablesorter_settings = {
+        'textExtraction': JSString('cw.sortValueExtraction'),
+        'selectorHeaders: "thead tr:first th"' # only plug on the first row
+        }
 
     def form_filter(self, divid, displaycols, displayactions, displayfilter,
                     paginate, hidden=True):
@@ -84,6 +89,15 @@ class TableView(AnyRsetView):
                 displaycols = range(len(self.cw_rset.syntax_tree().children[0].selection))
         return displaycols
 
+    def _setup_tablesorter(self, divid):
+        req = self._cw
+        req.add_js('jquery.tablesorter.js')
+        req.add_onload('''$(document).ready(function() {
+    $("#%s table.listing").tablesorter(%s);
+});''' % (divid, js_dumps(self.tablesorter_settings)))
+        req.add_css(('cubicweb.tablesorter.css', 'cubicweb.tableview.css'))
+
+
     def call(self, title=None, subvid=None, displayfilter=None, headers=None,
              displaycols=None, displayactions=None, actions=(), divid=None,
              cellvids=None, cellattrs=None, mainindex=None,
@@ -98,12 +112,8 @@ class TableView(AnyRsetView):
         :param displayactions: if True, display action menu
         """
         req = self._cw
-        req.add_js('jquery.tablesorter.js')
-        req.add_onload('jQuery("table.listing").tablesorter({'
-                           'textExtraction: cubicwebSortValueExtraction,' # use our own function
-                           'selectorHeaders: "thead tr:first th"' # only plug on the first row
-                       '});')
-        req.add_css(('cubicweb.tablesorter.css', 'cubicweb.tableview.css'))
+        divid = divid or req.form.get('divid') or 'rs%s' % make_uid(id(self.cw_rset))
+        self._setup_tablesorter(divid)
         # compute label first  since the filter form may remove some necessary
         # information from the rql syntax tree
         if mainindex is None:
@@ -112,7 +122,6 @@ class TableView(AnyRsetView):
         hidden = True
         if not subvid and 'subvid' in req.form:
             subvid = req.form.pop('subvid')
-        divid = divid or req.form.get('divid') or 'rs%s' % make_uid(id(self.cw_rset))
         actions = list(actions)
         if mainindex is None:
             displayfilter, displayactions = False, False

@@ -90,6 +90,31 @@ def filter_hiddens(w, baserql, **kwargs):
 ## rqlst manipulation functions used by facets ################################
 
 def init_facets(rset, select, mainvar=None):
+    """Alters in place the <select> for filtering and returns related data.
+
+    Calls :func:`prepare_select` to prepare the syntaxtree for selection and
+    :func:`get_filtered_variable` that selects the variable to be filtered and
+    drops several parts of the select tree. See each function docstring for
+    details.
+
+    :param rset: ResultSet we init facet for.
+    :type rset: :class:`~cubicweb.rset.ResultSet`
+
+    :param select: Select statement to be *altered* to support filtering.
+    :type select:   :class:`~rql.stmts.Select` from the ``rset`` parameters.
+
+    :param mainvar: Name of the variable we want to filter with facets.
+    :type mainvar:  string
+
+    :rtype: (filtered_variable, baserql) tuple.
+    :return filtered_variable:  A rql class:`~rql.node.VariableRef`
+                                instance as returned by
+                                :func:`get_filtered_variable`.
+
+    :return baserql: A string containing the rql before
+                     :func:`prepare_select` but after
+                     :func:`get_filtered_variable`.
+    """
     rset.req.vreg.rqlhelper.annotate(select)
     filtered_variable = get_filtered_variable(select, mainvar)
     baserql = select.as_string(kwargs=rset.args) # before call to prepare_select

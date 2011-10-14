@@ -1554,14 +1554,15 @@ class ServerMigrationHelper(MigrationHelper):
         rschema = self.repo.schema.rschema(attr)
         oldtype = rschema.objects(etype)[0]
         rdefeid = rschema.rdef(etype, oldtype).eid
+        allownull = rschema.rdef(etype, oldtype).cardinality[0] != '1'
         sql = ("UPDATE cw_CWAttribute "
                "SET cw_to_entity=(SELECT cw_eid FROM cw_CWEType WHERE cw_name='%s')"
                "WHERE cw_eid=%s") % (newtype, rdefeid)
         self.sqlexec(sql, ask_confirm=False)
         dbhelper = self.repo.system_source.dbhelper
         sqltype = dbhelper.TYPE_MAPPING[newtype]
-        sql = 'ALTER TABLE cw_%s ALTER COLUMN cw_%s TYPE %s' % (etype, attr, sqltype)
-        self.sqlexec(sql, ask_confirm=False)
+        cursor = self.session.cnxset[self.repo.system_source.uri]
+        dbhelper.change_col_type(cursor, 'cw_%s'  % etype, 'cw_%s' % attr, sqltype, allownull)
         if commit:
             self.commit()
 

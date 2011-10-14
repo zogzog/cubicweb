@@ -27,6 +27,7 @@ from cubicweb.selectors import (non_final_entity, multi_lines_rset,
                                 match_context_prop, yes, relation_possible)
 from cubicweb.utils import json_dumps
 from cubicweb.web import component, facet as facetbase
+from cubicweb.rqlrewrite import add_types_restriction
 
 def facets(req, rset, context, mainvar=None):
     """return the base rql and a list of widgets for facets applying to the
@@ -65,6 +66,17 @@ def _facets(req, rset, context, mainvar):
     if len(origqlst.children) != 1:
         req.debug('facette disabled on union request %s', origqlst)
         return None, ()
+
+    # Add type restriction to rql. This allow the get_type() method to return
+    # useful value on variable extracted from a select statement.
+    #
+    # This is done on origqlst to ensure all rql related objects are properly
+    # enriched when handled by a Facet:
+    #    - the rset.syntax_tree() during selection
+    #    - the select during selection
+    #    - the select during filtering
+
+    add_types_restriction(req.vreg.schema, origqlst.children[0])
     rqlst = origqlst.copy()
     select = rqlst.children[0]
     filtered_variable, baserql = facetbase.init_facets(rset, select, mainvar)
@@ -175,6 +187,20 @@ class FacetFilterMixIn(object):
             hiddens['mainvar'] = mainvar
         filter_hiddens(w, baserql, wdgs, **hiddens)
         self.layout_widgets(w, self.sorted_widgets(wdgs))
+
+        # <Enter> is supposed to submit the form only if there is a single
+        # input:text field. However most browsers will submit the form
+        # on <Enter> anyway if there is an input:submit field.
+        #
+        # see: http://www.w3.org/MarkUp/html-spec/html-spec_8.html#SEC8.2
+        #
+        # Firefox 7.0.1 does not submit form on <Enter> if there is more than a
+        # input:text field and not input:submit but does it if there is an
+        # input:submit.
+        #
+        # IE 6 or Firefox 2 behave the same way.
+        w(u'<input type="submit" class="hidden" />')
+        #
         w(u'</fieldset>\n')
         w(u'</form>\n')
 

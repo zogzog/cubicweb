@@ -82,6 +82,15 @@ jQuery.extend(cw, {
         }
         return src;
     }
+
+
+    sortValueExtraction: function (node) {
+	var sortvalue = jQuery(node).attr('cubicweb:sortvalue');
+	if (sortvalue === undefined) {
+	    return '';
+	}
+	return sortvalue;
+}
 });
 
 

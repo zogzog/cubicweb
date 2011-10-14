@@ -39,7 +39,6 @@ _abaa.tag_object_of(('CWSourceSchemaConfig', 'cw_for_source', '*'), False)
 _abaa.tag_object_of(('CWSourceSchemaConfig', 'cw_host_config_of', '*'), False)
 
 _afs = uicfg.autoform_section
-_afs.tag_attribute(('CWSource', 'synchronizing'), 'main', 'hidden')
 _afs.tag_object_of(('*', 'cw_for_source', 'CWSource'), 'main', 'hidden')
 
 _affk = uicfg.autoform_field_kwargs

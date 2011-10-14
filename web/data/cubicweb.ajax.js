@@ -257,10 +257,6 @@ function loadAjaxHtmlHead(response) {
 }
 
 function _postAjaxLoad(node) {
-    // find sortable tables if there are some
-    if (typeof(Sortable) != 'undefined') {
-        Sortable.sortTables(node);
-    }
     // find textareas and wrap them if there are some
     if (typeof(FCKeditor) != 'undefined') {
         buildWysiwygEditors();
