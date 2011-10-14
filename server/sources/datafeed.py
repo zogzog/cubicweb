@@ -297,7 +297,9 @@ class DataFeedParser(AppObject):
                                          complete=False, commit=False,
                                          sourceparams=sourceparams)
         except ValidationError, ex:
-            self.source.error('error while creating %s: %s', etype, ex)
+            # XXX use critical so they are seen during tests. Should consider
+            # raise_on_error instead?
+            self.source.critical('error while creating %s: %s', etype, ex)
             return None
         if eid < 0:
             # entity has been moved away from its original source

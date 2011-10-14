@@ -1085,6 +1085,9 @@ class Repository(object):
             entity = source.before_entity_insertion(
                 session, extid, etype, eid, sourceparams)
             if source.should_call_hooks:
+                # get back a copy of operation for later restore if necessary,
+                # see below
+                pending_operations = session.pending_operations[:]
                 self.hm.call_hooks('before_add_entity', session, entity=entity)
             self.add_info(session, entity, source, extid, complete=complete)
             source.after_entity_insertion(session, extid, entity, sourceparams)
@@ -1096,6 +1099,16 @@ class Repository(object):
         except Exception:
             if commit or free_cnxset:
                 session.rollback(free_cnxset)
+            else:
+                # XXX do some cleanup manually so that the transaction has a
+                # chance to be commited, with simply this entity discarded
+                self._extid_cache.pop(cachekey, None)
+                self._type_source_cache.pop(eid, None)
+                if 'entity' in locals():
+                    hook.CleanupDeletedEidsCacheOp.get_instance(session).add_data(entity.eid)
+                    self.system_source.delete_info_multi(session, [entity], uri)
+                    if source.should_call_hooks:
+                        session._threaddata.pending_operations = pending_operations
             raise
 
     def add_info(self, session, entity, source, extid=None, complete=True):
