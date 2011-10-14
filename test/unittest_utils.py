@@ -26,7 +26,7 @@ from logilab.common.testlib import TestCase, DocTest, unittest_main
 
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.utils import (make_uid, UStringIO, SizeConstrainedList,
-                            RepeatList, HTMLHead)
+                            RepeatList, HTMLHead, QueryCache)
 from cubicweb.entity import Entity
 
 try:
@@ -50,6 +50,55 @@ class MakeUidTC(TestCase):
                           'some numeric character, got %s' % uid)
             d.add(uid)
 
+class TestQueryCache(TestCase):
+    def test_querycache(self):
+        c = QueryCache(ceiling=20)
+        # write only
+        for x in xrange(10):
+            c[x] = x
+        self.assertEqual(c._usage_report(),
+                         {'transientcount': 0,
+                          'itemcount': 10,
+                          'permanentcount': 0})
+        c = QueryCache(ceiling=10)
+        # we should also get a warning
+        for x in xrange(20):
+            c[x] = x
+        self.assertEqual(c._usage_report(),
+                         {'transientcount': 0,
+                          'itemcount': 10,
+                          'permanentcount': 0})
+        # write + reads
+        c = QueryCache(ceiling=20)
+        for n in xrange(4):
+            for x in xrange(10):
+                c[x] = x
+                c[x]
+        self.assertEqual(c._usage_report(),
+                         {'transientcount': 10,
+                          'itemcount': 10,
+                          'permanentcount': 0})
+        c = QueryCache(ceiling=20)
+        for n in xrange(17):
+            for x in xrange(10):
+                c[x] = x
+                c[x]
+        self.assertEqual(c._usage_report(),
+                         {'transientcount': 0,
+                          'itemcount': 10,
+                          'permanentcount': 10})
+        c = QueryCache(ceiling=20)
+        for n in xrange(17):
+            for x in xrange(10):
+                c[x] = x
+                if n % 2:
+                    c[x]
+                if x % 2:
+                    c[x]
+        self.assertEqual(c._usage_report(),
+                         {'transientcount': 5,
+                          'itemcount': 10,
+                          'permanentcount': 5})
 
 class UStringIOTC(TestCase):
     def test_boolean_value(self):

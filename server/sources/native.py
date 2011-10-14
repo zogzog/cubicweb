@@ -46,7 +46,6 @@ import logging
 import sys
 
 from logilab.common.compat import any
-from logilab.common.cache import Cache
 from logilab.common.decorators import cached, clear_cache
 from logilab.common.configuration import Method
 from logilab.common.shellutils import getlogin
@@ -58,6 +57,7 @@ from yams.schema import role_name
 from cubicweb import (UnknownEid, AuthenticationError, ValidationError, Binary,
                       UniqueTogetherError)
 from cubicweb import transaction as tx, server, neg_role
+from cubicweb.utils import QueryCache
 from cubicweb.schema import VIRTUAL_RTYPES
 from cubicweb.cwconfig import CubicWebNoAppConfiguration
 from cubicweb.server import hook
@@ -295,7 +295,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         # full text index helper
         self.do_fti = not repo.config['delay-full-text-indexation']
         # sql queries cache
-        self._cache = Cache(repo.config['rql-cache-size'])
+        self._cache = QueryCache(repo.config['rql-cache-size'])
         self._temp_table_data = {}
         # we need a lock to protect eid attribution function (XXX, really?
         # explain)
@@ -343,7 +343,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
 
     def reset_caches(self):
         """method called during test to reset potential source caches"""
-        self._cache = Cache(self.repo.config['rql-cache-size'])
+        self._cache = QueryCache(self.repo.config['rql-cache-size'])
 
     def clear_eid_cache(self, eid, etype):
         """clear potential caches for the given eid"""
@@ -463,7 +463,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
 
     def set_schema(self, schema):
         """set the instance'schema"""
-        self._cache = Cache(self.repo.config['rql-cache-size'])
+        self._cache = QueryCache(self.repo.config['rql-cache-size'])
         self.cache_hit, self.cache_miss, self.no_cache = 0, 0, 0
         self.schema = schema
         try:

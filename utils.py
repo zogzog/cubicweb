@@ -16,18 +16,21 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Some utilities for CubicWeb server/clients."""
-
+from __future__ import division
 __docformat__ = "restructuredtext en"
 
-import os
 import sys
 import decimal
 import datetime
 import random
+from operator import itemgetter
 from inspect import getargspec
 from itertools import repeat
 from uuid import uuid4
 from warnings import warn
+from threading import Lock
+
+from logging import getLogger
 
 from logilab.mtconverter import xml_escape
 from logilab.common.deprecation import deprecated
@@ -551,3 +554,125 @@ for funcname in ('date_range', 'todate', 'todatetime', 'datetime2ticks',
                  'strptime'):
     msg = '[3.6] %s has been moved to logilab.common.date' % funcname
     _THIS_MOD_NS[funcname] = deprecated(msg)(getattr(date, funcname))
+
+
+logger = getLogger('cubicweb.utils')
+
+class QueryCache(object):
+    """ a minimalist dict-like object to be used by the querier
+    and native source (replaces lgc.cache for this very usage)
+
+    To be efficient it must be properly used. The usage patterns are
+    quite specific to its current clients.
+
+    The ceiling value should be sufficiently high, else it will be
+    ruthlessly inefficient (there will be warnings when this happens).
+    A good (high enough) value can only be set on a per-application
+    value. A default, reasonnably high value is provided but tuning
+    e.g `rql-cache-size` can certainly help.
+
+    There are two kinds of elements to put in this cache:
+    * frequently used elements
+    * occasional elements
+
+    The former should finish in the _permanent structure after some
+    warmup.
+
+    Occasional elements can be buggy requests (server-side) or
+    end-user (web-ui provided) requests. These have to be cleaned up
+    when they fill the cache, without evicting the usefull, frequently
+    used entries.
+    """
+    # quite arbitrary, but we want to never
+    # immortalize some use-a-little query
+    _maxlevel = 15
+
+    def __init__(self, ceiling=3000):
+        self._max = ceiling
+        # keys belonging forever to this cache
+        self._permanent = set()
+        # mapping of key (that can get wiped) to getitem count
+        self._transient = {}
+        self._data = {}
+        self._lock = Lock()
+
+    def __len__(self):
+        with self._lock:
+            return len(self._data)
+
+    def __getitem__(self, k):
+        with self._lock:
+            if k in self._permanent:
+                return self._data[k]
+            v = self._transient.get(k, _MARKER)
+            if v is _MARKER:
+                self._transient[k] = 1
+                return self._data[k]
+            if v > self._maxlevel:
+                self._permanent.add(k)
+                self._transient.pop(k, None)
+            else:
+                self._transient[k] += 1
+            return self._data[k]
+
+    def __setitem__(self, k, v):
+        with self._lock:
+            if len(self._data) >= self._max:
+                self._try_to_make_room()
+            self._data[k] = v
+
+    def pop(self, key, default=_MARKER):
+        with self._lock:
+            try:
+                if default is _MARKER:
+                    return self._data.pop(key)
+                return self._data.pop(key, default)
+            finally:
+                if key in self._permanent:
+                    self._permanent.remove(key)
+                else:
+                    self._transient.pop(key, None)
+
+    def clear(self):
+        with self._lock:
+            self._clear()
+
+    def _clear(self):
+        self._permanent = set()
+        self._transient = {}
+        self._data = {}
+
+    def _try_to_make_room(self):
+        current_size = len(self._data)
+        items = sorted(self._transient.items(), key=itemgetter(1))
+        level = 0
+        for k, v in items:
+            self._data.pop(k, None)
+            self._transient.pop(k, None)
+            if v > level:
+                datalen = len(self._data)
+                if datalen == 0:
+                    return
+                if (current_size - datalen) / datalen > .1:
+                    break
+                level = v
+        else:
+            # we removed cruft but everything is permanent
+            if len(self._data) >= self._max:
+                logger.warning('Cache %s is full.' % id(self))
+                self._clear()
+
+    def _usage_report(self):
+        with self._lock:
+            return {'itemcount': len(self._data),
+                    'transientcount': len(self._transient),
+                    'permanentcount': len(self._permanent)}
+
+    def popitem(self):
+        raise NotImplementedError()
+
+    def setdefault(self, key, default=None):
+        raise NotImplementedError()
+
+    def update(self, other):
+        raise NotImplementedError()
