@@ -81,8 +81,7 @@ jQuery.extend(cw, {
             parent.removeChild(dest);
         }
         return src;
-    }
-
+    },
 
     sortValueExtraction: function (node) {
 	var sortvalue = jQuery(node).attr('cubicweb:sortvalue');
