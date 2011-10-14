@@ -170,11 +170,10 @@ def display_name(req, key, form='', context=None):
     if form:
         key = key + '_' + form
     # ensure unicode
-    # .lower() in case no translation are available XXX done whatever a translation is there or not!
     if context is not None:
-        return unicode(req.pgettext(context, key)).lower()
+        return unicode(req.pgettext(context, key))
     else:
-        return unicode(req._(key)).lower()
+        return unicode(req._(key))
 
 __builtins__['display_name'] = deprecated('[3.4] display_name should be imported from cubicweb.schema')(display_name)
 
