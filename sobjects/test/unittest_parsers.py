@@ -16,6 +16,8 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import with_statement
+
 from datetime import datetime
 
 from cubicweb.devtools.testlib import CubicWebTC
@@ -228,13 +230,15 @@ class CWEntityXMLParserTC(CubicWebTC):
                                     ('unknown', 'http://testing.fr/cubicweb/', 'system')))
                          )
         session.set_cnxset()
-        stats = dfsource.pull_data(session, force=True, raise_on_error=True)
+        with session.security_enabled(read=False): # avoid Unauthorized due to password selection
+            stats = dfsource.pull_data(session, force=True, raise_on_error=True)
         self.assertEqual(stats['created'], set())
         self.assertEqual(len(stats['updated']), 2)
         self.repo._type_source_cache.clear()
         self.repo._extid_cache.clear()
         session.set_cnxset()
-        stats = dfsource.pull_data(session, force=True, raise_on_error=True)
+        with session.security_enabled(read=False): # avoid Unauthorized due to password selection
+            stats = dfsource.pull_data(session, force=True, raise_on_error=True)
         self.assertEqual(stats['created'], set())
         self.assertEqual(len(stats['updated']), 2)
         session.commit()
@@ -255,7 +259,8 @@ class CWEntityXMLParserTC(CubicWebTC):
         self.commit()
         # test everything is still fine after source synchronization
         session.set_cnxset()
-        stats = dfsource.pull_data(session, force=True, raise_on_error=True)
+        with session.security_enabled(read=False): # avoid Unauthorized due to password selection
+            stats = dfsource.pull_data(session, force=True, raise_on_error=True)
         rset = self.sexecute('EmailAddress X WHERE X address "syt@logilab.fr"')
         self.assertEqual(len(rset), 1)
         e = rset.get_entity(0, 0)
@@ -273,7 +278,8 @@ class CWEntityXMLParserTC(CubicWebTC):
         self.commit()
         # test everything is still fine after source synchronization
         session.set_cnxset()
-        stats = dfsource.pull_data(session, force=True, raise_on_error=True)
+        with session.security_enabled(read=False): # avoid Unauthorized due to password selection
+            stats = dfsource.pull_data(session, force=True, raise_on_error=True)
         rset = self.sexecute('EmailAddress X WHERE X address "syt@logilab.fr"')
         self.assertEqual(len(rset), 0)
         rset = self.sexecute('Any X WHERE X use_email E, X login "sthenault"')

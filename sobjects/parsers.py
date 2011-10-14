@@ -61,9 +61,14 @@ def convert_datetime(ustr):
         ustr = ustr.split('.',1)[0]
     return datetime.strptime(ustr, '%Y-%m-%d %H:%M:%S')
 DEFAULT_CONVERTERS['Datetime'] = convert_datetime
+# XXX handle timezone, though this will be enough as TZDatetime are
+# serialized without time zone by default (UTC time). See
+# cw.web.views.xmlrss.SERIALIZERS.
+DEFAULT_CONVERTERS['TZDatetime'] = convert_datetime
 def convert_time(ustr):
     return totime(datetime.strptime(ustr, '%H:%M:%S'))
 DEFAULT_CONVERTERS['Time'] = convert_time
+DEFAULT_CONVERTERS['TZTime'] = convert_time
 def convert_interval(ustr):
     return time(seconds=int(ustr))
 DEFAULT_CONVERTERS['Interval'] = convert_interval

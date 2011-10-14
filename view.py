@@ -469,7 +469,7 @@ class AnyRsetView(View):
             translate = lambda val: val
         # XXX [0] because of missing Union support
         rql_syntax_tree = self.cw_rset.syntax_tree()
-        rqlstdescr = rql_syntax_tree.get_description(mainindex)[0]
+        rqlstdescr = rql_syntax_tree.get_description(mainindex, translate)[0]
         labels = []
         for colidx, label in enumerate(rqlstdescr):
             labels.append(self.column_label(colidx, label, translate))
@@ -496,7 +496,7 @@ class AnyRsetView(View):
             etypes = self.cw_rset.column_types(colidx)
             if translate_func is not None:
                 etypes = map(translate_func, etypes)
-            label = ','.join(etypes)
+            label = u','.join(etypes)
         return label
 
 
