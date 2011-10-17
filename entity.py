@@ -894,7 +894,7 @@ class Entity(AppObject):
                 targettypes = rschema.subjects(self.e_schema)
             else:
                 select.add_constant_restriction(mainvar, 'is', targettypes,
-                                                'String')
+                                                'etype')
             gcard = greater_card(rschema, targettypes, (self.e_schema,), 1)
         etypecls = vreg['etypes'].etype_class(targettypes[0])
         if len(targettypes) > 1:
