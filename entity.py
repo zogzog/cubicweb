@@ -333,8 +333,8 @@ class Entity(AppObject):
                             var, order = orderterm.split()
                         except ValueError:
                             if '(' in orderterm:
-                                self.error('ignore %s until %s is upgraded',
-                                           orderterm, cmeth)
+                                cls.error('ignore %s until %s is upgraded',
+                                          orderterm, cmeth)
                                 orderterm = None
                             elif not ' ' in orderterm.strip():
                                 var = orderterm
