@@ -30,6 +30,7 @@ from glob import glob
 from logilab.common.modutils import LazyObject
 from logilab.common.textutils import splitstrip
 from logilab.common.registry import yes
+from logilab import database
 
 from yams import BASE_GROUPS
 
@@ -162,7 +163,8 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     from cubicweb.dbapi import in_memory_repo_cnx
     from cubicweb.server.repository import Repository
     from cubicweb.server.utils import manager_userpasswd
-    from cubicweb.server.sqlutils import sqlexec, sqlschema, sqldropschema
+    from cubicweb.server.sqlutils import sqlexec, sqlschema, sql_drop_all_user_tables
+    from cubicweb.server.sqlutils import _SQL_DROP_ALL_USER_TABLES_FILTER_FUNCTION as drop_filter
     # configuration to avoid db schema loading and user'state checking
     # on connection
     config.creating = True
@@ -179,13 +181,21 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     sqlcursor = sqlcnx.cursor()
     execute = sqlcursor.execute
     if drop:
-        _title = '-> drop tables '
-        dropsql = sqldropschema(schema, driver)
-        try:
-            sqlexec(dropsql, execute, pbtitle=_title)
-        except Exception as ex:
-            print '-> drop failed, skipped (%s).' % ex
-            sqlcnx.rollback()
+        helper = database.get_db_helper(driver)
+        dropsql = sql_drop_all_user_tables(helper, sqlcursor)
+        # We may fail dropping some tables because of table dependencies, in a first pass.
+        # So, we try a second drop sequence to drop remaining tables if needed.
+        # Note that 2 passes is an arbitrary choice as it seems enougth for our usecases.
+        # (looping may induce infinite recursion when user have no right for example)
+        # Here we try to keep code simple and backend independant. That why we don't try to
+        # distinguish remaining tables (wrong right, dependencies, ...).
+        failed = sqlexec(dropsql, execute, cnx=sqlcnx,
+                         pbtitle='-> dropping tables (first pass)')
+        if failed:
+            failed = sqlexec(failed, execute, cnx=sqlcnx,
+                             pbtitle='-> dropping tables (second pass)')
+            remainings = filter(drop_filter, helper.list_tables(sqlcursor))
+            assert not remainings, 'Remaining tables: %s' % ', '.join(remainings)
     _title = '-> creating tables '
     print _title,
     # schema entities and relations tables
