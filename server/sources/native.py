@@ -1682,7 +1682,6 @@ class DatabaseIndependentBackupRestore(object):
         prefix = 'cw_'
         for etype in self.schema.entities():
             eschema = self.schema.eschema(etype)
-            print etype, eschema.final
             if eschema.final:
                 continue
             etype_tables.append('%s%s'%(prefix, etype))
