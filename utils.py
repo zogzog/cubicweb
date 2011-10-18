@@ -25,6 +25,8 @@ import sys
 import decimal
 import datetime
 import random
+import re
+
 from operator import itemgetter
 from inspect import getargspec
 from itertools import repeat
@@ -539,6 +541,29 @@ else:
         if isinstance(something, JSString):
             return something
         return json_dumps(something)
+
+PERCENT_IN_URLQUOTE_RE = re.compile(r'%(?=[0-9a-fA-F]{2})')
+def js_href(javascript_code):
+    """Generate a "javascript: ..." string for an href attribute.
+
+    Some % which may be interpreted in a href context will be escaped.
+
+    In an href attribute, url-quotes-looking fragments are interpreted before
+    being given to the javascript engine. Valid url quotes are in the form
+    ``%xx`` with xx being a byte in hexadecimal form. This means that ``%toto``
+    will be unaltered but ``%babar`` will be mangled because ``ba`` is the
+    hexadecimal representation of 186.
+
+    >>> js_href('alert("babar");')
+    'javascript: alert("babar");'
+    >>> js_href('alert("%babar");')
+    'javascript: alert("%25babar");'
+    >>> js_href('alert("%toto %babar");')
+    'javascript: alert("%toto %25babar");'
+    >>> js_href('alert("%1337%");')
+    'javascript: alert("%251337%");'
+    """
+    return 'javascript: ' + PERCENT_IN_URLQUOTE_RE.sub(r'%25', javascript_code)
 
 
 @deprecated('[3.7] merge_dicts is deprecated')

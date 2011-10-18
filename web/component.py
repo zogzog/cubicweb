@@ -30,7 +30,7 @@ from logilab.mtconverter import xml_escape
 from cubicweb import Unauthorized, role, target, tags
 from cubicweb.schema import display_name
 from cubicweb.uilib import js, domid
-from cubicweb.utils import json_dumps
+from cubicweb.utils import json_dumps, js_href
 from cubicweb.view import ReloadableMixIn, Component
 from cubicweb.selectors import (no_cnx, paginated_rset, one_line_rset,
                                 non_final_entity, partial_relation_possible,
@@ -120,8 +120,8 @@ class NavigationComponent(Component):
     def ajax_page_url(self, **params):
         divid = params.setdefault('divid', 'pageContent')
         params['rql'] = self.cw_rset.printable_rql()
-        return "javascript: $(%s).loadxhtml('json', %s, 'get', 'swap')" % (
-            json_dumps('#'+divid), js.ajaxFuncArgs('view', params))
+        return js_href("$(%s).loadxhtml('json', %s, 'get', 'swap')" % (
+            json_dumps('#'+divid), js.ajaxFuncArgs('view', params)))
 
     def page_link(self, path, params, start, stop, content):
         url = xml_escape(self.page_url(path, params, start, stop))
