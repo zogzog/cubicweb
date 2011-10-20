@@ -61,6 +61,18 @@ def _make_description(selected, args, solution):
         description.append(term.get_type(solution, args))
     return description
 
+def selection_idx_type(i, rqlst, args):
+    """try to return type of term at index `i` of the rqlst's selection"""
+    for select in rqlst.children:
+        term = select.selection[i]
+        for solution in select.solutions:
+            try:
+                ttype = term.get_type(solution, args)
+                if ttype is not None:
+                    return ttype
+            except CoercionError:
+                return None
+
 @objectify_selector
 def is_user_session(cls, req, **kwargs):
     """repository side only selector returning 1 if the session is a regular
@@ -1156,20 +1168,13 @@ class Session(RequestSessionBase):
         unstables = rqlst.get_variable_indices()
         basedescr = []
         todetermine = []
-        sampleselect = rqlst.children[0]
-        samplesols = sampleselect.solutions[0]
-        for i, term in enumerate(sampleselect.selection):
-            try:
-                ttype = term.get_type(samplesols, args)
-            except CoercionError:
+        for i in xrange(len(rqlst.children[0].selection)):
+            ttype = selection_idx_type(i, rqlst, args)
+            if ttype is None or ttype == 'Any':
                 ttype = None
                 isfinal = True
             else:
-                if ttype is None or ttype == 'Any':
-                    ttype = None
-                    isfinal = True
-                else:
-                    isfinal = ttype in BASE_TYPES
+                isfinal = ttype in BASE_TYPES
             if ttype is None or i in unstables:
                 basedescr.append(None)
                 todetermine.append( (i, isfinal) )
