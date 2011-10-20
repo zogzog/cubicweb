@@ -61,6 +61,9 @@ def print_string(value, req, props, displaytime=True):
         return req._(value)
     return value
 
+def print_int(value, req, props, displaytime=True):
+    return unicode(value)
+
 def print_date(value, req, props, displaytime=True):
     return ustrftime(value, req.property_value('ui.date-format'))
 
@@ -124,6 +127,8 @@ def print_float(value, req, props, displaytime=True):
 PRINTERS = {
     'Bytes': print_bytes,
     'String': print_string,
+    'Int': print_int,
+    'BigInt': print_int,
     'Date': print_date,
     'Time': print_time,
     'TZTime': print_tztime,
