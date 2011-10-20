@@ -223,7 +223,7 @@ msgid ""
 "<div>This schema of the data model <em>excludes</em> the meta-data, but you "
 "can also display a <a href=\"%s\">complete schema with meta-data</a>.</div>"
 msgstr ""
-"<div>Ce schéma du modèle de données <em>exclue</em> les méta-données, mais "
+"<div>Ce schéma du modèle de données <em>exclut</em> les méta-données, mais "
 "vous pouvez afficher un <a href=\"%s\">schéma complet</a>.</div>"
 
 msgid "<no relation>"

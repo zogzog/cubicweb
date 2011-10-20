@@ -1107,8 +1107,8 @@ class RelationField(Field):
             done = set()
         res = []
         entity = form.edited_entity
-        for entity in entity.unrelated(self.name, targettype,
-                                       self.role, limit).entities():
+        for entity in entity.unrelated(self.name, targettype, self.role, limit,
+                                       lt_infos=form.linked_to).entities():
             if entity.eid in done:
                 continue
             done.add(entity.eid)

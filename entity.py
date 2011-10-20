@@ -37,7 +37,8 @@ from cubicweb.rset import ResultSet
 from cubicweb.selectors import yes
 from cubicweb.appobject import AppObject
 from cubicweb.req import _check_cw_unsafe
-from cubicweb.schema import RQLVocabularyConstraint, RQLConstraint
+from cubicweb.schema import (RQLVocabularyConstraint, RQLConstraint,
+                             GeneratedConstraint)
 from cubicweb.rqlrewrite import RQLRewriter
 
 from cubicweb.uilib import soup2xhtml
@@ -65,6 +66,85 @@ def can_use_rest_path(value):
         return False
     return True
 
+def rel_vars(rel):
+    return ((isinstance(rel.children[0], VariableRef)
+             and rel.children[0].variable or None),
+            (isinstance(rel.children[1].children[0], VariableRef)
+             and rel.children[1].children[0].variable or None)
+            )
+
+def rel_matches(rel, rtype, role, varname, operator='='):
+    if rel.r_type == rtype and rel.children[1].operator == operator:
+        same_role_var_idx = 0 if role == 'subject' else 1
+        variables = rel_vars(rel)
+        if variables[same_role_var_idx].name == varname:
+            return variables[1 - same_role_var_idx]
+
+def build_cstr_with_linkto_infos(cstr, args, searchedvar, evar,
+                                 lt_infos, eidvars):
+    """restrict vocabulary as much as possible in entity creation,
+    based on infos provided by __linkto form param.
+
+    Example based on following schema:
+
+      class works_in(RelationDefinition):
+          subject = 'CWUser'
+          object = 'Lab'
+          cardinality = '1*'
+          constraints = [RQLConstraint('S in_group G, O welcomes G')]
+
+      class welcomes(RelationDefinition):
+          subject = 'Lab'
+          object = 'CWGroup'
+
+    If you create a CWUser in the "scientists" CWGroup you can show
+    only the labs that welcome them using :
+
+      lt_infos = {('in_group', 'subject'): 321}
+
+    You get following restriction : 'O welcomes G, G eid 321'
+
+    """
+    st = cstr.snippet_rqlst.copy()
+    # replace relations in ST by eid infos from linkto where possible
+    for (info_rtype, info_role), eids in lt_infos.iteritems():
+        eid = eids[0] # NOTE: we currently assume a pruned lt_info with only 1 eid
+        for rel in st.iget_nodes(RqlRelation):
+            targetvar = rel_matches(rel, info_rtype, info_role, evar.name)
+            if targetvar is not None:
+                if targetvar.name in eidvars:
+                    rel.parent.remove(rel)
+                else:
+                    eidrel = make_relation(
+                        targetvar, 'eid', (targetvar.name, 'Substitute'),
+                        Constant)
+                    rel.parent.replace(rel, eidrel)
+                    args[targetvar.name] = eid
+                    eidvars.add(targetvar.name)
+    # if modified ST still contains evar references we must discard the
+    # constraint, otherwise evar is unknown in the final rql query which can
+    # lead to a SQL table cartesian product and multiple occurences of solutions
+    evarname = evar.name
+    for rel in st.iget_nodes(RqlRelation):
+        for variable in rel_vars(rel):
+            if variable and evarname == variable.name:
+                return
+    # else insert snippets into the global tree
+    return GeneratedConstraint(st, cstr.mainvars - set(evarname))
+
+def pruned_lt_info(eschema, lt_infos):
+    pruned = {}
+    for (lt_rtype, lt_role), eids in lt_infos.iteritems():
+        # we can only use lt_infos describing relation with a cardinality
+        # of value 1 towards the linked entity
+        if not len(eids) == 1:
+            continue
+        lt_card = eschema.rdef(lt_rtype, lt_role).cardinality[
+            0 if lt_role == 'subject' else 1]
+        if lt_card not in '?1':
+            continue
+        pruned[(lt_rtype, lt_role)] = eids
+    return pruned
 
 class Entity(AppObject):
     """an entity instance has e_schema automagically set on
@@ -931,17 +1011,22 @@ class Entity(AppObject):
     # generic vocabulary methods ##############################################
 
     def cw_unrelated_rql(self, rtype, targettype, role, ordermethod=None,
-                         vocabconstraints=True):
+                         vocabconstraints=True, lt_infos={}):
         """build a rql to fetch `targettype` entities unrelated to this entity
         using (rtype, role) relation.
 
         Consider relation permissions so that returned entities may be actually
         linked by `rtype`.
+
+        `lt_infos` are supplementary informations, usually coming from __linkto
+        parameter, that can help further restricting the results in case current
+        entity is not yet created. It is a dict describing entities the current
+        entity will be linked to, which keys are (rtype, role) tuples and values
+        are a list of eids.
         """
         ordermethod = ordermethod or 'fetch_unrelated_order'
-        if isinstance(rtype, basestring):
-            rtype = self._cw.vreg.schema.rschema(rtype)
-        rdef = rtype.role_rdef(self.e_schema, targettype, role)
+        rschema = self._cw.vreg.schema.rschema(rtype)
+        rdef = rschema.role_rdef(self.e_schema, targettype, role)
         rewriter = RQLRewriter(self._cw)
         select = Select()
         # initialize some variables according to the `role` of `self` in the
@@ -955,20 +1040,20 @@ class Entity(AppObject):
             searchedvar = subjvar = select.get_variable('S')
             evar = objvar = select.get_variable('O')
         select.add_selected(searchedvar)
-        # initialize some variables according to `self` existance
+        # initialize some variables according to `self` existence
         if rdef.role_cardinality(neg_role(role)) in '?1':
             # if cardinality in '1?', we want a target entity which isn't
             # already linked using this relation
-            var = select.get_variable('ZZ') # XXX unname when tests pass
+            variable = select.make_variable()
             if role == 'subject':
-                rel = make_relation(var, rtype.type, (searchedvar,), VariableRef)
+                rel = make_relation(variable, rtype, (searchedvar,), VariableRef)
             else:
-                rel = make_relation(searchedvar, rtype.type, (var,), VariableRef)
+                rel = make_relation(searchedvar, rtype, (variable,), VariableRef)
             select.add_restriction(Not(rel))
         elif self.has_eid():
             # elif we have an eid, we don't want a target entity which is
             # already linked to ourself through this relation
-            rel = make_relation(subjvar, rtype.type, (objvar,), VariableRef)
+            rel = make_relation(subjvar, rtype, (objvar,), VariableRef)
             select.add_restriction(Not(rel))
         if self.has_eid():
             rel = make_relation(evar, 'eid', ('x', 'Substitute'), Constant)
@@ -998,11 +1083,23 @@ class Entity(AppObject):
             cstrcls = RQLVocabularyConstraint
         else:
             cstrcls = RQLConstraint
+        lt_infos = pruned_lt_info(self.e_schema, lt_infos or {})
+        # if there are still lt_infos, use set to keep track of added eid
+        # relations (adding twice the same eid relation is incorrect RQL)
+        eidvars = set()
         for cstr in rdef.constraints:
             # consider constraint.mainvars to check if constraint apply
             if isinstance(cstr, cstrcls) and searchedvar.name in cstr.mainvars:
-                if not self.has_eid() and evar.name in cstr.mainvars:
-                    continue
+                if not self.has_eid():
+                    if lt_infos:
+                        # we can perhaps further restrict with linkto infos using
+                        # a custom constraint built from cstr and lt_infos
+                        cstr = build_cstr_with_linkto_infos(
+                            cstr, args, searchedvar, evar, lt_infos, eidvars)
+                        if cstr is None:
+                            continue # could not build constraint -> discard
+                    elif evar.name in cstr.mainvars:
+                        continue
                 # compute a varmap suitable to RQLRewriter.rewrite argument
                 varmap = dict((v, v) for v in (searchedvar.name, evar.name)
                               if v in select.defined_vars and v in cstr.mainvars)
@@ -1028,12 +1125,13 @@ class Entity(AppObject):
         return rql, args
 
     def unrelated(self, rtype, targettype, role='subject', limit=None,
-                  ordermethod=None): # XXX .cw_unrelated
+                  ordermethod=None, lt_infos={}): # XXX .cw_unrelated
         """return a result set of target type objects that may be related
         by a given relation, with self as subject or object
         """
         try:
-            rql, args = self.cw_unrelated_rql(rtype, targettype, role, ordermethod)
+            rql, args = self.cw_unrelated_rql(rtype, targettype, role,
+                                              ordermethod, lt_infos=lt_infos)
         except Unauthorized:
             return self._cw.empty_rset()
         # XXX should be set in unrelated rql when manipulating the AST

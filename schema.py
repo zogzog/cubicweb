@@ -850,23 +850,39 @@ class ERQLExpression(RQLExpression):
         return self._check(session, **kwargs)
 
 
+def vargraph(rqlst):
+    """ builds an adjacency graph of variables from the rql syntax tree, e.g:
+    Any O,S WHERE T subworkflow_exit S, T subworkflow WF, O state_of WF
+    => {'WF': ['O', 'T'], 'S': ['T'], 'T': ['WF', 'S'], 'O': ['WF']}
+    """
+    vargraph = {}
+    for relation in rqlst.get_nodes(nodes.Relation):
+        try:
+            rhsvarname = relation.children[1].children[0].variable.name
+            lhsvarname = relation.children[0].name
+        except AttributeError:
+            pass
+        else:
+            vargraph.setdefault(lhsvarname, []).append(rhsvarname)
+            vargraph.setdefault(rhsvarname, []).append(lhsvarname)
+            #vargraph[(lhsvarname, rhsvarname)] = relation.r_type
+    return vargraph
+
+
+class GeneratedConstraint(object):
+    def __init__(self, rqlst, mainvars):
+        self.snippet_rqlst = rqlst
+        self.mainvars = mainvars
+        self.vargraph = vargraph(rqlst)
+
+
 class RRQLExpression(RQLExpression):
     def __init__(self, expression, mainvars=None, eid=None):
         if mainvars is None:
             mainvars = guess_rrqlexpr_mainvars(expression)
         RQLExpression.__init__(self, expression, mainvars, eid)
         # graph of links between variable, used by rql rewriter
-        self.vargraph = {}
-        for relation in self.rqlst.get_nodes(nodes.Relation):
-            try:
-                rhsvarname = relation.children[1].children[0].variable.name
-                lhsvarname = relation.children[0].name
-            except AttributeError:
-                pass
-            else:
-                self.vargraph.setdefault(lhsvarname, []).append(rhsvarname)
-                self.vargraph.setdefault(rhsvarname, []).append(lhsvarname)
-                #self.vargraph[(lhsvarname, rhsvarname)] = relation.r_type
+        self.vargraph = vargraph(self.rqlst)
 
     @property
     def full_rql(self):
