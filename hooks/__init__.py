@@ -59,13 +59,23 @@ class ServerStartupHook(hook.Hook):
                     continue
                 session = repo.internal_session(safe=True)
                 try:
-                    stats = source.pull_data(session)
-                    if stats.get('created'):
-                        source.info('added %s entities', len(stats['created']))
-                    if stats.get('updated'):
-                        source.info('updated %s entities', len(stats['updated']))
+                    source.pull_data(session)
                 except Exception, exc:
                     session.exception('while trying to update feed %s', source)
                 finally:
                     session.close()
         self.repo.looping_task(60, update_feeds, self.repo)
+
+        def expire_dataimports(repo=self.repo):
+            for source in repo.sources_by_eid.itervalues():
+                if (not source.copy_based_source
+                    or not repo.config.source_enabled(source)):
+                    continue
+                session = repo.internal_session()
+                try:
+                    mindate = datetime.now() - timedelta(seconds=source.config['logs-lifetime'])
+                    session.execute('DELETE CWDataImport X WHERE X start_timestamp < %(time)s', {'time': mindate})
+                    session.commit()
+                finally:
+                    session.close()
+        self.repo.looping_task(60*60*24, expire_dataimports, self.repo)

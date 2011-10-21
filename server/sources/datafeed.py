@@ -27,6 +27,7 @@ from base64 import b64decode
 from cookielib import CookieJar
 
 from lxml import etree
+from logilab.mtconverter import xml_escape
 
 from cubicweb import RegistryNotFound, ObjectNotFound, ValidationError, UnknownEid
 from cubicweb.server.sources import AbstractSource
@@ -71,7 +72,12 @@ class DataFeedSource(AbstractSource):
                    'external source be deleted?'),
           'group': 'datafeed-source', 'level': 2,
           }),
-
+        ('logs-lifetime',
+         {'type': 'time',
+          'default': '10d',
+          'help': ('Time before logs from datafeed imports are deleted.'),
+          'group': 'datafeed-source', 'level': 2,
+          }),
         )
     def __init__(self, repo, source_config, eid=None):
         AbstractSource.__init__(self, repo, source_config, eid)
@@ -188,7 +194,8 @@ class DataFeedSource(AbstractSource):
             myuris = self.source_cwuris(session)
         else:
             myuris = None
-        parser = self._get_parser(session, sourceuris=myuris)
+        importlog = self.init_import_log(session)
+        parser = self._get_parser(session, sourceuris=myuris, import_log=importlog)
         if self.process_urls(parser, self.urls, raise_on_error):
             self.warning("some error occured, don't attempt to delete entities")
         elif self.config['delete-entities'] and myuris:
@@ -200,7 +207,13 @@ class DataFeedSource(AbstractSource):
                 session.execute('DELETE %s X WHERE X eid IN (%s)'
                                 % (etype, ','.join(eids)))
         self.update_latest_retrieval(session)
-        return parser.stats
+        stats = parser.stats
+        if stats.get('created'):
+            importlog.record_info('added %s entities' % len(stats['created']))
+        if stats.get('updated'):
+            importlog.record_info('updated %s entities' % len(stats['updated']))
+        importlog.write_log(session, end_timestamp=self.latest_retrieval)
+        return stats
 
     def process_urls(self, parser, urls, raise_on_error=False):
         error = False
@@ -255,14 +268,20 @@ class DataFeedSource(AbstractSource):
         return dict((b64decode(uri), (eid, type))
                     for uri, eid, type in session.system_sql(sql))
 
+    def init_import_log(self, session, **kwargs):
+        dataimport = session.create_entity('CWDataImport', cw_import_of=self,
+                                           start_timestamp=datetime.utcnow(),
+                                           **kwargs)
+        return dataimport
 
 class DataFeedParser(AppObject):
     __registry__ = 'parsers'
 
-    def __init__(self, session, source, sourceuris=None, **kwargs):
+    def __init__(self, session, source, sourceuris=None, import_log=None, **kwargs):
         super(DataFeedParser, self).__init__(session, **kwargs)
         self.source = source
         self.sourceuris = sourceuris
+        self.import_log = import_log
         self.stats = {'created': set(),
                       'updated': set()}
 

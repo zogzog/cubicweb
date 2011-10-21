@@ -20,12 +20,14 @@
 
 __docformat__ = "restructuredtext en"
 
+import logging
 from random import randint, choice
 from copy import deepcopy
 from datetime import datetime, date, time, timedelta
 from decimal import Decimal
 
 from logilab.common import attrdict
+from logilab.mtconverter import xml_escape
 from yams.constraints import (SizeConstraint, StaticVocabularyConstraint,
                               IntervalBoundConstraint, BoundaryConstraint,
                               Attribute, actual_value)
@@ -237,6 +239,14 @@ title
         # need this method else stupid values will be set which make mtconverter
         # raise exception
         return u'text/plain'
+
+    def generate_CWDataImport_log(self, entity, index, **kwargs):
+        # content_format attribute of EmailPart has no vocabulary constraint, we
+        # need this method else stupid values will be set which make mtconverter
+        # raise exception
+        logs =  [u'%s\t%s\t%s\t%s<br/>' % (logging.ERROR, 'http://url.com?arg1=hop&arg2=hip',
+                                           1, xml_escape('hjoio&oio"'))]
+        return u'<br/>'.join(logs)
 
 
 class autoextend(type):

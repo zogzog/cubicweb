@@ -305,6 +305,24 @@ class cw_source(RelationDefinition):
     cardinality = '1*'
     composite = 'object'
 
+
+class CWDataImport(EntityType):
+    __permissions__ = ENTITY_MANAGERS_PERMISSIONS
+    start_timestamp = TZDatetime()
+    end_timestamp = TZDatetime()
+    log = String()
+    status = String(required=True, internationalizable=True, indexed=True,
+                    default='in progress',
+                    vocabulary=[_('in progress'), _('success'), _('failed')])
+
+class cw_import_of(RelationDefinition):
+    __permissions__ = RELATION_MANAGERS_PERMISSIONS
+    subject = 'CWDataImport'
+    object = 'CWSource'
+    cardinality = '1*'
+    composite = 'object'
+
+
 class CWSourceSchemaConfig(EntityType):
     __permissions__ = ENTITY_MANAGERS_PERMISSIONS
     cw_for_source = SubjectRelation(

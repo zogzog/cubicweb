@@ -161,8 +161,8 @@ class SchemaReaderClassTest(TestCase):
         entities = sorted([str(e) for e in schema.entities()])
         expected_entities = ['BaseTransition', 'BigInt', 'Bookmark', 'Boolean', 'Bytes', 'Card',
                              'Date', 'Datetime', 'Decimal',
-                             'CWCache', 'CWConstraint', 'CWConstraintType', 'CWEType',
-                             'CWAttribute', 'CWGroup', 'EmailAddress', 'CWRelation',
+                             'CWCache', 'CWConstraint', 'CWConstraintType', 'CWDataImport',
+                             'CWEType', 'CWAttribute', 'CWGroup', 'EmailAddress', 'CWRelation',
                              'CWPermission', 'CWProperty', 'CWRType',
                              'CWSource', 'CWSourceHostConfig', 'CWSourceSchemaConfig',
                              'CWUniqueTogetherConstraint', 'CWUser',
@@ -183,12 +183,12 @@ class SchemaReaderClassTest(TestCase):
                               'constrained_by', 'constraint_of',
                               'content', 'content_format',
                               'created_by', 'creation_date', 'cstrtype', 'custom_workflow',
-                              'cwuri', 'cw_for_source', 'cw_host_config_of', 'cw_schema', 'cw_source',
+                              'cwuri', 'cw_for_source', 'cw_import_of', 'cw_host_config_of', 'cw_schema', 'cw_source',
 
                               'data', 'data_encoding', 'data_format', 'data_name', 'default_workflow', 'defaultval', 'delete_permission',
                               'description', 'description_format', 'destination_state',
 
-                              'ecrit_par', 'eid', 'evaluee', 'expression', 'exprtype',
+                              'ecrit_par', 'eid', 'end_timestamp', 'evaluee', 'expression', 'exprtype',
 
                               'fabrique_par', 'final', 'firstname', 'for_user', 'fournit',
                               'from_entity', 'from_state', 'fulltext_container', 'fulltextindexed',
@@ -196,7 +196,7 @@ class SchemaReaderClassTest(TestCase):
                               'identity', 'in_group', 'in_state', 'in_synchronization', 'indexed',
                               'initial_state', 'inlined', 'internationalizable', 'is', 'is_instance_of',
 
-                              'label', 'last_login_time', 'latest_retrieval', 'lieu', 'login',
+                              'label', 'last_login_time', 'latest_retrieval', 'lieu', 'log', 'login',
 
                               'mainvars', 'match_host', 'modification_date',
 
@@ -208,7 +208,7 @@ class SchemaReaderClassTest(TestCase):
 
                               'read_permission', 'relation_type', 'relations', 'require_group',
 
-                              'specializes', 'state_of', 'subworkflow', 'subworkflow_exit', 'subworkflow_state', 'surname', 'symmetric', 'synopsis',
+                              'specializes', 'start_timestamp', 'state_of', 'status', 'subworkflow', 'subworkflow_exit', 'subworkflow_state', 'surname', 'symmetric', 'synopsis',
 
                               'tags', 'timestamp', 'title', 'to_entity', 'to_state', 'transition_of', 'travaille', 'type',
 

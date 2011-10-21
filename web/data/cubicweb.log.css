@@ -1,0 +1,118 @@
+/* sample css file for logs
+ *
+ * Copyright (c) 2003-2010 LOGILAB S.A. (Paris, FRANCE).
+ * http://www.logilab.fr/ -- mailto:contact@logilab.fr
+ */
+
+pre.rawtext {
+    overflow: auto;
+    max-width: 110em;
+    padding: 0 0 0 0;
+}
+
+table.listing td.logSeverity {
+    font-weight: bold;
+    padding-left: 0.5em;
+    padding-right: 1em;
+}
+
+table.listing pre{
+    color: black;
+}
+
+table.listing .logDebug a{
+    color : #444 ;
+}
+table.listing .logDebug td{
+    color : #444 ;
+    border-color: grey #AAA;
+}
+
+table.listing .logDebug pre{
+    background-color : transparent ;
+    border: none;
+}
+
+table.listing .logSeverity .internallink {
+    visibility: hidden;
+    color: #FF4500;
+    font-weight: bolder;
+}
+
+table.listing tr:hover .internallink {
+    visibility: visible;
+}
+
+table.listing .internallink:hover {
+    background-color: #FF4500;
+    color: White;
+    font-weight: bolder;
+}
+
+table.listing .logInfo a{
+    color : #240 ;
+}
+
+table.listing .logInfo td{
+    color : #240 ;
+    background-color : #DFD ;
+    border-color: grey #AFA;
+}
+
+table.listing .logInfo pre{
+    background-color : transparent ;
+    border: none;
+}
+
+table.listing .logWarning a{
+    color : #A42 ;
+}
+table.listing .logWarning td{
+    color : #A42 ;
+    background-color : #FFC ;
+    border-color: grey #FA6;
+}
+
+table.listing .logWarning pre{
+    background-color : transparent ;
+    border: none;
+}
+
+table.listing .logError a{
+    color : #A00 ;
+}
+table.listing .logError td{
+    color : #A00 ;
+    background-color : #FDD ;
+    border-color: grey #FAA;
+}
+
+table.listing .logError pre{
+    background-color : transparent ;
+    border: none;
+}
+
+table.listing .logFatal a{
+    color : #00A;
+}
+table.listing .logFatal td{
+    color : #00A;
+    background-color : #DDF ;
+    border-color: grey #AAF;
+}
+
+table.listing .logFatal pre{
+    background-color : transparent ;
+    border: none;
+}
+
+div.validPlan{
+  color: green;
+  text-align: center;
+}
+
+div.invalidPlan{
+  color: red;
+  text-align: center;
+}
+

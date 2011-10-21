@@ -835,7 +835,7 @@ class Entity(AppObject):
             var = varmaker.next()
             rql.append('%s %s %s' % (V, attr, var))
             selected.append((attr, var))
-        # +1 since this doen't include the main variable
+        # +1 since this doesn't include the main variable
         lastattr = len(selected) + 1
         # don't fetch extra relation if attributes specified or of the entity is
         # coming from an external source (may lead to error)
