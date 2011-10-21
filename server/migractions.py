@@ -359,6 +359,8 @@ class ServerMigrationHelper(MigrationHelper):
         if cube:
             cubepath = self.config.cube_dir(cube)
             apc = osp.join(cubepath, 'migration', '%s.py' % event)
+        elif kwargs.pop('apphome', False):
+            apc = osp.join(self.config.apphome, 'migration', '%s.py' % event)
         else:
             apc = osp.join(self.config.migration_scripts_dir(), '%s.py' % event)
         if osp.exists(apc):
