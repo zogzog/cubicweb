@@ -1,6 +1,6 @@
 from cubicweb.devtools.testlib import CubicWebTC
 
-from json import loads
+from cubicweb.utils import json
 
 class JsonViewsTC(CubicWebTC):
 
@@ -35,7 +35,7 @@ class JsonViewsTC(CubicWebTC):
     def test_json_ersetexport(self):
         req = self.request()
         rset = req.execute('Any G ORDERBY GN WHERE G is CWGroup, G name GN')
-        data = loads(self.view('ejsonexport', rset))
+        data = json.loads(self.view('ejsonexport', rset))
         self.assertEqual(req.headers_out.getRawHeaders('content-type'), ['application/json'])
         self.assertEqual(data[0]['name'], 'guests')
         self.assertEqual(data[1]['name'], 'managers')
