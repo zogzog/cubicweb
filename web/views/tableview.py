@@ -922,7 +922,7 @@ class TableView(AnyRsetView):
             table.append_column(column)
         table.render(self.w)
         self.w(u'</div>\n')
-        if not self.initial_load:
+        if self.initial_load:
             self.w(u'</div>\n')
 
     def page_navigation_url(self, navcomp, path, params):
