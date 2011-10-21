@@ -160,6 +160,10 @@ class FacetFilterMixIn(object):
         :param hiddens:  other hidden parametters to include in the forms.
         :type hiddens:   dict from extra keyword argument
         """
+        # XXX Facet.context property hijacks an otherwise well-behaved
+        #     vocabulary with its own notions
+        #     Hence we whack here to avoid a clash
+        kwargs.pop('context', None)
         baserql, wdgs = facets(self._cw, rset, context=self.__regid__,
                                mainvar=mainvar, **kwargs)
         assert wdgs

@@ -85,7 +85,7 @@ jQuery.extend(cw, {
 
     sortValueExtraction: function (node) {
 	var sortvalue = jQuery(node).attr('cubicweb:sortvalue');
-	if (sortvalue === undefined) {
+ 	if (sortvalue === undefined) {
 	    return '';
 	}
 	return sortvalue;
