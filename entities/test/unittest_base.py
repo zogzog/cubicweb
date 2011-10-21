@@ -49,7 +49,7 @@ class MetadataTC(BaseEntityTC):
         self.assertEqual(entity.dc_creator(), u'member')
 
     def test_type(self):
-        self.assertEqual(self.member.dc_type(), 'cwuser')
+        self.assertEqual(self.member.dc_type(), 'CWUser')
 
     def test_entity_meta_attributes(self):
         # XXX move to yams

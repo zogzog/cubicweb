@@ -99,7 +99,7 @@ yeah
 
 url: http://testing.fr/cubicweb/cwuser/toto
 ''')
-        self.assertEqual(email.subject, 'status changed cwuser #%s (admin)' % u.eid)
+        self.assertEqual(email.subject, 'status changed CWUser #%s (admin)' % u.eid)
 
 if __name__ == '__main__':
     unittest_main()
