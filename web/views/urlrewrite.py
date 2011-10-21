@@ -101,7 +101,7 @@ class SimpleReqRewriter(URLRewriter):
                                     tab=domid('cw.users-management'))),
         (rgx('/cwgroup', re.I), dict(vid='cw.users-and-groups-management',
                                      tab=domid('cw.groups-management'))),
-        (rgx('/cwsource', re.I), dict(vid='cw.source-management')),
+        (rgx('/cwsource', re.I), dict(vid='cw.sources-management')),
         # XXX should be case insensitive as 'create', but I would like to find another way than
         # relying on the etype_selector
         (rgx('/schema/([^/]+?)/?'),  dict(vid='primary', rql=r'Any X WHERE X is CWEType, X name "\1"')),

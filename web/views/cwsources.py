@@ -29,7 +29,7 @@ from cubicweb.selectors import is_instance, score_entity, match_user_groups
 from cubicweb.view import EntityView, StartupView
 from cubicweb.schema import META_RTYPES, VIRTUAL_RTYPES, display_name
 from cubicweb.web import uicfg, formwidgets as wdgs
-from cubicweb.web.views import tabs, actions, ibreadcrumbs, add_etype_button
+from cubicweb.web.views import tabs, actions, ibreadcrumbs, tableview, add_etype_button
 
 
 _abaa = uicfg.actionbox_appearsin_addmenu
@@ -255,9 +255,10 @@ class ManageSourcesAction(actions.ManagersAction):
     title = _('data sources')
     category = 'manage'
 
-class CWSourceManagementView(StartupView):
-    __regid__ = 'cw.source-management'
-    rql = ('Any S, ST, SP, SD, SN ORDERBY SN WHERE S is CWSource, S name SN, S type ST, '
+
+class CWSourcesManagementView(StartupView):
+    __regid__ = 'cw.sources-management'
+    rql = ('Any S,ST,SP,SD,SN ORDERBY SN WHERE S is CWSource, S name SN, S type ST, '
            'S latest_retrieval SD, S parser SP')
     title = _('data sources management')
 
@@ -265,7 +266,18 @@ class CWSourceManagementView(StartupView):
         self.w('<h1>%s</h1>' % self._cw._(self.title))
         self.w(add_etype_button(self._cw, 'CWSource'))
         self.w(u'<div class="clear"></div>')
-        self.wview('table', self._cw.execute(self.rql), displaycols=range(4))
+        self.wview('cw.sources-table', self._cw.execute(self.rql))
+
+
+class CWSourcesTable(tableview.EntityTableView):
+    __regid__ = 'cw.sources-table'
+    __select__ = is_instance('CWSource')
+    columns = ['source', 'type', 'parser', 'latest_retrieval']
+
+    # @tableview.etable_header_title('CWSource_plural', addcount=True)
+    # @tableview.etable_entity_sortvalue()
+    # def source_cell(self, w, entity):
+    #     w(entity.view('incontext'))
 
 
 # breadcrumbs configuration ####################################################

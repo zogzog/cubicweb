@@ -29,6 +29,19 @@ class CWGroup(AnyEntity):
     fetch_attrs, cw_fetch_order = fetch_config(['name'])
     cw_fetch_unrelated_order = cw_fetch_order
 
+    def dc_long_title(self):
+        name = self.name
+        trname = self._cw._(name)
+        if trname != name:
+            return '%s (%s)' % (name, trname)
+        return name
+
+    @cached
+    def num_users(self):
+        """return the number of users in this group"""
+        return self._cw.execute('Any COUNT(U) WHERE U in_group G, G eid %(g)s',
+                                {'g': self.eid})[0][0]
+
 
 class CWUser(AnyEntity):
     __regid__ = 'CWUser'
