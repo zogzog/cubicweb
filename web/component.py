@@ -245,7 +245,7 @@ def _bwcompatible_render_item(w, item):
 
 
 class Layout(Component):
-    __regid__ = 'layout'
+    __regid__ = 'component_layout'
     __abstract__ = True
 
     def init_rendering(self):
@@ -263,7 +263,23 @@ class Layout(Component):
         return True
 
 
-class CtxComponent(AppObject):
+class LayoutableMixIn(object):
+    layout_id = None # to be defined in concret class
+    layout_args = {}
+
+    def layout_render(self, w):
+        getlayout = self._cw.vreg['components'].select
+        layout = getlayout(self.layout_id, self._cw, **self.layout_select_args())
+        layout.render(w)
+
+    def layout_select_args(self):
+        args  = dict(rset=self.cw_rset, row=self.cw_row, col=self.cw_col,
+                     view=self)
+        args.update(self.layout_args)
+        return args
+
+
+class CtxComponent(LayoutableMixIn, AppObject):
     """base class for contextual components. The following contexts are
     predefined:
 
@@ -310,6 +326,7 @@ class CtxComponent(AppObject):
     context = 'left'
     contextual = False
     title = None
+    layout_id = 'component_layout'
 
     # XXX support kwargs for compat with old boxes which gets the view as
     # argument
@@ -323,19 +340,17 @@ class CtxComponent(AppObject):
             self.wview = wview
             self.call(**kwargs) # pylint: disable=E1101
             return
-        getlayout = self._cw.vreg['components'].select
-        layout = getlayout('layout', self._cw, **self.layout_select_args())
-        layout.render(w)
+        self.layout_render(w)
 
     def layout_select_args(self):
+        args = super(CtxComponent, self).layout_select_args()
         try:
             # XXX ensure context is given when the component is reloaded through
             # ajax
-            context = self.cw_extra_kwargs['context']
+            args['context'] = self.cw_extra_kwargs['context']
         except KeyError:
-            context = self.cw_propval('context')
-        return dict(rset=self.cw_rset, row=self.cw_row, col=self.cw_col,
-                    view=self, context=context)
+            args['context'] = self.cw_propval('context')
+        return args
 
     def init_rendering(self):
         """init rendering callback: that's the good time to check your component
