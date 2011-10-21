@@ -192,8 +192,7 @@ class SchemaReaderClassTest(TestCase):
 
                               'fabrique_par', 'final', 'firstname', 'for_user', 'fournit',
                               'from_entity', 'from_state', 'fulltext_container', 'fulltextindexed',
-
-                              'has_text',
+                              'has_group_permission', 'has_text',
                               'identity', 'in_group', 'in_state', 'in_synchronization', 'indexed',
                               'initial_state', 'inlined', 'internationalizable', 'is', 'is_instance_of',
 
