@@ -67,6 +67,15 @@ API changes
 
 * jQuery has been updated to 1.6.4. No backward compat issue known (yet...)
 
+* Table views refactoring : new RsetTableView and EntityTableView, as well as
+  rewritten an enhanced version of PyValTableView on the same bases.  Those
+  deprecates former `TableView`, `EntityAttributesTableView` and `CellView`,
+  which are however kept for backward compat, with some warnings that may not be
+  very clear unfortunatly (you may see your own table view subclass name here,
+  which doesn't make the problem that clear). Notice that `_cw.view('table',
+  rset, *kwargs)` will be routed to the new `RsetTableView` or to the old
+  `TableView` depending on given extra arguments. See #1986413.
+
 
 Unintrusive API changes
 -----------------------

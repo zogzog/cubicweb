@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -44,10 +44,6 @@ class ManualCubicWebTCs(AutoPopulateTest):
         """
         rset = self.execute('CWUser X WHERE X login "admin"')
         self.view('copy', rset)
-
-    def test_manual_tests(self):
-        rset = self.execute('Any P,F,S WHERE P is CWUser, P firstname F, P surname S')
-        self.view('table', rset, template=None, displayfilter=True, displaycols=[0,2])
 
     def test_sortable_js_added(self):
         rset = self.execute('CWUser X')

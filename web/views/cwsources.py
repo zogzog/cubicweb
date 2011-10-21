@@ -84,8 +84,9 @@ class CWSourceMainTab(tabs.PrimaryTab):
         else:
             if hostconfig:
                 self.w(u'<h3>%s</h3>' % self._cw._('CWSourceHostConfig_plural'))
-                self._cw.view('editable-table', hostconfig,
-                              displaycols=range(2), w=self.w)
+                self._cw.view('table', hostconfig, w=self.w,
+                              displaycols=range(2),
+                              cellvids={1: 'editable-final'})
 
 
 MAPPED_SOURCE_TYPES = set( ('pyrorql', 'datafeed') )

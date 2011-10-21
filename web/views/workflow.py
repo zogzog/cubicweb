@@ -143,12 +143,10 @@ class WFHistoryView(EntityView):
         if self._cw.vreg.schema.eschema('CWUser').has_perm(self._cw, 'read'):
             sel += ',U,C'
             rql += ', WF owned_by U?'
-            displaycols = range(5)
             headers = (_('from_state'), _('to_state'), _('comment'), _('date'),
                        _('CWUser'))
         else:
             sel += ',C'
-            displaycols = range(4)
             headers = (_('from_state'), _('to_state'), _('comment'), _('date'))
         rql = '%s %s, X eid %%(x)s' % (sel, rql)
         try:
@@ -157,9 +155,8 @@ class WFHistoryView(EntityView):
             return
         if rset:
             if title:
-                title = _(title)
-            self.wview('table', rset, title=title, displayactions=False,
-                       displaycols=displaycols, headers=headers)
+                self.w(u'<h2>%s</h2>\n' % _(title))
+            self.wview('table', rset, headers=headers)
 
 
 class WFHistoryVComponent(component.EntityCtxComponent):
@@ -284,7 +281,7 @@ class WorkflowTabTextView(PrimaryTab):
         rset = self._cw.execute(
             'Any T,T,DS,T,TT ORDERBY TN WHERE T transition_of WF, WF eid %(x)s,'
             'T type TT, T name TN, T destination_state DS?', {'x': entity.eid})
-        self.wview('editable-table', rset, 'null',
+        self.wview('table', rset, 'null',
                    cellvids={ 1: 'trfromstates', 2: 'outofcontext', 3:'trsecurity',},
                    headers = (_('Transition'),  _('from_state'),
                               _('to_state'), _('permissions'), _('type') ),

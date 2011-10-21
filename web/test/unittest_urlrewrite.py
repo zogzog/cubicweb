@@ -54,7 +54,7 @@ class UrlRewriteTC(CubicWebTC):
                           'tab': 'cw_users_management'}),
             ('/cwgroup$', {'vid': 'cw.users-and-groups-management',
                            'tab': 'cw_groups_management'}),
-            ('/cwsource$', {'vid': 'cw.source-management'}),
+            ('/cwsource$', {'vid': 'cw.sources-management'}),
             ('/schema/([^/]+?)/?$', {'rql': r'Any X WHERE X is CWEType, X name "\1"', 'vid': 'primary'}),
             ('/add/([^/]+?)/?$' , dict(vid='creation', etype=r'\1')),
             ('/doc/images/(.+?)/?$', dict(fid='\\1', vid='wdocimages')),
