@@ -139,6 +139,7 @@ class TableLayout(component.Component):
     add_view_actions = False
     header_column_idx = None
     enable_sorting = True
+    sortvalue_limit = 10
     tablesorter_settings = {
         'textExtraction': JSString('cw.sortValueExtraction'),
         'selectorHeaders': "thead tr:first th", # only plug on the first row
@@ -263,7 +264,7 @@ class TableLayout(component.Component):
         if renderer.sortable:
             sortvalue = renderer.sortvalue(rownum)
             if isinstance(sortvalue, basestring):
-                sortvalue = sortvalue[:10]
+                sortvalue = sortvalue[:self.sortvalue_limit]
             if sortvalue is not None:
                 attrs[u'cubicweb:sortvalue'] = js_dumps(sortvalue)
         return attrs
