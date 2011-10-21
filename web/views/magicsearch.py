@@ -392,14 +392,7 @@ class MagicSearchComponent(Component):
             unauthorized = None
             for proc in self.processors:
                 try:
-                    try:
-                        return proc.process_query(uquery)
-                    except TypeError, exc: # cw 3.5 compat
-                        warn("[3.6] %s.%s.process_query() should now accept uquery "
-                             "as unique argument, use self._cw instead of req"
-                             % (proc.__module__, proc.__class__.__name__),
-                             DeprecationWarning)
-                        return proc.process_query(uquery, self._cw)
+                    return proc.process_query(uquery)
                 # FIXME : we don't want to catch any exception type here !
                 except (RQLSyntaxError, BadRQLQuery):
                     pass

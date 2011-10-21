@@ -140,12 +140,6 @@ class EditController(basecontrollers.ViewController):
             todelete = req.list_form_param('__delete', req.form, pop=True)
             if todelete:
                 autoform.delete_relations(self._cw, todelete)
-        if req.form.has_key('__insert'):
-            warn('[3.6] stop using __insert, support will be removed',
-                 DeprecationWarning)
-            toinsert = req.list_form_param('__insert', req.form, pop=True)
-            if toinsert:
-                autoform.insert_relations(self._cw, toinsert)
         self._cw.remove_pending_operations()
         if self.errors:
             errors = dict((f.name, unicode(ex)) for f, ex in self.errors)

@@ -285,13 +285,6 @@ class FieldWidget(object):
     def values_and_attributes(self, form, field):
         return self.values(form, field), self.attributes(form, field)
 
-    @deprecated('[3.6] use values_and_attributes')
-    def _render_attrs(self, form, field):
-        """return html tag name, attributes and a list of values for the field
-        """
-        values, attrs = self.values_and_attributes(form, field)
-        return field.input_name(form, self.suffix), values, attrs
-
 
 class Input(FieldWidget):
     """abstract widget class for <input> tag based widgets"""
@@ -734,14 +727,7 @@ class AutoCompletionWidget(TextInput):
     def __init__(self, *args, **kwargs):
         self.autocomplete_settings = kwargs.pop('autocomplete_settings',
                                                 self.default_settings)
-        try:
-            self.autocomplete_initfunc = kwargs.pop('autocomplete_initfunc')
-        except KeyError:
-            warn('[3.6] use autocomplete_initfunc argument of %s constructor '
-                 'instead of relying on autocomplete_initfuncs dictionary on '
-                 'the entity class' % self.__class__.__name__,
-                 DeprecationWarning)
-            self.autocomplete_initfunc = None
+        self.autocomplete_initfunc = kwargs.pop('autocomplete_initfunc')
         super(AutoCompletionWidget, self).__init__(*args, **kwargs)
 
     def values(self, form, field):
@@ -763,11 +749,7 @@ class AutoCompletionWidget(TextInput):
         return super(AutoCompletionWidget, self)._render(form, field, renderer)
 
     def _get_url(self, entity, field):
-        if self.autocomplete_initfunc is None:
-            # XXX for bw compat
-            fname = entity.autocomplete_initfuncs[field.name]
-        else:
-            fname = self.autocomplete_initfunc
+        fname = self.autocomplete_initfunc
         return entity._cw.build_url('json', fname=fname, mode='remote',
                                     pageid=entity._cw.pageid)
 
@@ -778,12 +760,7 @@ class StaticFileAutoCompletionWidget(AutoCompletionWidget):
     wdgtype = 'StaticFileSuggestField'
 
     def _get_url(self, entity, field):
-        if self.autocomplete_initfunc is None:
-            # XXX for bw compat
-            fname = entity.autocomplete_initfuncs[field.name]
-        else:
-            fname = self.autocomplete_initfunc
-        return entity._cw.data_url(fname)
+        return entity._cw.data_url(self.autocomplete_initfunc)
 
 
 class RestrictedAutoCompletionWidget(AutoCompletionWidget):

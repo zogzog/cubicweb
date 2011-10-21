@@ -243,38 +243,6 @@ class CWRegistry(Registry):
     def schema(self):
         return self.vreg.schema
 
-    @deprecated('[3.6] select object, then use obj.render()')
-    def render(self, __oid, req, __fallback_oid=None, rset=None, initargs=None,
-               **kwargs):
-        """Select object with the given id (`__oid`) then render it.  If the
-        object isn't selectable, try to select fallback object if
-        `__fallback_oid` is specified.
-
-        If specified `initargs` is expected to be a dictionnary containing
-        arguments that should be given to selection (hence to object's __init__
-        as well), but not to render(). Other arbitrary keyword arguments will be
-        given to selection *and* to render(), and so should be handled by
-        object's call or cell_call method..
-        """
-        if initargs is None:
-            initargs = kwargs
-        else:
-            initargs.update(kwargs)
-        try:
-            obj = self.select(__oid, req, rset=rset, **initargs)
-        except NoSelectableObject:
-            if __fallback_oid is None:
-                raise
-            obj = self.select(__fallback_oid, req, rset=rset, **initargs)
-        return obj.render(**kwargs)
-
-    @deprecated('[3.6] use select_or_none and test for obj.cw_propval("visible")')
-    def select_vobject(self, oid, *args, **kwargs):
-        selected = self.select_or_none(oid, *args, **kwargs)
-        if selected and selected.cw_propval('visible'):
-            return selected
-        return None
-
     def poss_visible_objects(self, *args, **kwargs):
         """return an ordered list of possible app objects in a given registry,
         supposing they support the 'visible' and 'order' properties (as most
@@ -283,7 +251,6 @@ class CWRegistry(Registry):
         return sorted([x for x in self.possible_objects(*args, **kwargs)
                        if x.cw_propval('visible')],
                       key=lambda x: x.cw_propval('order'))
-    possible_vobjects = deprecated('[3.6] use poss_visible_objects()')(poss_visible_objects)
 
 
 VRegistry.REGISTRY_FACTORY[None] = CWRegistry
@@ -815,40 +782,6 @@ class CubicWebVRegistry(VRegistry):
             except UnknownProperty, ex:
                 self.warning('%s (you should probably delete that property '
                              'from the database)', ex)
-
-    # deprecated code ####################################################
-
-    @deprecated('[3.4] use vreg["etypes"].etype_class(etype)')
-    def etype_class(self, etype):
-        return self["etypes"].etype_class(etype)
-
-    @deprecated('[3.4] use vreg["views"].main_template(*args, **kwargs)')
-    def main_template(self, req, oid='main-template', **context):
-        return self["views"].main_template(req, oid, **context)
-
-    @deprecated('[3.4] use vreg[registry].possible_vobjects(*args, **kwargs)')
-    def possible_vobjects(self, registry, *args, **kwargs):
-        return self[registry].possible_vobjects(*args, **kwargs)
-
-    @deprecated('[3.4] use vreg["actions"].possible_actions(*args, **kwargs)')
-    def possible_actions(self, req, rset=None, **kwargs):
-        return self["actions"].possible_actions(req, rest=rset, **kwargs)
-
-    @deprecated('[3.4] use vreg["ctxcomponents"].select_object(...)')
-    def select_box(self, oid, *args, **kwargs):
-        return self['boxes'].select_object(oid, *args, **kwargs)
-
-    @deprecated('[3.4] use vreg["components"].select_object(...)')
-    def select_component(self, cid, *args, **kwargs):
-        return self['components'].select_object(cid, *args, **kwargs)
-
-    @deprecated('[3.4] use vreg["actions"].select_object(...)')
-    def select_action(self, oid, *args, **kwargs):
-        return self['actions'].select_object(oid, *args, **kwargs)
-
-    @deprecated('[3.4] use vreg["views"].select(...)')
-    def select_view(self, __vid, req, rset=None, **kwargs):
-        return self['views'].select(__vid, req, rset=rset, **kwargs)
 
 
 # XXX unify with yams.constraints.BASE_CONVERTERS?

@@ -50,12 +50,7 @@ class has_editable_relation(EntitySelector):
                                                entity=entity, mainform=False)
         for dummy in form.editable_relations():
             return 1
-        try:
-            editableattrs = form.editable_attributes(strict=True)
-        except TypeError:
-            warn('[3.6] %s: editable_attributes now take strict=False as '
-                 'optional argument', DeprecationWarning)
-            editableattrs = form.editable_attributes()
+        editableattrs = form.editable_attributes(strict=True)
         for rschema, role in editableattrs:
             return 1
         return 0

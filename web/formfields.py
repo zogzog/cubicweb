@@ -203,10 +203,6 @@ class Field(object):
 
     def __init__(self, name=None, label=_MARKER, widget=None, **kwargs):
         for key, val in kwargs.items():
-            if key == 'initial':
-                warn('[3.6] use value instead of initial', DeprecationWarning,
-                     stacklevel=3)
-                key = 'value'
             assert hasattr(self.__class__, key) and not key[0] == '_', key
             setattr(self, key, val)
         self.name = name
@@ -358,10 +354,6 @@ class Field(object):
                     return self.value(form)
             return self.value
         formattr = '%s_%s_default' % (self.role, self.name)
-        if hasattr(form, formattr):
-            warn('[3.6] %s.%s deprecated, use field.value' % (
-                form.__class__.__name__, formattr), DeprecationWarning)
-            return getattr(form, formattr)()
         if self.eidparam and self.role is not None:
             if form._cw.vreg.schema.rschema(self.name).final:
                 return form.edited_entity.e_schema.default(self.name)
@@ -393,19 +385,8 @@ class Field(object):
             # pylint: disable=E1102
             if getattr(self.choices, 'im_self', None) is self:
                 vocab = self.choices(form=form, **kwargs)
-            elif support_args(self.choices, 'form', 'field'):
-                vocab = self.choices(form=form, field=self, **kwargs)
             else:
-                try:
-                    vocab = self.choices(form=form, **kwargs)
-                    warn('[3.6] %s: choices should now take '
-                         'the form and field as named arguments' % self,
-                         DeprecationWarning)
-                except TypeError:
-                    warn('[3.3] %s: choices should now take '
-                         'the form and field as named arguments' % self,
-                         DeprecationWarning)
-                    vocab = self.choices(req=form._cw, **kwargs)
+                vocab = self.choices(form=form, field=self, **kwargs)
         else:
             vocab = self.choices
         if vocab and not isinstance(vocab[0], (list, tuple)):
@@ -1047,17 +1028,11 @@ class RelationField(Field):
             linkedto = self.relvoc_linkedto(form)
             if linkedto:
                 return linkedto
+            # it isn't, search more vocabulary
             vocab = self.relvoc_init(form)
         else:
             vocab = []
-        # it isn't, check if the entity provides a method to get correct values
-        method = '%s_%s_vocabulary' % (self.role, self.name)
-        try:
-            vocab += getattr(form, method)(self.name, limit)
-            warn('[3.6] found %s on %s, should override field.choices instead (need tweaks)'
-                 % (method, form), DeprecationWarning)
-        except AttributeError:
-            vocab += self.relvoc_unrelated(form, limit)
+        vocab += self.relvoc_unrelated(form, limit)
         if self.sort:
             vocab = vocab_sort(vocab)
         return vocab

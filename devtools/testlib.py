@@ -904,12 +904,6 @@ class CubicWebTC(TestCase):
                  DeprecationWarning, stacklevel=2)
         return self.execute(rql, args, req=req).get_entity(0, 0)
 
-    @deprecated('[3.6] use self.request().create_entity(...)')
-    def add_entity(self, etype, req=None, **kwargs):
-        if req is None:
-            req = self.request()
-        return req.create_entity(etype, **kwargs)
-
 
 # auto-populating test classes and utilities ###################################
 

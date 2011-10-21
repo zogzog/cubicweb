@@ -124,8 +124,7 @@ class AbstractSessionManager(component.Component):
 
 class AbstractAuthenticationManager(component.Component):
     """authenticate user associated to a request and check session validity"""
-    id = 'authmanager'
-    vreg = None # XXX necessary until property for deprecation warning is on appobject
+    __regid__ = 'authmanager'
 
     def __init__(self, vreg):
         self.vreg = vreg
@@ -332,13 +331,6 @@ class CubicWebPublisher(object):
                         self._query_log.flush()
                     except Exception:
                         self.exception('error while logging queries')
-
-    @deprecated("[3.4] use vreg['controllers'].select(...)")
-    def select_controller(self, oid, req):
-        try:
-            return self.vreg['controllers'].select(oid, req=req, appli=self)
-        except NoSelectableObject:
-            raise Unauthorized(req._('not authorized'))
 
     def main_publish(self, path, req):
         """method called by the main publisher to process <path>

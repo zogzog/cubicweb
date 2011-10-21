@@ -732,11 +732,3 @@ class RelatedObjectsVComponent(EntityVComponent):
         self.w(u'<h4>%s</h4>\n' % self._cw._(self.title).capitalize())
         self.wview(self.vid, rset)
         self.w(u'</div>')
-
-
-
-VComponent = class_renamed('VComponent', Component,
-                           '[3.2] VComponent is deprecated, use Component')
-SingletonVComponent = class_renamed('SingletonVComponent', Component,
-                                    '[3.2] SingletonVComponent is deprecated, use '
-                                    'Component and explicit registration control')

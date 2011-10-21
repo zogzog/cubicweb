@@ -175,8 +175,6 @@ def display_name(req, key, form='', context=None):
     else:
         return unicode(req._(key))
 
-__builtins__['display_name'] = deprecated('[3.4] display_name should be imported from cubicweb.schema')(display_name)
-
 
 # Schema objects definition ###################################################
 
@@ -931,9 +929,6 @@ class BaseRQLConstraint(RRQLExpression, BaseConstraint):
 
     @classmethod
     def deserialize(cls, value):
-        # XXX < 3.5.10 bw compat
-        if not value.startswith(';'):
-            return cls(value)
         _, mainvars, expression = value.split(';', 2)
         return cls(expression, mainvars)
 
@@ -973,7 +968,7 @@ class RQLVocabularyConstraint(BaseRQLConstraint):
     def repo_check(self, session, eidfrom, rtype, eidto):
         """raise ValidationError if the relation doesn't satisfy the constraint
         """
-        pass # this is a vocabulary constraint, not enforce 
+        pass # this is a vocabulary constraint, not enforced
 
 
 class RepoEnforcedRQLConstraintMixIn(object):
@@ -988,9 +983,6 @@ class RepoEnforcedRQLConstraintMixIn(object):
                                self.msg or '')
 
     def deserialize(cls, value):
-        # XXX < 3.5.10 bw compat
-        if not value.startswith(';'):
-            return cls(value)
         value, msg = value.split('\n', 1)
         _, mainvars, expression = value.split(';', 2)
         return cls(expression, mainvars, msg)

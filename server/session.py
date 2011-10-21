@@ -1254,31 +1254,6 @@ class Session(RequestSessionBase):
         """return the original parent session if any, else self"""
         return self
 
-    @property
-    @deprecated("[3.6] use session.vreg.schema")
-    def schema(self):
-        return self.repo.schema
-
-    @deprecated("[3.4] use vreg['etypes'].etype_class(etype)")
-    def etype_class(self, etype):
-        """return an entity class for the given entity type"""
-        return self.vreg['etypes'].etype_class(etype)
-
-    @deprecated('[3.4] use direct access to session.transaction_data')
-    def query_data(self, key, default=None, setdefault=False, pop=False):
-        if setdefault:
-            assert not pop
-            return self.transaction_data.setdefault(key, default)
-        if pop:
-            return self.transaction_data.pop(key, default)
-        else:
-            return self.transaction_data.get(key, default)
-
-    @deprecated('[3.4] use entity_from_eid(eid, etype=None)')
-    def entity(self, eid):
-        """return a result set for the given eid"""
-        return self.entity_from_eid(eid)
-
     # these are overridden by set_log_methods below
     # only defining here to prevent pylint from complaining
     info = warning = error = critical = exception = debug = lambda msg,*a,**kw: None

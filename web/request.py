@@ -405,12 +405,9 @@ class CubicWebRequestBase(DBAPIRequest):
         cbname = build_cb_uid(func.__name__)
         def _cb(req):
             try:
-                ret = func(req, *args)
-            except TypeError:
-                warn('[3.2] user callback should now take request as argument')
-                ret = func(*args)
-            self.unregister_callback(self.pageid, cbname)
-            return ret
+                return func(req, *args)
+            finally:
+                self.unregister_callback(self.pageid, cbname)
         self.set_page_data(cbname, _cb)
         return cbname
 
@@ -886,12 +883,6 @@ class CubicWebRequestBase(DBAPIRequest):
             if default is _MARKER:
                 raise
             return default
-
-    @deprecated("[3.4] use parse_accept_header('Accept-Language')")
-    def header_accept_language(self):
-        """returns an ordered list of preferred languages"""
-        return [value.split('-')[0] for value in
-                self.parse_accept_header('Accept-Language')]
 
 
 

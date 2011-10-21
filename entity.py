@@ -623,12 +623,7 @@ class Entity(AppObject):
                 kwargs['base_url'] = sourcemeta['base-url']
                 use_ext_id = True
         if method in (None, 'view'):
-            try:
-                kwargs['_restpath'] = self.rest_path(use_ext_id)
-            except TypeError:
-                warn('[3.4] %s: rest_path() now take use_ext_eid argument, '
-                     'please update' % self.__regid__, DeprecationWarning)
-                kwargs['_restpath'] = self.rest_path()
+            kwargs['_restpath'] = self.rest_path(use_ext_id)
         else:
             kwargs['rql'] = 'Any X WHERE X eid %s' % self.eid
         return self._cw.build_url(method, **kwargs)

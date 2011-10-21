@@ -182,7 +182,7 @@ class FieldsForm(form.Form):
         if self.needs_css:
             self._cw.add_css(self.needs_css)
 
-    def render(self, formvalues=None, rendervalues=None, renderer=None, **kwargs):
+    def render(self, formvalues=None, renderer=None, **kwargs):
         """Render this form, using the `renderer` given as argument or the
         default according to :attr:`form_renderer_id`. The rendered form is
         returned as an unicode string.
@@ -191,13 +191,7 @@ class FieldsForm(form.Form):
         considered as field's value.
 
         Extra keyword arguments will be given to renderer's :meth:`render` method.
-
-        `rendervalues` is deprecated.
         """
-        if rendervalues is not None:
-            warn('[3.6] rendervalues argument is deprecated, all named arguments will be given instead',
-                 DeprecationWarning, stacklevel=2)
-            kwargs = rendervalues
         w = kwargs.pop('w', None)
         if w is None:
             warn('[3.10] you should specify "w" to form.render() named arguments',
@@ -305,21 +299,6 @@ class FieldsForm(form.Form):
                 errors = dict((f.role_name(), unicode(ex)) for f, ex in errors)
                 raise ValidationError(None, errors)
             return processed
-
-    @deprecated('[3.6] use .add_hidden(name, value, **kwargs)')
-    def form_add_hidden(self, name, value=None, **kwargs):
-        return self.add_hidden(name, value, **kwargs)
-
-    @deprecated('[3.6] use .render(formvalues, **rendervalues)')
-    def form_render(self, **values):
-        """render this form, using the renderer given in args or the default
-        FormRenderer()
-        """
-        self.build_context(values)
-        renderer = values.pop('renderer', None)
-        if renderer is None:
-            renderer = self.default_renderer()
-        return renderer.render(self, values)
 
 
 _AFF = uicfg.autoform_field
@@ -458,19 +437,6 @@ class EntityFieldsForm(FieldsForm):
 
     def editable_relations(self):
         return ()
-
-    @deprecated('[3.6] use cw.web.formfields.RelationField.relvoc_unrelated method')
-    def subject_relation_vocabulary(self, rtype, limit=None):
-        """defaut vocabulary method for the given relation, looking for
-        relation's object entities (i.e. self is the subject)
-        """
-        field = self.field_by_name(rtype, 'subject')
-        return field.relvoc_unrelated(form, limit=None)
-
-    @deprecated('[3.6] use cw.web.formfields.relvoc_unrelated method')
-    def object_relation_vocabulary(self, rtype, limit=None):
-        field = self.field_by_name(rtype, 'object')
-        return field.relvoc_unrelated(form, limit=None)
 
 
 class CompositeFormMixIn(object):

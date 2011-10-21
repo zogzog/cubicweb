@@ -306,15 +306,3 @@ def paginate(view, show_all_option=True, w=None, page_size=None, rset=None):
 from cubicweb.view import View
 View.do_paginate = do_paginate
 View.paginate = paginate
-
-
-#@deprecated (see below)
-def limit_rset_using_paged_nav(self, req, rset, w, forcedisplay=False,
-                               show_all_option=True, page_size=None):
-    if not (forcedisplay or req.form.get('__force_display') is not None):
-        do_paginate(self, rset, w, show_all_option, page_size)
-
-View.pagination = deprecated('[3.2] .pagination is deprecated, use paginate')(
-    limit_rset_using_paged_nav)
-limit_rset_using_paged_nav = deprecated('[3.6] limit_rset_using_paged_nav is deprecated, use do_paginate')(
-    limit_rset_using_paged_nav)

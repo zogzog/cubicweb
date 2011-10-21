@@ -424,13 +424,3 @@ class RequestSessionBase(object):
     def describe(self, eid, asdict=False):
         """return a tuple (type, sourceuri, extid) for the entity with id <eid>"""
         raise NotImplementedError
-
-    @property
-    @deprecated('[3.6] use _cw.vreg.config')
-    def config(self):
-        return self.vreg.config
-
-    @property
-    @deprecated('[3.6] use _cw.vreg.schema')
-    def schema(self):
-        return self.vreg.schema

@@ -1027,12 +1027,7 @@ class partial_relation_possible(PartialSelectorMixIn, relation_possible):
     def complete(self, cls):
         self.rtype = cls.rtype
         self.role = role(cls)
-        self.target_etype = getattr(cls, 'etype', None)
-        if self.target_etype is not None:
-            warn('[3.6] please rename etype to target_etype on %s' % cls,
-                 DeprecationWarning)
-        else:
-            self.target_etype = getattr(cls, 'target_etype', None)
+        self.target_etype = getattr(cls, 'target_etype', None)
 
 
 class has_related_entities(EntitySelector):
@@ -1084,12 +1079,7 @@ class partial_has_related_entities(PartialSelectorMixIn, has_related_entities):
     def complete(self, cls):
         self.rtype = cls.rtype
         self.role = role(cls)
-        self.target_etype = getattr(cls, 'etype', None)
-        if self.target_etype is not None:
-            warn('[3.6] please rename etype to target_etype on %s' % cls,
-                 DeprecationWarning)
-        else:
-            self.target_etype = getattr(cls, 'target_etype', None)
+        self.target_etype = getattr(cls, 'target_etype', None)
 
 
 class has_permission(EntitySelector):

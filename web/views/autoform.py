@@ -758,14 +758,7 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
     # autoform specific fields #################################################
 
     def _generic_relations_field(self):
-        try:
-            # pylint: disable=E1101
-            srels_by_cat = self.srelations_by_category('generic', 'add', strict=True)
-            warn('[3.6] %s: srelations_by_category is deprecated, use uicfg or '
-                 'override editable_relations instead' % classid(self),
-                 DeprecationWarning)
-        except AttributeError:
-            srels_by_cat = self.editable_relations()
+        srels_by_cat = self.editable_relations()
         if not srels_by_cat:
             raise f.FieldNotFound('_cw_generic_field')
         fieldset = u'%s :' % self._cw.__('This %s' % self.edited_entity.e_schema)

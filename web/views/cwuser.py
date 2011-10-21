@@ -47,8 +47,8 @@ class UserPreferencesEntityAction(action.Action):
     category = 'mainactions'
 
     def url(self):
-        login = self.cw_rset.get_entity(self.cw_row or 0, self.cw_col or 0).login
-        return self._cw.build_url('cwuser/%s'%login, vid='propertiesform')
+        user = self.cw_rset.get_entity(self.cw_row or 0, self.cw_col or 0)
+        return user.absolute_url(vid='propertiesform')
 
 
 class FoafView(EntityView):

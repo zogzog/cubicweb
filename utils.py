@@ -548,15 +548,6 @@ def merge_dicts(dict1, dict2):
     dict1.update(dict2)
     return dict1
 
-from logilab.common import date
-_THIS_MOD_NS = globals()
-for funcname in ('date_range', 'todate', 'todatetime', 'datetime2ticks',
-                 'days_in_month', 'days_in_year', 'previous_month',
-                 'next_month', 'first_day', 'last_day',
-                 'strptime'):
-    msg = '[3.6] %s has been moved to logilab.common.date' % funcname
-    _THIS_MOD_NS[funcname] = deprecated(msg)(getattr(date, funcname))
-
 
 logger = getLogger('cubicweb.utils')
 
