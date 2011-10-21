@@ -309,7 +309,7 @@ class EClassSelector(Selector):
         else:
             etype = rset.description[row][col]
             # may have None in rset.description on outer join
-            if etype is None:
+            if etype is None or rset.rows[row][col] is None:
                 return 0
             etypes = (etype,)
         score = 0

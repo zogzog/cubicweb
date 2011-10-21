@@ -164,6 +164,12 @@ class ImplementsSelectorTC(CubicWebTC):
         self.assertEqual(is_instance('BaseTransition').score_class(cls, self.request()),
                           3)
 
+    def test_outer_join(self):
+        req = self.request()
+        rset = req.execute('Any U,B WHERE B? bookmarked_by U, U login "anon"')
+        self.assertEqual(is_instance('Bookmark')(None, req, rset=rset, row=0, col=1),
+                         0)
+
 
 class WorkflowSelectorTC(CubicWebTC):
     def _commit(self):
