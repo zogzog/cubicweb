@@ -147,9 +147,9 @@ class TableLayout(component.Component):
     def _setup_tablesorter(self, divid):
         self._cw.add_css('cubicweb.tablesorter.css')
         self._cw.add_js('jquery.tablesorter.js')
-        print '$("#%s table").tablesorter(%s);' % (divid, js_dumps(self.tablesorter_settings))
-        self._cw.add_onload('$("#%s table").tablesorter(%s);cw.log("done");' %
-                            (divid, js_dumps(self.tablesorter_settings)))
+        self._cw.add_onload('''$(document).ready(function() {
+    $("#%s table").tablesorter(%s);
+});''' % (divid, js_dumps(self.tablesorter_settings)))
 
     def __init__(self, req, view, **kwargs):
         super(TableLayout, self).__init__(req, **kwargs)
@@ -177,7 +177,6 @@ class TableLayout(component.Component):
             self._cw.add_css(self.needs_css)
         if self.needs_js:
             self._cw.add_js(self.needs_js)
-        print self.enable_sorting
         if self.enable_sorting:
             self._setup_tablesorter(self.view.domid)
         # Notice facets form must be rendered **outside** the main div as it

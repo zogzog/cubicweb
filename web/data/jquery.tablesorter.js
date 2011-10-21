@@ -684,7 +684,7 @@
             function getCachedSortType(parsers, i) {
                 return parsers[i].type;
             }; /* public methods */
-            this.construct = function (settings) { cw.log(settings);
+            this.construct = function (settings) {
                 return this.each(function () {
                     // if no thead or tbody quit.
                     if (!this.tHead || !this.tBodies) return;
