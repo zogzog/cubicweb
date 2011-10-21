@@ -244,6 +244,8 @@ def initialize_schema(config, schema, mhandler, event='create'):
         # execute cubes pre<event> script if any
         for cube in reversed(cubes):
             mhandler.cmd_exec_event_script('pre%s' % event, cube)
+        # execute instance's pre<event> script (useful in tests)
+        mhandler.cmd_exec_event_script('pre%s' % event, apphome=True)
         # enter instance'schema into the database
         session.set_cnxset()
         serialize_schema(session, schema)
@@ -252,6 +254,8 @@ def initialize_schema(config, schema, mhandler, event='create'):
         # execute cubes'post<event> script if any
         for cube in reversed(cubes):
             mhandler.cmd_exec_event_script('post%s' % event, cube)
+        # execute instance's post<event> script (useful in tests)
+        mhandler.cmd_exec_event_script('post%s' % event, apphome=True)
 
 
 # sqlite'stored procedures have to be registered at connection opening time

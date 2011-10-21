@@ -30,7 +30,7 @@ class ExternalSource1Configuration(TestServerConfiguration):
 class ExternalSource2Configuration(TestServerConfiguration):
     sourcefile = 'sources_multi'
 
-MTIME = datetime.now() - timedelta(0, 10)
+MTIME = datetime.utcnow() - timedelta(0, 10)
 
 EXTERN_SOURCE_CFG = u'''
 pyro-ns-id = extern

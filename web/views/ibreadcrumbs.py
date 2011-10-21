@@ -163,7 +163,7 @@ class BreadCrumbEntityVComponent(basecomponents.HeaderComponent):
                 xml_escape(url), xml_escape(uilib.cut(title, textsize))))
         else:
             textsize = self._cw.property_value('navigation.short-line-size')
-            w(uilib.cut(unicode(part), textsize))
+            w(xml_escape(uilib.cut(unicode(part), textsize)))
 
 
 class BreadCrumbETypeVComponent(BreadCrumbEntityVComponent):
