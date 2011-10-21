@@ -113,7 +113,7 @@ class TableViewTC(CubicWebTC):
         e, _, view = self._prepare_entity()
         colrenderers = view.build_column_renderers()[:3]
         self.assertListEqual([renderer.sortvalue(0) for renderer in colrenderers],
-                             [u'<toto>', u'loo"ong blabla'[:10], e.creation_date])
+                             [u'<toto>', u'loo"ong blabla', e.creation_date])
         # XXX sqlite does not handle Interval correctly
         # value = loadjson(view.sortvalue(0, 3))
         # self.assertAlmostEquals(value, rset.rows[0][3].seconds)
