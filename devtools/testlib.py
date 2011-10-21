@@ -1099,7 +1099,7 @@ class AutomaticWebTest(AutoPopulateTest):
     tags = AutoPopulateTest.tags | Tags('web', 'generated')
 
     def setUp(self):
-        assert not self.__class__ is AutomaticWebTest, 'Please subclass AutomaticWebTest to pprevent database caching issue'
+        assert not self.__class__ is AutomaticWebTest, 'Please subclass AutomaticWebTest to prevent database caching issue'
         super(AutomaticWebTest, self).setUp()
 
         # access to self.app for proper initialization of the authentication
