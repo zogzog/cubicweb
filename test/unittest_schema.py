@@ -175,23 +175,24 @@ class SchemaReaderClassTest(TestCase):
                              'Workflow', 'WorkflowTransition']
         self.assertListEqual(sorted(expected_entities), entities)
         relations = sorted([str(r) for r in schema.relations()])
-        expected_relations = ['add_permission', 'address', 'alias', 'allowed_transition',
+        expected_relations = ['actionnaire', 'add_permission', 'address', 'alias', 'allowed_transition', 'associe',
                               'bookmarked_by', 'by_transition',
 
                               'cardinality', 'comment', 'comment_format',
                               'composite', 'condition', 'config', 'connait',
                               'constrained_by', 'constraint_of',
-                              'content', 'content_format',
+                              'content', 'content_format', 'contrat_exclusif',
                               'created_by', 'creation_date', 'cstrtype', 'custom_workflow',
                               'cwuri', 'cw_for_source', 'cw_import_of', 'cw_host_config_of', 'cw_schema', 'cw_source',
 
                               'data', 'data_encoding', 'data_format', 'data_name', 'default_workflow', 'defaultval', 'delete_permission',
-                              'description', 'description_format', 'destination_state',
+                              'description', 'description_format', 'destination_state', 'dirige',
 
                               'ecrit_par', 'eid', 'end_timestamp', 'evaluee', 'expression', 'exprtype',
 
                               'fabrique_par', 'final', 'firstname', 'for_user', 'fournit',
                               'from_entity', 'from_state', 'fulltext_container', 'fulltextindexed',
+
                               'has_group_permission', 'has_text',
                               'identity', 'in_group', 'in_state', 'in_synchronization', 'indexed',
                               'initial_state', 'inlined', 'internationalizable', 'is', 'is_instance_of',
