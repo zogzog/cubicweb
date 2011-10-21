@@ -345,7 +345,7 @@ def transition_states_vocabulary(form, field):
         if not eids:
             return []
         return _wf_items_for_relation(form._cw, eids[0], 'state_of', field)
-    return ff.relvoc_unrelated(entity, field.name, field.role)
+    return field.relvoc_unrelated(form)
 
 _afs.tag_subject_of(('*', 'destination_state', '*'), 'main', 'attributes')
 _affk.tag_subject_of(('*', 'destination_state', '*'),
@@ -363,7 +363,7 @@ def state_transitions_vocabulary(form, field):
         if eids:
             return _wf_items_for_relation(form._cw, eids[0], 'transition_of', field)
         return []
-    return ff.relvoc_unrelated(entity, field.name, field.role)
+    return field.relvoc_unrelated(form)
 
 _afs.tag_subject_of(('State', 'allowed_transition', '*'), 'main', 'attributes')
 _affk.tag_subject_of(('State', 'allowed_transition', '*'),
