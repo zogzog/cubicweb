@@ -98,34 +98,6 @@ msgid "%d years"
 msgstr ""
 
 #, python-format
-msgid "%d&#160;days"
-msgstr ""
-
-#, python-format
-msgid "%d&#160;hours"
-msgstr ""
-
-#, python-format
-msgid "%d&#160;minutes"
-msgstr ""
-
-#, python-format
-msgid "%d&#160;months"
-msgstr ""
-
-#, python-format
-msgid "%d&#160;seconds"
-msgstr ""
-
-#, python-format
-msgid "%d&#160;weeks"
-msgstr ""
-
-#, python-format
-msgid "%d&#160;years"
-msgstr ""
-
-#, python-format
 msgid "%s could be supported"
 msgstr ""
 
@@ -313,6 +285,12 @@ msgstr "Constraint types"
 msgid "CWConstraint_plural"
 msgstr "Constraints"
 
+msgid "CWDataImport"
+msgstr "Data import"
+
+msgid "CWDataImport_plural"
+msgstr "Data imports"
+
 msgid "CWEType"
 msgstr "Entity type"
 
@@ -421,6 +399,12 @@ msgid ""
 "supported"
 msgstr ""
 
+msgid "Click to sort on this column"
+msgstr ""
+
+msgid "DEBUG"
+msgstr ""
+
 #, python-format
 msgid "Data connection graph for %s"
 msgstr ""
@@ -452,6 +436,9 @@ msgstr ""
 msgid "Download schema as OWL"
 msgstr ""
 
+msgid "ERROR"
+msgstr ""
+
 msgid "EmailAddress"
 msgstr "Email address"
 
@@ -473,6 +460,9 @@ msgstr "External Uri"
 
 msgid "ExternalUri_plural"
 msgstr "External Uris"
+
+msgid "FATAL"
+msgstr ""
 
 msgid "Float"
 msgstr "Float"
@@ -496,6 +486,9 @@ msgid "Got rhythm?"
 msgstr ""
 
 msgid "Help"
+msgstr ""
+
+msgid "INFO"
 msgstr ""
 
 msgid "Instance"
@@ -525,6 +518,9 @@ msgstr ""
 msgid "Manage security"
 msgstr ""
 
+msgid "Message threshold"
+msgstr ""
+
 msgid "Most referenced classes"
 msgstr ""
 
@@ -545,6 +541,9 @@ msgstr "New constraint"
 
 msgid "New CWConstraintType"
 msgstr "New constraint type"
+
+msgid "New CWDataImport"
+msgstr "New data import"
 
 msgid "New CWEType"
 msgstr "New entity type"
@@ -763,6 +762,9 @@ msgstr "This constraint"
 msgid "This CWConstraintType"
 msgstr "This constraint type"
 
+msgid "This CWDataImport"
+msgstr "This data import"
+
 msgid "This CWEType"
 msgstr "This entity type"
 
@@ -854,6 +856,9 @@ msgid "Used by:"
 msgstr ""
 
 msgid "Users and groups management"
+msgstr ""
+
+msgid "WARNING"
 msgstr ""
 
 msgid "Web server"
@@ -1856,6 +1861,20 @@ msgctxt "CWSource"
 msgid "cw_host_config_of_object"
 msgstr "host configuration"
 
+msgid "cw_import_of"
+msgstr "source"
+
+msgctxt "CWDataImport"
+msgid "cw_import_of"
+msgstr "source"
+
+msgid "cw_import_of_object"
+msgstr "imports"
+
+msgctxt "CWSource"
+msgid "cw_import_of_object"
+msgstr "imports"
+
 msgid "cw_schema"
 msgstr "maps"
 
@@ -1910,6 +1929,9 @@ msgstr "description"
 
 msgid "cwrtype-permissions"
 msgstr "permissions"
+
+msgid "cwsource-imports"
+msgstr ""
 
 msgid "cwsource-main"
 msgstr "description"
@@ -2237,6 +2259,13 @@ msgstr ""
 msgid "embedding this url is forbidden"
 msgstr ""
 
+msgid "end_timestamp"
+msgstr "end timestamp"
+
+msgctxt "CWDataImport"
+msgid "end_timestamp"
+msgstr "end timestamp"
+
 msgid "entities deleted"
 msgstr ""
 
@@ -2355,6 +2384,12 @@ msgstr "\"final entity or relation type\" facet"
 msgid "facets_cwfinal-facet_description"
 msgstr ""
 
+msgid "facets_datafeed.dataimport.status"
+msgstr ""
+
+msgid "facets_datafeed.dataimport.status_description"
+msgstr ""
+
 msgid "facets_etype-facet"
 msgstr "\"entity type\" facet"
 
@@ -2377,6 +2412,9 @@ msgid "facets_in_state-facet"
 msgstr "\"in state\" facet"
 
 msgid "facets_in_state-facet_description"
+msgstr ""
+
+msgid "failed"
 msgstr ""
 
 #, python-format
@@ -2641,6 +2679,9 @@ msgstr ""
 msgid "image"
 msgstr ""
 
+msgid "in progress"
+msgstr ""
+
 msgid "in_group"
 msgstr "in group"
 
@@ -2792,6 +2833,12 @@ msgstr "has instances"
 msgid "january"
 msgstr ""
 
+msgid "json-entities-export-view"
+msgstr ""
+
+msgid "json-export-view"
+msgstr ""
+
 msgid "july"
 msgstr ""
 
@@ -2820,6 +2867,9 @@ msgctxt "CWUser"
 msgid "last_login_time"
 msgstr "last login time"
 
+msgid "latest import"
+msgstr ""
+
 msgid "latest modification time of an entity"
 msgstr ""
 
@@ -2837,6 +2887,9 @@ msgid "latest_retrieval"
 msgstr "latest retrieval"
 
 msgid "left"
+msgstr ""
+
+msgid "line"
 msgstr ""
 
 msgid ""
@@ -2866,6 +2919,13 @@ msgid "link a workflow to one or more entity type"
 msgstr ""
 
 msgid "list"
+msgstr ""
+
+msgid "log"
+msgstr ""
+
+msgctxt "CWDataImport"
+msgid "log"
 msgstr ""
 
 msgid "log in"
@@ -2951,6 +3011,9 @@ msgid "may"
 msgstr ""
 
 msgid "memory leak debugging"
+msgstr ""
+
+msgid "message"
 msgstr ""
 
 msgid "milestone"
@@ -3094,6 +3157,9 @@ msgstr ""
 msgid "no edited fields specified for entity %s"
 msgstr ""
 
+msgid "no log to display"
+msgstr ""
+
 msgid "no related entity"
 msgstr ""
 
@@ -3126,6 +3192,9 @@ msgid "not selected"
 msgstr ""
 
 msgid "november"
+msgstr ""
+
+msgid "num. users"
 msgstr ""
 
 msgid "object"
@@ -3223,6 +3292,9 @@ msgstr ""
 msgctxt "Bookmark"
 msgid "path"
 msgstr "path"
+
+msgid "permalink to this message"
+msgstr ""
 
 msgid "permission"
 msgstr ""
@@ -3572,6 +3644,9 @@ msgstr ""
 msgid "server information"
 msgstr ""
 
+msgid "severity"
+msgstr ""
+
 msgid ""
 "should html fields being edited using fckeditor (a HTML WYSIWYG editor).  "
 "You should also select text/html as default text format to actually get "
@@ -3643,6 +3718,13 @@ msgid ""
 "synchronization in progress."
 msgstr ""
 
+msgid "start_timestamp"
+msgstr "start timestamp"
+
+msgctxt "CWDataImport"
+msgid "start_timestamp"
+msgstr "start timestamp"
+
 msgid "startup views"
 msgstr ""
 
@@ -3685,6 +3767,13 @@ msgstr "use states"
 msgctxt "Workflow"
 msgid "state_of_object"
 msgstr "use states"
+
+msgid "status"
+msgstr ""
+
+msgctxt "CWDataImport"
+msgid "status"
+msgstr "status"
 
 msgid "status change"
 msgstr ""
@@ -3753,6 +3842,9 @@ msgstr "exit point"
 msgctxt "State"
 msgid "subworkflow_state_object"
 msgstr "exit point"
+
+msgid "success"
+msgstr ""
 
 msgid "sunday"
 msgstr ""
