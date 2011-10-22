@@ -294,8 +294,8 @@ class TableLayout(component.Component):
         else:
             c1, d1 = None, '%sShow' % divid
             c2, d2 = 'hidden', '%sHide' % divid
-        return [component.Link(showhide, showlabel, klass=c1, ident=d1),
-                component.Link(showhide, hidelabel, klass=c2, ident=d2)]
+        return [component.Link(showhide, showlabel, klass=c1, id=d1),
+                component.Link(showhide, hidelabel, klass=c2, id=d2)]
 
 
 class AbstractColumnRenderer(object):
