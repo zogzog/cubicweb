@@ -45,8 +45,8 @@ print '******************** backport entity content ***************************'
 
 from cubicweb.server import debugged
 todelete = {}
+host = source.config['base-url'].split('://')[1]
 for entity in rql('Any X WHERE X cw_source S, S eid %(s)s', {'s': source.eid}).entities():
-    with debugged('DBG_SQL'):
         etype = entity.__regid__
         if not source.support_entity(etype):
             print "source doesn't support %s, delete %s" % (etype, entity.eid)
@@ -55,7 +55,10 @@ for entity in rql('Any X WHERE X cw_source S, S eid %(s)s', {'s': source.eid}).e
         else:
             try:
                 entity.complete()
-            except:
+                if not host in entity.cwuri:
+                    print 'SKIP foreign entity', entity.cwuri, source.config['base-url']
+                    continue
+            except Exception:
                 print '%s %s much probably deleted, delete it (extid %s)' % (
                     etype, entity.eid, entity.cw_metainformation()['extid'])
             else:
