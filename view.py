@@ -466,7 +466,7 @@ class AnyRsetView(View):
         if tr:
             translate = partial(display_name, self._cw)
         else:
-            translate = lambda val: val
+            translate = lambda val, *args,**kwargs: val
         # XXX [0] because of missing Union support
         rql_syntax_tree = self.cw_rset.syntax_tree()
         rqlstdescr = rql_syntax_tree.get_description(mainindex, translate)[0]
