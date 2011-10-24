@@ -89,17 +89,14 @@ if rdflib is not None:
                             except xy.UnsupportedVocabulary:
                                 pass
                     else:
-                        try:
-                            for related in entity.related(rtype, role, entities=True, safe=True):
-                                if role == 'subject':
-                                    add( (cwuri, CW[rtype], URIRef(related.cwuri)) )
-                                    try:
-                                        for item in xy.xeq('%s %s' % (entity.e_schema.type, rtype)):
-                                            add( (cwuri, urijoin(item), URIRef(related.cwuri)) )
-                                    except xy.UnsupportedVocabulary:
-                                        pass
-                                else:
-                                    add( (URIRef(related.cwuri), CW[rtype], cwuri) )
-                        except Unauthorized:
-                            pass
+                        for related in entity.related(rtype, role, entities=True, safe=True):
+                            if role == 'subject':
+                                add( (cwuri, CW[rtype], URIRef(related.cwuri)) )
+                                try:
+                                    for item in xy.xeq('%s %s' % (entity.e_schema.type, rtype)):
+                                        add( (cwuri, urijoin(item), URIRef(related.cwuri)) )
+                                except xy.UnsupportedVocabulary:
+                                    pass
+                            else:
+                                add( (URIRef(related.cwuri), CW[rtype], cwuri) )
 
