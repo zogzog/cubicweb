@@ -824,8 +824,12 @@ class TableView(AnyRsetView):
         return self.show_hide_actions(divid, not hidden)
 
     def main_var_index(self):
-        """returns the index of the first non-attribute variable among the RQL
-        selected variables
+        """Returns the index of the first non final variable of the rset.
+
+        Used to select the main etype to help generate accurate column headers.
+        XXX explain the concept
+
+        May return None if none is found.
         """
         eschema = self._cw.vreg.schema.eschema
         for i, etype in enumerate(self.cw_rset.description[0]):
@@ -960,6 +964,19 @@ class TableView(AnyRsetView):
 
     def get_columns(self, computed_labels, displaycols, headers, subvid,
                     cellvids, cellattrs, mainindex):
+        """build columns description from various parameters
+
+        : computed_labels: columns headers computed from rset to be used if there is no headers entry
+        : displaycols: see :meth:`call`
+        : headers: explicitly define columns headers
+        : subvid: see :meth:`call`
+        : cellvids: see :meth:`call`
+        : cellattrs: see :meth:`call`
+        : mainindex: see :meth:`call`
+
+        return a list of columns description to be used by
+               :class:`~cubicweb.web.htmlwidgets.TableWidget`
+        """
         columns = []
         eschema = self._cw.vreg.schema.eschema
         for colindex, label in enumerate(computed_labels):
@@ -995,6 +1012,21 @@ class TableView(AnyRsetView):
 
     def get_rows(self):
         return self.cw_rset
+
+    def page_navigation_url(self, navcomp, path, params):
+        """Build an url to the current view using the <navcomp> attributes
+
+        :param navcomp: a NavigationComponent to call an url method on.
+        :param path:    expected to be json here ?
+        :param params: params to give to build_url method
+
+        this is called by :class:`cubiweb.web.component.NavigationComponent`
+        """
+        if hasattr(self, 'divid'):
+            # XXX this assert a single call
+            params['divid'] = self.divid
+        params['vid'] = self.__regid__
+        return navcomp.ajax_page_url(**params)
 
     @htmlescape
     @jsonize
