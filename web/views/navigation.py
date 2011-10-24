@@ -306,3 +306,4 @@ def paginate(view, show_all_option=True, w=None, page_size=None, rset=None):
 from cubicweb.view import View
 View.do_paginate = do_paginate
 View.paginate = paginate
+View.handle_pagination = False

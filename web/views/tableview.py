@@ -416,6 +416,8 @@ class TableMixIn(component.LayoutableMixIn):
     column_renderers = {}
     # default renderer class to use when no renderer specified for the column
     default_column_renderer_class = None
+    # default layout handles inner pagination
+    handle_pagination = True
 
     def call(self, **kwargs):
         self.layout_render(self.w)
