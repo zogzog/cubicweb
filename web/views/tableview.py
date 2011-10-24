@@ -203,6 +203,20 @@ class TableLayout(component.Component):
             facetsform.render(w, vid=self.view.__regid__, cssclass=cssclass,
                               divid=self.view.domid)
 
+    def render_table_headers(self, w, colrenderers):
+        w(u'<thead><tr>')
+        for colrenderer in colrenderers:
+            w(u'<th>')
+            colrenderer.render_header(w)
+            w(u'</th>')
+        w(u'</tr></thead>\n')
+
+    def render_table_body(self, w, colrenderers):
+        w(u'<tbody>')
+        for rownum in xrange(self.view.table_size):
+            self.render_row(w, rownum, colrenderers)
+        w(u'</tbody>')
+
     def render_table(self, w, actions, paginate):
         view = self.view
         divid = view.domid
@@ -217,17 +231,9 @@ class TableLayout(component.Component):
         colrenderers = view.build_column_renderers()
         attrs = self.table_attributes()
         w(u'<table %s>' % sgml_attributes(attrs))
-        if view.has_headers:
-            w(u'<thead><tr>')
-            for colrenderer in colrenderers:
-                w(u'<th>')
-                colrenderer.render_header(w)
-                w(u'</th>')
-            w(u'</tr></thead>\n')
-        w(u'<tbody>')
-        for rownum in xrange(view.table_size):
-            self.render_row(w, rownum, colrenderers)
-        w(u'</tbody>')
+        if self.view.has_headers:
+            self.render_table_headers(w, colrenderers)
+        self.render_table_body(w, colrenderers)
         w(u'</table>')
         if actions and self.display_actions == 'bottom':
             self.render_actions(w, actions)
