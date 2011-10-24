@@ -20,6 +20,8 @@
 __docformat__ = "restructuredtext en"
 _ = unicode
 
+from datetime import datetime
+
 from rql.nodes import VariableRef, Constant
 
 from logilab.mtconverter import xml_escape
@@ -151,6 +153,10 @@ class SortedNavigation(NavigationComponent):
                 col = var.selected_index()
                 attrname = None
             if col is not None:
+                # if column type is date[time], set proper 'nb_chars'
+                if var.stinfo['possibletypes'] & frozenset(('TZDatetime', 'Datetime',
+                                                            'Date')):
+                    self.nb_chars = len(self._cw.format_date(datetime.today()))
                 index_display = self.display_func(rset, col, attrname)
                 break
         else:
