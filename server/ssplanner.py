@@ -232,7 +232,7 @@ class SSPlanner(object):
         select.append_selected(rhs.copy(select))
         select.set_where(relation.copy(select))
         if rqlst.where is not None:
-            select.set_where(rqlst.where.copy(select))
+            select.add_restriction(rqlst.where.copy(select))
         if getattr(rqlst, 'having', None):
             select.set_having([x.copy(select) for x in rqlst.having])
         return self._select_plan(plan, select, rqlst.solutions)
