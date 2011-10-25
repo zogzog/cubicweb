@@ -1227,6 +1227,26 @@ Any P1,B,E WHERE P1 identity P2 WITH
         self.assertRaises(QueryError, self.execute, "SET X nom 'toto', X has_text 'tutu' WHERE X is Personne")
         self.assertRaises(QueryError, self.execute, "SET X login 'tutu', X eid %s" % cnx.user(self.session).eid)
 
+    # HAVING on write queries test #############################################
+
+    def test_update_having(self):
+        peid1 = self.execute("INSERT Personne Y: Y nom 'hop', Y tel 1")[0][0]
+        peid2 = self.execute("INSERT Personne Y: Y nom 'hop', Y tel 2")[0][0]
+        rset = self.execute("SET X tel 3 WHERE X tel TEL HAVING TEL&1=1")
+        self.assertEqual(tuplify(rset.rows), [(peid1, 3)])
+
+    def test_insert_having(self):
+        self.skip('unsupported yet')
+        self.execute("INSERT Personne Y: Y nom 'hop', Y tel 1")[0][0]
+        with self.debugged('DBG_SQL'):
+            self.assertFalse(self.execute("INSERT Personne Y: Y nom 'hop', Y tel 2 WHERE X tel XT HAVING XT&2=2"))
+            self.assertTrue(self.execute("INSERT Personne Y: Y nom 'hop', Y tel 2 WHERE X tel XT HAVING XT&1=1"))
+
+    def test_delete_having(self):
+        self.execute("INSERT Personne Y: Y nom 'hop', Y tel 1")[0][0]
+        self.assertFalse(self.execute("DELETE Personne Y WHERE X tel XT HAVING XT&2=2"))
+        self.assertTrue(self.execute("DELETE Personne Y WHERE X tel XT HAVING XT&1=1"))
+
     # upassword encryption tests #################################################
 
     def test_insert_upassword(self):
