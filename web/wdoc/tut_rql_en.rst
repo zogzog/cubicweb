@@ -23,7 +23,7 @@ link in user's dropdown menu (on the top-right of the screen) or by clicking her
 .. _here: schema
 
 
-Some bits of théory
+Some bits of theory
 -------------------
 
 Variables et types
