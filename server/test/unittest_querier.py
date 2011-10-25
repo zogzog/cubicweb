@@ -1236,7 +1236,7 @@ Any P1,B,E WHERE P1 identity P2 WITH
         self.assertEqual(tuplify(rset.rows), [(peid1, 3)])
 
     def test_insert_having(self):
-        self.skip('unsupported yet')
+        self.skipTest('unsupported yet')
         self.execute("INSERT Personne Y: Y nom 'hop', Y tel 1")[0][0]
         with self.debugged('DBG_SQL'):
             self.assertFalse(self.execute("INSERT Personne Y: Y nom 'hop', Y tel 2 WHERE X tel XT HAVING XT&2=2"))
