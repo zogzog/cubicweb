@@ -767,7 +767,7 @@ class MSPlannerTC(BaseMSPlannerTC):
 
     def test_not_identity(self):
         ueid = self.session.user.eid
-        self._test('Any X WHERE NOT X identity U, U eid %s' % ueid,
+        self._test('Any X WHERE NOT X identity U, U eid %s, X is CWUser' % ueid,
                    [('OneFetchStep',
                      [('Any X WHERE NOT X identity %s, X is CWUser' % ueid, [{'X': 'CWUser'}])],
                      None, None,
