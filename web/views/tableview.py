@@ -812,6 +812,7 @@ class TableView(AnyRsetView):
         'textExtraction': JSString('cw.sortValueExtraction'),
         'selectorHeaders': 'thead tr:first th', # only plug on the first row
         }
+    handle_pagination = True
 
     def form_filter(self, divid, displaycols, displayactions, displayfilter,
                     paginate, hidden=True):

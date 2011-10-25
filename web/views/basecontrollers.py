@@ -353,7 +353,7 @@ class JSonController(Controller):
             if vtitle:
                 stream.write(u'<h1 class="vtitle">%s</h1>\n' % vtitle)
             paginate = True
-        if paginate:
+        if paginate and not view.handle_pagination:
             view.paginate()
         if divid == 'pageContent':
             stream.write(u'<div id="contentmain">')
