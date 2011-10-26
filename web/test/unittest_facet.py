@@ -4,17 +4,17 @@ from cubicweb.web import facet
 
 class BaseFacetTC(CubicWebTC):
 
-    def prepare_rqlst(self, rql='CWUser X', baserql='Any X WHERE X is CWUser',
-                      preparedrql='DISTINCT Any  WHERE X is CWUser',
-                      mainvar='X'):
+    def prepare_rqlst(self, rql='CWUser X', mainvar='X',
+                      expected_baserql='Any X WHERE X is CWUser',
+                      expected_preparedrql='DISTINCT Any  WHERE X is CWUser'):
         req = self.request()
         rset = self.execute(rql)
         rqlst = rset.syntax_tree().copy()
         filtered_variable, baserql = facet.init_facets(rset, rqlst.children[0],
                                                        mainvar=mainvar)
         self.assertEqual(filtered_variable.name, mainvar)
-        self.assertEqual(baserql, baserql)
-        self.assertEqual(rqlst.as_string(), preparedrql)
+        self.assertEqual(baserql, expected_baserql)
+        self.assertEqual(rqlst.as_string(), expected_preparedrql)
         return req, rset, rqlst, filtered_variable
 
     def _in_group_facet(self, cls=facet.RelationFacet, no_relation=False):
@@ -262,11 +262,11 @@ class BaseFacetTC(CubicWebTC):
         return self.prepare_rqlst(
             'Any 1, COUNT(X) WHERE X is CWUser, X creation_date XD, '
             'X modification_date XM, Y creation_date YD, Y is CWGroup '
-            'HAVING DAY(XD)>=DAY(YD) AND DAY(XM)<=DAY(YD)', mainvar='X',
-            baserql='DISTINCT Any  WHERE X is CWUser, X creation_date XD, '
+            'HAVING DAY(XD)>=DAY(YD) AND DAY(XM)<=DAY(YD)', 'X',
+            expected_baserql='Any 1,COUNT(X) WHERE X is CWUser, X creation_date XD, '
             'X modification_date XM, Y creation_date YD, Y is CWGroup '
             'HAVING DAY(XD) >= DAY(YD), DAY(XM) <= DAY(YD)',
-            preparedrql='DISTINCT Any  WHERE X is CWUser, X creation_date XD, '
+            expected_preparedrql='DISTINCT Any  WHERE X is CWUser, X creation_date XD, '
             'X modification_date XM, Y creation_date YD, Y is CWGroup '
             'HAVING DAY(XD) >= DAY(YD), DAY(XM) <= DAY(YD)')
 

@@ -111,16 +111,15 @@ operators (see :ref:`RQLOperatorsPriority`).
 
 Mathematical operators
 ``````````````````````
-::
 
-+==========+=====================+===========+========+
++----------+---------------------+-----------+--------+
 | Operator |    Description      | Example   | Result |
 +==========+=====================+===========+========+
-|  +       | addition            | 2 + 3     | 5      |
+|  `+`     | addition            | 2 + 3     | 5      |
 +----------+---------------------+-----------+--------+
-|  -       | subtraction         | 2 - 3     | -1     |
+|  `-`     | subtraction         | 2 - 3     | -1     |
 +----------+---------------------+-----------+--------+
-|  *       | multiplication      | 2 * 3     | 6      |
+|  `*`     | multiplication      | 2 * 3     | 6      |
 +----------+---------------------+-----------+--------+
 |  /       | division            | 4 / 2     | 2      |
 +----------+---------------------+-----------+--------+
@@ -141,7 +140,6 @@ Mathematical operators
 |  >>      | bitwise shift right | 8 >> 2    | 2      |
 +----------+---------------------+-----------+--------+
 
-  +, -, *, /
 
 Notice integer division truncates results depending on the backend behaviour. For
 instance, postgresql does.
