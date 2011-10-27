@@ -693,12 +693,12 @@ class EntityTableColRenderer(AbstractColumnRenderer):
     def sortvalue(self, rownum):
         entity = self.entity(rownum)
         if entity:
-            return self.sortfunc(self.entity(rownum))
+            return self.sortfunc(entity)
         return None
 
     def entity(self, rownum):
         """Return the table's main entity"""
-        return self.view.cw_rset.get_entity(rownum, self.view.cw_col or 0)
+        return self.view.entity(rownum)
 
 
 class MainEntityColRenderer(EntityTableColRenderer):
@@ -778,6 +778,10 @@ class EntityTableView(TableMixIn, EntityView):
 
     def build_column_renderers(self):
         return [self.column_renderer(colid) for colid in self.columns]
+
+    def entity(self, rownum):
+        """Return the table's main entity"""
+        return self.cw_rset.get_entity(rownum, self.cw_col or 0)
 
 
 class EmptyCellView(AnyRsetView):
