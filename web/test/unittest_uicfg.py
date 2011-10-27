@@ -15,9 +15,10 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
+import copy
 from logilab.common.testlib import tag
 from cubicweb.devtools.testlib import CubicWebTC
-from cubicweb.web import uicfg
+from cubicweb.web import uicfg, uihelper, formwidgets as fwdgs
 
 abaa = uicfg.actionbox_appearsin_addmenu
 
@@ -33,7 +34,9 @@ class DefinitionOrderTC(CubicWebTC):
     the more accurate apply"""
 
     def setUp(self):
-
+        super(DefinitionOrderTC, self).setUp()
+        for rtag in (uicfg.autoform_section, uicfg.autoform_field_kwargs):
+            rtag._old_tagdefs = copy.deepcopy(rtag._tagdefs)
         new_def = (
                     (('*', 'login', '*'),
                          {'formtype':'main', 'section':'hidden'}),
@@ -48,15 +51,13 @@ class DefinitionOrderTC(CubicWebTC):
                     (('CWUser', 'login', 'String'),
                          {'formtype':'inlined', 'section':'attributes'}),
                     )
-        self._old_def = []
-
         for key, kwargs in new_def:
-            nkey = key[0], key[1], key[2], 'subject'
-            self._old_def.append((nkey, uicfg.autoform_section._tagdefs.get(nkey)))
             uicfg.autoform_section.tag_subject_of(key, **kwargs)
 
-        super(DefinitionOrderTC, self).setUp()
-
+    def tearDown(self):
+        super(DefinitionOrderTC, self).tearDown()
+        for rtag in (uicfg.autoform_section, uicfg.autoform_field_kwargs):
+            rtag._tagdefs = rtag._old_tagdefs
 
     @tag('uicfg')
     def test_definition_order_hidden(self):
@@ -64,18 +65,47 @@ class DefinitionOrderTC(CubicWebTC):
         expected = set(['main_inlined', 'muledit_attributes', 'inlined_attributes'])
         self.assertSetEqual(result, expected)
 
-    def tearDown(self):
-        super(DefinitionOrderTC, self).tearDown()
-        for key, tags in self._old_def:
-                if tags is None:
-                    uicfg.autoform_section.del_rtag(*key)
-                else:
-                    for tag in tags:
-                        formtype, section = tag.split('_')
-                        uicfg.autoform_section.tag_subject_of(key[:3], formtype=formtype, section=section)
+    @tag('uihelper', 'order', 'func')
+    def test_uihelper_set_fields_order(self):
+        afk_get = uicfg.autoform_field_kwargs.get
+        self.assertEqual(afk_get('CWUser', 'firstname', 'String', 'subject'), {})
+        uihelper.set_fields_order('CWUser', ('login', 'firstname', 'surname'))
+        self.assertEqual(afk_get('CWUser', 'firstname', 'String', 'subject'), {'order': 1})
 
-        uicfg.autoform_section.clear()
-        uicfg.autoform_section.init(self.repo.vreg.schema)
+    @tag('uihelper', 'kwargs', 'func')
+    def test_uihelper_set_field_kwargs(self):
+        afk_get = uicfg.autoform_field_kwargs.get
+        self.assertEqual(afk_get('CWUser', 'firstname', 'String', 'subject'), {})
+        wdg = fwdgs.TextInput({'size': 30})
+        uihelper.set_field_kwargs('CWUser', 'firstname', widget=wdg)
+        self.assertEqual(afk_get('CWUser', 'firstname', 'String', 'subject'), {'widget': wdg})
+
+    @tag('uihelper', 'hidden', 'func')
+    def test_uihelper_hide_fields(self):
+        # original conf : in_group is edited in 'attributes' section everywhere
+        section_conf = uicfg.autoform_section.get('CWUser', 'in_group', '*', 'subject')
+        self.assertItemsEqual(section_conf, ['main_attributes', 'muledit_attributes'])
+        # hide field in main form
+        uihelper.hide_fields('CWUser', ('login', 'in_group'))
+        section_conf = uicfg.autoform_section.get('CWUser', 'in_group', '*', 'subject')
+        self.assertItemsEqual(section_conf, ['main_hidden', 'muledit_attributes'])
+        # hide field in muledit form
+        uihelper.hide_fields('CWUser', ('login', 'in_group'), formtype='muledit')
+        section_conf = uicfg.autoform_section.get('CWUser', 'in_group', '*', 'subject')
+        self.assertItemsEqual(section_conf, ['main_hidden', 'muledit_hidden'])
+
+    @tag('uihelper', 'hidden', 'formconfig')
+    def test_uihelper_formconfig(self):
+        afk_get = uicfg.autoform_field_kwargs.get
+        class CWUserFormConfig(uihelper.FormConfig):
+            etype = 'CWUser'
+            hidden = ('in_group',)
+            fields_order = ('login', 'firstname')
+        section_conf = uicfg.autoform_section.get('CWUser', 'in_group', '*', 'subject')
+        self.assertItemsEqual(section_conf, ['main_hidden', 'muledit_attributes'])
+        self.assertEqual(afk_get('CWUser', 'firstname', 'String', 'subject'), {'order': 1})
+
+
 
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main
