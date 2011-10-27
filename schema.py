@@ -929,6 +929,9 @@ class BaseRQLConstraint(RRQLExpression, BaseConstraint):
 
     @classmethod
     def deserialize(cls, value):
+        # XXX < 3.5.10 bw compat
+        if not value.startswith(';'):
+            return cls(value)
         _, mainvars, expression = value.split(';', 2)
         return cls(expression, mainvars)
 
@@ -983,6 +986,9 @@ class RepoEnforcedRQLConstraintMixIn(object):
                                self.msg or '')
 
     def deserialize(cls, value):
+        # XXX < 3.5.10 bw compat
+        if not value.startswith(';'):
+            return cls(value)
         value, msg = value.split('\n', 1)
         _, mainvars, expression = value.split(';', 2)
         return cls(expression, mainvars, msg)
