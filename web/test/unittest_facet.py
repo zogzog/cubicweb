@@ -195,6 +195,32 @@ class BaseFacetTC(CubicWebTC):
         self.assertEqual(f.select.as_string(),
                           "DISTINCT Any  WHERE X is CWUser, X login 'admin'")
 
+    def test_bitfield(self):
+        req, rset, rqlst, filtered_variable = self.prepare_rqlst(
+            'CWAttribute X WHERE X ordernum XO',
+            expected_baserql='Any X WHERE X ordernum XO, X is CWAttribute',
+            expected_preparedrql='DISTINCT Any  WHERE X ordernum XO, X is CWAttribute')
+        f = facet.BitFieldFacet(req, rset=rset,
+                                select=rqlst.children[0],
+                                filtered_variable=filtered_variable)
+        f.choices = [('un', 1,), ('deux', 2,)]
+        f.rtype = 'ordernum'
+        self.assertEqual(f.vocabulary(),
+                          [(u'deux', 2), (u'un', 1)])
+        # ensure rqlst is left unmodified
+        self.assertEqual(rqlst.as_string(), 'DISTINCT Any  WHERE X ordernum XO, X is CWAttribute')
+        #rqlst = rset.syntax_tree()
+        self.assertEqual(f.possible_values(),
+                          ['2', '1'])
+        # ensure rqlst is left unmodified
+        self.assertEqual(rqlst.as_string(), 'DISTINCT Any  WHERE X ordernum XO, X is CWAttribute')
+        req.form[f.__regid__] = '3'
+        f.add_rql_restrictions()
+        # selection is cluttered because rqlst has been prepared for facet (it
+        # is not in real life)
+        self.assertEqual(f.select.as_string(),
+                          "DISTINCT Any  WHERE X ordernum XO, X is CWAttribute, X ordernum C HAVING 3 = (C & 3)")
+
     def test_rql_path_eid(self):
         req, rset, rqlst, filtered_variable = self.prepare_rqlst()
         class RPF(facet.RQLPathFacet):

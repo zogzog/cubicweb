@@ -32,13 +32,29 @@ def setUpModule(*args):
 
 class WidgetsTC(TestCase):
 
-    def test_state_fields(self):
+    def test_editableurl_widget(self):
         field = formfields.guess_field(schema['Bookmark'], schema['path'])
         widget = formwidgets.EditableURLWidget()
         req = fake.FakeRequest(form={'path-subjectfqs:A': 'param=value&vid=view'})
         form = mock(_cw=req, formvalues={}, edited_entity=mock(eid='A'))
         self.assertEqual(widget.process_field_data(form, field),
                          '?param=value%26vid%3Dview')
+
+    def test_bitselect_widget(self):
+        field = formfields.guess_field(schema['CWAttribute'], schema['ordernum'])
+        field.choices = [('un', '1',), ('deux', '2',)]
+        widget = formwidgets.BitSelect(settabindex=False)
+        req = fake.FakeRequest(form={'ordernum-subject:A': ['1', '2']})
+        form = mock(_cw=req, formvalues={}, edited_entity=mock(eid='A'),
+                    form_previous_values=())
+        self.assertMultiLineEqual(widget._render(form, field, None),
+                             '''\
+<select id="ordernum-subject:A" multiple="multiple" name="ordernum-subject:A" size="2">
+<option selected="selected" value="2">deux</option>
+<option selected="selected" value="1">un</option>
+</select>''')
+        self.assertEqual(widget.process_field_data(form, field),
+                         3)
 
 if __name__ == '__main__':
     unittest_main()

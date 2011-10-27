@@ -33,6 +33,7 @@ Classes you'll want to use
 .. autoclass:: cubicweb.web.facet.RQLPathFacet
 .. autoclass:: cubicweb.web.facet.RangeFacet
 .. autoclass:: cubicweb.web.facet.DateRangeFacet
+.. autoclass:: cubicweb.web.facet.BitFieldFacet
 
 Classes for facets implementor
 ------------------------------
@@ -977,8 +978,12 @@ class AttributeFacet(RelationAttributeFacet):
             cleanup_select(select, filtered_variable)
             newvar = prepare_vocabulary_select(select, filtered_variable, self.rtype, self.role)
             _set_orderby(select, newvar, self.sortasc, self.sortfunc)
+            if self.cw_rset:
+                args = self.cw_rset.args
+            else: # vocabulary used for possible_values
+                args = None
             try:
-                rset = self.rqlexec(select.as_string(), self.cw_rset.args)
+                rset = self.rqlexec(select.as_string(), args)
             except Exception:
                 self.exception('error while getting vocabulary for %s, rql: %s',
                                self, select.as_string())
@@ -1362,6 +1367,42 @@ class HasRelationFacet(AbstractFacet):
             self.select.add_relation(self.filtered_variable, self.rtype, var)
         else:
             self.select.add_relation(var, self.rtype, self.filtered_variable)
+
+
+class BitFieldFacet(AttributeFacet):
+    """Base facet class for Int field holding some bit values using binary
+    masks.
+
+    label / value for each bit should be given using the :attr:`choices`
+    attribute.
+
+    See also :class:`~cubicweb.web.formwidgets.BitSelect`.
+    """
+    choices = None # to be set on concret class
+    def add_rql_restrictions(self):
+        value = self._cw.form.get(self.__regid__)
+        if not value:
+            return
+        if isinstance(value, list):
+            value = reduce(lambda x, y: int(x) | int(y), value)
+        attr_var = self.select.make_variable()
+        self.select.add_relation(self.filtered_variable, self.rtype, attr_var)
+        comp = nodes.Comparison('=', nodes.Constant(value, 'Int'))
+        comp.append(nodes.MathExpression('&', nodes.variable_ref(attr_var),
+                                         nodes.Constant(value, 'Int')))
+        having = self.select.having
+        if having:
+            self.select.replace(having[0], nodes.And(having[0], comp))
+        else:
+            self.select.set_having([comp])
+
+    def rset_vocabulary(self, rset):
+        mask = reduce(lambda x, y: x | (y[0] or 0), rset, 0)
+        return sorted([(self._cw._(label), val) for label, val in self.choices
+                       if val & mask])
+
+    def possible_values(self):
+        return [unicode(val) for label, val in self.vocabulary()]
 
 
 ## html widets ################################################################
