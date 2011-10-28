@@ -1755,11 +1755,11 @@ msgctxt "CWConstraintType"
 msgid "cstrtype_object"
 msgstr "Einschränkungstyp von"
 
-msgid "csv entities export"
-msgstr "CSV-Export von Entitäten"
-
 msgid "csv export"
 msgstr "CSV-Export"
+
+msgid "csv export (entities)"
+msgstr ""
 
 msgid "ctxcomponents"
 msgstr "Kontext-Komponenten"
@@ -3460,7 +3460,7 @@ msgstr "Beschreibung"
 msgid "rdef-permissions"
 msgstr "Rechte"
 
-msgid "rdf"
+msgid "rdf export"
 msgstr ""
 
 msgid "read"
@@ -3641,8 +3641,8 @@ msgstr ""
 msgid "rql expressions"
 msgstr "RQL-Ausdrücke"
 
-msgid "rss"
-msgstr "RSS"
+msgid "rss export"
+msgstr ""
 
 msgid "same_as"
 msgstr "identisch mit"
@@ -4527,14 +4527,14 @@ msgstr "hat als Workflow"
 msgid "wrong query parameter line %s"
 msgstr "Falscher Anfrage-Parameter Zeile %s"
 
-msgid "xbel"
-msgstr "XBEL"
-
-msgid "xml"
-msgstr "XML"
+msgid "xbel export"
+msgstr ""
 
 msgid "xml export"
 msgstr "XML-Export"
+
+msgid "xml export (entities)"
+msgstr ""
 
 msgid "yes"
 msgstr "Ja"
@@ -4553,29 +4553,20 @@ msgstr "Sie sollten diese Eigenschaft wahrscheinlich löschen."
 msgid "you should un-inline relation %s which is supported and may be crossed "
 msgstr ""
 
-#~ msgid "%d&#160;days"
-#~ msgstr "%d&#160;Tage"
-
-#~ msgid "%d&#160;hours"
-#~ msgstr "%d&#160;Stunden"
-
-#~ msgid "%d&#160;minutes"
-#~ msgstr "%d&#160;Minuten"
-
-#~ msgid "%d&#160;months"
-#~ msgstr "%d&#160;Monate"
-
-#~ msgid "%d&#160;seconds"
-#~ msgstr "%d&#160;Sekunden"
-
-#~ msgid "%d&#160;weeks"
-#~ msgstr "%d&#160;Wochen"
-
-#~ msgid "%d&#160;years"
-#~ msgstr "%d&#160;Jahre"
-
 #~ msgid "Schema of the data model"
 #~ msgstr "Schema des Datenmodells"
 
+#~ msgid "csv entities export"
+#~ msgstr "CSV-Export von Entitäten"
+
 #~ msgid "instance schema"
 #~ msgstr "Schema der Instanz"
+
+#~ msgid "rss"
+#~ msgstr "RSS"
+
+#~ msgid "xbel"
+#~ msgstr "XBEL"
+
+#~ msgid "xml"
+#~ msgstr "XML"

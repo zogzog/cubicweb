@@ -1782,11 +1782,11 @@ msgctxt "CWConstraintType"
 msgid "cstrtype_object"
 msgstr "type des contraintes"
 
-msgid "csv entities export"
-msgstr "export d'entités en CSV"
-
 msgid "csv export"
 msgstr "export CSV"
+
+msgid "csv export (entities)"
+msgstr "export CSV (entités)"
 
 msgid "ctxcomponents"
 msgstr "composants contextuels"
@@ -3506,8 +3506,8 @@ msgstr "description"
 msgid "rdef-permissions"
 msgstr "permissions"
 
-msgid "rdf"
-msgstr "rdf"
+msgid "rdf export"
+msgstr "export RDF"
 
 msgid "read"
 msgstr "lecture"
@@ -3697,8 +3697,8 @@ msgstr ""
 msgid "rql expressions"
 msgstr "conditions rql"
 
-msgid "rss"
-msgstr "RSS"
+msgid "rss export"
+msgstr "export RSS"
 
 msgid "same_as"
 msgstr "identique à"
@@ -4582,14 +4582,14 @@ msgstr "a pour workflow"
 msgid "wrong query parameter line %s"
 msgstr "mauvais paramètre de requête ligne %s"
 
-msgid "xbel"
-msgstr "xbel"
-
-msgid "xml"
-msgstr "xml"
+msgid "xbel export"
+msgstr "export XBEL"
 
 msgid "xml export"
-msgstr "export xml"
+msgstr "export XML"
+
+msgid "xml export (entities)"
+msgstr "export XML (entités)"
 
 msgid "yes"
 msgstr "oui"

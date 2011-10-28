@@ -1708,11 +1708,11 @@ msgctxt "CWConstraintType"
 msgid "cstrtype_object"
 msgstr "constraint type of"
 
-msgid "csv entities export"
-msgstr ""
-
 msgid "csv export"
-msgstr ""
+msgstr "CSV export"
+
+msgid "csv export (entities)"
+msgstr "CSV export (entities)"
 
 msgid "ctxcomponents"
 msgstr "contextual components"
@@ -2834,10 +2834,10 @@ msgid "january"
 msgstr ""
 
 msgid "json-entities-export-view"
-msgstr ""
+msgstr "JSON export (entities)"
 
 msgid "json-export-view"
-msgstr ""
+msgstr "JSON export"
 
 msgid "july"
 msgstr ""
@@ -3376,8 +3376,8 @@ msgstr "description"
 msgid "rdef-permissions"
 msgstr "permissions"
 
-msgid "rdf"
-msgstr ""
+msgid "rdf export"
+msgstr "RDF export"
 
 msgid "read"
 msgstr ""
@@ -3554,8 +3554,8 @@ msgstr ""
 msgid "rql expressions"
 msgstr ""
 
-msgid "rss"
-msgstr ""
+msgid "rss export"
+msgstr "RSS export"
 
 msgid "same_as"
 msgstr "same as"
@@ -4415,14 +4415,14 @@ msgstr "may use workflow"
 msgid "wrong query parameter line %s"
 msgstr ""
 
-msgid "xbel"
-msgstr ""
-
-msgid "xml"
-msgstr ""
+msgid "xbel export"
+msgstr "XBEL export"
 
 msgid "xml export"
-msgstr ""
+msgstr "XML export"
+
+msgid "xml export (entities)"
+msgstr "XML export (entities)"
 
 msgid "yes"
 msgstr ""

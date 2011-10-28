@@ -52,7 +52,7 @@ SERIALIZERS = {
 class XMLView(EntityView):
     """xml view for entities"""
     __regid__ = 'xml'
-    title = _('xml')
+    title = _('xml export (entities)')
     templatable = False
     content_type = 'text/xml'
     xml_root = 'rset'
@@ -231,7 +231,7 @@ class RSSIconBox(component.CtxComponent):
 
 class RSSView(XMLView):
     __regid__ = 'rss'
-    title = _('rss')
+    title = _('rss export')
     templatable = False
     content_type = 'text/xml'
     http_cache_manager = httpcache.MaxAgeHTTPCacheManager

@@ -1779,11 +1779,11 @@ msgctxt "CWConstraintType"
 msgid "cstrtype_object"
 msgstr "Tipo de restricciones"
 
-msgid "csv entities export"
-msgstr "Exportar entidades en csv"
-
 msgid "csv export"
 msgstr "Exportar en CSV"
+
+msgid "csv export (entities)"
+msgstr ""
 
 msgid "ctxcomponents"
 msgstr "Componentes contextuales"
@@ -3501,8 +3501,8 @@ msgstr "Descripción"
 msgid "rdef-permissions"
 msgstr "Permisos"
 
-msgid "rdf"
-msgstr "rdf"
+msgid "rdf export"
+msgstr ""
 
 msgid "read"
 msgstr "Lectura"
@@ -3691,8 +3691,8 @@ msgstr ""
 msgid "rql expressions"
 msgstr "Expresiones RQL"
 
-msgid "rss"
-msgstr "RSS"
+msgid "rss export"
+msgstr ""
 
 msgid "same_as"
 msgstr "Idéntico a"
@@ -4576,14 +4576,14 @@ msgstr "Utiliza el Workflow"
 msgid "wrong query parameter line %s"
 msgstr "Parámetro erróneo de consulta línea %s"
 
-msgid "xbel"
-msgstr "xbel"
-
-msgid "xml"
-msgstr "xml"
+msgid "xbel export"
+msgstr ""
 
 msgid "xml export"
 msgstr "Exportar XML"
+
+msgid "xml export (entities)"
+msgstr ""
 
 msgid "yes"
 msgstr "Sí"
@@ -4604,35 +4604,29 @@ msgstr ""
 "usted debe  quitar la puesta en línea de la relación %s que es aceptada y "
 "puede ser cruzada"
 
-#~ msgid "%d&#160;days"
-#~ msgstr "%d&#160;días"
-
-#~ msgid "%d&#160;hours"
-#~ msgstr "%d&#160;horas"
-
-#~ msgid "%d&#160;minutes"
-#~ msgstr "%d&#160;minutos"
-
-#~ msgid "%d&#160;months"
-#~ msgstr "%d&#160;meses"
-
-#~ msgid "%d&#160;seconds"
-#~ msgstr "%d&#160;segundos"
-
-#~ msgid "%d&#160;weeks"
-#~ msgstr "%d&#160;semanas"
-
-#~ msgid "%d&#160;years"
-#~ msgstr "%d&#160;años"
-
 #~ msgid "Schema of the data model"
 #~ msgstr "Esquema del modelo de datos"
 
 #~ msgid "add a CWSourceSchemaConfig"
 #~ msgstr "agregar una parte de mapeo"
 
+#~ msgid "csv entities export"
+#~ msgstr "Exportar entidades en csv"
+
 #~ msgid "instance schema"
 #~ msgstr "Esquema de la Instancia"
 
+#~ msgid "rdf"
+#~ msgstr "rdf"
+
+#~ msgid "rss"
+#~ msgstr "RSS"
+
 #~ msgid "siteinfo"
 #~ msgstr "información"
+
+#~ msgid "xbel"
+#~ msgstr "xbel"
+
+#~ msgid "xml"
+#~ msgstr "xml"
