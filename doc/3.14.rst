@@ -76,6 +76,10 @@ API changes
   rset, *kwargs)` will be routed to the new `RsetTableView` or to the old
   `TableView` depending on given extra arguments. See #1986413.
 
+* `IEditControlAdapter` has been deprecated in favor of `EditController`
+  overloading, which was made easier by adding dedicated selectors called
+  `match_edited_type` and `match_form_id`
+
 
 Unintrusive API changes
 -----------------------

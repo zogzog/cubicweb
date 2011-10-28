@@ -21,6 +21,8 @@ __docformat__ = "restructuredtext en"
 
 from warnings import warn
 
+from logilab.common.deprecation import deprecated
+
 from rql.utils import rqlvar_maker
 
 from cubicweb import Binary, ValidationError, typed_eid
@@ -36,6 +38,13 @@ class IEditControlAdapter(EntityAdapter):
     __regid__ = 'IEditControl'
     __select__ = is_instance('Any')
 
+    @deprecated()
+    def __init__(self, _cw, **kwargs):
+        warn('[3.14] IEditControlAdapter is deprecated, override EditController'
+             ' using match_edited_type or match_form_id selectors for example.',
+             DeprecationWarning)
+        super(IEditControlAdapter, self).__init__(_cw, **kwargs)
+
     @implements_adapter_compat('IEditControl')
     def after_deletion_path(self):
         """return (path, parameters) which should be used as redirect
@@ -47,7 +56,7 @@ class IEditControlAdapter(EntityAdapter):
         return str(self.entity.e_schema).lower(), {}
 
     @implements_adapter_compat('IEditControl')
-    def pre_web_edit(self, form):
+    def pre_web_edit(self):
         """callback called by the web editcontroller when an entity will be
         created/modified, to let a chance to do some entity specific stuff.
 
@@ -167,6 +176,13 @@ class EditController(basecontrollers.ViewController):
         entity = self._cw.vreg['etypes'].etype_class(etype)(self._cw)
         entity.eid = valerror_eid(formparams['eid'])
         is_main_entity = self._cw.form.get('__maineid') == formparams['eid']
+        # let a chance to do some entity specific stuff
+        entity.cw_adapt_to('IEditControl').pre_web_edit()
+        # create a rql query from parameters
+        rqlquery = RqlQuery()
+        # process inlined relations at the same time as attributes
+        # this will generate less rql queries and might be useful in
+        # a few dark corners
         if is_main_entity:
             formid = self._cw.form.get('__form_id', 'edition')
         else:
@@ -174,13 +190,6 @@ class EditController(basecontrollers.ViewController):
             # inbetween, use cubicweb standard formid for inlined forms
             formid = 'edition'
         form = self._cw.vreg['forms'].select(formid, self._cw, entity=entity)
-        # let a chance to do some entity specific stuff
-        entity.cw_adapt_to('IEditControl').pre_web_edit(form)
-        # create a rql query from parameters
-        rqlquery = RqlQuery()
-        # process inlined relations at the same time as attributes
-        # this will generate less rql queries and might be useful in
-        # a few dark corners
         eid = form.actual_eid(entity.eid)
         try:
             editedfields = formparams['_cw_entity_fields']

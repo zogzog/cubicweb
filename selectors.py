@@ -406,11 +406,11 @@ class EntitySelector(EClassSelector):
 class ExpectedValueSelector(Selector):
     """Take a list of expected values as initializer argument and store them
     into the :attr:`expected` set attribute. You may also give a set as single
-    argument, which will be then be referenced as set of expected values,
+    argument, which will then be referenced as set of expected values,
     allowing modifications to the given set to be considered.
 
     You should implement one of :meth:`_values_set(cls, req, **kwargs)` or
-    :meth:`_get_value(cls, req, **kwargs)` method which should respectivly
+    :meth:`_get_value(cls, req, **kwargs)` method which should respectively
     return the set of values or the unique possible value for the given context.
 
     You may also specify a `mode` behaviour as argument, as explained below.
@@ -1503,6 +1503,30 @@ class match_form_params(ExpectedValueSelector):
 
     def _values_set(self, cls, req, **kwargs):
         return frozenset(req.form)
+
+
+class match_edited_type(ExpectedValueSelector):
+    """return non-zero if main edited entity type is the one specified as
+    initializer argument, or is among initializer arguments if `mode` == 'any'.
+    """
+
+    def _values_set(self, cls, req, **kwargs):
+        try:
+            return frozenset((req.form['__type:%s' % req.form['__maineid']],))
+        except KeyError:
+            return frozenset()
+
+
+class match_form_id(ExpectedValueSelector):
+    """return non-zero if request form identifier is the one specified as
+    initializer argument, or is among initializer arguments if `mode` == 'any'.
+    """
+
+    def _values_set(self, cls, req, **kwargs):
+        try:
+            return frozenset((req.form['__form_id'],))
+        except KeyError:
+            return frozenset()
 
 
 class specified_etype_implements(is_instance):
