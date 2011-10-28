@@ -62,7 +62,6 @@ class ProgressTableView(EntityAttributesTableView):
                _('cost'), _('progress'), _('todo_by'))
 
     def cell_call(self, row, col):
-        x
         _ = self._cw._
         entity = self.cw_rset.get_entity(row, col)
         infos = {}
@@ -159,7 +158,6 @@ class InContextProgressTableView(ProgressTableView):
     __regid__ = 'ic_progress_table_view'
 
     def call(self, columns=None):
-        x
         view = self._cw.vreg['views'].select('progress_table_view', self._cw,
                                          rset=self.cw_rset)
         columns = list(columns or view.columns)
@@ -205,7 +203,6 @@ class ProgressBarView(EntityView):
         return cls.overrun(iprogress) * 100. / budget
 
     def cell_call(self, row, col):
-        x
         self._cw.add_css('cubicweb.iprogress.css')
         self._cw.add_js('cubicweb.iprogress.js')
         entity = self.cw_rset.get_entity(row, col)
