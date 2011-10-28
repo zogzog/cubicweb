@@ -147,8 +147,8 @@ def hide_fields(etype, attrs, formtype='main'):
   from cubicweb.web import uihelper
   uihelper.hide_fields('CWUser', ('login', ('use_email', 'subject')), formtype='inlined')
     """
-    for field in fields:
-        hide_field(etype, field, formtype=formtype)
+    for attr in attrs:
+        hide_field(etype, attr, formtype=formtype)
 
 
 def set_field_kwargs(etype, attr, **kwargs):
