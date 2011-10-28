@@ -274,9 +274,10 @@ class FilterTable(FacetFilterMixIn, AnyRsetView):
     compact_layout_threshold = 5
 
     def call(self, vid, divid, vidargs=None, cssclass=''):
+        hiddens = self.cw_extra_kwargs.setdefault('hiddens', {})
+        hiddens['fromformfilter'] = '1'
         self.generate_form(self.w, self.cw_rset, divid, vid, vidargs=vidargs,
-                           cssclass=cssclass, hiddens={'fromformfilter':'1'},
-                           **self.cw_extra_kwargs)
+                           cssclass=cssclass, **self.cw_extra_kwargs)
 
     def _simple_horizontal_layout(self, w, wdgs):
         w(u'<table class="filter">\n')
