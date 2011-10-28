@@ -136,17 +136,17 @@ class WFHistoryView(EntityView):
     def cell_call(self, row, col, view=None, title=title):
         _ = self._cw._
         eid = self.cw_rset[row][col]
-        sel = 'Any FS,TS,WF,D'
+        sel = 'Any FS,TS,C,D'
         rql = ' ORDERBY D DESC WHERE WF wf_info_for X,'\
               'WF from_state FS, WF to_state TS, WF comment C,'\
               'WF creation_date D'
         if self._cw.vreg.schema.eschema('CWUser').has_perm(self._cw, 'read'):
-            sel += ',U,C'
+            sel += ',U,WF'
             rql += ', WF owned_by U?'
             headers = (_('from_state'), _('to_state'), _('comment'), _('date'),
                        _('CWUser'))
         else:
-            sel += ',C'
+            sel += ',WF'
             headers = (_('from_state'), _('to_state'), _('comment'), _('date'))
         rql = '%s %s, X eid %%(x)s' % (sel, rql)
         try:
@@ -156,7 +156,8 @@ class WFHistoryView(EntityView):
         if rset:
             if title:
                 self.w(u'<h2>%s</h2>\n' % _(title))
-            self.wview('table', rset, headers=headers)
+            self.wview('table', rset, headers=headers,
+                       cellvids={2: 'editable-final'})
 
 
 class WFHistoryVComponent(component.EntityCtxComponent):
@@ -243,14 +244,6 @@ class WorkflowPrimaryView(TabbedPrimaryView):
     __select__ = is_instance('Workflow')
     tabs = [  _('wf_tab_info'), _('wfgraph'),]
     default_tab = 'wf_tab_info'
-
-
-class CellView(EntityView):
-    __regid__ = 'cell'
-    __select__ = is_instance('TrInfo')
-
-    def cell_call(self, row, col, cellvid=None):
-        self.w(self.cw_rset.get_entity(row, col).view('reledit', rtype='comment'))
 
 
 class StateInContextView(EntityView):
