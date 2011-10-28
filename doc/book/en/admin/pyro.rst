@@ -1,7 +1,7 @@
+.. _UsingPyro:
+
 Working with a distributed client (using Pyro)
 ==============================================
-
-.. _UsingPyro:
 
 In some circumstances, it is practical to split the repository and
 web-client parts of the application for load-balancing reasons. Or
@@ -14,7 +14,7 @@ Prerequisites
 For this to work, several steps have to be taken in order.
 
 You must first ensure that the appropriate software is installed and
-running (see ref:`setup`)::
+running (see :ref:`ConfigEnv`)::
 
   pyro-nsd -x -p 6969
 
@@ -52,14 +52,11 @@ as in the following example code:
         cur.execute('INSERT Tag T: T name %(n)s', {'n': name})
     cnx.commit()
 
-Calling :meth:`cubicweb.dbapi.load_appobjects`, will populates The `cubicweb
-registries`_ with the application objects installed on the host where the script
-runs. You'll then be allowed to use the ORM goodies and custom entity methods and
-views. Of course this is optional, without it you can still get the repository
-data through the connection but in a roughly way: only RQL cursors will be
-available, e.g. you can't even build entity objects from the result set.
-
-
-
-.. _cubicweb registries: VRegistryIntro_
-
+Calling :meth:`cubicweb.dbapi.load_appobjects`, will populate the
+cubicweb registrires (see :ref:`VRegistryIntro`) with the application
+objects installed on the host where the script runs. You'll then be
+allowed to use the ORM goodies and custom entity methods and views. Of
+course this is optional, without it you can still get the repository
+data through the connection but in a roughly way: only RQL cursors
+will be available, e.g. you can't even build entity objects from the
+result set.

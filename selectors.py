@@ -424,7 +424,7 @@ class ExpectedValueSelector(Selector):
 
     - else the number of matching values
 
-    Notice `mode`='any' with a single expected value has no effect at all.
+    Notice `mode` = 'any' with a single expected value has no effect at all.
     """
     def __init__(self, *expected, **kwargs):
         assert expected, self
@@ -654,7 +654,7 @@ class paginated_rset(Selector):
     Page size is searched in (respecting order):
     * a `page_size` argument
     * a `page_size` form parameters
-    * the :ref:`navigation.page-size` property
+    * the `navigation.page-size` property (see :ref:`PersistentProperties`)
     """
     def __init__(self, nbpages=1):
         assert nbpages > 0

@@ -381,7 +381,7 @@ class CubicWebRequestBase(DBAPIRequest):
     def user_callback(self, cb, cbargs, *args, **kwargs):
         """register the given user callback and return a URL which can
         be inserted in an HTML view. When the URL is accessed, the
-        callback function will be called (as 'cb(req, *cbargs)', and a
+        callback function will be called (as 'cb(req, \*cbargs)', and a
         message will be displayed in the web interface. The third
         positional argument must be 'msg', containing the message.
 
@@ -575,7 +575,8 @@ class CubicWebRequestBase(DBAPIRequest):
         self.html_headers.add_onload(jscode)
 
     def add_js(self, jsfiles, localfile=True):
-        """specify a list of JS files to include in the HTML headers
+        """specify a list of JS files to include in the HTML headers.
+
         :param jsfiles: a JS filename or a list of JS filenames
         :param localfile: if True, the default data dir prefix is added to the
                           JS filename
@@ -591,7 +592,7 @@ class CubicWebRequestBase(DBAPIRequest):
                 iespec=u'[if lt IE 8]'):
         """specify a CSS file to include in the HTML headers
 
-        :param cssfiles: a CSS filename or a list of CSS filenames
+        :param cssfiles: a CSS filename or a list of CSS filenames.
         :param media: the CSS's media if necessary
         :param localfile: if True, the default data dir prefix is added to the
                           CSS filename

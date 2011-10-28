@@ -97,7 +97,7 @@ argument to implement it at entity class level.
 
 `fetch_attrs` configures which attributes should be prefetched when using ORM
 methods retrieving entity of this type. In a same manner, the `cw_fetch_order` is
-a class method allowing to control sort order. More on this in :ref:FetchAttrs.
+a class method allowing to control sort order. More on this in :ref:`FetchAttrs`.
 
 We can observe the big TICKET_DEFAULT_STATE_RESTR is a pure
 application domain piece of data. There is, of course, no limitation

@@ -33,7 +33,8 @@ attributes of `AnyEntity`) and a sorting function as described below:
 In you want something else (such as sorting on the result of a registered
 procedure), here is the prototype of those methods:
 
-.. autofunction:: cubicweb.entity.Entity.cw_fetch_order
 
-.. autofunction:: cubicweb.entity.Entity.cw_fetch_unrelated_order
+.. automethod:: cubicweb.entity.Entity.cw_fetch_order
+
+.. automethod:: cubicweb.entity.Entity.cw_fetch_unrelated_order
 

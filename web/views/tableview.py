@@ -34,12 +34,12 @@ looks similar.
 .. autoclass:: cubicweb.web.views.tableview.EntityTableView
    :members:
 
-.. autoclass:: cubicweb.web.views.pyview.PyValTableView
+.. autoclass:: cubicweb.web.views.pyviews.PyValTableView
    :members:
 
 All those classes are rendered using a *layout*:
 
-.. autoclass:: cubicweb.web.views.pyview.TableLayout
+.. autoclass:: cubicweb.web.views.tableview.TableLayout
    :members:
 
 There is by default only on table layout, using the 'table_layout' identifier,
@@ -56,7 +56,7 @@ If you can still find a view that suit your needs, you should take a look at the
 class below that is the common abstract base class for the three views defined
 above and implements you own class.
 
-.. autoclass:: cubicweb.web.views.pyview.TableMixIn
+.. autoclass:: cubicweb.web.views.tableview.TableMixIn
    :members:
 """
 
@@ -166,8 +166,8 @@ class TableLayout(component.Component):
 
     @cachedproperty
     def initial_load(self):
-        """We detect a bit heuristically if we are built for the first time of
-        from subsequent calls by the form filter or by the pagination hooks
+        """We detect a bit heuristically if we are built for the first time.
+        or from subsequent calls by the form filter or by the pagination hooks.
         """
         form = self._cw.form
         return 'fromformfilter' not in form and '__start' not in form
@@ -307,10 +307,10 @@ class TableLayout(component.Component):
 class AbstractColumnRenderer(object):
     """Abstract base class for column renderer. Interface of a column renderer follows:
 
-    .. automethod:: bind
-    .. automethod:: render_header
-    .. automethod:: render_cell
-    .. automethod:: sortvalue
+    .. automethod:: cubicweb.web.views.tableview.AbstractColumnRenderer.bind
+    .. automethod:: cubicweb.web.views.tableview.AbstractColumnRenderer.render_header
+    .. automethod:: cubicweb.web.views.tableview.AbstractColumnRenderer.render_cell
+    .. automethod:: cubicweb.web.views.tableview.AbstractColumnRenderer.sortvalue
 
     Attributes on this base class are:
 
@@ -323,7 +323,7 @@ class AbstractColumnRenderer(object):
     :attr: `_cw`, the request object
     :attr: `colid`, the column identifier
     :attr: `attributes`, dictionary of attributes to put on the HTML tag when
-    the cell is rendered
+            the cell is rendered
     """
     attributes = {}
     empty_cell_content = u'&#160;'
@@ -408,7 +408,7 @@ class TableMixIn(component.LayoutableMixIn):
 
     You may also want to overridde:
 
-    .. automethod:: table_size
+    .. autoattribute:: cubicweb.web.views.tableview.TableMixIn.table_size
 
     The :attr:`has_headers` boolean attribute tells if the table has some
     headers to be displayed. Default to `True`.
@@ -464,7 +464,7 @@ class TableMixIn(component.LayoutableMixIn):
         """Return a list of column renderers, one for each column to be
         rendered. Prototype of a column renderer is described below:
 
-        .. autoclass:: AbstractColumnRenderer
+        .. autoclass:: cubicweb.web.views.tableview.AbstractColumnRenderer
         """
         raise NotImplementedError()
 
@@ -671,7 +671,7 @@ class EntityTableColRenderer(AbstractColumnRenderer):
     You may use the :meth:`entity` method to retrieve the main entity for a
     given row number.
 
-    .. automethod:: entity
+    .. automethod:: cubicweb.web.views.tableview.EntityTableColRenderer.entity
     """
     def __init__(self, renderfunc=None, sortfunc=None, **kwargs):
         if renderfunc is None:
@@ -759,9 +759,9 @@ class EntityTableView(TableMixIn, EntityView):
     :class:`RelatedEntityColRenderer` renderer for a column in the
     :attr:`column_renderers` dictionary.
 
-    .. autoclass:: EntityTableColRenderer
-    .. autoclass:: MainEntityColRenderer
-    .. autoclass:: RelatedEntityColRenderer
+    .. autoclass:: cubicweb.web.views.tableview.EntityTableColRenderer
+    .. autoclass:: cubicweb.web.views.tableview.MainEntityColRenderer
+    .. autoclass:: cubicweb.web.views.tableview.RelatedEntityColRenderer
     """
     __abstract__ = True
     default_column_renderer_class = EntityTableColRenderer

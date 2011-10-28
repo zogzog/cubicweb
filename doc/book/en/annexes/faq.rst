@@ -150,9 +150,7 @@ interface of your instance by adding a user with in the group `guests`.
 
 How to load data from a python script ?
 ---------------------------------------
-Please, refer to the `Pyro chapter`_.
-
-.. _`Pyro chapter`: UsingPyro_
+Please, refer to :ref:`UsingPyro`.
 
 
 How to format an entity date attribute ?

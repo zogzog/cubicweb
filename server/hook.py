@@ -444,8 +444,8 @@ class match_rtype(ExpectedValueSelector):
     """accept if parameters specified as initializer arguments are specified
     in named arguments given to the selector
 
-    :param *expected: parameters (eg `basestring`) which are expected to be
-                      found in named arguments (kwargs)
+    :param \*expected: parameters (eg `basestring`) which are expected to be
+                       found in named arguments (kwargs)
     """
     def __init__(self, *expected, **more):
         self.expected = expected

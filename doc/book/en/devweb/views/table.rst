@@ -56,7 +56,7 @@ below:
 
 By the same way, you can display additional actions for the selected entities
 by setting `add_view_actions` layout option to `True`. This will add actions
-returned by the view's :meth:`~cubicweb.web.views.TableMixIn.table_actions`.
+returned by the view's :meth:`~cubicweb.web.views.tableview.TableMixIn.table_actions`.
 
 You can notice that all columns of the result set are not displayed. This is
 because of given `headers`, implying to display only columns from 0 to
@@ -72,6 +72,7 @@ manually).
 So another option would be to write this view using
 :class:`~cubicweb.web.views.tableview.EntityTableView`, as below.
 
+.. sourcecode:: python
 
     class ResourcesTable(EntityTableView):
         __regid__ = 'resource.table'

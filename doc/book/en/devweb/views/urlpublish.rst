@@ -52,7 +52,7 @@ Here is an example of ``SimpleReqRewriter`` usage with regular expressions:
              dict(rql=('Any X ORDERBY CD DESC LIMIT 20 WHERE X is BlogEntry,'
                        'X creation_date CD, X created_by U, '
                        'U login "%(user)s"'
-                       % {'user': r'\1'}, vid='rss'))),
+                       % {'user': r'\1'}), vid='rss'))
             ]
 
 When a url matches the regular expression, the view with the __regid__
