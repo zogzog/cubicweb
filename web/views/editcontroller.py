@@ -38,11 +38,11 @@ class IEditControlAdapter(EntityAdapter):
     __regid__ = 'IEditControl'
     __select__ = is_instance('Any')
 
-    @deprecated()
     def __init__(self, _cw, **kwargs):
-        warn('[3.14] IEditControlAdapter is deprecated, override EditController'
-             ' using match_edited_type or match_form_id selectors for example.',
-             DeprecationWarning)
+        if self.__class__ is not IEditControlAdapter:
+            warn('[3.14] IEditControlAdapter is deprecated, override EditController'
+                 ' using match_edited_type or match_form_id selectors for example.',
+                 DeprecationWarning)
         super(IEditControlAdapter, self).__init__(_cw, **kwargs)
 
     @implements_adapter_compat('IEditControl')
