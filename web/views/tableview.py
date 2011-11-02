@@ -944,7 +944,16 @@ class TableView(AnyRsetView):
             self.w(u'</div>\n')
 
     def page_navigation_url(self, navcomp, path, params):
+        """Build an url to the current view using the <navcomp> attributes
+
+        :param navcomp: a NavigationComponent to call an url method on.
+        :param path:    expected to be json here ?
+        :param params: params to give to build_url method
+
+        this is called by :class:`cubiweb.web.component.NavigationComponent`
+        """
         if hasattr(self, 'divid'):
+            # XXX this assert a single call
             params['divid'] = self.divid
         params['vid'] = self.__regid__
         return navcomp.ajax_page_url(**params)
@@ -1023,21 +1032,6 @@ class TableView(AnyRsetView):
 
     def get_rows(self):
         return self.cw_rset
-
-    def page_navigation_url(self, navcomp, path, params):
-        """Build an url to the current view using the <navcomp> attributes
-
-        :param navcomp: a NavigationComponent to call an url method on.
-        :param path:    expected to be json here ?
-        :param params: params to give to build_url method
-
-        this is called by :class:`cubiweb.web.component.NavigationComponent`
-        """
-        if hasattr(self, 'divid'):
-            # XXX this assert a single call
-            params['divid'] = self.divid
-        params['vid'] = self.__regid__
-        return navcomp.ajax_page_url(**params)
 
     @htmlescape
     @jsonize
