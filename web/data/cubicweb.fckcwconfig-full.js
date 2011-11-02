@@ -29,6 +29,9 @@ FCKConfig.ToolbarSets["Default"] = [
 FCKConfig.ContextMenu = ['Generic','Link','Anchor','Image','BulletedList','NumberedList','Table'] ;
 
 FCKConfig.LinkUpload = false ;
+FCKConfig.LinkBrowser = false ;
 FCKConfig.ImageUpload = false ;
+FCKConfig.ImageBrowser = false ;
 FCKConfig.FlashUpload = false ;
+FCKConfig.FlashBrowser = false ;
 
