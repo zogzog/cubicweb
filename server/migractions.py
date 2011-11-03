@@ -388,7 +388,7 @@ class ServerMigrationHelper(MigrationHelper):
         if cube is None:
             directory = osp.join(CW_SOFTWARE_ROOT, 'schemas')
         else:
-            directory = self.config.cube_dir(cube)
+            directory = osp.join(self.config.cube_dir(cube), 'schema')
         sql_scripts = []
         for fpath in glob(osp.join(directory, '*.sql.%s' % driver)):
             newname = osp.basename(fpath).replace('.sql.%s' % driver,
