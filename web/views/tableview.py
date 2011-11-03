@@ -711,10 +711,10 @@ class MainEntityColRenderer(EntityTableColRenderer):
     If header not specified, it would be built using entity types in the main
     column.
     """
-    def __init__(self, vid='incontext', **kwargs):
+    def __init__(self, vid='incontext', addcount=True, **kwargs):
         kwargs.setdefault('renderfunc', lambda w, x: x.view(vid, w=w))
         kwargs.setdefault('sortfunc', lambda x: x.sortvalue())
-        super(MainEntityColRenderer, self).__init__(**kwargs)
+        super(MainEntityColRenderer, self).__init__(addcount=addcount, **kwargs)
 
     def default_header(self):
         view = self.view
