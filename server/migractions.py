@@ -392,7 +392,7 @@ class ServerMigrationHelper(MigrationHelper):
         if cube is None:
             directory = osp.join(CW_SOFTWARE_ROOT, 'schemas')
         else:
-            directory = self.config.cube_dir(cube)
+            directory = osp.join(self.config.cube_dir(cube), 'schema')
         sql_scripts = glob(osp.join(directory, '*.%s.sql' % driver))
         for fpath in sql_scripts:
             print '-> installing', fpath

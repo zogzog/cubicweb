@@ -351,7 +351,8 @@ class ResultSet(object):
                     if offset <= entity.cw_row < stop:
                         entity.cw_row = entity.cw_row - offset
                     else:
-                        self.req.drop_entity_cache(entity.eid)
+                        entity.cw_rset = entity.as_rset()
+                        entity.cw_row = entity.cw_col = 0
         else:
             rset = self.copy(rows, descr)
             if not offset:

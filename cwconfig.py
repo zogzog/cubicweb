@@ -22,6 +22,9 @@
 Resource mode
 -------------
 
+Standard resource mode
+```````````````````````````
+
 A resource *mode* is a predefined set of settings for various resources
 directories, such as cubes, instances, etc. to ease development with the
 framework. There are two running modes with *CubicWeb*:
@@ -30,7 +33,7 @@ framework. There are two running modes with *CubicWeb*:
   usually requiring root access):
 
   - instances are stored in :file:`<INSTALL_PREFIX>/etc/cubicweb.d`
-  - temporary files (such as pid file) in :file:`/var/run/cubicweb`
+  - temporary files (such as pid file) in :file:`<INSTALL_PREFIX>/var/run/cubicweb`
 
   where `<INSTALL_PREFIX>` is the detected installation prefix ('/usr/local' for
   instance).
@@ -42,6 +45,25 @@ framework. There are two running modes with *CubicWeb*:
 
 
 
+
+.. _CubicwebWithinVirtualEnv:
+
+Within virtual environment
+```````````````````````````
+
+If you are not administrator of you machine or if you need to play with some
+specific version of |cubicweb| you can use `virtualenv`_ a tool to create
+isolated Python environments.  Since version 3.9 |cubicweb| is **`virtualenv`
+friendly** and won't write any file outside the virtualenv directory.
+
+- instances are stored in :file:`<VIRTUAL_ENV>/etc/cubicweb.d`
+- temporary files (such as pid file) in :file:`<VIRTUAL_ENV>/var/run/cubicweb`
+
+.. _`virtualenv`: http://pypi.python.org/pypi/virtualenv
+
+Custom resource location
+````````````````````````````````
+
 Notice that each resource path may be explicitly set using an environment
 variable if the default doesn't suit your needs. Here are the default resource
 directories that are affected according to mode:
@@ -49,8 +71,8 @@ directories that are affected according to mode:
 * **system**: ::
 
         CW_INSTANCES_DIR = <INSTALL_PREFIX>/etc/cubicweb.d/
-        CW_INSTANCES_DATA_DIR = /var/lib/cubicweb/instances/
-        CW_RUNTIME_DIR = /var/run/cubicweb/
+        CW_INSTANCES_DATA_DIR = <INSTALL_PREFIX>/var/lib/cubicweb/instances/
+        CW_RUNTIME_DIR = <INSTALL_PREFIX>/var/run/cubicweb/
 
 * **user**: ::
 
@@ -60,10 +82,13 @@ directories that are affected according to mode:
 
 Cubes search path is also affected, see the :ref:`Cube` section.
 
-By default, the mode automatically set to `user` if a :file:`.hg` directory is found
-in the cubicweb package, else it's set to `system`. You can force this by setting
-the :envvar:`CW_MODE` environment variable to either `user` or `system` so you can
-easily:
+Setting Cubicweb Mode
+`````````````````````
+
+By default, the mode is set to 'system' for standard installation. The mode is
+set to 'user' if `cubicweb is used from a mercurial repository`_. You can force
+this by setting the :envvar:`CW_MODE` environment variable to either 'user' or
+'system' so you can easily:
 
 * use system wide installation but user specific instances and all, without root
   privileges on the system (`export CW_MODE=user`)
@@ -74,7 +99,15 @@ easily:
 If you've a doubt about the mode you're currently running, check the first line
 outputed by the :command:`cubicweb-ctl list` command.
 
-Also, if cubicweb is a mercurial checkout located in `<CW_SOFTWARE_ROOT>`:
+.. _`cubicweb is used from a mercurial repository`: CubicwebDevelopmentMod_
+
+.. _CubicwebDevelopmentMod:
+
+Development Mode
+`````````````````````
+If :file:`.hg` directory is found into the cubicweb package, there are specific resource rules.
+
+`<CW_SOFTWARE_ROOT>` is the mercurial checkout of cubicweb:
 
 * main cubes directory is `<CW_SOFTWARE_ROOT>/../cubes`. You can specify
   another one with :envvar:`CW_INSTANCES_DIR` environment variable or simply
