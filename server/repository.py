@@ -1213,6 +1213,13 @@ class Repository(object):
                     rql += ', NOT (Y cw_source S, S eid %(seid)s)'
                 try:
                     session.execute(rql, {'seid': scleanup}, build_descr=False)
+                except ValidationError:
+                    raise
+                except Unauthorized:
+                    self.exception('Unauthorized exception while cascading delete for entity %s '
+                                   'from %s. RQL: %s.\nThis should not happen since security is disabled here.',
+                                   entities, sourceuri, rql)
+                    raise
                 except Exception:
                     if self.config.mode == 'test':
                         raise
