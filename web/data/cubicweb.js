@@ -88,7 +88,7 @@ jQuery.extend(cw, {
 	if (sortvalue === undefined) {
 	    return '';
 	}
-	return sortvalue;
+	return cw.evalJSON(sortvalue);
 }
 });
 
