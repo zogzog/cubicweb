@@ -19,10 +19,6 @@ in |cubicweb|.
    table
    xmlrss
 ..   editforms
-
-.. toctree::
-   :maxdepth: 3
-
    urlpublish
    breadcrumbs
    idownloadable

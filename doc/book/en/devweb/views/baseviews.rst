@@ -15,3 +15,7 @@ default, generic, implementations.
 
 .. automodule:: cubicweb.web.views.baseviews
 
+You will also find modules providing some specific services:
+
+.. automodule:: cubicweb.web.views.navigation
+
