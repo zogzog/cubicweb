@@ -71,9 +71,10 @@ from logilab.common.deprecation import class_deprecated
 
 from cubicweb import NoSelectableObject, tags
 from cubicweb.selectors import yes, nonempty_rset, match_kwargs, objectify_selector
+from cubicweb.schema import display_name
 from cubicweb.utils import make_uid, js_dumps, JSString
-from cubicweb.view import EntityView, AnyRsetView
 from cubicweb.uilib import toggle_action, limitsize, htmlescape, sgml_attributes, domid
+from cubicweb.view import EntityView, AnyRsetView
 from cubicweb.web import jsonize, component
 from cubicweb.web.htmlwidgets import (TableWidget, TableColumn, MenuWidget,
                                       PopupBoxMenu)
@@ -142,7 +143,7 @@ class TableLayout(component.Component):
     sortvalue_limit = 10
     tablesorter_settings = {
         'textExtraction': JSString('cw.sortValueExtraction'),
-        'selectorHeaders': "thead tr:first th", # only plug on the first row
+        'selectorHeaders': "thead tr:first th[class='sortable']", # only plug on the first row
         }
 
     def _setup_tablesorter(self, divid):
@@ -206,7 +207,10 @@ class TableLayout(component.Component):
     def render_table_headers(self, w, colrenderers):
         w(u'<thead><tr>')
         for colrenderer in colrenderers:
-            w(u'<th>')
+            if colrenderer.sortable:
+                w(u'<th class="sortable">')
+            else:
+                w(u'<th>')
             colrenderer.render_header(w)
             w(u'</th>')
         w(u'</tr></thead>\n')
@@ -674,12 +678,14 @@ class EntityTableColRenderer(AbstractColumnRenderer):
     given row number.
 
     .. automethod:: cubicweb.web.views.tableview.EntityTableColRenderer.entity
+    .. automethod:: cubicweb.web.views.tableview.EntityTableColRenderer.render_entity
+    .. automethod:: cubicweb.web.views.tableview.EntityTableColRenderer.entity_sortvalue
     """
     def __init__(self, renderfunc=None, sortfunc=None, **kwargs):
         if renderfunc is None:
-            renderfunc = lambda w,x: w(x.printable_value(self.colid))
+            renderfunc = self.render_entity
             if sortfunc is None:
-                sortfunc = lambda x: x.sortvalue(self.colid)
+                sortfunc = self.entity_sortvalue
         kwargs.setdefault('sortable', sortfunc is not None)
         super(EntityTableColRenderer, self).__init__(**kwargs)
         self.renderfunc = renderfunc
@@ -687,20 +693,39 @@ class EntityTableColRenderer(AbstractColumnRenderer):
 
     def render_cell(self, w, rownum):
         entity = self.entity(rownum)
-        if entity:
-            self.renderfunc(w, entity)
-        else:
+        if entity is None:
             w(self.empty_cell_content)
+        else:
+            self.renderfunc(w, entity)
 
     def sortvalue(self, rownum):
         entity = self.entity(rownum)
-        if entity:
+        if entity is None:
+            return None
+        else:
             return self.sortfunc(entity)
-        return None
 
     def entity(self, rownum):
-        """Return the table's main entity"""
+        """Convenience method returning the table's main entity."""
         return self.view.entity(rownum)
+
+    def render_entity(self, w, entity):
+        """Sort value if `renderfunc` nor `sortfunc` specified at
+        initialization.
+
+        This default implementation consider column id is an entity attribute
+        and print its value.
+        """
+        w(entity.printable_value(self.colid))
+
+    def entity_sortvalue(self, entity):
+        """Cell rendering implementation if `renderfunc` nor `sortfunc`
+        specified at initialization.
+
+        This default implementation consider column id is an entity attribute
+        and return its sort value by calling `entity.sortvalue(colid)`.
+        """
+        return entity.sortvalue(self.colid)
 
 
 class MainEntityColRenderer(EntityTableColRenderer):
@@ -714,14 +739,19 @@ class MainEntityColRenderer(EntityTableColRenderer):
     column.
     """
     def __init__(self, vid='incontext', addcount=True, **kwargs):
-        kwargs.setdefault('renderfunc', lambda w, x: x.view(vid, w=w))
-        kwargs.setdefault('sortfunc', lambda x: x.sortvalue())
         super(MainEntityColRenderer, self).__init__(addcount=addcount, **kwargs)
+        self.vid = vid
 
     def default_header(self):
         view = self.view
         return u', '.join(self._cw.__(et+'_plural')
                           for et in view.cw_rset.column_types(view.cw_col or 0))
+
+    def render_entity(self, w, entity):
+        entity.view(self.vid, w=w)
+
+    def entity_sortvalue(self, entity):
+        return entity.sortvalue()
 
 
 class RelatedEntityColRenderer(MainEntityColRenderer):
@@ -731,11 +761,10 @@ class RelatedEntityColRenderer(MainEntityColRenderer):
     By default display it using the 'incontext' view. You may specify another
     view identifier using the `vid` argument.
 
-    If header not specified, it would be built using entity types in the main
-    column.
+    If header not specified, it would be built by translating the column id.
     """
-    def __init__(self, getrelated, **kwargs):
-        super(RelatedEntityColRenderer, self).__init__(**kwargs)
+    def __init__(self, getrelated, addcount=False, **kwargs):
+        super(RelatedEntityColRenderer, self).__init__(addcount=addcount, **kwargs)
         self.getrelated = getrelated
 
     def entity(self, rownum):
@@ -744,6 +773,37 @@ class RelatedEntityColRenderer(MainEntityColRenderer):
 
     def default_header(self):
         return self._cw._(self.colid)
+
+
+class RelationColRenderer(EntityTableColRenderer):
+    """Renderer to be used for column displaying a list of entities related the
+    'main entity' of a :class:`EntityTableView`. By default, the main entity is
+    considered as the subject of the relation but you may specify otherwise
+    using the `role` argument.
+
+    By default display the related rset using the 'csv' view and 'outofcontext'
+    view for each entity. You may specify another view identifier using
+    respectivly the `vid` and `subvid` arguments.
+
+    If header not specified, it would be built by translating the column id,
+    properly considering role.
+    """
+    def __init__(self, role='subject', vid='csv', subvid='outofcontext',
+                 fallbackvid='empty-cell', **kwargs):
+        super(RelationColRenderer, self).__init__(**kwargs)
+        self.role = role
+        self.vid = vid
+        self.subvid = subvid
+        self.fallbackvid = fallbackvid
+
+    def render_entity(self, w, entity):
+        self._cw.view(self.vid, entity.related(self.colid, self.role),
+                      self.fallbackvid, subvid=self.subvid, w=w)
+
+    def default_header(self):
+        return display_name(self._cw, self.colid, self.role)
+
+    entity_sortvalue = None # column not sortable by default
 
 
 class EntityTableView(TableMixIn, EntityView):
@@ -764,6 +824,7 @@ class EntityTableView(TableMixIn, EntityView):
     .. autoclass:: cubicweb.web.views.tableview.EntityTableColRenderer
     .. autoclass:: cubicweb.web.views.tableview.MainEntityColRenderer
     .. autoclass:: cubicweb.web.views.tableview.RelatedEntityColRenderer
+    .. autoclass:: cubicweb.web.views.tableview.RelationColRenderer
     """
     __abstract__ = True
     default_column_renderer_class = EntityTableColRenderer
