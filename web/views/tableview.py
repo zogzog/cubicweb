@@ -292,16 +292,18 @@ class TableLayout(component.Component):
         showhide = u';'.join(toggle_action('%s%s' % (divid, what))[11:]
                              for what in ('Form', 'Show', 'Hide', 'Actions'))
         showhide = 'javascript:' + showhide
+        self._cw.add_onload(u'''\
+$(document).ready(function() {
+  if ($('#%(id)sForm[class=\"hidden\"]').length) {
+    $('#%(id)sHide').attr('class', 'hidden');
+  } else {
+    $('#%(id)sShow').attr('class', 'hidden');
+  }
+});''' % {'id': divid})
         showlabel = self._cw._('show filter form')
         hidelabel = self._cw._('hide filter form')
-        if currentlydisplayed:
-            c1, d1 = 'hidden', '%sShow' % divid
-            c2, d2 = None, '%sHide' % divid
-        else:
-            c1, d1 = None, '%sShow' % divid
-            c2, d2 = 'hidden', '%sHide' % divid
-        return [component.Link(showhide, showlabel, klass=c1, id=d1),
-                component.Link(showhide, hidelabel, klass=c2, id=d2)]
+        return [component.Link(showhide, showlabel, id='%sShow' % divid),
+                component.Link(showhide, hidelabel, id='%sHide' % divid)]
 
 
 class AbstractColumnRenderer(object):
