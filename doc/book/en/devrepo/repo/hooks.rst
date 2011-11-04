@@ -110,7 +110,7 @@ be set at commit time.
             parents.add(parent.eid)
 
 
-    class CheckSubsidiaryCycleOp(DataOperationMixIn, Operation):
+    class CheckSubsidiaryCycleOp(Operation):
 
         def precommit_event(self):
             check_cycle(self.session, self.eidto, 'subsidiary_of')
@@ -145,7 +145,7 @@ alternative method to schedule an operation from a hook, using the
        def __call__(self):
            CheckSubsidiaryCycleOp.get_instance(self._cw).add_data(self.eidto)
 
-   class CheckSubsidiaryCycleOp(Operation):
+   class CheckSubsidiaryCycleOp(DataOperationMixIn, Operation):
 
        def precommit_event(self):
            for eid in self.get_data():
