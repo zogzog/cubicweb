@@ -166,7 +166,7 @@ class NavigationComponent(Component):
         start = max(0, start - self.page_size)
         stop = start + self.page_size - 1
         url = xml_escape(self.page_url(path, params, start, stop))
-        return self.previous_page_link_templ % (url, title, content)
+        return self.previous_page_link_templ % (url, self._cw._(title), content)
 
     def next_link(self, path, params, content=None, title=_('next_results')):
         if not content:
@@ -176,7 +176,7 @@ class NavigationComponent(Component):
             return self.no_next_page_link
         stop = start + self.page_size - 1
         url = xml_escape(self.page_url(path, params, start, stop))
-        return self.next_page_link_templ % (url, title, content)
+        return self.next_page_link_templ % (url, self._cw._(title), content)
 
 
 # new contextual components system #############################################
