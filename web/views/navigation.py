@@ -288,7 +288,7 @@ def do_paginate(view, rset=None, w=None, show_all_option=True, page_size=None):
             basepath = req.relative_path(includeparams=False)
             params['__force_display'] = 1
             url = nav.page_url(basepath, params)
-            w(u'<div><a href="%s">%s</a></div>\n'
+            w(u'<div class="displayAllLink"><a href="%s">%s</a></div>\n'
               % (xml_escape(url), req._('show %s results') % len(rset)))
         rset.limit(offset=start, limit=stop-start, inplace=True)
 
