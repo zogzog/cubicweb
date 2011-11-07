@@ -72,7 +72,7 @@ from logilab.common.deprecation import class_deprecated
 from cubicweb import NoSelectableObject, tags
 from cubicweb.selectors import yes, nonempty_rset, match_kwargs, objectify_selector
 from cubicweb.schema import display_name
-from cubicweb.utils import make_uid, js_dumps, JSString
+from cubicweb.utils import make_uid, js_dumps, JSString, UStringIO
 from cubicweb.uilib import toggle_action, limitsize, htmlescape, sgml_attributes, domid
 from cubicweb.view import EntityView, AnyRsetView
 from cubicweb.web import jsonize, component
@@ -124,6 +124,9 @@ class TableLayout(component.Component):
     * `hide_filter`, when true (the default), facets filter will be hidden by
       default, with an action in the actions menu allowing to show / hide it.
 
+    * `show_all_option`, when true, a *show all results* link will be displayed
+      below the navigation component.
+
     * `add_view_actions`, when true, actions returned by view.table_actions()
       will be included in the actions menu.
 
@@ -134,9 +137,10 @@ class TableLayout(component.Component):
     cssclass = "listing"
     needs_css = ('cubicweb.tableview.css',)
     needs_js = ()
-    display_filter = None # None / 'top' / 'bottom'
-    display_actions = 'top' # None / 'top' / 'bottom'
+    display_filter = None    # None / 'top' / 'bottom'
+    display_actions = 'top'  # None / 'top' / 'bottom'
     hide_filter = True
+    show_all_option = True   # make navcomp generate a 'show all' results link
     add_view_actions = False
     header_column_idx = None
     enable_sorting = True
@@ -228,8 +232,10 @@ class TableLayout(component.Component):
             w(u'<div id="%s">' % divid)
         else:
             assert not (actions or paginate)
+        nav_html = UStringIO()
         if paginate:
-            view.paginate(w=w, show_all_option=False)
+            view.paginate(w=nav_html.write, show_all_option=self.show_all_option)
+        w(nav_html.getvalue())
         if actions and self.display_actions == 'top':
             self.render_actions(w, actions)
         colrenderers = view.build_column_renderers()
@@ -241,6 +247,7 @@ class TableLayout(component.Component):
         w(u'</table>')
         if actions and self.display_actions == 'bottom':
             self.render_actions(w, actions)
+        w(nav_html.getvalue())
         if divid is not None:
             w(u'</div>')
 
