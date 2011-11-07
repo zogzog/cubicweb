@@ -793,8 +793,13 @@ class CubicWebRequestBase(DBAPIRequest):
         The global doctype and xmldec must also be changed otherwise the browser
         will display '<[' at the beginning of the page
         """
-        self.set_content_type('text/html')
-        self.main_stream.set_doctype(TRANSITIONAL_DOCTYPE_NOEXT)
+        if not self.vreg.config['force-html-content-type']:
+            if not hasattr(self, 'main_stream'):
+                raise Exception("Can't demote to html from an ajax context. You "
+                                "should change force-html-content-type to yes "
+                                "in the instance configuration file.")
+            self.set_content_type('text/html')
+            self.main_stream.set_doctype(TRANSITIONAL_DOCTYPE_NOEXT)
 
     def set_doctype(self, doctype, reset_xmldecl=True):
         """helper method to dynamically change page doctype
