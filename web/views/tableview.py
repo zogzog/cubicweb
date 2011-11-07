@@ -64,6 +64,8 @@ __docformat__ = "restructuredtext en"
 _ = unicode
 
 from warnings import warn
+from copy import copy
+from types import MethodType
 
 from logilab.mtconverter import xml_escape
 from logilab.common.decorators import cachedproperty
@@ -365,6 +367,10 @@ class AbstractColumnRenderer(object):
         self.view = view
         self._cw = view._cw
         self.colid = colid
+
+    def copy(self):
+        assert self.view is None
+        return copy(self)
 
     def default_header(self):
         """Return header for this column if one has not been specified."""
@@ -697,6 +703,23 @@ class EntityTableColRenderer(AbstractColumnRenderer):
         super(EntityTableColRenderer, self).__init__(**kwargs)
         self.renderfunc = renderfunc
         self.sortfunc = sortfunc
+
+    def copy(self):
+        assert self.view is None
+        # copy of attribute referencing a method doesn't work with python < 2.7
+        renderfunc = self.__dict__.pop('renderfunc')
+        sortfunc = self.__dict__.pop('sortfunc')
+        try:
+            acopy =  copy(self)
+            for aname, member in[('renderfunc', renderfunc),
+                                 ('sortfunc', sortfunc)]:
+                if isinstance(member, MethodType):
+                    member = MethodType(member.im_func, acopy, acopy.__class__)
+                setattr(acopy, aname, member)
+            return acopy
+        finally:
+            self.renderfunc = renderfunc
+            self.sortfunc = sortfunc
 
     def render_cell(self, w, rownum):
         entity = self.entity(rownum)
