@@ -1,6 +1,7 @@
 """https://pastebin.logilab.fr/show/860/"""
 
 from logilab.astng import MANAGER, nodes, scoped_nodes
+from logilab.astng.builder import ASTNGBuilder
 
 def turn_function_to_class(node):
     """turn a Function node into a Class node (in-place)"""
@@ -33,9 +34,15 @@ def cubicweb_transform(module):
         from yams import BASE_TYPES
         for etype in BASE_TYPES:
             module.locals[etype] = [scoped_nodes.Class(etype, None)]
-
-MANAGER.register_transformer(cubicweb_transform)
+    # add data() to uiprops module
+    if module.name.endswith('.uiprops'):
+        fake = ASTNGBuilder(MANAGER).string_build('''
+def data(string):
+  return u''
+''')
+        module.locals['data'] = fake.locals['data']
 
 def register(linter):
     """called when loaded by pylint --load-plugins, nothing to do here"""
+    MANAGER.register_transformer(cubicweb_transform)
 
