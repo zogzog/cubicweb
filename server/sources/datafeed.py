@@ -225,8 +225,9 @@ class DataFeedSource(AbstractSource):
             except IOError, exc:
                 if raise_on_error:
                     raise
-                self.error('could not pull data while processing %s: %s',
-                           url, exc)
+                parser.import_log.record_error(
+                    'could not pull data while processing %s: %s'
+                    % (url, exc))
                 error = True
             except Exception, exc:
                 if raise_on_error:
@@ -320,6 +321,8 @@ class DataFeedParser(AppObject):
             # XXX use critical so they are seen during tests. Should consider
             # raise_on_error instead?
             self.source.critical('error while creating %s: %s', etype, ex)
+            self.import_log.record_error('error while creating %s: %s'
+                                         % (etype, ex))
             return None
         if eid < 0:
             # entity has been moved away from its original source
@@ -365,7 +368,7 @@ class DataFeedXMLParser(DataFeedParser):
         except Exception, ex:
             if raise_on_error:
                 raise
-            self.source.error(str(ex))
+            self.import_log.record_error(str(ex))
             return True
         error = False
         for args in parsed:
