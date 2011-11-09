@@ -54,6 +54,7 @@ def add_types_restriction(schema, rqlst, newroot=None, solutions=None):
             if varname not in newroot.defined_vars or eschema(etype).final:
                 continue
             allpossibletypes.setdefault(varname, set()).add(etype)
+    # XXX could be factorized with add_etypes_restriction from rql 0.31
     for varname in sorted(allpossibletypes):
         var = newroot.defined_vars[varname]
         stinfo = var.stinfo
