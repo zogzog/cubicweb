@@ -272,6 +272,7 @@ class DataFeedSource(AbstractSource):
         dataimport = session.create_entity('CWDataImport', cw_import_of=self,
                                            start_timestamp=datetime.utcnow(),
                                            **kwargs)
+        dataimport.init()
         return dataimport
 
 class DataFeedParser(AppObject):

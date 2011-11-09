@@ -137,10 +137,11 @@ class CWSourceSchemaConfig(AnyEntity):
 
 class CWDataImport(AnyEntity):
     __regid__ = 'CWDataImport'
+    repo_source = _logs = None # please pylint
 
-    def __init__(self, *args, **kwargs):
-        super(CWDataImport, self).__init__(*args, **kwargs)
+    def init(self):
         self._logs = []
+        self.repo_source = self.cwsource.repo_source
 
     def dc_title(self):
         return '%s [%s]' % (self.printable_value('start_timestamp'),
@@ -152,25 +153,25 @@ class CWDataImport(AnyEntity):
 
     def record_debug(self, msg, path=None, line=None):
         self._log(logging.DEBUG, msg, path, line)
-        self.debug(msg)
+        self.repo_source.debug(msg)
 
     def record_info(self, msg, path=None, line=None):
         self._log(logging.INFO, msg, path, line)
-        self.info(msg)
+        self.repo_source.info(msg)
 
     def record_warning(self, msg, path=None, line=None):
         self._log(logging.WARNING, msg, path, line)
-        self.warning(msg)
+        self.repo_source.warning(msg)
 
     def record_error(self, msg, path=None, line=None):
         self._status = u'failed'
         self._log(logging.ERROR, msg, path, line)
-        self.error(msg)
+        self.repo_source.error(msg)
 
     def record_fatal(self, msg, path=None, line=None):
         self._status = u'failed'
         self._log(logging.FATAL, msg, path, line)
-        self.fatal(msg)
+        self.repo_source.fatal(msg)
 
     def _log(self, severity, msg, path=None, line=None):
         encodedmsg =  u'%s\t%s\t%s\t%s<br/>' % (severity, path or u'',
