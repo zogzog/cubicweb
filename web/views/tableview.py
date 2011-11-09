@@ -504,7 +504,6 @@ class TableMixIn(component.LayoutableMixIn):
     # interaction with navigation component ####################################
 
     def page_navigation_url(self, navcomp, _path, params):
-        # we don't need 'divid' once assumed a view can compute its domid
         params['divid'] = self.domid
         params['vid'] = self.__regid__
         return navcomp.ajax_page_url(**params)
