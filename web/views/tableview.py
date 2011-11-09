@@ -693,13 +693,22 @@ class EntityTableColRenderer(AbstractColumnRenderer):
     .. automethod:: cubicweb.web.views.tableview.EntityTableColRenderer.render_entity
     .. automethod:: cubicweb.web.views.tableview.EntityTableColRenderer.entity_sortvalue
     """
-    def __init__(self, renderfunc=None, sortfunc=None, **kwargs):
+    def __init__(self, renderfunc=None, sortfunc=None, sortable=None, **kwargs):
         if renderfunc is None:
             renderfunc = self.render_entity
-            if sortfunc is None:
-                sortfunc = self.entity_sortvalue
-        kwargs.setdefault('sortable', sortfunc is not None)
-        super(EntityTableColRenderer, self).__init__(**kwargs)
+            # if renderfunc nor sortfunc nor sortable specified, column will be
+            # sortable using the default implementation.
+            if sortable is None:
+                sortable = True
+        # no sortfunc given but asked to be sortable: use the default sort
+        # method. Sub-class may set `entity_sortvalue` to None if they don't
+        # support sorting.
+        if sortfunc is None and sortable:
+            sortfunc = self.entity_sortvalue
+        # at this point `sortable` may still be unspecified while `sortfunc` is
+        # sure to be set to someting else than None if the column is sortable.
+        sortable = sortfunc is not None
+        super(EntityTableColRenderer, self).__init__(sortable=sortable, **kwargs)
         self.renderfunc = renderfunc
         self.sortfunc = sortfunc
 
