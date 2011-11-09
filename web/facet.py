@@ -1453,7 +1453,7 @@ class FacetVocabularyWidget(htmlwidgets.HTMLWidget):
           (xml_escape(self.facet.__regid__), title))
         if self.facet._support_and_compat():
             self._render_and_or(w)
-        cssclass = 'vocabularyFacet'
+        cssclass = 'facetBody vocabularyFacet'
         if not self.facet.start_unfolded:
             cssclass += ' hidden'
         overflow = self.overflows

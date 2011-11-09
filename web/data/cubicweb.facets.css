@@ -20,7 +20,7 @@ div.facetTitle, div.bkSearch  {
 div.facetTitle a {
  padding-left: 10px;
  background: transparent url("puce.png") 0% 50% no-repeat;
- }
+}
 
 .opened {
  color: #000 !important;
