@@ -89,7 +89,7 @@ jQuery.extend(cw, {
 	    return '';
 	}
 	return cw.evalJSON(sortvalue);
-}
+    }
 });
 
 

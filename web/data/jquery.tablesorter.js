@@ -886,9 +886,20 @@
         is: function (s) {
             return true;
         }, format: function (s) {
-            return $.trim(s.toLocaleLowerCase());
+            return $.trim(s); // CW PATCH: lowercasing decision taken in the server
         }, type: "text"
     });
+
+    // CW PATCH: ugly hack to catch booleans
+    ts.addParser({
+        id: 'boolean',
+        is: function (s) {
+            return (s == "true" || s == "false");
+        },
+       format: function (s) {
+           if (s) { return "0"; } else { return "1"; }
+       },
+      type: 'boolean'});
 
     ts.addParser({
         id: "digit",
