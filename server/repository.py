@@ -528,6 +528,8 @@ class Repository(object):
         This is a public method, not requiring a session id.
         """
         # XXX we may want to check we don't give sensible information
+        # XXX the only cube using 'foreid', apycot, stop used this, we probably
+        # want to drop this argument
         if foreid is None:
             return self.config[option]
         _, sourceuri, extid, _ = self.type_and_source_from_eid(foreid)
