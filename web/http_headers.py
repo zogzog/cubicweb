@@ -744,7 +744,8 @@ def generateContentRange(tup):
 
 def generateDateTime(secSinceEpoch):
     """Convert seconds since epoch to HTTP datetime string."""
-    year, month, day, hh, mm, ss, wd, y, z = time.gmtime(secSinceEpoch)
+    # take care gmtime doesn't handle time before epoch (crash on windows at least)
+    year, month, day, hh, mm, ss, wd, y, z = time.gmtime(max(0, secSinceEpoch))
     s = "%s, %02d %3s %4d %02d:%02d:%02d GMT" % (
         weekdayname[wd],
         day, monthname[month], year,

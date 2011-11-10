@@ -557,7 +557,11 @@ class CubicWebRequestBase(DBAPIRequest):
             warn('[3.13] remove_cookie now take only a name as argument',
                  DeprecationWarning, stacklevel=2)
             name = bwcompat
-        self.set_cookie(name, '', maxage=0, expires=date(1970, 1, 1))
+        self.set_cookie(name, '', maxage=0,
+                        # substracting GMTOFFSET because set_cookie
+                        # expects a localtime and we don't want to
+                        # handle times before the EPOCH
+                        expires=date(1970, 1, 1) - GMTOFFSET) 
 
     def set_content_type(self, content_type, filename=None, encoding=None):
         """set output content type for this request. An optional filename
