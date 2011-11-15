@@ -578,12 +578,11 @@ class MailBugReportController(Controller):
     __select__ = match_form_params('description')
 
     def publish(self, rset=None):
-        body = self._cw.form['description']
-        self.sendmail(self._cw.config['submit-mail'],
-                      self._cw._('%s error report') % self._cw.config.appid,
-                      body)
-        url = self._cw.build_url(__message=self._cw._('bug report sent'))
-        raise Redirect(url)
+        req = self._cw
+        self.sendmail(req.vreg.config['submit-mail'],
+                      req._('%s error report') % req.vreg.config.appid,
+                      req.form['description'])
+        raise Redirect(req.build_url(__message=req._('bug report sent')))
 
 
 class UndoController(Controller):
