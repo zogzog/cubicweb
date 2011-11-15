@@ -221,7 +221,7 @@ class CWUsersTable(tableview.EntityTableView):
         'in_group': tableview.EntityTableColRenderer(
             renderfunc=lambda w,x: x.view('reledit', rtype='in_group', role='subject', w=w)),
         'primary_email': tableview.RelatedEntityColRenderer(
-            getrelated=lambda x:x.primary_email and x.primary_email[0]),
+            getrelated=lambda x:x.primary_email and x.primary_email[0] or None),
         'cw_source': tableview.RelatedEntityColRenderer(
             getrelated=lambda x: x.cw_source[0]),
         }
