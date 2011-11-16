@@ -695,7 +695,7 @@ def attr_desc_iterator(select, selectidx, rootidx):
             continue
         if rootvar.name == rootmainvar.name:
             continue
-        if select is not rootselect:
+        if select is not rootselect and isinstance(rootvar, nodes.ColumnAlias):
             term = select.selection[root.subquery_selection_index(select, i)]
         var = _get_variable(term)
         if var is None:

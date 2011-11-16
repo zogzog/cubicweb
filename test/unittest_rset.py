@@ -71,6 +71,13 @@ class AttrDescIteratorTC(TestCase):
         result = list(attr_desc_iterator(select, col, 2))
         self.assertEqual(result, [])
 
+    def test_subquery_callfunc_2(self):
+        rql = ('Any X,S,L WHERE X in_state S WITH X, L BEING (Any X,MAX(L) GROUPBY X WHERE X is CWUser, T wf_info_for X, T creation_date L)')
+        rqlst = parse(rql)
+        select, col = rqlst.locate_subquery(0, 'CWUser', None)
+        result = list(attr_desc_iterator(select, col, 0))
+        self.assertEqual(result, [(1, 'in_state', 'subject')])
+
 
 class ResultSetTC(CubicWebTC):
 
@@ -478,6 +485,7 @@ class ResultSetTC(CubicWebTC):
         rset = self.execute('(Any X WHERE X is CWGroup, X name "managers")')
         self.assertIsInstance(str(rset), basestring)
         self.assertEqual(len(str(rset).splitlines()), 1)
+
 
 if __name__ == '__main__':
     unittest_main()
