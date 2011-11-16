@@ -176,6 +176,8 @@ class AutoClickAndEditFormView(EntityView):
                     self._cw, rschema.type, role)
             else:
                 default = self._cw._('<not specified>')
+        else:
+            default = self._cw._(default)
         return xml_escape(default)
 
     def _is_composite(self):
