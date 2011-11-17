@@ -782,7 +782,11 @@ class MainEntityColRenderer(EntityTableColRenderer):
 
     def default_header(self):
         view = self.view
-        return u', '.join(self._cw.__(et+'_plural')
+        if len(view.cw_rset) > 1:
+            suffix = '_plural'
+        else:
+            suffix = ''
+        return u', '.join(self._cw.__(et + suffix)
                           for et in view.cw_rset.column_types(view.cw_col or 0))
 
     def render_entity(self, w, entity):
