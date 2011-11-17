@@ -819,24 +819,39 @@ class RelationColRenderer(EntityTableColRenderer):
     considered as the subject of the relation but you may specify otherwise
     using the `role` argument.
 
-    By default display the related rset using the 'csv' view and 'outofcontext'
-    view for each entity. You may specify another view identifier using
-    respectivly the `vid` and `subvid` arguments.
+    By default display the related rset using the 'csv' view, using
+    'outofcontext' sub-view for each entity. You may specify another view
+    identifier using respectivly the `vid` and `subvid` arguments.
+
+    If you specify a 'rtype view', such as 'reledit', you should add a
+    is_rtype_view=True parameter.
 
     If header not specified, it would be built by translating the column id,
     properly considering role.
     """
-    def __init__(self, role='subject', vid='csv', subvid='outofcontext',
-                 fallbackvid='empty-cell', **kwargs):
+    def __init__(self, role='subject', vid='csv', subvid=None,
+                 fallbackvid='empty-cell', is_rtype_view=False, **kwargs):
         super(RelationColRenderer, self).__init__(**kwargs)
         self.role = role
         self.vid = vid
+        if subvid is None and vid in ('csv', 'list'):
+            subvid = 'outofcontext'
         self.subvid = subvid
         self.fallbackvid = fallbackvid
+        self.is_rtype_view = is_rtype_view
 
     def render_entity(self, w, entity):
-        self._cw.view(self.vid, entity.related(self.colid, self.role),
-                      self.fallbackvid, subvid=self.subvid, w=w)
+        kwargs = {'w': w}
+        if self.is_rtype_view:
+            rset = None
+            kwargs['entity'] = entity
+            kwargs['rtype'] = self.colid
+            kwargs['role'] = self.role
+        else:
+            rset = entity.related(self.colid, self.role)
+        if self.subvid is not None:
+            kwargs['subvid'] = 'subvid'
+        self._cw.view(self.vid, rset, self.fallbackvid, **kwargs)
 
     def default_header(self):
         return display_name(self._cw, self.colid, self.role)
