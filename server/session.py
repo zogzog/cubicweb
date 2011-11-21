@@ -994,6 +994,7 @@ class Session(RequestSessionBase):
                     # instead of having to implements rollback, revertprecommit
                     # and revertcommit, that will be enough in mont case.
                     operation.failed = True
+                    self.critical('operation precommit failed for %s', operation.__class__.__name, exc_info=True)
                     for operation in reversed(processed):
                         try:
                             operation.handle_event('revertprecommit_event')
