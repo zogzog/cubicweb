@@ -484,6 +484,11 @@ class CWAttributeAddOp(MemSchemaOperation):
         # set default value, using sql for performance and to avoid
         # modification_date update
         if default:
+            if  rdefdef.object in ('Date', 'Datetime'):
+                if default == 'TODAY':
+                    default = syssource.dbhelper.sql_current_date()
+                elif default == 'NOW':
+                    default = syssource.dbhelper.sql_current_timestamp()
             session.system_sql('UPDATE %s SET %s=%%(default)s' % (table, column),
                                {'default': default})
 
