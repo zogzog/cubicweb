@@ -854,7 +854,7 @@ class RelationColRenderer(EntityTableColRenderer):
         else:
             rset = entity.related(self.colid, self.role)
         if self.subvid is not None:
-            kwargs['subvid'] = 'subvid'
+            kwargs['subvid'] = self.subvid
         self._cw.view(self.vid, rset, self.fallbackvid, **kwargs)
 
     def default_header(self):
