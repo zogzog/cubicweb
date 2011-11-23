@@ -289,9 +289,8 @@ class TableLayout(component.Component):
         return attrs
 
     def render_actions(self, w, actions):
-        box = MenuWidget('', 'tableActionsBox', _class='', islist=False)
-        label = tags.img(src=self._cw.uiprops['PUCE_DOWN'],
-                         alt=xml_escape(self._cw._('action(s) on this selection')))
+        box = MenuWidget('', '', _class='tableActionsBox', islist=False)
+        label = tags.span(self._cw._('action menu'))
         menu = PopupBoxMenu(label, isitem=False, link_class='actionsBox',
                             ident='%sActions' % self.view.domid)
         box.append(menu)
