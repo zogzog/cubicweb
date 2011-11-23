@@ -55,7 +55,7 @@ from datetime import datetime, timedelta
 
 from logilab.mtconverter import xml_escape
 from logilab.common.graph import has_path
-from logilab.common.decorators import cached
+from logilab.common.decorators import cached, cachedproperty
 from logilab.common.date import datetime2ticks, ustrftime, ticks2datetime
 from logilab.common.compat import all
 from logilab.common.deprecation import deprecated
@@ -64,6 +64,7 @@ from rql import nodes, utils
 
 from cubicweb import Unauthorized, typed_eid
 from cubicweb.schema import display_name
+from cubicweb.uilib import css_em_num_value
 from cubicweb.utils import make_uid
 from cubicweb.selectors import match_context_prop, partial_relation_possible, yes
 from cubicweb.appobject import AppObject
@@ -1406,7 +1407,7 @@ class BitFieldFacet(AttributeFacet):
 
 
 ## html widets ################################################################
-_DEFAULT_CONSTANT_VOCAB_WIDGET_HEIGHT = 12
+_DEFAULT_CONSTANT_VOCAB_WIDGET_HEIGHT = 14
 
 class FacetVocabularyWidget(htmlwidgets.HTMLWidget):
 
@@ -1414,28 +1415,21 @@ class FacetVocabularyWidget(htmlwidgets.HTMLWidget):
         self.facet = facet
         self.items = []
 
-    @property
-    @cached
+    @cachedproperty
     def css_overflow_limit(self):
         """ we try to deduce a number of displayed lines from a css property
         if we get another unit we're out of luck and resort to one constant
         hence, it is strongly advised not to specify but ems for this css prop
         """
-        vreg = self.facet._cw.vreg
-        cssprop = vreg.config.uiprops['facet_overflowedHeight'].lower().strip()
-        if cssprop.endswith('em'):
-            try:
-                return int(cssprop[:-2])
-            except Exception:
-                vreg.warning('css property facet_overflowedHeight looks malformed (%r)',
-                             cssprop)
-        return _DEFAULT_CONSTANT_VOCAB_WIDGET_HEIGHT
+        return css_em_num_value(self.facet._cw.vreg, 'facet_vocabMaxHeight',
+                                _DEFAULT_CONSTANT_VOCAB_WIDGET_HEIGHT)
 
-    @property
-    @cached
+    @cachedproperty
     def height(self):
-        return 1 + min(len(self.items),
-                       self.css_overflow_limit + int(self.facet._support_and_compat()))
+        """ title, optional and/or dropdown, len(items) or upper limit """
+        return (1.5 + # title + small magic constant
+                int(self.facet._support_and_compat() +
+                    min(len(self.items), self.css_overflow_limit)))
 
     @property
     @cached
@@ -1499,7 +1493,7 @@ class FacetStringWidget(htmlwidgets.HTMLWidget):
 
     @property
     def height(self):
-        return 3
+        return 2.5
 
     def _render(self):
         w = self.w
@@ -1544,7 +1538,7 @@ class FacetRangeWidget(htmlwidgets.HTMLWidget):
 
     @property
     def height(self):
-        return 3
+        return 2.5
 
     def _render(self):
         w = self.w
@@ -1564,7 +1558,7 @@ class FacetRangeWidget(htmlwidgets.HTMLWidget):
             })
         title = xml_escape(self.facet.title)
         facetname = xml_escape(facetname)
-        w(u'<div id="%s" class="facet">\n' % facetid)
+        w(u'<div id="%s" class="facet rangeFacet">\n' % facetid)
         w(u'<div class="facetTitle" cubicweb:facetName="%s">%s</div>\n' %
           (facetname, title))
         cssclass = 'facetBody'
@@ -1615,7 +1609,7 @@ class CheckBoxFacetWidget(htmlwidgets.HTMLWidget):
 
     @property
     def height(self):
-        return 2
+        return 1.5
 
     def _render(self):
         w = self.w
@@ -1640,13 +1634,6 @@ class CheckBoxFacetWidget(htmlwidgets.HTMLWidget):
         w(u'</div>\n')
         w(u'</div>\n')
 
-
-class FacetSeparator(htmlwidgets.HTMLWidget):
-    def __init__(self, label=None):
-        self.label = label or u'&#160;'
-
-    def _render(self):
-        pass
 
 # other classes ################################################################
 

@@ -144,6 +144,22 @@ PRINTERS = {
 def printable_value(req, attrtype, value, props=None, displaytime=True):
     return req.printable_value(attrtype, value, props, displaytime)
 
+def css_em_num_value(vreg, propname, default):
+    """ we try to read an 'em' css property
+    if we get another unit we're out of luck and resort to the given default
+    (hence, it is strongly advised not to specify but ems for this css prop)
+    """
+    propvalue = vreg.config.uiprops[propname].lower().strip()
+    if propvalue.endswith('em'):
+        try:
+            return float(propvalue[:-2])
+        except Exception:
+            vreg.warning('css property %s looks malformed (%r)',
+                         propname, propvalue)
+    else:
+        vreg.warning('css property %s should use em (currently is %r)',
+                     propname, propvalue)
+    return default
 
 # text publishing #############################################################
 

@@ -3,15 +3,22 @@
  padding: 0px;
 }
 
-div.facet {
- background: #fff;
- padding: 5px;
- margin: .3em!important;
+.facet {
+  border: 1px solid chocolate;
+  background: #fff;
+  padding: %(facet_Padding)s;
+  margin-bottom: %(facet_MarginBottom)s;
+}
+
+.facetGroup {
+  margin: .3em;
+  float: left;
+  max-height: %(facet_Height)s;
 }
 
 div.facetTitle, div.bkSearch  {
  color: #000;
- margin-bottom: 2px;
+ margin: 2px;
  cursor: pointer;
  font-weight: bold;
  font: %(facet_titleFont)s;
@@ -26,15 +33,19 @@ div.facetTitle a {
  color: #000 !important;
 }
 
-div.vocabularyFacetBody {
-  height: %(facet_overflowedHeight)s;
+.facetGroup div.rangeFacet {
+  width: 13em;
 }
 
-div.vocabularyFacetBodyWithLogicalSelector {
-  height: %(facet_overflowedHeightWithLogicalSelector)s;
+.facetGroup div.vocabularyFacet {
+  /* when facets spread on several lines, it can relieve the eye
+     to have them vertically aligned; these properties should
+     be used then  */
+  /* width: 13em; */
 }
 
 div.vocabularyFacet {
+  max-height: %(facet_vocabMaxHeight)s;
   overflow-y: auto;
   overflow-x: hidden;
 }
@@ -72,10 +83,10 @@ div#filter_box {
   border: none;
 }
 
-.facet input{
- margin-top:3px;
- border:1px solid #ccc;
- font-size:11px;
+.facet input {
+  margin-top: .2em;
+  border: 1px solid #ccc;
+  font-size: small;
 }
 
 .facetValueDisabled span {
@@ -108,7 +119,8 @@ div.facetTitleSelected {
   background: url("required.png") no-repeat right top;
 }
 
-table.filter {
+.filter {
   background-color: #EBE8D9;
   border: dotted grey 1px;
+  display: inline-block;
 }

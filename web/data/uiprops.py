@@ -168,6 +168,7 @@ errorMsgColor = '#ed0d0d'
 
 # facets
 facet_titleFont = 'bold SansSerif'
-facet_overflowedHeight = '12em'
-# the above minus 1
-facet_overflowedHeightWithLogicalSelector = '11em'
+facet_Height = '15em'
+facet_Padding = '.4em'
+facet_MarginBottom = '.4em'
+facet_vocabMaxHeight = '12em' # ensure << facet_Height

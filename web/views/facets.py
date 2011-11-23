@@ -23,11 +23,14 @@ _ = unicode
 from warnings import warn
 
 from logilab.mtconverter import xml_escape
+from logilab.common.decorators import cachedproperty
 
 from cubicweb.appobject import objectify_selector
 from cubicweb.selectors import (non_final_entity, multi_lines_rset,
                                 match_context_prop, yes, relation_possible)
 from cubicweb.utils import json_dumps
+from cubicweb.uilib import css_em_num_value
+from cubicweb.view import AnyRsetView
 from cubicweb.web import component, facet as facetbase
 
 def facets(req, rset, context, mainvar=None, **kwargs):
@@ -199,7 +202,7 @@ class FacetFilterMixIn(object):
         """sort widgets: by default sort by widget height, then according to
         widget.order (the original widgets order)
         """
-        return sorted(wdgs, key=lambda x: x.height)
+        return sorted(wdgs, key=lambda x: 99 * (not x.facet.start_unfolded) or x.height )
 
     def layout_widgets(self, w, wdgs):
         """layout widgets: by default simply render each of them
@@ -266,12 +269,10 @@ class FilterBox(FacetFilterMixIn, component.CtxComponent):
         return self.bk_linkbox_template % bk_link
 
 
-from cubicweb.view import AnyRsetView
-
 class FilterTable(FacetFilterMixIn, AnyRsetView):
     __regid__ = 'facet.filtertable'
     __select__ = has_facets()
-    compact_layout_threshold = 5
+    average_perfacet_uncomputable_overhead = .3
 
     def call(self, vid, divid, vidargs=None, cssclass=''):
         hiddens = self.cw_extra_kwargs.setdefault('hiddens', {})
@@ -279,47 +280,39 @@ class FilterTable(FacetFilterMixIn, AnyRsetView):
         self.generate_form(self.w, self.cw_rset, divid, vid, vidargs=vidargs,
                            cssclass=cssclass, **self.cw_extra_kwargs)
 
-    def _simple_horizontal_layout(self, w, wdgs):
-        w(u'<table class="filter">\n')
-        w(u'<tr>\n')
-        for wdg in wdgs:
-            w(u'<td>')
-            wdg.render(w=w)
-            w(u'</td>')
-        w(u'</tr>\n')
-        w(u'</table>\n')
+    @cachedproperty
+    def per_facet_height_overhead(self):
+        return (css_em_num_value(self._cw.vreg, 'facet_MarginBottom', .2) +
+                css_em_num_value(self._cw.vreg, 'facet_Padding', .2) +
+                self.average_perfacet_uncomputable_overhead)
 
     def layout_widgets(self, w, wdgs):
         """layout widgets: put them in a table where each column should have
         sum(wdg.height) < wdg_stack_size.
         """
-        if len(wdgs) < self.compact_layout_threshold:
-            self._simple_horizontal_layout(w, wdgs)
-            return
-        w(u'<table class="filter">\n')
+        w(u'<div class="filter">\n')
         widget_queue = []
         queue_height = 0
-        wdg_stack_size = max(wdgs, key=lambda wdg:wdg.height).height
-        w(u'<tr>\n')
+        wdg_stack_size = css_em_num_value(self._cw.vreg, 'facet_Height',
+                                          facetbase._DEFAULT_CONSTANT_VOCAB_WIDGET_HEIGHT)
         for wdg in wdgs:
-            height = wdg.height
+            height = wdg.height + self.per_facet_height_overhead
             if queue_height + height <= wdg_stack_size:
                 widget_queue.append(wdg)
                 queue_height += height
                 continue
-            w(u'<td>')
+            w(u'<div class="facetGroup">')
             for queued in widget_queue:
                 queued.render(w=w)
-            w(u'</td>')
+            w(u'</div>')
             widget_queue = [wdg]
             queue_height = height
         if widget_queue:
-            w(u'<td>')
+            w(u'<div class="facetGroup">')
             for queued in widget_queue:
                 queued.render(w=w)
-            w(u'</td>')
-        w(u'</tr>\n')
-        w(u'</table>\n')
+            w(u'</div>')
+        w(u'</div>\n')
 
 
 # facets ######################################################################
