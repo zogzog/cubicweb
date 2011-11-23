@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: cubicweb 2.46.0\n"
-"PO-Revision-Date: 2011-06-23 10:23+0200\n"
+"PO-Revision-Date: 2011-11-23 11:09+0100\n"
 "Last-Translator: Logilab Team <contact@logilab.fr>\n"
 "Language-Team: fr <contact@logilab.fr>\n"
 "Language: \n"
@@ -146,9 +146,6 @@ msgstr "l'action '%s' nécessite une option 'linkattr'"
 
 msgid "(UNEXISTANT EID)"
 msgstr "(EID INTROUVABLE)"
-
-msgid "(loading ...)"
-msgstr "(chargement ...)"
 
 msgid "**"
 msgstr "0..n 0..n"
@@ -532,6 +529,9 @@ msgstr "contrainte d'interval"
 
 msgid "Interval_plural"
 msgstr "Durées"
+
+msgid "Link:"
+msgstr "Lien :"
 
 msgid "Looked up classes"
 msgstr "Classes recherchées"
@@ -2556,9 +2556,6 @@ msgstr "suivre le lien"
 #, python-format
 msgid "follow this link for more information on this %s"
 msgstr "suivez ce lien pour plus d'information sur ce %s"
-
-msgid "follow this link if javascript is deactivated"
-msgstr "suivez ce lien si javascript est désactivé"
 
 msgid "for_user"
 msgstr "pour l'utilisateur"
@@ -4609,3 +4606,9 @@ msgid "you should un-inline relation %s which is supported and may be crossed "
 msgstr ""
 "vous devriez enlevé la mise en ligne de la relation %s qui est supportée et "
 "peut-être croisée"
+
+#~ msgid "(loading ...)"
+#~ msgstr "(chargement ...)"
+
+#~ msgid "follow this link if javascript is deactivated"
+#~ msgstr "suivez ce lien si javascript est désactivé"

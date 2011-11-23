@@ -145,9 +145,6 @@ msgstr ""
 msgid "(UNEXISTANT EID)"
 msgstr "(EID nicht gefunden)"
 
-msgid "(loading ...)"
-msgstr "(laden...)"
-
 msgid "**"
 msgstr "0..n 0..n"
 
@@ -532,6 +529,9 @@ msgstr "interval-Einschränkung"
 
 msgid "Interval_plural"
 msgstr "Intervalle"
+
+msgid "Link:"
+msgstr ""
 
 msgid "Looked up classes"
 msgstr "gesuchte Klassen"
@@ -2512,9 +2512,6 @@ msgstr "dem Link folgen"
 #, python-format
 msgid "follow this link for more information on this %s"
 msgstr "Folgend Sie dem Link für mehr Informationen über %s"
-
-msgid "follow this link if javascript is deactivated"
-msgstr "Folgen Sie diesem Link, falls Javascript deaktiviert ist."
 
 msgid "for_user"
 msgstr "für den Nutzer"
@@ -4553,11 +4550,17 @@ msgstr "Sie sollten diese Eigenschaft wahrscheinlich löschen."
 msgid "you should un-inline relation %s which is supported and may be crossed "
 msgstr ""
 
+#~ msgid "(loading ...)"
+#~ msgstr "(laden...)"
+
 #~ msgid "Schema of the data model"
 #~ msgstr "Schema des Datenmodells"
 
 #~ msgid "csv entities export"
 #~ msgstr "CSV-Export von Entitäten"
+
+#~ msgid "follow this link if javascript is deactivated"
+#~ msgstr "Folgen Sie diesem Link, falls Javascript deaktiviert ist."
 
 #~ msgid "instance schema"
 #~ msgstr "Schema der Instanz"

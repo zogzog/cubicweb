@@ -146,9 +146,6 @@ msgstr "la acción '%s' requiere una opción 'linkattr'"
 msgid "(UNEXISTANT EID)"
 msgstr "(EID INEXISTENTE"
 
-msgid "(loading ...)"
-msgstr "(Cargando ...)"
-
 msgid "**"
 msgstr "0..n 0..n"
 
@@ -532,6 +529,9 @@ msgstr "Restricción de intervalo"
 
 msgid "Interval_plural"
 msgstr "Duraciones"
+
+msgid "Link:"
+msgstr ""
 
 msgid "Looked up classes"
 msgstr "Clases buscadas"
@@ -2554,9 +2554,6 @@ msgstr "Seguir la liga"
 #, python-format
 msgid "follow this link for more information on this %s"
 msgstr "Seleccione esta liga para obtener mayor información sobre %s"
-
-msgid "follow this link if javascript is deactivated"
-msgstr "Seleccione esta liga si javascript esta desactivado"
 
 msgid "for_user"
 msgstr "Para el usuario"
@@ -4604,6 +4601,9 @@ msgstr ""
 "usted debe  quitar la puesta en línea de la relación %s que es aceptada y "
 "puede ser cruzada"
 
+#~ msgid "(loading ...)"
+#~ msgstr "(Cargando ...)"
+
 #~ msgid "Schema of the data model"
 #~ msgstr "Esquema del modelo de datos"
 
@@ -4612,6 +4612,9 @@ msgstr ""
 
 #~ msgid "csv entities export"
 #~ msgstr "Exportar entidades en csv"
+
+#~ msgid "follow this link if javascript is deactivated"
+#~ msgstr "Seleccione esta liga si javascript esta desactivado"
 
 #~ msgid "instance schema"
 #~ msgstr "Esquema de la Instancia"

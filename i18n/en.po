@@ -137,9 +137,6 @@ msgstr ""
 msgid "(UNEXISTANT EID)"
 msgstr ""
 
-msgid "(loading ...)"
-msgstr ""
-
 msgid "**"
 msgstr "0..n 0..n"
 
@@ -508,6 +505,9 @@ msgstr "Interval constraint"
 
 msgid "Interval_plural"
 msgstr "Intervals"
+
+msgid "Link:"
+msgstr ""
 
 msgid "Looked up classes"
 msgstr ""
@@ -2456,9 +2456,6 @@ msgstr ""
 
 #, python-format
 msgid "follow this link for more information on this %s"
-msgstr ""
-
-msgid "follow this link if javascript is deactivated"
 msgstr ""
 
 msgid "for_user"
