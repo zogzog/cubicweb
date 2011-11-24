@@ -37,6 +37,7 @@ binary-indep: build install
 	dh_installexamples -i
 	dh_installdocs -i
 	dh_installman -i
+	dh_pysupport -i /usr/share/cubicweb
 	dh_link -i
 	dh_compress -i -X.py -X.ini -X.xml -Xtest
 	dh_fixperms -i
