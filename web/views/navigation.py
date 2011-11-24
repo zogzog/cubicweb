@@ -231,10 +231,11 @@ class SortedNavigation(NavigationComponent):
                         relvar = rel.children[0].variable
                     col = relvar.selected_index()
                 if col is not None:
-                    return col, attrname
-            # no relation but maybe usable anyway if selected
-            col = var.selected_index()
-            attrname = None
+                    break
+            else:
+                # no relation but maybe usable anyway if selected
+                col = var.selected_index()
+                attrname = None
             if col is not None:
                 # if column type is date[time], set proper 'nb_chars'
                 if var.stinfo['possibletypes'] & frozenset(('TZDatetime', 'Datetime',
