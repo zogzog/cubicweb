@@ -177,7 +177,7 @@ class TableLayout(component.Component):
         or from subsequent calls by the form filter or by the pagination hooks.
         """
         form = self._cw.form
-        return 'fromformfilter' not in form and '__start' not in form
+        return 'fromformfilter' not in form and '__fromnavigation' not in form
 
     def render(self, w, **kwargs):
         assert self.display_filter in (None, 'top', 'bottom'), self.display_filter

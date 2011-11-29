@@ -100,6 +100,7 @@ class NavigationComponent(Component):
 
     def page_url(self, path, params, start=None, stop=None):
         params = dict(params)
+        params['__fromnavigation'] = 1
         if start is not None:
             params[self.start_param] = start
         if stop is not None:
