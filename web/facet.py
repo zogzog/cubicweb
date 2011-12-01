@@ -1407,7 +1407,8 @@ class BitFieldFacet(AttributeFacet):
 
 
 ## html widets ################################################################
-_DEFAULT_CONSTANT_VOCAB_WIDGET_HEIGHT = 14
+_DEFAULT_VOCAB_WIDGET_HEIGHT = 12
+_DEFAULT_FACET_GROUP_HEIGHT = 15
 
 class FacetVocabularyWidget(htmlwidgets.HTMLWidget):
 
@@ -1422,7 +1423,7 @@ class FacetVocabularyWidget(htmlwidgets.HTMLWidget):
         hence, it is strongly advised not to specify but ems for this css prop
         """
         return css_em_num_value(self.facet._cw.vreg, 'facet_vocabMaxHeight',
-                                _DEFAULT_CONSTANT_VOCAB_WIDGET_HEIGHT)
+                                _DEFAULT_VOCAB_WIDGET_HEIGHT)
 
     @cachedproperty
     def height(self):

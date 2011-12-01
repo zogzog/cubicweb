@@ -13,7 +13,6 @@
 .facetGroup {
   margin: .3em;
   float: left;
-  max-height: %(facet_Height)s;
 }
 
 div.facetTitle, div.bkSearch  {

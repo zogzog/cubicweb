@@ -293,8 +293,7 @@ class FilterTable(FacetFilterMixIn, AnyRsetView):
         w(u'<div class="filter">\n')
         widget_queue = []
         queue_height = 0
-        wdg_stack_size = css_em_num_value(self._cw.vreg, 'facet_Height',
-                                          facetbase._DEFAULT_CONSTANT_VOCAB_WIDGET_HEIGHT)
+        wdg_stack_size = facetbase._DEFAULT_FACET_GROUP_HEIGHT
         for wdg in wdgs:
             height = wdg.height + self.per_facet_height_overhead
             if queue_height + height <= wdg_stack_size:

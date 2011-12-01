@@ -168,7 +168,6 @@ errorMsgColor = '#ed0d0d'
 
 # facets
 facet_titleFont = 'bold SansSerif'
-facet_Height = '15em'
 facet_Padding = '.4em'
 facet_MarginBottom = '.4em'
-facet_vocabMaxHeight = '12em' # ensure << facet_Height
+facet_vocabMaxHeight = '12em' # ensure < FACET_GROUP_HEIGHT by some const. factor (e.g 3em)
