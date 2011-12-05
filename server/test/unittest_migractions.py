@@ -234,6 +234,12 @@ class MigrationCommandsTC(CubicWebTC):
         self.assertFalse(self.execute('State X WHERE NOT X state_of WF'))
         self.assertFalse(self.execute('Transition X WHERE NOT X transition_of WF'))
 
+    def test_rename_entity_type(self):
+        entity = self.mh.create_entity('Old', name=u'old')
+        self.repo.type_and_source_from_eid(entity.eid)
+        self.mh.cmd_rename_entity_type('Old', 'New')
+        self.mh.cmd_rename_attribute('New', 'name', 'new_name')
+
     def test_add_drop_relation_type(self):
         self.mh.cmd_add_entity_type('Folder2', auto=False)
         self.mh.cmd_add_relation_type('filed_under2')
