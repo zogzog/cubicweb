@@ -196,6 +196,7 @@ class MigrationCommandsTC(CubicWebTC):
         self.assertFalse('filed_under2' in self.schema)
         self.mh.cmd_add_entity_type('Folder2')
         self.assertTrue('Folder2' in self.schema)
+        self.assertTrue('Old' in self.schema)
         self.assertTrue(self.execute('CWEType X WHERE X name "Folder2"'))
         self.assertTrue('filed_under2' in self.schema)
         self.assertTrue(self.execute('CWRType X WHERE X name "filed_under2"'))
@@ -209,8 +210,10 @@ class MigrationCommandsTC(CubicWebTC):
                            'modification_date', 'name', 'owned_by'])
         self.assertEqual([str(rs) for rs in self.schema['Folder2'].object_relations()],
                           ['filed_under2', 'identity'])
+        # Old will be missing as it has been renamed into 'New' in the migrated
+        # schema while New hasn't been added here.
         self.assertEqual(sorted(str(e) for e in self.schema['filed_under2'].subjects()),
-                          sorted(str(e) for e in self.schema.entities() if not e.final))
+                         sorted(str(e) for e in self.schema.entities() if not e.final and e != 'Old'))
         self.assertEqual(self.schema['filed_under2'].objects(), ('Folder2',))
         eschema = self.schema.eschema('Folder2')
         for cstr in eschema.rdef('name').constraints:
@@ -245,8 +248,11 @@ class MigrationCommandsTC(CubicWebTC):
         self.mh.cmd_add_relation_type('filed_under2')
         self.schema.rebuild_infered_relations()
         self.assertTrue('filed_under2' in self.schema)
+        # Old will be missing as it has been renamed into 'New' in the migrated
+        # schema while New hasn't been added here.
         self.assertEqual(sorted(str(e) for e in self.schema['filed_under2'].subjects()),
-                          sorted(str(e) for e in self.schema.entities() if not e.final))
+                         sorted(str(e) for e in self.schema.entities()
+                                if not e.final and e != 'Old'))
         self.assertEqual(self.schema['filed_under2'].objects(), ('Folder2',))
         self.mh.cmd_drop_relation_type('filed_under2')
         self.assertFalse('filed_under2' in self.schema)

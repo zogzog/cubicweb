@@ -145,7 +145,7 @@ class UtilsTC(BaseQuerierTC):
                                        'X': 'Affaire',
                                        'ET': 'CWEType', 'ETN': 'String'}])
         rql, solutions = partrqls[1]
-        self.assertEqual(rql,  'Any ETN,X WHERE X is ET, ET name ETN, ET is CWEType, X is IN(BaseTransition, Bookmark, CWAttribute, CWCache, CWConstraint, CWConstraintType, CWEType, CWGroup, CWPermission, CWProperty, CWRType, CWRelation, CWSource, CWUniqueTogetherConstraint, CWUser, Card, Comment, Division, Email, EmailAddress, EmailPart, EmailThread, ExternalUri, File, Folder, Note, Personne, RQLExpression, Societe, State, SubDivision, SubWorkflowExitPoint, Tag, TrInfo, Transition, Workflow, WorkflowTransition)')
+        self.assertEqual(rql,  'Any ETN,X WHERE X is ET, ET name ETN, ET is CWEType, X is IN(BaseTransition, Bookmark, CWAttribute, CWCache, CWConstraint, CWConstraintType, CWEType, CWGroup, CWPermission, CWProperty, CWRType, CWRelation, CWSource, CWUniqueTogetherConstraint, CWUser, Card, Comment, Division, Email, EmailAddress, EmailPart, EmailThread, ExternalUri, File, Folder, Note, Old, Personne, RQLExpression, Societe, State, SubDivision, SubWorkflowExitPoint, Tag, TrInfo, Transition, Workflow, WorkflowTransition)')
         self.assertListEqual(sorted(solutions),
                               sorted([{'X': 'BaseTransition', 'ETN': 'String', 'ET': 'CWEType'},
                                       {'X': 'Bookmark', 'ETN': 'String', 'ET': 'CWEType'},
@@ -173,6 +173,7 @@ class UtilsTC(BaseQuerierTC):
                                       {'X': 'File', 'ETN': 'String', 'ET': 'CWEType'},
                                       {'X': 'Folder', 'ETN': 'String', 'ET': 'CWEType'},
                                       {'X': 'Note', 'ETN': 'String', 'ET': 'CWEType'},
+                                      {'X': 'Old', 'ETN': 'String', 'ET': 'CWEType'},
                                       {'X': 'Personne', 'ETN': 'String', 'ET': 'CWEType'},
                                       {'X': 'RQLExpression', 'ETN': 'String', 'ET': 'CWEType'},
                                       {'X': 'Societe', 'ETN': 'String', 'ET': 'CWEType'},
@@ -528,16 +529,16 @@ class QuerierTC(BaseQuerierTC):
         self.assertListEqual(rset.rows,
                               [[u'description_format', 12],
                                [u'description', 13],
-                               [u'name', 15],
-                               [u'created_by', 42],
-                               [u'creation_date', 42],
-                               [u'cw_source', 42],
-                               [u'cwuri', 42],
-                               [u'in_basket', 42],
-                               [u'is', 42],
-                               [u'is_instance_of', 42],
-                               [u'modification_date', 42],
-                               [u'owned_by', 42]])
+                               [u'name', 16],
+                               [u'created_by', 43],
+                               [u'creation_date', 43],
+                               [u'cw_source', 43],
+                               [u'cwuri', 43],
+                               [u'in_basket', 43],
+                               [u'is', 43],
+                               [u'is_instance_of', 43],
+                               [u'modification_date', 43],
+                               [u'owned_by', 43]])
 
     def test_select_aggregat_having_dumb(self):
         # dumb but should not raise an error
