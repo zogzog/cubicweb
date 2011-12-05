@@ -411,7 +411,7 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
         basecubes = [c for c in origcubes if not c in toremove]
         self.config._cubes = tuple(self.config.expand_cubes(basecubes))
         removed = [p for p in origcubes if not p in self.config._cubes]
-        if not cube in removed:
+        if not cube in removed and cube in origcubes:
             raise ConfigurationError("can't remove cube %s, "
                                      "used as a dependency" % cube)
         return removed
