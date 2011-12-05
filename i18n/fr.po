@@ -982,6 +982,9 @@ msgstr ""
 msgid "abstract base class for transitions"
 msgstr "classe de base abstraite pour les transitions"
 
+msgid "action menu"
+msgstr ""
+
 msgid "action(s) on this selection"
 msgstr "action(s) sur cette sélection"
 
@@ -1263,6 +1266,10 @@ msgstr ""
 
 msgid "automatic"
 msgstr "automatique"
+
+#, python-format
+msgid "back to pagination (%s results)"
+msgstr "retour à la vue paginée (%s résultats)"
 
 msgid "bad value"
 msgstr "mauvaise valeur"

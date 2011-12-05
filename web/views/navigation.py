@@ -290,7 +290,8 @@ def do_paginate(view, rset=None, w=None, show_all_option=True, page_size=None):
             del params['__force_display']
             url = nav.page_url(basepath, params)
             w(u'<div class="displayAllLink"><a href="%s">%s</a></div>\n'
-              % (xml_escape(url), req._('show %s results') % nav.page_size))
+              % (xml_escape(url), req._('back to pagination (%s results)')
+                                  % nav.page_size))
         else:
             # get boundaries before component rendering
             start, stop = nav.page_boundaries()

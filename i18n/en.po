@@ -932,6 +932,9 @@ msgstr ""
 msgid "abstract base class for transitions"
 msgstr ""
 
+msgid "action menu"
+msgstr ""
+
 msgid "action(s) on this selection"
 msgstr ""
 
@@ -1205,6 +1208,10 @@ msgid "autocomputed attribute used to ensure transition coherency"
 msgstr ""
 
 msgid "automatic"
+msgstr ""
+
+#, python-format
+msgid "back to pagination (%s results)"
 msgstr ""
 
 msgid "bad value"
