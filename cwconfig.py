@@ -1165,7 +1165,7 @@ the repository',
 
     def _gettext_init(self):
         """set language for gettext"""
-        from gettext import translation
+        from cubicweb.gettext import translation
         path = join(self.apphome, 'i18n')
         for language in self.available_languages():
             self.info("loading language %s", language)
