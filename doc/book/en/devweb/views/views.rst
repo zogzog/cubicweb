@@ -35,30 +35,7 @@ Basic class for views
 Class `View` (`cubicweb.view`)
 ```````````````````````````````
 
-This class is an abstraction of a view class, used as a base class for
-every renderable object such as views, templates and other user
-interface components.
-
-A `View` is instantiated to render a result set or part of a result
-set. `View` subclasses may be parametrized using the following class
-attributes:
-
-* `templatable` indicates if the view may be embedded in a main
-  template or if it has to be rendered standalone (i.e. pure XML views
-  must not be embedded in the main template of HTML pages)
-
-* if the view is not templatable, it should set the `content_type`
-  class attribute to the correct MIME type (text/xhtml being the
-  default)
-
-* the `category` attribute may be used in the interface to regroup
-  related view kinds together
-
-A view writes to its output stream thanks to its attribute `w` (the
-append method of an `UStreamIO`, except for binary views).
-
-At instantiation time, the standard `_cw` and `cw_rset` attributes are
-added and the `w` attribute will be set at rendering time.
+.. autoclass:: cubicweb.view.View
 
 The basic interface for views is as follows (remember that the result
 set has a tabular structure with rows and columns, hence cells):
@@ -88,12 +65,13 @@ set has a tabular structure with rows and columns, hence cells):
 
 Other basic view classes
 ````````````````````````
-Here are some of the subclasses of `View` defined in `cubicweb.view`
+Here are some of the subclasses of :ref:`View` defined in :ref:`cubicweb.view`
 that are more concrete as they relate to data rendering within the application:
 
-* `EntityView`, view applying to lines or cell containing an entity (e.g. an eid)
-* `StartupView`, start view that does not require a result set to apply to
-* `AnyRsetView`, view applicable to any result set
+.. autoclass:: cubicweb.view.EntityView
+.. autoclass:: cubicweb.view.StartupView
+.. autoclass:: cubicweb.view.EntityStartupView
+.. autoclass:: cubicweb.view.AnyRsetView
 
 Examples of views class
 ```````````````````````
