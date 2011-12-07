@@ -249,7 +249,7 @@ class RQLRewriter(object):
                     self.insert_snippet(varmap, rqlexpr.snippet_rqlst, exists)
         if varexistsmap is None and not inserted:
             # no rql expression found matching rql solutions. User has no access right
-            raise Unauthorized() # XXX bad constraint when inserting constraints
+            raise Unauthorized() # XXX may also be because of bad constraints in schema definition
 
     def insert_snippet(self, varmap, snippetrqlst, parent=None):
         new = snippetrqlst.where.accept(self)
