@@ -349,8 +349,10 @@ class JSonController(Controller):
             if vtitle:
                 stream.write(u'<h1 class="vtitle">%s</h1>\n' % vtitle)
             paginate = True
+        nav_html = UStringIO()
         if paginate and not view.handle_pagination:
-            view.paginate()
+            view.paginate(w=nav_html.write)
+        stream.write(nav_html.getvalue())
         if divid == 'pageContent':
             stream.write(u'<div id="contentmain">')
         view.render(**kwargs)
@@ -360,7 +362,7 @@ class JSonController(Controller):
             stream.write(extresources)
             stream.write(u'</div>\n')
         if divid == 'pageContent':
-            stream.write(u'</div></div>')
+            stream.write(u'</div>%s</div>' % nav_html.getvalue())
         return stream.getvalue()
 
     @xhtmlize
