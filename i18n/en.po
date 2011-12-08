@@ -2614,17 +2614,24 @@ msgid "hide filter form"
 msgstr ""
 
 msgid ""
-"how to format date and time in the ui (\"man strftime\" for format "
+"how to format date and time in the ui (see <a href=\"http://docs.python.org/"
+"library/datetime.html#strftime-strptime-behavior\">this page</a> for format "
 "description)"
 msgstr ""
 
-msgid "how to format date in the ui (\"man strftime\" for format description)"
+msgid ""
+"how to format date in the ui (see <a href=\"http://docs.python.org/library/"
+"datetime.html#strftime-strptime-behavior\">this page</a> for format "
+"description)"
 msgstr ""
 
 msgid "how to format float numbers in the ui"
 msgstr ""
 
-msgid "how to format time in the ui (\"man strftime\" for format description)"
+msgid ""
+"how to format time in the ui (see <a href=\"http://docs.python.org/library/"
+"datetime.html#strftime-strptime-behavior\">this page</a> for format "
+"description)"
 msgstr ""
 
 msgid "i18n_bookmark_url_fqs"
