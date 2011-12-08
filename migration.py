@@ -270,7 +270,10 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
         def unicode_raw_input(prompt):
             return unicode(raw_input(prompt), sys.stdin.encoding)
         interact(banner, readfunc=unicode_raw_input, local=local_ctx)
-        readline.write_history_file(histfile)
+        try:
+            readline.write_history_file(histfile)
+        except IOError:
+            pass
         # delete instance's confirm attribute to avoid questions
         del self.confirm
         self.need_wrap = True
@@ -412,7 +415,7 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
         basecubes = [c for c in origcubes if not c in toremove]
         self.config._cubes = tuple(self.config.expand_cubes(basecubes))
         removed = [p for p in origcubes if not p in self.config._cubes]
-        if not cube in removed:
+        if not cube in removed and cube in origcubes:
             raise ConfigurationError("can't remove cube %s, "
                                      "used as a dependency" % cube)
         return removed
