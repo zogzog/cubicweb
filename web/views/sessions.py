@@ -21,10 +21,11 @@ object :/
 
 __docformat__ = "restructuredtext en"
 
-from cubicweb import RepositoryError, Unauthorized, AuthenticationError
+from cubicweb import (RepositoryError, Unauthorized, AuthenticationError,
+                      BadConnectionId)
 from cubicweb.web import InvalidSession, Redirect
 from cubicweb.web.application import AbstractSessionManager
-from cubicweb.dbapi import DBAPISession
+from cubicweb.dbapi import ProgrammingError, DBAPISession
 
 
 class InMemoryRepositorySessionManager(AbstractSessionManager):
@@ -98,10 +99,10 @@ class InMemoryRepositorySessionManager(AbstractSessionManager):
         for forminternal_key in ('__form_id', '__domid', '__errorurl'):
             args.pop(forminternal_key, None)
         path = req.relative_path(False)
-        if path == 'login':
+        if path in ('login', 'logout') or req.form.get('vid') == 'loggedout':
             path = 'view'
             args['__message'] = req._('welcome %s !') % req.user.login
-            if 'vid' in req.form:
+            if 'vid' in req.form and req.form['vid'] != 'loggedout':
                 args['vid'] = req.form['vid']
             if 'rql' in req.form:
                 args['rql'] = req.form['rql']
@@ -119,7 +120,7 @@ class InMemoryRepositorySessionManager(AbstractSessionManager):
             req.cnx.commit()
         except (RepositoryError, Unauthorized):
             req.cnx.rollback()
-        except:
+        except Exception:
             req.cnx.rollback()
             raise
 
@@ -132,8 +133,6 @@ class InMemoryRepositorySessionManager(AbstractSessionManager):
         if session.cnx:
             try:
                 session.cnx.close()
-            except:
-                # already closed, may occur if the repository session expired
-                # but not the web session
+            except (ProgrammingError, BadConnectionId): # expired on the repository side
                 pass
             session.cnx = None

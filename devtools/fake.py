@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -63,8 +63,8 @@ class FakeRequest(CubicWebRequestBase):
         self._session_data = {}
         self._headers_in = Headers()
 
-    def set_cookie(self, cookie, key, maxage=300, expires=None):
-        super(FakeRequest, self).set_cookie(cookie, key, maxage=300, expires=None)
+    def set_cookie(self, name, value, maxage=300, expires=None, secure=False):
+        super(FakeRequest, self).set_cookie(name, value, maxage, expires, secure)
         cookie = self.get_response_header('Set-Cookie')
         self._headers_in.setHeader('Cookie', cookie)
 
@@ -138,13 +138,15 @@ class FakeUser(object):
 
 
 class FakeSession(RequestSessionBase):
-    read_security = write_security = True
-    set_read_security = set_write_security = lambda *args, **kwargs: None
 
-    def __init__(self, repo=None, user=None):
+    def __init__(self, repo=None, user=None, vreg=None):
         self.repo = repo
-        self.vreg = getattr(self.repo, 'vreg', CubicWebVRegistry(FakeConfig(), initlog=False))
-        self.pool = FakePool()
+        if vreg is None:
+            vreg = getattr(self.repo, 'vreg', None)
+        if vreg is None:
+            vreg = CubicWebVRegistry(FakeConfig(), initlog=False)
+        self.vreg = vreg
+        self.cnxset = FakeConnectionsSet()
         self.user = user or FakeUser()
         self.is_internal_session = False
         self.transaction_data = {}
@@ -161,6 +163,13 @@ class FakeSession(RequestSessionBase):
 
     def set_entity_cache(self, entity):
         pass
+
+    # for use with enabled_security context manager
+    read_security = write_security = True
+    def init_security(self, *args):
+        return None, None
+    def reset_security(self, *args):
+        return
 
 class FakeRepo(object):
     querier = None
@@ -201,6 +210,6 @@ class FakeSource(object):
         self.uri = uri
 
 
-class FakePool(object):
+class FakeConnectionsSet(object):
     def source(self, uri):
         return FakeSource(uri)

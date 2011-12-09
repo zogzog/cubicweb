@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -45,6 +45,7 @@ def _change_state(session, x, oldstate, newstate):
 
 class _SetInitialStateOp(hook.Operation):
     """make initial state be a default state"""
+    entity = None # make pylint happy
 
     def precommit_event(self):
         session = self.session
@@ -61,6 +62,7 @@ class _SetInitialStateOp(hook.Operation):
 
 class _FireAutotransitionOp(hook.Operation):
     """try to fire auto transition after state changes"""
+    entity = None # make pylint happy
 
     def precommit_event(self):
         entity = self.entity
@@ -73,6 +75,7 @@ class _FireAutotransitionOp(hook.Operation):
 
 class _WorkflowChangedOp(hook.Operation):
     """fix entity current state when changing its workflow"""
+    eid = wfeid = None # make pylint happy
 
     def precommit_event(self):
         # notice that enforcement that new workflow apply to the entity's type is
@@ -109,6 +112,7 @@ class _WorkflowChangedOp(hook.Operation):
 
 
 class _CheckTrExitPoint(hook.Operation):
+    treid = None # make pylint happy
 
     def precommit_event(self):
         tr = self.session.entity_from_eid(self.treid)
@@ -122,6 +126,7 @@ class _CheckTrExitPoint(hook.Operation):
 
 
 class _SubWorkflowExitOp(hook.Operation):
+    forentity = trinfo = None # make pylint happy
 
     def precommit_event(self):
         session = self.session
@@ -148,7 +153,7 @@ class _SubWorkflowExitOp(hook.Operation):
 
 class WorkflowHook(hook.Hook):
     __abstract__ = True
-    category = 'workflow'
+    category = 'metadata'
 
 
 class SetInitialStateHook(WorkflowHook):
@@ -160,21 +165,15 @@ class SetInitialStateHook(WorkflowHook):
         _SetInitialStateOp(self._cw, entity=self.entity)
 
 
-class PrepareStateChangeHook(WorkflowHook):
-    """record previous state information"""
-    __regid__ = 'cwdelstate'
-    __select__ = WorkflowHook.__select__ & hook.match_rtype('in_state')
-    events = ('before_delete_relation',)
-
-    def __call__(self):
-        self._cw.transaction_data.setdefault('pendingrelations', []).append(
-            (self.eidfrom, self.rtype, self.eidto))
-
-
 class FireTransitionHook(WorkflowHook):
-    """check the transition is allowed, add missing information. Expect that:
+    """check the transition is allowed and add missing information into the
+    TrInfo entity.
+
+    Expect that:
     * wf_info_for inlined relation is set
     * by_transition or to_state (managers only) inlined relation is set
+
+    Check for automatic transition to be fired at the end
     """
     __regid__ = 'wffiretransition'
     __select__ = WorkflowHook.__select__ & is_instance('TrInfo')
@@ -273,7 +272,7 @@ class FireTransitionHook(WorkflowHook):
 
 
 class FiredTransitionHook(WorkflowHook):
-    """change related entity state"""
+    """change related entity state and handle exit of subworkflow"""
     __regid__ = 'wffiretransition'
     __select__ = WorkflowHook.__select__ & is_instance('TrInfo')
     events = ('after_add_entity',)
@@ -296,6 +295,7 @@ class CheckInStateChangeAllowed(WorkflowHook):
     __regid__ = 'wfcheckinstate'
     __select__ = WorkflowHook.__select__ & hook.match_rtype('in_state')
     events = ('before_add_relation',)
+    category = 'integrity'
 
     def __call__(self):
         session = self._cw

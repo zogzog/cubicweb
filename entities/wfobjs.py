@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -326,8 +326,8 @@ class WorkflowTransition(BaseTransition):
             result[ep.subwf_state.eid] = ep.destination and ep.destination.eid
         return result
 
-    def clear_all_caches(self):
-        super(WorkflowTransition, self).clear_all_caches()
+    def cw_clear_all_caches(self):
+        super(WorkflowTransition, self).cw_clear_all_caches()
         clear_cache(self, 'exit_points')
 
 

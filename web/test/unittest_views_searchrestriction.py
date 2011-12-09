@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -15,11 +15,9 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""
 
-"""
 from cubicweb.devtools.testlib import CubicWebTC
-from cubicweb.web.facet import insert_attr_select_relation, prepare_facets_rqlst
+from cubicweb.web import facet
 
 
 class InsertAttrRelationTC(CubicWebTC):
@@ -27,13 +25,14 @@ class InsertAttrRelationTC(CubicWebTC):
     def parse(self, query):
         rqlst = self.vreg.parse(self.session, query)
         select = rqlst.children[0]
-        # XXX done in real life?
-        select.remove_groups()
         return rqlst
 
     def _generate(self, rqlst, rel, role, attr):
-        mainvar = prepare_facets_rqlst(rqlst)[0]
-        insert_attr_select_relation(rqlst.children[0], mainvar, rel, role, attr)
+        select = rqlst.children[0]
+        filtered_variable = facet.get_filtered_variable(select)
+        facet.prepare_select(select, filtered_variable)
+        facet.insert_attr_select_relation(select, filtered_variable,
+                                          rel, role, attr)
         return rqlst.as_string()
 
     @property

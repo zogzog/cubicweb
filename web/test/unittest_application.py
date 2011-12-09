@@ -196,7 +196,7 @@ class ApplicationTC(CubicWebTC):
         eid = unicode(user.eid)
         req.form = {
             'eid':       eid,
-            '__type:'+eid:    'CWUser', '_cw_edited_fields:'+eid: 'login-subject',
+            '__type:'+eid:    'CWUser', '_cw_entity_fields:'+eid: 'login-subject',
             'login-subject:'+eid:     '', # ERROR: no login specified
              # just a sample, missing some necessary information for real life
             '__errorurl': 'view?vid=edition...'
@@ -221,11 +221,11 @@ class ApplicationTC(CubicWebTC):
         req = self.request()
         # set Y before X to ensure both entities are edited, not only X
         req.form = {'eid': ['Y', 'X'], '__maineid': 'X',
-                    '__type:X': 'CWUser', '_cw_edited_fields:X': 'login-subject',
+                    '__type:X': 'CWUser', '_cw_entity_fields:X': 'login-subject',
                     # missing required field
                     'login-subject:X': u'',
                     # but email address is set
-                    '__type:Y': 'EmailAddress', '_cw_edited_fields:Y': 'address-subject',
+                    '__type:Y': 'EmailAddress', '_cw_entity_fields:Y': 'address-subject',
                     'address-subject:Y': u'bougloup@logilab.fr',
                     'use_email-object:Y': 'X',
                     # necessary to get validation error handling
@@ -250,11 +250,11 @@ class ApplicationTC(CubicWebTC):
         req = self.request()
         # set Y before X to ensure both entities are edited, not only X
         req.form = {'eid': ['Y', 'X'], '__maineid': 'X',
-                    '__type:X': 'CWUser', '_cw_edited_fields:X': 'login-subject,upassword-subject',
+                    '__type:X': 'CWUser', '_cw_entity_fields:X': 'login-subject,upassword-subject',
                     # already existent user
                     'login-subject:X': u'admin',
                     'upassword-subject:X': u'admin', 'upassword-subject-confirm:X': u'admin',
-                    '__type:Y': 'EmailAddress', '_cw_edited_fields:Y': 'address-subject',
+                    '__type:Y': 'EmailAddress', '_cw_entity_fields:Y': 'address-subject',
                     'address-subject:Y': u'bougloup@logilab.fr',
                     'use_email-object:Y': 'X',
                     # necessary to get validation error handling

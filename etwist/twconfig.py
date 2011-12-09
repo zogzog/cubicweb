@@ -90,6 +90,13 @@ the repository rather than the user running the command',
           'help': 'run a pyro server',
           'group': 'main', 'level': 1,
           }),
+        ('webserver-threadpool-size',
+         {'type': 'int',
+          'default': 4,
+          'help': "size of twisted's reactor threadpool. It should probably be not too \
+much greater than connection-poolsize",
+          'group': 'web', 'level': 3,
+          }),
         ) + WebConfiguration.options)
 
     def server_file(self):

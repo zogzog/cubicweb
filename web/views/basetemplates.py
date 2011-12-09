@@ -25,7 +25,7 @@ from logilab.common.deprecation import class_renamed
 
 from cubicweb.appobject import objectify_selector
 from cubicweb.selectors import match_kwargs, no_cnx, anonymous_user
-from cubicweb.view import View, MainTemplate, NOINDEX, NOFOLLOW
+from cubicweb.view import View, MainTemplate, NOINDEX, NOFOLLOW, StartupView
 from cubicweb.utils import UStringIO
 from cubicweb.schema import display_name
 from cubicweb.web import component, formfields as ff, formwidgets as fw
@@ -56,6 +56,9 @@ class LogInOutTemplate(MainTemplate):
         self.wview('htmlheader', rset=self.cw_rset)
         w(u'<title>%s</title>\n' % xml_escape(page_title))
 
+    def content(self):
+        raise NotImplementedError()
+
 
 class LogInTemplate(LogInOutTemplate):
     __regid__ = 'login'
@@ -66,19 +69,19 @@ class LogInTemplate(LogInOutTemplate):
         self.wview('logform', rset=self.cw_rset, id='loginBox', klass='')
 
 
-class LoggedOutTemplate(LogInOutTemplate):
+class LoggedOutTemplate(StartupView):
     __regid__ = 'loggedout'
+    __select__ = anonymous_user()
     title = 'logged out'
 
-    def content(self, w):
-        # FIXME Deprecated code ?
+    def call(self):
         msg = self._cw._('you have been logged out')
-        w(u'<h2>%s</h2>\n' % msg)
-        if self._cw.vreg.config.anonymous_user()[0]:
-            indexurl = self._cw.build_url('view', vid='index', __message=msg)
-            w(u'<p><a href="%s">%s</a><p>' % (
-                xml_escape(indexurl),
-                self._cw._('go back to the index page')))
+        if self._cw.cnx:
+            comp = self._cw.vreg['components'].select('applmessages', self._cw)
+            comp.render(w=self.w, msg=msg)
+            self.wview('index')
+        else:
+            self.w(u'<h2>%s</h2>' % msg)
 
 
 @objectify_selector

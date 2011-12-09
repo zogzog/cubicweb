@@ -163,6 +163,11 @@ msgid "'%s' action doesn't take any options"
 msgstr "la acción '%s'  no acepta opciones"
 
 #, python-format
+msgid ""
+"'%s' action for in_state relation should at least have 'linkattr=name' option"
+msgstr ""
+
+#, python-format
 msgid "'%s' action requires 'linkattr' option"
 msgstr "la acción '%s' requiere una opción 'linkattr'"
 
@@ -221,6 +226,9 @@ msgstr ""
 "pero se puede ver a un <a href=\"%s\">modelo completo con meta-datos</a>.</"
 "div>"
 
+msgid "<no relation>"
+msgstr ""
+
 msgid "<not specified>"
 msgstr "<no especificado>"
 
@@ -256,6 +264,12 @@ msgstr "Transición (abstracta)"
 
 msgid "BaseTransition_plural"
 msgstr "Transiciones (abstractas)"
+
+msgid "BigInt"
+msgstr ""
+
+msgid "BigInt_plural"
+msgstr ""
 
 msgid "Bookmark"
 msgstr "Favorito"
@@ -1083,12 +1097,6 @@ msgctxt "inlined:CWRelation.relation_type.subject"
 msgid "add a CWRType"
 msgstr "Agregar un tipo de relación"
 
-msgid "add a CWSource"
-msgstr "agregar una fuente"
-
-msgid "add a CWSourceSchemaConfig"
-msgstr "agregar una parte de mapeo"
-
 msgctxt "inlined:CWUser.use_email.subject"
 msgid "add a EmailAddress"
 msgstr "Agregar correo electrónico"
@@ -1162,6 +1170,10 @@ msgstr "las opciones permitidas dependen del tipo de fuente"
 
 msgid "allowed transitions from this state"
 msgstr "transiciones autorizadas desde este estado"
+
+#, python-format
+msgid "allowed values for \"action\" are %s"
+msgstr ""
 
 msgid "allowed_transition"
 msgstr "transiciones autorizadas"
@@ -1245,6 +1257,9 @@ msgstr "Usuario o contraseña incorrecta"
 
 msgid "auto"
 msgstr "Automático"
+
+msgid "autocomputed attribute used to ensure transition coherency"
+msgstr ""
 
 msgid "automatic"
 msgstr "Automático"
@@ -1812,10 +1827,10 @@ msgstr "Caja de Acciones"
 msgid "ctxcomponents_edit_box_description"
 msgstr "Muestra las acciones posibles a ejecutar para los datos seleccionados"
 
-msgid "ctxcomponents_facet.filters"
+msgid "ctxcomponents_facet.filterbox"
 msgstr "Filtros"
 
-msgid "ctxcomponents_facet.filters_description"
+msgid "ctxcomponents_facet.filterbox_description"
 msgstr "Muestra los filtros aplicables a una búsqueda realizada"
 
 msgid "ctxcomponents_logo"
@@ -1925,10 +1940,6 @@ msgstr "esquema"
 msgid "cw_schema_object"
 msgstr "mapeado por"
 
-msgctxt "CWAttribute"
-msgid "cw_schema_object"
-msgstr "mapeado por"
-
 msgctxt "CWEType"
 msgid "cw_schema_object"
 msgstr "mapeado por"
@@ -1985,6 +1996,9 @@ msgstr "Uri Interna"
 
 msgid "data directory url"
 msgstr "Url del repertorio de datos"
+
+msgid "data model schema"
+msgstr "Esquema del Sistema"
 
 msgid "data sources"
 msgstr "fuente de datos"
@@ -2313,9 +2327,6 @@ msgstr "Tabla modificable"
 msgid "eid"
 msgstr "eid"
 
-msgid "email address to use for notification"
-msgstr "Dirección electrónica a utilizarse para notificar"
-
 msgid "emails successfully sent"
 msgstr "Mensajes enviados con éxito"
 
@@ -2430,6 +2441,9 @@ msgstr "Tipo"
 
 msgid "external page"
 msgstr "Página externa"
+
+msgid "facet-loading-msg"
+msgstr ""
 
 msgid "facet.filters"
 msgstr "Filtros"
@@ -2615,9 +2629,6 @@ msgstr ""
 "Relación genérica que indicar que una entidad es idéntica a otro recurso web "
 "(ver http://www.w3.org/TR/owl-ref/#sameAs-def)."
 
-msgid "go back to the index page"
-msgstr "Regresar a la página de inicio"
-
 msgid "granted to groups"
 msgstr "Otorgado a los grupos"
 
@@ -2646,6 +2657,18 @@ msgstr "Grupo en el cual el usuario debe estar lograr la transición"
 
 msgid "groups"
 msgstr "Grupos"
+
+msgid "groups allowed to add entities/relations of this type"
+msgstr ""
+
+msgid "groups allowed to delete entities/relations of this type"
+msgstr ""
+
+msgid "groups allowed to read entities/relations of this type"
+msgstr ""
+
+msgid "groups allowed to update entities/relations of this type"
+msgstr ""
 
 msgid "groups grant permissions to the user"
 msgstr "Los grupos otorgan los permisos al usuario"
@@ -2769,6 +2792,13 @@ msgstr "Estado"
 
 msgid "in_state_object"
 msgstr "Estado de"
+
+msgid "in_synchronization"
+msgstr ""
+
+msgctxt "CWSource"
+msgid "in_synchronization"
+msgstr ""
 
 msgid "incontext"
 msgstr "En el contexto"
@@ -3152,11 +3182,11 @@ msgstr "Nombre"
 
 msgctxt "CWSource"
 msgid "name"
-msgstr "nombre"
+msgstr ""
 
 msgctxt "State"
 msgid "name"
-msgstr "Nombre"
+msgstr "nombre"
 
 msgctxt "Transition"
 msgid "name"
@@ -3224,6 +3254,15 @@ msgstr "No"
 
 msgid "no associated permissions"
 msgstr "No existe permiso asociado"
+
+msgid "no content next link"
+msgstr ""
+
+msgid "no content prev link"
+msgstr ""
+
+msgid "no edited fields specified"
+msgstr ""
 
 #, python-format
 msgid "no edited fields specified for entity %s"
@@ -3631,6 +3670,18 @@ msgstr "Anular modificación"
 msgid "right"
 msgstr "Derecha"
 
+msgid "rql expression allowing to add entities/relations of this type"
+msgstr ""
+
+msgid "rql expression allowing to delete entities/relations of this type"
+msgstr ""
+
+msgid "rql expression allowing to read entities/relations of this type"
+msgstr ""
+
+msgid "rql expression allowing to update entities/relations of this type"
+msgstr ""
+
 msgid "rql expressions"
 msgstr "Expresiones RQL"
 
@@ -3666,9 +3717,6 @@ msgstr "Búsqueda por asociación"
 
 msgid "searching for"
 msgstr "Buscando"
-
-msgid "secondary"
-msgstr "Secundaria"
 
 msgid "security"
 msgstr "Seguridad"
@@ -3759,9 +3807,6 @@ msgstr "Configuración Sistema"
 msgid "site documentation"
 msgstr "Documentación Sistema"
 
-msgid "site schema"
-msgstr "Esquema del Sistema"
-
 msgid "site title"
 msgstr "Nombre del Sistema"
 
@@ -3770,9 +3815,6 @@ msgstr "Una propiedad específica al Sistema no puede ser propia al usuario"
 
 msgid "siteinfo"
 msgstr "información"
-
-msgid "some errors occurred:"
-msgstr "Algunos errores encontrados :"
 
 msgid "some later transaction(s) touch entity, undo them first"
 msgstr ""
@@ -3811,6 +3853,11 @@ msgstr "Especializado por"
 #, python-format
 msgid "specifying %s is mandatory"
 msgstr "especificar %s es obligatorio"
+
+msgid ""
+"start timestamp of the currently in synchronization, or NULL when no "
+"synchronization in progress."
+msgstr ""
 
 msgid "startup views"
 msgstr "Vistas de inicio"
@@ -3985,6 +4032,12 @@ msgstr ""
 msgid "the value \"%s\" is already used, use another one"
 msgstr "El valor \"%s\" ya esta en uso, favor de utilizar otro"
 
+msgid "there is no next page"
+msgstr ""
+
+msgid "there is no previous page"
+msgstr ""
+
 msgid "this action is not reversible!"
 msgstr "Esta acción es irreversible!."
 
@@ -4085,7 +4138,7 @@ msgid "tr_count"
 msgstr "n° de transición"
 
 msgid "transaction undone"
-msgstr "Transacciones Anuladas"
+msgstr ""
 
 #, python-format
 msgid "transition %(tr)s isn't allowed from %(st)s"
@@ -4340,6 +4393,9 @@ msgstr "Encoding de la interfaz de usuario"
 msgid "user preferences"
 msgstr "Preferencias"
 
+msgid "user's email account"
+msgstr ""
+
 msgid "users"
 msgstr "Usuarios"
 
@@ -4369,28 +4425,28 @@ msgctxt "CWProperty"
 msgid "value"
 msgstr "Vampr"
 
+#, python-format
+msgid "value %(value)s must be %(op)s %(boundary)s"
+msgstr ""
+
+#, python-format
+msgid "value %(value)s must be <= %(boundary)s"
+msgstr ""
+
+#, python-format
+msgid "value %(value)s must be >= %(boundary)s"
+msgstr ""
+
 msgid "value associated to this key is not editable manually"
 msgstr "El valor asociado a este elemento no es editable manualmente"
 
 #, python-format
-msgid "value must be %(op)s %(boundary)s"
-msgstr "El valor debe ser %(op)s %(boundary)s"
+msgid "value should have maximum size of %s but found %s"
+msgstr ""
 
 #, python-format
-msgid "value must be <= %(boundary)s"
-msgstr "El valor debe ser <= %(boundary)s"
-
-#, python-format
-msgid "value must be >= %(boundary)s"
-msgstr "El valor debe ser >= %(boundary)s"
-
-#, python-format
-msgid "value should have maximum size of %s"
-msgstr "El valor no debe exceder de %s"
-
-#, python-format
-msgid "value should have minimum size of %s"
-msgstr "El valor no puede ser menor a %s"
+msgid "value should have minimum size of %s but found %s"
+msgstr ""
 
 msgid "vcard"
 msgstr "vcard"
@@ -4539,6 +4595,3 @@ msgid "you should un-inline relation %s which is supported and may be crossed "
 msgstr ""
 "usted debe  quitar la puesta en línea de la relación %s que es aceptada y "
 "puede ser cruzada"
-
-#~ msgid "add a %s"
-#~ msgstr "agregar un %s"

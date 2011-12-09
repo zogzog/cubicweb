@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -201,8 +201,8 @@ class MigrationHelper(object):
         if not ask_confirm or self.confirm(msg):
             return meth(*args, **kwargs)
 
-    def confirm(self, question, shell=True, abort=True, retry=False, pdb=False,
-                default='y'):
+    def confirm(self, question, # pylint: disable=E0202
+                shell=True, abort=True, retry=False, pdb=False, default='y'):
         """ask for confirmation and return true on positive answer
 
         if `retry` is true the r[etry] answer may return 2
@@ -269,7 +269,10 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
         def unicode_raw_input(prompt):
             return unicode(raw_input(prompt), sys.stdin.encoding)
         interact(banner, readfunc=unicode_raw_input, local=local_ctx)
-        readline.write_history_file(histfile)
+        try:
+            readline.write_history_file(histfile)
+        except IOError:
+            pass
         # delete instance's confirm attribute to avoid questions
         del self.confirm
         self.need_wrap = True
@@ -411,7 +414,7 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
         basecubes = [c for c in origcubes if not c in toremove]
         self.config._cubes = tuple(self.config.expand_cubes(basecubes))
         removed = [p for p in origcubes if not p in self.config._cubes]
-        if not cube in removed:
+        if not cube in removed and cube in origcubes:
             raise ConfigurationError("can't remove cube %s, "
                                      "used as a dependency" % cube)
         return removed
@@ -488,7 +491,7 @@ class ConfigurationProblem(object):
                     try:
                         oper, version = constraint.split()
                         self.reverse_dependencies[name].add( (oper, version, cube) )
-                    except:
+                    except Exception:
                         self.warnings.append(
                             'cube %s depends on %s but constraint badly '
                             'formatted: %s' % (cube, name, constraint))

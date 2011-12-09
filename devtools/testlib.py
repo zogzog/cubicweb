@@ -233,7 +233,7 @@ class CubicWebTC(TestCase):
         # web resources
         try:
             config.global_set_option('embed-allowed', re.compile('.*'))
-        except: # not in server only configuration
+        except Exception: # not in server only configuration
             pass
 
     #XXX this doesn't need to a be classmethod anymore
@@ -274,7 +274,7 @@ class CubicWebTC(TestCase):
     def session(self):
         """return current server side session (using default manager account)"""
         session = self.repo._sessions[self.cnx.sessionid]
-        session.set_pool()
+        session.set_cnxset()
         return session
 
     @property
@@ -458,7 +458,7 @@ class CubicWebTC(TestCase):
         try:
             return self.cnx.commit()
         finally:
-            self.session.set_pool() # ensure pool still set after commit
+            self.session.set_cnxset() # ensure cnxset still set after commit
 
     @nocoverage
     def rollback(self):
@@ -467,7 +467,7 @@ class CubicWebTC(TestCase):
         except dbapi.ProgrammingError:
             pass # connection closed
         finally:
-            self.session.set_pool() # ensure pool still set after commit
+            self.session.set_cnxset() # ensure cnxset still set after commit
 
     # # server side db api #######################################################
 
@@ -475,7 +475,7 @@ class CubicWebTC(TestCase):
         if eid_key is not None:
             warn('[3.8] eid_key is deprecated, you can safely remove this argument',
                  DeprecationWarning, stacklevel=2)
-        self.session.set_pool()
+        self.session.set_cnxset()
         return self.session.execute(rql, args)
 
     # other utilities #########################################################
@@ -493,12 +493,16 @@ class CubicWebTC(TestCase):
 
     def assertModificationDateGreater(self, entity, olddate):
         entity.cw_attr_cache.pop('modification_date', None)
-        self.failUnless(entity.modification_date > olddate)
+        self.assertTrue(entity.modification_date > olddate)
 
     def assertItemsEqual(self, it1, it2, *args, **kwargs):
         it1 = set(getattr(x, 'eid', x) for x in it1)
         it2 = set(getattr(x, 'eid', x) for x in it2)
         super(CubicWebTC, self).assertItemsEqual(it1, it2, *args, **kwargs)
+
+    def assertMessageEqual(self, req, params, msg):
+        msg = req.session.data[params['_cwmsgid']]
+        self.assertEqual(msg, msg)
 
     # workflow utilities #######################################################
 
@@ -568,6 +572,8 @@ class CubicWebTC(TestCase):
             if views:
                 try:
                     view = viewsvreg._select_best(views, req, rset=rset)
+                    if view is None:
+                        raise NoSelectableObject((req,), {'rset':rset}, views)
                     if view.linkable():
                         yield view
                     else:
@@ -722,7 +728,7 @@ class CubicWebTC(TestCase):
         self.assertEqual(session.login, origsession.login)
         self.assertEqual(session.anonymous_session, False)
         self.assertEqual(path, 'view')
-        self.assertEqual(params, {'__message': 'welcome %s !' % req.user.login})
+        self.assertMessageEqual(req, params, 'welcome %s !' % req.user.login)
 
     def assertAuthFailure(self, req, nbsessions=0):
         self.app.connect(req)
@@ -806,15 +812,13 @@ class CubicWebTC(TestCase):
         """
         try:
             output = viewfunc(**kwargs)
-        except (SystemExit, KeyboardInterrupt):
-            raise
-        except:
+        except Exception:
             # hijack exception: generative tests stop when the exception
             # is not an AssertionError
             klass, exc, tcbk = sys.exc_info()
             try:
                 msg = '[%s in %s] %s' % (klass, view.__regid__, exc)
-            except:
+            except Exception:
                 msg = '[%s in %s] undisplayable exception' % (klass, view.__regid__)
             raise AssertionError, msg, tcbk
         return self._check_html(output, view, template)
@@ -856,9 +860,7 @@ class CubicWebTC(TestCase):
     def assertWellFormed(self, validator, content, context=None):
         try:
             return validator.parse_string(content)
-        except (SystemExit, KeyboardInterrupt):
-            raise
-        except:
+        except Exception:
             # hijack exception: generative tests stop when the exception
             # is not an AssertionError
             klass, exc, tcbk = sys.exc_info()
@@ -870,7 +872,7 @@ class CubicWebTC(TestCase):
 
             try:
                 str_exc = str(exc)
-            except:
+            except Exception:
                 str_exc = 'undisplayable exception'
             msg += str_exc
             if content is not None:
@@ -1165,34 +1167,34 @@ def not_selected(vreg, appobject):
         pass
 
 
-def vreg_instrumentize(testclass):
-    # XXX broken
-    from cubicweb.devtools.apptest import TestEnvironment
-    env = testclass._env = TestEnvironment('data', configcls=testclass.configcls)
-    for reg in env.vreg.values():
-        reg._selected = {}
-        try:
-            orig_select_best = reg.__class__.__orig_select_best
-        except:
-            orig_select_best = reg.__class__._select_best
-        def instr_select_best(self, *args, **kwargs):
-            selected = orig_select_best(self, *args, **kwargs)
-            try:
-                self._selected[selected.__class__] += 1
-            except KeyError:
-                self._selected[selected.__class__] = 1
-            except AttributeError:
-                pass # occurs on reg used to restore database
-            return selected
-        reg.__class__._select_best = instr_select_best
-        reg.__class__.__orig_select_best = orig_select_best
+# def vreg_instrumentize(testclass):
+#     # XXX broken
+#     from cubicweb.devtools.apptest import TestEnvironment
+#     env = testclass._env = TestEnvironment('data', configcls=testclass.configcls)
+#     for reg in env.vreg.values():
+#         reg._selected = {}
+#         try:
+#             orig_select_best = reg.__class__.__orig_select_best
+#         except Exception:
+#             orig_select_best = reg.__class__._select_best
+#         def instr_select_best(self, *args, **kwargs):
+#             selected = orig_select_best(self, *args, **kwargs)
+#             try:
+#                 self._selected[selected.__class__] += 1
+#             except KeyError:
+#                 self._selected[selected.__class__] = 1
+#             except AttributeError:
+#                 pass # occurs on reg used to restore database
+#             return selected
+#         reg.__class__._select_best = instr_select_best
+#         reg.__class__.__orig_select_best = orig_select_best
 
 
-def print_untested_objects(testclass, skipregs=('hooks', 'etypes')):
-    for regname, reg in testclass._env.vreg.iteritems():
-        if regname in skipregs:
-            continue
-        for appobjects in reg.itervalues():
-            for appobject in appobjects:
-                if not reg._selected.get(appobject):
-                    print 'not tested', regname, appobject
+# def print_untested_objects(testclass, skipregs=('hooks', 'etypes')):
+#     for regname, reg in testclass._env.vreg.iteritems():
+#         if regname in skipregs:
+#             continue
+#         for appobjects in reg.itervalues():
+#             for appobject in appobjects:
+#                 if not reg._selected.get(appobject):
+#                     print 'not tested', regname, appobject

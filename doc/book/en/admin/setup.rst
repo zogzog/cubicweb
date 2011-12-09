@@ -91,10 +91,10 @@ list of available cubes using ``apt-cache search cubicweb`` or at the
   :ref:`cubicweb with other database <DatabaseInstallation>` using the following
   virtual packages :
 
-  * `cubicweb-postgresql-support` contains the necessary dependency for
+  * `cubicweb-postgresql-support` contains the necessary dependencies for
     using :ref:`cubicweb with postgresql datatabase <PostgresqlConfiguration>`
 
-  * `cubicweb-mysql-support` contains the necessary dependency for using
+  * `cubicweb-mysql-support` contains the necessary dependencies for using
     :ref:`cubicweb with mysql database <MySqlConfiguration>`.
 
 .. _`list of sources`: http://wiki.debian.org/SourcesList
@@ -144,9 +144,9 @@ managing python packages and their dependencies. It is fully compatible with
 .. _`virtualenv`: http://virtualenv.openplans.org/
 
 A working compilation chain is needed to build the modules that include C
-extensions. If you definitively wont, installing `Lxml
-<http://codespeak.net/lxml/>`_, `Twisted <http://twistedmatrix.com/trac/>`_ and
-`libgecode <http://www.gecode.org/>`_ will help.
+extensions. If you definitively wont, installing `Lxml <http://lxml.de/>`_,
+`Twisted Web <http://twistedmatrix.com/trac/wiki/Downloads/>`_ and `libgecode
+<http://www.gecode.org/>`_ will help.
 
 To install |cubicweb| and its dependencies, just run::
 

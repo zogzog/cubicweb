@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -387,7 +387,7 @@ class MagicSearchComponent(Component):
             procname, query = uquery.split(':', 1)
             proc = self.by_name[procname.strip().lower()]
             uquery = query.strip()
-        except:
+        except Exception:
             # use processor chain
             unauthorized = None
             for proc in self.processors:

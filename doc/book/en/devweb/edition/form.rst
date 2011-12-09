@@ -48,9 +48,10 @@ discover available forms (or application objects in general).
   'sparql': [<class 'cubicweb.web.views.sparql.SparqlForm'>]}
 
 
-The two most important form families here (for all pracitcal purposes)
-are `base` and `edition`. Most of the time one wants alterations of
-the AutomaticEntityForm (from the `edition` category).
+The two most important form families here (for all practical purposes) are `base`
+and `edition`. Most of the time one wants alterations of the
+:class:`AutomaticEntityForm` to generate custom forms to handle edition of an
+entity.
 
 The Automatic Entity Form
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -213,6 +214,158 @@ trivial. Then we add the relevant version to the initial vocabulary.
 Here, given a project eid, we complete the vocabulary with all
 unpublished versions defined in the project (sorted by number) for
 which the current user is allowed to establish the relation.
+
+
+Building self-posted form with custom fields/widgets
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Sometimes you want a form that is not related to entity edition. For those,
+you'll have to handle form posting by yourself. Here is a complete example on how
+to achieve this (and more).
+
+Imagine you want a form that selects a month period. There are no proper
+field/widget to handle this in CubicWeb, so let's start by defining them:
+
+.. sourcecode:: python
+
+    # let's have the whole import list at the beginning, even those necessary for
+    # subsequent snippets
+    from logilab.common import date
+    from logilab.mtconverter import xml_escape
+    from cubicweb.view import View
+    from cubicweb.selectors import match_kwargs
+    from cubicweb.web import RequestError, ProcessFormError
+    from cubicweb.web import formfields as fields, formwidgets as wdgs
+    from cubicweb.web.views import forms, calendar
+
+    class MonthSelect(wdgs.Select):
+        """Custom widget to display month and year. Expect value to be given as a
+        date instance.
+        """
+
+        def format_value(self, form, field, value):
+            return u'%s/%s' % (value.year, value.month)
+
+        def process_field_data(self, form, field):
+            val = super(MonthSelect, self).process_field_data(form, field)
+            try:
+                year, month = val.split('/')
+                year = int(year)
+                month = int(month)
+                return date.date(year, month, 1)
+            except ValueError:
+                raise ProcessFormError(
+                    form._cw._('badly formated date string %s') % val)
+
+
+    class MonthPeriodField(fields.CompoundField):
+        """custom field composed of two subfields, 'begin_month' and 'end_month'.
+
+        It expects to be used on form that has 'mindate' and 'maxdate' in its
+        extra arguments, telling the range of month to display.
+        """
+
+        def __init__(self, *args, **kwargs):
+            kwargs.setdefault('widget', wdgs.IntervalWidget())
+            super(MonthPeriodField, self).__init__(
+                [fields.StringField(name='begin_month',
+                                    choices=self.get_range, sort=False,
+                                    value=self.get_mindate,
+                                    widget=MonthSelect()),
+                 fields.StringField(name='end_month',
+                                    choices=self.get_range, sort=False,
+                                    value=self.get_maxdate,
+                                    widget=MonthSelect())], *args, **kwargs)
+
+        @staticmethod
+        def get_range(form, field):
+            mindate = date.todate(form.cw_extra_kwargs['mindate'])
+            maxdate = date.todate(form.cw_extra_kwargs['maxdate'])
+            assert mindate <= maxdate
+            _ = form._cw._
+            months = []
+            while mindate <= maxdate:
+                label = '%s %s' % (_(calendar.MONTHNAMES[mindate.month - 1]),
+                                   mindate.year)
+                value = field.widget.format_value(form, field, mindate)
+                months.append( (label, value) )
+                mindate = date.next_month(mindate)
+            return months
+
+        @staticmethod
+        def get_mindate(form, field):
+            return form.cw_extra_kwargs['mindate']
+
+        @staticmethod
+        def get_maxdate(form, field):
+            return form.cw_extra_kwargs['maxdate']
+
+        def process_posted(self, form):
+            for field, value in super(MonthPeriodField, self).process_posted(form):
+                if field.name == 'end_month':
+                    value = date.last_day(value)
+                yield field, value
+
+
+Here we first define a widget that will be used to select the beginning and the
+end of the period, displaying months like '<month> YYYY' but using 'YYYY/mm' as
+actual value.
+
+We then define a field that will actually hold two fields, one for the beginning
+and another for the end of the period. Each subfield uses the widget we defined
+earlier, and the outer field itself uses the standard
+:class:`IntervalWidget`. The field adds some logic:
+
+* a vocabulary generation function `get_range`, used to populate each sub-field
+
+* two 'value' functions `get_mindate` and `get_maxdate`, used to tell to
+  subfields which value they should consider on form initialization
+
+* overriding of `process_posted`, called when the form is being posted, so that
+  the end of the period is properly set to the last day of the month.
+
+Now, we can define a very simple form:
+
+.. sourcecode:: python
+
+    class MonthPeriodSelectorForm(forms.FieldsForm):
+        __regid__ = 'myform'
+        __select__ = match_kwargs('mindate', 'maxdate')
+
+        form_buttons = [wdgs.SubmitButton()]
+        form_renderer_id = 'onerowtable'
+        period = MonthPeriodField()
+
+
+where we simply add our field, set a submit button and use a very simple renderer
+(try others!). Also we specify a selector that ensures form will have arguments
+necessary to our field.
+
+Now, we need a view that will wrap the form and handle post when it occurs,
+simply displaying posted values in the page:
+
+.. sourcecode:: python
+
+    class SelfPostingForm(View):
+        __regid__ = 'myformview'
+
+        def call(self):
+            mindate, maxdate = date.date(2010, 1, 1), date.date(2012, 1, 1)
+            form = self._cw.vreg['forms'].select(
+                'myform', self._cw, mindate=mindate, maxdate=maxdate, action='')
+            try:
+                posted = form.process_posted()
+                self.w(u'<p>posted values %s</p>' % xml_escape(repr(posted)))
+            except RequestError: # no specified period asked
+                pass
+            form.render(w=self.w, formvalues=self._cw.form)
+
+
+Notice usage of the :meth:`process_posted` method, that will return a dictionary
+of typed values (because they have been processed by the field). In our case, when
+the form is posted you should see a dictionary with 'begin_month' and 'end_month'
+as keys with the selected dates as value (as a python `date` object).
+
 
 APIs
 ~~~~

@@ -14,4 +14,6 @@ syntax: regexp
 .*/data/database/.*\.sqlite
 .*/data/database/.*\.config
 .*/data/database/tmpdb.*
-
+^doc/html/
+^doc/doctrees/
+^doc/book/en/devweb/js_api/

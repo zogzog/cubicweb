@@ -64,7 +64,7 @@ class ClickAndEditFormTC(ReleditMixinTC, CubicWebTC):
 <input name="__reledit|reload" type="hidden" value="false" />
 <input name="__reledit|role" type="hidden" value="subject" />
 <input name="__reledit|eid" type="hidden" value="%(eid)s" />
-<input name="_cw_edited_fields:%(eid)s" type="hidden" value="title-subject,__type" />
+<input name="_cw_entity_fields:%(eid)s" type="hidden" value="title-subject,__type" />
 <fieldset class="default">
 <table class="">
 <tr class="title_subject_row">
@@ -97,7 +97,7 @@ class ClickAndEditFormTC(ReleditMixinTC, CubicWebTC):
 <input name="__reledit|reload" type="hidden" value="false" />
 <input name="__reledit|role" type="hidden" value="subject" />
 <input name="__reledit|eid" type="hidden" value="%(eid)s" />
-<input name="_cw_edited_fields:A" type="hidden" value="title-subject,rss_url-subject,__type,description-subject" />
+<input name="_cw_entity_fields:A" type="hidden" value="title-subject,rss_url-subject,__type,description-subject" />
 <fieldset class="default">
 <table class="attributeForm">
 <tr class="title_subject_row">
@@ -141,7 +141,7 @@ class ClickAndEditFormTC(ReleditMixinTC, CubicWebTC):
 <input name="__reledit|reload" type="hidden" value="false" />
 <input name="__reledit|role" type="hidden" value="subject" />
 <input name="__reledit|eid" type="hidden" value="%(eid)s" />
-<input name="_cw_edited_fields:%(eid)s" type="hidden" value="manager-subject,__type" />
+<input name="_cw_entity_fields:%(eid)s" type="hidden" value="manager-subject,__type" />
 <fieldset class="default">
 <table class="">
 <tr class="manager_subject_row">

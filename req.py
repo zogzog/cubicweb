@@ -29,7 +29,7 @@ from logilab.common.decorators import cached
 from logilab.common.deprecation import deprecated
 from logilab.common.date import ustrftime, strptime, todate, todatetime
 
-from cubicweb import Unauthorized, RegistryException, typed_eid
+from cubicweb import Unauthorized, NoSelectableObject, typed_eid
 from cubicweb.rset import ResultSet
 
 ONESECOND = timedelta(0, 1, 0)
@@ -66,7 +66,7 @@ class RequestSessionBase(object):
         self.vreg = vreg
         try:
             encoding = vreg.property_value('ui.encoding')
-        except: # no vreg or property not registered
+        except Exception: # no vreg or property not registered
             encoding = 'utf-8'
         self.encoding = encoding
         # cache result of execution for (rql expr / eids),
@@ -336,7 +336,7 @@ class RequestSessionBase(object):
             initargs.update(kwargs)
         try:
             view =  self.vreg[__registry].select(__vid, self, rset=rset, **initargs)
-        except RegistryException:
+        except NoSelectableObject:
             if __fallback_oid is None:
                 raise
             view =  self.vreg[__registry].select(__fallback_oid, self,
@@ -409,7 +409,7 @@ class RequestSessionBase(object):
 
     # abstract methods to override according to the web front-end #############
 
-    def describe(self, eid):
+    def describe(self, eid, asdict=False):
         """return a tuple (type, sourceuri, extid) for the entity with id <eid>"""
         raise NotImplementedError
 

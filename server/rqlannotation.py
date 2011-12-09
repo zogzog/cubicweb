@@ -109,8 +109,9 @@ def _annotate_select(annotator, rqlst):
                         ostinfo = rhs.children[0].variable.stinfo
                     else:
                         ostinfo = lhs.variable.stinfo
-                    if not any(orel for orel in ostinfo['relations']
-                               if orel.optional and orel is not rel):
+                    if not (ostinfo.get('optcomparisons') or
+                            any(orel for orel in ostinfo['relations']
+                                if orel.optional and orel is not rel)):
                         break
             if rschema.final or (onlhs and rschema.inlined):
                 if rschema.type != 'has_text':
@@ -202,8 +203,8 @@ def _select_principal(scope, relations, _sort=lambda x:x):
     # since introduced duplicates will be removed
     if scope.stmt.distinct and diffscope_rels:
         return iter(_sort(diffscope_rels)).next()
-    # XXX  could use a relation for a different scope if it can't generate
-    # duplicates, so we would have to check cardinality
+    # XXX could use a relation from a different scope if it can't generate
+    # duplicates, so we should have to check cardinality
     raise CantSelectPrincipal()
 
 def _select_main_var(relations):
@@ -211,16 +212,22 @@ def _select_main_var(relations):
     relation for the rhs variable
     """
     principal = None
+    others = []
     # sort for test predictability
     for rel in sorted(relations, key=lambda x: (x.children[0].name, x.r_type)):
         # only equality relation with a variable as rhs may be principal
         if rel.operator() not in ('=', 'IS') \
                or not isinstance(rel.children[1].children[0], VariableRef) or rel.neged(strict=True):
             continue
+        if rel.optional:
+            others.append(rel)
+            continue
         if rel.scope is rel.stmt:
             return rel
         principal = rel
     if principal is None:
+        if others:
+            return others[0]
         raise BadRQLQuery('unable to find principal in %s' % ', '.join(
             r.as_string() for r in relations))
     return principal

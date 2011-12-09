@@ -59,11 +59,11 @@ The authentication process is a ballet involving a few dancers:
       other credentials elements (calling `authentication_information`),
       giving the request object each time
 
-      * the default retriever (bizarrely named
-        `LoginPaswordRetreiver`) will in turn defer login and password
-        fetching to the request object (which, depending on the
-        authentication mode (`cookie` or `http`), will do the
-        appropriate things and return a login and a password)
+      * the default retriever (oddly named `LoginPasswordRetreiver`)
+        will in turn defer login and password fetching to the request
+        object (which, depending on the authentication mode (`cookie`
+        or `http`), will do the appropriate things and return a login
+        and a password)
 
     * the authentication manager, on success, asks the `Repository`
       object to connect with the found credentials (using `connect`)
@@ -74,10 +74,10 @@ The authentication process is a ballet involving a few dancers:
         from which a regular `Session` object is made; it returns the
         session id
 
-        * the source in turn will defer work to an authentifier class
-          that define the ultimate `authenticate` method (for instance
-          the native source will query the database against the
-          provided credentials)
+        * the source in turn will delegate work to an authentifier
+          class that defines the ultimate `authenticate` method (for
+          instance the native source will query the database against
+          the provided credentials)
 
     * the authentication manager, on success, will call back _all_
       retrievers with `authenticated` and return its authentication
@@ -99,9 +99,9 @@ We invented a scenario where it makes sense to have a new plugin in
 each side: some middleware will do pre-authentication and under the
 right circumstances add a new HTTP `x-foo-user` header to the query
 before it reaches the CubicWeb instance. For a concrete example of
-this, see the `apachekerberos`_ cube.
+this, see the `trustedauth`_ cube.
 
-.. _`apachekerberos`: http://www.cubicweb.org/project/cubicweb-apachekerberos
+.. _`trustedauth`: http://www.cubicweb.org/project/cubicweb-trustedauth
 
 Repository authentication plugins
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

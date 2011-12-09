@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -70,7 +70,7 @@ class AddRelationView(component.EditRelationMixIn, View):
         if getattr(self, 'etype', None):
             rset = entity.unrelated(self.rtype, self.etype, role(self),
                                     ordermethod='fetch_order')
-            self.pagination(self._cw, rset, w=self.w)
+            self.paginate(self._cw, rset=rset, w=self.w)
             return rset.entities()
         super(AddRelationView, self).unrelated_entities(self)
 

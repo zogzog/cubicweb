@@ -56,6 +56,7 @@ from logilab.common.date import utcdatetime, utctime
 from logilab.database import FunctionDescr, SQL_FUNCTIONS_REGISTRY
 
 from rql import BadRQLQuery, CoercionError
+from rql.utils import common_parent
 from rql.stmts import Union, Select
 from rql.nodes import (SortTerm, VariableRef, Constant, Function, Variable, Or,
                        Not, Comparison, ColumnAlias, Relation, SubQuery, Exists)
@@ -669,7 +670,7 @@ def extract_fake_having_terms(having):
             else:
                 tocheck.append(compnode)
         # tocheck hold a set of comparison not implying an aggregat function
-        # put them in fakehaving if the don't share an Or node as ancestor
+        # put them in fakehaving if they don't share an Or node as ancestor
         # with another comparison containing an aggregat function
         for compnode in tocheck:
             parents = set()
@@ -784,7 +785,20 @@ class SQLGenerator(object):
         sorts = select.orderby
         groups = select.groupby
         having = select.having
-        morerestr = extract_fake_having_terms(having)
+        for restr in extract_fake_having_terms(having):
+            scope = None
+            for vref in restr.get_nodes(VariableRef):
+                vscope = vref.variable.scope
+                if vscope is select:
+                    continue # ignore select scope, so restriction is added to
+                             # the inner most scope possible
+                if scope is None:
+                    scope = vscope
+                elif vscope is not scope:
+                    scope = common_parent(scope, vscope).scope
+            if scope is None:
+                scope = select
+            scope.add_restriction(restr)
         # remember selection, it may be changed and have to be restored
         origselection = select.selection[:]
         # check if the query will have union subquery, if it need sort term
@@ -829,7 +843,7 @@ class SQLGenerator(object):
         self._in_wrapping_query = False
         self._state = state
         try:
-            sql = self._solutions_sql(select, morerestr, sols, distinct,
+            sql = self._solutions_sql(select, sols, distinct,
                                       needalias or needwrap)
             # generate groups / having before wrapping query selection to get
             # correct column aliases
@@ -900,15 +914,13 @@ class SQLGenerator(object):
                 except KeyError:
                     continue
 
-    def _solutions_sql(self, select, morerestr, solutions, distinct, needalias):
+    def _solutions_sql(self, select, solutions, distinct, needalias):
         sqls = []
         for solution in solutions:
             self._state.reset(solution)
             # visit restriction subtree
             if select.where is not None:
                 self._state.add_restriction(select.where.accept(self))
-            for restriction in morerestr:
-                self._state.add_restriction(restriction.accept(self))
             sql = [self._selection_sql(select.selection, distinct, needalias)]
             if self._state.restrictions:
                 sql.append('WHERE %s' % ' AND '.join(self._state.restrictions))
@@ -1226,35 +1238,47 @@ class SQLGenerator(object):
 
 
     def _visit_outer_join_inlined_relation(self, relation, rschema):
-        leftvar, leftconst, rightvar, rightconst = relation_info(relation)
-        assert not (leftconst and rightconst), "doesn't make sense"
-        if relation.optional != 'right':
-            leftvar, rightvar = rightvar, leftvar
-            leftconst, rightconst = rightconst, leftconst
-        outertype = 'FULL' if relation.optional == 'both' else 'LEFT'
-        leftalias = self._var_table(leftvar)
+        lhsvar, lhsconst, rhsvar, rhsconst = relation_info(relation)
+        assert not (lhsconst and rhsconst), "doesn't make sense"
         attr = 'eid' if relation.r_type == 'identity' else relation.r_type
-        lhs, rhs = relation.get_variable_parts()
+        lhsalias = self._var_table(lhsvar)
+        rhsalias = rhsvar and self._var_table(rhsvar)
         try:
-            lhssql = self._varmap['%s.%s' % (lhs.name, attr)]
+            lhssql = self._varmap['%s.%s' % (lhsvar.name, attr)]
         except KeyError:
-            lhssql = '%s.%s%s' % (self._var_table(lhs.variable), SQL_PREFIX, attr)
-        if rightvar is not None:
-            rightalias = self._var_table(rightvar)
-            if rightalias is None:
-                if rightconst is not None:
-                    # inlined relation with invariant as rhs
-                    condition = '%s=%s' % (lhssql, rightconst.accept(self))
-                    if relation.r_type != 'identity':
-                        condition = '(%s OR %s IS NULL)' % (condition, lhssql)
-                    if not leftvar.stinfo.get('optrelations'):
-                        return condition
-                    self._state.add_outer_join_condition(leftalias, condition)
-                return
-        if leftalias is None:
-            leftalias = leftvar._q_sql.split('.', 1)[0]
-        self._state.replace_tables_by_outer_join(
-            leftalias, rightalias, outertype, '%s=%s' % (lhssql, rhs.accept(self)))
+            if lhsalias is None:
+                lhssql = lhsconst.accept(self)
+            else:
+                lhssql = '%s.%s%s' % (lhsalias, SQL_PREFIX, attr)
+        condition = '%s=%s' % (lhssql, (rhsconst or rhsvar).accept(self))
+        # this is not a typo, rhs optional variable means lhs outer join and vice-versa
+        if relation.optional == 'left':
+            lhsvar, rhsvar = rhsvar, lhsvar
+            lhsconst, rhsconst = rhsconst, lhsconst
+            lhsalias, rhsalias = rhsalias, lhsalias
+            outertype = 'LEFT'
+        elif relation.optional == 'both':
+            outertype = 'FULL'
+        else:
+            outertype = 'LEFT'
+        if rhsalias is None:
+            if rhsconst is not None:
+                # inlined relation with invariant as rhs
+                if relation.r_type != 'identity':
+                    condition = '(%s OR %s IS NULL)' % (condition, lhssql)
+                if not lhsvar.stinfo.get('optrelations'):
+                    return condition
+                self._state.add_outer_join_condition(lhsalias, condition)
+            return
+        if lhsalias is None:
+            if lhsconst is not None and not rhsvar.stinfo.get('optrelations'):
+                return condition
+            lhsalias = lhsvar._q_sql.split('.', 1)[0]
+        if lhsalias == rhsalias:
+            self._state.add_outer_join_condition(lhsalias, condition)
+        else:
+            self._state.replace_tables_by_outer_join(
+                lhsalias, rhsalias, outertype, condition)
         return ''
 
     def _visit_var_attr_relation(self, relation, rhs_vars):
@@ -1280,9 +1304,16 @@ class SQLGenerator(object):
                                                relation.r_type)
                 try:
                     self._state.ignore_varmap = True
-                    return '%s%s' % (lhssql, relation.children[1].accept(self))
+                    sql = lhssql + relation.children[1].accept(self)
                 finally:
                     self._state.ignore_varmap = False
+                if relation.optional == 'right':
+                    leftalias = self._var_table(principal.children[0].variable)
+                    rightalias = self._var_table(relation.children[0].variable)
+                    self._state.replace_tables_by_outer_join(
+                        leftalias, rightalias, 'LEFT', sql)
+                    return ''
+                return sql
         return ''
 
     def _visit_attribute_relation(self, rel):
@@ -1360,29 +1391,63 @@ class SQLGenerator(object):
 
     def visit_comparison(self, cmp):
         """generate SQL for a comparison"""
+        optional = getattr(cmp, 'optional', None) # rql < 0.30
         if len(cmp.children) == 2:
-            # XXX occurs ?
+            # simplified expression from HAVING clause
             lhs, rhs = cmp.children
         else:
             lhs = None
             rhs = cmp.children[0]
+            assert not optional
+        sql = None
         operator = cmp.operator
         if operator in ('LIKE', 'ILIKE'):
             if operator == 'ILIKE' and not self.dbhelper.ilike_support:
                 operator = ' LIKE '
             else:
                 operator = ' %s ' % operator
+        elif operator == 'REGEXP':
+            sql = ' %s' % self.dbhelper.sql_regexp_match_expression(rhs.accept(self))
         elif (operator == '=' and isinstance(rhs, Constant)
               and rhs.eval(self._args) is None):
             if lhs is None:
-                return ' IS NULL'
-            return '%s IS NULL' % lhs.accept(self)
+                sql = ' IS NULL'
+            else:
+                sql = '%s IS NULL' % lhs.accept(self)
         elif isinstance(rhs, Function) and rhs.name == 'IN':
             assert operator == '='
             operator = ' '
-        if lhs is None:
-            return '%s%s'% (operator, rhs.accept(self))
-        return '%s%s%s'% (lhs.accept(self), operator, rhs.accept(self))
+        if sql is None:
+            if lhs is None:
+                sql = '%s%s'% (operator, rhs.accept(self))
+            else:
+                sql = '%s%s%s'% (lhs.accept(self), operator, rhs.accept(self))
+        if optional is None:
+            return sql
+        leftvars = cmp.children[0].get_nodes(VariableRef)
+        assert len(leftvars) == 1
+        if leftvars[0].variable.stinfo['attrvar'] is None:
+            assert isinstance(leftvars[0].variable, ColumnAlias)
+            leftalias = leftvars[0].variable._q_sqltable
+        else:
+            leftalias = self._var_table(leftvars[0].variable.stinfo['attrvar'])
+        rightvars = cmp.children[1].get_nodes(VariableRef)
+        assert len(rightvars) == 1
+        if rightvars[0].variable.stinfo['attrvar'] is None:
+            assert isinstance(rightvars[0].variable, ColumnAlias)
+            rightalias = rightvars[0].variable._q_sqltable
+        else:
+            rightalias = self._var_table(rightvars[0].variable.stinfo['attrvar'])
+        if optional == 'right':
+            self._state.replace_tables_by_outer_join(
+                leftalias, rightalias, 'LEFT', sql)
+        elif optional == 'left':
+            self._state.replace_tables_by_outer_join(
+                rightalias, leftalias, 'LEFT', sql)
+        else:
+            self._state.replace_tables_by_outer_join(
+                leftalias, rightalias, 'FULL', sql)
+        return ''
 
     def visit_mathexpression(self, mexpr):
         """generate SQL for a mathematic expression"""
@@ -1396,6 +1461,10 @@ class SQLGenerator(object):
         except CoercionError:
             pass
         return '(%s %s %s)'% (lhs.accept(self), operator, rhs.accept(self))
+
+    def visit_unaryexpression(self, uexpr):
+        """generate SQL for a unary expression"""
+        return '%s%s'% (uexpr.operator, uexpr.children[0].accept(self))
 
     def visit_function(self, func):
         """generate SQL name for a function"""
@@ -1422,15 +1491,17 @@ class SQLGenerator(object):
         if constant.type is None:
             return 'NULL'
         value = constant.value
-        if constant.type == 'Int' and  isinstance(constant.parent, SortTerm):
+        if constant.type == 'etype':
             return value
+        if constant.type == 'Int': # XXX Float?
+            return str(value)
         if constant.type in ('Date', 'Datetime'):
             rel = constant.relation()
             if rel is not None:
                 rel._q_needcast = value
             return self.keyword_map[value]()
         if constant.type == 'Boolean':
-            value = self.dbhelper.boolean_value(value)
+            return str(self.dbhelper.boolean_value(value))
         if constant.type == 'Substitute':
             try:
                 # we may found constant from simplified var in varmap
@@ -1584,8 +1655,14 @@ class SQLGenerator(object):
             scope = self._state.scopes[var.scope]
             self._state.add_table(sql.split('.', 1)[0], scope=scope)
         except KeyError:
-            sql = '%s.%s%s' % (self._var_table(var), SQL_PREFIX, rtype)
-            #self._state.done.add(var.name)
+            # rtype may be an attribute relation when called from
+            # _visit_var_attr_relation.  take care about 'eid' rtype, since in
+            # some case we may use the `entities` table, so in that case we've
+            # to properly use variable'sql
+            if rtype == 'eid':
+                sql = var.accept(self)
+            else:
+                sql = '%s.%s%s' % (self._var_table(var), SQL_PREFIX, rtype)
         return sql
 
     def _linked_var_sql(self, variable):

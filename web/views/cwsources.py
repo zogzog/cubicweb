@@ -24,27 +24,40 @@ _ = unicode
 
 from itertools import repeat, chain
 
+from cubicweb import Unauthorized
 from cubicweb.selectors import is_instance, score_entity, match_user_groups
 from cubicweb.view import EntityView, StartupView
 from cubicweb.schema import META_RTYPES, VIRTUAL_RTYPES, display_name
 from cubicweb.web import uicfg, formwidgets as wdgs
-from cubicweb.web.views import tabs, actions
+from cubicweb.web.views import tabs, actions, ibreadcrumbs, add_etype_button
 
 
 _abaa = uicfg.actionbox_appearsin_addmenu
+# there are explicit 'add' buttons for those
 _abaa.tag_object_of(('CWSourceSchemaConfig', 'cw_schema', '*'), False)
 _abaa.tag_object_of(('CWSourceSchemaConfig', 'cw_for_source', '*'), False)
+_abaa.tag_object_of(('CWSourceSchemaConfig', 'cw_host_config_of', '*'), False)
 
 _afs = uicfg.autoform_section
-_afs.tag_attribute(('CWSource', 'synchronizing'), 'main', 'hidden')
 _afs.tag_object_of(('*', 'cw_for_source', 'CWSource'), 'main', 'hidden')
+
 _affk = uicfg.autoform_field_kwargs
 _affk.tag_attribute(('CWSource', 'parser'), {'widget': wdgs.TextInput})
 
 # source primary views #########################################################
 
 _pvs = uicfg.primaryview_section
+_pvs.tag_attribute(('CWSource', 'name'), 'hidden')
 _pvs.tag_object_of(('*', 'cw_for_source', 'CWSource'), 'hidden')
+_pvs.tag_object_of(('*', 'cw_host_config_of', 'CWSource'), 'hidden')
+
+_pvdc = uicfg.primaryview_display_ctrl
+_pvdc.tag_attribute(('CWSource', 'type'), {'vid': 'attribute'})# disable reledit
+
+_rc = uicfg.reledit_ctrl
+_rc.tag_attribute(('CWSource', 'config'), {'rvid': 'verbatimattr'})
+_rc.tag_attribute(('CWSourceHostConfig', 'config'), {'rvid': 'verbatimattr'})
+_rc.tag_attribute(('CWSourceSchemaConfig', 'options'), {'rvid': 'verbatimattr'})
 
 
 class CWSourcePrimaryView(tabs.TabbedPrimaryView):
@@ -56,6 +69,23 @@ class CWSourcePrimaryView(tabs.TabbedPrimaryView):
 class CWSourceMainTab(tabs.PrimaryTab):
     __regid__ = 'cwsource-main'
     __select__ = tabs.PrimaryTab.__select__ & is_instance('CWSource')
+
+    def render_entity_attributes(self, entity):
+        super(CWSourceMainTab, self).render_entity_attributes(entity)
+        self.w(add_etype_button(self._cw, 'CWSourceHostConfig',
+                                __linkto='cw_host_config_of:%s:subject' % entity.eid,
+                                __redirectpath=entity.rest_path()))
+        try:
+            hostconfig = self._cw.execute(
+                'Any X, XC, XH WHERE X cw_host_config_of S, S eid %(s)s, '
+                'X config XC, X match_host XH', {'s': entity.eid})
+        except Unauthorized:
+            pass
+        else:
+            if hostconfig:
+                self.w(u'<h3>%s</h3>' % self._cw._('CWSourceHostConfig_plural'))
+                self._cw.view('editable-table', hostconfig,
+                              displaycols=range(2), w=self.w)
 
 
 MAPPED_SOURCE_TYPES = set( ('pyrorql', 'datafeed') )
@@ -69,12 +99,9 @@ class CWSourceMappingTab(EntityView):
     def entity_call(self, entity):
         _ = self._cw._
         self.w('<h3>%s</h3>' % _('Entity and relation supported by this source'))
-        eschema = self._cw.vreg.schema.eschema('CWSourceSchemaConfig')
-        if eschema.has_perm(self._cw, 'add'):
-            self.w(u'<a href="%s" class="addButton right">%s</a>' % (
-                self._cw.build_url('add/%s' % eschema),
-                self._cw._('add a CWSourceSchemaConfig')))
-            self.w(u'<div class="clear"></div>')
+        self.w(add_etype_button(self._cw, 'CWSourceSchemaConfig',
+                                __linkto='cw_for_source:%s:subject' % entity.eid))
+        self.w(u'<div class="clear"></div>')
         rset = self._cw.execute(
             'Any X, SCH, XO ORDERBY ET WHERE X options XO, X cw_for_source S, S eid %(s)s, '
             'X cw_schema SCH, SCH is ET', {'s': entity.eid})
@@ -96,11 +123,11 @@ class CWSourceMappingTab(EntityView):
         checker = MAPPING_CHECKERS.get(entity.type, MappingChecker)(entity)
         checker.check()
         if (checker.errors or checker.warnings or checker.infos):
-                self.w('<h2>%s</h2>' % _('Detected problems'))
-                errors = zip(repeat(_('error')), checker.errors)
-                warnings = zip(repeat(_('warning')), checker.warnings)
-                infos = zip(repeat(_('warning')), checker.infos)
-                self.wview('pyvaltable', pyvalue=chain(errors, warnings, infos))
+            self.w('<h2>%s</h2>' % _('Detected problems'))
+            errors = zip(repeat(_('error')), checker.errors)
+            warnings = zip(repeat(_('warning')), checker.warnings)
+            infos = zip(repeat(_('warning')), checker.infos)
+            self.wview('pyvaltable', pyvalue=chain(errors, warnings, infos))
 
 
 class MappingChecker(object):
@@ -229,15 +256,20 @@ class ManageSourcesAction(actions.ManagersAction):
 
 class CWSourceManagementView(StartupView):
     __regid__ = 'cw.source-management'
-    rql = ('Any S, ST, SN ORDERBY SN WHERE S is CWSource, S name SN, S type ST')
+    rql = ('Any S, ST, SP, SD, SN ORDERBY SN WHERE S is CWSource, S name SN, S type ST, '
+           'S latest_retrieval SD, S parser SP')
     title = _('data sources management')
 
     def call(self, **kwargs):
         self.w('<h1>%s</h1>' % self._cw._(self.title))
-        eschema = self._cw.vreg.schema.eschema('CWSource')
-        if eschema.has_perm(self._cw, 'add'):
-            self.w(u'<a href="%s" class="addButton right">%s</a>' % (
-                self._cw.build_url('add/%s' % eschema),
-                self._cw._('add a CWSource')))
-            self.w(u'<div class="clear"></div>')
-        self.wview('table', self._cw.execute(self.rql), displaycols=range(2))
+        self.w(add_etype_button(self._cw, 'CWSource'))
+        self.w(u'<div class="clear"></div>')
+        self.wview('table', self._cw.execute(self.rql), displaycols=range(4))
+
+
+# breadcrumbs configuration ####################################################
+
+class CWsourceConfigIBreadCrumbsAdapter(ibreadcrumbs.IBreadCrumbsAdapter):
+    __select__ = is_instance('CWSourceHostConfig', 'CWSourceSchemaConfig')
+    def parent_entity(self):
+        return self.entity.cwsource

@@ -19,6 +19,7 @@
 
 from socket import gethostname
 
+from logilab.common.decorators import clear_cache
 from yams.schema import role_name
 
 from cubicweb import ValidationError
@@ -30,7 +31,10 @@ class SourceHook(hook.Hook):
     category = 'cw.sources'
 
 
+# repo sources synchronization #################################################
+
 class SourceAddedOp(hook.Operation):
+    entity = None # make pylint happy
     def postcommit_event(self):
         self.session.repo.add_source(self.entity)
 
@@ -51,7 +55,8 @@ class SourceAddedHook(SourceHook):
 
 
 class SourceRemovedOp(hook.Operation):
-    def precommit_event(self):
+    uri = None # make pylint happy
+    def postcommit_event(self):
         self.session.repo.remove_source(self.uri)
 
 class SourceRemovedHook(SourceHook):
@@ -64,25 +69,59 @@ class SourceRemovedHook(SourceHook):
         SourceRemovedOp(self._cw, uri=self.entity.name)
 
 
-class SourceUpdatedOp(hook.DataOperationMixIn, hook.Operation):
+class SourceConfigUpdatedOp(hook.DataOperationMixIn, hook.Operation):
 
     def precommit_event(self):
         self.__processed = []
         for source in self.get_data():
-            conf = source.repo_source.check_config(source)
-            self.__processed.append( (source, conf) )
+            if not self.session.deleted_in_transaction(source.eid):
+                conf = source.repo_source.check_config(source)
+                self.__processed.append( (source, conf) )
 
     def postcommit_event(self):
         for source, conf in self.__processed:
             source.repo_source.update_config(source, conf)
 
+
+class SourceRenamedOp(hook.LateOperation):
+    oldname = newname = None # make pylint happy
+
+    def precommit_event(self):
+        source = self.session.repo.sources_by_uri[self.oldname]
+        if source.copy_based_source:
+            sql = 'UPDATE entities SET asource=%(newname)s WHERE asource=%(oldname)s'
+        else:
+            sql = 'UPDATE entities SET source=%(newname)s, asource=%(newname)s WHERE source=%(oldname)s'
+        self.session.system_sql(sql, {'oldname': self.oldname,
+                                      'newname': self.newname})
+
+    def postcommit_event(self):
+        repo = self.session.repo
+        # XXX race condition
+        source = repo.sources_by_uri.pop(self.oldname)
+        source.uri = self.newname
+        source.public_config['uri'] = self.newname
+        repo.sources_by_uri[self.newname] = source
+        repo._type_source_cache.clear()
+        clear_cache(repo, 'source_defs')
+        if not source.copy_based_source:
+            repo._extid_cache.clear()
+            repo._clear_planning_caches()
+            for cnxset in repo.cnxsets:
+                cnxset.source_cnxs[self.oldname] = cnxset.source_cnxs.pop(self.oldname)
+
+
 class SourceUpdatedHook(SourceHook):
     __regid__ = 'cw.sources.configupdate'
     __select__ = SourceHook.__select__ & is_instance('CWSource')
-    events = ('after_update_entity',)
+    events = ('before_update_entity',)
     def __call__(self):
         if 'config' in self.entity.cw_edited:
-            SourceUpdatedOp.get_instance(self._cw).add_data(self.entity)
+            SourceConfigUpdatedOp.get_instance(self._cw).add_data(self.entity)
+        if 'name' in self.entity.cw_edited:
+            oldname, newname = self.entity.cw_edited.oldnewvalue('name')
+            SourceRenamedOp(self._cw, oldname=oldname, newname=newname)
+
 
 class SourceHostConfigUpdatedHook(SourceHook):
     __regid__ = 'cw.sources.hostconfigupdate'
@@ -94,21 +133,23 @@ class SourceHostConfigUpdatedHook(SourceHook):
                    not 'config' in self.entity.cw_edited:
                 return
             try:
-                SourceUpdatedOp.get_instance(self._cw).add_data(self.entity.cwsource)
+                SourceConfigUpdatedOp.get_instance(self._cw).add_data(self.entity.cwsource)
             except IndexError:
                 # XXX no source linked to the host config yet
                 pass
 
 
-# source mapping synchronization. Expect cw_for_source/cw_schema are immutable
-# relations (i.e. can't change from a source or schema to another).
+# source mapping synchronization ###############################################
+#
+# Expect cw_for_source/cw_schema are immutable relations (i.e. can't change from
+# a source or schema to another).
 
-class SourceMappingDeleteHook(SourceHook):
+class SourceMappingImmutableHook(SourceHook):
     """check cw_for_source and cw_schema are immutable relations
 
     XXX empty delete perms would be enough?
     """
-    __regid__ = 'cw.sources.delschemaconfig'
+    __regid__ = 'cw.sources.mapping.immutable'
     __select__ = SourceHook.__select__ & hook.match_rtype('cw_for_source', 'cw_schema')
     events = ('before_add_relation',)
     def __call__(self):

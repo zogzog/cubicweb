@@ -21,7 +21,9 @@ __docformat__ = "restructuredtext en"
 _ = unicode
 
 from yams.buildobjs import (EntityType, RelationType, RelationDefinition,
-                            SubjectRelation, String, Datetime, Password, Interval)
+                            SubjectRelation,
+                            String, TZDatetime, Datetime, Password, Interval,
+                            Boolean)
 from cubicweb.schema import (
     RQLConstraint, WorkflowableEntityType, ERQLExpression, RRQLExpression,
     PUB_SYSTEM_ENTITY_PERMS, PUB_SYSTEM_REL_PERMS, PUB_SYSTEM_ATTR_PERMS)
@@ -40,13 +42,7 @@ class CWUser(WorkflowableEntityType):
     upassword = Password(required=True) # password is a reserved word for mysql
     firstname = String(maxsize=64)
     surname   = String(maxsize=64)
-    last_login_time  = Datetime(description=_('last connection date'))
-    # allowing an email to be the primary email of multiple entities is necessary for
-    # test at least :-/
-    primary_email = SubjectRelation('EmailAddress', cardinality='??',
-                                    description=_('email address to use for notification'))
-    use_email     = SubjectRelation('EmailAddress', cardinality='*?', composite='subject')
-
+    last_login_time = TZDatetime(description=_('last connection date'))
     in_group = SubjectRelation('CWGroup', cardinality='+*',
                                constraints=[RQLConstraint('NOT O name "owners"')],
                                description=_('groups grant permissions to the user'))
@@ -70,17 +66,35 @@ class EmailAddress(EntityType):
 to indicate which is the preferred form.'))
 
 class use_email(RelationType):
-    """ """
+    fulltext_container = 'subject'
+
+
+class use_email_relation(RelationDefinition):
+    """user's email account"""
+    name = "use_email"
     __permissions__ = {
         'read':   ('managers', 'users', 'guests',),
         'add':    ('managers', RRQLExpression('U has_update_permission S'),),
         'delete': ('managers', RRQLExpression('U has_update_permission S'),),
         }
-    fulltext_container = 'subject'
+    subject = "CWUser"
+    object = "EmailAddress"
+    cardinality = '*?'
+    composite = 'subject'
 
-class primary_email(RelationType):
+
+class primary_email(RelationDefinition):
     """the prefered email"""
-    __permissions__ = use_email.__permissions__
+    __permissions__ = {
+        'read':   ('managers', 'users', 'guests',),
+        'add':    ('managers', RRQLExpression('U has_update_permission S'),),
+        'delete': ('managers', RRQLExpression('U has_update_permission S'),),
+        }
+    subject = "CWUser"
+    object = "EmailAddress"
+    cardinality = '??'
+    constraints= [RQLConstraint('S use_email O')]
+
 
 class prefered_form(RelationType):
     __permissions__ = {
@@ -238,7 +252,7 @@ class CWCache(EntityType):
 
     name = String(required=True, unique=True, maxsize=128,
                   description=_('name of the cache'))
-    timestamp = Datetime(default='NOW')
+    timestamp = TZDatetime(default='NOW')
 
 
 class CWSource(EntityType):
@@ -264,7 +278,8 @@ class CWSource(EntityType):
     # may changes when sources are specified
     url = String(description=_('URLs from which content will be imported. You can put one url per line'))
     parser = String(description=_('parser to use to extract entities from content retrieved at given URLs.'))
-    latest_retrieval = Datetime(description=_('latest synchronization time'))
+    latest_retrieval = TZDatetime(description=_('latest synchronization time'))
+    in_synchronization = TZDatetime(description=_('start timestamp of the currently in synchronization, or NULL when no synchronization in progress.'))
 
 
 ENTITY_MANAGERS_PERMISSIONS = {
@@ -307,8 +322,8 @@ class cw_host_config_of(RelationDefinition):
 class cw_source(RelationDefinition):
     __permissions__ = {
         'read':   ('managers', 'users', 'guests'),
-        'add':    (),
-        'delete': (),
+        'add':    ('managers',),
+        'delete': ('managers',),
         }
     subject = '*'
     object = 'CWSource'
@@ -317,16 +332,30 @@ class cw_source(RelationDefinition):
 
 class CWSourceSchemaConfig(EntityType):
     __permissions__ = ENTITY_MANAGERS_PERMISSIONS
-    __unique_together__ = [('cw_for_source', 'cw_schema')]
     cw_for_source = SubjectRelation(
         'CWSource', inlined=True, cardinality='1*', composite='object',
         __permissions__=RELATION_MANAGERS_PERMISSIONS)
-    cw_schema = SubjectRelation(
-        ('CWEType', 'CWRType', 'CWAttribute', 'CWRelation'),
-        inlined=True, cardinality='1*', composite='object',
-        __permissions__=RELATION_MANAGERS_PERMISSIONS)
     options = String(description=_('allowed options depends on the source type'))
 
+
+class rtype_cw_schema(RelationDefinition):
+    __permissions__ = RELATION_MANAGERS_PERMISSIONS
+    name = 'cw_schema'
+    subject = 'CWSourceSchemaConfig'
+    object = ('CWEType', 'CWRType')
+    inlined = True
+    cardinality = '1*'
+    composite = 'object'
+    constraints = [RQLConstraint('NOT O final TRUE')]
+
+class rdef_cw_schema(RelationDefinition):
+    __permissions__ = RELATION_MANAGERS_PERMISSIONS
+    name = 'cw_schema'
+    subject = 'CWSourceSchemaConfig'
+    object = 'CWRelation'
+    inlined = True
+    cardinality = '1*'
+    composite = 'object'
 
 # "abtract" relation types, no definition in cubicweb itself ###################
 

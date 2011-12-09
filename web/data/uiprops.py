@@ -77,6 +77,17 @@ defaultLayoutMargin = '8px'
 headerBgColor = '#ff7700'
 headerBg = lazystr('%(headerBgColor)s url("banner.png") repeat-x top left')
 
+
+# scale 3:5 stranded
+# h1 { font-size:2em; }
+# h2 { font-size:1.61538em; }
+# h3 { font-size:1.23077em; }
+#
+# scale le corbusier */
+# h1 { font-size:2.11538em; }
+# h2 { font-size:1.61538em; }
+# h3 { font-size:1.30769em; }
+
 # h
 h1FontSize = '1.5em' # 18px
 h1Padding = '0 0 0.14em 0 '
@@ -154,3 +165,9 @@ msgBgColor = '#f8f8ee'
 infoMsgBgImg = 'url("information.png") 5px center no-repeat'
 errorMsgBgImg = 'url("error.png") 100% 50% no-repeat'
 errorMsgColor = '#ed0d0d'
+
+# facets
+facet_titleFont = 'bold 100% Georgia'
+facet_overflowedHeight = '12em'
+
+

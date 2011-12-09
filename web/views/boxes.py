@@ -185,7 +185,7 @@ class PossibleViewsBox(component.CtxComponent):
 
     def render_body(self, w):
         for category, views in box.sort_by_category(self.views):
-            menu = htmlwidgets.BoxMenu(self._cw._(category))
+            menu = htmlwidgets.BoxMenu(self._cw._(category), ident=category)
             for view in views:
                 menu.append(self.action_link(view))
             self.append(menu)

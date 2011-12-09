@@ -22,6 +22,9 @@
  *
  * dummy ultra minimalist implementation of deferred for jQuery
  */
+
+cw.ajax = new Namespace('cw.ajax');
+
 function Deferred() {
     this.__init__(this);
 }
@@ -86,40 +89,133 @@ jQuery.extend(Deferred.prototype, {
 
 var JSON_BASE_URL = baseuri() + 'json?';
 
-//============= utility function handling remote calls responses. ==============//
-function _loadAjaxHtmlHead($node, $head, tag, srcattr) {
-    var jqtagfilter = tag + '[' + srcattr + ']';
-    if (cw['loaded_'+srcattr] === undefined) {
-        cw['loaded_'+srcattr] = [];
-        var loaded = cw['loaded_'+srcattr];
-        jQuery('head ' + jqtagfilter).each(function(i) {
-                   loaded.push(this.getAttribute(srcattr));
-               });
-    } else {
-        var loaded = cw['loaded_'+srcattr];
-    }
-    $node.find(tag).each(function(i) {
-        var url = this.getAttribute(srcattr);
-        if (url) {
-            if (jQuery.inArray(url, loaded) == -1) {
-                // take care to <script> tags: jQuery append method script nodes
-                // don't appears in the DOM (See comments on
-                // http://api.jquery.com/append/), which cause undesired
-                // duplicated load in our case. After trying to use bare DOM api
-                // to avoid this, we switched to handle a list of already loaded
-                // stuff ourselves, since bare DOM api gives bug with the
-                // server-response event, since we loose control on when the
-                // script is loaded (jQuery load it immediatly).
-                loaded.push(url);
-                jQuery(this).appendTo($head);
-            }
-        } else {
-            jQuery(this).appendTo($head);
-        }
-    });
-    $node.find(jqtagfilter).remove();
-}
 
+jQuery.extend(cw.ajax, {
+    /* variant of jquery evalScript with cache: true in ajax call */
+    _evalscript: function ( i, elem ) {
+       var src = elem.getAttribute('src');
+       if (src) {
+           jQuery.ajax({
+               url: src,
+               async: false,
+               cache: true,
+               dataType: "script"
+           });
+       } else {
+           jQuery.globalEval( elem.text || elem.textContent || elem.innerHTML || "" );
+       }
+       if ( elem.parentNode ) {
+           elem.parentNode.removeChild( elem );
+       }
+    },
+
+    evalscripts: function ( scripts ) {
+        if ( scripts.length ) {
+            jQuery.each(scripts, cw.ajax._evalscript);
+        }
+    },
+
+    /**
+     * returns true if `url` is a mod_concat-like url
+     * (e.g. http://..../data??resource1.js,resource2.js)
+     */
+    _modconcatLikeUrl: function(url) {
+        var base = baseuri();
+        if (!base.endswith('/')) { base += '/'; }
+        var modconcat_rgx = new RegExp('(' + base + 'data/([a-z0-9]+/)?)\\?\\?(.+)');
+        return modconcat_rgx.exec(url);
+    },
+
+    /**
+     * decomposes a mod_concat-like url into its corresponding list of
+     * resources' urls
+     * >>> _listResources('http://foo.com/data/??a.js,b.js,c.js')
+     * ['http://foo.com/data/a.js', 'http://foo.com/data/b.js', 'http://foo.com/data/c.js']
+     */
+    _listResources: function(src) {
+        var resources = [];
+        var groups = cw.ajax._modconcatLikeUrl(src);
+        if (groups == null) {
+            resources.push(src);
+        } else {
+            var dataurl = groups[1];
+            $.each(cw.utils.lastOf(groups).split(','),
+                 function() {
+                     resources.push(dataurl + this);
+                 }
+            );
+        }
+        return resources;
+    },
+
+    _buildMissingResourcesUrl: function(url, loadedResources) {
+        var resources = cw.ajax._listResources(url);
+        var missingResources = $.grep(resources, function(resource) {
+            return $.inArray(resource, loadedResources) == -1;
+        });
+        cw.utils.extend(loadedResources, missingResources);
+        var missingResourceUrl = null;
+        if (missingResources.length == 1) {
+            // only one resource missing: build a node with a single resource url
+            // (maybe the browser has it in cache already)
+            missingResourceUrl = missingResources[0];
+        } else if (missingResources.length > 1) {
+            // several resources missing: build a node with a concatenated
+            // resources url
+            var dataurl = cw.ajax._modconcatLikeUrl(url)[1];
+            var missing_path = $.map(missingResources, function(resource) {
+                return resource.substring(dataurl.length);
+            });
+            missingResourceUrl = dataurl + '??' + missing_path.join(',');
+        }
+        return missingResourceUrl;
+    },
+
+    _loadAjaxStylesheets: function($responseHead, $head) {
+        $responseHead.find('link[href]').each(function(i) {
+            var $srcnode = $(this);
+            var url = $srcnode.attr('href');
+            if (url) {
+                var missingStylesheetsUrl = cw.ajax._buildMissingResourcesUrl(url, cw.loaded_links);
+                // compute concat-like url for missing resources and append <link>
+                // element to $head
+                if (missingStylesheetsUrl) {
+                    $srcnode.attr('href', missingStylesheetsUrl);
+                    $srcnode.appendTo($head);
+                }
+            }
+        });
+        $responseHead.find('link[href]').remove();
+    },
+
+    _loadAjaxScripts: function($responseHead, $head) {
+        $responseHead.find('pre.script').each(function(i) {
+            var $srcnode = $(this);
+            var url = $srcnode.attr('src');
+            if (url) {
+                var missingScriptsUrl = cw.ajax._buildMissingResourcesUrl(url, cw.loaded_scripts);
+                if (missingScriptsUrl) {
+                    $srcnode.attr('src', missingScriptsUrl);
+                    /* special handling of <script> tags: script nodes appended by jquery
+                     * use uncached ajax calls and do not appear in the DOM
+                     * (See comments in response to Syt on // http://api.jquery.com/append/),
+                     * which cause undesired duplicated load in our case. We now handle
+                     * a list of already loaded resources, since bare DOM api gives bugs with the
+                     * server-response event, and we lose control on when the
+                     * script is loaded (jQuery loads it immediately). */
+                    cw.ajax.evalscripts($srcnode);
+                }
+            } else {
+                // <script> contains inlined javascript code, node content
+                // must be evaluated
+    	        jQuery.globalEval($srcnode.text());
+    	    }
+        });
+        $responseHead.find('pre.script').remove();
+    }
+});
+
+//============= utility function handling remote calls responses. ==============//
 /**
  * .. function:: function loadAjaxHtmlHead(response)
  *
@@ -135,8 +231,8 @@ function loadAjaxHtmlHead(response) {
     if (!$responseHead.length) {
         return response;
     }
-    _loadAjaxHtmlHead($responseHead, $head, 'script', 'src');
-    _loadAjaxHtmlHead($responseHead, $head, 'link', 'href');
+    cw.ajax._loadAjaxStylesheets($responseHead, $head);
+    cw.ajax._loadAjaxScripts($responseHead, $head);
     // add any remaining children (e.g. meta)
     $responseHead.children().appendTo($head);
     // remove original container, which is now empty
@@ -161,10 +257,6 @@ function loadAjaxHtmlHead(response) {
 }
 
 function _postAjaxLoad(node) {
-    // find sortable tables if there are some
-    if (typeof(Sortable) != 'undefined') {
-        Sortable.sortTables(node);
-    }
     // find textareas and wrap them if there are some
     if (typeof(FCKeditor) != 'undefined') {
         buildWysiwygEditors();
@@ -406,11 +498,6 @@ function _loadDynamicFragments(node) {
         $fragment.loadxhtml('json', ajaxFuncArgs('view', extraparams));
     }
 }
-
-jQuery(document).ready(function() {
-    _loadDynamicFragments();
-});
-
 function unloadPageData() {
     // NOTE: do not make async calls on unload if you want to avoid
     //       strange bugs
@@ -614,7 +701,7 @@ function reload(domid, compid, registry, formparams  /* ... */) {
 
 function setTab(tabname, cookiename) {
     // set appropriate cookie
-    loadRemote('json', ajaxFuncArgs('set_cookie', null, cookiename, tabname));
+    jQuery.cookie(cookiename, tabname, {path: '/'});
     // trigger show + tabname event
     triggerLoad(tabname);
 }
@@ -736,3 +823,16 @@ function asyncRemoteExec(fname /* ... */) {
     deferred = deferred.addCallback(resetCursor);
     return deferred;
 }
+
+jQuery(document).ready(function() {
+    _loadDynamicFragments();
+    // build loaded_scripts / loaded_links lists
+    cw.loaded_scripts = [];
+    jQuery('head script[src]').each(function(i) {
+        cw.utils.extend(cw.loaded_scripts, cw.ajax._listResources(this.getAttribute('src')));
+    });
+    cw.loaded_links = [];
+    jQuery('head link[href]').each(function(i) {
+        cw.utils.extend(cw.loaded_links, cw.ajax._listResources(this.getAttribute('href')));
+    });
+});

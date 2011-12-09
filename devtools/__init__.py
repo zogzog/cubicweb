@@ -28,15 +28,17 @@ import shutil
 import pickle
 import glob
 import warnings
+from hashlib import sha1 # pylint: disable=E0611
 from datetime import timedelta
 from os.path import (abspath, join, exists, basename, dirname, normpath, split,
                      isfile, isabs, splitext, isdir, expanduser)
 from functools import partial
-import hashlib
 
 from logilab.common.date import strptime
 from logilab.common.decorators import cached, clear_cache
-from cubicweb import CW_SOFTWARE_ROOT, ConfigurationError, schema, cwconfig, BadConnectionId
+
+from cubicweb import ConfigurationError, ExecutionError, BadConnectionId
+from cubicweb import CW_SOFTWARE_ROOT, schema, cwconfig
 from cubicweb.server.serverconfig import ServerConfiguration
 from cubicweb.etwist.twconfig import TwistedConfiguration
 
@@ -91,7 +93,7 @@ def turn_repo_off(repo):
     """ Idea: this is less costly than a full re-creation of the repo object.
     off:
     * session are closed,
-    * pools are closed
+    * cnxsets are closed
     * system source is shutdown
     """
     if not repo._needs_refresh:
@@ -102,8 +104,8 @@ def turn_repo_off(repo):
                 repo.close(sessionid)
             except BadConnectionId: #this is strange ? thread issue ?
                 print 'XXX unknown session', sessionid
-        for pool in repo.pools:
-            pool.close(True)
+        for cnxset in repo.cnxsets:
+            cnxset.close(True)
         repo.system_source.shutdown()
         repo._needs_refresh = True
         repo._has_started = False
@@ -111,12 +113,12 @@ def turn_repo_off(repo):
 def turn_repo_on(repo):
     """Idea: this is less costly than a full re-creation of the repo object.
     on:
-    * pools are connected
+    * cnxsets are connected
     * cache are cleared
     """
     if repo._needs_refresh:
-        for pool in repo.pools:
-            pool.reconnect()
+        for cnxset in repo.cnxsets:
+            cnxset.reconnect()
         repo._type_source_cache = {}
         repo._extid_cache = {}
         repo.querier._rql_cache = {}
@@ -197,7 +199,10 @@ class TestServerConfiguration(ServerConfiguration):
         directory from wich tests are launched or by specifying an alternative
         sources file using self.sourcefile.
         """
-        sources = super(TestServerConfiguration, self).sources()
+        try:
+            sources = super(TestServerConfiguration, self).sources()
+        except ExecutionError:
+            sources = {}
         if not sources:
             sources = DEFAULT_SOURCES
         if 'admin' not in sources:
@@ -206,9 +211,6 @@ class TestServerConfiguration(ServerConfiguration):
 
     # web config methods needed here for cases when we use this config as a web
     # config
-
-    def instance_md5_version(self):
-        return ''
 
     def default_base_url(self):
         return BASE_URL
@@ -258,8 +260,9 @@ class RealDatabaseConfiguration(ApptestConfiguration):
     Example usage::
 
       class MyTests(CubicWebTC):
-          _config = RealDatabseConfiguration('myapp',
-                                             sourcefile='/path/to/sources')
+          _config = RealDatabaseConfiguration('myapp',
+                                              sourcefile='/path/to/sources')
+
           def test_something(self):
               rset = self.execute('Any X WHERE X is CWUser')
               self.view('foaf', rset)
@@ -475,12 +478,11 @@ class TestDataBaseHandler(object):
             repo = self.get_repo(startup=True)
             cnx = self.get_cnx()
             session = repo._sessions[cnx.sessionid]
-            session.set_pool()
+            session.set_cnxset()
             _commit = session.commit
-            def always_pooled_commit():
-                _commit()
-                session.set_pool()
-            session.commit = always_pooled_commit
+            def keep_cnxset_commit():
+                _commit(free_cnxset=False)
+            session.commit = keep_cnxset_commit
             pre_setup_func(session, self.config)
             session.commit()
             cnx.close()
@@ -576,7 +578,7 @@ class PostgresTestDataBaseHandler(TestDataBaseHandler):
                 templcursor.close()
                 cnx.close()
             init_repository(self.config, interactive=False)
-        except:
+        except BaseException:
             if self.dbcnx is not None:
                 self.dbcnx.rollback()
             print >> sys.stderr, 'building', self.dbname, 'failed'
@@ -596,7 +598,7 @@ class PostgresTestDataBaseHandler(TestDataBaseHandler):
 
     @property
     def _config_id(self):
-        return hashlib.sha1(self.config.apphome).hexdigest()[:10]
+        return sha1(self.config.apphome).hexdigest()[:10]
 
     def _backup_name(self, db_id): # merge me with parent
         backup_name = '_'.join(('cache', self._config_id, self.dbname, db_id))
@@ -656,6 +658,25 @@ class SQLServerTestDataBaseHandler(TestDataBaseHandler):
 class SQLiteTestDataBaseHandler(TestDataBaseHandler):
     DRIVER = 'sqlite'
 
+    __TMPDB = set()
+
+    @classmethod
+    def _cleanup_all_tmpdb(cls):
+        for dbpath in cls.__TMPDB:
+            cls._cleanup_database(dbpath)
+
+
+
+    def __init__(self, *args, **kwargs):
+        super(SQLiteTestDataBaseHandler, self).__init__(*args, **kwargs)
+        # use a dedicated base for each process.
+        if 'global-db-name' not in self.system_source:
+            self.system_source['global-db-name'] = self.system_source['db-name']
+            process_db = self.system_source['db-name'] + str(os.getpid())
+            self.system_source['db-name'] = process_db
+        process_db = self.absolute_dbfile() # update db-name to absolute path
+        self.__TMPDB.add(process_db)
+
     @staticmethod
     def _cleanup_database(dbfile):
         try:
@@ -664,13 +685,16 @@ class SQLiteTestDataBaseHandler(TestDataBaseHandler):
         except OSError:
             pass
 
+    @property
+    def dbname(self):
+        return self.system_source['global-db-name']
+
     def absolute_dbfile(self):
         """absolute path of current database file"""
         dbfile = join(self._ensure_test_backup_db_dir(),
                       self.config.sources()['system']['db-name'])
         self.config.sources()['system']['db-name'] = dbfile
         return dbfile
-
 
     def process_cache_entry(self, directory, dbname, db_id, entry):
         return entry.get('sqlite')
@@ -706,6 +730,9 @@ class SQLiteTestDataBaseHandler(TestDataBaseHandler):
         self._cleanup_database(self.absolute_dbfile())
         init_repository(self.config, interactive=False)
 
+import atexit
+atexit.register(SQLiteTestDataBaseHandler._cleanup_all_tmpdb)
+
 
 def install_sqlite_patch(querier):
     """This patch hotfixes the following sqlite bug :
@@ -726,13 +753,13 @@ def install_sqlite_patch(querier):
                             value = value.rsplit('.', 1)[0]
                             try:
                                 row[cellindex] = strptime(value, '%Y-%m-%d %H:%M:%S')
-                            except:
+                            except Exception:
                                 row[cellindex] = strptime(value, '%Y-%m-%d')
                         if vtype == 'Time' and type(value) is unicode:
                             found_date = True
                             try:
                                 row[cellindex] = strptime(value, '%H:%M:%S')
-                            except:
+                            except Exception:
                                 # DateTime used as Time?
                                 row[cellindex] = strptime(value, '%Y-%m-%d %H:%M:%S')
                         if vtype == 'Interval' and type(value) is int:

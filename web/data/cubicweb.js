@@ -53,7 +53,13 @@ jQuery.extend(cw, {
     },
 
     evalJSON: function (json) { // trust source
-        return eval("(" + json + ")");
+        try {
+            return eval("(" + json + ")");
+        } catch(e) {
+          cw.log(e);
+          cw.log('The faulty json source was', json);
+          throw (e);
+       }
     },
 
     urlEncode: function (str) {
@@ -305,6 +311,28 @@ jQuery.extend(cw.utils, {
             result.push(lst[i]);
         }
         return result;
+    },
+
+    /**
+     * returns the last element of an array-like object or undefined if empty
+     */
+    lastOf: function(array) {
+        if (array.length) {
+            return array[array.length-1];
+        } else {
+            return undefined;
+        }
+    },
+
+
+    /**
+     * .. function:: extend(array1, array2)
+     *
+     * equivalent of python ``+=`` statement on lists (array1 += array2)
+     */
+    extend: function(array1, array2) {
+        array1.push.apply(array1, array2);
+        return array1; // return array1 for convenience
     },
 
     /**

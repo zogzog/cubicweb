@@ -15,8 +15,10 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""Set of HTML startup views. A startup view is global, e.g. doesn't apply to a
-result set.
+"""This module contains the default index page and management view.
+
+.. autoclass:: IndexView
+.. autoclass:: ManageView
 """
 
 __docformat__ = "restructuredtext en"
@@ -32,6 +34,19 @@ from cubicweb.schema import display_name
 from cubicweb.web import ajax_replace_url, uicfg, httpcache
 
 class ManageView(StartupView):
+    """:__regid__: *manage*
+
+    The manage view, display some information about what's contained by your
+    site and provides access to administration stuff such as user and groups
+    management.
+
+    Regarding the section displaying link to entity type, notice by default it
+    won't display entity types which are related to another one using a
+    mandatory (cardinality == 1) composite relation.
+
+    You can still configure that behaviour manually using the
+    `indexview_etype_section` as explained in :mod:`cubicweb.web.uicfg`.
+    """
     __regid__ = 'manage'
     title = _('manage')
     http_cache_manager = httpcache.EtagHTTPCacheManager
@@ -127,16 +142,16 @@ class ManageView(StartupView):
         for etype in self.add_etype_links:
             eschema = self._cw.vreg.schema.eschema(etype)
             if eschema.has_perm(self._cw, 'add'):
+                url = self._cw.vreg["etypes"].etype_class(etype).cw_create_url(self._cw)
                 self.w(u'<li><a href="%s">%s</a></li>' % (
-                        self._cw.build_url('add/%s' % eschema),
-                        self._cw.__('add a %s' % eschema).capitalize()))
+                        url, self._cw.__('New %s' % eschema).capitalize()))
         self.w(u'</ul>')
 
     def add_entity_link(self, etype):
         """creates a [+] link for adding an entity"""
         url = self._cw.vreg["etypes"].etype_class(etype).cw_create_url(self._cw)
         return u'[<a href="%s" title="%s">+</a>]' % (
-            xml_escape(url), self._cw.__('add a %s' % etype))
+            xml_escape(url), self._cw.__('New %s' % etype))
 
     @deprecated('[3.11] display_folders method is deprecated, backport it if needed')
     def display_folders(self):
@@ -149,6 +164,13 @@ class ManageView(StartupView):
 
 
 class IndexView(ManageView):
+    """:__regid__: *index*
+
+    The default index view, that you'll get when accessing your site's root url.
+    It's by default indentical to the
+    :class:`~cubicweb.web.views.startup.ManageView`, but you'll usually want to
+    customize this one.
+    """
     __regid__ = 'index'
     title = _('view_index')
 

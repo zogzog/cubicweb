@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""Specific views for email addresses entities
+"""Specific views for email addresses entities"""
 
-"""
 __docformat__ = "restructuredtext en"
 
 from logilab.mtconverter import xml_escape
@@ -85,8 +84,7 @@ class EmailAddressShortPrimaryView(EmailAddressPrimaryView):
 class EmailAddressOneLineView(baseviews.OneLineView):
     __select__ = is_instance('EmailAddress')
 
-    def cell_call(self, row, col, **kwargs):
-        entity = self.cw_rset.get_entity(row, col)
+    def entity_call(self, entity, **kwargs):
         if entity.reverse_primary_email:
             self.w(u'<b>')
         if entity.alias:
@@ -106,8 +104,7 @@ class EmailAddressMailToView(baseviews.OneLineView):
     __regid__ = 'mailto'
     __select__ = is_instance('EmailAddress')
 
-    def cell_call(self, row, col, **kwargs):
-        entity = self.cw_rset.get_entity(row, col)
+    def entity_call(self, entity, **kwargs):
         if entity.reverse_primary_email:
             self.w(u'<b>')
         if entity.alias:
@@ -130,7 +127,10 @@ class EmailAddressInContextView(baseviews.InContextView):
     __select__ = is_instance('EmailAddress')
 
     def cell_call(self, row, col, **kwargs):
-        self.wview('mailto', self.cw_rset, row=row, col=col, **kwargs)
+        if self._cw.vreg.config['mangle-emails']:
+            self.wview('oneline', self.cw_rset, row=row, col=col, **kwargs)
+        else:
+            self.wview('mailto', self.cw_rset, row=row, col=col, **kwargs)
 
 
 class EmailAddressTextView(baseviews.TextView):

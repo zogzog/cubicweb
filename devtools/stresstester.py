@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -38,7 +38,7 @@ OPTIONS:
   -o / --report-output <filename>
      Write profiler report into <filename> rather than on stdout
 
-Copyright (c) 2003-2010 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
+Copyright (c) 2003-2011 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
 http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 
@@ -73,9 +73,7 @@ class QueryExecutor:
                 start = clock()
                 try:
                     cursor.execute(query)
-                except KeyboardInterrupt:
-                    raise
-                except:
+                except Exception:
                     TB_LOCK.acquire()
                     traceback.print_exc()
                     TB_LOCK.release()

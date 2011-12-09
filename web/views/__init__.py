@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -22,7 +22,9 @@ __docformat__ = "restructuredtext en"
 import os
 import sys
 import tempfile
+
 from rql import nodes
+from logilab.mtconverter import xml_escape
 
 
 def need_table_view(rset, schema):
@@ -111,6 +113,16 @@ def linksearch_select_url(req, rset):
         id_fmt = '%%s:%s:%s' % (r_type, eid)
     triplets = '-'.join(id_fmt % row[0] for row in rset.rows)
     return "javascript: selectForAssociation('%s', '%s');" % (triplets, eid)
+
+
+def add_etype_button(req, etype, csscls='addButton right', **urlkwargs):
+    vreg = req.vreg
+    eschema = vreg.schema.eschema(etype)
+    if eschema.has_perm(req, 'add'):
+        url = vreg['etypes'].etype_class(etype).cw_create_url(req, **urlkwargs)
+        return u'<a href="%s" class="%s">%s</a>' % (
+            xml_escape(url), csscls, req.__('New %s' % etype))
+    return u''
 
 
 class TmpFileViewMixin(object):

@@ -41,7 +41,7 @@ contains the following license in it:
 MAGIC = '$1$'                        # Magic string
 ITOA64 = "./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 
-import hashlib as md5
+from hashlib import md5 # pylint: disable=E0611
 
 def to64 (v, n):
     ret = ''
@@ -63,7 +63,7 @@ def crypt(pw, salt, magic=None):
     salt = salt.split('$', 1)[0]
     salt = salt[:8]
     ctx = pw + magic + salt
-    final = md5.md5(pw + salt + pw).digest()
+    final = md5(pw + salt + pw).digest()
     for pl in xrange(len(pw), 0, -16):
         if pl > 16:
             ctx = ctx + final[:16]
@@ -77,7 +77,7 @@ def crypt(pw, salt, magic=None):
         else:
             ctx = ctx + pw[0]
         i = i >> 1
-    final = md5.md5(ctx).digest()
+    final = md5(ctx).digest()
     # The following is supposed to make
     # things run slower.
     # my question: WTF???
@@ -95,7 +95,7 @@ def crypt(pw, salt, magic=None):
             ctx1 = ctx1 + final[:16]
         else:
             ctx1 = ctx1 + pw
-        final = md5.md5(ctx1).digest()
+        final = md5(ctx1).digest()
     # Final xform
     passwd = ''
     passwd = passwd + to64((int(ord(final[0])) << 16)

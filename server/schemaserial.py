@@ -88,7 +88,7 @@ def deserialize_schema(schema, session):
     repo = session.repo
     dbhelper = repo.system_source.dbhelper
     # XXX bw compat (3.6 migration)
-    sqlcu = session.pool['system']
+    sqlcu = session.cnxset['system']
     sqlcu.execute("SELECT * FROM cw_CWRType WHERE cw_name='symetric'")
     if sqlcu.fetchall():
         sql = dbhelper.sql_rename_col('cw_CWRType', 'cw_symetric', 'cw_symmetric',
@@ -135,11 +135,11 @@ def deserialize_schema(schema, session):
             try:
                 sqlexec('UPDATE deleted_entities SET type=%(n)s WHERE type=%(x)s',
                         {'x': etype, 'n': netype})
-            except:
+            except Exception:
                 pass
             tocleanup = [eid]
-            tocleanup += (eid for eid, (eidetype, uri, extid) in repo._type_source_cache.items()
-                          if etype == eidetype)
+            tocleanup += (eid for eid, cached in repo._type_source_cache.iteritems()
+                          if etype == cached[0])
             repo.clear_caches(tocleanup)
             session.commit(False)
             if needcopy:

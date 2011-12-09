@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -15,7 +15,27 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""The default primary view"""
+"""
+Public API of the PrimaryView class
+````````````````````````````````````
+.. autoclass:: cubicweb.web.views.primary.PrimaryView
+
+Views that may be used to display an entity's attribute or relation
+```````````````````````````````````````````````````````````````````
+
+Yoy may easily the display of an attribute or relation by simply configuring the
+view using one of `primaryview_display_ctrl` or `reledit_ctrl` to use one of the
+views describled below. For instance:
+
+.. sourcecode:: python
+
+    primaryview_display_ctrl.tag_attribute(('Foo', 'bar'), {'vid': 'attribute'})
+
+
+.. autoclass:: AttributeView
+.. autoclass:: URLAttributeView
+.. autoclass:: VerbatimAttributeView
+"""
 
 __docformat__ = "restructuredtext en"
 _ = unicode
@@ -34,7 +54,47 @@ from cubicweb.web import uicfg, component
 
 
 class PrimaryView(EntityView):
-    """the full view of an non final entity"""
+    """
+    The basic layout of a primary view is as in the :ref:`primary_view_layout`
+    section. This layout is actually drawn by the `render_entity` method.
+
+    The methods you may want to modify while customizing a ``PrimaryView``
+    are:
+
+    .. automethod:: cubicweb.web.views.primary.PrimaryView.render_entity_title
+    .. automethod:: cubicweb.web.views.primary.PrimaryView.render_entity_attributes
+    .. automethod:: cubicweb.web.views.primary.PrimaryView.render_entity_relations
+    .. automethod:: cubicweb.web.views.primary.PrimaryView.render_side_boxes
+
+    The placement of relations in the relations section or in side boxes
+    can be controlled through the :ref:`primary_view_configuration` mechanism.
+
+    .. automethod:: cubicweb.web.views.primary.PrimaryView.content_navigation_components
+
+    Also, please note that by setting the following attributes in your
+    subclass, you can already customize some of the rendering:
+
+    :attr:`show_attr_label`
+        Renders the attribute label next to the attribute value if set to `True`.
+        Otherwise, does only display the attribute value.
+
+    :attr:`show_rel_label`
+        Renders the relation label next to the relation value if set to `True`.
+        Otherwise, does only display the relation value.
+
+    :attr:`skip_none`
+        Does not render an attribute value that is None if set to `True`.
+
+    :attr:`main_related_section`
+        Renders the relations of the entity if set to `True`.
+
+    A good practice is for you to identify the content of your entity type for
+    which the default rendering does not answer your need so that you can focus
+    on the specific method (from the list above) that needs to be modified. We
+    do not advise you to overwrite ``render_entity`` unless you want a
+    completely different layout.
+    """
+
     __regid__ = 'primary'
     title = _('primary')
     show_attr_label = True
@@ -70,7 +130,8 @@ class PrimaryView(EntityView):
         if hasattr(self, 'render_entity_summary'):
             warn('[3.10] render_entity_summary method is deprecated (%s)' % self,
                  DeprecationWarning)
-            self.render_entity_summary(entity)
+            self.render_entity_summary(entity) # pylint: disable=E1101
+
         summary = self.summary(entity)
         if summary:
             warn('[3.10] summary method is deprecated (%s)' % self,
@@ -89,12 +150,18 @@ class PrimaryView(EntityView):
             self.w(u'<div class="primaryRight">')
             if hasattr(self, 'render_side_related'):
                 warn('[3.2] render_side_related is deprecated')
-                self.render_side_related(entity, [])
+                self.render_side_related(entity, []) # pylint: disable=E1101
             self.render_side_boxes(boxes)
             self.w(u'</div>')
             self.w(u'</td></tr></table>')
 
     def content_navigation_components(self, context):
+        """This method is applicable only for entity type implementing the
+        interface `IPrevNext`. This interface is for entities which can be
+        linked to a previous and/or next entity. This method will render the
+        navigation links between entities of this type, either at the top or at
+        the bottom of the page given the context (navcontent{top|bottom}).
+        """
         self.w(u'<div class="%s">' % context)
         for comp in self._cw.vreg['ctxcomponents'].poss_visible_objects(
             self._cw, rset=self.cw_rset, view=self, context=context):
@@ -106,7 +173,9 @@ class PrimaryView(EntityView):
         self.w(u'</div>')
 
     def render_entity_title(self, entity):
-        """default implementation return dc_title"""
+        """Renders the entity title, by default using entity's
+        :meth:`dc_title()` method.
+        """
         title = xml_escape(entity.dc_title())
         if title:
             if self.is_primary():
@@ -128,6 +197,10 @@ class PrimaryView(EntityView):
         return u''
 
     def render_entity_attributes(self, entity):
+        """Renders all attributes and relations in the 'attributes' section. The
+        :attr:`skip_none` attribute controls the display of `None` valued
+        attributes.
+        """
         display_attributes = []
         for rschema, _, role, dispctrl in self._section_def(entity, 'attributes'):
             vid = dispctrl.get('vid', 'reledit')
@@ -145,26 +218,28 @@ class PrimaryView(EntityView):
         if display_attributes:
             self.w(u'<table>')
             for rschema, role, dispctrl, value in display_attributes:
+                # pylint: disable=E1101
                 if not hasattr(self, '_render_attribute'):
                     label = self._rel_label(entity, rschema, role, dispctrl)
                     self.render_attribute(label, value, table=True)
                 elif support_args(self._render_attribute, 'dispctrl'):
                     warn('[3.9] _render_attribute prototype has changed and '
                          'renamed to render_attribute, please update %s'
-                         % self.__class___, DeprecationWarning)
+                         % self.__class__, DeprecationWarning)
                     self._render_attribute(dispctrl, rschema, value, role=role,
                                            table=True)
                 else:
                     self._render_attribute(rschema, value, role=role, table=True)
                     warn('[3.6] _render_attribute prototype has changed and '
                          'renamed to render_attribute, please update %s'
-                         % self.__class___, DeprecationWarning)
+                         % self.__class__, DeprecationWarning)
             self.w(u'</table>')
 
     def render_attribute(self, label, value, table=False):
         self.field(label, value, tr=False, table=table)
 
     def render_entity_relations(self, entity):
+        """Renders all relations in the 'relations' section."""
         for rschema, tschemas, role, dispctrl in self._section_def(entity, 'relations'):
             if rschema.final or dispctrl.get('rtypevid'):
                 vid = dispctrl.get('vid', 'reledit')
@@ -182,6 +257,7 @@ class PrimaryView(EntityView):
                 if not rset:
                     continue
                 if hasattr(self, '_render_relation'):
+                    # pylint: disable=E1101
                     if not support_args(self._render_relation, 'showlabel'):
                         self._render_relation(dispctrl, rset, 'autolimited')
                         warn('[3.9] _render_relation prototype has changed and has '
@@ -212,8 +288,9 @@ class PrimaryView(EntityView):
         self.w(u'</div>')
 
     def render_side_boxes(self, boxes):
-        """display side related relations:
-        non-meta in a first step, meta in a second step
+        """Renders side boxes on the right side of the content. This will
+        generate a box for each relation in the 'sidebox' section, as well as
+        explicit box appobjects selectable in this context.
         """
         for box in boxes:
             if isinstance(box, tuple):
@@ -305,6 +382,8 @@ class RelatedView(EntityView):
 
     It will try to display nicely according to the number of items in the result
     set.
+
+    XXX include me in the doc
     """
     __regid__ = 'autolimited'
 
@@ -346,32 +425,16 @@ class RelatedView(EntityView):
                 self.w(u'</div>')
 
 
-class URLAttributeView(EntityView):
-    """use this view for attributes whose value is an url and that you want
-    to display as clickable link
-    """
-    __regid__ = 'urlattr'
-    __select__ = EntityView.__select__ & match_kwargs('rtype')
-
-    def cell_call(self, row, col, rtype, **kwargs):
-        entity = self.cw_rset.get_entity(row, col)
-        url = entity.printable_value(rtype)
-        if url:
-            self.w(u'<a href="%s">%s</a>' % (url, url))
-
 class AttributeView(EntityView):
-    """use this view on an entity as an alternative to more sophisticated
-    views such as reledit.
+    """:__regid__: *attribute*
 
-    Ex. usage:
-
-    uicfg.primaryview_display_ctrl.tag_attribute(('Foo', 'bar'), {'vid': 'attribute'})
+    This view is generally used to disable the *reledit* feature. It works on
+    both relations and attributes.
     """
     __regid__ = 'attribute'
     __select__ = EntityView.__select__ & match_kwargs('rtype')
 
-    def cell_call(self, row, col, rtype, role, **kwargs):
-        entity = self.cw_rset.get_entity(row, col)
+    def entity_call(self, entity, rtype, role, **kwargs):
         if self._cw.vreg.schema.rschema(rtype).final:
             self.w(entity.printable_value(rtype))
         else:
@@ -382,13 +445,48 @@ class AttributeView(EntityView):
                 self.wview('autolimited', rset, initargs={'dispctrl': dispctrl})
 
 
+class URLAttributeView(EntityView):
+    """:__regid__: *urlattr*
+
+    This view will wrap an attribute value (hence expect a string) into an '<a>'
+    HTML tag to display a clickable link.
+    """
+    __regid__ = 'urlattr'
+    __select__ = EntityView.__select__ & match_kwargs('rtype')
+
+    def entity_call(self, entity, rtype, **kwargs):
+        url = entity.printable_value(rtype)
+        if url:
+            self.w(u'<a href="%s">%s</a>' % (url, url))
+
+
+class VerbatimAttributeView(EntityView):
+    """:__regid__: *verbatimattr*
+
+    This view will wrap an attribute value into an '<pre>' HTML tag to display
+    arbitrary text where EOL will be respected. It usually make sense for
+    attributes whose value is a multi-lines string where new lines matters.
+    """
+    __regid__ = 'verbatimattr'
+    __select__ = EntityView.__select__ & match_kwargs('rtype')
+
+    def entity_call(self, entity, rtype, **kwargs):
+        value = entity.printable_value(rtype)
+        if value:
+            self.w(u'<pre>%s</pre>' % value)
+
+
+
+
 
 class ToolbarLayout(component.Layout):
+    # XXX include me in the doc
     __select__ = match_context('ctxtoolbar')
 
     def render(self, w):
         if self.init_rendering():
             self.cw_extra_kwargs['view'].render_body(w)
+
 
 ## default primary ui configuration ###########################################
 

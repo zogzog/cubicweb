@@ -273,7 +273,7 @@ directory (default to once a day).',
         if self._conn is None:
             try:
                 self._connect()
-            except:
+            except Exception:
                 self.exception('unable to connect to ldap:')
         return ConnectionWrapper(self._conn)
 
@@ -310,7 +310,11 @@ directory (default to once a day).',
         except Exception:
             self.error('while trying to authenticate %s', user, exc_info=True)
             raise AuthenticationError()
-        return self.extid2eid(user['dn'], 'CWUser', session)
+        eid = self.repo.extid2eid(self, user['dn'], 'CWUser', session)
+        if eid < 0:
+            # user has been moved away from this source
+            raise AuthenticationError()
+        return eid
 
     def ldap_name(self, var):
         if var.stinfo['relations']:
@@ -392,7 +396,7 @@ directory (default to once a day).',
                     break
         assert mainvars, rqlst
         columns, globtransforms = self.prepare_columns(mainvars, rqlst)
-        eidfilters = []
+        eidfilters = [lambda x: x > 0]
         allresults = []
         generator = RQL2LDAPFilter(self, session, args, mainvars)
         for mainvar in mainvars:
@@ -419,7 +423,7 @@ directory (default to once a day).',
             filteredres = []
             for resdict in res:
                 # get sure the entity exists in the system table
-                eid = self.extid2eid(resdict['dn'], 'CWUser', session)
+                eid = self.repo.extid2eid(self, resdict['dn'], 'CWUser', session)
                 for eidfilter in eidfilters:
                     if not eidfilter(eid):
                         break
@@ -524,21 +528,21 @@ directory (default to once a day).',
         """make an ldap query"""
         self.debug('ldap search %s %s %s %s %s', self.uri, base, scope,
                    searchstr, list(attrs))
-        # XXX for now, we do not have connection pool support for LDAP, so
+        # XXX for now, we do not have connections set support for LDAP, so
         # this is always self._conn
-        cnx = session.pool.connection(self.uri).cnx
+        cnx = session.cnxset.connection(self.uri).cnx
         try:
             res = cnx.search_s(base, scope, searchstr, attrs)
         except ldap.PARTIAL_RESULTS:
             res = cnx.result(all=0)[1]
         except ldap.NO_SUCH_OBJECT:
             self.info('ldap NO SUCH OBJECT')
-            eid = self.extid2eid(base, 'CWUser', session, insert=False)
+            eid = self.repo.extid2eid(self, base, 'CWUser', session, insert=False)
             if eid:
                 self.warning('deleting ldap user with eid %s and dn %s',
                              eid, base)
                 entity = session.entity_from_eid(eid, 'CWUser')
-                self.repo.delete_info(session, entity, self.uri, base)
+                self.repo.delete_info(session, entity, self.uri)
                 self.reset_caches()
             return []
         # except ldap.REFERRAL, e:
@@ -566,7 +570,7 @@ directory (default to once a day).',
                     try:
                         for i in range(len(value)):
                             value[i] = unicode(value[i], 'utf8')
-                    except:
+                    except Exception:
                         pass
                 if isinstance(value, list) and len(value) == 1:
                     rec_dict[key] = value = value[0]
@@ -642,6 +646,7 @@ class RQL2LDAPFilter(object):
     """generate an LDAP filter for a rql query"""
     def __init__(self, source, session, args=None, mainvars=()):
         self.source = source
+        self.repo = source.repo
         self._ldap_attrs = source.user_rev_attrs
         self._base_filters = source.base_filters
         self._session = session
@@ -747,7 +752,7 @@ class RQL2LDAPFilter(object):
                           }[rhs.operator]
                 self._eidfilters.append(filter)
                 return
-            dn = self.source.eid2extid(eid, self._session)
+            dn = self.repo.eid2extid(self.source, eid, self._session)
             raise GotDN(dn)
         try:
             filter = '(%s%s)' % (self._ldap_attrs[relation.r_type],

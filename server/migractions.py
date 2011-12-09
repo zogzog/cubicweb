@@ -50,7 +50,7 @@ from yams.constraints import SizeConstraint
 from yams.schema2sql import eschema2sql, rschema2sql
 from yams.schema import RelationDefinitionSchema
 
-from cubicweb import AuthenticationError, ExecutionError
+from cubicweb import CW_SOFTWARE_ROOT, AuthenticationError, ExecutionError
 from cubicweb.selectors import is_instance
 from cubicweb.schema import (ETYPE_NAME_MAP, META_RTYPES, VIRTUAL_RTYPES,
                              PURE_VIRTUAL_RTYPES,
@@ -153,7 +153,7 @@ class ServerMigrationHelper(MigrationHelper):
                   migrscript, funcname, *args, **kwargs)
         except ExecutionError, err:
             print >> sys.stderr, "-> %s" % err
-        except:
+        except BaseException:
             self.rollback()
             raise
 
@@ -201,7 +201,6 @@ class ServerMigrationHelper(MigrationHelper):
                 versions = repo.get_versions()
                 for cube, version in versions.iteritems():
                     version_file.write('%s %s\n' % (cube, version))
-                    
             if not failed:
                 bkup = tarfile.open(backupfile, 'w|gz')
                 for filename in os.listdir(tmpdir):
@@ -242,7 +241,7 @@ class ServerMigrationHelper(MigrationHelper):
                 written_format = format_file.readline().strip()
                 if written_format in ('portable', 'native'):
                     format = written_format
-        self.config.open_connections_pools = False
+        self.config.init_cnxset_pool = False
         repo = self.repo_connect()
         for source in repo.sources:
             if systemonly and source.uri != 'system':
@@ -255,7 +254,7 @@ class ServerMigrationHelper(MigrationHelper):
                     raise SystemExit(1)
         shutil.rmtree(tmpdir)
         # call hooks
-        repo.open_connections_pools()
+        repo.init_cnxset_pool()
         repo.hm.call_hooks('server_restore', repo=repo, timestamp=backupfile)
         print '-> database restored.'
 
@@ -288,7 +287,7 @@ class ServerMigrationHelper(MigrationHelper):
                 except (KeyboardInterrupt, EOFError):
                     print 'aborting...'
                     sys.exit(0)
-            self.session.keep_pool_mode('transaction')
+            self.session.keep_cnxset_mode('transaction')
             self.session.data['rebuild-infered'] = False
             return self._cnx
 
@@ -296,10 +295,10 @@ class ServerMigrationHelper(MigrationHelper):
     def session(self):
         if self.config is not None:
             session = self.repo._get_session(self.cnx.sessionid)
-            if session.pool is None:
+            if session.cnxset is None:
                 session.set_read_security(False)
                 session.set_write_security(False)
-            session.set_pool()
+            session.set_cnxset()
             return session
         # no access to session on remote instance
         return None
@@ -308,13 +307,13 @@ class ServerMigrationHelper(MigrationHelper):
         if hasattr(self, '_cnx'):
             self._cnx.commit()
         if self.session:
-            self.session.set_pool()
+            self.session.set_cnxset()
 
     def rollback(self):
         if hasattr(self, '_cnx'):
             self._cnx.rollback()
         if self.session:
-            self.session.set_pool()
+            self.session.set_cnxset()
 
     def rqlexecall(self, rqliter, ask_confirm=False):
         for rql, kwargs in rqliter:
@@ -351,10 +350,17 @@ class ServerMigrationHelper(MigrationHelper):
         """cached constraint types mapping"""
         return ss.cstrtype_mapping(self._cw)
 
-    def exec_event_script(self, event, cubepath=None, funcname=None,
-                          *args, **kwargs):
-        if cubepath:
+    def cmd_exec_event_script(self, event, cube=None, funcname=None,
+                              *args, **kwargs):
+        """execute a cube event scripts  `migration/<event>.py` where event
+        is one of 'precreate', 'postcreate', 'preremove' and 'postremove'.
+        """
+        assert event in ('precreate', 'postcreate', 'preremove', 'postremove')
+        if cube:
+            cubepath = self.config.cube_dir(cube)
             apc = osp.join(cubepath, 'migration', '%s.py' % event)
+        elif kwargs.pop('apphome', False):
+            apc = osp.join(self.config.apphome, 'migration', '%s.py' % event)
         else:
             apc = osp.join(self.config.migration_scripts_dir(), '%s.py' % event)
         if osp.exists(apc):
@@ -373,19 +379,31 @@ class ServerMigrationHelper(MigrationHelper):
                 if self.config.free_wheel:
                     self.cmd_reactivate_verification_hooks()
 
-    def install_custom_sql_scripts(self, directory, driver):
+    def cmd_install_custom_sql_scripts(self, cube=None):
+        """install a cube custom sql scripts `schema/*.<driver>.sql` where
+        <driver> depends on the instance main database backend (eg 'postgres',
+        'mysql'...)
+        """
+        driver = self.repo.system_source.dbdriver
+        if cube is None:
+            directory = osp.join(CW_SOFTWARE_ROOT, 'schemas')
+        else:
+            directory = osp.join(self.config.cube_dir(cube), 'schema')
+        sql_scripts = []
         for fpath in glob(osp.join(directory, '*.sql.%s' % driver)):
             newname = osp.basename(fpath).replace('.sql.%s' % driver,
                                                   '.%s.sql' % driver)
             warn('[3.5.6] rename %s into %s' % (fpath, newname),
                  DeprecationWarning)
+            sql_scripts.append(fpath)
+        sql_scripts += glob(osp.join(directory, '*.%s.sql' % driver))
+        for fpath in sql_scripts:
             print '-> installing', fpath
-            sqlexec(open(fpath).read(), self.session.system_sql, False,
-                    delimiter=';;')
-        for fpath in glob(osp.join(directory, '*.%s.sql' % driver)):
-            print '-> installing', fpath
-            sqlexec(open(fpath).read(), self.session.system_sql, False,
-                    delimiter=';;')
+            try:
+                sqlexec(open(fpath).read(), self.session.system_sql, False,
+                        delimiter=';;')
+            except Exception, exc:
+                print '-> ERROR:', exc, ', skipping', fpath
 
     # schema synchronization internals ########################################
 
@@ -657,10 +675,9 @@ class ServerMigrationHelper(MigrationHelper):
         new = set()
         # execute pre-create files
         driver = self.repo.system_source.dbdriver
-        for pack in reversed(newcubes):
-            cubedir = self.config.cube_dir(pack)
-            self.install_custom_sql_scripts(osp.join(cubedir, 'schema'), driver)
-            self.exec_event_script('precreate', cubedir)
+        for cube in reversed(newcubes):
+            self.cmd_install_custom_sql_scripts(cube)
+            self.cmd_exec_event_script('precreate', cube)
         # add new entity and relation types
         for rschema in newcubes_schema.relations():
             if not rschema in self.repo.schema:
@@ -683,8 +700,8 @@ class ServerMigrationHelper(MigrationHelper):
                 self.cmd_add_relation_definition(str(fromtype), rschema.type,
                                                  str(totype))
         # execute post-create files
-        for pack in reversed(newcubes):
-            self.exec_event_script('postcreate', self.config.cube_dir(pack))
+        for cube in reversed(newcubes):
+            self.cmd_exec_event_script('postcreate', cube)
             self.commit()
 
     def cmd_remove_cube(self, cube, removedeps=False):
@@ -696,8 +713,8 @@ class ServerMigrationHelper(MigrationHelper):
         removedcubes_schema = self.config.load_schema(construction_mode='non-strict')
         reposchema = self.repo.schema
         # execute pre-remove files
-        for pack in reversed(removedcubes):
-            self.exec_event_script('preremove', self.config.cube_dir(pack))
+        for cube in reversed(removedcubes):
+            self.cmd_exec_event_script('preremove', cube)
         # remove cubes'entity and relation types
         for rschema in fsschema.relations():
             if not rschema in removedcubes_schema and rschema in reposchema:
@@ -718,7 +735,7 @@ class ServerMigrationHelper(MigrationHelper):
                             str(fromtype), rschema.type, str(totype))
         # execute post-remove files
         for cube in reversed(removedcubes):
-            self.exec_event_script('postremove', self.config.cube_dir(cube))
+            self.cmd_exec_event_script('postremove', cube)
             self.rqlexec('DELETE CWProperty X WHERE X pkey %(pk)s',
                          {'pk': u'system.version.'+cube}, ask_confirm=False)
             self.commit()
@@ -1364,7 +1381,7 @@ class ServerMigrationHelper(MigrationHelper):
             prop = self.rqlexec(
                 'CWProperty X WHERE X pkey %(k)s, NOT X for_user U',
                 {'k': pkey}, ask_confirm=False).get_entity(0, 0)
-        except:
+        except Exception:
             self.cmd_create_entity('CWProperty', pkey=unicode(pkey), value=value)
         else:
             prop.set_attributes(value=value)
@@ -1375,7 +1392,7 @@ class ServerMigrationHelper(MigrationHelper):
     def _cw(self):
         session = self.session
         if session is not None:
-            session.set_pool()
+            session.set_cnxset()
             return session
         return self.cnx.request()
 
@@ -1482,14 +1499,14 @@ class ServerMigrationHelper(MigrationHelper):
         if not ask_confirm or self.confirm('Execute sql: %s ?' % sql):
             try:
                 cu = self.session.system_sql(sql, args)
-            except:
+            except Exception:
                 ex = sys.exc_info()[1]
                 if self.confirm('Error: %s\nabort?' % ex, pdb=True):
                     raise
                 return
             try:
                 return cu.fetchall()
-            except:
+            except Exception:
                 # no result to fetch
                 return
 
@@ -1530,15 +1547,16 @@ class ServerMigrationHelper(MigrationHelper):
         """
         rschema = self.repo.schema.rschema(attr)
         oldtype = rschema.objects(etype)[0]
-        rdefeid = rschema.rproperty(etype, oldtype, 'eid')
+        rdefeid = rschema.rdef(etype, oldtype).eid
+        allownull = rschema.rdef(etype, oldtype).cardinality[0] != '1'
         sql = ("UPDATE cw_CWAttribute "
                "SET cw_to_entity=(SELECT cw_eid FROM cw_CWEType WHERE cw_name='%s')"
                "WHERE cw_eid=%s") % (newtype, rdefeid)
         self.sqlexec(sql, ask_confirm=False)
         dbhelper = self.repo.system_source.dbhelper
         sqltype = dbhelper.TYPE_MAPPING[newtype]
-        sql = 'ALTER TABLE cw_%s ALTER COLUMN cw_%s TYPE %s' % (etype, attr, sqltype)
-        self.sqlexec(sql, ask_confirm=False)
+        cursor = self.session.cnxset[self.repo.system_source.uri]
+        dbhelper.change_col_type(cursor, 'cw_%s'  % etype, 'cw_%s' % attr, sqltype, allownull)
         if commit:
             self.commit()
 
@@ -1561,8 +1579,7 @@ class ServerMigrationHelper(MigrationHelper):
         This may be useful on accidental desync between the repository schema
         and a sql database
         """
-        dbhelper = self.repo.system_source.dbhelper
-        tablesql = rschema2sql(dbhelper, self.repo.schema.rschema(rtype))
+        tablesql = rschema2sql(self.repo.schema.rschema(rtype))
         for sql in tablesql.split(';'):
             if sql.strip():
                 self.sqlexec(sql)

@@ -29,7 +29,7 @@ from rql import RQLSyntaxError
 from yams import ValidationError, BadSchemaDefinition
 from yams.constraints import SizeConstraint, StaticVocabularyConstraint
 from yams.buildobjs import RelationDefinition, EntityType, RelationType
-from yams.reader import PyFileReader
+from yams.reader import fill_schema
 
 from cubicweb.schema import (
     CubicWebSchema, CubicWebEntitySchema, CubicWebSchemaLoader,
@@ -159,7 +159,7 @@ class SchemaReaderClassTest(TestCase):
         self.assert_(isinstance(schema, CubicWebSchema))
         self.assertEqual(schema.name, 'data')
         entities = sorted([str(e) for e in schema.entities()])
-        expected_entities = ['BaseTransition', 'Bookmark', 'Boolean', 'Bytes', 'Card',
+        expected_entities = ['BaseTransition', 'BigInt', 'Bookmark', 'Boolean', 'Bytes', 'Card',
                              'Date', 'Datetime', 'Decimal',
                              'CWCache', 'CWConstraint', 'CWConstraintType', 'CWEType',
                              'CWAttribute', 'CWGroup', 'EmailAddress', 'CWRelation',
@@ -194,7 +194,7 @@ class SchemaReaderClassTest(TestCase):
                               'from_entity', 'from_state', 'fulltext_container', 'fulltextindexed',
 
                               'has_text',
-                              'identity', 'in_group', 'in_state', 'indexed',
+                              'identity', 'in_group', 'in_state', 'in_synchronization', 'indexed',
                               'initial_state', 'inlined', 'internationalizable', 'is', 'is_instance_of',
 
                               'label', 'last_login_time', 'latest_retrieval', 'lieu', 'login',
@@ -260,18 +260,23 @@ class SchemaReaderClassTest(TestCase):
         self.assertEqual([x.expression for x in aschema.get_rqlexprs('update')],
                           ['U has_update_permission X'])
 
+    def test_nonregr_allowed_type_names(self):
+        schema = CubicWebSchema('Test Schema')
+        schema.add_entity_type(EntityType('NaN'))
+
+
 class BadSchemaTC(TestCase):
     def setUp(self):
         self.loader = CubicWebSchemaLoader()
         self.loader.defined = {}
         self.loader.loaded_files = []
         self.loader.post_build_callbacks = []
-        self.loader._pyreader = PyFileReader(self.loader)
 
     def _test(self, schemafile, msg):
         self.loader.handle_file(join(DATADIR, schemafile))
+        sch = self.loader.schemacls('toto')
         with self.assertRaises(BadSchemaDefinition) as cm:
-            self.loader._build_schema('toto', False)
+            fill_schema(sch, self.loader.defined, False)
         self.assertEqual(str(cm.exception), msg)
 
     def test_lowered_etype(self):

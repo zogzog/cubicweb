@@ -22,6 +22,9 @@
 Resource mode
 -------------
 
+Standard resource mode
+```````````````````````````
+
 A resource *mode* is a predefined set of settings for various resources
 directories, such as cubes, instances, etc. to ease development with the
 framework. There are two running modes with *CubicWeb*:
@@ -30,7 +33,7 @@ framework. There are two running modes with *CubicWeb*:
   usually requiring root access):
 
   - instances are stored in :file:`<INSTALL_PREFIX>/etc/cubicweb.d`
-  - temporary files (such as pid file) in :file:`/var/run/cubicweb`
+  - temporary files (such as pid file) in :file:`<INSTALL_PREFIX>/var/run/cubicweb`
 
   where `<INSTALL_PREFIX>` is the detected installation prefix ('/usr/local' for
   instance).
@@ -42,6 +45,25 @@ framework. There are two running modes with *CubicWeb*:
 
 
 
+
+.. _CubicwebWithinVirtualEnv:
+
+Within virtual environment
+```````````````````````````
+
+If you are not administrator of you machine or if you need to play with some
+specific version of |cubicweb| you can use `virtualenv`_ a tool to create
+isolated Python environments.  Since version 3.9 |cubicweb| is **`virtualenv`
+friendly** and won't write any file outside the virtualenv directory.
+
+- instances are stored in :file:`<VIRTUAL_ENV>/etc/cubicweb.d`
+- temporary files (such as pid file) in :file:`<VIRTUAL_ENV>/var/run/cubicweb`
+
+.. _`virtualenv`: http://pypi.python.org/pypi/virtualenv
+
+Custom resource location
+````````````````````````````````
+
 Notice that each resource path may be explicitly set using an environment
 variable if the default doesn't suit your needs. Here are the default resource
 directories that are affected according to mode:
@@ -49,8 +71,8 @@ directories that are affected according to mode:
 * **system**: ::
 
         CW_INSTANCES_DIR = <INSTALL_PREFIX>/etc/cubicweb.d/
-        CW_INSTANCES_DATA_DIR = /var/lib/cubicweb/instances/
-        CW_RUNTIME_DIR = /var/run/cubicweb/
+        CW_INSTANCES_DATA_DIR = <INSTALL_PREFIX>/var/lib/cubicweb/instances/
+        CW_RUNTIME_DIR = <INSTALL_PREFIX>/var/run/cubicweb/
 
 * **user**: ::
 
@@ -60,10 +82,13 @@ directories that are affected according to mode:
 
 Cubes search path is also affected, see the :ref:`Cube` section.
 
-By default, the mode automatically set to `user` if a :file:`.hg` directory is found
-in the cubicweb package, else it's set to `system`. You can force this by setting
-the :envvar:`CW_MODE` environment variable to either `user` or `system` so you can
-easily:
+Setting Cubicweb Mode
+`````````````````````
+
+By default, the mode is set to 'system' for standard installation. The mode is
+set to 'user' if `cubicweb is used from a mercurial repository`_. You can force
+this by setting the :envvar:`CW_MODE` environment variable to either 'user' or
+'system' so you can easily:
 
 * use system wide installation but user specific instances and all, without root
   privileges on the system (`export CW_MODE=user`)
@@ -74,7 +99,15 @@ easily:
 If you've a doubt about the mode you're currently running, check the first line
 outputed by the :command:`cubicweb-ctl list` command.
 
-Also, if cubicweb is a mercurial checkout located in `<CW_SOFTWARE_ROOT>`:
+.. _`cubicweb is used from a mercurial repository`: CubicwebDevelopmentMod_
+
+.. _CubicwebDevelopmentMod:
+
+Development Mode
+`````````````````````
+If :file:`.hg` directory is found into the cubicweb package, there are specific resource rules.
+
+`<CW_SOFTWARE_ROOT>` is the mercurial checkout of cubicweb:
 
 * main cubes directory is `<CW_SOFTWARE_ROOT>/../cubes`. You can specify
   another one with :envvar:`CW_INSTANCES_DIR` environment variable or simply
@@ -144,7 +177,8 @@ from smtplib import SMTP
 from threading import Lock
 from os.path import (exists, join, expanduser, abspath, normpath,
                      basename, isdir, dirname, splitext)
-from warnings import warn
+from warnings import warn, filterwarnings
+
 from logilab.common.decorators import cached, classproperty
 from logilab.common.deprecation import deprecated
 from logilab.common.logging_ext import set_log_methods, init_log
@@ -618,7 +652,7 @@ this option is set to yes",
                 try:
                     __import__('cubes.%s.ccplugin' % cube)
                     cls.info('loaded cubicweb-ctl plugin from %s', cube)
-                except:
+                except Exception:
                     cls.exception('while loading plugin %s', pluginfile)
             elif exists(oldpluginfile):
                 warn('[3.6] %s: ecplugin module should be renamed to ccplugin' % cube,
@@ -626,12 +660,12 @@ this option is set to yes",
                 try:
                     __import__('cubes.%s.ecplugin' % cube)
                     cls.info('loaded cubicweb-ctl plugin from %s', cube)
-                except:
+                except Exception:
                     cls.exception('while loading plugin %s', oldpluginfile)
             elif exists(initfile):
                 try:
                     __import__('cubes.%s' % cube)
-                except:
+                except Exception:
                     cls.exception('while loading cube %s', cube)
             else:
                 cls.warning('no __init__ file in cube %s', cube)
@@ -696,6 +730,9 @@ this option is set to yes",
         return vregpath
 
     def __init__(self, debugmode=False):
+        if debugmode:
+            # in python 2.7, DeprecationWarning are not shown anymore by default
+            filterwarnings('default', category=DeprecationWarning)
         register_stored_procedures()
         self._cubes = None
         super(CubicWebNoAppConfiguration, self).__init__()
@@ -826,6 +863,13 @@ this option is set to yes",
         """
         return [self.cube_dir(p) for p in self.cubes()]
 
+    # these are overridden by set_log_methods below
+    # only defining here to prevent pylint from complaining
+    @classmethod
+    def debug(cls, msg, *a, **kw):
+        pass
+    info = warning = error = critical = exception = debug
+
 
 class CubicWebConfiguration(CubicWebNoAppConfiguration):
     """base class for cubicweb server and web configurations"""
@@ -848,6 +892,9 @@ class CubicWebConfiguration(CubicWebNoAppConfiguration):
     # set to true during repair (shell, migration) to allow some things which
     # wouldn't be possible otherwise
     repairing = False
+
+    # set by upgrade command
+    verbosity = 0
 
     options = CubicWebNoAppConfiguration.options + (
         ('log-file',
@@ -1068,13 +1115,13 @@ the repository',
 
     @cached
     def instance_md5_version(self):
-        import hashlib
+        from hashlib import md5 # pylint: disable=E0611
         infos = []
         for pkg in sorted(self.cubes()):
             version = self.cube_version(pkg)
             infos.append('%s-%s' % (pkg, version))
         infos.append('cubicweb-%s' % str(self.cubicweb_version()))
-        return hashlib.md5(';'.join(infos)).hexdigest()
+        return md5(';'.join(infos)).hexdigest()
 
     def load_configuration(self):
         """load instance's configuration files"""
@@ -1118,7 +1165,7 @@ the repository',
 
     def _gettext_init(self):
         """set language for gettext"""
-        from gettext import translation
+        from cubicweb.gettext import translation
         path = join(self.apphome, 'i18n')
         for language in self.available_languages():
             self.info("loading language %s", language)
@@ -1184,13 +1231,6 @@ the repository',
             SMTP_LOCK.release()
         return True
 
-    # these are overridden by set_log_methods below
-    # only defining here to prevent pylint from complaining
-    @classmethod
-    def debug(cls, msg, *a, **kw):
-        pass
-    info = warning = error = critical = exception = debug 
-
 set_log_methods(CubicWebNoAppConfiguration,
                 logging.getLogger('cubicweb.configuration'))
 
@@ -1235,6 +1275,7 @@ def register_stored_procedures():
 
     class LIMIT_SIZE(FunctionDescr):
         supported_backends = ('postgres', 'sqlite',)
+        minargs = maxargs = 3
         rtype = 'String'
 
         def st_description(self, funcnode, mainindex, tr):
@@ -1245,6 +1286,7 @@ def register_stored_procedures():
 
     class TEXT_LIMIT_SIZE(LIMIT_SIZE):
         supported_backends = ('mysql', 'postgres', 'sqlite',)
+        minargs = maxargs = 2
 
     register_function(TEXT_LIMIT_SIZE)
 
@@ -1297,7 +1339,7 @@ def register_stored_procedures():
             try:
                 return Binary(fpath)
             except OSError, ex:
-                self.critical("can't open %s: %s", fpath, ex)
+                source.critical("can't open %s: %s", fpath, ex)
                 return None
 
     register_function(FSPATH)

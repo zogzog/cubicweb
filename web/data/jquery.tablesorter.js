@@ -874,5 +874,3 @@ function cubicwebSortValueExtraction(node){
 Sortable.sortTables = function() {
    jQuery("table.listing").tablesorter({textExtraction: cubicwebSortValueExtraction});
 };
-
-jQuery(document).ready(Sortable.sortTables);

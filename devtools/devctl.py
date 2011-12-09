@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -88,6 +88,9 @@ def cleanup_sys_modules(config):
             continue
         if not hasattr(mod, '__file__'):
             continue
+        if mod.__file__ is None:
+            # odd/rare but real
+            continue
         for path in config.vregistry_path():
             if mod.__file__.startswith(path):
                 del sys.modules[name]
@@ -155,6 +158,9 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None):
             add_msg(w, cstrtype)
     done = set()
     for eschema in sorted(schema.entities()):
+        if eschema.type in libschema:
+            done.add(eschema.description)
+    for eschema in sorted(schema.entities()):
         etype = eschema.type
         if etype not in libschema:
             add_msg(w, etype)
@@ -203,15 +209,19 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None):
     w('# (no object form for final or symmetric relation types)\n')
     w('\n')
     for rschema in sorted(schema.relations()):
+        if rschema.type in libschema:
+            done.add(rschema.type)
+            done.add(rschema.description)
+    for rschema in sorted(schema.relations()):
         rtype = rschema.type
         if rtype not in libschema:
             # bw compat, necessary until all translation of relation are done
             # properly...
             add_msg(w, rtype)
-            if rschema.description and rschema.description not in done:
-                done.add(rschema.description)
-                add_msg(w, rschema.description)
             done.add(rtype)
+            if rschema.description and rschema.description not in done:
+                add_msg(w, rschema.description)
+            done.add(rschema.description)
             librschema = None
         else:
             librschema = libschema.rschema(rtype)
@@ -221,7 +231,7 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None):
             for subjschema in rschema.subjects():
                 if not subjschema in libsubjects:
                     add_msg(w, rtype, subjschema.type)
-        if not (schema.rschema(rtype).final or rschema.symmetric):
+        if not (rschema.final or rschema.symmetric):
             if rschema not in NO_I18NCONTEXT:
                 libobjects = librschema and librschema.objects() or ()
                 for objschema in rschema.objects():
@@ -231,6 +241,14 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None):
                 # bw compat, necessary until all translation of relation are
                 # done properly...
                 add_msg(w, '%s_object' % rtype)
+        for rdef in rschema.rdefs.itervalues():
+            if not rdef.description or rdef.description in done:
+                continue
+            if (librschema is None or
+                (rdef.subject, rdef.object) not in librschema.rdefs or
+                librschema.rdefs[(rdef.subject, rdef.object)].description != rdef.description):
+                add_msg(w, rdef.description)
+            done.add(rdef.description)
     for objid in _iter_vreg_objids(vreg, vregdone):
         add_msg(w, '%s_description' % objid)
         add_msg(w, objid)

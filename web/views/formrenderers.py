@@ -37,7 +37,6 @@ _ = unicode
 
 from warnings import warn
 
-from logilab.common import dictattr
 from logilab.mtconverter import xml_escape
 
 from cubicweb import tags, uilib
@@ -193,7 +192,7 @@ class FormRenderer(AppObject):
         if form.domid:
             attrs.setdefault('id', form.domid)
         if form.onsubmit:
-            attrs.setdefault('onsubmit',  form.onsubmit % dictattr(form))
+            attrs.setdefault('onsubmit',  form.onsubmit)
         if form.cssstyle:
             attrs.setdefault('style', form.cssstyle)
         if form.cssclass:
@@ -316,6 +315,43 @@ class HTableFormRenderer(FormRenderer):
         w(u'</tr>')
         w(u'<tr>')
         for field in fields:
+            error = form.field_error(field)
+            if error:
+                w(u'<td class="error">')
+                self.render_error(w, error)
+            else:
+                w(u'<td>')
+            w(field.render(form, self))
+            w(u'</td>')
+        w(u'<td>')
+        for button in form.form_buttons:
+            w(button.render(form))
+        w(u'</td>')
+        w(u'</tr>')
+        w(u'</table>')
+
+    def render_buttons(self, w, form):
+        pass
+
+
+class OneRowTableFormRenderer(FormRenderer):
+    """The 'htable' form renderer display fields horizontally in a table:
+
+    +--------------+--------------+--------------+--------------+---------+
+    | field1 label | field1 input | field2 label | field2 input | buttons |
+    +--------------+--------------+--------------+--------------+---------+
+    """
+    __regid__ = 'onerowtable'
+
+    display_help = False
+    def _render_fields(self, fields, w, form):
+        w(u'<table border="0" class="oneRowTableForm">')
+        w(u'<tr>')
+        for field in fields:
+            if self.display_label:
+                w(u'<th class="labelCol">%s</th>' % self.render_label(form, field))
+            if self.display_help:
+                w(self.render_help(form, field))
             error = form.field_error(field)
             if error:
                 w(u'<td class="error">')

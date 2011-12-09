@@ -25,6 +25,7 @@ from datetime import datetime, timedelta
 from logging import getLogger
 
 from logilab.common import configuration
+from logilab.common.deprecation import deprecated
 
 from yams.schema import role_name
 
@@ -36,11 +37,11 @@ from cubicweb.server.edition import EditedEntity
 
 def dbg_st_search(uri, union, varmap, args, cachekey=None, prefix='rql for'):
     if server.DEBUG & server.DBG_RQL:
-        print '  %s %s source: %s' % (prefix, uri, union.as_string())
+        print '  %s %s source: %s' % (prefix, uri, repr(union.as_string()))
         if varmap:
             print '    using varmap', varmap
         if server.DEBUG & server.DBG_MORE:
-            print '    args', args
+            print '    args', repr(args)
             print '    cache key', cachekey
             print '    solutions', ','.join(str(s.solutions)
                                             for s in union.children)
@@ -64,13 +65,13 @@ class TimedCache(dict):
         self.ttl = timedelta(seconds=ttl)
 
     def __setitem__(self, key, value):
-        dict.__setitem__(self, key, (datetime.now(), value))
+        dict.__setitem__(self, key, (datetime.utcnow(), value))
 
     def __getitem__(self, key):
         return dict.__getitem__(self, key)[1]
 
     def clear_expired(self):
-        now_ = datetime.now()
+        now_ = datetime.utcnow()
         ttl = self.ttl
         for key, (timestamp, value) in self.items():
             if now_ - timestamp > ttl:
@@ -110,8 +111,16 @@ class AbstractSource(object):
     # force deactivation (configuration error for instance)
     disabled = False
 
+    # boolean telling if cwuri of entities from this source is the url that
+    # should be used as entity's absolute url
+    use_cwuri_as_url = False
+
     # source configuration options
     options = ()
+
+    # these are overridden by set_log_methods below
+    # only defining here to prevent pylint from complaining
+    info = warning = error = critical = exception = debug = lambda msg,*a,**kw: None
 
     def __init__(self, repo, source_config, eid=None):
         self.repo = repo
@@ -119,6 +128,7 @@ class AbstractSource(object):
         self.support_relations['identity'] = False
         self.eid = eid
         self.public_config = source_config.copy()
+        self.public_config.setdefault('use-cwuri-as-url', self.use_cwuri_as_url)
         self.remove_sensitive_information(self.public_config)
         self.uri = source_config.pop('uri')
         set_log_methods(self, getLogger('cubicweb.sources.'+self.uri))
@@ -171,7 +181,7 @@ class AbstractSource(object):
         # cw < 3.10 bw compat
         try:
             processed['adapter'] = confdict['adapter']
-        except:
+        except KeyError:
             pass
         # check for unknown options
         if confdict and not confdict.keys() == ['adapter']:
@@ -213,7 +223,7 @@ class AbstractSource(object):
         """
         pass
 
-    PUBLIC_KEYS = ('type', 'uri')
+    PUBLIC_KEYS = ('type', 'uri', 'use-cwuri-as-url')
     def remove_sensitive_information(self, sourcedef):
         """remove sensitive information such as login / password from source
         definition
@@ -230,23 +240,23 @@ class AbstractSource(object):
 
     def check_connection(self, cnx):
         """Check connection validity, return None if the connection is still
-        valid else a new connection (called when the pool using the given
-        connection is being attached to a session). Do nothing by default.
+        valid else a new connection (called when the connections set using the
+        given connection is being attached to a session). Do nothing by default.
         """
         pass
 
-    def close_pool_connections(self):
-        for pool in self.repo.pools:
-            pool._cursors.pop(self.uri, None)
-            pool.source_cnxs[self.uri][1].close()
+    def close_source_connections(self):
+        for cnxset in self.repo.cnxsets:
+            cnxset._cursors.pop(self.uri, None)
+            cnxset.source_cnxs[self.uri][1].close()
 
-    def open_pool_connections(self):
-        for pool in self.repo.pools:
-            pool.source_cnxs[self.uri] = (self, self.get_connection())
+    def open_source_connections(self):
+        for cnxset in self.repo.cnxsets:
+            cnxset.source_cnxs[self.uri] = (self, self.get_connection())
 
-    def pool_reset(self, cnx):
-        """the pool using the given connection is being reseted from its current
-        attached session
+    def cnxset_freed(self, cnx):
+        """the connections set holding the given connection is being reseted
+        from its current attached session.
 
         do nothing by default
         """
@@ -263,12 +273,6 @@ class AbstractSource(object):
         pass
 
     # external source api ######################################################
-
-    def eid2extid(self, eid, session=None):
-        return self.repo.eid2extid(self, eid, session)
-
-    def extid2eid(self, value, etype, session=None, **kwargs):
-        return self.repo.extid2eid(self, value, etype, session, **kwargs)
 
     def support_entity(self, etype, write=False):
         """return true if the given entity's type is handled by this adapter
@@ -404,7 +408,7 @@ class AbstractSource(object):
         .executemany().
         """
         res = self.syntax_tree_search(session, union, args, varmap=varmap)
-        session.pool.source('system').manual_insert(res, table, session)
+        session.cnxset.source('system').manual_insert(res, table, session)
 
     # write modification api ###################################################
     # read-only sources don't have to implement methods below
@@ -515,6 +519,15 @@ class AbstractSource(object):
     def clean_temp_data(self, session, temptables):
         """remove temporary data, usually associated to temporary tables"""
         pass
+
+
+    @deprecated('[3.13] use repo.eid2extid(source, eid, session)')
+    def eid2extid(self, eid, session=None):
+        return self.repo.eid2extid(self, eid, session)
+
+    @deprecated('[3.13] use extid2eid(source, value, etype, session, **kwargs)')
+    def extid2eid(self, value, etype, session=None, **kwargs):
+        return self.repo.extid2eid(self, value, etype, session, **kwargs)
 
 
 class TrFunc(object):

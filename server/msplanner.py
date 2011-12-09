@@ -291,6 +291,8 @@ class PartPlanInformation(object):
         self.sourcesterms = self._sourcesterms = {}
         # source : {relation: set(child variable and constant)}
         self._crossrelations = {}
+        # term : set(sources)
+        self._discarded_sources = {}
         # dictionary of variables and constants which are linked to each other
         # using a non final relation supported by multiple sources (crossed or
         # not).
@@ -370,7 +372,7 @@ class PartPlanInformation(object):
                     eid = const.eval(self.plan.args)
                     source = self._session.source_from_eid(eid)
                     if (source is self.system_source
-                        or (hasrel and
+                        or (hasrel and varobj._q_invariant and
                             not any(source.support_relation(r.r_type)
                                     for r in varobj.stinfo['relations']
                                     if not r is rel))):
@@ -539,6 +541,7 @@ class PartPlanInformation(object):
                         if invariant and source is self.system_source:
                             continue
                         self._remove_source_term(source, lhs)
+                        self._discarded_sources.setdefault(lhs, set()).add(source)
                     usesys = self.system_source not in sources
                 else:
                     for source, terms in sourcesterms.items():
@@ -546,6 +549,7 @@ class PartPlanInformation(object):
                             if invariant and source is self.system_source:
                                 continue
                             self._remove_source_term(source, lhs)
+                            self._discarded_sources.setdefault(lhs, set()).add(source)
                     usesys = self.system_source in sources
                 if rel is None or (len(var.stinfo['relations']) == 2 and
                                    not var.stinfo['selected']):
@@ -697,6 +701,12 @@ class PartPlanInformation(object):
                                                     rel in self._crossrelations[s]))
         if invalid_sources:
             self._remove_sources(term, invalid_sources)
+            discarded = self._discarded_sources.get(term)
+            if discarded is not None and not any(x[0] for x in (termsources-invalid_sources)
+                                                 if not x[0] in discarded):
+                raise BadRQLQuery('relation %s cant be crossed but %s and %s should '
+                              'come from difference sources' %
+                              (rel.r_type, term.as_string(), oterm.as_string()))
             # if term is a rewritten const, we can apply the same changes to
             # all other consts inserted from the same original variable
             for const in self._const_vars.get(term, ()):
@@ -1438,7 +1448,7 @@ class MSPlanner(SSPlanner):
                                                          for step in steps
                                                          for select in step.union.children):
                 if temptable:
-                    step = IntersectFetchStep(plan) # XXX not implemented
+                    raise NotImplementedError('oops') # IntersectFetchStep(plan)
                 else:
                     step = IntersectStep(plan)
             else:
@@ -1623,17 +1633,7 @@ class TermsFiltererVisitor(object):
     def visit_relation(self, node, newroot, terms):
         if not node.is_types_restriction():
             if not node in terms and node in self.skip and self.solindices.issubset(self.skip[node]):
-                if not self.schema.rschema(node.r_type).final:
-                    # can't really skip the relation if one variable is selected
-                    # and only referenced by this relation
-                    for vref in node.iget_nodes(VariableRef):
-                        stinfo = vref.variable.stinfo
-                        if stinfo['selected'] and len(stinfo['relations']) == 1:
-                            break
-                    else:
-                        return None, node
-                else:
-                    return None, node
+                return None, node
             if not self._relation_supported(node):
                 raise UnsupportedBranch()
         # don't copy type restriction unless this is the only supported relation
@@ -1650,7 +1650,7 @@ class TermsFiltererVisitor(object):
         self._pending_vrefs = []
         try:
             res = self.visit_default(node, newroot, terms)[0]
-        except:
+        except Exception:
             # when a relation isn't supported, we should dereference potentially
             # introduced variable refs
             for vref in self._pending_vrefs:

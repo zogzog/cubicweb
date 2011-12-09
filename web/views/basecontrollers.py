@@ -23,6 +23,7 @@ __docformat__ = "restructuredtext en"
 _ = unicode
 
 from logilab.common.date import strptime
+from logilab.common.deprecation import deprecated
 
 from cubicweb import (NoSelectableObject, ObjectNotFound, ValidationError,
                       AuthenticationError, typed_eid)
@@ -35,11 +36,9 @@ from cubicweb.web.controller import Controller
 from cubicweb.web.views import vid_from_rset, formrenderers
 
 try:
-    from cubicweb.web.facet import (FilterRQLBuilder, get_facet,
-                                    prepare_facets_rqlst)
-    HAS_SEARCH_RESTRICTION = True
+    from cubicweb.web import facet as facetbase
 except ImportError: # gae
-    HAS_SEARCH_RESTRICTION = False
+    facetbase = None
 
 def jsonize(func):
     """decorator to sets correct content_type and calls `json_dumps` on
@@ -102,7 +101,7 @@ class LogoutController(Controller):
         msg = self._cw._('you have been logged out')
         # force base_url so on dual http/https configuration, we generate an url
         # on the http version of the site
-        return self._cw.build_url('view', vid='index', __message=msg,
+        return self._cw.build_url('view', vid='loggedout',
                                   base_url=self._cw.vreg.config['base-url'])
 
 
@@ -490,21 +489,23 @@ class JSonController(Controller):
             return None
         return cb(self._cw)
 
-    if HAS_SEARCH_RESTRICTION:
+    if facetbase is not None:
         @jsonize
         def js_filter_build_rql(self, names, values):
             form = self._rebuild_posted_form(names, values)
             self._cw.form = form
-            builder = FilterRQLBuilder(self._cw)
+            builder = facetbase.FilterRQLBuilder(self._cw)
             return builder.build_rql()
 
         @jsonize
-        def js_filter_select_content(self, facetids, rql):
-            rqlst = self._cw.vreg.parse(self._cw, rql) # XXX Union unsupported yet
-            mainvar = prepare_facets_rqlst(rqlst)[0]
+        def js_filter_select_content(self, facetids, rql, mainvar):
+            # Union unsupported yet
+            select = self._cw.vreg.parse(self._cw, rql).children[0]
+            filtered_variable = facetbase.get_filtered_variable(select, mainvar)
+            facetbase.prepare_select(select, filtered_variable)
             update_map = {}
             for facetid in facetids:
-                facet = get_facet(self._cw, facetid, rqlst.children[0], mainvar)
+                facet = facetbase.get_facet(self._cw, facetid, select, filtered_variable)
                 update_map[facetid] = facet.possible_values()
             return update_map
 
@@ -534,24 +535,20 @@ class JSonController(Controller):
         statename = treecookiename(treeid)
         treestate = cookies.get(statename)
         if treestate is None:
-            cookies[statename] = nodeeid
-            self._cw.set_cookie(cookies, statename)
+            self._cw.set_cookie(statename, nodeeid)
         else:
             marked = set(filter(None, treestate.value.split(':')))
             if nodeeid in marked:
                 marked.remove(nodeeid)
             else:
                 marked.add(nodeeid)
-            cookies[statename] = ':'.join(marked)
-            self._cw.set_cookie(cookies, statename)
+            self._cw.set_cookie(statename, ':'.join(marked))
 
     @jsonize
+    @deprecated("[3.13] use jQuery.cookie(cookiename, cookievalue, {path: '/'}) in js land instead")
     def js_set_cookie(self, cookiename, cookievalue):
-        # XXX we should consider jQuery.Cookie
         cookiename, cookievalue = str(cookiename), str(cookievalue)
-        cookies = self._cw.get_cookie()
-        cookies[cookiename] = cookievalue
-        self._cw.set_cookie(cookies, cookiename)
+        self._cw.set_cookie(cookiename, cookievalue)
 
     # relations edition stuff ##################################################
 

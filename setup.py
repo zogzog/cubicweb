@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # pylint: disable=W0142,W0403,W0404,W0613,W0622,W0622,W0704,R0904,C0103,E0611
 #
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -179,7 +179,7 @@ class MyInstallData(install_data.install_data):
 if USE_SETUPTOOLS:
     # overwrite MyInstallData to use sys.prefix instead of the egg directory
     MyInstallMoreData = MyInstallData
-    class MyInstallData(MyInstallMoreData):
+    class MyInstallData(MyInstallMoreData): # pylint: disable=E0102
         """A class that manages data files installation"""
         def run(self):
             _old_install_dir = self.install_dir

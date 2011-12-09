@@ -395,8 +395,10 @@ class Entity(AppObject):
 
     @cached
     def cw_metainformation(self):
-        res = dict(zip(('type', 'source', 'extid'), self._cw.describe(self.eid)))
-        res['source'] = self._cw.source_defs()[res['source']]
+        res = self._cw.describe(self.eid, asdict=True)
+        # use 'asource' and not 'source' since this is the actual source,
+        # while 'source' is the physical source (where it's stored)
+        res['source'] = self._cw.source_defs()[res.pop('asource')]
         return res
 
     def cw_check_perm(self, action):
@@ -431,9 +433,11 @@ class Entity(AppObject):
         use_ext_id = False
         if 'base_url' not in kwargs and \
                getattr(self._cw, 'search_state', ('normal',))[0] == 'normal':
-            baseurl = self.cw_metainformation()['source'].get('base-url')
-            if baseurl:
-                kwargs['base_url'] = baseurl
+            sourcemeta = self.cw_metainformation()['source']
+            if sourcemeta.get('use-cwuri-as-url'):
+                return self.cwuri # XXX consider kwargs?
+            if sourcemeta.get('base-url'):
+                kwargs['base_url'] = sourcemeta['base-url']
                 use_ext_id = True
         if method in (None, 'view'):
             try:
@@ -718,12 +722,21 @@ class Entity(AppObject):
                         self.cw_attr_cache[name] = value = None
             return value
 
-    def related(self, rtype, role='subject', limit=None, entities=False): # XXX .cw_related
+    def related(self, rtype, role='subject', limit=None, entities=False, # XXX .cw_related
+                safe=False):
         """returns a resultset of related entities
 
-        :param role: is the role played by 'self' in the relation ('subject' or 'object')
-        :param limit: resultset's maximum size
-        :param entities: if True, the entites are returned; if False, a result set is returned
+        :param rtype:
+          the name of the relation, aka relation type
+        :param role:
+          the role played by 'self' in the relation ('subject' or 'object')
+        :param limit:
+          resultset's maximum size
+        :param entities:
+          if True, the entites are returned; if False, a result set is returned
+        :param safe:
+          if True, an empty rset/list of entities will be returned in case of
+          :exc:`Unauthorized`, else (the default), the exception is propagated
         """
         try:
             return self._cw_relation_cache(rtype, role, entities, limit)
@@ -734,7 +747,12 @@ class Entity(AppObject):
                 return []
             return self._cw.empty_rset()
         rql = self.cw_related_rql(rtype, role)
-        rset = self._cw.execute(rql, {'x': self.eid})
+        try:
+            rset = self._cw.execute(rql, {'x': self.eid})
+        except Unauthorized:
+            if not safe:
+                raise
+            rset = self._cw.empty_rset()
         self.cw_set_relation_cache(rtype, role, rset)
         return self.related(rtype, role, limit, entities)
 
@@ -773,7 +791,7 @@ class Entity(AppObject):
                                        rql.split(' WHERE ', 1)[1])
         elif not ' ORDERBY ' in rql:
             args = rql.split(' WHERE ', 1)
-            # if modification_date already retreived, we should use it instead
+            # if modification_date already retrieved, we should use it instead
             # of adding another variable for sort. This should be be problematic
             # but it's actually with sqlserver, see ticket #694445
             if 'X modification_date ' in args[1]:
@@ -942,7 +960,7 @@ class Entity(AppObject):
             assert role
             self._cw_related_cache.pop('%s_%s' % (rtype, role), None)
 
-    def clear_all_caches(self): # XXX cw_clear_all_caches
+    def cw_clear_all_caches(self):
         """flush all caches on this entity. Further attributes/relations access
         will triggers new database queries to get back values.
 
@@ -1023,6 +1041,10 @@ class Entity(AppObject):
             self._cw.local_perm_cache.pop((rqlexpr.eid, (('x', self.eid),)), None)
 
     # deprecated stuff #########################################################
+
+    @deprecated('[3.13] use entity.cw_clear_all_caches()')
+    def clear_all_caches(self):
+        return self.cw_clear_all_caches()
 
     @deprecated('[3.9] use entity.cw_attr_value(attr)')
     def get_value(self, name):

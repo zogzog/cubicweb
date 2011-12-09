@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -33,14 +33,14 @@ def all_columns_are_numbers(cls, req, rset=None, *args, **kwargs):
     """accept result set with at least one line and two columns of result
     all columns after second must be of numerical types"""
     for etype in rset.description[0]:
-        if etype not in ('Int', 'Float'):
+        if etype not in ('Int', 'BigInt', 'Float'):
             return 0
     return 1
 
 @objectify_selector
 def second_column_is_number(cls, req, rset=None, *args, **kwargs):
     etype = rset.description[0][1]
-    if etype not  in ('Int', 'Float'):
+    if etype not  in ('Int', 'BigInt', 'Float'):
         return 0
     return 1
 
@@ -50,7 +50,7 @@ def columns_are_date_then_numbers(cls, req, rset=None, *args, **kwargs):
     if etypes[0] not in ('Date', 'Datetime', 'TZDatetime'):
         return 0
     for etype in etypes[1:]:
-        if etype not in ('Int', 'Float'):
+        if etype not in ('Int', 'BigInt', 'Float'):
             return 0
     return 1
 
@@ -78,6 +78,9 @@ class PlotWidget(object):
         self._render(*args, **kwargs)
         if w is None:
             return self._stream.getvalue()
+
+    def _render(self, *args, **kwargs):
+        raise NotImplementedError
 
 class FlotPlotWidget(PlotWidget):
     """PlotRenderer widget using Flot"""

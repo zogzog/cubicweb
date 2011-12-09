@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -123,8 +123,10 @@ class Controller(AppObject):
         """
         newparams = {}
         # sets message if needed
-        if self._cw.message:
-            newparams['_cwmsgid'] = self._cw.set_redirect_message(self._cw.message)
+        # XXX - don't call .message twice since it pops the id
+        msg = self._cw.message
+        if msg:
+            newparams['_cwmsgid'] = self._cw.set_redirect_message(msg)
         if self._cw.form.has_key('__action_apply'):
             self._return_to_edition_view(newparams)
         if self._cw.form.has_key('__action_cancel'):
@@ -165,7 +167,7 @@ class Controller(AppObject):
         elif self._edited_entity:
             # clear caches in case some attribute participating to the rest path
             # has been modified
-            self._edited_entity.clear_all_caches()
+            self._edited_entity.cw_clear_all_caches()
             path = self._edited_entity.rest_path()
         else:
             path = 'view'

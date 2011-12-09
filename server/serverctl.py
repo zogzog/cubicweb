@@ -24,6 +24,7 @@ __docformat__ = 'restructuredtext en'
 # completion). So import locally in command helpers.
 import sys
 import os
+import logging
 
 from logilab.common import nullobject
 from logilab.common.configuration import Configuration
@@ -122,11 +123,10 @@ def _db_sys_cnx(source, special_privs, interactive=True):
                             interactive=interactive)
     # disable autocommit (isolation_level(1)) because DROP and
     # CREATE DATABASE can't be executed in a transaction
-    try:
-        cnx.set_isolation_level(0)
-    except AttributeError:
+    set_isolation_level = getattr(cnx, 'set_isolation_level', None)
+    if set_isolation_level is not None:
         # set_isolation_level() is psycopg specific
-        pass
+        set_isolation_level(0)
     return cnx
 
 def repo_cnx(config):
@@ -248,7 +248,7 @@ class RepositoryDeleteHandler(CommandHandler):
                         cursor.execute, 'DROP USER %s' % user) is not ERROR:
                         print '-> user %s dropped.' % user
                 cnx.commit()
-            except:
+            except BaseException:
                 cnx.rollback()
                 raise
 
@@ -363,21 +363,28 @@ class CreateInstanceDBCommand(Command):
                 createdb(helper, source, dbcnx, cursor)
                 dbcnx.commit()
                 print '-> database %s created.' % dbname
-            except:
+            except BaseException:
                 dbcnx.rollback()
                 raise
         cnx = system_source_cnx(source, special_privs='CREATE LANGUAGE',
                                 interactive=not automatic)
         cursor = cnx.cursor()
         helper.init_fti_extensions(cursor)
+        cnx.commit()
         # postgres specific stuff
         if driver == 'postgres':
-            # install plpythonu/plpgsql language if not installed by the cube
-            langs = sys.platform == 'win32' and ('plpgsql',) or ('plpythonu', 'plpgsql')
+            # install plpythonu/plpgsql languages
+            langs = ('plpythonu', 'plpgsql')
             for extlang in langs:
-                helper.create_language(cursor, extlang)
-        cursor.close()
-        cnx.commit()
+                if automatic or ASK.confirm('Create language %s ?' % extlang):
+                    try:
+                        helper.create_language(cursor, extlang)
+                    except Exception, exc:
+                        print '-> ERROR:', exc
+                        print '-> could not create language %s, some stored procedures might be unusable' % extlang
+                        cnx.rollback()
+                    else:
+                        cnx.commit()
         print '-> database for instance %s created and necessary extensions installed.' % appid
         print
         if automatic:
@@ -560,6 +567,7 @@ class ResetAdminPasswordCommand(Command):
     """
     name = 'reset-admin-pwd'
     arguments = '<instance>'
+    min_args = max_args = 1
     options = (
         ('password',
          {'short': 'p', 'type' : 'string', 'metavar' : '<new-password>',
@@ -643,14 +651,13 @@ class StartRepositoryCommand(Command):
         )
 
     def run(self, args):
-        from logilab.common.daemon import daemonize
+        from logilab.common.daemon import daemonize, setugid
         from cubicweb.cwctl import init_cmdline_log_threshold
         from cubicweb.server.server import RepositoryServer
         appid = args[0]
         debug = self['debug']
         if sys.platform == 'win32' and not debug:
-            from logging import getLogger
-            logger = getLogger('cubicweb.ctl')
+            logger = logging.getLogger('cubicweb.ctl')
             logger.info('Forcing debug mode on win32 platform')
             debug = True
         config = ServerConfiguration.config_for(appid, debugmode=debug)
@@ -668,12 +675,7 @@ class StartRepositoryCommand(Command):
             return
         uid = config['uid']
         if uid is not None:
-            try:
-                uid = int(uid)
-            except ValueError:
-                from pwd import getpwnam
-                uid = getpwnam(uid).pw_uid
-            os.setuid(uid)
+            setugid(uid)
         server.install_sig_handlers()
         server.connect(config['host'], 0)
         server.run()
@@ -982,7 +984,7 @@ class RebuildFTICommand(Command):
         appid = args[0]
         config = ServerConfiguration.config_for(appid)
         repo, cnx = repo_cnx(config)
-        session = repo._get_session(cnx.sessionid, setpool=True)
+        session = repo._get_session(cnx.sessionid, setcnxset=True)
         reindex_entities(repo.schema, session)
         cnx.commit()
 
@@ -1007,11 +1009,43 @@ class SynchronizeInstanceSchemaCommand(Command):
         mih.cmd_synchronize_schema()
 
 
+class SynchronizeSourceCommand(Command):
+    """Force a source synchronization.
+
+    <instance>
+      the identifier of the instance
+    <source>
+      the name of the source to synchronize.
+    """
+    name = 'source-sync'
+    arguments = '<instance> <source>'
+    min_args = max_args = 2
+
+    def run(self, args):
+        config = ServerConfiguration.config_for(args[0])
+        config.global_set_option('log-file', None)
+        config.log_format = '%(levelname)s %(name)s: %(message)s'
+        logger = logging.getLogger('cubicweb.sources')
+        logger.setLevel(logging.INFO)
+        # only retrieve cnx to trigger authentication, close it right away
+        repo, cnx = repo_cnx(config)
+        cnx.close()
+        try:
+            source = repo.sources_by_uri[args[1]]
+        except KeyError:
+            raise ExecutionError('no source named %r' % args[1])
+        session = repo.internal_session()
+        stats = source.pull_data(session, force=True, raise_on_error=True)
+        for key, val in stats.iteritems():
+            if val:
+                print key, ':', val
+
+
 for cmdclass in (CreateInstanceDBCommand, InitInstanceCommand,
                  GrantUserOnInstanceCommand, ResetAdminPasswordCommand,
                  StartRepositoryCommand,
                  DBDumpCommand, DBRestoreCommand, DBCopyCommand,
                  AddSourceCommand, CheckRepositoryCommand, RebuildFTICommand,
-                 SynchronizeInstanceSchemaCommand,
+                 SynchronizeInstanceSchemaCommand, SynchronizeSourceCommand
                  ):
     CWCTL.register(cmdclass)

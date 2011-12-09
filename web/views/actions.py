@@ -135,14 +135,19 @@ class ViewAction(action.Action):
         params = self._cw.form.copy()
         for param in ('vid', '__message') + controller.NAV_FORM_PARAMETERS:
             params.pop(param, None)
-        return self._cw.build_url(self._cw.relative_path(includeparams=False),
-                                  **params)
+        if self._cw.json_request:
+            path = 'view'
+            if self.cw_rset is not None:
+                params = {'rql': self.cw_rset.printable_rql()}
+        else:
+            path = self._cw.relative_path(includeparams=False)
+        return self._cw.build_url(path, **params)
 
 
 class ModifyAction(action.Action):
     __regid__ = 'edit'
     __select__ = (action.Action.__select__
-                  & one_line_rset() & has_editable_relation('add'))
+                  & one_line_rset() & has_editable_relation())
 
     title = _('modify')
     category = 'mainactions'
@@ -163,7 +168,7 @@ class MultipleEditAction(action.Action):
     order = 10
 
     def url(self):
-        return self._cw.build_url('view', rql=self.cw_rset.rql, vid='muledit')
+        return self._cw.build_url('view', rql=self.cw_rset.printable_rql(), vid='muledit')
 
 
 # generic "more" actions #######################################################
@@ -243,7 +248,7 @@ class AddNewAction(MultipleEditAction):
         return self._cw.__('add a %s' % self.rsettype) # generated msgid
 
     def url(self):
-        return self._cw.build_url('add/%s' % self.rsettype)
+        return self._cw.vreg["etypes"].etype_class(self.rsettype).cw_create_url(self._cw)
 
 
 class AddRelatedActions(action.Action):
@@ -314,8 +319,9 @@ class AddRelatedActions(action.Action):
                         yield rschema, teschema, role
 
     def linkto_url(self, entity, rtype, etype, target, **kwargs):
-        return self._cw.build_url('add/%s' % etype,
-                                  __linkto='%s:%s:%s' % (rtype, entity.eid, target), **kwargs)
+        return self._cw.vreg["etypes"].etype_class(etype).cw_create_url(
+                self._cw, __linkto='%s:%s:%s' % (rtype, entity.eid, target),
+                **kwargs)
 
 
 class ViewSameCWEType(action.Action):

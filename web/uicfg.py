@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -29,6 +29,16 @@ Index view configuration
       * ``system``
       * ``schema``
       * ``subobject`` (not displayed by default)
+
+   By default only entities on the ``application`` category are shown.
+
+.. sourcecode:: python
+
+    from cubicweb.web import uicfg
+    # force hiding
+    uicfg.indexview_etype_section['HideMe'] = 'subobject'
+    # force display
+    uicfg.indexview_etype_section['ShowMe'] = 'application'
 
 
 Actions box configuration

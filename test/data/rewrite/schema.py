@@ -63,3 +63,15 @@ class inlined_card(RelationDefinition):
     object = 'Card'
     inlined = True
     cardinality = '?*'
+
+class inlined_note(RelationDefinition):
+    subject = 'Card'
+    object = 'Note'
+    inlined = True
+    cardinality = '?*'
+
+class inlined_affaire(RelationDefinition):
+    subject = 'Note'
+    object = 'Affaire'
+    inlined = True
+    cardinality = '?*'

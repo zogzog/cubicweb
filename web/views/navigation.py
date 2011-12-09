@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -40,10 +40,10 @@ class PageNavigation(NavigationComponent):
         self.clean_params(params)
         basepath = self._cw.relative_path(includeparams=False)
         self.w(u'<div class="pagination">')
-        self.w(u'%s&#160;' % self.previous_link(basepath, params))
+        self.w(self.previous_link(basepath, params))
         self.w(u'[&#160;%s&#160;]' %
                u'&#160;| '.join(self.iter_page_links(basepath, params)))
-        self.w(u'&#160;%s' % self.next_link(basepath, params))
+        self.w(u'&#160;&#160;%s' % self.next_link(basepath, params))
         self.w(u'</div>')
 
     def index_display(self, start, stop):
@@ -74,12 +74,12 @@ class PageNavigationSelect(PageNavigation):
         basepath = self._cw.relative_path(includeparams=False)
         w = self.w
         w(u'<div class="pagination">')
-        w(u'%s&#160;' % self.previous_link(basepath, params))
+        w(self.previous_link(basepath, params))
         w(u'<select onchange="javascript: document.location=this.options[this.selectedIndex].value">')
         for option in self.iter_page_links(basepath, params):
             w(option)
         w(u'</select>')
-        w(u'&#160;%s' % self.next_link(basepath, params))
+        w(u'&#160;&#160;%s' % self.next_link(basepath, params))
         w(u'</div>')
 
 
@@ -211,6 +211,14 @@ class NextPrevNavigationComponent(EntityCtxComponent):
     context = 'navbottom'
     order = 10
 
+    @property
+    def prev_icon(self):
+        return '<img src="%s"/>' % xml_escape(self._cw.data_url('go_prev.png'))
+
+    @property
+    def next_icon(self):
+        return '<img src="%s"/>' % xml_escape(self._cw.data_url('go_next.png'))
+
     def init_rendering(self):
         adapter = self.entity.cw_adapt_to('IPrevNext')
         self.previous = adapter.previous_entity()
@@ -232,16 +240,19 @@ class NextPrevNavigationComponent(EntityCtxComponent):
 
     def prevnext_entity(self, w, entity, type):
         textsize = self._cw.property_value('navigation.short-line-size')
+        content = xml_escape(cut(entity.dc_title(), textsize))
         if type == 'prev':
             title = self._cw._('i18nprevnext_previous')
-            icon = u'&lt;&lt; '
+            icon = self.prev_icon
             cssclass = u'previousEntity left'
+            content = icon + content
         else:
             title = self._cw._('i18nprevnext_next')
-            icon = u'&gt;&gt; '
+            icon = self.next_icon
             cssclass = u'nextEntity right'
+            content = content + '&#160;&#160;' + icon
         self.prevnext_div(w, type, cssclass, entity.absolute_url(),
-                          title, icon + xml_escape(cut(entity.dc_title(), textsize)))
+                          title, content)
 
     def prevnext_div(self, w, type, cssclass, url, title, content):
         w(u'<div class="%s">' % cssclass)
@@ -277,7 +288,7 @@ def do_paginate(view, rset=None, w=None, show_all_option=True, page_size=None):
             basepath = req.relative_path(includeparams=False)
             params['__force_display'] = 1
             url = nav.page_url(basepath, params)
-            w(u'<div><a href="%s">%s</a></div>\n'
+            w(u'<div class="displayAllLink"><a href="%s">%s</a></div>\n'
               % (xml_escape(url), req._('show %s results') % len(rset)))
         rset.limit(offset=start, limit=stop-start, inplace=True)
 

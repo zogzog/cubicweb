@@ -80,6 +80,7 @@ YAMS_XMLSCHEMA_MAPPING = {
 
     'Boolean': 'boolean',
     'Int': 'integer',
+    'BigInt': 'integer',
     'Float': 'float',
 
     'Datetime': 'dateTime',

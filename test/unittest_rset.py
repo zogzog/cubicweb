@@ -71,6 +71,13 @@ class AttrDescIteratorTC(TestCase):
         result = list(attr_desc_iterator(select, col, 2))
         self.assertEqual(result, [])
 
+    def test_subquery_callfunc_2(self):
+        rql = ('Any X,S,L WHERE X in_state S WITH X, L BEING (Any X,MAX(L) GROUPBY X WHERE X is CWUser, T wf_info_for X, T creation_date L)')
+        rqlst = parse(rql)
+        select, col = rqlst.locate_subquery(0, 'CWUser', None)
+        result = list(attr_desc_iterator(select, col, 0))
+        self.assertEqual(result, [(1, 'in_state', 'subject')])
+
 
 class ResultSetTC(CubicWebTC):
 
@@ -107,7 +114,7 @@ class ResultSetTC(CubicWebTC):
         self.compare_urls(req.build_url('view', _restpath=''), baseurl)
 
 
-    def test_resultset_build(self):
+    def test_build(self):
         """test basic build of a ResultSet"""
         rs = ResultSet([1,2,3], 'CWGroup X', description=['CWGroup', 'CWGroup', 'CWGroup'])
         self.assertEqual(rs.rowcount, 3)
@@ -115,7 +122,7 @@ class ResultSetTC(CubicWebTC):
         self.assertEqual(rs.description, ['CWGroup', 'CWGroup', 'CWGroup'])
 
 
-    def test_resultset_limit(self):
+    def test_limit(self):
         rs = ResultSet([[12000, 'adim'], [13000, 'syt'], [14000, 'nico']],
                        'Any U,L where U is CWUser, U login L',
                        description=[['CWUser', 'String']] * 3)
@@ -128,8 +135,30 @@ class ResultSetTC(CubicWebTC):
         self.assertEqual(rs.limit(2, offset=2).rows, [[14000, 'nico']])
         self.assertEqual(rs.limit(2, offset=3).rows, [])
 
+    def test_limit_2(self):
+        req = self.request()
+        # drop user from cache for the sake of this test
+        req.drop_entity_cache(req.user.eid)
+        rs = req.execute('Any E,U WHERE E is CWEType, E created_by U')
+        # get entity on row 9. This will fill its created_by relation cache,
+        # with cwuser on row 9 as well
+        e1 = rs.get_entity(9, 0)
+        # get entity on row 10. This will fill its created_by relation cache,
+        # with cwuser built on row 9
+        e2 = rs.get_entity(10, 0)
+        # limit result set from row 10
+        rs.limit(1, 10, inplace=True)
+        # get back eid
+        e = rs.get_entity(0, 0)
+        self.assertTrue(e2 is e)
+        # rs.limit has properly removed cwuser for request cache, but it's
+        # still referenced by e/e2 relation cache
+        u = e.created_by[0]
+        # now ensure this doesn't trigger IndexError because cwuser.cw_row is 9
+        # while now rset has only one row
+        u.cw_rset[u.cw_row]
 
-    def test_resultset_filter(self):
+    def test_filter(self):
         rs = ResultSet([[12000, 'adim'], [13000, 'syt'], [14000, 'nico']],
                        'Any U,L where U is CWUser, U login L',
                        description=[['CWUser', 'String']] * 3)
@@ -142,7 +171,7 @@ class ResultSetTC(CubicWebTC):
         self.assertEqual(len(rs2), 2)
         self.assertEqual([login for _, login in rs2], ['adim', 'syt'])
 
-    def test_resultset_transform(self):
+    def test_transform(self):
         rs = ResultSet([[12, 'adim'], [13, 'syt'], [14, 'nico']],
                        'Any U,L where U is CWUser, U login L',
                        description=[['CWUser', 'String']] * 3)
@@ -154,7 +183,7 @@ class ResultSetTC(CubicWebTC):
         self.assertEqual(len(rs2), 3)
         self.assertEqual(list(rs2), [['adim'],['syt'],['nico']])
 
-    def test_resultset_sort(self):
+    def test_sort(self):
         rs = ResultSet([[12000, 'adim'], [13000, 'syt'], [14000, 'nico']],
                        'Any U,L where U is CWUser, U login L',
                        description=[['CWUser', 'String']] * 3)
@@ -179,7 +208,7 @@ class ResultSetTC(CubicWebTC):
         # make sure rs is unchanged
         self.assertEqual([login for _, login in rs], ['adim', 'syt', 'nico'])
 
-    def test_resultset_split(self):
+    def test_split(self):
         rs = ResultSet([[12000, 'adim', u'Adim chez les pinguins'],
                         [12000, 'adim', u'Jardiner facile'],
                         [13000, 'syt',  u'Le carrelage en 42 leçons'],
@@ -456,6 +485,7 @@ class ResultSetTC(CubicWebTC):
         rset = self.execute('(Any X WHERE X is CWGroup, X name "managers")')
         self.assertIsInstance(str(rset), basestring)
         self.assertEqual(len(str(rset).splitlines()), 1)
+
 
 if __name__ == '__main__':
     unittest_main()

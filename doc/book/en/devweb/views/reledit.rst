@@ -116,7 +116,34 @@ eid, then, forces to reload on something like http://myapp/company/42,
 which always work.
 
 
+Disable `reledit`
+*****************
 
+By default, `reledit` is available on attributes and relations displayed in
+the 'attribute' section of the default primary view.  If you want to disable
+it for some attribute or relation, you have use `uicfg`:
 
+.. sourcecode:: python
+
+    import uicfg.primaryview_display_ctrl as _pvdc
+    _pvdc.tag_attribute(('Company', 'name'), {'vid': 'incontext'})
+
+To deactivate it everywhere it's used automatically, you may use the code snippet
+below somewhere in your cube's views:
+
+.. sourcecode:: python
+
+    from cubicweb.web.views import reledit
+
+    class DeactivatedAutoClickAndEditFormView(reledit.AutoClickAndEditFormView):
+	def _should_edit_attribute(self, rschema):
+	    return False
+
+	def _should_edit_attribute(self, rschema, role):
+	    return False
+
+    def registration_callback(vreg):
+	vreg.register_and_replace(DeactivatedAutoClickAndEditFormView,
+				  reledit.AutoClickAndEditFormView)
 
 

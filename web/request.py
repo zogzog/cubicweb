@@ -19,11 +19,12 @@
 
 __docformat__ = "restructuredtext en"
 
-import Cookie
-import hashlib
 import time
 import random
 import base64
+from hashlib import sha1 # pylint: disable=E0611
+from Cookie import SimpleCookie
+from calendar import timegm
 from datetime import date
 from urlparse import urlsplit
 from itertools import count
@@ -42,12 +43,13 @@ from cubicweb.utils import SizeConstrainedList, HTMLHead, make_uid
 from cubicweb.view import STRICT_DOCTYPE, TRANSITIONAL_DOCTYPE_NOEXT
 from cubicweb.web import (INTERNAL_FIELD_VALUE, LOGGER, NothingToEdit,
                           RequestError, StatusResponse)
-from cubicweb.web.http_headers import Headers
+from cubicweb.web.httpcache import GMTOFFSET
+from cubicweb.web.http_headers import Headers, Cookie
 
 _MARKER = object()
 
 def build_cb_uid(seed):
-    sha = hashlib.sha1('%s%s%s' % (time.time(), seed, random.random()))
+    sha = sha1('%s%s%s' % (time.time(), seed, random.random()))
     return 'cb_%s' % (sha.hexdigest())
 
 
@@ -92,7 +94,7 @@ class CubicWebRequestBase(DBAPIRequest):
             self.uiprops = vreg.config.uiprops
             self.datadir_url = vreg.config.datadir_url
         # raw html headers that can be added from any view
-        self.html_headers = HTMLHead()
+        self.html_headers = HTMLHead(self.datadir_url)
         # form parameters
         self.setup_params(form)
         # dictionnary that may be used to store request data that has to be
@@ -214,6 +216,12 @@ class CubicWebRequestBase(DBAPIRequest):
             if param == '_cwmsgid':
                 self.set_message_id(val)
             elif param == '__message':
+                warn('[3.13] __message in request parameter is deprecated (may '
+                     'only be given to .build_url). Seeing this message usualy '
+                     'means your application hold some <form> where you should '
+                     'replace use of __message hidden input by form.set_message, '
+                     'so new _cwmsgid mechanism is properly used',
+                     DeprecationWarning)
                 self.set_message(val)
             else:
                 self.form[param] = val
@@ -256,7 +264,7 @@ class CubicWebRequestBase(DBAPIRequest):
         """used by AutomaticWebTest to clear html headers between tests on
         the same resultset
         """
-        self.html_headers = HTMLHead()
+        self.html_headers = HTMLHead(self.datadir_url)
         return self
 
     # web state helpers #######################################################
@@ -264,7 +272,7 @@ class CubicWebRequestBase(DBAPIRequest):
     @property
     def message(self):
         try:
-            return self.session.data.pop(self._msgid, '')
+            return self.session.data.pop(self._msgid, u'')
         except AttributeError:
             try:
                 return self._msg
@@ -283,6 +291,7 @@ class CubicWebRequestBase(DBAPIRequest):
         return make_uid()
 
     def set_redirect_message(self, msg):
+        # TODO - this should probably be merged with append_to_redirect_message
         assert isinstance(msg, unicode)
         msgid = self.redirect_message_id()
         self.session.data[msgid] = msg
@@ -292,7 +301,7 @@ class CubicWebRequestBase(DBAPIRequest):
         msgid = self.redirect_message_id()
         currentmsg = self.session.data.get(msgid)
         if currentmsg is not None:
-            currentmsg = '%s %s' % (currentmsg, msg)
+            currentmsg = u'%s %s' % (currentmsg, msg)
         else:
             currentmsg = msg
         self.session.data[msgid] = currentmsg
@@ -355,10 +364,13 @@ class CubicWebRequestBase(DBAPIRequest):
         return self.base_url()
 
     def user_rql_callback(self, rqlargs, *args, **kwargs):
-        """register a user callback to execute some rql query and return an url
-        to call it ready to be inserted in html.
+        """register a user callback to execute some rql query, and return a URL
+        to call that callback which can be inserted in an HTML view.
 
-        rqlargs should be a tuple containing argument to give to the execute function.
+        `rqlargs` should be a tuple containing argument to give to the execute function.
+
+        The first argument following rqlargs must be the message to be
+        displayed after the callback is called.
 
         For other allowed arguments, see :meth:`user_callback` method
         """
@@ -367,8 +379,11 @@ class CubicWebRequestBase(DBAPIRequest):
         return self.user_callback(rqlexec, rqlargs, *args, **kwargs)
 
     def user_callback(self, cb, cbargs, *args, **kwargs):
-        """register the given user callback and return an url to call it ready
-        to be inserted in html.
+        """register the given user callback and return a URL which can
+        be inserted in an HTML view. When the URL is accessed, the
+        callback function will be called (as 'cb(req, *cbargs)', and a
+        message will be displayed in the web interface. The third
+        positional argument must be 'msg', containing the message.
 
         You can specify the underlying js function to call using a 'jsfunc'
         named args, to one of :func:`userCallback`,
@@ -415,7 +430,8 @@ class CubicWebRequestBase(DBAPIRequest):
 
     @cached # so it's writed only once
     def fckeditor_config(self):
-        self.add_js('fckeditor/fckeditor.js')
+        fckeditor_url = self.build_url('fckeditor/fckeditor.js')
+        self.add_js(fckeditor_url, localfile=False)
         self.html_headers.define_var('fcklang', self.lang)
         self.html_headers.define_var('fckconfigpath',
                                      self.data_url('cubicweb.fckcwconfig.js'))
@@ -454,7 +470,7 @@ class CubicWebRequestBase(DBAPIRequest):
             try:
                 name, peid = param.split(':', 1)
             except ValueError:
-                if not param.startswith('__') and param != "eid":
+                if not param.startswith('__') and param not in ('eid', '_cw_fields'):
                     self.warning('param %s mis-formatted', param)
                 continue
             if peid == eid:
@@ -504,30 +520,48 @@ class CubicWebRequestBase(DBAPIRequest):
 
     def get_cookie(self):
         """retrieve request cookies, returns an empty cookie if not found"""
+        # XXX use http_headers implementation
         try:
-            return Cookie.SimpleCookie(self.get_header('Cookie'))
+            return SimpleCookie(self.get_header('Cookie'))
         except KeyError:
-            return Cookie.SimpleCookie()
+            return SimpleCookie()
 
-    def set_cookie(self, cookie, key, maxage=300, expires=None):
-        """set / update a cookie key
+    def set_cookie(self, name, value, maxage=300, expires=None, secure=False):
+        """set / update a cookie
 
         by default, cookie will be available for the next 5 minutes.
         Give maxage = None to have a "session" cookie expiring when the
         client close its browser
         """
-        morsel = cookie[key]
-        if maxage is not None:
-            morsel['Max-Age'] = maxage
-        if expires:
-            morsel['expires'] = expires.strftime('%a, %d %b %Y %H:%M:%S %z')
+        if isinstance(name, SimpleCookie):
+            warn('[3.13] set_cookie now takes name and value as two first '
+                 'argument, not anymore cookie object and name',
+                 DeprecationWarning, stacklevel=2)
+            secure = name[value]['secure']
+            name, value = value, name[value].value
+        if maxage: # don't check is None, 0 may be specified
+            assert expires is None, 'both max age and expires cant be specified'
+            expires = maxage + time.time()
+        elif expires:
+            expires = timegm((expires + GMTOFFSET).timetuple())
+        else:
+            expires = None
         # make sure cookie is set on the correct path
-        morsel['path'] = self.base_url_path()
-        self.add_header('Set-Cookie', morsel.OutputString())
+        cookie = Cookie(str(name), str(value), self.base_url_path(),
+                        expires=expires, secure=secure)
+        self.headers_out.addHeader('Set-cookie', cookie)
 
-    def remove_cookie(self, cookie, key):
+    def remove_cookie(self, name, bwcompat=None):
         """remove a cookie by expiring it"""
-        self.set_cookie(cookie, key, maxage=0, expires=date(1970, 1, 1))
+        if bwcompat is not None:
+            warn('[3.13] remove_cookie now take only a name as argument',
+                 DeprecationWarning, stacklevel=2)
+            name = bwcompat
+        self.set_cookie(name, '', maxage=0,
+                        # substracting GMTOFFSET because set_cookie
+                        # expects a localtime and we don't want to
+                        # handle times before the EPOCH
+                        expires=date(1970, 1, 1) - GMTOFFSET) 
 
     def set_content_type(self, content_type, filename=None, encoding=None):
         """set output content type for this request. An optional filename
@@ -617,13 +651,23 @@ class CubicWebRequestBase(DBAPIRequest):
         url = self.build_url('json', **extraparams)
         cbname = build_cb_uid(url[:50])
         # think to propagate pageid. XXX see https://www.cubicweb.org/ticket/1753121
-        jscode = 'function %s() { $("#%s").%s; }' % (
+        jscode = u'function %s() { $("#%s").%s; }' % (
             cbname, nodeid, js.loadxhtml(url, {'pageid': self.pageid},
                                          'get', replacemode))
         self.html_headers.add_post_inline_script(jscode)
         return "javascript: %s()" % cbname
 
     # urls/path management ####################################################
+
+    def build_url(self, *args, **kwargs):
+        """return an absolute URL using params dictionary key/values as URL
+        parameters. Values are automatically URL quoted, and the
+        publishing method to use may be specified or will be guessed.
+        """
+        if '__message' in kwargs:
+            msg = kwargs.pop('__message')
+            kwargs['_cwmsgid'] = self.set_redirect_message(msg)
+        return super(CubicWebRequestBase, self).build_url(*args, **kwargs)
 
     def url(self, includeparams=True):
         """return currently accessed url"""
@@ -755,8 +799,13 @@ class CubicWebRequestBase(DBAPIRequest):
         The global doctype and xmldec must also be changed otherwise the browser
         will display '<[' at the beginning of the page
         """
-        self.set_content_type('text/html')
-        self.main_stream.set_doctype(TRANSITIONAL_DOCTYPE_NOEXT)
+        if not self.vreg.config['force-html-content-type']:
+            if not hasattr(self, 'main_stream'):
+                raise Exception("Can't demote to html from an ajax context. You "
+                                "should change force-html-content-type to yes "
+                                "in the instance configuration file.")
+            self.set_content_type('text/html')
+            self.main_stream.set_doctype(TRANSITIONAL_DOCTYPE_NOEXT)
 
     def set_doctype(self, doctype, reset_xmldecl=True):
         """helper method to dynamically change page doctype
@@ -890,10 +939,20 @@ def _charset_sort_key(accept_info):
 def _parse_accept_header(raw_header, value_parser=None, value_sort_key=None):
     """returns an ordered list accepted types
 
-    returned value is a list of 2-tuple (value, score), ordered
-    by score. Exact type of `value` will depend on what `value_parser`
-    will reutrn. if `value_parser` is None, then the raw value, as found
-    in the http header, is used.
+    :param value_parser: a function to parse a raw accept chunk. If None
+    is provided, the function defaults to identity. If a function is provided,
+    it must accept 2 parameters ``value`` and ``other_params``. ``value`` is
+    the value found before the first ';', `other_params` is a dictionary
+    built from all other chunks after this first ';'
+
+    :param value_sort_key: a key function to sort values found in the accept
+    header. This function will be passed a 3-tuple
+    (raw_value, parsed_value, score). If None is provided, the default
+    sort_key is 1./score
+
+    :return: a list of 3-tuple (raw_value, parsed_value, score),
+    ordered by score. ``parsed_value`` will be the return value of
+    ``value_parser(raw_value)``
     """
     if value_sort_key is None:
         value_sort_key = lambda infos: 1./infos[-1]
@@ -928,7 +987,7 @@ def _mimetype_parser(value, other_params):
     'text/html;level=1', `mimetypeinfo` will be ('text', '*', {'level': '1'})
     """
     try:
-        media_type, media_subtype = value.strip().split('/')
+        media_type, media_subtype = value.strip().split('/', 1)
     except ValueError: # safety belt : '/' should always be present
         media_type = value.strip()
         media_subtype = '*'

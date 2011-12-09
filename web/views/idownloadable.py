@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -75,7 +75,7 @@ class DownloadBox(component.EntityCtxComponent):
 
 class DownloadView(EntityView):
     """download view
-    
+
     this view is replacing the deprecated 'download' controller and allow
     downloading of entities providing the necessary interface
     """
@@ -194,7 +194,7 @@ class AbstractEmbeddedView(EntityView):
     def cell_call(self, row, col, link=False, **kwargs):
         entity = self.cw_rset.get_entity(row, col)
         adapter = entity.cw_adapt_to('IDownloadable')
-        tag = self._embedding_tag(src=adapter.download_url(),
+        tag = self._embedding_tag(src=adapter.download_url(), # pylint: disable=E1102
                                   alt=(self._cw._('download %s') % adapter.download_file_name()),
                                   **kwargs)
         if link:

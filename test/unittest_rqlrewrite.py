@@ -21,9 +21,8 @@ from logilab.common.testlib import mock_object
 from yams import BadSchemaDefinition
 from rql import parse, nodes, RQLHelper
 
-from cubicweb import Unauthorized
+from cubicweb import Unauthorized, rqlrewrite
 from cubicweb.schema import RRQLExpression, ERQLExpression
-from cubicweb.rqlrewrite import RQLRewriter
 from cubicweb.devtools import repotest, TestServerConfiguration
 
 
@@ -62,9 +61,10 @@ def rewrite(rqlst, snippets_map, kwargs, existingvars=None):
             @staticmethod
             def simplify(mainrqlst, needcopy=False):
                 rqlhelper.simplify(rqlst, needcopy)
-    rewriter = RQLRewriter(mock_object(vreg=FakeVReg, user=(mock_object(eid=1))))
+    rewriter = rqlrewrite.RQLRewriter(
+        mock_object(vreg=FakeVReg, user=(mock_object(eid=1))))
     snippets = []
-    for v, exprs in snippets_map.items():
+    for v, exprs in sorted(snippets_map.items()):
         rqlexprs = [isinstance(snippet, basestring)
                     and mock_object(snippet_rqlst=parse('Any X WHERE '+snippet).children[0],
                                     expression='Any X WHERE '+snippet)
@@ -210,8 +210,8 @@ class RQLRewriteTC(TestCase):
                         }, {})
         # XXX suboptimal
         self.failUnlessEqual(rqlst.as_string(),
-                             "Any C,A,R WITH A,R,C BEING "
-                             "(Any A,R,C WHERE A ref R, A? inlined_card C, "
+                             "Any C,A,R WITH A,C,R BEING "
+                             "(Any A,C,R WHERE A? inlined_card C, A ref R, "
                              "(A is NULL) OR (EXISTS(A inlined_card B, B require_permission D, "
                              "B is Card, D is CWPermission)), "
                              "A is Affaire, C is Card, EXISTS(C require_permission E, E is CWPermission))")
@@ -236,6 +236,18 @@ class RQLRewriteTC(TestCase):
                                            ('A2', 'X'): (c2,),
                                            }, {})
 
+    def test_optional_var_inlined_linked(self):
+        c1 = ('X require_permission P')
+        c2 = ('X inlined_card O, O require_permission P')
+        rqlst = parse('Any A,W WHERE A inlined_card C?, C inlined_note N, '
+                      'N inlined_affaire W')
+        rewrite(rqlst, {('C', 'X'): (c1,)}, {})
+        self.failUnlessEqual(rqlst.as_string(),
+                             'Any A,W WHERE A inlined_card C?, A is Affaire '
+                             'WITH C,N,W BEING (Any C,N,W WHERE C inlined_note N, '
+                             'N inlined_affaire W, EXISTS(C require_permission B), '
+                             'C is Card, N is Note, W is Affaire)')
+
     def test_relation_optimization_1_lhs(self):
         # since Card in_state State as monovalued cardinality, the in_state
         # relation used in the rql expression can be ignored and S replaced by
@@ -246,6 +258,7 @@ class RQLRewriteTC(TestCase):
         self.failUnlessEqual(rqlst.as_string(),
                              "Any C WHERE C in_state STATE, C is Card, "
                              "EXISTS(STATE name 'hop'), STATE is State")
+
     def test_relation_optimization_1_rhs(self):
         snippet = ('TW subworkflow_exit X, TW name "hop"')
         rqlst = parse('WorkflowTransition C WHERE C subworkflow_exit EXIT')

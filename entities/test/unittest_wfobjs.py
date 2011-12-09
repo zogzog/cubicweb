@@ -165,7 +165,7 @@ class WorkflowTC(CubicWebTC):
         user = self.user()
         iworkflowable = user.cw_adapt_to('IWorkflowable')
         iworkflowable.fire_transition('deactivate', comment=u'deactivate user')
-        user.clear_all_caches()
+        user.cw_clear_all_caches()
         self.assertEqual(iworkflowable.state, 'deactivated')
         self._test_manager_deactivate(user)
         trinfo = self._test_manager_deactivate(user)
@@ -192,7 +192,7 @@ class WorkflowTC(CubicWebTC):
         self.commit()
         iworkflowable.fire_transition('wake up')
         self.commit()
-        user.clear_all_caches()
+        user.cw_clear_all_caches()
         self.assertEqual(iworkflowable.state, 'deactivated')
 
     # XXX test managers can change state without matching transition
@@ -274,14 +274,14 @@ class WorkflowTC(CubicWebTC):
         self.assertEqual(iworkflowable.subworkflow_input_transition(), None)
         iworkflowable.fire_transition('swftr1', u'go')
         self.commit()
-        group.clear_all_caches()
+        group.cw_clear_all_caches()
         self.assertEqual(iworkflowable.current_state.eid, swfstate1.eid)
         self.assertEqual(iworkflowable.current_workflow.eid, swf.eid)
         self.assertEqual(iworkflowable.main_workflow.eid, mwf.eid)
         self.assertEqual(iworkflowable.subworkflow_input_transition().eid, swftr1.eid)
         iworkflowable.fire_transition('tr1', u'go')
         self.commit()
-        group.clear_all_caches()
+        group.cw_clear_all_caches()
         self.assertEqual(iworkflowable.current_state.eid, state2.eid)
         self.assertEqual(iworkflowable.current_workflow.eid, mwf.eid)
         self.assertEqual(iworkflowable.main_workflow.eid, mwf.eid)
@@ -295,10 +295,10 @@ class WorkflowTC(CubicWebTC):
         # force back to state1
         iworkflowable.change_state('state1', u'gadget')
         iworkflowable.fire_transition('swftr1', u'au')
-        group.clear_all_caches()
+        group.cw_clear_all_caches()
         iworkflowable.fire_transition('tr2', u'chapeau')
         self.commit()
-        group.clear_all_caches()
+        group.cw_clear_all_caches()
         self.assertEqual(iworkflowable.current_state.eid, state3.eid)
         self.assertEqual(iworkflowable.current_workflow.eid, mwf.eid)
         self.assertEqual(iworkflowable.main_workflow.eid, mwf.eid)
@@ -390,7 +390,7 @@ class WorkflowTC(CubicWebTC):
                                  ):
             iworkflowable.fire_transition(trans)
             self.commit()
-            group.clear_all_caches()
+            group.cw_clear_all_caches()
             self.assertEqual(iworkflowable.state, nextstate)
 
 
@@ -408,11 +408,11 @@ class CustomWorkflowTC(CubicWebTC):
         wf.add_state('asleep', initial=True)
         self.execute('SET X custom_workflow WF WHERE X eid %(x)s, WF eid %(wf)s',
                      {'wf': wf.eid, 'x': self.member.eid})
-        self.member.clear_all_caches()
+        self.member.cw_clear_all_caches()
         iworkflowable = self.member.cw_adapt_to('IWorkflowable')
         self.assertEqual(iworkflowable.state, 'activated')# no change before commit
         self.commit()
-        self.member.clear_all_caches()
+        self.member.cw_clear_all_caches()
         self.assertEqual(iworkflowable.current_workflow.eid, wf.eid)
         self.assertEqual(iworkflowable.state, 'asleep')
         self.assertEqual(iworkflowable.workflow_history, ())
@@ -429,7 +429,7 @@ class CustomWorkflowTC(CubicWebTC):
         self.execute('SET X custom_workflow WF WHERE X eid %(x)s, WF eid %(wf)s',
                      {'wf': wf.eid, 'x': self.member.eid})
         self.commit()
-        self.member.clear_all_caches()
+        self.member.cw_clear_all_caches()
         self.assertEqual(iworkflowable.current_workflow.eid, wf.eid)
         self.assertEqual(iworkflowable.state, 'asleep')
         self.assertEqual(parse_hist(iworkflowable.workflow_history),
@@ -472,10 +472,10 @@ class CustomWorkflowTC(CubicWebTC):
         self.commit()
         self.execute('DELETE X custom_workflow WF WHERE X eid %(x)s, WF eid %(wf)s',
                      {'wf': wf.eid, 'x': self.member.eid})
-        self.member.clear_all_caches()
+        self.member.cw_clear_all_caches()
         self.assertEqual(iworkflowable.state, 'asleep')# no change before commit
         self.commit()
-        self.member.clear_all_caches()
+        self.member.cw_clear_all_caches()
         self.assertEqual(iworkflowable.current_workflow.name, "default user workflow")
         self.assertEqual(iworkflowable.state, 'activated')
         self.assertEqual(parse_hist(iworkflowable.workflow_history),
@@ -504,13 +504,13 @@ class AutoTransitionTC(CubicWebTC):
         self.execute('SET X custom_workflow WF WHERE X eid %(x)s, WF eid %(wf)s',
                      {'wf': wf.eid, 'x': user.eid})
         self.commit()
-        user.clear_all_caches()
+        user.cw_clear_all_caches()
         self.assertEqual(iworkflowable.state, 'asleep')
         self.assertEqual([t.name for t in iworkflowable.possible_transitions()],
                           ['rest'])
         iworkflowable.fire_transition('rest')
         self.commit()
-        user.clear_all_caches()
+        user.cw_clear_all_caches()
         self.assertEqual(iworkflowable.state, 'asleep')
         self.assertEqual([t.name for t in iworkflowable.possible_transitions()],
                           ['rest'])
@@ -520,7 +520,7 @@ class AutoTransitionTC(CubicWebTC):
         self.commit()
         iworkflowable.fire_transition('rest')
         self.commit()
-        user.clear_all_caches()
+        user.cw_clear_all_caches()
         self.assertEqual(iworkflowable.state, 'dead')
         self.assertEqual(parse_hist(iworkflowable.workflow_history),
                           [('asleep', 'asleep', 'rest', None),
@@ -557,7 +557,7 @@ class WorkflowHooksTC(CubicWebTC):
     def setUp(self):
         CubicWebTC.setUp(self)
         self.wf = self.session.user.cw_adapt_to('IWorkflowable').current_workflow
-        self.session.set_pool()
+        self.session.set_cnxset()
         self.s_activated = self.wf.state_by_name('activated').eid
         self.s_deactivated = self.wf.state_by_name('deactivated').eid
         self.s_dummy = self.wf.add_state(u'dummy').eid
@@ -629,13 +629,13 @@ class WorkflowHooksTC(CubicWebTC):
         iworkflowable = user.cw_adapt_to('IWorkflowable')
         iworkflowable.fire_transition('deactivate')
         cnx.commit()
-        session.set_pool()
+        session.set_cnxset()
         with self.assertRaises(ValidationError) as cm:
             iworkflowable.fire_transition('deactivate')
         self.assertEqual(self._cleanup_msg(cm.exception.errors['by_transition-subject']),
                                             u"transition isn't allowed from")
         cnx.rollback()
-        session.set_pool()
+        session.set_cnxset()
         # get back now
         iworkflowable.fire_transition('activate')
         cnx.commit()

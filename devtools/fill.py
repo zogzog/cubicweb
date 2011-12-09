@@ -275,9 +275,6 @@ def insert_entity_queries(etype, schema, vreg, entity_num,
     :param choice_func: a function that takes an entity type, an attrname and
                         returns acceptable values for this attribute
     """
-    # XXX HACK, remove or fix asap
-    if etype in set(('String', 'Int', 'Float', 'Boolean', 'Date', 'CWGroup', 'CWUser')):
-        return []
     queries = []
     for index in xrange(entity_num):
         restrictions = []
@@ -355,7 +352,7 @@ def select(constraints, cursor, selectvar='O', objtype=None):
         if objtype:
             rql += ', %s is %s' % (selectvar, objtype)
         rset = cursor.execute(rql)
-    except:
+    except Exception:
         print "could restrict eid_list with given constraints (%r)" % constraints
         return []
     return set(eid for eid, in rset.rows)

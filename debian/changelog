@@ -1,3 +1,63 @@
+cubicweb (3.13.10-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Sylvain Thénault <sylvain.thenault@logilab.fr>  Thu, 08 Dec 2011 13:22:05 +0100
+
+cubicweb (3.13.9-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Sylvain Thénault <sylvain.thenault@logilab.fr>  Fri, 21 Oct 2011 11:03:45 +0200
+
+cubicweb (3.13.8-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Sylvain Thénault <sylvain.thenault@logilab.fr>  Fri, 07 Oct 2011 16:20:35 +0200
+
+cubicweb (3.13.7-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Sylvain Thénault <sylvain.thenault@logilab.fr>  Thu, 29 Sep 2011 14:08:07 +0200
+
+cubicweb (3.13.6-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Sylvain Thénault <sylvain.thenault@logilab.fr>  Mon, 26 Sep 2011 18:36:00 +0200
+
+cubicweb (3.13.5-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Sylvain Thénault <sylvain.thenault@logilab.fr>  Thu, 08 Sep 2011 16:53:13 +0200
+
+cubicweb (3.13.4-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Sylvain Thénault <sylvain.thenault@logilab.fr>  Fri, 05 Aug 2011 12:22:11 +0200
+
+cubicweb (3.13.3-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Sylvain Thénault <sylvain.thenault@logilab.fr>  Wed, 27 Jul 2011 19:06:16 +0200
+
+cubicweb (3.13.2-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Sylvain Thénault <sylvain.thenault@logilab.fr>  Wed, 20 Jul 2011 17:15:22 +0200
+
+cubicweb (3.13.1-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Sylvain Thénault <sylvain.thenault@logilab.fr>  Tue, 12 Jul 2011 12:23:54 +0200
+
 cubicweb (3.12.10-1) unstable; urgency=low
 
   * new upstream release
@@ -9,6 +69,12 @@ cubicweb (3.12.9-1) unstable; urgency=low
   * new upstream release
 
  -- Sylvain Thénault <sylvain.thenault@logilab.fr>  Tue, 12 Jul 2011 11:30:10 +0200
+
+cubicweb (3.13.0-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Sylvain Thénault <sylvain.thenault@logilab.fr>  Thu, 09 Jun 2011 20:18:41 +0200
 
 cubicweb (3.12.8-1) unstable; urgency=low
 

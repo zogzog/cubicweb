@@ -50,25 +50,22 @@ class RQLInputForm(component.Component):
     visible = False
 
     def call(self, view=None):
+        req = self._cw
         if hasattr(view, 'filter_box_context_info'):
             rset = view.filter_box_context_info()[0]
         else:
             rset = self.cw_rset
         # display multilines query as one line
-        rql = rset is not None and rset.printable_rql(encoded=False) or self._cw.form.get('rql', '')
+        rql = rset is not None and rset.printable_rql(encoded=False) or req.form.get('rql', '')
         rql = rql.replace(u"\n", u" ")
-        req = self._cw
-        self.w(u'''<div id="rqlinput" class="%s">
-          <form action="%s">
-<fieldset>
+        self.w(u'''<div id="rqlinput" class="%s"><form action="%s"><fieldset>
 <input type="text" id="rql" name="rql" value="%s"  title="%s" tabindex="%s" accesskey="q" class="searchField" />
-</fieldset>
 ''' % (not self.cw_propval('visible') and 'hidden' or '',
-       self._cw.build_url('view'), xml_escape(rql), req._('full text or RQL query'), req.next_tabindex()))
-        if self._cw.search_state[0] != 'normal':
+       req.build_url('view'), xml_escape(rql), req._('full text or RQL query'), req.next_tabindex()))
+        if req.search_state[0] != 'normal':
             self.w(u'<input type="hidden" name="__mode" value="%s"/>'
                    % ':'.join(req.search_state[1]))
-        self.w(u'</form></div>')
+        self.w(u'</fieldset></form></div>')
 
 
 

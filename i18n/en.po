@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 2.0\n"
 "POT-Creation-Date: 2006-01-12 17:35+CET\n"
-"PO-Revision-Date: 2010-09-15 14:55+0200\n"
+"PO-Revision-Date: 2011-04-29 12:57+0200\n"
 "Last-Translator: Sylvain Thenault <sylvain.thenault@logilab.fr>\n"
 "Language-Team: English <devel@logilab.fr.org>\n"
 "Language: en\n"
@@ -154,6 +154,11 @@ msgid "'%s' action doesn't take any options"
 msgstr ""
 
 #, python-format
+msgid ""
+"'%s' action for in_state relation should at least have 'linkattr=name' option"
+msgstr ""
+
+#, python-format
 msgid "'%s' action requires 'linkattr' option"
 msgstr ""
 
@@ -209,6 +214,9 @@ msgid ""
 "can also display a <a href=\"%s\">complete schema with meta-data</a>.</div>"
 msgstr ""
 
+msgid "<no relation>"
+msgstr ""
+
 msgid "<not specified>"
 msgstr ""
 
@@ -244,6 +252,12 @@ msgstr "Transition (abstract)"
 
 msgid "BaseTransition_plural"
 msgstr "Transitions (abstract)"
+
+msgid "BigInt"
+msgstr "Big integer"
+
+msgid "BigInt_plural"
+msgstr "Big integers"
 
 msgid "Bookmark"
 msgstr "Bookmark"
@@ -503,7 +517,7 @@ msgid "Interval"
 msgstr "Interval"
 
 msgid "IntervalBoundConstraint"
-msgstr "interval constraint"
+msgstr "Interval constraint"
 
 msgid "Interval_plural"
 msgstr "Intervals"
@@ -1033,12 +1047,6 @@ msgctxt "inlined:CWRelation.relation_type.subject"
 msgid "add a CWRType"
 msgstr "add a relation type"
 
-msgid "add a CWSource"
-msgstr "add a source"
-
-msgid "add a CWSourceSchemaConfig"
-msgstr "add an item to mapping "
-
 msgctxt "inlined:CWUser.use_email.subject"
 msgid "add a EmailAddress"
 msgstr "add an email address"
@@ -1109,6 +1117,10 @@ msgid "allowed options depends on the source type"
 msgstr ""
 
 msgid "allowed transitions from this state"
+msgstr ""
+
+#, python-format
+msgid "allowed values for \"action\" are %s"
 msgstr ""
 
 msgid "allowed_transition"
@@ -1189,6 +1201,9 @@ msgstr ""
 
 msgid "auto"
 msgstr "automatic"
+
+msgid "autocomputed attribute used to ensure transition coherency"
+msgstr ""
 
 msgid "automatic"
 msgstr ""
@@ -1742,10 +1757,10 @@ msgstr "actions box"
 msgid "ctxcomponents_edit_box_description"
 msgstr "box listing the applicable actions on the displayed data"
 
-msgid "ctxcomponents_facet.filters"
+msgid "ctxcomponents_facet.filterbox"
 msgstr "facets box"
 
-msgid "ctxcomponents_facet.filters_description"
+msgid "ctxcomponents_facet.filterbox_description"
 msgstr "box providing filter within current search results functionality"
 
 msgid "ctxcomponents_logo"
@@ -1851,10 +1866,6 @@ msgstr "maps"
 msgid "cw_schema_object"
 msgstr "mapped by"
 
-msgctxt "CWAttribute"
-msgid "cw_schema_object"
-msgstr "mapped by"
-
 msgctxt "CWEType"
 msgid "cw_schema_object"
 msgstr "mapped by"
@@ -1910,6 +1921,9 @@ msgid "cwuri"
 msgstr "internal uri"
 
 msgid "data directory url"
+msgstr ""
+
+msgid "data model schema"
 msgstr ""
 
 msgid "data sources"
@@ -2219,9 +2233,6 @@ msgstr ""
 msgid "eid"
 msgstr ""
 
-msgid "email address to use for notification"
-msgstr ""
-
 msgid "emails successfully sent"
 msgstr ""
 
@@ -2329,6 +2340,9 @@ msgstr "expression type"
 
 msgid "external page"
 msgstr ""
+
+msgid "facet-loading-msg"
+msgstr "processing, please wait"
 
 msgid "facet.filters"
 msgstr "filter"
@@ -2512,9 +2526,6 @@ msgid ""
 "object as a local one: http://www.w3.org/TR/owl-ref/#sameAs-def"
 msgstr ""
 
-msgid "go back to the index page"
-msgstr ""
-
 msgid "granted to groups"
 msgstr ""
 
@@ -2538,6 +2549,18 @@ msgid "group in which a user should be to be allowed to pass this transition"
 msgstr ""
 
 msgid "groups"
+msgstr ""
+
+msgid "groups allowed to add entities/relations of this type"
+msgstr ""
+
+msgid "groups allowed to delete entities/relations of this type"
+msgstr ""
+
+msgid "groups allowed to read entities/relations of this type"
+msgstr ""
+
+msgid "groups allowed to update entities/relations of this type"
 msgstr ""
 
 msgid "groups grant permissions to the user"
@@ -2653,6 +2676,13 @@ msgstr "in state"
 
 msgid "in_state_object"
 msgstr "state of"
+
+msgid "in_synchronization"
+msgstr "in synchronization"
+
+msgctxt "CWSource"
+msgid "in_synchronization"
+msgstr "in synchronization"
 
 msgid "incontext"
 msgstr "in-context"
@@ -3095,6 +3125,15 @@ msgstr ""
 msgid "no associated permissions"
 msgstr ""
 
+msgid "no content next link"
+msgstr ""
+
+msgid "no content prev link"
+msgstr ""
+
+msgid "no edited fields specified"
+msgstr ""
+
 #, python-format
 msgid "no edited fields specified for entity %s"
 msgstr ""
@@ -3488,6 +3527,18 @@ msgstr ""
 msgid "right"
 msgstr ""
 
+msgid "rql expression allowing to add entities/relations of this type"
+msgstr ""
+
+msgid "rql expression allowing to delete entities/relations of this type"
+msgstr ""
+
+msgid "rql expression allowing to read entities/relations of this type"
+msgstr ""
+
+msgid "rql expression allowing to update entities/relations of this type"
+msgstr ""
+
 msgid "rql expressions"
 msgstr ""
 
@@ -3522,9 +3573,6 @@ msgid "search for association"
 msgstr ""
 
 msgid "searching for"
-msgstr ""
-
-msgid "secondary"
 msgstr ""
 
 msgid "security"
@@ -3612,9 +3660,6 @@ msgstr ""
 msgid "site documentation"
 msgstr ""
 
-msgid "site schema"
-msgstr ""
-
 msgid "site title"
 msgstr ""
 
@@ -3623,9 +3668,6 @@ msgstr ""
 
 msgid "siteinfo"
 msgstr "site information"
-
-msgid "some errors occurred:"
-msgstr ""
 
 msgid "some later transaction(s) touch entity, undo them first"
 msgstr ""
@@ -3660,6 +3702,11 @@ msgstr "specialized by"
 
 #, python-format
 msgid "specifying %s is mandatory"
+msgstr ""
+
+msgid ""
+"start timestamp of the currently in synchronization, or NULL when no "
+"synchronization in progress."
 msgstr ""
 
 msgid "startup views"
@@ -3828,6 +3875,12 @@ msgstr ""
 
 #, python-format
 msgid "the value \"%s\" is already used, use another one"
+msgstr ""
+
+msgid "there is no next page"
+msgstr ""
+
+msgid "there is no previous page"
 msgstr ""
 
 msgid "this action is not reversible!"
@@ -4176,6 +4229,9 @@ msgstr ""
 msgid "user preferences"
 msgstr ""
 
+msgid "user's email account"
+msgstr ""
+
 msgid "users"
 msgstr ""
 
@@ -4205,27 +4261,27 @@ msgctxt "CWProperty"
 msgid "value"
 msgstr ""
 
+#, python-format
+msgid "value %(value)s must be %(op)s %(boundary)s"
+msgstr ""
+
+#, python-format
+msgid "value %(value)s must be <= %(boundary)s"
+msgstr ""
+
+#, python-format
+msgid "value %(value)s must be >= %(boundary)s"
+msgstr ""
+
 msgid "value associated to this key is not editable manually"
 msgstr ""
 
 #, python-format
-msgid "value must be %(op)s %(boundary)s"
+msgid "value should have maximum size of %s but found %s"
 msgstr ""
 
 #, python-format
-msgid "value must be <= %(boundary)s"
-msgstr ""
-
-#, python-format
-msgid "value must be >= %(boundary)s"
-msgstr ""
-
-#, python-format
-msgid "value should have maximum size of %s"
-msgstr ""
-
-#, python-format
-msgid "value should have minimum size of %s"
+msgid "value should have minimum size of %s but found %s"
 msgstr ""
 
 msgid "vcard"
@@ -4370,10 +4426,3 @@ msgstr ""
 #, python-format
 msgid "you should un-inline relation %s which is supported and may be crossed "
 msgstr ""
-
-#~ msgctxt "CWAttribute"
-#~ msgid "relations_object"
-#~ msgstr "constrained by"
-
-#~ msgid "schema-security"
-#~ msgstr "permissions"

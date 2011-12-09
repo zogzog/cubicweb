@@ -26,7 +26,7 @@ from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.appobject import Selector, AndSelector, OrSelector
 from cubicweb.selectors import (is_instance, adaptable, match_user_groups,
                                 multi_lines_rset, score_entity, is_in_state,
-                                on_transition, rql_condition)
+                                on_transition, rql_condition, relation_possible)
 from cubicweb.web import action
 
 
@@ -102,6 +102,10 @@ class SelectorsTC(TestCase):
         self.assertIs(csel.search_selector(is_instance), sel)
         csel = AndSelector(Selector(), sel)
         self.assertIs(csel.search_selector(is_instance), sel)
+        self.assertIs(csel.search_selector((AndSelector, OrSelector)), csel)
+        self.assertIs(csel.search_selector((OrSelector, AndSelector)), csel)
+        self.assertIs(csel.search_selector((is_instance, score_entity)),  sel)
+        self.assertIs(csel.search_selector((score_entity, is_instance)), sel)
 
     def test_inplace_and(self):
         selector = _1_()
@@ -140,35 +144,6 @@ class SelectorsTC(TestCase):
         self.assertEqual(selector(None), 0)
 
 
-class IsInStateSelectorTC(CubicWebTC):
-    def setup_database(self):
-        wf = self.shell().add_workflow("testwf", 'StateFull', default=True)
-        initial = wf.add_state(u'initial', initial=True)
-        final = wf.add_state(u'final')
-        wf.add_transition(u'forward', (initial,), final)
-
-    def test_initial_state(self):
-        req = self.request()
-        entity = req.create_entity('StateFull')
-        selector = is_in_state(u'initial')
-        self.commit()
-        score = selector(entity.__class__, None, entity=entity)
-        self.assertEqual(score, 1)
-
-    def test_final_state(self):
-        req = self.request()
-        entity = req.create_entity('StateFull')
-        selector = is_in_state(u'initial')
-        self.commit()
-        entity.cw_adapt_to('IWorkflowable').fire_transition(u'forward')
-        self.commit()
-        score = selector(entity.__class__, None, entity=entity)
-        self.assertEqual(score, 0)
-        selector = is_in_state(u'final')
-        score = selector(entity.__class__, None, entity=entity)
-        self.assertEqual(score, 1)
-
-
 class ImplementsSelectorTC(CubicWebTC):
     def test_etype_priority(self):
         req = self.request()
@@ -189,11 +164,17 @@ class ImplementsSelectorTC(CubicWebTC):
         self.assertEqual(is_instance('BaseTransition').score_class(cls, self.request()),
                           3)
 
+    def test_outer_join(self):
+        req = self.request()
+        rset = req.execute('Any U,B WHERE B? bookmarked_by U, U login "anon"')
+        self.assertEqual(is_instance('Bookmark')(None, req, rset=rset, row=0, col=1),
+                         0)
+
 
 class WorkflowSelectorTC(CubicWebTC):
     def _commit(self):
         self.commit()
-        self.wf_entity.clear_all_caches()
+        self.wf_entity.cw_clear_all_caches()
 
     def setup_database(self):
         wf = self.shell().add_workflow("wf_test", 'StateFull', default=True)
@@ -313,6 +294,27 @@ class WorkflowSelectorTC(CubicWebTC):
         self.assertEqual(selector(None, self.req, rset=self.rset), 0)
         selector = on_transition("forsake")
         self.assertEqual(selector(None, self.req, rset=self.rset), 0)
+
+
+class RelationPossibleTC(CubicWebTC):
+
+    def test_rqlst_1(self):
+        req = self.request()
+        selector = relation_possible('in_group')
+        select = self.vreg.parse(req, 'Any X WHERE X is CWUser').children[0]
+        score = selector(None, req, rset=1,
+                         select=select, filtered_variable=select.defined_vars['X'])
+        self.assertEqual(score, 1)
+
+    def test_rqlst_2(self):
+        req = self.request()
+        selector = relation_possible('in_group')
+        select = self.vreg.parse(req, 'Any 1, COUNT(X) WHERE X is CWUser, X creation_date XD, '
+                                 'Y creation_date YD, Y is CWGroup '
+                                 'HAVING DAY(XD)=DAY(YD)').children[0]
+        score = selector(None, req, rset=1,
+                         select=select, filtered_variable=select.defined_vars['X'])
+        self.assertEqual(score, 1)
 
 
 class MatchUserGroupsTC(CubicWebTC):

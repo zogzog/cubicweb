@@ -28,7 +28,7 @@ Let first see the base class for fields:
 
 .. autoclass:: cubicweb.web.formfields.Field
 
-Now, you usually don't use that class but one of the concret field classes
+Now, you usually don't use that class but one of the concrete field classes
 described below, according to what you want to edit.
 
 Basic fields
@@ -37,6 +37,7 @@ Basic fields
 .. autoclass:: cubicweb.web.formfields.StringField()
 .. autoclass:: cubicweb.web.formfields.PasswordField()
 .. autoclass:: cubicweb.web.formfields.IntField()
+.. autoclass:: cubicweb.web.formfields.BigIntField()
 .. autoclass:: cubicweb.web.formfields.FloatField()
 .. autoclass:: cubicweb.web.formfields.BooleanField()
 .. autoclass:: cubicweb.web.formfields.DateField()
@@ -106,7 +107,7 @@ _MARKER = nullobject()
 class Field(object):
     """This class is the abstract base class for all fields. It hold a bunch
     of attributes which may be used for fine control of the behaviour of a
-    concret field.
+    concrete field.
 
     **Attributes**
 
@@ -147,7 +148,9 @@ class Field(object):
        bool flag telling if this field is linked to a specific entity
     :attr:`role`
        when the field is linked to an entity attribute or relation, tells the
-       role of the entity in the relation (eg 'subject' or 'object')
+       role of the entity in the relation (eg 'subject' or 'object'). If this is
+       not an attribute or relation of the edited entity, `role` should be
+       `None`.
     :attr:`fieldset`
        optional fieldset to which this field belongs to
     :attr:`order`
@@ -346,6 +349,7 @@ class Field(object):
     def initial_typed_value(self, form, load_bytes):
         if self.value is not _MARKER:
             if callable(self.value):
+                # pylint: disable=E1102
                 if support_args(self.value, 'form', 'field'):
                     return self.value(form, self)
                 else:
@@ -386,6 +390,7 @@ class Field(object):
         """
         assert self.choices is not None
         if callable(self.choices):
+            # pylint: disable=E1102
             if getattr(self.choices, 'im_self', None) is self:
                 vocab = self.choices(form=form, **kwargs)
             elif support_args(self.choices, 'form', 'field'):
@@ -393,11 +398,11 @@ class Field(object):
             else:
                 try:
                     vocab = self.choices(form=form, **kwargs)
-                    warn('[3.6]  %s: choices should now take '
+                    warn('[3.6] %s: choices should now take '
                          'the form and field as named arguments' % self,
                          DeprecationWarning)
                 except TypeError:
-                    warn('[3.3]  %s: choices should now take '
+                    warn('[3.3] %s: choices should now take '
                          'the form and field as named arguments' % self,
                          DeprecationWarning)
                     vocab = self.choices(req=form._cw, **kwargs)
@@ -829,21 +834,25 @@ class EditableFileField(FileField):
         return super(EditableFileField, self)._process_form_value(form)
 
 
-class IntField(Field):
-    """Use this field to edit integers (`Int` yams type). This field additionaly
-    support `min` and `max` attributes that specify a minimum and/or maximum
-    value for the integer (`None` meaning no boundary).
+class BigIntField(Field):
+    """Use this field to edit big integers (`BigInt` yams type). This field
+    additionaly support `min` and `max` attributes that specify a minimum and/or
+    maximum value for the integer (`None` meaning no boundary).
 
     Unless explicitly specified, the widget for this field will be a
     :class:`~cubicweb.web.formwidgets.TextInput`.
     """
+    default_text_input_size = 10
+
     def __init__(self, min=None, max=None, **kwargs):
-        super(IntField, self).__init__(**kwargs)
+        super(BigIntField, self).__init__(**kwargs)
         self.min = min
         self.max = max
+
+    def init_widget(self, widget):
+        super(BigIntField, self).init_widget(widget)
         if isinstance(self.widget, fw.TextInput):
-            self.widget.attrs.setdefault('size', 5)
-            self.widget.attrs.setdefault('maxlength', 15)
+            self.widget.attrs.setdefault('size', self.default_text_input_size)
 
     def _ensure_correctly_typed(self, form, value):
         if isinstance(value, basestring):
@@ -855,6 +864,19 @@ class IntField(Field):
             except ValueError:
                 raise ProcessFormError(form._cw._('an integer is expected'))
         return value
+
+
+class IntField(BigIntField):
+    """Use this field to edit integers (`Int` yams type). Similar to
+    :class:`~cubicweb.web.formfields.BigIntField` but set max length when text
+    input widget is used (the default).
+    """
+    default_text_input_size = 5
+
+    def init_widget(self, widget):
+        super(IntField, self).init_widget(widget)
+        if isinstance(self.widget, fw.TextInput):
+            self.widget.attrs.setdefault('maxlength', 15)
 
 
 class BooleanField(Field):
@@ -1207,6 +1229,7 @@ FIELDS = {
 
     'Boolean':  BooleanField,
     'Int':      IntField,
+    'BigInt':   BigIntField,
     'Float':    FloatField,
     'Decimal':  StringField,
 

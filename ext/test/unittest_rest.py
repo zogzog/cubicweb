@@ -63,6 +63,16 @@ class RestTC(CubicWebTC):
         self.assert_(out.endswith('<a href="http://testing.fr/cubicweb/cwuser/anon" title="">anon</a>'
                                   '</td></tr></tbody></table></div>\n</div>\n</p>\n'))
 
+    def test_rql_role_with_vid_empty_rset(self):
+        context = self.context()
+        out = rest_publish(context, ':rql:`Any X WHERE X is CWUser, X login "nono":table`')
+        self.assert_(out.endswith('<p><div class="searchMessage"><strong>No result matching query</strong></div>\n</p>\n'))
+
+    def test_rql_role_with_unknown_vid(self):
+        context = self.context()
+        out = rest_publish(context, ':rql:`Any X WHERE X is CWUser:toto`')
+        self.assert_(out.startswith("<p>an error occured while interpreting this rql directive: ObjectNotFound(u'toto',)</p>"))
+
     def test_rql_role_without_vid(self):
         context = self.context()
         out = rest_publish(context, ':rql:`Any X WHERE X is CWUser`')

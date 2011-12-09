@@ -5,7 +5,7 @@ include pylintrc
 include bin/cubicweb-*
 include man/cubicweb-ctl.1
 
-recursive-include doc README makefile *.conf *.css *.py *.rst *.txt *.html *.png *.svg *.zargo *.dia
+recursive-include doc README makefile *.conf *.js *.css *.py *.rst *.txt *.html *.png *.svg *.zargo *.dia
 
 recursive-include misc *.py *.png *.display
 
@@ -32,5 +32,6 @@ recursive-include skeleton *.py *.css *.js *.po compat *.in *.tmpl
 
 prune doc/book/en/.static
 prune doc/book/fr/.static
+prune doc/html/_sources/
 prune misc/cwfs
 prune goa

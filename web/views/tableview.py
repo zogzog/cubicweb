@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -15,82 +15,55 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""generic table view, including filtering abilities"""
+"""generic table view, including filtering abilities using facets"""
 
 __docformat__ = "restructuredtext en"
 _ = unicode
 
 from logilab.mtconverter import xml_escape
 
-from cubicweb.selectors import nonempty_rset, match_form_params
-from cubicweb.utils import make_uid, json_dumps
+from cubicweb import NoSelectableObject, tags
+from cubicweb.selectors import nonempty_rset
+from cubicweb.utils import make_uid, js_dumps, JSString
 from cubicweb.view import EntityView, AnyRsetView
-from cubicweb import tags
 from cubicweb.uilib import toggle_action, limitsize, htmlescape
-from cubicweb.web import jsonize
-from cubicweb.web.component import Link
+from cubicweb.web import jsonize, component, facet
 from cubicweb.web.htmlwidgets import (TableWidget, TableColumn, MenuWidget,
                                       PopupBoxMenu)
-from cubicweb.web.facet import prepare_facets_rqlst, filter_hiddens
+
 
 class TableView(AnyRsetView):
-    """The table view accepts any non-empty rset. It uses
-    introspection on the result set to compute column names and the
-    proper way to display the cells.
+    """The table view accepts any non-empty rset. It uses introspection on the
+    result set to compute column names and the proper way to display the cells.
+
     It is however highly configurable and accepts a wealth of options.
     """
     __regid__ = 'table'
     title = _('table')
     finalview = 'final'
 
+    table_widget_class = TableWidget
+    table_column_class = TableColumn
+
+    tablesorter_settings = {
+        'textExtraction': JSString('cubicwebSortValueExtraction'),
+        }
+
     def form_filter(self, divid, displaycols, displayactions, displayfilter,
                     paginate, hidden=True):
-        rqlst = self.cw_rset.syntax_tree()
-        # union not yet supported
-        if len(rqlst.children) != 1:
+        try:
+            filterform = self._cw.vreg['views'].select(
+                'facet.filtertable', self._cw, rset=self.cw_rset)
+        except NoSelectableObject:
             return ()
-        rqlst = rqlst.copy()
-        self._cw.vreg.rqlhelper.annotate(rqlst)
-        mainvar, baserql = prepare_facets_rqlst(rqlst, self.cw_rset.args)
-        wdgs = [facet.get_widget() for facet in self._cw.vreg['facets'].poss_visible_objects(
-            self._cw, rset=self.cw_rset, rqlst=rqlst.children[0], context='tablefilter',
-            filtered_variable=mainvar)]
-        wdgs = [wdg for wdg in wdgs if wdg is not None]
-        if wdgs:
-            self._generate_form(divid, baserql, wdgs, hidden,
-                               vidargs={'paginate': paginate,
-                                        'displaycols': displaycols,
-                                        'displayactions': displayactions,
-                                        'displayfilter': displayfilter})
-            return self.show_hide_actions(divid, not hidden)
-        return ()
-
-    def _generate_form(self, divid, baserql, fwidgets, hidden=True, vidargs={}):
-        """display a form to filter table's content. This should only
-        occur when a context eid is given
-        """
-        w = self.w
-        self._cw.add_css('cubicweb.facets.css')
-        self._cw.add_js( ('cubicweb.ajax.js', 'cubicweb.facets.js'))
-        # drop False / None values from vidargs
-        vidargs = dict((k, v) for k, v in vidargs.iteritems() if v)
-        w(u'<form method="post" cubicweb:facetargs="%s" action="">' %
-          xml_escape(json_dumps([divid, self.__regid__, False, vidargs])))
-        w(u'<fieldset id="%sForm" class="%s">' % (divid, hidden and 'hidden' or ''))
-        w(u'<input type="hidden" name="divid" value="%s" />' % divid)
-        w(u'<input type="hidden" name="fromformfilter" value="1" />')
-        filter_hiddens(w, facets=','.join(wdg.facet.__regid__ for wdg in fwidgets),
-                       baserql=baserql)
-        w(u'<table class="filter">\n')
-        w(u'<tr>\n')
-        for wdg in fwidgets:
-            w(u'<td>')
-            wdg.render(w=w)
-            w(u'</td>\n')
-        w(u'</tr>\n')
-        w(u'</table>\n')
-        w(u'</fieldset>\n')
-        w(u'</form>\n')
+        vidargs = {'paginate': paginate,
+                   'displaycols': displaycols,
+                   'displayactions': displayactions,
+                   'displayfilter': displayfilter}
+        cssclass = hidden and 'hidden' or ''
+        filterform.render(self.w, vid=self.__regid__, divid=divid,
+                          vidargs=vidargs, cssclass=cssclass)
+        return self.show_hide_actions(divid, not hidden)
 
     def main_var_index(self):
         """returns the index of the first non-attribute variable among the RQL
@@ -115,6 +88,15 @@ class TableView(AnyRsetView):
                 displaycols = range(len(self.cw_rset.syntax_tree().children[0].selection))
         return displaycols
 
+    def _setup_tablesorter(self, divid):
+        req = self._cw
+        req.add_js('jquery.tablesorter.js')
+        req.add_onload('''$(document).ready(function() {
+    $("#%s table.listing").tablesorter(%s);
+});''' % (divid, js_dumps(self.tablesorter_settings)))
+        req.add_css(('cubicweb.tablesorter.css', 'cubicweb.tableview.css'))
+
+
     def call(self, title=None, subvid=None, displayfilter=None, headers=None,
              displaycols=None, displayactions=None, actions=(), divid=None,
              cellvids=None, cellattrs=None, mainindex=None,
@@ -125,10 +107,12 @@ class TableView(AnyRsetView):
         :param subvid: cell view
         :param displayfilter: filter that selects rows to display
         :param headers: columns' titles
+        :param displaycols: indexes of columns to display (first column is 0)
+        :param displayactions: if True, display action menu
         """
         req = self._cw
-        req.add_js('jquery.tablesorter.js')
-        req.add_css(('cubicweb.tablesorter.css', 'cubicweb.tableview.css'))
+        divid = divid or req.form.get('divid') or 'rs%s' % make_uid(id(self.cw_rset))
+        self._setup_tablesorter(divid)
         # compute label first  since the filter form may remove some necessary
         # information from the rql syntax tree
         if mainindex is None:
@@ -137,7 +121,6 @@ class TableView(AnyRsetView):
         hidden = True
         if not subvid and 'subvid' in req.form:
             subvid = req.form.pop('subvid')
-        divid = divid or req.form.get('divid') or 'rs%s' % make_uid(id(self.cw_rset))
         actions = list(actions)
         if mainindex is None:
             displayfilter, displayactions = False, False
@@ -178,7 +161,7 @@ class TableView(AnyRsetView):
         if paginate:
             self.divid = divid # XXX iirk (see usage in page_navigation_url)
             self.paginate(page_size=page_size, show_all_option=False)
-        table = TableWidget(self)
+        table = self.table_widget_class(self)
         for column in self.get_columns(computed_labels, displaycols, headers,
                                        subvid, cellvids, cellattrs, mainindex):
             table.append_column(column)
@@ -213,7 +196,7 @@ class TableView(AnyRsetView):
                             ident='%sActions' % divid)
         box.append(menu)
         for url, label, klass, ident in actions:
-            menu.append(Link(url, label, klass=klass, id=ident))
+            menu.append(component.Link(url, label, klass=klass, id=ident))
         box.render(w=self.w)
         self.w(u'<div class="clear"/>')
 
@@ -229,7 +212,7 @@ class TableView(AnyRsetView):
                 label = headers[displaycols.index(colindex)]
             if colindex == mainindex and label is not None:
                 label += ' (%s)' % self.cw_rset.rowcount
-            column = TableColumn(label, colindex)
+            column = self.table_column_class(label, colindex)
             coltype = self.cw_rset.description[0][colindex]
             # compute column cell view (if coltype is None, it's a left outer
             # join, use the default non final subvid)
@@ -291,14 +274,17 @@ class CellView(EntityView):
         :param cellvid: cell view (defaults to 'outofcontext')
         """
         etype, val = self.cw_rset.description[row][col], self.cw_rset[row][col]
-        if val is not None and etype is not None and not self._cw.vreg.schema.eschema(etype).final:
-            self.wview(cellvid or 'outofcontext', self.cw_rset, row=row, col=col)
-        elif val is None:
-            # This is usually caused by a left outer join and in that case,
-            # regular views will most certainly fail if they don't have
-            # a real eid
-            self.wview('final', self.cw_rset, row=row, col=col)
+        if etype is None or not self._cw.vreg.schema.eschema(etype).final:
+            if val is None:
+                # This is usually caused by a left outer join and in that case,
+                # regular views will most certainly fail if they don't have
+                # a real eid
+                # XXX if cellvid is e.g. reledit, we may wanna call it anyway
+                self.w(u'&#160;')
+            else:
+                self.wview(cellvid or 'outofcontext', self.cw_rset, row=row, col=col)
         else:
+            # XXX why do we need a fallback view here?
             self.wview(cellvid or 'final', self.cw_rset, 'null', row=row, col=col)
 
 
@@ -396,6 +382,7 @@ class EntityAttributesTableView(EntityView):
     def cell_call(self, row, col):
         _ = self._cw._
         entity = self.cw_rset.get_entity(row, col)
+        entity.complete()
         infos = {}
         for col in self.columns:
             meth = getattr(self, 'build_%s_cell' % col, None)

@@ -254,6 +254,8 @@ class DBAPISession(object):
     def anonymous_session(self):
         return not self.cnx or self.cnx.anonymous_connection
 
+    def __repr__(self):
+        return '<DBAPISession %r>' % self.sessionid
 
 class DBAPIRequest(RequestSessionBase):
 
@@ -292,7 +294,7 @@ class DBAPIRequest(RequestSessionBase):
             self.user = user
             self.set_entity_cache(user)
 
-    def execute(self, *args, **kwargs):
+    def execute(self, *args, **kwargs): # pylint: disable=E0202
         """overriden when session is set. By default raise authentication error
         so authentication is requested.
         """
@@ -301,7 +303,7 @@ class DBAPIRequest(RequestSessionBase):
     def set_default_language(self, vreg):
         try:
             self.lang = vreg.property_value('ui.language')
-        except: # property may not be registered
+        except Exception: # property may not be registered
             self.lang = 'en'
         # use req.__ to translate a message without registering it to the catalog
         try:
@@ -311,7 +313,7 @@ class DBAPIRequest(RequestSessionBase):
         except KeyError:
             # this occurs usually during test execution
             self._ = self.__ = unicode
-            self.pgettext = lambda x, y: y
+            self.pgettext = lambda x, y: unicode(y)
         self.debug('request default language: %s', self.lang)
 
     # entities cache management ###############################################
@@ -347,9 +349,9 @@ class DBAPIRequest(RequestSessionBase):
 
     # server session compat layer #############################################
 
-    def describe(self, eid):
+    def describe(self, eid, asdict=False):
         """return a tuple (type, sourceuri, extid) for the entity with id <eid>"""
-        return self.cnx.describe(eid)
+        return self.cnx.describe(eid, asdict)
 
     def source_defs(self):
         """return the definition of sources used by the repository."""
@@ -483,7 +485,7 @@ class LogCursor(Cursor):
 def check_not_closed(func):
     def decorator(self, *args, **kwargs):
         if self._closed is not None:
-            raise ProgrammingError('Closed connection')
+            raise ProgrammingError('Closed connection %s' % self.sessionid)
         return func(self, *args, **kwargs)
     return decorator
 
@@ -532,7 +534,7 @@ class Connection(object):
         if self._closed is None and self._close_on_del:
             try:
                 self.close()
-            except:
+            except Exception:
                 pass
 
     # connection initialization methods ########################################
@@ -621,7 +623,8 @@ class Connection(object):
         """
         return self._repo.check_session(self.sessionid)
 
-    def _txid(self, cursor=None): # XXX could now handle various isolation level!
+    def _txid(self, cursor=None): # pylint: disable=E0202
+        # XXX could now handle various isolation level!
         # return a dict as bw compat trick
         return {'txid': currentThread().getName()}
 
@@ -675,8 +678,15 @@ class Connection(object):
         return self._repo.get_option_value(option, foreid)
 
     @check_not_closed
-    def describe(self, eid):
-        return self._repo.describe(self.sessionid, eid, **self._txid())
+    def describe(self, eid, asdict=False):
+        metas = self._repo.describe(self.sessionid, eid, **self._txid())
+        if len(metas) == 3: # backward compat
+            metas = list(metas)
+            metas.append(metas[1])
+        if asdict:
+            return dict(zip(('type', 'source', 'extid', 'asource'), metas))
+        # XXX :-1 for cw compat, use asdict=True for full information
+        return metas[:-1]
 
     # db-api like interface ####################################################
 

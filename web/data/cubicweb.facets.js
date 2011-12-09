@@ -1,7 +1,7 @@
 /** filter form, aka facets, javascript functions
  *
  *  :organization: Logilab
- *  :copyright: 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+ *  :copyright: 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
  *  :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
  */
 
@@ -23,15 +23,24 @@ function facetFormContent($form) {
     var values = [];
     $form.find('.facet').each(function() {
         var facetName = jQuery(this).find('.facetTitle').attr('cubicweb:facetName');
-        var facetValues = jQuery(this).find('.facetValueSelected').each(function(x) {
+        // FacetVocabularyWidget
+        jQuery(this).find('.facetValueSelected').each(function(x) {
             names.push(facetName);
             values.push(this.getAttribute('cubicweb:value'));
         });
+        // FacetStringWidget (e.g. has-text)
+        jQuery(this).find('input:text').each(function(){
+            names.push(facetName);
+            values.push(this.value);
+        });
     });
-    $form.find('input').each(function() {
+    // pick up hidden inputs (required metadata inputs such as 'facets'
+    // but also RangeWidgets)
+    $form.find('input:hidden').each(function() {
         names.push(this.name);
         values.push(this.value);
     });
+    // And / Or operators
     $form.find('select option[selected]').each(function() {
         names.push(this.parentNode.name);
         values.push(this.value);
@@ -51,11 +60,11 @@ function buildRQL(divid, vid, paginate, vidargs) {
         var rql = result[0];
         var $bkLink = jQuery('#facetBkLink');
         if ($bkLink.length) {
-            var bkPath = 'view?rql=' + escape(rql);
+            var bkPath = 'view?rql=' + encodeURIComponent(rql);
             if (vid) {
-                bkPath += '&vid=' + escape(vid);
+                bkPath += '&vid=' + encodeURIComponent(vid);
             }
-            var bkUrl = $bkLink.attr('cubicweb:target') + '&path=' + escape(bkPath);
+            var bkUrl = $bkLink.attr('cubicweb:target') + '&path=' + encodeURIComponent(bkPath);
             $bkLink.attr('href', bkUrl);
         }
         var toupdate = result[1];
@@ -94,7 +103,7 @@ function buildRQL(divid, vid, paginate, vidargs) {
                 },
                 'ctxcomponents', 'edit_box'));
             }
-            $node = jQuery('#breadcrumbs')
+            $node = jQuery('#breadcrumbs');
             if ($node.length) {
                 $node.loadxhtml('json', ajaxFuncArgs('render', {
                     'rql': rql
@@ -102,11 +111,19 @@ function buildRQL(divid, vid, paginate, vidargs) {
                 'ctxcomponents', 'breadcrumbs'));
             }
         }
-        var d = loadRemote('json', ajaxFuncArgs('filter_select_content', null, toupdate, rql));
+        var mainvar = null;
+        var index = jQuery.inArray('mainvar', zipped[0]);
+        if (index > - 1) {
+            mainvar = zipped[1][index];
+        }
+
+        var d = loadRemote('json', ajaxFuncArgs('filter_select_content', null, toupdate, rql, mainvar));
         d.addCallback(function(updateMap) {
-            for (facetId in updateMap) {
-                var values = updateMap[facetId];
-                cw.jqNode(facetId).find('.facetCheckBox').each(function() {
+            for (facetName in updateMap) {
+                var values = updateMap[facetName];
+                // XXX fine with jquery 1.6
+                //$form.find('div[cubicweb\\:facetName="' + facetName + '"] ~ div .facetCheckBox').each(function() {
+                $form.find('div').filter(function () {return $(this).attr('cubicweb:facetName') == facetName}).parent().find('.facetCheckBox').each(function() {
                     var value = this.getAttribute('cubicweb:value');
                     if (jQuery.inArray(value, values) == -1) {
                         if (!jQuery(this).hasClass('facetValueDisabled')) {
@@ -134,19 +151,19 @@ function initFacetBoxEvents(root) {
         //       called, not when the page is initialized
         var facetargs = form.attr('cubicweb:facetargs');
         if (facetargs != undefined && !form.attr('cubicweb:initialized')) {
-	    form.attr('cubicweb:initialized', '1');
-	    var jsfacetargs = cw.evalJSON(form.attr('cubicweb:facetargs'));
+            form.attr('cubicweb:initialized', '1');
+            var jsfacetargs = cw.evalJSON(form.attr('cubicweb:facetargs'));
             form.submit(function() {
                 buildRQL.apply(null, jsfacetargs);
                 return false;
             });
-	    var divid = jsfacetargs[0];
-	    if (jQuery('#'+divid).length) {
-		var $loadingDiv = $(DIV({id:'facetLoading'},
-					facetLoadingMsg));
-		$loadingDiv.corner();
-		$(jQuery('#'+divid).get(0).parentNode).append($loadingDiv);
-	    }
+            var divid = jsfacetargs[0];
+            if (jQuery('#'+divid).length) {
+                var $loadingDiv = $(DIV({id:'facetLoading'},
+                                        facetLoadingMsg));
+                $loadingDiv.corner();
+                $(jQuery('#'+divid).get(0).parentNode).append($loadingDiv);
+           }
             form.find('div.facet').each(function() {
                 var facet = jQuery(this);
                 facet.find('div.facetCheckBox').each(function(i) {
@@ -247,6 +264,18 @@ function reorderFacetsItems(root) {
     });
 }
 
+// change css class of facets that have a value selected
+function updateFacetTitles() {
+    $('.facet').each(function() {
+        var $divTitle = $(this).find('.facetTitle');
+        var facetSelected = $(this).find('.facetValueSelected');
+        if (facetSelected.length) {
+            $divTitle.addClass('facetTitleSelected');
+        } else {
+            $divTitle.removeClass('facetTitleSelected');
+        }
+    });
+}
 
 // we need to differenciate cases where initFacetBoxEvents is called with one
 // argument or without any argument. If we use `initFacetBoxEvents` as the
@@ -254,4 +283,34 @@ function reorderFacetsItems(root) {
 // his, so we use this small anonymous function instead.
 jQuery(document).ready(function() {
     initFacetBoxEvents();
+    jQuery(cw).bind('facets-content-loaded', onFacetContentLoaded);
+    jQuery(cw).bind('facets-content-loading', onFacetFiltering);
+    jQuery(cw).bind('facets-content-loading', updateFacetTitles);
+});
+
+function showFacetLoading(parentid) {
+    var loadingWidth = 200; // px
+    var loadingHeight = 100; // px
+    var $msg = jQuery('#facetLoading');
+    var $parent = jQuery('#' + parentid);
+    var leftPos = $parent.offset().left + ($parent.width() - loadingWidth) / 2;
+    $parent.fadeTo('normal', 0.2);
+    $msg.css('left', leftPos).show();
+}
+
+function onFacetFiltering(event, divid /* ... */) {
+    showFacetLoading(divid);
+}
+
+function onFacetContentLoaded(event, divid, rql, vid, extraparams) {
+    jQuery('#facetLoading').hide();
+}
+
+jQuery(document).ready(function () {
+    if (jQuery('div.facetBody').length) {
+        var $loadingDiv = $(DIV({id:'facetLoading'},
+                                facetLoadingMsg));
+        $loadingDiv.corner();
+        $('body').append($loadingDiv);
+    }
 });

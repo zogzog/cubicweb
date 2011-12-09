@@ -42,12 +42,15 @@ from cubicweb.server.sqlutils import SQL_PREFIX
 TYPE_CONVERTER = { # XXX
     'Boolean': bool,
     'Int': int,
+    'BigInt': int,
     'Float': float,
     'Password': str,
     'String': unicode,
     'Date' : unicode,
     'Datetime' : unicode,
     'Time' : unicode,
+    'TZDatetime' : unicode,
+    'TZTime' : unicode,
     }
 
 # core entity and relation types which can't be removed
@@ -84,7 +87,7 @@ def add_inline_relation_column(session, etype, rtype):
         session.system_sql(str('ALTER TABLE %s ADD %s integer'
                                % (table, column)), rollback_on_failure=False)
         session.info('added column %s to table %s', column, table)
-    except:
+    except Exception:
         # silent exception here, if this error has not been raised because the
         # column already exists, index creation will fail anyway
         session.exception('error while adding column %s to table %s',
@@ -92,7 +95,7 @@ def add_inline_relation_column(session, etype, rtype):
     # create index before alter table which may expectingly fail during test
     # (sqlite) while index creation should never fail (test for index existence
     # is done by the dbhelper)
-    session.pool.source('system').create_index(session, table, column)
+    session.cnxset.source('system').create_index(session, table, column)
     session.info('added index on %s(%s)', table, column)
 
 
@@ -218,8 +221,8 @@ class MemSchemaNotifyChanges(hook.SingleLastOperation):
             cwuser_cls = self.session.vreg['etypes'].etype_class('CWUser')
             for session in repo._sessions.values():
                 session.user.__class__ = cwuser_cls
-        except:
-            self.critical('error while setting schmea', exc_info=True)
+        except Exception:
+            self.critical('error while setting schema', exc_info=True)
 
     def rollback_event(self):
         self.precommit_event()
@@ -243,6 +246,7 @@ class CWETypeAddOp(MemSchemaOperation):
       CWAttribute entities
     * add owned_by relation by creating the necessary CWRelation entity
     """
+    entity = None # make pylint happy
 
     def precommit_event(self):
         session = self.session
@@ -252,7 +256,7 @@ class CWETypeAddOp(MemSchemaOperation):
                                description=entity.description)
         eschema = schema.add_entity_type(etype)
         # create the necessary table
-        tablesql = y2sql.eschema2sql(session.pool.source('system').dbhelper,
+        tablesql = y2sql.eschema2sql(session.cnxset.source('system').dbhelper,
                                      eschema, prefix=SQL_PREFIX)
         for sql in tablesql.split(';'):
             if sql.strip():
@@ -289,7 +293,7 @@ class CWETypeRenameOp(MemSchemaOperation):
         self.session.vreg.schema.rename_entity_type(oldname, newname)
         # we need sql to operate physical changes on the system database
         sqlexec = self.session.system_sql
-        dbhelper= self.session.pool.source('system').dbhelper
+        dbhelper= self.session.cnxset.source('system').dbhelper
         sql = dbhelper.sql_rename_table(SQL_PREFIX+oldname,
                                         SQL_PREFIX+newname)
         sqlexec(sql)
@@ -433,7 +437,7 @@ class CWAttributeAddOp(MemSchemaOperation):
         # update the in-memory schema first
         rdefdef = self.init_rdef(**props)
         # then make necessary changes to the system source database
-        syssource = session.pool.source('system')
+        syssource = session.cnxset.source('system')
         attrtype = y2sql.type_from_constraints(
             syssource.dbhelper, rdefdef.object, rdefdef.constraints)
         # XXX should be moved somehow into lgdb: sqlite doesn't support to
@@ -606,7 +610,7 @@ class RDefUpdateOp(MemSchemaOperation):
         self.oldvalues = dict( (attr, getattr(rdef, attr)) for attr in self.values)
         rdef.update(self.values)
         # then make necessary changes to the system source database
-        syssource = session.pool.source('system')
+        syssource = session.cnxset.source('system')
         if 'indexed' in self.values:
             syssource.update_rdef_indexed(session, rdef)
             self.indexed_changed = True
@@ -624,7 +628,7 @@ class RDefUpdateOp(MemSchemaOperation):
         # revert changes on in memory schema
         self.rdef.update(self.oldvalues)
         # revert changes on database
-        syssource = self.session.pool.source('system')
+        syssource = self.session.cnxset.source('system')
         if self.indexed_changed:
             syssource.update_rdef_indexed(self.session, self.rdef)
         if self.null_allowed_changed:
@@ -652,7 +656,7 @@ class CWConstraintDelOp(MemSchemaOperation):
         rdef.constraints.remove(self.oldcstr)
         # then update database: alter the physical schema on size/unique
         # constraint changes
-        syssource = session.pool.source('system')
+        syssource = session.cnxset.source('system')
         cstrtype = self.oldcstr.type()
         if cstrtype == 'SizeConstraint':
             syssource.update_rdef_column(session, rdef)
@@ -668,7 +672,7 @@ class CWConstraintDelOp(MemSchemaOperation):
         if self.oldcstr is not None:
             self.rdef.constraints.append(self.oldcstr)
         # revert changes on database
-        syssource = self.session.pool.source('system')
+        syssource = self.session.cnxset.source('system')
         if self.size_cstr_changed:
             syssource.update_rdef_column(self.session, self.rdef)
         if self.unique_changed:
@@ -699,7 +703,7 @@ class CWConstraintAddOp(CWConstraintDelOp):
         rdef.constraints.append(newcstr)
         # then update database: alter the physical schema on size/unique
         # constraint changes
-        syssource = session.pool.source('system')
+        syssource = session.cnxset.source('system')
         if cstrtype == 'SizeConstraint' and (oldcstr is None or
                                              oldcstr.max != newcstr.max):
             syssource.update_rdef_column(session, rdef)
@@ -716,7 +720,7 @@ class CWUniqueTogetherConstraintAddOp(MemSchemaOperation):
         prefix = SQL_PREFIX
         table = '%s%s' % (prefix, self.entity.constraint_of[0].name)
         cols = ['%s%s' % (prefix, r.name) for r in self.entity.relations]
-        dbhelper= session.pool.source('system').dbhelper
+        dbhelper= session.cnxset.source('system').dbhelper
         sqls = dbhelper.sqls_create_multicol_unique_index(table, cols)
         for sql in sqls:
             session.system_sql(sql)
@@ -736,7 +740,7 @@ class CWUniqueTogetherConstraintDelOp(MemSchemaOperation):
         session = self.session
         prefix = SQL_PREFIX
         table = '%s%s' % (prefix, self.entity.type)
-        dbhelper= session.pool.source('system').dbhelper
+        dbhelper= session.cnxset.source('system').dbhelper
         cols = ['%s%s' % (prefix, c) for c in self.cols]
         sqls = dbhelper.sqls_drop_multicol_unique_index(table, cols)
         for sql in sqls:
@@ -756,6 +760,8 @@ class CWUniqueTogetherConstraintDelOp(MemSchemaOperation):
 
 class MemSchemaCWETypeDel(MemSchemaOperation):
     """actually remove the entity type from the instance's schema"""
+    etype = None # make pylint happy
+
     def postcommit_event(self):
         # del_entity_type also removes entity's relations
         self.session.vreg.schema.del_entity_type(self.etype)
@@ -763,6 +769,8 @@ class MemSchemaCWETypeDel(MemSchemaOperation):
 
 class MemSchemaCWRTypeAdd(MemSchemaOperation):
     """actually add the relation type to the instance's schema"""
+    rtypedef = None # make pylint happy
+
     def precommit_event(self):
         self.session.vreg.schema.add_relation_type(self.rtypedef)
 
@@ -772,6 +780,8 @@ class MemSchemaCWRTypeAdd(MemSchemaOperation):
 
 class MemSchemaCWRTypeDel(MemSchemaOperation):
     """actually remove the relation type from the instance's schema"""
+    rtype = None # make pylint happy
+
     def postcommit_event(self):
         try:
             self.session.vreg.schema.del_relation_type(self.rtype)
@@ -783,9 +793,10 @@ class MemSchemaCWRTypeDel(MemSchemaOperation):
 class MemSchemaPermissionAdd(MemSchemaOperation):
     """synchronize schema when a *_permission relation has been added on a group
     """
+    eid = action = group_eid = expr = None # make pylint happy
 
     def precommit_event(self):
-        """the observed connections pool has been commited"""
+        """the observed connections.cnxset has been commited"""
         try:
             erschema = self.session.vreg.schema.schema_by_eid(self.eid)
         except KeyError:
@@ -793,7 +804,7 @@ class MemSchemaPermissionAdd(MemSchemaOperation):
             self.warning('no schema for %s', self.eid)
             return
         perms = list(erschema.action_permissions(self.action))
-        if hasattr(self, 'group_eid'):
+        if self.group_eid is not None:
             perm = self.session.entity_from_eid(self.group_eid).name
         else:
             perm = erschema.rql_expression(self.expr)
@@ -814,7 +825,7 @@ class MemSchemaPermissionDel(MemSchemaPermissionAdd):
     """
 
     def precommit_event(self):
-        """the observed connections pool has been commited"""
+        """the observed connections set has been commited"""
         try:
             erschema = self.session.vreg.schema.schema_by_eid(self.eid)
         except KeyError:
@@ -827,7 +838,7 @@ class MemSchemaPermissionDel(MemSchemaPermissionAdd):
                self.action in ('delete', 'add'): # XXX 3.6.1 migration
             return
         perms = list(erschema.action_permissions(self.action))
-        if hasattr(self, 'group_eid'):
+        if self.group_eid is not None:
             perm = self.session.entity_from_eid(self.group_eid).name
         else:
             perm = erschema.rql_expression(self.expr)
@@ -842,6 +853,7 @@ class MemSchemaPermissionDel(MemSchemaPermissionAdd):
 
 
 class MemSchemaSpecializesAdd(MemSchemaOperation):
+    etypeeid = parentetypeeid = None # make pylint happy
 
     def precommit_event(self):
         eschema = self.session.vreg.schema.schema_by_eid(self.etypeeid)
@@ -853,6 +865,7 @@ class MemSchemaSpecializesAdd(MemSchemaOperation):
 
 
 class MemSchemaSpecializesDel(MemSchemaOperation):
+    etypeeid = parentetypeeid = None # make pylint happy
 
     def precommit_event(self):
         try:
@@ -1228,7 +1241,7 @@ class UpdateFTIndexOp(hook.DataOperationMixIn, hook.SingleLastOperation):
                         source.fti_index_entities(session, [container])
         if to_reindex:
             # Transaction has already been committed
-            session.pool.commit()
+            session.cnxset.commit()
 
 
 

@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -261,7 +261,7 @@ class StorageTC(CubicWebTC):
     def test_bfss_update_to_None(self):
         f = self.session.create_entity('Affaire', opt_attr=Binary('toto'))
         self.session.commit()
-        self.session.set_pool()
+        self.session.set_cnxset()
         f.set_attributes(opt_attr=None)
         self.session.commit()
 

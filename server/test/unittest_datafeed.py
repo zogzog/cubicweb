@@ -37,19 +37,21 @@ class DataFeedTC(CubicWebTC):
         self.assertEqual(dfsource.synchro_interval, timedelta(seconds=60))
         self.assertFalse(dfsource.fresh())
 
+
         class AParser(datafeed.DataFeedParser):
             __regid__ = 'testparser'
-            def process(self, url):
+            def process(self, url, raise_on_error=False):
                 entity = self.extid2entity('http://www.cubicweb.org/', 'Card',
-                                  item={'title': u'cubicweb.org',
-                                        'content': u'the cw web site'})
+                                           item={'title': u'cubicweb.org',
+                                                 'content': u'the cw web site'})
                 if not self.created_during_pull(entity):
                     self.notify_updated(entity)
             def before_entity_copy(self, entity, sourceparams):
                 entity.cw_edited.update(sourceparams['item'])
 
         with self.temporary_appobjects(AParser):
-            stats = dfsource.pull_data(self.session, force=True)
+            session = self.repo.internal_session()
+            stats = dfsource.pull_data(session, force=True)
             self.commit()
             # test import stats
             self.assertEqual(sorted(stats.keys()), ['created', 'updated'])
@@ -64,26 +66,29 @@ class DataFeedTC(CubicWebTC):
             self.assertEqual(entity.cw_source[0].name, 'myfeed')
             self.assertEqual(entity.cw_metainformation(),
                              {'type': 'Card',
-                              'source': {'uri': 'system', 'type': 'native'},
+                              'source': {'uri': 'myfeed', 'type': 'datafeed', 'use-cwuri-as-url': True},
                               'extid': 'http://www.cubicweb.org/'}
                              )
+            self.assertEqual(entity.absolute_url(), 'http://www.cubicweb.org/')
             # test repo cache keys
             self.assertEqual(self.repo._type_source_cache[entity.eid],
-                             ('Card', 'system', 'http://www.cubicweb.org/'))
+                             ('Card', 'system', 'http://www.cubicweb.org/', 'myfeed'))
             self.assertEqual(self.repo._extid_cache[('http://www.cubicweb.org/', 'system')],
                              entity.eid)
             # test repull
-            stats = dfsource.pull_data(self.session, force=True)
+            session.set_cnxset()
+            stats = dfsource.pull_data(session, force=True)
             self.assertEqual(stats['created'], set())
             self.assertEqual(stats['updated'], set((entity.eid,)))
             # test repull with caches reseted
             self.repo._type_source_cache.clear()
             self.repo._extid_cache.clear()
-            stats = dfsource.pull_data(self.session, force=True)
+            session.set_cnxset()
+            stats = dfsource.pull_data(session, force=True)
             self.assertEqual(stats['created'], set())
             self.assertEqual(stats['updated'], set((entity.eid,)))
             self.assertEqual(self.repo._type_source_cache[entity.eid],
-                             ('Card', 'system', 'http://www.cubicweb.org/'))
+                             ('Card', 'system', 'http://www.cubicweb.org/', 'myfeed'))
             self.assertEqual(self.repo._extid_cache[('http://www.cubicweb.org/', 'system')],
                              entity.eid)
 
@@ -92,6 +97,30 @@ class DataFeedTC(CubicWebTC):
                          )
         self.assertTrue(dfsource.latest_retrieval)
         self.assertTrue(dfsource.fresh())
+
+        # test_rename_source
+        req = self.request()
+        req.execute('SET S name "myrenamedfeed" WHERE S is CWSource, S name "myfeed"')
+        self.commit()
+        entity = self.execute('Card X').get_entity(0, 0)
+        self.assertEqual(entity.cwuri, 'http://www.cubicweb.org/')
+        self.assertEqual(entity.cw_source[0].name, 'myrenamedfeed')
+        self.assertEqual(entity.cw_metainformation(),
+                         {'type': 'Card',
+                          'source': {'uri': 'myrenamedfeed', 'type': 'datafeed', 'use-cwuri-as-url': True},
+                          'extid': 'http://www.cubicweb.org/'}
+                         )
+        self.assertEqual(self.repo._type_source_cache[entity.eid],
+                         ('Card', 'system', 'http://www.cubicweb.org/', 'myrenamedfeed'))
+        self.assertEqual(self.repo._extid_cache[('http://www.cubicweb.org/', 'system')],
+                         entity.eid)
+
+        # test_delete_source
+        req = self.request()
+        req.execute('DELETE CWSource S WHERE S name "myrenamedfeed"')
+        self.commit()
+        self.failIf(self.execute('Card X WHERE X title "cubicweb.org"'))
+        self.failIf(self.execute('Any X WHERE X has_text "cubicweb.org"'))
 
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main

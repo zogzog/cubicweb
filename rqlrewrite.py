@@ -119,6 +119,10 @@ def remove_solutions(origsolutions, solutions, defined):
     return newsolutions
 
 
+def iter_relations(stinfo):
+    # this is a function so that test may return relation in a predictable order
+    return stinfo['relations'] - stinfo['rhsrelations']
+
 class Unsupported(Exception):
     """raised when an rql expression can't be inserted in some rql query
     because it create an unresolvable query (eg no solutions found)
@@ -337,43 +341,58 @@ class RQLRewriter(object):
         """introduce the given snippet in a subquery"""
         subselect = stmts.Select()
         snippetrqlst = n.Exists(transformedsnippet.copy(subselect))
+        get_rschema = self.schema.rschema
         aliases = []
-        rels_done = set()
-        for i, (selectvar, snippetvar) in enumerate(varmap):
+        done = set()
+        for i, (selectvar, _) in enumerate(varmap):
+            need_null_test = False
             subselectvar = subselect.get_variable(selectvar)
             subselect.append_selected(n.VariableRef(subselectvar))
             aliases.append(selectvar)
-            vi = self.varinfos[i]
-            need_null_test = False
-            stinfo = vi['stinfo']
-            for rel in stinfo['relations']:
-                if rel in rels_done:
-                    continue
-                rels_done.add(rel)
-                rschema = self.schema.rschema(rel.r_type)
-                if rschema.final or (rschema.inlined and
-                                     not rel in stinfo['rhsrelations']):
-                    rel.children[0].name = selectvar # XXX explain why
-                    subselect.add_restriction(rel.copy(subselect))
-                    for vref in rel.children[1].iget_nodes(n.VariableRef):
-                        if isinstance(vref.variable, n.ColumnAlias):
-                            # XXX could probably be handled by generating the
-                            # subquery into the detected subquery
-                            raise BadSchemaDefinition(
-                                "cant insert security because of usage two inlined "
-                                "relations in this query. You should probably at "
-                                "least uninline %s" % rel.r_type)
-                        subselect.append_selected(vref.copy(subselect))
-                        aliases.append(vref.name)
-                    self.select.remove_node(rel)
-                    # when some inlined relation has to be copied in the
-                    # subquery, we need to test that either value is NULL or
-                    # that the snippet condition is satisfied
-                    if rschema.inlined and rel.optional:
-                        need_null_test = True
+            todo = [(selectvar, self.varinfos[i]['stinfo'])]
+            while todo:
+                varname, stinfo = todo.pop()
+                done.add(varname)
+                for rel in iter_relations(stinfo):
+                    if rel in done:
+                        continue
+                    done.add(rel)
+                    rschema = get_rschema(rel.r_type)
+                    if rschema.final or rschema.inlined:
+                        rel.children[0].name = varname # XXX explain why
+                        subselect.add_restriction(rel.copy(subselect))
+                        for vref in rel.children[1].iget_nodes(n.VariableRef):
+                            if isinstance(vref.variable, n.ColumnAlias):
+                                # XXX could probably be handled by generating the
+                                # subquery into the detected subquery
+                                raise BadSchemaDefinition(
+                                    "cant insert security because of usage two inlined "
+                                    "relations in this query. You should probably at "
+                                    "least uninline %s" % rel.r_type)
+                            subselect.append_selected(vref.copy(subselect))
+                            aliases.append(vref.name)
+                        self.select.remove_node(rel)
+                        # when some inlined relation has to be copied in the
+                        # subquery and that relation is optional, we need to
+                        # test that either value is NULL or that the snippet
+                        # condition is satisfied
+                        if varname == selectvar and rel.optional and rschema.inlined:
+                            need_null_test = True
+                        # also, if some attributes or inlined relation of the
+                        # object variable are accessed, we need to get all those
+                        # from the subquery as well
+                        if vref.name not in done and rschema.inlined:
+                            # we can use vref here define in above for loop
+                            ostinfo = vref.variable.stinfo
+                            for orel in iter_relations(ostinfo):
+                                orschema = get_rschema(orel.r_type)
+                                if orschema.final or orschema.inlined:
+                                    todo.append( (vref.name, ostinfo) )
+                                    break
             if need_null_test:
                 snippetrqlst = n.Or(
-                    n.make_relation(subselectvar, 'is', (None, None), n.Constant,
+                    n.make_relation(subselect.get_variable(selectvar), 'is',
+                                    (None, None), n.Constant,
                                     operator='='),
                     snippetrqlst)
         subselect.add_restriction(snippetrqlst)
@@ -619,7 +638,7 @@ class RQLRewriter(object):
 
     def visit_mathexpression(self, node):
         cmp_ = n.MathExpression(node.operator)
-        for c in cmp.children:
+        for c in node.children:
             cmp_.append(c.accept(self))
         return cmp_
 

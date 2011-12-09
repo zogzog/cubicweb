@@ -21,9 +21,12 @@ import re
 import decimal
 import datetime
 
+
 from logilab.common.testlib import TestCase, DocTest, unittest_main
 
-from cubicweb.utils import make_uid, UStringIO, SizeConstrainedList, RepeatList
+from cubicweb.devtools.testlib import CubicWebTC
+from cubicweb.utils import (make_uid, UStringIO, SizeConstrainedList,
+                            RepeatList, HTMLHead)
 from cubicweb.entity import Entity
 
 try:
@@ -155,6 +158,102 @@ class JSONEncoderTC(TestCase):
     def test_encoding_unknown_stuff(self):
         self.assertEqual(self.encode(TestCase), 'null')
 
+class HTMLHeadTC(CubicWebTC):
+    def test_concat_urls(self):
+        base_url = u'http://test.fr/data/'
+        head = HTMLHead(base_url)
+        urls = [base_url + u'bob1.js',
+                base_url + u'bob2.js',
+                base_url + u'bob3.js']
+        result = head.concat_urls(urls)
+        expected = u'http://test.fr/data/??bob1.js,bob2.js,bob3.js'
+        self.assertEqual(result, expected)
+
+    def test_group_urls(self):
+        base_url = u'http://test.fr/data/'
+        head = HTMLHead(base_url)
+        urls_spec = [(base_url + u'bob0.js', None),
+                     (base_url + u'bob1.js', None),
+                     (u'http://ext.com/bob2.js', None),
+                     (u'http://ext.com/bob3.js', None),
+                     (base_url + u'bob4.css', 'all'),
+                     (base_url + u'bob5.css', 'all'),
+                     (base_url + u'bob6.css', 'print'),
+                     (base_url + u'bob7.css', 'print'),
+                     (base_url + u'bob8.css', ('all', u'[if IE 8]')),
+                     (base_url + u'bob9.css', ('print', u'[if IE 8]'))
+                     ]
+        result = head.group_urls(urls_spec)
+        expected = [(base_url + u'??bob0.js,bob1.js', None),
+                    (u'http://ext.com/bob2.js', None),
+                    (u'http://ext.com/bob3.js', None),
+                    (base_url + u'??bob4.css,bob5.css', 'all'),
+                    (base_url + u'??bob6.css,bob7.css', 'print'),
+                    (base_url + u'bob8.css', ('all', u'[if IE 8]')),
+                    (base_url + u'bob9.css', ('print', u'[if IE 8]'))
+                    ]
+        self.assertEqual(list(result), expected)
+
+    def test_getvalue_with_concat(self):
+        base_url = u'http://test.fr/data/'
+        head = HTMLHead(base_url)
+        head.add_js(base_url + u'bob0.js')
+        head.add_js(base_url + u'bob1.js')
+        head.add_js(u'http://ext.com/bob2.js')
+        head.add_js(u'http://ext.com/bob3.js')
+        head.add_css(base_url + u'bob4.css')
+        head.add_css(base_url + u'bob5.css')
+        head.add_css(base_url + u'bob6.css', 'print')
+        head.add_css(base_url + u'bob7.css', 'print')
+        head.add_ie_css(base_url + u'bob8.css')
+        head.add_ie_css(base_url + u'bob9.css', 'print', u'[if lt IE 7]')
+        result = head.getvalue()
+        expected = u"""<head>
+<link rel="stylesheet" type="text/css" media="all" href="http://test.fr/data/??bob4.css,bob5.css"/>
+<link rel="stylesheet" type="text/css" media="print" href="http://test.fr/data/??bob6.css,bob7.css"/>
+<!--[if lt IE 8]>
+<link rel="stylesheet" type="text/css" media="all" href="http://test.fr/data/bob8.css"/>
+<!--[if lt IE 7]>
+<link rel="stylesheet" type="text/css" media="print" href="http://test.fr/data/bob9.css"/>
+<![endif]--> 
+<script type="text/javascript" src="http://test.fr/data/??bob0.js,bob1.js"></script>
+<script type="text/javascript" src="http://ext.com/bob2.js"></script>
+<script type="text/javascript" src="http://ext.com/bob3.js"></script>
+</head>
+"""
+        self.assertEqual(result, expected)
+
+    def test_getvalue_without_concat(self):
+        base_url = u'http://test.fr/data/'
+        head = HTMLHead()
+        head.add_js(base_url + u'bob0.js')
+        head.add_js(base_url + u'bob1.js')
+        head.add_js(u'http://ext.com/bob2.js')
+        head.add_js(u'http://ext.com/bob3.js')
+        head.add_css(base_url + u'bob4.css')
+        head.add_css(base_url + u'bob5.css')
+        head.add_css(base_url + u'bob6.css', 'print')
+        head.add_css(base_url + u'bob7.css', 'print')
+        head.add_ie_css(base_url + u'bob8.css')
+        head.add_ie_css(base_url + u'bob9.css', 'print', u'[if lt IE 7]')
+        result = head.getvalue()
+        expected = u"""<head>
+<link rel="stylesheet" type="text/css" media="all" href="http://test.fr/data/bob4.css"/>
+<link rel="stylesheet" type="text/css" media="all" href="http://test.fr/data/bob5.css"/>
+<link rel="stylesheet" type="text/css" media="print" href="http://test.fr/data/bob6.css"/>
+<link rel="stylesheet" type="text/css" media="print" href="http://test.fr/data/bob7.css"/>
+<!--[if lt IE 8]>
+<link rel="stylesheet" type="text/css" media="all" href="http://test.fr/data/bob8.css"/>
+<!--[if lt IE 7]>
+<link rel="stylesheet" type="text/css" media="print" href="http://test.fr/data/bob9.css"/>
+<![endif]--> 
+<script type="text/javascript" src="http://test.fr/data/bob0.js"></script>
+<script type="text/javascript" src="http://test.fr/data/bob1.js"></script>
+<script type="text/javascript" src="http://ext.com/bob2.js"></script>
+<script type="text/javascript" src="http://ext.com/bob3.js"></script>
+</head>
+"""
+        self.assertEqual(result, expected)
 
 class DocTest(DocTest):
     from cubicweb import utils as module

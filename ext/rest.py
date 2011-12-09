@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -71,7 +71,7 @@ def eid_reference_role(role, rawtext, text, lineno, inliner,
     try:
         try:
             eid_num, rest = text.split(u':', 1)
-        except:
+        except ValueError:
             eid_num, rest = text, '#'+text
         eid_num = int(eid_num)
         if eid_num < 0:
@@ -105,11 +105,17 @@ def rql_role(role, rawtext, text, lineno, inliner, options={}, content=[]):
     else:
         rql, vid = text, None
     _cw.ensure_ro_rql(rql)
-    rset = _cw.execute(rql, {'userid': _cw.user.eid})
-    if vid is None:
-        vid = vid_from_rset(_cw, rset, _cw.vreg.schema)
-    view = _cw.vreg['views'].select(vid, _cw, rset=rset)
-    content = view.render()
+    try:
+        rset = _cw.execute(rql, {'userid': _cw.user.eid})
+        if rset:
+            if vid is None:
+                vid = vid_from_rset(_cw, rset, _cw.vreg.schema)
+        else:
+            vid = 'noresult'
+        view = _cw.vreg['views'].select(vid, _cw, rset=rset)
+        content = view.render()
+    except Exception, exc:
+        content = 'an error occured while interpreting this rql directive: %r' % exc
     set_classes(options)
     return [nodes.raw('', content, format='html')], []
 
@@ -181,7 +187,7 @@ winclude_directive.options = {'literal': directives.flag,
 try:
     from pygments import highlight
     from pygments.lexers import get_lexer_by_name
-    from pygments.formatters import HtmlFormatter
+    from pygments.formatters.html import HtmlFormatter
 except ImportError:
     pygments_directive = None
 else:
@@ -200,7 +206,7 @@ else:
             context = state.document.settings.context
             context._cw.add_css('pygments.css')
         except AttributeError:
-            # used outside cubicweb
+            # used outside cubicweb XXX use hasattr instead
             pass
         return [nodes.raw('', parsed, format='html')]
 

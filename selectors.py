@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -255,12 +255,19 @@ class EClassSelector(Selector):
 
     * if `entity` is specified, return score for this entity's class
 
-    * elif `row` is specified, return score for the class of the entity
-      found in the specified cell, using column specified by `col` or 0
+    * elif `rset`, `select` and `filtered_variable` are specified, return score
+      for the possible classes for variable in the given rql :class:`Select`
+      node
 
-    * else return the sum of scores for each entity class found in the column
-      specified specified by the `col` argument or in column 0 if not specified,
-      unless:
+    * elif `rset` and `row` are specified, return score for the class of the
+      entity found in the specified cell, using column specified by `col` or 0
+
+    * elif `rset` is specified return score for each entity class found in the
+      column specified specified by the `col` argument or in column 0 if not
+      specified
+
+    When there are several classes to be evaluated, return the sum of scores for
+    each entity class unless:
 
       - `once_is_enough` is False (the default) and some entity class is scored
         to 0, in which case 0 is returned
@@ -276,32 +283,37 @@ class EClassSelector(Selector):
         self.accept_none = accept_none
 
     @lltrace
-    def __call__(self, cls, req, rset=None, row=None, col=0, accept_none=None,
+    def __call__(self, cls, req, rset=None, row=None, col=0, entity=None,
+                 select=None, filtered_variable=None,
+                 accept_none=None,
                  **kwargs):
-        if kwargs.get('entity'):
-            return self.score_class(kwargs['entity'].__class__, req)
+        if entity is not None:
+            return self.score_class(entity.__class__, req)
         if not rset:
             return 0
-        score = 0
-        if row is None:
+        if select is not None and filtered_variable is not None:
+            etypes = set(sol[filtered_variable.name] for sol in select.solutions)
+        elif row is None:
             if accept_none is None:
                 accept_none = self.accept_none
-            if not accept_none:
-                if any(rset[i][col] is None for i in xrange(len(rset))):
-                    return 0
-            for etype in rset.column_types(col):
-                if etype is None: # outer join
-                    return 0
-                escore = self.score(cls, req, etype)
-                if not escore and not self.once_is_enough:
-                    return 0
-                elif self.once_is_enough:
-                    return escore
-                score += escore
+            if not accept_none and \
+                   any(rset[i][col] is None for i in xrange(len(rset))):
+                return 0
+            etypes = rset.column_types(col)
         else:
             etype = rset.description[row][col]
-            if etype is not None:
-                score = self.score(cls, req, etype)
+            # may have None in rset.description on outer join
+            if etype is None or rset.rows[row][col] is None:
+                return 0
+            etypes = (etype,)
+        score = 0
+        for etype in etypes:
+            escore = self.score(cls, req, etype)
+            if not escore and not self.once_is_enough:
+                return 0
+            elif self.once_is_enough:
+                return escore
+            score += escore
         return score
 
     def score(self, cls, req, etype):
@@ -909,6 +921,7 @@ class relation_possible(EntitySelector):
 
     # hack hack hack
     def __call__(self, cls, req, **kwargs):
+        # hack hack hack
         if self.strict:
             return EntitySelector.__call__(self, cls, req, **kwargs)
         return EClassSelector.__call__(self, cls, req, **kwargs)

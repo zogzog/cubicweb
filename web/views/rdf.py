@@ -89,7 +89,7 @@ if rdflib is not None:
                             except xy.UnsupportedVocabulary:
                                 pass
                     else:
-                        for related in entity.related(rtype, role, entities=True):
+                        for related in entity.related(rtype, role, entities=True, safe=True):
                             if role == 'subject':
                                 add( (cwuri, CW[rtype], URIRef(related.cwuri)) )
                                 try:
@@ -99,5 +99,4 @@ if rdflib is not None:
                                     pass
                             else:
                                 add( (URIRef(related.cwuri), CW[rtype], cwuri) )
-
 

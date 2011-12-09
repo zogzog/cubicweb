@@ -31,26 +31,22 @@ Example of mapping for CWEntityXMLParser::
 
 """
 
-import urllib2
-import StringIO
 import os.path as osp
-from cookielib import CookieJar
-from datetime import datetime, timedelta
-
-from lxml import etree
+from datetime import datetime, timedelta, time
+from urllib import urlencode
+from cgi import parse_qs # in urlparse with python >= 2.6
 
 from logilab.common.date import todate, totime
 from logilab.common.textutils import splitstrip, text_to_dict
+from logilab.common.decorators import classproperty
 
 from yams.constraints import BASE_CONVERTERS
 from yams.schema import role_name as rn
 
-from cubicweb import ValidationError, typed_eid
+from cubicweb import ValidationError, RegistryException, typed_eid
+from cubicweb.view import Component
 from cubicweb.server.sources import datafeed
-
-def ensure_str_keys(dic):
-    for key in dic:
-        dic[str(key)] = dic.pop(key)
+from cubicweb.server.hook import match_rtype
 
 # XXX see cubicweb.cwvreg.YAMS_TO_PY
 # XXX see cubicweb.web.views.xmlrss.SERIALIZERS
@@ -65,60 +61,30 @@ def convert_datetime(ustr):
         ustr = ustr.split('.',1)[0]
     return datetime.strptime(ustr, '%Y-%m-%d %H:%M:%S')
 DEFAULT_CONVERTERS['Datetime'] = convert_datetime
+# XXX handle timezone, though this will be enough as TZDatetime are
+# serialized without time zone by default (UTC time). See
+# cw.web.views.xmlrss.SERIALIZERS.
+DEFAULT_CONVERTERS['TZDatetime'] = convert_datetime
 def convert_time(ustr):
     return totime(datetime.strptime(ustr, '%H:%M:%S'))
 DEFAULT_CONVERTERS['Time'] = convert_time
+DEFAULT_CONVERTERS['TZTime'] = convert_time
 def convert_interval(ustr):
     return time(seconds=int(ustr))
 DEFAULT_CONVERTERS['Interval'] = convert_interval
-
-# use a cookie enabled opener to use session cookie if any
-_OPENER = urllib2.build_opener()
-try:
-    from logilab.common import urllib2ext
-    _OPENER.add_handler(urllib2ext.HTTPGssapiAuthHandler())
-except ImportError: # python-kerberos not available
-    pass
-_OPENER.add_handler(urllib2.HTTPCookieProcessor(CookieJar()))
 
 def extract_typed_attrs(eschema, stringdict, converters=DEFAULT_CONVERTERS):
     typeddict = {}
     for rschema in eschema.subject_relations():
         if rschema.final and rschema in stringdict:
-            if rschema == 'eid':
+            if rschema in ('eid', 'cwuri', 'cwtype', 'cwsource'):
                 continue
             attrtype = eschema.destination(rschema)
-            typeddict[rschema.type] = converters[attrtype](stringdict[rschema])
+            value = stringdict[rschema]
+            if value is not None:
+                value = converters[attrtype](value)
+            typeddict[rschema.type] = value
     return typeddict
-
-def _parse_entity_etree(parent):
-    for node in list(parent):
-        try:
-            item = {'cwtype': unicode(node.tag),
-                    'cwuri': node.attrib['cwuri'],
-                    'eid': typed_eid(node.attrib['eid']),
-                    }
-        except KeyError:
-            # cw < 3.11 compat mode XXX
-            item = {'cwtype': unicode(node.tag),
-                    'cwuri': node.find('cwuri').text,
-                    'eid': typed_eid(node.find('eid').text),
-                    }
-        rels = {}
-        for child in node:
-            role = child.get('role')
-            if role:
-                # relation
-                related = rels.setdefault(role, {}).setdefault(child.tag, [])
-                related += [ritem for ritem, _ in _parse_entity_etree(child)]
-            else:
-                # attribute
-                item[child.tag] = unicode(child.text)
-        yield item, rels
-
-def build_search_rql(etype, attrs):
-    restrictions = ['X %(attr)s %%(%(attr)s)s'%{'attr': attr} for attr in attrs]
-    return 'Any X WHERE X is %s, %s' % (etype, ', '.join(restrictions))
 
 def rtype_role_rql(rtype, role):
     if role == 'object':
@@ -127,34 +93,40 @@ def rtype_role_rql(rtype, role):
         return 'X %s Y WHERE X eid %%(x)s' % rtype
 
 
-def _check_no_option(action, options, eid, _):
-    if options:
-        msg = _("'%s' action doesn't take any options") % action
-        raise ValidationError(eid, {rn('options', 'subject'): msg})
+class CWEntityXMLParser(datafeed.DataFeedXMLParser):
+    """datafeed parser for the 'xml' entity view
 
-def _check_linkattr_option(action, options, eid, _):
-    if not 'linkattr' in options:
-        msg = _("'%s' action requires 'linkattr' option") % action
-        raise ValidationError(eid, {rn('options', 'subject'): msg})
+    Most of the logic is delegated to the following components:
 
+    * an "item builder" component, turning an etree xml node into a specific
+      python dictionnary representing an entity
 
-class CWEntityXMLParser(datafeed.DataFeedParser):
-    """datafeed parser for the 'xml' entity view"""
+    * "action" components, selected given an entity, a relation and its role in
+      the relation, and responsible to link the entity to given related items
+      (eg dictionnary)
+
+    So the parser is only doing the gluing service and the connection to the
+    source.
+    """
     __regid__ = 'cw.entityxml'
-
-    action_options = {
-        'copy': _check_no_option,
-        'link-or-create': _check_linkattr_option,
-        'link': _check_linkattr_option,
-        }
 
     def __init__(self, *args, **kwargs):
         super(CWEntityXMLParser, self).__init__(*args, **kwargs)
-        self.action_methods = {
-            'copy': self.related_copy,
-            'link-or-create': self.related_link_or_create,
-            'link': self.related_link,
-            }
+        self._parsed_urls = {}
+        self._processed_entities = set()
+
+    def select_linker(self, action, rtype, role, entity=None):
+        try:
+            return self._cw.vreg['components'].select(
+                'cw.entityxml.action.%s' % action, self._cw, entity=entity,
+                rtype=rtype, role=role, parser=self)
+        except RegistryException:
+            raise RegistryException('Unknown action %s' % action)
+
+    def list_actions(self):
+        reg = self._cw.vreg['components']
+        return sorted(clss[0].action for rid, clss in reg.iteritems()
+                      if rid.startswith('cw.entityxml.action.'))
 
     # mapping handling #########################################################
 
@@ -180,10 +152,14 @@ class CWEntityXMLParser(datafeed.DataFeedParser):
             raise ValidationError(schemacfg.eid, {rn('options', 'subject'): msg})
         try:
             action = options.pop('action')
-            self.action_options[action](action, options, schemacfg.eid, _)
+            linker = self.select_linker(action, rtype, role)
+            linker.check_options(options, schemacfg.eid)
         except KeyError:
             msg = _('"action" must be specified in options; allowed values are '
-                    '%s') % ', '.join(self.action_methods)
+                    '%s') % ', '.join(self.list_actions())
+            raise ValidationError(schemacfg.eid, {rn('options', 'subject'): msg})
+        except RegistryException:
+            msg = _('allowed values for "action" are %s') % ', '.join(self.list_actions())
             raise ValidationError(schemacfg.eid, {rn('options', 'subject'): msg})
         if not checkonly:
             if role == 'subject':
@@ -208,184 +184,325 @@ class CWEntityXMLParser(datafeed.DataFeedParser):
 
     # import handling ##########################################################
 
-    def process(self, url, partialcommit=True):
+    def process(self, url, raise_on_error=False, partialcommit=True):
         """IDataFeedParser main entry point"""
-        # XXX suppression support according to source configuration. If set, get
-        # all cwuri of entities from this source, and compare with newly
-        # imported ones
-        error = False
-        for item, rels in self.parse(url):
-            cwuri = item['cwuri']
-            try:
-                self.process_item(item, rels)
-                if partialcommit:
-                    # commit+set_pool instead of commit(reset_pool=False) to let
-                    # other a chance to get our pool
-                    self._cw.commit()
-                    self._cw.set_pool()
-            except ValidationError, exc:
-                if partialcommit:
-                    self.source.error('Skipping %s because of validation error %s' % (cwuri, exc))
-                    self._cw.rollback()
-                    self._cw.set_pool()
-                    error = True
-                else:
-                    raise
-        return error
+        if url.startswith('http'): # XXX similar loose test as in parse of sources.datafeed
+            url = self.complete_url(url)
+        super(CWEntityXMLParser, self).process(url, raise_on_error, partialcommit)
 
-    def parse(self, url):
-        if not url.startswith('http'):
-            stream = StringIO.StringIO(url)
-        else:
-            for mappedurl in HOST_MAPPING:
-                if url.startswith(mappedurl):
-                    url = url.replace(mappedurl, HOST_MAPPING[mappedurl], 1)
-                    break
-            self.source.info('GET %s', url)
-            stream = _OPENER.open(url)
-        return _parse_entity_etree(etree.parse(stream).getroot())
+    def parse_etree(self, parent):
+        for node in list(parent):
+            builder = self._cw.vreg['components'].select(
+                'cw.entityxml.item-builder', self._cw, node=node,
+                parser=self)
+            yield builder.build_item()
 
     def process_item(self, item, rels):
-        entity = self.extid2entity(str(item.pop('cwuri')),  item.pop('cwtype'),
-                                   item=item)
+        """
+        item and rels are what's returned by the item builder `build_item` method:
+
+        * `item` is an {attribute: value} dictionary
+        * `rels` is for relations and structured as
+           {role: {relation: [(related item, related rels)...]}
+        """
+        entity = self.extid2entity(str(item['cwuri']),  item['cwtype'],
+                                   cwsource=item['cwsource'], item=item)
+        if entity is None:
+            return None
+        if entity.eid in self._processed_entities:
+            return entity
+        self._processed_entities.add(entity.eid)
         if not (self.created_during_pull(entity) or self.updated_during_pull(entity)):
             self.notify_updated(entity)
-            item.pop('eid')
-            # XXX check modification date
             attrs = extract_typed_attrs(entity.e_schema, item)
-            entity.set_attributes(**attrs)
-        for (rtype, role, action), rules in self.source.mapping.get(entity.__regid__, {}).iteritems():
+            # check modification date and compare attribute values to only
+            # update what's actually needed
+            entity.complete(tuple(attrs))
+            mdate = attrs.get('modification_date')
+            if not mdate or mdate > entity.modification_date:
+                attrs = dict( (k, v) for k, v in attrs.iteritems()
+                              if v != getattr(entity, k))
+                if attrs:
+                    entity.set_attributes(**attrs)
+        self.process_relations(entity, rels)
+        return entity
+
+    def process_relations(self, entity, rels):
+        etype = entity.__regid__
+        for (rtype, role, action), rules in self.source.mapping.get(etype, {}).iteritems():
             try:
                 related_items = rels[role][rtype]
             except KeyError:
                 self.source.error('relation %s-%s not found in xml export of %s',
-                                  rtype, role, entity.__regid__)
+                                  rtype, role, etype)
                 continue
             try:
-                actionmethod = self.action_methods[action]
-            except KeyError:
-                raise Exception('Unknown action %s' % action)
-            actionmethod(entity, rtype, role, related_items, rules)
-        return entity
+                linker = self.select_linker(action, rtype, role, entity)
+            except RegistryException:
+                self.source.error('no linker for action %s', action)
+            else:
+                linker.link_items(related_items, rules)
 
     def before_entity_copy(self, entity, sourceparams):
         """IDataFeedParser callback"""
         attrs = extract_typed_attrs(entity.e_schema, sourceparams['item'])
         entity.cw_edited.update(attrs)
 
-    def related_copy(self, entity, rtype, role, others, rules):
-        """implementation of 'copy' action
+    def complete_url(self, url, etype=None, known_relations=None):
+        """append to the url's query string information about relation that should
+        be included in the resulting xml, according to source mapping.
 
-        Takes no option.
+        If etype is not specified, try to guess it using the last path part of
+        the url, i.e. the format used by default in cubicweb to map all entities
+        of a given type as in 'http://mysite.org/EntityType'.
+
+        If `known_relations` is given, it should be a dictionary of already
+        known relations, so they don't get queried again.
         """
-        assert not any(x[1] for x in rules), "'copy' action takes no option"
-        ttypes = set([x[0] for x in rules])
-        others = [item for item in others if item['cwtype'] in ttypes]
-        eids = [] # local eids
-        if not others:
-            self._clear_relation(entity, rtype, role, ttypes)
-            return
-        for item in others:
-            item, _rels = self._complete_item(item)
-            other_entity = self.process_item(item, [])
-            eids.append(other_entity.eid)
-        self._set_relation(entity, rtype, role, eids)
-
-    def related_link(self, entity, rtype, role, others, rules):
-        """implementation of 'link' action
-
-        requires an options to control search of the linked entity.
-        """
-        for ttype, options in rules:
-            assert 'linkattr' in options, (
-                "'link' action requires a list of attributes used to "
-                "search if the entity already exists")
-            self._related_link(entity, rtype, role, ttype, others, [options['linkattr']],
-                               create_when_not_found=False)
-
-    def related_link_or_create(self, entity, rtype, role, others, rules):
-        """implementation of 'link-or-create' action
-
-        requires an options to control search of the linked entity.
-        """
-        for ttype, options in rules:
-            assert 'linkattr' in options, (
-                "'link-or-create' action requires a list of attributes used to "
-                "search if the entity already exists")
-            self._related_link(entity, rtype, role, ttype, others, [options['linkattr']],
-                               create_when_not_found=True)
-
-    def _related_link(self, entity, rtype, role, ttype, others, searchattrs,
-                      create_when_not_found):
-        def issubset(x,y):
-            return all(z in y for z in x)
-        eids = [] # local eids
-        for item in others:
-            if item['cwtype'] != ttype:
+        try:
+            url, qs = url.split('?', 1)
+        except ValueError:
+            qs = ''
+        params = parse_qs(qs)
+        if not 'vid' in params:
+            params['vid'] = ['xml']
+        if etype is None:
+            try:
+                etype = url.rsplit('/', 1)[1]
+            except ValueError:
+                return url + '?' + self._cw.build_url_params(**params)
+            try:
+                etype = self._cw.vreg.case_insensitive_etypes[etype.lower()]
+            except KeyError:
+                return url + '?' + self._cw.build_url_params(**params)
+        relations = params.setdefault('relation', [])
+        for rtype, role, _ in self.source.mapping.get(etype, ()):
+            if known_relations and rtype in known_relations.get('role', ()):
                 continue
-            if not issubset(searchattrs, item):
-                item, _rels = self._complete_item(item, False)
-                if not issubset(searchattrs, item):
-                    self.source.error('missing attribute, got %s expected keys %s'
-                                      % item, searchattrs)
-                    continue
-            kwargs = dict((attr, item[attr]) for attr in searchattrs)
-            rql = build_search_rql(item['cwtype'], kwargs)
-            rset = self._cw.execute(rql, kwargs)
-            if len(rset) > 1:
-                self.source.error('ambiguous link: found %s entity %s with attributes %s',
-                                  len(rset), item['cwtype'], kwargs)
-            elif len(rset) == 1:
-                eids.append(rset[0][0])
-            elif create_when_not_found:
-                ensure_str_keys(kwargs) # XXX necessary with python < 2.6
-                eids.append(self._cw.create_entity(item['cwtype'], **kwargs).eid)
+            reldef = '%s-%s' % (rtype, role)
+            if not reldef in relations:
+                relations.append(reldef)
+        return url + '?' + self._cw.build_url_params(**params)
+
+    def complete_item(self, item, rels):
+        try:
+            return self._parsed_urls[item['cwuri']]
+        except KeyError:
+            itemurl = self.complete_url(item['cwuri'], item['cwtype'], rels)
+            item_rels = list(self.parse(itemurl))
+            assert len(item_rels) == 1, 'url %s expected to bring back one '\
+                   'and only one entity, got %s' % (itemurl, len(item_rels))
+            self._parsed_urls[item['cwuri']] = item_rels[0]
+            if rels:
+                # XXX (do it better) merge relations
+                new_rels = item_rels[0][1]
+                new_rels.get('subject', {}).update(rels.get('subject', {}))
+                new_rels.get('object', {}).update(rels.get('object', {}))
+            return item_rels[0]
+
+
+class CWEntityXMLItemBuilder(Component):
+    __regid__ = 'cw.entityxml.item-builder'
+
+    def __init__(self, _cw, parser, node, **kwargs):
+        super(CWEntityXMLItemBuilder, self).__init__(_cw, **kwargs)
+        self.parser = parser
+        self.node = node
+
+    def build_item(self):
+        """parse a XML document node and return two dictionaries defining (part
+        of) an entity:
+
+        - {attribute: value}
+        - {role: {relation: [(related item, related rels)...]}
+        """
+        node = self.node
+        item = dict(node.attrib.items())
+        item['cwtype'] = unicode(node.tag)
+        item.setdefault('cwsource', None)
+        try:
+            item['eid'] = typed_eid(item['eid'])
+        except KeyError:
+            # cw < 3.11 compat mode XXX
+            item['eid'] = typed_eid(node.find('eid').text)
+            item['cwuri'] = node.find('cwuri').text
+        rels = {}
+        for child in node:
+            role = child.get('role')
+            if role:
+                # relation
+                related = rels.setdefault(role, {}).setdefault(child.tag, [])
+                related += self.parser.parse_etree(child)
+            elif child.text:
+                # attribute
+                item[child.tag] = unicode(child.text)
             else:
-                self.source.error('can not find %s entity with attributes %s',
-                                  item['cwtype'], kwargs)
-        if not eids:
-            self._clear_relation(entity, rtype, role, (ttype,))
+                # None attribute (empty tag)
+                item[child.tag] = None
+        return item, rels
+
+
+class CWEntityXMLActionCopy(Component):
+    """implementation of cubicweb entity xml parser's'copy' action
+
+    Takes no option.
+    """
+    __regid__ = 'cw.entityxml.action.copy'
+
+    def __init__(self, _cw, parser, rtype, role, entity=None, **kwargs):
+        super(CWEntityXMLActionCopy, self).__init__(_cw, **kwargs)
+        self.parser = parser
+        self.rtype = rtype
+        self.role = role
+        self.entity = entity
+
+    @classproperty
+    def action(cls):
+        return cls.__regid__.rsplit('.', 1)[-1]
+
+    def check_options(self, options, eid):
+        self._check_no_options(options, eid)
+
+    def _check_no_options(self, options, eid, msg=None):
+        if options:
+            if msg is None:
+                msg = self._cw._("'%s' action doesn't take any options") % self.action
+            raise ValidationError(eid, {rn('options', 'subject'): msg})
+
+    def link_items(self, others, rules):
+        assert not any(x[1] for x in rules), "'copy' action takes no option"
+        ttypes = frozenset([x[0] for x in rules])
+        eids = [] # local eids
+        for item, rels in others:
+            if item['cwtype'] in ttypes:
+                item, rels = self.parser.complete_item(item, rels)
+                other_entity = self.parser.process_item(item, rels)
+                if other_entity is not None:
+                    eids.append(other_entity.eid)
+        if eids:
+            self._set_relation(eids)
         else:
-            self._set_relation(entity, rtype, role, eids)
+            self._clear_relation(ttypes)
 
-    def _complete_item(self, item, add_relations=True):
-        itemurl = item['cwuri'] + '?vid=xml'
-        if add_relations:
-            for rtype, role, _ in self.source.mapping.get(item['cwtype'], ()):
-                itemurl += '&relation=%s-%s' % (rtype, role)
-        item_rels = list(self.parse(itemurl))
-        assert len(item_rels) == 1
-        return item_rels[0]
-
-    def _clear_relation(self, entity, rtype, role, ttypes):
-        if entity.eid not in self.stats['created']:
+    def _clear_relation(self, ttypes):
+        if not self.parser.created_during_pull(self.entity):
             if len(ttypes) > 1:
                 typerestr = ', Y is IN(%s)' % ','.join(ttypes)
             else:
                 typerestr = ', Y is %s' % ','.join(ttypes)
-            self._cw.execute('DELETE ' + rtype_role_rql(rtype, role) + typerestr,
-                             {'x': entity.eid})
+            self._cw.execute('DELETE ' + rtype_role_rql(self.rtype, self.role) + typerestr,
+                             {'x': self.entity.eid})
 
-    def _set_relation(self, entity, rtype, role, eids):
-        rqlbase = rtype_role_rql(rtype, role)
-        rql = 'DELETE %s' % rqlbase
-        if eids:
-            eidstr = ','.join(str(eid) for eid in eids)
-            rql += ', NOT Y eid IN (%s)' % eidstr
-        self._cw.execute(rql, {'x': entity.eid})
-        if eids:
-            if role == 'object':
-                rql = 'SET %s, Y eid IN (%s), NOT Y %s X' % (rqlbase, eidstr, rtype)
+    def _set_relation(self, eids):
+        assert eids
+        rtype = self.rtype
+        rqlbase = rtype_role_rql(rtype, self.role)
+        eidstr = ','.join(str(eid) for eid in eids)
+        self._cw.execute('DELETE %s, NOT Y eid IN (%s)' % (rqlbase, eidstr),
+                         {'x': self.entity.eid})
+        if self.role == 'object':
+            rql = 'SET %s, Y eid IN (%s), NOT Y %s X' % (rqlbase, eidstr, rtype)
+        else:
+            rql = 'SET %s, Y eid IN (%s), NOT X %s Y' % (rqlbase, eidstr, rtype)
+        self._cw.execute(rql, {'x': self.entity.eid})
+
+
+class CWEntityXMLActionLink(CWEntityXMLActionCopy):
+    """implementation of cubicweb entity xml parser's'link' action
+
+    requires a 'linkattr' option to control search of the linked entity.
+    """
+    __regid__ = 'cw.entityxml.action.link'
+
+    def check_options(self, options, eid):
+        if not 'linkattr' in options:
+            msg = self._cw._("'%s' action requires 'linkattr' option") % self.action
+            raise ValidationError(eid, {rn('options', 'subject'): msg})
+
+    create_when_not_found = False
+
+    def link_items(self, others, rules):
+        for ttype, options in rules:
+            searchattrs = splitstrip(options.get('linkattr', ''))
+            self._related_link(ttype, others, searchattrs)
+
+    def _related_link(self, ttype, others, searchattrs):
+        def issubset(x,y):
+            return all(z in y for z in x)
+        eids = [] # local eids
+        source = self.parser.source
+        for item, rels in others:
+            if item['cwtype'] != ttype:
+                continue
+            if not issubset(searchattrs, item):
+                item, rels = self.parser.complete_item(item, rels)
+                if not issubset(searchattrs, item):
+                    source.error('missing attribute, got %s expected keys %s',
+                                 item, searchattrs)
+                    continue
+            # XXX str() needed with python < 2.6
+            kwargs = dict((str(attr), item[attr]) for attr in searchattrs)
+            targets = self._find_entities(item, kwargs)
+            if len(targets) == 1:
+                entity = targets[0]
+            elif not targets and self.create_when_not_found:
+                entity = self._cw.create_entity(item['cwtype'], **kwargs)
             else:
-                rql = 'SET %s, Y eid IN (%s), NOT X %s Y' % (rqlbase, eidstr, rtype)
-            self._cw.execute(rql, {'x': entity.eid})
+                if len(targets) > 1:
+                    source.error('ambiguous link: found %s entity %s with attributes %s',
+                                 len(targets), item['cwtype'], kwargs)
+                else:
+                    source.error('can not find %s entity with attributes %s',
+                                 item['cwtype'], kwargs)
+                continue
+            eids.append(entity.eid)
+            self.parser.process_relations(entity, rels)
+        if eids:
+            self._set_relation(eids)
+        else:
+            self._clear_relation((ttype,))
+
+    def _find_entities(self, item, kwargs):
+        return tuple(self._cw.find_entities(item['cwtype'], **kwargs))
+
+
+class CWEntityXMLActionLinkInState(CWEntityXMLActionLink):
+    """custom implementation of cubicweb entity xml parser's'link' action for
+    in_state relation
+    """
+    __select__ = match_rtype('in_state')
+
+    def check_options(self, options, eid):
+        super(CWEntityXMLActionLinkInState, self).check_options(options, eid)
+        if not 'name' in options['linkattr']:
+            msg = self._cw._("'%s' action for in_state relation should at least have 'linkattr=name' option") % self.action
+            raise ValidationError(eid, {rn('options', 'subject'): msg})
+
+    def _find_entities(self, item, kwargs):
+        assert 'name' in item # XXX else, complete_item
+        state_name = item['name']
+        wf = self.entity.cw_adapt_to('IWorkflowable').current_workflow
+        state = wf.state_by_name(state_name)
+        if state is None:
+            return ()
+        return (state,)
+
+
+class CWEntityXMLActionLinkOrCreate(CWEntityXMLActionLink):
+    """implementation of cubicweb entity xml parser's'link-or-create' action
+
+    requires a 'linkattr' option to control search of the linked entity.
+    """
+    __regid__ = 'cw.entityxml.action.link-or-create'
+    create_when_not_found = True
+
 
 def registration_callback(vreg):
     vreg.register_all(globals().values(), __name__)
-    global HOST_MAPPING
-    HOST_MAPPING = {}
+    global URL_MAPPING
+    URL_MAPPING = {}
     if vreg.config.apphome:
-        host_mapping_file = osp.join(vreg.config.apphome, 'hostmapping.py')
-        if osp.exists(host_mapping_file):
-            HOST_MAPPING = eval(file(host_mapping_file).read())
-            vreg.info('using host mapping %s from %s', HOST_MAPPING, host_mapping_file)
+        url_mapping_file = osp.join(vreg.config.apphome, 'urlmapping.py')
+        if osp.exists(url_mapping_file):
+            URL_MAPPING = eval(file(url_mapping_file).read())
+            vreg.info('using url mapping %s from %s', URL_MAPPING, url_mapping_file)
