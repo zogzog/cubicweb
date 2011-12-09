@@ -387,31 +387,6 @@ class CubicWebTC(TestCase):
                 req.cnx.commit()
         return user
 
-    @iclassmethod # XXX turn into a class method
-    def grant_permission(self, session, entity, group, pname=None, plabel=None):
-        """insert a permission on an entity. Will have to commit the main
-        connection to be considered
-        """
-        if not isinstance(session, Session):
-            warn('[3.12] grant_permission arguments are now (session, entity, group, pname[, plabel])',
-                 DeprecationWarning, stacklevel=2)
-            plabel = pname
-            pname = group
-            group = entity
-            entity = session
-            assert not isinstance(self, type)
-            session = self.session
-        pname = unicode(pname)
-        plabel = plabel and unicode(plabel) or unicode(group)
-        e = getattr(entity, 'eid', entity)
-        with security_enabled(session, False, False):
-            peid = session.execute(
-            'INSERT CWPermission X: X name %(pname)s, X label %(plabel)s,'
-            'X require_group G, E require_permission X '
-            'WHERE G name %(group)s, E eid %(e)s',
-            locals())[0][0]
-        return peid
-
     def login(self, login, **kwargs):
         """return a connection for the given login/password"""
         if login == self.admlogin:
@@ -851,7 +826,7 @@ class CubicWebTC(TestCase):
         output = output.strip()
         validator = self.get_validator(view, output=output)
         if validator is None:
-            return
+            return output # return raw output if no validator is defined
         if isinstance(validator, htmlparser.DTDValidator):
             # XXX remove <canvas> used in progress widget, unknown in html dtd
             output = re.sub('<canvas.*?></canvas>', '', output)
@@ -928,12 +903,6 @@ class CubicWebTC(TestCase):
             warn('[3.8] eidkey is deprecated, you can safely remove this argument',
                  DeprecationWarning, stacklevel=2)
         return self.execute(rql, args, req=req).get_entity(0, 0)
-
-    @deprecated('[3.6] use self.request().create_entity(...)')
-    def add_entity(self, etype, req=None, **kwargs):
-        if req is None:
-            req = self.request()
-        return req.create_entity(etype, **kwargs)
 
 
 # auto-populating test classes and utilities ###################################
@@ -1130,7 +1099,7 @@ class AutomaticWebTest(AutoPopulateTest):
     tags = AutoPopulateTest.tags | Tags('web', 'generated')
 
     def setUp(self):
-        assert not self.__class__ is AutomaticWebTest, 'Please subclass AutomaticWebTest to pprevent database caching issue'
+        assert not self.__class__ is AutomaticWebTest, 'Please subclass AutomaticWebTest to prevent database caching issue'
         super(AutomaticWebTest, self).setUp()
 
         # access to self.app for proper initialization of the authentication

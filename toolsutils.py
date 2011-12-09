@@ -180,7 +180,7 @@ def read_config(config_file, raise_if_unreadable=False):
                            'Section %s is defined more than once' % section
                     config[section] = current = {}
                     continue
-                print >> sys.stderr, 'ignoring malformed line\n%r' % line
+                sys.stderr.write('ignoring malformed line\n%r\n' % line)
                 continue
             option = option.strip().replace(' ', '_')
             value = value.strip()

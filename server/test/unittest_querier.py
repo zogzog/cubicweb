@@ -145,7 +145,7 @@ class UtilsTC(BaseQuerierTC):
                                        'X': 'Affaire',
                                        'ET': 'CWEType', 'ETN': 'String'}])
         rql, solutions = partrqls[1]
-        self.assertEqual(rql,  'Any ETN,X WHERE X is ET, ET name ETN, ET is CWEType, X is IN(BaseTransition, Bookmark, CWAttribute, CWCache, CWConstraint, CWConstraintType, CWEType, CWGroup, CWPermission, CWProperty, CWRType, CWRelation, CWSource, CWUniqueTogetherConstraint, CWUser, Card, Comment, Division, Email, EmailAddress, EmailPart, EmailThread, ExternalUri, File, Folder, Note, Personne, RQLExpression, Societe, State, SubDivision, SubWorkflowExitPoint, Tag, TrInfo, Transition, Workflow, WorkflowTransition)')
+        self.assertEqual(rql,  'Any ETN,X WHERE X is ET, ET name ETN, ET is CWEType, X is IN(BaseTransition, Bookmark, CWAttribute, CWCache, CWConstraint, CWConstraintType, CWEType, CWGroup, CWPermission, CWProperty, CWRType, CWRelation, CWSource, CWUniqueTogetherConstraint, CWUser, Card, Comment, Division, Email, EmailAddress, EmailPart, EmailThread, ExternalUri, File, Folder, Note, Old, Personne, RQLExpression, Societe, State, SubDivision, SubWorkflowExitPoint, Tag, TrInfo, Transition, Workflow, WorkflowTransition)')
         self.assertListEqual(sorted(solutions),
                               sorted([{'X': 'BaseTransition', 'ETN': 'String', 'ET': 'CWEType'},
                                       {'X': 'Bookmark', 'ETN': 'String', 'ET': 'CWEType'},
@@ -173,6 +173,7 @@ class UtilsTC(BaseQuerierTC):
                                       {'X': 'File', 'ETN': 'String', 'ET': 'CWEType'},
                                       {'X': 'Folder', 'ETN': 'String', 'ET': 'CWEType'},
                                       {'X': 'Note', 'ETN': 'String', 'ET': 'CWEType'},
+                                      {'X': 'Old', 'ETN': 'String', 'ET': 'CWEType'},
                                       {'X': 'Personne', 'ETN': 'String', 'ET': 'CWEType'},
                                       {'X': 'RQLExpression', 'ETN': 'String', 'ET': 'CWEType'},
                                       {'X': 'Societe', 'ETN': 'String', 'ET': 'CWEType'},
@@ -250,7 +251,7 @@ class QuerierTC(BaseQuerierTC):
 
     def test_unknown_eid(self):
         # should return an empty result set
-        self.failIf(self.execute('Any X WHERE X eid 99999999'))
+        self.assertFalse(self.execute('Any X WHERE X eid 99999999'))
 
     def test_typed_eid(self):
         # should return an empty result set
@@ -418,8 +419,8 @@ class QuerierTC(BaseQuerierTC):
         self.execute("SET X tags Y WHERE X eid %(t)s, Y eid %(g)s",
                      {'g': geid, 't': teid})
         rset = self.execute("Any GN,TN ORDERBY GN WHERE T? tags G, T name TN, G name GN")
-        self.failUnless(['users', 'tag'] in rset.rows)
-        self.failUnless(['activated', None] in rset.rows)
+        self.assertTrue(['users', 'tag'] in rset.rows)
+        self.assertTrue(['activated', None] in rset.rows)
         rset = self.execute("Any GN,TN ORDERBY GN WHERE T tags G?, T name TN, G name GN")
         self.assertEqual(rset.rows, [[None, 'tagbis'], ['users', 'tag']])
 
@@ -494,26 +495,26 @@ class QuerierTC(BaseQuerierTC):
 
     def test_select_custom_aggregat_concat_string(self):
         rset = self.execute('Any GROUP_CONCAT(N) WHERE X is CWGroup, X name N')
-        self.failUnless(rset)
-        self.failUnlessEqual(sorted(rset[0][0].split(', ')), ['guests', 'managers',
+        self.assertTrue(rset)
+        self.assertEqual(sorted(rset[0][0].split(', ')), ['guests', 'managers',
                                                              'owners', 'users'])
 
     def test_select_custom_regproc_limit_size(self):
         rset = self.execute('Any TEXT_LIMIT_SIZE(N, 3) WHERE X is CWGroup, X name N, X name "managers"')
-        self.failUnless(rset)
-        self.failUnlessEqual(rset[0][0], 'man...')
+        self.assertTrue(rset)
+        self.assertEqual(rset[0][0], 'man...')
         self.execute("INSERT Basket X: X name 'bidule', X description '<b>hop hop</b>', X description_format 'text/html'")
         rset = self.execute('Any LIMIT_SIZE(D, DF, 3) WHERE X is Basket, X description D, X description_format DF')
-        self.failUnless(rset)
-        self.failUnlessEqual(rset[0][0], 'hop...')
+        self.assertTrue(rset)
+        self.assertEqual(rset[0][0], 'hop...')
 
     def test_select_regproc_orderby(self):
         rset = self.execute('DISTINCT Any X,N ORDERBY GROUP_SORT_VALUE(N) WHERE X is CWGroup, X name N, X name "managers"')
-        self.failUnlessEqual(len(rset), 1)
-        self.failUnlessEqual(rset[0][1], 'managers')
+        self.assertEqual(len(rset), 1)
+        self.assertEqual(rset[0][1], 'managers')
         rset = self.execute('Any X,N ORDERBY GROUP_SORT_VALUE(N) WHERE X is CWGroup, X name N, NOT U in_group X, U login "admin"')
-        self.failUnlessEqual(len(rset), 3)
-        self.failUnlessEqual(rset[0][1], 'owners')
+        self.assertEqual(len(rset), 3)
+        self.assertEqual(rset[0][1], 'owners')
 
     def test_select_aggregat_sort(self):
         rset = self.execute('Any G, COUNT(U) GROUPBY G ORDERBY 2 WHERE U in_group G')
@@ -528,16 +529,16 @@ class QuerierTC(BaseQuerierTC):
         self.assertListEqual(rset.rows,
                               [[u'description_format', 12],
                                [u'description', 13],
-                               [u'name', 15],
-                               [u'created_by', 41],
-                               [u'creation_date', 41],
-                               [u'cw_source', 41],
-                               [u'cwuri', 41],
-                               [u'in_basket', 41],
-                               [u'is', 41],
-                               [u'is_instance_of', 41],
-                               [u'modification_date', 41],
-                               [u'owned_by', 41]])
+                               [u'name', 16],
+                               [u'created_by', 43],
+                               [u'creation_date', 43],
+                               [u'cw_source', 43],
+                               [u'cwuri', 43],
+                               [u'in_basket', 43],
+                               [u'is', 43],
+                               [u'is_instance_of', 43],
+                               [u'modification_date', 43],
+                               [u'owned_by', 43]])
 
     def test_select_aggregat_having_dumb(self):
         # dumb but should not raise an error
@@ -619,7 +620,7 @@ class QuerierTC(BaseQuerierTC):
         self.assertEqual(len(rset.rows), 2, rset.rows)
         biduleeids = [r[0] for r in rset.rows]
         rset = self.execute(u'Any N where NOT N has_text "bidüle"')
-        self.failIf([r[0] for r in rset.rows if r[0] in biduleeids])
+        self.assertFalse([r[0] for r in rset.rows if r[0] in biduleeids])
         # duh?
         rset = self.execute('Any X WHERE X has_text %(text)s', {'text': u'ça'})
 
@@ -757,7 +758,7 @@ class QuerierTC(BaseQuerierTC):
 
     def test_select_explicit_eid(self):
         rset = self.execute('Any X,E WHERE X owned_by U, X eid E, U eid %(u)s', {'u': self.session.user.eid})
-        self.failUnless(rset)
+        self.assertTrue(rset)
         self.assertEqual(rset.description[0][1], 'Int')
 
 #     def test_select_rewritten_optional(self):
@@ -774,7 +775,7 @@ class QuerierTC(BaseQuerierTC):
         rset = self.execute('Tag X WHERE X creation_date TODAY')
         self.assertEqual(len(rset.rows), 2)
         rset = self.execute('Any MAX(D) WHERE X is Tag, X creation_date D')
-        self.failUnless(isinstance(rset[0][0], datetime), (rset[0][0], type(rset[0][0])))
+        self.assertTrue(isinstance(rset[0][0], datetime), (rset[0][0], type(rset[0][0])))
 
     def test_today(self):
         self.execute("INSERT Tag X: X name 'bidule', X creation_date TODAY")
@@ -891,11 +892,11 @@ class QuerierTC(BaseQuerierTC):
 
     def test_select_date_mathexp(self):
         rset = self.execute('Any X, TODAY - CD WHERE X is CWUser, X creation_date CD')
-        self.failUnless(rset)
-        self.failUnlessEqual(rset.description[0][1], 'Interval')
+        self.assertTrue(rset)
+        self.assertEqual(rset.description[0][1], 'Interval')
         eid, = self.execute("INSERT Personne X: X nom 'bidule'")[0]
         rset = self.execute('Any X, NOW - CD WHERE X is Personne, X creation_date CD')
-        self.failUnlessEqual(rset.description[0][1], 'Interval')
+        self.assertEqual(rset.description[0][1], 'Interval')
 
     def test_select_subquery_aggregat_1(self):
         # percent users by groups
@@ -1173,7 +1174,7 @@ Any P1,B,E WHERE P1 identity P2 WITH
         rset = self.execute('Any X, Y WHERE X travaille Y')
         self.assertEqual(len(rset.rows), 1)
         # test add of an existant relation but with NOT X rel Y protection
-        self.failIf(self.execute("SET X travaille Y WHERE X eid %(x)s, Y eid %(y)s,"
+        self.assertFalse(self.execute("SET X travaille Y WHERE X eid %(x)s, Y eid %(y)s,"
                                  "NOT X travaille Y",
                                  {'x': str(eid1), 'y': str(eid2)}))
 
@@ -1198,9 +1199,9 @@ Any P1,B,E WHERE P1 identity P2 WITH
         peid2 = self.execute("INSERT Personne Y: Y nom 'tutu'")[0][0]
         self.execute('SET P1 owned_by U, P2 owned_by U '
                      'WHERE P1 eid %s, P2 eid %s, U eid %s' % (peid1, peid2, ueid))
-        self.failUnless(self.execute('Any X WHERE X eid %s, X owned_by U, U eid %s'
+        self.assertTrue(self.execute('Any X WHERE X eid %s, X owned_by U, U eid %s'
                                        % (peid1, ueid)))
-        self.failUnless(self.execute('Any X WHERE X eid %s, X owned_by U, U eid %s'
+        self.assertTrue(self.execute('Any X WHERE X eid %s, X owned_by U, U eid %s'
                                        % (peid2, ueid)))
 
     def test_update_math_expr(self):
@@ -1226,6 +1227,25 @@ Any P1,B,E WHERE P1 identity P2 WITH
         self.assertRaises(Exception, self.execute, "SET X nom 'toto', X is Personne")
         self.assertRaises(QueryError, self.execute, "SET X nom 'toto', X has_text 'tutu' WHERE X is Personne")
         self.assertRaises(QueryError, self.execute, "SET X login 'tutu', X eid %s" % cnx.user(self.session).eid)
+
+    # HAVING on write queries test #############################################
+
+    def test_update_having(self):
+        peid1 = self.execute("INSERT Personne Y: Y nom 'hop', Y tel 1")[0][0]
+        peid2 = self.execute("INSERT Personne Y: Y nom 'hop', Y tel 2")[0][0]
+        rset = self.execute("SET X tel 3 WHERE X tel TEL HAVING TEL&1=1")
+        self.assertEqual(tuplify(rset.rows), [(peid1, 3)])
+
+    def test_insert_having(self):
+        self.skipTest('unsupported yet')
+        self.execute("INSERT Personne Y: Y nom 'hop', Y tel 1")[0][0]
+        self.assertFalse(self.execute("INSERT Personne Y: Y nom 'hop', Y tel 2 WHERE X tel XT HAVING XT&2=2"))
+        self.assertTrue(self.execute("INSERT Personne Y: Y nom 'hop', Y tel 2 WHERE X tel XT HAVING XT&1=1"))
+
+    def test_delete_having(self):
+        self.execute("INSERT Personne Y: Y nom 'hop', Y tel 1")[0][0]
+        self.assertFalse(self.execute("DELETE Personne Y WHERE X tel XT HAVING XT&2=2"))
+        self.assertTrue(self.execute("DELETE Personne Y WHERE X tel XT HAVING XT&1=1"))
 
     # upassword encryption tests #################################################
 

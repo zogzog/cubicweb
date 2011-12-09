@@ -60,14 +60,16 @@ class LazyViewMixin(object):
         w(u'<div id="lazy-%s" cubicweb:loadurl="%s">' % (
             tabid, xml_escape(self._cw.build_url('json', **urlparams))))
         if show_spinbox:
-            w(u'<img src="%s" id="%s-hole" alt="%s"/>'
-              % (xml_escape(self._cw.data_url('loading.gif')),
-                 tabid, self._cw._('(loading ...)')))
+            # Don't use ``alt`` since image is a *visual* helper for ajax
+            w(u'<img src="%s" alt="" id="%s-hole"/>'
+              % (xml_escape(self._cw.data_url('loading.gif')), tabid))
         else:
             w(u'<div id="%s-hole"></div>' % tabid)
-        w(u'<noscript><p><a class="style: hidden" id="seo-%s" href="%s">%s</a></p></noscript>'
-          % (tabid, xml_escape(self._cw.build_url(**urlparams)), xml_escape('%s (%s)') %
-             (tabid, self._cw._('follow this link if javascript is deactivated'))))
+        w(u'<noscript><p>%s <a class="style: hidden" id="seo-%s" href="%s">%s</a></p></noscript>'
+          % (xml_escape(self._cw._('Link:')),
+             tabid,
+             xml_escape(self._cw.build_url(**urlparams)),
+             xml_escape(self._cw._(tabid))))
         w(u'</div>')
         self._prepare_bindings(tabid, reloadable)
 

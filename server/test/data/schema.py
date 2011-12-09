@@ -128,6 +128,9 @@ class Personne(EntityType):
     inline2 = SubjectRelation('Affaire', inlined=True, cardinality='?*')
 
 
+class Old(EntityType):
+    name = String()
+
 
 class connait(RelationType):
     symmetric = True

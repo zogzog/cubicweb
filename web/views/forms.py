@@ -47,7 +47,7 @@ __docformat__ = "restructuredtext en"
 from warnings import warn
 
 from logilab.common import dictattr, tempattr
-from logilab.common.decorators import iclassmethod
+from logilab.common.decorators import iclassmethod, cached
 from logilab.common.compat import any
 from logilab.common.textutils import splitstrip
 from logilab.common.deprecation import deprecated
@@ -57,7 +57,7 @@ from cubicweb.utils import support_args
 from cubicweb.selectors import non_final_entity, match_kwargs, one_line_rset
 from cubicweb.web import RequestError, ProcessFormError
 from cubicweb.web import uicfg, form, formwidgets as fwdgs
-from cubicweb.web.formfields import relvoc_unrelated, guess_field
+from cubicweb.web.formfields import guess_field
 
 
 class FieldsForm(form.Form):
@@ -182,7 +182,7 @@ class FieldsForm(form.Form):
         if self.needs_css:
             self._cw.add_css(self.needs_css)
 
-    def render(self, formvalues=None, rendervalues=None, renderer=None, **kwargs):
+    def render(self, formvalues=None, renderer=None, **kwargs):
         """Render this form, using the `renderer` given as argument or the
         default according to :attr:`form_renderer_id`. The rendered form is
         returned as an unicode string.
@@ -191,13 +191,7 @@ class FieldsForm(form.Form):
         considered as field's value.
 
         Extra keyword arguments will be given to renderer's :meth:`render` method.
-
-        `rendervalues` is deprecated.
         """
-        if rendervalues is not None:
-            warn('[3.6] rendervalues argument is deprecated, all named arguments will be given instead',
-                 DeprecationWarning, stacklevel=2)
-            kwargs = rendervalues
         w = kwargs.pop('w', None)
         if w is None:
             warn('[3.10] you should specify "w" to form.render() named arguments',
@@ -306,21 +300,6 @@ class FieldsForm(form.Form):
                 raise ValidationError(None, errors)
             return processed
 
-    @deprecated('[3.6] use .add_hidden(name, value, **kwargs)')
-    def form_add_hidden(self, name, value=None, **kwargs):
-        return self.add_hidden(name, value, **kwargs)
-
-    @deprecated('[3.6] use .render(formvalues, **rendervalues)')
-    def form_render(self, **values):
-        """render this form, using the renderer given in args or the default
-        FormRenderer()
-        """
-        self.build_context(values)
-        renderer = values.pop('renderer', None)
-        if renderer is None:
-            renderer = self.default_renderer()
-        return renderer.render(self, values)
-
 
 _AFF = uicfg.autoform_field
 _AFF_KWARGS = uicfg.autoform_field_kwargs
@@ -376,9 +355,7 @@ class EntityFieldsForm(FieldsForm):
         if kwargs.get('mainform', True) or kwargs.get('mainentity', False):
             self.add_hidden(u'__maineid', self.edited_entity.eid)
             # If we need to directly attach the new object to another one
-            if self._cw.list_form_param('__linkto'):
-                for linkto in self._cw.list_form_param('__linkto'):
-                    self.add_hidden('__linkto', linkto)
+            if '__linkto' in self._cw.form:
                 if msg:
                     msg = '%s %s' % (msg, self._cw._('and linked'))
                 else:
@@ -386,6 +363,40 @@ class EntityFieldsForm(FieldsForm):
         if msg:
             msgid = self._cw.set_redirect_message(msg)
             self.add_hidden('_cwmsgid', msgid)
+
+    def add_linkto_hidden(self):
+        """add the __linkto hidden field used to directly attach the new object
+        to an existing other one when the relation between those two is not
+        already present in the form.
+
+        Warning: this method must be called only when all form fields are setup
+        """
+        for (rtype, role), eids in self.linked_to.iteritems():
+            # if the relation is already setup by a form field, do not add it
+            # in a __linkto hidden to avoid setting it twice in the controller
+            try:
+                self.field_by_name(rtype, role)
+            except form.FieldNotFound:
+                for eid in eids:
+                    self.add_hidden('__linkto', '%s:%s:%s' % (rtype, eid, role))
+
+    def render(self, *args, **kwargs):
+        self.add_linkto_hidden()
+        return super(EntityFieldsForm, self).render(*args, **kwargs)
+
+    @property
+    @cached
+    def linked_to(self):
+        # if current form is not the main form, exit immediately
+        try:
+            self.field_by_name('__maineid')
+        except form.FieldNotFound:
+            return {}
+        linked_to = {}
+        for linkto in self._cw.list_form_param('__linkto'):
+            ltrtype, eid, ltrole = linkto.split(':')
+            linked_to.setdefault((ltrtype, ltrole), []).append(typed_eid(eid))
+        return linked_to
 
     def session_key(self):
         """return the key that may be used to store / retreive data about a
@@ -426,17 +437,6 @@ class EntityFieldsForm(FieldsForm):
 
     def editable_relations(self):
         return ()
-
-    @deprecated('[3.6] use cw.web.formfields.relvoc_unrelated function')
-    def subject_relation_vocabulary(self, rtype, limit=None):
-        """defaut vocabulary method for the given relation, looking for
-        relation's object entities (i.e. self is the subject)
-        """
-        return relvoc_unrelated(self.edited_entity, rtype, 'subject', limit=None)
-
-    @deprecated('[3.6] use cw.web.formfields.relvoc_unrelated function')
-    def object_relation_vocabulary(self, rtype, limit=None):
-        return relvoc_unrelated(self.edited_entity, rtype, 'object', limit=None)
 
 
 class CompositeFormMixIn(object):

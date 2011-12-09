@@ -148,9 +148,6 @@ class PrimaryView(EntityView):
         if boxes or hasattr(self, 'render_side_related'):
             self.w(u'</td><td>')
             self.w(u'<div class="primaryRight">')
-            if hasattr(self, 'render_side_related'):
-                warn('[3.2] render_side_related is deprecated')
-                self.render_side_related(entity, []) # pylint: disable=E1101
             self.render_side_boxes(boxes)
             self.w(u'</div>')
             self.w(u'</td></tr></table>')
@@ -222,17 +219,12 @@ class PrimaryView(EntityView):
                 if not hasattr(self, '_render_attribute'):
                     label = self._rel_label(entity, rschema, role, dispctrl)
                     self.render_attribute(label, value, table=True)
-                elif support_args(self._render_attribute, 'dispctrl'):
+                else:
                     warn('[3.9] _render_attribute prototype has changed and '
                          'renamed to render_attribute, please update %s'
                          % self.__class__, DeprecationWarning)
                     self._render_attribute(dispctrl, rschema, value, role=role,
                                            table=True)
-                else:
-                    self._render_attribute(rschema, value, role=role, table=True)
-                    warn('[3.6] _render_attribute prototype has changed and '
-                         'renamed to render_attribute, please update %s'
-                         % self.__class__, DeprecationWarning)
             self.w(u'</table>')
 
     def render_attribute(self, label, value, table=False):
@@ -258,17 +250,10 @@ class PrimaryView(EntityView):
                     continue
                 if hasattr(self, '_render_relation'):
                     # pylint: disable=E1101
-                    if not support_args(self._render_relation, 'showlabel'):
-                        self._render_relation(dispctrl, rset, 'autolimited')
-                        warn('[3.9] _render_relation prototype has changed and has '
-                             'been renamed to render_relation, please update %s'
-                             % self.__class__, DeprecationWarning)
-                    else:
-                        self._render_relation(rset, dispctrl, 'autolimited',
-                                              self.show_rel_label)
-                        warn('[3.6] _render_relation prototype has changed and has '
-                             'been renamed to render_relation, please update %s'
-                             % self.__class__, DeprecationWarning)
+                    self._render_relation(dispctrl, rset, 'autolimited')
+                    warn('[3.9] _render_relation prototype has changed and has '
+                         'been renamed to render_relation, please update %s'
+                         % self.__class__, DeprecationWarning)
                     continue
                 vid = dispctrl.get('vid', 'autolimited')
                 try:
@@ -494,5 +479,3 @@ _pvs = uicfg.primaryview_section
 for rtype in META_RTYPES:
     _pvs.tag_subject_of(('*', rtype, '*'), 'hidden')
     _pvs.tag_object_of(('*', rtype, '*'), 'hidden')
-_pvs.tag_subject_of(('*', 'require_permission', '*'), 'hidden')
-_pvs.tag_object_of(('*', 'require_permission', '*'), 'hidden')

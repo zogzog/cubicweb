@@ -255,19 +255,19 @@ PERSISTENT_OPTIONS = (
     ('date-format',
      {'type' : 'string',
       'default': '%Y/%m/%d',
-      'help': _('how to format date in the ui ("man strftime" for format description)'),
+      'help': _('how to format date in the ui (see <a href="http://docs.python.org/library/datetime.html#strftime-strptime-behavior">this page</a> for format description)'),
       'group': 'ui',
       }),
     ('datetime-format',
      {'type' : 'string',
       'default': '%Y/%m/%d %H:%M',
-      'help': _('how to format date and time in the ui ("man strftime" for format description)'),
+      'help': _('how to format date and time in the ui (see <a href="http://docs.python.org/library/datetime.html#strftime-strptime-behavior">this page</a> for format description)'),
       'group': 'ui',
       }),
     ('time-format',
      {'type' : 'string',
       'default': '%H:%M',
-      'help': _('how to format time in the ui ("man strftime" for format description)'),
+      'help': _('how to format time in the ui (see <a href="http://docs.python.org/library/datetime.html#strftime-strptime-behavior">this page</a> for format description)'),
       'group': 'ui',
       }),
     ('float-format',
@@ -645,7 +645,6 @@ this option is set to yes",
                               ctlfile, err)
                 cls.info('loaded cubicweb-ctl plugin %s', ctlfile)
         for cube in cls.available_cubes():
-            oldpluginfile = join(cls.cube_dir(cube), 'ecplugin.py')
             pluginfile = join(cls.cube_dir(cube), 'ccplugin.py')
             initfile = join(cls.cube_dir(cube), '__init__.py')
             if exists(pluginfile):
@@ -654,14 +653,6 @@ this option is set to yes",
                     cls.info('loaded cubicweb-ctl plugin from %s', cube)
                 except Exception:
                     cls.exception('while loading plugin %s', pluginfile)
-            elif exists(oldpluginfile):
-                warn('[3.6] %s: ecplugin module should be renamed to ccplugin' % cube,
-                     DeprecationWarning)
-                try:
-                    __import__('cubes.%s.ecplugin' % cube)
-                    cls.info('loaded cubicweb-ctl plugin from %s', cube)
-                except Exception:
-                    cls.exception('while loading plugin %s', oldpluginfile)
             elif exists(initfile):
                 try:
                     __import__('cubes.%s' % cube)
@@ -795,13 +786,6 @@ this option is set to yes",
             if exists(sitefile) and not sitefile in self._site_loaded:
                 self._load_site_cubicweb(sitefile)
                 self._site_loaded.add(sitefile)
-            else:
-                sitefile = join(path, 'site_erudi.py')
-                if exists(sitefile) and not sitefile in self._site_loaded:
-                    self._load_site_cubicweb(sitefile)
-                    self._site_loaded.add(sitefile)
-                    self.warning('[3.5] site_erudi.py is deprecated, should be '
-                                 'renamed to site_cubicweb.py')
 
     def _load_site_cubicweb(self, sitefile):
         # XXX extrapath argument to load_module_from_file only in lgc > 0.50.2

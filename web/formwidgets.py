@@ -75,6 +75,7 @@ Other widgets
 
 .. autoclass:: cubicweb.web.formwidgets.PasswordInput
 .. autoclass:: cubicweb.web.formwidgets.IntervalWidget
+.. autoclass:: cubicweb.web.formwidgets.BitSelect
 .. autoclass:: cubicweb.web.formwidgets.HorizontalLayoutWidget
 .. autoclass:: cubicweb.web.formwidgets.EditableURLWidget
 
@@ -285,13 +286,6 @@ class FieldWidget(object):
     def values_and_attributes(self, form, field):
         return self.values(form, field), self.attributes(form, field)
 
-    @deprecated('[3.6] use values_and_attributes')
-    def _render_attrs(self, form, field):
-        """return html tag name, attributes and a list of values for the field
-        """
-        values, attrs = self.values_and_attributes(form, field)
-        return field.input_name(form, self.suffix), values, attrs
-
 
 class Input(FieldWidget):
     """abstract widget class for <input> tag based widgets"""
@@ -459,7 +453,7 @@ class Select(FieldWidget):
                 oattrs.setdefault('label', label or '')
                 options.append(u'<optgroup %s>' % uilib.sgml_attributes(oattrs))
                 optgroup_opened = True
-            elif value in curvalues:
+            elif self.value_selected(value, curvalues):
                 options.append(tags.option(label, value=value,
                                            selected='selected', **oattrs))
             else:
@@ -474,6 +468,36 @@ class Select(FieldWidget):
             attrs['size'] = size
         return tags.select(name=field.input_name(form, self.suffix),
                            multiple=self._multiple, options=options, **attrs)
+
+    def value_selected(self, value, curvalues):
+        return value in curvalues
+
+
+class BitSelect(Select):
+    """Select widget for IntField using a vocabulary with bit masks as values.
+
+    See also :class:`~cubicweb.web.facet.BitFieldFacet`.
+    """
+    def __init__(self, attrs=None, multiple=True, **kwargs):
+        super(BitSelect, self).__init__(attrs, multiple=multiple, **kwargs)
+
+    def value_selected(self, value, curvalues):
+        mask = reduce(lambda x, y: int(x) | int(y), curvalues, 0)
+        return int(value) & mask
+
+    def process_field_data(self, form, field):
+        """Return process posted value(s) for widget and return something
+        understandable by the associated `field`. That value may be correctly
+        typed or a string that the field may parse.
+        """
+        val = super(BitSelect, self).process_field_data(form, field)
+        if isinstance(val, list):
+            val = reduce(lambda x, y: int(x) | int(y), val, 0)
+        elif val:
+            val = int(val)
+        else:
+            val = 0
+        return val
 
 
 class CheckBox(Input):
@@ -734,14 +758,7 @@ class AutoCompletionWidget(TextInput):
     def __init__(self, *args, **kwargs):
         self.autocomplete_settings = kwargs.pop('autocomplete_settings',
                                                 self.default_settings)
-        try:
-            self.autocomplete_initfunc = kwargs.pop('autocomplete_initfunc')
-        except KeyError:
-            warn('[3.6] use autocomplete_initfunc argument of %s constructor '
-                 'instead of relying on autocomplete_initfuncs dictionary on '
-                 'the entity class' % self.__class__.__name__,
-                 DeprecationWarning)
-            self.autocomplete_initfunc = None
+        self.autocomplete_initfunc = kwargs.pop('autocomplete_initfunc')
         super(AutoCompletionWidget, self).__init__(*args, **kwargs)
 
     def values(self, form, field):
@@ -763,11 +780,7 @@ class AutoCompletionWidget(TextInput):
         return super(AutoCompletionWidget, self)._render(form, field, renderer)
 
     def _get_url(self, entity, field):
-        if self.autocomplete_initfunc is None:
-            # XXX for bw compat
-            fname = entity.autocomplete_initfuncs[field.name]
-        else:
-            fname = self.autocomplete_initfunc
+        fname = self.autocomplete_initfunc
         return entity._cw.build_url('json', fname=fname, mode='remote',
                                     pageid=entity._cw.pageid)
 
@@ -778,12 +791,7 @@ class StaticFileAutoCompletionWidget(AutoCompletionWidget):
     wdgtype = 'StaticFileSuggestField'
 
     def _get_url(self, entity, field):
-        if self.autocomplete_initfunc is None:
-            # XXX for bw compat
-            fname = entity.autocomplete_initfuncs[field.name]
-        else:
-            fname = self.autocomplete_initfunc
-        return entity._cw.data_url(fname)
+        return entity._cw.data_url(self.autocomplete_initfunc)
 
 
 class RestrictedAutoCompletionWidget(AutoCompletionWidget):

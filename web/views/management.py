@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -45,10 +45,9 @@ class SecurityManagementView(SecurityViewMixIn, EntityView):
         self.w(u'<div id="progress">%s</div>' % self._cw._('validating...'))
         super(SecurityManagementView, self).call()
 
-    def cell_call(self, row, col):
+    def entity_call(self, entity):
         self._cw.add_js('cubicweb.edition.js')
         self._cw.add_css('cubicweb.acl.css')
-        entity = self.cw_rset.get_entity(row, col)
         w = self.w
         _ = self._cw._
         w(u'<h1><span class="etype">%s</span> <a href="%s">%s</a></h1>'
@@ -56,28 +55,21 @@ class SecurityManagementView(SecurityViewMixIn, EntityView):
              xml_escape(entity.absolute_url()),
              xml_escape(entity.dc_title())))
         # first show permissions defined by the schema
-        self.w('<h2>%s</h2>' % _('schema\'s permissions definitions'))
+        self.w('<h2>%s</h2>' % _('Schema\'s permissions definitions'))
         self.permissions_table(entity.e_schema)
-        self.w('<h2>%s</h2>' % _('manage security'))
+        self.w('<h2>%s</h2>' % _('Manage security'))
         # ownership information
         if self._cw.vreg.schema.rschema('owned_by').has_perm(self._cw, 'add',
                                                     fromeid=entity.eid):
             self.owned_by_edit_form(entity)
         else:
             self.owned_by_information(entity)
-        # cwpermissions
-        if 'require_permission' in entity.e_schema.subject_relations():
-            w('<h3>%s</h3>' % _('permissions for this entity'))
-            reqpermschema = self._cw.vreg.schema.rschema('require_permission')
-            self.require_permission_information(entity, reqpermschema)
-            if reqpermschema.has_perm(self._cw, 'add', fromeid=entity.eid):
-                self.require_permission_edit_form(entity)
 
     def owned_by_edit_form(self, entity):
-        self.w('<h3>%s</h3>' % self._cw._('ownership'))
+        self.w('<h3>%s</h3>' % self._cw._('Ownership'))
         msg = self._cw._('ownerships have been changed')
         form = self._cw.vreg['forms'].select('base', self._cw, entity=entity,
-                                         form_renderer_id='base', submitmsg=msg,
+                                         form_renderer_id='onerowtable', submitmsg=msg,
                                          form_buttons=[wdgs.SubmitButton()],
                                          domid='ownership%s' % entity.eid,
                                          __redirectvid='security',
@@ -89,72 +81,13 @@ class SecurityManagementView(SecurityViewMixIn, EntityView):
     def owned_by_information(self, entity):
         ownersrset = entity.related('owned_by')
         if ownersrset:
-            self.w('<h3>%s</h3>' % self._cw._('ownership'))
+            self.w('<h3>%s</h3>' % self._cw._('Ownership'))
             self.w(u'<div class="ownerInfo">')
             self.w(self._cw._('this entity is currently owned by') + ' ')
             self.wview('csv', entity.related('owned_by'), 'null')
             self.w(u'</div>')
         # else we don't know if this is because entity has no owner or becayse
         # user as no access to owner users entities
-
-    def require_permission_information(self, entity, reqpermschema):
-        if entity.require_permission:
-            w = self.w
-            _ = self._cw._
-            if reqpermschema.has_perm(self._cw, 'delete', fromeid=entity.eid):
-                delurl = self._cw.build_url('edit', __redirectvid='security',
-                                            __redirectpath=entity.rest_path())
-                delurl = delurl.replace('%', '%%')
-                # don't give __delete value to build_url else it will be urlquoted
-                # and this will replace %s by %25s
-                delurl += '&__delete=%s:require_permission:%%s' % entity.eid
-                dellinktempl = u'[<a href="%s" title="%s">-</a>]&#160;' % (
-                    xml_escape(delurl), _('delete this permission'))
-            else:
-                dellinktempl = None
-            w(u'<table class="schemaInfo">')
-            w(u'<tr><th>%s</th><th>%s</th></tr>' % (_("permission"),
-                                                    _('granted to groups')))
-            for cwperm in entity.require_permission:
-                w(u'<tr>')
-                if dellinktempl:
-                    w(u'<td>%s%s</td>' % (dellinktempl % cwperm.eid,
-                                          cwperm.view('oneline')))
-                else:
-                    w(u'<td>%s</td>' % cwperm.view('oneline'))
-                w(u'<td>%s</td>' % self._cw.view('csv', cwperm.related('require_group'), 'null'))
-                w(u'</tr>\n')
-            w(u'</table>')
-        else:
-            self.w(self._cw._('no associated permissions'))
-
-    def require_permission_edit_form(self, entity):
-        newperm = self._cw.vreg['etypes'].etype_class('CWPermission')(self._cw)
-        newperm.eid = self._cw.varmaker.next()
-        self.w(u'<p>%s</p>' % self._cw._('add a new permission'))
-        form = self._cw.vreg['forms'].select('base', self._cw, entity=newperm,
-                                         form_buttons=[wdgs.SubmitButton()],
-                                         domid='reqperm%s' % entity.eid,
-                                         __redirectvid='security',
-                                         __redirectpath=entity.rest_path())
-        form.add_hidden('require_permission', entity.eid, role='object',
-                        eidparam=True)
-        permnames = getattr(entity, '__permissions__', None)
-        cwpermschema = newperm.e_schema
-        if permnames is not None:
-            field = guess_field(cwpermschema, self._cw.vreg.schema.rschema('name'),
-                                widget=wdgs.Select({'size': 1}),
-                                choices=permnames)
-        else:
-            field = guess_field(cwpermschema, self._cw.vreg.schema.rschema('name'))
-        form.append_field(field)
-        field = guess_field(cwpermschema, self._cw.vreg.schema.rschema('label'))
-        form.append_field(field)
-        field = guess_field(cwpermschema, self._cw.vreg.schema.rschema('require_group'))
-        form.append_field(field)
-        renderer = self._cw.vreg['formrenderers'].select(
-            'htable', self._cw, rset=None, display_progress_div=False)
-        form.render(w=self.w, renderer=renderer)
 
 
 class ErrorView(AnyRsetView):

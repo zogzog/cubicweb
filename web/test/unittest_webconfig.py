@@ -34,16 +34,16 @@ class WebconfigTC(TestCase):
         """make sure PRINT_CSS *must* is a list"""
         config = self.config
         print_css = config.uiprops['STYLESHEETS_PRINT']
-        self.failUnless(isinstance(print_css, list))
+        self.assertTrue(isinstance(print_css, list))
         ie_css = config.uiprops['STYLESHEETS_IE']
-        self.failUnless(isinstance(ie_css, list))
+        self.assertTrue(isinstance(ie_css, list))
 
     def test_locate_resource(self):
-        self.failUnless('FILE_ICON' in self.config.uiprops)
+        self.assertTrue('FILE_ICON' in self.config.uiprops)
         rname = self.config.uiprops['FILE_ICON'].replace(self.config.datadir_url, '')
-        self.failUnless('file' in self.config.locate_resource(rname)[0].split(os.sep))
+        self.assertTrue('file' in self.config.locate_resource(rname)[0].split(os.sep))
         cubicwebcsspath = self.config.locate_resource('cubicweb.css')[0].split(os.sep)
-        self.failUnless('web' in cubicwebcsspath or 'shared' in cubicwebcsspath) # 'shared' if tests under apycot
+        self.assertTrue('web' in cubicwebcsspath or 'shared' in cubicwebcsspath) # 'shared' if tests under apycot
 
 if __name__ == '__main__':
     unittest_main()

@@ -21,6 +21,7 @@ __docformat__ = "restructuredtext en"
 _ = unicode
 
 from logilab.common.date import datetime2ticks
+from logilab.common.deprecation import class_deprecated
 from logilab.mtconverter import xml_escape
 
 from cubicweb.utils import UStringIO, json_dumps
@@ -84,6 +85,8 @@ class PlotWidget(object):
 
 class FlotPlotWidget(PlotWidget):
     """PlotRenderer widget using Flot"""
+    __metaclass__ = class_deprecated
+    __deprecation_warning__ = '[3.14] cubicweb.web.views.plots module is deprecated, use the jqplot cube instead'
     onload = u"""
 var fig = jQuery('#%(figid)s');
 if (fig.attr('cubicweb:type') != 'prepared-plot') {
@@ -135,6 +138,8 @@ if (fig.attr('cubicweb:type') != 'prepared-plot') {
 
 
 class PlotView(baseviews.AnyRsetView):
+    __metaclass__ = class_deprecated
+    __deprecation_warning__ = '[3.14] cubicweb.web.views.plots module is deprecated, use the jqplot cube instead'
     __regid__ = 'plot'
     title = _('generic plot')
     __select__ = multi_columns_rset() & all_columns_are_numbers()

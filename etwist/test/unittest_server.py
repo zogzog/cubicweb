@@ -69,7 +69,7 @@ class ConcatFilesTC(CubicWebTC):
 
     def test_cache(self):
         concat = ConcatFiles(self.config, ('cubicweb.ajax.js', 'jquery.js'))
-        self.failUnless(osp.isfile(concat.path))
+        self.assertTrue(osp.isfile(concat.path))
 
     def test_404(self):
         # when not in debug mode, should not crash

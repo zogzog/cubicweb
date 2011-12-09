@@ -263,10 +263,7 @@ def _iter_vreg_objids(vreg, done):
                 objid = '%s_%s' % (reg, obj.__regid__)
                 if objid in done:
                     break
-                try: # XXX < 3.6 bw compat
-                    pdefs = obj.property_defs
-                except AttributeError:
-                    pdefs = getattr(obj, 'cw_property_defs', {})
+                pdefs = getattr(obj, 'cw_property_defs', {})
                 if pdefs:
                     yield objid
                     done.add(objid)

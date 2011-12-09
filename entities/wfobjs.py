@@ -183,7 +183,7 @@ class BaseTransition(AnyEntity):
     fired by the logged user
     """
     __regid__ = 'BaseTransition'
-    fetch_attrs, fetch_order = fetch_config(['name', 'type'])
+    fetch_attrs, cw_fetch_order = fetch_config(['name', 'type'])
 
     def __init__(self, *args, **kwargs):
         if self.__regid__ == 'BaseTransition':
@@ -250,11 +250,6 @@ class BaseTransition(AnyEntity):
                              'X expression %(expr)s, X mainvars %(mainvars)s, '
                              'T condition X WHERE T eid %(x)s', kwargs)
         # XXX clear caches?
-
-    @deprecated('[3.6.1] use set_permission')
-    def set_transition_permissions(self, requiredgroups=(), conditions=(),
-                                   reset=True):
-        return self.set_permissions(requiredgroups, conditions, reset)
 
 
 class Transition(BaseTransition):
@@ -347,7 +342,7 @@ class SubWorkflowExitPoint(AnyEntity):
 class State(AnyEntity):
     """customized class for State entities"""
     __regid__ = 'State'
-    fetch_attrs, fetch_order = fetch_config(['name'])
+    fetch_attrs, cw_fetch_order = fetch_config(['name'])
     rest_attr = 'eid'
 
     @property
@@ -360,8 +355,8 @@ class TrInfo(AnyEntity):
     """customized class for Transition information entities
     """
     __regid__ = 'TrInfo'
-    fetch_attrs, fetch_order = fetch_config(['creation_date', 'comment'],
-                                            pclass=None) # don't want modification_date
+    fetch_attrs, cw_fetch_order = fetch_config(['creation_date', 'comment'],
+                                               pclass=None) # don't want modification_date
     @property
     def for_entity(self):
         return self.wf_info_for[0]
@@ -385,10 +380,6 @@ class WorkflowableMixIn(object):
     relation (which implies supporting 'wf_info_for' as well)
     """
 
-    @property
-    @deprecated('[3.5] use printable_state')
-    def displayable_state(self):
-        return self._cw._(self.state)
     @property
     @deprecated("[3.9] use entity.cw_adapt_to('IWorkflowable').main_workflow")
     def main_workflow(self):
@@ -414,14 +405,6 @@ class WorkflowableMixIn(object):
     def workflow_history(self):
         return self.cw_adapt_to('IWorkflowable').workflow_history
 
-    @deprecated('[3.5] get transition from current workflow and use its may_be_fired method')
-    def can_pass_transition(self, trname):
-        """return the Transition instance if the current user can fire the
-        transition with the given name, else None
-        """
-        tr = self.current_workflow and self.current_workflow.transition_by_name(trname)
-        if tr and tr.may_be_fired(self.eid):
-            return tr
     @deprecated("[3.9] use entity.cw_adapt_to('IWorkflowable').cwetype_workflow()")
     def cwetype_workflow(self):
         return self.cw_adapt_to('IWorkflowable').main_workflow()
@@ -607,11 +590,7 @@ class IWorkflowableAdapter(WorkflowableMixIn, EntityAdapter):
         if hasattr(statename, 'eid'):
             stateeid = statename.eid
         else:
-            if not isinstance(statename, basestring):
-                warn('[3.5] give a state name', DeprecationWarning, stacklevel=2)
-                state = self.current_workflow.state_by_eid(statename)
-            else:
-                state = self.current_workflow.state_by_name(statename)
+            state = self.current_workflow.state_by_name(statename)
             if state is None:
                 raise WorkflowException('not a %s state: %s' % (self.__regid__,
                                                                 statename))

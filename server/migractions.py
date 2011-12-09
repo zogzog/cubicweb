@@ -117,7 +117,15 @@ class ServerMigrationHelper(MigrationHelper):
             # which is called on regular start
             repo.hm.call_hooks('server_maintenance', repo=repo)
         if not schema and not getattr(config, 'quick_start', False):
-            schema = config.load_schema(expand_cubes=True)
+            insert_lperms = self.repo.get_versions()['cubicweb'] < (3, 14, 0) and 'localperms' in config.available_cubes()
+            if insert_lperms:
+                cubes = config._cubes
+                config._cubes += ('localperms',)
+            try:
+                schema = config.load_schema(expand_cubes=True)
+            finally:
+                if insert_lperms:
+                    config._cubes = cubes
         self.fs_schema = schema
         self._synchronized = set()
 
@@ -152,7 +160,7 @@ class ServerMigrationHelper(MigrationHelper):
             return super(ServerMigrationHelper, self).cmd_process_script(
                   migrscript, funcname, *args, **kwargs)
         except ExecutionError, err:
-            print >> sys.stderr, "-> %s" % err
+            sys.stderr.write("-> %s\n" % err)
         except BaseException:
             self.rollback()
             raise
@@ -325,7 +333,6 @@ class ServerMigrationHelper(MigrationHelper):
         context = super(ServerMigrationHelper, self)._create_context()
         context.update({'commit': self.checkpoint,
                         'rollback': self.rollback,
-                        'checkpoint': deprecated('[3.6] use commit')(self.checkpoint),
                         'sql': self.sqlexec,
                         'rql': self.rqlexec,
                         'rqliter': self.rqliter,
@@ -334,9 +341,6 @@ class ServerMigrationHelper(MigrationHelper):
                         'fsschema': self.fs_schema,
                         'session' : self.session,
                         'repo' : self.repo,
-                        'synchronize_schema': deprecated()(self.cmd_sync_schema_props_perms), # 3.4
-                        'synchronize_eschema': deprecated()(self.cmd_sync_schema_props_perms), # 3.4
-                        'synchronize_rschema': deprecated()(self.cmd_sync_schema_props_perms), # 3.4
                         })
         return context
 
@@ -389,14 +393,7 @@ class ServerMigrationHelper(MigrationHelper):
             directory = osp.join(CW_SOFTWARE_ROOT, 'schemas')
         else:
             directory = osp.join(self.config.cube_dir(cube), 'schema')
-        sql_scripts = []
-        for fpath in glob(osp.join(directory, '*.sql.%s' % driver)):
-            newname = osp.basename(fpath).replace('.sql.%s' % driver,
-                                                  '.%s.sql' % driver)
-            warn('[3.5.6] rename %s into %s' % (fpath, newname),
-                 DeprecationWarning)
-            sql_scripts.append(fpath)
-        sql_scripts += glob(osp.join(directory, '*.%s.sql' % driver))
+        sql_scripts = glob(osp.join(directory, '*.%s.sql' % driver))
         for fpath in sql_scripts:
             print '-> installing', fpath
             try:
@@ -1241,10 +1238,6 @@ class ServerMigrationHelper(MigrationHelper):
         if commit:
             self.commit()
 
-    @deprecated('[3.2] use sync_schema_props_perms(ertype, syncprops=False)')
-    def cmd_synchronize_permissions(self, ertype, commit=True):
-        self.cmd_sync_schema_props_perms(ertype, syncprops=False, commit=commit)
-
     # Workflows handling ######################################################
 
     def cmd_make_workflowable(self, etype):
@@ -1299,62 +1292,6 @@ class ServerMigrationHelper(MigrationHelper):
         rset = self.rqlexec('Workflow X WHERE ET default_workflow X, ET name %(et)s',
                             {'et': etype})
         return rset.get_entity(0, 0)
-
-    # XXX remove once cmd_add_[state|transition] are removed
-    def _get_or_create_wf(self, etypes):
-        if not isinstance(etypes, (list, tuple)):
-            etypes = (etypes,)
-        rset = self.rqlexec('Workflow X WHERE X workflow_of ET, ET name %(et)s',
-                            {'et': etypes[0]})
-        if rset:
-            return rset.get_entity(0, 0)
-        return self.cmd_add_workflow('%s workflow' % ';'.join(etypes), etypes)
-
-    @deprecated('[3.5] use add_workflow and Workflow.add_state method',
-                stacklevel=3)
-    def cmd_add_state(self, name, stateof, initial=False, commit=False, **kwargs):
-        """method to ease workflow definition: add a state for one or more
-        entity type(s)
-        """
-        wf = self._get_or_create_wf(stateof)
-        state = wf.add_state(name, initial, **kwargs)
-        if commit:
-            self.commit()
-        return state.eid
-
-    @deprecated('[3.5] use add_workflow and Workflow.add_transition method',
-                stacklevel=3)
-    def cmd_add_transition(self, name, transitionof, fromstates, tostate,
-                           requiredgroups=(), conditions=(), commit=False, **kwargs):
-        """method to ease workflow definition: add a transition for one or more
-        entity type(s), from one or more state and to a single state
-        """
-        wf = self._get_or_create_wf(transitionof)
-        tr = wf.add_transition(name, fromstates, tostate, requiredgroups,
-                               conditions, **kwargs)
-        if commit:
-            self.commit()
-        return tr.eid
-
-    @deprecated('[3.5] use Transition.set_transition_permissions method',
-                stacklevel=3)
-    def cmd_set_transition_permissions(self, treid,
-                                       requiredgroups=(), conditions=(),
-                                       reset=True, commit=False):
-        """set or add (if `reset` is False) groups and conditions for a
-        transition
-        """
-        tr = self._cw.entity_from_eid(treid)
-        tr.set_transition_permissions(requiredgroups, conditions, reset)
-        if commit:
-            self.commit()
-
-    @deprecated('[3.5] use iworkflowable.fire_transition("transition") or '
-                'iworkflowable.change_state("state")', stacklevel=3)
-    def cmd_set_state(self, eid, statename, commit=False):
-        self._cw.entity_from_eid(eid).cw_adapt_to('IWorkflowable').change_state(statename)
-        if commit:
-            self.commit()
 
     # CWProperty handling ######################################################
 
@@ -1449,11 +1386,6 @@ class ServerMigrationHelper(MigrationHelper):
         """
         from cubicweb.server.checkintegrity import reindex_entities
         reindex_entities(self.repo.schema, self.session, etypes=etypes)
-
-    @deprecated('[3.5] use create_entity', stacklevel=3)
-    def cmd_add_entity(self, etype, *args, **kwargs):
-        """add a new entity of the given type"""
-        return self.cmd_create_entity(etype, *args, **kwargs).eid
 
     @contextmanager
     def cmd_dropped_constraints(self, etype, attrname, cstrtype=None,

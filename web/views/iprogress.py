@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -22,6 +22,7 @@ _ = unicode
 
 from math import floor
 
+from logilab.common.deprecation import class_deprecated
 from logilab.mtconverter import xml_escape
 
 from cubicweb.utils import make_uid
@@ -47,6 +48,8 @@ class ProgressTableView(EntityAttributesTableView):
 
     header_for_COLNAME methods allow to customize header's label
     """
+    __metaclass__ = class_deprecated
+    __deprecation_warning__ = '[3.14] %(cls)s is deprecated'
 
     __regid__ = 'progress_table_view'
     __select__ = adaptable('IMileStone')
@@ -150,6 +153,8 @@ class InContextProgressTableView(ProgressTableView):
     """this views redirects to ``progress_table_view`` but removes
     the ``project`` column
     """
+    __metaclass__ = class_deprecated
+    __deprecation_warning__ = '[3.14] %(cls)s is deprecated'
     __regid__ = 'ic_progress_table_view'
 
     def call(self, columns=None):
@@ -165,6 +170,8 @@ class InContextProgressTableView(ProgressTableView):
 
 class ProgressBarView(EntityView):
     """displays a progress bar"""
+    __metaclass__ = class_deprecated
+    __deprecation_warning__ = '[3.14] %(cls)s is deprecated'
     __regid__ = 'progressbar'
     __select__ = adaptable('IProgress')
 

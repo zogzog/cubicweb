@@ -105,7 +105,7 @@ def export(from_dir, to_dir,
             src = join(directory, filename)
             dest = to_dir + src[len(from_dir):]
             if verbose:
-                print >> sys.stderr, src, '->', dest
+                sys.stderr.write('%s -> %s\n' % (src, dest))
             if os.path.isdir(src):
                 if not exists(dest):
                     os.mkdir(dest)

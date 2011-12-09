@@ -137,11 +137,7 @@ class LinkToEntityAction(Action):
     target_etype = rtype = None
 
     def url(self):
-        try:
-            # deprecated in 3.6, already warned by the selector
-            ttype = self.etype # pylint: disable=E1101
-        except AttributeError:
-            ttype = self.target_etype
+        ttype = self.target_etype
         entity = self.cw_rset.get_entity(self.cw_row or 0, self.cw_col or 0)
         linkto = '%s:%s:%s' % (self.rtype, entity.eid, target(self))
         return self._cw.vreg["etypes"].etype_class(ttype).cw_create_url(self._cw,

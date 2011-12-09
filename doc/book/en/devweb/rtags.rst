@@ -19,3 +19,9 @@ The uicfg module
 
 .. automodule:: cubicweb.web.uicfg
 
+
+The uihelper module
+~~~~~~~~~~~~~~~~~~~
+
+.. automodule:: cubicweb.web.uihelper
+

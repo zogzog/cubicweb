@@ -17,21 +17,42 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Associate url's path to view identifier / rql queries.
 
-It currently handles url path with the forms:
+CubicWeb finds all registered URLPathEvaluators, orders them according
+to their ``priority`` attribute and calls their ``evaluate_path()``
+method. The first that returns something and doesn't raise a
+``PathDontMatch`` exception wins.
 
-* <publishing_method>
-* minimal REST publishing:
+Here is the default evaluator chain:
 
-  * <eid>
-  * <etype>[/<attribute name>/<attribute value>]*
-* folder navigation
+1. :class:`cubicweb.web.views.urlpublishing.RawPathEvaluator` handles
+   unique url segments that match exactly one of the registered
+   controller's *__regid__*. Urls such as */view?*, */edit?*, */json?*
+   fall in that category;
 
-You can actually control URL (more exactly path) resolution using an
-URL path evaluator.
+2. :class:`cubicweb.web.views.urlpublishing.EidPathEvaluator` handles
+   unique url segments that are eids (e.g. */1234*);
+
+3. :class:`cubicweb.web.views.urlpublishing.URLRewriteEvaluator`
+   selects all urlrewriter components, sorts them according to their
+   priorty, call their ``rewrite()`` method, the first one that
+   doesn't raise a ``KeyError`` wins. This is where the
+   :mod:`cubicweb.web.views.urlrewrite` and
+   :class:`cubicweb.web.views.urlrewrite.SimpleReqRewriter` comes into
+   play;
+
+4. :class:`cubicweb.web.views.urlpublishing.RestPathEvaluator` handles
+   urls based on entity types and attributes : <etype>((/<attribute
+   name>])?/<attribute value>)?  This is why ``cwuser/carlos`` works;
+
+5. :class:`cubicweb.web.views.urlpublishing.ActionPathEvaluator`
+   handles any of the previous paths with an additional trailing
+   "/<action>" segment, <action> being one of the registered actions'
+   __regid__.
+
 
 .. note::
 
- Actionpath and Folderpath execute a query whose results is lost
+ Actionpath executes a query whose results is lost
  because of redirecting instead of direct traversal.
 """
 __docformat__ = "restructuredtext en"
@@ -174,7 +195,7 @@ class RestPathEvaluator(URLPathEvaluator):
                 except KeyError:
                     raise PathDontMatch()
             else:
-                attrname = cls._rest_attr_info()[0]
+                attrname = cls.cw_rest_attr_info()[0]
             value = req.url_unquote(parts.pop(0))
             return self.handle_etype_attr(req, cls, attrname, value)
         return self.handle_etype(req, cls)
@@ -195,16 +216,17 @@ class RestPathEvaluator(URLPathEvaluator):
         return None, rset
 
     def handle_etype_attr(self, req, cls, attrname, value):
-        rql = cls.fetch_rql(req.user, ['X %s %%(x)s' % (attrname)],
-                            mainvar='X', ordermethod=None)
+        st = cls.fetch_rqlst(req.user, ordermethod=None)
+        st.add_constant_restriction(st.get_variable('X'), attrname,
+                                    'x', 'Substitute')
         if attrname == 'eid':
             try:
-                rset = req.execute(rql, {'x': typed_eid(value)})
+                rset = req.execute(st.as_string(), {'x': typed_eid(value)})
             except (ValueError, TypeResolverException):
                 # conflicting eid/type
                 raise PathDontMatch()
         else:
-            rset = req.execute(rql, {'x': value})
+            rset = req.execute(st.as_string(), {'x': value})
         self.set_vid_for_rset(req, cls, rset)
         return None, rset
 

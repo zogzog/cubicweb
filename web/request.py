@@ -94,7 +94,7 @@ class CubicWebRequestBase(DBAPIRequest):
             self.uiprops = vreg.config.uiprops
             self.datadir_url = vreg.config.datadir_url
         # raw html headers that can be added from any view
-        self.html_headers = HTMLHead(self.datadir_url)
+        self.html_headers = HTMLHead(self)
         # form parameters
         self.setup_params(form)
         # dictionnary that may be used to store request data that has to be
@@ -264,7 +264,7 @@ class CubicWebRequestBase(DBAPIRequest):
         """used by AutomaticWebTest to clear html headers between tests on
         the same resultset
         """
-        self.html_headers = HTMLHead(self.datadir_url)
+        self.html_headers = HTMLHead(self)
         return self
 
     # web state helpers #######################################################
@@ -381,7 +381,7 @@ class CubicWebRequestBase(DBAPIRequest):
     def user_callback(self, cb, cbargs, *args, **kwargs):
         """register the given user callback and return a URL which can
         be inserted in an HTML view. When the URL is accessed, the
-        callback function will be called (as 'cb(req, *cbargs)', and a
+        callback function will be called (as 'cb(req, \*cbargs)', and a
         message will be displayed in the web interface. The third
         positional argument must be 'msg', containing the message.
 
@@ -405,12 +405,9 @@ class CubicWebRequestBase(DBAPIRequest):
         cbname = build_cb_uid(func.__name__)
         def _cb(req):
             try:
-                ret = func(req, *args)
-            except TypeError:
-                warn('[3.2] user callback should now take request as argument')
-                ret = func(*args)
-            self.unregister_callback(self.pageid, cbname)
-            return ret
+                return func(req, *args)
+            finally:
+                self.unregister_callback(self.pageid, cbname)
         self.set_page_data(cbname, _cb)
         return cbname
 
@@ -582,7 +579,8 @@ class CubicWebRequestBase(DBAPIRequest):
         self.html_headers.add_onload(jscode)
 
     def add_js(self, jsfiles, localfile=True):
-        """specify a list of JS files to include in the HTML headers
+        """specify a list of JS files to include in the HTML headers.
+
         :param jsfiles: a JS filename or a list of JS filenames
         :param localfile: if True, the default data dir prefix is added to the
                           JS filename
@@ -598,7 +596,7 @@ class CubicWebRequestBase(DBAPIRequest):
                 iespec=u'[if lt IE 8]'):
         """specify a CSS file to include in the HTML headers
 
-        :param cssfiles: a CSS filename or a list of CSS filenames
+        :param cssfiles: a CSS filename or a list of CSS filenames.
         :param media: the CSS's media if necessary
         :param localfile: if True, the default data dir prefix is added to the
                           CSS filename
@@ -895,12 +893,6 @@ class CubicWebRequestBase(DBAPIRequest):
             if default is _MARKER:
                 raise
             return default
-
-    @deprecated("[3.4] use parse_accept_header('Accept-Language')")
-    def header_accept_language(self):
-        """returns an ordered list of preferred languages"""
-        return [value.split('-')[0] for value in
-                self.parse_accept_header('Accept-Language')]
 
 
 

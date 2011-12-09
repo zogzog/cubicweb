@@ -203,6 +203,12 @@ have the python imaging library installed to use captcha)',
           'help': 'use cubicweb.old.css instead of 3.9 cubicweb.css',
           'group': 'web', 'level': 2,
           }),
+        ('concat-resources',
+         {'type' : 'yn',
+          'default': True,
+          'help': 'use modconcat-like URLS to concat and serve JS / CSS files',
+          'group': 'web', 'level': 2,
+          }),
         ))
 
     def fckeditor_installed(self):

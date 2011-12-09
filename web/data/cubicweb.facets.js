@@ -49,6 +49,7 @@ function facetFormContent($form) {
 }
 
 
+// XXX deprecate vidargs once TableView is gone
 function buildRQL(divid, vid, paginate, vidargs) {
     jQuery(CubicWeb).trigger('facets-content-loading', [divid, vid, paginate, vidargs]);
     var $form = $('#' + divid + 'Form');
@@ -77,7 +78,7 @@ function buildRQL(divid, vid, paginate, vidargs) {
         copyParam(zipped, extraparams, 'vid');
         extraparams['divid'] = divid;
         copyParam(zipped, extraparams, 'divid');
-        copyParam(zipped, extraparams, 'subvid');
+        copyParam(zipped, extraparams, 'subvid'); // XXX deprecate once TableView is gone
         copyParam(zipped, extraparams, 'fromformfilter');
         // paginate used to know if the filter box is acting, in which case we
         // want to reload action box to match current selection (we don't want

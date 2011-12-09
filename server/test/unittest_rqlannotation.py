@@ -342,7 +342,7 @@ class SQLGenAnnotatorTC(BaseQuerierTC):
 
     def test_remove_from_deleted_source_1(self):
         rqlst = self._prepare('Note X WHERE X eid 999998, NOT X cw_source Y')
-        self.failIf('X' in rqlst.defined_vars) # simplified
+        self.assertFalse('X' in rqlst.defined_vars) # simplified
         self.assertEqual(rqlst.defined_vars['Y']._q_invariant, True)
 
     def test_remove_from_deleted_source_2(self):

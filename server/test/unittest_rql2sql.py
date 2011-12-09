@@ -19,7 +19,7 @@
 
 import sys
 import os
-
+from datetime import date
 from logilab.common.testlib import TestCase, unittest_main, mock_object
 
 from rql import BadRQLQuery
@@ -46,12 +46,12 @@ def monkey_patch_import_driver_module(driver, drivers, quiet=True):
     for modname in drivers[driver]:
         try:
             if not quiet:
-                print >> sys.stderr, 'Trying %s' % modname
+                sys.stderr.write('Trying %s\n' % modname)
             module = db.load_module_from_name(modname, use_sys=False)
             break
         except ImportError:
             if not quiet:
-                print >> sys.stderr, '%s is not available' % modname
+                sys.stderr.write('%s is not available\n' % modname)
             continue
     else:
         return mock_object(STRING=1, BOOLEAN=2, BINARY=3, DATETIME=4, NUMBER=5), drivers[driver][0]
@@ -1747,7 +1747,7 @@ ORDER BY 1'''),
 class SqlServer2005SQLGeneratorTC(PostgresSQLGeneratorTC):
     backend = 'sqlserver2005'
     def _norm_sql(self, sql):
-        return sql.strip().replace(' SUBSTR', ' SUBSTRING').replace(' || ', ' + ').replace(' ILIKE ', ' LIKE ').replace('TRUE', '1').replace('FALSE', '0')
+        return sql.strip().replace(' SUBSTR', ' SUBSTRING').replace(' || ', ' + ').replace(' ILIKE ', ' LIKE ').replace('TRUE', '1').replace('FALSE', '0').replace('CURRENT_DATE', str(date.today()))
 
     def test_has_text(self):
         for t in self._parse(HAS_TEXT_LG_INDEXER):

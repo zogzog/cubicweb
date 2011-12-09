@@ -567,7 +567,7 @@ class WorkflowHooksTC(CubicWebTC):
         # test initial state is set
         rset = self.execute('Any N WHERE S name N, X in_state S, X eid %(x)s',
                             {'x' : ueid})
-        self.failIf(rset, rset.rows)
+        self.assertFalse(rset, rset.rows)
         self.commit()
         initialstate = self.execute('Any N WHERE S name N, X in_state S, X eid %(x)s',
                                     {'x' : ueid})[0][0]

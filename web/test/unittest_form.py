@@ -64,15 +64,15 @@ class EntityFieldsFormTC(CubicWebTC):
         t = self.req.create_entity('Tag', name=u'x')
         form1 = self.vreg['forms'].select('edition', self.req, entity=t)
         unrelated = [reid for rview, reid in form1.field_by_name('tags', 'subject', t.e_schema).choices(form1)]
-        self.failUnless(unicode(b.eid) in unrelated, unrelated)
+        self.assertTrue(unicode(b.eid) in unrelated, unrelated)
         form2 = self.vreg['forms'].select('edition', self.req, entity=b)
         unrelated = [reid for rview, reid in form2.field_by_name('tags', 'object', t.e_schema).choices(form2)]
-        self.failUnless(unicode(t.eid) in unrelated, unrelated)
+        self.assertTrue(unicode(t.eid) in unrelated, unrelated)
         self.execute('SET X tags Y WHERE X is Tag, Y is BlogEntry')
         unrelated = [reid for rview, reid in form1.field_by_name('tags', 'subject', t.e_schema).choices(form1)]
-        self.failIf(unicode(b.eid) in unrelated, unrelated)
+        self.assertFalse(unicode(b.eid) in unrelated, unrelated)
         unrelated = [reid for rview, reid in form2.field_by_name('tags', 'object', t.e_schema).choices(form2)]
-        self.failIf(unicode(t.eid) in unrelated, unrelated)
+        self.assertFalse(unicode(t.eid) in unrelated, unrelated)
 
 
     def test_form_field_vocabulary_new_entity(self):
@@ -110,14 +110,14 @@ class EntityFieldsFormTC(CubicWebTC):
                 ok = True
         self.assertEqual(ok, True, 'expected option not found')
         inputs = pageinfo.find_tag('input', False)
-        self.failIf(list(pageinfo.matching_nodes('input', name='__linkto')))
+        self.assertFalse(list(pageinfo.matching_nodes('input', name='__linkto')))
 
     def test_reledit_composite_field(self):
         rset = self.execute('INSERT BlogEntry X: X title "cubicweb.org", X content "hop"')
         form = self.vreg['views'].select('reledit', self.request(),
                                          rset=rset, row=0, rtype='content')
         data = form.render(row=0, rtype='content', formid='base', action='edit_rtype')
-        self.failUnless('content_format' in data)
+        self.assertTrue('content_format' in data)
 
     # form view tests #########################################################
 

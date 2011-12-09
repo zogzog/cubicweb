@@ -136,19 +136,17 @@ class WFHistoryView(EntityView):
     def cell_call(self, row, col, view=None, title=title):
         _ = self._cw._
         eid = self.cw_rset[row][col]
-        sel = 'Any FS,TS,WF,D'
+        sel = 'Any FS,TS,C,D'
         rql = ' ORDERBY D DESC WHERE WF wf_info_for X,'\
               'WF from_state FS, WF to_state TS, WF comment C,'\
               'WF creation_date D'
         if self._cw.vreg.schema.eschema('CWUser').has_perm(self._cw, 'read'):
-            sel += ',U,C'
+            sel += ',U,WF'
             rql += ', WF owned_by U?'
-            displaycols = range(5)
             headers = (_('from_state'), _('to_state'), _('comment'), _('date'),
                        _('CWUser'))
         else:
-            sel += ',C'
-            displaycols = range(4)
+            sel += ',WF'
             headers = (_('from_state'), _('to_state'), _('comment'), _('date'))
         rql = '%s %s, X eid %%(x)s' % (sel, rql)
         try:
@@ -157,9 +155,9 @@ class WFHistoryView(EntityView):
             return
         if rset:
             if title:
-                title = _(title)
-            self.wview('table', rset, title=title, displayactions=False,
-                       displaycols=displaycols, headers=headers)
+                self.w(u'<h2>%s</h2>\n' % _(title))
+            self.wview('table', rset, headers=headers,
+                       cellvids={2: 'editable-final'})
 
 
 class WFHistoryVComponent(component.EntityCtxComponent):
@@ -248,14 +246,6 @@ class WorkflowPrimaryView(TabbedPrimaryView):
     default_tab = 'wf_tab_info'
 
 
-class CellView(EntityView):
-    __regid__ = 'cell'
-    __select__ = is_instance('TrInfo')
-
-    def cell_call(self, row, col, cellvid=None):
-        self.w(self.cw_rset.get_entity(row, col).view('reledit', rtype='comment'))
-
-
 class StateInContextView(EntityView):
     """convenience trick, State's incontext view should not be clickable"""
     __regid__ = 'incontext'
@@ -284,7 +274,7 @@ class WorkflowTabTextView(PrimaryTab):
         rset = self._cw.execute(
             'Any T,T,DS,T,TT ORDERBY TN WHERE T transition_of WF, WF eid %(x)s,'
             'T type TT, T name TN, T destination_state DS?', {'x': entity.eid})
-        self.wview('editable-table', rset, 'null',
+        self.wview('table', rset, 'null',
                    cellvids={ 1: 'trfromstates', 2: 'outofcontext', 3:'trsecurity',},
                    headers = (_('Transition'),  _('from_state'),
                               _('to_state'), _('permissions'), _('type') ),
@@ -341,11 +331,11 @@ _afs.tag_attribute(('TrInfo', 'tr_count'), 'main', 'hidden')
 def transition_states_vocabulary(form, field):
     entity = form.edited_entity
     if not entity.has_eid():
-        eids = entity.linked_to('transition_of', 'subject')
+        eids = form.linked_to.get(('transition_of', 'subject'))
         if not eids:
             return []
         return _wf_items_for_relation(form._cw, eids[0], 'state_of', field)
-    return ff.relvoc_unrelated(entity, field.name, field.role)
+    return field.relvoc_unrelated(form)
 
 _afs.tag_subject_of(('*', 'destination_state', '*'), 'main', 'attributes')
 _affk.tag_subject_of(('*', 'destination_state', '*'),
@@ -359,11 +349,11 @@ _affk.tag_object_of(('*', 'allowed_transition', '*'),
 def state_transitions_vocabulary(form, field):
     entity = form.edited_entity
     if not entity.has_eid():
-        eids = entity.linked_to('state_of', 'subject')
+        eids = form.linked_to.get(('state_of', 'subject'))
         if eids:
             return _wf_items_for_relation(form._cw, eids[0], 'transition_of', field)
         return []
-    return ff.relvoc_unrelated(entity, field.name, field.role)
+    return field.relvoc_unrelated(form)
 
 _afs.tag_subject_of(('State', 'allowed_transition', '*'), 'main', 'attributes')
 _affk.tag_subject_of(('State', 'allowed_transition', '*'),

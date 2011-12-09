@@ -138,7 +138,7 @@ class TheMainTemplate(MainTemplate):
         if etypefilter and etypefilter.cw_propval('visible'):
             etypefilter.render(w=w)
         nav_html = UStringIO()
-        if view:
+        if view and not view.handle_pagination:
             view.paginate(w=nav_html.write)
         w(nav_html.getvalue())
         w(u'<div id="contentmain">\n')

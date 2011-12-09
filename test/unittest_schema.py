@@ -106,9 +106,9 @@ class CubicWebSchemaTC(TestCase):
         # isinstance(cstr, RQLConstraint)
         # -> expected to return RQLConstraint instances but not
         #    RRQLVocabularyConstraint and QLUniqueConstraint
-        self.failIf(issubclass(RQLUniqueConstraint, RQLVocabularyConstraint))
-        self.failIf(issubclass(RQLUniqueConstraint, RQLConstraint))
-        self.failUnless(issubclass(RQLConstraint, RQLVocabularyConstraint))
+        self.assertFalse(issubclass(RQLUniqueConstraint, RQLVocabularyConstraint))
+        self.assertFalse(issubclass(RQLUniqueConstraint, RQLConstraint))
+        self.assertTrue(issubclass(RQLConstraint, RQLVocabularyConstraint))
 
     def test_entity_perms(self):
         self.assertEqual(eperson.get_groups('read'), set(('managers', 'users', 'guests')))
@@ -161,8 +161,8 @@ class SchemaReaderClassTest(TestCase):
         entities = sorted([str(e) for e in schema.entities()])
         expected_entities = ['BaseTransition', 'BigInt', 'Bookmark', 'Boolean', 'Bytes', 'Card',
                              'Date', 'Datetime', 'Decimal',
-                             'CWCache', 'CWConstraint', 'CWConstraintType', 'CWEType',
-                             'CWAttribute', 'CWGroup', 'EmailAddress', 'CWRelation',
+                             'CWCache', 'CWConstraint', 'CWConstraintType', 'CWDataImport',
+                             'CWEType', 'CWAttribute', 'CWGroup', 'EmailAddress', 'CWRelation',
                              'CWPermission', 'CWProperty', 'CWRType',
                              'CWSource', 'CWSourceHostConfig', 'CWSourceSchemaConfig',
                              'CWUniqueTogetherConstraint', 'CWUser',
@@ -175,29 +175,29 @@ class SchemaReaderClassTest(TestCase):
                              'Workflow', 'WorkflowTransition']
         self.assertListEqual(sorted(expected_entities), entities)
         relations = sorted([str(r) for r in schema.relations()])
-        expected_relations = ['add_permission', 'address', 'alias', 'allowed_transition',
+        expected_relations = ['actionnaire', 'add_permission', 'address', 'alias', 'allowed_transition', 'associe',
                               'bookmarked_by', 'by_transition',
 
                               'cardinality', 'comment', 'comment_format',
                               'composite', 'condition', 'config', 'connait',
                               'constrained_by', 'constraint_of',
-                              'content', 'content_format',
+                              'content', 'content_format', 'contrat_exclusif',
                               'created_by', 'creation_date', 'cstrtype', 'custom_workflow',
-                              'cwuri', 'cw_for_source', 'cw_host_config_of', 'cw_schema', 'cw_source',
+                              'cwuri', 'cw_for_source', 'cw_import_of', 'cw_host_config_of', 'cw_schema', 'cw_source',
 
                               'data', 'data_encoding', 'data_format', 'data_name', 'default_workflow', 'defaultval', 'delete_permission',
-                              'description', 'description_format', 'destination_state',
+                              'description', 'description_format', 'destination_state', 'dirige',
 
-                              'ecrit_par', 'eid', 'evaluee', 'expression', 'exprtype',
+                              'ecrit_par', 'eid', 'end_timestamp', 'evaluee', 'expression', 'exprtype',
 
                               'fabrique_par', 'final', 'firstname', 'for_user', 'fournit',
                               'from_entity', 'from_state', 'fulltext_container', 'fulltextindexed',
 
-                              'has_text',
+                              'has_group_permission', 'has_text',
                               'identity', 'in_group', 'in_state', 'in_synchronization', 'indexed',
                               'initial_state', 'inlined', 'internationalizable', 'is', 'is_instance_of',
 
-                              'label', 'last_login_time', 'latest_retrieval', 'lieu', 'login',
+                              'label', 'last_login_time', 'latest_retrieval', 'lieu', 'log', 'login',
 
                               'mainvars', 'match_host', 'modification_date',
 
@@ -209,7 +209,7 @@ class SchemaReaderClassTest(TestCase):
 
                               'read_permission', 'relation_type', 'relations', 'require_group',
 
-                              'specializes', 'state_of', 'subworkflow', 'subworkflow_exit', 'subworkflow_state', 'surname', 'symmetric', 'synopsis',
+                              'specializes', 'start_timestamp', 'state_of', 'status', 'subworkflow', 'subworkflow_exit', 'subworkflow_state', 'surname', 'symmetric', 'synopsis',
 
                               'tags', 'timestamp', 'title', 'to_entity', 'to_state', 'transition_of', 'travaille', 'type',
 
@@ -225,12 +225,13 @@ class SchemaReaderClassTest(TestCase):
         rels = sorted(str(r) for r in eschema.subject_relations())
         self.assertListEqual(rels, ['created_by', 'creation_date', 'custom_workflow',
                                     'cw_source', 'cwuri', 'eid',
-                                     'evaluee', 'firstname', 'has_text', 'identity',
-                                     'in_group', 'in_state', 'is',
-                                     'is_instance_of', 'last_login_time',
-                                     'login', 'modification_date', 'owned_by',
-                                     'primary_email', 'surname', 'upassword',
-                                     'use_email'])
+                                    'evaluee', 'firstname', 'has_group_permission',
+                                    'has_text', 'identity',
+                                    'in_group', 'in_state', 'is',
+                                    'is_instance_of', 'last_login_time',
+                                    'login', 'modification_date', 'owned_by',
+                                    'primary_email', 'surname', 'upassword',
+                                    'use_email'])
         rels = sorted(r.type for r in eschema.object_relations())
         self.assertListEqual(rels, ['bookmarked_by', 'created_by', 'for_user',
                                      'identity', 'owned_by', 'wf_info_for'])
@@ -238,15 +239,15 @@ class SchemaReaderClassTest(TestCase):
         properties = rschema.rdef('CWAttribute', 'CWRType')
         self.assertEqual(properties.cardinality, '1*')
         constraints = properties.constraints
-        self.failUnlessEqual(len(constraints), 1, constraints)
+        self.assertEqual(len(constraints), 1, constraints)
         constraint = constraints[0]
-        self.failUnless(isinstance(constraint, RQLConstraint))
-        self.failUnlessEqual(constraint.expression, 'O final TRUE')
+        self.assertTrue(isinstance(constraint, RQLConstraint))
+        self.assertEqual(constraint.expression, 'O final TRUE')
 
     def test_fulltext_container(self):
         schema = loader.load(config)
-        self.failUnless('has_text' in schema['CWUser'].subject_relations())
-        self.failIf('has_text' in schema['EmailAddress'].subject_relations())
+        self.assertTrue('has_text' in schema['CWUser'].subject_relations())
+        self.assertFalse('has_text' in schema['EmailAddress'].subject_relations())
 
     def test_permission_settings(self):
         schema = loader.load(config)

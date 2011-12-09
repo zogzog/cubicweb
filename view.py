@@ -115,19 +115,7 @@ class View(AppObject):
     binary = False
     add_to_breadcrumbs = True
     category = 'view'
-
-    @property
-    @deprecated('[3.6] need_navigation is deprecated, use .paginable')
-    def need_navigation(self):
-        return True
-
-    @property
-    def paginable(self):
-        if not isinstance(self.__class__.need_navigation, property):
-            warn('[3.6] %s.need_navigation is deprecated, use .paginable'
-                 % self.__class__, DeprecationWarning)
-            return self.need_navigation
-        return True
+    paginable = True
 
     def __init__(self, req=None, rset=None, **kwargs):
         super(View, self).__init__(req, rset=rset, **kwargs)
@@ -194,8 +182,6 @@ class View(AppObject):
         output = UStringIO()
         template.expand(context, output)
         return output.getvalue()
-
-    dispatch = deprecated('[3.4] .dispatch is deprecated, use .render')(render)
 
     # should default .call() method add a <div classs="section"> around each
     # rset item
@@ -283,9 +269,6 @@ class View(AppObject):
         """shortcut to self.view method automatically passing self.w as argument
         """
         self._cw.view(__vid, rset, __fallback_vid, w=self.w, **kwargs)
-
-    # XXX Template bw compat
-    template = deprecated('[3.4] .template is deprecated, use .view')(wview)
 
     def whead(self, data):
         self._cw.html_headers.write(data)

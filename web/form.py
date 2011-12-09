@@ -223,11 +223,6 @@ class Form(AppObject):
         # deleting validation errors here breaks form reloading (errors are
         # no more available), they have to be deleted by application's publish
         # method on successful commit
-        if hasattr(self, '_form_previous_values'):
-            # XXX behaviour changed in 3.6.1, warn
-            warn('[3.6.1] restore_previous_post already called, remove this call',
-                 DeprecationWarning, stacklevel=2)
-            return
         forminfo = self._cw.session.data.pop(sessionkey, None)
         if forminfo:
             self._form_previous_values = forminfo['values']
@@ -261,12 +256,4 @@ class Form(AppObject):
 
     def remaining_errors(self):
         return sorted(self.form_valerror.errors.items())
-
-    @deprecated('[3.6] use form.field_error and/or new renderer.render_error method')
-    def form_field_error(self, field):
-        """return validation error for widget's field, if any"""
-        err = self.field_error(field)
-        if err:
-            return u'<span class="error">%s</span>' % err
-        return u''
 

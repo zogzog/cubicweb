@@ -28,10 +28,10 @@ class BookmarkHooksTC(CubicWebTC):
         self.commit()
         self.execute('DELETE X bookmarked_by U WHERE U login "admin"')
         self.commit()
-        self.failUnless(self.execute('Any X WHERE X eid %(x)s', {'x': beid}))
+        self.assertTrue(self.execute('Any X WHERE X eid %(x)s', {'x': beid}))
         self.execute('DELETE X bookmarked_by U WHERE U login "anon"')
         self.commit()
-        self.failIf(self.execute('Any X WHERE X eid %(x)s', {'x': beid}))
+        self.assertFalse(self.execute('Any X WHERE X eid %(x)s', {'x': beid}))
 
 if __name__ == '__main__':
     unittest_main()

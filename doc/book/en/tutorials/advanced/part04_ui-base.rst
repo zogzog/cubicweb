@@ -138,20 +138,21 @@ There are still a few problems I want to solve...
 * Also, when viewing an image, there is no clue about the folder to which this
   image belongs to.
 
-I will first try to explain the ordering problem. By default, when accessing related
-entities by using the ORM's API, you should get them ordered according to the target's
-class `fetch_order`. If we take a look at the file cube'schema, we can see:
+I will first try to explain the ordering problem. By default, when accessing
+related entities by using the ORM's API, you should get them ordered according to
+the target's class `cw_fetch_order`. If we take a look at the file cube'schema,
+we can see:
 
 .. sourcecode:: python
-
 
     class File(AnyEntity):
 	"""customized class for File entities"""
 	__regid__ = 'File'
-	fetch_attrs, fetch_order = fetch_config(['data_name', 'title'])
+	fetch_attrs, cw_fetch_order = fetch_config(['data_name', 'title'])
 
-By default, `fetch_config` will return a `fetch_order` method that will order on
-the first attribute in the list. So, we could expect to get files ordered by
+
+By default, `fetch_config` will return a `cw_fetch_order` method that will order
+on the first attribute in the list. So, we could expect to get files ordered by
 their name. But we don't.  What's up doc ?
 
 The problem is that files are related to folder using the `filed_under` relation.

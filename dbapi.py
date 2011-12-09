@@ -223,12 +223,31 @@ def in_memory_cnx(repo, login, **kwargs):
     return repo_connect(repo, login, cnxprops=cnxprops, **kwargs)
 
 def in_memory_repo_cnx(config, login, **kwargs):
-    """usefull method for testing and scripting to get a dbapi.Connection
+    """useful method for testing and scripting to get a dbapi.Connection
     object connected to an in-memory repository instance
     """
     # connection to the CubicWeb repository
     repo = in_memory_repo(config)
     return repo, in_memory_cnx(repo, login, **kwargs)
+
+
+def anonymous_session(vreg):
+    """return a new anonymous session
+
+    raises an AuthenticationError if anonymous usage is not allowed
+    """
+    anoninfo = vreg.config.anonymous_user()
+    if anoninfo is None: # no anonymous user
+        raise AuthenticationError('anonymous access is not authorized')
+    anon_login, anon_password = anoninfo
+    cnxprops = ConnectionProperties(vreg.config.repo_method)
+    # use vreg's repository cache
+    repo = vreg.config.repository(vreg)
+    anon_cnx = repo_connect(repo, anon_login,
+                            cnxprops=cnxprops, password=anon_password)
+    anon_cnx.vreg = vreg
+    return DBAPISession(anon_cnx, anon_login)
+
 
 class _NeedAuthAccessMock(object):
     def __getattribute__(self, attr):

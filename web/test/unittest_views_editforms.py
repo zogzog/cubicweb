@@ -95,9 +95,9 @@ class AutomaticEntityFormTC(CubicWebTC):
                                       ]))
 
     def test_inlined_view(self):
-        self.failUnless('main_inlined' in AFS.etype_get('CWUser', 'use_email', 'subject', 'EmailAddress'))
-        self.failIf('main_inlined' in AFS.etype_get('CWUser', 'primary_email', 'subject', 'EmailAddress'))
-        self.failUnless('main_relations' in AFS.etype_get('CWUser', 'primary_email', 'subject', 'EmailAddress'))
+        self.assertTrue('main_inlined' in AFS.etype_get('CWUser', 'use_email', 'subject', 'EmailAddress'))
+        self.assertFalse('main_inlined' in AFS.etype_get('CWUser', 'primary_email', 'subject', 'EmailAddress'))
+        self.assertTrue('main_relations' in AFS.etype_get('CWUser', 'primary_email', 'subject', 'EmailAddress'))
 
     def test_personne_relations_by_category(self):
         e = self.vreg['etypes'].etype_class('Personne')(self.request())
@@ -142,7 +142,7 @@ class AutomaticEntityFormTC(CubicWebTC):
         # should be also selectable by specifying entity
         self.vreg['forms'].select('edition', rset.req,
                          entity=rset.get_entity(0, 0))
-        self.failIf(any(f for f in form.fields if f is None))
+        self.assertFalse(any(f for f in form.fields if f is None))
 
 
 class FormViewsTC(CubicWebTC):

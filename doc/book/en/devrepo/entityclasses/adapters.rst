@@ -133,8 +133,8 @@ start from:
             return sum(captain.age for captain in self.captains)
 
     class FooView(EntityView):
-       __regid__ = 'mycube.fooview'
-       __select__ = implements('IFoo')
+        __regid__ = 'mycube.fooview'
+        __select__ = implements('IFoo')
 
         def cell_call(self, row, col):
             entity = self.cw_rset.get_entity(row, col)
@@ -152,8 +152,8 @@ Converting to:
            return sum(captain.age for captain in self.entity.captains)
 
    class FooView(EntityView):
-      __regid__ = 'mycube.fooview'
-      __select__ = adaptable('IFoo')
+        __regid__ = 'mycube.fooview'
+        __select__ = adaptable('IFoo')
 
         def cell_call(self, row, col):
             entity = self.cw_rset.get_entity(row, col)

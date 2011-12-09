@@ -98,34 +98,6 @@ msgid "%d years"
 msgstr ""
 
 #, python-format
-msgid "%d&#160;days"
-msgstr ""
-
-#, python-format
-msgid "%d&#160;hours"
-msgstr ""
-
-#, python-format
-msgid "%d&#160;minutes"
-msgstr ""
-
-#, python-format
-msgid "%d&#160;months"
-msgstr ""
-
-#, python-format
-msgid "%d&#160;seconds"
-msgstr ""
-
-#, python-format
-msgid "%d&#160;weeks"
-msgstr ""
-
-#, python-format
-msgid "%d&#160;years"
-msgstr ""
-
-#, python-format
 msgid "%s could be supported"
 msgstr ""
 
@@ -163,9 +135,6 @@ msgid "'%s' action requires 'linkattr' option"
 msgstr ""
 
 msgid "(UNEXISTANT EID)"
-msgstr ""
-
-msgid "(loading ...)"
 msgstr ""
 
 msgid "**"
@@ -313,6 +282,12 @@ msgstr "Constraint types"
 msgid "CWConstraint_plural"
 msgstr "Constraints"
 
+msgid "CWDataImport"
+msgstr "Data import"
+
+msgid "CWDataImport_plural"
+msgstr "Data imports"
+
 msgid "CWEType"
 msgstr "Entity type"
 
@@ -332,12 +307,6 @@ msgstr "Group"
 
 msgid "CWGroup_plural"
 msgstr "Groups"
-
-msgid "CWPermission"
-msgstr "Permission"
-
-msgid "CWPermission_plural"
-msgstr "Permissions"
 
 msgid "CWProperty"
 msgstr "Property"
@@ -427,6 +396,12 @@ msgid ""
 "supported"
 msgstr ""
 
+msgid "Click to sort on this column"
+msgstr ""
+
+msgid "DEBUG"
+msgstr ""
+
 #, python-format
 msgid "Data connection graph for %s"
 msgstr ""
@@ -458,6 +433,9 @@ msgstr ""
 msgid "Download schema as OWL"
 msgstr ""
 
+msgid "ERROR"
+msgstr ""
+
 msgid "EmailAddress"
 msgstr "Email address"
 
@@ -479,6 +457,9 @@ msgstr "External Uri"
 
 msgid "ExternalUri_plural"
 msgstr "External Uris"
+
+msgid "FATAL"
+msgstr ""
 
 msgid "Float"
 msgstr "Float"
@@ -504,6 +485,9 @@ msgstr ""
 msgid "Help"
 msgstr ""
 
+msgid "INFO"
+msgstr ""
+
 msgid "Instance"
 msgstr ""
 
@@ -522,10 +506,19 @@ msgstr "Interval constraint"
 msgid "Interval_plural"
 msgstr "Intervals"
 
+msgid "Link:"
+msgstr ""
+
 msgid "Looked up classes"
 msgstr ""
 
 msgid "Manage"
+msgstr ""
+
+msgid "Manage security"
+msgstr ""
+
+msgid "Message threshold"
 msgstr ""
 
 msgid "Most referenced classes"
@@ -549,14 +542,14 @@ msgstr "New constraint"
 msgid "New CWConstraintType"
 msgstr "New constraint type"
 
+msgid "New CWDataImport"
+msgstr "New data import"
+
 msgid "New CWEType"
 msgstr "New entity type"
 
 msgid "New CWGroup"
 msgstr "New group"
-
-msgid "New CWPermission"
-msgstr "New permission"
 
 msgid "New CWProperty"
 msgstr "New property"
@@ -622,6 +615,9 @@ msgstr ""
 msgid "OR"
 msgstr ""
 
+msgid "Ownership"
+msgstr ""
+
 msgid "Parent class:"
 msgstr ""
 
@@ -671,7 +667,7 @@ msgstr ""
 msgid "Schema %s"
 msgstr ""
 
-msgid "Schema of the data model"
+msgid "Schema's permissions definitions"
 msgstr ""
 
 msgid "Search for"
@@ -766,14 +762,14 @@ msgstr "This constraint"
 msgid "This CWConstraintType"
 msgstr "This constraint type"
 
+msgid "This CWDataImport"
+msgstr "This data import"
+
 msgid "This CWEType"
 msgstr "This entity type"
 
 msgid "This CWGroup"
 msgstr "This group"
-
-msgid "This CWPermission"
-msgstr "This permission"
 
 msgid "This CWProperty"
 msgstr "This property"
@@ -859,6 +855,12 @@ msgstr ""
 msgid "Used by:"
 msgstr ""
 
+msgid "Users and groups management"
+msgstr ""
+
+msgid "WARNING"
+msgstr ""
+
 msgid "Web server"
 msgstr ""
 
@@ -911,7 +913,7 @@ msgstr ""
 msgid ""
 "a RQL expression which should return some results, else the transition won't "
 "be available. This query may use X and U variables that will respectivly "
-"represents the current entity and the current user"
+"represents the current entity and the current user."
 msgstr ""
 
 msgid "a URI representing an object in external data store"
@@ -928,6 +930,9 @@ msgid ""
 msgstr ""
 
 msgid "abstract base class for transitions"
+msgstr ""
+
+msgid "action menu"
 msgstr ""
 
 msgid "action(s) on this selection"
@@ -1050,9 +1055,6 @@ msgstr "add a relation type"
 msgctxt "inlined:CWUser.use_email.subject"
 msgid "add a EmailAddress"
 msgstr "add an email address"
-
-msgid "add a new permission"
-msgstr ""
 
 # subject and object forms for each relation type
 # (no object form for final relation types)
@@ -1206,6 +1208,10 @@ msgid "autocomputed attribute used to ensure transition coherency"
 msgstr ""
 
 msgid "automatic"
+msgstr ""
+
+#, python-format
+msgid "back to pagination (%s results)"
 msgstr ""
 
 msgid "bad value"
@@ -1709,11 +1715,11 @@ msgctxt "CWConstraintType"
 msgid "cstrtype_object"
 msgstr "constraint type of"
 
-msgid "csv entities export"
-msgstr ""
-
 msgid "csv export"
-msgstr ""
+msgstr "CSV export"
+
+msgid "csv export (entities)"
+msgstr "CSV export (entities)"
 
 msgid "ctxcomponents"
 msgstr "contextual components"
@@ -1828,6 +1834,12 @@ msgstr "custom workflow"
 msgid "custom_workflow_object"
 msgstr "custom workflow of"
 
+msgid "cw.groups-management"
+msgstr "groups"
+
+msgid "cw.users-management"
+msgstr "users"
+
 msgid "cw_for_source"
 msgstr "for source"
 
@@ -1855,6 +1867,20 @@ msgstr "host configuration"
 msgctxt "CWSource"
 msgid "cw_host_config_of_object"
 msgstr "host configuration"
+
+msgid "cw_import_of"
+msgstr "source"
+
+msgctxt "CWDataImport"
+msgid "cw_import_of"
+msgstr "source"
+
+msgid "cw_import_of_object"
+msgstr "imports"
+
+msgctxt "CWSource"
+msgid "cw_import_of_object"
+msgstr "imports"
 
 msgid "cw_schema"
 msgstr "maps"
@@ -1910,6 +1936,9 @@ msgstr "description"
 
 msgid "cwrtype-permissions"
 msgstr "permissions"
+
+msgid "cwsource-imports"
+msgstr ""
 
 msgid "cwsource-main"
 msgstr "description"
@@ -2029,9 +2058,6 @@ msgid "delete"
 msgstr ""
 
 msgid "delete this bookmark"
-msgstr ""
-
-msgid "delete this permission"
 msgstr ""
 
 msgid "delete this relation"
@@ -2203,11 +2229,6 @@ msgstr ""
 msgid "display the facet or not"
 msgstr ""
 
-msgid ""
-"distinct label to distinguate between other permission entity of the same "
-"name"
-msgstr ""
-
 msgid "download"
 msgstr ""
 
@@ -2245,6 +2266,13 @@ msgstr ""
 msgid "embedding this url is forbidden"
 msgstr ""
 
+msgid "end_timestamp"
+msgstr "end timestamp"
+
+msgctxt "CWDataImport"
+msgid "end_timestamp"
+msgstr "end timestamp"
+
 msgid "entities deleted"
 msgstr ""
 
@@ -2276,11 +2304,6 @@ msgid "entity linked"
 msgstr ""
 
 msgid "entity type"
-msgstr ""
-
-msgid ""
-"entity type that may be used to construct some advanced security "
-"configuration"
 msgstr ""
 
 msgid "entity types which may use this workflow"
@@ -2368,6 +2391,12 @@ msgstr "\"final entity or relation type\" facet"
 msgid "facets_cwfinal-facet_description"
 msgstr ""
 
+msgid "facets_datafeed.dataimport.status"
+msgstr ""
+
+msgid "facets_datafeed.dataimport.status_description"
+msgstr ""
+
 msgid "facets_etype-facet"
 msgstr "\"entity type\" facet"
 
@@ -2390,6 +2419,9 @@ msgid "facets_in_state-facet"
 msgstr "\"in state\" facet"
 
 msgid "facets_in_state-facet_description"
+msgstr ""
+
+msgid "failed"
 msgstr ""
 
 #, python-format
@@ -2431,9 +2463,6 @@ msgstr ""
 
 #, python-format
 msgid "follow this link for more information on this %s"
-msgstr ""
-
-msgid "follow this link if javascript is deactivated"
 msgstr ""
 
 msgid "for_user"
@@ -2566,9 +2595,6 @@ msgstr ""
 msgid "groups grant permissions to the user"
 msgstr ""
 
-msgid "groups to which the permission is granted"
-msgstr ""
-
 msgid "guests"
 msgstr ""
 
@@ -2588,17 +2614,24 @@ msgid "hide filter form"
 msgstr ""
 
 msgid ""
-"how to format date and time in the ui (\"man strftime\" for format "
+"how to format date and time in the ui (see <a href=\"http://docs.python.org/"
+"library/datetime.html#strftime-strptime-behavior\">this page</a> for format "
 "description)"
 msgstr ""
 
-msgid "how to format date in the ui (\"man strftime\" for format description)"
+msgid ""
+"how to format date in the ui (see <a href=\"http://docs.python.org/library/"
+"datetime.html#strftime-strptime-behavior\">this page</a> for format "
+"description)"
 msgstr ""
 
 msgid "how to format float numbers in the ui"
 msgstr ""
 
-msgid "how to format time in the ui (\"man strftime\" for format description)"
+msgid ""
+"how to format time in the ui (see <a href=\"http://docs.python.org/library/"
+"datetime.html#strftime-strptime-behavior\">this page</a> for format "
+"description)"
 msgstr ""
 
 msgid "i18n_bookmark_url_fqs"
@@ -2655,6 +2688,9 @@ msgid ""
 msgstr ""
 
 msgid "image"
+msgstr ""
+
+msgid "in progress"
 msgstr ""
 
 msgid "in_group"
@@ -2753,9 +2789,6 @@ msgstr ""
 msgid "instance home"
 msgstr ""
 
-msgid "instance schema"
-msgstr ""
-
 msgid "internal entity uri"
 msgstr ""
 
@@ -2811,18 +2844,17 @@ msgstr "has instances"
 msgid "january"
 msgstr ""
 
+msgid "json-entities-export-view"
+msgstr "JSON export (entities)"
+
+msgid "json-export-view"
+msgstr "JSON export"
+
 msgid "july"
 msgstr ""
 
 msgid "june"
 msgstr ""
-
-msgid "label"
-msgstr ""
-
-msgctxt "CWPermission"
-msgid "label"
-msgstr "label"
 
 msgid "language of the user interface"
 msgstr ""
@@ -2846,6 +2878,9 @@ msgctxt "CWUser"
 msgid "last_login_time"
 msgstr "last login time"
 
+msgid "latest import"
+msgstr ""
+
 msgid "latest modification time of an entity"
 msgstr ""
 
@@ -2865,9 +2900,7 @@ msgstr "latest retrieval"
 msgid "left"
 msgstr ""
 
-msgid ""
-"link a permission to the entity. This permission should be used in the "
-"security definition of the entity's type to be useful."
+msgid "line"
 msgstr ""
 
 msgid ""
@@ -2897,6 +2930,13 @@ msgid "link a workflow to one or more entity type"
 msgstr ""
 
 msgid "list"
+msgstr ""
+
+msgid "log"
+msgstr ""
+
+msgctxt "CWDataImport"
+msgid "log"
 msgstr ""
 
 msgid "log in"
@@ -2950,9 +2990,6 @@ msgstr ""
 msgid "manage permissions"
 msgstr ""
 
-msgid "manage security"
-msgstr ""
-
 msgid "managers"
 msgstr ""
 
@@ -2985,6 +3022,9 @@ msgid "may"
 msgstr ""
 
 msgid "memory leak debugging"
+msgstr ""
+
+msgid "message"
 msgstr ""
 
 msgid "milestone"
@@ -3044,10 +3084,6 @@ msgctxt "CWGroup"
 msgid "name"
 msgstr "name"
 
-msgctxt "CWPermission"
-msgid "name"
-msgstr "name"
-
 msgctxt "CWRType"
 msgid "name"
 msgstr "name"
@@ -3081,9 +3117,6 @@ msgid ""
 msgstr ""
 
 msgid "name of the source"
-msgstr ""
-
-msgid "name or identifier of the permission"
 msgstr ""
 
 msgid "navbottom"
@@ -3122,9 +3155,6 @@ msgstr "next results"
 msgid "no"
 msgstr ""
 
-msgid "no associated permissions"
-msgstr ""
-
 msgid "no content next link"
 msgstr ""
 
@@ -3136,6 +3166,9 @@ msgstr ""
 
 #, python-format
 msgid "no edited fields specified for entity %s"
+msgstr ""
+
+msgid "no log to display"
 msgstr ""
 
 msgid "no related entity"
@@ -3170,6 +3203,9 @@ msgid "not selected"
 msgstr ""
 
 msgid "november"
+msgstr ""
+
+msgid "num. users"
 msgstr ""
 
 msgid "object"
@@ -3238,9 +3274,6 @@ msgstr "owns"
 msgid "owners"
 msgstr ""
 
-msgid "ownership"
-msgstr ""
-
 msgid "ownerships have been changed"
 msgstr ""
 
@@ -3271,13 +3304,13 @@ msgctxt "Bookmark"
 msgid "path"
 msgstr "path"
 
+msgid "permalink to this message"
+msgstr ""
+
 msgid "permission"
 msgstr ""
 
 msgid "permissions"
-msgstr ""
-
-msgid "permissions for this entity"
 msgstr ""
 
 msgid "pick existing bookmarks"
@@ -3354,8 +3387,8 @@ msgstr "description"
 msgid "rdef-permissions"
 msgstr "permissions"
 
-msgid "rdf"
-msgstr ""
+msgid "rdf export"
+msgstr "RDF export"
 
 msgid "read"
 msgstr ""
@@ -3477,10 +3510,6 @@ msgctxt "BaseTransition"
 msgid "require_group"
 msgstr "require group"
 
-msgctxt "CWPermission"
-msgid "require_group"
-msgstr "require group"
-
 msgctxt "Transition"
 msgid "require_group"
 msgstr "require group"
@@ -3494,12 +3523,6 @@ msgstr "required by"
 
 msgctxt "CWGroup"
 msgid "require_group_object"
-msgstr "required by"
-
-msgid "require_permission"
-msgstr "require permission"
-
-msgid "require_permission_object"
 msgstr "required by"
 
 msgid "required"
@@ -3542,8 +3565,8 @@ msgstr ""
 msgid "rql expressions"
 msgstr ""
 
-msgid "rss"
-msgstr ""
+msgid "rss export"
+msgstr "RSS export"
 
 msgid "same_as"
 msgstr "same as"
@@ -3552,9 +3575,6 @@ msgid "sample format"
 msgstr ""
 
 msgid "saturday"
-msgstr ""
-
-msgid "schema's permissions definitions"
 msgstr ""
 
 msgid "schema-diagram"
@@ -3635,6 +3655,9 @@ msgstr ""
 msgid "server information"
 msgstr ""
 
+msgid "severity"
+msgstr ""
+
 msgid ""
 "should html fields being edited using fckeditor (a HTML WYSIWYG editor).  "
 "You should also select text/html as default text format to actually get "
@@ -3665,9 +3688,6 @@ msgstr ""
 
 msgid "site-wide property can't be set for user"
 msgstr ""
-
-msgid "siteinfo"
-msgstr "site information"
 
 msgid "some later transaction(s) touch entity, undo them first"
 msgstr ""
@@ -3708,6 +3728,13 @@ msgid ""
 "start timestamp of the currently in synchronization, or NULL when no "
 "synchronization in progress."
 msgstr ""
+
+msgid "start_timestamp"
+msgstr "start timestamp"
+
+msgctxt "CWDataImport"
+msgid "start_timestamp"
+msgstr "start timestamp"
 
 msgid "startup views"
 msgstr ""
@@ -3751,6 +3778,13 @@ msgstr "use states"
 msgctxt "Workflow"
 msgid "state_of_object"
 msgstr "use states"
+
+msgid "status"
+msgstr ""
+
+msgctxt "CWDataImport"
+msgid "status"
+msgstr "status"
 
 msgid "status change"
 msgstr ""
@@ -3819,6 +3853,9 @@ msgstr "exit point"
 msgctxt "State"
 msgid "subworkflow_state_object"
 msgstr "exit point"
+
+msgid "success"
+msgstr ""
 
 msgid "sunday"
 msgstr ""
@@ -4176,9 +4213,6 @@ msgctxt "CWSource"
 msgid "url"
 msgstr "url"
 
-msgid "use template languages"
-msgstr ""
-
 msgid ""
 "use to define a transition from one or multiple states to a destination "
 "states in workflow's definitions. Transition without destination state will "
@@ -4199,9 +4233,6 @@ msgctxt "EmailAddress"
 msgid "use_email_object"
 msgstr "used by"
 
-msgid "use_template_format"
-msgstr "use template format"
-
 msgid ""
 "used for cubicweb configuration. Once a property has been created you can't "
 "change the key."
@@ -4209,9 +4240,6 @@ msgstr ""
 
 msgid ""
 "used to associate simple states to an entity type and/or to define workflows"
-msgstr ""
-
-msgid "used to grant a permission to a group"
 msgstr ""
 
 msgid "user"
@@ -4236,9 +4264,6 @@ msgid "users"
 msgstr ""
 
 msgid "users and groups"
-msgstr ""
-
-msgid "users and groups management"
 msgstr ""
 
 msgid "users using this bookmark"
@@ -4401,14 +4426,14 @@ msgstr "may use workflow"
 msgid "wrong query parameter line %s"
 msgstr ""
 
-msgid "xbel"
-msgstr ""
-
-msgid "xml"
-msgstr ""
+msgid "xbel export"
+msgstr "XBEL export"
 
 msgid "xml export"
-msgstr ""
+msgstr "XML export"
+
+msgid "xml export (entities)"
+msgstr "XML export (entities)"
 
 msgid "yes"
 msgstr ""

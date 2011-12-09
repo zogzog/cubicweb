@@ -20,8 +20,20 @@ table.filter div.facetTitle {
   font-weight: bold;
 }
 
-
-div#tableActionsBox {
- direction:rtl;
- float:right
+div.tableActionsBox {
 }
+
+div.tableActionsBox .popup {
+  border-radius: 5px;
+  background: %(incontextBoxBodyBgColor)s;
+  box-shadow: 3px 3px 3px Grey;
+}
+
+div.tableActionsBox li {
+  background: none;
+  /* we should probably get rid of ul/li structure because
+     of the spurious space consumed by the bullet */
+  margin-right: .3em;
+  margin-left: -.3em;
+}
+

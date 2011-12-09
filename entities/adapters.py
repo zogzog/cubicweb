@@ -26,15 +26,15 @@ from warnings import warn
 
 from logilab.mtconverter import TransformError
 from logilab.common.decorators import cached
+from logilab.common.deprecation import class_deprecated
 
-from cubicweb import ValidationError
-from cubicweb.view import EntityAdapter, implements_adapter_compat
+from cubicweb import ValidationError, view
 from cubicweb.selectors import (implements, is_instance, relation_possible,
                                 match_exception)
 from cubicweb.interfaces import IDownloadable, ITree, IProgress, IMileStone
 
 
-class IEmailableAdapter(EntityAdapter):
+class IEmailableAdapter(view.EntityAdapter):
     __regid__ = 'IEmailable'
     __select__ = relation_possible('primary_email') | relation_possible('use_email')
 
@@ -67,12 +67,12 @@ class IEmailableAdapter(EntityAdapter):
                      for attr in self.allowed_massmail_keys() )
 
 
-class INotifiableAdapter(EntityAdapter):
+class INotifiableAdapter(view.EntityAdapter):
     __needs_bw_compat__ = True
     __regid__ = 'INotifiable'
     __select__ = is_instance('Any')
 
-    @implements_adapter_compat('INotifiableAdapter')
+    @view.implements_adapter_compat('INotifiableAdapter')
     def notification_references(self, view):
         """used to control References field of email send on notification
         for this entity. `view` is the notification view.
@@ -86,7 +86,7 @@ class INotifiableAdapter(EntityAdapter):
         return ()
 
 
-class IFTIndexableAdapter(EntityAdapter):
+class IFTIndexableAdapter(view.EntityAdapter):
     __regid__ = 'IFTIndexable'
     __select__ = is_instance('Any')
 
@@ -156,35 +156,35 @@ def merge_weight_dict(maindict, newdict):
     for weight, words in newdict.iteritems():
         maindict.setdefault(weight, []).extend(words)
 
-class IDownloadableAdapter(EntityAdapter):
+class IDownloadableAdapter(view.EntityAdapter):
     """interface for downloadable entities"""
     __needs_bw_compat__ = True
     __regid__ = 'IDownloadable'
     __select__ = implements(IDownloadable, warn=False) # XXX for bw compat, else should be abstract
 
-    @implements_adapter_compat('IDownloadable')
+    @view.implements_adapter_compat('IDownloadable')
     def download_url(self, **kwargs): # XXX not really part of this interface
         """return an url to download entity's content"""
         raise NotImplementedError
-    @implements_adapter_compat('IDownloadable')
+    @view.implements_adapter_compat('IDownloadable')
     def download_content_type(self):
         """return MIME type of the downloadable content"""
         raise NotImplementedError
-    @implements_adapter_compat('IDownloadable')
+    @view.implements_adapter_compat('IDownloadable')
     def download_encoding(self):
         """return encoding of the downloadable content"""
         raise NotImplementedError
-    @implements_adapter_compat('IDownloadable')
+    @view.implements_adapter_compat('IDownloadable')
     def download_file_name(self):
         """return file name of the downloadable content"""
         raise NotImplementedError
-    @implements_adapter_compat('IDownloadable')
+    @view.implements_adapter_compat('IDownloadable')
     def download_data(self):
         """return actual data of the downloadable content"""
         raise NotImplementedError
 
 # XXX should propose to use two different relations for children/parent
-class ITreeAdapter(EntityAdapter):
+class ITreeAdapter(view.EntityAdapter):
     """This adapter has to be overriden to be configured using the
     tree_relation, child_role and parent_role class attributes to benefit from
     this default implementation.
@@ -225,12 +225,12 @@ class ITreeAdapter(EntityAdapter):
         return self.entity.tree_attribute
 
     # XXX should be removed from the public interface
-    @implements_adapter_compat('ITree')
+    @view.implements_adapter_compat('ITree')
     def children_rql(self):
         """Returns RQL to get the children of the entity."""
         return self.entity.cw_related_rql(self.tree_relation, self.parent_role)
 
-    @implements_adapter_compat('ITree')
+    @view.implements_adapter_compat('ITree')
     def different_type_children(self, entities=True):
         """Return children entities of different type as this entity.
 
@@ -244,7 +244,7 @@ class ITreeAdapter(EntityAdapter):
             return [e for e in res if e.e_schema != eschema]
         return res.filtered_rset(lambda x: x.e_schema != eschema, self.entity.cw_col)
 
-    @implements_adapter_compat('ITree')
+    @view.implements_adapter_compat('ITree')
     def same_type_children(self, entities=True):
         """Return children entities of the same type as this entity.
 
@@ -258,23 +258,23 @@ class ITreeAdapter(EntityAdapter):
             return [e for e in res if e.e_schema == eschema]
         return res.filtered_rset(lambda x: x.e_schema is eschema, self.entity.cw_col)
 
-    @implements_adapter_compat('ITree')
+    @view.implements_adapter_compat('ITree')
     def is_leaf(self):
         """Returns True if the entity does not have any children."""
         return len(self.children()) == 0
 
-    @implements_adapter_compat('ITree')
+    @view.implements_adapter_compat('ITree')
     def is_root(self):
         """Returns true if the entity is root of the tree (e.g. has no parent).
         """
         return self.parent() is None
 
-    @implements_adapter_compat('ITree')
+    @view.implements_adapter_compat('ITree')
     def root(self):
         """Return the root entity of the tree."""
         return self._cw.entity_from_eid(self.path()[0])
 
-    @implements_adapter_compat('ITree')
+    @view.implements_adapter_compat('ITree')
     def parent(self):
         """Returns the parent entity if any, else None (e.g. if we are on the
         root).
@@ -285,7 +285,7 @@ class ITreeAdapter(EntityAdapter):
         except (KeyError, IndexError):
             return None
 
-    @implements_adapter_compat('ITree')
+    @view.implements_adapter_compat('ITree')
     def children(self, entities=True, sametype=False):
         """Return children entities.
 
@@ -298,7 +298,7 @@ class ITreeAdapter(EntityAdapter):
             return self.entity.related(self.tree_relation, self.parent_role,
                                        entities=entities)
 
-    @implements_adapter_compat('ITree')
+    @view.implements_adapter_compat('ITree')
     def iterparents(self, strict=True):
         """Return an iterator on the parents of the entity."""
         def _uptoroot(self):
@@ -313,7 +313,7 @@ class ITreeAdapter(EntityAdapter):
             return chain([self.entity], _uptoroot(self))
         return _uptoroot(self)
 
-    @implements_adapter_compat('ITree')
+    @view.implements_adapter_compat('ITree')
     def iterchildren(self, _done=None):
         """Return an iterator over the item's children."""
         if _done is None:
@@ -325,7 +325,7 @@ class ITreeAdapter(EntityAdapter):
             yield child
             _done.add(child.eid)
 
-    @implements_adapter_compat('ITree')
+    @view.implements_adapter_compat('ITree')
     def prefixiter(self, _done=None):
         """Return an iterator over the item's descendants in a prefixed order."""
         if _done is None:
@@ -338,7 +338,7 @@ class ITreeAdapter(EntityAdapter):
             for entity in child.cw_adapt_to('ITree').prefixiter(_done):
                 yield entity
 
-    @implements_adapter_compat('ITree')
+    @view.implements_adapter_compat('ITree')
     @cached
     def path(self):
         """Returns the list of eids from the root object to this object."""
@@ -363,120 +363,11 @@ class ITreeAdapter(EntityAdapter):
         return path
 
 
-class IProgressAdapter(EntityAdapter):
-    """something that has a cost, a state and a progression.
-
-    You should at least override progress_info an in_progress methods on
-    concrete implementations.
-    """
-    __needs_bw_compat__ = True
-    __regid__ = 'IProgress'
-    __select__ = implements(IProgress, warn=False) # XXX for bw compat, should be abstract
-
-    @property
-    @implements_adapter_compat('IProgress')
-    def cost(self):
-        """the total cost"""
-        return self.progress_info()['estimated']
-
-    @property
-    @implements_adapter_compat('IProgress')
-    def revised_cost(self):
-        return self.progress_info().get('estimatedcorrected', self.cost)
-
-    @property
-    @implements_adapter_compat('IProgress')
-    def done(self):
-        """what is already done"""
-        return self.progress_info()['done']
-
-    @property
-    @implements_adapter_compat('IProgress')
-    def todo(self):
-        """what remains to be done"""
-        return self.progress_info()['todo']
-
-    @implements_adapter_compat('IProgress')
-    def progress_info(self):
-        """returns a dictionary describing progress/estimated cost of the
-        version.
-
-        - mandatory keys are (''estimated', 'done', 'todo')
-
-        - optional keys are ('notestimated', 'notestimatedcorrected',
-          'estimatedcorrected')
-
-        'noestimated' and 'notestimatedcorrected' should default to 0
-        'estimatedcorrected' should default to 'estimated'
-        """
-        raise NotImplementedError
-
-    @implements_adapter_compat('IProgress')
-    def finished(self):
-        """returns True if status is finished"""
-        return not self.in_progress()
-
-    @implements_adapter_compat('IProgress')
-    def in_progress(self):
-        """returns True if status is not finished"""
-        raise NotImplementedError
-
-    @implements_adapter_compat('IProgress')
-    def progress(self):
-        """returns the % progress of the task item"""
-        try:
-            return 100. * self.done / self.revised_cost
-        except ZeroDivisionError:
-            # total cost is 0 : if everything was estimated, task is completed
-            if self.progress_info().get('notestimated'):
-                return 0.
-            return 100
-
-    @implements_adapter_compat('IProgress')
-    def progress_class(self):
-        return ''
-
-
-class IMileStoneAdapter(IProgressAdapter):
-    __needs_bw_compat__ = True
-    __regid__ = 'IMileStone'
-    __select__ = implements(IMileStone, warn=False) # XXX for bw compat, should be abstract
-
-    parent_type = None # specify main task's type
-
-    @implements_adapter_compat('IMileStone')
-    def get_main_task(self):
-        """returns the main ITask entity"""
-        raise NotImplementedError
-
-    @implements_adapter_compat('IMileStone')
-    def initial_prevision_date(self):
-        """returns the initial expected end of the milestone"""
-        raise NotImplementedError
-
-    @implements_adapter_compat('IMileStone')
-    def eta_date(self):
-        """returns expected date of completion based on what remains
-        to be done
-        """
-        raise NotImplementedError
-
-    @implements_adapter_compat('IMileStone')
-    def completion_date(self):
-        """returns date on which the subtask has been completed"""
-        raise NotImplementedError
-
-    @implements_adapter_compat('IMileStone')
-    def contractors(self):
-        """returns the list of persons supposed to work on this task"""
-        raise NotImplementedError
-
-
 # error handling adapters ######################################################
 
 from cubicweb import UniqueTogetherError
 
-class IUserFriendlyError(EntityAdapter):
+class IUserFriendlyError(view.EntityAdapter):
     __regid__ = 'IUserFriendlyError'
     __abstract__ = True
     def __init__(self, *args, **kwargs):
@@ -491,3 +382,129 @@ class IUserFriendlyUniqueTogether(IUserFriendlyError):
         msg = self._cw._('violates unique_together constraints (%s)') % (
             ', '.join([self._cw._(rtype) for rtype in rtypes]))
         raise ValidationError(self.entity.eid, dict((col, msg) for col in rtypes))
+
+# deprecated ###################################################################
+
+
+class adapter_deprecated(view.auto_unwrap_bw_compat):
+    """metaclass to print a warning on instantiation of a deprecated class"""
+
+    def __call__(cls, *args, **kwargs):
+        msg = getattr(cls, "__deprecation_warning__",
+                      "%(cls)s is deprecated") % {'cls': cls.__name__}
+        warn(msg, DeprecationWarning, stacklevel=2)
+        return type.__call__(cls, *args, **kwargs)
+
+
+class IProgressAdapter(view.EntityAdapter):
+    """something that has a cost, a state and a progression.
+
+    You should at least override progress_info an in_progress methods on
+    concrete implementations.
+    """
+    __metaclass__ = adapter_deprecated
+    __deprecation_warning__ = '[3.14] IProgressAdapter has been moved to iprogress cube'
+    __needs_bw_compat__ = True
+    __regid__ = 'IProgress'
+    __select__ = implements(IProgress, warn=False) # XXX for bw compat, should be abstract
+
+    @property
+    @view.implements_adapter_compat('IProgress')
+    def cost(self):
+        """the total cost"""
+        return self.progress_info()['estimated']
+
+    @property
+    @view.implements_adapter_compat('IProgress')
+    def revised_cost(self):
+        return self.progress_info().get('estimatedcorrected', self.cost)
+
+    @property
+    @view.implements_adapter_compat('IProgress')
+    def done(self):
+        """what is already done"""
+        return self.progress_info()['done']
+
+    @property
+    @view.implements_adapter_compat('IProgress')
+    def todo(self):
+        """what remains to be done"""
+        return self.progress_info()['todo']
+
+    @view.implements_adapter_compat('IProgress')
+    def progress_info(self):
+        """returns a dictionary describing progress/estimated cost of the
+        version.
+
+        - mandatory keys are (''estimated', 'done', 'todo')
+
+        - optional keys are ('notestimated', 'notestimatedcorrected',
+          'estimatedcorrected')
+
+        'noestimated' and 'notestimatedcorrected' should default to 0
+        'estimatedcorrected' should default to 'estimated'
+        """
+        raise NotImplementedError
+
+    @view.implements_adapter_compat('IProgress')
+    def finished(self):
+        """returns True if status is finished"""
+        return not self.in_progress()
+
+    @view.implements_adapter_compat('IProgress')
+    def in_progress(self):
+        """returns True if status is not finished"""
+        raise NotImplementedError
+
+    @view.implements_adapter_compat('IProgress')
+    def progress(self):
+        """returns the % progress of the task item"""
+        try:
+            return 100. * self.done / self.revised_cost
+        except ZeroDivisionError:
+            # total cost is 0 : if everything was estimated, task is completed
+            if self.progress_info().get('notestimated'):
+                return 0.
+            return 100
+
+    @view.implements_adapter_compat('IProgress')
+    def progress_class(self):
+        return ''
+
+
+class IMileStoneAdapter(IProgressAdapter):
+    __metaclass__ = adapter_deprecated
+    __deprecation_warning__ = '[3.14] IMileStoneAdapter has been moved to iprogress cube'
+    __needs_bw_compat__ = True
+    __regid__ = 'IMileStone'
+    __select__ = implements(IMileStone, warn=False) # XXX for bw compat, should be abstract
+
+    parent_type = None # specify main task's type
+
+    @view.implements_adapter_compat('IMileStone')
+    def get_main_task(self):
+        """returns the main ITask entity"""
+        raise NotImplementedError
+
+    @view.implements_adapter_compat('IMileStone')
+    def initial_prevision_date(self):
+        """returns the initial expected end of the milestone"""
+        raise NotImplementedError
+
+    @view.implements_adapter_compat('IMileStone')
+    def eta_date(self):
+        """returns expected date of completion based on what remains
+        to be done
+        """
+        raise NotImplementedError
+
+    @view.implements_adapter_compat('IMileStone')
+    def completion_date(self):
+        """returns date on which the subtask has been completed"""
+        raise NotImplementedError
+
+    @view.implements_adapter_compat('IMileStone')
+    def contractors(self):
+        """returns the list of persons supposed to work on this task"""
+        raise NotImplementedError
+

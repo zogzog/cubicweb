@@ -262,7 +262,7 @@ class LDAPUserSourceTC(CubicWebTC):
     def test_multiple_entities_from_different_sources(self):
         req = self.request()
         self.create_user(req, 'cochon')
-        self.failUnless(self.sexecute('Any X,Y WHERE X login %(syt)s, Y login "cochon"', {'syt': SYT}))
+        self.assertTrue(self.sexecute('Any X,Y WHERE X login %(syt)s, Y login "cochon"', {'syt': SYT}))
 
     def test_exists1(self):
         self.session.set_cnxset()
@@ -288,9 +288,9 @@ class LDAPUserSourceTC(CubicWebTC):
         self.create_user(req, 'comme')
         self.create_user(req, 'cochon')
         self.sexecute('SET X copain Y WHERE X login "comme", Y login "cochon"')
-        self.failUnless(self.sexecute('Any X, Y WHERE X copain Y, X login "comme", Y login "cochon"'))
+        self.assertTrue(self.sexecute('Any X, Y WHERE X copain Y, X login "comme", Y login "cochon"'))
         self.sexecute('SET X copain Y WHERE X login %(syt)s, Y login "cochon"', {'syt': SYT})
-        self.failUnless(self.sexecute('Any X, Y WHERE X copain Y, X login %(syt)s, Y login "cochon"', {'syt': SYT}))
+        self.assertTrue(self.sexecute('Any X, Y WHERE X copain Y, X login %(syt)s, Y login "cochon"', {'syt': SYT}))
         rset = self.sexecute('Any GN,L WHERE X in_group G, X login L, G name GN, G name "managers" '
                              'OR EXISTS(X copain T, T login in ("comme", "cochon"))')
         self.assertEqual(sorted(rset.rows), [['managers', 'admin'], ['users', 'comme'], ['users', SYT]])
@@ -392,8 +392,8 @@ class LDAPUserSourceTC(CubicWebTC):
                                                   'type': 'CWUser',
                                                   'extid': None})
         self.assertEqual(e.cw_source[0].name, 'system')
-        self.failUnless(e.creation_date)
-        self.failUnless(e.modification_date)
+        self.assertTrue(e.creation_date)
+        self.assertTrue(e.modification_date)
         # XXX test some password has been set
         source.synchronize()
         rset = self.sexecute('CWUser X WHERE X login %(login)s', {'login': SYT})

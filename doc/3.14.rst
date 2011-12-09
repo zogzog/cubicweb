@@ -1,0 +1,164 @@
+Whats new in CubicWeb 3.14
+==========================
+
+First notice CW 3.14 depends on yams 0.34 (which is incompatible with prior
+cubicweb releases regarding instance re-creation).
+
+API changes
+-----------
+
+* `Entity.fetch_rql` `restriction` argument has been deprecated and should be
+  replaced with a call to the new `Entity.fetch_rqlst` method, get the returned
+  value (a rql `Select` node) and use the RQL syntax tree API to include the
+  above-mentionned restrictions.
+
+  Backward compat is kept with proper warning.
+
+* `Entity.fetch_order` and `Entity.fetch_unrelated_order` class methods have been
+  replaced by `Entity.cw_fetch_order` and `Entity.cw_fetch_unrelated_order` with
+  a different prototype:
+
+  - instead of taking (attr, var) as two string argument, they now take (select,
+    attr, var) where select is the rql syntax tree beinx constructed and var the
+    variable *node*.
+
+  - instead of returning some string to be inserted in the ORDERBY clause, it has
+    to modify the syntax tree
+
+  Backward compat is kept with proper warning, BESIDE cases below:
+
+  - custom order method return **something else the a variable name with or
+    without the sorting order** (e.g. cases where you sort on the value of a
+    registered procedure as it was done in the tracker for instance). In such
+    case, an error is logged telling that this sorting is ignored until API
+    upgrade.
+
+  - client code use direct access to one of those methods on an entity (no code
+    known to do that).
+
+* `Entity._rest_attr_info` class method has been renamed to
+  `Entity.cw_rest_attr_info`
+
+  No backward compat yet since this is a protected method an no code is known to
+  use it outside cubicweb itself.
+
+* `AnyEntity.linked_to` has been removed as part of a refactoring of this
+  functionality (link a entity to another one at creation step). It was replaced
+  by a `EntityFieldsForm.linked_to` property.
+
+  In the same refactoring, `cubicweb.web.formfield.relvoc_linkedto`,
+  `cubicweb.web.formfield.relvoc_init` and
+  `cubicweb.web.formfield.relvoc_unrelated` were removed and replaced by
+  RelationField methods with the same names, that take a form as a parameter.
+
+  **No backward compatibility yet**. It's still time to cry for it.
+  Cubes known to be affected: tracker, vcsfile, vcreview.
+
+* `CWPermission` entity type and its associated require_permission relation type
+  (abstract) and require_group relation definitions have been moved to a new
+  `localperms` cube. With this have gone some functions from the
+  `cubicweb.schemas` package as well as some views. This makes cubicweb itself
+  smaller while you get all the local permissions stuff into a single,
+  documented, place.
+
+  Backward compat is kept for existing instances, **though you should have
+  installed the localperms cubes**. A proper error should be displayed when
+  trying to migrate to 3.14 an instance the use `CWPermission` without the new
+  cube installed. For new instances / test, you should add a dependancy on the
+  new cube in cubes using this feature, along with a dependancy on cubicweb >=
+  3.14.
+
+* jQuery has been updated to 1.6.4 and jquery-tablesorter to 2.0.5. No backward
+  compat issue known.
+
+* Table views refactoring : new `RsetTableView` and `EntityTableView`, as well as
+  rewritten an enhanced version of `PyValTableView` on the same bases, with logic
+  moved to some column renderers and a layout. Those should be well documented
+  and deprecates former `TableView`, `EntityAttributesTableView` and `CellView`,
+  which are however kept for backward compat, with some warnings that may not be
+  very clear unfortunatly (you may see your own table view subclass name here,
+  which doesn't make the problem that clear). Notice that `_cw.view('table',
+  rset, *kwargs)` will be routed to the new `RsetTableView` or to the old
+  `TableView` depending on given extra arguments. See #1986413.
+
+* `display_name` don't call .lower() anymore. This may leads to changes in your
+  user interface. Different msgid for upper/lower cases version of entity type
+  names, as this is the only proper way to handle this with some languages.
+
+* `IEditControlAdapter` has been deprecated in favor of `EditController`
+  overloading, which was made easier by adding dedicated selectors called
+  `match_edited_type` and `match_form_id`.
+
+* Pre 3.6 API backward compat has been dropped, though *data* migration
+  compatibility has been kept. You may have to fix errors due to old API usage
+  for your instance before to be able to run migration, but then you should be
+  able to upgrade even a pre 3.6 database.
+
+* Deprecated `cubicweb.web.views.iprogress` in favor of new `iprogress` cube.
+
+* Deprecated `cubicweb.web.views.flot` in favor of new `jqplot` cube.
+
+
+Unintrusive API changes
+-----------------------
+
+* Refactored properties forms (eg user preferences and site wide properties) as
+  well as pagination components to ease overridding.
+
+* New `cubicweb.web.uihelper` module with high-level helpers for uicfg.
+
+* New `anonymized_request` decorator to temporary run stuff as an anonymous
+  user, whatever the currently logged in user.
+
+* New 'verbatimattr' attribute view.
+
+* New facet and form widget for Integer used to store binary mask.
+
+* New `js_href` function to generated proper javascript href.
+
+* `match_kwargs` and `match_form_params` selectors both accept a new
+  `once_is_enough` argument.
+
+* `printable_value` is now a method of request, and may be given dict of
+   formatters to use.
+
+* `[Rset]TableView` allows to set None in 'headers', meaning the label should be
+  fetched from the result set as done by default.
+
+* Field vocabulary computation on entity creation now takes `__linkto`
+  information into accounet.
+
+* Started a `cubicweb.pylintext` pylint plugin to help pylint analyzing cubes.
+
+
+RQL
+---
+
+* Support for HAVING in 'SET' and 'DELETE' queries.
+
+* new `AT_TZ` function to get back a timestamp at a given time-zone.
+
+* new `WEEKDAY` date extraction function
+
+
+User interface changes
+----------------------
+
+* Datafeed source now present an history of the latest import's log, including
+  global status and debug/info/warning/error messages issued during
+  imports. Import logs older than a configurable amount of time are automatically
+  deleted.
+
+* Breadcrumbs component is properly kept when creating an entity with '__linkto'.
+
+* users and groups management now really lead to that (i.e. includes *groups*
+  management).
+
+* New 'jsonp' controller with 'jsonexport' and 'ejsonexport' views.
+
+
+Configuration
+------------
+
+* Added option 'resources-concat' to make javascript/css files concatenation
+  optional.

@@ -291,12 +291,6 @@ def _iter_kwargs(entities, eids_from_to, kwargs):
 
 
 class HooksRegistry(CWRegistry):
-    def initialization_completed(self):
-        for appobjects in self.values():
-            for cls in appobjects:
-                if not cls.enabled:
-                    warn('[3.6] %s: enabled is deprecated' % classid(cls))
-                    self.unregister(cls)
 
     def register(self, obj, **kwargs):
         obj.check_events()
@@ -450,8 +444,8 @@ class match_rtype(ExpectedValueSelector):
     """accept if parameters specified as initializer arguments are specified
     in named arguments given to the selector
 
-    :param *expected: parameters (eg `basestring`) which are expected to be
-                      found in named arguments (kwargs)
+    :param \*expected: parameters (eg `basestring`) which are expected to be
+                       found in named arguments (kwargs)
     """
     def __init__(self, *expected, **more):
         self.expected = expected
@@ -534,8 +528,6 @@ class Hook(AppObject):
     events = None
     category = None
     order = 0
-    # XXX deprecated
-    enabled = True
     # stop pylint from complaining about missing attributes in Hooks classes
     eidfrom = eidto = entity = rtype = repo = None
 
@@ -567,28 +559,6 @@ class Hook(AppObject):
         cls.check_events()
         return ['%s_hooks' % ev for ev in cls.events]
 
-    @classproperty
-    def __regid__(cls):
-        warn('[3.6] %s: please specify an id for your hook' % classid(cls),
-             DeprecationWarning)
-        return str(id(cls))
-
-    @classmethod
-    def __registered__(cls, reg):
-        super(Hook, cls).__registered__(reg)
-        if getattr(cls, 'accepts', None):
-            warn('[3.6] %s: accepts is deprecated, define proper __select__'
-                 % classid(cls), DeprecationWarning)
-            rtypes = []
-            for ertype in cls.accepts: # pylint: disable=E1101
-                if ertype.islower():
-                    rtypes.append(ertype)
-                else:
-                    cls.__select__ = cls.__select__ & is_instance(ertype)
-            if rtypes:
-                cls.__select__ = cls.__select__ & match_rtype(*rtypes)
-        return cls
-
     known_args = set(('entity', 'rtype', 'eidfrom', 'eidto', 'repo', 'timestamp'))
     def __init__(self, req, event, **kwargs):
         for arg in self.known_args:
@@ -596,22 +566,6 @@ class Hook(AppObject):
                 setattr(self, arg, kwargs.pop(arg))
         super(Hook, self).__init__(req, **kwargs)
         self.event = event
-
-    def __call__(self):
-        if hasattr(self, 'call'):
-            warn('[3.6] %s: call is deprecated, implement __call__'
-                 % classid(self.__class__), DeprecationWarning)
-            # pylint: disable=E1101
-            if self.event.endswith('_relation'):
-                self.call(self._cw, self.eidfrom, self.rtype, self.eidto)
-            elif 'delete' in self.event:
-                self.call(self._cw, self.entity.eid)
-            elif self.event.startswith('server_'):
-                self.call(self.repo)
-            elif self.event.startswith('session_'):
-                self.call(self._cw)
-            else:
-                self.call(self._cw, self.entity)
 
 set_log_methods(Hook, getLogger('cubicweb.hook'))
 
@@ -830,26 +784,6 @@ class Operation(object):
 
     def postcommit_event(self):
         """the observed connections set has committed"""
-
-    @property
-    @deprecated('[3.6] use self.session.user')
-    def user(self):
-        return self.session.user
-
-    @property
-    @deprecated('[3.6] use self.session.repo')
-    def repo(self):
-        return self.session.repo
-
-    @property
-    @deprecated('[3.6] use self.session.vreg.schema')
-    def schema(self):
-        return self.session.repo.schema
-
-    @property
-    @deprecated('[3.6] use self.session.vreg.config')
-    def config(self):
-        return self.session.repo.config
 
     # these are overridden by set_log_methods below
     # only defining here to prevent pylint from complaining

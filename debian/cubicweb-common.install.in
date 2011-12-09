@@ -1,4 +1,3 @@
-debian/tmp/usr/lib/PY_VERSION/site-packages/cubicweb/common/ usr/lib/PY_VERSION/site-packages/cubicweb
 debian/tmp/usr/lib/PY_VERSION/site-packages/cubicweb/entities/ usr/lib/PY_VERSION/site-packages/cubicweb
 debian/tmp/usr/lib/PY_VERSION/site-packages/cubicweb/ext/ usr/lib/PY_VERSION/site-packages/cubicweb
 debian/tmp/usr/share/cubicweb/cubes/ usr/share/cubicweb/

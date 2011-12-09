@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -197,8 +197,6 @@ class Registry(dict):
             return self.select(__oid, *args, **kwargs)
         except (NoSelectableObject, ObjectNotFound):
             return None
-    select_object = deprecated('[3.6] use select_or_none instead of select_object'
-                               )(select_or_none)
 
     def possible_objects(self, *args, **kwargs):
         """return an iterator on possible objects in this registry for the given
@@ -218,9 +216,6 @@ class Registry(dict):
         it's costly when searching appobjects using `possible_objects`
         (e.g. searching for hooks).
         """
-        if len(args) > 1:
-            warn('[3.5] only the request param can not be named when calling select*',
-                 DeprecationWarning, stacklevel=3)
         score, winners = 0, None
         for appobject in appobjects:
             appobjectscore = appobject.__select__(appobject, *args, **kwargs)
@@ -239,8 +234,6 @@ class Registry(dict):
             self.error(msg, winners, args, kwargs.keys())
         # return the result of calling the appobject
         return winners[0](*args, **kwargs)
-
-    select_best = deprecated('[3.6] select_best is now private')(_select_best)
 
     # these are overridden by set_log_methods below
     # only defining here to prevent pylint from complaining
@@ -281,41 +274,6 @@ class VRegistry(dict):
             return super(VRegistry, self).__getitem__(name)
         except KeyError:
             raise RegistryNotFound(name), None, sys.exc_info()[-1]
-
-    # dynamic selection methods ################################################
-
-    @deprecated('[3.4] use vreg[registry].object_by_id(oid, *args, **kwargs)')
-    def object_by_id(self, registry, oid, *args, **kwargs):
-        """return object in <registry>.<oid>
-
-        raise `ObjectNotFound` if not object with id <oid> in <registry>
-        raise `AssertionError` if there is more than one object there
-        """
-        return self[registry].object_by_id(oid)
-
-    @deprecated('[3.4] use vreg[registry].select(oid, *args, **kwargs)')
-    def select(self, registry, oid, *args, **kwargs):
-        """return the most specific object in <registry>.<oid> according to
-        the given context
-
-        raise `ObjectNotFound` if not object with id <oid> in <registry>
-        raise `NoSelectableObject` if not object apply
-        """
-        return self[registry].select(oid, *args, **kwargs)
-
-    @deprecated('[3.4] use vreg[registry].select_or_none(oid, *args, **kwargs)')
-    def select_object(self, registry, oid, *args, **kwargs):
-        """return the most specific object in <registry>.<oid> according to
-        the given context, or None if no object apply
-        """
-        return self[registry].select_or_none(oid, *args, **kwargs)
-
-    @deprecated('[3.4] use vreg[registry].possible_objects(*args, **kwargs)')
-    def possible_objects(self, registry, *args, **kwargs):
-        """return an iterator on possible objects in <registry> for the given
-        context
-        """
-        return self[registry].possible_objects(*args, **kwargs)
 
     # methods for explicit (un)registration ###################################
 
@@ -540,31 +498,4 @@ set_log_methods(Registry, getLogger('cubicweb.registry'))
 
 from cubicweb.appobject import objectify_selector, AndSelector, OrSelector, Selector
 
-objectify_selector = deprecated('[3.4] objectify_selector has been moved to appobject module')(objectify_selector)
-
 Selector = class_moved(Selector)
-
-@deprecated('[3.4] use & operator (binary and)')
-def chainall(*selectors, **kwargs):
-    """return a selector chaining given selectors. If one of
-    the selectors fail, selection will fail, else the returned score
-    will be the sum of each selector'score
-    """
-    assert selectors
-    # XXX do we need to create the AndSelector here, a tuple might be enough
-    selector = AndSelector(*selectors)
-    if 'name' in kwargs:
-        selector.__name__ = kwargs['name']
-    return selector
-
-@deprecated('[3.4] use | operator (binary or)')
-def chainfirst(*selectors, **kwargs):
-    """return a selector chaining given selectors. If all
-    the selectors fail, selection will fail, else the returned score
-    will be the first non-zero selector score
-    """
-    assert selectors
-    selector = OrSelector(*selectors)
-    if 'name' in kwargs:
-        selector.__name__ = kwargs['name']
-    return selector

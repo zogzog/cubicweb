@@ -87,8 +87,6 @@ Logged user selectors
 ~~~~~~~~~~~~~~~~~~~~~
 Those selectors are looking for properties of the user issuing the request.
 
-.. autoclass:: cubicweb.selectors.anonymous_user
-.. autoclass:: cubicweb.selectors.authenticated_user
 .. autoclass:: cubicweb.selectors.match_user_groups
 
 
@@ -97,18 +95,24 @@ Web request selectors
 Those selectors are looking for properties of *web* request, they can not be
 used on the data repository side.
 
+.. autoclass:: cubicweb.selectors.no_cnx
+.. autoclass:: cubicweb.selectors.anonymous_user
+.. autoclass:: cubicweb.selectors.authenticated_user
 .. autoclass:: cubicweb.selectors.match_form_params
 .. autoclass:: cubicweb.selectors.match_search_state
 .. autoclass:: cubicweb.selectors.match_context_prop
+.. autoclass:: cubicweb.selectors.match_context
 .. autoclass:: cubicweb.selectors.match_view
 .. autoclass:: cubicweb.selectors.primary_view
+.. autoclass:: cubicweb.selectors.contextual
 .. autoclass:: cubicweb.selectors.specified_etype_implements
 .. autoclass:: cubicweb.selectors.attribute_edited
+.. autoclass:: cubicweb.selectors.match_transition
 
 
 Other selectors
 ~~~~~~~~~~~~~~~
-.. autoclass:: cubicweb.selectors.match_transition
+.. autoclass:: cubicweb.selectors.match_exception
 .. autoclass:: cubicweb.selectors.debug_mode
 
 You'll also find some other (very) specific selectors hidden in other modules

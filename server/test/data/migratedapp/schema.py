@@ -120,6 +120,10 @@ class Personne(EntityType):
     concerne2 = SubjectRelation(('Affaire', 'Note'), cardinality='1*')
     connait = SubjectRelation('Personne', symmetric=True)
 
+
+class New(EntityType):
+    new_name = String()
+
 class Societe(WorkflowableEntityType):
     __permissions__ = {
         'read': ('managers', 'users', 'guests'),

@@ -34,6 +34,7 @@ from logilab.common.changelog import Version
 
 from cubicweb import ConfigurationError, ExecutionError
 from cubicweb.cwconfig import CubicWebConfiguration as cwcfg
+from cubicweb.toolsutils import show_diffs
 
 def filter_scripts(config, directory, fromversion, toversion, quiet=True):
     """return a list of paths of migration files to consider to upgrade
@@ -420,8 +421,6 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
         return removed
 
     def rewrite_configuration(self):
-        # import locally, show_diffs unavailable in gae environment
-        from cubicweb.toolsutils import show_diffs
         configfile = self.config.main_config_file()
         if self._option_changes:
             read_old_config(self.config, self._option_changes, configfile)

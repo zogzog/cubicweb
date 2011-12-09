@@ -37,13 +37,19 @@ class Personne(EntityType):
             # unittest_entity.py
             RQLVocabularyConstraint('NOT (S connait P, P nom "toto")'),
             RQLVocabularyConstraint('S travaille P, P nom "tutu"')])
+    actionnaire = SubjectRelation('Societe', cardinality='??',
+                                  constraints=[RQLConstraint('NOT EXISTS(O contrat_exclusif S)')])
+    dirige = SubjectRelation('Societe', cardinality='??',
+                             constraints=[RQLConstraint('S actionnaire O')])
+    associe = SubjectRelation('Personne', cardinality='1*',
+                              constraints=[RQLConstraint('S actionnaire SOC, O actionnaire SOC')])
 
 
 class Societe(EntityType):
     nom = String()
     evaluee = SubjectRelation('Note')
     fournit = SubjectRelation(('Service', 'Produit'), cardinality='1*')
-
+    contrat_exclusif = SubjectRelation('Personne', cardinality='??')
 
 class Service(EntityType):
     fabrique_par = SubjectRelation('Personne', cardinality='1*')

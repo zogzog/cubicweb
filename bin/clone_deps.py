@@ -63,7 +63,7 @@ def main():
     elif len(sys.argv) == 2:
         base_url = sys.argv[1]
     else:
-        print >> sys.stderr, 'usage %s [base_url]' %  sys.argv[0]
+        sys.stderr.write('usage %s [base_url]\n' %  sys.argv[0])
         sys.exit(1)
     print len(to_clone), 'repositories will be cloned'
     base_dir = normpath(join(dirname(__file__), pardir, pardir))
@@ -104,9 +104,9 @@ Clone them from `%(baseurl)scubes/` into the `%(basedir)s%(sep)scubes%(sep)s` di
 To get started you may read http://docs.cubicweb.org/tutorials/base/index.html.
 """ % {'basedir': os.getcwd(), 'baseurl': base_url, 'sep': os.sep}
     if not_updated:
-        print >> sys.stderr, 'WARNING: The following repositories were not updated (no debian tag found):'
+        sys.stderr.write('WARNING: The following repositories were not updated (no debian tag found):\n')
         for path in not_updated:
-            print >> sys.stderr, '\t-', path
+            sys.stderr.write('\t-%s\n' % path)
 
 if __name__ == '__main__':
     main()

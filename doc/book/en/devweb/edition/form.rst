@@ -87,15 +87,15 @@ respect to the context. The important context here is:
     def ticket_done_in_choices(form, field):
         entity = form.edited_entity
         # first see if its specified by __linkto form parameters
-        linkedto = formfields.relvoc_linkedto(entity, 'done_in', 'subject')
+        linkedto = form.linked_to[('done_in', 'subject')]
         if linkedto:
             return linkedto
         # it isn't, get initial values
-        vocab = formfields.relvoc_init(entity, 'done_in', 'subject')
+        vocab = field.relvoc_init(form)
         veid = None
         # try to fetch the (already or pending) related version and project
         if not entity.has_eid():
-            peids = entity.linked_to('concerns', 'subject')
+            peids = form.linked_to[('concerns', 'subject')]
             peid = peids and peids[0]
         else:
             peid = entity.project.eid
@@ -112,29 +112,28 @@ respect to the context. The important context here is:
                       and v.eid != veid]
         return vocab
 
-The first thing we have to do is fetch potential values from the
-``__linkto`` url parameter that is often found in entity creation
-contexts (the creation action provides such a parameter with a
-predetermined value; for instance in this case, ticket creation could
-occur in the context of a `Version` entity). The
-:mod:`cubicweb.web.formfields` module provides a ``relvoc_linkedto``
-utility function that gets a list suitably filled with vocabulary
-values.
+The first thing we have to do is fetch potential values from the ``__linkto`` url
+parameter that is often found in entity creation contexts (the creation action
+provides such a parameter with a predetermined value; for instance in this case,
+ticket creation could occur in the context of a `Version` entity). The
+:class:`~cubicweb.web.formfields.RelationField` field class provides a
+:meth:`~cubicweb.web.formfields.RelationField.relvoc_linkedto` method that gets a
+list suitably filled with vocabulary values.
 
 .. sourcecode:: python
 
-        linkedto = formfields.relvoc_linkedto(entity, 'done_in', 'subject')
+        linkedto = field.relvoc_linkedto(form)
         if linkedto:
             return linkedto
 
-Then, if no ``__linkto`` argument was given, we must prepare the
-vocabulary with an initial empty value (because `done_in` is not
-mandatory, we must allow the user to not select a verson) and already
-linked values. This is done with the ``relvoc_init`` function.
+Then, if no ``__linkto`` argument was given, we must prepare the vocabulary with
+an initial empty value (because `done_in` is not mandatory, we must allow the
+user to not select a verson) and already linked values. This is done with the
+:meth:`~cubicweb.web.formfields.RelationField.relvoc_init` method.
 
 .. sourcecode:: python
 
-        vocab = formfields.relvoc_init(entity, 'done_in', 'subject')
+        vocab = field.relvoc_init(form)
 
 But then, we have to give more: if the ticket is related to a project,
 we should provide all the non published versions of this project
@@ -169,7 +168,7 @@ Hence, we try to fetch the related project.
 
         veid = None
         if not entity.has_eid():
-            peids = entity.linked_to('concerns', 'subject')
+            peids = form.linked_to[('concerns', 'subject')]
             peid = peids and peids[0]
         else:
             peid = entity.project.eid

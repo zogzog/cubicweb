@@ -112,72 +112,18 @@ class SystemCWPropertiesForm(FormViewMixIn, StartupView):
         self._cw.add_js(('cubicweb.preferences.js',
                          'cubicweb.edition.js', 'cubicweb.ajax.js'))
         self._cw.add_css('cubicweb.preferences.css')
-        vreg = self._cw.vreg
         values = self.defined_keys
-        groupedopts = {}
-        mainopts = {}
-        # "self.id=='systempropertiesform'" to skip site wide properties on
-        # user's preference but not site's configuration
-        for key in vreg.user_property_keys(self.__regid__=='systempropertiesform'):
-            parts = key.split('.')
-            if parts[0] in vreg and len(parts) >= 3:
-                # appobject configuration
-                reg = parts[0]
-                propid = parts[-1]
-                oid = '.'.join(parts[1:-1])
-                groupedopts.setdefault(reg, {}).setdefault(oid, []).append(key)
-            else:
-                mainopts.setdefault(parts[0], []).append(key)
-        # precompute form to consume error message
-        for group, keys in mainopts.items():
-            mainopts[group] = self.form(group, keys, False)
-
-        for group, objects in groupedopts.items():
-            for oid, keys in objects.items():
-                groupedopts[group][oid] = self.form(group + '_' + oid, keys, True)
-
-        w = self.w
-        req = self._cw
-        _ = req._
-        w(u'<h1>%s</h1>\n' % _(self.title))
+        mainopts, groupedopts = self.group_properties()
+        # precompute all forms first to consume error message
+        mainforms, groupedforms = self.build_forms(mainopts, groupedopts)
+        _ = self._cw._
+        self.w(u'<h1>%s</h1>\n' % _(self.title))
         for label, group, form in sorted((_(g), g, f)
-                                         for g, f in mainopts.iteritems()):
-            status = css_class(self._group_status(group))
-            w(u'<div class="propertiesform">%s</div>\n' %
-            (make_togglable_link('fieldset_' + group, label.capitalize())))
-            w(u'<div id="fieldset_%s" %s>' % (group, status))
-            w(u'<fieldset class="preferences">')
-            w(form)
-            w(u'</fieldset></div>')
-
+                                         for g, f in mainforms.iteritems()):
+            self.wrap_main_form(group, label, form)
         for label, group, objects in sorted((_(g), g, o)
-                                            for g, o in groupedopts.iteritems()):
-            status = css_class(self._group_status(group))
-            w(u'<div class="propertiesform">%s</div>\n' %
-              (make_togglable_link('fieldset_' + group, label.capitalize())))
-            w(u'<div id="fieldset_%s" %s>' % (group, status))
-            # create selection
-            sorted_objects =  sorted((self._cw.__('%s_%s' % (group, o)), o, f)
-                                           for o, f in objects.iteritems())
-            for label, oid, form in sorted_objects:
-                w(u'<div class="component">')
-                w(u'''<div class="componentLink"><a href="javascript:$.noop();"
-                           onclick="javascript:toggleVisibility('field_%(oid)s_%(group)s')"
-                           class="componentTitle">%(label)s</a>''' % {'label':label, 'oid':oid, 'group':group})
-                w(u''' (<div class="openlink"><a href="javascript:$.noop();"
-                             onclick="javascript:openFieldset('fieldset_%(group)s')">%(label)s</a></div>)'''
-                  % {'label':_('open all'), 'group':group})
-                w(u'</div>')
-                docmsgid = '%s_%s_description' % (group, oid)
-                doc = _(docmsgid)
-                if doc != docmsgid:
-                    w(u'<div class="helper">%s</div>' % xml_escape(doc).capitalize())
-                w(u'</div>')
-                w(u'<fieldset id="field_%(oid)s_%(group)s" class="%(group)s preferences hidden">'
-                  % {'oid':oid, 'group':group})
-                w(form)
-                w(u'</fieldset>')
-            w(u'</div>')
+                                            for g, o in groupedforms.iteritems()):
+            self.wrap_grouped_form(group, label, objects)
 
     @property
     @cached
@@ -191,6 +137,33 @@ class SystemCWPropertiesForm(FormViewMixIn, StartupView):
         for i, entity in enumerate(self.cwprops_rset.entities()):
             values[entity.pkey] = i
         return values
+
+    def group_properties(self):
+        mainopts, groupedopts = {}, {}
+        vreg = self._cw.vreg
+        # "self._regid__=='systempropertiesform'" to skip site wide properties on
+        # user's preference but not site's configuration
+        for key in vreg.user_property_keys(self.__regid__=='systempropertiesform'):
+            parts = key.split('.')
+            if parts[0] in vreg and len(parts) >= 3:
+                # appobject configuration
+                reg = parts[0]
+                propid = parts[-1]
+                oid = '.'.join(parts[1:-1])
+                groupedopts.setdefault(reg, {}).setdefault(oid, []).append(key)
+            else:
+                mainopts.setdefault(parts[0], []).append(key)
+        return mainopts, groupedopts
+
+    def build_forms(self, mainopts, groupedopts):
+        mainforms, groupedforms = {}, {}
+        for group, keys in mainopts.items():
+            mainforms[group] = self.form(group, keys, False)
+        for group, objects in groupedopts.items():
+            groupedforms[group] = {}
+            for oid, keys in objects.items():
+                groupedforms[group][oid] = self.form(group + '_' + oid, keys, True)
+        return mainforms, groupedforms
 
     def entity_for_key(self, key):
         values = self.defined_keys
@@ -232,10 +205,49 @@ class SystemCWPropertiesForm(FormViewMixIn, StartupView):
                                                 mainform=False)
         subform.append_field(PropertyValueField(name='value', label=label, role='subject',
                                                 eidparam=True))
-        #subform.vreg = self._cw.vreg
         subform.add_hidden('pkey', key, eidparam=True, role='subject')
         form.add_subform(subform)
         return subform
+
+    def wrap_main_form(self, group, label, form):
+        status = css_class(self._group_status(group))
+        self.w(u'<div class="propertiesform">%s</div>\n' %
+               (make_togglable_link('fieldset_' + group, label)))
+        self.w(u'<div id="fieldset_%s" %s>' % (group, status))
+        self.w(u'<fieldset class="preferences">')
+        self.w(form)
+        self.w(u'</fieldset></div>')
+
+    def wrap_grouped_form(self, group, label, objects):
+        status = css_class(self._group_status(group))
+        self.w(u'<div class="propertiesform">%s</div>\n' %
+          (make_togglable_link('fieldset_' + group, label)))
+        self.w(u'<div id="fieldset_%s" %s>' % (group, status))
+        sorted_objects = sorted((self._cw.__('%s_%s' % (group, o)), o, f)
+                                for o, f in objects.iteritems())
+        for label, oid, form in sorted_objects:
+            self.wrap_object_form(group, oid, label, form)
+        self.w(u'</div>')
+
+    def wrap_object_form(self, group, oid, label, form):
+        w = self.w
+        w(u'<div class="component">')
+        w(u'''<div class="componentLink"><a href="javascript:$.noop();"
+                   onclick="javascript:toggleVisibility('field_%(oid)s_%(group)s')"
+                   class="componentTitle">%(label)s</a>''' % {'label':label, 'oid':oid, 'group':group})
+        w(u''' (<div class="openlink"><a href="javascript:$.noop();"
+                onclick="javascript:openFieldset('fieldset_%(group)s')">%(label)s</a></div>)'''
+                  % {'label':self._cw._('open all'), 'group':group})
+        w(u'</div>')
+        docmsgid = '%s_%s_description' % (group, oid)
+        doc = self._cw._(docmsgid)
+        if doc != docmsgid:
+            w(u'<div class="helper">%s</div>' % xml_escape(doc).capitalize())
+        w(u'</div>')
+        w(u'<fieldset id="field_%(oid)s_%(group)s" class="%(group)s preferences hidden">'
+          % {'oid':oid, 'group':group})
+        w(form)
+        w(u'</fieldset>')
 
 
 class CWPropertiesForm(SystemCWPropertiesForm):
@@ -267,7 +279,7 @@ class CWPropertiesForm(SystemCWPropertiesForm):
         # we have to set for_user explicitly
         if not subform.edited_entity.has_eid() and self.user.matching_groups('managers'):
             subform.add_hidden('for_user', self.user.eid, eidparam=True, role='subject')
-
+        return subform
 
 # cwproperty form objects ######################################################
 

@@ -95,7 +95,7 @@ class SessionTC(CubicWebTC):
         description = self.session.build_description(rset.syntax_tree(), None, rset.rows)
         self.assertEqual(len(description), orig_length - 1)
         self.assertEqual(len(rset.rows), orig_length - 1)
-        self.failIf(rset.rows[0][0] == 9999999)
+        self.assertFalse(rset.rows[0][0] == 9999999)
 
     def test_build_descr2(self):
         rset = self.execute('Any X,Y WITH X,Y BEING ((Any G,NULL WHERE G is CWGroup) UNION (Any U,G WHERE U in_group G))')

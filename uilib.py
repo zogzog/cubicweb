@@ -30,6 +30,7 @@ from StringIO import StringIO
 
 from logilab.mtconverter import xml_escape, html_unescape
 from logilab.common.date import ustrftime
+from logilab.common.deprecation import deprecated
 
 from cubicweb.utils import JSString, json_dumps
 
@@ -60,6 +61,9 @@ def print_string(value, req, props, displaytime=True):
         return req._(value)
     return value
 
+def print_int(value, req, props, displaytime=True):
+    return unicode(value)
+
 def print_date(value, req, props, displaytime=True):
     return ustrftime(value, req.property_value('ui.date-format'))
 
@@ -79,6 +83,39 @@ def print_tzdatetime(value, req, props, displaytime=True):
         return ustrftime(value, req.property_value('ui.datetime-format')) + u' UTC'
     return ustrftime(value, req.property_value('ui.date-format'))
 
+_('%d years')
+_('%d months')
+_('%d weeks')
+_('%d days')
+_('%d hours')
+_('%d minutes')
+_('%d seconds')
+
+def print_timedelta(value, req, props, displaytime=True):
+    if isinstance(value, (int, long)):
+        # `date - date`, unlike `datetime - datetime` gives an int
+        # (number of days), not a timedelta
+        # XXX should rql be fixed to return Int instead of Interval in
+        #     that case? that would be probably the proper fix but we
+        #     loose information on the way...
+        value = timedelta(days=value)
+    if value.days > 730 or value.days < -730: # 2 years
+        return req._('%d years') % (value.days // 365)
+    elif value.days > 60 or value.days < -60: # 2 months
+        return req._('%d months') % (value.days // 30)
+    elif value.days > 14 or value.days < -14: # 2 weeks
+        return req._('%d weeks') % (value.days // 7)
+    elif value.days > 2 or value.days < -2:
+        return req._('%d days') % int(value.days)
+    else:
+        minus = 1 if value.days > 0 else -1
+        if value.seconds > 3600:
+            return req._('%d hours') % (int(value.seconds // 3600) * minus)
+        elif value.seconds >= 120:
+            return req._('%d minutes') % (int(value.seconds // 60) * minus)
+        else:
+            return req._('%d seconds') % (int(value.seconds) * minus)
+
 def print_boolean(value, req, props, displaytime=True):
     if value:
         return req._('yes')
@@ -90,6 +127,8 @@ def print_float(value, req, props, displaytime=True):
 PRINTERS = {
     'Bytes': print_bytes,
     'String': print_string,
+    'Int': print_int,
+    'BigInt': print_int,
     'Date': print_date,
     'Time': print_time,
     'TZTime': print_tztime,
@@ -98,19 +137,29 @@ PRINTERS = {
     'Boolean': print_boolean,
     'Float': print_float,
     'Decimal': print_float,
-    # XXX Interval
+    'Interval': print_timedelta,
     }
 
+@deprecated('[3.14] use req.printable_value(attrtype, value, ...)')
 def printable_value(req, attrtype, value, props=None, displaytime=True):
-    """return a displayable value (i.e. unicode string)"""
-    if value is None:
-        return u''
-    try:
-        printer = PRINTERS[attrtype]
-    except KeyError:
-        return unicode(value)
-    return printer(value, req, props, displaytime)
+    return req.printable_value(attrtype, value, props, displaytime)
 
+def css_em_num_value(vreg, propname, default):
+    """ we try to read an 'em' css property
+    if we get another unit we're out of luck and resort to the given default
+    (hence, it is strongly advised not to specify but ems for this css prop)
+    """
+    propvalue = vreg.config.uiprops[propname].lower().strip()
+    if propvalue.endswith('em'):
+        try:
+            return float(propvalue[:-2])
+        except Exception:
+            vreg.warning('css property %s looks malformed (%r)',
+                         propname, propvalue)
+    else:
+        vreg.warning('css property %s should use em (currently is %r)',
+                     propname, propvalue)
+    return default
 
 # text publishing #############################################################
 

@@ -23,6 +23,7 @@ __docformat__ = "restructuredtext en"
 
 import sys
 from time import clock, time
+from contextlib import contextmanager
 
 from logilab.common.deprecation import deprecated
 
@@ -32,7 +33,7 @@ from cubicweb import set_log_methods, cwvreg
 from cubicweb import (
     ValidationError, Unauthorized, AuthenticationError, NoSelectableObject,
     BadConnectionId, CW_EVENT_MANAGER)
-from cubicweb.dbapi import DBAPISession
+from cubicweb.dbapi import DBAPISession, anonymous_session
 from cubicweb.web import LOGGER, component
 from cubicweb.web import (
     StatusResponse, DirectResponse, Redirect, NotFound, LogOut,
@@ -41,6 +42,16 @@ from cubicweb.web import (
 # make session manager available through a global variable so the debug view can
 # print information about web session
 SESSION_MANAGER = None
+
+
+@contextmanager
+def anonymized_request(req):
+    orig_session = req.session
+    req.set_session(anonymous_session(req.vreg))
+    try:
+        yield req
+    finally:
+        req.set_session(orig_session)
 
 class AbstractSessionManager(component.Component):
     """manage session data associated to a session identifier"""
@@ -113,8 +124,7 @@ class AbstractSessionManager(component.Component):
 
 class AbstractAuthenticationManager(component.Component):
     """authenticate user associated to a request and check session validity"""
-    id = 'authmanager'
-    vreg = None # XXX necessary until property for deprecation warning is on appobject
+    __regid__ = 'authmanager'
 
     def __init__(self, vreg):
         self.vreg = vreg
@@ -321,13 +331,6 @@ class CubicWebPublisher(object):
                         self._query_log.flush()
                     except Exception:
                         self.exception('error while logging queries')
-
-    @deprecated("[3.4] use vreg['controllers'].select(...)")
-    def select_controller(self, oid, req):
-        try:
-            return self.vreg['controllers'].select(oid, req=req, appli=self)
-        except NoSelectableObject:
-            raise Unauthorized(req._('not authorized'))
 
     def main_publish(self, path, req):
         """method called by the main publisher to process <path>

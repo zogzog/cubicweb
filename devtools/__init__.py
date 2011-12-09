@@ -581,7 +581,7 @@ class PostgresTestDataBaseHandler(TestDataBaseHandler):
         except BaseException:
             if self.dbcnx is not None:
                 self.dbcnx.rollback()
-            print >> sys.stderr, 'building', self.dbname, 'failed'
+            sys.stderr.write('building %s failed\n' % self.dbname)
             #self._drop(self.dbname)
             raise
 

@@ -40,11 +40,11 @@ def req_form(user):
 class EditControllerTC(CubicWebTC):
     def setUp(self):
         CubicWebTC.setUp(self)
-        self.failUnless('users' in self.schema.eschema('CWGroup').get_groups('read'))
+        self.assertTrue('users' in self.schema.eschema('CWGroup').get_groups('read'))
 
     def tearDown(self):
         CubicWebTC.tearDown(self)
-        self.failUnless('users' in self.schema.eschema('CWGroup').get_groups('read'))
+        self.assertTrue('users' in self.schema.eschema('CWGroup').get_groups('read'))
 
     def test_noparam_edit(self):
         """check behaviour of this controller without any form parameter
@@ -107,7 +107,7 @@ class EditControllerTC(CubicWebTC):
         path, params = self.expect_redirect_publish(req, 'edit')
         cnx.commit() # commit to check we don't get late validation error for instance
         self.assertEqual(path, 'cwuser/user')
-        self.failIf('vid' in params)
+        self.assertFalse('vid' in params)
 
     def test_user_editing_itself_no_relation(self):
         """checking we can edit an entity without specifying some required
@@ -308,7 +308,7 @@ class EditControllerTC(CubicWebTC):
             '__action_apply': '',
             }
         path, params = self.expect_redirect_publish(req, 'edit')
-        self.failUnless(path.startswith('blogentry/'))
+        self.assertTrue(path.startswith('blogentry/'))
         eid = path.split('/')[1]
         self.assertEqual(params['vid'], 'edition')
         self.assertNotEqual(int(eid), 4012)
@@ -365,6 +365,43 @@ class EditControllerTC(CubicWebTC):
         self.assertEqual(path, 'view')
         self.assertIn('_cwmsgid', params)
 
+    def test_simple_copy(self):
+        req = self.request()
+        blog = req.create_entity('Blog', title=u'my-blog')
+        blogentry = req.create_entity('BlogEntry', title=u'entry1',
+                                      content=u'content1', entry_of=blog)
+        req = self.request()
+        req.form = {'__maineid' : 'X', 'eid': 'X',
+                    '__cloned_eid:X': blogentry.eid, '__type:X': 'BlogEntry',
+                    '_cw_entity_fields:X': 'title-subject,content-subject',
+                    'title-subject:X': u'entry1-copy',
+                    'content-subject:X': u'content1',
+                    }
+        self.expect_redirect_publish(req, 'edit')
+        blogentry2 = req.find_one_entity('BlogEntry', title=u'entry1-copy')
+        self.assertEqual(blogentry2.entry_of[0].eid, blog.eid)
+
+    def test_skip_copy_for(self):
+        req = self.request()
+        blog = req.create_entity('Blog', title=u'my-blog')
+        blogentry = req.create_entity('BlogEntry', title=u'entry1',
+                                      content=u'content1', entry_of=blog)
+        blogentry.__class__.cw_skip_copy_for = [('entry_of', 'subject')]
+        try:
+            req = self.request()
+            req.form = {'__maineid' : 'X', 'eid': 'X',
+                        '__cloned_eid:X': blogentry.eid, '__type:X': 'BlogEntry',
+                        '_cw_entity_fields:X': 'title-subject,content-subject',
+                        'title-subject:X': u'entry1-copy',
+                        'content-subject:X': u'content1',
+                        }
+            self.expect_redirect_publish(req, 'edit')
+            blogentry2 = req.find_one_entity('BlogEntry', title=u'entry1-copy')
+            # entry_of should not be copied
+            self.assertEqual(len(blogentry2.entry_of), 0)
+        finally:
+            blogentry.__class__.cw_skip_copy_for = []
+
     def test_nonregr_eetype_etype_editing(self):
         """non-regression test checking that a manager user can edit a CWEType entity
         """
@@ -405,7 +442,7 @@ class EditControllerTC(CubicWebTC):
             'title-subject:A': u'"13:03:40"',
             'content-subject:A': u'"13:03:43"',}
         path, params = self.expect_redirect_publish(req, 'edit')
-        self.failUnless(path.startswith('blogentry/'))
+        self.assertTrue(path.startswith('blogentry/'))
         eid = path.split('/')[1]
         e = self.execute('Any C, T WHERE C eid %(x)s, C content T', {'x': eid}).get_entity(0, 0)
         self.assertEqual(e.title, '"13:03:40"')
@@ -541,12 +578,12 @@ class JSONControllerTC(CubicWebTC):
         rset = self.john.as_rset()
         rset.req = req
         source = ctrl.publish()
-        self.failUnless(source.startswith('<?xml version="1.0"?>\n' + STRICT_DOCTYPE +
+        self.assertTrue(source.startswith('<?xml version="1.0"?>\n' + STRICT_DOCTYPE +
                                           u'<div xmlns="http://www.w3.org/1999/xhtml" xmlns:cubicweb="http://www.logilab.org/2008/cubicweb">')
                         )
         req.xhtml_browser = lambda: False
         source = ctrl.publish()
-        self.failUnless(source.startswith('<div>'))
+        self.assertTrue(source.startswith('<div>'))
 
 #     def test_json_exec(self):
 #         rql = 'Any T,N WHERE T is Tag, T name N'

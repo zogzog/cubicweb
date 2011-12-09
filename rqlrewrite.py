@@ -54,6 +54,7 @@ def add_types_restriction(schema, rqlst, newroot=None, solutions=None):
             if varname not in newroot.defined_vars or eschema(etype).final:
                 continue
             allpossibletypes.setdefault(varname, set()).add(etype)
+    # XXX could be factorized with add_etypes_restriction from rql 0.31
     for varname in sorted(allpossibletypes):
         var = newroot.defined_vars[varname]
         stinfo = var.stinfo
@@ -207,7 +208,7 @@ class RQLRewriter(object):
             vi = {}
             self.varinfos.append(vi)
             try:
-                vi['const'] = typed_eid(selectvar) # XXX gae
+                vi['const'] = typed_eid(selectvar)
                 vi['rhs_rels'] = vi['lhs_rels'] = {}
             except ValueError:
                 try:
@@ -248,7 +249,7 @@ class RQLRewriter(object):
                     self.insert_snippet(varmap, rqlexpr.snippet_rqlst, exists)
         if varexistsmap is None and not inserted:
             # no rql expression found matching rql solutions. User has no access right
-            raise Unauthorized() # XXX bad constraint when inserting constraints
+            raise Unauthorized() # XXX may also be because of bad constraints in schema definition
 
     def insert_snippet(self, varmap, snippetrqlst, parent=None):
         new = snippetrqlst.where.accept(self)
@@ -660,7 +661,7 @@ class RQLRewriter(object):
             selectvar, index = self.revvarmap[node.name]
             vi = self.varinfos[index]
             if vi.get('const') is not None:
-                return n.Constant(vi['const'], 'Int') # XXX gae
+                return n.Constant(vi['const'], 'Int')
             return n.VariableRef(stmt.get_variable(selectvar))
         vname_or_term = self._get_varname_or_term(node.name)
         if isinstance(vname_or_term, basestring):

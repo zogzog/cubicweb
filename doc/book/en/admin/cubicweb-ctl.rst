@@ -109,14 +109,3 @@ See also chapter :ref:`internationalization`.
 Other commands
 --------------
 * ``delete``, deletes an instance (configuration files and database)
-
-Command to create an instance for Google AppEngine datastore source
--------------------------------------------------------------------
-* ``newgapp``, creates the configuration files for an instance
-
-This command needs to be followed by the commands responsible for
-the database initialization. As those are specific to the `datastore`,
-specific Google AppEgine database, they are not available for now
-in cubicweb-ctl, but they are available in the instance created.
-
-For more details, please see :ref:`GoogleAppEngineSource` .

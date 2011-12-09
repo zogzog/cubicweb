@@ -27,16 +27,21 @@ from logilab.common.deprecation import deprecated
 from logilab.mtconverter import TransformData, TransformError, xml_escape
 
 from rql.utils import rqlvar_maker
+from rql.stmts import Select
+from rql.nodes import (Not, VariableRef, Constant, make_relation,
+                       Relation as RqlRelation)
 
 from cubicweb import Unauthorized, typed_eid, neg_role
+from cubicweb.utils import support_args
 from cubicweb.rset import ResultSet
 from cubicweb.selectors import yes
 from cubicweb.appobject import AppObject
 from cubicweb.req import _check_cw_unsafe
-from cubicweb.schema import RQLVocabularyConstraint, RQLConstraint
+from cubicweb.schema import (RQLVocabularyConstraint, RQLConstraint,
+                             GeneratedConstraint)
 from cubicweb.rqlrewrite import RQLRewriter
 
-from cubicweb.uilib import printable_value, soup2xhtml
+from cubicweb.uilib import soup2xhtml
 from cubicweb.mixins import MI_REL_TRIGGERS
 from cubicweb.mttransforms import ENGINE
 
@@ -61,23 +66,85 @@ def can_use_rest_path(value):
         return False
     return True
 
+def rel_vars(rel):
+    return ((isinstance(rel.children[0], VariableRef)
+             and rel.children[0].variable or None),
+            (isinstance(rel.children[1].children[0], VariableRef)
+             and rel.children[1].children[0].variable or None)
+            )
 
-def remove_ambiguous_rels(attr_set, subjtypes, schema):
-    '''remove from `attr_set` the relations of entity types `subjtypes` that have
-    different entity type sets as target'''
-    for attr in attr_set.copy():
-        rschema = schema.rschema(attr)
-        if rschema.final:
+def rel_matches(rel, rtype, role, varname, operator='='):
+    if rel.r_type == rtype and rel.children[1].operator == operator:
+        same_role_var_idx = 0 if role == 'subject' else 1
+        variables = rel_vars(rel)
+        if variables[same_role_var_idx].name == varname:
+            return variables[1 - same_role_var_idx]
+
+def build_cstr_with_linkto_infos(cstr, args, searchedvar, evar,
+                                 lt_infos, eidvars):
+    """restrict vocabulary as much as possible in entity creation,
+    based on infos provided by __linkto form param.
+
+    Example based on following schema:
+
+      class works_in(RelationDefinition):
+          subject = 'CWUser'
+          object = 'Lab'
+          cardinality = '1*'
+          constraints = [RQLConstraint('S in_group G, O welcomes G')]
+
+      class welcomes(RelationDefinition):
+          subject = 'Lab'
+          object = 'CWGroup'
+
+    If you create a CWUser in the "scientists" CWGroup you can show
+    only the labs that welcome them using :
+
+      lt_infos = {('in_group', 'subject'): 321}
+
+    You get following restriction : 'O welcomes G, G eid 321'
+
+    """
+    st = cstr.snippet_rqlst.copy()
+    # replace relations in ST by eid infos from linkto where possible
+    for (info_rtype, info_role), eids in lt_infos.iteritems():
+        eid = eids[0] # NOTE: we currently assume a pruned lt_info with only 1 eid
+        for rel in st.iget_nodes(RqlRelation):
+            targetvar = rel_matches(rel, info_rtype, info_role, evar.name)
+            if targetvar is not None:
+                if targetvar.name in eidvars:
+                    rel.parent.remove(rel)
+                else:
+                    eidrel = make_relation(
+                        targetvar, 'eid', (targetvar.name, 'Substitute'),
+                        Constant)
+                    rel.parent.replace(rel, eidrel)
+                    args[targetvar.name] = eid
+                    eidvars.add(targetvar.name)
+    # if modified ST still contains evar references we must discard the
+    # constraint, otherwise evar is unknown in the final rql query which can
+    # lead to a SQL table cartesian product and multiple occurences of solutions
+    evarname = evar.name
+    for rel in st.iget_nodes(RqlRelation):
+        for variable in rel_vars(rel):
+            if variable and evarname == variable.name:
+                return
+    # else insert snippets into the global tree
+    return GeneratedConstraint(st, cstr.mainvars - set(evarname))
+
+def pruned_lt_info(eschema, lt_infos):
+    pruned = {}
+    for (lt_rtype, lt_role), eids in lt_infos.iteritems():
+        # we can only use lt_infos describing relation with a cardinality
+        # of value 1 towards the linked entity
+        if not len(eids) == 1:
             continue
-        ttypes = None
-        for subjtype in subjtypes:
-            cur_ttypes = rschema.objects(subjtype)
-            if ttypes is None:
-                ttypes = cur_ttypes
-            elif cur_ttypes != ttypes:
-                attr_set.remove(attr)
-                break
-
+        lt_card = eschema.rdef(lt_rtype, lt_role).cardinality[
+            0 if lt_role == 'subject' else 1]
+        if lt_card not in '?1':
+            continue
+        pruned[(lt_rtype, lt_role)] = eids
+    return pruned
 
 class Entity(AppObject):
     """an entity instance has e_schema automagically set on
@@ -91,16 +158,16 @@ class Entity(AppObject):
     :type e_schema: `cubicweb.schema.EntitySchema`
     :ivar e_schema: the entity's schema
 
-    :type rest_var: str
-    :cvar rest_var: indicates which attribute should be used to build REST urls
-                    If None is specified, the first non-meta attribute will
-                    be used
+    :type rest_attr: str
+    :cvar rest_attr: indicates which attribute should be used to build REST urls
+       If `None` is specified (the default), the first unique attribute will
+       be used ('eid' if none found)
 
-    :type skip_copy_for: list
-    :cvar skip_copy_for: a list of relations that should be skipped when copying
-                         this kind of entity. Note that some relations such
-                         as composite relations or relations that have '?1' as object
-                         cardinality are always skipped.
+    :type cw_skip_copy_for: list
+    :cvar cw_skip_copy_for: a list of couples (rtype, role) for each relation
+       that should be skipped when copying this kind of entity. Note that some
+       relations such as composite relations or relations that have '?1' as
+       object cardinality are always skipped.
     """
     __registry__ = 'etypes'
     __select__ = yes()
@@ -108,7 +175,8 @@ class Entity(AppObject):
     # class attributes that must be set in class definition
     rest_attr = None
     fetch_attrs = None
-    skip_copy_for = ('in_state',) # XXX turn into a set
+    skip_copy_for = () # bw compat (< 3.14), use cw_skip_copy_for instead
+    cw_skip_copy_for = [('in_state', 'subject')]
     # class attributes set automatically at registration time
     e_schema = None
 
@@ -153,50 +221,131 @@ class Entity(AppObject):
             cls.info('plugged %s mixins on %s', mixins, cls)
 
     fetch_attrs = ('modification_date',)
-    @classmethod
-    def fetch_order(cls, attr, var):
-        """class method used to control sort order when multiple entities of
-        this type are fetched
-        """
-        return cls.fetch_unrelated_order(attr, var)
 
     @classmethod
-    def fetch_unrelated_order(cls, attr, var):
-        """class method used to control sort order when multiple entities of
-        this type are fetched to use in edition (eg propose them to create a
+    def cw_fetch_order(cls, select, attr, var):
+        """This class method may be used to control sort order when multiple
+        entities of this type are fetched through ORM methods. Its arguments
+        are:
+
+        * `select`, the RQL syntax tree
+
+        * `attr`, the attribute being watched
+
+        * `var`, the variable through which this attribute's value may be
+          accessed in the query
+
+        When you want to do some sorting on the given attribute, you should
+        modify the syntax tree accordingly. For instance:
+
+        .. sourcecode:: python
+
+          from rql import nodes
+
+          class Version(AnyEntity):
+              __regid__ = 'Version'
+
+              fetch_attrs = ('num', 'description', 'in_state')
+
+              @classmethod
+              def cw_fetch_order(cls, select, attr, var):
+                  if attr == 'num':
+                      func = nodes.Function('version_sort_value')
+                      func.append(nodes.variable_ref(var))
+                      sterm = nodes.SortTerm(func, asc=False)
+                      select.add_sort_term(sterm)
+
+        The default implementation call
+        :meth:`~cubicweb.entity.Entity.cw_fetch_unrelated_order`
+        """
+        cls.cw_fetch_unrelated_order(select, attr, var)
+
+    @classmethod
+    def cw_fetch_unrelated_order(cls, select, attr, var):
+        """This class method may be used to control sort order when multiple entities of
+        this type are fetched to use in edition (e.g. propose them to create a
         new relation on an edited entity).
+
+        See :meth:`~cubicweb.entity.Entity.cw_fetch_unrelated_order` for a
+        description of its arguments and usage.
+
+        By default entities will be listed on their modification date descending,
+        i.e. you'll get entities recently modified first.
         """
         if attr == 'modification_date':
-            return '%s DESC' % var
-        return None
+            select.add_sort_var(var, asc=False)
 
     @classmethod
     def fetch_rql(cls, user, restriction=None, fetchattrs=None, mainvar='X',
                   settype=True, ordermethod='fetch_order'):
-        """return a rql to fetch all entities of the class type"""
-        # XXX update api and implementation to AST manipulation (see unrelated rql)
-        restrictions = restriction or []
-        if settype:
-            restrictions.append('%s is %s' % (mainvar, cls.__regid__))
-        if fetchattrs is None:
-            fetchattrs = cls.fetch_attrs
-        selection = [mainvar]
-        orderby = []
-        # start from 26 to avoid possible conflicts with X
-        # XXX not enough to be sure it'll be no conflicts
-        varmaker = rqlvar_maker(index=26)
-        cls._fetch_restrictions(mainvar, varmaker, fetchattrs, selection,
-                                orderby, restrictions, user, ordermethod)
-        rql = 'Any %s' % ','.join(selection)
-        if orderby:
-            rql +=  ' ORDERBY %s' % ','.join(orderby)
-        rql += ' WHERE %s' % ', '.join(restrictions)
+        st = cls.fetch_rqlst(user, mainvar=mainvar, fetchattrs=fetchattrs,
+                             settype=settype, ordermethod=ordermethod)
+        rql = st.as_string()
+        if restriction:
+            # cannot use RQLRewriter API to insert 'X rtype %(x)s' restriction
+            warn('[3.14] fetch_rql: use of `restriction` parameter is '
+                 'deprecated, please use fetch_rqlst and supply a syntax'
+                 'tree with your restriction instead', DeprecationWarning)
+            insert = ' WHERE ' + ','.join(restriction)
+            if ' WHERE ' in rql:
+                select, where = rql.split(' WHERE ', 1)
+                rql = select + insert + ',' + where
+            else:
+                rql += insert
         return rql
 
     @classmethod
-    def _fetch_restrictions(cls, mainvar, varmaker, fetchattrs,
-                            selection, orderby, restrictions, user,
-                            ordermethod='fetch_order', visited=None):
+    def fetch_rqlst(cls, user, select=None, mainvar='X', fetchattrs=None,
+                    settype=True, ordermethod='fetch_order'):
+        if select is None:
+            select = Select()
+            mainvar = select.get_variable(mainvar)
+            select.add_selected(mainvar)
+        elif isinstance(mainvar, basestring):
+            assert mainvar in select.defined_vars
+            mainvar = select.get_variable(mainvar)
+        # eases string -> syntax tree test transition: please remove once stable
+        select._varmaker = rqlvar_maker(defined=select.defined_vars,
+                                        aliases=select.aliases, index=26)
+        if settype:
+            select.add_type_restriction(mainvar, cls.__regid__)
+        if fetchattrs is None:
+            fetchattrs = cls.fetch_attrs
+        cls._fetch_restrictions(mainvar, select, fetchattrs, user, ordermethod)
+        return select
+
+    @classmethod
+    def _fetch_ambiguous_rtypes(cls, select, var, fetchattrs, subjtypes, schema):
+        """find rtypes in `fetchattrs` that relate different subject etypes
+        taken from (`subjtypes`) to different target etypes; these so called
+        "ambiguous" relations, are added directly to the `select` syntax tree
+        selection but removed from `fetchattrs` to avoid the fetch recursion
+        because we have to choose only one targettype for the recursion and
+        adding its own fetch attrs to the selection -when we recurse- would
+        filter out the other possible target types from the result set
+        """
+        for attr in fetchattrs.copy():
+            rschema = schema.rschema(attr)
+            if rschema.final:
+                continue
+            ttypes = None
+            for subjtype in subjtypes:
+                cur_ttypes = set(rschema.objects(subjtype))
+                if ttypes is None:
+                    ttypes = cur_ttypes
+                elif cur_ttypes != ttypes:
+                    # we found an ambiguous relation: remove it from fetchattrs
+                    fetchattrs.remove(attr)
+                    # ... and add it to the selection
+                    targetvar = select.make_variable()
+                    select.add_selected(targetvar)
+                    rel = make_relation(var, attr, (targetvar,), VariableRef)
+                    select.add_restriction(rel)
+                    break
+
+    @classmethod
+    def _fetch_restrictions(cls, mainvar, select, fetchattrs,
+                            user, ordermethod='fetch_order', visited=None):
         eschema = cls.e_schema
         if visited is None:
             visited = set((eschema.type,))
@@ -216,51 +365,85 @@ class Entity(AppObject):
             rdef = eschema.rdef(attr)
             if not user.matching_groups(rdef.get_groups('read')):
                 continue
-            var = varmaker.next()
-            selection.append(var)
-            restriction = '%s %s %s' % (mainvar, attr, var)
-            restrictions.append(restriction)
+            if rschema.final or rdef.cardinality[0] in '?1':
+                var = select.make_variable()
+                select.add_selected(var)
+                rel = make_relation(mainvar, attr, (var,), VariableRef)
+                select.add_restriction(rel)
+            else:
+                cls.warning('bad relation %s specified in fetch attrs for %s',
+                            attr, cls)
+                continue
             if not rschema.final:
-                card = rdef.cardinality[0]
-                if card not in '?1':
-                    cls.warning('bad relation %s specified in fetch attrs for %s',
-                                 attr, cls)
-                    selection.pop()
-                    restrictions.pop()
-                    continue
                 # XXX we need outer join in case the relation is not mandatory
                 # (card == '?')  *or if the entity is being added*, since in
                 # that case the relation may still be missing. As we miss this
                 # later information here, systematically add it.
-                restrictions[-1] += '?'
+                rel.change_optional('right')
                 targettypes = rschema.objects(eschema.type)
-                # XXX user._cw.vreg iiiirk
-                etypecls = user._cw.vreg['etypes'].etype_class(targettypes[0])
+                vreg = user._cw.vreg # XXX user._cw.vreg iiiirk
+                etypecls = vreg['etypes'].etype_class(targettypes[0])
                 if len(targettypes) > 1:
                     # find fetch_attrs common to all destination types
-                    fetchattrs = user._cw.vreg['etypes'].fetch_attrs(targettypes)
-                    remove_ambiguous_rels(fetchattrs, targettypes, user._cw.vreg.schema)
+                    fetchattrs = vreg['etypes'].fetch_attrs(targettypes)
+                    # ... and handle ambiguous relations
+                    cls._fetch_ambiguous_rtypes(select, var, fetchattrs,
+                                                targettypes, vreg.schema)
                 else:
                     fetchattrs = etypecls.fetch_attrs
-                etypecls._fetch_restrictions(var, varmaker, fetchattrs,
-                                             selection, orderby, restrictions,
+                etypecls._fetch_restrictions(var, select, fetchattrs,
                                              user, ordermethod, visited=visited)
             if ordermethod is not None:
-                orderterm = getattr(cls, ordermethod)(attr, var)
-                if orderterm:
-                    orderby.append(orderterm)
-        return selection, orderby, restrictions
+                try:
+                    cmeth = getattr(cls, ordermethod)
+                    warn('[3.14] %s %s class method should be renamed to cw_%s'
+                         % (cls.__regid__, ordermethod, ordermethod),
+                         DeprecationWarning)
+                except AttributeError:
+                    cmeth = getattr(cls, 'cw_' + ordermethod)
+                if support_args(cmeth, 'select'):
+                    cmeth(select, attr, var)
+                else:
+                    warn('[3.14] %s should now take (select, attr, var) and '
+                         'modify the syntax tree when desired instead of '
+                         'returning something' % cmeth, DeprecationWarning)
+                    orderterm = cmeth(attr, var.name)
+                    if orderterm is not None:
+                        try:
+                            var, order = orderterm.split()
+                        except ValueError:
+                            if '(' in orderterm:
+                                cls.error('ignore %s until %s is upgraded',
+                                          orderterm, cmeth)
+                                orderterm = None
+                            elif not ' ' in orderterm.strip():
+                                var = orderterm
+                                order = 'ASC'
+                        if orderterm is not None:
+                            select.add_sort_var(select.get_variable(var),
+                                                order=='ASC')
 
     @classmethod
     @cached
-    def _rest_attr_info(cls):
+    def cw_rest_attr_info(cls):
+        """this class method return an attribute name to be used in URL for
+        entities of this type and a boolean flag telling if its value should be
+        checked for uniqness.
+
+        The attribute returned is, in order of priority:
+
+        * class's `rest_attr` class attribute
+        * an attribute defined as unique in the class'schema
+        * 'eid'
+        """
         mainattr, needcheck = 'eid', True
         if cls.rest_attr:
             mainattr = cls.rest_attr
             needcheck = not cls.e_schema.has_unique_values(mainattr)
         else:
             for rschema in cls.e_schema.subject_relations():
-                if rschema.final and rschema != 'eid' and cls.e_schema.has_unique_values(rschema):
+                if rschema.final and rschema != 'eid' \
+                        and cls.e_schema.has_unique_values(rschema):
                     mainattr = str(rschema)
                     needcheck = False
                     break
@@ -354,7 +537,7 @@ class Entity(AppObject):
         """custom json dumps hook to dump the entity's eid
         which is not part of dict structure itself
         """
-        dumpable = dict(self)
+        dumpable = self.cw_attr_cache.copy()
         dumpable['eid'] = self.eid
         return dumpable
 
@@ -440,19 +623,14 @@ class Entity(AppObject):
                 kwargs['base_url'] = sourcemeta['base-url']
                 use_ext_id = True
         if method in (None, 'view'):
-            try:
-                kwargs['_restpath'] = self.rest_path(use_ext_id)
-            except TypeError:
-                warn('[3.4] %s: rest_path() now take use_ext_eid argument, '
-                     'please update' % self.__regid__, DeprecationWarning)
-                kwargs['_restpath'] = self.rest_path()
+            kwargs['_restpath'] = self.rest_path(use_ext_id)
         else:
             kwargs['rql'] = 'Any X WHERE X eid %s' % self.eid
         return self._cw.build_url(method, **kwargs)
 
     def rest_path(self, use_ext_eid=False): # XXX cw_rest_path
         """returns a REST-like (relative) path for this entity"""
-        mainattr, needcheck = self._rest_attr_info()
+        mainattr, needcheck = self.cw_rest_attr_info()
         etype = str(self.e_schema)
         path = etype.lower()
         if mainattr != 'eid':
@@ -516,8 +694,8 @@ class Entity(AppObject):
                 return self._cw_mtc_transform(value.getvalue(), attrformat, format,
                                               encoding)
             return u''
-        value = printable_value(self._cw, attrtype, value, props,
-                                displaytime=displaytime)
+        value = self._cw.printable_value(attrtype, value, props,
+                                         displaytime=displaytime)
         if format == 'text/html':
             value = xml_escape(value)
         return value
@@ -542,13 +720,22 @@ class Entity(AppObject):
         """
         assert self.has_eid()
         execute = self._cw.execute
+        skip_copy_for = {'subject': set(), 'object': set()}
+        for rtype in self.skip_copy_for:
+            skip_copy_for['subject'].add(rtype)
+            warn('[3.14] skip_copy_for on entity classes (%s) is deprecated, '
+                 'use cw_skip_for instead with list of couples (rtype, role)' % self.__regid__,
+                 DeprecationWarning)
+        for rtype, role in self.cw_skip_copy_for:
+            assert role in ('subject', 'object'), role
+            skip_copy_for[role].add(rtype)
         for rschema in self.e_schema.subject_relations():
             if rschema.final or rschema.meta:
                 continue
             # skip already defined relations
             if getattr(self, rschema.type):
                 continue
-            if rschema.type in self.skip_copy_for:
+            if rschema.type in skip_copy_for['subject']:
                 continue
             # skip composite relation
             rdef = self.e_schema.rdef(rschema)
@@ -567,6 +754,8 @@ class Entity(AppObject):
                 continue
             # skip already defined relations
             if self.related(rschema.type, 'object'):
+                continue
+            if rschema.type in skip_copy_for['object']:
                 continue
             rdef = self.e_schema.rdef(rschema, 'object')
             # skip composite relation
@@ -646,7 +835,7 @@ class Entity(AppObject):
             var = varmaker.next()
             rql.append('%s %s %s' % (V, attr, var))
             selected.append((attr, var))
-        # +1 since this doen't include the main variable
+        # +1 since this doesn't include the main variable
         lastattr = len(selected) + 1
         # don't fetch extra relation if attributes specified or of the entity is
         # coming from an external source (may lead to error)
@@ -738,6 +927,7 @@ class Entity(AppObject):
           if True, an empty rset/list of entities will be returned in case of
           :exc:`Unauthorized`, else (the default), the exception is propagated
         """
+        rtype = str(rtype)
         try:
             return self._cw_relation_cache(rtype, role, entities, limit)
         except KeyError:
@@ -757,94 +947,112 @@ class Entity(AppObject):
         return self.related(rtype, role, limit, entities)
 
     def cw_related_rql(self, rtype, role='subject', targettypes=None):
-        rschema = self._cw.vreg.schema[rtype]
+        vreg = self._cw.vreg
+        rschema = vreg.schema[rtype]
+        select = Select()
+        mainvar, evar = select.get_variable('X'), select.get_variable('E')
+        select.add_selected(mainvar)
+        select.add_eid_restriction(evar, 'x', 'Substitute')
         if role == 'subject':
-            restriction = 'E eid %%(x)s, E %s X' % rtype
+            rel = make_relation(evar, rtype, (mainvar,), VariableRef)
+            select.add_restriction(rel)
             if targettypes is None:
                 targettypes = rschema.objects(self.e_schema)
             else:
-                restriction += ', X is IN (%s)' % ','.join(targettypes)
-            card = greater_card(rschema, (self.e_schema,), targettypes, 0)
+                select.add_constant_restriction(mainvar, 'is',
+                                                targettypes, 'etype')
+            gcard = greater_card(rschema, (self.e_schema,), targettypes, 0)
         else:
-            restriction = 'E eid %%(x)s, X %s E' % rtype
+            rel = make_relation(mainvar, rtype, (evar,), VariableRef)
+            select.add_restriction(rel)
             if targettypes is None:
                 targettypes = rschema.subjects(self.e_schema)
             else:
-                restriction += ', X is IN (%s)' % ','.join(targettypes)
-            card = greater_card(rschema, targettypes, (self.e_schema,), 1)
-        etypecls = self._cw.vreg['etypes'].etype_class(targettypes[0])
+                select.add_constant_restriction(mainvar, 'is', targettypes,
+                                                'etype')
+            gcard = greater_card(rschema, targettypes, (self.e_schema,), 1)
+        etypecls = vreg['etypes'].etype_class(targettypes[0])
         if len(targettypes) > 1:
-            fetchattrs = self._cw.vreg['etypes'].fetch_attrs(targettypes)
-            # XXX we should fetch ambiguous relation objects too but not
-            # recurse on them in _fetch_restrictions; it is easier to remove
-            # them completely for now, as it would require an deeper api rewrite
-            remove_ambiguous_rels(fetchattrs, targettypes, self._cw.vreg.schema)
+            fetchattrs = vreg['etypes'].fetch_attrs(targettypes)
+            self._fetch_ambiguous_rtypes(select, mainvar, fetchattrs,
+                                         targettypes, vreg.schema)
         else:
             fetchattrs = etypecls.fetch_attrs
-        rql = etypecls.fetch_rql(self._cw.user, [restriction], fetchattrs,
-                                 settype=False)
+        etypecls.fetch_rqlst(self._cw.user, select, mainvar, fetchattrs,
+                             settype=False)
         # optimisation: remove ORDERBY if cardinality is 1 or ? (though
         # greater_card return 1 for those both cases)
-        if card == '1':
-            if ' ORDERBY ' in rql:
-                rql = '%s WHERE %s' % (rql.split(' ORDERBY ', 1)[0],
-                                       rql.split(' WHERE ', 1)[1])
-        elif not ' ORDERBY ' in rql:
-            args = rql.split(' WHERE ', 1)
-            # if modification_date already retrieved, we should use it instead
-            # of adding another variable for sort. This should be be problematic
-            # but it's actually with sqlserver, see ticket #694445
-            if 'X modification_date ' in args[1]:
-                var = args[1].split('X modification_date ', 1)[1].split(',', 1)[0]
-                args.insert(1, var.strip())
-                rql = '%s ORDERBY %s DESC WHERE %s' % tuple(args)
+        if gcard == '1':
+            select.remove_sort_terms()
+        elif not select.orderby:
+            # if modification_date is already retrieved, we use it instead
+            # of adding another variable for sorting. This should not be
+            # problematic, but it is with sqlserver, see ticket #694445
+            for rel in select.where.get_nodes(RqlRelation):
+                if (rel.r_type == 'modification_date'
+                    and rel.children[0].variable == mainvar
+                    and rel.children[1].operator == '='):
+                    var = rel.children[1].children[0].variable
+                    select.add_sort_var(var, asc=False)
+                    break
             else:
-                rql = '%s ORDERBY Z DESC WHERE X modification_date Z, %s' % \
-                      tuple(args)
-        return rql
+                mdvar = select.make_variable()
+                rel = make_relation(mainvar, 'modification_date',
+                                    (mdvar,), VariableRef)
+                select.add_restriction(rel)
+                select.add_sort_var(mdvar, asc=False)
+        return select.as_string()
 
     # generic vocabulary methods ##############################################
 
     def cw_unrelated_rql(self, rtype, targettype, role, ordermethod=None,
-                         vocabconstraints=True):
+                         vocabconstraints=True, lt_infos={}):
         """build a rql to fetch `targettype` entities unrelated to this entity
         using (rtype, role) relation.
 
         Consider relation permissions so that returned entities may be actually
         linked by `rtype`.
+
+        `lt_infos` are supplementary informations, usually coming from __linkto
+        parameter, that can help further restricting the results in case current
+        entity is not yet created. It is a dict describing entities the current
+        entity will be linked to, which keys are (rtype, role) tuples and values
+        are a list of eids.
         """
         ordermethod = ordermethod or 'fetch_unrelated_order'
-        if isinstance(rtype, basestring):
-            rtype = self._cw.vreg.schema.rschema(rtype)
-        rdef = rtype.role_rdef(self.e_schema, targettype, role)
+        rschema = self._cw.vreg.schema.rschema(rtype)
+        rdef = rschema.role_rdef(self.e_schema, targettype, role)
         rewriter = RQLRewriter(self._cw)
+        select = Select()
         # initialize some variables according to the `role` of `self` in the
-        # relation:
-        # * variable for myself (`evar`) and searched entities (`searchvedvar`)
-        # * entity type of the subject (`subjtype`) and of the object
-        #   (`objtype`) of the relation
+        # relation (variable names must respect constraints conventions):
+        # * variable for myself (`evar`)
+        # * variable for searched entities (`searchvedvar`)
         if role == 'subject':
-            evar, searchedvar = 'S', 'O'
-            subjtype, objtype = self.e_schema, targettype
+            evar = subjvar = select.get_variable('S')
+            searchedvar = objvar = select.get_variable('O')
         else:
-            searchedvar, evar = 'S', 'O'
-            objtype, subjtype = self.e_schema, targettype
-        # initialize some variables according to `self` existance
+            searchedvar = subjvar = select.get_variable('S')
+            evar = objvar = select.get_variable('O')
+        select.add_selected(searchedvar)
+        # initialize some variables according to `self` existence
         if rdef.role_cardinality(neg_role(role)) in '?1':
             # if cardinality in '1?', we want a target entity which isn't
             # already linked using this relation
-            if searchedvar == 'S':
-                restriction = ['NOT S %s ZZ' % rtype]
+            variable = select.make_variable()
+            if role == 'subject':
+                rel = make_relation(variable, rtype, (searchedvar,), VariableRef)
             else:
-                restriction = ['NOT ZZ %s O' % rtype]
+                rel = make_relation(searchedvar, rtype, (variable,), VariableRef)
+            select.add_restriction(Not(rel))
         elif self.has_eid():
             # elif we have an eid, we don't want a target entity which is
             # already linked to ourself through this relation
-            restriction = ['NOT S %s O' % rtype]
-        else:
-            restriction = []
+            rel = make_relation(subjvar, rtype, (objvar,), VariableRef)
+            select.add_restriction(Not(rel))
         if self.has_eid():
-            restriction += ['%s eid %%(x)s' % evar]
+            rel = make_relation(evar, 'eid', ('x', 'Substitute'), Constant)
+            select.add_restriction(rel)
             args = {'x': self.eid}
             if role == 'subject':
                 sec_check_args = {'fromeid': self.eid}
@@ -854,12 +1062,15 @@ class Entity(AppObject):
         else:
             args = {}
             sec_check_args = {}
-            existant = searchedvar
-        # retreive entity class for targettype to compute base rql
+            existant = searchedvar.name
+            # undefine unused evar, or the type resolver will consider it
+            select.undefine_variable(evar)
+        # retrieve entity class for targettype to compute base rql
         etypecls = self._cw.vreg['etypes'].etype_class(targettype)
-        rql = etypecls.fetch_rql(self._cw.user, restriction,
-                                 mainvar=searchedvar, ordermethod=ordermethod)
-        select = self._cw.vreg.parse(self._cw, rql, args).children[0]
+        etypecls.fetch_rqlst(self._cw.user, select, searchedvar,
+                             ordermethod=ordermethod)
+        # from now on, we need variable type resolving
+        self._cw.vreg.solutions(self._cw, select, args)
         # insert RQL expressions for schema constraints into the rql syntax tree
         if vocabconstraints:
             # RQLConstraint is a subclass for RQLVocabularyConstraint, so they
@@ -867,14 +1078,26 @@ class Entity(AppObject):
             cstrcls = RQLVocabularyConstraint
         else:
             cstrcls = RQLConstraint
+        lt_infos = pruned_lt_info(self.e_schema, lt_infos or {})
+        # if there are still lt_infos, use set to keep track of added eid
+        # relations (adding twice the same eid relation is incorrect RQL)
+        eidvars = set()
         for cstr in rdef.constraints:
             # consider constraint.mainvars to check if constraint apply
-            if isinstance(cstr, cstrcls) and searchedvar in cstr.mainvars:
-                if not self.has_eid() and evar in cstr.mainvars:
-                    continue
+            if isinstance(cstr, cstrcls) and searchedvar.name in cstr.mainvars:
+                if not self.has_eid():
+                    if lt_infos:
+                        # we can perhaps further restrict with linkto infos using
+                        # a custom constraint built from cstr and lt_infos
+                        cstr = build_cstr_with_linkto_infos(
+                            cstr, args, searchedvar, evar, lt_infos, eidvars)
+                        if cstr is None:
+                            continue # could not build constraint -> discard
+                    elif evar.name in cstr.mainvars:
+                        continue
                 # compute a varmap suitable to RQLRewriter.rewrite argument
-                varmap = dict((v, v) for v in 'SO' if v in select.defined_vars
-                              and v in cstr.mainvars)
+                varmap = dict((v, v) for v in (searchedvar.name, evar.name)
+                              if v in select.defined_vars and v in cstr.mainvars)
                 # rewrite constraint by constraint since we want a AND between
                 # expressions.
                 rewriter.rewrite(select, [(varmap, (cstr,))], select.solutions,
@@ -884,24 +1107,26 @@ class Entity(AppObject):
         rqlexprs = rdef.get_rqlexprs('add')
         if rqlexprs and not rdef.has_perm(self._cw, 'add', **sec_check_args):
             # compute a varmap suitable to RQLRewriter.rewrite argument
-            varmap = dict((v, v) for v in 'SO' if v in select.defined_vars)
+            varmap = dict((v, v) for v in (searchedvar.name, evar.name)
+                          if v in select.defined_vars)
             # rewrite all expressions at once since we want a OR between them.
             rewriter.rewrite(select, [(varmap, rqlexprs)], select.solutions,
                              args, existant)
         # ensure we have an order defined
         if not select.orderby:
-            select.add_sort_var(select.defined_vars[searchedvar])
+            select.add_sort_var(select.defined_vars[searchedvar.name])
         # we're done, turn the rql syntax tree as a string
         rql = select.as_string()
         return rql, args
 
     def unrelated(self, rtype, targettype, role='subject', limit=None,
-                  ordermethod=None): # XXX .cw_unrelated
+                  ordermethod=None, lt_infos={}): # XXX .cw_unrelated
         """return a result set of target type objects that may be related
         by a given relation, with self as subject or object
         """
         try:
-            rql, args = self.cw_unrelated_rql(rtype, targettype, role, ordermethod)
+            rql, args = self.cw_unrelated_rql(rtype, targettype, role,
+                                              ordermethod, lt_infos=lt_infos)
         except Unauthorized:
             return self._cw.empty_rset()
         # XXX should be set in unrelated rql when manipulating the AST

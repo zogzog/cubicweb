@@ -327,7 +327,7 @@ class SecurityTC(BaseSecurityTC):
             cu = cnx.cursor()
             aff2 = cu.execute("INSERT Affaire X: X sujet 'cool'")[0][0]
             # entity created in transaction are readable *by eid*
-            self.failUnless(cu.execute('Any X WHERE X eid %(x)s', {'x':aff2}))
+            self.assertTrue(cu.execute('Any X WHERE X eid %(x)s', {'x':aff2}))
             # XXX would be nice if it worked
             rset = cu.execute("Affaire X WHERE X sujet 'cool'")
             self.assertEqual(len(rset), 0)
@@ -347,8 +347,8 @@ class SecurityTC(BaseSecurityTC):
         cu.execute("SET A concerne S WHERE A eid %(a)s, S eid %(s)s", {'a': aff2, 's': soc1})
         cnx.commit()
         self.assertRaises(Unauthorized, cu.execute, 'Any X WHERE X eid %(x)s', {'x':aff1})
-        self.failUnless(cu.execute('Any X WHERE X eid %(x)s', {'x':aff2}))
-        self.failUnless(cu.execute('Any X WHERE X eid %(x)s', {'x':card1}))
+        self.assertTrue(cu.execute('Any X WHERE X eid %(x)s', {'x':aff2}))
+        self.assertTrue(cu.execute('Any X WHERE X eid %(x)s', {'x':card1}))
         rset = cu.execute("Any X WHERE X has_text 'cool'")
         self.assertEqual(sorted(eid for eid, in rset.rows),
                           [card1, aff2])
@@ -457,14 +457,14 @@ class SecurityTC(BaseSecurityTC):
         cnx = self.login('anon')
         cu = cnx.cursor()
         rset = cu.execute('CWUser X')
-        self.failUnless(rset)
+        self.assertTrue(rset)
         x = rset.get_entity(0, 0)
         self.assertEqual(x.login, None)
-        self.failUnless(x.creation_date)
+        self.assertTrue(x.creation_date)
         x = rset.get_entity(1, 0)
         x.complete()
         self.assertEqual(x.login, None)
-        self.failUnless(x.creation_date)
+        self.assertTrue(x.creation_date)
         cnx.rollback()
         cnx.close()
 
@@ -492,7 +492,7 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
         cu = cnx.cursor()
         cu.execute('DELETE Affaire X WHERE X ref "ARCT01"')
         cnx.commit()
-        self.failIf(cu.execute('Affaire X'))
+        self.assertFalse(cu.execute('Affaire X'))
         cnx.close()
 
     def test_users_and_groups_non_readable_by_guests(self):
@@ -569,6 +569,26 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
         names = [t for t, in cu.execute('Any N ORDERBY lower(N) WHERE X name N')]
         self.assertEqual(names, sorted(names, key=lambda x: x.lower()))
         cnx.close()
+
+    def test_restrict_is_instance_ok(self):
+        from rql import RQLException
+        rset = self.execute('Any X WHERE X is_instance_of BaseTransition')
+        rqlst = rset.syntax_tree()
+        select = rqlst.children[0]
+        x = select.get_selected_variables().next()
+        self.assertRaises(RQLException, select.add_type_restriction,
+                          x.variable, 'CWUser')
+        select.add_type_restriction(x.variable, 'BaseTransition')
+        select.add_type_restriction(x.variable, 'WorkflowTransition')
+        self.assertEqual(rqlst.as_string(), 'Any X WHERE X is_instance_of WorkflowTransition')
+
+    def test_restrict_is_instance_no_supported(self):
+        rset = self.execute('Any X WHERE X is_instance_of IN(CWUser, CWGroup)')
+        rqlst = rset.syntax_tree()
+        select = rqlst.children[0]
+        x = select.get_selected_variables().next()
+        self.assertRaises(NotImplementedError, select.add_type_restriction,
+                          x.variable, 'WorkflowTransition')
 
     def test_in_state_without_update_perm(self):
         """check a user change in_state without having update permission on the

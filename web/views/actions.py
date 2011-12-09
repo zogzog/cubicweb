@@ -50,12 +50,7 @@ class has_editable_relation(EntitySelector):
                                                entity=entity, mainform=False)
         for dummy in form.editable_relations():
             return 1
-        try:
-            editableattrs = form.editable_attributes(strict=True)
-        except TypeError:
-            warn('[3.6] %s: editable_attributes now take strict=False as '
-                 'optional argument', DeprecationWarning)
-            editableattrs = form.editable_attributes()
+        editableattrs = form.editable_attributes(strict=True)
         for rschema, role in editableattrs:
             return 1
         return 0
@@ -181,15 +176,6 @@ class ManagePermissionsAction(action.Action):
     title = _('manage permissions')
     category = 'moreactions'
     order = 15
-
-    @classmethod
-    def __registered__(cls, reg):
-        if 'require_permission' in reg.schema:
-            cls.__select__ = (one_line_rset() & non_final_entity() &
-                              (match_user_groups('managers')
-                               | relation_possible('require_permission', 'subject', 'CWPermission',
-                                                   action='add')))
-        return super(ManagePermissionsAction, cls).__registered__(reg)
 
     def url(self):
         return self.cw_rset.get_entity(self.cw_row or 0, self.cw_col or 0).absolute_url(vid='security')
@@ -437,7 +423,6 @@ class GotRhythmAction(action.Action):
 ## default actions ui configuration ###########################################
 
 addmenu = uicfg.actionbox_appearsin_addmenu
-addmenu.tag_subject_of(('*', 'require_permission', '*'), False)
 addmenu.tag_object_of(('*', 'relation_type', 'CWRType'), True)
 addmenu.tag_object_of(('*', 'from_entity', 'CWEType'), False)
 addmenu.tag_object_of(('*', 'to_entity', 'CWEType'), False)

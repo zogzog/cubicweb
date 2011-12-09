@@ -27,6 +27,7 @@ from base64 import b64decode
 from cookielib import CookieJar
 
 from lxml import etree
+from logilab.mtconverter import xml_escape
 
 from cubicweb import RegistryNotFound, ObjectNotFound, ValidationError, UnknownEid
 from cubicweb.server.sources import AbstractSource
@@ -71,7 +72,12 @@ class DataFeedSource(AbstractSource):
                    'external source be deleted?'),
           'group': 'datafeed-source', 'level': 2,
           }),
-
+        ('logs-lifetime',
+         {'type': 'time',
+          'default': '10d',
+          'help': ('Time before logs from datafeed imports are deleted.'),
+          'group': 'datafeed-source', 'level': 2,
+          }),
         )
     def __init__(self, repo, source_config, eid=None):
         AbstractSource.__init__(self, repo, source_config, eid)
@@ -91,9 +97,11 @@ class DataFeedSource(AbstractSource):
         source_entity.complete()
         self.parser_id = source_entity.parser
         self.latest_retrieval = source_entity.latest_retrieval
-        self.urls = [url.strip() for url in source_entity.url.splitlines()
-                     if url.strip()]
-
+        if source_entity.url:
+            self.urls = [url.strip() for url in source_entity.url.splitlines()
+                         if url.strip()]
+        else:
+            self.urls = []
     def update_config(self, source_entity, typedconfig):
         """update configuration from source entity. `typedconfig` is config
         properly typed with defaults set
@@ -186,7 +194,8 @@ class DataFeedSource(AbstractSource):
             myuris = self.source_cwuris(session)
         else:
             myuris = None
-        parser = self._get_parser(session, sourceuris=myuris)
+        importlog = self.init_import_log(session)
+        parser = self._get_parser(session, sourceuris=myuris, import_log=importlog)
         if self.process_urls(parser, self.urls, raise_on_error):
             self.warning("some error occured, don't attempt to delete entities")
         elif self.config['delete-entities'] and myuris:
@@ -198,7 +207,13 @@ class DataFeedSource(AbstractSource):
                 session.execute('DELETE %s X WHERE X eid IN (%s)'
                                 % (etype, ','.join(eids)))
         self.update_latest_retrieval(session)
-        return parser.stats
+        stats = parser.stats
+        if stats.get('created'):
+            importlog.record_info('added %s entities' % len(stats['created']))
+        if stats.get('updated'):
+            importlog.record_info('updated %s entities' % len(stats['updated']))
+        importlog.write_log(session, end_timestamp=self.latest_retrieval)
+        return stats
 
     def process_urls(self, parser, urls, raise_on_error=False):
         error = False
@@ -210,8 +225,9 @@ class DataFeedSource(AbstractSource):
             except IOError, exc:
                 if raise_on_error:
                     raise
-                self.error('could not pull data while processing %s: %s',
-                           url, exc)
+                parser.import_log.record_error(
+                    'could not pull data while processing %s: %s'
+                    % (url, exc))
                 error = True
             except Exception, exc:
                 if raise_on_error:
@@ -253,14 +269,21 @@ class DataFeedSource(AbstractSource):
         return dict((b64decode(uri), (eid, type))
                     for uri, eid, type in session.system_sql(sql))
 
+    def init_import_log(self, session, **kwargs):
+        dataimport = session.create_entity('CWDataImport', cw_import_of=self,
+                                           start_timestamp=datetime.utcnow(),
+                                           **kwargs)
+        dataimport.init()
+        return dataimport
 
 class DataFeedParser(AppObject):
     __registry__ = 'parsers'
 
-    def __init__(self, session, source, sourceuris=None, **kwargs):
+    def __init__(self, session, source, sourceuris=None, import_log=None, **kwargs):
         super(DataFeedParser, self).__init__(session, **kwargs)
         self.source = source
         self.sourceuris = sourceuris
+        self.import_log = import_log
         self.stats = {'created': set(),
                       'updated': set()}
 
@@ -295,7 +318,11 @@ class DataFeedParser(AppObject):
                                          complete=False, commit=False,
                                          sourceparams=sourceparams)
         except ValidationError, ex:
-            self.source.error('error while creating %s: %s', etype, ex)
+            # XXX use critical so they are seen during tests. Should consider
+            # raise_on_error instead?
+            self.source.critical('error while creating %s: %s', etype, ex)
+            self.import_log.record_error('error while creating %s: %s'
+                                         % (etype, ex))
             return None
         if eid < 0:
             # entity has been moved away from its original source
@@ -341,7 +368,7 @@ class DataFeedXMLParser(DataFeedParser):
         except Exception, ex:
             if raise_on_error:
                 raise
-            self.source.error(str(ex))
+            self.import_log.record_error(str(ex))
             return True
         error = False
         for args in parsed:

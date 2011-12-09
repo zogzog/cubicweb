@@ -28,6 +28,7 @@ from uuid import uuid4
 from warnings import warn
 
 from logilab.common.deprecation import deprecated
+from logilab.common.textutils import unormalize
 from rql import CoercionError
 from rql.nodes import ETYPE_PYOBJ_MAP, etype_from_pyobj
 from yams import BASE_TYPES
@@ -244,7 +245,7 @@ class Session(RequestSessionBase):
 
     def __init__(self, user, repo, cnxprops=None, _id=None):
         super(Session, self).__init__(repo.vreg)
-        self.id = _id or make_uid(user.login.encode('UTF8'))
+        self.id = _id or make_uid(unormalize(user.login).encode('UTF8'))
         cnxprops = cnxprops or ConnectionProperties('inmemory')
         self.user = user
         self.repo = repo
@@ -1253,31 +1254,6 @@ class Session(RequestSessionBase):
         """return the original parent session if any, else self"""
         return self
 
-    @property
-    @deprecated("[3.6] use session.vreg.schema")
-    def schema(self):
-        return self.repo.schema
-
-    @deprecated("[3.4] use vreg['etypes'].etype_class(etype)")
-    def etype_class(self, etype):
-        """return an entity class for the given entity type"""
-        return self.vreg['etypes'].etype_class(etype)
-
-    @deprecated('[3.4] use direct access to session.transaction_data')
-    def query_data(self, key, default=None, setdefault=False, pop=False):
-        if setdefault:
-            assert not pop
-            return self.transaction_data.setdefault(key, default)
-        if pop:
-            return self.transaction_data.pop(key, default)
-        else:
-            return self.transaction_data.get(key, default)
-
-    @deprecated('[3.4] use entity_from_eid(eid, etype=None)')
-    def entity(self, eid):
-        """return a result set for the given eid"""
-        return self.entity_from_eid(eid)
-
     # these are overridden by set_log_methods below
     # only defining here to prevent pylint from complaining
     info = warning = error = critical = exception = debug = lambda msg,*a,**kw: None
@@ -1322,9 +1298,6 @@ class InternalManager(object):
         return True
 
     def owns(self, eid):
-        return True
-
-    def has_permission(self, pname, contexteid=None):
         return True
 
     def property_value(self, key):

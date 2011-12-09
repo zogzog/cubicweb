@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: cubicweb 2.46.0\n"
-"PO-Revision-Date: 2011-06-23 10:23+0200\n"
+"PO-Revision-Date: 2011-11-23 11:09+0100\n"
 "Last-Translator: Logilab Team <contact@logilab.fr>\n"
 "Language-Team: fr <contact@logilab.fr>\n"
 "Language: \n"
@@ -106,34 +106,6 @@ msgid "%d years"
 msgstr "%d années"
 
 #, python-format
-msgid "%d&#160;days"
-msgstr "%d&#160;jours"
-
-#, python-format
-msgid "%d&#160;hours"
-msgstr "%d&#160;heures"
-
-#, python-format
-msgid "%d&#160;minutes"
-msgstr "%d&#160;minutes"
-
-#, python-format
-msgid "%d&#160;months"
-msgstr "%d&#160;mois"
-
-#, python-format
-msgid "%d&#160;seconds"
-msgstr "%d&#160;secondes"
-
-#, python-format
-msgid "%d&#160;weeks"
-msgstr "%d&#160;semaines"
-
-#, python-format
-msgid "%d&#160;years"
-msgstr "%d&#160;années"
-
-#, python-format
 msgid "%s could be supported"
 msgstr "%s pourrait être supporté"
 
@@ -174,9 +146,6 @@ msgstr "l'action '%s' nécessite une option 'linkattr'"
 
 msgid "(UNEXISTANT EID)"
 msgstr "(EID INTROUVABLE)"
-
-msgid "(loading ...)"
-msgstr "(chargement ...)"
 
 msgid "**"
 msgstr "0..n 0..n"
@@ -223,7 +192,7 @@ msgid ""
 "<div>This schema of the data model <em>excludes</em> the meta-data, but you "
 "can also display a <a href=\"%s\">complete schema with meta-data</a>.</div>"
 msgstr ""
-"<div>Ce schéma du modèle de données <em>exclue</em> les méta-données, mais "
+"<div>Ce schéma du modèle de données <em>exclut</em> les méta-données, mais "
 "vous pouvez afficher un <a href=\"%s\">schéma complet</a>.</div>"
 
 msgid "<no relation>"
@@ -325,6 +294,12 @@ msgstr "Types de contrainte"
 msgid "CWConstraint_plural"
 msgstr "Contraintes"
 
+msgid "CWDataImport"
+msgstr "Import de données"
+
+msgid "CWDataImport_plural"
+msgstr "Imports de données"
+
 msgid "CWEType"
 msgstr "Type d'entité"
 
@@ -344,12 +319,6 @@ msgstr "Groupe"
 
 msgid "CWGroup_plural"
 msgstr "Groupes"
-
-msgid "CWPermission"
-msgstr "Permission"
-
-msgid "CWPermission_plural"
-msgstr "Permissions"
 
 msgid "CWProperty"
 msgstr "Propriété"
@@ -451,6 +420,12 @@ msgstr ""
 "Ne peut annuler la création de l'entité %(eid)s de type %(etype)s, ce type "
 "n'existe plus"
 
+msgid "Click to sort on this column"
+msgstr "Cliquer pour trier sur cette colonne"
+
+msgid "DEBUG"
+msgstr "DEBUG"
+
 #, python-format
 msgid "Data connection graph for %s"
 msgstr "Graphique de connection des données pour %s"
@@ -482,6 +457,9 @@ msgstr "Voulez-vous supprimer le(s) élément(s) suivant(s) ?"
 msgid "Download schema as OWL"
 msgstr "Télécharger le schéma au format OWL"
 
+msgid "ERROR"
+msgstr "ERREUR"
+
 msgid "EmailAddress"
 msgstr "Adresse électronique"
 
@@ -503,6 +481,9 @@ msgstr "Uri externe"
 
 msgid "ExternalUri_plural"
 msgstr "Uri externes"
+
+msgid "FATAL"
+msgstr "FATAL"
 
 msgid "Float"
 msgstr "Nombre flottant"
@@ -528,6 +509,9 @@ msgstr "T'as le rythme ?"
 msgid "Help"
 msgstr "Aide"
 
+msgid "INFO"
+msgstr "INFO"
+
 msgid "Instance"
 msgstr "Instance"
 
@@ -546,11 +530,20 @@ msgstr "contrainte d'interval"
 msgid "Interval_plural"
 msgstr "Durées"
 
+msgid "Link:"
+msgstr "Lien :"
+
 msgid "Looked up classes"
 msgstr "Classes recherchées"
 
 msgid "Manage"
 msgstr "Administration"
+
+msgid "Manage security"
+msgstr "Gestion de la sécurité"
+
+msgid "Message threshold"
+msgstr "Niveau du message"
 
 msgid "Most referenced classes"
 msgstr "Classes les plus référencées"
@@ -573,14 +566,14 @@ msgstr "Nouvelle contrainte"
 msgid "New CWConstraintType"
 msgstr "Nouveau type de contrainte"
 
+msgid "New CWDataImport"
+msgstr "Nouvel import de données"
+
 msgid "New CWEType"
 msgstr "Nouveau type d'entité"
 
 msgid "New CWGroup"
 msgstr "Nouveau groupe"
-
-msgid "New CWPermission"
-msgstr "Nouvelle permission"
 
 msgid "New CWProperty"
 msgstr "Nouvelle propriété"
@@ -646,6 +639,9 @@ msgstr "Liste non exhaustive des vues s'appliquant à ce type d'entité"
 msgid "OR"
 msgstr "OU"
 
+msgid "Ownership"
+msgstr "Propriété"
+
 msgid "Parent class:"
 msgstr "Classe parente"
 
@@ -695,8 +691,8 @@ msgstr "Entrepôt de données"
 msgid "Schema %s"
 msgstr "Schéma %s"
 
-msgid "Schema of the data model"
-msgstr "Schéma du modèle de données"
+msgid "Schema's permissions definitions"
+msgstr "Permissions définies dans le schéma"
 
 msgid "Search for"
 msgstr "Rechercher"
@@ -793,14 +789,14 @@ msgstr "Cette contrainte"
 msgid "This CWConstraintType"
 msgstr "Ce type de contrainte"
 
+msgid "This CWDataImport"
+msgstr "Cet import de données"
+
 msgid "This CWEType"
 msgstr "Ce type d'entité"
 
 msgid "This CWGroup"
 msgstr "Ce groupe"
-
-msgid "This CWPermission"
-msgstr "Cette permission"
 
 msgid "This CWProperty"
 msgstr "Cette propriété"
@@ -888,6 +884,12 @@ msgstr "Objets inaccessibles"
 msgid "Used by:"
 msgstr "Utilisé par :"
 
+msgid "Users and groups management"
+msgstr "Gestion des utilisateurs et groupes"
+
+msgid "WARNING"
+msgstr "AVERTISSEMENT"
+
 msgid "Web server"
 msgstr "Serveur web"
 
@@ -952,7 +954,7 @@ msgstr "[%s supervision] description des changements"
 msgid ""
 "a RQL expression which should return some results, else the transition won't "
 "be available. This query may use X and U variables that will respectivly "
-"represents the current entity and the current user"
+"represents the current entity and the current user."
 msgstr ""
 "une expression RQL devant retourner des résultats pour que la transition "
 "puisse être passée. Cette expression peut utiliser les variables X et U qui "
@@ -979,6 +981,9 @@ msgstr ""
 
 msgid "abstract base class for transitions"
 msgstr "classe de base abstraite pour les transitions"
+
+msgid "action menu"
+msgstr ""
 
 msgid "action(s) on this selection"
 msgstr "action(s) sur cette sélection"
@@ -1100,9 +1105,6 @@ msgstr "ajouter un type de relation"
 msgctxt "inlined:CWUser.use_email.subject"
 msgid "add a EmailAddress"
 msgstr "ajouter une adresse électronique"
-
-msgid "add a new permission"
-msgstr "ajouter une permission"
 
 # subject and object forms for each relation type
 # (no object form for final relation types)
@@ -1264,6 +1266,10 @@ msgstr ""
 
 msgid "automatic"
 msgstr "automatique"
+
+#, python-format
+msgid "back to pagination (%s results)"
+msgstr "retour à la vue paginée (%s résultats)"
 
 msgid "bad value"
 msgstr "mauvaise valeur"
@@ -1783,11 +1789,11 @@ msgctxt "CWConstraintType"
 msgid "cstrtype_object"
 msgstr "type des contraintes"
 
-msgid "csv entities export"
-msgstr "export d'entités en CSV"
-
 msgid "csv export"
 msgstr "export CSV"
+
+msgid "csv export (entities)"
+msgstr "export CSV (entités)"
 
 msgid "ctxcomponents"
 msgstr "composants contextuels"
@@ -1908,6 +1914,12 @@ msgstr "workflow spécifique"
 msgid "custom_workflow_object"
 msgstr "workflow de"
 
+msgid "cw.groups-management"
+msgstr "groupes"
+
+msgid "cw.users-management"
+msgstr "utilisateurs"
+
 msgid "cw_for_source"
 msgstr "source"
 
@@ -1935,6 +1947,20 @@ msgstr "has host configuration"
 msgctxt "CWSource"
 msgid "cw_host_config_of_object"
 msgstr "has host configuration"
+
+msgid "cw_import_of"
+msgstr "source"
+
+msgctxt "CWDataImport"
+msgid "cw_import_of"
+msgstr "source"
+
+msgid "cw_import_of_object"
+msgstr "imports"
+
+msgctxt "CWSource"
+msgid "cw_import_of_object"
+msgstr "imports"
 
 msgid "cw_schema"
 msgstr "schéma"
@@ -1990,6 +2016,9 @@ msgstr "description"
 
 msgid "cwrtype-permissions"
 msgstr "permissions"
+
+msgid "cwsource-imports"
+msgstr "imports"
 
 msgid "cwsource-main"
 msgstr "description"
@@ -2117,9 +2146,6 @@ msgstr "supprimer"
 
 msgid "delete this bookmark"
 msgstr "supprimer ce signet"
-
-msgid "delete this permission"
-msgstr "supprimer cette permission"
 
 msgid "delete this relation"
 msgstr "supprimer cette relation"
@@ -2297,13 +2323,6 @@ msgstr "afficher le composant ou non"
 msgid "display the facet or not"
 msgstr "afficher la facette ou non"
 
-msgid ""
-"distinct label to distinguate between other permission entity of the same "
-"name"
-msgstr ""
-"libellé permettant de distinguer cette permission des autres ayant le même "
-"nom"
-
 msgid "download"
 msgstr "télécharger"
 
@@ -2341,6 +2360,13 @@ msgstr "HTML contenu"
 msgid "embedding this url is forbidden"
 msgstr "l'inclusion de cette url est interdite"
 
+msgid "end_timestamp"
+msgstr "horodate de fin"
+
+msgctxt "CWDataImport"
+msgid "end_timestamp"
+msgstr "horodate de fin"
+
 msgid "entities deleted"
 msgstr "entités supprimées"
 
@@ -2375,12 +2401,6 @@ msgstr "entité liée"
 
 msgid "entity type"
 msgstr "type d'entité"
-
-msgid ""
-"entity type that may be used to construct some advanced security "
-"configuration"
-msgstr ""
-"type d'entité à utiliser pour définir une configuration de sécurité avancée"
 
 msgid "entity types which may use this workflow"
 msgstr "types d'entité pouvant utiliser ce workflow"
@@ -2470,6 +2490,12 @@ msgstr "facette \"type d'entité ou de relation final\""
 msgid "facets_cwfinal-facet_description"
 msgstr ""
 
+msgid "facets_datafeed.dataimport.status"
+msgstr "état de l'iport"
+
+msgid "facets_datafeed.dataimport.status_description"
+msgstr ""
+
 msgid "facets_etype-facet"
 msgstr "facette \"est de type\""
 
@@ -2493,6 +2519,9 @@ msgstr "facette \"dans l'état\""
 
 msgid "facets_in_state-facet_description"
 msgstr ""
+
+msgid "failed"
+msgstr "échec"
 
 #, python-format
 msgid "failed to uniquify path (%s, %s)"
@@ -2534,9 +2563,6 @@ msgstr "suivre le lien"
 #, python-format
 msgid "follow this link for more information on this %s"
 msgstr "suivez ce lien pour plus d'information sur ce %s"
-
-msgid "follow this link if javascript is deactivated"
-msgstr "suivez ce lien si javascript est désactivé"
 
 msgid "for_user"
 msgstr "pour l'utilisateur"
@@ -2675,9 +2701,6 @@ msgstr "groupes autorisés à mettre à jour des entités/relations de ce type"
 msgid "groups grant permissions to the user"
 msgstr "les groupes donnent des permissions à l'utilisateur"
 
-msgid "groups to which the permission is granted"
-msgstr "groupes auquels cette permission est donnée"
-
 msgid "guests"
 msgstr "invités"
 
@@ -2697,24 +2720,32 @@ msgid "hide filter form"
 msgstr "cacher le filtre"
 
 msgid ""
-"how to format date and time in the ui (\"man strftime\" for format "
+"how to format date and time in the ui (see <a href=\"http://docs.python.org/"
+"library/datetime.html#strftime-strptime-behavior\">this page</a> for format "
 "description)"
 msgstr ""
-"comment formater la date dans l'interface (\"man strftime\" pour la "
-"description du format)"
+"comment formater l'horodate dans l'interface (<a href=\"http://docs.python."
+"org/library/datetime.html#strftime-strptime-behavior\">description du "
+"format</a>)"
 
-msgid "how to format date in the ui (\"man strftime\" for format description)"
+msgid ""
+"how to format date in the ui (see <a href=\"http://docs.python.org/library/"
+"datetime.html#strftime-strptime-behavior\">this page</a> for format "
+"description)"
 msgstr ""
-"comment formater la date dans l'interface (\"man strftime\" pour la "
-"description du format)"
+"comment formater la date dans l'interface (<a href=\"http://docs.python.org/"
+"library/datetime.html#strftime-strptime-behavior\">description du format</a>)"
 
 msgid "how to format float numbers in the ui"
 msgstr "comment formater les nombres flottants dans l'interface"
 
-msgid "how to format time in the ui (\"man strftime\" for format description)"
+msgid ""
+"how to format time in the ui (see <a href=\"http://docs.python.org/library/"
+"datetime.html#strftime-strptime-behavior\">this page</a> for format "
+"description)"
 msgstr ""
-"comment formater l'heure dans l'interface (\"man strftime\" pour la "
-"description du format)"
+"comment formater l'heure dans l'interface (<a href=\"http://docs.python.org/"
+"library/datetime.html#strftime-strptime-behavior\">description du format</a>)"
 
 msgid "i18n_bookmark_url_fqs"
 msgstr "paramètres"
@@ -2773,6 +2804,9 @@ msgstr ""
 
 msgid "image"
 msgstr "image"
+
+msgid "in progress"
+msgstr "en cours"
 
 msgid "in_group"
 msgstr "dans le groupe"
@@ -2873,9 +2907,6 @@ msgstr ""
 msgid "instance home"
 msgstr "répertoire de l'instance"
 
-msgid "instance schema"
-msgstr "schéma de l'instance"
-
 msgid "internal entity uri"
 msgstr "uri interne"
 
@@ -2936,18 +2967,17 @@ msgstr "a pour instance"
 msgid "january"
 msgstr "janvier"
 
+msgid "json-entities-export-view"
+msgstr "export JSON (entités)"
+
+msgid "json-export-view"
+msgstr "export JSON"
+
 msgid "july"
 msgstr "juillet"
 
 msgid "june"
 msgstr "juin"
-
-msgid "label"
-msgstr "libellé"
-
-msgctxt "CWPermission"
-msgid "label"
-msgstr "libellé"
 
 msgid "language of the user interface"
 msgstr "langue pour l'interface utilisateur"
@@ -2971,6 +3001,9 @@ msgctxt "CWUser"
 msgid "last_login_time"
 msgstr "dernière date de connexion"
 
+msgid "latest import"
+msgstr "dernier import"
+
 msgid "latest modification time of an entity"
 msgstr "date de dernière modification d'une entité"
 
@@ -2990,12 +3023,8 @@ msgstr "date de la dernière synchronisation de la source."
 msgid "left"
 msgstr "gauche"
 
-msgid ""
-"link a permission to the entity. This permission should be used in the "
-"security definition of the entity's type to be useful."
-msgstr ""
-"lie une permission à une entité. Cette permission doit généralement être "
-"utilisée dans la définition de sécurité du type d'entité pour être utile."
+msgid "line"
+msgstr "ligne"
 
 msgid ""
 "link a property to the user which want this property customization. Unless "
@@ -3028,6 +3057,13 @@ msgstr "lie un workflow à un ou plusieurs types d'entité"
 
 msgid "list"
 msgstr "liste"
+
+msgid "log"
+msgstr "journal"
+
+msgctxt "CWDataImport"
+msgid "log"
+msgstr "journal"
 
 msgid "log in"
 msgstr "s'identifier"
@@ -3080,9 +3116,6 @@ msgstr "gérer les signets"
 msgid "manage permissions"
 msgstr "gestion des permissions"
 
-msgid "manage security"
-msgstr "gestion de la sécurité"
-
 msgid "managers"
 msgstr "administrateurs"
 
@@ -3116,6 +3149,9 @@ msgstr "mai"
 
 msgid "memory leak debugging"
 msgstr "Déboguage des fuites de mémoire"
+
+msgid "message"
+msgstr "message"
 
 msgid "milestone"
 msgstr "jalon"
@@ -3174,10 +3210,6 @@ msgctxt "CWGroup"
 msgid "name"
 msgstr "nom"
 
-msgctxt "CWPermission"
-msgid "name"
-msgstr "nom"
-
 msgctxt "CWRType"
 msgid "name"
 msgstr "nom"
@@ -3215,9 +3247,6 @@ msgstr ""
 msgid "name of the source"
 msgstr "nom de la source"
 
-msgid "name or identifier of the permission"
-msgstr "nom (identifiant) de la permission"
-
 msgid "navbottom"
 msgstr "bas de page"
 
@@ -3254,9 +3283,6 @@ msgstr "résultats suivants"
 msgid "no"
 msgstr "non"
 
-msgid "no associated permissions"
-msgstr "aucune permission associée"
-
 msgid "no content next link"
 msgstr "pas de lien 'suivant'"
 
@@ -3269,6 +3295,9 @@ msgstr "aucun champ à éditer spécifié"
 #, python-format
 msgid "no edited fields specified for entity %s"
 msgstr "aucun champ à éditer spécifié pour l'entité %s"
+
+msgid "no log to display"
+msgstr "rien à afficher"
 
 msgid "no related entity"
 msgstr "pas d'entité liée"
@@ -3303,6 +3332,9 @@ msgstr "non sélectionné"
 
 msgid "november"
 msgstr "novembre"
+
+msgid "num. users"
+msgstr "nombre d'utilisateurs"
 
 msgid "object"
 msgstr "objet"
@@ -3370,9 +3402,6 @@ msgstr "possède"
 msgid "owners"
 msgstr "propriétaires"
 
-msgid "ownership"
-msgstr "propriété"
-
 msgid "ownerships have been changed"
 msgstr "les droits de propriété ont été modifiés"
 
@@ -3406,14 +3435,14 @@ msgctxt "Bookmark"
 msgid "path"
 msgstr "chemin"
 
+msgid "permalink to this message"
+msgstr "lien permanent vers ce message"
+
 msgid "permission"
 msgstr "permission"
 
 msgid "permissions"
 msgstr "permissions"
-
-msgid "permissions for this entity"
-msgstr "permissions pour cette entité"
 
 msgid "pick existing bookmarks"
 msgstr "récupérer des signets existants"
@@ -3489,8 +3518,8 @@ msgstr "description"
 msgid "rdef-permissions"
 msgstr "permissions"
 
-msgid "rdf"
-msgstr "rdf"
+msgid "rdf export"
+msgstr "export RDF"
 
 msgid "read"
 msgstr "lecture"
@@ -3619,10 +3648,6 @@ msgctxt "BaseTransition"
 msgid "require_group"
 msgstr "restreinte au groupe"
 
-msgctxt "CWPermission"
-msgid "require_group"
-msgstr "restreinte au groupe"
-
 msgctxt "Transition"
 msgid "require_group"
 msgstr "restreinte au groupe"
@@ -3637,12 +3662,6 @@ msgstr "a les droits"
 msgctxt "CWGroup"
 msgid "require_group_object"
 msgstr "a les droits"
-
-msgid "require_permission"
-msgstr "require permission"
-
-msgid "require_permission_object"
-msgstr "permission of"
 
 msgid "required"
 msgstr "requis"
@@ -3690,8 +3709,8 @@ msgstr ""
 msgid "rql expressions"
 msgstr "conditions rql"
 
-msgid "rss"
-msgstr "RSS"
+msgid "rss export"
+msgstr "export RSS"
 
 msgid "same_as"
 msgstr "identique à"
@@ -3701,9 +3720,6 @@ msgstr "exemple"
 
 msgid "saturday"
 msgstr "samedi"
-
-msgid "schema's permissions definitions"
-msgstr "permissions définies dans le schéma"
 
 msgid "schema-diagram"
 msgstr "diagramme"
@@ -3783,6 +3799,9 @@ msgstr "septembre"
 msgid "server information"
 msgstr "informations serveur"
 
+msgid "severity"
+msgstr "sévérité"
+
 msgid ""
 "should html fields being edited using fckeditor (a HTML WYSIWYG editor).  "
 "You should also select text/html as default text format to actually get "
@@ -3816,9 +3835,6 @@ msgstr "titre du site"
 
 msgid "site-wide property can't be set for user"
 msgstr "une propriété spécifique au site ne peut être propre à un utilisateur"
-
-msgid "siteinfo"
-msgstr "informations"
 
 msgid "some later transaction(s) touch entity, undo them first"
 msgstr ""
@@ -3865,6 +3881,13 @@ msgid ""
 msgstr ""
 "horodate de départ de la synchronisation en cours, ou NULL s'il n'y en a pas."
 
+msgid "start_timestamp"
+msgstr "horodate de début"
+
+msgctxt "CWDataImport"
+msgid "start_timestamp"
+msgstr "horodate de début"
+
 msgid "startup views"
 msgstr "vues de départ"
 
@@ -3909,6 +3932,13 @@ msgstr "a pour état"
 msgctxt "Workflow"
 msgid "state_of_object"
 msgstr "contient les états"
+
+msgid "status"
+msgstr "état"
+
+msgctxt "CWDataImport"
+msgid "status"
+msgstr "état"
 
 msgid "status change"
 msgstr "changer l'état"
@@ -3979,6 +4009,9 @@ msgstr "état de sortie de"
 msgctxt "State"
 msgid "subworkflow_state_object"
 msgstr "état de sortie de"
+
+msgid "success"
+msgstr "succès"
 
 msgid "sunday"
 msgstr "dimanche"
@@ -4337,9 +4370,6 @@ msgctxt "CWSource"
 msgid "url"
 msgstr "url"
 
-msgid "use template languages"
-msgstr "utiliser les langages de template"
-
 msgid ""
 "use to define a transition from one or multiple states to a destination "
 "states in workflow's definitions. Transition without destination state will "
@@ -4363,9 +4393,6 @@ msgctxt "EmailAddress"
 msgid "use_email_object"
 msgstr "utilisée par"
 
-msgid "use_template_format"
-msgstr "utilisation du format 'cubicweb template'"
-
 msgid ""
 "used for cubicweb configuration. Once a property has been created you can't "
 "change the key."
@@ -4376,9 +4403,6 @@ msgstr ""
 msgid ""
 "used to associate simple states to an entity type and/or to define workflows"
 msgstr "associe les états à un type d'entité pour définir un workflow"
-
-msgid "used to grant a permission to a group"
-msgstr "utiliser pour donner une permission à un groupe"
 
 msgid "user"
 msgstr "utilisateur"
@@ -4405,9 +4429,6 @@ msgstr "utilisateurs"
 
 msgid "users and groups"
 msgstr "utilisateurs et groupes"
-
-msgid "users and groups management"
-msgstr "gestion des utilisateurs et groupes"
 
 msgid "users using this bookmark"
 msgstr "utilisateurs utilisant ce signet"
@@ -4573,14 +4594,14 @@ msgstr "a pour workflow"
 msgid "wrong query parameter line %s"
 msgstr "mauvais paramètre de requête ligne %s"
 
-msgid "xbel"
-msgstr "xbel"
-
-msgid "xml"
-msgstr "xml"
+msgid "xbel export"
+msgstr "export XBEL"
 
 msgid "xml export"
-msgstr "export xml"
+msgstr "export XML"
+
+msgid "xml export (entities)"
+msgstr "export XML (entités)"
 
 msgid "yes"
 msgstr "oui"
@@ -4600,3 +4621,28 @@ msgid "you should un-inline relation %s which is supported and may be crossed "
 msgstr ""
 "vous devriez enlevé la mise en ligne de la relation %s qui est supportée et "
 "peut-être croisée"
+
+#~ msgid "(loading ...)"
+#~ msgstr "(chargement ...)"
+
+#~ msgid "follow this link if javascript is deactivated"
+#~ msgstr "suivez ce lien si javascript est désactivé"
+
+#~ msgid ""
+#~ "how to format date and time in the ui (\"man strftime\" for format "
+#~ "description)"
+#~ msgstr ""
+#~ "comment formater la date dans l'interface (\"man strftime\" pour la "
+#~ "description du format)"
+
+#~ msgid ""
+#~ "how to format date in the ui (\"man strftime\" for format description)"
+#~ msgstr ""
+#~ "comment formater la date dans l'interface (\"man strftime\" pour la "
+#~ "description du format)"
+
+#~ msgid ""
+#~ "how to format time in the ui (\"man strftime\" for format description)"
+#~ msgstr ""
+#~ "comment formater l'heure dans l'interface (\"man strftime\" pour la "
+#~ "description du format)"

@@ -26,7 +26,9 @@ User defined string
 In the Python code and cubicweb-tal templates translatable strings can be
 marked in one of the following ways :
 
- * by using the *built-in* function `_` ::
+ * by using the *built-in* function `_`:
+
+   .. sourcecode:: python
 
      class PrimaryView(EntityView):
          """the full view of an non final entity"""
@@ -35,7 +37,9 @@ marked in one of the following ways :
 
   OR
 
- * by using the equivalent request's method ::
+ * by using the equivalent request's method:
+
+   .. sourcecode:: python
 
      class NoResultView(View):
          """default view when no result has been found"""
@@ -79,9 +83,12 @@ We do not need to mark the translation strings of entities/relations used by a
 particular instance's schema as they are generated automatically. String for
 various actions are also generated.
 
-For exemple the following schema ::
+For exemple the following schema:
 
-  Class EntityA(EntityType):
+.. sourcecode:: python
+
+
+  class EntityA(EntityType):
       relation_a2b = SubjectRelation('EntityB')
 
   class EntityB(EntityType):

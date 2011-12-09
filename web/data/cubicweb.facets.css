@@ -3,65 +3,70 @@
  padding: 0px;
 }
 
-div.facet {
- margin-bottom: 8px;
- background: #fff;
- padding: 5px;
- min-width: 10em;
+.facet {
+  border: 1px solid chocolate;
+  background: #fff;
+  padding: %(facet_Padding)s;
+  margin-bottom: %(facet_MarginBottom)s;
+}
+
+.facetGroup {
+  margin: .3em;
+  float: left;
 }
 
 div.facetTitle, div.bkSearch  {
- font-size: 80%;
  color: #000;
- margin-bottom: 2px;
+ margin: 2px;
  cursor: pointer;
+ font-weight: bold;
  font: %(facet_titleFont)s;
 }
 
 div.facetTitle a {
  padding-left: 10px;
  background: transparent url("puce.png") 0% 50% no-repeat;
- }
-
-div.facetBody {
 }
 
-.opened{
+.opened {
  color: #000 !important;
 }
 
-div.overflowed {
-  height: %(facet_overflowedHeight)s;
+.facetGroup div.rangeFacet {
+  width: 13em;
+}
+
+.facetGroup div.vocabularyFacet {
+  /* when facets spread on several lines, it can relieve the eye
+     to have them vertically aligned; these properties should
+     be used then  */
+  /* width: 13em; */
+}
+
+div.vocabularyFacet {
+  max-height: %(facet_vocabMaxHeight)s;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 div.facetCheckBox {
   clear: both;
   cursor: pointer;
-}
-
-div.facetCheckBox a {
- text-decoration: none;
- font-size: 85%;
+  text-decoration: none;
 }
 
 div.facetValue{
-clear: both
+  padding-left: 2px;
+  clear: both
 }
 
-div.facetValue img{
- float: left;
- background: #fff;
+div.facetValue img {
+  float: left;
+  background: #fff;
 }
 
-div.facetValue a {
- margin-left: 20px;
- display: block;
- margin-top: -6px; /* FIXME why do we need this ? */
-}
-
-div.facetValueSelected a {
-  font-weight: bold;
+div.facetValueSelected {
+  background: #EBE8D9;
 }
 
 #leftcol label {
@@ -77,34 +82,25 @@ div#filter_box {
   border: none;
 }
 
+.facet input {
+  margin-top: .2em;
+  border: 1px solid #ccc;
+  font-size: small;
+}
 
-div.facetCheckBox{
- line-height:0.8em;
- }
-
-.facet input{
- margin-top:3px;
- border:1px solid #ccc;
- font-size:11px;
- }
-
-
-.facetValueDisabled {
+.facetValueDisabled span {
   font-style: italic;
   text-decoration: line-through;
 }
-
 
 div#filterboxTitle {
   margin-top: 50px;
   margin-bottom: 1em;
   color: #1190A1;
   font-size: 75%;
-  font-weight: bold;
   padding: 0.15em;
   text-transform: uppercase;
 }
-
 
 div#facetLoading {
   display: none;
@@ -122,12 +118,8 @@ div.facetTitleSelected {
   background: url("required.png") no-repeat right top;
 }
 
-table.filter {
+.filter {
   background-color: #EBE8D9;
   border: dotted grey 1px;
-}
-
-div.facet {
- padding: none;
- margin: .3em!important;
+  display: inline-block;
 }
