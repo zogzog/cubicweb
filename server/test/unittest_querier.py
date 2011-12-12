@@ -1495,5 +1495,11 @@ Any P1,B,E WHERE P1 identity P2 WITH
         rset = self.execute('Any X WHERE X is CWUser, X has_text "bidule", X in_state S, S name SN')
         self.assertEqual(rset.rows, [[peid]])
 
+
+    def test_nonregr_sql_cache(self):
+        # different SQL generated when 'name' is None or not (IS NULL).
+        self.assertFalse(self.execute('Any X WHERE X is CWEType, X name %(name)s', {'name': None}))
+        self.assertTrue(self.execute('Any X WHERE X is CWEType, X name %(name)s', {'name': 'CWEType'}))
+
 if __name__ == '__main__':
     unittest_main()
