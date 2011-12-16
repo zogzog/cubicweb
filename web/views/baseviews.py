@@ -157,7 +157,7 @@ class InContextView(EntityView):
     """:__regid__: *incontext*
 
     This view is used whenthe entity should be considered as displayed in its
-    context. By default it produces the result of `textincontext` wrapped in a
+    context. By default it produces the result of ``entity.dc_title()`` wrapped in a
     link leading to the primary view of the entity.
     """
     __regid__ = 'incontext'
@@ -165,18 +165,15 @@ class InContextView(EntityView):
     def cell_call(self, row, col):
         entity = self.cw_rset.get_entity(row, col)
         desc = cut(entity.dc_description(), 50)
-        self.w(u'<a href="%s" title="%s">' % (
-            xml_escape(entity.absolute_url()), xml_escape(desc)))
-        self.w(xml_escape(self._cw.view('textincontext', self.cw_rset,
-                                        row=row, col=col)))
-        self.w(u'</a>')
-
+        self.w(u'<a href="%s" title="%s">%s</a>' % (
+            xml_escape(entity.absolute_url()), xml_escape(desc),
+            xml_escape(entity.dc_title())))
 
 class OutOfContextView(EntityView):
     """:__regid__: *outofcontext*
 
     This view is used whenthe entity should be considered as displayed out of
-    its context. By default it produces the result of `textoutofcontext` wrapped
+    its context. By default it produces the result of ``entity.dc_long_title()`` wrapped
     in a link leading to the primary view of the entity.
     """
     __regid__ = 'outofcontext'
@@ -184,11 +181,9 @@ class OutOfContextView(EntityView):
     def cell_call(self, row, col):
         entity = self.cw_rset.get_entity(row, col)
         desc = cut(entity.dc_description(), 50)
-        self.w(u'<a href="%s" title="%s">' % (
-            xml_escape(entity.absolute_url()), xml_escape(desc)))
-        self.w(xml_escape(self._cw.view('textoutofcontext', self.cw_rset,
-                                        row=row, col=col)))
-        self.w(u'</a>')
+        self.w(u'<a href="%s" title="%s">%s</a>' % (
+            xml_escape(entity.absolute_url()), xml_escape(desc),
+            xml_escape(entity.dc_long_title())))
 
 
 class OneLineView(EntityView):
@@ -205,9 +200,12 @@ class OneLineView(EntityView):
         """the one line view for an entity: linked text view
         """
         entity = self.cw_rset.get_entity(row, col)
-        self.w(u'<a href="%s">' % xml_escape(entity.absolute_url()))
-        self.w(xml_escape(self._cw.view('text', self.cw_rset, row=row, col=col)))
-        self.w(u'</a>')
+        desc = cut(entity.dc_description(), 50)
+        title = cut(entity.dc_title(),
+                    self._cw.property_value('navigation.short-line-size'))
+        self.w(u'<a href="%s" title="%s">%s</a>' % (
+                xml_escape(entity.absolute_url()), xml_escape(desc),
+                xml_escape(title)))
 
 
 # text views ###################################################################
