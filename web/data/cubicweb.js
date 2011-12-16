@@ -84,11 +84,13 @@ jQuery.extend(cw, {
     },
 
     sortValueExtraction: function (node) {
-	var sortvalue = jQuery(node).attr('cubicweb:sortvalue');
-	if (sortvalue === undefined) {
-	    return '';
-	}
-	return cw.evalJSON(sortvalue);
+        var $node = $(node);
+        var sortvalue = $node.attr('cubicweb:sortvalue');
+        // No metadata found, use cell content as sort key
+        if (sortvalue === undefined) {
+            return $node.text();
+        }
+        return cw.evalJSON(sortvalue);
     }
 });
 
