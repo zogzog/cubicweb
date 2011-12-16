@@ -32,6 +32,7 @@ from cubicweb.utils import json_dumps
 from cubicweb.uilib import css_em_num_value
 from cubicweb.view import AnyRsetView
 from cubicweb.web import component, facet as facetbase
+from cubicweb.web.views.ajaxcontroller import ajaxfunc
 
 def facets(req, rset, context, mainvar=None, **kwargs):
     """return the base rql and a list of widgets for facets applying to the
@@ -312,6 +313,28 @@ class FilterTable(FacetFilterMixIn, AnyRsetView):
                 queued.render(w=w)
             w(u'</div>')
         w(u'</div>\n')
+
+# python-ajax remote functions used by facet widgets #########################
+
+@ajaxfunc(output_type='json')
+def filter_build_rql(self, names, values):
+    form = self._rebuild_posted_form(names, values)
+    self._cw.form = form
+    builder = facetbase.FilterRQLBuilder(self._cw)
+    return builder.build_rql()
+
+@ajaxfunc(output_type='json')
+def filter_select_content(self, facetids, rql, mainvar):
+    # Union unsupported yet
+    select = self._cw.vreg.parse(self._cw, rql).children[0]
+    filtered_variable = facetbase.get_filtered_variable(select, mainvar)
+    facetbase.prepare_select(select, filtered_variable)
+    update_map = {}
+    for fid in facetids:
+        fobj = facetbase.get_facet(self._cw, fid, select, filtered_variable)
+        update_map[fid] = fobj.possible_values()
+    return update_map
+
 
 
 # facets ######################################################################

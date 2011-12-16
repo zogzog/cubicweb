@@ -35,6 +35,7 @@ from cubicweb.web.formfields import FIELDS, StringField
 from cubicweb.web.formwidgets import (Select, TextInput, Button, SubmitButton,
                                       FieldWidget)
 from cubicweb.web.views import primary, formrenderers, editcontroller
+from cubicweb.web.views.ajaxcontroller import ajaxfunc
 
 uicfg.primaryview_section.tag_object_of(('*', 'for_user', '*'), 'hidden')
 
@@ -418,6 +419,20 @@ class CWPropertyIEditControlAdapter(editcontroller.IEditControlAdapter):
         information when this entity is being deleted
         """
         return 'view', {}
+
+
+@ajaxfunc(output_type='xhtml')
+def prop_widget(self, propkey, varname, tabindex=None):
+    """specific method for CWProperty handling"""
+    entity = self._cw.vreg['etypes'].etype_class('CWProperty')(self._cw)
+    entity.eid = varname
+    entity['pkey'] = propkey
+    form = self._cw.vreg['forms'].select('edition', self._cw, entity=entity)
+    form.build_context()
+    vfield = form.field_by_name('value')
+    renderer = formrenderers.FormRenderer(self._cw)
+    return vfield.render(form, renderer, tabindex=tabindex) \
+           + renderer.render_help(form, vfield)
 
 _afs = uicfg.autoform_section
 _afs.tag_subject_of(('*', 'for_user', '*'), 'main', 'hidden')

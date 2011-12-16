@@ -82,7 +82,7 @@ def list_form_param(form, param, pop=False):
 
 class CubicWebRequestBase(DBAPIRequest):
     """abstract HTTP request, should be extended according to the HTTP backend"""
-    json_request = False # to be set to True by json controllers
+    ajax_request = False # to be set to True by ajax controllers
 
     def __init__(self, vreg, https, form=None):
         super(CubicWebRequestBase, self).__init__(vreg)
@@ -120,6 +120,12 @@ class CubicWebRequestBase(DBAPIRequest):
             pid = make_uid(id(self))
             self.html_headers.define_var('pageid', pid, override=False)
         self.pageid = pid
+
+    @property
+    def json_request(self):
+        warn('[3.15] self._cw.json_request is deprecated, use self._cw.ajax_request instead',
+             DeprecationWarning, stacklevel=2)
+        return self.ajax_request
 
     @property
     def authmode(self):

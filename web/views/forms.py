@@ -406,7 +406,7 @@ class EntityFieldsForm(FieldsForm):
             return self.force_session_key
         # XXX if this is a json request, suppose we should redirect to the
         # entity primary view
-        if self._cw.json_request and self.edited_entity.has_eid():
+        if self._cw.ajax_request and self.edited_entity.has_eid():
             return '%s#%s' % (self.edited_entity.absolute_url(), self.domid)
         # XXX we should not consider some url parameters that may lead to
         # different url after a validation error

@@ -130,7 +130,7 @@ class ViewAction(action.Action):
         params = self._cw.form.copy()
         for param in ('vid', '__message') + controller.NAV_FORM_PARAMETERS:
             params.pop(param, None)
-        if self._cw.json_request:
+        if self._cw.ajax_request:
             path = 'view'
             if self.cw_rset is not None:
                 params = {'rql': self.cw_rset.printable_rql()}

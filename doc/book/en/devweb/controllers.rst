@@ -22,10 +22,6 @@ list them by category. They are all defined in
   :exc:`NoSelectableObject` errors that may bubble up to its entry point, in an
   end-user-friendly way (but other programming errors will slip through)
 
-* the JSon controller (same module) provides services for Ajax calls,
-  typically using JSON as a serialization format for input, and
-  sometimes using either JSON or XML for output;
-
 * the JSonpController is a wrapper around the ``ViewController`` that
   provides jsonp_ services. Padding can be specified with the
   ``callback`` request parameter. Only *jsonexport* / *ejsonexport*
@@ -36,10 +32,6 @@ list them by category. They are all defined in
 * the Login/Logout controllers make effective user login or logout
   requests
 
-.. warning::
-
-  JsonController will probably be renamed into AjaxController soon since
-  it has nothing to do with json per se.
 
 .. _jsonp: http://en.wikipedia.org/wiki/JSONP
 
@@ -63,6 +55,13 @@ list them by category. They are all defined in
 
 * the MailBugReport controller (web/views/basecontrollers.py) allows
   to quickly have a `reportbug` feature in one's application
+
+* the :class:`cubicweb.web.views.ajaxcontroller.AjaxController`
+  (:mod:`cubicweb.web.views.ajaxcontroller`) provides
+  services for Ajax calls, typically using JSON as a serialization format
+  for input, and sometimes using either JSON or XML for output. See
+  :ref:`ajax` chapter for more information.
+
 
 Registration
 ++++++++++++

@@ -20,15 +20,19 @@
 from __future__ import with_statement
 
 from logilab.common.testlib import unittest_main, mock_object
+from logilab.common.decorators import monkeypatch
 
 from cubicweb import Binary, NoSelectableObject, ValidationError
 from cubicweb.view import STRICT_DOCTYPE
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.utils import json_dumps
 from cubicweb.uilib import rql_for_eid
-from cubicweb.web import INTERNAL_FIELD_VALUE, Redirect, RequestError
+from cubicweb.web import INTERNAL_FIELD_VALUE, Redirect, RequestError, RemoteCallFailed
 from cubicweb.entities.authobjs import CWUser
 from cubicweb.web.views.autoform import get_pending_inserts, get_pending_deletes
+from cubicweb.web.views.basecontrollers import JSonController, xhtmlize, jsonize
+from cubicweb.web.views.ajaxcontroller import ajaxfunc, AjaxFunction
+
 u = unicode
 
 def req_form(user):
@@ -557,11 +561,12 @@ class SendMailControllerTC(CubicWebTC):
 
 
 
-class JSONControllerTC(CubicWebTC):
+class AjaxControllerTC(CubicWebTC):
+    tested_controller = 'ajax'
 
     def ctrl(self, req=None):
         req = req or self.request(url='http://whatever.fr/')
-        return self.vreg['controllers'].select('json', req)
+        return self.vreg['controllers'].select(self.tested_controller, req)
 
     def setup_database(self):
         req = self.request()
@@ -679,8 +684,89 @@ class JSONControllerTC(CubicWebTC):
         self.assertEqual(self.remote_call('format_date', '2007-01-01 12:00:00')[0],
                           json_dumps('2007/01/01'))
 
+    def test_ajaxfunc_noparameter(self):
+        @ajaxfunc
+        def foo(self, x, y):
+            return 'hello'
+        self.assertTrue(issubclass(foo, AjaxFunction))
+        self.assertEqual(foo.__regid__, 'foo')
+        self.assertEqual(foo.check_pageid, False)
+        self.assertEqual(foo.output_type, None)
+        req = self.request()
+        f = foo(req)
+        self.assertEqual(f(12, 13), 'hello')
+
+    def test_ajaxfunc_checkpageid(self):
+        @ajaxfunc( check_pageid=True)
+        def foo(self, x, y):
+            pass
+        self.assertTrue(issubclass(foo, AjaxFunction))
+        self.assertEqual(foo.__regid__, 'foo')
+        self.assertEqual(foo.check_pageid, True)
+        self.assertEqual(foo.output_type, None)
+        # no pageid
+        req = self.request()
+        f = foo(req)
+        self.assertRaises(RemoteCallFailed, f, 12, 13)
+
+    def test_ajaxfunc_json(self):
+        @ajaxfunc(output_type='json')
+        def foo(self, x, y):
+            return x + y
+        self.assertTrue(issubclass(foo, AjaxFunction))
+        self.assertEqual(foo.__regid__, 'foo')
+        self.assertEqual(foo.check_pageid, False)
+        self.assertEqual(foo.output_type, 'json')
+        # no pageid
+        req = self.request()
+        f = foo(req)
+        self.assertEqual(f(12, 13), '25')
 
 
+class JSonControllerTC(AjaxControllerTC):
+    # NOTE: this class performs the same tests as AjaxController but with
+    #       deprecated 'json' controller (i.e. check backward compatibility)
+    tested_controller = 'json'
+
+    def setUp(self):
+        super(JSonControllerTC, self).setUp()
+        self.exposed_remote_funcs = [fname for fname in dir(JSonController)
+                                     if fname.startswith('js_')]
+
+    def tearDown(self):
+        super(JSonControllerTC, self).tearDown()
+        for funcname in dir(JSonController):
+            # remove functions added dynamically during tests
+            if funcname.startswith('js_') and funcname not in self.exposed_remote_funcs:
+                delattr(JSonController, funcname)
+
+    def test_monkeypatch_jsoncontroller(self):
+        self.assertRaises(RemoteCallFailed, self.remote_call, 'foo')
+        @monkeypatch(JSonController)
+        def js_foo(self):
+            return u'hello'
+        res, req = self.remote_call('foo')
+        self.assertEqual(res, u'hello')
+
+    def test_monkeypatch_jsoncontroller_xhtmlize(self):
+        self.assertRaises(RemoteCallFailed, self.remote_call, 'foo')
+        @monkeypatch(JSonController)
+        @xhtmlize
+        def js_foo(self):
+            return u'hello'
+        res, req = self.remote_call('foo')
+        self.assertEqual(res,
+                         '<?xml version="1.0"?>\n' + STRICT_DOCTYPE +
+                         u'<div xmlns="http://www.w3.org/1999/xhtml" xmlns:cubicweb="http://www.logilab.org/2008/cubicweb">hello</div>')
+
+    def test_monkeypatch_jsoncontroller_jsonize(self):
+        self.assertRaises(RemoteCallFailed, self.remote_call, 'foo')
+        @monkeypatch(JSonController)
+        @jsonize
+        def js_foo(self):
+            return 12
+        res, req = self.remote_call('foo')
+        self.assertEqual(res, '12')
 
 if __name__ == '__main__':
     unittest_main()

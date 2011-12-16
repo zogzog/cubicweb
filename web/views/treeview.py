@@ -31,6 +31,7 @@ from cubicweb.selectors import adaptable
 from cubicweb.view import EntityView
 from cubicweb.mixins import _done_init
 from cubicweb.web.views import baseviews
+from cubicweb.web.views.ajaxcontroller import ajaxfunc
 
 def treecookiename(treeid):
     return str('%s-treestate' % treeid)
@@ -280,3 +281,20 @@ class TreeViewItemView(EntityView):
                        treeid=treeid, initial_load=False, **morekwargs)
         w(u'</li>')
 
+
+
+@ajaxfunc
+def node_clicked(self, treeid, nodeeid):
+    """add/remove eid in treestate cookie"""
+    cookies = self._cw.get_cookie()
+    statename = treecookiename(treeid)
+    treestate = cookies.get(statename)
+    if treestate is None:
+        self._cw.set_cookie(statename, nodeeid)
+    else:
+        marked = set(filter(None, treestate.value.split(':')))
+        if nodeeid in marked:
+            marked.remove(nodeeid)
+        else:
+            marked.add(nodeeid)
+        self._cw.set_cookie(statename, ':'.join(marked))

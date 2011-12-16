@@ -605,7 +605,7 @@ class CubicWebTC(TestCase):
         dump = json.dumps
         args = [dump(arg) for arg in args]
         req = self.request(fname=fname, pageid='123', arg=args)
-        ctrl = self.vreg['controllers'].select('json', req)
+        ctrl = self.vreg['controllers'].select('ajax', req)
         return ctrl.publish(), req
 
     def app_publish(self, req, path='view'):

@@ -450,7 +450,7 @@ class CubicWebPublisher(object):
         req.remove_header('Etag')
         req.reset_message()
         req.reset_headers()
-        if req.json_request:
+        if req.ajax_request:
             raise RemoteCallFailed(unicode(ex))
         try:
             req.data['ex'] = ex
