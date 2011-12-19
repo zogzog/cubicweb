@@ -18,6 +18,7 @@
 """CubicWeb is a generic framework to quickly build applications which describes
 relations between entitites.
 """
+from __future__ import with_statement
 
 __docformat__ = "restructuredtext en"
 
