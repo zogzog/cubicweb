@@ -813,7 +813,7 @@ table.listing td {
 
 table.listing th {
   font-weight: bold;
-  background: #ebe8d9 url("button.png") repeat-x;
+  background: %(listingHeaderBgColor)s;
 }
 
 table.listing td a,
