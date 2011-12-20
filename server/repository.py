@@ -989,11 +989,11 @@ class Repository(object):
         for eid in eids:
             try:
                 etype, uri, extid, auri = etcache.pop(typed_eid(eid)) # may be a string in some cases
-                rqlcache.pop('%s X WHERE X eid %s' % (etype, eid), None)
+                rqlcache.pop( ('%s X WHERE X eid %s' % (etype, eid),), None)
                 extidcache.pop((extid, uri), None)
             except KeyError:
                 etype = None
-            rqlcache.pop('Any X WHERE X eid %s' % eid, None)
+            rqlcache.pop( ('Any X WHERE X eid %s' % eid,), None)
             for source in self.sources:
                 source.clear_eid_cache(eid, etype)
 
