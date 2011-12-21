@@ -620,10 +620,12 @@ class PostgresTestDataBaseHandler(TestDataBaseHandler):
             backup_name = self._backup_name(db_id)
             self._drop(backup_name)
             self.system_source['db-name'] = backup_name
-            self._repo.turn_repo_off()
+            # during postgres database initialization, there is no repo set here.
+            assert self._repo is None
+            #self._repo.turn_repo_off()
             createdb(self.helper, self.system_source, self.dbcnx, self.cursor, template=orig_name)
             self.dbcnx.commit()
-            self._repo.turn_repo_on()
+            #self._repo.turn_repo_on()
             return backup_name
         finally:
             self.system_source['db-name'] = orig_name
