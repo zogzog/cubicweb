@@ -146,7 +146,7 @@ incontextBoxBodyHoverBgColor = lazystr('%(incontextBoxBodyBgColor)s')
 # table listing & co ###########################################################
 listingBorderColor = '#ccc'
 listingHeaderBgColor = '#efefef'
-listingHihligthedBgColor = '#fbfbfb'
+listingHighlightedBgColor = '#fbfbfb'
 
 # puce
 bulletDownImg = 'url("puce_down.png") 98% 6px no-repeat'

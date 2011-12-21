@@ -76,7 +76,7 @@ pre {
   letter-spacing: 0.015em;
   padding: 0.6em;
   margin: 0 2em 1.7em;
-  background-color: %(listingHihligthedBgColor)s;
+  background-color: %(listingHighlightedBgColor)s;
   border: 1px solid %(listingBorderColor)s;
 }
 
@@ -808,7 +808,7 @@ table.listing td.top {
 
 table.listing input,
 table.listing textarea {
- background: %(listingHihligthedBgColor)s;
+ background: %(listingHighlightedBgColor)s;
 }
 
 table.htableForm label, table.oneRowTableForm label {
