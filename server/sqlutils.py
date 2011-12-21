@@ -214,30 +214,10 @@ class SQLAdapterMixIn(object):
         # callback lookup for each *cell* in results when there is nothing to
         # lookup
         if not column_callbacks:
-            return self._process_result(cursor)
+            return self.dbhelper.dbapi_module.process_cursor(cursor, self._dbencoding,
+                                                             Binary)
         assert session
         return self._cb_process_result(cursor, column_callbacks, session)
-
-    def _process_result(self, cursor):
-        # begin bind to locals for optimization
-        descr = cursor.description
-        encoding = self._dbencoding
-        process_value = self._process_value
-        binary = Binary
-        # /end
-        cursor.arraysize = 100
-        while True:
-            results = cursor.fetchmany()
-            if not results:
-                break
-            for line in results:
-                result = []
-                for col, value in enumerate(line):
-                    if value is None:
-                        result.append(value)
-                        continue
-                    result.append(process_value(value, descr[col], encoding, binary))
-                yield result
 
     def _cb_process_result(self, cursor, column_callbacks, session):
         # begin bind to locals for optimization
