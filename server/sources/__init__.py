@@ -236,7 +236,7 @@ class AbstractSource(object):
 
     def get_connection(self):
         """open and return a connection to the source"""
-        raise NotImplementedError()
+        raise NotImplementedError(self)
 
     def check_connection(self, cnx):
         """Check connection validity, return None if the connection is still
@@ -388,7 +388,7 @@ class AbstractSource(object):
         if this account is defined in this source and valid login / password is
         given. Else raise `AuthenticationError`
         """
-        raise NotImplementedError()
+        raise NotImplementedError(self)
 
     # RQL query api ############################################################
 
@@ -399,7 +399,7 @@ class AbstractSource(object):
         possible type). If cachekey is given, the query necessary to fetch the
         results (but not the results themselves) may be cached using this key.
         """
-        raise NotImplementedError()
+        raise NotImplementedError(self)
 
     def flying_insert(self, table, session, union, args=None, varmap=None):
         """similar as .syntax_tree_search, but inserts data in the temporary
@@ -415,15 +415,15 @@ class AbstractSource(object):
 
     def get_extid(self, entity):
         """return the external id for the given newly inserted entity"""
-        raise NotImplementedError()
+        raise NotImplementedError(self)
 
     def add_entity(self, session, entity):
         """add a new entity to the source"""
-        raise NotImplementedError()
+        raise NotImplementedError(self)
 
     def update_entity(self, session, entity):
         """update an entity in the source"""
-        raise NotImplementedError()
+        raise NotImplementedError(self)
 
     def delete_entities(self, session, entities):
         """delete several entities from the source"""
@@ -432,11 +432,11 @@ class AbstractSource(object):
 
     def delete_entity(self, session, entity):
         """delete an entity from the source"""
-        raise NotImplementedError()
+        raise NotImplementedError(self)
 
     def add_relation(self, session, subject, rtype, object):
         """add a relation to the source"""
-        raise NotImplementedError()
+        raise NotImplementedError(self)
 
     def add_relations(self, session,  rtype, subj_obj_list):
         """add a relations to the source"""
@@ -447,30 +447,30 @@ class AbstractSource(object):
 
     def delete_relation(self, session, subject, rtype, object):
         """delete a relation from the source"""
-        raise NotImplementedError()
+        raise NotImplementedError(self)
 
     # system source interface #################################################
 
     def eid_type_source(self, session, eid):
         """return a tuple (type, source, extid) for the entity with id <eid>"""
-        raise NotImplementedError()
+        raise NotImplementedError(self)
 
     def create_eid(self, session):
-        raise NotImplementedError()
+        raise NotImplementedError(self)
 
     def add_info(self, session, entity, source, extid):
         """add type and source info for an eid into the system table"""
-        raise NotImplementedError()
+        raise NotImplementedError(self)
 
     def update_info(self, session, entity, need_fti_update):
         """mark entity as being modified, fulltext reindex if needed"""
-        raise NotImplementedError()
+        raise NotImplementedError(self)
 
     def delete_info_multi(self, session, entities, uri):
         """delete system information on deletion of a list of entities with the
         same etype and belinging to the same source
         """
-        raise NotImplementedError()
+        raise NotImplementedError(self)
 
     def modified_entities(self, session, etypes, mtime):
         """return a 2-uple:
@@ -480,41 +480,41 @@ class AbstractSource(object):
         * list of (etype, eid) of entities of the given types which have been
           deleted since the given timestamp
         """
-        raise NotImplementedError()
+        raise NotImplementedError(self)
 
     def index_entity(self, session, entity):
         """create an operation to [re]index textual content of the given entity
         on commit
         """
-        raise NotImplementedError()
+        raise NotImplementedError(self)
 
     def fti_unindex_entities(self, session, entities):
         """remove text content for entities from the full text index
         """
-        raise NotImplementedError()
+        raise NotImplementedError(self)
 
     def fti_index_entities(self, session, entities):
         """add text content of created/modified entities to the full text index
         """
-        raise NotImplementedError()
+        raise NotImplementedError(self)
 
     # sql system source interface #############################################
 
     def sqlexec(self, session, sql, args=None):
         """execute the query and return its result"""
-        raise NotImplementedError()
+        raise NotImplementedError(self)
 
     def temp_table_def(self, selection, solution, table, basemap):
-        raise NotImplementedError()
+        raise NotImplementedError(self)
 
     def create_index(self, session, table, column, unique=False):
-        raise NotImplementedError()
+        raise NotImplementedError(self)
 
     def drop_index(self, session, table, column, unique=False):
-        raise NotImplementedError()
+        raise NotImplementedError(self)
 
     def create_temp_table(self, session, table, schema):
-        raise NotImplementedError()
+        raise NotImplementedError(self)
 
     def clean_temp_data(self, session, temptables):
         """remove temporary data, usually associated to temporary tables"""
