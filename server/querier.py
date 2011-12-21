@@ -668,7 +668,7 @@ class QuerierHelper(object):
                 print '*'*80
             print 'querier input', repr(rql), repr(args)
         # parse the query and binds variables
-        cachekey = rql
+        cachekey = (rql,)
         try:
             if args:
                 # search for named args in query which are eids (hence
@@ -699,7 +699,7 @@ class QuerierHelper(object):
                 # we want queries such as "Any X WHERE X eid 9999" return an
                 # empty result instead of raising UnknownEid
                 return empty_rset(rql, args, rqlst)
-            if args and not rql in self._rql_ck_cache:
+            if args and rql not in self._rql_ck_cache:
                 self._rql_ck_cache[rql] = eidkeys
                 if eidkeys:
                     cachekey = self._repo.querier_cache_key(session, rql, args,
@@ -722,6 +722,11 @@ class QuerierHelper(object):
             # a new syntax tree is built from them.
             rqlst = rqlst.copy()
             self._annotate(rqlst)
+            if args:
+                 # different SQL generated when some argument is None or not (IS
+                # NULL). This should be considered when computing sql cache key
+                cachekey += tuple(sorted([k for k,v in args.iteritems()
+                                          if v is None]))
         # make an execution plan
         plan = self.plan_factory(rqlst, args, session)
         plan.cache_key = cachekey

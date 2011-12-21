@@ -392,7 +392,8 @@ class OneFetchStep(LimitOffsetMixIn, Step):
         # cachekey
         if inputmap or self.plan.cache_key is None:
             cachekey = None
-        # union may have been splited into subqueries, rebuild a cache key
+        # union may have been splited into subqueries, in which case we can't
+        # use plan.cache_key, rebuild a cache key
         elif isinstance(self.plan.cache_key, tuple):
             cachekey = list(self.plan.cache_key)
             cachekey[0] = union.as_string()

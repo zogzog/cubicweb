@@ -23,7 +23,7 @@ __docformat__ = "restructuredtext en"
 _ = unicode
 
 import logging
-from itertools import repeat, chain
+from itertools import repeat
 from logilab.mtconverter import xml_escape
 from logilab.common.decorators import cachedproperty
 
@@ -136,7 +136,7 @@ class CWSourceMappingTab(EntityView):
             errors = zip(repeat(_('error')), checker.errors)
             warnings = zip(repeat(_('warning')), checker.warnings)
             infos = zip(repeat(_('warning')), checker.infos)
-            self.wview('pyvaltable', pyvalue=chain(errors, warnings, infos))
+            self.wview('pyvaltable', pyvalue=errors + warnings + infos)
 
 
 class MappingChecker(object):
