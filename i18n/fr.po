@@ -983,7 +983,7 @@ msgid "abstract base class for transitions"
 msgstr "classe de base abstraite pour les transitions"
 
 msgid "action menu"
-msgstr ""
+msgstr "actions"
 
 msgid "action(s) on this selection"
 msgstr "action(s) sur cette sélection"
