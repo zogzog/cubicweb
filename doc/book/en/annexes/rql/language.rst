@@ -354,17 +354,43 @@ Both queries aren't at all equivalent :
   tagged by the expected tag. This implies that : you won't get any result if the
   in_state or tag
 
+Another common case where you may want to use ``EXISTS`` is when you
+find yourself using ``DISTINCT`` at the beginning of your query to
+remove duplicate results. The typical case is when you have a
+multivalued relation such as Version version_of Project and you want
+to retrieve projects which have a version:
 
-You can also use the question mark (`?`) to mark optional relations which allow
+.. sourcecode:: sql
+
+  Any P WHERE V version_of P
+
+will return each project number of versions times. So you may be
+tempted to use:
+
+.. sourcecode:: sql
+
+  DISTINCT ANY P WHERE V version_of P
+
+This will work, but is not efficient, as it will use the ``SELECT
+DISTINCT`` SQL predicate, which needs to retrieve all projects, then
+sort them and discard duplicates, which can have a very high cost for
+large result sets. So the best way to write this is:
+
+.. sourcecode:: sql
+
+  ANY P WHERE EXISTS V version_of P
+
+
+You can also use the question mark (`?`) to mark optional relations. This allows
 you to select entities related **or not** to another. It is a similar concept
-that the `Left outer join`_:
+to `Left outer join`_:
 
     the result of a left outer join (or simply left join) for table A and B
     always contains all records of the "left" table (A), even if the
     join-condition does not find any matching record in the "right" table (B).
 
-You must use the `?` behind a variable to specify that the relation toward it
-is optional. For instance:
+You must use the `?` behind a variable to specify that the relation to
+that variable is optional. For instance:
 
 - Bugs of a project attached or not to a version
 
@@ -373,7 +399,7 @@ is optional. For instance:
        Any X, V WHERE X concerns P, P eid 42, X corrected_in V?
 
   You will get a result set containing all the project's tickets, with either the
-  version in which it's corrected or None for tickets not related to a version.
+  version in which it's fixed or None for tickets not related to a version.
 
 
 - All cards and the project they document if any
