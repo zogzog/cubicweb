@@ -295,7 +295,7 @@ class RQLRewriter(object):
                     if parent is None:
                         self.current_statement().remove_node(new, undefine=True)
                     else:
-                        parent.parent.replace(or_, or_.children[0])
+                        grandpa.replace(or_, parent)
                         self._cleanup_inserted(new)
                     raise
                 else:
