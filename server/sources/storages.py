@@ -113,6 +113,8 @@ def fsimport(session):
 class BytesFileSystemStorage(Storage):
     """store Bytes attribute value on the file system"""
     def __init__(self, defaultdir, fsencoding='utf-8'):
+        if type(defaultdir) is unicode:
+            defaultdir = defaultdir.encode(fsencoding)
         self.default_directory = defaultdir
         self.fsencoding = fsencoding
 
@@ -201,7 +203,8 @@ class BytesFileSystemStorage(Storage):
         name = entity.cw_attr_metadata(attr, 'name')
         if name is not None:
             basename.append(name.encode(self.fsencoding))
-        fspath = uniquify_path(self.default_directory, '_'.join(basename))
+        fspath = uniquify_path(self.default_directory,
+                               '_'.join(basename))
         if fspath is None:
             msg = entity._cw._('failed to uniquify path (%s, %s)') % (
                 self.default_directory, '_'.join(basename))
