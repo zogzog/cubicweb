@@ -121,11 +121,15 @@ class CubicWebRequestBase(DBAPIRequest):
             self.html_headers.define_var('pageid', pid, override=False)
         self.pageid = pid
 
-    @property
-    def json_request(self):
+    def _get_json_request(self):
         warn('[3.15] self._cw.json_request is deprecated, use self._cw.ajax_request instead',
              DeprecationWarning, stacklevel=2)
         return self.ajax_request
+    def _set_json_request(self, value):
+        warn('[3.15] self._cw.json_request is deprecated, use self._cw.ajax_request instead',
+             DeprecationWarning, stacklevel=2)
+        self.ajax_request = value
+    json_request = property(_get_json_request, _set_json_request)
 
     @property
     def authmode(self):
