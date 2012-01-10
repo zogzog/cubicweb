@@ -458,12 +458,9 @@ class TableMixIn(component.LayoutableMixIn):
     # layout callbacks #########################################################
 
     def facets_form(self, **kwargs):# XXX extracted from jqplot cube
-        try:
-            return self._cw.vreg['views'].select(
-                'facet.filtertable', self._cw, rset=self.cw_rset, view=self,
-                **kwargs)
-        except NoSelectableObject:
-            return None
+        return self._cw.vreg['views'].select_or_none(
+            'facet.filtertable', self._cw, rset=self.cw_rset, view=self,
+            **kwargs)
 
     @cachedproperty
     def domid(self):
