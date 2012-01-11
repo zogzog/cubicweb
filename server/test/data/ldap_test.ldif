@@ -31,6 +31,7 @@ displayName: sthenault
 gecos: Sylvain Thenault
 mail: sylvain.thenault@logilab.fr
 mail: syt@logilab.fr
+userPassword: {SSHA}v/8xJQP3uoaTBZz1T7Y0B3qOxRN1cj7D
 
 dn: uid=adim,ou=People,dc=cubicweb,dc=test
 loginShell: /bin/bash
@@ -52,4 +53,5 @@ displayName: adimascio
 gecos: Adrien Di Mascio
 mail: adim@logilab.fr
 mail: adrien.dimascio@logilab.fr
+userPassword: {SSHA}cPQOWqkkLDlfWFwxcl1m8V2JdySQBHfS
 

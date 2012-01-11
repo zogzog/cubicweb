@@ -26,7 +26,7 @@ from datetime import timedelta
 from logilab.mtconverter import xml_escape
 from logilab.common.date import todatetime
 
-from cubicweb.utils import json_dumps
+from cubicweb.utils import json_dumps, make_uid
 from cubicweb.interfaces import ICalendarable
 from cubicweb.selectors import implements, adaptable
 from cubicweb.view import EntityView, EntityAdapter, implements_adapter_compat
@@ -198,9 +198,10 @@ class CalendarView(EntityView):
         self._cw.demote_to_html()
         self._cw.add_css(('fullcalendar.css', 'cubicweb.calendar.css'))
         self._cw.add_js(('jquery.ui.js', 'fullcalendar.min.js', 'jquery.qtip.min.js'))
+        self.calendar_id = 'cal' + make_uid('uid')
         self.add_onload()
         # write calendar div to load jquery fullcalendar object
-        self.w(u'<div id="calendar"></div>')
+        self.w(u'<div id="%s"></div>' % self.calendar_id)
 
 
     def add_onload(self):
@@ -220,9 +221,9 @@ class CalendarView(EntityView):
           // allow to have html tags in event's title
           $element.find('span.fc-event-title').html($element.find('span.fc-event-title').text());
         };
-        $("#calendar").fullCalendar(options);
+        $("#%s").fullCalendar(options);
         """ #"
-        self._cw.add_onload(js % json_dumps(fullcalendar_options))
+        self._cw.add_onload(js % (json_dumps(fullcalendar_options), self.calendar_id))
 
 
     def get_events(self):

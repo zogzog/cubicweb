@@ -115,6 +115,16 @@ class WebConfiguration(CubicWebConfiguration):
           'where the cubicweb web server is listening on port 8080.',
           'group': 'main', 'level': 3,
           }),
+        ('https-deny-anonymous',
+         {'type': 'string',
+          'default': False,
+          'help': 'Prevent anonymous user to browse thought https version of '
+                  'the site (https-url). Login form will then be displayed '
+                  'until logged',
+          'group': 'web',
+          'level': 2
+         }
+          ),
         ('auth-mode',
          {'type' : 'choice',
           'choices' : ('cookie', 'http'),

@@ -23,9 +23,24 @@ Widgets.GMapWidget = defclass('GMapWidget', null, {
             var jsonurl = wdgnode.getAttribute('cubicweb:loadurl');
             var self = this; // bind this to a local variable
             jQuery.getJSON(jsonurl, function(geodata) {
+                var zoomLevel;
+                var center;
+                var latlngbounds = new GLatLngBounds( );
+                for (var i = 0; i < geodata.markers.length; i++) {
+                    var marker = geodata.markers[i];
+                    var latlng = new GLatLng(marker.latitude, marker.longitude);
+                    latlngbounds.extend( latlng );
+                }
+                if (geodata.zoomlevel) {
+                    zoomLevel = geodata.zoomlevel;
+                } else {
+                    zoomLevel = map.getBoundsZoomLevel( latlngbounds ) - 1;
                 if (geodata.center) {
-                    var zoomLevel = geodata.zoomlevel;
-                    map.setCenter(new GLatLng(geodata.center.latitude, geodata.center.longitude), zoomLevel);
+                    center = new GLatng(geodata.center.latitude, geodata.center.longitude);
+                } else {
+                    center = latlngbounds.getCenter();
+                }
+                map.setCenter(center, zoomLevel);
                 }
                 for (var i = 0; i < geodata.markers.length; i++) {
                     var marker = geodata.markers[i];

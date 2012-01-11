@@ -340,7 +340,7 @@ class CubicWebRootResource(resource.Resource):
             self.appli.connect(req)
         except Redirect, ex:
             return self.redirect(request=req, location=ex.location)
-        if https and req.session.anonymous_session:
+        if https and req.session.anonymous_session and self.config['https-deny-anonymous']:
             # don't allow anonymous on https connection
             return self.request_auth(request=req)
         if self.url_rewriter is not None:
