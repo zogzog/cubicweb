@@ -510,11 +510,10 @@ class TableMixIn(component.LayoutableMixIn):
 
 class RsetTableColRenderer(AbstractColumnRenderer):
     """Default renderer for :class:`RsetTableView`."""
-    default_cellvid = 'incontext'
 
-    def __init__(self, cellvid=None, **kwargs):
+    def __init__(self, cellvid, **kwargs):
         super(RsetTableColRenderer, self).__init__(**kwargs)
-        self.cellvid = cellvid or self.default_cellvid
+        self.cellvid = cellvid
 
     def bind(self, view, colid):
         super(RsetTableColRenderer, self).bind(view, colid)
