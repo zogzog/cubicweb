@@ -1,0 +1,33 @@
+Whats new in CubicWeb 3.15
+==========================
+
+
+API changes
+-----------
+
+
+
+Unintrusive API changes
+-----------------------
+
+
+
+RQL
+---
+
+
+
+User interface changes
+----------------------
+
+
+
+Configuration
+-------------
+
+Base schema changes
+-------------------
+Email address 'read' permission is now more restrictive: only managers and
+users to which an address belong may see them. Application that wish other
+settings should set them explicitly.
+
