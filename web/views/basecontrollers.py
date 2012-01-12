@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -36,7 +36,7 @@ from cubicweb.web.controller import Controller
 from cubicweb.web.views import vid_from_rset
 
 
-@deprecated('jsonize is deprecated, use AjaxFunction appobjects instead')
+@deprecated('[3.15] jsonize is deprecated, use AjaxFunction appobjects instead')
 def jsonize(func):
     """decorator to sets correct content_type and calls `json_dumps` on
     results
@@ -47,7 +47,7 @@ def jsonize(func):
     wrapper.__name__ = func.__name__
     return wrapper
 
-@deprecated('xhtmlize is deprecated, use AjaxFunction appobjects instead')
+@deprecated('[3.15] xhtmlize is deprecated, use AjaxFunction appobjects instead')
 def xhtmlize(func):
     """decorator to sets correct content_type and calls `xmlize` on results"""
     def wrapper(self, *args, **kwargs):
@@ -58,7 +58,7 @@ def xhtmlize(func):
     wrapper.__name__ = func.__name__
     return wrapper
 
-@deprecated('check_pageid is deprecated, use AjaxFunction appobjects instead')
+@deprecated('[3.15] check_pageid is deprecated, use AjaxFunction appobjects instead')
 def check_pageid(func):
     """decorator which checks the given pageid is found in the
     user's session data
