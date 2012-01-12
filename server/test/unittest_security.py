@@ -646,5 +646,13 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
                           self.execute, 'SET TI to_state S WHERE TI eid %(ti)s, S name "pitetre"',
                           {'ti': trinfo.eid})
 
+    def test_emailaddress_security(self):
+        self.execute('INSERT EmailAddress X: X address "hop"').get_entity(0, 0)
+        self.execute('INSERT EmailAddress X: X address "anon", U use_email X WHERE U login "anon"').get_entity(0, 0)
+        self.commit()
+        self.assertEqual(len(self.execute('Any X WHERE X is EmailAddress')), 2)
+        self.login('anon')
+        self.assertEqual(len(self.execute('Any X WHERE X is EmailAddress')), 1)
+
 if __name__ == '__main__':
     unittest_main()
