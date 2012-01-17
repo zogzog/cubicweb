@@ -422,6 +422,7 @@ class AbstractFacet(AppObject):
     context = ''
     needs_update = False
     start_unfolded = True
+    allow_hide = True
     cw_rset = None # ensure facets have a cw_rset attribute
 
     def __init__(self, req, select=None, filtered_variable=None,
@@ -1444,8 +1445,11 @@ class FacetVocabularyWidget(htmlwidgets.HTMLWidget):
         title = xml_escape(self.facet.title)
         facetid = make_uid(self.facet.__regid__)
         w(u'<div id="%s" class="facet">\n' % facetid)
-        w(u'<div class="facetTitle" cubicweb:facetName="%s">%s</div>\n' %
-          (xml_escape(self.facet.__regid__), title))
+        cssclass = 'facetTitle'
+        if self.facet.allow_hide:
+            cssclass += ' hideFacetBody'
+        w(u'<div class="%s" cubicweb:facetName="%s">%s</div>\n' %
+          (cssclass, xml_escape(self.facet.__regid__), title))
         if self.facet._support_and_compat():
             self._render_and_or(w)
         cssclass = 'facetBody vocabularyFacet'
@@ -1501,8 +1505,11 @@ class FacetStringWidget(htmlwidgets.HTMLWidget):
         title = xml_escape(self.facet.title)
         facetid = make_uid(self.facet.__regid__)
         w(u'<div id="%s" class="facet">\n' % facetid)
-        w(u'<div class="facetTitle" cubicweb:facetName="%s">%s</div>\n' %
-               (xml_escape(self.facet.__regid__), title))
+        cssclass = 'facetTitle'
+        if self.facet.allow_hide:
+            cssclass += ' hideFacetBody'
+        w(u'<div class="%s" cubicweb:facetName="%s">%s</div>\n' %
+               (cssclass, xml_escape(self.facet.__regid__), title))
         w(u'<input name="%s" type="text" value="%s" />\n' % (facetid, self.value or u''))
         w(u'</div>\n')
 
@@ -1560,8 +1567,11 @@ class FacetRangeWidget(htmlwidgets.HTMLWidget):
         title = xml_escape(self.facet.title)
         facetname = xml_escape(facetname)
         w(u'<div id="%s" class="facet rangeFacet">\n' % facetid)
-        w(u'<div class="facetTitle" cubicweb:facetName="%s">%s</div>\n' %
-          (facetname, title))
+        cssclass = 'facetTitle'
+        if facet.allow_hide:
+            cssclass += ' hideFacetBody'
+        w(u'<div class="%s" cubicweb:facetName="%s">%s</div>\n' %
+          (cssclass, facetname, title))
         cssclass = 'facetBody'
         if not self.facet.start_unfolded:
             cssclass += ' hidden'
