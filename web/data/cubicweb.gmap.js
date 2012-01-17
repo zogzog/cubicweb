@@ -35,13 +35,13 @@ Widgets.GMapWidget = defclass('GMapWidget', null, {
                     zoomLevel = geodata.zoomlevel;
                 } else {
                     zoomLevel = map.getBoundsZoomLevel( latlngbounds ) - 1;
+                }
                 if (geodata.center) {
                     center = new GLatng(geodata.center.latitude, geodata.center.longitude);
                 } else {
                     center = latlngbounds.getCenter();
                 }
                 map.setCenter(center, zoomLevel);
-                }
                 for (var i = 0; i < geodata.markers.length; i++) {
                     var marker = geodata.markers[i];
                     self.createMarker(map, marker, i + 1, uselabel);
