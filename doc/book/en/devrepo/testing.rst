@@ -460,3 +460,127 @@ CubicWebTC API
 ``````````````
 .. autoclass:: cubicweb.devtools.testlib.CubicWebTC
    :members:
+
+
+What you need to know about request and session
+-----------------------------------------------
+
+
+.. image:: ../images/request_session.png
+
+First, remember to think that some code run on a client side, some
+other on the repository side. More precisely:
+
+* client side: web interface, raw db-api connection (cubicweb-ctl shell for
+  instance);
+
+* repository side: RQL query execution, that may trigger hooks and operation.
+
+The client interact with the repository through a db-api connection.
+
+
+A db-api connection is tied to a session in the repository. The connection and
+request objects are unaccessible from repository code / the session object is
+unaccessible from client code (theorically at least).
+
+The :mod:`cubicweb.dbapi` module provides a base request class. The web interface
+provides an extended request class.
+
+
+The `request` object provides access to all cubicweb resources, eg:
+
+* the registry (which itself provides access to the schema and the
+  configuration);
+
+* an underlying db-api connection (when using req.execute, you actually call the
+  db-api);
+
+* other specific resources depending on the client type (url generation according
+  to base url, form parameters, etc.).
+
+
+A `session` provides an api similar to a request regarding RQL execution and
+access to global resources (registry and all), but also have the following
+responsibilities:
+
+* handle transaction data, that will live during the time of a single
+  transaction. This includes the database connections that will be used to
+  execute RQL queries.
+
+* handle persistent data that may be used across different (web) requests
+
+* security and hooks control (not possible through a request)
+
+
+The `_cw` attribute
+```````````````````
+The `_cw` attribute available on every application object provides access to all
+cubicweb resources, eg:
+
+For code running on the client side (eg web interface view), `_cw` is a request
+instance.
+
+For code running on the repository side (hooks and operation), `_cw` is a session
+instance.
+
+
+Beware some views may be called with a session (eg notifications) or with a
+DB-API request. In the later case, see :meth:`use_web_compatible_requests` on
+:class:`Connection` instances.
+
+
+Request, session and transaction
+````````````````````````````````
+
+In the web interface, an HTTP request is handle by a single request, which will
+be thrown way once the response send.
+
+The web publisher handle the transaction:
+
+* commit / rollback is done automatically
+* you should not commit / rollback explicitly
+
+When using a raw db-api, you're on your own regarding transaction.
+
+On the other hand, db-api connection and session live from a user login to its logout.
+
+Because session lives for a long time, and database connections is a limited
+resource, we can't bound a session to its own database connection for all its
+lifetime. The repository handles a pool of connections (4 by default), and it's
+responsible to attribute them as needed.
+
+Let's detail the process:
+
+1. an incoming RQL query comes from a client to the repository
+
+2. the repository attributes a database connection to the session
+
+3. the repository's querier execute the query
+
+4. this query may trigger hooks. Hooks and operation may execute some rql queries
+   through `_cw.execute`. Those queries go directly to the querier, hence don't
+   touch the database connection, they use the one attributed in 2.
+
+5. the repository's get the result of the query in 1. If it was a RQL read query,
+   the database connection is released. If it was a write query, the connection
+   is then tied to the session until the transaction is commited or rollbacked.
+
+6. results are sent back to the client
+
+This implies several things:
+
+* when using a request, or code executed in hooks, this database connection
+  handling is totally transparent
+
+* however, take care when writing test: you are usually faking / testing both the
+  server and the client side, so you have to decide when to use self.request() /
+  self.session. Ask yourself "where the code I want to test will be running,
+  client or repository side ?". The response is usually : use a request :)
+  However, if you really need using a session:
+
+  - commit / rollback will free the database connection (unless explicitly told
+    not to do so).
+
+  - if you issue a query after that without asking for a database connection
+    (`session.get_cnxset()`), you will end up with a 'None type has no attribute
+    source()' error
