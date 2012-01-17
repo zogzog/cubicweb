@@ -666,6 +666,12 @@ class RQLExpression(object):
     full_rql = None
 
     def __init__(self, expression, mainvars, eid):
+        """
+        :type mainvars: sequence of RQL variables' names. Can be provided as a 
+                        comma separated string.
+        :param mainvars: names of the variables being selected.
+
+        """
         self.eid = eid # eid of the entity representing this rql expression
         assert mainvars, 'bad mainvars %s' % mainvars
         if isinstance(mainvars, basestring):
