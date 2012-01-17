@@ -265,6 +265,20 @@ class SchemaReaderClassTest(TestCase):
         schema = CubicWebSchema('Test Schema')
         schema.add_entity_type(EntityType('NaN'))
 
+    def test_relation_perm_overriding(self):
+        loader = CubicWebSchemaLoader()
+        config = TestConfiguration('data', apphome=join(dirname(__file__), 'data_schemareader'))
+        config.bootstrap_cubes()
+        schema = loader.load(config)
+        self.assertEqual(schema['in_group'].rdefs.values()[0].permissions,
+                         {'read': ('managers',),
+                          'add': ('managers',),
+                          'delete': ('managers',)})
+        self.assertEqual(schema['cw_for_source'].rdefs.values()[0].permissions,
+                         {'read': ('managers', 'users'),
+                          'add': ('managers',),
+                          'delete': ('managers',)})
+
 
 class BadSchemaTC(TestCase):
     def setUp(self):
