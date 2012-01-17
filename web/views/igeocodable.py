@@ -80,7 +80,7 @@ class GeocodingJsonView(EntityView):
             'markers': markers,
             }
         if zoomlevel:
-            geodata['zoomlevel'] = zoomlevel
+            geodata['zoomlevel'] = int(zoomlevel)
         self.w(json_dumps(geodata))
 
     def build_marker_data(self, entity, igeocodable, extraparams):
