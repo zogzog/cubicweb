@@ -227,7 +227,7 @@ function initFacetBoxEvents(root) {
                         buildRQL.apply(null, jsfacetargs);
                     }
                 });
-                facet.find('div.facetTitle').click(function() {
+                facet.find('div.facetTitle.hideFacetBody').click(function() {
                     facet.find('div.facetBody').toggleClass('hidden').toggleClass('opened');
                     jQuery(this).toggleClass('opened');
                 });
