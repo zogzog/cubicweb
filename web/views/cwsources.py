@@ -460,9 +460,9 @@ class LogTable(pyviews.PyValTableView):
                     w(u'</div>')
 
     column_renderers = {0: SeverityRenderer(),
-                        1: URLRenderer(),
-                        2: LineRenderer(),
-                        3: MessageRenderer(),
+                        1: URLRenderer(sortable=False),
+                        2: LineRenderer(sortable=False),
+                        3: MessageRenderer(sortable=False),
                         }
 
 
