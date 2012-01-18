@@ -18,6 +18,7 @@
 """custom storages for the system source"""
 
 import os
+import sys
 from os import unlink, path as osp
 from contextlib import contextmanager
 
@@ -112,11 +113,29 @@ def fsimport(session):
 
 class BytesFileSystemStorage(Storage):
     """store Bytes attribute value on the file system"""
-    def __init__(self, defaultdir, fsencoding='utf-8'):
+    def __init__(self, defaultdir, fsencoding='utf-8', wmode=0444):
         if type(defaultdir) is unicode:
             defaultdir = defaultdir.encode(fsencoding)
         self.default_directory = defaultdir
         self.fsencoding = fsencoding
+        # extra umask to use when creating file
+        # 0444 as in "only allow read bit in permission"
+        self._wmode = wmode
+
+    def _writecontent(self, path, binary):
+        """write the content of a binary in readonly file
+
+        As the bfss never alter a create file it does not prevent it to work as
+        intended. This is a beter safe than sorry approach.
+        """
+        write_flag = os.O_WRONLY | os.O_CREAT | os.O_EXCL
+        if sys.platform == 'win32':
+            write_flag |= os.O_BINARY
+        fd = os.open(path, write_flag, self._wmode)
+        fileobj = os.fdopen(fd, 'wb')
+        binary.to_file(fileobj)
+        fileobj.close()
+
 
     def callback(self, source, session, value):
         """sql generator callback when some attribute with a custom storage is
@@ -138,7 +157,7 @@ class BytesFileSystemStorage(Storage):
             fpath = self.new_fs_path(entity, attr)
             # bytes storage used to store file's path
             entity.cw_edited.edited_attribute(attr, Binary(fpath))
-            binary.to_file(fpath)
+            self._writecontent(fpath, binary)
             AddFileOp.get_instance(entity._cw).add_data(fpath)
         return binary
 
@@ -171,7 +190,7 @@ class BytesFileSystemStorage(Storage):
                 fpath = self.new_fs_path(entity, attr)
                 assert not osp.exists(fpath)
                 # write attribute value on disk
-                binary.to_file(fpath)
+                self._writecontent(fpath, binary)
                 # Mark the new file as added during the transaction.
                 # The file will be removed on rollback
                 AddFileOp.get_instance(entity._cw).add_data(fpath)

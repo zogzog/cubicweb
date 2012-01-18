@@ -77,25 +77,24 @@ class Binary(StringIO):
                "Binary objects must use raw strings, not %s" % data.__class__
         StringIO.write(self, data)
 
-    def to_file(self, filename):
+    def to_file(self, fobj):
         """write a binary to disk
 
         the writing is performed in a safe way for files stored on
         Windows SMB shares
         """
         pos = self.tell()
-        with open(filename, 'wb') as fobj:
-            self.seek(0)
-            if sys.platform == 'win32':
-                while True:
-                    # the 16kB chunksize comes from the shutil module
-                    # in stdlib
-                    chunk = self.read(16*1024)
-                    if not chunk:
-                        break
-                    fobj.write(chunk)
-            else:
-                fobj.write(self.read())
+        self.seek(0)
+        if sys.platform == 'win32':
+            while True:
+                # the 16kB chunksize comes from the shutil module
+                # in stdlib
+                chunk = self.read(16*1024)
+                if not chunk:
+                    break
+                fobj.write(chunk)
+        else:
+            fobj.write(self.read())
         self.seek(pos)
 
     @staticmethod
