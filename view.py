@@ -417,6 +417,10 @@ class EntityStartupView(EntityView):
         """return some rql to be executed if the result set is None"""
         return self.default_rql
 
+    def no_entities(self, **kwargs):
+        """override to display something when no entities were found"""
+        pass
+
     def call(self, **kwargs):
         """override call to execute rql returned by the .startup_rql method if
         necessary
@@ -424,8 +428,11 @@ class EntityStartupView(EntityView):
         rset = self.cw_rset
         if rset is None:
             rset = self.cw_rset = self._cw.execute(self.startup_rql())
-        for i in xrange(len(rset)):
-            self.wview(self.__regid__, rset, row=i, **kwargs)
+        if rset:
+            for i in xrange(len(rset)):
+                self.wview(self.__regid__, rset, row=i, **kwargs)
+        else:
+            self.no_entities(**kwargs)
 
 
 class AnyRsetView(View):
