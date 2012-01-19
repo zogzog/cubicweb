@@ -543,6 +543,10 @@ class CubicWebRequestBase(DBAPIRequest):
             assert expires is None, 'both max age and expires cant be specified'
             expires = maxage + time.time()
         elif expires:
+            # we don't want to handle times before the EPOCH (cause bug on
+            # windows). Also use > and not >= else expires == 0 and Cookie think
+            # that means no expire...
+            assert expires + GMTOFFSET > date(1970, 1, 1)
             expires = timegm((expires + GMTOFFSET).timetuple())
         else:
             expires = None
@@ -557,11 +561,7 @@ class CubicWebRequestBase(DBAPIRequest):
             warn('[3.13] remove_cookie now take only a name as argument',
                  DeprecationWarning, stacklevel=2)
             name = bwcompat
-        self.set_cookie(name, '', maxage=0,
-                        # substracting GMTOFFSET because set_cookie
-                        # expects a localtime and we don't want to
-                        # handle times before the EPOCH
-                        expires=date(1970, 1, 1) - GMTOFFSET) 
+        self.set_cookie(name, '', maxage=0, expires=date(2000, 1, 1))
 
     def set_content_type(self, content_type, filename=None, encoding=None):
         """set output content type for this request. An optional filename
