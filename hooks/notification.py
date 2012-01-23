@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -22,7 +22,7 @@ __docformat__ = "restructuredtext en"
 from logilab.common.textutils import normalize_text
 
 from cubicweb import RegistryNotFound
-from cubicweb.selectors import is_instance
+from cubicweb.predicates import is_instance
 from cubicweb.server import hook
 from cubicweb.sobjects.supervising import SupervisionMailOp
 

@@ -21,7 +21,7 @@ __docformat__ = "restructuredtext en"
 
 from yams.schema import role_name
 from cubicweb import UnknownProperty, ValidationError, BadConnectionId
-from cubicweb.selectors import is_instance
+from cubicweb.predicates import is_instance
 from cubicweb.server import hook
 
 

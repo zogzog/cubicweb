@@ -1,5 +1,5 @@
 # -*- coding: iso-8859-1 -*-
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -34,7 +34,7 @@ from yams.constraints import UniqueConstraint
 
 from cubicweb import (BadConnectionId, RepositoryError, ValidationError,
                       UnknownEid, AuthenticationError, Unauthorized, QueryError)
-from cubicweb.selectors import is_instance
+from cubicweb.predicates import is_instance
 from cubicweb.schema import CubicWebSchema, RQLConstraint
 from cubicweb.dbapi import connect, multiple_connections_unfix
 from cubicweb.devtools.testlib import CubicWebTC

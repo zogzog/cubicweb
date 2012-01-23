@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -25,8 +25,8 @@ from logilab.mtconverter import xml_escape
 
 from cubicweb import typed_eid
 from cubicweb.view import EntityView, StartupView
-from cubicweb.selectors import (one_line_rset, non_final_entity,
-                                match_search_state)
+from cubicweb.predicates import (one_line_rset, non_final_entity,
+                                 match_search_state)
 from cubicweb.web import httpcache
 from cubicweb.web.views import baseviews, linksearch_select_url
 

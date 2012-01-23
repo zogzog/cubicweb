@@ -199,8 +199,8 @@ A view is defined by a python class which includes:
     particular context. When looking for a particular view (e.g. given an
     identifier), |cubicweb| computes for each available view with that identifier
     a score which is returned by the selector. Then the view with the highest
-    score is used. The standard library of selectors is in
-    :mod:`cubicweb.selector`.
+    score is used. The standard library of predicates is in
+    :mod:`cubicweb.predicates`.
 
 A view has a set of methods inherited from the :class:`cubicweb.view.View` class,
 though you usually don't derive directly from this class but from one of its more
@@ -310,7 +310,7 @@ So... Some code! That we'll put again in the module ``views`` of our cube.
 
 .. sourcecode:: python
 
-  from cubicweb.selectors import is_instance
+  from cubicweb.predicates import is_instance
   from cubicweb.web.views import primary
 
   class CommunityPrimaryView(primary.PrimaryView):

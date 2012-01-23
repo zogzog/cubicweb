@@ -28,7 +28,7 @@ import shutil
 import tempfile
 
 from cubicweb import Binary, QueryError
-from cubicweb.selectors import is_instance
+from cubicweb.predicates import is_instance
 from cubicweb.server.sources import storages
 from cubicweb.server.hook import Hook, Operation
 

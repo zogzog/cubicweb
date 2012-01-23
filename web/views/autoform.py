@@ -126,12 +126,12 @@ from warnings import warn
 from logilab.mtconverter import xml_escape
 from logilab.common.decorators import iclassmethod, cached
 from logilab.common.deprecation import deprecated
+from logilab.common.registry import classid
 
 from cubicweb import typed_eid, neg_role, uilib
-from cubicweb.vregistry import classid
 from cubicweb.schema import display_name
 from cubicweb.view import EntityView
-from cubicweb.selectors import (
+from cubicweb.predicates import (
     match_kwargs, match_form_params, non_final_entity,
     specified_etype_implements)
 from cubicweb.utils import json, json_dumps

@@ -130,7 +130,7 @@ class Repository(object):
     def __init__(self, config, vreg=None):
         self.config = config
         if vreg is None:
-            vreg = cwvreg.CubicWebVRegistry(config)
+            vreg = cwvreg.CWRegistryStore(config)
         self.vreg = vreg
         self.pyro_registered = False
         self.pyro_uri = None

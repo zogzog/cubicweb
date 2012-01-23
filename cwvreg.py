@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -15,12 +15,12 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-""".. VRegistry:
+""".. RegistryStore:
 
-The `VRegistry`
----------------
+The `RegistryStore`
+-------------------
 
-The `VRegistry` can be seen as a two-level dictionary. It contains
+The `RegistryStore` can be seen as a two-level dictionary. It contains
 all dynamically loaded objects (subclasses of :ref:`appobject`) to
 build a |cubicweb| application. Basically:
 
@@ -34,7 +34,7 @@ build a |cubicweb| application. Basically:
 A *registry* holds a specific kind of application objects. There is
 for instance a registry for entity classes, another for views, etc...
 
-The `VRegistry` has two main responsibilities:
+The `RegistryStore` has two main responsibilities:
 
 - being the access point to all registries
 
@@ -76,13 +76,13 @@ API for objects registration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Here are the registration methods that you can use in the `registration_callback`
-to register your objects to the `VRegistry` instance given as argument (usually
+to register your objects to the `RegistryStore` instance given as argument (usually
 named `vreg`):
 
-.. automethod:: cubicweb.cwvreg.CubicWebVRegistry.register_all
-.. automethod:: cubicweb.cwvreg.CubicWebVRegistry.register_and_replace
-.. automethod:: cubicweb.cwvreg.CubicWebVRegistry.register
-.. automethod:: cubicweb.cwvreg.CubicWebVRegistry.unregister
+.. automethod:: cubicweb.cwvreg.CWRegistryStore.register_all
+.. automethod:: cubicweb.cwvreg.CWRegistryStore.register_and_replace
+.. automethod:: cubicweb.cwvreg.CWRegistryStore.register
+.. automethod:: cubicweb.cwvreg.CWRegistryStore.unregister
 
 Examples:
 
@@ -193,41 +193,44 @@ selectors that will inspect their content and return a score accordingly.
 __docformat__ = "restructuredtext en"
 _ = unicode
 
+import sys
+from os.path import join, dirname, realpath
 from warnings import warn
 from datetime import datetime, date, time, timedelta
 
 from logilab.common.decorators import cached, clear_cache
 from logilab.common.deprecation import deprecated, class_deprecated
 from logilab.common.modutils import cleanup_sys_modules
+from logilab.common.registry import (
+    RegistryStore, Registry, classid,
+    ObjectNotFound, NoSelectableObject, RegistryNotFound)
 
 from rql import RQLHelper
 from yams.constraints import BASE_CONVERTERS
 
-from cubicweb import (ETYPE_NAME_MAP, Binary, UnknownProperty, UnknownEid,
-                      ObjectNotFound, NoSelectableObject, RegistryNotFound,
-                      CW_EVENT_MANAGER)
-from cubicweb.vregistry import VRegistry, Registry, class_regid, classid
+from cubicweb import (CW_SOFTWARE_ROOT, ETYPE_NAME_MAP, CW_EVENT_MANAGER,
+                      Binary, UnknownProperty, UnknownEid)
 from cubicweb.rtags import RTAGS
+from cubicweb.predicates import (implements, appobject_selectable,
+                                 _reset_is_instance_cache)
 
 def clear_rtag_objects():
     for rtag in RTAGS:
         rtag.clear()
 
 def use_interfaces(obj):
-    """return interfaces used by the given object by searching for implements
-    selectors
+    """return interfaces required by the given object by searching for
+    `implements` predicate
     """
-    from cubicweb.selectors import implements
     impl = obj.__select__.search_selector(implements)
     if impl:
         return sorted(impl.expected_ifaces)
     return ()
 
 def require_appobject(obj):
-    """return interfaces used by the given object by searching for implements
-    selectors
+    """return appobjects required by the given object by searching for
+    `appobject_selectable` predicate
     """
-    from cubicweb.selectors import appobject_selectable
     impl = obj.__select__.search_selector(appobject_selectable)
     if impl:
         return (impl.registry, impl.regids)
@@ -253,16 +256,13 @@ class CWRegistry(Registry):
                       key=lambda x: x.cw_propval('order'))
 
 
-VRegistry.REGISTRY_FACTORY[None] = CWRegistry
-
 
 class ETypeRegistry(CWRegistry):
 
     def clear_caches(self):
         clear_cache(self, 'etype_class')
         clear_cache(self, 'parent_classes')
-        from cubicweb import selectors
-        selectors._reset_is_instance_cache(self.vreg)
+        _reset_is_instance_cache(self.vreg)
 
     def initialization_completed(self):
         """on registration completed, clear etype_class internal cache
@@ -272,7 +272,7 @@ class ETypeRegistry(CWRegistry):
         self.clear_caches()
 
     def register(self, obj, **kwargs):
-        oid = kwargs.get('oid') or class_regid(obj)
+        oid = kwargs.get('oid') or obj.__regid__
         if oid != 'Any' and not oid in self.schema:
             self.error('don\'t register %s, %s type not defined in the '
                        'schema', obj, oid)
@@ -354,8 +354,6 @@ class ETypeRegistry(CWRegistry):
             fetchattrs_list.append(set(etypecls.fetch_attrs))
         return reduce(set.intersection, fetchattrs_list)
 
-VRegistry.REGISTRY_FACTORY['etypes'] = ETypeRegistry
-
 
 class ViewsRegistry(CWRegistry):
 
@@ -389,8 +387,6 @@ class ViewsRegistry(CWRegistry):
                 self.exception('error while trying to select %s view for %s',
                                vid, rset)
 
-VRegistry.REGISTRY_FACTORY['views'] = ViewsRegistry
-
 
 class ActionsRegistry(CWRegistry):
     def poss_visible_objects(self, *args, **kwargs):
@@ -407,8 +403,6 @@ class ActionsRegistry(CWRegistry):
         for action in actions:
             result.setdefault(action.category, []).append(action)
         return result
-
-VRegistry.REGISTRY_FACTORY['actions'] = ActionsRegistry
 
 
 class CtxComponentsRegistry(CWRegistry):
@@ -445,8 +439,6 @@ class CtxComponentsRegistry(CWRegistry):
             component.cw_extra_kwargs['context'] = context
         return thisctxcomps
 
-VRegistry.REGISTRY_FACTORY['ctxcomponents'] = CtxComponentsRegistry
-
 
 class BwCompatCWRegistry(object):
     def __init__(self, vreg, oldreg, redirecttoreg):
@@ -462,14 +454,15 @@ class BwCompatCWRegistry(object):
     def clear(self): pass
     def initialization_completed(self): pass
 
-class CubicWebVRegistry(VRegistry):
+
+class CWRegistryStore(RegistryStore):
     """Central registry for the cubicweb instance, extending the generic
-    VRegistry with some cubicweb specific stuff.
+    RegistryStore with some cubicweb specific stuff.
 
     This is one of the central object in cubicweb instance, coupling
     dynamically loaded objects with the schema and the configuration objects.
 
-    It specializes the VRegistry by adding some convenience methods to access to
+    It specializes the RegistryStore by adding some convenience methods to access to
     stored objects. Currently we have the following registries of objects known
     by the web instance (library may use some others additional registries):
 
@@ -492,11 +485,29 @@ class CubicWebVRegistry(VRegistry):
       plugged into the application
     """
 
+    REGISTRY_FACTORY = {None: CWRegistry,
+                        'etypes': ETypeRegistry,
+                        'views': ViewsRegistry,
+                        'actions': ActionsRegistry,
+                        'ctxcomponents': CtxComponentsRegistry,
+                        }
+
     def __init__(self, config, initlog=True):
         if initlog:
             # first init log service
             config.init_log()
-        super(CubicWebVRegistry, self).__init__(config)
+        super(CWRegistryStore, self).__init__(config.debugmode)
+        self.config = config
+        # need to clean sys.path this to avoid import confusion pb (i.e.  having
+        # the same module loaded as 'cubicweb.web.views' subpackage and as
+        # views' or 'web.views' subpackage. This is mainly for testing purpose,
+        # we should'nt need this in production environment
+        for webdir in (join(dirname(realpath(__file__)), 'web'),
+                       join(dirname(__file__), 'web')):
+            if webdir in sys.path:
+                sys.path.remove(webdir)
+        if CW_SOFTWARE_ROOT in sys.path:
+            sys.path.remove(CW_SOFTWARE_ROOT)
         self.schema = None
         self.initialized = False
         # XXX give force_reload (or refactor [re]loading...)
@@ -515,10 +526,10 @@ class CubicWebVRegistry(VRegistry):
             return self[regid]
 
     def items(self):
-        return [item for item in super(CubicWebVRegistry, self).items()
+        return [item for item in super(CWRegistryStore, self).items()
                 if not item[0] in ('propertydefs', 'propertyvalues')]
     def iteritems(self):
-        return (item for item in super(CubicWebVRegistry, self).iteritems()
+        return (item for item in super(CWRegistryStore, self).iteritems()
                 if not item[0] in ('propertydefs', 'propertyvalues'))
 
     def values(self):
@@ -528,7 +539,7 @@ class CubicWebVRegistry(VRegistry):
 
     def reset(self):
         CW_EVENT_MANAGER.emit('before-registry-reset', self)
-        super(CubicWebVRegistry, self).reset()
+        super(CWRegistryStore, self).reset()
         self._needs_iface = {}
         self._needs_appobject = {}
         # two special registries, propertydefs which care all the property
@@ -597,7 +608,7 @@ class CubicWebVRegistry(VRegistry):
         the given `ifaces` interfaces at the end of the registration process.
 
         Extra keyword arguments are given to the
-        :meth:`~cubicweb.cwvreg.CubicWebVRegistry.register` function.
+        :meth:`~cubicweb.cwvreg.CWRegistryStore.register` function.
         """
         self.register(obj, **kwargs)
         if not isinstance(ifaces,  (tuple, list)):
@@ -613,7 +624,7 @@ class CubicWebVRegistry(VRegistry):
         If `clear` is true, all objects with the same identifier will be
         previously unregistered.
         """
-        super(CubicWebVRegistry, self).register(obj, *args, **kwargs)
+        super(CWRegistryStore, self).register(obj, *args, **kwargs)
         # XXX bw compat
         ifaces = use_interfaces(obj)
         if ifaces:
@@ -630,7 +641,7 @@ class CubicWebVRegistry(VRegistry):
     def register_objects(self, path):
         """overriden to give cubicweb's extrapath (eg cubes package's __path__)
         """
-        super(CubicWebVRegistry, self).register_objects(
+        super(CWRegistryStore, self).register_objects(
             path, self.config.extrapath)
 
     def initialization_completed(self):
@@ -685,7 +696,7 @@ class CubicWebVRegistry(VRegistry):
                     self.debug('unregister %s (no %s object in registry %s)',
                                classid(obj), ' or '.join(regids), regname)
                     self.unregister(obj)
-        super(CubicWebVRegistry, self).initialization_completed()
+        super(CWRegistryStore, self).initialization_completed()
         for rtag in RTAGS:
             # don't check rtags if we don't want to cleanup_interface_sobjects
             rtag.init(self.schema, check=self.config.cleanup_interface_sobjects)

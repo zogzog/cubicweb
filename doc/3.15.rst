@@ -5,6 +5,33 @@ Whats new in CubicWeb 3.15
 API changes
 -----------
 
+* The base registry implementation has been moved to a new
+  `logilab.common.registry` module (see #1916014). This includes code from :
+
+  * `cubicweb.vreg` (the whole things that was in there)
+  * `cw.appobject` (base selectors and all).
+
+  In the process, some renaming was done:
+
+  * the top level registry is now `RegistryStore` (was `VRegistry`), but that
+    should not impact cubicweb client code ;
+
+  * former selectors functions are now known as "predicate", though you still use
+    predicates to build an object'selector ;
+
+  * for consistency, the `objectify_selector` decoraror has hence be renamed to
+    `objectify_predicate` ;
+
+  * on the CubicWeb side, the `selectors` module has been renamed to
+    `predicates`.
+
+  Debugging refactoring dropped the more need for the `lltrace` decorator.
+
+  There should be full backward compat with proper deprecation warnings.
+
+  Notice the `yes` predicate and `objectify_predicate` decorator, as well as the
+  `traced_selection` function should now be imported from the
+  `logilab.common.registry` module.
 
 
 Unintrusive API changes

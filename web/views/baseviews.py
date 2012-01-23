@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -84,9 +84,10 @@ from warnings import warn
 from rql import nodes
 
 from logilab.mtconverter import TransformError, xml_escape
+from logilab.common.registry import yes
 
 from cubicweb import NoSelectableObject, tags
-from cubicweb.selectors import yes, empty_rset, one_etype_rset, match_kwargs
+from cubicweb.predicates import empty_rset, one_etype_rset, match_kwargs
 from cubicweb.schema import display_name
 from cubicweb.view import EntityView, AnyRsetView, View
 from cubicweb.uilib import cut

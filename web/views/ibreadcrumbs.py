@@ -27,7 +27,7 @@ from logilab.mtconverter import xml_escape
 #from cubicweb.interfaces import IBreadCrumbs
 from cubicweb import tags, uilib
 from cubicweb.entity import Entity
-from cubicweb.selectors import (is_instance, one_line_rset, adaptable,
+from cubicweb.predicates import (is_instance, one_line_rset, adaptable,
                                 one_etype_rset, multi_lines_rset, any_rset,
                                 match_form_params)
 from cubicweb.view import EntityView, EntityAdapter

@@ -27,7 +27,7 @@ from rql.utils import rqlvar_maker
 
 from cubicweb import Binary, ValidationError, typed_eid
 from cubicweb.view import EntityAdapter, implements_adapter_compat
-from cubicweb.selectors import is_instance
+from cubicweb.predicates import is_instance
 from cubicweb.web import (INTERNAL_FIELD_VALUE, RequestError, NothingToEdit,
                           ProcessFormError)
 from cubicweb.web.views import basecontrollers, autoform

@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -26,12 +26,13 @@ __docformat__ = "restructuredtext en"
 _ = unicode
 
 from logilab.mtconverter import xml_escape
+from logilab.common.registry import yes
 from logilab.common.deprecation import class_renamed
 from rql import parse
 
-from cubicweb.selectors import (yes, match_form_params, match_context,
-                                multi_etypes_rset, configuration_values,
-                                anonymous_user, authenticated_user)
+from cubicweb.predicates import (match_form_params, match_context,
+                                 multi_etypes_rset, configuration_values,
+                                 anonymous_user, authenticated_user)
 from cubicweb.schema import display_name
 from cubicweb.utils import wrap_on_write
 from cubicweb.uilib import toggle_action

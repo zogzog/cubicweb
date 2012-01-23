@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -29,12 +29,12 @@ from warnings import warn
 
 from logilab.common.deprecation import deprecated
 from logilab.common.textutils import unormalize
+from logilab.common.registry import objectify_predicate
 from rql import CoercionError
 from rql.nodes import ETYPE_PYOBJ_MAP, etype_from_pyobj
 from yams import BASE_TYPES
 
 from cubicweb import Binary, UnknownEid, QueryError, schema
-from cubicweb.selectors import objectify_selector
 from cubicweb.req import RequestSessionBase
 from cubicweb.dbapi import ConnectionProperties
 from cubicweb.utils import make_uid, RepeatList
@@ -74,23 +74,23 @@ def selection_idx_type(i, rqlst, args):
             except CoercionError:
                 return None
 
-@objectify_selector
+@objectify_predicate
 def is_user_session(cls, req, **kwargs):
-    """repository side only selector returning 1 if the session is a regular
+    """repository side only predicate returning 1 if the session is a regular
     user session and not an internal session
     """
     return not req.is_internal_session
 
-@objectify_selector
+@objectify_predicate
 def is_internal_session(cls, req, **kwargs):
-    """repository side only selector returning 1 if the session is not a regular
+    """repository side only predicate returning 1 if the session is not a regular
     user session but an internal session
     """
     return req.is_internal_session
 
-@objectify_selector
+@objectify_predicate
 def repairing(cls, req, **kwargs):
-    """repository side only selector returning 1 if the session is not a regular
+    """repository side only predicate returning 1 if the session is not a regular
     user session but an internal session
     """
     return req.vreg.config.repairing

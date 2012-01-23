@@ -15,14 +15,14 @@ def turn_function_to_class(node):
 
 
 def cubicweb_transform(module):
-    # handle objectify_selector decorator. Only look at module level functions,
-    # should be enough
+    # handle objectify_predicate decorator (and its former name until bw compat
+    # is kept). Only look at module level functions, should be enough.
     for assnodes in module.locals.values():
         for node in assnodes:
             if isinstance(node, scoped_nodes.Function) and node.decorators:
                 for decorator in node.decorators.nodes:
                     for infered in decorator.infer():
-                        if infered.name == 'objectify_selector':
+                        if infered.name in ('objectify_predicate', 'objectify_selector'):
                             turn_function_to_class(node)
                             break
                     else:

@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -15,10 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""Exceptions shared by different cubicweb packages.
+"""Exceptions shared by different cubicweb packages."""
 
-
-"""
 __docformat__ = "restructuredtext en"
 
 from yams import ValidationError
@@ -114,32 +112,8 @@ class EidNotInSource(SourceException):
 
 # registry exceptions #########################################################
 
-class RegistryException(CubicWebException):
-    """raised when an unregistered view is called"""
-
-class RegistryNotFound(RegistryException):
-    """raised when an unknown registry is requested
-
-    this is usually a programming/typo error...
-    """
-
-class ObjectNotFound(RegistryException):
-    """raised when an unregistered object is requested
-
-    this may be a programming/typo or a misconfiguration error
-    """
-
-class NoSelectableObject(RegistryException):
-    """raised when no appobject is selectable for a given context."""
-    def __init__(self, args, kwargs, appobjects):
-        self.args = args
-        self.kwargs = kwargs
-        self.appobjects = appobjects
-
-    def __str__(self):
-        return ('args: %s, kwargs: %s\ncandidates: %s'
-                % (self.args, self.kwargs.keys(), self.appobjects))
-
+# pre 3.15 bw compat
+from logilab.common.registry import RegistryException, ObjectNotFound, NoSelectableObject
 
 class UnknownProperty(RegistryException):
     """property found in database but unknown in registry"""
@@ -161,3 +135,4 @@ class ExecutionError(Exception):
 
 # pylint: disable=W0611
 from logilab.common.clcommands import BadCommandUsage
+

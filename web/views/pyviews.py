@@ -20,7 +20,7 @@
 __docformat__ = "restructuredtext en"
 
 from cubicweb.view import View
-from cubicweb.selectors import match_kwargs
+from cubicweb.predicates import match_kwargs
 from cubicweb.web.views import tableview
 
 

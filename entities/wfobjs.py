@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -32,7 +32,7 @@ from logilab.common.compat import any
 
 from cubicweb.entities import AnyEntity, fetch_config
 from cubicweb.view import EntityAdapter
-from cubicweb.selectors import relation_possible
+from cubicweb.predicates import relation_possible
 from cubicweb.mixins import MI_REL_TRIGGERS
 
 class WorkflowException(Exception): pass

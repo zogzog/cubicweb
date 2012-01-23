@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -23,7 +23,7 @@ __docformat__ = "restructuredtext en"
 from logilab.database import get_db_helper
 
 from cubicweb.req import RequestSessionBase
-from cubicweb.cwvreg import CubicWebVRegistry
+from cubicweb.cwvreg import CWRegistryStore
 from cubicweb.web.request import CubicWebRequestBase
 from cubicweb.web.http_headers import Headers
 
@@ -34,6 +34,7 @@ class FakeConfig(dict, BaseApptestConfiguration):
     translations = {}
     uiprops = {}
     apphome = None
+    debugmode = False
     def __init__(self, appid='data', apphome=None, cubes=()):
         self.appid = appid
         self.apphome = apphome
@@ -56,7 +57,7 @@ class FakeRequest(CubicWebRequestBase):
 
     def __init__(self, *args, **kwargs):
         if not (args or 'vreg' in kwargs):
-            kwargs['vreg'] = CubicWebVRegistry(FakeConfig(), initlog=False)
+            kwargs['vreg'] = CWRegistryStore(FakeConfig(), initlog=False)
         kwargs['https'] = False
         self._url = kwargs.pop('url', None) or 'view?rql=Blop&vid=blop'
         super(FakeRequest, self).__init__(*args, **kwargs)
@@ -144,7 +145,7 @@ class FakeSession(RequestSessionBase):
         if vreg is None:
             vreg = getattr(self.repo, 'vreg', None)
         if vreg is None:
-            vreg = CubicWebVRegistry(FakeConfig(), initlog=False)
+            vreg = CWRegistryStore(FakeConfig(), initlog=False)
         self.vreg = vreg
         self.cnxset = FakeConnectionsSet()
         self.user = user or FakeUser()
@@ -179,7 +180,7 @@ class FakeRepo(object):
         self._count = 0
         self.schema = schema
         self.config = config or FakeConfig()
-        self.vreg = vreg or CubicWebVRegistry(self.config, initlog=False)
+        self.vreg = vreg or CWRegistryStore(self.config, initlog=False)
         self.vreg.schema = schema
         self.sources = []
 

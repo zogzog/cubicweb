@@ -187,7 +187,7 @@ Here is the code in cube's *hooks.py*:
 
 .. sourcecode:: python
 
-    from cubicweb.selectors import is_instance
+    from cubicweb.predicates import is_instance
     from cubicweb.server import hook
 
     class SetVisibilityOp(hook.DataOperationMixIn, hook.Operation):

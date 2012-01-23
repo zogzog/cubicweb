@@ -21,7 +21,7 @@ __docformat__ = "restructuredtext en"
 
 from datetime import datetime
 
-from cubicweb.selectors import is_instance
+from cubicweb.predicates import is_instance
 from cubicweb.server import hook
 from cubicweb.server.edition import EditedEntity
 

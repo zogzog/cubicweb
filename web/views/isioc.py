@@ -26,7 +26,7 @@ _ = unicode
 from logilab.mtconverter import xml_escape
 
 from cubicweb.view import EntityView, EntityAdapter, implements_adapter_compat
-from cubicweb.selectors import implements, adaptable
+from cubicweb.predicates import implements, adaptable
 from cubicweb.interfaces import ISiocItem, ISiocContainer
 
 

@@ -29,7 +29,7 @@ from logilab.common.deprecation import deprecated
 from cubicweb import (NoSelectableObject, ObjectNotFound, ValidationError,
                       AuthenticationError, typed_eid)
 from cubicweb.utils import json_dumps
-from cubicweb.selectors import (authenticated_user, anonymous_user,
+from cubicweb.predicates import (authenticated_user, anonymous_user,
                                 match_form_params)
 from cubicweb.web import Redirect, RemoteCallFailed
 from cubicweb.web.controller import Controller

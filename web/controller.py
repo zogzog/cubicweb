@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -20,8 +20,8 @@
 __docformat__ = "restructuredtext en"
 
 from logilab.mtconverter import xml_escape
+from logilab.common.registry import yes
 
-from cubicweb.selectors import yes
 from cubicweb.appobject import AppObject
 from cubicweb.mail import format_mail
 from cubicweb.web import LOGGER, Redirect, RequestError

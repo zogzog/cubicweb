@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -27,12 +27,13 @@ import os, os.path as osp
 
 from logilab.common.graph import GraphGenerator, DotBackend
 from logilab.common.ureports import Section, Table
+from logilab.common.registry import yes
 from logilab.mtconverter import xml_escape
 from yams import BASE_TYPES, schema2dot as s2d
 from yams.buildobjs import DEFAULT_ATTRPERMS
 
-from cubicweb.selectors import (is_instance, match_user_groups, match_kwargs,
-                                has_related_entities, authenticated_user, yes)
+from cubicweb.predicates import (is_instance, match_user_groups, match_kwargs,
+                                has_related_entities, authenticated_user)
 from cubicweb.schema import (META_RTYPES, SCHEMA_TYPES, SYSTEM_RTYPES,
                              WORKFLOW_TYPES, INTERNAL_TYPES)
 from cubicweb.utils import make_uid

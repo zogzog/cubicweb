@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -32,7 +32,7 @@ with the :ref:`cubicweb.web.views.ajaxcontroller.ajaxfunc` decorator:
 
 .. sourcecode:: python
 
-    from cubicweb.selectors import mactch_user_groups
+    from cubicweb.predicates import mactch_user_groups
     from cubicweb.web.views.ajaxcontroller import ajaxfunc
 
     @ajaxfunc(output_type='json', selector=match_user_groups('managers'))
@@ -66,11 +66,11 @@ __docformat__ = "restructuredtext en"
 from functools import partial
 
 from logilab.common.date import strptime
+from logilab.common.registry import yes
 from logilab.common.deprecation import deprecated
 
 from cubicweb import ObjectNotFound, NoSelectableObject
 from cubicweb.appobject import AppObject
-from cubicweb.selectors import yes
 from cubicweb.utils import json, json_dumps, UStringIO
 from cubicweb.uilib import exc_message
 from cubicweb.web import RemoteCallFailed, DirectResponse

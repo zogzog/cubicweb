@@ -55,6 +55,7 @@ set_log_methods(sys.modules[__name__], logging.getLogger('cubicweb'))
 
 # make all exceptions accessible from the package
 from cubicweb._exceptions import *
+from logilab.common.registry import ObjectNotFound, NoSelectableObject, RegistryNotFound
 
 # convert eid to the right type, raise ValueError if it's not a valid eid
 typed_eid = int

@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -59,6 +59,7 @@ from logilab.common.decorators import cached, cachedproperty
 from logilab.common.date import datetime2ticks, ustrftime, ticks2datetime
 from logilab.common.compat import all
 from logilab.common.deprecation import deprecated
+from logilab.common.registry import yes
 
 from rql import nodes, utils
 
@@ -66,7 +67,7 @@ from cubicweb import Unauthorized, typed_eid
 from cubicweb.schema import display_name
 from cubicweb.uilib import css_em_num_value
 from cubicweb.utils import make_uid
-from cubicweb.selectors import match_context_prop, partial_relation_possible, yes
+from cubicweb.predicates import match_context_prop, partial_relation_possible
 from cubicweb.appobject import AppObject
 from cubicweb.web import RequestError, htmlwidgets
 

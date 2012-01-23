@@ -24,7 +24,7 @@ _ = unicode
 from logilab.mtconverter import TransformError, xml_escape
 
 from cubicweb.view import StartupView, EntityView
-from cubicweb.selectors import none_rset, match_view
+from cubicweb.predicates import none_rset, match_view
 from cubicweb.web.action import Action
 from cubicweb.web.views import schema
 

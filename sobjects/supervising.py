@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -21,7 +21,7 @@ __docformat__ = "restructuredtext en"
 _ = unicode
 
 from cubicweb import UnknownEid
-from cubicweb.selectors import none_rset
+from cubicweb.predicates import none_rset
 from cubicweb.schema import display_name
 from cubicweb.view import Component
 from cubicweb.mail import format_mail

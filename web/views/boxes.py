@@ -36,7 +36,7 @@ from logilab.mtconverter import xml_escape
 from logilab.common.deprecation import class_deprecated
 
 from cubicweb import Unauthorized
-from cubicweb.selectors import (match_user_groups, match_kwargs,
+from cubicweb.predicates import (match_user_groups, match_kwargs,
                                 non_final_entity, nonempty_rset,
                                 match_context, contextual)
 from cubicweb.utils import wrap_on_write

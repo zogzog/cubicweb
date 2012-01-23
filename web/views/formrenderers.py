@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -38,10 +38,11 @@ _ = unicode
 from warnings import warn
 
 from logilab.mtconverter import xml_escape
+from logilab.common.registry import yes
 
 from cubicweb import tags, uilib
 from cubicweb.appobject import AppObject
-from cubicweb.selectors import is_instance, yes
+from cubicweb.predicates import is_instance
 from cubicweb.utils import json_dumps, support_args
 from cubicweb.web import eid_param, formwidgets as fwdgs
 

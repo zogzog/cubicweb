@@ -23,7 +23,7 @@ _ = unicode
 from logilab.mtconverter import xml_escape
 from logilab.common.date import ONEDAY, date_range, todatetime
 
-from cubicweb.selectors import adaptable
+from cubicweb.predicates import adaptable
 from cubicweb.view import EntityView
 
 

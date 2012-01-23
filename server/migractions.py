@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -51,7 +51,7 @@ from yams.schema2sql import eschema2sql, rschema2sql
 from yams.schema import RelationDefinitionSchema
 
 from cubicweb import CW_SOFTWARE_ROOT, AuthenticationError, ExecutionError
-from cubicweb.selectors import is_instance
+from cubicweb.predicates import is_instance
 from cubicweb.schema import (ETYPE_NAME_MAP, META_RTYPES, VIRTUAL_RTYPES,
                              PURE_VIRTUAL_RTYPES,
                              CubicWebRelationSchema, order_eschemas)

@@ -70,9 +70,10 @@ from types import MethodType
 from logilab.mtconverter import xml_escape
 from logilab.common.decorators import cachedproperty
 from logilab.common.deprecation import class_deprecated
+from logilab.common.registry import yes
 
 from cubicweb import NoSelectableObject, tags
-from cubicweb.selectors import yes, nonempty_rset, match_kwargs, objectify_selector
+from cubicweb.predicates import nonempty_rset, match_kwargs, objectify_predicate
 from cubicweb.schema import display_name
 from cubicweb.utils import make_uid, js_dumps, JSString, UStringIO
 from cubicweb.uilib import toggle_action, limitsize, htmlescape, sgml_attributes, domid
@@ -82,7 +83,7 @@ from cubicweb.web.htmlwidgets import (TableWidget, TableColumn, MenuWidget,
                                       PopupBoxMenu)
 
 
-@objectify_selector
+@objectify_predicate
 def unreloadable_table(cls, req, rset=None,
                        displaycols=None, headers=None, cellvids=None,
                        paginate=False, displayactions=False, displayfilter=False,
@@ -860,7 +861,7 @@ class RelationColRenderer(EntityTableColRenderer):
 
 class EntityTableView(TableMixIn, EntityView):
     """This abstract table view is designed to be used with an
-    :class:`is_instance()` or :class:`adaptable` selector, hence doesn't depend
+    :class:`is_instance()` or :class:`adaptable` predicate, hence doesn't depend
     the result set shape as the :class:`TableView` does.
 
     It will display columns that should be defined using the `columns` class

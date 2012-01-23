@@ -32,7 +32,7 @@ from logilab.common.decorators import cached
 from cubicweb import neg_role
 from cubicweb.schema import display_name
 from cubicweb.utils import json_dumps
-from cubicweb.selectors import non_final_entity, match_kwargs
+from cubicweb.predicates import non_final_entity, match_kwargs
 from cubicweb.view import EntityView
 from cubicweb.web import uicfg, stdmsgs
 from cubicweb.web.form import FieldNotFound

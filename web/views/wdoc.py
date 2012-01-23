@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -27,9 +27,10 @@ from datetime import date
 
 from logilab.common.changelog import ChangeLog
 from logilab.common.date import strptime, todate
+from logilab.common.registry import yes
 from logilab.mtconverter import CHARSET_DECL_RGX
 
-from cubicweb.selectors import match_form_params, yes
+from cubicweb.predicates import match_form_params
 from cubicweb.view import StartupView
 from cubicweb.uilib import rest_publish
 from cubicweb.web import NotFound, action

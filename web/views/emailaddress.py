@@ -22,7 +22,7 @@ __docformat__ = "restructuredtext en"
 from logilab.mtconverter import xml_escape
 
 from cubicweb.schema import display_name
-from cubicweb.selectors import is_instance
+from cubicweb.predicates import is_instance
 from cubicweb import Unauthorized
 from cubicweb.web import uicfg
 from cubicweb.web.views import baseviews, primary, ibreadcrumbs

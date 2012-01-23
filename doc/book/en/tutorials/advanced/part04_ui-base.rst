@@ -23,7 +23,7 @@ Here is the code, samples from my cube's `views.py` file:
 
 .. sourcecode:: python
 
-    from cubicweb.selectors import is_instance
+    from cubicweb.predicates import is_instance
     from cubicweb.web import component
     from cubicweb.web.views import error
 
@@ -210,7 +210,7 @@ cube's `views.py` file:
 
 .. sourcecode:: python
 
-    from cubicweb.selectors import is_instance
+    from cubicweb.predicates import is_instance
     from cubicweb.web.views import navigation
 
 

@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -22,9 +22,9 @@ _ = unicode
 
 from logilab.mtconverter import xml_escape
 from logilab.common.deprecation import class_renamed
+from logilab.common.registry import objectify_predicate
 
-from cubicweb.appobject import objectify_selector
-from cubicweb.selectors import match_kwargs, no_cnx, anonymous_user
+from cubicweb.predicates import match_kwargs, no_cnx, anonymous_user
 from cubicweb.view import View, MainTemplate, NOINDEX, NOFOLLOW, StartupView
 from cubicweb.utils import UStringIO
 from cubicweb.schema import display_name
@@ -84,7 +84,7 @@ class LoggedOutTemplate(StartupView):
             self.w(u'<h2>%s</h2>' % msg)
 
 
-@objectify_selector
+@objectify_predicate
 def templatable_view(cls, req, rset, *args, **kwargs):
     view = kwargs.pop('view', None)
     if view is None:

@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -24,10 +24,10 @@ from warnings import warn
 
 from logilab.mtconverter import xml_escape
 from logilab.common.decorators import cachedproperty
+from logilab.common.registry import objectify_predicate, yes
 
-from cubicweb.appobject import objectify_selector
-from cubicweb.selectors import (non_final_entity, multi_lines_rset,
-                                match_context_prop, yes, relation_possible)
+from cubicweb.predicates import (non_final_entity, multi_lines_rset,
+                                 match_context_prop, relation_possible)
 from cubicweb.utils import json_dumps
 from cubicweb.uilib import css_em_num_value
 from cubicweb.view import AnyRsetView
@@ -82,7 +82,7 @@ def _facets(req, rset, context, mainvar, **kwargs):
     return baserql, [wdg for facet, wdg in wdgs if wdg is not None]
 
 
-@objectify_selector
+@objectify_predicate
 def contextview_selector(cls, req, rset=None, row=None, col=None, view=None,
                          **kwargs):
     if view:
@@ -97,7 +97,7 @@ def contextview_selector(cls, req, rset=None, row=None, col=None, view=None,
         return len(wdgs)
     return 0
 
-@objectify_selector
+@objectify_predicate
 def has_facets(cls, req, rset=None, **kwargs):
     if rset is None or rset.rowcount < 2:
         return 0

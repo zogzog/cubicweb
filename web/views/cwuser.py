@@ -26,7 +26,7 @@ from logilab.mtconverter import xml_escape
 
 from cubicweb import tags
 from cubicweb.schema import display_name
-from cubicweb.selectors import one_line_rset, is_instance, match_user_groups
+from cubicweb.predicates import one_line_rset, is_instance, match_user_groups
 from cubicweb.view import EntityView, StartupView
 from cubicweb.web import action, uicfg, formwidgets
 from cubicweb.web.views import tabs, tableview, actions, add_etype_button

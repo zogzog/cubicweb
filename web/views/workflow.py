@@ -31,7 +31,7 @@ from logilab.mtconverter import xml_escape
 from logilab.common.graph import escape
 
 from cubicweb import Unauthorized
-from cubicweb.selectors import (has_related_entities, one_line_rset,
+from cubicweb.predicates import (has_related_entities, one_line_rset,
                                 relation_possible, match_form_params,
                                 score_entity, is_instance, adaptable)
 from cubicweb.view import EntityView

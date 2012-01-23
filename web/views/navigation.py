@@ -55,7 +55,7 @@ from rql.nodes import VariableRef, Constant
 from logilab.mtconverter import xml_escape
 from logilab.common.deprecation import deprecated
 
-from cubicweb.selectors import (paginated_rset, sorted_rset,
+from cubicweb.predicates import (paginated_rset, sorted_rset,
                                 adaptable, implements)
 from cubicweb.uilib import cut
 from cubicweb.view import EntityAdapter, implements_adapter_compat

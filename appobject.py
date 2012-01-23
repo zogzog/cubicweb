@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -38,278 +38,19 @@ from warnings import warn
 from logilab.common.deprecation import deprecated
 from logilab.common.decorators import classproperty
 from logilab.common.logging_ext import set_log_methods
+from logilab.common.registry import yes
 
 from cubicweb.cwconfig import CubicWebConfiguration
-
-def class_regid(cls):
-    """returns a unique identifier for an appobject class"""
-    return cls.__regid__
-
-# helpers for debugging selectors
-TRACED_OIDS = None
-
-def _trace_selector(cls, selector, args, ret):
-    # /!\ lltrace decorates pure function or __call__ method, this
-    #     means argument order may be different
-    if isinstance(cls, Selector):
-        selname = str(cls)
-        vobj = args[0]
-    else:
-        selname = selector.__name__
-        vobj = cls
-    if TRACED_OIDS == 'all' or class_regid(vobj) in TRACED_OIDS:
-        #SELECTOR_LOGGER.warning('selector %s returned %s for %s', selname, ret, cls)
-        print '%s -> %s for %s(%s)' % (selname, ret, vobj, vobj.__regid__)
-
-def lltrace(selector):
-    """use this decorator on your selectors so the becomes traceable with
-    :class:`traced_selection`
-    """
-    # don't wrap selectors if not in development mode
-    if CubicWebConfiguration.mode == 'system': # XXX config.debug
-        return selector
-    def traced(cls, *args, **kwargs):
-        ret = selector(cls, *args, **kwargs)
-        if TRACED_OIDS is not None:
-            _trace_selector(cls, selector, args, ret)
-        return ret
-    traced.__name__ = selector.__name__
-    traced.__doc__ = selector.__doc__
-    return traced
-
-class traced_selection(object):
-    """
-    Typical usage is :
-
-    .. sourcecode:: python
-
-        >>> from cubicweb.selectors import traced_selection
-        >>> with traced_selection():
-        ...     # some code in which you want to debug selectors
-        ...     # for all objects
-
-    Don't forget the 'from __future__ import with_statement' at the module top-level
-    if you're using python prior to 2.6.
-
-    This will yield lines like this in the logs::
-
-        selector one_line_rset returned 0 for <class 'cubicweb.web.views.basecomponents.WFHistoryVComponent'>
-
-    You can also give to :class:`traced_selection` the identifiers of objects on
-    which you want to debug selection ('oid1' and 'oid2' in the example above).
-
-    .. sourcecode:: python
-
-        >>> with traced_selection( ('regid1', 'regid2') ):
-        ...     # some code in which you want to debug selectors
-        ...     # for objects with __regid__ 'regid1' and 'regid2'
-
-    A potentially usefull point to set up such a tracing function is
-    the `cubicweb.vregistry.Registry.select` method body.
-    """
-
-    def __init__(self, traced='all'):
-        self.traced = traced
-
-    def __enter__(self):
-        global TRACED_OIDS
-        TRACED_OIDS = self.traced
-
-    def __exit__(self, exctype, exc, traceback):
-        global TRACED_OIDS
-        TRACED_OIDS = None
-        return traceback is None
-
-# selector base classes and operations ########################################
-
-def objectify_selector(selector_func):
-    """Most of the time, a simple score function is enough to build a selector.
-    The :func:`objectify_selector` decorator turn it into a proper selector
-    class::
-
-        @objectify_selector
-        def one(cls, req, rset=None, **kwargs):
-            return 1
-
-        class MyView(View):
-            __select__ = View.__select__ & one()
-
-    """
-    return type(selector_func.__name__, (Selector,),
-                {'__doc__': selector_func.__doc__,
-                 '__call__': lambda self, *a, **kw: selector_func(*a, **kw)})
+# XXX for bw compat
+from logilab.common.registry import objectify_predicate, traced_selection
 
 
-def _instantiate_selector(selector):
-    """ensures `selector` is a `Selector` instance
+objectify_selector = deprecated('[3.15] objectify_selector has been renamed to objectify_predicates in logilab.common.registry')(objectify_predicate)
+traced_selection = deprecated('[3.15] traced_selection has been moved to logilab.common.registry')(traced_selection)
 
-    NOTE: This should only be used locally in build___select__()
-    XXX: then, why not do it ??
-    """
-    if isinstance(selector, types.FunctionType):
-        return objectify_selector(selector)()
-    if isinstance(selector, type) and issubclass(selector, Selector):
-        return selector()
-    return selector
-
-
-class Selector(object):
-    """base class for selector classes providing implementation
-    for operators ``&``, ``|`` and  ``~``
-
-    This class is only here to give access to binary operators, the
-    selector logic itself should be implemented in the __call__ method
-
-
-    a selector is called to help choosing the correct object for a
-    particular context by returning a score (`int`) telling how well
-    the class given as first argument apply to the given context.
-
-    0 score means that the class doesn't apply.
-    """
-
-    @property
-    def func_name(self):
-        # backward compatibility
-        return self.__class__.__name__
-
-    def search_selector(self, selector):
-        """search for the given selector, selector instance or tuple of
-        selectors in the selectors tree. Return None if not found.
-        """
-        if self is selector:
-            return self
-        if (isinstance(selector, type) or isinstance(selector, tuple)) and \
-               isinstance(self, selector):
-            return self
-        return None
-
-    def __str__(self):
-        return self.__class__.__name__
-
-    def __and__(self, other):
-        return AndSelector(self, other)
-    def __rand__(self, other):
-        return AndSelector(other, self)
-    def __iand__(self, other):
-        return AndSelector(self, other)
-    def __or__(self, other):
-        return OrSelector(self, other)
-    def __ror__(self, other):
-        return OrSelector(other, self)
-    def __ior__(self, other):
-        return OrSelector(self, other)
-
-    def __invert__(self):
-        return NotSelector(self)
-
-    # XXX (function | function) or (function & function) not managed yet
-
-    def __call__(self, cls, *args, **kwargs):
-        return NotImplementedError("selector %s must implement its logic "
-                                   "in its __call__ method" % self.__class__)
-
-    def __repr__(self):
-        return u'<Selector %s at %x>' % (self.__class__.__name__, id(self))
-
-
-class MultiSelector(Selector):
-    """base class for compound selector classes"""
-
-    def __init__(self, *selectors):
-        self.selectors = self.merge_selectors(selectors)
-
-    def __str__(self):
-        return '%s(%s)' % (self.__class__.__name__,
-                           ','.join(str(s) for s in self.selectors))
-
-    @classmethod
-    def merge_selectors(cls, selectors):
-        """deal with selector instanciation when necessary and merge
-        multi-selectors if possible:
-
-        AndSelector(AndSelector(sel1, sel2), AndSelector(sel3, sel4))
-        ==> AndSelector(sel1, sel2, sel3, sel4)
-        """
-        merged_selectors = []
-        for selector in selectors:
-            try:
-                selector = _instantiate_selector(selector)
-            except Exception:
-                pass
-            #assert isinstance(selector, Selector), selector
-            if isinstance(selector, cls):
-                merged_selectors += selector.selectors
-            else:
-                merged_selectors.append(selector)
-        return merged_selectors
-
-    def search_selector(self, selector):
-        """search for the given selector or selector instance (or tuple of
-        selectors) in the selectors tree. Return None if not found
-        """
-        for childselector in self.selectors:
-            if childselector is selector:
-                return childselector
-            found = childselector.search_selector(selector)
-            if found is not None:
-                return found
-        # if not found in children, maybe we are looking for self?
-        return super(MultiSelector, self).search_selector(selector)
-
-
-class AndSelector(MultiSelector):
-    """and-chained selectors (formerly known as chainall)"""
-    @lltrace
-    def __call__(self, cls, *args, **kwargs):
-        score = 0
-        for selector in self.selectors:
-            partscore = selector(cls, *args, **kwargs)
-            if not partscore:
-                return 0
-            score += partscore
-        return score
-
-
-class OrSelector(MultiSelector):
-    """or-chained selectors (formerly known as chainfirst)"""
-    @lltrace
-    def __call__(self, cls, *args, **kwargs):
-        for selector in self.selectors:
-            partscore = selector(cls, *args, **kwargs)
-            if partscore:
-                return partscore
-        return 0
-
-class NotSelector(Selector):
-    """negation selector"""
-    def __init__(self, selector):
-        self.selector = selector
-
-    @lltrace
-    def __call__(self, cls, *args, **kwargs):
-        score = self.selector(cls, *args, **kwargs)
-        return int(not score)
-
-    def __str__(self):
-        return 'NOT(%s)' % self.selector
-
-
-class yes(Selector):
-    """Return the score given as parameter, with a default score of 0.5 so any
-    other selector take precedence.
-
-    Usually used for appobjects which can be selected whatever the context, or
-    also sometimes to add arbitrary points to a score.
-
-    Take care, `yes(0)` could be named 'no'...
-    """
-    def __init__(self, score=0.5):
-        self.score = score
-
-    def __call__(self, *args, **kwargs):
-        return self.score
-
+@deprecated('[3.15] lltrace decorator can now be removed')
+def lltrace(func):
+    return func
 
 # the base class for all appobjects ############################################
 
@@ -464,3 +205,6 @@ class AppObject(object):
     info = warning = error = critical = exception = debug = lambda msg,*a,**kw: None
 
 set_log_methods(AppObject, getLogger('cubicweb.appobject'))
+
+# defined here to avoid warning on usage on the AppObject class
+yes = deprecated('[3.15] yes has been moved to logilab.common.registry')(yes)

@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -25,9 +25,8 @@ from logilab.mtconverter import xml_escape
 from logilab.common.decorators import cached
 
 from cubicweb import UnknownProperty
-from cubicweb.selectors import (one_line_rset, none_rset, is_instance,
-                                match_user_groups, objectify_selector,
-                                logged_user_in_rset)
+from cubicweb.predicates import (one_line_rset, none_rset, is_instance,
+                                 match_user_groups, logged_user_in_rset)
 from cubicweb.view import StartupView
 from cubicweb.web import uicfg, stdmsgs
 from cubicweb.web.form import FormViewMixIn

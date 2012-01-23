@@ -58,9 +58,9 @@ def multiple_connections_fix():
     attributes since classes are not designed to be shared among multiple
     registries.
     """
-    defaultcls = cwvreg.VRegistry.REGISTRY_FACTORY[None]
+    defaultcls = cwvreg.CWRegistryStore.REGISTRY_FACTORY[None]
 
-    etypescls = cwvreg.VRegistry.REGISTRY_FACTORY['etypes']
+    etypescls = cwvreg.CWRegistryStore.REGISTRY_FACTORY['etypes']
     orig_etype_class = etypescls.orig_etype_class = etypescls.etype_class
     @monkeypatch(defaultcls)
     def etype_class(self, etype):
@@ -75,7 +75,7 @@ def multiple_connections_fix():
         return usercls
 
 def multiple_connections_unfix():
-    etypescls = cwvreg.VRegistry.REGISTRY_FACTORY['etypes']
+    etypescls = cwvreg.CWRegistryStore.REGISTRY_FACTORY['etypes']
     etypescls.etype_class = etypescls.orig_etype_class
 
 
@@ -192,7 +192,7 @@ def connect(database=None, login=None, host=None, group=None,
     elif setvreg:
         if mulcnx:
             multiple_connections_fix()
-        vreg = cwvreg.CubicWebVRegistry(config, initlog=initlog)
+        vreg = cwvreg.CWRegistryStore(config, initlog=initlog)
         schema = repo.get_schema()
         for oldetype, newetype in ETYPE_NAME_MAP.items():
             if oldetype in schema:
@@ -207,7 +207,7 @@ def connect(database=None, login=None, host=None, group=None,
 
 def in_memory_repo(config):
     """Return and in_memory Repository object from a config (or vreg)"""
-    if isinstance(config, cwvreg.CubicWebVRegistry):
+    if isinstance(config, cwvreg.CWRegistryStore):
         vreg = config
         config = None
     else:

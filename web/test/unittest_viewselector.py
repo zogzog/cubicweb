@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -22,9 +22,8 @@ from logilab.common.testlib import unittest_main
 
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb import CW_SOFTWARE_ROOT as BASE, Binary, UnknownProperty
-from cubicweb.selectors import (match_user_groups, is_instance,
-                                specified_etype_implements, rql_condition,
-                                traced_selection)
+from cubicweb.predicates import (match_user_groups, is_instance,
+                                 specified_etype_implements, rql_condition)
 from cubicweb.web import NoSelectableObject
 from cubicweb.web.action import Action
 from cubicweb.web.views import (

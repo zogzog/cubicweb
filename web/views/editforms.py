@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -26,11 +26,12 @@ from copy import copy
 
 from logilab.mtconverter import xml_escape
 from logilab.common.decorators import cached
+from logilab.common.registry import yes
 from logilab.common.deprecation import class_moved
 
 from cubicweb import tags
-from cubicweb.selectors import (match_kwargs, one_line_rset, non_final_entity,
-                                specified_etype_implements, is_instance, yes)
+from cubicweb.predicates import (match_kwargs, one_line_rset, non_final_entity,
+                                specified_etype_implements, is_instance)
 from cubicweb.view import EntityView
 from cubicweb.schema import display_name
 from cubicweb.web import uicfg, stdmsgs, eid_param, \

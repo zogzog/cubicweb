@@ -23,7 +23,7 @@ _ = unicode
 from logilab.mtconverter import xml_escape
 
 from cubicweb import Unauthorized, typed_eid
-from cubicweb.selectors import is_instance, one_line_rset
+from cubicweb.predicates import is_instance, one_line_rset
 from cubicweb.web import (action, component, uicfg, htmlwidgets,
                           formwidgets as fw)
 from cubicweb.web.views import primary

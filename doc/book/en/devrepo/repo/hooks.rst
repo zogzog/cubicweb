@@ -26,7 +26,7 @@ into `mycube/hooks.py`. If this file were to grow too much, we can easily have a
 .. sourcecode:: python
 
    from cubicweb import ValidationError
-   from cubicweb.selectors import is_instance
+   from cubicweb.predicates import is_instance
    from cubicweb.server.hook import Hook
 
    class PersonAgeRange(Hook):
