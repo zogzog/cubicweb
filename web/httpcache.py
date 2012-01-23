@@ -23,6 +23,7 @@ from time import mktime
 from datetime import datetime
 
 # time delta usable to convert localized time to GMT time
+# XXX this become erroneous after a DST transition!!!
 GMTOFFSET = - (datetime.now() - datetime.utcnow())
 
 class NoHTTPCacheManager(object):
