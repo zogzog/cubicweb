@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -53,7 +53,8 @@ class ManageView(StartupView):
     add_etype_links = ()
     skip_startup_views = set( ('index', 'manage', 'schema', 'owl', 'changelog',
                                'systempropertiesform', 'propertiesform',
-                               'cw.user-management', 'cw.source-management',
+                               'cw.users-and-groups-management', 'cw.groups-management', 
+                               'cw.users-management', 'cw.sources-management',
                                'siteinfo', 'info', 'registry', 'gc',
                                'tree') )
 
