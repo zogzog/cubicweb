@@ -136,13 +136,13 @@ class SearchBox(component.CtxComponent):
 
     title = _('search')
     order = 0
-    formdef = u"""<form action="%s">
-<table id="tsearch"><tr><td>
-<input id="norql" type="text" accesskey="q" tabindex="%s" title="search text" value="%s" name="rql" />
+    formdef = u"""<form action="%(action)s">
+<table id="%(id)s"><tr><td>
+<input class="norql" type="text" accesskey="q" tabindex="%(tabindex1)s" title="search text" value="%(value)s" name="rql" />
 <input type="hidden" name="__fromsearchbox" value="1" />
 <input type="hidden" name="subvid" value="tsearch" />
 </td><td>
-<input tabindex="%s" type="submit" id="rqlboxsubmit" class="rqlsubmit" value="" />
+<input tabindex="%(tabindex2)s" type="submit" class="rqlsubmit" value="" />
  </td></tr></table>
  </form>"""
 
@@ -155,8 +155,13 @@ class SearchBox(component.CtxComponent):
             rql = self._cw.form.get('rql', '')
         else:
             rql = ''
-        w(self.formdef % (self._cw.build_url('view'), self._cw.next_tabindex(),
-                          xml_escape(rql), self._cw.next_tabindex()))
+        tabidx1 = self._cw.next_tabindex()
+        tabidx2 = self._cw.next_tabindex()
+        w(self.formdef % {'action': self._cw.build_url('view'),
+                          'value': xml_escape(rql),
+                          'id': self.cw_extra_kwargs.get('domid', 'tsearch'),
+                          'tabindex1': tabidx1,
+                          'tabindex2': tabidx2})
 
 
 # boxes disabled by default ###################################################
