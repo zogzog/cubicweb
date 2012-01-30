@@ -474,7 +474,7 @@ function handleFormValidationResponse(formid, onsuccess, onfailure, result, cbar
         errmsg = descr;
     } else {
         _displayValidationerrors(formid, descr[0], descr[1]);
-        errmsg = _('please correct errors below');
+        errmsg = _("please correct errors below");
     }
     updateMessage(errmsg);
     // ensure the browser does not scroll down

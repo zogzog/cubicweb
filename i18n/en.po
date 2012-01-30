@@ -1389,6 +1389,9 @@ msgstr ""
 msgid "click to edit this field"
 msgstr ""
 
+msgid "close all"
+msgstr ""
+
 msgid "comment"
 msgstr ""
 

@@ -1449,6 +1449,9 @@ msgstr "cliquer pour supprimer cette valeur"
 msgid "click to edit this field"
 msgstr "cliquez pour éditer ce champ"
 
+msgid "close all"
+msgstr "tout fermer"
+
 msgid "comment"
 msgstr "commentaire"
 
