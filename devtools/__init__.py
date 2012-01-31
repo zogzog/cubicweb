@@ -480,8 +480,8 @@ class TestDataBaseHandler(object):
             session = repo._sessions[cnx.sessionid]
             session.set_cnxset()
             _commit = session.commit
-            def keep_cnxset_commit():
-                _commit(free_cnxset=False)
+            def keep_cnxset_commit(free_cnxset=False):
+                _commit(free_cnxset=free_cnxset)
             session.commit = keep_cnxset_commit
             pre_setup_func(session, self.config)
             session.commit()

@@ -1,4 +1,4 @@
-# copyright 2010-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2010-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -31,7 +31,6 @@ Example of mapping for CWEntityXMLParser::
 
 """
 
-import os.path as osp
 from datetime import datetime, timedelta, time
 from urllib import urlencode
 from cgi import parse_qs # in urlparse with python >= 2.6
@@ -213,17 +212,8 @@ class CWEntityXMLParser(datafeed.DataFeedXMLParser):
             return entity
         self._processed_entities.add(entity.eid)
         if not (self.created_during_pull(entity) or self.updated_during_pull(entity)):
-            self.notify_updated(entity)
             attrs = extract_typed_attrs(entity.e_schema, item)
-            # check modification date and compare attribute values to only
-            # update what's actually needed
-            entity.complete(tuple(attrs))
-            mdate = attrs.get('modification_date')
-            if not mdate or mdate > entity.modification_date:
-                attrs = dict( (k, v) for k, v in attrs.iteritems()
-                              if v != getattr(entity, k))
-                if attrs:
-                    entity.set_attributes(**attrs)
+            self.update_if_necessary(entity, attrs)
         self.process_relations(entity, rels)
         return entity
 
@@ -495,14 +485,3 @@ class CWEntityXMLActionLinkOrCreate(CWEntityXMLActionLink):
     """
     __regid__ = 'cw.entityxml.action.link-or-create'
     create_when_not_found = True
-
-
-def registration_callback(vreg):
-    vreg.register_all(globals().values(), __name__)
-    global URL_MAPPING
-    URL_MAPPING = {}
-    if vreg.config.apphome:
-        url_mapping_file = osp.join(vreg.config.apphome, 'urlmapping.py')
-        if osp.exists(url_mapping_file):
-            URL_MAPPING = eval(file(url_mapping_file).read())
-            vreg.info('using url mapping %s from %s', URL_MAPPING, url_mapping_file)

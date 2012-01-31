@@ -103,6 +103,7 @@ class DataFeedSource(AbstractSource):
                          if url.strip()]
         else:
             self.urls = []
+
     def update_config(self, source_entity, typedconfig):
         """update configuration from source entity. `typedconfig` is config
         properly typed with defaults set
@@ -290,7 +291,7 @@ class DataFeedParser(AppObject):
                       'updated': set()}
 
     def normalize_url(self, url):
-        from cubicweb.sobjects.parsers import URL_MAPPING
+        from cubicweb.sobjects import URL_MAPPING # available after registration
         for mappedurl in URL_MAPPING:
             if url.startswith(mappedurl):
                 return url.replace(mappedurl, URL_MAPPING[mappedurl], 1)
@@ -373,6 +374,19 @@ class DataFeedParser(AppObject):
         stuff in sub-classes.
         """
         return True
+
+    def update_if_necessary(self, entity, attrs):
+        self.notify_updated(entity)
+        entity.complete(tuple(attrs))
+        # check modification date and compare attribute values to only update
+        # what's actually needed
+        mdate = attrs.get('modification_date')
+        if not mdate or mdate > entity.modification_date:
+            attrs = dict( (k, v) for k, v in attrs.iteritems()
+                          if v != getattr(entity, k))
+            if attrs:
+                entity.set_attributes(**attrs)
+
 
 class DataFeedXMLParser(DataFeedParser):
 

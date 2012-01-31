@@ -10,6 +10,8 @@ API changes
 Unintrusive API changes
 -----------------------
 
+* new 'ldapfeed' source type, designed to replace 'ldapuser' source with
+  data-feed (i.e. copy based) source ideas.
 
 
 RQL

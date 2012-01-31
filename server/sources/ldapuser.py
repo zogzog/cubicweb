@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -18,33 +18,20 @@
 """cubicweb ldap user source
 
 this source is for now limited to a read-only CWUser source
-
-Part of the code is coming form Zope's LDAPUserFolder
-
-Copyright (c) 2004 Jens Vagelpohl.
-All Rights Reserved.
-
-This software is subject to the provisions of the Zope Public License,
-Version 2.1 (ZPL).  A copy of the ZPL should accompany this distribution.
-THIS SOFTWARE IS PROVIDED "AS IS" AND ANY AND ALL EXPRESS OR IMPLIED
-WARRANTIES ARE DISCLAIMED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF TITLE, MERCHANTABILITY, AGAINST INFRINGEMENT, AND FITNESS
-FOR A PARTICULAR PURPOSE.
 """
 from __future__ import division
 from base64 import b64decode
 
 import ldap
-from ldap.ldapobject import ReconnectLDAPObject
-from ldap.filter import filter_format, escape_filter_chars
-from ldapurl import LDAPUrl
+from ldap.filter import escape_filter_chars
 
 from rql.nodes import Relation, VariableRef, Constant, Function
 
-from cubicweb import AuthenticationError, UnknownEid, RepositoryError
+from cubicweb import UnknownEid, RepositoryError
+from cubicweb.server import ldaputils
 from cubicweb.server.utils import cartesian_product
 from cubicweb.server.sources import (AbstractSource, TrFunc, GlobTrFunc,
-                                     ConnectionWrapper, TimedCache)
+                                     TimedCache)
 
 # search scopes
 BASE = ldap.SCOPE_BASE
@@ -58,97 +45,11 @@ PROTO_PORT = {'ldap': 389,
               }
 
 
-class LDAPUserSource(AbstractSource):
+class LDAPUserSource(ldaputils.LDAPSourceMixIn, AbstractSource):
     """LDAP read-only CWUser source"""
     support_entities = {'CWUser': False}
 
-    options = (
-        ('host',
-         {'type' : 'string',
-          'default': 'ldap',
-          'help': 'ldap host. It may contains port information using \
-<host>:<port> notation.',
-          'group': 'ldap-source', 'level': 1,
-          }),
-        ('protocol',
-         {'type' : 'choice',
-          'default': 'ldap',
-          'choices': ('ldap', 'ldaps', 'ldapi'),
-          'help': 'ldap protocol (allowed values: ldap, ldaps, ldapi)',
-          'group': 'ldap-source', 'level': 1,
-          }),
-        ('auth-mode',
-         {'type' : 'choice',
-          'default': 'simple',
-          'choices': ('simple', 'cram_md5', 'digest_md5', 'gssapi'),
-          'help': 'authentication mode used to authenticate user to the ldap.',
-          'group': 'ldap-source', 'level': 3,
-          }),
-        ('auth-realm',
-         {'type' : 'string',
-          'default': None,
-          'help': 'realm to use when using gssapi/kerberos authentication.',
-          'group': 'ldap-source', 'level': 3,
-          }),
-
-        ('data-cnx-dn',
-         {'type' : 'string',
-          'default': '',
-          'help': 'user dn to use to open data connection to the ldap (eg used \
-to respond to rql queries). Leave empty for anonymous bind',
-          'group': 'ldap-source', 'level': 1,
-          }),
-        ('data-cnx-password',
-         {'type' : 'string',
-          'default': '',
-          'help': 'password to use to open data connection to the ldap (eg used to respond to rql queries). Leave empty for anonymous bind.',
-          'group': 'ldap-source', 'level': 1,
-          }),
-
-        ('user-base-dn',
-         {'type' : 'string',
-          'default': 'ou=People,dc=logilab,dc=fr',
-          'help': 'base DN to lookup for users',
-          'group': 'ldap-source', 'level': 1,
-          }),
-        ('user-scope',
-         {'type' : 'choice',
-          'default': 'ONELEVEL',
-          'choices': ('BASE', 'ONELEVEL', 'SUBTREE'),
-          'help': 'user search scope (valid values: "BASE", "ONELEVEL", "SUBTREE")',
-          'group': 'ldap-source', 'level': 1,
-          }),
-        ('user-classes',
-         {'type' : 'csv',
-          'default': ('top', 'posixAccount'),
-          'help': 'classes of user (with Active Directory, you want to say "user" here)',
-          'group': 'ldap-source', 'level': 1,
-          }),
-        ('user-filter',
-         {'type': 'string',
-          'default': '',
-          'help': 'additional filters to be set in the ldap query to find valid users',
-          'group': 'ldap-source', 'level': 2,
-          }),
-        ('user-login-attr',
-         {'type' : 'string',
-          'default': 'uid',
-          'help': 'attribute used as login on authentication (with Active Directory, you want to use "sAMAccountName" here)',
-          'group': 'ldap-source', 'level': 1,
-          }),
-        ('user-default-group',
-         {'type' : 'csv',
-          'default': ('users',),
-          'help': 'name of a group in which ldap users will be by default. \
-You can set multiple groups by separating them by a comma.',
-          'group': 'ldap-source', 'level': 1,
-          }),
-        ('user-attrs-map',
-         {'type' : 'named',
-          'default': {'uid': 'login', 'gecos': 'email'},
-          'help': 'map from ldap user attributes to cubicweb attributes (with Active Directory, you want to use sAMAccountName:login,mail:email,givenName:firstname,sn:surname)',
-          'group': 'ldap-source', 'level': 1,
-          }),
+    options = ldaputils.LDAPSourceMixIn.options + (
 
         ('synchronization-interval',
          {'type' : 'time',
@@ -168,35 +69,32 @@ directory (default to once a day).',
 
     def __init__(self, repo, source_config, eid=None):
         AbstractSource.__init__(self, repo, source_config, eid)
-        self.update_config(None, self.check_conf_dict(eid, source_config))
-        self._conn = None
+        self.update_config(None, self.check_conf_dict(eid, source_config,
+                                                      fail_if_unknown=False))
+
+    def _entity_update(self, source_entity):
+        # XXX copy from datafeed source
+        if source_entity.url:
+            self.urls = [url.strip() for url in source_entity.url.splitlines()
+                         if url.strip()]
+        else:
+            self.urls = []
+        # /end XXX
+        ldaputils.LDAPSourceMixIn._entity_update(self, source_entity)
 
     def update_config(self, source_entity, typedconfig):
         """update configuration from source entity. `typedconfig` is config
         properly typed with defaults set
         """
-        self.host = typedconfig['host']
-        self.protocol = typedconfig['protocol']
-        self.authmode = typedconfig['auth-mode']
-        self._authenticate = getattr(self, '_auth_%s' % self.authmode)
-        self.cnx_dn = typedconfig['data-cnx-dn']
-        self.cnx_pwd = typedconfig['data-cnx-password']
-        self.user_base_dn = str(typedconfig['user-base-dn'])
-        self.user_base_scope = globals()[typedconfig['user-scope']]
-        self.user_login_attr = typedconfig['user-login-attr']
-        self.user_default_groups = typedconfig['user-default-group']
-        self.user_attrs = typedconfig['user-attrs-map']
-        self.user_rev_attrs = {'eid': 'dn'}
-        for ldapattr, cwattr in self.user_attrs.items():
-            self.user_rev_attrs[cwattr] = ldapattr
-        self.base_filters = [filter_format('(%s=%s)', ('objectClass', o))
-                             for o in typedconfig['user-classes']]
-        if typedconfig['user-filter']:
-            self.base_filters.append(typedconfig['user-filter'])
+        ldaputils.LDAPSourceMixIn.update_config(self, source_entity, typedconfig)
         self._interval = typedconfig['synchronization-interval']
         self._cache_ttl = max(71, typedconfig['cache-life-time'])
         self.reset_caches()
-        self._conn = None
+        # XXX copy from datafeed source
+        if source_entity is not None:
+            self._entity_update(source_entity)
+        self.config = typedconfig
+        # /end XXX
 
     def reset_caches(self):
         """method called during test to reset potential source caches"""
@@ -207,21 +105,24 @@ directory (default to once a day).',
         """method called by the repository once ready to handle request"""
         if activated:
             self.info('ldap init')
+            self._entity_update(source_entity)
             # set minimum period of 5min 1s (the additional second is to
             # minimize resonnance effet)
-            self.repo.looping_task(max(301, self._interval), self.synchronize)
+            if self.user_rev_attrs['email']:
+                self.repo.looping_task(max(301, self._interval), self.synchronize)
             self.repo.looping_task(self._cache_ttl // 10,
                                    self._query_cache.clear_expired)
 
     def synchronize(self):
+        self.pull_data(self.repo.internal_session())
+
+    def pull_data(self, session, force=False, raise_on_error=False):
         """synchronize content known by this repository with content in the
         external repository
         """
         self.info('synchronizing ldap source %s', self.uri)
-        try:
-            ldap_emailattr = self.user_rev_attrs['email']
-        except KeyError:
-            return # no email in ldap, we're done
+        ldap_emailattr = self.user_rev_attrs['email']
+        assert ldap_emailattr
         session = self.repo.internal_session()
         execute = session.execute
         try:
@@ -267,54 +168,6 @@ directory (default to once a day).',
         finally:
             session.commit()
             session.close()
-
-    def get_connection(self):
-        """open and return a connection to the source"""
-        if self._conn is None:
-            try:
-                self._connect()
-            except Exception:
-                self.exception('unable to connect to ldap:')
-        return ConnectionWrapper(self._conn)
-
-    def authenticate(self, session, login, password=None, **kwargs):
-        """return CWUser eid for the given login/password if this account is
-        defined in this source, else raise `AuthenticationError`
-
-        two queries are needed since passwords are stored crypted, so we have
-        to fetch the salt first
-        """
-        self.info('ldap authenticate %s', login)
-        if not password:
-            # On Windows + ADAM this would have succeeded (!!!)
-            # You get Authenticated as: 'NT AUTHORITY\ANONYMOUS LOGON'.
-            # we really really don't want that
-            raise AuthenticationError()
-        searchfilter = [filter_format('(%s=%s)', (self.user_login_attr, login))]
-        searchfilter.extend(self.base_filters)
-        searchstr = '(&%s)' % ''.join(searchfilter)
-        # first search the user
-        try:
-            user = self._search(session, self.user_base_dn,
-                                self.user_base_scope, searchstr)[0]
-        except IndexError:
-            # no such user
-            raise AuthenticationError()
-        # check password by establishing a (unused) connection
-        try:
-            self._connect(user, password)
-        except ldap.LDAPError, ex:
-            # Something went wrong, most likely bad credentials
-            self.info('while trying to authenticate %s: %s', user, ex)
-            raise AuthenticationError()
-        except Exception:
-            self.error('while trying to authenticate %s', user, exc_info=True)
-            raise AuthenticationError()
-        eid = self.repo.extid2eid(self, user['dn'], 'CWUser', session)
-        if eid < 0:
-            # user has been moved away from this source
-            raise AuthenticationError()
-        return eid
 
     def ldap_name(self, var):
         if var.stinfo['relations']:
@@ -459,127 +312,18 @@ directory (default to once a day).',
         #print '--> ldap result', result
         return result
 
+    def _process_ldap_item(self, dn, iterator):
+        itemdict = super(LDAPUserSource, self)._process_ldap_item(dn, iterator)
+        self._cache[dn] = itemdict
+        return itemdict
 
-    def _connect(self, user=None, userpwd=None):
-        if self.protocol == 'ldapi':
-            hostport = self.host
-        elif not ':' in self.host:
-            hostport = '%s:%s' % (self.host, PROTO_PORT[self.protocol])
-        else:
-            hostport = self.host
-        self.info('connecting %s://%s as %s', self.protocol, hostport,
-                  user and user['dn'] or 'anonymous')
-        # don't require server certificate when using ldaps (will
-        # enable self signed certs)
-        ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
-        url = LDAPUrl(urlscheme=self.protocol, hostport=hostport)
-        conn = ReconnectLDAPObject(url.initializeUrl())
-        # Set the protocol version - version 3 is preferred
-        try:
-            conn.set_option(ldap.OPT_PROTOCOL_VERSION, ldap.VERSION3)
-        except ldap.LDAPError: # Invalid protocol version, fall back safely
-            conn.set_option(ldap.OPT_PROTOCOL_VERSION, ldap.VERSION2)
-        # Deny auto-chasing of referrals to be safe, we handle them instead
-        #try:
-        #    connection.set_option(ldap.OPT_REFERRALS, 0)
-        #except ldap.LDAPError: # Cannot set referrals, so do nothing
-        #    pass
-        #conn.set_option(ldap.OPT_NETWORK_TIMEOUT, conn_timeout)
-        #conn.timeout = op_timeout
-        # Now bind with the credentials given. Let exceptions propagate out.
-        if user is None:
-            # no user specified, we want to initialize the 'data' connection,
-            assert self._conn is None
-            self._conn = conn
-            # XXX always use simple bind for data connection
-            if not self.cnx_dn:
-                conn.simple_bind_s(self.cnx_dn, self.cnx_pwd)
-            else:
-                self._authenticate(conn, {'dn': self.cnx_dn}, self.cnx_pwd)
-        else:
-            # user specified, we want to check user/password, no need to return
-            # the connection which will be thrown out
-            self._authenticate(conn, user, userpwd)
-        return conn
-
-    def _auth_simple(self, conn, user, userpwd):
-        conn.simple_bind_s(user['dn'], userpwd)
-
-    def _auth_cram_md5(self, conn, user, userpwd):
-        from ldap import sasl
-        auth_token = sasl.cram_md5(user['dn'], userpwd)
-        conn.sasl_interactive_bind_s('', auth_token)
-
-    def _auth_digest_md5(self, conn, user, userpwd):
-        from ldap import sasl
-        auth_token = sasl.digest_md5(user['dn'], userpwd)
-        conn.sasl_interactive_bind_s('', auth_token)
-
-    def _auth_gssapi(self, conn, user, userpwd):
-        # print XXX not proper sasl/gssapi
-        import kerberos
-        if not kerberos.checkPassword(user[self.user_login_attr], userpwd):
-            raise Exception('BAD login / mdp')
-        #from ldap import sasl
-        #conn.sasl_interactive_bind_s('', sasl.gssapi())
-
-    def _search(self, session, base, scope,
-                searchstr='(objectClass=*)', attrs=()):
-        """make an ldap query"""
-        self.debug('ldap search %s %s %s %s %s', self.uri, base, scope,
-                   searchstr, list(attrs))
-        # XXX for now, we do not have connections set support for LDAP, so
-        # this is always self._conn
-        cnx = session.cnxset.connection(self.uri).cnx
-        try:
-            res = cnx.search_s(base, scope, searchstr, attrs)
-        except ldap.PARTIAL_RESULTS:
-            res = cnx.result(all=0)[1]
-        except ldap.NO_SUCH_OBJECT:
-            self.info('ldap NO SUCH OBJECT')
-            eid = self.repo.extid2eid(self, base, 'CWUser', session, insert=False)
-            if eid:
-                self.warning('deleting ldap user with eid %s and dn %s',
-                             eid, base)
-                entity = session.entity_from_eid(eid, 'CWUser')
-                self.repo.delete_info(session, entity, self.uri)
-                self.reset_caches()
-            return []
-        # except ldap.REFERRAL, e:
-        #     cnx = self.handle_referral(e)
-        #     try:
-        #         res = cnx.search_s(base, scope, searchstr, attrs)
-        #     except ldap.PARTIAL_RESULTS:
-        #         res_type, res = cnx.result(all=0)
-        result = []
-        for rec_dn, rec_dict in res:
-            # When used against Active Directory, "rec_dict" may not be
-            # be a dictionary in some cases (instead, it can be a list)
-            # An example of a useless "res" entry that can be ignored
-            # from AD is
-            # (None, ['ldap://ForestDnsZones.PORTAL.LOCAL/DC=ForestDnsZones,DC=PORTAL,DC=LOCAL'])
-            # This appears to be some sort of internal referral, but
-            # we can't handle it, so we need to skip over it.
-            try:
-                items =  rec_dict.items()
-            except AttributeError:
-                # 'items' not found on rec_dict, skip
-                continue
-            for key, value in items: # XXX syt: huuum ?
-                if not isinstance(value, str):
-                    try:
-                        for i in range(len(value)):
-                            value[i] = unicode(value[i], 'utf8')
-                    except Exception:
-                        pass
-                if isinstance(value, list) and len(value) == 1:
-                    rec_dict[key] = value = value[0]
-            rec_dict['dn'] = rec_dn
-            self._cache[rec_dn] = rec_dict
-            result.append(rec_dict)
-        #print '--->', result
-        self.debug('ldap built results %s', len(result))
-        return result
+    def _process_no_such_object(self, session, dn):
+        eid = self.repo.extid2eid(self, dn, 'CWUser', session, insert=False)
+        if eid:
+            self.warning('deleting ldap user with eid %s and dn %s', eid, dn)
+            entity = session.entity_from_eid(eid, 'CWUser')
+            self.repo.delete_info(session, entity, self.uri)
+            self.reset_caches()
 
     def before_entity_insertion(self, session, lid, etype, eid, sourceparams):
         """called by the repository when an eid has been attributed for an
@@ -604,13 +348,13 @@ directory (default to once a day).',
         self.debug('ldap after entity insertion')
         super(LDAPUserSource, self).after_entity_insertion(
             session, lid, entity, sourceparams)
-        dn = lid
         for group in self.user_default_groups:
             session.execute('SET X in_group G WHERE X eid %(x)s, G name %(group)s',
                             {'x': entity.eid, 'group': group})
         # search for existant email first
         try:
-            emailaddr = self._cache[dn][self.user_rev_attrs['email']]
+            # lid = dn
+            emailaddr = self._cache[lid][self.user_rev_attrs['email']]
         except KeyError:
             return
         if isinstance(emailaddr, list):
@@ -631,6 +375,7 @@ directory (default to once a day).',
     def delete_entity(self, session, entity):
         """delete an entity from the source"""
         raise RepositoryError('this source is read only')
+
 
 def _insert_email(session, emailaddr, ueid):
     session.execute('INSERT EmailAddress X: X address %(addr)s, U primary_email X '

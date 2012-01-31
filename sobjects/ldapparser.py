@@ -1,0 +1,99 @@
+# copyright 2011-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# CubicWeb is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
+"""cubicweb ldap feed source
+
+unlike ldapuser source, this source is copy based and will import ldap content
+(beside passwords for authentication) into the system source.
+"""
+from base64 import b64decode
+
+from logilab.common.decorators import cached
+
+from cubicweb.server.sources import datafeed
+
+class DataFeedlDAPParser(datafeed.DataFeedParser):
+    __regid__ = 'ldapfeed'
+
+    def process(self, url, raise_on_error=False, partialcommit=True):
+        """IDataFeedParser main entry point"""
+        source = self.source
+        searchstr = '(&%s)' % ''.join(source.base_filters)
+        try:
+            ldap_emailattr = source.user_rev_attrs['email']
+        except KeyError:
+            ldap_emailattr = None
+        for userdict in source._search(self._cw, source.user_base_dn,
+                                       source.user_base_scope, searchstr):
+            entity = self.extid2entity(userdict['dn'], 'CWUser', **userdict)
+            if not self.created_during_pull(entity):
+                self.notify_updated(entity)
+                attrs = dict( (k, v) for k, v in userdict.iteritems()
+                              if not k in ('dn', 'email') )
+                self.update_if_necessary(entity, attrs)
+                self._process_email(entity, userdict)
+
+    def before_entity_copy(self, entity, sourceparams):
+        if entity.__regid__ == 'EmailAddress':
+            entity.cw_edited['address'] = sourceparams['address']
+        else:
+            for ldapattr, cwattr in self.source.user_attrs.iteritems():
+                if cwattr != 'email':
+                    entity.cw_edited[cwattr] = sourceparams[ldapattr]
+        return entity
+
+    def after_entity_copy(self, entity, sourceparams):
+        super(DataFeedlDAPParser, self).after_entity_copy(entity, sourceparams)
+        if entity.__regid__ == 'EmailAddress':
+            return
+        groups = [self._get_group(n) for n in self.source.user_default_groups]
+        entity.set_relations(in_group=groups)
+        self._process_email(entity, sourceparams)
+
+    def is_deleted(self, extid, etype, eid):
+        try:
+            extid, _ = extid.rsplit('@@', 1)
+        except ValueError:
+            pass
+        return self.source.object_exists_in_ldap(extid)
+
+    def _process_email(self, entity, userdict):
+        try:
+            emailaddrs = userdict[self.source.user_rev_attrs['email']]
+        except KeyError:
+            return # no email for that user, nothing to do
+        if not isinstance(emailaddrs, list):
+            emailaddrs = [emailaddrs]
+        for emailaddr in emailaddrs:
+            # search for existant email first, may be coming from another source
+            rset = self._cw.execute('EmailAddress X WHERE X address %(addr)s',
+                                   {'addr': emailaddr})
+            if not rset:
+                # not found, create it. first forge an external id
+                emailextid = userdict['dn'] + '@@' + emailaddr
+                email = self.extid2entity(emailextid, 'EmailAddress',
+                                          address=emailaddr)
+                if entity.primary_email:
+                    entity.set_relations(use_email=email)
+                else:
+                    entity.set_relations(primary_email=email)
+            # XXX else check use_email relation?
+
+    @cached
+    def _get_group(self, name):
+        return self._cw.execute('Any X WHERE X is CWGroup, X name %(name)s',
+                                {'name': name}).get_entity(0, 0)

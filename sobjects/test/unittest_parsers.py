@@ -162,7 +162,7 @@ class CWEntityXMLParserTC(CubicWebTC):
         dfsource = self.repo.sources_by_uri['myfeed']
         parser = dfsource._get_parser(self.session)
         self.assertEqual(parser.complete_url('http://www.cubicweb.org/CWUser'),
-                         'http://www.cubicweb.org/CWUser?relation=tags-object&relation=in_group-subject&relation=in_state-subject&relation=use_email-subject&vid=xml')
+                         'http://www.cubicweb.org/CWUser?relation=tags-object&relation=in_group-subject&relation=in_tate-subject&relation=use_email-subject&vid=xml')
         self.assertEqual(parser.complete_url('http://www.cubicweb.org/cwuser'),
                          'http://www.cubicweb.org/cwuser?relation=tags-object&relation=in_group-subject&relation=in_state-subject&relation=use_email-subject&vid=xml')
         self.assertEqual(parser.complete_url('http://www.cubicweb.org/cwuser?vid=rdf&relation=hop'),
