@@ -238,6 +238,22 @@ class CWEntityXMLParser(datafeed.DataFeedXMLParser):
         attrs = extract_typed_attrs(entity.e_schema, sourceparams['item'])
         entity.cw_edited.update(attrs)
 
+
+    def normalize_url(self, url):
+        """overriden to add vid=xml"""
+        url = super(CWEntityXMLParser, self).normalize_url(url)
+        if url.startswih('http'):
+            try:
+                url, qs = url.split('?', 1)
+            except ValueError:
+                params = {}
+            else:
+                params = parse_qs(qs)
+            if not 'vid' in params:
+                params['vid'] = ['xml']
+            return url + '?' + self._cw.build_url_params(**params)
+        return url
+
     def complete_url(self, url, etype=None, known_relations=None):
         """append to the url's query string information about relation that should
         be included in the resulting xml, according to source mapping.
@@ -253,9 +269,8 @@ class CWEntityXMLParser(datafeed.DataFeedXMLParser):
             url, qs = url.split('?', 1)
         except ValueError:
             qs = ''
+        # XXX vid will be added by later call to normalize_url (in parent class)
         params = parse_qs(qs)
-        if not 'vid' in params:
-            params['vid'] = ['xml']
         if etype is None:
             try:
                 etype = url.rsplit('/', 1)[1]
