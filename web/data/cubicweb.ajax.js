@@ -709,6 +709,7 @@ function setTab(tabname, cookiename) {
 function loadNow(eltsel, holesel, reloadable) {
     var lazydiv = jQuery(eltsel);
     var hole = lazydiv.children(holesel);
+    hole.show();
     if ((hole.length == 0) && ! reloadable) {
         /* the hole is already filed */
         return;
