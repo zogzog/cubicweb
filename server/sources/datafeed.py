@@ -1,4 +1,4 @@
-# copyright 2010-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2010-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -22,6 +22,7 @@ from __future__ import with_statement
 
 import urllib2
 import StringIO
+from os.path import exists
 from datetime import datetime, timedelta
 from base64 import b64decode
 from cookielib import CookieJar
@@ -199,11 +200,11 @@ class DataFeedSource(AbstractSource):
         if self.process_urls(parser, self.urls, raise_on_error):
             self.warning("some error occured, don't attempt to delete entities")
         elif self.config['delete-entities'] and myuris:
-            byetype = {}
-            for eid, etype in myuris.values():
-                byetype.setdefault(etype, []).append(str(eid))
-            self.error('delete %s entities %s', self.uri, byetype)
+            for extid, (eid, etype) in myuris.iteritems():
+                if parser.is_deleted(extid, etype, eid):
+                    byetype.setdefault(etype, []).append(str(eid))
             for etype, eids in byetype.iteritems():
+                self.warning('delete %s %s entities', len(eids), etype)
                 session.execute('DELETE %s X WHERE X eid IN (%s)'
                                 % (etype, ','.join(eids)))
         self.update_latest_retrieval(session)
@@ -276,6 +277,7 @@ class DataFeedSource(AbstractSource):
         dataimport.init()
         return dataimport
 
+
 class DataFeedParser(AppObject):
     __registry__ = 'parsers'
 
@@ -286,6 +288,13 @@ class DataFeedParser(AppObject):
         self.import_log = import_log
         self.stats = {'created': set(),
                       'updated': set()}
+
+    def normalize_url(self, url):
+        from cubicweb.sobjects.parsers import URL_MAPPING
+        for mappedurl in URL_MAPPING:
+            if url.startswith(mappedurl):
+                return url.replace(mappedurl, URL_MAPPING[mappedurl], 1)
+        return url
 
     def add_schema_config(self, schemacfg, checkonly=False):
         """added CWSourceSchemaConfig, modify mapping accordingly"""
@@ -358,6 +367,12 @@ class DataFeedParser(AppObject):
     def notify_updated(self, entity):
         return self.stats['updated'].add(entity.eid)
 
+    def is_deleted(self, extid, etype, eid):
+        """return True if the entity of given external id, entity type and eid
+        is actually deleted. Always return True by default, put more sensible
+        stuff in sub-classes.
+        """
+        return True
 
 class DataFeedXMLParser(DataFeedParser):
 
@@ -393,11 +408,7 @@ class DataFeedXMLParser(DataFeedParser):
 
     def parse(self, url):
         if url.startswith('http'):
-            from cubicweb.sobjects.parsers import URL_MAPPING
-            for mappedurl in URL_MAPPING:
-                if url.startswith(mappedurl):
-                    url = url.replace(mappedurl, URL_MAPPING[mappedurl], 1)
-                    break
+            url = self.normalize_url(url)
             self.source.info('GET %s', url)
             stream = _OPENER.open(url)
         elif url.startswith('file://'):
@@ -411,6 +422,17 @@ class DataFeedXMLParser(DataFeedParser):
 
     def process_item(self, *args):
         raise NotImplementedError
+
+    def is_deleted(self, extid, etype, eid):
+        if extid.startswith('http'):
+            try:
+                _OPENER.open(self.normalize_url(extid)) # XXX HTTP HEAD request
+            except urllib2.HTTPError, ex:
+                if ex.code == 404:
+                    return True
+        elif extid.startswith('file://'):
+            return exists(extid[7:])
+        return False
 
 # use a cookie enabled opener to use session cookie if any
 _OPENER = urllib2.build_opener()
