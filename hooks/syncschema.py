@@ -268,9 +268,8 @@ class CWETypeAddOp(MemSchemaOperation):
             try:
                 rschema = schema[rtype]
             except KeyError:
-                if rtype == 'cw_source':
-                    continue # XXX 3.10 migration
-                raise
+                self.critical('rtype %s was not handled at cwetype creation time', rtype)
+                continue
             sampletype = rschema.subjects()[0]
             desttype = rschema.objects()[0]
             rdef = copy(rschema.rdef(sampletype, desttype))
