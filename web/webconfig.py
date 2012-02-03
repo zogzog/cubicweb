@@ -116,7 +116,7 @@ class WebConfiguration(CubicWebConfiguration):
           'group': 'main', 'level': 3,
           }),
         ('https-deny-anonymous',
-         {'type': 'string',
+         {'type': 'yn',
           'default': False,
           'help': 'Prevent anonymous user to browse thought https version of '
                   'the site (https-url). Login form will then be displayed '
