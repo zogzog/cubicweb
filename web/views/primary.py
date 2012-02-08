@@ -419,7 +419,7 @@ class AttributeView(EntityView):
     __regid__ = 'attribute'
     __select__ = EntityView.__select__ & match_kwargs('rtype')
 
-    def entity_call(self, entity, rtype, role, **kwargs):
+    def entity_call(self, entity, rtype, role='subject', **kwargs):
         if self._cw.vreg.schema.rschema(rtype).final:
             self.w(entity.printable_value(rtype))
         else:
