@@ -481,7 +481,9 @@ class Entity(AppObject):
             assert eschema.has_relation(attr, role), '%s %s not found on %s' % (attr, role, eschema)
             rschema = eschema.subjrels[attr] if role == 'subject' else eschema.objrels[attr]
             if not rschema.final and isinstance(value, (tuple, list, set, frozenset)):
-                if len(value) == 1:
+                if len(value) == 0:
+                    continue # avoid crash with empty IN clause
+                elif len(value) == 1:
                     value = iter(value).next()
                 else:
                     # prepare IN clause
