@@ -35,7 +35,7 @@ def cubicweb_transform(module):
         for etype in BASE_TYPES:
             module.locals[etype] = [scoped_nodes.Class(etype, None)]
     # add data() to uiprops module
-    if module.name.endswith('.uiprops'):
+    if module.name.split('.')[-1] == 'uiprops':
         fake = ASTNGBuilder(MANAGER).string_build('''
 def data(string):
   return u''
