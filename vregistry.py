@@ -16,5 +16,8 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 from warnings import warn
+from logilab.common.deprecation import class_moved
 warn('[3.15] moved to logilab.common.registry', DeprecationWarning, stacklevel=2)
 from logilab.common.registry import *
+
+VRegistry = class_moved(RegistryStore, old_name='VRegistry', message='[3.15] VRegistry moved to logilab.common.registry as RegistryStore')
