@@ -256,6 +256,9 @@ class Transition(BaseTransition):
     """customized class for Transition entities"""
     __regid__ = 'Transition'
 
+    def dc_long_title(self):
+        return '%s (%s)' % (self.name, self._cw._(self.name))
+
     def destination(self, entity):
         try:
             return self.destination_state[0]
@@ -344,6 +347,9 @@ class State(AnyEntity):
     __regid__ = 'State'
     fetch_attrs, cw_fetch_order = fetch_config(['name'])
     rest_attr = 'eid'
+
+    def dc_long_title(self):
+        return '%s (%s)' % (self.name, self._cw._(self.name))
 
     @property
     def workflow(self):
