@@ -204,11 +204,11 @@ class CWETypeDescriptionTab(tabs.PrimaryTab):
         _ = self._cw._
         # inheritance
         if entity.specializes:
-            self.w(u'<div>%s' % _('Parent class:'))
+            self.w(u'<div><strong>%s</strong>' % _('Parent class:'))
             self.wview('csv', entity.related('specializes', 'subject'))
             self.w(u'</div>')
         if entity.reverse_specializes:
-            self.w(u'<div>%s' % _('Sub-classes:'))
+            self.w(u'<div><strong>%s</strong>' % _('Sub-classes:'))
             self.wview('csv', entity.related('specializes', 'object'))
             self.w(u'</div>')
         # entity schema image
@@ -565,8 +565,14 @@ class CWSchemaDotPropsHandler(s2d.SchemaDotPropsHandler):
 
     def edge_properties(self, rschema, subjnode, objnode):
         """return default DOT drawing options for a relation schema"""
+        # Inheritance relation (i.e 'specializes').
+        if rschema is None:
+            kwargs = {'label': 'Parent class',
+                      'color' : 'grey',  'style' : 'filled',
+                      'arrowhead': 'empty',
+                      'fontsize': '10px'}
         # symmetric rels are handled differently, let yams decide what's best
-        if rschema.symmetric:
+        elif rschema.symmetric:
             kwargs = {'label': rschema.type,
                       'color': '#887788', 'style': 'dashed',
                       'dir': 'both', 'arrowhead': 'normal', 'arrowtail': 'normal',
