@@ -398,10 +398,6 @@ class WorkflowDotPropsHandler(DotPropsHandler):
                 props['fillcolor'] = '#88CC88'
         else:
             props['shape'] = 'ellipse'
-            descr = []
-            tr = stateortransition
-            if descr:
-                props['label'] += escape('\n'.join(descr))
         return props
 
 
