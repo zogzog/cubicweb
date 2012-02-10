@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: cubicweb 2.46.0\n"
-"PO-Revision-Date: 2011-11-23 11:09+0100\n"
+"PO-Revision-Date: 2012-02-08 17:43+0100\n"
 "Last-Translator: Logilab Team <contact@logilab.fr>\n"
 "Language-Team: fr <contact@logilab.fr>\n"
 "Language: \n"
@@ -2757,7 +2757,7 @@ msgid "i18n_bookmark_url_path"
 msgstr "chemin"
 
 msgid "i18n_login_popup"
-msgstr "s'authentifier"
+msgstr "s'identifier"
 
 msgid "i18ncard_*"
 msgstr "0..n"
