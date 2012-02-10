@@ -120,6 +120,20 @@ def del_existing_rel_if_needed(session, eidfrom, rtype, eidto):
                             {'x': eidfrom, 'y': eidto})
 
 
+class NullEventBus(object):
+    def send(self, msg):
+        pass
+
+    def add_subscription(self, topic, callback):
+        pass
+
+    def start(self):
+        pass
+
+    def stop(self):
+        pass
+
+
 class Repository(object):
     """a repository provides access to a set of persistent storages for
     entities and relations
@@ -134,6 +148,7 @@ class Repository(object):
         self.vreg = vreg
         self.pyro_registered = False
         self.pyro_uri = None
+        self.app_instances_bus = NullEventBus()
         self.info('starting repository from %s', self.config.apphome)
         # dictionary of opened sessions
         self._sessions = {}

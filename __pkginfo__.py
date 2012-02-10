@@ -63,6 +63,7 @@ __recommends__ = {
     'fyzz': '>= 0.1.0',         # for sparql
     'vobject': '>= 0.6.0',      # for ical view
     'rdflib': None,             #
+    'pyzmq': None,
     #'Products.FCKeditor':'',
     #'SimpleTAL':'>= 4.1.6',
     }

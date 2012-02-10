@@ -207,6 +207,19 @@ gethostname(). It may contains port information using <host>:<port> notation, \
 and if not set, it will be choosen randomly',
           'group': 'pyro', 'level': 3,
           }),
+
+         ('zmq-address-sub',
+          {'type' : 'csv',
+           'default' : None,
+           'help': ('List of ZMQ addresses to subscribe to (requires pyzmq)'),
+           'group': 'zmq', 'level': 1,
+           }),
+         ('zmq-address-pub',
+          {'type' : 'string',
+           'default' : None,
+           'help': ('ZMQ address to use for publishing (requires pyzmq)'),
+           'group': 'zmq', 'level': 1,
+           }),
         ) + CubicWebConfiguration.options)
 
     # should we init the connections pool (eg connect to sources). This is

@@ -1064,6 +1064,8 @@ class CleanupDeletedEidsCacheOp(DataOperationMixIn, SingleLastOperation):
         remove inserted eid from repository type/source cache
         """
         try:
-            self.session.repo.clear_caches(self.get_data())
+            eids = self.get_data()
+            self.session.repo.clear_caches(eids)
+            self.session.repo.app_instances_bus.publish(['delete'] + list(str(eid) for eid in eids))
         except KeyError:
             pass
