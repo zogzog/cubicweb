@@ -58,7 +58,6 @@ from cubicweb.schema import (ETYPE_NAME_MAP, META_RTYPES, VIRTUAL_RTYPES,
 from cubicweb.cwvreg import CW_EVENT_MANAGER
 from cubicweb.dbapi import get_repository, repo_connect
 from cubicweb.migration import MigrationHelper, yes
-from cubicweb.server.session import hooks_control
 from cubicweb.server import hook
 try:
     from cubicweb.server import SOURCE_TYPES, schemaserial as ss
@@ -152,7 +151,7 @@ class ServerMigrationHelper(MigrationHelper):
             elif options.backup_db:
                 self.backup_database(askconfirm=False)
         # disable notification during migration
-        with hooks_control(self.session, self.session.HOOKS_ALLOW_ALL, 'notification'):
+        with self.session.allow_all_hooks_but('notification'):
             super(ServerMigrationHelper, self).migrate(vcconf, toupgrade, options)
 
     def cmd_process_script(self, migrscript, funcname=None, *args, **kwargs):
@@ -376,6 +375,9 @@ class ServerMigrationHelper(MigrationHelper):
             self.confirm = yes
             self.execscript_confirm = yes
             try:
+                if event == 'postcreate':
+                    with self.session.allow_all_hooks_but():
+                        return self.cmd_process_script(apc, funcname, *args, **kwargs)
                 return self.cmd_process_script(apc, funcname, *args, **kwargs)
             finally:
                 self.confirm = confirm
@@ -698,8 +700,9 @@ class ServerMigrationHelper(MigrationHelper):
                                                  str(totype))
         # execute post-create files
         for cube in reversed(newcubes):
-            self.cmd_exec_event_script('postcreate', cube)
-            self.commit()
+            with self.session.allow_all_hooks_but():
+                self.cmd_exec_event_script('postcreate', cube)
+                self.commit()
 
     def cmd_remove_cube(self, cube, removedeps=False):
         removedcubes = super(ServerMigrationHelper, self).cmd_remove_cube(
