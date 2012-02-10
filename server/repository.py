@@ -121,7 +121,7 @@ def del_existing_rel_if_needed(session, eidfrom, rtype, eidto):
 
 
 class NullEventBus(object):
-    def send(self, msg):
+    def publish(self, msg):
         pass
 
     def add_subscription(self, topic, callback):
