@@ -160,11 +160,6 @@ SELECT rel_evaluee0.eid_to
 FROM cw_SubDivision AS _X, evaluee_relation AS rel_evaluee0
 WHERE rel_evaluee0.eid_from=_X.cw_eid AND _X.cw_nom IN(Logilab, Caesium)'''),
 
-    ("Any X WHERE X creation_date TODAY, X is Affaire",
-     '''SELECT _X.cw_eid
-FROM cw_Affaire AS _X
-WHERE DATE(_X.cw_creation_date)=CURRENT_DATE'''),
-
     ("Any N WHERE G is CWGroup, G name N, E eid 12, E read_permission G",
      '''SELECT _G.cw_name
 FROM cw_CWGroup AS _G, read_permission_relation AS rel_read_permission0
@@ -683,11 +678,6 @@ WHERE NOT (EXISTS(SELECT 1 FROM evaluee_relation AS rel_evaluee0 WHERE rel_evalu
      '''SELECT _X.cw_eid
 FROM cw_Personne AS _X
 WHERE NOT (EXISTS(SELECT 1 FROM travaille_relation AS rel_travaille0 WHERE rel_travaille0.eid_from=_X.cw_eid))'''),
-
-    ("Personne P where not P datenaiss TODAY",
-     '''SELECT _P.cw_eid
-FROM cw_Personne AS _P
-WHERE NOT (DATE(_P.cw_datenaiss)=CURRENT_DATE)'''),
 
     ("Personne P where NOT P concerne A",
      '''SELECT _P.cw_eid
@@ -1390,6 +1380,17 @@ WHERE rel_in_group0.eid_from=T00.x AND rel_in_group0.eid_to=_G.cw_eid''',
 FROM cw_CWUser AS _X
 WHERE _X.cw_login IS NULL''')
 
+    def test_today(self):
+        for t in self._parse([("Any X WHERE X creation_date TODAY, X is Affaire",
+                              '''SELECT _X.cw_eid
+FROM cw_Affaire AS _X
+WHERE DATE(_X.cw_creation_date)=CAST(clock_timestamp() AS DATE)'''),
+                             ("Personne P where not P datenaiss TODAY",
+                              '''SELECT _P.cw_eid
+FROM cw_Personne AS _P
+WHERE NOT (DATE(_P.cw_datenaiss)=CAST(clock_timestamp() AS DATE))'''),
+                             ]):
+            yield t
 
     def test_date_extraction(self):
         self._check("Any MONTH(D) WHERE P is Personne, P creation_date D",
@@ -1747,7 +1748,7 @@ ORDER BY 1'''),
 class SqlServer2005SQLGeneratorTC(PostgresSQLGeneratorTC):
     backend = 'sqlserver2005'
     def _norm_sql(self, sql):
-        return sql.strip().replace(' SUBSTR', ' SUBSTRING').replace(' || ', ' + ').replace(' ILIKE ', ' LIKE ').replace('TRUE', '1').replace('FALSE', '0').replace('CURRENT_DATE', str(date.today()))
+        return sql.strip().replace(' SUBSTR', ' SUBSTRING').replace(' || ', ' + ').replace(' ILIKE ', ' LIKE ').replace('TRUE', '1').replace('FALSE', '0')
 
     def test_has_text(self):
         for t in self._parse(HAS_TEXT_LG_INDEXER):
@@ -1912,7 +1913,20 @@ FROM cw_Personne AS _P''')
                     '''SELECT ((DATEPART(YEAR, _X.cw_modification_date) * 100) + DATEPART(MONTH, _X.cw_modification_date)), COUNT(_X.cw_eid), SUM(_X.cw_ordernum), AVG((_X.cw_creation_date - _X.cw_modification_date))
 FROM cw_CWAttribute AS _X
 GROUP BY DATEPART(YEAR, _X.cw_modification_date),DATEPART(MONTH, _X.cw_modification_date)
-ORDER BY 1'''),
+ORDER BY 1''')
+
+    def test_today(self):
+        for t in self._parse([("Any X WHERE X creation_date TODAY, X is Affaire",
+                        '''SELECT _X.cw_eid
+FROM cw_Affaire AS _X
+WHERE DATE(_X.cw_creation_date)=CURRENT_DATE'''),
+
+                       ("Personne P where not P datenaiss TODAY",
+                        '''SELECT _P.cw_eid
+FROM cw_Personne AS _P
+WHERE NOT (DATE(_P.cw_datenaiss)=CURRENT_DATE)'''),
+                       ]):
+            yield t
 
 
 class SqliteSQLGeneratorTC(PostgresSQLGeneratorTC):
@@ -2068,6 +2082,18 @@ FROM cw_CWAttribute AS _X
 GROUP BY YEAR(_X.cw_modification_date),MONTH(_X.cw_modification_date)
 ORDER BY 1'''),
 
+    def test_today(self):
+        for t in self._parse([("Any X WHERE X creation_date TODAY, X is Affaire",
+                        '''SELECT _X.cw_eid
+FROM cw_Affaire AS _X
+WHERE DATE(_X.cw_creation_date)=CURRENT_DATE'''),
+
+                       ("Personne P where not P datenaiss TODAY",
+                        '''SELECT _P.cw_eid
+FROM cw_Personne AS _P
+WHERE NOT (DATE(_P.cw_datenaiss)=CURRENT_DATE)'''),
+                       ]):
+            yield t
 
 
 class MySQLGenerator(PostgresSQLGeneratorTC):
@@ -2191,6 +2217,18 @@ FROM cw_CWAttribute AS _X
 GROUP BY EXTRACT(YEAR from _X.cw_modification_date),EXTRACT(MONTH from _X.cw_modification_date)
 ORDER BY 1'''),
 
+    def test_today(self):
+        for t in self._parse([("Any X WHERE X creation_date TODAY, X is Affaire",
+                        '''SELECT _X.cw_eid
+FROM cw_Affaire AS _X
+WHERE DATE(_X.cw_creation_date)=CURRENT_DATE'''),
+
+                       ("Personne P where not P datenaiss TODAY",
+                        '''SELECT _P.cw_eid
+FROM cw_Personne AS _P
+WHERE NOT (DATE(_P.cw_datenaiss)=CURRENT_DATE)'''),
+                       ]):
+            yield t
 
 class removeUnsusedSolutionsTC(TestCase):
     def test_invariant_not_varying(self):
