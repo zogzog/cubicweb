@@ -146,6 +146,8 @@ class EntityTC(CubicWebTC):
         req = self.request()
         p1 = req.create_entity('Personne', nom=u'di')
         p2 = req.create_entity('Personne', nom=u'mascio')
+        t = req.create_entity('Tag', name=u't0', tags=[])
+        self.assertItemsEqual(t.tags, [])
         t = req.create_entity('Tag', name=u't1', tags=p1)
         self.assertItemsEqual(t.tags, [p1])
         t = req.create_entity('Tag', name=u't2', tags=p1.eid)

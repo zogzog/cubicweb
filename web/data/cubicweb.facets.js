@@ -181,11 +181,11 @@ function initFacetBoxEvents(root) {
                         $this.find('img').each(function(i) {
                             if (this.getAttribute('cubicweb:unselimg')) {
                                 this.setAttribute('src', UNSELECTED_BORDER_IMG);
-                                this.setAttribute('alt', (_('not selected')));
+                                this.setAttribute('alt', (_("not selected")));
                             }
                             else {
                                 this.setAttribute('src', UNSELECTED_IMG);
-                                this.setAttribute('alt', (_('not selected')));
+                                this.setAttribute('alt', (_("not selected")));
                             }
                         });
                         var index = parseInt($this.attr('cubicweb:idx'));
@@ -213,7 +213,7 @@ function initFacetBoxEvents(root) {
                         }
                         jQuery(this).addClass('facetValueSelected');
                         var $img = jQuery(this).find('img');
-                        $img.attr('src', SELECTED_IMG).attr('alt', (_('selected')));
+                        $img.attr('src', SELECTED_IMG).attr('alt', (_("selected")));
                     }
                     buildRQL.apply(null, jsfacetargs);
                     facet.find('.facetBody').animate({

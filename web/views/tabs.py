@@ -61,11 +61,11 @@ class LazyViewMixin(object):
             tabid, xml_escape(self._cw.build_url('json', **urlparams))))
         if show_spinbox:
             # Don't use ``alt`` since image is a *visual* helper for ajax
-            w(u'<img src="%s" alt="" id="%s-hole"/>'
+            w(u'<img style="display: none" src="%s" alt="" id="%s-hole"/>'
               % (xml_escape(self._cw.data_url('loading.gif')), tabid))
         else:
             w(u'<div id="%s-hole"></div>' % tabid)
-        w(u'<noscript><p>%s <a class="style: hidden" id="seo-%s" href="%s">%s</a></p></noscript>'
+        w(u'<noscript><p>%s <a id="seo-%s" href="%s">%s</a></p></noscript>'
           % (xml_escape(self._cw._('Link:')),
              tabid,
              xml_escape(self._cw.build_url(**urlparams)),

@@ -1447,6 +1447,9 @@ msgstr "seleccione para eliminar este valor"
 msgid "click to edit this field"
 msgstr "seleccione para editar este campo"
 
+msgid "close all"
+msgstr ""
+
 msgid "comment"
 msgstr "Comentario"
 

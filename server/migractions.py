@@ -1025,15 +1025,15 @@ class ServerMigrationHelper(MigrationHelper):
 
         """
         reposchema = self.repo.schema
+        rschema = self.fs_schema.rschema(rtype)
+        execute = self._cw.execute
         if rtype in reposchema:
             print 'warning: relation type %s is already known, skip addition' % (
                 rtype)
-            return
-        rschema = self.fs_schema.rschema(rtype)
-        execute = self._cw.execute
-        # register the relation into CWRType and insert necessary relation
-        # definitions
-        ss.execschemarql(execute, rschema, ss.rschema2rql(rschema, addrdef=False))
+        else:
+            # register the relation into CWRType and insert necessary relation
+            # definitions
+            ss.execschemarql(execute, rschema, ss.rschema2rql(rschema, addrdef=False))
         if addrdef:
             self.commit()
             gmap = self.group_mapping()

@@ -11,13 +11,13 @@ function togglePrefVisibility(elemId) {
 }
 
 function closeFieldset(fieldsetid) {
-    var linklabel = _('open all');
+    var linklabel = _("open all");
     var linkhref = 'javascript:openFieldset("' + fieldsetid + '")';
     _toggleFieldset(fieldsetid, 1, linklabel, linkhref);
 }
 
 function openFieldset(fieldsetid) {
-    var linklabel = _('close all');
+    var linklabel = _("close all");
     var linkhref = 'javascript:closeFieldset("' + fieldsetid + '")';
     _toggleFieldset(fieldsetid, 0, linklabel, linkhref);
 }
@@ -37,7 +37,7 @@ function _toggleFieldset(fieldsetid, closeaction, linklabel, linkhref) {
             fieldset.addClass('hidden');
         } else {
             fieldset.removeClass('hidden');
-            linkLabel = (_('open all'));
+            linkLabel = (_("open all"));
         }
     });
 }

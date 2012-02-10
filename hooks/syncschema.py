@@ -268,9 +268,8 @@ class CWETypeAddOp(MemSchemaOperation):
             try:
                 rschema = schema[rtype]
             except KeyError:
-                if rtype == 'cw_source':
-                    continue # XXX 3.10 migration
-                raise
+                self.critical('rtype %s was not handled at cwetype creation time', rtype)
+                continue
             sampletype = rschema.subjects()[0]
             desttype = rschema.objects()[0]
             rdef = copy(rschema.rdef(sampletype, desttype))
@@ -493,7 +492,7 @@ class CWAttributeAddOp(MemSchemaOperation):
                     default = syssource.dbhelper.sql_current_date()
                 elif default == 'NOW':
                     default = syssource.dbhelper.sql_current_timestamp()
-                session.system_sql('UPDATE %s SET %s=%(default)s'
+                session.system_sql('UPDATE %s SET %s=%s'
                                    % (table, column, default))
             else:
                 session.system_sql('UPDATE %s SET %s=%%(default)s' % (table, column),

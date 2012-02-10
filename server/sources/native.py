@@ -1459,8 +1459,8 @@ def sql_schema(driver):
 CREATE TABLE entities (
   eid INTEGER PRIMARY KEY NOT NULL,
   type VARCHAR(64) NOT NULL,
-  source VARCHAR(64) NOT NULL,
-  asource VARCHAR(64) NOT NULL,
+  source VARCHAR(128) NOT NULL,
+  asource VARCHAR(128) NOT NULL,
   mtime %s NOT NULL,
   extid VARCHAR(256)
 );;
@@ -1471,7 +1471,7 @@ CREATE INDEX entities_extid_idx ON entities(extid);;
 CREATE TABLE deleted_entities (
   eid INTEGER PRIMARY KEY NOT NULL,
   type VARCHAR(64) NOT NULL,
-  source VARCHAR(64) NOT NULL,
+  source VARCHAR(128) NOT NULL,
   dtime %s NOT NULL,
   extid VARCHAR(256)
 );;
