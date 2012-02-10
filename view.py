@@ -196,7 +196,7 @@ class View(AppObject):
         """
         rset = self.cw_rset
         if rset is None:
-            raise NotImplementedError, (self, "an rset is required")
+            raise NotImplementedError("%r an rset is required" % self)
         wrap = self.templatable and len(rset) > 1 and self.add_div_section
         # avoid re-selection if rset of size 1, we already have the most
         # specific view
@@ -218,7 +218,7 @@ class View(AppObject):
 
     def cell_call(self, row, col, **kwargs):
         """the view is called for a particular result set cell"""
-        raise NotImplementedError, self
+        raise NotImplementedError(repr(self))
 
     def linkable(self):
         """return True if the view may be linked in a menu
@@ -379,7 +379,7 @@ class EntityView(View):
         self.entity_call(self.cw_rset.get_entity(row, col), **kwargs)
 
     def entity_call(self, entity, **kwargs):
-        raise NotImplementedError()
+        raise NotImplementedError('%r %r' % (self.__regid__, self.__class__))
 
 
 class StartupView(View):
