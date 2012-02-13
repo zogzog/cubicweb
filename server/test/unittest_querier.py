@@ -120,7 +120,7 @@ class UtilsTC(BaseQuerierTC):
         self.assertEqual(len(union.children), 1)
         self.assertEqual(len(union.children[0].with_), 1)
         subq = union.children[0].with_[0].query
-        self.assertEqual(len(subq.children), 3)
+        self.assertEqual(len(subq.children), 4)
         self.assertEqual([t.as_string() for t in union.children[0].selection],
                           ['ETN','COUNT(X)'])
         self.assertEqual([t.as_string() for t in union.children[0].groupby],
@@ -145,7 +145,7 @@ class UtilsTC(BaseQuerierTC):
                                        'X': 'Affaire',
                                        'ET': 'CWEType', 'ETN': 'String'}])
         rql, solutions = partrqls[1]
-        self.assertEqual(rql,  'Any ETN,X WHERE X is ET, ET name ETN, ET is CWEType, X is IN(BaseTransition, Bookmark, CWAttribute, CWCache, CWConstraint, CWConstraintType, CWEType, CWGroup, CWPermission, CWProperty, CWRType, CWRelation, CWSource, CWUniqueTogetherConstraint, CWUser, Card, Comment, Division, Email, EmailAddress, EmailPart, EmailThread, ExternalUri, File, Folder, Note, Old, Personne, RQLExpression, Societe, State, SubDivision, SubWorkflowExitPoint, Tag, TrInfo, Transition, Workflow, WorkflowTransition)')
+        self.assertEqual(rql,  'Any ETN,X WHERE X is ET, ET name ETN, ET is CWEType, X is IN(BaseTransition, Bookmark, CWAttribute, CWCache, CWConstraint, CWConstraintType, CWEType, CWGroup, CWPermission, CWProperty, CWRType, CWRelation, CWSource, CWUniqueTogetherConstraint, CWUser, Card, Comment, Division, Email, EmailPart, EmailThread, ExternalUri, File, Folder, Note, Old, Personne, RQLExpression, Societe, State, SubDivision, SubWorkflowExitPoint, Tag, TrInfo, Transition, Workflow, WorkflowTransition)')
         self.assertListEqual(sorted(solutions),
                               sorted([{'X': 'BaseTransition', 'ETN': 'String', 'ET': 'CWEType'},
                                       {'X': 'Bookmark', 'ETN': 'String', 'ET': 'CWEType'},
@@ -166,7 +166,6 @@ class UtilsTC(BaseQuerierTC):
                                       {'X': 'CWUniqueTogetherConstraint', 'ETN': 'String', 'ET': 'CWEType'},
                                       {'X': 'CWUser', 'ETN': 'String', 'ET': 'CWEType'},
                                       {'X': 'Email', 'ETN': 'String', 'ET': 'CWEType'},
-                                      {'X': 'EmailAddress', 'ETN': 'String', 'ET': 'CWEType'},
                                       {'X': 'EmailPart', 'ETN': 'String', 'ET': 'CWEType'},
                                       {'X': 'EmailThread', 'ETN': 'String', 'ET': 'CWEType'},
                                       {'X': 'ExternalUri', 'ETN': 'String', 'ET': 'CWEType'},
@@ -187,12 +186,14 @@ class UtilsTC(BaseQuerierTC):
                                       {'X': 'WorkflowTransition', 'ETN': 'String', 'ET': 'CWEType'}]))
         rql, solutions = partrqls[2]
         self.assertEqual(rql,
+                         'Any ETN,X WHERE X is ET, ET name ETN, EXISTS(%(D)s use_email X), '
+                         'ET is CWEType, X is EmailAddress')
+        self.assertEqual(solutions, [{'X': 'EmailAddress', 'ET': 'CWEType', 'ETN': 'String'}])
+        rql, solutions = partrqls[3]
+        self.assertEqual(rql,
                           'Any ETN,X WHERE X is ET, ET name ETN, EXISTS(X owned_by %(C)s), '
                           'ET is CWEType, X is Basket')
-        self.assertEqual(solutions, [{'ET': 'CWEType',
-                                       'X': 'Basket',
-                                       'ETN': 'String',
-                                       }])
+        self.assertEqual(solutions, [{'X': 'Basket', 'ET': 'CWEType', 'ETN': 'String'}])
 
     def test_preprocess_security_aggregat(self):
         plan = self._prepare_plan('Any MAX(X)')
@@ -202,7 +203,7 @@ class UtilsTC(BaseQuerierTC):
         self.assertEqual(len(union.children), 1)
         self.assertEqual(len(union.children[0].with_), 1)
         subq = union.children[0].with_[0].query
-        self.assertEqual(len(subq.children), 3)
+        self.assertEqual(len(subq.children), 4)
         self.assertEqual([t.as_string() for t in union.children[0].selection],
                           ['MAX(X)'])
 
@@ -1117,13 +1118,12 @@ Any P1,B,E WHERE P1 identity P2 WITH
         (using cachekey on sql generation returned always the same query for an eid,
         whatever the relation)
         """
-        s = self.user_groups_session('users')
-        aeid, = self.o.execute(s, 'INSERT EmailAddress X: X address "toto@logilab.fr", X alias "hop"')[0]
+        aeid, = self.execute('INSERT EmailAddress X: X address "toto@logilab.fr", X alias "hop"')[0]
         # XXX would be nice if the rql below was enough...
         #'INSERT Email X: X messageid "<1234>", X subject "test", X sender Y, X recipients Y'
-        eeid, = self.o.execute(s, 'INSERT Email X: X messageid "<1234>", X subject "test", X sender Y, X recipients Y WHERE Y is EmailAddress')[0]
-        self.o.execute(s, "DELETE Email X")
-        sqlc = s.cnxset['system']
+        eeid, = self.execute('INSERT Email X: X messageid "<1234>", X subject "test", X sender Y, X recipients Y WHERE Y is EmailAddress')[0]
+        self.execute("DELETE Email X")
+        sqlc = self.session.cnxset['system']
         sqlc.execute('SELECT * FROM recipients_relation')
         self.assertEqual(len(sqlc.fetchall()), 0)
         sqlc.execute('SELECT * FROM owned_by_relation WHERE eid_from=%s'%eeid)
