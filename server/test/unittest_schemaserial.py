@@ -141,7 +141,7 @@ class Schema2RQLTC(TestCase):
                               [
             ('INSERT CWAttribute X: X cardinality %(cardinality)s,X defaultval %(defaultval)s,X description %(description)s,X fulltextindexed %(fulltextindexed)s,X indexed %(indexed)s,X internationalizable %(internationalizable)s,X ordernum %(ordernum)s,X relation_type ER,X from_entity SE,X to_entity OE WHERE SE eid %(se)s,ER eid %(rt)s,OE eid %(oe)s',
              {'se': None, 'rt': None, 'oe': None,
-              'description': u'', 'internationalizable': True, 'fulltextindexed': False, 'ordernum': 7, 'defaultval': u'text/plain', 'indexed': False, 'cardinality': u'?1'}),
+              'description': u'', 'internationalizable': True, 'fulltextindexed': False, 'ordernum': 3, 'defaultval': u'text/plain', 'indexed': False, 'cardinality': u'?1'}),
             ('INSERT CWConstraint X: X value %(value)s, X cstrtype CT, EDEF constrained_by X WHERE CT eid %(ct)s, EDEF eid %(x)s',
              {'x': None, 'value': u'None', 'ct': 'FormatConstraint_eid'}),
             ('INSERT CWConstraint X: X value %(value)s, X cstrtype CT, EDEF constrained_by X WHERE CT eid %(ct)s, EDEF eid %(x)s',
