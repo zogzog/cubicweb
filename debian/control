@@ -126,7 +126,7 @@ Package: cubicweb-dev
 Architecture: all
 XB-Python-Version: ${python:Versions}
 Depends: ${misc:Depends}, ${python:Depends}, cubicweb-server (= ${source:Version}), cubicweb-web (= ${source:Version}), python-pysqlite2
-Suggests: w3c-dtd-xhtml
+Suggests: w3c-dtd-xhtml, xvfb
 Description: tests suite and development tools for the CubicWeb framework
  CubicWeb is a semantic web application framework.
  .
