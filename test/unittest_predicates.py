@@ -25,7 +25,8 @@ from cubicweb import Binary
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.predicates import (is_instance, adaptable, match_kwargs, match_user_groups,
                                 multi_lines_rset, score_entity, is_in_state,
-                                on_transition, rql_condition, relation_possible)
+                                rql_condition, relation_possible)
+from cubicweb.selectors import on_transition # XXX on_transition is deprecated
 from cubicweb.web import action
 
 

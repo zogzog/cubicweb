@@ -23,13 +23,15 @@ from logilab.common.deprecation import deprecated, class_renamed
 from cubicweb.predicates import *
 
 
-warn('[3.15] moved to cubicweb.predicates', DeprecationWarning, stacklevel=2)
+warn('[3.15] cubicweb.selectors renamed into cubicweb.predicates',
+     DeprecationWarning, stacklevel=2)
 
 # XXX pre 3.15 bw compat
 from cubicweb.appobject import (objectify_selector, traced_selection,
                                 lltrace, yes)
 
-ExpectedValueSelector = class_renamed('ExpectedValueSelector', ExpectedValuePredicate)
+ExpectedValueSelector = class_renamed('ExpectedValueSelector',
+                                      ExpectedValuePredicate)
 EClassSelector = class_renamed('EClassSelector', EClassPredicate)
 EntitySelector = class_renamed('EntitySelector', EntityPredicate)
 
