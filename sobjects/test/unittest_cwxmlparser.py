@@ -1,4 +1,4 @@
-# copyright 2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2011-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -22,7 +22,7 @@ from datetime import datetime
 
 from cubicweb.devtools.testlib import CubicWebTC
 
-from cubicweb.sobjects.parsers import CWEntityXMLParser
+from cubicweb.sobjects.cwxmlparser import CWEntityXMLParser
 
 orig_parse = CWEntityXMLParser.parse
 
@@ -162,15 +162,15 @@ class CWEntityXMLParserTC(CubicWebTC):
         dfsource = self.repo.sources_by_uri['myfeed']
         parser = dfsource._get_parser(self.session)
         self.assertEqual(parser.complete_url('http://www.cubicweb.org/CWUser'),
-                         'http://www.cubicweb.org/CWUser?relation=tags-object&relation=in_group-subject&relation=in_tate-subject&relation=use_email-subject&vid=xml')
+                         'http://www.cubicweb.org/CWUser?relation=tags-object&relation=in_group-subject&relation=in_state-subject&relation=use_email-subject')
         self.assertEqual(parser.complete_url('http://www.cubicweb.org/cwuser'),
-                         'http://www.cubicweb.org/cwuser?relation=tags-object&relation=in_group-subject&relation=in_state-subject&relation=use_email-subject&vid=xml')
+                         'http://www.cubicweb.org/cwuser?relation=tags-object&relation=in_group-subject&relation=in_state-subject&relation=use_email-subject')
         self.assertEqual(parser.complete_url('http://www.cubicweb.org/cwuser?vid=rdf&relation=hop'),
                          'http://www.cubicweb.org/cwuser?relation=hop&relation=tags-object&relation=in_group-subject&relation=in_state-subject&relation=use_email-subject&vid=rdf')
         self.assertEqual(parser.complete_url('http://www.cubicweb.org/?rql=cwuser&vid=rdf&relation=hop'),
                          'http://www.cubicweb.org/?rql=cwuser&relation=hop&vid=rdf')
         self.assertEqual(parser.complete_url('http://www.cubicweb.org/?rql=cwuser&relation=hop'),
-                         'http://www.cubicweb.org/?rql=cwuser&relation=hop&vid=xml')
+                         'http://www.cubicweb.org/?rql=cwuser&relation=hop')
 
 
     def test_actions(self):
