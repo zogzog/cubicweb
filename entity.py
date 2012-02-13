@@ -635,11 +635,12 @@ class Entity(AppObject):
         mainattr, needcheck = self.cw_rest_attr_info()
         etype = str(self.e_schema)
         path = etype.lower()
+        fallback = False
         if mainattr != 'eid':
             value = getattr(self, mainattr)
             if not can_use_rest_path(value):
                 mainattr = 'eid'
-                path += '/eid'
+                path = None
             elif needcheck:
                 # make sure url is not ambiguous
                 try:
@@ -650,12 +651,16 @@ class Entity(AppObject):
                     nbresults = self.__unique = self._cw.execute(rql, {'value' : value})[0][0]
                 if nbresults != 1: # ambiguity?
                     mainattr = 'eid'
-                    path += '/eid'
+                    path = None
         if mainattr == 'eid':
             if use_ext_eid:
                 value = self.cw_metainformation()['extid']
             else:
                 value = self.eid
+        if path is None:
+            # fallback url: <base-url>/<eid> url is used as cw entities uri,
+            # prefer it to <base-url>/<etype>/eid/<eid>
+            return unicode(value)
         return '%s/%s' % (path, self._cw.url_quote(value))
 
     def cw_attr_metadata(self, attr, metadata):

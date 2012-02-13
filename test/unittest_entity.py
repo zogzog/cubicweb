@@ -651,18 +651,18 @@ du :eid:`1:*ReST*`'''
         # ambiguity test
         person2 = req.create_entity('Personne', prenom=u'remi', nom=u'doe')
         person.cw_clear_all_caches()
-        self.assertEqual(person.rest_path(), 'personne/eid/%s' % person.eid)
-        self.assertEqual(person2.rest_path(), 'personne/eid/%s' % person2.eid)
+        self.assertEqual(person.rest_path(), unicode(person.eid))
+        self.assertEqual(person2.rest_path(), unicode(person2.eid))
         # unique attr with None value (wikiid in this case)
         card1 = req.create_entity('Card', title=u'hop')
-        self.assertEqual(card1.rest_path(), 'card/eid/%s' % card1.eid)
+        self.assertEqual(card1.rest_path(), unicode(card1.eid))
         # don't use rest if we have /, ? or & in the path (breaks mod_proxy)
         card2 = req.create_entity('Card', title=u'pod', wikiid=u'zo/bi')
-        self.assertEqual(card2.rest_path(), 'card/eid/%d' % card2.eid)
+        self.assertEqual(card2.rest_path(), unicode(card2.eid))
         card3 = req.create_entity('Card', title=u'pod', wikiid=u'zo&bi')
-        self.assertEqual(card3.rest_path(), 'card/eid/%d' % card3.eid)
+        self.assertEqual(card3.rest_path(), unicode(card3.eid))
         card4 = req.create_entity('Card', title=u'pod', wikiid=u'zo?bi')
-        self.assertEqual(card4.rest_path(), 'card/eid/%d' % card4.eid)
+        self.assertEqual(card4.rest_path(), unicode(card4.eid))
 
 
     def test_set_attributes(self):
@@ -701,7 +701,7 @@ du :eid:`1:*ReST*`'''
         req = self.request()
         card = req.create_entity('Card', wikiid=u'', title=u'test')
         self.assertEqual(card.absolute_url(),
-                          'http://testing.fr/cubicweb/card/eid/%s' % card.eid)
+                          'http://testing.fr/cubicweb/%s' % card.eid)
 
     def test_create_entity(self):
         req = self.request()
