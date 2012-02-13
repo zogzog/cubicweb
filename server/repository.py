@@ -492,12 +492,51 @@ class Repository(object):
             results['%s_cache_hit' % title] =  hits
             results['%s_cache_miss' % title] = misses
             results['%s_cache_hit_percent' % title] = (hits * 100) / (hits + misses)
+        results['type_source_cache_size'] = len(self._type_source_cache)
+        results['extid_cache_size'] = len(self._extid_cache)
         results['sql_no_cache'] = self.system_source.no_cache
         results['nb_open_sessions'] = len(self._sessions)
         results['nb_active_threads'] = threading.activeCount()
         results['looping_tasks'] = ', '.join(str(t) for t in self._looping_tasks)
         results['available_cnxsets'] = self._cnxsets_pool.qsize()
         results['threads'] = ', '.join(sorted(str(t) for t in threading.enumerate()))
+        return results
+
+    def gc_stats(self, nmax=20):
+        """Return a dictionary containing some statistics about the repository
+        memory usage.
+
+        This is a public method, not requiring a session id.
+
+        nmax is the max number of (most) referenced object returned as
+        the 'referenced' result
+        """
+
+        from cubicweb._gcdebug import gc_info
+        from cubicweb.appobject import AppObject
+        from cubicweb.rset import ResultSet
+        from cubicweb.dbapi import Connection, Cursor
+        from cubicweb.web.request import CubicWebRequestBase
+        from rql.stmts import Union
+
+        lookupclasses = (AppObject,
+                         Union, ResultSet,
+                         Connection, Cursor,
+                         CubicWebRequestBase)
+        try:
+            from cubicweb.server.session import Session, InternalSession
+            lookupclasses += (InternalSession, Session)
+        except ImportError:
+            pass # no server part installed
+
+        results = {}
+        counters, ocounters, garbage = gc_info(lookupclasses,
+                                               viewreferrersclasses=())
+        values = sorted(counters.iteritems(), key=lambda x: x[1], reverse=True)
+        results['lookupclasses'] = values
+        values = sorted(ocounters.iteritems(), key=lambda x: x[1], reverse=True)[:nmax]
+        results['referenced'] = values
+        results['unreachable'] = len(garbage)
         return results
 
     def get_schema(self):
