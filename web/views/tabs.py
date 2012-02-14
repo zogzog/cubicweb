@@ -52,7 +52,7 @@ class LazyViewMixin(object):
         if rql:
             urlparams['rql'] = rql
         elif eid:
-            urlparams['rql'] = uilib.rql_for_eid(eid)
+            urlparams['eid'] = eid
         elif rset:
             urlparams['rql'] = rset.printable_rql()
         if tabid is None:
