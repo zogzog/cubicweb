@@ -25,6 +25,7 @@ __docformat__ = 'restructuredtext en'
 import sys
 import os
 import logging
+import subprocess
 
 from logilab.common import nullobject
 from logilab.common.configuration import Configuration
@@ -258,12 +259,13 @@ class RepositoryStartHandler(CommandHandler):
     cfgname = 'repository'
 
     def start_server(self, config):
-        command = ['cubicweb-ctl start-repository ']
+        command = ['cubicweb-ctl', 'start-repository']
         if config.debugmode:
             command.append('--debug')
-        command.append('--loglevel %s' % config['log-threshold'].lower())
+        command.append('--loglevel')
+        command.append(config['log-threshold'].lower())
         command.append(config.appid)
-        os.system(' '.join(command))
+        subprocess.call(command)
         return 1
 
 

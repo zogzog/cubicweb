@@ -135,7 +135,8 @@ class AbstractSource(object):
         source_config.pop('type')
 
     def __repr__(self):
-        return '<%s source %s @%#x>' % (self.uri, self.eid, id(self))
+        return '<%s %s source %s @%#x>' % (self.uri, self.__class__.__name__,
+                                           self.eid, id(self))
 
     def __cmp__(self, other):
         """simple comparison function to get predictable source order, with the

@@ -60,7 +60,9 @@ def execute(cmd):
     status != 0
     """
     from subprocess import call
-    print cmd.replace(os.getcwd() + os.sep, '')
+    # use getcwdu as cmd may be unicode and cwd may contains non-ascii
+    # characters
+    print cmd.replace(os.getcwdu() + os.sep, '')
     status = call(cmd, shell=True)
     if status != 0:
         raise Exception('status = %s' % status)

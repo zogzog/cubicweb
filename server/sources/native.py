@@ -1586,9 +1586,11 @@ class LoginPasswordAuthentifier(BaseAuthentifier):
                 pwd = rset[0][0]
             except IndexError:
                 raise AuthenticationError('bad login')
+            if pwd is None:
+                # if pwd is None but a password is provided, something is wrong
+                raise AuthenticationError('bad password')
             # passwords are stored using the Bytes type, so we get a StringIO
-            if pwd is not None:
-                args['pwd'] = Binary(crypt_password(password, pwd.getvalue()[:2]))
+            args['pwd'] = Binary(crypt_password(password, pwd.getvalue()[:2]))
         # get eid from login and (crypted) password
         rset = self.source.syntax_tree_search(session, self._auth_rqlst, args)
         try:
