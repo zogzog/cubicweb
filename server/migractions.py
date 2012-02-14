@@ -1349,7 +1349,7 @@ class ServerMigrationHelper(MigrationHelper):
             getattr(entity, attribute)
             storage.migrate_entity(entity, attribute)
             # remove from entity cache to avoid memory exhaustion
-            del entity[attribute]
+            del entity.cw_attr_cache[attribute]
             pb.update()
         print
         source.set_storage(etype, attribute, storage)
