@@ -28,6 +28,7 @@ from cubicweb.server import ldaputils
 class LDAPFeedSource(ldaputils.LDAPSourceMixIn,
                      datafeed.DataFeedSource):
     """LDAP feed source"""
+    support_entities = {'CWUser': False}
     use_cwuri_as_url = True
 
     options = datafeed.DataFeedSource.options + ldaputils.LDAPSourceMixIn.options

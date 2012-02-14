@@ -451,8 +451,10 @@ class Repository(object):
         """validate authentication, raise AuthenticationError on failure, return
         associated CWUser's eid on success.
         """
-        for source in self.sources:
-            if source.support_entity('CWUser'):
+        # iter on sources_by_uri then check enabled source since sources doesn't
+        # contain copy based sources
+        for source in self.sources_by_uri.itervalues():
+            if self.config.source_enabled(source) and source.support_entity('CWUser'):
                 try:
                     return source.authenticate(session, login, **authinfo)
                 except AuthenticationError:

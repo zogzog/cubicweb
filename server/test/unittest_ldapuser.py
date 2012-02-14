@@ -123,8 +123,11 @@ class LDAPFeedSourceTC(CubicWebTC):
     def test_authenticate(self):
         source = self.repo.sources_by_uri['ldapuser']
         self.session.set_cnxset()
+        # ensure we won't be logged against
         self.assertRaises(AuthenticationError,
                           source.authenticate, self.session, 'toto', 'toto')
+        self.assertTrue(source.authenticate(self.session, 'syt', 'syt'))
+        self.assertTrue(self.repo.connect('syt', password='syt'))
 
     def test_base(self):
         # check a known one
