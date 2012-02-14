@@ -201,6 +201,7 @@ class DataFeedSource(AbstractSource):
         if self.process_urls(parser, self.urls, raise_on_error):
             self.warning("some error occured, don't attempt to delete entities")
         elif self.config['delete-entities'] and myuris:
+            byetype = {}
             for extid, (eid, etype) in myuris.iteritems():
                 if parser.is_deleted(extid, etype, eid):
                     byetype.setdefault(etype, []).append(str(eid))
