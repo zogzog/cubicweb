@@ -227,7 +227,7 @@ You can set multiple groups by separating them by a comma.',
         if cnx is None:
             return True # ldap unreachable, suppose it exists
         try:
-            cnx.search_s(base, scope, searchstr, attrs)
+            cnx.search_s(dn, self.user_base_scope)
         except ldap.PARTIAL_RESULTS:
             pass
         except ldap.NO_SUCH_OBJECT:

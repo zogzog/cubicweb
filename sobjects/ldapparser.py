@@ -28,6 +28,9 @@ from cubicweb.server.sources import datafeed
 
 class DataFeedlDAPParser(datafeed.DataFeedParser):
     __regid__ = 'ldapfeed'
+    # attributes that may appears in source user_attrs dict which are not
+    # attributes of the cw user
+    non_attribute_keys = set(('email',))
 
     def process(self, url, raise_on_error=False, partialcommit=True):
         """IDataFeedParser main entry point"""
@@ -42,18 +45,23 @@ class DataFeedlDAPParser(datafeed.DataFeedParser):
             entity = self.extid2entity(userdict['dn'], 'CWUser', **userdict)
             if not self.created_during_pull(entity):
                 self.notify_updated(entity)
-                attrs = dict( (k, v) for k, v in userdict.iteritems()
-                              if not k in ('dn', 'email') )
+                attrs = self.ldap2cwattrs(userdict)
                 self.update_if_necessary(entity, attrs)
                 self._process_email(entity, userdict)
+
+    def ldap2cwattrs(self, sdict, tdict=None):
+        if tdict is None:
+            tdict = {}
+        for sattr, tattr in self.source.user_attrs.iteritems():
+            if tattr not in self.non_attribute_keys:
+                tdict[tattr] = sdict[sattr]
+        return tdict
 
     def before_entity_copy(self, entity, sourceparams):
         if entity.__regid__ == 'EmailAddress':
             entity.cw_edited['address'] = sourceparams['address']
         else:
-            for ldapattr, cwattr in self.source.user_attrs.iteritems():
-                if cwattr != 'email':
-                    entity.cw_edited[cwattr] = sourceparams[ldapattr]
+            self.ldap2cwattrs(sourceparams, entity.cw_edited)
         return entity
 
     def after_entity_copy(self, entity, sourceparams):
