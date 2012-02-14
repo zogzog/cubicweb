@@ -117,6 +117,7 @@ class Binary(StringIO):
                     binary.write(chunk)
             else:
                 binary.write(fobj.read())
+        binary.seek(0)
         return binary
 
 
