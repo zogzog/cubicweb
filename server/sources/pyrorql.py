@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -367,7 +367,7 @@ repository (default to 5 minutes).',
         if cu is None:
             # this is a ConnectionWrapper instance
             msg = session._("can't connect to source %s, some data may be missing")
-            session.set_shared_data('sources_error', msg % self.uri)
+            session.set_shared_data('sources_error', msg % self.uri, txdata=True)
             return []
         translator = RQL2RQL(self)
         try:
@@ -383,7 +383,7 @@ repository (default to 5 minutes).',
         except Exception, ex:
             self.exception(str(ex))
             msg = session._("error while querying source %s, some data may be missing")
-            session.set_shared_data('sources_error', msg % self.uri)
+            session.set_shared_data('sources_error', msg % self.uri, txdata=True)
             return []
         descr = rset.description
         if rset:

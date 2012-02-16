@@ -303,7 +303,7 @@ You can set multiple groups by separating them by a comma.',
         if cnx is None:
             # cant connect to server
             msg = session._("can't connect to source %s, some data may be missing")
-            session.set_shared_data('sources_error', msg % self.uri)
+            session.set_shared_data('sources_error', msg % self.uri, txdata=True)
             return []
         try:
             res = cnx.search_s(base, scope, searchstr, attrs)

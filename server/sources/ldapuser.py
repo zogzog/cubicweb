@@ -236,7 +236,7 @@ directory (default to once a day).',
             except ldap.SERVER_DOWN:
                 # cant connect to server
                 msg = session._("can't connect to source %s, some data may be missing")
-                session.set_shared_data('sources_error', msg % self.uri)
+                session.set_shared_data('sources_error', msg % self.uri, txdata=True)
                 return []
         return results
 
