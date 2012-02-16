@@ -306,7 +306,7 @@ def make_entity(etype, schema, vreg, index=0, choice_func=_default_choice_func,
     """generates a random entity and returns it as a dict
 
     by default, generate an entity to be inserted in the repository
-    elif form, generate an form dictionnary to be given to a web controller
+    elif form, generate an form dictionary to be given to a web controller
     """
     eschema = schema.eschema(etype)
     valgen = ValueGenerator(eschema, choice_func)

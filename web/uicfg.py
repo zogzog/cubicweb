@@ -370,7 +370,7 @@ autoform_field_kwargs = RelationTagsDict('autoform_field_kwargs')
 autoform_permissions_overrides = RelationTagsSet('autoform_permissions_overrides')
 
 class ReleditTags(NoTargetRelationTagsDict):
-    """Associate to relation a dictionnary to control `reledit` (e.g. edition of
+    """Associate to relation a dictionary to control `reledit` (e.g. edition of
     attributes / relations from within views).
 
     Possible keys and associated values are:

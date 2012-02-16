@@ -29,7 +29,7 @@ def rgx(pattern, flags=0):
     return re.compile(pattern+'$', flags)
 
 class metarewriter(type):
-    """auto-extend rules dictionnary"""
+    """auto-extend rules dictionary"""
     def __new__(mcs, name, bases, classdict):
         # collect baseclass' rules
         rules = []

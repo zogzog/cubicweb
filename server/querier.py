@@ -390,7 +390,7 @@ class ExecutionPlan(object):
                 if var.stinfo['constnode'] is not None:
                     eid = var.stinfo['constnode'].eval(self.args)
                     varkwargs[var.name] = typed_eid(eid)
-        # dictionnary of variables restricted for security reason
+        # dictionary of variables restricted for security reason
         localchecks = {}
         restricted_vars = set()
         newsolutions = []

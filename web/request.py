@@ -63,7 +63,7 @@ def list_form_param(form, param, pop=False):
     * if the parameter is already a list or tuple, just skip internal
       markers
 
-    if pop is True, the parameter is removed from the form dictionnary
+    if pop is True, the parameter is removed from the form dictionary
     """
     if pop:
         try:
@@ -97,7 +97,7 @@ class CubicWebRequestBase(DBAPIRequest):
         self.html_headers = HTMLHead(self)
         # form parameters
         self.setup_params(form)
-        # dictionnary that may be used to store request data that has to be
+        # dictionary that may be used to store request data that has to be
         # shared among various components used to publish the request (views,
         # controller, application...)
         self.data = {}
@@ -253,7 +253,7 @@ class CubicWebRequestBase(DBAPIRequest):
         * if the parameter is already a list or tuple, just skip internal
           markers
 
-        if pop is True, the parameter is removed from the form dictionnary
+        if pop is True, the parameter is removed from the form dictionary
         """
         if form is None:
             form = self.form

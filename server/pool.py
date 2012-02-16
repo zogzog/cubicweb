@@ -30,7 +30,7 @@ class ConnectionsSet(object):
     """
 
     def __init__(self, sources):
-        # dictionnary of (source, connection), indexed by sources'uri
+        # dictionary of (source, connection), indexed by sources'uri
         self.source_cnxs = {}
         for source in sources:
             self.add_source(source)

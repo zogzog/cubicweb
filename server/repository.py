@@ -805,9 +805,9 @@ class Repository(object):
         """return value associated to key in the session's data dictionary or
         session's transaction's data if `txdata` is true.
 
-        If pop is True, value will be removed from the dictionnary.
+        If pop is True, value will be removed from the dictionary.
 
-        If key isn't defined in the dictionnary, value specified by the
+        If key isn't defined in the dictionary, value specified by the
         `default` argument will be returned.
         """
         session = self._get_session(sessionid, setcnxset=False)

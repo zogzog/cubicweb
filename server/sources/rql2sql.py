@@ -339,7 +339,7 @@ class StateInfo(object):
     * `outer_chains`, list of list of strings. Each list represent a tables
       that have to be outer joined together.
 
-    * `outer_tables`, dictionnary used as index of tables used in outer join ::
+    * `outer_tables`, dictionary used as index of tables used in outer join ::
 
         'table alias': (outertype, [conditions], [chain])
 
@@ -721,7 +721,7 @@ class SQLGenerator(object):
         self.attr_map = attrmap
 
     def generate(self, union, args=None, varmap=None):
-        """return SQL queries and a variable dictionnary from a RQL syntax tree
+        """return SQL queries and a variable dictionary from a RQL syntax tree
 
         :partrqls: a list of couple (rqlst, solutions)
         :args: optional dictionary with values of substitutions used in the query
@@ -772,11 +772,11 @@ class SQLGenerator(object):
         return '\nUNION ALL\n'.join(sqls)
 
     def select_sql(self, select, needalias=False):
-        """return SQL queries and a variable dictionnary from a RQL syntax tree
+        """return SQL queries and a variable dictionary from a RQL syntax tree
 
         :select: a selection statement of the syntax tree (`rql.stmts.Select`)
-        :solution: a dictionnary containing variables binding.
-          A solution's dictionnary has variable's names as key and variable's
+        :solution: a dictionary containing variables binding.
+          A solution's dictionary has variable's names as key and variable's
           types as values
         :needwrap: boolean telling if the query will be wrapped in an outer
           query (to deal with aggregat and/or grouping)

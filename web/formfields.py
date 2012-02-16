@@ -618,7 +618,7 @@ class RichTextField(StringField):
         if self.format_field:
             return self.format_field
         # we have to cache generated field since it's use as key in the
-        # context dictionnary
+        # context dictionary
         req = form._cw
         try:
             return req.data[self]

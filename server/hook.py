@@ -115,10 +115,10 @@ containing the entity instance.
 - `before_add_entity`, `before_update_entity`:
 
   On those events, you can access the modified attributes of the entity using
-  the `entity.cw_edited` dictionnary. The values can be modified and the old
+  the `entity.cw_edited` dictionary. The values can be modified and the old
   values can be retrieved.
 
-  If you modify the `entity.cw_edited` dictionnary in the hook, that is before
+  If you modify the `entity.cw_edited` dictionary in the hook, that is before
   the database operations take place, you will avoid the need to process a whole
   new rql query and the underlying backend query (eg usually sql) will contain
   the modified data. For example:
@@ -145,12 +145,12 @@ containing the entity instance.
 - `after_add_entity`, `after_update_entity`
 
   On those events, you can get the list of attributes that were modified using
-  the `entity.cw_edited` dictionnary, but you can not modify it or get the old
+  the `entity.cw_edited` dictionary, but you can not modify it or get the old
   value of an attribute.
 
 - `before_delete_entity`, `after_delete_entity`
 
-  On those events, the entity has no `cw_edited` dictionnary.
+  On those events, the entity has no `cw_edited` dictionary.
 
 .. note:: `self.entity.set_attributes(age=42)` will set the `age` attribute to
   42. But to do so, it will generate a rql query that will have to be processed,

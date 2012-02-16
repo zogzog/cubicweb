@@ -298,10 +298,10 @@ class FormConfig:
       being consistent with the schema definition.
 
     :attr:`widgets`
-      a dictionnary mapping attribute names to widget instances.
+      a dictionary mapping attribute names to widget instances.
 
     :attr:`fields`
-      a dictionnary mapping attribute names to field instances.
+      a dictionary mapping attribute names to field instances.
 
     Examples:
 
