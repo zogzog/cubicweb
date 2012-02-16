@@ -64,7 +64,7 @@ function updateMessage(msg) {
 /**
  * .. function:: asURL(props)
  *
- * builds an url from an object (used as a dictionnary)
+ * builds an url from an object (used as a dictionary)
  *
  * >>> asURL({'rql' : "RQL", 'x': [1, 2], 'itemvid' : "oneline"})
  * rql=RQL&vid=list&itemvid=oneline&x=1&x=2

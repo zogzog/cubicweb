@@ -299,7 +299,7 @@ class RequestSessionBase(object):
 
     @cached
     def user_data(self):
-        """returns a dictionnary with this user's information"""
+        """returns a dictionary with this user's information"""
         userinfo = {}
         if self.is_internal_session:
             userinfo['login'] = "cubicweb"
@@ -324,7 +324,7 @@ class RequestSessionBase(object):
         object isn't selectable, try to select fallback object if
         `__fallback_oid` is specified.
 
-        If specified `initargs` is expected to be a dictionnary containing
+        If specified `initargs` is expected to be a dictionary containing
         arguments that should be given to selection (hence to object's __init__
         as well), but not to render(). Other arbitrary keyword arguments will be
         given to selection *and* to render(), and so should be handled by

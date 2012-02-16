@@ -31,7 +31,7 @@ def check_entity_attributes(session, entity, editedattrs=None, creation=False):
     eid = entity.eid
     eschema = entity.e_schema
     # ._cw_skip_security_attributes is there to bypass security for attributes
-    # set by hooks by modifying the entity's dictionnary
+    # set by hooks by modifying the entity's dictionary
     if editedattrs is None:
         editedattrs = entity.cw_edited
     dontcheck = editedattrs.skip_security

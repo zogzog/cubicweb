@@ -98,11 +98,11 @@ class CWEntityXMLParser(datafeed.DataFeedXMLParser):
     Most of the logic is delegated to the following components:
 
     * an "item builder" component, turning an etree xml node into a specific
-      python dictionnary representing an entity
+      python dictionary representing an entity
 
     * "action" components, selected given an entity, a relation and its role in
       the relation, and responsible to link the entity to given related items
-      (eg dictionnary)
+      (eg dictionary)
 
     So the parser is only doing the gluing service and the connection to the
     source.

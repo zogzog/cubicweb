@@ -177,7 +177,7 @@ directory (default to once a day).',
 
     def prepare_columns(self, mainvars, rqlst):
         """return two list describing how to build the final results
-        from the result of an ldap search (ie a list of dictionnary)
+        from the result of an ldap search (ie a list of dictionary)
         """
         columns = []
         global_transforms = []
