@@ -27,7 +27,7 @@ from warnings import warn
 
 from logilab.common.decorators import cached, clear_cache, monkeypatch
 from logilab.common.logging_ext import set_log_methods
-from logilab.common.deprecation import deprecated, class_moved
+from logilab.common.deprecation import deprecated, class_moved, moved
 from logilab.common.textutils import splitstrip
 from logilab.common.graph import get_cycles
 from logilab.common.compat import any
@@ -1250,7 +1250,10 @@ stmts.Select.set_statement_type = bw_set_statement_type
 from yams.buildobjs import RichString
 from yams.constraints import StaticVocabularyConstraint
 
-RichString = class_moved(RichString)
+try: # for yams < 0.35
+    RichString = class_moved(RichString)
+except TypeError:
+    RichString = moved('yams.buildobjs', 'RichString')
 
 StaticVocabularyConstraint = class_moved(StaticVocabularyConstraint)
 FormatConstraint = class_moved(FormatConstraint)
