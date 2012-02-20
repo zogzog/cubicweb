@@ -624,6 +624,9 @@ Date extraction functions
 +--------------------------+----------------------------------------+
 | :func:`SECOND(Datetime)` | return the seconds of a datetime       |
 +--------------------------+----------------------------------------+
+| :func:`WEEKDAY(Date)`    | return the day of week of a date or    |
+|                          | datetime.  Sunday == 1, Saturday == 7. |
++--------------------------+----------------------------------------+
 
 .. _RQLOtherFunctions:
 
