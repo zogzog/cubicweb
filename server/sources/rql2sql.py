@@ -1454,6 +1454,8 @@ class SQLGenerator(object):
         lhs, rhs = mexpr.get_parts()
         # check for string concatenation
         operator = mexpr.operator
+        if operator == '%':
+            operator = '%%'
         try:
             if mexpr.operator == '+' and mexpr.get_type(self._state.solution, self._args) == 'String':
                 return '(%s)' % self.dbhelper.sql_concat_string(lhs.accept(self),

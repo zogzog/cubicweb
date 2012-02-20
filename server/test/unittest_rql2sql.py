@@ -1744,6 +1744,9 @@ FROM cw_CWAttribute AS _X
 GROUP BY CAST(EXTRACT(YEAR from _X.cw_modification_date) AS INTEGER),CAST(EXTRACT(MONTH from _X.cw_modification_date) AS INTEGER)
 ORDER BY 1'''),
 
+    def test_modulo(self):
+        self._check('Any 5 % 2', '''SELECT (5 % 2)''')
+
 
 class SqlServer2005SQLGeneratorTC(PostgresSQLGeneratorTC):
     backend = 'sqlserver2005'
