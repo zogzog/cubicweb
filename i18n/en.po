@@ -922,6 +922,9 @@ msgstr ""
 msgid "a float is expected"
 msgstr ""
 
+msgid "a number (in seconds) or 20s, 10min, 24h or 4d are expected"
+msgstr ""
+
 msgid ""
 "a simple cache entity characterized by a name and a validity date. The "
 "target application is responsible for updating timestamp when necessary to "

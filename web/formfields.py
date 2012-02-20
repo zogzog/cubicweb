@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -43,6 +43,7 @@ Basic fields
 .. autoclass:: cubicweb.web.formfields.DateField()
 .. autoclass:: cubicweb.web.formfields.DateTimeField()
 .. autoclass:: cubicweb.web.formfields.TimeField()
+.. autoclass:: cubicweb.web.formfields.TimeIntervalField()
 
 Compound fields
 ''''''''''''''''
@@ -63,11 +64,13 @@ Entity specific fields and function
 __docformat__ = "restructuredtext en"
 
 from warnings import warn
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from logilab.mtconverter import xml_escape
 from logilab.common import nullobject
 from logilab.common.date import ustrftime
+from logilab.common.configuration import format_time
+from logilab.common.textutils import apply_units, TIME_UNITS
 
 from yams.schema import KNOWN_METAATTRIBUTES, role_name
 from yams.constraints import (SizeConstraint, StaticVocabularyConstraint,
@@ -929,6 +932,38 @@ class FloatField(IntField):
         return None
 
 
+class TimeIntervalField(StringField):
+    """Use this field to edit time interval (`Interval` yams type).
+
+    Unless explicitly specified, the widget for this field will be a
+    :class:`~cubicweb.web.formwidgets.TextInput`.
+    """
+    widget = fw.TextInput
+
+    def format_single_value(self, req, value):
+        if value:
+            value = format_time(value.days * 24 * 3600 + value.seconds)
+            return unicode(value)
+        return u''
+
+    def example_format(self, req):
+        """return a sample string describing what can be given as input for this
+        field
+        """
+        return u'20s, 10min, 24h, 4d'
+
+    def _ensure_correctly_typed(self, form, value):
+        if isinstance(value, basestring):
+            value = value.strip()
+            if not value:
+                return None
+            try:
+                value = apply_units(value, TIME_UNITS)
+            except ValueError:
+                raise ProcessFormError(form._cw._('a number (in seconds) or 20s, 10min, 24h or 4d are expected'))
+        return timedelta(0, value)
+
+
 class DateField(StringField):
     """Use this field to edit date (`Date` yams type).
 
@@ -1201,5 +1236,5 @@ FIELDS = {
     'TZDatetime': DateTimeField,
     'Time':       TimeField,
     'TZTime':     TimeField,
-    # XXX implement 'Interval': TimeIntervalField,
+    'Interval':   TimeIntervalField,
     }
