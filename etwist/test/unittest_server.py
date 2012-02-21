@@ -55,6 +55,12 @@ class HostPrefixedBaseURLTC(CubicWebTC):
                     'http://localhost:8080/hg/')
 
 
+if __name__ == '__main__':
+    from logilab.common.testlib import unittest_main
+    unittest_main()
+
+
+
 class ConcatFilesTC(CubicWebTC):
 
     def tearDown(self):
