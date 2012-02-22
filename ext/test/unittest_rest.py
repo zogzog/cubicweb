@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -15,9 +15,6 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""
-
-"""
 from logilab.common.testlib import unittest_main
 from cubicweb.devtools.testlib import CubicWebTC
 
@@ -60,23 +57,23 @@ class RestTC(CubicWebTC):
     def test_rql_role_with_vid(self):
         context = self.context()
         out = rest_publish(context, ':rql:`Any X WHERE X is CWUser:table`')
-        self.assert_(out.endswith('<a href="http://testing.fr/cubicweb/cwuser/anon" title="">anon</a>'
-                                  '</td></tr></tbody></table></div>\n</div>\n</p>\n'))
+        self.assertTrue(out.endswith('<a href="http://testing.fr/cubicweb/cwuser/anon" title="">anon</a>'
+                                     '</td></tr>\n</tbody></table></div></p>\n'))
 
     def test_rql_role_with_vid_empty_rset(self):
         context = self.context()
         out = rest_publish(context, ':rql:`Any X WHERE X is CWUser, X login "nono":table`')
-        self.assert_(out.endswith('<p><div class="searchMessage"><strong>No result matching query</strong></div>\n</p>\n'))
+        self.assertTrue(out.endswith('<p><div class="searchMessage"><strong>No result matching query</strong></div>\n</p>\n'))
 
     def test_rql_role_with_unknown_vid(self):
         context = self.context()
         out = rest_publish(context, ':rql:`Any X WHERE X is CWUser:toto`')
-        self.assert_(out.startswith("<p>an error occured while interpreting this rql directive: ObjectNotFound(u'toto',)</p>"))
+        self.assertTrue(out.startswith("<p>an error occured while interpreting this rql directive: ObjectNotFound(u'toto',)</p>"))
 
     def test_rql_role_without_vid(self):
         context = self.context()
         out = rest_publish(context, ':rql:`Any X WHERE X is CWUser`')
-        self.assertEqual(out, u'<p><h1>cwuser_plural</h1><div class="section"><a href="http://testing.fr/cubicweb/cwuser/admin" title="">admin</a></div><div class="section"><a href="http://testing.fr/cubicweb/cwuser/anon" title="">anon</a></div></p>\n')
+        self.assertEqual(out, u'<p><h1>CWUser_plural</h1><div class="section"><a href="http://testing.fr/cubicweb/cwuser/admin" title="">admin</a></div><div class="section"><a href="http://testing.fr/cubicweb/cwuser/anon" title="">anon</a></div></p>\n')
 
 if __name__ == '__main__':
     unittest_main()
