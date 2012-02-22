@@ -29,14 +29,15 @@ from logilab.mtconverter import xml_escape
 from logilab.common.deprecation import deprecated, class_renamed
 from logilab.common.decorators import cached
 
-from cubicweb import neg_role
+from cubicweb import neg_role, typed_eid
 from cubicweb.schema import display_name
-from cubicweb.utils import json_dumps
+from cubicweb.utils import json, json_dumps
 from cubicweb.predicates import non_final_entity, match_kwargs
 from cubicweb.view import EntityView
 from cubicweb.web import uicfg, stdmsgs
 from cubicweb.web.form import FieldNotFound
 from cubicweb.web.formwidgets import Button, SubmitButton
+from cubicweb.web.views.ajaxcontroller import ajaxfunc
 
 class _DummyForm(object):
     __slots__ = ('event_args',)
@@ -394,3 +395,18 @@ class AutoClickAndEditFormView(EntityView):
 
 
 ClickAndEditFormView = class_renamed('ClickAndEditFormView', AutoClickAndEditFormView)
+
+
+@ajaxfunc(output_type='xhtml')
+def reledit_form(self):
+    req = self._cw
+    args = dict((x, req.form[x])
+                for x in ('formid', 'rtype', 'role', 'reload', 'action'))
+    rset = req.eid_rset(typed_eid(self._cw.form['eid']))
+    try:
+        args['reload'] = json.loads(args['reload'])
+    except ValueError: # not true/false, an absolute url
+        assert args['reload'].startswith('http')
+    view = req.vreg['views'].select('reledit', req, rset=rset, rtype=args['rtype'])
+    return self._call_view(view, **args)
+

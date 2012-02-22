@@ -134,7 +134,7 @@ from cubicweb.view import EntityView
 from cubicweb.predicates import (
     match_kwargs, match_form_params, non_final_entity,
     specified_etype_implements)
-from cubicweb.utils import json, json_dumps
+from cubicweb.utils import json_dumps
 from cubicweb.web import (stdmsgs, uicfg, eid_param,
                           form as f, formwidgets as fw, formfields as ff)
 from cubicweb.web.views import forms
@@ -459,19 +459,6 @@ def cancel_edition(self, errorurl):
       - pending insertions / deletions
     """
     self._cw.cancel_edition(errorurl)
-
-@ajaxfunc(output_type='xhtml')
-def reledit_form(self):
-    req = self._cw
-    args = dict((x, req.form[x])
-                for x in ('formid', 'rtype', 'role', 'reload', 'action'))
-    rset = req.eid_rset(typed_eid(self._cw.form['eid']))
-    try:
-        args['reload'] = json.loads(args['reload'])
-    except ValueError: # not true/false, an absolute url
-        assert args['reload'].startswith('http')
-    view = req.vreg['views'].select('reledit', req, rset=rset, rtype=args['rtype'])
-    return self._call_view(view, **args)
 
 
 def _add_pending(req, eidfrom, rel, eidto, kind):
