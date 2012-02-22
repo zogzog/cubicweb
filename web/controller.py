@@ -207,10 +207,12 @@ class Controller(AppObject):
         if '__redirectpath' in self._cw.form:
             # if redirect path was explicitly specified in the form, use it
             path = self._cw.form['__redirectpath']
-            url = self._cw.build_url(path, **newparams)
+            url = self._cw.build_url(path)
             url = append_url_params(url, self._cw.form.get('__redirectparams'))
         else:
             url = self._cw.last_visited_page()
+        # The newparams must update the params in all cases
+        url = self._cw.rebuild_url(url, **newparams)
         raise Redirect(url)
 
 
