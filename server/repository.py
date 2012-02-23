@@ -324,7 +324,7 @@ class Repository(object):
         self.schema = schema
 
     def fill_schema(self):
-        """lod schema from the repository"""
+        """load schema from the repository"""
         from cubicweb.server.schemaserial import deserialize_schema
         self.info('loading schema from the repository')
         appschema = schema.CubicWebSchema(self.config.appid)
