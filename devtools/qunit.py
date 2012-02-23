@@ -64,7 +64,7 @@ class FirefoxHelper(object):
 
     def __init__(self, url=None):
         self._process = None
-        self._tmp_dir = mkdtemp()
+        self._tmp_dir = mkdtemp(prefix='cwtest-ffxprof-')
         self._profile_data = {'uid': uuid4()}
         self._profile_name = self.profile_name_mask % self._profile_data
         fnull = open(os.devnull, 'w')
