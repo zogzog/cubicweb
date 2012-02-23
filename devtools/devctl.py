@@ -303,7 +303,7 @@ class UpdateCubicWebCatalogCommand(Command):
         from logilab.common.shellutils import globfind, find, rm
         from logilab.common.modutils import get_module_files
         from cubicweb.i18n import extract_from_tal, execute
-        tempdir = tempfile.mkdtemp()
+        tempdir = tempfile.mkdtemp(prefix='cw-')
         cwi18ndir = WebConfiguration.i18n_lib_dir()
         print '-> extract schema messages.'
         schemapot = osp.join(tempdir, 'schema.pot')
