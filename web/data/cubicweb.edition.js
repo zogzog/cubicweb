@@ -28,7 +28,7 @@ function setPropValueWidget(varname, tabindex) {
             pageid: pageid,
             arg: $.map([key, varname, tabindex], jQuery.toJSON)
         };
-        cw.jqNode('div:value:' + varname).loadxhtml(JSON_BASE_URL, args, 'post');
+        cw.jqNode('div:value:' + varname).loadxhtml(AJAX_BASE_URL, args, 'post');
     }
 }
 
@@ -170,8 +170,8 @@ function addPendingInsert(optionNode, eid, cell, relname) {
     // add hidden parameter
     var entityForm = jQuery('#entityForm');
     var oid = optionNode.id.substring(2); // option id is prefixed by "id"
-    loadRemote('json', ajaxFuncArgs('add_pending_inserts', null,
-                                    [oid.split(':')]), 'GET', true);
+    loadRemote(AJAX_BASE_URL, ajaxFuncArgs('add_pending_inserts', null,
+                                           [oid.split(':')]), 'GET', true);
     var selectNode = optionNode.parentNode;
     // remove option node
     selectNode.removeChild(optionNode);
@@ -209,8 +209,8 @@ function cancelPendingInsert(elementId, element_name, comboId, eid) {
         }
     }
     elementId = elementId.substring(2, elementId.length);
-    loadRemote('json', ajaxFuncArgs('remove_pending_insert', null,
-                                    elementId.split(':')), 'GET', true);
+    loadRemote(AJAX_BASE_URL, ajaxFuncArgs('remove_pending_insert', null,
+                                           elementId.split(':')), 'GET', true);
 }
 
 /**
@@ -234,7 +234,7 @@ function buildPendingDeleteHandle(elementId, eid) {
  * * `nodeId`, eid_from:r_type:eid_to
  */
 function addPendingDelete(nodeId, eid) {
-    var d = loadRemote('json', ajaxFuncArgs('add_pending_delete', null, nodeId.split(':')));
+    var d = loadRemote(AJAX_BASE_URL, ajaxFuncArgs('add_pending_delete', null, nodeId.split(':')));
     d.addCallback(function() {
         // and strike entity view
         cw.jqNode('span' + nodeId).addClass('pendingDelete');
@@ -249,7 +249,7 @@ function addPendingDelete(nodeId, eid) {
  * * `nodeId`, eid_from:r_type:eid_to
  */
 function cancelPendingDelete(nodeId, eid) {
-    var d = loadRemote('json', ajaxFuncArgs('remove_pending_delete', null, nodeId.split(':')));
+    var d = loadRemote(AJAX_BASE_URL, ajaxFuncArgs('remove_pending_delete', null, nodeId.split(':')));
     d.addCallback(function() {
         // reset link's CSS class
         cw.jqNode('span' + nodeId).removeClass('pendingDelete');
@@ -275,7 +275,7 @@ function togglePendingDelete(nodeId, eid) {
 function selectForAssociation(tripletIdsString, originalEid) {
     var tripletlist = $.map(tripletIdsString.split('-'),
                             function(x) { return [x.split(':')] ;});
-    var d = loadRemote('json', ajaxFuncArgs('add_pending_inserts', null, tripletlist));
+    var d = loadRemote(AJAX_BASE_URL, ajaxFuncArgs('add_pending_inserts', null, tripletlist));
     d.addCallback(function() {
         var args = {
             vid: 'edition',
@@ -308,7 +308,7 @@ function updateInlinedEntitiesCounters(rtype, role) {
 function addInlineCreationForm(peid, petype, ttype, rtype, role, i18nctx, insertBefore) {
     insertBefore = insertBefore || cw.getNode('add' + rtype + ':' + peid + 'link').parentNode;
     var args = ajaxFuncArgs('inline_creation_form', null, peid, petype, ttype, rtype, role, i18nctx);
-    var d = loadRemote('json', args);
+    var d = loadRemote(AJAX_BASE_URL, args);
     d.addCallback(function(response) {
         var dom = getDomFromResponse(response);
         loadAjaxHtmlHead(dom);
@@ -587,7 +587,7 @@ function validateForm(formid, action, onsuccess, onfailure) {
     try {
         var zipped = cw.utils.formContents(formid);
         var args = ajaxFuncArgs('validate_form', null, action, zipped[0], zipped[1]);
-        var d = loadRemote('json', args, 'POST');
+        var d = loadRemote(AJAX_BASE_URL, args, 'POST');
     } catch(ex) {
         cw.log('got exception', ex);
         return false;

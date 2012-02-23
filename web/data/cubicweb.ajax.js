@@ -86,8 +86,9 @@ jQuery.extend(Deferred.prototype, {
 
 });
 
-
+var AJAX_PREFIX_URL = 'ajax';
 var JSON_BASE_URL = baseuri() + 'json?';
+var AJAX_BASE_URL = baseuri() + AJAX_PREFIX_URL + '?';
 
 
 jQuery.extend(cw.ajax, {
@@ -439,7 +440,7 @@ function loadRemote(url, form, reqtype, sync) {
  * emulation of gettext's _ shortcut
  */
 function _(message) {
-    return loadRemote('json', ajaxFuncArgs('i18n', null, [message]), 'GET', true)[0];
+    return loadRemote(AJAX_BASE_URL, ajaxFuncArgs('i18n', null, [message]), 'GET', true)[0];
 }
 
 /**
@@ -495,19 +496,19 @@ function _loadDynamicFragments(node) {
         }
         extraparams['rql'] = rql;
         extraparams['vid'] = vid;
-        $fragment.loadxhtml('json', ajaxFuncArgs('view', extraparams));
+        $fragment.loadxhtml(AJAX_BASE_URL, ajaxFuncArgs('view', extraparams));
     }
 }
 function unloadPageData() {
     // NOTE: do not make async calls on unload if you want to avoid
     //       strange bugs
-    loadRemote('json', ajaxFuncArgs('unload_page_data'), 'GET', true);
+    loadRemote(AJAX_BASE_URL, ajaxFuncArgs('unload_page_data'), 'GET', true);
 }
 
 function removeBookmark(beid) {
-    var d = loadRemote('json', ajaxFuncArgs('delete_bookmark', null, beid));
+    var d = loadRemote(AJAX_BASE_URL, ajaxFuncArgs('delete_bookmark', null, beid));
     d.addCallback(function(boxcontent) {
-        $('#bookmarks_box').loadxhtml('json',
+        $('#bookmarks_box').loadxhtml(AJAX_BASE_URL,
                                       ajaxFuncArgs('render', null, 'ctxcomponents',
                                                    'bookmarks_box'));
         document.location.hash = '#header';
@@ -517,7 +518,7 @@ function removeBookmark(beid) {
 
 function userCallback(cbname) {
     setProgressCursor();
-    var d = loadRemote('json', ajaxFuncArgs('user_callback', null, cbname));
+    var d = loadRemote(AJAX_BASE_URL, ajaxFuncArgs('user_callback', null, cbname));
     d.addCallback(resetCursor);
     d.addErrback(resetCursor);
     d.addErrback(remoteCallFailed);
@@ -527,7 +528,7 @@ function userCallback(cbname) {
 function userCallbackThenUpdateUI(cbname, compid, rql, msg, registry, nodeid) {
     var d = userCallback(cbname);
     d.addCallback(function() {
-        $('#' + nodeid).loadxhtml('json', ajaxFuncArgs('render', {'rql': rql},
+        $('#' + nodeid).loadxhtml(AJAX_BASE_URL, ajaxFuncArgs('render', {'rql': rql},
                                                        registry, compid));
         if (msg) {
             updateMessage(msg);
@@ -553,7 +554,7 @@ function userCallbackThenReloadPage(cbname, msg) {
  */
 function unregisterUserCallback(cbname) {
     setProgressCursor();
-    var d = loadRemote('json', ajaxFuncArgs('unregister_user_callback',
+    var d = loadRemote(AJAX_BASE_URL, ajaxFuncArgs('unregister_user_callback',
                                             null, cbname));
     d.addCallback(resetCursor);
     d.addErrback(resetCursor);
@@ -679,7 +680,7 @@ function reloadCtxComponentsSection(context, actualEid, creationEid) {
 	var compid = this.id.replace("_", ".").rstrip(creationEid);
 	var params = ajaxFuncArgs('render', null, 'ctxcomponents',
 				  compid, actualEid);
-	$(this).loadxhtml('json', params, null, 'swap', true);
+	$(this).loadxhtml(AJAX_BASE_URL, params, null, 'swap', true);
     });
     $compsholder.attr('id', context + actualEid);
 }
@@ -694,7 +695,7 @@ function reload(domid, compid, registry, formparams  /* ... */) {
     var ajaxArgs = ['render', formparams, registry, compid];
     ajaxArgs = ajaxArgs.concat(cw.utils.sliceList(arguments, 4));
     var params = ajaxFuncArgs.apply(null, ajaxArgs);
-    return $('#'+domid).loadxhtml('json', params, null, 'swap');
+    return $('#'+domid).loadxhtml(AJAX_BASE_URL, params, null, 'swap');
 }
 
 /* ajax tabs ******************************************************************/
@@ -738,8 +739,8 @@ reloadComponent = cw.utils.deprecatedFunction(
         nodeid = nodeid || (compid + 'Component');
         extraargs = extraargs || {};
         var node = cw.jqNode(nodeid);
-        return node.loadxhtml('json', ajaxFuncArgs('component', null, compid,
-                                                   rql, registry, extraargs));
+        return node.loadxhtml(AJAX_BASE_URL, ajaxFuncArgs('component', null, compid,
+                                                          rql, registry, extraargs));
     }
 );
 
@@ -775,7 +776,7 @@ replacePageChunk = cw.utils.deprecatedFunction(
             // passing `props` directly to loadxml because replacePageChunk
             // is sometimes called (abusively) with some extra parameters in `vid`
             var mode = swap ? 'swap': 'replace';
-            var url = JSON_BASE_URL + asURL(props);
+            var url = AJAX_BASE_URL + asURL(props);
             jQuery(node).loadxhtml(url, params, 'get', mode);
         } else {
             cw.log('Node', nodeId, 'not found');
@@ -798,7 +799,7 @@ function remoteExec(fname /* ... */) {
         arg: $.map(cw.utils.sliceList(arguments, 1), jQuery.toJSON)
     };
     var result = jQuery.ajax({
-        url: JSON_BASE_URL,
+        url: AJAX_BASE_URL,
         data: props,
         async: false,
         traditional: true
@@ -818,7 +819,7 @@ function asyncRemoteExec(fname /* ... */) {
         arg: $.map(cw.utils.sliceList(arguments, 1), jQuery.toJSON)
     };
     // XXX we should inline the content of loadRemote here
-    var deferred = loadRemote(JSON_BASE_URL, props, 'POST');
+    var deferred = loadRemote(AJAX_BASE_URL, props, 'POST');
     deferred = deferred.addErrback(remoteCallFailed);
     deferred = deferred.addErrback(resetCursor);
     deferred = deferred.addCallback(resetCursor);

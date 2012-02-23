@@ -56,7 +56,7 @@ function buildRQL(divid, vid, paginate, vidargs) {
     var zipped = facetFormContent($form);
     zipped[0].push('facetargs');
     zipped[1].push(vidargs);
-    var d = loadRemote('json', ajaxFuncArgs('filter_build_rql', null, zipped[0], zipped[1]));
+    var d = loadRemote(AJAX_BASE_URL, ajaxFuncArgs('filter_build_rql', null, zipped[0], zipped[1]));
     d.addCallback(function(result) {
         var rql = result[0];
         var $bkLink = jQuery('#facetBkLink');
@@ -87,7 +87,7 @@ function buildRQL(divid, vid, paginate, vidargs) {
         if (vid) { // XXX see copyParam above. Need cleanup
             extraparams['vid'] = vid;
         }
-        d = $('#' + divid).loadxhtml('json', ajaxFuncArgs('view', extraparams),
+        d = $('#' + divid).loadxhtml(AJAX_BASE_URL, ajaxFuncArgs('view', extraparams),
                                      null, 'swap');
         d.addCallback(function() {
             // XXX rql/vid in extraparams
@@ -99,14 +99,14 @@ function buildRQL(divid, vid, paginate, vidargs) {
             // now
             var $node = jQuery('#edit_box');
             if ($node.length) {
-                $node.loadxhtml('json', ajaxFuncArgs('render', {
+                $node.loadxhtml(AJAX_BASE_URL, ajaxFuncArgs('render', {
                     'rql': rql
                 },
                 'ctxcomponents', 'edit_box'));
             }
             $node = jQuery('#breadcrumbs');
             if ($node.length) {
-                $node.loadxhtml('json', ajaxFuncArgs('render', {
+                $node.loadxhtml(AJAX_BASE_URL, ajaxFuncArgs('render', {
                     'rql': rql
                 },
                 'ctxcomponents', 'breadcrumbs'));
@@ -118,7 +118,7 @@ function buildRQL(divid, vid, paginate, vidargs) {
             mainvar = zipped[1][index];
         }
 
-        var d = loadRemote('json', ajaxFuncArgs('filter_select_content', null, toupdate, rql, mainvar));
+        var d = loadRemote(AJAX_BASE_URL, ajaxFuncArgs('filter_select_content', null, toupdate, rql, mainvar));
         d.addCallback(function(updateMap) {
             for (facetName in updateMap) {
                 var values = updateMap[facetName];
