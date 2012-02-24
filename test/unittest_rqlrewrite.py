@@ -183,9 +183,9 @@ class RQLRewriteTC(TestCase):
         self.assertEqual(rqlst.as_string(),
                          "Any A,C,T WHERE A documented_by C?, A is Affaire "
                          "WITH C,T BEING (Any C,T WHERE C title T, "
-                         "EXISTS(C in_state B, D in_group F, G require_state B, G name 'read', G require_group F), "
-                         "D eid %(A)s, C is Card, "
-                         "EXISTS(C in_state E, E name 'public'))")
+                         "(EXISTS(C in_state B, D in_group F, G require_state B, G name 'read', G require_group F)) "
+                         "OR (EXISTS(C in_state E, E name 'public')), "
+                         "D eid %(A)s, C is Card)")
 
     def test_optional_var_4(self):
         constraint1 = 'A created_by U, X documented_by A'
@@ -199,8 +199,8 @@ class RQLRewriteTC(TestCase):
                              u'Any X,LA,Y WHERE LA? documented_by X, LA concerne Y, B eid %(C)s, '
                              'EXISTS(X created_by B), EXISTS(Y created_by B), '
                              'X is Card, Y is IN(Division, Note, Societe) '
-                             'WITH LA BEING (Any LA WHERE EXISTS(A created_by B, LA documented_by A), '
-                             'B eid %(D)s, LA is Affaire, EXISTS(E created_by B, LA concerne E))')
+                             'WITH LA BEING (Any LA WHERE (EXISTS(A created_by B, LA documented_by A)) OR (EXISTS(E created_by B, LA concerne E)), '
+                             'B eid %(D)s, LA is Affaire)')
 
     def test_optional_var_inlined(self):
         c1 = ('X require_permission P')
@@ -430,6 +430,18 @@ class RQLRewriteTC(TestCase):
         rewrite(rqlst, {('C', 'X'): (constraint,)}, {}, 'X')
         self.assertEqual(rqlst.as_string(),
                          u'Any A WHERE NOT EXISTS(A documented_by C, EXISTS(C owned_by B, B login "hop", B is CWUser), C is Card), A is Affaire')
+
+    def test_rqlexpr_multiexpr_outerjoin(self):
+        c1 = RRQLExpression('X owned_by Z, Z login "hop"', 'X')
+        c2 = RRQLExpression('X owned_by Z, Z login "hip"', 'X')
+        c3 = RRQLExpression('X owned_by Z, Z login "momo"', 'X')
+        rqlst = rqlhelper.parse('Any A WHERE A documented_by C?', annotate=False)
+        rewrite(rqlst, {('C', 'X'): (c1, c2, c3)}, {}, 'X')
+        self.assertEqual(rqlst.as_string(),
+                         u'Any A WHERE A documented_by C?, A is Affaire '
+                         'WITH C BEING (Any C WHERE ((EXISTS(C owned_by B, B login "hop")) '
+                         'OR (EXISTS(C owned_by D, D login "momo"))) '
+                         'OR (EXISTS(C owned_by A, A login "hip")), C is Card)')
 
 
 if __name__ == '__main__':
