@@ -556,6 +556,12 @@ class Connection(object):
             except Exception:
                 pass
 
+    # server-side service call #################################################
+
+    @check_not_closed
+    def call_service(self, regid, async=False, **kwargs):
+        return self._repo.call_service(self.sessionid, regid, async, **kwargs)
+
     # connection initialization methods ########################################
 
     def load_appobjects(self, cubes=_MARKER, subpath=None, expand=True):

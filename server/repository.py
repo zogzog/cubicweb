@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -878,6 +878,22 @@ class Repository(object):
         del self._sessions[sessionid]
         self.info('closed session %s for user %s', sessionid, session.user.login)
 
+    def call_service(self, sessionid, regid, async, **kwargs):
+        """
+        See :class:`cubicweb.dbapi.Connection.call_service`
+        and :class:`cubicweb.server.Service`
+        """
+        def task():
+            session = self._get_session(sessionid)
+            service = session.vreg['services'].select(regid, session, **kwargs)
+            return service.call(session, **kwargs)
+        if async:
+            self.info('calling service %s asynchronously', regid)
+            self.threaded_task(task)
+        else:
+            self.info('calling service %s synchronously', regid)
+            return task()
+
     def user_info(self, sessionid, props=None):
         """this method should be used by client to:
         * check session id validity
@@ -1670,6 +1686,7 @@ class Repository(object):
     # these are overridden by set_log_methods below
     # only defining here to prevent pylint from complaining
     info = warning = error = critical = exception = debug = lambda msg,*a,**kw: None
+
 
 def pyro_unregister(config):
     """unregister the repository from the pyro name server"""

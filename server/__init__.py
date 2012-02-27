@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -31,10 +31,12 @@ from glob import glob
 
 from logilab.common.modutils import LazyObject
 from logilab.common.textutils import splitstrip
+from logilab.common.registry import yes
 
 from yams import BASE_GROUPS
 
 from cubicweb import CW_SOFTWARE_ROOT
+from cubicweb.appobject import AppObject
 
 class ShuttingDown(BaseException):
     """raised when trying to access some resources while the repository is
@@ -42,7 +44,26 @@ class ShuttingDown(BaseException):
     catch it.
     """
 
-# server-side debugging #########################################################
+# server-side services #########################################################
+
+class Service(AppObject):
+    """Base class for services.
+
+    A service is a selectable object that performs an action server-side.
+    Use :class:`cubicweb.dbapi.Connection.call_service` to call them from
+    the web-side.
+
+    When inheriting this class, do not forget to define at least the __regid__
+    attribute (and probably __select__ too).
+    """
+    __registry__ = 'services'
+    __select__ = yes()
+
+    def call(self, **kwargs):
+        raise NotImplementedError
+
+
+# server-side debugging ########################################################
 
 # server debugging flags. They may be combined using binary operators.
 
