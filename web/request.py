@@ -86,7 +86,7 @@ class CubicWebRequestBase(DBAPIRequest):
     """
     ajax_request = False # to be set to True by ajax controllers
 
-    def __init__(self, vreg, https, form=None):
+    def __init__(self, vreg, https=False, form=None):
         """
         :vreg: Vregistry,
         :https: boolean, s this a https request
@@ -143,6 +143,22 @@ class CubicWebRequestBase(DBAPIRequest):
              DeprecationWarning, stacklevel=2)
         self.ajax_request = value
     json_request = property(_get_json_request, _set_json_request)
+
+    def base_url(self, secure=None):
+        """return the root url of the instance
+
+        secure = False -> base-url
+        secure = None  -> https-url if req.https
+        secure = True  -> https if it exist
+        """
+        if secure is None:
+            secure = self.https
+        base_url = None
+        if secure:
+            base_url = self.vreg.config.get('https-url')
+        if base_url is None:
+            base_url = super(CubicWebRequestBase, self).base_url()
+        return base_url
 
     @property
     def authmode(self):

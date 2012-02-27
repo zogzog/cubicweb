@@ -161,7 +161,7 @@ class CubicWebWSGIApplication(object):
 
     def __call__(self, environ, start_response):
         """WSGI protocol entry point"""
-        req = CubicWebWsgiRequest(environ, self.appli.vreg, self.base_url)
+        req = CubicWebWsgiRequest(environ, self.appli.vreg)
         response = self._render(req)
         start_response(response.status, response.headers)
         return response.body

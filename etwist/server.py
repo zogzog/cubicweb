@@ -157,15 +157,12 @@ class CubicWebRootResource(resource.Resource):
         host = request.host
         # dual http/https access handling: expect a rewrite rule to prepend
         # 'https' to the path to detect https access
+        https = False
         if origpath.split('/', 2)[1] == 'https':
             origpath = origpath[6:]
             request.uri = request.uri[6:]
             https = True
-            baseurl = self.https_url or self.base_url
-        else:
-            https = False
-            baseurl = self.base_url
-        req = CubicWebTwistedRequestAdapter(request, self.appli.vreg, https, baseurl)
+        req = CubicWebTwistedRequestAdapter(request, self.appli.vreg, https)
         if req.authmode == 'http':
             # activate realm-based auth
             realm = self.config['realm']

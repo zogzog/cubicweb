@@ -40,14 +40,13 @@ class CubicWebWsgiRequest(CubicWebRequestBase):
     """most of this code COMES FROM DJANO
     """
 
-    def __init__(self, environ, vreg, base_url=None):
+    def __init__(self, environ, vreg):
         self.environ = environ
         self.path = environ['PATH_INFO']
         self.method = environ['REQUEST_METHOD'].upper()
         self._headers = dict([(normalize_header(k[5:]), v) for k, v in self.environ.items()
                               if k.startswith('HTTP_')])
         https = environ.get("HTTPS") in ('yes', 'on', '1')
-        self._base_url = base_url or self.instance_uri()
         post, files = self.get_posted_data()
         super(CubicWebWsgiRequest, self).__init__(vreg, https, post)
         if files is not None:
@@ -66,9 +65,6 @@ class CubicWebWsgiRequest(CubicWebRequestBase):
             (form, meta)
 
     ## cubicweb request interface ################################################
-
-    def base_url(self):
-        return self._base_url
 
     def http_method(self):
         """returns 'POST', 'GET', 'HEAD', etc."""

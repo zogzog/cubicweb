@@ -31,9 +31,8 @@ from cubicweb.etwist.http import not_modified_response
 
 
 class CubicWebTwistedRequestAdapter(CubicWebRequestBase):
-    def __init__(self, req, vreg, https, base_url):
+    def __init__(self, req, vreg, https):
         self._twreq = req
-        self._base_url = base_url
         super(CubicWebTwistedRequestAdapter, self).__init__(vreg, https, req.args)
         for key, (name, stream) in req.files.iteritems():
             if name is None:
@@ -44,10 +43,6 @@ class CubicWebTwistedRequestAdapter(CubicWebRequestBase):
         self._headers_in = Headers()
         for k, v in req.received_headers.iteritems():
             self._headers_in.addRawHeader(k, v)
-
-    def base_url(self):
-        """return the root url of the instance"""
-        return self._base_url
 
     def http_method(self):
         """returns 'POST', 'GET', 'HEAD', etc."""
