@@ -81,33 +81,46 @@ def list_form_param(form, param, pop=False):
 
 
 class CubicWebRequestBase(DBAPIRequest):
-    """abstract HTTP request, should be extended according to the HTTP backend"""
+    """abstract HTTP request, should be extended according to the HTTP backend
+    Immutable attributes that describe the received query and generic configuration
+    """
     ajax_request = False # to be set to True by ajax controllers
 
     def __init__(self, vreg, https, form=None):
+        """
+        :vreg: Vregistry,
+        :https: boolean, s this a https request
+        :form: Forms value
+        """
         super(CubicWebRequestBase, self).__init__(vreg)
+        #: (Boolean) Is this an https request.
         self.https = https
+        #: User interface property (vary with https) (see uiprops_)
+        self.uiprops = None
+        #: url for serving datadir (vary with https) (see resources_)
+        self.datadir_url = None
         if https:
             self.uiprops = vreg.config.https_uiprops
             self.datadir_url = vreg.config.https_datadir_url
         else:
             self.uiprops = vreg.config.uiprops
             self.datadir_url = vreg.config.datadir_url
-        # raw html headers that can be added from any view
+        #: raw html headers that can be added from any view
         self.html_headers = HTMLHead(self)
-        # form parameters
+        #: form parameters
         self.setup_params(form)
-        # dictionary that may be used to store request data that has to be
-        # shared among various components used to publish the request (views,
-        # controller, application...)
+        #: dictionary that may be used to store request data that has to be
+        #: shared among various components used to publish the request (views,
+        #: controller, application...)
         self.data = {}
-        # search state: 'normal' or 'linksearch' (eg searching for an object
-        # to create a relation with another)
+        #:  search state: 'normal' or 'linksearch' (eg searching for an object
+        #:  to create a relation with another)
         self.search_state = ('normal',)
-        # page id, set by htmlheader template
+        #: page id, set by htmlheader template
         self.pageid = None
         self._set_pageid()
         # prepare output header
+        #: Header used for the final response
         self.headers_out = Headers()
 
     def _set_pageid(self):
@@ -133,7 +146,12 @@ class CubicWebRequestBase(DBAPIRequest):
 
     @property
     def authmode(self):
+        """Authentification mode of the instance
+
+        (see `Configuring the Web server`_)"""
         return self.vreg.config['auth-mode']
+
+    # Various variable generator.
 
     @property
     def varmaker(self):

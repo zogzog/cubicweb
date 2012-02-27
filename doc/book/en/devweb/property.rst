@@ -1,3 +1,5 @@
+.. _cwprops:
+
 The property mecanism
 ---------------------
 
