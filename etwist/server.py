@@ -352,8 +352,6 @@ class CubicWebRootResource(resource.Resource):
             request.uri.replace(origpath, path, 1)
         else:
             path = origpath
-        if not path or path == "/":
-            path = 'view'
         try:
             result = self.appli.publish(path, req)
         except DirectResponse, ex:

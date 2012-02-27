@@ -347,7 +347,6 @@ class CubicWebPublisher(object):
         :rtype: str
         :return: the result of the pusblished url
         """
-        path = path or 'view'
         # don't log form values they may contains sensitive information
         self.info('publish "%s" (%s, form params: %s)',
                   path, req.session.sessionid, req.form.keys())

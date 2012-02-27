@@ -126,9 +126,6 @@ class CubicWebWSGIApplication(object):
             self.appli.connect(req)
         except Redirect, ex:
             return self.redirect(req, ex.location)
-        path = req.path
-        if not path or path == "/":
-            path = 'view'
         try:
             result = self.appli.publish(path, req)
         except DirectResponse, ex:

@@ -106,7 +106,8 @@ class URLPublisherComponent(component.Component):
         :param req: the request object
 
         :type path: str
-        :param path: the path of the resource to publish
+        :param path: the path of the resource to publish. If empty, None or "/"
+                     "view" is used as the default path.
 
         :rtype: tuple(str, `cubicweb.rset.ResultSet` or None)
         :return: the publishing method identifier and an optional result set
