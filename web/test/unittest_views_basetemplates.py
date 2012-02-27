@@ -35,6 +35,13 @@ class LogFormTemplateTC(CubicWebTC):
         self.set_option('allow-email-login', 'no')
         self.assertEqual(self._login_labels(), ['login', 'password'])
 
+
+class MainNoTopTemplateTC(CubicWebTC):
+
+    def test_valid_xhtml(self):
+        self.view('index', template='main-no-top')
+
+
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main
     unittest_main()
