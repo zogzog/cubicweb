@@ -177,6 +177,9 @@ class Repository(object):
             self.init_cnxset_pool()
         @onevent('after-registry-reload', self)
         def fix_user_classes(self):
+            # After registery reload the 'CWUser' class used for CWEtype
+            # changed.  To any existing user object have a different class than
+            # the new loaded one. We are hot fixing this.
             usercls = self.vreg['etypes'].etype_class('CWUser')
             for session in self._sessions.values():
                 if not isinstance(session.user, InternalManager):
