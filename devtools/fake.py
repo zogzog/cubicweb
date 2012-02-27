@@ -33,6 +33,7 @@ from cubicweb.devtools import BASE_URL, BaseApptestConfiguration
 class FakeConfig(dict, BaseApptestConfiguration):
     translations = {}
     uiprops = {}
+    https_uiprops = {}
     apphome = None
     debugmode = False
     def __init__(self, appid='data', apphome=None, cubes=()):
@@ -44,6 +45,7 @@ class FakeConfig(dict, BaseApptestConfiguration):
         self['base-url'] = BASE_URL
         self['rql-cache-size'] = 3000
         self.datadir_url = BASE_URL + 'data/'
+        self.https_datadir_url = (BASE_URL + 'data/').replace('http://', 'https://')
 
     def cubes(self, expand=False):
         return self._cubes
