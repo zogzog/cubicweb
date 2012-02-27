@@ -41,7 +41,7 @@ class undoable_action(Predicate):
     # XXX FIXME : this selector should be completed to allow selection on the
     # entity or relation types and public / private.
     def __init__(self, action_type='CUDAR'):
-        assert not set(action_type) & set('CUDAR')
+        assert not set(action_type) - set('CUDAR')
         self.action_type = action_type
 
     def __str__(self):
