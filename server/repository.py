@@ -887,9 +887,12 @@ class Repository(object):
         and :class:`cubicweb.server.Service`
         """
         def task():
-            session = self._get_session(sessionid)
+            session = self._get_session(sessionid, setcnxset=True)
             service = session.vreg['services'].select(regid, session, **kwargs)
-            return service.call(session, **kwargs)
+            try:
+                return service.call(session, **kwargs)
+            finally:
+                session.rollback() # free cnxset
         if async:
             self.info('calling service %s asynchronously', regid)
             self.threaded_task(task)
