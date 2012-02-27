@@ -1112,7 +1112,7 @@ class ServerMigrationHelper(MigrationHelper):
             schemaobj = getattr(rdef, attr)
             if getattr(schemaobj, 'eid', None) is None:
                 schemaobj.eid =  self.repo.schema[schemaobj].eid
-                assert schemaobj.eid is not None
+                assert schemaobj.eid is not None, schemaobj
         return rdef
 
     def cmd_drop_relation_definition(self, subjtype, rtype, objtype, commit=True):
