@@ -252,13 +252,11 @@ class Session(RequestSessionBase):
         self.cnxtype = cnxprops.cnxtype
         self.timestamp = time()
         self.default_mode = 'read'
-        # support undo for Create Update Delete entity / Add Remove relation
+        # undo support
         if repo.config.creating or repo.config.repairing or self.is_internal_session:
-            self.undo_actions = ()
+            self.undo_actions = False
         else:
-            self.undo_actions = set(repo.config['undo-support'].upper())
-            if self.undo_actions - set('CUDAR'):
-                raise Exception('bad undo-support string in configuration')
+            self.undo_actions = repo.config['undo-support']
         # short cut to querier .execute method
         self._execute = repo.querier.execute
         # shared data, used to communicate extra information between the client
@@ -1118,9 +1116,8 @@ class Session(RequestSessionBase):
 
     # undo support ############################################################
 
-    def undoable_action(self, action, ertype):
-        return action in self.undo_actions and not ertype in NO_UNDO_TYPES
-        # XXX elif transaction on mark it partial
+    def ertype_supports_undo(self, ertype):
+        return self.undo_actions  and ertype not in NO_UNDO_TYPES
 
     def transaction_uuid(self, set=True):
         try:

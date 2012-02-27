@@ -390,14 +390,6 @@ msgstr ""
 
 #, python-format
 msgid ""
-"Can't restore relation %(rtype)s of entity %(eid)s, this relation does not "
-"exists anymore in the schema."
-msgstr ""
-"Kann die Relation %(rtype)s der Entität %(eid)s nicht wieder herstellen, "
-"diese Relation existiert nicht mehr in dem Schema."
-
-#, python-format
-msgid ""
 "Can't restore relation %(rtype)s, %(role)s entity %(eid)s doesn't exist "
 "anymore."
 msgstr ""
@@ -1265,6 +1257,9 @@ msgstr ""
 msgid "bad value"
 msgstr "Unzulässiger Wert"
 
+msgid "badly formatted url"
+msgstr ""
+
 msgid "base url"
 msgstr "Basis-URL"
 
@@ -1349,6 +1344,9 @@ msgstr "Kalender anzeigen"
 msgid "can not resolve entity types:"
 msgstr "Die Typen konnten nicht ermittelt werden:"
 
+msgid "can only have one url"
+msgstr ""
+
 msgid "can't be changed"
 msgstr "kann nicht geändert werden"
 
@@ -1383,6 +1381,22 @@ msgstr ""
 msgid "can't parse %(value)r (expected %(format)s)"
 msgstr ""
 "Kann den Wert %(value)r nicht analysieren (erwartetes Format: %(format)s)"
+
+#, python-format
+msgid ""
+"can't restore entity %(eid)s of type %(eschema)s, target of %(rtype)s (eid "
+"%(value)s) does not exist any longer"
+msgstr ""
+
+#, python-format
+msgid ""
+"can't restore relation %(rtype)s of entity %(eid)s, this relation does not "
+"exist in the schema anymore."
+msgstr ""
+
+#, python-format
+msgid "can't restore state of entity %s, it has been deleted inbetween"
+msgstr ""
 
 #, python-format
 msgid ""
@@ -4241,6 +4255,9 @@ msgstr "ungültiger Wert"
 msgid "undo"
 msgstr "rückgängig machen"
 
+msgid "undo last change"
+msgstr ""
+
 msgid "unique identifier used to connect to the application"
 msgstr "eindeutiger Bezeichner zur Verbindung mit der Anwendung"
 
@@ -4264,6 +4281,9 @@ msgstr ""
 
 msgid "unknown vocabulary:"
 msgstr "Unbekanntes Wörterbuch : "
+
+msgid "unsupported protocol"
+msgstr ""
 
 msgid "upassword"
 msgstr "Passwort"
@@ -4573,45 +4593,9 @@ msgstr "Sie sollten diese Eigenschaft wahrscheinlich löschen."
 msgid "you should un-inline relation %s which is supported and may be crossed "
 msgstr ""
 
-#~ msgid "(loading ...)"
-#~ msgstr "(laden...)"
-
-#~ msgid "Schema of the data model"
-#~ msgstr "Schema des Datenmodells"
-
-#~ msgid "csv entities export"
-#~ msgstr "CSV-Export von Entitäten"
-
-#~ msgid "follow this link if javascript is deactivated"
-#~ msgstr "Folgen Sie diesem Link, falls Javascript deaktiviert ist."
-
 #~ msgid ""
-#~ "how to format date and time in the ui (\"man strftime\" for format "
-#~ "description)"
+#~ "Can't restore relation %(rtype)s of entity %(eid)s, this relation does "
+#~ "not exists anymore in the schema."
 #~ msgstr ""
-#~ "Wie formatiert man das Datum Interface im (\"man strftime\" für die "
-#~ "Beschreibung des neuen Formats"
-
-#~ msgid ""
-#~ "how to format date in the ui (\"man strftime\" for format description)"
-#~ msgstr ""
-#~ "Wie formatiert man das Datum im Interface (\"man strftime\" für die "
-#~ "Beschreibung des Formats)"
-
-#~ msgid ""
-#~ "how to format time in the ui (\"man strftime\" for format description)"
-#~ msgstr ""
-#~ "Wie man die Uhrzeit im Interface (\"man strftime\" für die "
-#~ "Formatbeschreibung)"
-
-#~ msgid "instance schema"
-#~ msgstr "Schema der Instanz"
-
-#~ msgid "rss"
-#~ msgstr "RSS"
-
-#~ msgid "xbel"
-#~ msgstr "XBEL"
-
-#~ msgid "xml"
-#~ msgstr "XML"
+#~ "Kann die Relation %(rtype)s der Entität %(eid)s nicht wieder herstellen, "
+#~ "diese Relation existiert nicht mehr in dem Schema."

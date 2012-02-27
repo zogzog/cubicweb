@@ -30,9 +30,10 @@ class CubicWebException(Exception):
         if self.msg:
             if self.args:
                 return self.msg % tuple(self.args)
-            return self.msg
-        return ' '.join(unicode(arg) for arg in self.args)
-
+            else:
+                return self.msg
+        else:
+            return u' '.join(unicode(arg) for arg in self.args)
 
 class ConfigurationError(CubicWebException):
     """a misconfiguration error"""
@@ -81,6 +82,7 @@ class MultiSourcesError(RepositoryError, InternalError):
 class UniqueTogetherError(RepositoryError):
     """raised when a unique_together constraint caused an IntegrityError"""
 
+
 # security exceptions #########################################################
 
 class Unauthorized(SecurityError):
@@ -127,6 +129,35 @@ class NotAnEntity(CubicWebRuntimeError):
     """raised when get_entity is called for a column which doesn't contain
     a non final entity
     """
+
+class UndoTransactionException(QueryError):
+    """Raised when undoing a transaction could not be performed completely.
+
+    Note that :
+      1) the partial undo operation might be acceptable
+         depending upon the final application
+
+      2) the undo operation can also fail with a `ValidationError` in
+         cases where the undoing breaks integrity constraints checked
+         immediately.
+
+      3) It might be that neither of those exception is raised but a
+         subsequent `commit` might raise a `ValidationError` in cases
+         where the undoing breaks integrity constraints checked at
+         commit time.
+
+    :type txuuix: int
+    :param txuuid: Unique identifier of the partialy undone transaction
+
+    :type errors: list
+    :param errors: List of errors occured during undoing
+    """
+    msg = u"The following error(s) occured while undoing transaction #%d : %s"
+
+    def __init__(self, txuuid, errors):
+        super(UndoTransactionException, self).__init__(txuuid, errors)
+        self.txuuid = txuuid
+        self.errors = errors
 
 # tools exceptions ############################################################
 

@@ -168,7 +168,7 @@ class TestServerConfiguration(ServerConfiguration):
     def load_configuration(self):
         super(TestServerConfiguration, self).load_configuration()
         # no undo support in tests
-        self.global_set_option('undo-support', '')
+        self.global_set_option('undo-support', 'n')
 
     def main_config_file(self):
         """return instance's control configuration file"""

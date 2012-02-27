@@ -22,14 +22,14 @@ from cubicweb import ValidationError
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.transaction import *
 
-from cubicweb.server.sources.native import UndoException
+from cubicweb.server.sources.native import UndoTransactionException, _UndoException
 
 
 class UndoableTransactionTC(CubicWebTC):
 
     def setup_database(self):
         req = self.request()
-        self.session.undo_actions = set('CUDAR')
+        self.session.undo_actions = True
         self.toto = self.create_user(req, 'toto', password='toto', groups=('users',),
                                      commit=False)
         self.txuuid = self.commit()
@@ -47,6 +47,17 @@ class UndoableTransactionTC(CubicWebTC):
         cu = self.session.system_sql(
             "SELECT * from tx_relation_actions WHERE tx_uuid='%s'" % txuuid)
         self.assertFalse(cu.fetchall())
+
+    def assertUndoTransaction(self, txuuid, expected_errors=None):
+        if expected_errors is None :
+            expected_errors = []
+        try:
+            self.cnx.undo_transaction(txuuid)
+        except UndoTransactionException, exn:
+            errors = exn.errors
+        else:
+            errors = []
+        self.assertEqual(errors, expected_errors)
 
     def test_undo_api(self):
         self.assertTrue(self.txuuid)
@@ -155,10 +166,9 @@ class UndoableTransactionTC(CubicWebTC):
         self.assertEqual(len(actions), 1)
         toto.cw_clear_all_caches()
         e.cw_clear_all_caches()
-        errors = self.cnx.undo_transaction(txuuid)
+        self.assertUndoTransaction(txuuid)
         undotxuuid = self.commit()
         self.assertEqual(undotxuuid, None) # undo not undoable
-        self.assertEqual(errors, [])
         self.assertTrue(self.execute('Any X WHERE X eid %(x)s', {'x': toto.eid}))
         self.assertTrue(self.execute('Any X WHERE X eid %(x)s', {'x': e.eid}))
         self.assertTrue(self.execute('Any X WHERE X has_text "toto@logilab"'))
@@ -193,14 +203,12 @@ class UndoableTransactionTC(CubicWebTC):
         c2 = session.create_entity('Card', title=u'hip', content=u'hip')
         p.set_relations(fiche=c2)
         self.commit()
-        errors = self.cnx.undo_transaction(txuuid)
+        self.assertUndoTransaction(txuuid, [
+            "Can't restore object relation fiche to entity "
+            "%s which is already linked using this relation." % p.eid])
         self.commit()
         p.cw_clear_all_caches()
         self.assertEqual(p.fiche[0].eid, c2.eid)
-        self.assertEqual(len(errors), 1)
-        self.assertEqual(errors[0],
-                          "Can't restore object relation fiche to entity "
-                          "%s which is already linked using this relation." % p.eid)
 
     def test_undo_deletion_integrity_2(self):
         # test validation error raised if we can't restore a required relation
@@ -213,10 +221,9 @@ class UndoableTransactionTC(CubicWebTC):
         txuuid = self.commit()
         g.cw_delete()
         self.commit()
-        errors = self.cnx.undo_transaction(txuuid)
-        self.assertEqual(errors,
-                          [u"Can't restore relation in_group, object entity "
-                          "%s doesn't exist anymore." % g.eid])
+        self.assertUndoTransaction(txuuid, [
+            u"Can't restore relation in_group, object entity "
+            "%s doesn't exist anymore." % g.eid])
         with self.assertRaises(ValidationError) as cm:
             self.commit()
         self.assertEqual(cm.exception.entity, self.toto.eid)
@@ -229,9 +236,8 @@ class UndoableTransactionTC(CubicWebTC):
         c = session.create_entity('Card', title=u'hop', content=u'hop')
         p = session.create_entity('Personne', nom=u'louis', fiche=c)
         txuuid = self.commit()
-        errors = self.cnx.undo_transaction(txuuid)
+        self.assertUndoTransaction(txuuid)
         self.commit()
-        self.assertFalse(errors)
         self.assertFalse(self.execute('Any X WHERE X eid %(x)s', {'x': c.eid}))
         self.assertFalse(self.execute('Any X WHERE X eid %(x)s', {'x': p.eid}))
         self.assertFalse(self.execute('Any X,Y WHERE X fiche Y'))
@@ -288,12 +294,135 @@ class UndoableTransactionTC(CubicWebTC):
 
     # test implicit 'replacement' of an inlined relation
 
+    def test_undo_inline_rel_remove_ok(self):
+        """Undo remove relation  Personne (?) fiche (?) Card
+
+        NB: processed by `_undo_r` as expected"""
+        session = self.session
+        c = session.create_entity('Card', title=u'hop', content=u'hop')
+        p = session.create_entity('Personne', nom=u'louis', fiche=c)
+        self.commit()
+        p.set_relations(fiche=None)
+        txuuid = self.commit()
+        self.assertUndoTransaction(txuuid)
+        self.commit()
+        p.cw_clear_all_caches()
+        self.assertEqual(p.fiche[0].eid, c.eid)
+
+    def test_undo_inline_rel_remove_ko(self):
+        """Restore an inlined relation to a deleted entity, with an error.
+
+        NB: processed by `_undo_r` as expected"""
+        session = self.session
+        c = session.create_entity('Card', title=u'hop', content=u'hop')
+        p = session.create_entity('Personne', nom=u'louis', fiche=c)
+        self.commit()
+        p.set_relations(fiche=None)
+        txuuid = self.commit()
+        c.cw_delete()
+        self.commit()
+        self.assertUndoTransaction(txuuid, [
+            "Can't restore relation fiche, object entity %d doesn't exist anymore." % c.eid])
+        self.commit()
+        p.cw_clear_all_caches()
+        self.assertFalse(p.fiche)
+        self.assertIsNone(session.system_sql(
+            'SELECT cw_fiche FROM cw_Personne WHERE cw_eid=%s' % p.eid).fetchall()[0][0])
+
+    def test_undo_inline_rel_add_ok(self):
+        """Undo add relation  Personne (?) fiche (?) Card
+
+        Caution processed by `_undo_u`, not `_undo_a` !"""
+        session = self.session
+        c = session.create_entity('Card', title=u'hop', content=u'hop')
+        p = session.create_entity('Personne', nom=u'louis')
+        self.commit()
+        p.set_relations(fiche=c)
+        txuuid = self.commit()
+        self.assertUndoTransaction(txuuid)
+        self.commit()
+        p.cw_clear_all_caches()
+        self.assertFalse(p.fiche)
+
+    def test_undo_inline_rel_add_ko(self):
+        """Undo add relation  Personne (?) fiche (?) Card
+
+        Caution processed by `_undo_u`, not `_undo_a` !"""
+        session = self.session
+        c = session.create_entity('Card', title=u'hop', content=u'hop')
+        p = session.create_entity('Personne', nom=u'louis')
+        self.commit()
+        p.set_relations(fiche=c)
+        txuuid = self.commit()
+        c.cw_delete()
+        self.commit()
+        self.assertUndoTransaction(txuuid)
+
+    def test_undo_inline_rel_replace_ok(self):
+        """Undo changing relation  Personne (?) fiche (?) Card
+
+        Caution processed by `_undo_u` """
+        session = self.session
+        c1 = session.create_entity('Card', title=u'hop', content=u'hop')
+        c2 = session.create_entity('Card', title=u'hip', content=u'hip')
+        p = session.create_entity('Personne', nom=u'louis', fiche=c1)
+        self.commit()
+        p.set_relations(fiche=c2)
+        txuuid = self.commit()
+        self.assertUndoTransaction(txuuid)
+        self.commit()
+        p.cw_clear_all_caches()
+        self.assertEqual(p.fiche[0].eid, c1.eid)
+
+    def test_undo_inline_rel_replace_ko(self):
+        """Undo changing relation  Personne (?) fiche (?) Card, with an error
+
+        Caution processed by `_undo_u` """
+        session = self.session
+        c1 = session.create_entity('Card', title=u'hop', content=u'hop')
+        c2 = session.create_entity('Card', title=u'hip', content=u'hip')
+        p = session.create_entity('Personne', nom=u'louis', fiche=c1)
+        self.commit()
+        p.set_relations(fiche=c2)
+        txuuid = self.commit()
+        c1.cw_delete()
+        self.commit()
+        self.assertUndoTransaction(txuuid, [
+            "can't restore entity %s of type Personne, target of fiche (eid %s)"
+            " does not exist any longer" % (p.eid, c1.eid)])
+        self.commit()
+        p.cw_clear_all_caches()
+        self.assertFalse(p.fiche)
+
+    def test_undo_attr_update_ok(self):
+        session = self.session
+        p = session.create_entity('Personne', nom=u'toto')
+        session.commit()
+        self.session.set_cnxset()
+        p.set_attributes(nom=u'titi')
+        txuuid = self.commit()
+        self.assertUndoTransaction(txuuid)
+        p.cw_clear_all_caches()
+        self.assertEqual(p.nom, u'toto')
+
+    def test_undo_attr_update_ko(self):
+        session = self.session
+        p = session.create_entity('Personne', nom=u'toto')
+        session.commit()
+        self.session.set_cnxset()
+        p.set_attributes(nom=u'titi')
+        txuuid = self.commit()
+        p.cw_delete()
+        self.commit()
+        self.assertUndoTransaction(txuuid, [
+            u"can't restore state of entity %s, it has been deleted inbetween" % p.eid])
+
 
 class UndoExceptionInUnicode(CubicWebTC):
 
     # problem occurs in string manipulation for python < 2.6
     def test___unicode__method(self):
-        u = UndoException(u"voilà")
+        u = _UndoException(u"voilà")
         self.assertIsInstance(unicode(u), unicode)
 
 

@@ -141,11 +141,8 @@ connections will have this number of opened connections.',
           'group': 'main', 'level': 3,
           }),
         ('undo-support',
-         {'type' : 'string', 'default': '',
-          'help': 'string defining actions that will have undo support: \
-[C]reate [U]pdate [D]elete entities / [A]dd [R]emove relation. Leave it empty \
-for no undo support, set it to CUDAR for full undo support, or to DR for \
-support undoing of deletion only.',
+         {'type' : 'yn', 'default': False,
+          'help': 'enable undo support',
           'group': 'main', 'level': 3,
           }),
         ('keep-transaction-lifetime',

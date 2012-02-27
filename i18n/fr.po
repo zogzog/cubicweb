@@ -390,14 +390,6 @@ msgstr ""
 
 #, python-format
 msgid ""
-"Can't restore relation %(rtype)s of entity %(eid)s, this relation does not "
-"exists anymore in the schema."
-msgstr ""
-"Ne peut restaurer la relation %(rtype)s de l'entité %(eid)s, cette relation "
-"n'existe plus dans le schéma"
-
-#, python-format
-msgid ""
 "Can't restore relation %(rtype)s, %(role)s entity %(eid)s doesn't exist "
 "anymore."
 msgstr ""
@@ -1277,6 +1269,9 @@ msgstr "retour à la vue paginée (%s résultats)"
 msgid "bad value"
 msgstr "mauvaise valeur"
 
+msgid "badly formatted url"
+msgstr ""
+
 msgid "base url"
 msgstr "url de base"
 
@@ -1362,6 +1357,9 @@ msgstr "afficher un calendrier"
 msgid "can not resolve entity types:"
 msgstr "impossible d'interpréter les types d'entités :"
 
+msgid "can only have one url"
+msgstr ""
+
 msgid "can't be changed"
 msgstr "ne peut-être modifié"
 
@@ -1395,6 +1393,22 @@ msgstr "ne peut mélanger dontcross et write options"
 #, python-format
 msgid "can't parse %(value)r (expected %(format)s)"
 msgstr "ne peut analyser %(value)r (format attendu : %(format)s)"
+
+#, python-format
+msgid ""
+"can't restore entity %(eid)s of type %(eschema)s, target of %(rtype)s (eid "
+"%(value)s) does not exist any longer"
+msgstr "impossible de rétablir l'entité %(eid)s de type %(eschema)s, cible de la relation %(rtype)s (eid %(value)s) n'existe plus"
+
+#, python-format
+msgid ""
+"can't restore relation %(rtype)s of entity %(eid)s, this relation does not "
+"exist in the schema anymore."
+msgstr "impossible de rétablir la relation %(rtype)s sur l'entité %(eid)s, cette relation n'existe plus dans le schéma."
+
+#, python-format
+msgid "can't restore state of entity %s, it has been deleted inbetween"
+msgstr "impossible de rétablir l'état de l'entité %s, elle a été supprimée entre-temps"
 
 #, python-format
 msgid ""
@@ -4296,6 +4310,9 @@ msgstr "valeur non autorisée"
 msgid "undo"
 msgstr "annuler"
 
+msgid "undo last change"
+msgstr "annuler dernier changement"
+
 msgid "unique identifier used to connect to the application"
 msgstr "identifiant unique utilisé pour se connecter à l'application"
 
@@ -4319,6 +4336,9 @@ msgstr "type de source inconnu"
 
 msgid "unknown vocabulary:"
 msgstr "vocabulaire inconnu : "
+
+msgid "unsupported protocol"
+msgstr ""
 
 msgid "upassword"
 msgstr "mot de passe"
@@ -4627,28 +4647,3 @@ msgid "you should un-inline relation %s which is supported and may be crossed "
 msgstr ""
 "vous devriez enlevé la mise en ligne de la relation %s qui est supportée et "
 "peut-être croisée"
-
-#~ msgid "(loading ...)"
-#~ msgstr "(chargement ...)"
-
-#~ msgid "follow this link if javascript is deactivated"
-#~ msgstr "suivez ce lien si javascript est désactivé"
-
-#~ msgid ""
-#~ "how to format date and time in the ui (\"man strftime\" for format "
-#~ "description)"
-#~ msgstr ""
-#~ "comment formater la date dans l'interface (\"man strftime\" pour la "
-#~ "description du format)"
-
-#~ msgid ""
-#~ "how to format date in the ui (\"man strftime\" for format description)"
-#~ msgstr ""
-#~ "comment formater la date dans l'interface (\"man strftime\" pour la "
-#~ "description du format)"
-
-#~ msgid ""
-#~ "how to format time in the ui (\"man strftime\" for format description)"
-#~ msgstr ""
-#~ "comment formater l'heure dans l'interface (\"man strftime\" pour la "
-#~ "description du format)"

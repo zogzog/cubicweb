@@ -55,7 +55,7 @@ from yams import schema2sql as y2sql
 from yams.schema import role_name
 
 from cubicweb import (UnknownEid, AuthenticationError, ValidationError, Binary,
-                      UniqueTogetherError)
+                      UniqueTogetherError, QueryError, UndoTransactionException)
 from cubicweb import transaction as tx, server, neg_role
 from cubicweb.utils import QueryCache
 from cubicweb.schema import VIRTUAL_RTYPES
@@ -65,7 +65,6 @@ from cubicweb.server.utils import crypt_password, eschema_eid
 from cubicweb.server.sqlutils import SQL_PREFIX, SQLAdapterMixIn
 from cubicweb.server.rqlannotation import set_qdata
 from cubicweb.server.hook import CleanupDeletedEidsCacheOp
-from cubicweb.server.session import hooks_control, security_enabled
 from cubicweb.server.edition import EditedEntity
 from cubicweb.server.sources import AbstractSource, dbg_st_search, dbg_results
 from cubicweb.server.sources.rql2sql import SQLGenerator
@@ -162,24 +161,24 @@ def rdef_physical_info(dbhelper, rdef):
     allownull = rdef.cardinality[0] != '1'
     return coltype, allownull
 
-class UndoException(Exception):
+
+class _UndoException(Exception):
     """something went wrong during undoing"""
 
     def __unicode__(self):
         """Called by the unicode builtin; should return a Unicode object
 
-        Type of UndoException message must be `unicode` by design in CubicWeb.
+        Type of _UndoException message must be `unicode` by design in CubicWeb.
+        """
+        assert isinstance(self.args[0], unicode)
+        return self.args[0]
 
-        .. warning::
-            This method is not available in python2.5"""
-        assert isinstance(self.message, unicode)
-        return self.message
 
 def _undo_check_relation_target(tentity, rdef, role):
     """check linked entity has not been redirected for this relation"""
     card = rdef.role_cardinality(role)
     if card in '?1' and tentity.related(rdef.rtype, role):
-        raise UndoException(tentity._cw._(
+        raise _UndoException(tentity._cw._(
             "Can't restore %(role)s relation %(rtype)s to entity %(eid)s which "
             "is already linked using this relation.")
                             % {'role': neg_role(role),
@@ -192,7 +191,7 @@ def _undo_rel_info(session, subj, rtype, obj):
         try:
             entities.append(session.entity_from_eid(eid))
         except UnknownEid:
-            raise UndoException(session._(
+            raise _UndoException(session._(
                 "Can't restore relation %(rtype)s, %(role)s entity %(eid)s"
                 " doesn't exist anymore.")
                                 % {'role': session._(role),
@@ -203,7 +202,7 @@ def _undo_rel_info(session, subj, rtype, obj):
         rschema = session.vreg.schema.rschema(rtype)
         rdef = rschema.rdefs[(sentity.__regid__, oentity.__regid__)]
     except KeyError:
-        raise UndoException(session._(
+        raise _UndoException(session._(
             "Can't restore relation %(rtype)s between %(subj)s and "
             "%(obj)s, that relation does not exists anymore in the "
             "schema.")
@@ -637,7 +636,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             attrs = self.preprocess_entity(entity)
             sql = self.sqlgen.insert(SQL_PREFIX + entity.__regid__, attrs)
             self.doexec(session, sql, attrs)
-            if session.undoable_action('C', entity.__regid__):
+            if session.ertype_supports_undo(entity.__regid__):
                 self._record_tx_action(session, 'tx_entity_actions', 'C',
                                        etype=entity.__regid__, eid=entity.eid)
 
@@ -645,7 +644,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         """replace an entity in the source"""
         with self._storage_handler(entity, 'updated'):
             attrs = self.preprocess_entity(entity)
-            if session.undoable_action('U', entity.__regid__):
+            if session.ertype_supports_undo(entity.__regid__):
                 changes = self._save_attrs(session, entity, attrs)
                 self._record_tx_action(session, 'tx_entity_actions', 'U',
                                        etype=entity.__regid__, eid=entity.eid,
@@ -657,7 +656,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
     def delete_entity(self, session, entity):
         """delete an entity from the source"""
         with self._storage_handler(entity, 'deleted'):
-            if session.undoable_action('D', entity.__regid__):
+            if session.ertype_supports_undo(entity.__regid__):
                 attrs = [SQL_PREFIX + r.type
                          for r in entity.e_schema.subject_relations()
                          if (r.final or r.inlined) and not r in VIRTUAL_RTYPES]
@@ -672,14 +671,14 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
     def add_relation(self, session, subject, rtype, object, inlined=False):
         """add a relation to the source"""
         self._add_relations(session,  rtype, [(subject, object)], inlined)
-        if session.undoable_action('A', rtype):
+        if session.ertype_supports_undo(rtype):
             self._record_tx_action(session, 'tx_relation_actions', 'A',
                                    eid_from=subject, rtype=rtype, eid_to=object)
 
     def add_relations(self, session,  rtype, subj_obj_list, inlined=False):
         """add a relations to the source"""
         self._add_relations(session, rtype, subj_obj_list, inlined)
-        if session.undoable_action('A', rtype):
+        if session.ertype_supports_undo(rtype):
             for subject, object in subj_obj_list:
                 self._record_tx_action(session, 'tx_relation_actions', 'A',
                                        eid_from=subject, rtype=rtype, eid_to=object)
@@ -712,7 +711,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         """delete a relation from the source"""
         rschema = self.schema.rschema(rtype)
         self._delete_relation(session, subject, rtype, object, rschema.inlined)
-        if session.undoable_action('R', rtype):
+        if session.ertype_supports_undo(rtype):
             self._record_tx_action(session, 'tx_relation_actions', 'R',
                                    eid_from=subject, rtype=rtype, eid_to=object)
 
@@ -1157,16 +1156,18 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         session.mode = 'write'
         errors = []
         session.transaction_data['undoing_uuid'] = txuuid
-        with hooks_control(session, session.HOOKS_DENY_ALL,
-                           'integrity', 'activeintegrity', 'undo'):
-            with security_enabled(session, read=False):
+        with session.deny_all_hooks_but('integrity', 'activeintegrity', 'undo'):
+            with session.security_enabled(read=False):
                 for action in reversed(self.tx_actions(session, txuuid, False)):
                     undomethod = getattr(self, '_undo_%s' % action.action.lower())
                     errors += undomethod(session, action)
         # remove the transactions record
         self.doexec(session,
                     "DELETE FROM transactions WHERE tx_uuid='%s'" % txuuid)
-        return errors
+        if errors:
+            raise UndoTransactionException(txuuid, errors)
+        else:
+            return
 
     def start_undoable_transaction(self, session, uuid):
         """session callback to insert a transaction record in the transactions
@@ -1219,11 +1220,52 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         try:
             time, ueid = cu.fetchone()
         except TypeError:
-            raise tx.NoSuchTransaction()
+            raise tx.NoSuchTransaction(txuuid)
         if not (session.user.is_in_group('managers')
                 or session.user.eid == ueid):
-            raise tx.NoSuchTransaction()
+            raise tx.NoSuchTransaction(txuuid)
         return time, ueid
+
+    def _reedit_entity(self, entity, changes, err):
+        session = entity._cw
+        eid = entity.eid
+        entity.cw_edited = edited = EditedEntity(entity)
+        # check for schema changes, entities linked through inlined relation
+        # still exists, rewrap binary values
+        eschema = entity.e_schema
+        getrschema = eschema.subjrels
+        for column, value in changes.items():
+            rtype = column[len(SQL_PREFIX):]
+            if rtype == "eid":
+                continue # XXX should even `eid` be stored in action changes?
+            try:
+                rschema = getrschema[rtype]
+            except KeyError:
+                err(session._("can't restore relation %(rtype)s of entity %(eid)s, "
+                              "this relation does not exist in the schema anymore.")
+                    % {'rtype': rtype, 'eid': eid})
+            if not rschema.final:
+                if not rschema.inlined:
+                    assert value is None
+                # rschema is an inlined relation
+                elif value is not None:
+                    # not a deletion: we must put something in edited
+                    try:
+                        entity._cw.entity_from_eid(value) # check target exists
+                        edited[rtype] = value
+                    except UnknownEid:
+                        err(session._("can't restore entity %(eid)s of type %(eschema)s, "
+                                      "target of %(rtype)s (eid %(value)s) does not exist any longer")
+                            % locals())
+            elif eschema.destination(rtype) in ('Bytes', 'Password'):
+                changes[column] = self._binary(value)
+                edited[rtype] = Binary(value)
+            elif isinstance(value, str):
+                edited[rtype] = unicode(value, session.encoding, 'replace')
+            else:
+                edited[rtype] = value
+        # This must only be done after init_entitiy_caches : defered in calling functions
+        # edited.check()
 
     def _undo_d(self, session, action):
         """undo an entity deletion"""
@@ -1239,31 +1281,10 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             err("can't restore entity %s of type %s, type no more supported"
                 % (eid, etype))
             return errors
-        entity.cw_edited = edited = EditedEntity(entity)
-        # check for schema changes, entities linked through inlined relation
-        # still exists, rewrap binary values
-        eschema = entity.e_schema
-        getrschema = eschema.subjrels
-        for column, value in action.changes.items():
-            rtype = column[3:] # remove cw_ prefix
-            try:
-                rschema = getrschema[rtype]
-            except KeyError:
-                err(_("Can't restore relation %(rtype)s of entity %(eid)s, "
-                      "this relation does not exists anymore in the schema.")
-                    % {'rtype': rtype, 'eid': eid})
-            if not rschema.final:
-                assert value is None
-            elif eschema.destination(rtype) in ('Bytes', 'Password'):
-                action.changes[column] = self._binary(value)
-                edited[rtype] = Binary(value)
-            elif isinstance(value, str):
-                edited[rtype] = unicode(value, session.encoding, 'replace')
-            else:
-                edited[rtype] = value
+        self._reedit_entity(entity, action.changes, err)
         entity.eid = eid
         session.repo.init_entity_caches(session, entity, self)
-        edited.check()
+        entity.cw_edited.check()
         self.repo.hm.call_hooks('before_add_entity', session, entity=entity)
         # restore the entity
         action.changes['cw_eid'] = eid
@@ -1284,14 +1305,14 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         subj, rtype, obj = action.eid_from, action.rtype, action.eid_to
         try:
             sentity, oentity, rdef = _undo_rel_info(session, subj, rtype, obj)
-        except UndoException, ex:
+        except _UndoException, ex:
             errors.append(unicode(ex))
         else:
             for role, entity in (('subject', sentity),
                                  ('object', oentity)):
                 try:
                     _undo_check_relation_target(entity, rdef, role)
-                except UndoException, ex:
+                except _UndoException, ex:
                     errors.append(unicode(ex))
                     continue
         if not errors:
@@ -1344,7 +1365,22 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
 
     def _undo_u(self, session, action):
         """undo an entity update"""
-        return ['undoing of entity updating not yet supported.']
+        errors = []
+        err = errors.append
+        try:
+            entity = session.entity_from_eid(action.eid)
+        except UnknownEid:
+            err(session._("can't restore state of entity %s, it has been "
+                          "deleted inbetween") % action.eid)
+            return errors
+        self._reedit_entity(entity, action.changes, err)
+        entity.cw_edited.check()
+        self.repo.hm.call_hooks('before_update_entity', session, entity=entity)
+        sql = self.sqlgen.update(SQL_PREFIX + entity.__regid__, action.changes,
+                                 ['cw_eid'])
+        self.doexec(session, sql, action.changes)
+        self.repo.hm.call_hooks('after_update_entity', session, entity=entity)
+        return errors
 
     def _undo_a(self, session, action):
         """undo a relation addition"""
@@ -1352,7 +1388,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         subj, rtype, obj = action.eid_from, action.rtype, action.eid_to
         try:
             sentity, oentity, rdef = _undo_rel_info(session, subj, rtype, obj)
-        except UndoException, ex:
+        except _UndoException, ex:
             errors.append(unicode(ex))
         else:
             rschema = rdef.rtype

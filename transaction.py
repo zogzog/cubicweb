@@ -39,8 +39,12 @@ ACTION_LABELS = {
 
 
 class NoSuchTransaction(RepositoryError):
-    pass
+    # Used by CubicWebException
+    msg = _("there is no transaction #%s")
 
+    def __init__(self, txuuid):
+        super(RepositoryError, self).__init__(txuuid)
+        self.txuuid = txuuid
 
 class Transaction(object):
     """an undoable transaction"""

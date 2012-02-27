@@ -390,14 +390,6 @@ msgstr ""
 
 #, python-format
 msgid ""
-"Can't restore relation %(rtype)s of entity %(eid)s, this relation does not "
-"exists anymore in the schema."
-msgstr ""
-"No puede restaurar la relación %(rtype)s de la entidad %(eid)s, esta "
-"relación ya no existe en el esquema."
-
-#, python-format
-msgid ""
 "Can't restore relation %(rtype)s, %(role)s entity %(eid)s doesn't exist "
 "anymore."
 msgstr ""
@@ -1276,6 +1268,9 @@ msgstr ""
 msgid "bad value"
 msgstr "Valor erróneo"
 
+msgid "badly formatted url"
+msgstr ""
+
 msgid "base url"
 msgstr "Url de base"
 
@@ -1360,6 +1355,9 @@ msgstr "mostrar un calendario"
 msgid "can not resolve entity types:"
 msgstr "Imposible de interpretar los tipos de entidades:"
 
+msgid "can only have one url"
+msgstr ""
+
 msgid "can't be changed"
 msgstr "No puede ser modificado"
 
@@ -1393,6 +1391,22 @@ msgstr "no puede mezclar las opciones dontcross y write"
 #, python-format
 msgid "can't parse %(value)r (expected %(format)s)"
 msgstr "no puede analizar %(value)r (formato requerido : %(format)s)"
+
+#, python-format
+msgid ""
+"can't restore entity %(eid)s of type %(eschema)s, target of %(rtype)s (eid "
+"%(value)s) does not exist any longer"
+msgstr ""
+
+#, python-format
+msgid ""
+"can't restore relation %(rtype)s of entity %(eid)s, this relation does not "
+"exist in the schema anymore."
+msgstr ""
+
+#, python-format
+msgid "can't restore state of entity %s, it has been deleted inbetween"
+msgstr ""
 
 #, python-format
 msgid ""
@@ -4291,6 +4305,9 @@ msgstr "Valor no permitido"
 msgid "undo"
 msgstr "Anular"
 
+msgid "undo last change"
+msgstr ""
+
 msgid "unique identifier used to connect to the application"
 msgstr "Identificador único utilizado para conectarse al Sistema"
 
@@ -4314,6 +4331,9 @@ msgstr "tipo de fuente desconocida"
 
 msgid "unknown vocabulary:"
 msgstr "Vocabulario desconocido: "
+
+msgid "unsupported protocol"
+msgstr ""
 
 msgid "upassword"
 msgstr "Contraseña"
@@ -4624,54 +4644,9 @@ msgstr ""
 "usted debe  quitar la puesta en línea de la relación %s que es aceptada y "
 "puede ser cruzada"
 
-#~ msgid "(loading ...)"
-#~ msgstr "(Cargando ...)"
-
-#~ msgid "Schema of the data model"
-#~ msgstr "Esquema del modelo de datos"
-
-#~ msgid "add a CWSourceSchemaConfig"
-#~ msgstr "agregar una parte de mapeo"
-
-#~ msgid "csv entities export"
-#~ msgstr "Exportar entidades en csv"
-
-#~ msgid "follow this link if javascript is deactivated"
-#~ msgstr "Seleccione esta liga si javascript esta desactivado"
-
 #~ msgid ""
-#~ "how to format date and time in the ui (\"man strftime\" for format "
-#~ "description)"
+#~ "Can't restore relation %(rtype)s of entity %(eid)s, this relation does "
+#~ "not exists anymore in the schema."
 #~ msgstr ""
-#~ "Formato de fecha y hora que se utilizará por defecto en la interfaz "
-#~ "(\"man strftime\" para mayor información del formato)"
-
-#~ msgid ""
-#~ "how to format date in the ui (\"man strftime\" for format description)"
-#~ msgstr ""
-#~ "Formato de fecha que se utilizará por defecto en la interfaz (\"man "
-#~ "strftime\" para mayor información  del formato)"
-
-#~ msgid ""
-#~ "how to format time in the ui (\"man strftime\" for format description)"
-#~ msgstr ""
-#~ "Formato de hora que se utilizará por defecto en la interfaz (\"man "
-#~ "strftime\" para mayor información del formato)"
-
-#~ msgid "instance schema"
-#~ msgstr "Esquema de la Instancia"
-
-#~ msgid "rdf"
-#~ msgstr "rdf"
-
-#~ msgid "rss"
-#~ msgstr "RSS"
-
-#~ msgid "siteinfo"
-#~ msgstr "información"
-
-#~ msgid "xbel"
-#~ msgstr "xbel"
-
-#~ msgid "xml"
-#~ msgstr "xml"
+#~ "No puede restaurar la relación %(rtype)s de la entidad %(eid)s, esta "
+#~ "relación ya no existe en el esquema."
