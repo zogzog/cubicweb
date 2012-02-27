@@ -146,6 +146,10 @@ msgstr "la acción '%s' requiere una opción 'linkattr'"
 msgid "(UNEXISTANT EID)"
 msgstr "(EID INEXISTENTE"
 
+#, python-format
+msgid "(suppressed) entity #%d"
+msgstr ""
+
 msgid "**"
 msgstr "0..n 0..n"
 
@@ -218,6 +222,13 @@ msgstr "Y"
 
 msgid "About this site"
 msgstr "Información del Sistema"
+
+msgid "Action"
+msgstr ""
+
+#, python-format
+msgid "Added relation : %(entity_from)s %(rtype)s %(entity_to)s"
+msgstr ""
 
 msgid "Any"
 msgstr "Cualquiera"
@@ -415,6 +426,10 @@ msgstr ""
 msgid "Click to sort on this column"
 msgstr ""
 
+#, python-format
+msgid "Created %(etype)s : %(entity)s"
+msgstr ""
+
 msgid "DEBUG"
 msgstr ""
 
@@ -439,6 +454,14 @@ msgstr "Decimal"
 
 msgid "Decimal_plural"
 msgstr "Decimales"
+
+#, python-format
+msgid "Delete relation : %(entity_from)s %(rtype)s %(entity_to)s"
+msgstr ""
+
+#, python-format
+msgid "Deleted %(etype)s : %(entity)s"
+msgstr ""
 
 msgid "Detected problems"
 msgstr "Problemas detectados"
@@ -752,6 +775,9 @@ msgstr "Hora internacional"
 msgid "TZTime_plural"
 msgstr "Horas internacionales"
 
+msgid "Target"
+msgstr ""
+
 #, python-format
 msgid "The view %s can not be applied to this query"
 msgstr "La vista %s no puede ser aplicada a esta búsqueda"
@@ -867,14 +893,28 @@ msgstr ""
 "URLs desde el cual el contenido sera importado. Usted puede incluir un URL "
 "por línea."
 
+msgid "Undoable actions"
+msgstr ""
+
+msgid "Undoing"
+msgstr ""
+
 msgid "UniqueConstraint"
 msgstr "Restricción de Unicidad"
 
 msgid "Unreachable objects"
 msgstr "Objetos inaccesibles"
 
+#, python-format
+msgid "Updated %(etype)s : %(entity)s"
+msgstr ""
+
 msgid "Used by:"
 msgstr "Utilizado por :"
+
+#, python-format
+msgid "User %(user_eid)s on %(dt)s [%(undo_link)s] \n"
+msgstr ""
 
 msgid "Users and groups management"
 msgstr "Usuarios y grupos de administradores"
@@ -2072,6 +2112,9 @@ msgstr "Diciembre"
 
 msgid "default"
 msgstr "Valor por defecto"
+
+msgid "default /base view for (transaction) actions "
+msgstr ""
 
 msgid "default text format for rich text fields."
 msgstr ""

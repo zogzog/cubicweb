@@ -137,6 +137,10 @@ msgstr ""
 msgid "(UNEXISTANT EID)"
 msgstr ""
 
+#, python-format
+msgid "(suppressed) entity #%d"
+msgstr ""
+
 msgid "**"
 msgstr "0..n 0..n"
 
@@ -205,6 +209,13 @@ msgid "AND"
 msgstr ""
 
 msgid "About this site"
+msgstr ""
+
+msgid "Action"
+msgstr ""
+
+#, python-format
+msgid "Added relation : %(entity_from)s %(rtype)s %(entity_to)s"
 msgstr ""
 
 msgid "Any"
@@ -393,6 +404,10 @@ msgstr ""
 msgid "Click to sort on this column"
 msgstr ""
 
+#, python-format
+msgid "Created %(etype)s : %(entity)s"
+msgstr ""
+
 msgid "DEBUG"
 msgstr ""
 
@@ -417,6 +432,14 @@ msgstr "Decimal number"
 
 msgid "Decimal_plural"
 msgstr "Decimal numbers"
+
+#, python-format
+msgid "Delete relation : %(entity_from)s %(rtype)s %(entity_to)s"
+msgstr ""
+
+#, python-format
+msgid "Deleted %(etype)s : %(entity)s"
+msgstr ""
 
 msgid "Detected problems"
 msgstr ""
@@ -727,6 +750,9 @@ msgstr "International time"
 msgid "TZTime_plural"
 msgstr "International times"
 
+msgid "Target"
+msgstr ""
+
 #, python-format
 msgid "The view %s can not be applied to this query"
 msgstr ""
@@ -840,13 +866,27 @@ msgstr "Transitions"
 msgid "URLs from which content will be imported. You can put one url per line"
 msgstr ""
 
+msgid "Undoable actions"
+msgstr ""
+
+msgid "Undoing"
+msgstr ""
+
 msgid "UniqueConstraint"
 msgstr "unique constraint"
 
 msgid "Unreachable objects"
 msgstr ""
 
+#, python-format
+msgid "Updated %(etype)s : %(entity)s"
+msgstr ""
+
 msgid "Used by:"
+msgstr ""
+
+#, python-format
+msgid "User %(user_eid)s on %(dt)s [%(undo_link)s] \n"
 msgstr ""
 
 msgid "Users and groups management"
@@ -1999,6 +2039,9 @@ msgid "december"
 msgstr ""
 
 msgid "default"
+msgstr ""
+
+msgid "default /base view for (transaction) actions "
 msgstr ""
 
 msgid "default text format for rich text fields."

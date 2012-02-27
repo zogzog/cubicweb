@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: cubicweb 2.46.0\n"
-"PO-Revision-Date: 2012-02-08 17:43+0100\n"
+"PO-Revision-Date: 2012-02-15 16:08+0100\n"
 "Last-Translator: Logilab Team <contact@logilab.fr>\n"
 "Language-Team: fr <contact@logilab.fr>\n"
 "Language: \n"
@@ -147,6 +147,10 @@ msgstr "l'action '%s' nécessite une option 'linkattr'"
 msgid "(UNEXISTANT EID)"
 msgstr "(EID INTROUVABLE)"
 
+#, python-format
+msgid "(suppressed) entity #%d"
+msgstr "entité #%d (supprimée)"
+
 msgid "**"
 msgstr "0..n 0..n"
 
@@ -218,6 +222,13 @@ msgstr "ET"
 
 msgid "About this site"
 msgstr "À propos de ce site"
+
+msgid "Action"
+msgstr "Action"
+
+#, python-format
+msgid "Added relation : %(entity_from)s %(rtype)s %(entity_to)s"
+msgstr "Relation ajoutée : %(entity_from)s %(rtype)s %(entity_to)s"
 
 msgid "Any"
 msgstr "Tous"
@@ -415,6 +426,10 @@ msgstr ""
 msgid "Click to sort on this column"
 msgstr "Cliquer pour trier sur cette colonne"
 
+#, python-format
+msgid "Created %(etype)s : %(entity)s"
+msgstr "Entité %(etype)s crée : %(entity)s"
+
 msgid "DEBUG"
 msgstr "DEBUG"
 
@@ -439,6 +454,14 @@ msgstr "Nombre décimal"
 
 msgid "Decimal_plural"
 msgstr "Nombres décimaux"
+
+#, python-format
+msgid "Delete relation : %(entity_from)s %(rtype)s %(entity_to)s"
+msgstr "Relation supprimée : %(entity_from)s %(rtype)s %(entity_to)s"
+
+#, python-format
+msgid "Deleted %(etype)s : %(entity)s"
+msgstr "Entité %(etype)s supprimée : %(entity)s"
 
 msgid "Detected problems"
 msgstr "Problèmes détectés"
@@ -752,6 +775,9 @@ msgstr "Heure internationale"
 msgid "TZTime_plural"
 msgstr "Heures internationales"
 
+msgid "Target"
+msgstr ""
+
 #, python-format
 msgid "The view %s can not be applied to this query"
 msgstr "La vue %s ne peut être appliquée à cette requête"
@@ -867,14 +893,28 @@ msgstr ""
 "URLs depuis lesquelles le contenu sera importé. Vous pouvez mettre une URL "
 "par ligne."
 
+msgid "Undoable actions"
+msgstr "Action annulables"
+
+msgid "Undoing"
+msgstr "Annuler"
+
 msgid "UniqueConstraint"
 msgstr "contrainte d'unicité"
 
 msgid "Unreachable objects"
 msgstr "Objets inaccessibles"
 
+#, python-format
+msgid "Updated %(etype)s : %(entity)s"
+msgstr "Entité %(etype)s mise à jour : %(entity)s"
+
 msgid "Used by:"
 msgstr "Utilisé par :"
+
+#, python-format
+msgid "By %(user)s on %(dt)s [%(undo_link)s]"
+msgstr "Par %(user)s le %(dt)s [%(undo_link)s] "
 
 msgid "Users and groups management"
 msgstr "Gestion des utilisateurs et groupes"
@@ -1398,17 +1438,23 @@ msgstr "ne peut analyser %(value)r (format attendu : %(format)s)"
 msgid ""
 "can't restore entity %(eid)s of type %(eschema)s, target of %(rtype)s (eid "
 "%(value)s) does not exist any longer"
-msgstr "impossible de rétablir l'entité %(eid)s de type %(eschema)s, cible de la relation %(rtype)s (eid %(value)s) n'existe plus"
+msgstr ""
+"impossible de rétablir l'entité %(eid)s de type %(eschema)s, cible de la "
+"relation %(rtype)s (eid %(value)s) n'existe plus"
 
 #, python-format
 msgid ""
 "can't restore relation %(rtype)s of entity %(eid)s, this relation does not "
 "exist in the schema anymore."
-msgstr "impossible de rétablir la relation %(rtype)s sur l'entité %(eid)s, cette relation n'existe plus dans le schéma."
+msgstr ""
+"impossible de rétablir la relation %(rtype)s sur l'entité %(eid)s, cette "
+"relation n'existe plus dans le schéma."
 
 #, python-format
 msgid "can't restore state of entity %s, it has been deleted inbetween"
-msgstr "impossible de rétablir l'état de l'entité %s, elle a été supprimée entre-temps"
+msgstr ""
+"impossible de rétablir l'état de l'entité %s, elle a été supprimée entre-"
+"temps"
 
 #, python-format
 msgid ""
@@ -2078,6 +2124,9 @@ msgstr "décembre"
 
 msgid "default"
 msgstr "valeur par défaut"
+
+msgid "default /base view for (transaction) actions "
+msgstr ""
 
 msgid "default text format for rich text fields."
 msgstr "format de texte par défaut pour les champs textes"

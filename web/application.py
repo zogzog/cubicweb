@@ -371,7 +371,9 @@ class CubicWebPublisher(object):
                     # no req.cnx if anonymous aren't allowed and we are
                     # displaying some anonymous enabled view such as the cookie
                     # authentication form
-                    req.cnx.commit()
+                    txuuid = req.cnx.commit()
+                    if txuuid is not None:
+                        req.data['last_undoable_transaction'] = txuuid
                     commited = True
             except (StatusResponse, DirectResponse):
                 if req.cnx:
@@ -386,9 +388,7 @@ class CubicWebPublisher(object):
                     if req.cnx:
                         txuuid = req.cnx.commit()
                         if txuuid is not None:
-                            msg = u'<span class="undo">[<a href="%s">%s</a>]</span>' %(
-                                req.build_url('undo', txuuid=txuuid), req._('undo'))
-                            req.append_to_redirect_message(msg)
+                            req.data['last_undoable_transaction'] = txuuid
                 except ValidationError, ex:
                     self.validation_error_handler(req, ex)
                 except Unauthorized, ex:
@@ -398,6 +398,7 @@ class CubicWebPublisher(object):
                 except Exception, ex:
                     self.error_handler(req, ex, tb=True)
                 else:
+                    self.add_undo_link_to_msg(req)
                     # delete validation errors which may have been previously set
                     if '__errorurl' in req.form:
                         req.session.data.pop(req.form['__errorurl'], None)
@@ -425,8 +426,16 @@ class CubicWebPublisher(object):
                     req.cnx.rollback()
                 except Exception:
                     pass # ignore rollback error at this point
+        self.add_undo_link_to_msg(req)
         self.info('query %s executed in %s sec', req.relative_path(), clock() - tstart)
         return result
+
+    def add_undo_link_to_msg(self, req):
+        txuuid = req.data.get('last_undoable_transaction')
+        if txuuid is not None:
+            msg = u'<span class="undo">[<a href="%s">%s</a>]</span>' %(
+            req.build_url('undo', txuuid=txuuid), req._('undo'))
+            req.append_to_redirect_message(msg)
 
     def validation_error_handler(self, req, ex):
         ex.errors = dict((k, v) for k, v in ex.errors.items())

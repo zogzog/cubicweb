@@ -82,6 +82,18 @@ def addable_etype_empty_rset(cls, req, rset=None, **kwargs):
                 return 1
     return 0
 
+class has_undoable_transactions(EntityPredicate):
+    "Select entities having public (i.e. end-user) undoable transactions."
+
+    def score_entity(self, entity):
+        if not entity._cw.vreg.config['undo-support']:
+            return 0
+        if entity._cw.cnx.undoable_transactions(eid=entity.eid):
+            return 1
+        else:
+            return 0
+
+
 # generic 'main' actions #######################################################
 
 class SelectAction(action.Action):
@@ -419,6 +431,7 @@ class GotRhythmAction(action.Action):
     def html_class(self):
         self._cw.add_js('cubicweb.rhythm.js')
         return 'rhythm'
+
 
 ## default actions ui configuration ###########################################
 

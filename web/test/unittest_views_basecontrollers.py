@@ -19,6 +19,12 @@
 
 from __future__ import with_statement
 
+from urlparse import urlsplit, urlunsplit, urljoin
+# parse_qs is deprecated in cgi and has been moved to urlparse in Python 2.6
+try:
+    from urlparse import parse_qs as url_parse_query
+except ImportError:
+    from cgi import parse_qs as url_parse_query
 from logilab.common.testlib import unittest_main, mock_object
 from logilab.common.decorators import monkeypatch
 
@@ -32,6 +38,7 @@ from cubicweb.entities.authobjs import CWUser
 from cubicweb.web.views.autoform import get_pending_inserts, get_pending_deletes
 from cubicweb.web.views.basecontrollers import JSonController, xhtmlize, jsonize
 from cubicweb.web.views.ajaxcontroller import ajaxfunc, AjaxFunction
+import cubicweb.transaction as tx
 
 u = unicode
 
@@ -767,6 +774,67 @@ class JSonControllerTC(AjaxControllerTC):
             return 12
         res, req = self.remote_call('foo')
         self.assertEqual(res, '12')
+
+
+
+
+
+class UndoControllerTC(CubicWebTC):
+
+    def setup_database(self):
+        req = self.request()
+        self.session.undo_actions = True
+        self.toto = self.create_user(req, 'toto', password='toto', groups=('users',),
+                                     commit=False)
+        self.txuuid_toto = self.commit()
+        self.toto_email = self.session.create_entity('EmailAddress',
+                                       address=u'toto@logilab.org',
+                                       reverse_use_email=self.toto)
+        self.txuuid_toto_email = self.commit()
+
+    def test_no_such_transaction(self):
+        req = self.request()
+        txuuid = u"12345acbd"
+        req.form['txuuid'] = txuuid
+        controller = self.vreg['controllers'].select('undo', req)
+        with self.assertRaises(tx.NoSuchTransaction) as cm:
+            result = controller.publish(rset=None)
+        self.assertEqual(cm.exception.txuuid, txuuid)
+
+    def assertURLPath(self, url, expected_path, expected_params=None):
+        """ This assert that the path part of `url` matches  expected path
+
+        TODO : implement assertion on the expected_params too
+        """
+        req = self.request()
+        scheme, netloc, path, query, fragment = urlsplit(url)
+        query_dict = url_parse_query(query)
+        expected_url = urljoin(req.base_url(), expected_path)
+        self.assertEqual( urlunsplit((scheme, netloc, path, None, None)), expected_url)
+
+    def test_redirect_redirectpath(self):
+        "Check that the potential __redirectpath is honored"
+        req = self.request()
+        txuuid = self.txuuid_toto_email
+        req.form['txuuid'] = txuuid
+        rpath = "toto"
+        req.form['__redirectpath'] = rpath
+        controller = self.vreg['controllers'].select('undo', req)
+        with self.assertRaises(Redirect) as cm:
+            result = controller.publish(rset=None)
+        self.assertURLPath(cm.exception.location, rpath)
+
+    def test_redirect_default(self):
+        req = self.request()
+        txuuid = self.txuuid_toto_email
+        req.form['txuuid'] = txuuid
+        req.session.data['breadcrumbs'] = [ urljoin(req.base_url(), path)
+                                            for path in ('tata', 'toto',)]
+        controller = self.vreg['controllers'].select('undo', req)
+        with self.assertRaises(Redirect) as cm:
+            result = controller.publish(rset=None)
+        self.assertURLPath(cm.exception.location, 'toto')
+
 
 if __name__ == '__main__':
     unittest_main()

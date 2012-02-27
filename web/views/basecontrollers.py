@@ -27,14 +27,14 @@ from warnings import warn
 from logilab.common.deprecation import deprecated
 
 from cubicweb import (NoSelectableObject, ObjectNotFound, ValidationError,
-                      AuthenticationError, typed_eid)
+                      AuthenticationError, typed_eid, UndoTransactionException)
 from cubicweb.utils import json_dumps
 from cubicweb.predicates import (authenticated_user, anonymous_user,
                                 match_form_params)
 from cubicweb.web import Redirect, RemoteCallFailed
-from cubicweb.web.controller import Controller
+from cubicweb.web.controller import Controller, append_url_params
 from cubicweb.web.views import vid_from_rset
-
+import cubicweb.transaction as tx
 
 @deprecated('[3.15] jsonize is deprecated, use AjaxFunction appobjects instead')
 def jsonize(func):
@@ -203,7 +203,7 @@ def _validate_form(req, vreg):
         return (False, _validation_error(req, ex), ctrl._edited_entity)
     except Redirect, ex:
         try:
-            req.cnx.commit() # ValidationError may be raise on commit
+            txuuid = req.cnx.commit() # ValidationError may be raised on commit
         except ValidationError, ex:
             return (False, _validation_error(req, ex), ctrl._edited_entity)
         except Exception, ex:
@@ -211,6 +211,8 @@ def _validate_form(req, vreg):
             req.exception('unexpected error while validating form')
             return (False, str(ex).decode('utf-8'), ctrl._edited_entity)
         else:
+            if txuuid is not None:
+                req.data['last_undoable_transaction'] = txuuid
             # complete entity: it can be used in js callbacks where we might
             # want every possible information
             if ctrl._edited_entity:
@@ -275,17 +277,17 @@ class UndoController(Controller):
 
     def publish(self, rset=None):
         txuuid = self._cw.form['txuuid']
-        errors = self._cw.cnx.undo_transaction(txuuid)
-        if not errors:
-            self.redirect()
-        raise ValidationError(None, {None: '\n'.join(errors)})
+        try:
+            self._cw.cnx.undo_transaction(txuuid)
+        except UndoTransactionException, exc:
+            errors = exc.errors
+            #This will cause a rollback in main_publish
+            raise ValidationError(None, {None: '\n'.join(errors)})
+        else :
+            self.redirect() # Will raise Redirect
 
     def redirect(self, msg=None):
         req = self._cw
         msg = msg or req._("transaction undone")
-        breadcrumbs = req.session.data.get('breadcrumbs', None)
-        if breadcrumbs is not None and len(breadcrumbs) > 1:
-            url = req.rebuild_url(breadcrumbs[-2], __message=msg)
-        else:
-            url = req.build_url(__message=msg)
-        raise Redirect(url)
+        self._return_to_lastpage( dict(_cwmsgid= req.set_redirect_message(msg)) )
+
