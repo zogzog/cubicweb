@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -40,6 +40,13 @@ if applcubicwebversion <= (3, 13, 0) and cubicwebversion >= (3, 13, 1):
     sql('UPDATE entities SET asource=cw_name  '
         'FROM cw_CWSource, cw_source_relation '
         'WHERE entities.eid=cw_source_relation.eid_from AND cw_source_relation.eid_to=cw_CWSource.cw_eid')
+    commit()
+
+if schema['TZDatetime'].eid is None:
+    add_entity_type('TZDatetime', auto=False)
+if schema['TZTime'].eid is None:
+    add_entity_type('TZTime', auto=False)
+
 
 if applcubicwebversion <= (3, 14, 0) and cubicwebversion >= (3, 14, 0):
     if 'require_permission' in schema and not 'localperms'in repo.config.cubes():
