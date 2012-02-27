@@ -280,13 +280,17 @@ class DBAPIRequest(RequestSessionBase):
 
     def __init__(self, vreg, session=None):
         super(DBAPIRequest, self).__init__(vreg)
+        #: 'language' => translation_function() mapping
+        self.translation = {}
         try:
             # no vreg or config which doesn't handle translations
             self.translations = vreg.config.translations
         except AttributeError:
-            self.translations = {}
+            pass
+        #: Request language identifier eg: 'en'
+        self.lang = None
         self.set_default_language(vreg)
-        # cache entities built during the request
+        #: cache entities built during the request
         self._eid_cache = {}
         if session is not None:
             self.set_session(session)
