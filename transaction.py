@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -21,7 +21,6 @@
 This module is in the cubicweb package and not in cubicweb.server because those
 objects should be accessible to client through pyro, where the cubicweb.server
 package may not be installed.
-
 """
 __docformat__ = "restructuredtext en"
 _ = unicode
@@ -86,6 +85,11 @@ class AbstractAction(object):
     def label(self):
         return ACTION_LABELS[self.action]
 
+    @property
+    def ertype(self):
+        """ Return the entity or relation type this action is related to"""
+        raise NotImplementedError(self)
+
 
 class EntityAction(AbstractAction):
     def __init__(self, action, public, order, etype, eid, changes):
@@ -99,6 +103,11 @@ class EntityAction(AbstractAction):
             self.label, self.eid, self.changes,
             self.public and 'dbapi' or 'hook')
 
+    @property
+    def ertype(self):
+        """ Return the entity or relation type this action is related to"""
+        return self.etype
+
 
 class RelationAction(AbstractAction):
     def __init__(self, action, public, order, rtype, eidfrom, eidto):
@@ -111,3 +120,8 @@ class RelationAction(AbstractAction):
         return '<%s: %s %s %s (%s)>' % (
             self.label, self.eid_from, self.rtype, self.eid_to,
             self.public and 'dbapi' or 'hook')
+
+    @property
+    def ertype(self):
+        """ Return the entity or relation type this action is related to"""
+        return self.rtype
