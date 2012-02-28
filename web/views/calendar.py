@@ -178,21 +178,14 @@ class CalendarView(EntityView):
 
     fullcalendar_options = {
         'firstDay': 1,
+        'firstHour': 8,
+        'defaultView': 'month',
+        'editable': True,
         'header': {'left': 'prev,next today',
                    'center': 'title',
                    'right': 'month,agendaWeek,agendaDay',
                    },
-        'editable': True,
-        'defaultView': 'month',
-        'timeFormat': {'month': '',
-                       '': 'H:mm'},
-        'firstHour': 8,
-        'axisFormat': 'H:mm',
-        'columnFormat': {'month': 'dddd',
-                         'agendaWeek': 'dddd yyyy/M/dd',
-                         'agendaDay': 'dddd yyyy/M/dd'}
         }
-
 
     def call(self):
         self._cw.demote_to_html()
@@ -203,17 +196,12 @@ class CalendarView(EntityView):
         # write calendar div to load jquery fullcalendar object
         self.w(u'<div id="%s"></div>' % self.calendar_id)
 
-
     def add_onload(self):
-        fullcalendar_options = self.fullcalendar_options.copy()
-        fullcalendar_options['events'] = self.get_events()
-        fullcalendar_options['buttonText'] = {'today': self._cw._('today'),
-                                              'month': self._cw._('month'),
-                                              'week': self._cw._('week'),
-                                              'day': self._cw._('day')}
+        # i18n
+        self._cw.add_js('fullcalendar.locale.js')
         # js callback to add a tooltip and to put html in event's title
         js = """
-        var options = %s;
+        var options = $.fullCalendar.regional('%s', %s);
         options.eventRender = function(event, $element) {
           // add a tooltip for each event
           var div = '<div class="tooltip">'+ event.description+ '</div>';
@@ -223,7 +211,7 @@ class CalendarView(EntityView):
         };
         $("#%s").fullCalendar(options);
         """ #"
-        self._cw.add_onload(js % (json_dumps(fullcalendar_options), self.calendar_id))
+        self._cw.add_onload(js % (self._cw.lang, json_dumps(self.fullcalendar_options), self.calendar_id))
 
 
     def get_events(self):
