@@ -1036,17 +1036,15 @@ class ServerMigrationHelper(MigrationHelper):
             gmap = self.group_mapping()
             cmap = self.cstrtype_mapping()
             done = set()
-            for rdef in rschema.rdefs.itervalues():
-                if not (reposchema.has_entity(rdef.subject)
-                        and reposchema.has_entity(rdef.object)):
+            for subj, obj in rschema.rdefs:
+                if not (reposchema.has_entity(subj)
+                        and reposchema.has_entity(obj)):
                     continue
                 # symmetric relations appears twice
-                if (rdef.subject, rdef.object) in done:
+                if (subj, obj) in done:
                     continue
-                done.add( (rdef.subject, rdef.object) )
-                self._set_rdef_eid(rdef)
-                ss.execschemarql(execute, rdef,
-                                 ss.rdef2rql(rdef, cmap, gmap))
+                done.add( (subj, obj) )
+                self.cmd_add_relation_definition(subj, rtype, obj)
             if rtype in META_RTYPES:
                 # if the relation is in META_RTYPES, ensure we're adding it for
                 # all entity types *in the persistent schema*, not only those in
@@ -1096,9 +1094,8 @@ class ServerMigrationHelper(MigrationHelper):
             print 'warning: relation %s %s %s is already known, skip addition' % (
                 subjtype, rtype, objtype)
             return
-        execute = self._cw.execute
         rdef = self._get_rdef(rschema, subjtype, objtype)
-        ss.execschemarql(execute, rdef,
+        ss.execschemarql(self._cw.execute, rdef,
                          ss.rdef2rql(rdef, self.cstrtype_mapping(),
                                      self.group_mapping()))
         if commit:
