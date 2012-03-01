@@ -23,6 +23,7 @@ _ = unicode
 from logilab.mtconverter import xml_escape
 from logilab.common.deprecation import class_renamed
 from logilab.common.registry import objectify_predicate
+from logilab.common.decorators import classproperty
 
 from cubicweb.predicates import match_kwargs, no_cnx, anonymous_user
 from cubicweb.view import View, MainTemplate, NOINDEX, NOFOLLOW, StartupView
@@ -417,26 +418,50 @@ class HTMLContentFooter(View):
                 comp.render(w=self.w, view=view)
             self.w(u'</div>')
 
+class BaseLogForm(forms.FieldsForm):
+    """Abstract Base login form to be used by any login form
+    """
+    __abstract__ = True
 
-class LogForm(forms.FieldsForm):
     __regid__ = 'logform'
     domid = 'loginForm'
     needs_css = ('cubicweb.login.css',)
-    onclick = "javascript: cw.htmlhelpers.popupLoginBox('%s', '%s');"
-    # XXX have to recall fields name since python is mangling __login/__password
-    __login = ff.StringField('__login', widget=fw.TextInput({'class': 'data'}))
-    __password = ff.StringField('__password', label=_('password'),
-                                widget=fw.PasswordSingleInput({'class': 'data'}))
-    form_buttons = [fw.SubmitButton(label=_('log in'),
+
+    onclick_base = "javascript: cw.htmlhelpers.popupLoginBox('%s', '%s');"
+    onclick_args = (None, None)
+
+    @classproperty
+    def form_buttons(cls):
+        # we use a property because sub class will need to define their own onclick_args.
+        # Therefor we can't juste make the string formating when instanciating this class
+        onclick = cls.onclick_base % cls.onclick_args
+        form_buttons = [fw.SubmitButton(label=_('log in'),
                                     attrs={'class': 'loginButton'}),
-                    fw.ResetButton(label=_('cancel'),
-                                   attrs={'class': 'loginButton',
-                                          'onclick': onclick % ('popupLoginBox', '__login')}),]
+                        fw.ResetButton(label=_('cancel'),
+                                       attrs={'class': 'loginButton',
+                                              'onclick': onclick}),]
+        ## Can't shortcut next access because __dict__ is a "dictproxy" which 
+        ## does not support items assignement.
+        # cls.__dict__['form_buttons'] = form_buttons
+        return form_buttons
 
     def form_action(self):
         if self.action is None:
             return login_form_url(self._cw)
         return super(LogForm, self).form_action()
+
+class LogForm(BaseLogForm):
+    """Simple login form that send username and password
+    """
+    __regid__ = 'logform'
+    domid = 'loginForm'
+    needs_css = ('cubicweb.login.css',)
+    # XXX have to recall fields name since python is mangling __login/__password
+    __login = ff.StringField('__login', widget=fw.TextInput({'class': 'data'}))
+    __password = ff.StringField('__password', label=_('password'),
+                                widget=fw.PasswordSingleInput({'class': 'data'}))
+
+    onclick_args =  ('popupLoginBox', '__login')
 
 
 class LogFormView(View):
