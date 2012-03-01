@@ -7,7 +7,7 @@ Uploaders: Sylvain Thenault <sylvain.thenault@logilab.fr>,
            Adrien Di Mascio <Adrien.DiMascio@logilab.fr>,
            Aurélien Campéas <aurelien.campeas@logilab.fr>,
            Nicolas Chauvat <nicolas.chauvat@logilab.fr>
-Build-Depends: debhelper (>= 7), python (>= 2.5), python-central (>= 0.5), python-sphinx
+Build-Depends: debhelper (>= 7), python (>= 2.5), python-central (>= 0.5), python-sphinx, python-logilab-common, python-unittest2
 # for the documentation:
 # python-sphinx, python-logilab-common, python-unittest2, logilab-doctools, logilab-xml
 Standards-Version: 3.9.1

@@ -1,3 +1,9 @@
+cubicweb (3.14.4-2) unstable; urgency=low
+
+  * add missing build-deps to generate the documentation
+
+ -- David Douard <david.douard@logilab.fr>  Wed, 29 Feb 2012 17:00:52 +0100
+
 cubicweb (3.14.4-1) unstable; urgency=low
 
   * New upstream release
