@@ -825,7 +825,7 @@ this option is set to yes",
     _cubes = None
 
     def init_cubes(self, cubes):
-        assert self._cubes is None, self._cubes
+        assert self._cubes is None, repr(self._cubes)
         self._cubes = self.reorder_cubes(cubes)
         # load cubes'__init__.py file first
         for cube in cubes:
