@@ -337,7 +337,7 @@ cubicweb-password = gingkow
         ceid = cu.execute('INSERT Card X: X title "without wikiid to get eid based url"')[0][0]
         self.cnx2.commit()
         lc = self.sexecute('Card X WHERE X title "without wikiid to get eid based url"').get_entity(0, 0)
-        self.assertEqual(lc.absolute_url(), 'http://extern.org/card/eid/%s' % ceid)
+        self.assertEqual(lc.absolute_url(), 'http://extern.org/%s' % ceid)
         cu.execute('DELETE Card X WHERE X eid %(x)s', {'x':ceid})
         self.cnx2.commit()
 
@@ -346,7 +346,7 @@ cubicweb-password = gingkow
         ceid = cu.execute('INSERT Card X: X title "without wikiid to get eid based url"')[0][0]
         self.cnx3.commit()
         lc = self.sexecute('Card X WHERE X title "without wikiid to get eid based url"').get_entity(0, 0)
-        self.assertEqual(lc.absolute_url(), 'http://testing.fr/cubicweb/card/eid/%s' % lc.eid)
+        self.assertEqual(lc.absolute_url(), 'http://testing.fr/cubicweb/%s' % lc.eid)
         cu.execute('DELETE Card X WHERE X eid %(x)s', {'x':ceid})
         self.cnx3.commit()
 
