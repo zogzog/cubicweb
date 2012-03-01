@@ -197,6 +197,8 @@ class CalendarView(EntityView):
         self.w(u'<div id="%s"></div>' % self.calendar_id)
 
     def add_onload(self):
+        fullcalendar_options = self.fullcalendar_options.copy()
+        fullcalendar_options['events'] = self.get_events()
         # i18n
         self._cw.add_js('fullcalendar.locale.js')
         # js callback to add a tooltip and to put html in event's title
@@ -211,8 +213,7 @@ class CalendarView(EntityView):
         };
         $("#%s").fullCalendar(options);
         """ #"
-        self._cw.add_onload(js % (self._cw.lang, json_dumps(self.fullcalendar_options), self.calendar_id))
-
+        self._cw.add_onload(js % (self._cw.lang, json_dumps(fullcalendar_options), self.calendar_id))
 
     def get_events(self):
         events = []
