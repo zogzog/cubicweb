@@ -190,7 +190,7 @@ class CalendarView(EntityView):
     def call(self):
         self._cw.demote_to_html()
         self._cw.add_css(('fullcalendar.css', 'cubicweb.calendar.css'))
-        self._cw.add_js(('jquery.ui.js', 'fullcalendar.min.js', 'jquery.qtip.min.js'))
+        self._cw.add_js(('jquery.ui.js', 'fullcalendar.min.js', 'jquery.qtip.min.js', 'fullcalendar.locale.js'))
         self.calendar_id = 'cal' + make_uid('uid')
         self.add_onload()
         # write calendar div to load jquery fullcalendar object
@@ -200,7 +200,6 @@ class CalendarView(EntityView):
         fullcalendar_options = self.fullcalendar_options.copy()
         fullcalendar_options['events'] = self.get_events()
         # i18n
-        self._cw.add_js('fullcalendar.locale.js')
         # js callback to add a tooltip and to put html in event's title
         js = """
         var options = $.fullCalendar.regional('%s', %s);

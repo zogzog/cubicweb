@@ -1,5 +1,8 @@
-jQuery(function($){
-  $.fullCalendar.regional = function(lng, options){
+/*
+ translations for fullCalendar plugin
+ */
+
+$.fullCalendar.regional = function(lng, options){
     var defaults = {'fr' : {
      monthNames:
        ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'],
@@ -32,4 +35,4 @@ jQuery(function($){
    }
    else {return options;};
   };
-});
+;
