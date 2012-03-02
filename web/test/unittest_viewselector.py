@@ -30,7 +30,7 @@ from cubicweb.web.views import (
     primary, baseviews, tableview, editforms, calendar, management, embedding,
     actions, startup, cwuser, schema, xbel, vcard, owl, treeview, idownloadable,
     wdoc, debug, cwuser, cwproperties, cwsources, workflow, xmlrss, rdf,
-    csvexport, json)
+    csvexport, json, undohistory)
 
 from cubes.folder import views as folderviews
 
@@ -102,6 +102,7 @@ class VRegistryTC(ViewSelectorTC):
                               ('siteinfo', debug.SiteInfoView),
                               ('systempropertiesform', cwproperties.SystemCWPropertiesForm),
                               ('tree', folderviews.FolderTreeView),
+                              ('undohistory', undohistory.UndoHistoryView),
                               ])
 
     def test_possible_views_noresult(self):

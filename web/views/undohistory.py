@@ -20,7 +20,7 @@ __docformat__ = "restructuredtext en"
 _ = unicode
 
 
-from logilab.common.registry import Predicate, yes
+from logilab.common.registry import Predicate
 
 from cubicweb import UnknownEid, tags, transaction as tx
 from cubicweb.view import View, StartupView
@@ -58,7 +58,6 @@ class undoable_action(Predicate):
 
 class UndoHistoryView(StartupView):
     __regid__ = 'undohistory'
-    __select__ = yes()
     title = _('Undoing')
     item_vid = 'undoable-transaction-view'
     cache_max_age = 0
