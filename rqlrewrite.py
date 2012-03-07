@@ -245,7 +245,7 @@ class RQLRewriter(object):
                 # called to reintroduce snippet due to ambiguity creation,
                 # so skip snippets which are not introducing this ambiguity
                 exists = varexistsmap[varmap]
-                if self.exists_snippet[rqlexpr] is exists:
+                if self.exists_snippet.get(rqlexpr) is exists:
                     self.insert_snippet(varmap, rqlexpr.snippet_rqlst, exists)
         if varexistsmap is None and not inserted:
             # no rql expression found matching rql solutions. User has no access right
@@ -481,11 +481,17 @@ class RQLRewriter(object):
 
     def _cleanup_inserted(self, node):
         # cleanup inserted variable references
+        removed = set()
         for vref in node.iget_nodes(n.VariableRef):
             vref.unregister_reference()
             if not vref.variable.stinfo['references']:
                 # no more references, undefine the variable
                 del self.select.defined_vars[vref.name]
+                removed.add(vref.name)
+        for key, newvar in self.rewritten.items(): # I mean items we alter it
+            if newvar in removed:
+                del self.rewritten[key]
+
 
     def _may_be_shared_with(self, sniprel, target):
         """if the snippet relation can be skipped to use a relation from the

@@ -443,6 +443,21 @@ class RQLRewriteTC(TestCase):
                          'OR (EXISTS(C owned_by D, D login "momo"))) '
                          'OR (EXISTS(C owned_by A, A login "hip")), C is Card)')
 
+    def test_multiple_erql_one_bad(self):
+        #: reproduce bug #2236985
+        #: (rqlrewrite fails to remove rewritten entry for unsupported constraint and then crash)
+        #:
+        #: This check a very rare code path triggered by the four condition below
+
+        # 1. c_ok introduce an ambiguity
+        c_ok = ERQLExpression('X concerne R')
+        # 2. c_bad is just plain wrong and won't be kept
+        # 3. but it declare a new variable
+        # 4. this variable require a rewrite
+        c_bad = ERQLExpression('X documented_by R, A in_state R')
+
+        rqlst = parse('Any A, R WHERE A ref R, S is Affaire')
+        rewrite(rqlst, {('A', 'X'): (c_ok, c_bad)}, {})
 
 if __name__ == '__main__':
     unittest_main()
