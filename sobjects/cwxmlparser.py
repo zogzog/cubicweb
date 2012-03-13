@@ -242,7 +242,7 @@ class CWEntityXMLParser(datafeed.DataFeedXMLParser):
     def normalize_url(self, url):
         """overriden to add vid=xml"""
         url = super(CWEntityXMLParser, self).normalize_url(url)
-        if url.startswih('http'):
+        if url.startswith('http'):
             try:
                 url, qs = url.split('?', 1)
             except ValueError:
