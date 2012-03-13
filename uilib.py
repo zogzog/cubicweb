@@ -108,7 +108,7 @@ def print_timedelta(value, req, props, displaytime=True):
     elif value.days > 2 or value.days < -2:
         return req._('%d days') % int(value.days)
     else:
-        minus = 1 if value.days > 0 else -1
+        minus = 1 if value.days >= 0 else -1
         if value.seconds > 3600:
             return req._('%d hours') % (int(value.seconds // 3600) * minus)
         elif value.seconds >= 120:
