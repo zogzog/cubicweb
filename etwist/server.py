@@ -165,9 +165,6 @@ class CubicWebRootResource(resource.Resource):
         else:
             https = False
             baseurl = self.base_url
-        if self.config['use-request-subdomain']:
-            baseurl = host_prefixed_baseurl(baseurl, host)
-            self.warning('used baseurl is %s for this request', baseurl)
         req = CubicWebTwistedRequestAdapter(request, self.appli.vreg, https, baseurl)
         if req.authmode == 'http':
             # activate realm-based auth
