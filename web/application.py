@@ -361,8 +361,6 @@ class CubicWebPublisher(object):
                     controller = self.vreg['controllers'].select(ctrlid, req,
                                                                  appli=self)
                 except NoSelectableObject:
-                    if ctrlid == 'login':
-                        raise Unauthorized(req._('log out first'))
                     raise Unauthorized(req._('not authorized'))
                 req.update_search_state()
                 result = controller.publish(rset=rset)

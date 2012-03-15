@@ -84,6 +84,17 @@ class LoginController(Controller):
             # Cookie authentication
             return self.appli.need_login_content(self._cw)
 
+class LoginControllerForAuthed(Controller):
+    __regid__ = 'login'
+    __select__ = ~anonymous_user()
+
+    def publish(self, rset=None):
+        """log in the instance"""
+        path = self._cw.form.get('postlogin_path')
+        if not path:
+            path = '/'
+        raise Redirect(path)
+
 
 class LogoutController(Controller):
     __regid__ = 'logout'

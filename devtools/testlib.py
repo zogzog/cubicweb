@@ -697,13 +697,11 @@ class CubicWebTC(TestCase):
 
     def assertAuthSuccess(self, req, origsession, nbsessions=1):
         sh = self.app.session_handler
-        path, params = self.expect_redirect(lambda x: self.app.connect(x), req)
+        self.app.connect(req)
         session = req.session
         self.assertEqual(len(self.open_sessions), nbsessions, self.open_sessions)
         self.assertEqual(session.login, origsession.login)
         self.assertEqual(session.anonymous_session, False)
-        self.assertEqual(path, 'view')
-        self.assertMessageEqual(req, params, 'welcome %s !' % req.user.login)
 
     def assertAuthFailure(self, req, nbsessions=0):
         self.app.connect(req)

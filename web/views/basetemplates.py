@@ -447,7 +447,11 @@ class BaseLogForm(forms.FieldsForm):
 
     def form_action(self):
         if self.action is None:
-            return login_form_url(self._cw)
+            # reuse existing redirection if it exist
+            target = self._cw.form.get('postlogin_path',
+                                       self._cw.relative_path())
+            return self._cw.build_url('login', __secure__=True,
+                                      postlogin_path=target)
         return super(LogForm, self).form_action()
 
 class LogForm(BaseLogForm):
@@ -507,12 +511,3 @@ class LogFormView(View):
         cw.html_headers.add_onload('jQuery("#__login:visible").focus()')
 
 LogFormTemplate = class_renamed('LogFormTemplate', LogFormView)
-
-
-def login_form_url(req):
-    if req.https:
-        return req.url()
-    httpsurl = req.vreg.config.get('https-url')
-    if httpsurl:
-        return req.url().replace(req.base_url(), httpsurl)
-    return req.url()

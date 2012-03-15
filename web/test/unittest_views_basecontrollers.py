@@ -776,9 +776,6 @@ class JSonControllerTC(AjaxControllerTC):
         self.assertEqual(res, '12')
 
 
-
-
-
 class UndoControllerTC(CubicWebTC):
 
     def setup_database(self):
@@ -835,6 +832,21 @@ class UndoControllerTC(CubicWebTC):
             result = controller.publish(rset=None)
         self.assertURLPath(cm.exception.location, 'toto')
 
+
+class LoginControllerTC(CubicWebTC):
+
+    def test_login_with_dest(self):
+        req = self.request()
+        req.form = {'postlogin_path': '/elephants/babar'}
+        with self.assertRaises(Redirect) as cm:
+            self.ctrl_publish(req, ctrl='login')
+        self.assertEqual('/elephants/babar', cm.exception.location)
+
+    def test_login_no_dest(self):
+        req = self.request()
+        with self.assertRaises(Redirect) as cm:
+            self.ctrl_publish(req, ctrl='login')
+        self.assertEqual('/', cm.exception.location)
 
 if __name__ == '__main__':
     unittest_main()

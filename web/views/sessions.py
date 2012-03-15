@@ -95,18 +95,6 @@ class InMemoryRepositorySessionManager(AbstractSessionManager):
         #      reopening. Is it actually a problem?
         if 'last_login_time' in req.vreg.schema:
             self._update_last_login_time(req)
-        args = req.form
-        for forminternal_key in ('__form_id', '__domid', '__errorurl'):
-            args.pop(forminternal_key, None)
-        path = req.relative_path(False)
-        if path in ('login', 'logout') or req.form.get('vid') == 'loggedout':
-            path = 'view'
-            args['__message'] = req._('welcome %s !') % req.user.login
-            if 'vid' in req.form and req.form['vid'] != 'loggedout':
-                args['vid'] = req.form['vid']
-            if 'rql' in req.form:
-                args['rql'] = req.form['rql']
-            raise Redirect(req.build_url(path, **args))
         req.set_message(req._('welcome %s !') % req.user.login)
 
     def _update_last_login_time(self, req):
