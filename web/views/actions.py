@@ -86,7 +86,7 @@ class has_undoable_transactions(EntityPredicate):
     "Select entities having public (i.e. end-user) undoable transactions."
 
     def score_entity(self, entity):
-        if not entity._cw.vreg.config['undo-support']:
+        if not entity._cw.vreg.config['undo-enabled']:
             return 0
         if entity._cw.cnx.undoable_transactions(eid=entity.eid):
             return 1

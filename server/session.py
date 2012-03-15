@@ -256,7 +256,7 @@ class Session(RequestSessionBase):
         if repo.config.creating or repo.config.repairing or self.is_internal_session:
             self.undo_actions = False
         else:
-            self.undo_actions = repo.config['undo-support']
+            self.undo_actions = repo.config['undo-enabled']
         # short cut to querier .execute method
         self._execute = repo.querier.execute
         # shared data, used to communicate extra information between the client
@@ -888,7 +888,7 @@ class Session(RequestSessionBase):
         """return a tuple (type, sourceuri, extid) for the entity with id <eid>"""
         metas = self.repo.type_and_source_from_eid(eid, self)
         if asdict:
-            return dict(zip(('type', 'source', 'extid', 'asource'), metas)) 
+            return dict(zip(('type', 'source', 'extid', 'asource'), metas))
        # XXX :-1 for cw compat, use asdict=True for full information
         return metas[:-1]
 

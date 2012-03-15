@@ -46,7 +46,7 @@ class ServerStartupHook(hook.Hook):
                 session.commit()
             finally:
                 session.close()
-        if self.repo.config['undo-support']:
+        if self.repo.config['undo-enabled']:
             self.repo.looping_task(60*60*24, cleanup_old_transactions,
                                    self.repo)
         def update_feeds(repo):
