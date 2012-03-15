@@ -96,7 +96,7 @@ class EditControllerTC(CubicWebTC):
             'firstname-subject:'+eid:   u'Sylvain',
             'in_group-subject:'+eid:  groups,
             }
-        path, params = self.expect_redirect_publish(req, 'edit')
+        path, params = self.expect_redirect_handle_request(req, 'edit')
         e = self.execute('Any X WHERE X eid %(x)s', {'x': user.eid}).get_entity(0, 0)
         self.assertEqual(e.firstname, u'Sylvain')
         self.assertEqual(e.surname, u'Th\xe9nault')
@@ -115,7 +115,7 @@ class EditControllerTC(CubicWebTC):
             'upassword-subject:'+eid: 'tournicoton',
             'upassword-subject-confirm:'+eid: 'tournicoton',
             }
-        path, params = self.expect_redirect_publish(req, 'edit')
+        path, params = self.expect_redirect_handle_request(req, 'edit')
         cnx.commit() # commit to check we don't get late validation error for instance
         self.assertEqual(path, 'cwuser/user')
         self.assertFalse('vid' in params)
@@ -136,7 +136,7 @@ class EditControllerTC(CubicWebTC):
             'firstname-subject:'+eid: u'Th\xe9nault',
             'surname-subject:'+eid:   u'Sylvain',
             }
-        path, params = self.expect_redirect_publish(req, 'edit')
+        path, params = self.expect_redirect_handle_request(req, 'edit')
         e = self.execute('Any X WHERE X eid %(x)s', {'x': user.eid}).get_entity(0, 0)
         self.assertEqual(e.login, user.login)
         self.assertEqual(e.firstname, u'Th\xe9nault')
@@ -162,7 +162,7 @@ class EditControllerTC(CubicWebTC):
                     'address-subject:Y': u'dima@logilab.fr',
                     'use_email-object:Y': 'X',
                     }
-        path, params = self.expect_redirect_publish(req, 'edit')
+        path, params = self.expect_redirect_handle_request(req, 'edit')
         # should be redirected on the created person
         self.assertEqual(path, 'cwuser/adim')
         e = self.execute('Any P WHERE P surname "Di Mascio"').get_entity(0, 0)
@@ -184,7 +184,7 @@ class EditControllerTC(CubicWebTC):
                     'address-subject:Y': u'dima@logilab.fr',
                     'use_email-object:Y': peid,
                     }
-        path, params = self.expect_redirect_publish(req, 'edit')
+        path, params = self.expect_redirect_handle_request(req, 'edit')
         # should be redirected on the created person
         self.assertEqual(path, 'cwuser/adim')
         e = self.execute('Any P WHERE P surname "Di Masci"').get_entity(0, 0)
@@ -204,7 +204,7 @@ class EditControllerTC(CubicWebTC):
                     'address-subject:'+emaileid: u'adim@logilab.fr',
                     'use_email-object:'+emaileid: peid,
                     }
-        path, params = self.expect_redirect_publish(req, 'edit')
+        path, params = self.expect_redirect_handle_request(req, 'edit')
         email.cw_clear_all_caches()
         self.assertEqual(email.address, 'adim@logilab.fr')
 
@@ -267,7 +267,7 @@ class EditControllerTC(CubicWebTC):
                     'amount-subject:X': u'10',
                     'described_by_test-subject:X': u(feid),
                     }
-        self.expect_redirect_publish(req, 'edit')
+        self.expect_redirect_handle_request(req, 'edit')
         # should be redirected on the created
         #eid = params['rql'].split()[-1]
         e = self.execute('Salesterm X').get_entity(0, 0)
@@ -279,7 +279,7 @@ class EditControllerTC(CubicWebTC):
         user = self.user()
         req = self.request(**req_form(user))
         req.session.data['pending_insert'] = set([(user.eid, 'in_group', tmpgroup.eid)])
-        path, params = self.expect_redirect_publish(req, 'edit')
+        path, params = self.expect_redirect_handle_request(req, 'edit')
         usergroups = [gname for gname, in
                       self.execute('Any N WHERE G name N, U in_group G, U eid %(u)s', {'u': user.eid})]
         self.assertItemsEqual(usergroups, ['managers', 'test'])
@@ -298,7 +298,7 @@ class EditControllerTC(CubicWebTC):
         # now try to delete the relation
         req = self.request(**req_form(user))
         req.session.data['pending_delete'] = set([(user.eid, 'in_group', groupeid)])
-        path, params = self.expect_redirect_publish(req, 'edit')
+        path, params = self.expect_redirect_handle_request(req, 'edit')
         usergroups = [gname for gname, in
                       self.execute('Any N WHERE G name N, U in_group G, U eid %(u)s', {'u': user.eid})]
         self.assertItemsEqual(usergroups, ['managers'])
@@ -318,7 +318,7 @@ class EditControllerTC(CubicWebTC):
             '__form_id': 'edition',
             '__action_apply': '',
             }
-        path, params = self.expect_redirect_publish(req, 'edit')
+        path, params = self.expect_redirect_handle_request(req, 'edit')
         self.assertTrue(path.startswith('blogentry/'))
         eid = path.split('/')[1]
         self.assertEqual(params['vid'], 'edition')
@@ -340,7 +340,7 @@ class EditControllerTC(CubicWebTC):
             '__redirectparams': 'toto=tutu&tata=titi',
             '__form_id': 'edition',
             }
-        path, params = self.expect_redirect_publish(req, 'edit')
+        path, params = self.expect_redirect_handle_request(req, 'edit')
         self.assertEqual(path, 'view')
         self.assertEqual(params['rql'], redirectrql)
         self.assertEqual(params['vid'], 'primary')
@@ -352,7 +352,7 @@ class EditControllerTC(CubicWebTC):
         eid = req.create_entity('BlogEntry', title=u'hop', content=u'hop').eid
         req.form = {'eid': u(eid), '__type:%s'%eid: 'BlogEntry',
                     '__action_delete': ''}
-        path, params = self.expect_redirect_publish(req, 'edit')
+        path, params = self.expect_redirect_handle_request(req, 'edit')
         self.assertEqual(path, 'blogentry')
         self.assertIn('_cwmsgid', params)
         eid = req.create_entity('EmailAddress', address=u'hop@logilab.fr').eid
@@ -362,7 +362,7 @@ class EditControllerTC(CubicWebTC):
         req = req
         req.form = {'eid': u(eid), '__type:%s'%eid: 'EmailAddress',
                     '__action_delete': ''}
-        path, params = self.expect_redirect_publish(req, 'edit')
+        path, params = self.expect_redirect_handle_request(req, 'edit')
         self.assertEqual(path, 'cwuser/admin')
         self.assertIn('_cwmsgid', params)
         eid1 = req.create_entity('BlogEntry', title=u'hop', content=u'hop').eid
@@ -372,7 +372,7 @@ class EditControllerTC(CubicWebTC):
                     '__type:%s'%eid1: 'BlogEntry',
                     '__type:%s'%eid2: 'EmailAddress',
                     '__action_delete': ''}
-        path, params = self.expect_redirect_publish(req, 'edit')
+        path, params = self.expect_redirect_handle_request(req, 'edit')
         self.assertEqual(path, 'view')
         self.assertIn('_cwmsgid', params)
 
@@ -388,7 +388,7 @@ class EditControllerTC(CubicWebTC):
                     'title-subject:X': u'entry1-copy',
                     'content-subject:X': u'content1',
                     }
-        self.expect_redirect_publish(req, 'edit')
+        self.expect_redirect_handle_request(req, 'edit')
         blogentry2 = req.find_one_entity('BlogEntry', title=u'entry1-copy')
         self.assertEqual(blogentry2.entry_of[0].eid, blog.eid)
 
@@ -406,7 +406,7 @@ class EditControllerTC(CubicWebTC):
                         'title-subject:X': u'entry1-copy',
                         'content-subject:X': u'content1',
                         }
-            self.expect_redirect_publish(req, 'edit')
+            self.expect_redirect_handle_request(req, 'edit')
             blogentry2 = req.find_one_entity('BlogEntry', title=u'entry1-copy')
             # entry_of should not be copied
             self.assertEqual(len(blogentry2.entry_of), 0)
@@ -432,7 +432,7 @@ class EditControllerTC(CubicWebTC):
             'read_permission-subject:'+cwetypeeid:  groups,
             }
         try:
-            path, params = self.expect_redirect_publish(req, 'edit')
+            path, params = self.expect_redirect_handle_request(req, 'edit')
             e = self.execute('Any X WHERE X eid %(x)s', {'x': cwetypeeid}).get_entity(0, 0)
             self.assertEqual(e.name, 'CWEType')
             self.assertEqual(sorted(g.eid for g in e.read_permission), groupeids)
@@ -452,7 +452,7 @@ class EditControllerTC(CubicWebTC):
             '__type:A': 'BlogEntry', '_cw_entity_fields:A': 'title-subject,content-subject',
             'title-subject:A': u'"13:03:40"',
             'content-subject:A': u'"13:03:43"',}
-        path, params = self.expect_redirect_publish(req, 'edit')
+        path, params = self.expect_redirect_handle_request(req, 'edit')
         self.assertTrue(path.startswith('blogentry/'))
         eid = path.split('/')[1]
         e = self.execute('Any C, T WHERE C eid %(x)s, C content T', {'x': eid}).get_entity(0, 0)
@@ -490,7 +490,7 @@ class EditControllerTC(CubicWebTC):
                     'login-subject:X': u'toto',
                     'upassword-subject:X': u'toto', 'upassword-subject-confirm:X': u'toto',
                     }
-        path, params = self.expect_redirect_publish(req, 'edit')
+        path, params = self.expect_redirect_handle_request(req, 'edit')
         self.assertEqual(path, 'cwuser/toto')
         e = self.execute('Any X WHERE X is CWUser, X login "toto"').get_entity(0, 0)
         self.assertEqual(e.login, 'toto')
@@ -520,12 +520,12 @@ class EditControllerTC(CubicWebTC):
             #    which fires a Redirect
             # 2/ When re-publishing the copy form, the publisher implicitly commits
             try:
-                self.app_publish(req, 'edit')
+                self.app_handle_request(req, 'edit')
             except Redirect:
                 req = self.request()
                 req.form['rql'] = 'Any X WHERE X eid %s' % p.eid
                 req.form['vid'] = 'copy'
-                self.app_publish(req, 'view')
+                self.app_handle_request(req, 'view')
             rset = self.execute('CWUser P WHERE P surname "Boom"')
             self.assertEqual(len(rset), 0)
         finally:

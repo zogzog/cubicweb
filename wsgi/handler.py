@@ -112,51 +112,15 @@ class CubicWebWSGIApplication(object):
 
     def _render(self, req):
         """this function performs the actual rendering
-        XXX missing: https handling, url rewriting, cache management,
-                     authentication
         """
         if self.base_url is None:
             self.base_url = self.config._base_url = req.base_url()
-        # XXX https handling needs to be implemented
-        if req.authmode == 'http':
-            # activate realm-based auth
-            realm = self.config['realm']
-            req.set_header('WWW-Authenticate', [('Basic', {'realm' : realm })], raw=False)
         try:
-            self.appli.connect(req)
-        except Redirect, ex:
-            return self.redirect(req, ex.location)
-        try:
-            result = self.appli.publish(path, req)
+            path = req.path
+            result = self.appli.handle_request(req, path)
         except DirectResponse, ex:
-            return WSGIResponse(200, req, ex.response)
-        except StatusResponse, ex:
-            return WSGIResponse(ex.status, req, ex.content)
-        except AuthenticationError:  # must be before AuthenticationError
-            return self.request_auth(req)
-        except LogOut:
-            if self.config['auth-mode'] == 'cookie':
-                # in cookie mode redirecting to the index view is enough :
-                # either anonymous connection is allowed and the page will
-                # be displayed or we'll be redirected to the login form
-                msg = req._('you have been logged out')
-#                 if req.https:
-#                     req._base_url =  self.base_url
-#                     req.https = False
-                url = req.build_url('view', vid='index', __message=msg)
-                return self.redirect(req, url)
-            else:
-                # in http we have to request auth to flush current http auth
-                # information
-                return self.request_auth(req, loggedout=True)
-        except Redirect, ex:
-            return self.redirect(req, ex.location)
-        if not result:
-            # no result, something went wrong...
-            self.error('no data (%s)', req)
-            # 500 Internal server error
-            return self.redirect(req, req.build_url('error'))
-        return WSGIResponse(200, req, result)
+            return ex.response
+        return WSGIResponse(req.status_out, req, result)
 
 
     def __call__(self, environ, start_response):
@@ -166,29 +130,7 @@ class CubicWebWSGIApplication(object):
         start_response(response.status, response.headers)
         return response.body
 
-    def redirect(self, req, location):
-        """convenience function which builds a redirect WSGIResponse"""
-        self.debug('redirecting to %s', location)
-        req.set_header('location', str(location))
-        return WSGIResponse(303, req)
 
-    def request_auth(self, req, loggedout=False):
-        """returns the appropriate WSGIResponse to require the user to log in
-        """
-#         if self.https_url and req.base_url() != self.https_url:
-#             return self.redirect(self.https_url + 'login')
-        if self.config['auth-mode'] == 'http':
-            code = 401 # UNAUTHORIZED
-        else:
-            code = 403 # FORBIDDEN
-        if loggedout:
-#             if req.https:
-#                 req._base_url =  self.base_url
-#                 req.https = False
-            content = self.appli.loggedout_content(req)
-        else:
-            content = self.appli.need_login_content(req)
-        return WSGIResponse(code, req, content)
 
     # these are overridden by set_log_methods below
     # only defining here to prevent pylint from complaining

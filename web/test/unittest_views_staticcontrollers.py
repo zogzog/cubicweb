@@ -26,7 +26,7 @@ class ConcatFilesTC(CubicWebTC):
         head = HTMLHead(req)
         url = head.concat_urls([req.data_url(js_file) for js_file in js_files])[len(req.base_url()):]
         req._url = url
-        return self.app_publish(req, url)
+        return self.app_handle_request(req, url), req
 
     def expected_content(self, js_files):
         content = u''
@@ -39,13 +39,8 @@ class ConcatFilesTC(CubicWebTC):
 
     def test_cache(self):
         js_files = ('cubicweb.ajax.js', 'jquery.js')
-        try:
-            result = self._publish_js_files(js_files)
-        except StatusResponse, exc:
-            if exc.status == 404:
-                self.fail('unable to serve cubicweb.js+jquery.js')
-            # let the exception propagate for any other status (e.g 500)
-            raise
+        result, req = self._publish_js_files(js_files)
+        self.assertNotEqual(404, req.status_out)
         # check result content
         self.assertEqual(result, self.expected_content(js_files))
         # make sure we kept a cached version on filesystem
@@ -59,23 +54,16 @@ class ConcatFilesTC(CubicWebTC):
         # in debug mode, an error is raised
         self.config.debugmode = True
         try:
-            result = self._publish_js_files(js_files)
-            self.fail('invalid concat js should return a 404 in debug mode')
-        except StatusResponse, exc:
-            if exc.status != 404:
-                self.fail('invalid concat js should return a 404 in debug mode')
+            result, req = self._publish_js_files(js_files)
+            #print result
+            self.assertEqual(404, req.status_out)
         finally:
             self.config.debugmode = False
 
     def test_invalid_file_in_production_mode(self):
         js_files = ('cubicweb.ajax.js', 'dummy.js')
-        try:
-            result = self._publish_js_files(js_files)
-        except StatusResponse, exc:
-            if exc.status == 404:
-                self.fail('invalid concat js should NOT return a 404 in debug mode')
-            # let the exception propagate for any other status (e.g 500)
-            raise
+        result, req = self._publish_js_files(js_files)
+        self.assertNotEqual(404, req.status_out)
         # check result content
         self.assertEqual(result, self.expected_content(js_files))
 

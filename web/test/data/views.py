@@ -21,12 +21,12 @@
 from cubicweb.web import Redirect
 from cubicweb.web.application import CubicWebPublisher
 
-# proof of concept : monkey patch publish method so that if we are in an
+# proof of concept : monkey patch handle method so that if we are in an
 # anonymous session and __fblogin is found is req.form, the user with the
 # given login is created if necessary and then a session is opened for that
 # user
 # NOTE: this require "cookie" authentication mode
-def auto_login_publish(self, path, req):
+def auto_login_handle_request(self, req, path):
     if (not req.cnx or req.cnx.anonymous_connection) and req.form.get('__fblogin'):
         login = password = req.form.pop('__fblogin')
         self.repo.register_user(login, password)
@@ -40,7 +40,7 @@ def auto_login_publish(self, path, req):
         except Redirect:
             pass
         assert req.user.login == login
-    return orig_publish(self, path, req)
+    return orig_handle(self, req, path)
 
-orig_publish = CubicWebPublisher.main_publish
-CubicWebPublisher.main_publish = auto_login_publish
+orig_handle = CubicWebPublisher.main_handle_request
+CubicWebPublisher.main_handle_request = auto_login_handle_request

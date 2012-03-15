@@ -162,75 +162,23 @@ class CubicWebRootResource(resource.Resource):
             origpath = origpath[6:]
             request.uri = request.uri[6:]
             https = True
-        req = CubicWebTwistedRequestAdapter(request, self.appli.vreg, https)
-        if req.authmode == 'http':
-            # activate realm-based auth
-            realm = self.config['realm']
-            req.set_header('WWW-Authenticate', [('Basic', {'realm' : realm })], raw=False)
-        try:
-            self.appli.connect(req)
-        except Redirect, ex:
-            return self.redirect(request=req, location=ex.location)
-        if https and req.session.anonymous_session and self.config['https-deny-anonymous']:
-            # don't allow anonymous on https connection
-            return self.request_auth(request=req)
         if self.url_rewriter is not None:
             # XXX should occur before authentication?
-            try:
-                path = self.url_rewriter.rewrite(host, origpath, req)
-            except Redirect, ex:
-                return self.redirect(req, ex.location)
+            path = self.url_rewriter.rewrite(host, origpath, request)
             request.uri.replace(origpath, path, 1)
         else:
             path = origpath
+        req = CubicWebTwistedRequestAdapter(request, self.appli.vreg, https)
         try:
-            result = self.appli.publish(path, req)
+            ### Try to generate the actual request content
+            content = self.appli.handle_request(req, path)
         except DirectResponse, ex:
             return ex.response
-        except StatusResponse, ex:
-            return HTTPResponse(stream=ex.content, code=ex.status,
-                                twisted_request=req._twreq,
-                                headers=req.headers_out)
-        except AuthenticationError:
-            return self.request_auth(request=req)
-        except LogOut, ex:
-            if self.config['auth-mode'] == 'cookie' and ex.url:
-                return self.redirect(request=req, location=ex.url)
-            # in http we have to request auth to flush current http auth
-            # information
-            return self.request_auth(request=req, loggedout=True)
-        except Redirect, ex:
-            return self.redirect(request=req, location=ex.location)
-        # request may be referenced by "onetime callback", so clear its entity
-        # cache to avoid memory usage
-        req.drop_entity_cache()
-        return HTTPResponse(twisted_request=req._twreq, code=http.OK,
-                            stream=result, headers=req.headers_out)
-
-    def redirect(self, request, location):
-        self.debug('redirecting to %s', str(location))
-        request.headers_out.setHeader('location', str(location))
-        # 303 See other
-        return HTTPResponse(twisted_request=request._twreq, code=303,
-                            headers=request.headers_out)
-
-    def request_auth(self, request, loggedout=False):
-        if self.https_url and request.base_url() != self.https_url:
-            return self.redirect(request, self.https_url + 'login')
-        if self.config['auth-mode'] == 'http':
-            code = http.UNAUTHORIZED
-        else:
-            code = http.FORBIDDEN
-        if loggedout:
-            if request.https:
-                request._base_url =  self.base_url
-                request.https = False
-            content = self.appli.loggedout_content(request)
-        else:
-            content = self.appli.need_login_content(request)
-        return HTTPResponse(twisted_request=request._twreq,
-                            stream=content, code=code,
-                            headers=request.headers_out)
+        # at last: create twisted object
+        return HTTPResponse(code    = req.status_out,
+                            headers = req.headers_out,
+                            stream  = content,
+                            twisted_request=req._twreq)
 
     # these are overridden by set_log_methods below
     # only defining here to prevent pylint from complaining

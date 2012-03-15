@@ -122,6 +122,8 @@ class CubicWebRequestBase(DBAPIRequest):
         # prepare output header
         #: Header used for the final response
         self.headers_out = Headers()
+        #: HTTP status use by the final response
+        self.status_out  = 200
 
     def _set_pageid(self):
         """initialize self.pageid
