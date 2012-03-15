@@ -61,6 +61,7 @@ class FakeRequest(CubicWebRequestBase):
         if not (args or 'vreg' in kwargs):
             kwargs['vreg'] = CWRegistryStore(FakeConfig(), initlog=False)
         kwargs['https'] = False
+        self._http_method = kwargs.pop('method', 'GET')
         self._url = kwargs.pop('url', None) or 'view?rql=Blop&vid=blop'
         super(FakeRequest, self).__init__(*args, **kwargs)
         self._session_data = {}
@@ -74,6 +75,10 @@ class FakeRequest(CubicWebRequestBase):
     def header_accept_language(self):
         """returns an ordered list of preferred languages"""
         return ('en',)
+
+    def http_method(self):
+        return self._http_method
+
 
     def header_if_modified_since(self):
         return None
