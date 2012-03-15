@@ -19,7 +19,11 @@
 
 """
 
+
+
 __docformat__ = "restructuredtext en"
+
+from itertools import chain, repeat, izip
 
 from cubicweb import AuthenticationError
 from cubicweb.web import Redirect, DirectResponse, StatusResponse, LogOut
@@ -71,7 +75,6 @@ STATUS_CODE_TEXT = {
     505: 'HTTP VERSION NOT SUPPORTED',
 }
 
-
 class WSGIResponse(object):
     """encapsulates the wsgi response parameters
     (code, headers and body if there is one)
@@ -79,7 +82,9 @@ class WSGIResponse(object):
     def __init__(self, code, req, body=None):
         text = STATUS_CODE_TEXT.get(code, 'UNKNOWN STATUS CODE')
         self.status =  '%s %s' % (code, text)
-        self.headers = [(str(k), str(v)) for k, v in req.headers_out.items()]
+        self.headers = list(chain(*[izip(repeat(k), v)
+                                    for k, v in req.headers_out.getAllRawHeaders()]))
+        self.headers = [(str(k), str(v)) for k, v in self.headers]
         if body:
             self.body = [body]
         else:
@@ -103,11 +108,8 @@ class CubicWebWSGIApplication(object):
     def __init__(self, config, vreg=None):
         self.appli = CubicWebPublisher(config, vreg=vreg)
         self.config = config
-        self.base_url = None
-#         self.base_url = config['base-url'] or config.default_base_url()
-#         assert self.base_url[-1] == '/'
-#         self.https_url = config['https-url']
-#         assert not self.https_url or self.https_url[-1] == '/'
+        self.base_url = config['base-url']
+        self.https_url = config['https-url']
         self.url_rewriter = self.appli.vreg['components'].select_or_none('urlrewriter')
 
     def _render(self, req):

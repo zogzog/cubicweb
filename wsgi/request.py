@@ -32,7 +32,8 @@ from logilab.common.decorators import cached
 
 from cubicweb.web.request import CubicWebRequestBase
 from cubicweb.wsgi import (pformat, qs2dict, safe_copyfileobj, parse_file_upload,
-                        normalize_header)
+                           normalize_header)
+from cubicweb.web.http_headers import Headers
 
 
 
@@ -44,17 +45,19 @@ class CubicWebWsgiRequest(CubicWebRequestBase):
         self.environ = environ
         self.path = environ['PATH_INFO']
         self.method = environ['REQUEST_METHOD'].upper()
-        self._headers = dict([(normalize_header(k[5:]), v) for k, v in self.environ.items()
-                              if k.startswith('HTTP_')])
+
+        headers_in = dict((normalize_header(k[5:]), v) for k, v in self.environ.items()
+                          if k.startswith('HTTP_'))
         https = environ.get("HTTPS") in ('yes', 'on', '1')
         post, files = self.get_posted_data()
-        super(CubicWebWsgiRequest, self).__init__(vreg, https, post)
+
+        super(CubicWebWsgiRequest, self).__init__(vreg, https, post,
+                                                  headers= headers_in)
         if files is not None:
             for key, (name, _, stream) in files.iteritems():
-                name = unicode(name, self.encoding)
+                if name is not None:
+                    name = unicode(name, self.encoding)
                 self.form[key] = (name, stream)
-        # prepare output headers
-        self.headers_out = {}
 
     def __repr__(self):
         # Since this is called as part of error handling, we need to be very
@@ -87,31 +90,6 @@ class CubicWebWsgiRequest(CubicWebRequestBase):
 
         return path
 
-    def get_header(self, header, default=None):
-        """return the value associated with the given input HTTP header,
-        raise KeyError if the header is not set
-        """
-        return self._headers.get(normalize_header(header), default)
-
-    def set_header(self, header, value, raw=True):
-        """set an output HTTP header"""
-        assert raw, "don't know anything about non-raw headers for wsgi requests"
-        self.headers_out[header] = value
-
-    def add_header(self, header, value):
-        """add an output HTTP header"""
-        self.headers_out[header] = value
-
-    def remove_header(self, header):
-        """remove an output HTTP header"""
-        self.headers_out.pop(header, None)
-
-    def header_if_modified_since(self):
-        """If the HTTP header If-modified-since is set, return the equivalent
-        mx date time value (GMT), else return None
-        """
-        return None
-
     ## wsgi request helpers ###################################################
 
     def instance_uri(self):
@@ -142,6 +120,8 @@ class CubicWebWsgiRequest(CubicWebRequestBase):
             and self.environ['wsgi.url_scheme'] == 'https'
 
     def get_posted_data(self):
+        # The WSGI spec says 'QUERY_STRING' may be absent.
+        post = qs2dict(self.environ.get('QUERY_STRING', ''))
         files = None
         if self.method == 'POST':
             if self.environ.get('CONTENT_TYPE', '').startswith('multipart'):
@@ -149,12 +129,10 @@ class CubicWebWsgiRequest(CubicWebRequestBase):
                                    for k, v in self.environ.items()
                                    if k.startswith('HTTP_'))
                 header_dict['Content-Type'] = self.environ.get('CONTENT_TYPE', '')
-                post, files = parse_file_upload(header_dict, self.raw_post_data)
+                post_, files = parse_file_upload(header_dict, self.raw_post_data)
+                post.update(post_)
             else:
-                post = qs2dict(self.raw_post_data)
-        else:
-            # The WSGI spec says 'QUERY_STRING' may be absent.
-            post = qs2dict(self.environ.get('QUERY_STRING', ''))
+                post.update(qs2dict(self.raw_post_data))
         return post, files
 
     @property
@@ -177,11 +155,10 @@ class CubicWebWsgiRequest(CubicWebRequestBase):
         """raise a `DirectResponse` exception if a cached page along the way
         exists and is still usable
         """
-        # XXX
-#         if self.get_header('Cache-Control') in ('max-age=0', 'no-cache'):
-#             # Expires header seems to be required by IE7
-#             self.add_header('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT')
-#             return
+        if self.get_header('Cache-Control') in ('max-age=0', 'no-cache'):
+            # Expires header seems to be required by IE7
+            self.add_header('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT')
+            return
 #         try:
 #             http.checkPreconditions(self._twreq, _PreResponse(self))
 #         except http.HTTPError, ex:

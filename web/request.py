@@ -25,7 +25,7 @@ import base64
 from hashlib import sha1 # pylint: disable=E0611
 from Cookie import SimpleCookie
 from calendar import timegm
-from datetime import date
+from datetime import date, datetime
 from urlparse import urlsplit
 from itertools import count
 from warnings import warn
@@ -86,7 +86,7 @@ class CubicWebRequestBase(DBAPIRequest):
     """
     ajax_request = False # to be set to True by ajax controllers
 
-    def __init__(self, vreg, https=False, form=None):
+    def __init__(self, vreg, https=False, form=None, headers={}):
         """
         :vreg: Vregistry,
         :https: boolean, s this a https request
@@ -107,6 +107,10 @@ class CubicWebRequestBase(DBAPIRequest):
             self.datadir_url = vreg.config.datadir_url
         #: raw html headers that can be added from any view
         self.html_headers = HTMLHead(self)
+        #: received headers
+        self._headers_in = Headers()
+        for k, v in headers.iteritems():
+            self._headers_in.addRawHeader(k, v)
         #: form parameters
         self.setup_params(form)
         #: dictionary that may be used to store request data that has to be
@@ -304,7 +308,6 @@ class CubicWebRequestBase(DBAPIRequest):
         if form is None:
             form = self.form
         return list_form_param(form, param, pop)
-
 
     def reset_headers(self):
         """used by AutomaticWebTest to clear html headers between tests on
@@ -778,12 +781,37 @@ class CubicWebRequestBase(DBAPIRequest):
         """
         raise NotImplementedError()
 
-    def get_header(self, header, default=None):
-        """return the value associated with the given input HTTP header,
-        raise KeyError if the header is not set
-        """
-        raise NotImplementedError()
+    # http headers ############################################################
 
+    ### incoming headers
+
+    def get_header(self, header, default=None, raw=True):
+        """return the value associated with the given input header, raise
+        KeyError if the header is not set
+        """
+        if raw:
+            return self._headers_in.getRawHeaders(header, [default])[0]
+        return self._headers_in.getHeader(header, default)
+
+    def header_accept_language(self):
+        """returns an ordered list of preferred languages"""
+        acceptedlangs = self.get_header('Accept-Language', raw=False) or {}
+        for lang, _ in sorted(acceptedlangs.iteritems(), key=lambda x: x[1],
+                              reverse=True):
+            lang = lang.split('-')[0]
+            yield lang
+
+    def header_if_modified_since(self):
+        """If the HTTP header If-modified-since is set, return the equivalent
+        date time value (GMT), else return None
+        """
+        mtime = self.get_header('If-modified-since', raw=False)
+        if mtime:
+            # :/ twisted is returned a localized time stamp
+            return datetime.fromtimestamp(mtime) + GMTOFFSET
+        return None
+
+    ### outcoming headers
     def set_header(self, header, value, raw=True):
         """set an output HTTP header"""
         if raw:
@@ -831,12 +859,6 @@ class CubicWebRequestBase(DBAPIRequest):
         values = _parse_accept_header(accepteds, value_parser, value_sort_key)
         return (raw_value for (raw_value, parsed_value, score) in values)
 
-    def header_if_modified_since(self):
-        """If the HTTP header If-modified-since is set, return the equivalent
-        mx date time value (GMT), else return None
-        """
-        raise NotImplementedError()
-
     def demote_to_html(self):
         """helper method to dynamically set request content type to text/html
 
@@ -850,6 +872,8 @@ class CubicWebRequestBase(DBAPIRequest):
                                 "in the instance configuration file.")
             self.set_content_type('text/html')
             self.main_stream.set_doctype(TRANSITIONAL_DOCTYPE_NOEXT)
+
+    # xml doctype #############################################################
 
     def set_doctype(self, doctype, reset_xmldecl=True):
         """helper method to dynamically change page doctype

@@ -64,7 +64,6 @@ class FakeRequest(CubicWebRequestBase):
         self._url = kwargs.pop('url', None) or 'view?rql=Blop&vid=blop'
         super(FakeRequest, self).__init__(*args, **kwargs)
         self._session_data = {}
-        self._headers_in = Headers()
 
     def set_cookie(self, name, value, maxage=300, expires=None, secure=False):
         super(FakeRequest, self).set_cookie(name, value, maxage, expires, secure)
@@ -92,32 +91,23 @@ class FakeRequest(CubicWebRequestBase):
             return url
         return url.split('?', 1)[0]
 
-    def get_header(self, header, default=None, raw=True):
-        """return the value associated with the given input header, raise
-        KeyError if the header is not set
-        """
-        if raw:
-            return self._headers_in.getRawHeaders(header, [default])[0]
-        return self._headers_in.getHeader(header, default)
-
-    ## extend request API to control headers in / out values
     def set_request_header(self, header, value, raw=False):
-        """set an input HTTP header"""
+        """set an incoming HTTP header (For test purpose only)"""
         if isinstance(value, basestring):
             value = [value]
-        if raw:
+        if raw: #
+            # adding encoded header is important, else page content
+            # will be reconverted back to unicode and apart unefficiency, this
+            # may cause decoding problem (e.g. when downloading a file)
             self._headers_in.setRawHeaders(header, value)
-        else:
-            self._headers_in.setHeader(header, value)
+        else: #
+            self._headers_in.setHeader(header, value) #
 
     def get_response_header(self, header, default=None, raw=False):
-        """return the value associated with the given input header,
-        raise KeyError if the header is not set
-        """
-        if raw:
-            return self.headers_out.getRawHeaders(header, default)[0]
-        else:
-            return self.headers_out.getHeader(header, default)
+        """return output header (For test purpose only"""
+        if raw: #
+            return self.headers_out.getRawHeaders(header, [default])[0]
+        return self.headers_out.getHeader(header, default)
 
     def validate_cache(self):
         pass
