@@ -1290,10 +1290,12 @@ class Headers(object):
             self._raw_headers[name] = r
         return r
 
-    def hasHeader(self, name):
+    def __contains__(self, name):
         """Does a header with the given name exist?"""
         name=name.lower()
         return self._raw_headers.has_key(name)
+
+    hasHeader = __contains__
 
     def getRawHeaders(self, name, default=None):
         """Returns a list of headers matching the given name as the raw string given."""
