@@ -27,7 +27,6 @@ from cubicweb.web import DirectResponse
 from cubicweb.web.request import CubicWebRequestBase
 from cubicweb.web.httpcache import GMTOFFSET
 from cubicweb.web.http_headers import Headers
-from cubicweb.etwist.http import not_modified_response
 
 
 class CubicWebTwistedRequestAdapter(CubicWebRequestBase):
@@ -57,30 +56,3 @@ class CubicWebTwistedRequestAdapter(CubicWebRequestBase):
         if not includeparams:
             path = path.split('?', 1)[0]
         return path
-
-    def _validate_cache(self):
-        """raise a `DirectResponse` exception if a cached page along the way
-        exists and is still usable
-        """
-        if self.get_header('Cache-Control') in ('max-age=0', 'no-cache'):
-            # Expires header seems to be required by IE7
-            self.add_header('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT')
-            return
-        # when using both 'Last-Modified' and 'ETag' response headers
-        # (i.e. using respectively If-Modified-Since and If-None-Match request
-        # headers, see
-        # http://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html#sec13.3.4 for
-        # reference
-        last_modified = self.headers_out.getHeader('last-modified')
-        if last_modified is not None:
-            status = self._twreq.setLastModified(last_modified)
-            if status != http.CACHED:
-                return
-        etag = self.headers_out.getRawHeaders('etag')
-        if etag is not None:
-            status = self._twreq.setETag(etag[0])
-            if status == http.CACHED:
-                response = not_modified_response(self._twreq, self._headers_in)
-                raise DirectResponse(response)
-        # Expires header seems to be required by IE7
-        self.add_header('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT')

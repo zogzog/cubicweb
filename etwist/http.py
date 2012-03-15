@@ -43,19 +43,3 @@ class HTTPResponse(object):
 
     def __repr__(self):
         return "<%s.%s code=%d>" % (self.__module__, self.__class__.__name__, self._code)
-
-
-def not_modified_response(twisted_request, headers_in):
-    headers_out = Headers()
-
-    for header in (
-        # Required from sec 10.3.5:
-        'date', 'etag', 'content-location', 'expires',
-        'cache-control', 'vary',
-        # Others:
-        'server', 'proxy-authenticate', 'www-authenticate', 'warning'):
-        value = headers_in.getRawHeaders(header)
-        if value is not None:
-            headers_out.setRawHeaders(header, value)
-    return HTTPResponse(twisted_request=twisted_request,
-                        headers=headers_out)

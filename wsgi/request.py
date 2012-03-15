@@ -150,19 +150,3 @@ class CubicWebWsgiRequest(CubicWebRequestBase):
         postdata = buf.getvalue()
         buf.close()
         return postdata
-
-    def _validate_cache(self):
-        """raise a `DirectResponse` exception if a cached page along the way
-        exists and is still usable
-        """
-        if self.get_header('Cache-Control') in ('max-age=0', 'no-cache'):
-            # Expires header seems to be required by IE7
-            self.add_header('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT')
-            return
-#         try:
-#             http.checkPreconditions(self._twreq, _PreResponse(self))
-#         except http.HTTPError, ex:
-#             self.info('valid http cache, no actual rendering')
-#             raise DirectResponse(ex.response)
-        # Expires header seems to be required by IE7
-        self.add_header('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT')

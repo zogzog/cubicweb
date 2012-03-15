@@ -79,10 +79,6 @@ class FakeRequest(CubicWebRequestBase):
     def http_method(self):
         return self._http_method
 
-
-    def header_if_modified_since(self):
-        return None
-
     def relative_path(self, includeparams=True):
         """return the normalized path of the request (ie at least relative
         to the instance's root, but some other normalization may be needed
@@ -113,9 +109,6 @@ class FakeRequest(CubicWebRequestBase):
         if raw: #
             return self.headers_out.getRawHeaders(header, [default])[0]
         return self.headers_out.getHeader(header, default)
-
-    def validate_cache(self):
-        pass
 
     def build_url_params(self, **kwargs):
         # overriden to get predictable resultts

@@ -27,6 +27,7 @@ from Cookie import SimpleCookie
 from calendar import timegm
 from datetime import date, datetime
 from urlparse import urlsplit
+import httplib
 from itertools import count
 from warnings import warn
 
@@ -43,8 +44,8 @@ from cubicweb.utils import SizeConstrainedList, HTMLHead, make_uid
 from cubicweb.view import STRICT_DOCTYPE, TRANSITIONAL_DOCTYPE_NOEXT
 from cubicweb.web import (INTERNAL_FIELD_VALUE, LOGGER, NothingToEdit,
                           RequestError, StatusResponse)
-from cubicweb.web.httpcache import GMTOFFSET
-from cubicweb.web.http_headers import Headers, Cookie
+from cubicweb.web.httpcache import GMTOFFSET, get_validators
+from cubicweb.web.http_headers import Headers, Cookie, parseDateTime
 
 _MARKER = object()
 
@@ -750,14 +751,33 @@ class CubicWebRequestBase(DBAPIRequest):
         return 'view'
 
     def validate_cache(self):
-        """raise a `DirectResponse` exception if a cached page along the way
+        """raise a `StatusResponse` exception if a cached page along the way
         exists and is still usable.
 
         calls the client-dependant implementation of `_validate_cache`
         """
-        self._validate_cache()
-        if self.http_method() == 'HEAD':
-            raise StatusResponse(200, '')
+        modified = True
+        if self.get_header('Cache-Control') not in ('max-age=0', 'no-cache'):
+            # Here, we search for any invalid 'not modified' condition
+            # see http://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html#sec13.3
+            validators = get_validators(self._headers_in)
+            if validators: # if we have no
+                modified = any(func(val, self.headers_out) for func, val in validators)
+        # Forge expected response
+        if modified:
+            if 'Expires' not in self.headers_out:
+                # Expires header seems to be required by IE7 -- Are you sure ?
+                self.add_header('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT')
+            if self.http_method() == 'HEAD':
+                raise StatusResponse(200, '')
+            # /!\ no raise, the function returns and we keep processing the request)
+        else:
+            # overwrite headers_out to forge a brand new not-modified response
+            self.headers_out = self._forge_cached_headers()
+            if self.http_method() in ('HEAD', 'GET'):
+                raise StatusResponse(httplib.NOT_MODIFIED)
+            else:
+                raise StatusResponse(httplib.PRECONDITION_FAILED)
 
     # abstract methods to override according to the web front-end #############
 
@@ -765,11 +785,19 @@ class CubicWebRequestBase(DBAPIRequest):
         """returns 'POST', 'GET', 'HEAD', etc."""
         raise NotImplementedError()
 
-    def _validate_cache(self):
-        """raise a `DirectResponse` exception if a cached page along the way
-        exists and is still usable
-        """
-        raise NotImplementedError()
+    def _forge_cached_headers(self):
+        # overwrite headers_out to forge a brand new not-modified response
+        headers = Headers()
+        for header in (
+            # Required from sec 10.3.5:
+            'date', 'etag', 'content-location', 'expires',
+            'cache-control', 'vary',
+            # Others:
+            'server', 'proxy-authenticate', 'www-authenticate', 'warning'):
+            value = self._headers_in.getRawHeaders(header)
+            if value is not None:
+                headers.setRawHeaders(header, value)
+        return headers
 
     def relative_path(self, includeparams=True):
         """return the normalized path of the request (ie at least relative
