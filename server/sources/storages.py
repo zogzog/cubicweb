@@ -194,16 +194,16 @@ class BytesFileSystemStorage(Storage):
                 # Mark the new file as added during the transaction.
                 # The file will be removed on rollback
                 AddFileOp.get_instance(entity._cw).add_data(fpath)
-        if oldpath != fpath:
-            # register the new location for the file.
+            # reinstall poped value
             if fpath is None:
                 entity.cw_edited.edited_attribute(attr, None)
             else:
+                # register the new location for the file.
                 entity.cw_edited.edited_attribute(attr, Binary(fpath))
+        if oldpath is not None and oldpath != fpath:
             # Mark the old file as useless so the file will be removed at
             # commit.
-            if oldpath is not None:
-                DeleteFileOp.get_instance(entity._cw).add_data(oldpath)
+            DeleteFileOp.get_instance(entity._cw).add_data(oldpath)
         return binary
 
     def entity_deleted(self, entity, attr):

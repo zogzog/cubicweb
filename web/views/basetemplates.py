@@ -256,10 +256,10 @@ class SimpleMainTemplate(TheMainTemplate):
         whead(u'\n'.join(additional_headers) + u'\n')
         self.wview('htmlheader', rset=self.cw_rset)
         w = self.w
-        w(u'<title>%s</title>\n' % xml_escape(page_title))
+        whead(u'<title>%s</title>\n' % xml_escape(page_title))
         w(u'<body>\n')
         w(u'<div id="page">')
-        w(u'<table width="100%" height="100%" border="0"><tr>\n')
+        w(u'<table width="100%" border="0" id="mainLayout"><tr>\n')
         w(u'<td id="navColumnLeft">\n')
         self.topleft_header()
         boxes = list(self._cw.vreg['ctxcomponents'].poss_visible_objects(
@@ -270,11 +270,7 @@ class SimpleMainTemplate(TheMainTemplate):
                 box.render(w=w)
             self.w(u'</div>\n')
         w(u'</td>')
-        w(u'<td id="contentcol" rowspan="2">')
-        w(u'<div id="pageContent">\n')
-        vtitle = self._cw.form.get('vtitle')
-        if vtitle:
-            w(u'<div class="vtitle">%s</div>' % xml_escape(vtitle))
+        w(u'<td id="contentColumn" rowspan="2">')
 
     def topleft_header(self):
         logo = self._cw.vreg['components'].select_or_none('logo', self._cw,
