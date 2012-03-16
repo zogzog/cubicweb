@@ -592,9 +592,9 @@ class CubicWebTC(TestCase):
         return publisher
 
     requestcls = fake.FakeRequest
-    def request(self, rollbackfirst=False, url=None, **kwargs):
+    def request(self, rollbackfirst=False, url=None, headers={}, **kwargs):
         """return a web ui request"""
-        req = self.requestcls(self.vreg, url=url, form=kwargs)
+        req = self.requestcls(self.vreg, url=url, headers=headers, form=kwargs)
         if rollbackfirst:
             self.websession.cnx.rollback()
         req.set_session(self.websession)
