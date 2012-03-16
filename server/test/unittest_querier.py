@@ -1259,7 +1259,7 @@ Any P1,B,E WHERE P1 identity P2 WITH
         cursor.execute("SELECT %supassword from %sCWUser WHERE %slogin='bob'"
                        % (SQL_PREFIX, SQL_PREFIX, SQL_PREFIX))
         passwd = str(cursor.fetchone()[0])
-        self.assertEqual(passwd, crypt_password('toto', passwd[:2]))
+        self.assertEqual(passwd, crypt_password('toto', passwd))
         rset = self.execute("Any X WHERE X is CWUser, X login 'bob', X upassword %(pwd)s",
                             {'pwd': Binary(passwd)})
         self.assertEqual(len(rset.rows), 1)
@@ -1274,7 +1274,7 @@ Any P1,B,E WHERE P1 identity P2 WITH
         cursor.execute("SELECT %supassword from %sCWUser WHERE %slogin='bob'"
                        % (SQL_PREFIX, SQL_PREFIX, SQL_PREFIX))
         passwd = str(cursor.fetchone()[0])
-        self.assertEqual(passwd, crypt_password('tutu', passwd[:2]))
+        self.assertEqual(passwd, crypt_password('tutu', passwd))
         rset = self.execute("Any X WHERE X is CWUser, X login 'bob', X upassword %(pwd)s",
                             {'pwd': Binary(passwd)})
         self.assertEqual(len(rset.rows), 1)

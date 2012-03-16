@@ -28,27 +28,49 @@ from random import choice
 
 from cubicweb.server import SOURCE_TYPES
 
-try:
-    from crypt import crypt
-except ImportError:
-    # crypt is not available (eg windows)
-    from cubicweb.md5crypt import crypt
+from passlib.utils import handlers as uh, to_hash_str
+from passlib.context import CryptContext
+
+from cubicweb.md5crypt import crypt as md5crypt
 
 
-def getsalt(chars=string.letters + string.digits):
-    """generate a random 2-character 'salt'"""
-    return choice(chars) + choice(chars)
+class CustomMD5Crypt(uh.HasSalt, uh.GenericHandler):
+    name = 'cubicweb-md5crypt'
+    setting_kwds = ("salt",)
+    min_salt_size = 0
+    max_salt_size = 8
+    salt_chars = uh.H64_CHARS
 
+    @classmethod
+    def from_string(cls, hash):
+        if hash is None:
+            raise ValueError("no hash specified")
+        if hash.count('$') != 1:
+            raise ValueError("invalid cubicweb-md5 hash")
+        salt = hash.split('$', 1)[0]
+        chk = hash.split('$', 1)[1]
+        return cls(salt=salt, checksum=chk, strict=True)
+
+    def to_string(self):
+        return to_hash_str(u'%s$%s' % (self.salt, self.checksum or u''))
+
+    def calc_checksum(self, secret):
+        return md5crypt(secret, self.salt.encode('ascii'))
+
+myctx = CryptContext(['sha512_crypt', CustomMD5Crypt, 'des_crypt'])
 
 def crypt_password(passwd, salt=None):
     """return the encrypted password using the given salt or a generated one
     """
-    if passwd is None:
-        return None
     if salt is None:
-        salt = getsalt()
-    return crypt(passwd, salt)
-
+        return myctx.encrypt(passwd)
+    # empty hash, accept any password for backwards compat
+    if salt == '':
+        return salt
+    if myctx.verify(passwd, salt):
+        return salt
+    # wrong password
+    return ''
 
 def cartesian_product(seqin):
     """returns a generator which returns the cartesian product of `seqin`

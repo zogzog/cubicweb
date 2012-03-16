@@ -54,6 +54,7 @@ __depends__ = {
     # server dependencies
     'logilab-database': '>= 1.8.1',
     'pysqlite': '>= 2.5.5', # XXX install pysqlite2
+    'passlib': '',
     }
 
 __recommends__ = {
