@@ -67,6 +67,16 @@ class StaticFileController(Controller):
             # the HTTP RFC recommands not going further than 1 year ahead
             expires = datetime.now() + timedelta(days=6*30)
             self._cw.set_header('Expires', generateDateTime(mktime(expires.timetuple())))
+
+        # XXX system call to os.stats could be cached once and for all in
+        # production mode (where static files are not expected to change)
+        #
+        # Note that: we do a osp.isdir + osp.isfile before and a potential
+        # os.read after. Improving this specific call will not help
+        #
+        # Real production environment should use dedicated static file serving.
+        self._cw.set_header('last-modified', generateDateTime(os.stat(path).st_mtime))
+        self._cw.validate_cache()
         # XXX elif uri.startswith('/https/'): uri = uri[6:]
         mimetype, encoding = mimetypes.guess_type(path)
         self._cw.set_content_type(mimetype, osp.basename(path), encoding)

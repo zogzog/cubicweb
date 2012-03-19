@@ -1,5 +1,6 @@
 from __future__ import with_statement
 
+from logilab.common.testlib import tag, Tags
 from cubicweb.devtools.testlib import CubicWebTC
 
 import os
@@ -10,7 +11,30 @@ from cubicweb.utils import HTMLHead
 from cubicweb.web import StatusResponse
 from cubicweb.web.views.staticcontrollers import ConcatFilesHandler
 
+class StaticControllerCacheTC(CubicWebTC):
+
+    tags = CubicWebTC.tags | Tags('static_controller', 'cache', 'http')
+
+
+    def _publish_static_files(self, url, header={}):
+        req = self.request(headers=header)
+        req._url = url
+        return self.app_handle_request(req, url), req
+
+    def test_static_file_are_cached(self):
+        _, req = self._publish_static_files('data/cubicweb.css')
+        self.assertEqual(200, req.status_out)
+        self.assertIn('last-modified', req.headers_out)
+        next_headers = {
+            'if-modified-since': req.get_response_header('last-modified', raw=True),
+        }
+        _, req = self._publish_static_files('data/cubicweb.css', next_headers)
+        self.assertEqual(304, req.status_out)
+
+
 class ConcatFilesTC(CubicWebTC):
+
+    tags = CubicWebTC.tags | Tags('static_controller', 'concat')
 
     def tearDown(self):
         super(ConcatFilesTC, self).tearDown()
