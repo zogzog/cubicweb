@@ -122,12 +122,12 @@ def func_name(func):
 
 class LoopTask(object):
     """threaded task restarting itself once executed"""
-    def __init__(self, repo, interval, func, args):
+    def __init__(self, tasks_manager, interval, func, args):
         if interval <= 0:
             raise ValueError('Loop task interval must be > 0 '
                              '(current value: %f for %s)' % \
                              (interval, func_name(func)))
-        self.repo = repo
+        self._tasks_manager = tasks_manager
         self.interval = interval
         def auto_restart_func(self=self, func=func, args=args):
             restart = True
@@ -140,7 +140,7 @@ class LoopTask(object):
             except BaseException:
                 restart = False
             finally:
-                if restart and not self.repo.shutting_down:
+                if restart and tasks_manager.running:
                     self.start()
         self.func = auto_restart_func
         self.name = func_name(func)
@@ -186,3 +186,52 @@ class RepoThread(Thread):
 
     def getName(self):
         return '%s(%s)' % (self._name, Thread.getName(self))
+
+class TasksManager(object):
+    """Object dedicated manage background task"""
+
+    def __init__(self):
+        self.running = False
+        self._tasks = []
+        self._looping_tasks = []
+
+    def add_looping_task(self, interval, func, *args):
+        """register a function to be called every `interval` seconds.
+
+        looping tasks can only be registered during repository initialization,
+        once done this method will fail.
+        """
+        if self.running:
+            raise RuntimeError("can't add looping task once the repository is started")
+        self._tasks.append( (interval, func, args) )
+
+    def start(self):
+        """Start running looping task"""
+        assert self.running == False # bw compat purpose maintly
+
+        while self._tasks:
+            interval, func, args = self._tasks.pop()
+            task = LoopTask(self, interval, func, args)
+            self._looping_tasks.append(task)
+            self.info('starting task %s with interval %.2fs', task.name,
+                      interval)
+            task.start()
+
+        self.running = True
+
+    def stop(self):
+        """Stop all running task.
+
+        returns when all task have been cancel and none are running anymore"""
+        if self.running:
+            while self._looping_tasks:
+                looptask = self._looping_tasks.pop()
+                self.info('canceling task %s...', looptask.name)
+                looptask.cancel()
+                looptask.join()
+                self.info('task %s finished', looptask.name)
+
+from logging import getLogger
+from cubicweb import set_log_methods
+set_log_methods(TasksManager, getLogger('cubicweb.repository'))
+
