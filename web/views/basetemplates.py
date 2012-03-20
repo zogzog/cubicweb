@@ -450,8 +450,10 @@ class BaseLogForm(forms.FieldsForm):
             # reuse existing redirection if it exist
             target = self._cw.form.get('postlogin_path',
                                        self._cw.relative_path())
-            return self._cw.build_url('login', __secure__=True,
-                                      postlogin_path=target)
+            url_args = {}
+            if target and target != '/':
+                url_args['postlogin_path'] = target
+            return self._cw.build_url('login', __secure__=True, **url_args)
         return super(LogForm, self).form_action()
 
 class LogForm(BaseLogForm):
