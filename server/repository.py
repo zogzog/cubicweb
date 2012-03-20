@@ -353,7 +353,13 @@ class Repository(object):
             session.close()
         self.set_schema(appschema)
 
-    def start_looping_tasks(self):
+
+    def _prepare_startup(self):
+        """Prepare "Repository as a server" for startup.
+
+        * trigger server startup hook,
+        * register session clean up task.
+        """
         if not (self.config.creating or self.config.repairing
                 or self.config.quick_start):
             # call instance level initialisation hooks
@@ -362,7 +368,20 @@ class Repository(object):
             self.cleanup_session_time = self.config['cleanup-session-time'] or 60 * 60 * 24
             assert self.cleanup_session_time > 0
             cleanup_session_interval = min(60*60, self.cleanup_session_time / 3)
-            self.looping_task(cleanup_session_interval, self.clean_sessions)
+            self._tasks_manager.add_looping_task(cleanup_session_interval,
+                                                 self.clean_sessions)
+
+    def start_looping_tasks(self):
+        """Actual "Repository as a server" startup.
+
+        * trigger server startup hook,
+        * register session clean up task,
+        * start all tasks.
+
+        XXX Other startup related stuffs are done elsewhere. In Repository
+        XXX __init__ or in external codes (various server managers).
+        """
+        self._prepare_startup()
         self._tasks_manager.start()
 
     def looping_task(self, interval, func, *args):
