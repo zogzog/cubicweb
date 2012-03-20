@@ -91,7 +91,9 @@ class Form(AppObject):
         super(Form, self).__init__(req, rset=rset, row=row, col=col)
         self.fields = list(self.__class__._fields_)
         if mainform:
-            self.add_hidden(u'__form_id', kwargs.pop('formvid', self.__regid__))
+            formid = kwargs.pop('formvid', self.__regid__)
+            self.add_hidden(u'__form_id', formid)
+            self._posting = self._cw.form.get('__form_id') == formid
         for key, val in kwargs.iteritems():
             if key in controller.NAV_FORM_PARAMETERS:
                 self.add_hidden(key, val)
@@ -144,6 +146,16 @@ class Form(AppObject):
             # unset if restore_previous_post has not be called
             return getattr(self, '_form_previous_values', {})
         return self.parent_form.form_previous_values
+
+    @property
+    def posting(self):
+        """return True if the form is being posted, False if it is being
+        generated.
+        """
+        # XXX check behaviour on regeneration after error
+        if self.parent_form is None:
+            return self._posting
+        return self.parent_form.posting
 
     @iclassmethod
     def _fieldsattr(cls_or_self):
