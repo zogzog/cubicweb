@@ -31,6 +31,7 @@ from time import mktime
 from datetime import datetime, timedelta
 from logging import getLogger
 
+from cubicweb import Unauthorized
 from cubicweb.web import NotFound
 from cubicweb.web.http_headers import generateDateTime
 from cubicweb.web.controller import Controller
@@ -58,7 +59,7 @@ class StaticFileController(Controller):
         if osp.isdir(path):
             if self.directory_listing_allowed:
                 return u''
-            raise NotFound(path)
+            raise Unauthorized(path)
         if not osp.isfile(path):
             raise NotFound()
         if not debugmode:
