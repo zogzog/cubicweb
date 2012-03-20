@@ -100,7 +100,9 @@ def get_repository(method, database=None, config=None, vreg=None):
     if method == 'inmemory':
         # get local access to the repository
         from cubicweb.server.repository import Repository
-        return Repository(config, vreg=vreg)
+        from cubicweb.server.utils import TasksManager
+        return Repository(config, TasksManager(), vreg=vreg)
+
     else: # method == 'pyro'
         # resolve the Pyro object
         from logilab.common.pyro_ext import ns_get_proxy, get_proxy

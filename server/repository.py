@@ -142,12 +142,12 @@ class Repository(object):
     XXX protect pyro access
     """
 
-    def __init__(self, config, vreg=None):
+    def __init__(self, config, tasks_manager=None, vreg=None):
         self.config = config
         if vreg is None:
             vreg = cwvreg.CWRegistryStore(config)
         self.vreg = vreg
-        self._tasks_manager = utils.TasksManager()
+        self._tasks_manager = tasks_manager
 
         self.pyro_registered = False
         self.pyro_uri = None
@@ -368,6 +368,7 @@ class Repository(object):
             self.cleanup_session_time = self.config['cleanup-session-time'] or 60 * 60 * 24
             assert self.cleanup_session_time > 0
             cleanup_session_interval = min(60*60, self.cleanup_session_time / 3)
+            assert self._tasks_manager is not None, "This Repository is not intended to be used as a server"
             self._tasks_manager.add_looping_task(cleanup_session_interval,
                                                  self.clean_sessions)
 
@@ -382,6 +383,7 @@ class Repository(object):
         XXX __init__ or in external codes (various server managers).
         """
         self._prepare_startup()
+        assert self._tasks_manager is not None, "This Repository is not intended to be used as a server"
         self._tasks_manager.start()
 
     def looping_task(self, interval, func, *args):
@@ -390,6 +392,7 @@ class Repository(object):
         looping tasks can only be registered during repository initialization,
         once done this method will fail.
         """
+        assert self._tasks_manager is not None, "This Repository is not intended to be used as a server"
         self._tasks_manager.add_looping_task(interval, func, *args)
 
     def threaded_task(self, func):
@@ -424,7 +427,8 @@ class Repository(object):
         assert not self.shutting_down, 'already shutting down'
         self.shutting_down = True
         self.system_source.shutdown()
-        self._tasks_manager.stop()
+        if self._tasks_manager is not None:
+            self._tasks_manager.stop()
         for thread in self._running_threads:
             self.info('waiting thread %s...', thread.getName())
             thread.join()
