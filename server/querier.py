@@ -417,7 +417,7 @@ class ExecutionPlan(object):
                         if rqlexpr.check(session, eid):
                             break
                     else:
-                        raise Unauthorized()
+                        raise Unauthorized('No read acces on %r with eid %i.' % (var, eid))
                 restricted_vars.update(localcheck)
                 localchecks.setdefault(tuple(localcheck.iteritems()), []).append(solution)
         # raise Unautorized exception if the user can't access to any solution
