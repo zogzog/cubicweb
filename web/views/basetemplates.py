@@ -329,7 +329,9 @@ class HTMLPageHeader(View):
     __regid__ = 'header'
     main_cell_components = ('appliname', 'breadcrumbs')
     headers = (('headtext', 'header-left'),
-               ('header-right', 'header-right'))
+               ('header-center', 'header-center'),
+               ('header-right', 'header-right')
+               )
 
     def call(self, view, **kwargs):
         self.main_header(view)

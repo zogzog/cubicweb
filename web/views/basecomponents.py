@@ -77,10 +77,10 @@ class HeaderComponent(component.CtxComponent): # XXX rename properly along with 
     __abstract__ = True
     cw_property_defs = component.override_ctx(
         component.CtxComponent,
-        vocabulary=['header-left', 'header-right'])
+        vocabulary=['header-center', 'header-left', 'header-right', ])
     # don't want user to hide this component using an cwproperty
     site_wide = True
-    context = _('header-left')
+    context = _('header-center')
 
 
 class ApplLogo(HeaderComponent):
@@ -88,6 +88,7 @@ class ApplLogo(HeaderComponent):
     __regid__ = 'logo'
     __select__ = yes() # no need for a cnx
     order = -1
+    context = _('header-left')
 
     def render(self, w):
         w(u'<a href="%s"><img id="logo" src="%s" alt="logo"/></a>'
