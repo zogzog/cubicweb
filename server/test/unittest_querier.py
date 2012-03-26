@@ -1,5 +1,5 @@
 # -*- coding: iso-8859-1 -*-
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -28,7 +28,7 @@ from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.server.utils import crypt_password
 from cubicweb.server.sources.native import make_schema
 from cubicweb.devtools import get_test_db_handler, TestServerConfiguration
-
+from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.devtools.repotest import tuplify, BaseQuerierTC
 from unittest_session import Variable
 
@@ -1501,5 +1501,17 @@ Any P1,B,E WHERE P1 identity P2 WITH
         self.assertFalse(self.execute('Any X WHERE X is CWEType, X name %(name)s', {'name': None}))
         self.assertTrue(self.execute('Any X WHERE X is CWEType, X name %(name)s', {'name': 'CWEType'}))
 
+class NonRegressionTC(CubicWebTC):
+    def test_has_text_security_cache_bug(self):
+        self.create_user('user', ('users',))
+        req = self.request()
+        aff1 = req.create_entity('Societe', nom=u'aff1')
+        aff2 = req.create_entity('Societe', nom=u'aff2')
+        self.commit()
+        with self.login('user', password='user'):
+            res = self.execute('Any X WHERE X has_text %(text)s', {'text': 'aff1'})
+            self.assertEqual(res.rows, [[aff1.eid]])
+            res = self.execute('Any X WHERE X has_text %(text)s', {'text': 'aff2'})
+            self.assertEqual(res.rows, [[aff2.eid]])
 if __name__ == '__main__':
     unittest_main()

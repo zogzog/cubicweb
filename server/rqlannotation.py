@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -28,12 +28,13 @@ from rql.nodes import Relation, VariableRef, Constant, Variable, Or, Exists
 from rql.utils import common_parent
 
 def _annotate_select(annotator, rqlst):
+    has_text_query = False
     for subquery in rqlst.with_:
-        annotator._annotate_union(subquery.query)
+        if annotator._annotate_union(subquery.query):
+            has_text_query = True
     #if server.DEBUG:
     #    print '-------- sql annotate', repr(rqlst)
     getrschema = annotator.schema.rschema
-    has_text_query = False
     need_distinct = rqlst.distinct
     for rel in rqlst.iget_nodes(Relation):
         if getrschema(rel.r_type).symmetric and not isinstance(rel.parent, Exists):
@@ -154,6 +155,11 @@ def _annotate_select(annotator, rqlst):
                     sstinfo['scope'] = common_parent(sstinfo['scope'], stinfo['scope']).scope
             except CantSelectPrincipal:
                 stinfo['invariant'] = False
+    # see unittest_rqlannotation. test_has_text_security_cache_bug
+    # XXX probably more to do, but yet that work without more...
+    for col_alias in rqlst.aliases.itervalues():
+        if col_alias.stinfo.get('ftirels'):
+            has_text_query = True
     rqlst.need_distinct = need_distinct
     return has_text_query
 
@@ -272,8 +278,7 @@ class SQLGenAnnotator(object):
     def _annotate_union(self, union):
         has_text_query = False
         for select in union.children:
-            htq = _annotate_select(self, select)
-            if htq:
+            if _annotate_select(self, select):
                 has_text_query = True
         return has_text_query
 
