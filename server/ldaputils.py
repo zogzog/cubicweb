@@ -203,7 +203,7 @@ You can set multiple groups by separating them by a comma.',
         try:
             user = self._search(session, self.user_base_dn,
                                 self.user_base_scope, searchstr)[0]
-        except IndexError:
+        except (IndexError, ldap.SERVER_DOWN):
             # no such user
             raise AuthenticationError()
         # check password by establishing a (unused) connection
