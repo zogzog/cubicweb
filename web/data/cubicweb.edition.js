@@ -435,11 +435,15 @@ function _displayValidationerrors(formid, eid, errors) {
         }
     }
     if (globalerrors.length) {
-        if (globalerrors.length == 1) {
-            var innernode = SPAN(null, globalerrors[0]);
-        } else {
-            var innernode = UL(null, $.map(globalerrors, partial(LI, null)));
-        }
+       if (globalerrors.length == 1) {
+           var innernode = SPAN(null, globalerrors[0]);
+       } else {
+           var linodes =[];
+           for(var i=0; i<globalerrors.length; i++){
+             linodes.push(LI(null, globalerrors[i]));
+           }
+           var innernode = UL(null, linodes);
+       }
         // insert DIV and innernode before the form
         var div = DIV({
             'class': "errorMessage",
