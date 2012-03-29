@@ -492,9 +492,20 @@ class EntityInlinedFormRenderer(EntityFormRenderer):
     entity's form.
     """
     __regid__ = 'inline'
+    fieldset_css_class = 'subentity'
 
     def render(self, w, form, values):
         form.add_media()
+        self.open_form(w, form, values)
+        self.render_title(w, form, values)
+        # XXX that stinks
+        # cleanup values
+        for key in ('title', 'removejs', 'removemsg'):
+            values.pop(key, None)
+        self.render_fields(w, form, values)
+        self.close_form(w, form, values)
+
+    def open_form(self, w, form, values):
         try:
             w(u'<div id="div-%(divid)s" onclick="%(divonclick)s">' % values)
         except KeyError:
@@ -503,7 +514,11 @@ class EntityInlinedFormRenderer(EntityFormRenderer):
             w(u'<div id="notice-%s" class="notice">%s</div>' % (
                 values['divid'], self._cw._('click on the box to cancel the deletion')))
         w(u'<div class="iformBody">')
-        eschema = form.edited_entity.e_schema
+
+    def close_form(self, w, form, values):
+        w(u'</div></div>')
+
+    def render_title(self, w, form, values):
         if values['removejs']:
             values['removemsg'] = self._cw._('remove-inlined-entity-form')
             w(u'<div class="iformTitle"><span>%(title)s</span> '
@@ -514,18 +529,12 @@ class EntityInlinedFormRenderer(EntityFormRenderer):
             w(u'<div class="iformTitle"><span>%(title)s</span> '
               '#<span class="icounter">%(counter)s</span></div>'
               % values)
-        # XXX that stinks
-        # cleanup values
-        for key in ('title', 'removejs', 'removemsg'):
-            values.pop(key, None)
-        self.render_fields(w, form, values)
-        w(u'</div></div>')
 
     def render_fields(self, w, form, values):
         w(u'<fieldset id="fs-%(divid)s">' % values)
         fields = self._render_hidden_fields(w, form)
         w(u'</fieldset>')
-        w(u'<fieldset class="subentity">')
+        w(u'<fieldset class="%s">' % self.fieldset_css_class)
         if fields:
             self._render_fields(fields, w, form)
         self.render_child_forms(w, form, values)
