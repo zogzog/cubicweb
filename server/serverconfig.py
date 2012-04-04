@@ -204,7 +204,13 @@ gethostname(). It may contains port information using <host>:<port> notation, \
 and if not set, it will be choosen randomly',
           'group': 'pyro', 'level': 3,
           }),
-
+        # zmq services config
+        ('zmq-repository-address',
+         {'type' : 'string',
+          'default': None,
+          'help': 'ZMQ URI on which the repository will be bound to.',
+          'group': 'zmq', 'level': 3,
+          }),
          ('zmq-address-sub',
           {'type' : 'csv',
            'default' : None,
