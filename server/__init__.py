@@ -296,4 +296,5 @@ SOURCE_TYPES = {'native': LazyObject('cubicweb.server.sources.native', 'NativeSQ
                 'ldapfeed': LazyObject('cubicweb.server.sources.ldapfeed', 'LDAPFeedSource'),
                 'ldapuser': LazyObject('cubicweb.server.sources.ldapuser', 'LDAPUserSource'),
                 'pyrorql': LazyObject('cubicweb.server.sources.pyrorql', 'PyroRQLSource'),
+                'zmqrql': LazyObject('cubicweb.server.sources.zmqrql', 'ZMQRQLSource'),
                 }
