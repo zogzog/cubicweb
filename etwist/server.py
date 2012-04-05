@@ -94,6 +94,15 @@ class NoListingFile(static.File):
     def directoryListing(self):
         return ForbiddenDirectoryLister()
 
+    def createSimilarFile(self, path):
+        # we override this method because twisted calls __init__
+        # which we overload with a different signature
+        f = self.__class__(self.config, path)
+        f.processors = self.processors
+        f.indexNames = self.indexNames[:]
+        f.childNotFound = self.childNotFound
+        return f
+
 
 class DataLookupDirectory(NoListingFile):
     def __init__(self, config, path):

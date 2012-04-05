@@ -21,7 +21,7 @@ __docformat__ = "restructuredtext en"
 _ = unicode
 
 import os
-from os.path import join, exists, split
+from os.path import join, exists, split, isdir
 from warnings import warn
 
 from logilab.common.decorators import cached
@@ -405,7 +405,8 @@ have the python imaging library installed to use captcha)',
         rdir, filename = split(rpath)
         if rdir:
             staticdir = join(staticdir, rdir)
-            os.makedirs(staticdir)
+            if not isdir(staticdir) and 'w' in mode:
+                os.makedirs(staticdir)
         return file(join(staticdir, filename), mode)
 
     def static_file_add(self, rpath, data):
