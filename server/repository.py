@@ -429,13 +429,13 @@ class Repository(object):
         self.system_source.shutdown()
         if self._tasks_manager is not None:
             self._tasks_manager.stop()
+        if not (self.config.creating or self.config.repairing
+                or self.config.quick_start):
+            self.hm.call_hooks('server_shutdown', repo=self)
         for thread in self._running_threads:
             self.info('waiting thread %s...', thread.getName())
             thread.join()
             self.info('thread %s finished', thread.getName())
-        if not (self.config.creating or self.config.repairing
-                or self.config.quick_start):
-            self.hm.call_hooks('server_shutdown', repo=self)
         self.close_sessions()
         while not self._cnxsets_pool.empty():
             cnxset = self._cnxsets_pool.get_nowait()
