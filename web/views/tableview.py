@@ -885,7 +885,7 @@ class EntityTableView(TableMixIn, EntityView):
     default_column_renderer_class = EntityTableColRenderer
     columns = None # to be defined in concret class
 
-    def call(self, columns=None):
+    def call(self, columns=None, **kwargs):
         if columns is not None:
             self.columns = columns
         self.layout_render(self.w)
