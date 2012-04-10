@@ -1502,10 +1502,12 @@ Any P1,B,E WHERE P1 identity P2 WITH
         self.assertFalse(self.execute('Any X WHERE X is CWEType, X name %(name)s', {'name': None}))
         self.assertTrue(self.execute('Any X WHERE X is CWEType, X name %(name)s', {'name': 'CWEType'}))
 
+
 class NonRegressionTC(CubicWebTC):
+
     def test_has_text_security_cache_bug(self):
-        self.create_user('user', ('users',))
         req = self.request()
+        self.create_user(req, 'user', ('users',))
         aff1 = req.create_entity('Societe', nom=u'aff1')
         aff2 = req.create_entity('Societe', nom=u'aff2')
         self.commit()
@@ -1514,5 +1516,6 @@ class NonRegressionTC(CubicWebTC):
             self.assertEqual(res.rows, [[aff1.eid]])
             res = self.execute('Any X WHERE X has_text %(text)s', {'text': 'aff2'})
             self.assertEqual(res.rows, [[aff2.eid]])
+
 if __name__ == '__main__':
     unittest_main()
