@@ -1,24 +1,24 @@
 #!/usr/bin/python
-import os
 import sys
-from subprocess import call, Popen, PIPE
-try:
-    from mercurial.dispatch import dispatch as hg_call
-except ImportError:
+
+from subprocess import call as sbp_call, Popen, PIPE
+from urllib import urlopen
+from os import path as osp, pardir, chdir
+
+
+def find_mercurial():
+    print "trying to find mercurial from the command line ..."
     print '-' * 20
-    print "mercurial module is not reachable from this Python interpreter"
-    print "trying from command line ..."
-    tryhg = os.system('hg --version')
+    tryhg = sbp_call(['hg', '--version'])
     if tryhg:
-        print 'mercurial seems to unavailable, please install it'
+        print 'mercurial seems to be unavailable, please install it'
         raise
-    print 'found it, ok'
     print '-' * 20
     def hg_call(args):
-        call(['hg'] + args)
-from urllib import urlopen
-from os import path as osp, pardir
-from os.path import normpath, join, dirname
+        return sbp_call(['hg'] + args)
+
+    return hg_call
+
 
 BASE_URL = 'http://www.logilab.org/hg/'
 
@@ -27,7 +27,7 @@ to_clone = ['fyzz', 'yams', 'rql',
             'logilab/devtools', 'logilab/mtconverter',
             'cubes/blog', 'cubes/calendar', 'cubes/card', 'cubes/comment',
             'cubes/datafeed', 'cubes/email', 'cubes/file', 'cubes/folder',
-            'cubes/forgotpwd', 'cubes/keyword', 'cubes/link',
+            'cubes/forgotpwd', 'cubes/keyword', 'cubes/link', 'cubes/localperms',
             'cubes/mailinglist', 'cubes/nosylist', 'cubes/person',
             'cubes/preview', 'cubes/registration', 'cubes/rememberme',
             'cubes/tag', 'cubes/vcsfile', 'cubes/zone']
@@ -65,9 +65,10 @@ def main():
     else:
         sys.stderr.write('usage %s [base_url]\n' %  sys.argv[0])
         sys.exit(1)
+    hg_call = find_mercurial()
     print len(to_clone), 'repositories will be cloned'
-    base_dir = normpath(join(dirname(__file__), pardir, pardir))
-    os.chdir(base_dir)
+    base_dir = osp.normpath(osp.join(osp.dirname(__file__), pardir, pardir))
+    chdir(base_dir)
     not_updated = []
     for repo in to_clone:
         url = base_url + repo
@@ -78,7 +79,7 @@ def main():
             directory, repo = repo.split('/')
             if not osp.isdir(directory):
                 os.mkdir(directory)
-                open(join(directory, '__init__.py'), 'w').close()
+                open(osp.join(directory, '__init__.py'), 'w').close()
             target_path = osp.join(directory, repo)
         if osp.exists(target_path):
             print target_path, 'seems already cloned. Skipping it.'

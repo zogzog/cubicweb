@@ -70,53 +70,53 @@ If you run postgres on another host than the |cubicweb| repository, you should
 install the `postgresql-client` package on the |cubicweb| host, and others on the
 database host.
 
-.. Note::
+Database cluster
+++++++++++++++++
 
-    If you already have an existing cluster and PostgreSQL server running, you do
-    not need to execute the initilization step of your PostgreSQL database unless
-    you want a specific cluster for |cubicweb| databases or if your existing
-    cluster doesn't use the UTF8 encoding (see note below).
+If you already have an existing cluster and PostgreSQL server running, you do
+not need to execute the initilization step of your PostgreSQL database unless
+you want a specific cluster for |cubicweb| databases or if your existing
+cluster doesn't use the UTF8 encoding (see note below).
 
-* First, initialize a PostgreSQL cluster with the command ``initdb``::
+To initialize a PostgreSQL cluster, use the command ``initdb``::
 
     $ initdb -E UTF8 -D /path/to/pgsql
 
-  Notice the encoding specification. This is necessary since |cubicweb| usually
-  want UTF8 encoded database. If you use a cluster with the wrong encoding, you'll
-  get error like::
+Notice the encoding specification. This is necessary since |cubicweb| usually
+want UTF8 encoded database. If you use a cluster with the wrong encoding, you'll
+get error like::
 
-    new encoding (UTF8) is incompatible with the encoding of the template database (SQL_ASCII)
-    HINT:  Use the same encoding as in the template database, or use template0 as template.
+  new encoding (UTF8) is incompatible with the encoding of the template database (SQL_ASCII)
+  HINT:  Use the same encoding as in the template database, or use template0 as template.
 
+Once initialized, start the database server PostgreSQL with the command::
 
-  Once initialized, start the database server PostgreSQL with the command::
+  $ postgres -D /path/to/psql
 
-    $ postgres -D /path/to/psql
+If you cannot execute this command due to permission issues, please make sure
+that your username has write access on the database.  ::
 
-  If you cannot execute this command due to permission issues, please make sure
-  that your username has write access on the database.  ::
+  $ chown username /path/to/pgsql
 
-    $ chown username /path/to/pgsql
+Database authentication
++++++++++++++++++++++++
 
-* The database authentication can be either set to `ident sameuser` or `md5`.  If
-  set to `md5`, make sure to use an existing user of your database.  If set to
-  `ident sameuser`, make sure that your client's operating system user name has a
-  matching user in the database. If not, please do as follow to create a user::
+The database authentication is configured in `pg_hba.conf`. It can be either set
+to `ident sameuser` or `md5`.  If set to `md5`, make sure to use an existing
+user of your database.  If set to `ident sameuser`, make sure that your client's
+operating system user name has a matching user in the database. If not, please
+do as follow to create a user::
 
-    $ su
-    $ su - postgres
-    $ createuser -s -P username
+  $ su
+  $ su - postgres
+  $ createuser -s -P username
 
-  The option `-P` (for password prompt), will encrypt the password with the
-  method set in the configuration file :file:`pg_hba.conf`.  If you do not use this
-  option `-P`, then the default value will be null and you will need to set it
-  with::
+The option `-P` (for password prompt), will encrypt the password with the
+method set in the configuration file :file:`pg_hba.conf`.  If you do not use this
+option `-P`, then the default value will be null and you will need to set it
+with::
 
-    $ su postgres -c "echo ALTER USER username WITH PASSWORD 'userpasswd' | psql"
-
-.. Note::
-    The authentication method can be configured in file:`pg_hba.conf`.
-
+  $ su postgres -c "echo ALTER USER username WITH PASSWORD 'userpasswd' | psql"
 
 The above login/password will be requested when you will create an instance with
 `cubicweb-ctl create` to initialize the database of your instance.
@@ -147,7 +147,6 @@ superuser. This update fix that problem by making it trusted.
 To install the tsearch plain-text index extension on postgres prior to 8.3, run::
 
     cat /usr/share/postgresql/8.X/contrib/tsearch2.sql | psql -U username template1
-
 
 
 .. _MySqlConfiguration:
@@ -196,12 +195,12 @@ You need to change the default settings on the database by running::
 
 The ALTER DATABASE command above requires some permissions that your
 user may not have. In that case you will have to ask your local DBA to
-run the query for you. 
+run the query for you.
 
 You can check that the setting is correct by running the following
 query which must return '1'::
 
-   SELECT is_read_committed_snapshot_on 
+   SELECT is_read_committed_snapshot_on
      FROM sys.databases WHERE name='<databasename>';
 
 
@@ -210,6 +209,7 @@ query which must return '1'::
 
 SQLite
 ~~~~~~
+
 SQLite has the great advantage of requiring almost no configuration. Simply
 use 'sqlite' as db-driver, and set path to the dabase as db-name. Don't specify
 anything for db-user and db-password, they will be ignore anyway.
@@ -226,6 +226,7 @@ Pyro configuration
 
 Pyro name server
 ~~~~~~~~~~~~~~~~
+
 If you want to use Pyro to access your instance remotely, or to have multi-source
 or distributed configuration, it is required to have a Pyro name server running
 on your network. By default it is detected by a broadcast request, but you can

@@ -348,6 +348,10 @@ class RQLConstraintTC(CubicWebTC):
         self.assertEqual(cstr.repo_check(self.session, 1, self.session.user.eid),
         None) # no validation error, constraint checked
 
+class WorkflowShemaTC(CubicWebTC):
+    def test_trinfo_default_format(self):
+         tr = self.session.user.cw_adapt_to('IWorkflowable').fire_transition('deactivate')
+         self.assertEqual(tr.comment_format, 'text/plain')
 
 if __name__ == '__main__':
     unittest_main()

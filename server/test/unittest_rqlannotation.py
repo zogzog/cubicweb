@@ -1,5 +1,5 @@
 # -*- coding: iso-8859-1 -*-
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -349,6 +349,12 @@ class SQLGenAnnotatorTC(BaseQuerierTC):
         rqlst = self._prepare('Note X WHERE X eid IN (999998, 999999), NOT X cw_source Y')
         self.assertEqual(rqlst.defined_vars['X']._q_invariant, False)
         self.assertEqual(rqlst.defined_vars['Y']._q_invariant, True)
+
+
+    def test_has_text_security_cache_bug(self):
+        rqlst = self._prepare('Any X WHERE X has_text "toto" WITH X BEING '
+                              '(Any C WHERE C is Societe, C nom CS)')
+        self.assertTrue(rqlst.parent.has_text_query)
 
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main

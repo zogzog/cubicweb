@@ -1,5 +1,5 @@
 # -*- coding: iso-8859-1 -*-
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -18,6 +18,8 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unit tests for modules cubicweb.server.querier and cubicweb.server.ssplanner
 """
+from __future__ import with_statement
+
 from datetime import date, datetime, timedelta, tzinfo
 
 from logilab.common.testlib import TestCase, unittest_main
@@ -28,7 +30,7 @@ from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.server.utils import crypt_password
 from cubicweb.server.sources.native import make_schema
 from cubicweb.devtools import get_test_db_handler, TestServerConfiguration
-
+from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.devtools.repotest import tuplify, BaseQuerierTC
 from unittest_session import Variable
 
@@ -70,14 +72,15 @@ class MakeSchemaTC(TestCase):
                           ('C0 text,C1 integer', {'A': 'table0.C0', 'B': 'table0.C1'}))
 
 
-def setUpModule(*args):
+def setUpClass(cls, *args):
     global repo, cnx
     config = TestServerConfiguration(apphome=UtilsTC.datadir)
     handler = get_test_db_handler(config)
     handler.build_db_cache()
     repo, cnx = handler.get_repo_and_cnx()
+    cls.repo = repo
 
-def tearDownModule(*args):
+def tearDownClass(cls, *args):
     global repo, cnx
     cnx.close()
     repo.shutdown()
@@ -85,9 +88,8 @@ def tearDownModule(*args):
 
 
 class UtilsTC(BaseQuerierTC):
-    def setUp(self):
-        self.__class__.repo = repo
-        super(UtilsTC, self).setUp()
+    setUpClass = classmethod(setUpClass)
+    tearDownClass = classmethod(tearDownClass)
 
     def get_max_eid(self):
         # no need for cleanup here
@@ -242,9 +244,8 @@ class UtilsTC(BaseQuerierTC):
 
 
 class QuerierTC(BaseQuerierTC):
-    def setUp(self):
-        self.__class__.repo = repo
-        super(QuerierTC, self).setUp()
+    setUpClass = classmethod(setUpClass)
+    tearDownClass = classmethod(tearDownClass)
 
     def test_encoding_pb(self):
         self.assertRaises(RQLSyntaxError, self.execute,
@@ -1259,7 +1260,7 @@ Any P1,B,E WHERE P1 identity P2 WITH
         cursor.execute("SELECT %supassword from %sCWUser WHERE %slogin='bob'"
                        % (SQL_PREFIX, SQL_PREFIX, SQL_PREFIX))
         passwd = str(cursor.fetchone()[0])
-        self.assertEqual(passwd, crypt_password('toto', passwd[:2]))
+        self.assertEqual(passwd, crypt_password('toto', passwd))
         rset = self.execute("Any X WHERE X is CWUser, X login 'bob', X upassword %(pwd)s",
                             {'pwd': Binary(passwd)})
         self.assertEqual(len(rset.rows), 1)
@@ -1274,7 +1275,7 @@ Any P1,B,E WHERE P1 identity P2 WITH
         cursor.execute("SELECT %supassword from %sCWUser WHERE %slogin='bob'"
                        % (SQL_PREFIX, SQL_PREFIX, SQL_PREFIX))
         passwd = str(cursor.fetchone()[0])
-        self.assertEqual(passwd, crypt_password('tutu', passwd[:2]))
+        self.assertEqual(passwd, crypt_password('tutu', passwd))
         rset = self.execute("Any X WHERE X is CWUser, X login 'bob', X upassword %(pwd)s",
                             {'pwd': Binary(passwd)})
         self.assertEqual(len(rset.rows), 1)
@@ -1500,6 +1501,21 @@ Any P1,B,E WHERE P1 identity P2 WITH
         # different SQL generated when 'name' is None or not (IS NULL).
         self.assertFalse(self.execute('Any X WHERE X is CWEType, X name %(name)s', {'name': None}))
         self.assertTrue(self.execute('Any X WHERE X is CWEType, X name %(name)s', {'name': 'CWEType'}))
+
+
+class NonRegressionTC(CubicWebTC):
+
+    def test_has_text_security_cache_bug(self):
+        req = self.request()
+        self.create_user(req, 'user', ('users',))
+        aff1 = req.create_entity('Societe', nom=u'aff1')
+        aff2 = req.create_entity('Societe', nom=u'aff2')
+        self.commit()
+        with self.login('user', password='user'):
+            res = self.execute('Any X WHERE X has_text %(text)s', {'text': 'aff1'})
+            self.assertEqual(res.rows, [[aff1.eid]])
+            res = self.execute('Any X WHERE X has_text %(text)s', {'text': 'aff2'})
+            self.assertEqual(res.rows, [[aff2.eid]])
 
 if __name__ == '__main__':
     unittest_main()

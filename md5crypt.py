@@ -51,18 +51,16 @@ def to64 (v, n):
         v = v >> 6
     return ret
 
-def crypt(pw, salt, magic=None):
+def crypt(pw, salt):
     if isinstance(pw, unicode):
         pw = pw.encode('utf-8')
-    if magic is None:
-        magic = MAGIC
     # Take care of the magic string if present
-    if salt[:len(magic)] == magic:
-        salt = salt[len(magic):]
+    if salt.startswith(MAGIC):
+        salt = salt[len(MAGIC):]
     # salt can have up to 8 characters:
     salt = salt.split('$', 1)[0]
     salt = salt[:8]
-    ctx = pw + magic + salt
+    ctx = pw + MAGIC + salt
     final = md5(pw + salt + pw).digest()
     for pl in xrange(len(pw), 0, -16):
         if pl > 16:
@@ -114,4 +112,4 @@ def crypt(pw, salt, magic=None):
                            |(int(ord(final[10])) << 8)
                            |(int(ord(final[5]))), 4)
     passwd = passwd + to64((int(ord(final[11]))), 2)
-    return salt + '$' + passwd
+    return passwd

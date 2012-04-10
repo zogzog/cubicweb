@@ -1,13 +1,11 @@
 #!/bin/sh
 
-# $Id: xvfb-run 2027 2004-11-16 14:54:16Z branden $
-
 # This script starts an instance of Xvfb, the "fake" X server, runs a command
 # with that server available, and kills the X server when done.  The return
 # value of the command becomes the return value of this script.
 #
 # If anyone is using this to build a Debian package, make sure the package
-# Build-Depends on xvfb, xbase-clients, and xfonts-base.
+# Build-Depends on xvfb and xauth.
 
 set -e
 
@@ -15,7 +13,6 @@ PROGNAME=xvfb-run
 SERVERNUM=99
 AUTHFILE=
 ERRORFILE=/dev/null
-STARTWAIT=3
 XVFBARGS="-screen 0 640x480x8"
 LISTENTCP="-nolisten tcp"
 XAUTHPROTO=.
@@ -62,8 +59,6 @@ Options:
 -s ARGS   --server-args=ARGS        arguments (other than server number and
                                     "-nolisten tcp") to pass to the Xvfb server
                                     (default: "$XVFBARGS")
--w DELAY  --wait=DELAY              delay in seconds to wait for Xvfb to start
-                                    before running COMMAND (default: $STARTWAIT)
 EOF
 }
 
@@ -93,7 +88,7 @@ clean_up() {
         fi
     fi
     if [ -n "$XVFBPID" ]; then
-        kill $XVFBPID
+        kill "$XVFBPID"
     fi
 }
 
@@ -120,7 +115,7 @@ while :; do
         -l|--listen-tcp) LISTENTCP="" ;;
         -p|--xauth-protocol) XAUTHPROTO="$2"; shift ;;
         -s|--server-args) XVFBARGS="$2"; shift ;;
-        -w|--wait) STARTWAIT="$2"; shift ;;
+        -w|--wait) shift ;;
         --) shift; break ;;
         *) error "internal error; getopt permitted \"$1\" unexpectedly"
            exit 6
@@ -163,10 +158,13 @@ while [ $tries -gt 0 ]; do
     XAUTHORITY=$AUTHFILE xauth source - << EOF >>"$ERRORFILE" 2>&1
 add :$SERVERNUM $XAUTHPROTO $MCOOKIE
 EOF
-    XAUTHORITY=$AUTHFILE Xvfb ":$SERVERNUM" $XVFBARGS $LISTENTCP >>"$ERRORFILE" 2>&1 &
+    # handle SIGUSR1 so Xvfb knows to send a signal when it's ready to accept
+    # connections
+    trap : USR1
+    (trap '' USR1; XAUTHORITY=$AUTHFILE exec Xvfb ":$SERVERNUM" $XVFBARGS $LISTENTCP >>"$ERRORFILE" 2>&1) &
     XVFBPID=$!
 
-    sleep "$STARTWAIT"
+    wait || :
     if kill -0 $XVFBPID 2>/dev/null; then
         break
     elif [ -n "$AUTONUM" ]; then
@@ -176,6 +174,7 @@ EOF
         continue
     fi
     error "Xvfb failed to start" >&2
+    XVFBPID=
     exit 1
 done
 

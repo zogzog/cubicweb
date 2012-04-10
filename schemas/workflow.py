@@ -185,7 +185,7 @@ class TrInfo(EntityType):
     # make by_transition optional because we want to allow managers to set
     # entity into an arbitrary state without having to respect wf transition
     by_transition = SubjectRelation('BaseTransition', cardinality='?*')
-    comment = RichString(fulltextindexed=True)
+    comment = RichString(fulltextindexed=True, default_format='text/plain')
     tr_count = Int(description='autocomputed attribute used to ensure transition coherency')
     # get actor and date time using owned_by and creation_date
 

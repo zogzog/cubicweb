@@ -39,6 +39,12 @@ h3 {
   padding: %(h3Padding)s;
 }
 
+
+h4 {
+  font-size: %(h4FontSize)s;
+}
+
+
 div.tabbedprimary + h1,
 h1.plain {
  border-bottom: none;
