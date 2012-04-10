@@ -93,7 +93,7 @@ def get_repository(method, database=None, config=None, vreg=None):
     Only 'in-memory' and 'pyro' are supported for now. Either vreg or config
     argument should be given
     """
-    assert method in ('pyro', 'inmemory')
+    assert method in ('pyro', 'inmemory', 'zmq')
     assert vreg or config
     if vreg and not config:
         config = vreg.config
@@ -102,7 +102,9 @@ def get_repository(method, database=None, config=None, vreg=None):
         from cubicweb.server.repository import Repository
         from cubicweb.server.utils import TasksManager
         return Repository(config, TasksManager(), vreg=vreg)
-
+    elif method == 'zmq':
+        from cubicweb.zmqclient import ZMQRepositoryClient
+        return ZMQRepositoryClient(config, vreg=vreg)
     else: # method == 'pyro'
         # resolve the Pyro object
         from logilab.common.pyro_ext import ns_get_proxy, get_proxy
@@ -147,8 +149,8 @@ def connect(database=None, login=None, host=None, group=None,
       the user login to use to authenticate.
 
     :host:
-      the pyro nameserver host. Will be detected using broadcast query if
-      unspecified.
+      - pyro: nameserver host. Will be detected using broadcast query if unspecified
+      - zmq: repository host socket address
 
     :group:
       the instance's pyro nameserver group. You don't have to specify it unless
@@ -185,6 +187,8 @@ def connect(database=None, login=None, host=None, group=None,
             config.global_set_option('pyro-ns-host', host)
         if group:
             config.global_set_option('pyro-ns-group', group)
+    elif method == 'zmq':
+        config = cwconfig.CubicWebNoAppConfiguration()
     else:
         assert database
         config = cwconfig.instance_configuration(database)
