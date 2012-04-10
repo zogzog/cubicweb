@@ -98,7 +98,7 @@ repository (default to 5 minutes).',
     _conn = None
 
     def __init__(self, repo, source_config, eid=None):
-        super(AbstractSource, self).__init__(repo, source_config, eid)
+        super(RemoteSource, self).__init__(repo, source_config, eid)
         self.update_config(None, self.check_conf_dict(eid, source_config,
                                                       fail_if_unknown=False))
         self._query_cache = TimedCache(1800)
