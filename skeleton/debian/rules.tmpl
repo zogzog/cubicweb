@@ -4,7 +4,10 @@
 
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
-build: build-stamp
+build: build-arch build-indep
+build-arch:
+	# Nothing to do
+build-indep: build-stamp
 build-stamp:
 	dh_testdir
 	NO_SETUPTOOLS=1 python setup.py -q build
