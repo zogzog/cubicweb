@@ -845,6 +845,12 @@ class Session(RequestSessionBase):
         else:
             self.data[key] = value
 
+    # server-side service call #################################################
+
+    def call_service(self, regid, async=False, **kwargs):
+        return self.repo.call_service(self.id, regid, async, **kwargs)
+
+
     # request interface #######################################################
 
     @property

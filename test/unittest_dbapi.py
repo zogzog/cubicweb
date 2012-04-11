@@ -84,16 +84,17 @@ class DBAPITC(CubicWebTC):
             req.user.cw_adapt_to('IBreadCrumbs') # don't crash
 
     def test_call_service(self):
-        req = self.request()
         ServiceClass = self.vreg['services']['test_service'][0]
-        ret_value = req.cnx.call_service('test_service', msg='coucou')
-        self.assertEqual('coucou', ServiceClass.passed_here.pop())
-        self.assertEqual('babar', ret_value)
+        for _cw in (self.request(), self.session):
+            ret_value = _cw.call_service('test_service', msg='coucou')
+            self.assertEqual('coucou', ServiceClass.passed_here.pop())
+            self.assertEqual('babar', ret_value)
         with self.login('anon') as ctm:
-            with self.assertRaises(NoSelectableObject):
-                self.request().cnx.call_service('test_service', msg='toto')
-            self.rollback()
-            self.assertEqual([], ServiceClass.passed_here)
+            for _cw in (self.request(), self.session):
+                with self.assertRaises(NoSelectableObject):
+                    _cw.call_service('test_service', msg='toto')
+                self.rollback()
+                self.assertEqual([], ServiceClass.passed_here)
 
 
 if __name__ == '__main__':

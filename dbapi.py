@@ -345,6 +345,11 @@ class DBAPIRequest(RequestSessionBase):
             self.pgettext = lambda x, y: unicode(y)
         self.debug('request default language: %s', self.lang)
 
+    # server-side service call #################################################
+
+    def call_service(self, regid, async=False, **kwargs):
+        return self.cnx.call_service(regid, async, **kwargs)
+
     # entities cache management ###############################################
 
     def entity_cache(self, eid):
