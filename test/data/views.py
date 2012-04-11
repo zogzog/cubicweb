@@ -17,3 +17,17 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 from cubicweb.web.views import xmlrss
 xmlrss.RSSIconBox.visible = True
+
+
+from cubicweb.predicates import match_user_groups
+from cubicweb.server import Service
+
+
+class TestService(Service):
+    __regid__ = 'test_service'
+    __select__ = Service.__select__ & match_user_groups('managers')
+    passed_here = []
+
+    def call(self, msg):
+        self.passed_here.append(msg)
+        return 'babar'

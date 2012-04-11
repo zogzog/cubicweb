@@ -902,7 +902,7 @@ class Repository(object):
             session = self._get_session(sessionid, setcnxset=True)
             service = session.vreg['services'].select(regid, session, **kwargs)
             try:
-                return service.call(session, **kwargs)
+                return service.call(**kwargs)
             finally:
                 session.rollback() # free cnxset
         if async:
