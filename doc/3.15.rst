@@ -1,13 +1,16 @@
-Whats new in CubicWeb 3.15
-==========================
-
+What's new in CubicWeb 3.15?
+============================
 
 New functionnalities
 --------------------
 
-* XXX david/vmic describe zmq server
+* Add Zmq server, based on the cutting edge ZMQ (http://www.zeromq.org/) socket
+  library.  This allows to access distant instance, in a similar way as Pyro.
 
-* XXX jcr describe zmq communication bus
+* Publish/subscribe mechanism using ZMQ for communication among cubicweb
+  instances.  The new zmq-address-sub and zmq-address-pub configuration variables
+  define where this communication occurs.  As of this release this mechanism is
+  used for entity cache invalidation.
 
 * Improved WSGI support. While there is still some caveats, most of the code
   which as twisted only is now generic and allows related functionalities to work
@@ -16,6 +19,12 @@ New functionnalities
 * Full undo/transaction support : undo of modification has eventually been
   implemented, and the configuration simplified (basically you activate it or not
   on an instance basis).
+
+* Controlling HTTP status code used is not much more easier :
+
+  - `WebRequest` now has a `status_out` attribut to control the response status ;
+
+  - most web-side exceptions take an optional ``status`` argument.
 
 API changes
 -----------
@@ -40,28 +49,40 @@ API changes
   * on the CubicWeb side, the `selectors` module has been renamed to
     `predicates`.
 
-  Debugging refactoring dropped the more need for the `lltrace` decorator.
-
-  There should be full backward compat with proper deprecation warnings.
-
-  Notice the `yes` predicate and `objectify_predicate` decorator, as well as the
+  Debugging refactoring dropped the more need for the `lltrace` decorator.  There
+  should be full backward compat with proper deprecation warnings.  Notice the
+  `yes` predicate and `objectify_predicate` decorator, as well as the
   `traced_selection` function should now be imported from the
   `logilab.common.registry` module.
 
-* XXX pyves describe web auth api change
-* XXX pyves describe web test api change
+* All login forms are now submitted to <app_root>/login. Redirection to requested
+  page is now handled by the login controller (it was previously handle by the
+  session manager).
 
+* `Publisher.publish` has been renamed to `Publisher.handle_request`. This
+  method now contains generic version of logic previously handled by
+  Twisted. `Controller.publish` is **not** affected.
 
 Unintrusive API changes
 -----------------------
 
-* new 'ldapfeed' source type, designed to replace 'ldapuser' source with
+* New 'ldapfeed' source type, designed to replace 'ldapuser' source with
   data-feed (i.e. copy based) source ideas.
 
-* new 'zmqrql' source type, similar to 'pyrorql' but using ømq instead of Pyro.
+* New 'zmqrql' source type, similar to 'pyrorql' but using ømq instead of Pyro.
 
-* XXX fcayre: new service api
-* XXX adim: new ajax controller and ajax function
+* A new call_service api is available through on `_cw` attribute of
+  appobjects. It can be used to
+
+* a new `ajaxfunction` registry now hosts all remote functions (i.e. functions
+  callable through the `asyncRemoteExec` JS api). A convenience `ajaxfunc`
+  decorator will let you expose your python function easily without all the
+  appobject standard boilerplate. Backward compatibility is preserved.
+
+* the 'json' controller is now deprecated in favor of the 'ajax' one.
+
+* `WebRequest.build_url` can now take a __secure__ argument. When True cubicweb
+  try to generate an https url.
 
 
 User interface changes
@@ -69,4 +90,3 @@ User interface changes
 
 A new 'undohistory' view expose the undoable transactions and give access to undo
 some of them.
-
