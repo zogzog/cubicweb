@@ -2,6 +2,22 @@ Whats new in CubicWeb 3.15
 ==========================
 
 
+
+New functionnalities
+--------------------
+
+* XXX david/vmic describe zmq server
+
+* XXX jcr describe zmq communication bus
+
+* Improved WSGI support. While there is still some caveats, most of the code
+  which as twisted only is now generic and allows related functionalities to work
+  with a WSGI front-end.
+
+* Full undo/transaction support : undo of modification has eventually been
+  implemented, and the configuration simplified (basically you activate it or not
+  on an instance basis).
+
 API changes
 -----------
 
@@ -33,6 +49,9 @@ API changes
   `traced_selection` function should now be imported from the
   `logilab.common.registry` module.
 
+* XXX pyves describe web auth api change
+* XXX pyves describe web test api change
+
 
 Unintrusive API changes
 -----------------------
@@ -40,23 +59,15 @@ Unintrusive API changes
 * new 'ldapfeed' source type, designed to replace 'ldapuser' source with
   data-feed (i.e. copy based) source ideas.
 
+* new 'zmqrql' source type, similar to 'pyrorql' but using ømq instead of Pyro.
 
-RQL
----
-
+* XXX fcayre: new service api
+* XXX adim: new ajax controller and ajax function
 
 
 User interface changes
 ----------------------
 
-
-
-Configuration
--------------
-
-Base schema changes
--------------------
-Email address 'read' permission is now more restrictive: only managers and
-users to which an address belong may see them. Application that wish other
-settings should set them explicitly.
+A new 'undohistory' view expose the undoable transactions and give access to undo
+some of them.
 
