@@ -71,8 +71,12 @@ Unintrusive API changes
 
 * New 'zmqrql' source type, similar to 'pyrorql' but using ømq instead of Pyro.
 
-* A new call_service api is available through on `_cw` attribute of
-  appobjects. It can be used to
+* A new registry called 'services' has appeared, where you can register
+  server-side `cubicweb.server.Service` child classes. Their `call` method can be
+  invoked from a web-side AppObject instance using new `self._cw.call_service`
+  method or a server-side one using `self.session.call_service`. This is a new
+  way to call server-side methods, much cleaner than monkey patching the
+  Repository class, which becomes a deprecated way to perform similar tasks.
 
 * a new `ajaxfunction` registry now hosts all remote functions (i.e. functions
   callable through the `asyncRemoteExec` JS api). A convenience `ajaxfunc`
