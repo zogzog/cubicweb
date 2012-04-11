@@ -82,7 +82,8 @@ class StaticFileController(Controller):
         # XXX elif uri.startswith('/https/'): uri = uri[6:]
         mimetype, encoding = mimetypes.guess_type(path)
         self._cw.set_content_type(mimetype, osp.basename(path), encoding)
-        return file(path).read()
+        with open(path, 'rb') as resource:
+            return resource.read()
 
     @property
     def relpath(self):
@@ -152,8 +153,9 @@ class ConcatFilesHandler(object):
                         if self.config.debugmode:
                             raise NotFound(path)
                     else:
-                        for line in open(osp.join(dirpath, rid)):
-                            f.write(line)
+                        with open(osp.join(dirpath, rid), 'rb') as source:
+                            for line in source:
+                                f.write(line)
                         f.write('\n')
         return filepath
 
