@@ -2,7 +2,6 @@ Whats new in CubicWeb 3.15
 ==========================
 
 
-
 New functionnalities
 --------------------
 

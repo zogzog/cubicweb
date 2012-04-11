@@ -611,6 +611,11 @@ class CubicWebTC(TestCase):
     def app_handle_request(self, req, path='view'):
         return self.app.core_handle(req, path)
 
+    @deprecated("[3.15] app_handle_request is the new and better way"
+                " (beware of small semantic changes)")
+    def app_publish(self, *args, **kwargs):
+        return self.app_handle_request(*args, **kwargs)
+
     def ctrl_publish(self, req, ctrl='edit'):
         """call the publish method of the edit controller"""
         ctrl = self.vreg['controllers'].select(ctrl, req, appli=self.app)
@@ -679,6 +684,12 @@ class CubicWebTC(TestCase):
         self.assertTrue(300 <= req.status_out <400, req.status_out)
         location = req.get_response_header('location')
         return self._parse_location(req, location)
+
+    @deprecated("[3.15] expect_redirect_handle_request is the new and better way"
+                " (beware of small semantic changes)")
+    def expect_redirect_publish(self, *args, **kwargs):
+        return self.expect_redirect_handle_request(*args, **kwargs)
+
 
     def set_auth_mode(self, authmode, anonuser=None):
         self.set_option('auth-mode', authmode)
