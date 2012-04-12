@@ -207,6 +207,9 @@ class FCKEditorController(StaticFileController):
         else:
             uiprops = config.uiprops
         relpath = self.relpath
+        if relpath.startswith('fckeditor/'):
+            relpath = relpath[len('fckeditor/'):]
+        relpath = relpath.split('?', 1)[0]
         return self.static_file(osp.join(uiprops['FCKEDITOR_PATH'], relpath))
 
 
