@@ -19,7 +19,7 @@
 # (disable pylint msg for client obj access to protected member as in obj._cw)
 # pylint: disable=W0212
 """The ``ajaxcontroller`` module defines the :class:`AjaxController`
-controller and the ``ajax-funcs`` cubicweb registry.
+controller and the ``ajax-func`` cubicweb registry.
 
 .. autoclass:: cubicweb.web.views.ajaxcontroller.AjaxController
    :members:
