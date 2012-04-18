@@ -183,13 +183,14 @@ class DataController(StaticFileController):
         if relpath.startswith(self.data_modconcat_basepath):
             paths = relpath[len(self.data_modconcat_basepath):].split(',')
             filepath = self.concat_files_registry.concat_cached_filepath(paths)
-            return self.static_file(filepath)
         else:
-            relpath = relpath[len(self.base_datapath):] # skip leading '/data/'
-        dirpath, rid = config.locate_resource(relpath)
-        if dirpath is None:
-            raise NotFound()
-        return self.static_file(osp.join(dirpath, rid))
+            # skip leading '/data/' and url params
+            relpath = relpath[len(self.base_datapath):].split('?', 1)[0]
+            dirpath, rid = config.locate_resource(relpath)
+            if dirpath is None:
+                raise NotFound()
+            filepath = osp.join(dirpath, rid)
+        return self.static_file(filepath)
 
 
 class FCKEditorController(StaticFileController):
