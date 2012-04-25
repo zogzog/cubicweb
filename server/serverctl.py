@@ -662,7 +662,7 @@ class StartRepositoryCommand(Command):
     def create_repo(self, config):
         address = self['address']
         if not address:
-            address = config.get('zmq-repository-address', 'pyro://')
+            address = config.get('zmq-repository-address') or 'pyro://'
         if address.startswith('pyro://'):
             from cubicweb.server.server import RepositoryServer
             return RepositoryServer(config), config['host']
