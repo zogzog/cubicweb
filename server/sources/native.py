@@ -1775,8 +1775,10 @@ class DatabaseIndependentBackupRestore(object):
         versions = set(self._get_versions())
         if file_versions != versions:
             self.logger.critical('Unable to restore : versions do not match')
-            self.logger.critical('Expected:\n%s', '\n'.join(list(sorted(versions))))
-            self.logger.critical('Found:\n%s', '\n'.join(list(sorted(file_versions))))
+            self.logger.critical('Expected:\n%s', '\n'.join('%s : %s' % (cube, ver)
+                                                            for cube, ver in sorted(versions)))
+            self.logger.critical('Found:\n%s', '\n'.join('%s : %s' % (cube, ver)
+                                                         for cube, ver in sorted(file_versions)))
             raise ValueError('Unable to restore : versions do not match')
         table_chunks = {}
         for name in archive.namelist():
