@@ -700,7 +700,9 @@ this option is set to yes",
         vregpath = []
         if evobjpath is None:
             evobjpath = cls.cubicweb_appobject_path
-        for subdir in evobjpath:
+        # NOTE: for the order, see http://www.cubicweb.org/ticket/2330799
+        #       it is clearly a workaround
+        for subdir in sorted(evobjpath, key=lambda x:x != 'entities'):
             path = join(CW_SOFTWARE_ROOT, subdir)
             if exists(path):
                 vregpath.append(path)
@@ -712,7 +714,8 @@ this option is set to yes",
         if tvobjpath is None:
             tvobjpath = cls.cube_appobject_path
         for directory in templpath:
-            for subdir in tvobjpath:
+            # NOTE: for the order, see http://www.cubicweb.org/ticket/2330799
+            for subdir in sorted(tvobjpath, key=lambda x:x != 'entities'):
                 path = join(directory, subdir)
                 if exists(path):
                     vregpath.append(path)
