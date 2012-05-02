@@ -3,6 +3,7 @@ import sys
 
 from subprocess import call as sbp_call, Popen, PIPE
 from urllib import urlopen
+import os
 from os import path as osp, pardir, chdir
 
 
