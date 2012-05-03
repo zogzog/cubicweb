@@ -43,7 +43,7 @@ class DataFeedlDAPParser(datafeed.DataFeedParser):
         for userdict in source._search(self._cw, source.user_base_dn,
                                        source.user_base_scope, searchstr):
             entity = self.extid2entity(userdict['dn'], 'CWUser', **userdict)
-            if not self.created_during_pull(entity):
+            if entity is not None and not self.created_during_pull(entity):
                 self.notify_updated(entity)
                 attrs = self.ldap2cwattrs(userdict)
                 self.update_if_necessary(entity, attrs)
