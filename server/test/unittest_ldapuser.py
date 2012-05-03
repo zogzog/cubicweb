@@ -105,7 +105,7 @@ class LDAPFeedSourceTC(CubicWebTC):
         session.create_entity('CWSource', name=u'ldapuser', type=u'ldapfeed', parser=u'ldapfeed',
                               url=URL, config=CONFIG)
         session.commit()
-        isession = session.repo.internal_session()
+        isession = session.repo.internal_session(safe=True)
         lfsource = isession.repo.sources_by_uri['ldapuser']
         stats = lfsource.pull_data(isession, force=True, raise_on_error=True)
 
