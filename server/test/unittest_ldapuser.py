@@ -156,10 +156,15 @@ class LDAPFeedSourceTC(CubicWebTC):
         self.assertEqual(e.cw_source[0].name, 'system')
         self.assertTrue(e.creation_date)
         self.assertTrue(e.modification_date)
-        # XXX test some password has been set
         source.pull_data(self.session)
         rset = self.sexecute('CWUser X WHERE X login %(login)s', {'login': 'syt'})
         self.assertEqual(len(rset), 1)
+        # test some password has been set
+        cu = self.session.system_sql('SELECT cw_upassword FROM cw_CWUser WHERE cw_eid=%s' % rset[0][0])
+        value = str(cu.fetchall()[0][0])
+        self.assertEqual(value, '{SSHA}v/8xJQP3uoaTBZz1T7Y0B3qOxRN1cj7D')
+        self.assertTrue(self.repo.system_source.authenticate(
+                self.session, 'syt', password='syt'))
 
 
 class LDAPUserSourceTC(LDAPFeedSourceTC):

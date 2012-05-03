@@ -57,7 +57,7 @@ class CustomMD5Crypt(uh.HasSalt, uh.GenericHandler):
     def calc_checksum(self, secret):
         return md5crypt(secret, self.salt.encode('ascii'))
 
-myctx = CryptContext(['sha512_crypt', CustomMD5Crypt, 'des_crypt'])
+myctx = CryptContext(['sha512_crypt', CustomMD5Crypt, 'des_crypt', 'ldap_salted_sha1'])
 
 def crypt_password(passwd, salt=None):
     """return the encrypted password using the given salt or a generated one

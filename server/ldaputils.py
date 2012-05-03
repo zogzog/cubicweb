@@ -37,7 +37,7 @@ from ldap.ldapobject import ReconnectLDAPObject
 from ldap.filter import filter_format
 from ldapurl import LDAPUrl
 
-from cubicweb import ValidationError, AuthenticationError
+from cubicweb import ValidationError, AuthenticationError, Binary
 from cubicweb.server.sources import ConnectionWrapper
 
 _ = unicode
@@ -125,7 +125,7 @@ You can set multiple groups by separating them by a comma.',
           }),
         ('user-attrs-map',
          {'type' : 'named',
-          'default': {'uid': 'login', 'gecos': 'email'},
+          'default': {'uid': 'login', 'gecos': 'email', 'userPassword': 'upassword'},
           'help': 'map from ldap user attributes to cubicweb attributes (with Active Directory, you want to use sAMAccountName:login,mail:email,givenName:firstname,sn:surname)',
           'group': 'ldap-source', 'level': 1,
           }),
@@ -344,14 +344,13 @@ You can set multiple groups by separating them by a comma.',
         """Turn an ldap received item into a proper dict."""
         itemdict = {'dn': dn}
         for key, value in iterator:
-            if not isinstance(value, str):
-                try:
-                    for i in range(len(value)):
-                        value[i] = unicode(value[i], 'utf8')
-                except Exception:
-                    pass
-            if isinstance(value, list) and len(value) == 1:
-                itemdict[key] = value = value[0]
+            if self.user_attrs.get(key) == 'upassword': # XXx better password detection
+                itemdict[key] = Binary(value[0].encode('utf-8'))
+            else:
+                for i, val in enumerate(value):
+                    value[i] = unicode(val, 'utf-8', 'replace')
+                if isinstance(value, list) and len(value) == 1:
+                    itemdict[key] = value = value[0]
         return itemdict
 
     def _process_no_such_object(self, session, dn):

@@ -23,8 +23,12 @@ unlike ldapuser source, this source is copy based and will import ldap content
 from base64 import b64decode
 
 from logilab.common.decorators import cached
+from logilab.common.shellutils import generate_password
 
+from cubicweb import Binary
+from cubicweb.server.utils import crypt_password
 from cubicweb.server.sources import datafeed
+
 
 class DataFeedlDAPParser(datafeed.DataFeedParser):
     __regid__ = 'ldapfeed'
@@ -62,6 +66,12 @@ class DataFeedlDAPParser(datafeed.DataFeedParser):
             entity.cw_edited['address'] = sourceparams['address']
         else:
             self.ldap2cwattrs(sourceparams, entity.cw_edited)
+            pwd = entity.cw_edited.get('upassword')
+            if not pwd:
+                # generate a dumb password if not fetched from ldap (see
+                # userPassword)
+                pwd = crypt_password(generate_password())
+                entity.cw_edited = Binary(pwd)
         return entity
 
     def after_entity_copy(self, entity, sourceparams):
