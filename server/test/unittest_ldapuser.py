@@ -34,13 +34,7 @@ from cubicweb.devtools import get_test_db_handler
 
 from cubicweb.server.sources.ldapuser import *
 
-CONFIG = u'''user-base-dn=ou=People,dc=cubicweb,dc=test
-user-scope=ONELEVEL
-user-classes=top,posixAccount
-user-login-attr=uid
-user-default-group=users
-user-attrs-map=gecos:email,uid:login
-'''
+CONFIG = u'user-base-dn=ou=People,dc=cubicweb,dc=test'
 URL = None
 
 def setUpModule(*args):
