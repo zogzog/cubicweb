@@ -41,6 +41,7 @@ import sys, os, logging
 from StringIO import StringIO
 
 from logilab.common.logging_ext import set_log_methods
+from yams.constraints import BASE_CONVERTERS
 
 
 if os.environ.get('APYCOT_ROOT'):
@@ -119,6 +120,13 @@ class Binary(StringIO):
                 binary.write(fobj.read())
         binary.seek(0)
         return binary
+
+def str_or_binary(value):
+    if isinstance(value, Binary):
+        return value
+    return str(value)
+BASE_CONVERTERS['Password'] = str_or_binary
+
 
 
 # use this dictionary to rename entity types while keeping bw compat
