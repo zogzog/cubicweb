@@ -20,7 +20,6 @@
 unlike ldapuser source, this source is copy based and will import ldap content
 (beside passwords for authentication) into the system source.
 """
-from base64 import b64decode
 
 from logilab.common.decorators import cached
 from logilab.common.shellutils import generate_password
@@ -36,14 +35,10 @@ class DataFeedlDAPParser(datafeed.DataFeedParser):
     # attributes of the cw user
     non_attribute_keys = set(('email',))
 
-    def process(self, url, raise_on_error=False, partialcommit=True):
+    def process(self, url, partialcommit=True):
         """IDataFeedParser main entry point"""
         source = self.source
         searchstr = '(&%s)' % ''.join(source.base_filters)
-        try:
-            ldap_emailattr = source.user_rev_attrs['email']
-        except KeyError:
-            ldap_emailattr = None
         for userdict in source._search(self._cw, source.user_base_dn,
                                        source.user_base_scope, searchstr):
             entity = self.extid2entity(userdict['dn'], 'CWUser', **userdict)
