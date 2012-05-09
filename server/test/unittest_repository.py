@@ -413,28 +413,31 @@ class RepositoryTC(CubicWebTC):
 
     def _zmq_client(self, done):
         cnxprops = ConnectionProperties('zmq')
-        cnx = connect(self.repo.config.appid, u'admin', password=u'gingkow',
-                      host='tcp://127.0.0.1:41415',
-                      cnxprops=cnxprops,
-                      initlog=False) # don't reset logging configuration
         try:
-            cnx.load_appobjects(subpath=('entities',))
-            # check we can get the schema
-            schema = cnx.get_schema()
-            self.assertTrue(cnx.vreg)
-            self.assertTrue('etypes'in cnx.vreg)
-            cu = cnx.cursor()
-            rset = cu.execute('Any U,G WHERE U in_group G')
-            user = iter(rset.entities()).next()
-            self.assertTrue(user._cw)
-            self.assertTrue(user._cw.vreg)
-            from cubicweb.entities import authobjs
-            self.assertIsInstance(user._cw.user, authobjs.CWUser)
-            cnx.close()
-            done.append(True)
+            cnx = connect(self.repo.config.appid, u'admin', password=u'gingkow',
+                          host='tcp://127.0.0.1:41415',
+                          cnxprops=cnxprops,
+                          initlog=False) # don't reset logging configuration
+            try:
+                cnx.load_appobjects(subpath=('entities',))
+                # check we can get the schema
+                schema = cnx.get_schema()
+                self.assertTrue(cnx.vreg)
+                self.assertTrue('etypes'in cnx.vreg)
+                cu = cnx.cursor()
+                rset = cu.execute('Any U,G WHERE U in_group G')
+                user = iter(rset.entities()).next()
+                self.assertTrue(user._cw)
+                self.assertTrue(user._cw.vreg)
+                from cubicweb.entities import authobjs
+                self.assertIsInstance(user._cw.user, authobjs.CWUser)
+                cnx.close()
+                done.append(True)
+            finally:
+                # connect monkey patch some method by default, remove them
+                multiple_connections_unfix()
         finally:
-            # connect monkey patch some method by default, remove them
-            multiple_connections_unfix()
+            done.append(False)
 
     def test_internal_api(self):
         repo = self.repo

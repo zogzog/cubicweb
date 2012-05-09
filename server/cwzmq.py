@@ -117,7 +117,7 @@ class ZMQRepositoryServer(object):
         self.repo = repository
         self.socket = None
         self.stream = None
-        self.loop = None
+        self.loop = ioloop.IOLoop()
 
         # event queue
         self.events = []
@@ -129,7 +129,6 @@ class ZMQRepositoryServer(object):
         """enter the service loop"""
         # start repository looping tasks
         self.socket = ctx.socket(zmq.REP)
-        self.loop = ioloop.IOLoop()
         self.stream = zmq.eventloop.zmqstream.ZMQStream(self.socket, io_loop=self.loop)
         self.stream.bind(self.address)
         self.info('ZMQ server bound on: %s', self.address)
@@ -209,7 +208,7 @@ class ZMQRepositoryServer(object):
         """stop the server"""
         self.info('Quitting ZMQ server')
         try:
-            self.loop.stop()
+            self.loop.add_callback(self.loop.stop)
             self.stream.on_recv(None)
             self.stream.close()
         except Exception, e:
