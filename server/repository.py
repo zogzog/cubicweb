@@ -425,6 +425,10 @@ class Repository(object):
         connections
         """
         assert not self.shutting_down, 'already shutting down'
+        if not (self.config.creating or self.config.repairing
+                or self.config.quick_start):
+            # then, the system source is still available
+            self.hm.call_hooks('before_server_shutdown', repo=self)
         self.shutting_down = True
         self.system_source.shutdown()
         if self._tasks_manager is not None:
