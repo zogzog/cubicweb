@@ -71,7 +71,7 @@ class DataFeedlDAPParser(datafeed.DataFeedParser):
                 # generate a dumb password if not fetched from ldap (see
                 # userPassword)
                 pwd = crypt_password(generate_password())
-                entity.cw_edited = Binary(pwd)
+                entity.cw_edited['upassword'] = Binary(pwd)
         return entity
 
     def after_entity_copy(self, entity, sourceparams):
