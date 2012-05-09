@@ -424,8 +424,8 @@ class CubicWebPublisher(object):
         :return: the result of the pusblished url
         """
         # don't log form values they may contains sensitive information
-        self.info('publish "%s" (%s, form params: %s)',
-                  path, req.session.sessionid, req.form.keys())
+        self.debug('publish "%s" (%s, form params: %s)',
+                   path, req.session.sessionid, req.form.keys())
         # remove user callbacks on a new request (except for json controllers
         # to avoid callbacks being unregistered before they could be called)
         tstart = clock()
@@ -500,7 +500,7 @@ class CubicWebPublisher(object):
             # cache to avoid memory usage
             req.drop_entity_cache()
         self.add_undo_link_to_msg(req)
-        self.info('query %s executed in %s sec', req.relative_path(), clock() - tstart)
+        self.debug('query %s executed in %s sec', req.relative_path(), clock() - tstart)
         return result
 
     ### Error handler
