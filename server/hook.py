@@ -174,14 +174,17 @@ Take note that relations can be added or deleted, but not updated.
 Non data events
 ~~~~~~~~~~~~~~~
 
-Hooks called on server start/maintenance/stop event (eg `server_startup`,
-`server_maintenance`, `server_shutdown`) have a `repo` attribute, but *their
-`_cw` attribute is None*.  The `server_startup` is called on regular startup,
-while `server_maintenance` is called on cubicweb-ctl upgrade or shell
-commands. `server_shutdown` is called anyway.
+Hooks called on server start/maintenance/stop event (e.g.
+`server_startup`, `server_maintenance`, `before_server_shutdown`,
+`server_shutdown`) have a `repo` attribute, but *their `_cw` attribute
+is None*.  The `server_startup` is called on regular startup, while
+`server_maintenance` is called on cubicweb-ctl upgrade or shell
+commands. `server_shutdown` is called anyway but connections to the
+native source is impossible; `before_server_shutdown` handles that.
 
-Hooks called on backup/restore event (eg 'server_backup', 'server_restore') have
-a `repo` and a `timestamp` attributes, but *their `_cw` attribute is None*.
+Hooks called on backup/restore event (eg `server_backup`,
+`server_restore`) have a `repo` and a `timestamp` attributes, but
+*their `_cw` attribute is None*.
 
 Hooks called on session event (eg `session_open`, `session_close`) have no
 special attribute.
