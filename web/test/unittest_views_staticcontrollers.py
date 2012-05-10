@@ -8,7 +8,6 @@ import os.path as osp
 import glob
 
 from cubicweb.utils import HTMLHead
-from cubicweb.web import StatusResponse
 from cubicweb.web.views.staticcontrollers import ConcatFilesHandler
 
 class StaticControllerCacheTC(CubicWebTC):

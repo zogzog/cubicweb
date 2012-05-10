@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -15,9 +15,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""WSGI request handler for cubicweb
-
-"""
+"""WSGI request handler for cubicweb"""
 
 
 
@@ -26,7 +24,7 @@ __docformat__ = "restructuredtext en"
 from itertools import chain, repeat, izip
 
 from cubicweb import AuthenticationError
-from cubicweb.web import Redirect, DirectResponse, StatusResponse, LogOut
+from cubicweb.web import DirectResponse
 from cubicweb.web.application import CubicWebPublisher
 from cubicweb.wsgi.request import CubicWebWsgiRequest
 

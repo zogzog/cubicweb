@@ -48,7 +48,7 @@ from logilab.common.decorators import monkeypatch
 from cubicweb import (AuthenticationError, ConfigurationError,
                       CW_EVENT_MANAGER, CubicWebException)
 from cubicweb.utils import json_dumps
-from cubicweb.web import Redirect, DirectResponse, StatusResponse, LogOut
+from cubicweb.web import DirectResponse
 from cubicweb.web.application import CubicWebPublisher
 from cubicweb.web.http_headers import generateDateTime
 from cubicweb.etwist.request import CubicWebTwistedRequestAdapter
