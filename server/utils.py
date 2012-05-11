@@ -20,13 +20,9 @@
 __docformat__ = "restructuredtext en"
 
 import sys
-import string
 import logging
 from threading import Timer, Thread
 from getpass import getpass
-from random import choice
-
-from cubicweb.server import SOURCE_TYPES
 
 from passlib.utils import handlers as uh, to_hash_str
 from passlib.context import CryptContext
@@ -35,8 +31,8 @@ from cubicweb.md5crypt import crypt as md5crypt
 
 
 class CustomMD5Crypt(uh.HasSalt, uh.GenericHandler):
-    name = 'cubicweb-md5crypt'
-    setting_kwds = ("salt",)
+    name = 'cubicwebmd5crypt'
+    setting_kwds = ('salt',)
     min_salt_size = 0
     max_salt_size = 8
     salt_chars = uh.H64_CHARS
@@ -57,17 +53,17 @@ class CustomMD5Crypt(uh.HasSalt, uh.GenericHandler):
     def calc_checksum(self, secret):
         return md5crypt(secret, self.salt.encode('ascii'))
 
-myctx = CryptContext(['sha512_crypt', CustomMD5Crypt, 'des_crypt', 'ldap_salted_sha1'])
+_CRYPTO_CTX = CryptContext(['sha512_crypt', CustomMD5Crypt, 'des_crypt', 'ldap_salted_sha1'])
 
 def crypt_password(passwd, salt=None):
     """return the encrypted password using the given salt or a generated one
     """
     if salt is None:
-        return myctx.encrypt(passwd)
+        return _CRYPTO_CTX.encrypt(passwd)
     # empty hash, accept any password for backwards compat
     if salt == '':
         return salt
-    if myctx.verify(passwd, salt):
+    if _CRYPTO_CTX.verify(passwd, salt):
         return salt
     # wrong password
     return ''
