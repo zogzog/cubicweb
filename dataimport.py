@@ -182,7 +182,10 @@ def mk_entity(row, map):
     assert isinstance(row, dict)
     assert isinstance(map, list)
     for src, dest, funcs in map:
-        res[dest] = row[src]
+        try:
+            res[dest] = row[src]
+        except KeyError:
+            continue
         try:
             for func in funcs:
                 res[dest] = func(res[dest])
