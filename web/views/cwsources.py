@@ -373,8 +373,9 @@ class LogTableLayout(tableview.TableLayout):
         w(u'<label>%s</label>' % self._cw._(u'Message threshold'))
         w(u'<select class="log_filter" onchange="filterLog(\'%s\', this.options[this.selectedIndex].value)">'
           % self.view.domid)
-        for level in ('Debug', 'Info', 'Warning', 'Error', 'Fatal'):
-            w('<option value="%s">%s</option>' % (level, self._cw._(level)))
+        for level in ('DEBUG', 'INFO', 'WARNING', 'ERROR', 'FATAL'):
+            w('<option value="%s">%s</option>' % (level.capitalize(),
+                                                  self._cw._(level)))
         w(u'</select>')
         w(u'</fieldset></form>')
         super(LogTableLayout, self).render_table(w, actions, paginate)
