@@ -104,6 +104,10 @@ class DataFeedlDAPParser(datafeed.DataFeedParser):
                     entity.set_relations(use_email=email)
                 else:
                     entity.set_relations(primary_email=email)
+            elif self.sourceuris:
+                # pop from sourceuris anyway, else email may be removed by the
+                # source once import is finished
+                self.sourceuris.pop(str(userdict['dn'] + '@@' + emailaddr), None)
             # XXX else check use_email relation?
 
     @cached
