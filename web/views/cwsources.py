@@ -421,7 +421,9 @@ class LogTable(pyviews.PyValTableView):
     class URLRenderer(pyviews.PyValTableColRenderer):
         def render_cell(self, w, rownum):
             url = self.data[rownum][1]
-            w(url and tags.a(url, href=url) or u'&#160;')
+            if url and url.startswith('http'):
+                url = tags.a(url, href=url)
+            w(url or u'&#160;')
 
     class LineRenderer(pyviews.PyValTableColRenderer):
         def render_cell(self, w, rownum):
