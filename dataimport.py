@@ -446,9 +446,12 @@ class RQLObjectStore(ObjectStore):
         if session is None:
             sys.exit('please provide a session of run this script with cubicweb-ctl shell and pass cnx as session')
         if not hasattr(session, 'set_cnxset'):
-            # connection
-            cnx = session
-            session = session.request()
+            if hasattr(session, 'request'):
+                # connection object
+                cnx = session
+                session = session.request()
+            else: # object is already a request
+                cnx = session.cnx
             session.set_cnxset = lambda : None
             commit = commit or cnx.commit
         else:
