@@ -371,21 +371,30 @@ class DataFeedXMLParser(DataFeedParser):
             self.import_log.record_error(str(ex))
             return True
         error = False
+        # Check whether self._cw is a session or a connection
+        if getattr(self._cw, 'commit', None) is not None:
+            commit = self._cw.commit
+            set_cnxset = self._cw.set_cnxset
+            rollback = self._cw.rollback
+        else:
+            commit = self._cw.cnx.commit
+            set_cnxset = lambda: None
+            rollback = self._cw.cnx.rollback
         for args in parsed:
             try:
                 self.process_item(*args)
                 if partialcommit:
                     # commit+set_cnxset instead of commit(free_cnxset=False) to let
                     # other a chance to get our connections set
-                    self._cw.commit()
-                    self._cw.set_cnxset()
+                    commit()
+                    set_cnxset()
             except ValidationError, exc:
                 if raise_on_error:
                     raise
                 if partialcommit:
                     self.source.error('Skipping %s because of validation error %s' % (args, exc))
-                    self._cw.rollback()
-                    self._cw.set_cnxset()
+                    rollback()
+                    set_cnxset()
                     error = True
                 else:
                     raise
