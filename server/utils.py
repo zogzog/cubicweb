@@ -39,19 +39,18 @@ class CustomMD5Crypt(uh.HasSalt, uh.GenericHandler):
 
     @classmethod
     def from_string(cls, hash):
-        if hash is None:
-            raise ValueError("no hash specified")
-        if hash.count('$') != 1:
-            raise ValueError("invalid cubicweb-md5 hash")
-        salt = hash.split('$', 1)[0]
-        chk = hash.split('$', 1)[1]
-        return cls(salt=salt, checksum=chk, strict=True)
+        salt, chk = uh.parse_mc2(hash, u'')
+        if chk is None:
+            raise ValueError('missing checksum')
+        return cls(salt=salt, checksum=chk)
 
     def to_string(self):
         return to_hash_str(u'%s$%s' % (self.salt, self.checksum or u''))
 
+    # passlib 1.5 wants calc_checksum, 1.6 wants _calc_checksum
     def calc_checksum(self, secret):
-        return md5crypt(secret, self.salt.encode('ascii'))
+        return md5crypt(secret, self.salt.encode('ascii')).decode('utf-8')
+    _calc_checksum = calc_checksum
 
 _CRYPTO_CTX = CryptContext(['sha512_crypt', CustomMD5Crypt, 'des_crypt'])
 
