@@ -35,7 +35,7 @@ class DataFeedlDAPParser(datafeed.DataFeedParser):
     # attributes of the cw user
     non_attribute_keys = set(('email',))
 
-    def process(self, url, partialcommit=True):
+    def process(self, url, raise_on_error=False):
         """IDataFeedParser main entry point"""
         source = self.source
         searchstr = '(&%s)' % ''.join(source.base_filters)

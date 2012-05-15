@@ -183,11 +183,11 @@ class CWEntityXMLParser(datafeed.DataFeedXMLParser):
 
     # import handling ##########################################################
 
-    def process(self, url, raise_on_error=False, partialcommit=True):
+    def process(self, url, raise_on_error=False):
         """IDataFeedParser main entry point"""
         if url.startswith('http'): # XXX similar loose test as in parse of sources.datafeed
             url = self.complete_url(url)
-        super(CWEntityXMLParser, self).process(url, raise_on_error, partialcommit)
+        super(CWEntityXMLParser, self).process(url, raise_on_error)
 
     def parse_etree(self, parent):
         for node in list(parent):

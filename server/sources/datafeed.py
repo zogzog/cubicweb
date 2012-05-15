@@ -350,7 +350,7 @@ class DataFeedParser(AppObject):
             self.sourceuris.pop(str(uri), None)
         return session.entity_from_eid(eid, etype)
 
-    def process(self, url, partialcommit=True):
+    def process(self, url, raise_on_error=False):
         """main callback: process the url"""
         raise NotImplementedError
 
@@ -391,7 +391,7 @@ class DataFeedParser(AppObject):
 
 class DataFeedXMLParser(DataFeedParser):
 
-    def process(self, url, raise_on_error=False, partialcommit=True):
+    def process(self, url, raise_on_error=False):
         """IDataFeedParser main entry point"""
         try:
             parsed = self.parse(url)
@@ -413,21 +413,18 @@ class DataFeedXMLParser(DataFeedParser):
         for args in parsed:
             try:
                 self.process_item(*args)
-                if partialcommit:
-                    # commit+set_cnxset instead of commit(free_cnxset=False) to let
-                    # other a chance to get our connections set
-                    commit()
-                    set_cnxset()
+                # commit+set_cnxset instead of commit(free_cnxset=False) to let
+                # other a chance to get our connections set
+                commit()
+                set_cnxset()
             except ValidationError, exc:
                 if raise_on_error:
                     raise
-                if partialcommit:
-                    self.source.error('Skipping %s because of validation error %s' % (args, exc))
-                    rollback()
-                    set_cnxset()
-                    error = True
-                else:
-                    raise
+                self.source.error('Skipping %s because of validation error %s'
+                                  % (args, exc))
+                rollback()
+                set_cnxset()
+                error = True
         return error
 
     def parse(self, url):
