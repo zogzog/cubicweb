@@ -492,6 +492,14 @@ class EntityInlinedFormRenderer(EntityFormRenderer):
     """
     __regid__ = 'inline'
 
+    def render_title(self, w, form, values):
+        w(u'<span>%(title)s</span> '
+          '#<span class="icounter">%(counter)s</span> ' % values)
+        if values['removejs']:
+            values['removemsg'] = self._cw._('remove-inlined-entity-form')
+            w(u'[<a href="javascript: %(removejs)s;$.noop();">%(removemsg)s</a>]'
+              % values)
+
     def render(self, w, form, values):
         form.add_media()
         try:
@@ -503,16 +511,9 @@ class EntityInlinedFormRenderer(EntityFormRenderer):
                 values['divid'], self._cw._('click on the box to cancel the deletion')))
         w(u'<div class="iformBody">')
         eschema = form.edited_entity.e_schema
-        if values['removejs']:
-            values['removemsg'] = self._cw._('remove-inlined-entity-form')
-            w(u'<div class="iformTitle"><span>%(title)s</span> '
-              '#<span class="icounter">%(counter)s</span> '
-              '[<a href="javascript: %(removejs)s;$.noop();">%(removemsg)s</a>]</div>'
-              % values)
-        else:
-            w(u'<div class="iformTitle"><span>%(title)s</span> '
-              '#<span class="icounter">%(counter)s</span></div>'
-              % values)
+        w(u'<div class="iformTitle">')
+        self.render_title(w, form, values)
+        w(u'</div>')
         # XXX that stinks
         # cleanup values
         for key in ('title', 'removejs', 'removemsg'):
