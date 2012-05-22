@@ -181,8 +181,17 @@ jQuery.extend(cw.ajax, {
                 // compute concat-like url for missing resources and append <link>
                 // element to $head
                 if (missingStylesheetsUrl) {
-                    $srcnode.attr('href', missingStylesheetsUrl);
-                    $srcnode.appendTo($head);
+                    // IE has problems with dynamic CSS insertions. One symptom (among others)
+                    // is a "1 item remaining" message in the status bar. (cf. #2356261)
+                    // document.createStyleSheet needs to be used for this, although it seems
+                    // that IE can't create more than 31 additional stylesheets with
+                    // document.createStyleSheet.
+                    if ($.browser.msie) {
+                        document.createStyleSheet(missingStylesheetsUrl);
+                    } else {
+                        $srcnode.attr('href', missingStylesheetsUrl);
+                        $srcnode.appendTo($head);
+                    }
                 }
             }
         });
