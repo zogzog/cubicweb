@@ -64,9 +64,13 @@ a:hover{
   text-decoration: underline;
 }
 
-a img, img {
-  border: none;
+a img{
   text-align: center;
+}
+
+img{
+  border: none;
+  display:block;
 }
 
 img.prevnext {
@@ -216,24 +220,40 @@ blockquote {
   visibility: hidden;
 }
 
-li.invisible { list-style: none; background: none; padding: 0px 0px
-1px 1px; }
+li.invisible {
+  list-style: none;
+  background: none;
+  padding: 0px 0px 1px 1px;
+}
 
 li.invisible div {
   display: inline;
 }
 
 .caption {
-    font-weight: bold;
+  font-weight: bold;
 }
 
 .legend{
-    font-style: italic;
+  font-style: italic;
 }
 
-.align-center{
-    text-align: center;
+/* rest related image classes generated with align: directive */
+
+img.align-right {
+  margin-left: auto;
 }
+
+img.align-left {
+  margin-right: auto;
+}
+
+img.align-center{
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 
 /***************************************/
 /*   LAYOUT                            */
