@@ -613,18 +613,18 @@ class AuthorView(GroupByView):
     def group_key(self, entity, **kwargs):
         value = super(AuthorView, self).group_key(entity, **kwargs)
         if value:
-            return value.login
-        return value
+            return (value.name(), value.login)
+        return (None, None)
 
     def index_link(self, basepath, key, items):
-        label = u'%s [%s]' % (key, len(items))
+        label = u'%s [%s]' % (key[0], len(items))
         etypes = set(entity.__regid__ for entity in items)
         vtitle = self._cw._('%(etype)s by %(author)s') % {
             'etype': ', '.join(display_name(self._cw, etype, 'plural')
                                for etype in etypes),
             'author': label}
-        url = self.index_url(basepath, key, vtitle=vtitle)
-        title = self._cw._('archive for %(author)s') % {'author': key}
+        url = self.index_url(basepath, key[1], vtitle=vtitle)
+        title = self._cw._('archive for %(author)s') % {'author': key[0]}
         return tags.a(label, href=url, title=title)
 
 
