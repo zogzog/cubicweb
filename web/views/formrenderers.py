@@ -494,6 +494,16 @@ class EntityInlinedFormRenderer(EntityFormRenderer):
     __regid__ = 'inline'
     fieldset_css_class = 'subentity'
 
+    def render_title(self, w, form, values):
+        w(u'<div class="iformTitle">')
+        w(u'<span>%(title)s</span> '
+          '#<span class="icounter">%(counter)s</span> ' % values)
+        if values['removejs']:
+            values['removemsg'] = self._cw._('remove-inlined-entity-form')
+            w(u'[<a href="javascript: %(removejs)s;$.noop();">%(removemsg)s</a>]'
+              % values)
+        w(u'</div>')
+
     def render(self, w, form, values):
         form.add_media()
         self.open_form(w, form, values)
@@ -517,18 +527,6 @@ class EntityInlinedFormRenderer(EntityFormRenderer):
 
     def close_form(self, w, form, values):
         w(u'</div></div>')
-
-    def render_title(self, w, form, values):
-        if values['removejs']:
-            values['removemsg'] = self._cw._('remove-inlined-entity-form')
-            w(u'<div class="iformTitle"><span>%(title)s</span> '
-              '#<span class="icounter">%(counter)s</span> '
-              '[<a href="javascript: %(removejs)s;$.noop();">%(removemsg)s</a>]</div>'
-              % values)
-        else:
-            w(u'<div class="iformTitle"><span>%(title)s</span> '
-              '#<span class="icounter">%(counter)s</span></div>'
-              % values)
 
     def render_fields(self, w, form, values):
         w(u'<fieldset id="fs-%(divid)s">' % values)

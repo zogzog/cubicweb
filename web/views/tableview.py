@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -135,7 +135,7 @@ class TableLayout(component.Component):
 
     * `header_column_idx`, if not `None`, should be a colum index or a set of
       column index where <th> tags should be generated instead of <td>
-    """
+    """ #'# make emacs happier
     __regid__ = 'table_layout'
     cssclass = "listing"
     needs_css = ('cubicweb.tableview.css',)
@@ -332,14 +332,14 @@ class AbstractColumnRenderer(object):
     :attr: `header`, the column header. If None, default to `_(colid)`
     :attr: `addcount`, if True, add the table size in parenthezis beside the header
     :attr: `trheader`, should the header be translated
-    :attr: `escapeheader`, should the header be xml_escape'd
+    :attr: `escapeheader`, should the header be xml_escaped
     :attr: `sortable`, tell if the column is sortable
     :attr: `view`, the table view
     :attr: `_cw`, the request object
     :attr: `colid`, the column identifier
     :attr: `attributes`, dictionary of attributes to put on the HTML tag when
             the cell is rendered
-    """
+    """ #'# make emacs
     attributes = {}
     empty_cell_content = u'&#160;'
 
@@ -576,7 +576,7 @@ class RsetTableView(TableMixIn, AnyRsetView):
     renderer.
 
     .. autoclass:: RsetTableColRenderer
-    """
+    """    #'# make emacs happier
     __regid__ = 'table'
     # selector trick for bw compath with the former :class:TableView
     __select__ = AnyRsetView.__select__ & (~match_kwargs(
@@ -599,16 +599,19 @@ class RsetTableView(TableMixIn, AnyRsetView):
         # may be listed in possible views
         return self.__regid__ == 'table'
 
-    def call(self, headers=None, displaycols=None, cellvids=None, **kwargs):
+    def call(self, headers=None, displaycols=None, cellvids=None,
+             paginate=None, **kwargs):
         if self.headers:
             self.headers = [h and self._cw._(h) for h in self.headers]
-        if (headers or displaycols or cellvids):
+        if (headers or displaycols or cellvids or paginate):
             if headers is not None:
                 self.headers = headers
             if displaycols is not None:
                 self.displaycols = displaycols
             if cellvids is not None:
                 self.cellvids = cellvids
+            if paginate is not None:
+                self.paginable = paginate
         if kwargs:
             # old table view arguments that we can safely ignore thanks to
             # selectors

@@ -220,9 +220,6 @@ li.invisible div{
     font-style: italic;
 }
 
-.align-center{
-    text-align: center;
-}
 
 /***************************************/
 /*   LAYOUT                            */
@@ -992,11 +989,20 @@ div#footer a {
 /********************************/
 
 img.align-right {
-  margin-left: 1.5em;
+  margin-left: auto;
+  display:block;
 }
 
 img.align-left {
-  margin-right: 1.5em;
+  margin-right: auto;
+  display:block;
+}
+
+img.align-center{
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+  display:block;
 }
 
 /******************************/

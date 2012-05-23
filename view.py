@@ -90,19 +90,30 @@ STRICT_DOCTYPE_NOEXT = u'<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN
 # base view object ############################################################
 
 class View(AppObject):
-    """abstract view class, used as base for every renderable object such
-    as views, templates, some components...web
+    """This class is an abstraction of a view class, used as a base class for
+    every renderable object such as views, templates and other user interface
+    components.
 
-    A view is instantiated to render a [part of a] result set. View
-    subclasses may be parametred using the following class attributes:
+    A `View` is instantiated to render a result set or part of a result
+    set. `View` subclasses may be parametrized using the following class
+    attributes:
 
-    * `templatable` indicates if the view may be embeded in a main
-      template or if it has to be rendered standalone (i.e. XML for
-      instance)
-    * if the view is not templatable, it should set the `content_type` class
-      attribute to the correct MIME type (text/xhtml by default)
-    * the `category` attribute may be used in the interface to regroup related
-      objects together
+    :py:attr:`templatable` indicates if the view may be embedded in a main
+      template or if it has to be rendered standalone (i.e. pure XML views must
+      not be embedded in the main template of HTML pages)
+    :py:attr:`content_type` if the view is not templatable, it should set the
+      `content_type` class attribute to the correct MIME type (text/xhtml being
+      the default)
+    :py:attr:`category` this attribute may be used in the interface to regroup
+      related objects (view kinds) together
+
+    :py:attr:`paginable`
+
+    :py:attr:`binary`
+
+
+    A view writes to its output stream thanks to its attribute `w` (the
+    append method of an `UStreamIO`, except for binary views).
 
     At instantiation time, the standard `_cw`, and `cw_rset` attributes are
     added and the `w` attribute will be set at rendering time to a write
