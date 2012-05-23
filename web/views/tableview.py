@@ -601,16 +601,19 @@ class RsetTableView(TableMixIn, AnyRsetView):
         # may be listed in possible views
         return self.__regid__ == 'table'
 
-    def call(self, headers=None, displaycols=None, cellvids=None, **kwargs):
+    def call(self, headers=None, displaycols=None, cellvids=None,
+             paginate=None, **kwargs):
         if self.headers:
             self.headers = [h and self._cw._(h) for h in self.headers]
-        if (headers or displaycols or cellvids):
+        if (headers or displaycols or cellvids or paginate):
             if headers is not None:
                 self.headers = headers
             if displaycols is not None:
                 self.displaycols = displaycols
             if cellvids is not None:
                 self.cellvids = cellvids
+            if paginate is not None:
+                self.paginable = paginate
         if kwargs:
             # old table view arguments that we can safely ignore thanks to
             # selectors
