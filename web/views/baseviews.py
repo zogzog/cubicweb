@@ -175,7 +175,7 @@ class InContextView(EntityView):
 class OutOfContextView(EntityView):
     """:__regid__: *outofcontext*
 
-    This view is used whenthe entity should be considered as displayed out of
+    This view is used when the entity should be considered as displayed out of
     its context. By default it produces the result of `textoutofcontext` wrapped
     in a link leading to the primary view of the entity.
     """
