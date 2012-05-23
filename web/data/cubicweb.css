@@ -116,7 +116,6 @@ li {
 
 img {
   border: none;
-  display: block;
 }
 
 
@@ -983,16 +982,19 @@ div#footer a {
 
 img.align-right {
   margin-left: auto;
+  display:block;
 }
 
 img.align-left {
   margin-right: auto;
+  display:block;
 }
 
 img.align-center{
   text-align: center;
   margin-left: auto;
   margin-right: auto;
+  display:block;
 }
 
 /******************************/
