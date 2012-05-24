@@ -332,7 +332,7 @@ class HooksRegistry(CWRegistry):
                                    key=lambda x: x.order)
                     with security_enabled(session, write=False):
                         for hook in hooks:
-                           hook()
+                            hook()
 
     def get_pruned_hooks(self, session, event, entities, eids_from_to, kwargs):
         """return a set of hooks that should not be considered by filtered_possible objects
