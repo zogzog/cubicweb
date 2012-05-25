@@ -39,8 +39,10 @@ class DataFeedlDAPParser(datafeed.DataFeedParser):
         """IDataFeedParser main entry point"""
         source = self.source
         searchstr = '(&%s)' % ''.join(source.base_filters)
+        self.warning('processing ldapfeed stuff %s %s', source, searchstr)
         for userdict in source._search(self._cw, source.user_base_dn,
                                        source.user_base_scope, searchstr):
+            self.warning('fetched user %s', userdict)
             entity = self.extid2entity(userdict['dn'], 'CWUser', **userdict)
             if entity is not None and not self.created_during_pull(entity):
                 self.notify_updated(entity)

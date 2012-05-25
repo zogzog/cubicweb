@@ -81,6 +81,8 @@ class StaticFileController(Controller):
         self._cw.validate_cache()
         # XXX elif uri.startswith('/https/'): uri = uri[6:]
         mimetype, encoding = mimetypes.guess_type(path)
+        if mimetype is None:
+            mimetype = 'application/octet-stream'
         self._cw.set_content_type(mimetype, osp.basename(path), encoding)
         with open(path, 'rb') as resource:
             return resource.read()
