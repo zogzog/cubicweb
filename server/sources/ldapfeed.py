@@ -29,7 +29,7 @@ class LDAPFeedSource(ldaputils.LDAPSourceMixIn,
                      datafeed.DataFeedSource):
     """LDAP feed source"""
     support_entities = {'CWUser': False}
-    use_cwuri_as_url = True
+    use_cwuri_as_url = False
 
     options = datafeed.DataFeedSource.options + ldaputils.LDAPSourceMixIn.options
 
