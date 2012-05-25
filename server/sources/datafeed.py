@@ -270,7 +270,7 @@ class DataFeedSource(AbstractSource):
                'WHERE entities.eid=cw_source_relation.eid_from '
                'AND cw_source_relation.eid_to=%s' % self.eid)
         return dict((b64decode(uri), (eid, type))
-                    for uri, eid, type in session.system_sql(sql))
+                    for uri, eid, type in session.system_sql(sql).fetchall())
 
     def init_import_log(self, session, **kwargs):
         dataimport = session.create_entity('CWDataImport', cw_import_of=self,
