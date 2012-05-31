@@ -43,4 +43,3 @@ class LDAPFeedSource(ldaputils.LDAPSourceMixIn,
     def _entity_update(self, source_entity):
         datafeed.DataFeedSource._entity_update(self, source_entity)
         ldaputils.LDAPSourceMixIn._entity_update(self, source_entity)
-

@@ -29,7 +29,7 @@ from cubicweb.server.utils import crypt_password
 from cubicweb.server.sources import datafeed
 
 
-class DataFeedlDAPParser(datafeed.DataFeedParser):
+class DataFeedLDAPAdapter(datafeed.DataFeedParser):
     __regid__ = 'ldapfeed'
     # attributes that may appears in source user_attrs dict which are not
     # attributes of the cw user
@@ -49,6 +49,26 @@ class DataFeedlDAPParser(datafeed.DataFeedParser):
                 attrs = self.ldap2cwattrs(userdict)
                 self.update_if_necessary(entity, attrs)
                 self._process_email(entity, userdict)
+
+
+    def handle_deletion(self, config, session, myuris):
+        if config['delete-entities']:
+            print 'DELETE'
+            super(DataFeedLDAPAdapter, self).handle_deletion(config, session, myuris)
+        if myuris:
+            byetype = {}
+            for extid, (eid, etype) in myuris.iteritems():
+                if self.is_deleted(extid, etype, eid):
+                    byetype.setdefault(etype, []).append(str(eid))
+
+            for etype, eids in byetype.iteritems():
+                if etype != 'CWUser':
+                    continue
+                self.warning('deactivate %s %s entities', len(eids), etype)
+                for eid in eids:
+                    wf = session.entity_from_eid(eid).cw_adapt_to('IWorkflowable')
+                    wf.fire_transition('deactivate')
+        session.commit(free_cnxset=False)
 
     def ldap2cwattrs(self, sdict, tdict=None):
         if tdict is None:
@@ -72,7 +92,7 @@ class DataFeedlDAPParser(datafeed.DataFeedParser):
         return entity
 
     def after_entity_copy(self, entity, sourceparams):
-        super(DataFeedlDAPParser, self).after_entity_copy(entity, sourceparams)
+        super(DataFeedLDAPAdapter, self).after_entity_copy(entity, sourceparams)
         if entity.__regid__ == 'EmailAddress':
             return
         groups = [self._get_group(n) for n in self.source.user_default_groups]
@@ -84,7 +104,7 @@ class DataFeedlDAPParser(datafeed.DataFeedParser):
             extid, _ = extid.rsplit('@@', 1)
         except ValueError:
             pass
-        return self.source.object_exists_in_ldap(extid)
+        return not self.source.object_exists_in_ldap(extid)
 
     def _process_email(self, entity, userdict):
         try:

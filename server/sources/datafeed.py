@@ -28,7 +28,6 @@ from base64 import b64decode
 from cookielib import CookieJar
 
 from lxml import etree
-from logilab.mtconverter import xml_escape
 
 from cubicweb import RegistryNotFound, ObjectNotFound, ValidationError, UnknownEid
 from cubicweb.server.sources import AbstractSource
@@ -68,7 +67,7 @@ class DataFeedSource(AbstractSource):
           }),
         ('delete-entities',
          {'type' : 'yn',
-          'default': True,
+          'default': False,
           'help': ('Should already imported entities not found anymore on the '
                    'external source be deleted?'),
           'group': 'datafeed-source', 'level': 2,
@@ -80,6 +79,7 @@ class DataFeedSource(AbstractSource):
           'group': 'datafeed-source', 'level': 2,
           }),
         )
+
     def __init__(self, repo, source_config, eid=None):
         AbstractSource.__init__(self, repo, source_config, eid)
         self.update_config(None, self.check_conf_dict(eid, source_config,
@@ -192,23 +192,13 @@ class DataFeedSource(AbstractSource):
             self.release_synchronization_lock(session)
 
     def _pull_data(self, session, force=False, raise_on_error=False):
-        if self.config['delete-entities']:
-            myuris = self.source_cwuris(session)
-        else:
-            myuris = None
         importlog = self.init_import_log(session)
+        myuris = self.source_cwuris(session)
         parser = self._get_parser(session, sourceuris=myuris, import_log=importlog)
         if self.process_urls(parser, self.urls, raise_on_error):
             self.warning("some error occured, don't attempt to delete entities")
-        elif self.config['delete-entities'] and myuris:
-            byetype = {}
-            for extid, (eid, etype) in myuris.iteritems():
-                if parser.is_deleted(extid, etype, eid):
-                    byetype.setdefault(etype, []).append(str(eid))
-            for etype, eids in byetype.iteritems():
-                self.warning('delete %s %s entities', len(eids), etype)
-                session.execute('DELETE %s X WHERE X eid IN (%s)'
-                                % (etype, ','.join(eids)))
+        else:
+            parser.handle_deletion(self.config, session, myuris)
         self.update_latest_retrieval(session)
         stats = parser.stats
         if stats.get('created'):
@@ -375,6 +365,17 @@ class DataFeedParser(AppObject):
         stuff in sub-classes.
         """
         return True
+
+    def handle_deletion(self, config, session, myuris):
+        if config['delete-entities'] and myuris:
+            byetype = {}
+            for extid, (eid, etype) in myuris.iteritems():
+                if self.is_deleted(extid, etype, eid):
+                    byetype.setdefault(etype, []).append(str(eid))
+            for etype, eids in byetype.iteritems():
+                self.warning('delete %s %s entities', len(eids), etype)
+                session.execute('DELETE %s X WHERE X eid IN (%s)'
+                                % (etype, ','.join(eids)))
 
     def update_if_necessary(self, entity, attrs):
         self.notify_updated(entity)
