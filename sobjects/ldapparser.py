@@ -54,6 +54,7 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
     def handle_deletion(self, config, session, myuris):
         if config['delete-entities']:
             super(DataFeedLDAPAdapter, self).handle_deletion(config, session, myuris)
+            return
         if myuris:
             byetype = {}
             for extid, (eid, etype) in myuris.iteritems():
