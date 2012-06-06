@@ -254,8 +254,7 @@ class Repository(object):
                or not 'CWSource' in self.schema: # # 3.10 migration
             self.system_source.init_creating()
             return
-        session = self.internal_session()
-        try:
+        with self.internal_session() as session:
             # FIXME: sources should be ordered (add_entity priority)
             for sourceent in session.execute(
                 'Any S, SN, SA, SC WHERE S is_instance_of CWSource, '
@@ -266,8 +265,6 @@ class Repository(object):
                     self.system_source.init(True, sourceent)
                     continue
                 self.add_source(sourceent, add_to_cnxsets=False)
-        finally:
-            session.close()
 
     def _clear_planning_caches(self):
         for cache in ('source_defs', 'is_multi_sources_relation',
@@ -337,8 +334,7 @@ class Repository(object):
         appschema = schema.CubicWebSchema(self.config.appid)
         self.set_schema(self.config.load_bootstrap_schema(), resetvreg=False)
         self.debug('deserializing db schema into %s %#x', appschema.name, id(appschema))
-        session = self.internal_session()
-        try:
+        with self.internal_session() as session:
             try:
                 deserialize_schema(appschema, session)
             except BadSchemaDefinition:
@@ -349,8 +345,6 @@ class Repository(object):
                 raise Exception('Is the database initialised ? (cause: %s)' %
                                 (ex.args and ex.args[0].strip() or 'unknown')), \
                                 None, sys.exc_info()[-1]
-        finally:
-            session.close()
         self.set_schema(appschema)
 
 
@@ -631,8 +625,7 @@ class Repository(object):
         """
         from logilab.common.changelog import Version
         vcconf = {}
-        session = self.internal_session()
-        try:
+        with self.internal_session() as session:
             for pk, version in session.execute(
                 'Any K,V WHERE P is CWProperty, P value V, P pkey K, '
                 'P pkey ~="system.version.%"', build_descr=False):
@@ -651,8 +644,6 @@ class Repository(object):
                         msg = ('instance has %s version %s but %s '
                                'is installed. Run "cubicweb-ctl upgrade".')
                         raise ExecutionError(msg % (cube, version, fsversion))
-        finally:
-            session.close()
         return vcconf
 
     @cached
@@ -673,14 +664,11 @@ class Repository(object):
 
         This is a public method, not requiring a session id.
         """
-        session = self.internal_session()
-        try:
+        with self.internal_session() as session:
             # don't use session.execute, we don't want rset.req set
             return self.querier.execute(session, 'Any K,V WHERE P is CWProperty,'
                                         'P pkey K, P value V, NOT P for_user U',
                                         build_descr=False)
-        finally:
-            session.close()
 
     # XXX protect this method: anonymous should be allowed and registration
     # plugged
@@ -689,10 +677,9 @@ class Repository(object):
         given password. This method is designed to be used for anonymous
         registration on public web site.
         """
-        session = self.internal_session()
-        # for consistency, keep same error as unique check hook (although not required)
-        errmsg = session._('the value "%s" is already used, use another one')
-        try:
+        with self.internal_session() as session:
+            # for consistency, keep same error as unique check hook (although not required)
+            errmsg = session._('the value "%s" is already used, use another one')
             if (session.execute('CWUser X WHERE X login %(login)s', {'login': login},
                                 build_descr=False)
                 or session.execute('CWUser X WHERE X use_email C, C address %(login)s',
@@ -719,8 +706,6 @@ class Repository(object):
                                 'U primary_email X, U use_email X '
                                 'WHERE U login %(login)s', d, build_descr=False)
             session.commit()
-        finally:
-            session.close()
         return True
 
     def find_users(self, fetch_attrs, **query_attrs):
@@ -743,8 +728,7 @@ class Repository(object):
         for k in chain(fetch_attrs, query_attrs.iterkeys()):
             if k not in cwuserattrs:
                 raise Exception('bad input for find_user')
-        session = self.internal_session()
-        try:
+        with self.internal_session() as session:
             varmaker = rqlvar_maker()
             vars = [(attr, varmaker.next()) for attr in fetch_attrs]
             rql = 'Any %s WHERE X is CWUser, ' % ','.join(var[1] for var in vars)
@@ -753,8 +737,6 @@ class Repository(object):
                                                   for attr in query_attrs.iterkeys()),
                                    query_attrs)
             return rset.rows
-        finally:
-            session.close()
 
     def connect(self, login, **kwargs):
         """open a connection for a given user
@@ -766,13 +748,10 @@ class Repository(object):
         raise `ConnectionError` if we can't open a connection
         """
         # use an internal connection
-        session = self.internal_session()
-        # try to get a user object
-        cnxprops = kwargs.pop('cnxprops', None)
-        try:
+        with self.internal_session() as session:
+            # try to get a user object
+            cnxprops = kwargs.pop('cnxprops', None)
             user = self.authenticate_user(session, login, **kwargs)
-        finally:
-            session.close()
         session = Session(user, self, cnxprops)
         user._cw = user.cw_rset.req = session
         user.cw_clear_relation_cache()
@@ -985,14 +964,11 @@ class Repository(object):
         * list of (etype, eid) of entities of the given types which have been
           deleted since the given timestamp
         """
-        session = self.internal_session()
-        updatetime = datetime.utcnow()
-        try:
+        with self.internal_session() as session:
+            updatetime = datetime.utcnow()
             modentities, delentities = self.system_source.modified_entities(
                 session, etypes, mtime)
             return updatetime, modentities, delentities
-        finally:
-            session.close()
 
     # session handling ########################################################
 

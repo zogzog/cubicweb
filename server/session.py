@@ -1275,6 +1275,12 @@ class InternalSession(Session):
         if not safe:
             self.disable_hook_categories('integrity')
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exctype, excvalue, tb):
+        self.close()
+
     @property
     def cnxset(self):
         """connections set, set according to transaction mode for each query"""
