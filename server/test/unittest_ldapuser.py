@@ -20,9 +20,8 @@
 import os
 import shutil
 import time
-from os.path import abspath, join, exists
+from os.path import join, exists
 import subprocess
-from socket import socket, error as socketerror
 
 from logilab.common.testlib import TestCase, unittest_main, mock_object, Tags
 
@@ -32,13 +31,15 @@ from cubicweb.devtools.repotest import RQLGeneratorTC
 from cubicweb.devtools.httptest import get_available_port
 from cubicweb.devtools import get_test_db_handler
 
-from cubicweb.server.sources.ldapuser import *
+from cubicweb.server.session import security_enabled
+from cubicweb.server.sources.ldapuser import GlobTrFunc, UnknownEid, RQL2LDAPFilter
 
 CONFIG = u'user-base-dn=ou=People,dc=cubicweb,dc=test'
 URL = None
 
-def create_slapd_configuration(config):
-    global slapd_process, URL
+def create_slapd_configuration(cls):
+    global URL
+    config = cls.config
     basedir = join(config.apphome, "ldapdb")
     slapdconf = join(config.apphome, "slapd.conf")
     confin = file(join(config.apphome, "slapd.conf.in")).read()
@@ -60,28 +61,26 @@ def create_slapd_configuration(config):
     ldapuri = 'ldap://%s' % host
     cmdline = ["/usr/sbin/slapd", "-f",  slapdconf,  "-h",  ldapuri, "-d", "0"]
     config.info('Starting slapd:', ' '.join(cmdline))
-    slapd_process = subprocess.Popen(cmdline)
+    cls.slapd_process = subprocess.Popen(cmdline)
     time.sleep(0.2)
-    if slapd_process.poll() is None:
-        config.info('slapd started with pid %s' % slapd_process.pid)
+    if cls.slapd_process.poll() is None:
+        config.info('slapd started with pid %s' % cls.slapd_process.pid)
     else:
         raise EnvironmentError('Cannot start slapd with cmdline="%s" (from directory "%s")' %
                                (" ".join(cmdline), os.getcwd()))
     URL = u'ldap://%s' % host
 
-def terminate_slapd(config):
-    global slapd_process
-    if slapd_process.returncode is None:
+def terminate_slapd(cls):
+    config = cls.config
+    if cls.slapd_process and cls.slapd_process.returncode is None:
         config.info('terminating slapd')
-        if hasattr(slapd_process, 'terminate'):
-            slapd_process.terminate()
+        if hasattr(cls.slapd_process, 'terminate'):
+            cls.slapd_process.terminate()
         else:
             import os, signal
-            os.kill(slapd_process.pid, signal.SIGTERM)
-        slapd_process.wait()
+            os.kill(cls.slapd_process.pid, signal.SIGTERM)
+        cls.slapd_process.wait()
         config.info('DONE')
-    del slapd_process
-
 
 class LDAPTestBase(CubicWebTC):
     loglevel = 'ERROR'
@@ -90,11 +89,11 @@ class LDAPTestBase(CubicWebTC):
     def setUpClass(cls):
         from cubicweb.cwctl import init_cmdline_log_threshold
         init_cmdline_log_threshold(cls.config, cls.loglevel)
-        create_slapd_configuration(cls.config)
+        create_slapd_configuration(cls)
 
     @classmethod
     def tearDownClass(cls):
-        terminate_slapd(cls.config)
+        terminate_slapd(cls)
 
 class DeleteStuffFromLDAPFeedSourceTC(LDAPTestBase):
     test_db_id = 'ldap-feed'
@@ -108,24 +107,36 @@ class DeleteStuffFromLDAPFeedSourceTC(LDAPTestBase):
         lfsource = isession.repo.sources_by_uri['ldapuser']
         stats = lfsource.pull_data(isession, force=True, raise_on_error=True)
 
+    def _pull(self):
+        with self.session.repo.internal_session() as isession:
+            with security_enabled(isession, read=False, write=False):
+                lfsource = isession.repo.sources_by_uri['ldapuser']
+                stats = lfsource.pull_data(isession, force=True, raise_on_error=True)
+                isession.commit()
+
     def test_delete(self):
+        """ delete syt, pull, check deactivation, repull,
+        readd syt, pull, check activation
+        """
         uri = self.repo.sources_by_uri['ldapuser'].urls[0]
-        from subprocess import call
         deletecmd = ("ldapdelete -H %s 'uid=syt,ou=People,dc=cubicweb,dc=test' "
                      "-v -x -D cn=admin,dc=cubicweb,dc=test -w'cw'" % uri)
         os.system(deletecmd)
-        isession = self.session.repo.internal_session(safe=False)
-        from cubicweb.server.session import security_enabled
-        with security_enabled(isession, read=False, write=False):
-            lfsource = isession.repo.sources_by_uri['ldapuser']
-            stats = lfsource.pull_data(isession, force=True, raise_on_error=True)
-            isession.commit()
+        self._pull()
         self.assertRaises(AuthenticationError, self.repo.connect, 'syt', password='syt')
         self.assertEqual(self.execute('Any N WHERE U login "syt", '
                                       'U in_state S, S name N').rows[0][0],
                          'deactivated')
-
-
+        # check that it doesn't choke
+        self._pull()
+        # reset the fscking ldap thing
+        self.tearDownClass()
+        self.setUpClass()
+        self._pull()
+        # still deactivated, but a warning has been emitted ...
+        self.assertEqual(self.execute('Any N WHERE U login "syt", '
+                                      'U in_state S, S name N').rows[0][0],
+                         'deactivated')
 
 class LDAPFeedSourceTC(LDAPTestBase):
     test_db_id = 'ldap-feed'

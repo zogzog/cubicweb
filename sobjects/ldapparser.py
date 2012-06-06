@@ -67,8 +67,22 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
                 self.warning('deactivate %s %s entities', len(eids), etype)
                 for eid in eids:
                     wf = session.entity_from_eid(eid).cw_adapt_to('IWorkflowable')
-                    wf.fire_transition('deactivate')
+                    wf.fire_transition_if_possible('deactivate')
         session.commit(free_cnxset=False)
+
+    def update_if_necessary(self, entity, attrs):
+        entity.complete(tuple(attrs))
+        if entity.__regid__ == 'CWUser':
+            wf = entity.cw_adapt_to('IWorkflowable')
+            if wf.state == 'deactivated':
+                self.warning('update on deactivated user %s', entity.login)
+        mdate = attrs.get('modification_date')
+        if not mdate or mdate > entity.modification_date:
+            attrs = dict( (k, v) for k, v in attrs.iteritems()
+                          if v != getattr(entity, k))
+            if attrs:
+                entity.set_attributes(**attrs)
+                self.notify_updated(entity)
 
     def ldap2cwattrs(self, sdict, tdict=None):
         if tdict is None:

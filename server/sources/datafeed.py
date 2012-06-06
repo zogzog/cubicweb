@@ -378,7 +378,6 @@ class DataFeedParser(AppObject):
                                 % (etype, ','.join(eids)))
 
     def update_if_necessary(self, entity, attrs):
-        self.notify_updated(entity)
         entity.complete(tuple(attrs))
         # check modification date and compare attribute values to only update
         # what's actually needed
@@ -388,7 +387,7 @@ class DataFeedParser(AppObject):
                           if v != getattr(entity, k))
             if attrs:
                 entity.set_attributes(**attrs)
-
+                self.notify_updated(entity)
 
 class DataFeedXMLParser(DataFeedParser):
 

@@ -447,7 +447,7 @@ class InitInstanceCommand(Command):
             get_connection(
                 system['db-driver'], database=system['db-name'],
                 host=system.get('db-host'), port=system.get('db-port'),
-                user=system.get('db-user'), password=system.get('db-password'),
+                user=system.get('db-user') or '', password=system.get('db-password') or '',
                 **extra)
         except Exception, ex:
             raise ConfigurationError(
