@@ -1152,8 +1152,11 @@ the repository',
                 tr = translation('cubicweb', path, languages=[language])
                 self.translations[language] = (tr.ugettext, tr.upgettext)
             except (ImportError, AttributeError, IOError):
-                self.exception('localisation support error for language %s',
-                               language)
+                if self.mode != 'test':
+                    # in test contexts, data/i18n does not exist, hence
+                    # logging will only pollute the logs
+                    self.exception('localisation support error for language %s',
+                                   language)
 
     def vregistry_path(self):
         """return a list of files or directories where the registry will look
