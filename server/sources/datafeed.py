@@ -278,8 +278,7 @@ class DataFeedParser(AppObject):
         self.source = source
         self.sourceuris = sourceuris
         self.import_log = import_log
-        self.stats = {'created': set(),
-                      'updated': set()}
+        self.stats = {'created': set(), 'updated': set(), 'checked': set()}
 
     def normalize_url(self, url):
         from cubicweb.sobjects import URL_MAPPING # available after registration
@@ -359,6 +358,9 @@ class DataFeedParser(AppObject):
     def notify_updated(self, entity):
         return self.stats['updated'].add(entity.eid)
 
+    def notify_checked(self, entity):
+        return self.stats['checked'].add(entity.eid)
+
     def is_deleted(self, extid, etype, eid):
         """return True if the entity of given external id, entity type and eid
         is actually deleted. Always return True by default, put more sensible
@@ -381,6 +383,7 @@ class DataFeedParser(AppObject):
         entity.complete(tuple(attrs))
         # check modification date and compare attribute values to only update
         # what's actually needed
+        self.notify_checked(entity)
         mdate = attrs.get('modification_date')
         if not mdate or mdate > entity.modification_date:
             attrs = dict( (k, v) for k, v in attrs.iteritems()

@@ -197,7 +197,7 @@ class CWEntityXMLParserTC(CubicWebTC):
                           })
         session = self.repo.internal_session(safe=True)
         stats = dfsource.pull_data(session, force=True, raise_on_error=True)
-        self.assertEqual(sorted(stats.keys()), ['created', 'updated'])
+        self.assertEqual(sorted(stats.keys()), ['checked', 'created', 'updated'])
         self.assertEqual(len(stats['created']), 2)
         self.assertEqual(stats['updated'], set())
 
@@ -233,14 +233,16 @@ class CWEntityXMLParserTC(CubicWebTC):
         with session.security_enabled(read=False): # avoid Unauthorized due to password selection
             stats = dfsource.pull_data(session, force=True, raise_on_error=True)
         self.assertEqual(stats['created'], set())
-        self.assertEqual(len(stats['updated']), 2)
+        self.assertEqual(len(stats['updated']), 0)
+        self.assertEqual(len(stats['checked']), 2)
         self.repo._type_source_cache.clear()
         self.repo._extid_cache.clear()
         session.set_cnxset()
         with session.security_enabled(read=False): # avoid Unauthorized due to password selection
             stats = dfsource.pull_data(session, force=True, raise_on_error=True)
         self.assertEqual(stats['created'], set())
-        self.assertEqual(len(stats['updated']), 2)
+        self.assertEqual(len(stats['updated']), 0)
+        self.assertEqual(len(stats['checked']), 2)
         session.commit()
 
         # test move to system source
