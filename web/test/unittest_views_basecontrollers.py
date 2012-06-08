@@ -695,38 +695,44 @@ class AjaxControllerTC(CubicWebTC):
         @ajaxfunc
         def foo(self, x, y):
             return 'hello'
-        self.assertTrue(issubclass(foo, AjaxFunction))
-        self.assertEqual(foo.__regid__, 'foo')
-        self.assertEqual(foo.check_pageid, False)
-        self.assertEqual(foo.output_type, None)
+        self.assertEqual(foo(object, 1, 2), 'hello')
+        appobject = foo.__appobject__
+        self.assertTrue(issubclass(appobject, AjaxFunction))
+        self.assertEqual(appobject.__regid__, 'foo')
+        self.assertEqual(appobject.check_pageid, False)
+        self.assertEqual(appobject.output_type, None)
         req = self.request()
-        f = foo(req)
+        f = appobject(req)
         self.assertEqual(f(12, 13), 'hello')
 
     def test_ajaxfunc_checkpageid(self):
-        @ajaxfunc( check_pageid=True)
+        @ajaxfunc(check_pageid=True)
         def foo(self, x, y):
-            pass
-        self.assertTrue(issubclass(foo, AjaxFunction))
-        self.assertEqual(foo.__regid__, 'foo')
-        self.assertEqual(foo.check_pageid, True)
-        self.assertEqual(foo.output_type, None)
+            return 'hello'
+        self.assertEqual(foo(object, 1, 2), 'hello')
+        appobject = foo.__appobject__
+        self.assertTrue(issubclass(appobject, AjaxFunction))
+        self.assertEqual(appobject.__regid__, 'foo')
+        self.assertEqual(appobject.check_pageid, True)
+        self.assertEqual(appobject.output_type, None)
         # no pageid
         req = self.request()
-        f = foo(req)
+        f = appobject(req)
         self.assertRaises(RemoteCallFailed, f, 12, 13)
 
     def test_ajaxfunc_json(self):
         @ajaxfunc(output_type='json')
         def foo(self, x, y):
             return x + y
-        self.assertTrue(issubclass(foo, AjaxFunction))
-        self.assertEqual(foo.__regid__, 'foo')
-        self.assertEqual(foo.check_pageid, False)
-        self.assertEqual(foo.output_type, 'json')
+        self.assertEqual(foo(object, 1, 2), 3)
+        appobject = foo.__appobject__
+        self.assertTrue(issubclass(appobject, AjaxFunction))
+        self.assertEqual(appobject.__regid__, 'foo')
+        self.assertEqual(appobject.check_pageid, False)
+        self.assertEqual(appobject.output_type, 'json')
         # no pageid
         req = self.request()
-        f = foo(req)
+        f = appobject(req)
         self.assertEqual(f(12, 13), '25')
 
 

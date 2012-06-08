@@ -256,6 +256,12 @@ class CWRegistry(Registry):
                       key=lambda x: x.cw_propval('order'))
 
 
+def related_appobject(obj, appobjectattr='__appobject__'):
+    """ adapts any object to a potential appobject bound to it
+    through the __appobject__ attribute
+    """
+    return getattr(obj, appobjectattr, obj)
+
 
 class ETypeRegistry(CWRegistry):
 
@@ -272,6 +278,7 @@ class ETypeRegistry(CWRegistry):
         self.clear_caches()
 
     def register(self, obj, **kwargs):
+        obj = related_appobject(obj)
         oid = kwargs.get('oid') or obj.__regid__
         if oid != 'Any' and not oid in self.schema:
             self.error('don\'t register %s, %s type not defined in the '
@@ -537,6 +544,20 @@ class CWRegistryStore(RegistryStore):
     def itervalues(self):
         return (value for key, value in self.items())
 
+    def load_module(self, module):
+        """ variation from the base implementation:
+        apply related_appobject to the automatically registered objects
+        """
+        self.info('loading %s from %s', module.__name__, module.__file__)
+        if hasattr(module, 'registration_callback'):
+            module.registration_callback(self)
+            return
+        for objname, obj in vars(module).iteritems():
+            if objname.startswith('_'):
+                continue
+            self._load_ancestors_then_object(module.__name__,
+                                             related_appobject(obj))
+
     def reset(self):
         CW_EVENT_MANAGER.emit('before-registry-reset', self)
         super(CWRegistryStore, self).reset()
@@ -551,6 +572,17 @@ class CWRegistryStore(RegistryStore):
             for key, propdef in self.config.cwproperty_definitions():
                 self.register_property(key, **propdef)
         CW_EVENT_MANAGER.emit('after-registry-reset', self)
+
+    def register_all(self, objects, modname, butclasses=()):
+        butclasses = set(related_appobject(obj)
+                         for obj in butclasses)
+        objects = [related_appobject(obj) for obj in objects]
+        super(CWRegistryStore, self).register_all(objects, modname, butclasses)
+
+    def register_and_replace(self, obj, replaced):
+        obj = related_appobject(obj)
+        replaced = related_appobject(replaced)
+        super(CWRegistryStore, self).register_and_replace(obj, replaced)
 
     def set_schema(self, schema):
         """set instance'schema and load application objects"""
@@ -624,6 +656,7 @@ class CWRegistryStore(RegistryStore):
         If `clear` is true, all objects with the same identifier will be
         previously unregistered.
         """
+        obj = related_appobject(obj)
         super(CWRegistryStore, self).register(obj, *args, **kwargs)
         # XXX bw compat
         ifaces = use_interfaces(obj)

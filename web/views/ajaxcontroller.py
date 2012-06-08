@@ -283,11 +283,21 @@ def _ajaxfunc_factory(implementation, selector=yes(), _output_type=None,
                 if data is None:
                     raise RemoteCallFailed(self._cw._('pageid-not-found'))
             return self.serialize(implementation(self, *args, **kwargs))
+
     AnAjaxFunc.__name__ = implementation.__name__
     # make sure __module__ refers to the original module otherwise
     # vreg.register(obj) will ignore ``obj``.
     AnAjaxFunc.__module__ = implementation.__module__
-    return AnAjaxFunc
+    # relate the ``implementation`` object to its wrapper appobject
+    # will be used by e.g.:
+    #   import base_module
+    #   @ajaxfunc
+    #   def foo(self):
+    #       return 42
+    #   assert foo(object) == 42
+    #   vreg.register_and_replace(foo, base_module.older_foo)
+    implementation.__appobject__ = AnAjaxFunc
+    return implementation
 
 
 def ajaxfunc(implementation=None, selector=yes(), output_type=None,
