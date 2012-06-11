@@ -42,9 +42,8 @@ classifiers = [
 __depends__ = {
     'logilab-common': '>= 0.58.0',
     'logilab-mtconverter': '>= 0.8.0',
-    'rql': '>= 0.28.0',
+    'rql': '>= 0.31.2',
     'yams': '>= 0.34.0',
-    'docutils': '>= 0.6',
     #gettext                    # for xgettext, msgcat, etc...
     # web dependancies
     'simplejson': '>= 2.0.9',
@@ -58,6 +57,7 @@ __depends__ = {
     }
 
 __recommends__ = {
+    'docutils': '>= 0.6',
     'Pyro': '>= 3.9.1, < 4.0.0',
     'PIL': '',                  # for captcha
     'pycrypto': '',             # for crypto extensions
