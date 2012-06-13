@@ -545,6 +545,16 @@ a.popupMenu {
   padding-left: 2em;
 }
 
+/* actions around tables */
+.tableactions span {
+  padding: 0 18px;
+  height: 24px;
+  background: #F8F8F8;
+  border: 1px solid #DFDFDF;
+  border-bottom: none;
+  border-radius: 4px 4px 0 0;
+}
+
 /* custom boxes */
 
 .search_box div.boxBody {

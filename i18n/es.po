@@ -223,9 +223,6 @@ msgstr "Y"
 msgid "About this site"
 msgstr "Información del Sistema"
 
-msgid "Action"
-msgstr ""
-
 #, python-format
 msgid "Added relation : %(entity_from)s %(rtype)s %(entity_to)s"
 msgstr ""
@@ -274,6 +271,10 @@ msgstr "Busca por categoría"
 
 msgid "Browse by entity type"
 msgstr "Busca por tipo de entidad"
+
+#, python-format
+msgid "By %(user)s on %(dt)s [%(undo_link)s]"
+msgstr ""
 
 msgid "Bytes"
 msgstr "Bytes"
@@ -775,9 +776,6 @@ msgstr "Hora internacional"
 msgid "TZTime_plural"
 msgstr "Horas internacionales"
 
-msgid "Target"
-msgstr ""
-
 #, python-format
 msgid "The view %s can not be applied to this query"
 msgstr "La vista %s no puede ser aplicada a esta búsqueda"
@@ -912,10 +910,6 @@ msgstr ""
 msgid "Used by:"
 msgstr "Utilizado por :"
 
-#, python-format
-msgid "User %(user_eid)s on %(dt)s [%(undo_link)s] \n"
-msgstr ""
-
 msgid "Users and groups management"
 msgstr "Usuarios y grupos de administradores"
 
@@ -1016,9 +1010,6 @@ msgstr ""
 
 msgid "abstract base class for transitions"
 msgstr "Clase de base abstracta para la transiciones"
-
-msgid "action menu"
-msgstr ""
 
 msgid "action(s) on this selection"
 msgstr "Acción(es) en esta selección"
@@ -2098,9 +2089,6 @@ msgstr "administración de fuentes de datos"
 msgid "date"
 msgstr "Fecha"
 
-msgid "day"
-msgstr "día"
-
 msgid "deactivate"
 msgstr "Desactivar"
 
@@ -2112,9 +2100,6 @@ msgstr "Diciembre"
 
 msgid "default"
 msgstr "Valor por defecto"
-
-msgid "default /base view for (transaction) actions "
-msgstr ""
 
 msgid "default text format for rich text fields."
 msgstr ""
@@ -2770,6 +2755,9 @@ msgstr "hCalendar"
 msgid "has_text"
 msgstr "Contiene el texto"
 
+msgid "header-center"
+msgstr ""
+
 msgid "header-left"
 msgstr "encabezado (izquierdo)"
 
@@ -3130,9 +3118,6 @@ msgstr ""
 msgid "log in"
 msgstr "Acceder"
 
-msgid "log out first"
-msgstr "Desconéctese primero"
-
 msgid "login"
 msgstr "Usuario"
 
@@ -3233,9 +3218,6 @@ msgstr "Modificar"
 
 msgid "monday"
 msgstr "Lunes"
-
-msgid "month"
-msgstr "mes"
 
 msgid "more actions"
 msgstr "Más acciones"
@@ -4135,6 +4117,10 @@ msgstr ""
 msgid "there is no previous page"
 msgstr ""
 
+#, python-format
+msgid "there is no transaction #%s"
+msgstr ""
+
 msgid "this action is not reversible!"
 msgstr "Esta acción es irreversible!."
 
@@ -4218,14 +4204,14 @@ msgctxt "State"
 msgid "to_state_object"
 msgstr "Transición hacia este Estado"
 
-msgid "today"
-msgstr "hoy"
-
 msgid "todo_by"
 msgstr "Asignada a"
 
 msgid "toggle check boxes"
 msgstr "Cambiar valor"
+
+msgid "toggle filter"
+msgstr "esconder/mostrar el filtro"
 
 msgid "tr_count"
 msgstr "n° de transición"
@@ -4345,11 +4331,11 @@ msgstr "Inaccesible"
 msgid "unauthorized value"
 msgstr "Valor no permitido"
 
+msgid "undefined user"
+msgstr ""
+
 msgid "undo"
 msgstr "Anular"
-
-msgid "undo last change"
-msgstr ""
 
 msgid "unique identifier used to connect to the application"
 msgstr "Identificador único utilizado para conectarse al Sistema"
@@ -4585,9 +4571,6 @@ msgstr "Aún no podemos manejar este tipo de consulta Sparql"
 msgid "wednesday"
 msgstr "Miércoles"
 
-msgid "week"
-msgstr "sem."
-
 #, python-format
 msgid "welcome %s !"
 msgstr "¡ Bienvenido %s  !"
@@ -4686,10 +4669,3 @@ msgid "you should un-inline relation %s which is supported and may be crossed "
 msgstr ""
 "usted debe  quitar la puesta en línea de la relación %s que es aceptada y "
 "puede ser cruzada"
-
-#~ msgid ""
-#~ "Can't restore relation %(rtype)s of entity %(eid)s, this relation does "
-#~ "not exists anymore in the schema."
-#~ msgstr ""
-#~ "No puede restaurar la relación %(rtype)s de la entidad %(eid)s, esta "
-#~ "relación ya no existe en el esquema."

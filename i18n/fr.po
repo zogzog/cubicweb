@@ -223,9 +223,6 @@ msgstr "ET"
 msgid "About this site"
 msgstr "À propos de ce site"
 
-msgid "Action"
-msgstr "Action"
-
 #, python-format
 msgid "Added relation : %(entity_from)s %(rtype)s %(entity_to)s"
 msgstr "Relation ajoutée : %(entity_from)s %(rtype)s %(entity_to)s"
@@ -274,6 +271,10 @@ msgstr "Naviguer par catégorie"
 
 msgid "Browse by entity type"
 msgstr "Naviguer par type d'entité"
+
+#, python-format
+msgid "By %(user)s on %(dt)s [%(undo_link)s]"
+msgstr "Par %(user)s le %(dt)s [%(undo_link)s] "
 
 msgid "Bytes"
 msgstr "Donnée binaires"
@@ -775,9 +776,6 @@ msgstr "Heure internationale"
 msgid "TZTime_plural"
 msgstr "Heures internationales"
 
-msgid "Target"
-msgstr ""
-
 #, python-format
 msgid "The view %s can not be applied to this query"
 msgstr "La vue %s ne peut être appliquée à cette requête"
@@ -912,10 +910,6 @@ msgstr "Entité %(etype)s mise à jour : %(entity)s"
 msgid "Used by:"
 msgstr "Utilisé par :"
 
-#, python-format
-msgid "By %(user)s on %(dt)s [%(undo_link)s]"
-msgstr "Par %(user)s le %(dt)s [%(undo_link)s] "
-
 msgid "Users and groups management"
 msgstr "Gestion des utilisateurs et groupes"
 
@@ -1016,9 +1010,6 @@ msgstr ""
 
 msgid "abstract base class for transitions"
 msgstr "classe de base abstraite pour les transitions"
-
-msgid "action menu"
-msgstr "actions"
 
 msgid "action(s) on this selection"
 msgstr "action(s) sur cette sélection"
@@ -1259,7 +1250,7 @@ msgid "anonymous"
 msgstr "anonyme"
 
 msgid "anyrsetview"
-msgstr "vues \"tous les rset\""
+msgstr "vues pour tout rset"
 
 msgid "april"
 msgstr "avril"
@@ -2110,9 +2101,6 @@ msgstr "gestion des sources de données"
 msgid "date"
 msgstr "date"
 
-msgid "day"
-msgstr "jour"
-
 msgid "deactivate"
 msgstr "désactiver"
 
@@ -2124,9 +2112,6 @@ msgstr "décembre"
 
 msgid "default"
 msgstr "valeur par défaut"
-
-msgid "default /base view for (transaction) actions "
-msgstr ""
 
 msgid "default text format for rich text fields."
 msgstr "format de texte par défaut pour les champs textes"
@@ -2779,6 +2764,9 @@ msgstr "hCalendar"
 msgid "has_text"
 msgstr "contient le texte"
 
+msgid "header-center"
+msgstr ""
+
 msgid "header-left"
 msgstr "en-tête (gauche)"
 
@@ -3137,9 +3125,6 @@ msgstr "journal"
 msgid "log in"
 msgstr "s'identifier"
 
-msgid "log out first"
-msgstr "déconnecter vous d'abord"
-
 msgid "login"
 msgstr "identifiant"
 
@@ -3240,9 +3225,6 @@ msgstr "modifier"
 
 msgid "monday"
 msgstr "lundi"
-
-msgid "month"
-msgstr "mois"
 
 msgid "more actions"
 msgstr "plus d'actions"
@@ -4145,6 +4127,10 @@ msgstr "il n'y a pas de page suivante"
 msgid "there is no previous page"
 msgstr "il n'y a pas de page précédente"
 
+#, python-format
+msgid "there is no transaction #%s"
+msgstr ""
+
 msgid "this action is not reversible!"
 msgstr ""
 "Attention ! Cette opération va détruire les données de façon irréversible."
@@ -4229,14 +4215,14 @@ msgctxt "State"
 msgid "to_state_object"
 msgstr "transition vers cet état"
 
-msgid "today"
-msgstr "aujourd'hui"
-
 msgid "todo_by"
 msgstr "à faire par"
 
 msgid "toggle check boxes"
-msgstr "inverser les cases à cocher"
+msgstr "afficher/masquer les cases à cocher"
+
+msgid "toggle filter"
+msgstr "afficher/masquer le filtre"
 
 msgid "tr_count"
 msgstr "n° de transition"
@@ -4356,11 +4342,11 @@ msgstr "inaccessible"
 msgid "unauthorized value"
 msgstr "valeur non autorisée"
 
+msgid "undefined user"
+msgstr ""
+
 msgid "undo"
 msgstr "annuler"
-
-msgid "undo last change"
-msgstr "annuler dernier changement"
 
 msgid "unique identifier used to connect to the application"
 msgstr "identifiant unique utilisé pour se connecter à l'application"
@@ -4594,9 +4580,6 @@ msgstr ""
 
 msgid "wednesday"
 msgstr "mercredi"
-
-msgid "week"
-msgstr "semaine"
 
 #, python-format
 msgid "welcome %s !"
