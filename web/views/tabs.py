@@ -47,7 +47,15 @@ class LazyViewMixin(object):
         """a lazy version of wview"""
         w = w or self.w
         self._cw.add_js('cubicweb.ajax.js')
+        # the form is copied into urlparams to please the inner views
+        # that might want to take params from it
+        # beware of already present rql or eid elements
+        # to be safe of collision a proper argument passing protocol
+        # (with namespaces) should be used instead of the current
+        # ad-hockery
         urlparams = self._cw.form.copy()
+        urlparams.pop('rql', None)
+        urlparams.pop('eid', None)
         urlparams.update({'vid' : vid, 'fname' : 'view'})
         if rql:
             urlparams['rql'] = rql
