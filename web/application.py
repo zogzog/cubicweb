@@ -348,6 +348,7 @@ class CubicWebPublisher(object):
             # activate realm-based auth
             realm = self.vreg.config['realm']
             req.set_header('WWW-Authenticate', [('Basic', {'realm' : realm })], raw=False)
+        content = ''
         try:
             self.connect(req)
             # DENY https acces for anonymous_user
@@ -356,7 +357,6 @@ class CubicWebPublisher(object):
                 and self.vreg.config['https-deny-anonymous']):
                 # don't allow anonymous on https connection
                 raise AuthenticationError()
-            content = ''
             # nested try to allow LogOut to delegate logic to AuthenticationError
             # handler
             try:
