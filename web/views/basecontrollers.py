@@ -90,9 +90,7 @@ class LoginControllerForAuthed(Controller):
 
     def publish(self, rset=None):
         """log in the instance"""
-        path = self._cw.form.get('postlogin_path')
-        if not path:
-            path = '/'
+        path = self._cw.form.get('postlogin_path', '.')
         raise Redirect(path)
 
 

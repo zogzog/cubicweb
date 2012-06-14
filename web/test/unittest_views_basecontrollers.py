@@ -852,7 +852,7 @@ class LoginControllerTC(CubicWebTC):
         req = self.request()
         with self.assertRaises(Redirect) as cm:
             self.ctrl_publish(req, ctrl='login')
-        self.assertEqual('/', cm.exception.location)
+        self.assertEqual('.', cm.exception.location)
 
 if __name__ == '__main__':
     unittest_main()
