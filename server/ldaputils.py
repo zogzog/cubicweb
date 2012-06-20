@@ -250,10 +250,11 @@ You can set multiple groups by separating them by a comma.',
         except ldap.LDAPError: # Invalid protocol version, fall back safely
             conn.set_option(ldap.OPT_PROTOCOL_VERSION, ldap.VERSION2)
         # Deny auto-chasing of referrals to be safe, we handle them instead
-        #try:
-        #    connection.set_option(ldap.OPT_REFERRALS, 0)
-        #except ldap.LDAPError: # Cannot set referrals, so do nothing
-        #    pass
+        # Required for AD
+        try:
+           conn.set_option(ldap.OPT_REFERRALS, 0)
+        except ldap.LDAPError: # Cannot set referrals, so do nothing
+           pass
         #conn.set_option(ldap.OPT_NETWORK_TIMEOUT, conn_timeout)
         #conn.timeout = op_timeout
         # Now bind with the credentials given. Let exceptions propagate out.
