@@ -117,7 +117,9 @@ class FormRenderer(AppObject):
         errormsg = self.error_message(form)
         if errormsg:
             data.insert(0, errormsg)
-        w(''.join(data))
+        # NOTE: we call unicode because `tag` objects may be found within data
+        #       e.g. from the cwtags library
+        w(''.join(unicode(x) for x in data))
 
     def render_content(self, w, form, values):
         if self.display_progress_div:
