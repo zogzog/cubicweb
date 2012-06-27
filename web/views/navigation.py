@@ -398,7 +398,7 @@ class NextPrevNavigationComponent(EntityCtxComponent):
             title = self._cw._('i18nprevnext_previous')
             icon = self.prev_icon
             cssclass = u'previousEntity left'
-            content = icon + content
+            content = icon + '&#160;&#160;' + content
         else:
             title = self._cw._('i18nprevnext_next')
             icon = self.next_icon
