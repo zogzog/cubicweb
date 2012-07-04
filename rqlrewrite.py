@@ -77,12 +77,26 @@ def add_types_restriction(schema, rqlst, newroot=None, solutions=None):
                 mytyperel = None
         possibletypes = allpossibletypes[varname]
         if mytyperel is not None:
-            # variable as already some types restriction. new possible types
-            # can only be a subset of existing ones, so only remove no more
-            # possible types
-            for cst in mytyperel.get_nodes(n.Constant):
-                if not cst.value in possibletypes:
-                    cst.parent.remove(cst)
+            if mytyperel.r_type == 'is_instance_of':
+                # turn is_instance_of relation into a is relation since we've
+                # all possible solutions and don't want to bother with
+                # potential is_instance_of incompatibility
+                mytyperel.r_type = 'is'
+                if len(possibletypes) > 1:
+                    node = n.Function('IN')
+                    for etype in possibletypes:
+                        node.append(n.Constant(etype, 'etype'))
+                else:
+                    node = n.Constant(etype, 'etype')
+                comp = mytyperel.children[1]
+                comp.replace(comp.children[0], node)
+            else:
+                # variable has already some strict types restriction. new
+                # possible types can only be a subset of existing ones, so only
+                # remove no more possible types
+                for cst in mytyperel.get_nodes(n.Constant):
+                    if not cst.value in possibletypes:
+                        cst.parent.remove(cst)
         else:
             # we have to add types restriction
             if stinfo.get('scope') is not None:

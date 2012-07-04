@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -23,7 +23,9 @@ from logilab.common.testlib import unittest_main, TestCase
 from cubicweb.devtools.testlib import CubicWebTC
 
 from cubicweb import Unauthorized, ValidationError, QueryError
+from cubicweb.schema import ERQLExpression
 from cubicweb.server.querier import check_read_access
+
 
 class BaseSecurityTC(CubicWebTC):
 
@@ -467,6 +469,28 @@ class SecurityTC(BaseSecurityTC):
         self.assertTrue(x.creation_date)
         cnx.rollback()
         cnx.close()
+
+    def test_yams_inheritance_and_security_bug(self):
+        oldperms = self.schema['Division'].permissions
+        try:
+            self.schema['Division'].permissions = {
+                'read': ('managers', ERQLExpression('X owned_by U')),
+                'add': ('managers', 'users'),
+                'update': ('managers', 'owners'),
+                'delete': ('managers', 'owners')}
+            self.login('iaminusersgrouponly')
+            querier = self.repo.querier
+            rqlst = querier.parse('Any X WHERE X is_instance_of Societe')
+            querier.solutions(self.session, rqlst, {})
+            querier._annotate(rqlst)
+            plan = querier.plan_factory(rqlst, {}, self.session)
+            plan.preprocess(rqlst)
+            self.assertEqual(
+                rqlst.as_string(),
+                '(Any X WHERE X is IN(SubDivision, Societe)) UNION (Any X WHERE X is Division, EXISTS(X owned_by %(B)s))')
+        finally:
+            self.schema['Division'].permissions = oldperms
+
 
 class BaseSchemaSecurityTC(BaseSecurityTC):
     """tests related to the base schema permission configuration"""
