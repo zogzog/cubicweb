@@ -218,22 +218,24 @@ class TasksManager(object):
         looping tasks can only be registered during repository initialization,
         once done this method will fail.
         """
+        task = LoopTask(self, interval, func, args)
         if self.running:
-            raise RuntimeError("can't add looping task once the repository is started")
-        self._tasks.append( (interval, func, args) )
+            self._start_task(task)
+        else:
+            self._tasks.append(task)
+
+    def _start_task(self, task):
+        self._looping_tasks.append(task)
+        self.info('starting task %s with interval %.2fs', task.name,
+                  task.interval)
+        task.start()
 
     def start(self):
         """Start running looping task"""
         assert self.running == False # bw compat purpose maintly
-
         while self._tasks:
-            interval, func, args = self._tasks.pop()
-            task = LoopTask(self, interval, func, args)
-            self._looping_tasks.append(task)
-            self.info('starting task %s with interval %.2fs', task.name,
-                      interval)
-            task.start()
-
+            task = self._tasks.pop()
+            self._start_task(task)
         self.running = True
 
     def stop(self):
