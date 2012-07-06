@@ -136,6 +136,8 @@ def reindex_entities(schema, session, withpb=True, etypes=None):
     for eschema in etypes:
         rset = session.execute('Any X WHERE X is %s' % eschema)
         source.fti_index_entities(session, rset.entities())
+        # clear entity cache to avoid high memory consumption on big tables
+        session.drop_entity_cache()
         if withpb:
             pb.update()
 
