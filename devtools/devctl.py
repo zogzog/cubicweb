@@ -726,7 +726,7 @@ class GenerateSchema(Command):
     min_args = max_args = 1
     options = [
         ('output-file',
-         {'type':'file', 'default': None,
+         {'type':'string', 'default': None,
           'metavar': '<file>', 'short':'o', 'help':'output image file',
           'input':False,
           }),
