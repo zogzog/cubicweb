@@ -65,7 +65,7 @@ NO_CACHE_RELATIONS = set( [('owned_by', 'object'),
                            ('cw_source', 'object'),
                            ])
 
-def prefill_entity_caches(entity, relations):
+def prefill_entity_caches(entity):
     session = entity._cw
     # prefill entity relation caches
     for rschema in entity.e_schema.subject_relations():
@@ -1361,11 +1361,11 @@ class Repository(object):
         extid = self.init_entity_caches(session, entity, source)
         if server.DEBUG & server.DBG_REPO:
             print 'ADD entity', self, entity.__regid__, entity.eid, edited
-        relations = []
-        prefill_entity_caches(entity, relations)
+        prefill_entity_caches(entity)
         if source.should_call_hooks:
             self.hm.call_hooks('before_add_entity', session, entity=entity)
-        activintegrity = session.is_hook_category_activated('activeintegrity')
+        relations = []
+        activeintegrity = session.is_hook_category_activated('activeintegrity')
         for attr in edited.iterkeys():
             rschema = eschema.subjrels[attr]
             if not rschema.final: # inlined relation
@@ -1373,7 +1373,7 @@ class Repository(object):
                 relations.append((attr, value))
                 session.update_rel_cache_add(entity.eid, attr, value)
                 rdef = session.rtype_eids_rdef(attr, entity.eid, value)
-                if rdef.cardinality[1] in '1?' and activintegrity:
+                if rdef.cardinality[1] in '1?' and activeintegrity:
                     with security_enabled(session, read=False):
                         session.execute('DELETE X %s Y WHERE Y eid %%(y)s' % attr,
                                         {'x': entity.eid, 'y': value})
