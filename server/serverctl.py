@@ -993,20 +993,24 @@ option is set to "y" or "yes" (may be long for large database).'}
 class RebuildFTICommand(Command):
     """Rebuild the full-text index of the system database of an instance.
 
-    <instance>
+    <instance> [etype(s)]
       the identifier of the instance to rebuild
+
+    If no etype is specified, cubicweb will reindex everything, otherwise
+    only specified etypes will be considered.
     """
     name = 'db-rebuild-fti'
     arguments = '<instance>'
-    min_args = max_args = 1
+    min_args = 1
 
     def run(self, args):
         from cubicweb.server.checkintegrity import reindex_entities
-        appid = args[0]
+        appid = args.pop(0)
+        etypes = args or None
         config = ServerConfiguration.config_for(appid)
         repo, cnx = repo_cnx(config)
         session = repo._get_session(cnx.sessionid, setcnxset=True)
-        reindex_entities(repo.schema, session)
+        reindex_entities(repo.schema, session, etypes=etypes)
         cnx.commit()
 
 
