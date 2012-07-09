@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -219,6 +219,11 @@ LIMIT 1'''),
 
 
 ADVANCED = [
+    ("Societe S WHERE S2 is Societe, S2 nom SN, S nom 'Logilab' OR S nom SN",
+     '''SELECT _S.cw_eid
+FROM cw_Societe AS _S, cw_Societe AS _S2
+WHERE ((_S.cw_nom=Logilab) OR (_S2.cw_nom=_S.cw_nom))'''),
+
     ("Societe S WHERE S nom 'Logilab' OR S nom 'Caesium'",
      '''SELECT _S.cw_eid
 FROM cw_Societe AS _S
