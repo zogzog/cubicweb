@@ -54,7 +54,6 @@ class EditBox(component.CtxComponent): # XXX rename to ActionsBox
     change state, add related entities...
     """
     __regid__ = 'edit_box'
-    __select__ = component.CtxComponent.__select__ & non_final_entity()
 
     title = _('actions')
     order = 2
