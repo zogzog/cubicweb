@@ -1298,12 +1298,11 @@ class SQLGenerator(object):
                 principal = 1
             else:
                 principal = var.stinfo.get('principal')
-                print relation, principal
             # we've to return some sql if:
             # 1. visited relation is ored
             # 2. variable's principal is not this relation and not 1.
             if ored or (principal is not None and principal is not relation
-                        and not principal.ored()):
+                        and not getattr(principal, 'ored', lambda : 0)()):
                 # we have to generate unification expression
                 if principal is relation:
                     # take care if ored case and principal is the relation to
