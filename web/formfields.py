@@ -360,7 +360,7 @@ class Field(object):
         if self.eidparam and self.role is not None:
             if form._cw.vreg.schema.rschema(self.name).final:
                 return form.edited_entity.e_schema.default(self.name)
-            return ()
+            return form.linked_to.get((self.name, self.role), ())
         return None
 
     def example_format(self, req):
