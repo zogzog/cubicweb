@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unittests for cw.devtools.testlib module"""
+from __future__ import with_statement
 
 from cStringIO import StringIO
 
@@ -154,6 +155,21 @@ class HTMLPageInfoTC(TestCase):
         self.assertEqual(self.page_info.has_link_regexp('L[oi]gilab'), True)
         self.assertEqual(self.page_info.has_link_regexp('L[ai]gilab'), False)
 
+
+class CWUtilitiesTC(CubicWebTC):
+    def test_temporary_permissions_eschema(self):
+        eschema = self.schema['CWUser']
+        with self.temporary_permissions(CWUser={'read': ()}):
+            self.assertEqual(eschema.permissions['read'], ())
+            self.assertTrue(eschema.permissions['add'])
+        self.assertTrue(eschema.permissions['read'], ())
+
+    def test_temporary_permissions_rdef(self):
+        rdef = self.schema['CWUser'].rdef('in_group')
+        with self.temporary_permissions((rdef, {'read': ()})):
+            self.assertEqual(rdef.permissions['read'], ())
+            self.assertTrue(rdef.permissions['add'])
+        self.assertTrue(rdef.permissions['read'], ())
 
 if __name__ == '__main__':
     unittest_main()
