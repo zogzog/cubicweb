@@ -159,7 +159,9 @@ class AggrStep(LimitOffsetMixIn, Step):
         if self.outputtable:
             self.plan.create_temp_table(self.outputtable)
             sql = 'INSERT INTO %s %s' % (self.outputtable, sql)
-        return self.plan.sqlexec(sql, self.plan.args)
+            self.plan.syssource.doexec(self.plan.session, sql, self.plan.args)
+        else:
+            return self.plan.sqlexec(sql, self.plan.args)
 
     def get_sql(self):
         self.inputmap = inputmap = self.children[-1].outputmap

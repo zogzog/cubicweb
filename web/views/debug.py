@@ -25,7 +25,7 @@ from time import strftime, localtime
 from logilab.mtconverter import xml_escape
 
 from cubicweb import BadConnectionId
-from cubicweb.selectors import none_rset, match_user_groups
+from cubicweb.predicates import none_rset, match_user_groups
 from cubicweb.view import StartupView
 from cubicweb.web.views import actions, tabs
 

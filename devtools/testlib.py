@@ -636,9 +636,9 @@ class CubicWebTC(TestCase):
         return publisher
 
     requestcls = fake.FakeRequest
-    def request(self, rollbackfirst=False, url=None, **kwargs):
+    def request(self, rollbackfirst=False, url=None, headers={}, **kwargs):
         """return a web ui request"""
-        req = self.requestcls(self.vreg, url=url, form=kwargs)
+        req = self.requestcls(self.vreg, url=url, headers=headers, form=kwargs)
         if rollbackfirst:
             self.websession.cnx.rollback()
         req.set_session(self.websession)
@@ -649,11 +649,16 @@ class CubicWebTC(TestCase):
         dump = json.dumps
         args = [dump(arg) for arg in args]
         req = self.request(fname=fname, pageid='123', arg=args)
-        ctrl = self.vreg['controllers'].select('json', req)
+        ctrl = self.vreg['controllers'].select('ajax', req)
         return ctrl.publish(), req
 
-    def app_publish(self, req, path='view'):
-        return self.app.publish(path, req)
+    def app_handle_request(self, req, path='view'):
+        return self.app.core_handle(req, path)
+
+    @deprecated("[3.15] app_handle_request is the new and better way"
+                " (beware of small semantic changes)")
+    def app_publish(self, *args, **kwargs):
+        return self.app_handle_request(*args, **kwargs)
 
     def ctrl_publish(self, req, ctrl='edit'):
         """call the publish method of the edit controller"""
@@ -690,6 +695,20 @@ class CubicWebTC(TestCase):
         ctrlid, rset = self.app.url_resolver.process(req, req.relative_path(False))
         return self.ctrl_publish(req, ctrlid)
 
+    @staticmethod
+    def _parse_location(req, location):
+        try:
+            path, params = location.split('?', 1)
+        except ValueError:
+            path = location
+            params = {}
+        else:
+            cleanup = lambda p: (p[0], unquote(p[1]))
+            params = dict(cleanup(p.split('=', 1)) for p in params.split('&') if p)
+        if path.startswith(req.base_url()): # may be relative
+            path = path[len(req.base_url()):]
+        return path, params
+
     def expect_redirect(self, callback, req):
         """call the given callback with req as argument, expecting to get a
         Redirect exception
@@ -697,25 +716,24 @@ class CubicWebTC(TestCase):
         try:
             callback(req)
         except Redirect, ex:
-            try:
-                path, params = ex.location.split('?', 1)
-            except ValueError:
-                path = ex.location
-                params = {}
-            else:
-                cleanup = lambda p: (p[0], unquote(p[1]))
-                params = dict(cleanup(p.split('=', 1)) for p in params.split('&') if p)
-            if path.startswith(req.base_url()): # may be relative
-                path = path[len(req.base_url()):]
-            return path, params
+            return self._parse_location(req, ex.location)
         else:
             self.fail('expected a Redirect exception')
 
-    def expect_redirect_publish(self, req, path='edit'):
+    def expect_redirect_handle_request(self, req, path='edit'):
         """call the publish method of the application publisher, expecting to
         get a Redirect exception
         """
-        return self.expect_redirect(lambda x: self.app_publish(x, path), req)
+        result = self.app_handle_request(req, path)
+        self.assertTrue(300 <= req.status_out <400, req.status_out)
+        location = req.get_response_header('location')
+        return self._parse_location(req, location)
+
+    @deprecated("[3.15] expect_redirect_handle_request is the new and better way"
+                " (beware of small semantic changes)")
+    def expect_redirect_publish(self, *args, **kwargs):
+        return self.expect_redirect_handle_request(*args, **kwargs)
+
 
     def set_auth_mode(self, authmode, anonuser=None):
         self.set_option('auth-mode', authmode)
@@ -741,13 +759,11 @@ class CubicWebTC(TestCase):
 
     def assertAuthSuccess(self, req, origsession, nbsessions=1):
         sh = self.app.session_handler
-        path, params = self.expect_redirect(lambda x: self.app.connect(x), req)
+        self.app.connect(req)
         session = req.session
         self.assertEqual(len(self.open_sessions), nbsessions, self.open_sessions)
         self.assertEqual(session.login, origsession.login)
         self.assertEqual(session.anonymous_session, False)
-        self.assertEqual(path, 'view')
-        self.assertMessageEqual(req, params, 'welcome %s !' % req.user.login)
 
     def assertAuthFailure(self, req, nbsessions=0):
         self.app.connect(req)

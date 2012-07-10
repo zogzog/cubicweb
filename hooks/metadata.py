@@ -21,7 +21,7 @@ __docformat__ = "restructuredtext en"
 
 from datetime import datetime
 
-from cubicweb.selectors import is_instance
+from cubicweb.predicates import is_instance
 from cubicweb.server import hook
 from cubicweb.server.edition import EditedEntity
 
@@ -199,17 +199,12 @@ class ChangeEntitySourceAddHook(MetaDataHook):
             entity = self._cw.entity_from_eid(self.eidfrom)
             # copy entity if necessary
             if not oldsource.repo_source.copy_based_source:
-                entity.complete(skip_bytes=False)
+                entity.complete(skip_bytes=False, skip_pwd=False)
                 if not entity.creation_date:
                     entity.cw_attr_cache['creation_date'] = datetime.now()
                 if not entity.modification_date:
                     entity.cw_attr_cache['modification_date'] = datetime.now()
                 entity.cw_attr_cache['cwuri'] = u'%s%s' % (self._cw.base_url(), entity.eid)
-                for rschema, attrschema in entity.e_schema.attribute_definitions():
-                    if attrschema == 'Password' and \
-                       rschema.rdef(entity.e_schema, attrschema).cardinality[0] == '1':
-                        from logilab.common.shellutils import generate_password
-                        entity.cw_attr_cache[rschema.type] = generate_password()
                 entity.cw_edited = EditedEntity(entity, **entity.cw_attr_cache)
                 syssource.add_entity(self._cw, entity)
             # we don't want the moved entity to be reimported later.  To

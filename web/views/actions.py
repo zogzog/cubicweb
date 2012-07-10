@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -23,10 +23,10 @@ _ = unicode
 from warnings import warn
 
 from logilab.mtconverter import xml_escape
+from logilab.common.registry import objectify_predicate, yes
 
 from cubicweb.schema import display_name
-from cubicweb.appobject import objectify_selector
-from cubicweb.selectors import (EntitySelector, yes,
+from cubicweb.predicates import (EntityPredicate,
     one_line_rset, multi_lines_rset, one_etype_rset, relation_possible,
     nonempty_rset, non_final_entity, score_entity,
     authenticated_user, match_user_groups, match_search_state,
@@ -36,11 +36,11 @@ from cubicweb.web import uicfg, controller, action
 from cubicweb.web.views import linksearch_select_url, vid_from_rset
 
 
-class has_editable_relation(EntitySelector):
+class has_editable_relation(EntityPredicate):
     """accept if some relations for an entity found in the result set is
     editable by the logged user.
 
-    See `EntitySelector` documentation for behaviour when row is not specified.
+    See `EntityPredicate` documentation for behaviour when row is not specified.
     """
 
     def score_entity(self, entity):
@@ -55,11 +55,11 @@ class has_editable_relation(EntitySelector):
             return 1
         return 0
 
-@objectify_selector
+@objectify_predicate
 def match_searched_etype(cls, req, rset=None, **kwargs):
     return req.match_search_state(rset)
 
-@objectify_selector
+@objectify_predicate
 def view_is_not_default_view(cls, req, rset=None, **kwargs):
     # interesting if it propose another view than the current one
     vid = req.form.get('vid')
@@ -67,7 +67,7 @@ def view_is_not_default_view(cls, req, rset=None, **kwargs):
         return 1
     return 0
 
-@objectify_selector
+@objectify_predicate
 def addable_etype_empty_rset(cls, req, rset=None, **kwargs):
     if rset is not None and not rset.rowcount:
         rqlst = rset.syntax_tree()
@@ -81,6 +81,18 @@ def addable_etype_empty_rset(cls, req, rset=None, **kwargs):
                    and eschema.has_perm(req, 'add'):
                 return 1
     return 0
+
+class has_undoable_transactions(EntityPredicate):
+    "Select entities having public (i.e. end-user) undoable transactions."
+
+    def score_entity(self, entity):
+        if not entity._cw.vreg.config['undo-enabled']:
+            return 0
+        if entity._cw.cnx.undoable_transactions(eid=entity.eid):
+            return 1
+        else:
+            return 0
+
 
 # generic 'main' actions #######################################################
 
@@ -130,7 +142,7 @@ class ViewAction(action.Action):
         params = self._cw.form.copy()
         for param in ('vid', '__message') + controller.NAV_FORM_PARAMETERS:
             params.pop(param, None)
-        if self._cw.json_request:
+        if self._cw.ajax_request:
             path = 'view'
             if self.cw_rset is not None:
                 params = {'rql': self.cw_rset.printable_rql()}
@@ -419,6 +431,7 @@ class GotRhythmAction(action.Action):
     def html_class(self):
         self._cw.add_js('cubicweb.rhythm.js')
         return 'rhythm'
+
 
 ## default actions ui configuration ###########################################
 

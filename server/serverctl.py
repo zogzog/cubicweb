@@ -35,6 +35,7 @@ from cubicweb import AuthenticationError, ExecutionError, ConfigurationError
 from cubicweb.toolsutils import Command, CommandHandler, underline_title
 from cubicweb.cwctl import CWCTL, check_options_consistency
 from cubicweb.server import SOURCE_TYPES
+from cubicweb.server.repository import Repository
 from cubicweb.server.serverconfig import (
     USER_OPTIONS, ServerConfiguration, SourceConfiguration,
     ask_source_config, generate_source_config)
@@ -446,7 +447,7 @@ class InitInstanceCommand(Command):
             get_connection(
                 system['db-driver'], database=system['db-name'],
                 host=system.get('db-host'), port=system.get('db-port'),
-                user=system.get('db-user'), password=system.get('db-password'),
+                user=system.get('db-user') or '', password=system.get('db-password') or '',
                 **extra)
         except Exception, ex:
             raise ConfigurationError(
@@ -633,7 +634,7 @@ class ResetAdminPasswordCommand(Command):
 class StartRepositoryCommand(Command):
     """Start a CubicWeb RQL server for a given instance.
 
-    The server will be accessible through pyro
+    The server will be remotely accessible through pyro or ZMQ
 
     <instance>
       the identifier of the instance to initialize.
@@ -650,12 +651,30 @@ class StartRepositoryCommand(Command):
           'default': None, 'choices': ('debug', 'info', 'warning', 'error'),
           'help': 'debug if -D is set, error otherwise',
           }),
+        ('address',
+         {'short': 'a', 'type': 'string', 'metavar': '<protocol>://<host>:<port>',
+          'default': '',
+          'help': ('specify a ZMQ URI on which to bind, or use "pyro://"'
+                   'to create a pyro-based repository'),
+          }),
         )
+
+    def create_repo(self, config):
+        address = self['address']
+        if not address:
+            address = config.get('zmq-repository-address') or 'pyro://'
+        if address.startswith('pyro://'):
+            from cubicweb.server.server import RepositoryServer
+            return RepositoryServer(config), config['host']
+        else:
+            from cubicweb.server.utils import TasksManager
+            from cubicweb.server.cwzmq import ZMQRepositoryServer
+            repo = Repository(config, TasksManager())
+            return ZMQRepositoryServer(repo), address
 
     def run(self, args):
         from logilab.common.daemon import daemonize, setugid
         from cubicweb.cwctl import init_cmdline_log_threshold
-        from cubicweb.server.server import RepositoryServer
         appid = args[0]
         debug = self['debug']
         if sys.platform == 'win32' and not debug:
@@ -665,7 +684,7 @@ class StartRepositoryCommand(Command):
         config = ServerConfiguration.config_for(appid, debugmode=debug)
         init_cmdline_log_threshold(config, self['loglevel'])
         # create the server
-        server = RepositoryServer(config)
+        server, address = self.create_repo(config)
         # ensure the directory where the pid-file should be set exists (for
         # instance /var/run/cubicweb may be deleted on computer restart)
         pidfile = config['pid-file']
@@ -679,7 +698,7 @@ class StartRepositoryCommand(Command):
         if uid is not None:
             setugid(uid)
         server.install_sig_handlers()
-        server.connect(config['host'], 0)
+        server.connect(address)
         server.run()
 
 
@@ -974,20 +993,24 @@ option is set to "y" or "yes" (may be long for large database).'}
 class RebuildFTICommand(Command):
     """Rebuild the full-text index of the system database of an instance.
 
-    <instance>
+    <instance> [etype(s)]
       the identifier of the instance to rebuild
+
+    If no etype is specified, cubicweb will reindex everything, otherwise
+    only specified etypes will be considered.
     """
     name = 'db-rebuild-fti'
     arguments = '<instance>'
-    min_args = max_args = 1
+    min_args = 1
 
     def run(self, args):
         from cubicweb.server.checkintegrity import reindex_entities
-        appid = args[0]
+        appid = args.pop(0)
+        etypes = args or None
         config = ServerConfiguration.config_for(appid)
         repo, cnx = repo_cnx(config)
         session = repo._get_session(cnx.sessionid, setcnxset=True)
-        reindex_entities(repo.schema, session)
+        reindex_entities(repo.schema, session, etypes=etypes)
         cnx.commit()
 
 

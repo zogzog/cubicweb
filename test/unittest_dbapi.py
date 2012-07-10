@@ -23,9 +23,10 @@ from copy import copy
 
 from logilab.common import tempattr
 
-from cubicweb import ConnectionError, cwconfig
+from cubicweb import ConnectionError, cwconfig, NoSelectableObject
 from cubicweb.dbapi import ProgrammingError
 from cubicweb.devtools.testlib import CubicWebTC
+
 
 class DBAPITC(CubicWebTC):
 
@@ -81,6 +82,20 @@ class DBAPITC(CubicWebTC):
             self.assertEqual(req.relative_path(), '')
             req.ajax_replace_url('domid') # don't crash
             req.user.cw_adapt_to('IBreadCrumbs') # don't crash
+
+    def test_call_service(self):
+        ServiceClass = self.vreg['services']['test_service'][0]
+        for _cw in (self.request(), self.session):
+            ret_value = _cw.call_service('test_service', msg='coucou')
+            self.assertEqual('coucou', ServiceClass.passed_here.pop())
+            self.assertEqual('babar', ret_value)
+        with self.login('anon') as ctm:
+            for _cw in (self.request(), self.session):
+                with self.assertRaises(NoSelectableObject):
+                    _cw.call_service('test_service', msg='toto')
+                self.rollback()
+                self.assertEqual([], ServiceClass.passed_here)
+
 
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main

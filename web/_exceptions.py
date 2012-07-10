@@ -20,59 +20,90 @@
 
 __docformat__ = "restructuredtext en"
 
+import httplib
+
 from cubicweb._exceptions import *
 from cubicweb.utils import json_dumps
+
+
+class DirectResponse(Exception):
+    """Used to supply a twitted HTTP Response directly"""
+    def __init__(self, response):
+        self.response = response
+
+class InvalidSession(CubicWebException):
+    """raised when a session id is found but associated session is not found or
+    invalid"""
+
+# Publish related exception
 
 class PublishException(CubicWebException):
     """base class for publishing related exception"""
 
-class RequestError(PublishException):
-    """raised when a request can't be served because of a bad input"""
+    def __init__(self, *args, **kwargs):
+        self.status = kwargs.pop('status', httplib.OK)
+        super(PublishException, self).__init__(*args, **kwargs)
 
-class NothingToEdit(RequestError):
-    """raised when an edit request doesn't specify any eid to edit"""
-
-class ProcessFormError(RequestError):
-    """raised when posted data can't be processed by the corresponding field
-    """
-
-class NotFound(RequestError):
-    """raised when a 404 error should be returned"""
+class LogOut(PublishException):
+    """raised to ask for deauthentication of a logged in user"""
+    def __init__(self, url=None):
+        super(LogOut, self).__init__()
+        self.url = url
 
 class Redirect(PublishException):
     """raised to redirect the http request"""
-    def __init__(self, location):
+    def __init__(self, location, status=httplib.SEE_OTHER):
+        super(Redirect, self).__init__(status=status)
         self.location = location
 
-class DirectResponse(Exception):
-    def __init__(self, response):
-        self.response = response
+class StatusResponse(PublishException):
 
-class StatusResponse(Exception):
     def __init__(self, status, content=''):
-        self.status = int(status)
+        super(StatusResponse, self).__init__(status=status)
         self.content = content
 
     def __repr__(self):
         return '%s(%r, %r)' % (self.__class__.__name__, self.status, self.content)
+        self.url = url
 
-class InvalidSession(CubicWebException):
-    """raised when a session id is found but associated session is not found or
-    invalid
+# Publish related error
+
+class RequestError(PublishException):
+    """raised when a request can't be served because of a bad input"""
+
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault('status', httplib.BAD_REQUEST)
+        super(RequestError, self).__init__(*args, **kwargs)
+
+
+class NothingToEdit(RequestError):
+    """raised when an edit request doesn't specify any eid to edit"""
+
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault('status', httplib.BAD_REQUEST)
+        super(NothingToEdit, self).__init__(*args, **kwargs)
+
+class ProcessFormError(RequestError):
+    """raised when posted data can't be processed by the corresponding field
     """
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault('status', httplib.BAD_REQUEST)
+        super(ProcessFormError, self).__init__(*args, **kwargs)
+
+class NotFound(RequestError):
+    """raised when something was not found. In most case,
+       a 404 error should be returned"""
+
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault('status', httplib.NOT_FOUND)
+        super(NotFound, self).__init__(*args, **kwargs)
 
 class RemoteCallFailed(RequestError):
     """raised when a json remote call fails
     """
-    def __init__(self, reason=''):
-        super(RemoteCallFailed, self).__init__()
+    def __init__(self, reason='', status=httplib.INTERNAL_SERVER_ERROR):
+        super(RemoteCallFailed, self).__init__(status=status)
         self.reason = reason
 
     def dumps(self):
         return json_dumps({'reason': self.reason})
-
-class LogOut(PublishException):
-    """raised to ask for deauthentication of a logged in user"""
-    def __init__(self, url):
-        super(LogOut, self).__init__()
-        self.url = url

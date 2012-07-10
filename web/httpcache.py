@@ -147,3 +147,39 @@ viewmod.View.cache_max_age = 0
 
 viewmod.StartupView.http_cache_manager = MaxAgeHTTPCacheManager
 viewmod.StartupView.cache_max_age = 60*60*2 # stay in http cache for 2 hours by default
+
+
+### HTTP Cache validator ############################################
+
+
+
+def get_validators(headers_in):
+    """return a list of http condition validator relevant to this request
+    """
+    result = []
+    for header, func in VALIDATORS:
+        value = headers_in.getHeader(header)
+        if value is not None:
+            result.append((func, value))
+    return result
+
+
+def if_modified_since(ref_date, headers_out):
+    last_modified = headers_out.getHeader('last-modified')
+    if last_modified is None:
+        return True
+    return ref_date < last_modified
+
+def if_none_match(tags, headers_out):
+    etag = headers_out.getHeader('etag')
+    if etag is None:
+        return True
+    return not ((etag in tags) or ('*' in tags))
+
+VALIDATORS = [
+    ('if-modified-since', if_modified_since),
+    #('if-unmodified-since', if_unmodified_since),
+    ('if-none-match', if_none_match),
+    #('if-modified-since', if_modified_since),
+]
+

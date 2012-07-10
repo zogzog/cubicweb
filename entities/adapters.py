@@ -1,4 +1,4 @@
-# copyright 2010-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2010-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -29,7 +29,7 @@ from logilab.common.decorators import cached
 from logilab.common.deprecation import class_deprecated
 
 from cubicweb import ValidationError, view
-from cubicweb.selectors import (implements, is_instance, relation_possible,
+from cubicweb.predicates import (implements, is_instance, relation_possible,
                                 match_exception)
 from cubicweb.interfaces import IDownloadable, ITree, IProgress, IMileStone
 

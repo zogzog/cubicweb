@@ -184,12 +184,12 @@ class ApplicationTC(CubicWebTC):
 
     def test_nonregr_publish1(self):
         req = self.request(u'CWEType X WHERE X final FALSE, X meta FALSE')
-        self.app.publish('view', req)
+        self.app.handle_request(req, 'view')
 
     def test_nonregr_publish2(self):
         req = self.request(u'Any count(N) WHERE N todo_by U, N is Note, U eid %s'
                            % self.user().eid)
-        self.app.publish('view', req)
+        self.app.handle_request(req, 'view')
 
     def test_publish_validation_error(self):
         req = self.request()
@@ -202,7 +202,7 @@ class ApplicationTC(CubicWebTC):
              # just a sample, missing some necessary information for real life
             '__errorurl': 'view?vid=edition...'
             }
-        path, params = self.expect_redirect(lambda x: self.app_publish(x, 'edit'), req)
+        path, params = self.expect_redirect_handle_request(req, 'edit')
         forminfo = req.session.data['view?vid=edition...']
         eidmap = forminfo['eidmap']
         self.assertEqual(eidmap, {})
@@ -232,7 +232,7 @@ class ApplicationTC(CubicWebTC):
                     # necessary to get validation error handling
                     '__errorurl': 'view?vid=edition...',
                     }
-        path, params = self.expect_redirect(lambda x: self.app_publish(x, 'edit'), req)
+        path, params = self.expect_redirect_handle_request(req, 'edit')
         forminfo = req.session.data['view?vid=edition...']
         self.assertEqual(set(forminfo['eidmap']), set('XY'))
         self.assertEqual(forminfo['eidmap']['X'], None)
@@ -261,7 +261,7 @@ class ApplicationTC(CubicWebTC):
                     # necessary to get validation error handling
                     '__errorurl': 'view?vid=edition...',
                     }
-        path, params = self.expect_redirect(lambda x: self.app_publish(x, 'edit'), req)
+        path, params = self.expect_redirect_handle_request(req, 'edit')
         forminfo = req.session.data['view?vid=edition...']
         self.assertEqual(set(forminfo['eidmap']), set('XY'))
         self.assertIsInstance(forminfo['eidmap']['X'], int)
@@ -274,7 +274,7 @@ class ApplicationTC(CubicWebTC):
 
     def _test_cleaned(self, kwargs, injected, cleaned):
         req = self.request(**kwargs)
-        page = self.app.publish('view', req)
+        page = self.app.handle_request(req, 'view')
         self.assertFalse(injected in page, (kwargs, injected))
         self.assertTrue(cleaned in page, (kwargs, cleaned))
 
@@ -308,12 +308,6 @@ class ApplicationTC(CubicWebTC):
         self.commit()
         self.assertEqual(vreg.property_value('ui.language'), 'en')
 
-    def test_login_not_available_to_authenticated(self):
-        req = self.request()
-        with self.assertRaises(Unauthorized) as cm:
-            self.app_publish(req, 'login')
-        self.assertEqual(str(cm.exception), 'log out first')
-
     def test_fb_login_concept(self):
         """see data/views.py"""
         self.set_auth_mode('cookie', 'anon')
@@ -321,7 +315,7 @@ class ApplicationTC(CubicWebTC):
         req = self.request()
         origcnx = req.cnx
         req.form['__fblogin'] = u'turlututu'
-        page = self.app_publish(req)
+        page = self.app.handle_request(req, '')
         self.assertFalse(req.cnx is origcnx)
         self.assertEqual(req.user.login, 'turlututu')
         self.assertTrue('turlututu' in page, page)
@@ -332,25 +326,28 @@ class ApplicationTC(CubicWebTC):
     def test_http_auth_no_anon(self):
         req, origsession = self.init_authentication('http')
         self.assertAuthFailure(req)
-        self.assertRaises(AuthenticationError, self.app_publish, req, 'login')
+        self.assertRaises(AuthenticationError, self.app_handle_request, req, 'login')
         self.assertEqual(req.cnx, None)
         authstr = base64.encodestring('%s:%s' % (self.admlogin, self.admpassword))
         req.set_request_header('Authorization', 'basic %s' % authstr)
         self.assertAuthSuccess(req, origsession)
-        self.assertRaises(LogOut, self.app_publish, req, 'logout')
+        self.assertRaises(LogOut, self.app_handle_request, req, 'logout')
         self.assertEqual(len(self.open_sessions), 0)
 
     def test_cookie_auth_no_anon(self):
         req, origsession = self.init_authentication('cookie')
         self.assertAuthFailure(req)
-        form = self.app_publish(req, 'login')
+        try:
+            form = self.app_handle_request(req, 'login')
+        except Redirect, redir:
+            self.fail('anonymous user should get login form')
         self.assertTrue('__login' in form)
         self.assertTrue('__password' in form)
         self.assertEqual(req.cnx, None)
         req.form['__login'] = self.admlogin
         req.form['__password'] = self.admpassword
         self.assertAuthSuccess(req, origsession)
-        self.assertRaises(LogOut, self.app_publish, req, 'logout')
+        self.assertRaises(LogOut, self.app_handle_request, req, 'logout')
         self.assertEqual(len(self.open_sessions), 0)
 
     def test_login_by_email(self):
@@ -370,7 +367,7 @@ class ApplicationTC(CubicWebTC):
         req.form['__login'] = address
         req.form['__password'] = self.admpassword
         self.assertAuthSuccess(req, origsession)
-        self.assertRaises(LogOut, self.app_publish, req, 'logout')
+        self.assertRaises(LogOut, self.app_handle_request, req, 'logout')
         self.assertEqual(len(self.open_sessions), 0)
 
     def _reset_cookie(self, req):
@@ -410,7 +407,7 @@ class ApplicationTC(CubicWebTC):
         authstr = base64.encodestring('%s:%s' % (self.admlogin, self.admpassword))
         req.set_request_header('Authorization', 'basic %s' % authstr)
         self.assertAuthSuccess(req, origsession)
-        self.assertRaises(LogOut, self.app_publish, req, 'logout')
+        self.assertRaises(LogOut, self.app_handle_request, req, 'logout')
         self.assertEqual(len(self.open_sessions), 0)
 
     def test_cookie_auth_anon_allowed(self):
@@ -422,7 +419,7 @@ class ApplicationTC(CubicWebTC):
         req.form['__login'] = self.admlogin
         req.form['__password'] = self.admpassword
         self.assertAuthSuccess(req, origsession)
-        self.assertRaises(LogOut, self.app_publish, req, 'logout')
+        self.assertRaises(LogOut, self.app_handle_request, req, 'logout')
         self.assertEqual(len(self.open_sessions), 0)
 
     def test_anonymized_request(self):
@@ -441,7 +438,7 @@ class ApplicationTC(CubicWebTC):
         req = self.request()
         # expect a rset with None in [0][0]
         req.form['rql'] = 'rql:Any OV1, X WHERE X custom_workflow OV1?'
-        self.app_publish(req)
+        self.app_handle_request(req)
 
 if __name__ == '__main__':
     unittest_main()

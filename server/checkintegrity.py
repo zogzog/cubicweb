@@ -134,10 +134,12 @@ def reindex_entities(schema, session, withpb=True, etypes=None):
     # attribute to their current value
     source = repo.system_source
     for eschema in etypes:
-        rset = session.execute('Any X WHERE X is %s' % eschema)
-        source.fti_index_entities(session, rset.entities())
-        # clear entity cache to avoid high memory consumption on big tables
-        session.drop_entity_cache()
+        etype_class = session.vreg['etypes'].etype_class(str(eschema))
+        for fti_rql in etype_class.cw_fti_index_rql_queries(session):
+            rset = session.execute(fti_rql)
+            source.fti_index_entities(session, rset.entities())
+            # clear entity cache to avoid high memory consumption on big tables
+            session.drop_entity_cache()
         if withpb:
             pb.update()
 

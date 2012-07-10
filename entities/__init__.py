@@ -40,6 +40,24 @@ class AnyEntity(Entity):
         """ return the url of the entity creation form for this entity type"""
         return req.build_url('add/%s' % cls.__regid__, **kwargs)
 
+    @classmethod
+    def cw_fti_index_rql_queries(cls, req):
+        """return the list of rql queries to fetch entities to FT-index
+
+        The default is to fetch all entities at once and to prefetch
+        indexable attributes but one could imagine iterating over
+        "smaller" resultsets if the table is very big or returning
+        a subset of entities that match some business-logic condition.
+        """
+        restrictions = ['X is %s' % cls.__regid__]
+        selected = ['X']
+        for attrschema in cls.e_schema.indexable_attributes():
+            varname = attrschema.type.upper()
+            restrictions.append('X %s %s' % (attrschema, varname))
+            selected.append(varname)
+        return ['Any %s WHERE %s' % (', '.join(selected),
+                                     ', '.join(restrictions))]
+
     # meta data api ###########################################################
 
     def dc_title(self):

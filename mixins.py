@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -23,7 +23,7 @@ from itertools import chain
 from logilab.common.decorators import cached
 from logilab.common.deprecation import deprecated, class_deprecated
 
-from cubicweb.selectors import implements
+from cubicweb.predicates import implements
 from cubicweb.interfaces import ITree
 
 

@@ -176,7 +176,7 @@ override the method ``cell_call()`` of the view ``primary`` in
 
 .. sourcecode:: python
 
-   from cubicweb.selectors import is_instance
+   from cubicweb.predicates import is_instance
    from cubicweb.web.views.primary import Primaryview
 
    class BlogEntryPrimaryView(PrimaryView):
@@ -206,7 +206,7 @@ Let us now improve the primary view of a blog
 .. sourcecode:: python
 
  from logilab.mtconverter import xml_escape
- from cubicweb.selectors import is_instance, one_line_rset
+ from cubicweb.predicates import is_instance, one_line_rset
  from cubicweb.web.views.primary import Primaryview
 
  class BlogPrimaryView(PrimaryView):

@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -29,12 +29,12 @@ from warnings import warn
 
 from logilab.common.deprecation import deprecated
 from logilab.common.textutils import unormalize
+from logilab.common.registry import objectify_predicate
 from rql import CoercionError
 from rql.nodes import ETYPE_PYOBJ_MAP, etype_from_pyobj
 from yams import BASE_TYPES
 
 from cubicweb import Binary, UnknownEid, QueryError, schema
-from cubicweb.selectors import objectify_selector
 from cubicweb.req import RequestSessionBase
 from cubicweb.dbapi import ConnectionProperties
 from cubicweb.utils import make_uid, RepeatList
@@ -74,23 +74,23 @@ def selection_idx_type(i, rqlst, args):
             except CoercionError:
                 return None
 
-@objectify_selector
+@objectify_predicate
 def is_user_session(cls, req, **kwargs):
-    """repository side only selector returning 1 if the session is a regular
+    """repository side only predicate returning 1 if the session is a regular
     user session and not an internal session
     """
     return not req.is_internal_session
 
-@objectify_selector
+@objectify_predicate
 def is_internal_session(cls, req, **kwargs):
-    """repository side only selector returning 1 if the session is not a regular
+    """repository side only predicate returning 1 if the session is not a regular
     user session but an internal session
     """
     return req.is_internal_session
 
-@objectify_selector
+@objectify_predicate
 def repairing(cls, req, **kwargs):
-    """repository side only selector returning 1 if the session is not a regular
+    """repository side only predicate returning 1 if the session is not a regular
     user session but an internal session
     """
     return req.vreg.config.repairing
@@ -252,13 +252,11 @@ class Session(RequestSessionBase):
         self.cnxtype = cnxprops.cnxtype
         self.timestamp = time()
         self.default_mode = 'read'
-        # support undo for Create Update Delete entity / Add Remove relation
+        # undo support
         if repo.config.creating or repo.config.repairing or self.is_internal_session:
-            self.undo_actions = ()
+            self.undo_actions = False
         else:
-            self.undo_actions = set(repo.config['undo-support'].upper())
-            if self.undo_actions - set('CUDAR'):
-                raise Exception('bad undo-support string in configuration')
+            self.undo_actions = repo.config['undo-enabled']
         # short cut to querier .execute method
         self._execute = repo.querier.execute
         # shared data, used to communicate extra information between the client
@@ -847,6 +845,12 @@ class Session(RequestSessionBase):
         else:
             self.data[key] = value
 
+    # server-side service call #################################################
+
+    def call_service(self, regid, async=False, **kwargs):
+        return self.repo.call_service(self.id, regid, async, **kwargs)
+
+
     # request interface #######################################################
 
     @property
@@ -890,7 +894,7 @@ class Session(RequestSessionBase):
         """return a tuple (type, sourceuri, extid) for the entity with id <eid>"""
         metas = self.repo.type_and_source_from_eid(eid, self)
         if asdict:
-            return dict(zip(('type', 'source', 'extid', 'asource'), metas)) 
+            return dict(zip(('type', 'source', 'extid', 'asource'), metas))
        # XXX :-1 for cw compat, use asdict=True for full information
         return metas[:-1]
 
@@ -1118,9 +1122,8 @@ class Session(RequestSessionBase):
 
     # undo support ############################################################
 
-    def undoable_action(self, action, ertype):
-        return action in self.undo_actions and not ertype in NO_UNDO_TYPES
-        # XXX elif transaction on mark it partial
+    def ertype_supports_undo(self, ertype):
+        return self.undo_actions  and ertype not in NO_UNDO_TYPES
 
     def transaction_uuid(self, set=True):
         try:
@@ -1271,6 +1274,12 @@ class InternalSession(Session):
         self.cnxtype = 'inmemory'
         if not safe:
             self.disable_hook_categories('integrity')
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exctype, excvalue, tb):
+        self.close()
 
     @property
     def cnxset(self):

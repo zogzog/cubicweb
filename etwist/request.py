@@ -27,27 +27,18 @@ from cubicweb.web import DirectResponse
 from cubicweb.web.request import CubicWebRequestBase
 from cubicweb.web.httpcache import GMTOFFSET
 from cubicweb.web.http_headers import Headers
-from cubicweb.etwist.http import not_modified_response
 
 
 class CubicWebTwistedRequestAdapter(CubicWebRequestBase):
-    def __init__(self, req, vreg, https, base_url):
+    def __init__(self, req, vreg, https):
         self._twreq = req
-        self._base_url = base_url
-        super(CubicWebTwistedRequestAdapter, self).__init__(vreg, https, req.args)
+        super(CubicWebTwistedRequestAdapter, self).__init__(
+            vreg, https, req.args, headers=req.received_headers)
         for key, (name, stream) in req.files.iteritems():
             if name is None:
                 self.form[key] = (name, stream)
             else:
                 self.form[key] = (unicode(name, self.encoding), stream)
-        # XXX can't we keep received_headers?
-        self._headers_in = Headers()
-        for k, v in req.received_headers.iteritems():
-            self._headers_in.addRawHeader(k, v)
-
-    def base_url(self):
-        """return the root url of the instance"""
-        return self._base_url
 
     def http_method(self):
         """returns 'POST', 'GET', 'HEAD', etc."""
@@ -65,56 +56,3 @@ class CubicWebTwistedRequestAdapter(CubicWebRequestBase):
         if not includeparams:
             path = path.split('?', 1)[0]
         return path
-
-    def get_header(self, header, default=None, raw=True):
-        """return the value associated with the given input header, raise
-        KeyError if the header is not set
-        """
-        if raw:
-            return self._headers_in.getRawHeaders(header, [default])[0]
-        return self._headers_in.getHeader(header, default)
-
-    def _validate_cache(self):
-        """raise a `DirectResponse` exception if a cached page along the way
-        exists and is still usable
-        """
-        if self.get_header('Cache-Control') in ('max-age=0', 'no-cache'):
-            # Expires header seems to be required by IE7
-            self.add_header('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT')
-            return
-        # when using both 'Last-Modified' and 'ETag' response headers
-        # (i.e. using respectively If-Modified-Since and If-None-Match request
-        # headers, see
-        # http://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html#sec13.3.4 for
-        # reference
-        last_modified = self.headers_out.getHeader('last-modified')
-        if last_modified is not None:
-            status = self._twreq.setLastModified(last_modified)
-            if status != http.CACHED:
-                return
-        etag = self.headers_out.getRawHeaders('etag')
-        if etag is not None:
-            status = self._twreq.setETag(etag[0])
-            if status == http.CACHED:
-                response = not_modified_response(self._twreq, self._headers_in)
-                raise DirectResponse(response)
-        # Expires header seems to be required by IE7
-        self.add_header('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT')
-
-    def header_accept_language(self):
-        """returns an ordered list of preferred languages"""
-        acceptedlangs = self.get_header('Accept-Language', raw=False) or {}
-        for lang, _ in sorted(acceptedlangs.iteritems(), key=lambda x: x[1],
-                              reverse=True):
-            lang = lang.split('-')[0]
-            yield lang
-
-    def header_if_modified_since(self):
-        """If the HTTP header If-modified-since is set, return the equivalent
-        date time value (GMT), else return None
-        """
-        mtime = self.get_header('If-modified-since', raw=False)
-        if mtime:
-            # :/ twisted is returned a localized time stamp
-            return datetime.fromtimestamp(mtime) + GMTOFFSET
-        return None

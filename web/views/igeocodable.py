@@ -21,7 +21,7 @@ __docformat__ = "restructuredtext en"
 
 from cubicweb.interfaces import IGeocodable
 from cubicweb.view import EntityView, EntityAdapter, implements_adapter_compat
-from cubicweb.selectors import implements, adaptable
+from cubicweb.predicates import implements, adaptable
 from cubicweb.utils import json_dumps
 
 class IGeocodableAdapter(EntityAdapter):

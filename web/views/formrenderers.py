@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -38,10 +38,11 @@ _ = unicode
 from warnings import warn
 
 from logilab.mtconverter import xml_escape
+from logilab.common.registry import yes
 
 from cubicweb import tags, uilib
 from cubicweb.appobject import AppObject
-from cubicweb.selectors import is_instance, yes
+from cubicweb.predicates import is_instance
 from cubicweb.utils import json_dumps, support_args
 from cubicweb.web import eid_param, formwidgets as fwdgs
 
@@ -116,7 +117,9 @@ class FormRenderer(AppObject):
         errormsg = self.error_message(form)
         if errormsg:
             data.insert(0, errormsg)
-        w(''.join(data))
+        # NOTE: we call unicode because `tag` objects may be found within data
+        #       e.g. from the cwtags library
+        w(''.join(unicode(x) for x in data))
 
     def render_content(self, w, form, values):
         if self.display_progress_div:
@@ -491,17 +494,30 @@ class EntityInlinedFormRenderer(EntityFormRenderer):
     entity's form.
     """
     __regid__ = 'inline'
+    fieldset_css_class = 'subentity'
 
     def render_title(self, w, form, values):
+        w(u'<div class="iformTitle">')
         w(u'<span>%(title)s</span> '
           '#<span class="icounter">%(counter)s</span> ' % values)
         if values['removejs']:
             values['removemsg'] = self._cw._('remove-inlined-entity-form')
             w(u'[<a href="javascript: %(removejs)s;$.noop();">%(removemsg)s</a>]'
               % values)
+        w(u'</div>')
 
     def render(self, w, form, values):
         form.add_media()
+        self.open_form(w, form, values)
+        self.render_title(w, form, values)
+        # XXX that stinks
+        # cleanup values
+        for key in ('title', 'removejs', 'removemsg'):
+            values.pop(key, None)
+        self.render_fields(w, form, values)
+        self.close_form(w, form, values)
+
+    def open_form(self, w, form, values):
         try:
             w(u'<div id="div-%(divid)s" onclick="%(divonclick)s">' % values)
         except KeyError:
@@ -510,22 +526,15 @@ class EntityInlinedFormRenderer(EntityFormRenderer):
             w(u'<div id="notice-%s" class="notice">%s</div>' % (
                 values['divid'], self._cw._('click on the box to cancel the deletion')))
         w(u'<div class="iformBody">')
-        eschema = form.edited_entity.e_schema
-        w(u'<div class="iformTitle">')
-        self.render_title(w, form, values)
-        w(u'</div>')
-        # XXX that stinks
-        # cleanup values
-        for key in ('title', 'removejs', 'removemsg'):
-            values.pop(key, None)
-        self.render_fields(w, form, values)
+
+    def close_form(self, w, form, values):
         w(u'</div></div>')
 
     def render_fields(self, w, form, values):
         w(u'<fieldset id="fs-%(divid)s">' % values)
         fields = self._render_hidden_fields(w, form)
         w(u'</fieldset>')
-        w(u'<fieldset class="subentity">')
+        w(u'<fieldset class="%s">' % self.fieldset_css_class)
         if fields:
             self._render_fields(fields, w, form)
         self.render_child_forms(w, form, values)

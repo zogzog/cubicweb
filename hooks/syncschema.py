@@ -32,7 +32,7 @@ from yams import buildobjs as ybo, schema2sql as y2sql
 from logilab.common.decorators import clear_cache
 
 from cubicweb import ValidationError
-from cubicweb.selectors import is_instance
+from cubicweb.predicates import is_instance
 from cubicweb.schema import (SCHEMA_TYPES, META_RTYPES, VIRTUAL_RTYPES,
                              CONSTRAINTS, ETYPE_NAME_MAP, display_name)
 from cubicweb.server import hook, schemaserial as ss

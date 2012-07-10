@@ -232,7 +232,7 @@ field/widget to handle this in CubicWeb, so let's start by defining them:
     from logilab.common import date
     from logilab.mtconverter import xml_escape
     from cubicweb.view import View
-    from cubicweb.selectors import match_kwargs
+    from cubicweb.predicates import match_kwargs
     from cubicweb.web import RequestError, ProcessFormError
     from cubicweb.web import formfields as fields, formwidgets as wdgs
     from cubicweb.web.views import forms, calendar

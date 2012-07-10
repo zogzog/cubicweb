@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -15,10 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""Exceptions shared by different cubicweb packages.
+"""Exceptions shared by different cubicweb packages."""
 
-
-"""
 __docformat__ = "restructuredtext en"
 
 from yams import ValidationError
@@ -32,9 +30,10 @@ class CubicWebException(Exception):
         if self.msg:
             if self.args:
                 return self.msg % tuple(self.args)
-            return self.msg
-        return ' '.join(unicode(arg) for arg in self.args)
-
+            else:
+                return self.msg
+        else:
+            return u' '.join(unicode(arg) for arg in self.args)
 
 class ConfigurationError(CubicWebException):
     """a misconfiguration error"""
@@ -83,6 +82,7 @@ class MultiSourcesError(RepositoryError, InternalError):
 class UniqueTogetherError(RepositoryError):
     """raised when a unique_together constraint caused an IntegrityError"""
 
+
 # security exceptions #########################################################
 
 class Unauthorized(SecurityError):
@@ -114,32 +114,8 @@ class EidNotInSource(SourceException):
 
 # registry exceptions #########################################################
 
-class RegistryException(CubicWebException):
-    """raised when an unregistered view is called"""
-
-class RegistryNotFound(RegistryException):
-    """raised when an unknown registry is requested
-
-    this is usually a programming/typo error...
-    """
-
-class ObjectNotFound(RegistryException):
-    """raised when an unregistered object is requested
-
-    this may be a programming/typo or a misconfiguration error
-    """
-
-class NoSelectableObject(RegistryException):
-    """raised when no appobject is selectable for a given context."""
-    def __init__(self, args, kwargs, appobjects):
-        self.args = args
-        self.kwargs = kwargs
-        self.appobjects = appobjects
-
-    def __str__(self):
-        return ('args: %s, kwargs: %s\ncandidates: %s'
-                % (self.args, self.kwargs.keys(), self.appobjects))
-
+# pre 3.15 bw compat
+from logilab.common.registry import RegistryException, ObjectNotFound, NoSelectableObject
 
 class UnknownProperty(RegistryException):
     """property found in database but unknown in registry"""
@@ -154,6 +130,35 @@ class NotAnEntity(CubicWebRuntimeError):
     a non final entity
     """
 
+class UndoTransactionException(QueryError):
+    """Raised when undoing a transaction could not be performed completely.
+
+    Note that :
+      1) the partial undo operation might be acceptable
+         depending upon the final application
+
+      2) the undo operation can also fail with a `ValidationError` in
+         cases where the undoing breaks integrity constraints checked
+         immediately.
+
+      3) It might be that neither of those exception is raised but a
+         subsequent `commit` might raise a `ValidationError` in cases
+         where the undoing breaks integrity constraints checked at
+         commit time.
+
+    :type txuuix: int
+    :param txuuid: Unique identifier of the partialy undone transaction
+
+    :type errors: list
+    :param errors: List of errors occured during undoing
+    """
+    msg = u"The following error(s) occured while undoing transaction #%d : %s"
+
+    def __init__(self, txuuid, errors):
+        super(UndoTransactionException, self).__init__(txuuid, errors)
+        self.txuuid = txuuid
+        self.errors = errors
+
 # tools exceptions ############################################################
 
 class ExecutionError(Exception):
@@ -161,3 +166,4 @@ class ExecutionError(Exception):
 
 # pylint: disable=W0611
 from logilab.common.clcommands import BadCommandUsage
+

@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -26,17 +26,17 @@ from warnings import warn
 from functools import partial
 
 from logilab.common.deprecation import deprecated
+from logilab.common.registry import classid, yes
 from logilab.mtconverter import xml_escape
 
 from rql import nodes
 
 from cubicweb import NotAnEntity
-from cubicweb.selectors import yes, non_final_entity, nonempty_rset, none_rset
+from cubicweb.predicates import non_final_entity, nonempty_rset, none_rset
 from cubicweb.appobject import AppObject
 from cubicweb.utils import UStringIO, HTMLStream
 from cubicweb.uilib import domid, js
 from cubicweb.schema import display_name
-from cubicweb.vregistry import classid
 
 # robots control
 NOINDEX = u'<meta name="ROBOTS" content="NOINDEX" />'

@@ -275,10 +275,16 @@ table#header td {
 table#header a {
   color: #000;
 }
+table#header td#headtext {
+  white-space: nowrap;
+}
 
 table#header td#header-right {
   padding-top: 1em;
-  float: right;
+  white-space: nowrap;
+}
+table#header td#header-center{
+  width: 100%;
 }
 
 span#appliName {

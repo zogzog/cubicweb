@@ -190,7 +190,7 @@ user interface tweaks in our :file:`views.py` file:
 
 .. sourcecode:: python
 
-  from cubicweb.selectors import none_rset
+  from cubicweb.predicates import none_rset
   from cubicweb.web.views import bookmark
   from cubes.zone import views as zone
   from cubes.tag import views as tag

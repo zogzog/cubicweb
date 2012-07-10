@@ -41,6 +41,7 @@ import sys, os, logging
 from StringIO import StringIO
 
 from logilab.common.logging_ext import set_log_methods
+from yams.constraints import BASE_CONVERTERS
 
 
 if os.environ.get('APYCOT_ROOT'):
@@ -55,6 +56,7 @@ set_log_methods(sys.modules[__name__], logging.getLogger('cubicweb'))
 
 # make all exceptions accessible from the package
 from cubicweb._exceptions import *
+from logilab.common.registry import ObjectNotFound, NoSelectableObject, RegistryNotFound
 
 # convert eid to the right type, raise ValueError if it's not a valid eid
 typed_eid = int
@@ -77,25 +79,24 @@ class Binary(StringIO):
                "Binary objects must use raw strings, not %s" % data.__class__
         StringIO.write(self, data)
 
-    def to_file(self, filename):
+    def to_file(self, fobj):
         """write a binary to disk
 
         the writing is performed in a safe way for files stored on
         Windows SMB shares
         """
         pos = self.tell()
-        with open(filename, 'wb') as fobj:
-            self.seek(0)
-            if sys.platform == 'win32':
-                while True:
-                    # the 16kB chunksize comes from the shutil module
-                    # in stdlib
-                    chunk = self.read(16*1024)
-                    if not chunk:
-                        break
-                    fobj.write(chunk)
-            else:
-                fobj.write(self.read())
+        self.seek(0)
+        if sys.platform == 'win32':
+            while True:
+                # the 16kB chunksize comes from the shutil module
+                # in stdlib
+                chunk = self.read(16*1024)
+                if not chunk:
+                    break
+                fobj.write(chunk)
+        else:
+            fobj.write(self.read())
         self.seek(pos)
 
     @staticmethod
@@ -119,6 +120,13 @@ class Binary(StringIO):
                 binary.write(fobj.read())
         binary.seek(0)
         return binary
+
+def str_or_binary(value):
+    if isinstance(value, Binary):
+        return value
+    return str(value)
+BASE_CONVERTERS['Password'] = str_or_binary
+
 
 
 # use this dictionary to rename entity types while keeping bw compat

@@ -62,11 +62,11 @@ table.progress td.tdleft {
 }
 
 table.progress tr.highlighted {
-  background-color: %(listingHihligthedBgColor)s;
+  background-color: %(listingHighlightedBgColor)s;
 }
 
 table.progress tr.highlighted .progressbarback {
-  border: 1px solid %(listingHihligthedBgColor)s;
+  border: 1px solid %(listingHighlightedBgColor)s;
 }
 
 table.progress .progressbarback {

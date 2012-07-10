@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -24,14 +24,15 @@ from warnings import warn
 
 from logilab.mtconverter import xml_escape
 from logilab.common.decorators import cachedproperty
+from logilab.common.registry import objectify_predicate, yes
 
-from cubicweb.appobject import objectify_selector
-from cubicweb.selectors import (non_final_entity, multi_lines_rset,
-                                match_context_prop, yes, relation_possible)
+from cubicweb.predicates import (non_final_entity, multi_lines_rset,
+                                 match_context_prop, relation_possible)
 from cubicweb.utils import json_dumps
 from cubicweb.uilib import css_em_num_value
 from cubicweb.view import AnyRsetView
 from cubicweb.web import component, facet as facetbase
+from cubicweb.web.views.ajaxcontroller import ajaxfunc
 
 def facets(req, rset, context, mainvar=None, **kwargs):
     """return the base rql and a list of widgets for facets applying to the
@@ -81,7 +82,7 @@ def _facets(req, rset, context, mainvar, **kwargs):
     return baserql, [wdg for facet, wdg in wdgs if wdg is not None]
 
 
-@objectify_selector
+@objectify_predicate
 def contextview_selector(cls, req, rset=None, row=None, col=None, view=None,
                          **kwargs):
     if view:
@@ -96,7 +97,7 @@ def contextview_selector(cls, req, rset=None, row=None, col=None, view=None,
         return len(wdgs)
     return 0
 
-@objectify_selector
+@objectify_predicate
 def has_facets(cls, req, rset=None, **kwargs):
     if rset is None or rset.rowcount < 2:
         return 0
@@ -312,6 +313,28 @@ class FilterTable(FacetFilterMixIn, AnyRsetView):
                 queued.render(w=w)
             w(u'</div>')
         w(u'</div>\n')
+
+# python-ajax remote functions used by facet widgets #########################
+
+@ajaxfunc(output_type='json')
+def filter_build_rql(self, names, values):
+    form = self._rebuild_posted_form(names, values)
+    self._cw.form = form
+    builder = facetbase.FilterRQLBuilder(self._cw)
+    return builder.build_rql()
+
+@ajaxfunc(output_type='json')
+def filter_select_content(self, facetids, rql, mainvar):
+    # Union unsupported yet
+    select = self._cw.vreg.parse(self._cw, rql).children[0]
+    filtered_variable = facetbase.get_filtered_variable(select, mainvar)
+    facetbase.prepare_select(select, filtered_variable)
+    update_map = {}
+    for fid in facetids:
+        fobj = facetbase.get_facet(self._cw, fid, select, filtered_variable)
+        update_map[fid] = fobj.possible_values()
+    return update_map
+
 
 
 # facets ######################################################################

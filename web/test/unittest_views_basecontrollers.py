@@ -19,16 +19,27 @@
 
 from __future__ import with_statement
 
+from urlparse import urlsplit, urlunsplit, urljoin
+# parse_qs is deprecated in cgi and has been moved to urlparse in Python 2.6
+try:
+    from urlparse import parse_qs as url_parse_query
+except ImportError:
+    from cgi import parse_qs as url_parse_query
 from logilab.common.testlib import unittest_main, mock_object
+from logilab.common.decorators import monkeypatch
 
 from cubicweb import Binary, NoSelectableObject, ValidationError
 from cubicweb.view import STRICT_DOCTYPE
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.utils import json_dumps
 from cubicweb.uilib import rql_for_eid
-from cubicweb.web import INTERNAL_FIELD_VALUE, Redirect, RequestError
+from cubicweb.web import INTERNAL_FIELD_VALUE, Redirect, RequestError, RemoteCallFailed
 from cubicweb.entities.authobjs import CWUser
 from cubicweb.web.views.autoform import get_pending_inserts, get_pending_deletes
+from cubicweb.web.views.basecontrollers import JSonController, xhtmlize, jsonize
+from cubicweb.web.views.ajaxcontroller import ajaxfunc, AjaxFunction
+import cubicweb.transaction as tx
+
 u = unicode
 
 def req_form(user):
@@ -85,7 +96,7 @@ class EditControllerTC(CubicWebTC):
             'firstname-subject:'+eid:   u'Sylvain',
             'in_group-subject:'+eid:  groups,
             }
-        path, params = self.expect_redirect_publish(req, 'edit')
+        path, params = self.expect_redirect_handle_request(req, 'edit')
         e = self.execute('Any X WHERE X eid %(x)s', {'x': user.eid}).get_entity(0, 0)
         self.assertEqual(e.firstname, u'Sylvain')
         self.assertEqual(e.surname, u'Th\xe9nault')
@@ -104,7 +115,7 @@ class EditControllerTC(CubicWebTC):
             'upassword-subject:'+eid: 'tournicoton',
             'upassword-subject-confirm:'+eid: 'tournicoton',
             }
-        path, params = self.expect_redirect_publish(req, 'edit')
+        path, params = self.expect_redirect_handle_request(req, 'edit')
         cnx.commit() # commit to check we don't get late validation error for instance
         self.assertEqual(path, 'cwuser/user')
         self.assertFalse('vid' in params)
@@ -125,7 +136,7 @@ class EditControllerTC(CubicWebTC):
             'firstname-subject:'+eid: u'Th\xe9nault',
             'surname-subject:'+eid:   u'Sylvain',
             }
-        path, params = self.expect_redirect_publish(req, 'edit')
+        path, params = self.expect_redirect_handle_request(req, 'edit')
         e = self.execute('Any X WHERE X eid %(x)s', {'x': user.eid}).get_entity(0, 0)
         self.assertEqual(e.login, user.login)
         self.assertEqual(e.firstname, u'Th\xe9nault')
@@ -151,7 +162,7 @@ class EditControllerTC(CubicWebTC):
                     'address-subject:Y': u'dima@logilab.fr',
                     'use_email-object:Y': 'X',
                     }
-        path, params = self.expect_redirect_publish(req, 'edit')
+        path, params = self.expect_redirect_handle_request(req, 'edit')
         # should be redirected on the created person
         self.assertEqual(path, 'cwuser/adim')
         e = self.execute('Any P WHERE P surname "Di Mascio"').get_entity(0, 0)
@@ -173,7 +184,7 @@ class EditControllerTC(CubicWebTC):
                     'address-subject:Y': u'dima@logilab.fr',
                     'use_email-object:Y': peid,
                     }
-        path, params = self.expect_redirect_publish(req, 'edit')
+        path, params = self.expect_redirect_handle_request(req, 'edit')
         # should be redirected on the created person
         self.assertEqual(path, 'cwuser/adim')
         e = self.execute('Any P WHERE P surname "Di Masci"').get_entity(0, 0)
@@ -193,7 +204,7 @@ class EditControllerTC(CubicWebTC):
                     'address-subject:'+emaileid: u'adim@logilab.fr',
                     'use_email-object:'+emaileid: peid,
                     }
-        path, params = self.expect_redirect_publish(req, 'edit')
+        path, params = self.expect_redirect_handle_request(req, 'edit')
         email.cw_clear_all_caches()
         self.assertEqual(email.address, 'adim@logilab.fr')
 
@@ -256,7 +267,7 @@ class EditControllerTC(CubicWebTC):
                     'amount-subject:X': u'10',
                     'described_by_test-subject:X': u(feid),
                     }
-        self.expect_redirect_publish(req, 'edit')
+        self.expect_redirect_handle_request(req, 'edit')
         # should be redirected on the created
         #eid = params['rql'].split()[-1]
         e = self.execute('Salesterm X').get_entity(0, 0)
@@ -268,7 +279,7 @@ class EditControllerTC(CubicWebTC):
         user = self.user()
         req = self.request(**req_form(user))
         req.session.data['pending_insert'] = set([(user.eid, 'in_group', tmpgroup.eid)])
-        path, params = self.expect_redirect_publish(req, 'edit')
+        path, params = self.expect_redirect_handle_request(req, 'edit')
         usergroups = [gname for gname, in
                       self.execute('Any N WHERE G name N, U in_group G, U eid %(u)s', {'u': user.eid})]
         self.assertItemsEqual(usergroups, ['managers', 'test'])
@@ -287,7 +298,7 @@ class EditControllerTC(CubicWebTC):
         # now try to delete the relation
         req = self.request(**req_form(user))
         req.session.data['pending_delete'] = set([(user.eid, 'in_group', groupeid)])
-        path, params = self.expect_redirect_publish(req, 'edit')
+        path, params = self.expect_redirect_handle_request(req, 'edit')
         usergroups = [gname for gname, in
                       self.execute('Any N WHERE G name N, U in_group G, U eid %(u)s', {'u': user.eid})]
         self.assertItemsEqual(usergroups, ['managers'])
@@ -307,7 +318,7 @@ class EditControllerTC(CubicWebTC):
             '__form_id': 'edition',
             '__action_apply': '',
             }
-        path, params = self.expect_redirect_publish(req, 'edit')
+        path, params = self.expect_redirect_handle_request(req, 'edit')
         self.assertTrue(path.startswith('blogentry/'))
         eid = path.split('/')[1]
         self.assertEqual(params['vid'], 'edition')
@@ -329,7 +340,7 @@ class EditControllerTC(CubicWebTC):
             '__redirectparams': 'toto=tutu&tata=titi',
             '__form_id': 'edition',
             }
-        path, params = self.expect_redirect_publish(req, 'edit')
+        path, params = self.expect_redirect_handle_request(req, 'edit')
         self.assertEqual(path, 'view')
         self.assertEqual(params['rql'], redirectrql)
         self.assertEqual(params['vid'], 'primary')
@@ -341,7 +352,7 @@ class EditControllerTC(CubicWebTC):
         eid = req.create_entity('BlogEntry', title=u'hop', content=u'hop').eid
         req.form = {'eid': u(eid), '__type:%s'%eid: 'BlogEntry',
                     '__action_delete': ''}
-        path, params = self.expect_redirect_publish(req, 'edit')
+        path, params = self.expect_redirect_handle_request(req, 'edit')
         self.assertEqual(path, 'blogentry')
         self.assertIn('_cwmsgid', params)
         eid = req.create_entity('EmailAddress', address=u'hop@logilab.fr').eid
@@ -351,7 +362,7 @@ class EditControllerTC(CubicWebTC):
         req = req
         req.form = {'eid': u(eid), '__type:%s'%eid: 'EmailAddress',
                     '__action_delete': ''}
-        path, params = self.expect_redirect_publish(req, 'edit')
+        path, params = self.expect_redirect_handle_request(req, 'edit')
         self.assertEqual(path, 'cwuser/admin')
         self.assertIn('_cwmsgid', params)
         eid1 = req.create_entity('BlogEntry', title=u'hop', content=u'hop').eid
@@ -361,7 +372,7 @@ class EditControllerTC(CubicWebTC):
                     '__type:%s'%eid1: 'BlogEntry',
                     '__type:%s'%eid2: 'EmailAddress',
                     '__action_delete': ''}
-        path, params = self.expect_redirect_publish(req, 'edit')
+        path, params = self.expect_redirect_handle_request(req, 'edit')
         self.assertEqual(path, 'view')
         self.assertIn('_cwmsgid', params)
 
@@ -377,7 +388,7 @@ class EditControllerTC(CubicWebTC):
                     'title-subject:X': u'entry1-copy',
                     'content-subject:X': u'content1',
                     }
-        self.expect_redirect_publish(req, 'edit')
+        self.expect_redirect_handle_request(req, 'edit')
         blogentry2 = req.find_one_entity('BlogEntry', title=u'entry1-copy')
         self.assertEqual(blogentry2.entry_of[0].eid, blog.eid)
 
@@ -395,7 +406,7 @@ class EditControllerTC(CubicWebTC):
                         'title-subject:X': u'entry1-copy',
                         'content-subject:X': u'content1',
                         }
-            self.expect_redirect_publish(req, 'edit')
+            self.expect_redirect_handle_request(req, 'edit')
             blogentry2 = req.find_one_entity('BlogEntry', title=u'entry1-copy')
             # entry_of should not be copied
             self.assertEqual(len(blogentry2.entry_of), 0)
@@ -421,7 +432,7 @@ class EditControllerTC(CubicWebTC):
             'read_permission-subject:'+cwetypeeid:  groups,
             }
         try:
-            path, params = self.expect_redirect_publish(req, 'edit')
+            path, params = self.expect_redirect_handle_request(req, 'edit')
             e = self.execute('Any X WHERE X eid %(x)s', {'x': cwetypeeid}).get_entity(0, 0)
             self.assertEqual(e.name, 'CWEType')
             self.assertEqual(sorted(g.eid for g in e.read_permission), groupeids)
@@ -441,7 +452,7 @@ class EditControllerTC(CubicWebTC):
             '__type:A': 'BlogEntry', '_cw_entity_fields:A': 'title-subject,content-subject',
             'title-subject:A': u'"13:03:40"',
             'content-subject:A': u'"13:03:43"',}
-        path, params = self.expect_redirect_publish(req, 'edit')
+        path, params = self.expect_redirect_handle_request(req, 'edit')
         self.assertTrue(path.startswith('blogentry/'))
         eid = path.split('/')[1]
         e = self.execute('Any C, T WHERE C eid %(x)s, C content T', {'x': eid}).get_entity(0, 0)
@@ -479,7 +490,7 @@ class EditControllerTC(CubicWebTC):
                     'login-subject:X': u'toto',
                     'upassword-subject:X': u'toto', 'upassword-subject-confirm:X': u'toto',
                     }
-        path, params = self.expect_redirect_publish(req, 'edit')
+        path, params = self.expect_redirect_handle_request(req, 'edit')
         self.assertEqual(path, 'cwuser/toto')
         e = self.execute('Any X WHERE X is CWUser, X login "toto"').get_entity(0, 0)
         self.assertEqual(e.login, 'toto')
@@ -509,12 +520,12 @@ class EditControllerTC(CubicWebTC):
             #    which fires a Redirect
             # 2/ When re-publishing the copy form, the publisher implicitly commits
             try:
-                self.app_publish(req, 'edit')
+                self.app_handle_request(req, 'edit')
             except Redirect:
                 req = self.request()
                 req.form['rql'] = 'Any X WHERE X eid %s' % p.eid
                 req.form['vid'] = 'copy'
-                self.app_publish(req, 'view')
+                self.app_handle_request(req, 'view')
             rset = self.execute('CWUser P WHERE P surname "Boom"')
             self.assertEqual(len(rset), 0)
         finally:
@@ -557,11 +568,12 @@ class SendMailControllerTC(CubicWebTC):
 
 
 
-class JSONControllerTC(CubicWebTC):
+class AjaxControllerTC(CubicWebTC):
+    tested_controller = 'ajax'
 
     def ctrl(self, req=None):
         req = req or self.request(url='http://whatever.fr/')
-        return self.vreg['controllers'].select('json', req)
+        return self.vreg['controllers'].select(self.tested_controller, req)
 
     def setup_database(self):
         req = self.request()
@@ -679,8 +691,168 @@ class JSONControllerTC(CubicWebTC):
         self.assertEqual(self.remote_call('format_date', '2007-01-01 12:00:00')[0],
                           json_dumps('2007/01/01'))
 
+    def test_ajaxfunc_noparameter(self):
+        @ajaxfunc
+        def foo(self, x, y):
+            return 'hello'
+        self.assertEqual(foo(object, 1, 2), 'hello')
+        appobject = foo.__appobject__
+        self.assertTrue(issubclass(appobject, AjaxFunction))
+        self.assertEqual(appobject.__regid__, 'foo')
+        self.assertEqual(appobject.check_pageid, False)
+        self.assertEqual(appobject.output_type, None)
+        req = self.request()
+        f = appobject(req)
+        self.assertEqual(f(12, 13), 'hello')
+
+    def test_ajaxfunc_checkpageid(self):
+        @ajaxfunc(check_pageid=True)
+        def foo(self, x, y):
+            return 'hello'
+        self.assertEqual(foo(object, 1, 2), 'hello')
+        appobject = foo.__appobject__
+        self.assertTrue(issubclass(appobject, AjaxFunction))
+        self.assertEqual(appobject.__regid__, 'foo')
+        self.assertEqual(appobject.check_pageid, True)
+        self.assertEqual(appobject.output_type, None)
+        # no pageid
+        req = self.request()
+        f = appobject(req)
+        self.assertRaises(RemoteCallFailed, f, 12, 13)
+
+    def test_ajaxfunc_json(self):
+        @ajaxfunc(output_type='json')
+        def foo(self, x, y):
+            return x + y
+        self.assertEqual(foo(object, 1, 2), 3)
+        appobject = foo.__appobject__
+        self.assertTrue(issubclass(appobject, AjaxFunction))
+        self.assertEqual(appobject.__regid__, 'foo')
+        self.assertEqual(appobject.check_pageid, False)
+        self.assertEqual(appobject.output_type, 'json')
+        # no pageid
+        req = self.request()
+        f = appobject(req)
+        self.assertEqual(f(12, 13), '25')
 
 
+class JSonControllerTC(AjaxControllerTC):
+    # NOTE: this class performs the same tests as AjaxController but with
+    #       deprecated 'json' controller (i.e. check backward compatibility)
+    tested_controller = 'json'
+
+    def setUp(self):
+        super(JSonControllerTC, self).setUp()
+        self.exposed_remote_funcs = [fname for fname in dir(JSonController)
+                                     if fname.startswith('js_')]
+
+    def tearDown(self):
+        super(JSonControllerTC, self).tearDown()
+        for funcname in dir(JSonController):
+            # remove functions added dynamically during tests
+            if funcname.startswith('js_') and funcname not in self.exposed_remote_funcs:
+                delattr(JSonController, funcname)
+
+    def test_monkeypatch_jsoncontroller(self):
+        self.assertRaises(RemoteCallFailed, self.remote_call, 'foo')
+        @monkeypatch(JSonController)
+        def js_foo(self):
+            return u'hello'
+        res, req = self.remote_call('foo')
+        self.assertEqual(res, u'hello')
+
+    def test_monkeypatch_jsoncontroller_xhtmlize(self):
+        self.assertRaises(RemoteCallFailed, self.remote_call, 'foo')
+        @monkeypatch(JSonController)
+        @xhtmlize
+        def js_foo(self):
+            return u'hello'
+        res, req = self.remote_call('foo')
+        self.assertEqual(res,
+                         '<?xml version="1.0"?>\n' + STRICT_DOCTYPE +
+                         u'<div xmlns="http://www.w3.org/1999/xhtml" xmlns:cubicweb="http://www.logilab.org/2008/cubicweb">hello</div>')
+
+    def test_monkeypatch_jsoncontroller_jsonize(self):
+        self.assertRaises(RemoteCallFailed, self.remote_call, 'foo')
+        @monkeypatch(JSonController)
+        @jsonize
+        def js_foo(self):
+            return 12
+        res, req = self.remote_call('foo')
+        self.assertEqual(res, '12')
+
+
+class UndoControllerTC(CubicWebTC):
+
+    def setup_database(self):
+        req = self.request()
+        self.session.undo_actions = True
+        self.toto = self.create_user(req, 'toto', password='toto', groups=('users',),
+                                     commit=False)
+        self.txuuid_toto = self.commit()
+        self.toto_email = self.session.create_entity('EmailAddress',
+                                       address=u'toto@logilab.org',
+                                       reverse_use_email=self.toto)
+        self.txuuid_toto_email = self.commit()
+
+    def test_no_such_transaction(self):
+        req = self.request()
+        txuuid = u"12345acbd"
+        req.form['txuuid'] = txuuid
+        controller = self.vreg['controllers'].select('undo', req)
+        with self.assertRaises(tx.NoSuchTransaction) as cm:
+            result = controller.publish(rset=None)
+        self.assertEqual(cm.exception.txuuid, txuuid)
+
+    def assertURLPath(self, url, expected_path, expected_params=None):
+        """ This assert that the path part of `url` matches  expected path
+
+        TODO : implement assertion on the expected_params too
+        """
+        req = self.request()
+        scheme, netloc, path, query, fragment = urlsplit(url)
+        query_dict = url_parse_query(query)
+        expected_url = urljoin(req.base_url(), expected_path)
+        self.assertEqual( urlunsplit((scheme, netloc, path, None, None)), expected_url)
+
+    def test_redirect_redirectpath(self):
+        "Check that the potential __redirectpath is honored"
+        req = self.request()
+        txuuid = self.txuuid_toto_email
+        req.form['txuuid'] = txuuid
+        rpath = "toto"
+        req.form['__redirectpath'] = rpath
+        controller = self.vreg['controllers'].select('undo', req)
+        with self.assertRaises(Redirect) as cm:
+            result = controller.publish(rset=None)
+        self.assertURLPath(cm.exception.location, rpath)
+
+    def test_redirect_default(self):
+        req = self.request()
+        txuuid = self.txuuid_toto_email
+        req.form['txuuid'] = txuuid
+        req.session.data['breadcrumbs'] = [ urljoin(req.base_url(), path)
+                                            for path in ('tata', 'toto',)]
+        controller = self.vreg['controllers'].select('undo', req)
+        with self.assertRaises(Redirect) as cm:
+            result = controller.publish(rset=None)
+        self.assertURLPath(cm.exception.location, 'toto')
+
+
+class LoginControllerTC(CubicWebTC):
+
+    def test_login_with_dest(self):
+        req = self.request()
+        req.form = {'postlogin_path': '/elephants/babar'}
+        with self.assertRaises(Redirect) as cm:
+            self.ctrl_publish(req, ctrl='login')
+        self.assertEqual('/elephants/babar', cm.exception.location)
+
+    def test_login_no_dest(self):
+        req = self.request()
+        with self.assertRaises(Redirect) as cm:
+            self.ctrl_publish(req, ctrl='login')
+        self.assertEqual('.', cm.exception.location)
 
 if __name__ == '__main__':
     unittest_main()

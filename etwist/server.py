@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -48,7 +48,7 @@ from logilab.common.decorators import monkeypatch
 from cubicweb import (AuthenticationError, ConfigurationError,
                       CW_EVENT_MANAGER, CubicWebException)
 from cubicweb.utils import json_dumps
-from cubicweb.web import Redirect, DirectResponse, StatusResponse, LogOut
+from cubicweb.web import DirectResponse
 from cubicweb.web.application import CubicWebPublisher
 from cubicweb.web.http_headers import generateDateTime
 from cubicweb.etwist.request import CubicWebTwistedRequestAdapter
@@ -69,175 +69,6 @@ def host_prefixed_baseurl(baseurl, host):
     return baseurl
 
 
-class ForbiddenDirectoryLister(resource.Resource):
-    def render(self, request):
-        return HTTPResponse(twisted_request=request,
-                            code=http.FORBIDDEN,
-                            stream='Access forbidden')
-
-
-class NoListingFile(static.File):
-    def __init__(self, config, path=None):
-        if path is None:
-            path = config.static_directory
-        static.File.__init__(self, path)
-        self.config = config
-
-    def set_expires(self, request):
-        if not self.config.debugmode:
-            # XXX: Don't provide additional resource information to error responses
-            #
-            # the HTTP RFC recommands not going further than 1 year ahead
-            expires = date.today() + timedelta(days=6*30)
-            request.setHeader('Expires', generateDateTime(mktime(expires.timetuple())))
-
-    def directoryListing(self):
-        return ForbiddenDirectoryLister()
-
-    def createSimilarFile(self, path):
-        # we override this method because twisted calls __init__
-        # which we overload with a different signature
-        f = self.__class__(self.config, path)
-        f.processors = self.processors
-        f.indexNames = self.indexNames[:]
-        f.childNotFound = self.childNotFound
-        return f
-
-
-class DataLookupDirectory(NoListingFile):
-    def __init__(self, config, path):
-        self.md5_version = config.instance_md5_version()
-        NoListingFile.__init__(self, config, path)
-        self.here = path
-        self._defineChildResources()
-        if self.config.debugmode:
-            self.data_modconcat_basepath = '/data/??'
-        else:
-            self.data_modconcat_basepath = '/data/%s/??' % self.md5_version
-
-    def _defineChildResources(self):
-        self.putChild(self.md5_version, self)
-
-    def getChild(self, path, request):
-        if not path:
-            uri = request.uri
-            if uri.startswith('/https/'):
-                uri = uri[6:]
-            if uri.startswith(self.data_modconcat_basepath):
-                resource_relpath = uri[len(self.data_modconcat_basepath):]
-                if resource_relpath:
-                    paths = resource_relpath.split(',')
-                    try:
-                        self.set_expires(request)
-                        return ConcatFiles(self.config, paths)
-                    except ConcatFileNotFoundError:
-                        return self.childNotFound
-            return self.directoryListing()
-        childpath = join(self.here, path)
-        dirpath, rid = self.config.locate_resource(childpath)
-        if dirpath is None:
-            # resource not found
-            return self.childNotFound
-        filepath = os.path.join(dirpath, rid)
-        if os.path.isdir(filepath):
-            resource = DataLookupDirectory(self.config, childpath)
-            # cache resource for this segment path to avoid recomputing
-            # directory lookup
-            self.putChild(path, resource)
-            return resource
-        else:
-            self.set_expires(request)
-            return NoListingFile(self.config, filepath)
-
-
-class FCKEditorResource(NoListingFile):
-
-    def getChild(self, path, request):
-        pre_path = request.path.split('/')[1:]
-        if pre_path[0] == 'https':
-            pre_path.pop(0)
-            uiprops = self.config.https_uiprops
-        else:
-            uiprops = self.config.uiprops
-        return static.File(osp.join(uiprops['FCKEDITOR_PATH'], path))
-
-
-class LongTimeExpiringFile(DataLookupDirectory):
-    """overrides static.File and sets a far future ``Expires`` date
-    on the resouce.
-
-    versions handling is done by serving static files by different
-    URLs for each version. For instance::
-
-      http://localhost:8080/data-2.48.2/cubicweb.css
-      http://localhost:8080/data-2.49.0/cubicweb.css
-      etc.
-
-    """
-    def _defineChildResources(self):
-        pass
-
-
-class ConcatFileNotFoundError(CubicWebException):
-    pass
-
-
-class ConcatFiles(LongTimeExpiringFile):
-    def __init__(self, config, paths):
-        _, ext = osp.splitext(paths[0])
-        self._resources = {}
-        # create a unique / predictable filename. We don't consider cubes
-        # version since uicache is cleared at server startup, and file's dates
-        # are checked in debug mode
-        fname = 'cache_concat_' + md5(';'.join(paths)).hexdigest() + ext
-        filepath = osp.join(config.appdatahome, 'uicache', fname)
-        LongTimeExpiringFile.__init__(self, config, filepath)
-        self._concat_cached_filepath(filepath, paths)
-
-    def _resource(self, path):
-        try:
-            return self._resources[path]
-        except KeyError:
-            self._resources[path] = self.config.locate_resource(path)
-            return self._resources[path]
-
-    def _concat_cached_filepath(self, filepath, paths):
-        if not self._up_to_date(filepath, paths):
-            with open(filepath, 'wb') as f:
-                for path in paths:
-                    dirpath, rid = self._resource(path)
-                    if rid is None:
-                        # In production mode log an error, do not return a 404
-                        # XXX the erroneous content is cached anyway
-                        LOGGER.error('concatenated data url error: %r file '
-                                     'does not exist', path)
-                        if self.config.debugmode:
-                            raise ConcatFileNotFoundError(path)
-                    else:
-                        for line in open(osp.join(dirpath, rid)):
-                            f.write(line)
-                        f.write('\n')
-
-    def _up_to_date(self, filepath, paths):
-        """
-        The concat-file is considered up-to-date if it exists.
-        In debug mode, an additional check is performed to make sure that
-        concat-file is more recent than all concatenated files
-        """
-        if not osp.isfile(filepath):
-            return False
-        if self.config.debugmode:
-            concat_lastmod = os.stat(filepath).st_mtime
-            for path in paths:
-                dirpath, rid = self._resource(path)
-                if rid is None:
-                    raise ConcatFileNotFoundError(path)
-                path = osp.join(dirpath, rid)
-                if os.stat(path).st_mtime > concat_lastmod:
-                    return False
-        return True
-
-
 class CubicWebRootResource(resource.Resource):
     def __init__(self, config, vreg=None):
         resource.Resource.__init__(self)
@@ -249,9 +80,6 @@ class CubicWebRootResource(resource.Resource):
         self.https_url = config['https-url']
         global MAX_POST_LENGTH
         MAX_POST_LENGTH = config['max-post-length']
-        self.putChild('static', NoListingFile(config))
-        self.putChild('fckeditor', FCKEditorResource(self.config, ''))
-        self.putChild('data', DataLookupDirectory(self.config, ''))
 
     def init_publisher(self):
         config = self.config
@@ -329,88 +157,28 @@ class CubicWebRootResource(resource.Resource):
         host = request.host
         # dual http/https access handling: expect a rewrite rule to prepend
         # 'https' to the path to detect https access
+        https = False
         if origpath.split('/', 2)[1] == 'https':
             origpath = origpath[6:]
             request.uri = request.uri[6:]
             https = True
-            baseurl = self.https_url or self.base_url
-        else:
-            https = False
-            baseurl = self.base_url
-        if self.config['use-request-subdomain']:
-            baseurl = host_prefixed_baseurl(baseurl, host)
-            self.warning('used baseurl is %s for this request', baseurl)
-        req = CubicWebTwistedRequestAdapter(request, self.appli.vreg, https, baseurl)
-        if req.authmode == 'http':
-            # activate realm-based auth
-            realm = self.config['realm']
-            req.set_header('WWW-Authenticate', [('Basic', {'realm' : realm })], raw=False)
-        try:
-            self.appli.connect(req)
-        except Redirect, ex:
-            return self.redirect(request=req, location=ex.location)
-        if https and req.session.anonymous_session and self.config['https-deny-anonymous']:
-            # don't allow anonymous on https connection
-            return self.request_auth(request=req)
         if self.url_rewriter is not None:
             # XXX should occur before authentication?
-            try:
-                path = self.url_rewriter.rewrite(host, origpath, req)
-            except Redirect, ex:
-                return self.redirect(req, ex.location)
+            path = self.url_rewriter.rewrite(host, origpath, request)
             request.uri.replace(origpath, path, 1)
         else:
             path = origpath
-        if not path or path == "/":
-            path = 'view'
+        req = CubicWebTwistedRequestAdapter(request, self.appli.vreg, https)
         try:
-            result = self.appli.publish(path, req)
+            ### Try to generate the actual request content
+            content = self.appli.handle_request(req, path)
         except DirectResponse, ex:
             return ex.response
-        except StatusResponse, ex:
-            return HTTPResponse(stream=ex.content, code=ex.status,
-                                twisted_request=req._twreq,
-                                headers=req.headers_out)
-        except AuthenticationError:
-            return self.request_auth(request=req)
-        except LogOut, ex:
-            if self.config['auth-mode'] == 'cookie' and ex.url:
-                return self.redirect(request=req, location=ex.url)
-            # in http we have to request auth to flush current http auth
-            # information
-            return self.request_auth(request=req, loggedout=True)
-        except Redirect, ex:
-            return self.redirect(request=req, location=ex.location)
-        # request may be referenced by "onetime callback", so clear its entity
-        # cache to avoid memory usage
-        req.drop_entity_cache()
-        return HTTPResponse(twisted_request=req._twreq, code=http.OK,
-                            stream=result, headers=req.headers_out)
-
-    def redirect(self, request, location):
-        self.debug('redirecting to %s', str(location))
-        request.headers_out.setHeader('location', str(location))
-        # 303 See other
-        return HTTPResponse(twisted_request=request._twreq, code=303,
-                            headers=request.headers_out)
-
-    def request_auth(self, request, loggedout=False):
-        if self.https_url and request.base_url() != self.https_url:
-            return self.redirect(request, self.https_url + 'login')
-        if self.config['auth-mode'] == 'http':
-            code = http.UNAUTHORIZED
-        else:
-            code = http.FORBIDDEN
-        if loggedout:
-            if request.https:
-                request._base_url =  self.base_url
-                request.https = False
-            content = self.appli.loggedout_content(request)
-        else:
-            content = self.appli.need_login_content(request)
-        return HTTPResponse(twisted_request=request._twreq,
-                            stream=content, code=code,
-                            headers=request.headers_out)
+        # at last: create twisted object
+        return HTTPResponse(code    = req.status_out,
+                            headers = req.headers_out,
+                            stream  = content,
+                            twisted_request=req._twreq)
 
     # these are overridden by set_log_methods below
     # only defining here to prevent pylint from complaining

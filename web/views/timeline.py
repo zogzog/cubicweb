@@ -25,7 +25,7 @@ __docformat__ = "restructuredtext en"
 from logilab.mtconverter import xml_escape
 from logilab.common.date import ustrftime
 
-from cubicweb.selectors import adaptable
+from cubicweb.predicates import adaptable
 from cubicweb.view import EntityView, StartupView
 from cubicweb.utils import json_dumps
 

@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -21,8 +21,9 @@ __docformat__ = "restructuredtext en"
 _ = unicode
 
 from logilab.mtconverter import xml_escape
+from logilab.common.registry import yes
 
-from cubicweb.selectors import yes, none_rset, match_user_groups, authenticated_user
+from cubicweb.predicates import none_rset, match_user_groups, authenticated_user
 from cubicweb.view import AnyRsetView, StartupView, EntityView, View
 from cubicweb.uilib import html_traceback, rest_traceback, exc_message
 from cubicweb.web import formwidgets as wdgs

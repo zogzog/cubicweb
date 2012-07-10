@@ -186,6 +186,9 @@ Attributes properties:
 * `default`: default value of the attribute. In case of date types, the values
   which could be used correspond to the RQL keywords `TODAY` and `NOW`.
 
+* `metadata`: Is also accepted as an argument of the attribute contructor. It is
+  not really an attribute property. see `Metadata`_ for details.
+
 Properties for `String` attributes:
 
 * `fulltextindexed`: boolean indicating if the attribute is part of
@@ -567,17 +570,41 @@ birth and a relation that connects a `Person` to another entity of type
  In any case, identifiers starting with "CW" or "cw" are reserved for
  internal use by the framework.
 
+ .. _Metadata:
+
+ Some attribute using the name of another attribute as prefix are considered
+ metadata.  For example, if an EntityType have both a ``data`` and
+ ``data_format`` attribute, ``data_format`` is view as the ``format`` metadata
+ of ``data``. Later the :meth:`cw_attr_metadata` method will allow you to fetch
+ metadata related to an attribute. There are only three valid metadata names:
+ ``format``, ``encoding`` and ``name``.
+
 
 The name of the Python attribute corresponds to the name of the attribute
 or the relation in *CubicWeb* application.
 
 An attribute is defined in the schema as follows::
 
-    attr_name = attr_type(properties)
+    attr_name = AttrType(*properties, metadata={})
 
-where `attr_type` is one of the type listed above and `properties` is
-a list of the attribute needs to satisfy (see `Properties`_
-for more details).
+where
+
+* `AttrType`: is one of the type listed in EntityType_,
+
+* `properties`: is a list of the attribute needs to satisfy (see `Properties`_
+  for more details),
+
+* `metadata`: is a dictionary of meta attributes related to ``attr_name``.
+  Dictionary keys are the name of the meta attribute. Dictionary values
+  attributes objects (like the content of ``AttrType``). For each entry of the
+  metadata dictionary a ``<attr_name>_<key> = <value>`` attribute is
+  automaticaly added to the EntityType.  see `Metadata`_ section for details
+  about valid key.
+
+
+ ---
+
+While building your schema
 
 * it is possible to use the attribute `meta` to flag an entity type as a `meta`
   (e.g. used to describe/categorize other entities)

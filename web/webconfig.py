@@ -321,17 +321,20 @@ have the python imaging library installed to use captcha)',
         if not (self.repairing or self.creating):
             self.global_set_option('base-url', baseurl)
         httpsurl = self['https-url']
-        if (self.debugmode or self.mode == 'test'):
-            datadir_path = 'data/'
-        else:
-            datadir_path = 'data/%s/' % self.instance_md5_version()
+        data_relpath = self.data_relpath()
         if httpsurl:
             if httpsurl[-1] != '/':
                 httpsurl += '/'
                 if not self.repairing:
                     self.global_set_option('https-url', httpsurl)
-            self.https_datadir_url = httpsurl + datadir_path
-        self.datadir_url = baseurl + datadir_path
+            self.https_datadir_url = httpsurl + data_relpath
+        self.datadir_url = baseurl + data_relpath
+
+    def data_relpath(self):
+        if (self.debugmode or self.mode == 'test'):
+            return 'data/'
+        else:
+            return 'data/%s/' % self.instance_md5_version()
 
     def _build_ui_properties(self):
         # self.datadir_url[:-1] to remove trailing /

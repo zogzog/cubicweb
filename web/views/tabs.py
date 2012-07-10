@@ -25,7 +25,7 @@ from logilab.mtconverter import xml_escape
 
 from cubicweb import NoSelectableObject, role
 from cubicweb import tags, uilib, utils
-from cubicweb.selectors import partial_has_related_entities
+from cubicweb.predicates import partial_has_related_entities
 from cubicweb.view import EntityView
 from cubicweb.web.views import primary
 
@@ -47,12 +47,20 @@ class LazyViewMixin(object):
         """a lazy version of wview"""
         w = w or self.w
         self._cw.add_js('cubicweb.ajax.js')
+        # the form is copied into urlparams to please the inner views
+        # that might want to take params from it
+        # beware of already present rql or eid elements
+        # to be safe of collision a proper argument passing protocol
+        # (with namespaces) should be used instead of the current
+        # ad-hockery
         urlparams = self._cw.form.copy()
+        urlparams.pop('rql', None)
+        urlparams.pop('eid', None)
         urlparams.update({'vid' : vid, 'fname' : 'view'})
         if rql:
             urlparams['rql'] = rql
         elif eid:
-            urlparams['rql'] = uilib.rql_for_eid(eid)
+            urlparams['eid'] = eid
         elif rset:
             urlparams['rql'] = rset.printable_rql()
         if tabid is None:

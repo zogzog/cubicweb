@@ -1,4 +1,4 @@
-# copyright 2010-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2010-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -31,7 +31,6 @@ Example of mapping for CWEntityXMLParser::
 
 """
 
-import os.path as osp
 from datetime import datetime, timedelta, time
 from urllib import urlencode
 from cgi import parse_qs # in urlparse with python >= 2.6
@@ -99,11 +98,11 @@ class CWEntityXMLParser(datafeed.DataFeedXMLParser):
     Most of the logic is delegated to the following components:
 
     * an "item builder" component, turning an etree xml node into a specific
-      python dictionnary representing an entity
+      python dictionary representing an entity
 
     * "action" components, selected given an entity, a relation and its role in
       the relation, and responsible to link the entity to given related items
-      (eg dictionnary)
+      (eg dictionary)
 
     So the parser is only doing the gluing service and the connection to the
     source.
@@ -184,11 +183,11 @@ class CWEntityXMLParser(datafeed.DataFeedXMLParser):
 
     # import handling ##########################################################
 
-    def process(self, url, raise_on_error=False, partialcommit=True):
+    def process(self, url, raise_on_error=False):
         """IDataFeedParser main entry point"""
         if url.startswith('http'): # XXX similar loose test as in parse of sources.datafeed
             url = self.complete_url(url)
-        super(CWEntityXMLParser, self).process(url, raise_on_error, partialcommit)
+        super(CWEntityXMLParser, self).process(url, raise_on_error)
 
     def parse_etree(self, parent):
         for node in list(parent):
@@ -213,17 +212,8 @@ class CWEntityXMLParser(datafeed.DataFeedXMLParser):
             return entity
         self._processed_entities.add(entity.eid)
         if not (self.created_during_pull(entity) or self.updated_during_pull(entity)):
-            self.notify_updated(entity)
             attrs = extract_typed_attrs(entity.e_schema, item)
-            # check modification date and compare attribute values to only
-            # update what's actually needed
-            entity.complete(tuple(attrs))
-            mdate = attrs.get('modification_date')
-            if not mdate or mdate > entity.modification_date:
-                attrs = dict( (k, v) for k, v in attrs.iteritems()
-                              if v != getattr(entity, k))
-                if attrs:
-                    entity.set_attributes(**attrs)
+            self.update_if_necessary(entity, attrs)
         self.process_relations(entity, rels)
         return entity
 
@@ -248,6 +238,22 @@ class CWEntityXMLParser(datafeed.DataFeedXMLParser):
         attrs = extract_typed_attrs(entity.e_schema, sourceparams['item'])
         entity.cw_edited.update(attrs)
 
+
+    def normalize_url(self, url):
+        """overriden to add vid=xml"""
+        url = super(CWEntityXMLParser, self).normalize_url(url)
+        if url.startswith('http'):
+            try:
+                url, qs = url.split('?', 1)
+            except ValueError:
+                params = {}
+            else:
+                params = parse_qs(qs)
+            if not 'vid' in params:
+                params['vid'] = ['xml']
+            return url + '?' + self._cw.build_url_params(**params)
+        return url
+
     def complete_url(self, url, etype=None, known_relations=None):
         """append to the url's query string information about relation that should
         be included in the resulting xml, according to source mapping.
@@ -263,9 +269,8 @@ class CWEntityXMLParser(datafeed.DataFeedXMLParser):
             url, qs = url.split('?', 1)
         except ValueError:
             qs = ''
+        # XXX vid will be added by later call to normalize_url (in parent class)
         params = parse_qs(qs)
-        if not 'vid' in params:
-            params['vid'] = ['xml']
         if etype is None:
             try:
                 etype = url.rsplit('/', 1)[1]
@@ -495,14 +500,3 @@ class CWEntityXMLActionLinkOrCreate(CWEntityXMLActionLink):
     """
     __regid__ = 'cw.entityxml.action.link-or-create'
     create_when_not_found = True
-
-
-def registration_callback(vreg):
-    vreg.register_all(globals().values(), __name__)
-    global URL_MAPPING
-    URL_MAPPING = {}
-    if vreg.config.apphome:
-        url_mapping_file = osp.join(vreg.config.apphome, 'urlmapping.py')
-        if osp.exists(url_mapping_file):
-            URL_MAPPING = eval(file(url_mapping_file).read())
-            vreg.info('using url mapping %s from %s', URL_MAPPING, url_mapping_file)

@@ -194,7 +194,7 @@ selection. One standard place for components is in cubicweb/vregistry.py:
         """return an iterator on possible objects in this registry for the given
         context
         """
-        from cubicweb.selectors import traced_selection
+        from logilab.common.registry import traced_selection
         with traced_selection():
             for appobjects in self.itervalues():
                 try:
@@ -217,7 +217,7 @@ the `ViewController`:
     def _select_view_and_rset(self, rset):
         ...
         try:
-            from cubicweb.selectors import traced_selection
+            from logilab.common.registry import traced_selection
             with traced_selection():
                 view = self._cw.vreg['views'].select(vid, req, rset=rset)
         except ObjectNotFound:

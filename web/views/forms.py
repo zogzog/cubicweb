@@ -54,7 +54,7 @@ from logilab.common.deprecation import deprecated
 
 from cubicweb import ValidationError, typed_eid
 from cubicweb.utils import support_args
-from cubicweb.selectors import non_final_entity, match_kwargs, one_line_rset
+from cubicweb.predicates import non_final_entity, match_kwargs, one_line_rset
 from cubicweb.web import RequestError, ProcessFormError
 from cubicweb.web import uicfg, form, formwidgets as fwdgs
 from cubicweb.web.formfields import guess_field
@@ -406,7 +406,7 @@ class EntityFieldsForm(FieldsForm):
             return self.force_session_key
         # XXX if this is a json request, suppose we should redirect to the
         # entity primary view
-        if self._cw.json_request and self.edited_entity.has_eid():
+        if self._cw.ajax_request and self.edited_entity.has_eid():
             return '%s#%s' % (self.edited_entity.absolute_url(), self.domid)
         # XXX we should not consider some url parameters that may lead to
         # different url after a validation error

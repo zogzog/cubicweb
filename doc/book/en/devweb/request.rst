@@ -99,6 +99,7 @@ request objects (grouped by category):
     document.ready(...) or another ajax-friendly one-time trigger event
   * `add_header(header, values)`: adds the header/value pair to the
     current html headers
+  * `status_out`: control the HTTP status of the response
 
 * `And more...`
 

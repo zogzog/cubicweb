@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -174,14 +174,17 @@ Take note that relations can be added or deleted, but not updated.
 Non data events
 ~~~~~~~~~~~~~~~
 
-Hooks called on server start/maintenance/stop event (eg `server_startup`,
-`server_maintenance`, `server_shutdown`) have a `repo` attribute, but *their
-`_cw` attribute is None*.  The `server_startup` is called on regular startup,
-while `server_maintenance` is called on cubicweb-ctl upgrade or shell
-commands. `server_shutdown` is called anyway.
+Hooks called on server start/maintenance/stop event (e.g.
+`server_startup`, `server_maintenance`, `before_server_shutdown`,
+`server_shutdown`) have a `repo` attribute, but *their `_cw` attribute
+is None*.  The `server_startup` is called on regular startup, while
+`server_maintenance` is called on cubicweb-ctl upgrade or shell
+commands. `server_shutdown` is called anyway but connections to the
+native source is impossible; `before_server_shutdown` handles that.
 
-Hooks called on backup/restore event (eg 'server_backup', 'server_restore') have
-a `repo` and a `timestamp` attributes, but *their `_cw` attribute is None*.
+Hooks called on backup/restore event (eg `server_backup`,
+`server_restore`) have a `repo` and a `timestamp` attributes, but
+*their `_cw` attribute is None*.
 
 Hooks called on session event (eg `session_open`, `session_close`) have no
 special attribute.
@@ -233,7 +236,7 @@ filter them in or out. Note that ending the transaction with commit()
 or rollback() will restore the hooks.
 
 
-Hooks specific selector
+Hooks specific predicate
 ~~~~~~~~~~~~~~~~~~~~~~~
 .. autoclass:: cubicweb.server.hook.match_rtype
 .. autoclass:: cubicweb.server.hook.match_rtype_sets
@@ -258,13 +261,13 @@ from itertools import chain
 from logilab.common.decorators import classproperty, cached
 from logilab.common.deprecation import deprecated, class_renamed
 from logilab.common.logging_ext import set_log_methods
+from logilab.common.registry import (Predicate, NotPredicate, OrPredicate,
+                                     classid, objectify_predicate, yes)
 
 from cubicweb import RegistryNotFound
-from cubicweb.vregistry import classid
-from cubicweb.cwvreg import CWRegistry, VRegistry
-from cubicweb.selectors import (objectify_selector, lltrace, ExpectedValueSelector,
-                                is_instance)
-from cubicweb.appobject import AppObject, NotSelector, OrSelector
+from cubicweb.cwvreg import CWRegistry, CWRegistryStore
+from cubicweb.predicates import ExpectedValuePredicate, is_instance
+from cubicweb.appobject import AppObject
 from cubicweb.server.session import security_enabled
 
 ENTITIES_HOOKS = set(('before_add_entity',    'after_add_entity',
@@ -273,7 +276,8 @@ ENTITIES_HOOKS = set(('before_add_entity',    'after_add_entity',
 RELATIONS_HOOKS = set(('before_add_relation',   'after_add_relation' ,
                        'before_delete_relation','after_delete_relation'))
 SYSTEM_HOOKS = set(('server_backup', 'server_restore',
-                    'server_startup', 'server_maintenance', 'server_shutdown',
+                    'server_startup', 'server_maintenance',
+                    'server_shutdown', 'before_server_shutdown',
                     'session_open', 'session_close'))
 ALL_HOOKS = ENTITIES_HOOKS | RELATIONS_HOOKS | SYSTEM_HOOKS
 
@@ -328,7 +332,7 @@ class HooksRegistry(CWRegistry):
                                    key=lambda x: x.order)
                     with security_enabled(session, write=False):
                         for hook in hooks:
-                           hook()
+                            hook()
 
     def get_pruned_hooks(self, session, event, entities, eids_from_to, kwargs):
         """return a set of hooks that should not be considered by filtered_possible objects
@@ -338,14 +342,15 @@ class HooksRegistry(CWRegistry):
         pruned hooks are the one which:
 
         * are disabled at the session level
-        * have a match_rtype or an is_instance selector which does not
-          match the rtype / etype of the relations / entities for
-          which we are calling the hooks. This works because the
-          repository calls the hooks grouped by rtype or by etype when
-          using the entities or eids_to_from keyword arguments
 
-        Only hooks with a simple selector or an AndSelector of simple
-        selectors are considered for disabling.
+        * have a selector containing a :class:`match_rtype` or an
+          :class:`is_instance` predicate which does not match the rtype / etype
+          of the relations / entities for which we are calling the hooks. This
+          works because the repository calls the hooks grouped by rtype or by
+          etype when using the entities or eids_to_from keyword arguments
+
+        Only hooks with a simple predicate or an AndPredicate of simple
+        predicates are considered for disabling.
 
         """
         if 'entity' in kwargs:
@@ -410,24 +415,22 @@ class HooksManager(object):
 
 
 for event in ALL_HOOKS:
-    VRegistry.REGISTRY_FACTORY['%s_hooks' % event] = HooksRegistry
+    CWRegistryStore.REGISTRY_FACTORY['%s_hooks' % event] = HooksRegistry
 
 @deprecated('[3.10] use entity.cw_edited.oldnewvalue(attr)')
 def entity_oldnewvalue(entity, attr):
     return entity.cw_edited.oldnewvalue(attr)
 
 
-# some hook specific selectors #################################################
+# some hook specific predicates #################################################
 
-@objectify_selector
-@lltrace
+@objectify_predicate
 def enabled_category(cls, req, **kwargs):
     if req is None:
         return True # XXX how to deactivate server startup / shutdown event
     return req.is_hook_activated(cls)
 
-@objectify_selector
-@lltrace
+@objectify_predicate
 def from_dbapi_query(cls, req, **kwargs):
     if req.running_dbapi_query:
         return 1
@@ -440,9 +443,9 @@ class rechain(object):
         return iter(chain(*self.iterators))
 
 
-class match_rtype(ExpectedValueSelector):
+class match_rtype(ExpectedValuePredicate):
     """accept if parameters specified as initializer arguments are specified
-    in named arguments given to the selector
+    in named arguments given to the predicate
 
     :param \*expected: parameters (eg `basestring`) which are expected to be
                        found in named arguments (kwargs)
@@ -453,7 +456,6 @@ class match_rtype(ExpectedValueSelector):
         self.toetypes = more.pop('toetypes', None)
         assert not more, "unexpected kwargs in match_rtype: %s" % more
 
-    @lltrace
     def __call__(self, cls, req, *args, **kwargs):
         if kwargs.get('rtype') not in self.expected:
             return 0
@@ -466,10 +468,10 @@ class match_rtype(ExpectedValueSelector):
         return 1
 
 
-class match_rtype_sets(ExpectedValueSelector):
+class match_rtype_sets(ExpectedValuePredicate):
     """accept if the relation type is in one of the sets given as initializer
-    argument. The goal of this selector is that it keeps reference to original sets,
-    so modification to thoses sets are considered by the selector. For instance
+    argument. The goal of this predicate is that it keeps reference to original sets,
+    so modification to thoses sets are considered by the predicate. For instance
 
     MYSET = set()
 
@@ -489,7 +491,6 @@ class match_rtype_sets(ExpectedValueSelector):
     def __init__(self, *expected):
         self.expected = expected
 
-    @lltrace
     def __call__(self, cls, req, *args, **kwargs):
         for rel_set in self.expected:
             if kwargs.get('rtype') in rel_set:
@@ -535,7 +536,7 @@ class Hook(AppObject):
     @cached
     def filterable_selectors(cls):
         search = cls.__select__.search_selector
-        if search((NotSelector, OrSelector)):
+        if search((NotPredicate, OrPredicate)):
             return None, None
         enabled_cat = search(enabled_category)
         main_filter = search((is_instance, match_rtype))
@@ -583,7 +584,7 @@ class PropagateRelationHook(Hook):
     Notice there are no default behaviour defined when a watched relation is
     deleted, you'll have to handle this by yourself.
 
-    You usually want to use the :class:`match_rtype_sets` selector on concrete
+    You usually want to use the :class:`match_rtype_sets` predicate on concrete
     classes.
     """
     events = ('after_add_relation',)
@@ -1067,6 +1068,8 @@ class CleanupDeletedEidsCacheOp(DataOperationMixIn, SingleLastOperation):
         remove inserted eid from repository type/source cache
         """
         try:
-            self.session.repo.clear_caches(self.get_data())
+            eids = self.get_data()
+            self.session.repo.clear_caches(eids)
+            self.session.repo.app_instances_bus.publish(['delete'] + list(str(eid) for eid in eids))
         except KeyError:
             pass

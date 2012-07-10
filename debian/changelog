@@ -1,3 +1,15 @@
+cubicweb (3.15.1-1) quantal; urgency=low
+
+  * new upstream release 
+
+ -- David Douard <david.douard@logilab.fr>  Mon, 11 Jun 2012 09:45:24 +0200
+
+cubicweb (3.15.0-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Sylvain Thénault <sylvain.thenault@logilab.fr>  Thu, 12 Apr 2012 13:52:05 +0200
+
 cubicweb (3.14.8-1) unstable; urgency=low
 
   * new upstream release

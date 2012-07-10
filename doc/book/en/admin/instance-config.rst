@@ -17,6 +17,7 @@ It is a simple text file in the INI format
 each option name is prefixed with its own section and followed by its
 default value if necessary, e.g. "`<section>.<option>` [value]."
 
+.. _`Configuring the Web server`:
 
 Configuring the Web server
 --------------------------

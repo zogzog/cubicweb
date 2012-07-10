@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -26,12 +26,13 @@ __docformat__ = "restructuredtext en"
 _ = unicode
 
 from logilab.mtconverter import xml_escape
+from logilab.common.registry import yes
 from logilab.common.deprecation import class_renamed
 from rql import parse
 
-from cubicweb.selectors import (yes, match_form_params, match_context,
-                                multi_etypes_rset, configuration_values,
-                                anonymous_user, authenticated_user)
+from cubicweb.predicates import (match_form_params, match_context,
+                                 multi_etypes_rset, configuration_values,
+                                 anonymous_user, authenticated_user)
 from cubicweb.schema import display_name
 from cubicweb.utils import wrap_on_write
 from cubicweb.uilib import toggle_action
@@ -76,10 +77,10 @@ class HeaderComponent(component.CtxComponent): # XXX rename properly along with 
     __abstract__ = True
     cw_property_defs = component.override_ctx(
         component.CtxComponent,
-        vocabulary=['header-left', 'header-right'])
+        vocabulary=['header-center', 'header-left', 'header-right', ])
     # don't want user to hide this component using an cwproperty
     site_wide = True
-    context = _('header-left')
+    context = _('header-center')
 
 
 class ApplLogo(HeaderComponent):
@@ -87,6 +88,7 @@ class ApplLogo(HeaderComponent):
     __regid__ = 'logo'
     __select__ = yes() # no need for a cnx
     order = -1
+    context = _('header-left')
 
     def render(self, w):
         w(u'<a href="%s"><img id="logo" src="%s" alt="logo"/></a>'
@@ -187,7 +189,7 @@ class ApplicationMessage(component.Component):
         if msg is None:
             msgs = []
             if self._cw.cnx:
-                srcmsg = self._cw.get_shared_data('sources_error', pop=True)
+                srcmsg = self._cw.get_shared_data('sources_error', pop=True, txdata=True)
                 if srcmsg:
                     msgs.append(srcmsg)
             reqmsg = self._cw.message # XXX don't call self._cw.message twice

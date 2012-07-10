@@ -386,14 +386,6 @@ registered.',
           'help': 'allow users to login with their primary email if set',
           'group': 'main', 'level': 2,
           }),
-        ('use-request-subdomain',
-         {'type' : 'yn',
-          'default': None,
-          'help': ('if set, base-url subdomain is replaced by the request\'s '
-                   'host, to help managing sites with several subdomains in a '
-                   'single cubicweb instance'),
-          'group': 'main', 'level': 1,
-          }),
         ('mangle-emails',
          {'type' : 'yn',
           'default': False,
@@ -828,7 +820,7 @@ this option is set to yes",
     _cubes = None
 
     def init_cubes(self, cubes):
-        assert self._cubes is None, self._cubes
+        assert self._cubes is None, repr(self._cubes)
         self._cubes = self.reorder_cubes(cubes)
         # load cubes'__init__.py file first
         for cube in cubes:
@@ -1160,8 +1152,11 @@ the repository',
                 tr = translation('cubicweb', path, languages=[language])
                 self.translations[language] = (tr.ugettext, tr.upgettext)
             except (ImportError, AttributeError, IOError):
-                self.exception('localisation support error for language %s',
-                               language)
+                if self.mode != 'test':
+                    # in test contexts, data/i18n does not exist, hence
+                    # logging will only pollute the logs
+                    self.exception('localisation support error for language %s',
+                                   language)
 
     def vregistry_path(self):
         """return a list of files or directories where the registry will look

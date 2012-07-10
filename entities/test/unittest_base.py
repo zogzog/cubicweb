@@ -19,6 +19,7 @@
 """unit tests for cubicweb.entities.base module
 
 """
+from __future__ import with_statement
 
 from logilab.common.testlib import unittest_main
 from logilab.common.decorators import clear_cache
@@ -56,6 +57,12 @@ class MetadataTC(BaseEntityTC):
         self.assertEqual(self.schema['CWUser'].meta_attributes(), {})
         self.assertEqual(dict((str(k), v) for k, v in self.schema['State'].meta_attributes().iteritems()),
                           {'description_format': ('format', 'description')})
+
+    def test_fti_rql_method(self):
+        eclass = self.vreg['etypes'].etype_class('EmailAddress')
+        self.assertEqual(['Any X, ALIAS, ADDRESS WHERE X is EmailAddress, '
+                          'X alias ALIAS, X address ADDRESS'],
+                         eclass.cw_fti_index_rql_queries(self.request()))
 
 
 class EmailAddressTC(BaseEntityTC):

@@ -13,11 +13,11 @@ function ajaxBoxValidateSelectorInput(boxid, eid, separator, fname, msg) {
     if (separator) {
         value = $.map(value.split(separator), jQuery.trim);
     }
-    var d = loadRemote('json', ajaxFuncArgs(fname, null, eid, value));
+    var d = loadRemote(AJAX_BASE_URL, ajaxFuncArgs(fname, null, eid, value));
     d.addCallback(function() {
             $('#' + holderid).empty();
             var formparams = ajaxFuncArgs('render', null, 'ctxcomponents', boxid, eid);
-            $('#' + cw.utils.domid(boxid) + eid).loadxhtml('json', formparams);
+            $('#' + cw.utils.domid(boxid) + eid).loadxhtml(AJAX_BASE_URL, formparams);
             if (msg) {
                 document.location.hash = '#header';
                 updateMessage(msg);
@@ -26,10 +26,10 @@ function ajaxBoxValidateSelectorInput(boxid, eid, separator, fname, msg) {
 }
 
 function ajaxBoxRemoveLinkedEntity(boxid, eid, relatedeid, delfname, msg) {
-    var d = loadRemote('json', ajaxFuncArgs(delfname, null, eid, relatedeid));
+    var d = loadRemote(AJAX_BASE_URL, ajaxFuncArgs(delfname, null, eid, relatedeid));
     d.addCallback(function() {
             var formparams = ajaxFuncArgs('render', null, 'ctxcomponents', boxid, eid);
-            $('#' + cw.utils.domid(boxid) + eid).loadxhtml('json', formparams);
+            $('#' + cw.utils.domid(boxid) + eid).loadxhtml(AJAX_BASE_URL, formparams);
             if (msg) {
                 document.location.hash = '#header';
                 updateMessage(msg);
@@ -69,7 +69,7 @@ function ajaxBoxShowSelector(boxid, eid,
     }
     else {
         var inputid = holderid + 'Input';
-        var deferred = loadRemote('json', ajaxFuncArgs(unrelfname, null, eid));
+        var deferred = loadRemote(AJAX_BASE_URL, ajaxFuncArgs(unrelfname, null, eid));
         deferred.addCallback(function (unrelated) {
             var input = INPUT({'type': 'text', 'id': inputid, 'size': 20});
             holder.append(input).show();

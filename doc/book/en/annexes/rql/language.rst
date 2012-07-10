@@ -614,15 +614,18 @@ Date extraction functions
 +--------------------------+----------------------------------------+
 | :func:`YEAR(Date)`       | return the year of a date or datetime  |
 +--------------------------+----------------------------------------+
-| :func:`MONTH(Date)`      | return the year of a date or datetime  |
+| :func:`MONTH(Date)`      | return the month of a date or datetime |
 +--------------------------+----------------------------------------+
-| :func:`DAY(Date)`        | return the year of a date or datetime  |
+| :func:`DAY(Date)`        | return the day of a date or datetime   |
 +--------------------------+----------------------------------------+
-| :func:`HOUR(Datetime)`   | return the year of a datetime          |
+| :func:`HOUR(Datetime)`   | return the hours of a datetime         |
 +--------------------------+----------------------------------------+
-| :func:`MINUTE(Datetime)` | return the year of a datetime          |
+| :func:`MINUTE(Datetime)` | return the minutes of a datetime       |
 +--------------------------+----------------------------------------+
-| :func:`SECOND(Datetime)` | return the year of a datetime          |
+| :func:`SECOND(Datetime)` | return the seconds of a datetime       |
++--------------------------+----------------------------------------+
+| :func:`WEEKDAY(Date)`    | return the day of week of a date or    |
+|                          | datetime.  Sunday == 1, Saturday == 7. |
 +--------------------------+----------------------------------------+
 
 .. _RQLOtherFunctions:
