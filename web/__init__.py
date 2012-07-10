@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -62,26 +62,3 @@ def jsonize(function):
         except TypeError:
             return json_dumps(repr(value))
     return newfunc
-
-@deprecated('[3.4] use req.ajax_replace_url() instead')
-def ajax_replace_url(nodeid, rql, vid=None, swap=False, **extraparams):
-    """builds a replacePageChunk-like url
-    >>> ajax_replace_url('foo', 'Person P')
-    "javascript: replacePageChunk('foo', 'Person%20P');"
-    >>> ajax_replace_url('foo', 'Person P', 'oneline')
-    "javascript: replacePageChunk('foo', 'Person%20P', 'oneline');"
-    >>> ajax_replace_url('foo', 'Person P', 'oneline', name='bar', age=12)
-    "javascript: replacePageChunk('foo', 'Person%20P', 'oneline', {'age':12, 'name':'bar'});"
-    >>> ajax_replace_url('foo', 'Person P', name='bar', age=12)
-    "javascript: replacePageChunk('foo', 'Person%20P', 'null', {'age':12, 'name':'bar'});"
-    """
-    params = [repr(nodeid), repr(urlquote(rql))]
-    if extraparams and not vid:
-        params.append("'null'")
-    elif vid:
-        params.append(repr(vid))
-    if extraparams:
-        params.append(json_dumps(extraparams))
-    if swap:
-        params.append('true')
-    return "javascript: replacePageChunk(%s);" % ', '.join(params)

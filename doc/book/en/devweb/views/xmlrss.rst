@@ -20,7 +20,9 @@ RSS Channel Example
 ++++++++++++++++++++
 
 Assuming you have several blog entries, click on the title of the
-search box in the left column. A larger search box should appear. Enter::
+search box in the left column. A larger search box should appear. Enter:
+
+.. sourcecode:: sql
 
    Any X ORDERBY D WHERE X is BlogEntry, X creation_date D
 
@@ -38,14 +40,18 @@ You just applied the "RSS" view to the RQL selection you requested.
 
 That's it, you have a RSS channel for your blog.
 
-Try again with::
+Try again with:
+
+.. sourcecode:: sql
 
     Any X ORDERBY D WHERE X is BlogEntry, X creation_date D,
     X entry_of B, B title "MyLife"
 
 Another RSS channel, but a bit more focused.
 
-A last one for the road::
+A last one for the road:
+
+.. sourcecode:: sql
 
     Any C ORDERBY D WHERE C is Comment, C creation_date D LIMIT 15
 

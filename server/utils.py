@@ -20,35 +20,52 @@
 __docformat__ = "restructuredtext en"
 
 import sys
-import string
 import logging
 from threading import Timer, Thread
 from getpass import getpass
-from random import choice
 
-from cubicweb.server import SOURCE_TYPES
+from passlib.utils import handlers as uh, to_hash_str
+from passlib.context import CryptContext
 
-try:
-    from crypt import crypt
-except ImportError:
-    # crypt is not available (eg windows)
-    from cubicweb.md5crypt import crypt
+from cubicweb.md5crypt import crypt as md5crypt
 
 
-def getsalt(chars=string.letters + string.digits):
-    """generate a random 2-character 'salt'"""
-    return choice(chars) + choice(chars)
+class CustomMD5Crypt(uh.HasSalt, uh.GenericHandler):
+    name = 'cubicwebmd5crypt'
+    setting_kwds = ('salt',)
+    min_salt_size = 0
+    max_salt_size = 8
+    salt_chars = uh.H64_CHARS
 
+    @classmethod
+    def from_string(cls, hash):
+        salt, chk = uh.parse_mc2(hash, u'')
+        if chk is None:
+            raise ValueError('missing checksum')
+        return cls(salt=salt, checksum=chk)
+
+    def to_string(self):
+        return to_hash_str(u'%s$%s' % (self.salt, self.checksum or u''))
+
+    # passlib 1.5 wants calc_checksum, 1.6 wants _calc_checksum
+    def calc_checksum(self, secret):
+        return md5crypt(secret, self.salt.encode('ascii')).decode('utf-8')
+    _calc_checksum = calc_checksum
+
+_CRYPTO_CTX = CryptContext(['sha512_crypt', CustomMD5Crypt, 'des_crypt'])
 
 def crypt_password(passwd, salt=None):
     """return the encrypted password using the given salt or a generated one
     """
-    if passwd is None:
-        return None
     if salt is None:
-        salt = getsalt()
-    return crypt(passwd, salt)
-
+        return _CRYPTO_CTX.encrypt(passwd)
+    # empty hash, accept any password for backwards compat
+    if salt == '':
+        return salt
+    if _CRYPTO_CTX.verify(passwd, salt):
+        return salt
+    # wrong password
+    return ''
 
 def cartesian_product(seqin):
     """returns a generator which returns the cartesian product of `seqin`

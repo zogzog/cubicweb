@@ -165,7 +165,7 @@ Here is what it looks like:
            msg = format_mail({'email' : self._cw.user.get_email(),
                               'name' : self._cw.user.dc_title()},
                              recipients, body, subject)
-           if not self._cw.vreg.config.sendmails([(msg, recipients]):
+           if not self._cw.vreg.config.sendmails([(msg, recipients)]):
                msg = self._cw._('could not connect to the SMTP server')
            else:
                msg = self._cw._('emails successfully sent')

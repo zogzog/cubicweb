@@ -117,7 +117,7 @@ class UserGroupHooksTC(CubicWebTC):
                           self.repo.connect, u'toto', password='hop')
         self.commit()
         cnxid = self.repo.connect(u'toto', password='hop')
-        self.failIfEqual(cnxid, self.session.id)
+        self.assertNotEqual(cnxid, self.session.id)
         self.execute('DELETE CWUser X WHERE X login "toto"')
         self.repo.execute(cnxid, 'State X')
         self.commit()
@@ -151,7 +151,7 @@ class UserGroupHooksTC(CubicWebTC):
         eid = self.execute('INSERT EmailAddress X: X address "toto@logilab.fr"')[0][0]
         self.execute('DELETE EmailAddress X WHERE X eid %s' % eid)
         self.commit()
-        self.failIf(self.execute('Any X WHERE X created_by Y, X eid >= %(x)s', {'x': eid}))
+        self.assertFalse(self.execute('Any X WHERE X created_by Y, X eid >= %(x)s', {'x': eid}))
 
 
 

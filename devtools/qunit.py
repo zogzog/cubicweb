@@ -64,19 +64,22 @@ class FirefoxHelper(object):
 
     def __init__(self, url=None):
         self._process = None
-        self._tmp_dir = mkdtemp()
+        self._tmp_dir = mkdtemp(prefix='cwtest-ffxprof-')
         self._profile_data = {'uid': uuid4()}
         self._profile_name = self.profile_name_mask % self._profile_data
         fnull = open(os.devnull, 'w')
         stdout = TemporaryFile()
         stderr = TemporaryFile()
+        self.firefox_cmd = ['firefox', '-no-remote']
+        if os.name == 'posix':
+            self.firefox_cmd = [osp.join(osp.dirname(__file__), 'data', 'xvfb-run.sh'), '-a'] + self.firefox_cmd
         try:
             home = osp.expanduser('~')
             user = getlogin()
             assert os.access(home, os.W_OK), \
                    'No write access to your home directory, Firefox will crash.'\
                    ' Are you sure "%s" is a valid home  for user "%s"' % (home, user)
-            check_call(['firefox', '-no-remote', '-CreateProfile',
+            check_call(self.firefox_cmd + ['-CreateProfile',
                         '%s %s' % (self._profile_name, self._tmp_dir)],
                                   stdout=stdout, stderr=stderr)
         except CalledProcessError, cpe:
@@ -87,7 +90,7 @@ class FirefoxHelper(object):
     def start(self, url):
         self.stop()
         fnull = open(os.devnull, 'w')
-        self._process = Popen(['firefox', '-no-remote', '-P', self._profile_name, url],
+        self._process = Popen(self.firefox_cmd + ['-P', self._profile_name, url],
                               stdout=fnull, stderr=fnull)
 
     def stop(self):

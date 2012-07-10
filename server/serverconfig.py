@@ -136,7 +136,7 @@ connections will have this number of opened connections.',
           }),
         ('rql-cache-size',
          {'type' : 'int',
-          'default': 300,
+          'default': 3000,
           'help': 'size of the parsed rql cache size.',
           'group': 'main', 'level': 3,
           }),
@@ -302,9 +302,7 @@ and if not set, it will be choosen randomly',
                         if attr != 'adapter':
                             self.error('skip unknown option %s in sources file')
                 sconfig = _sconfig
-            print >> stream, '[%s]' % section
-            print >> stream, generate_source_config(sconfig)
-            print >> stream
+            stream.write('[%s]\n%s\n' % (section, generate_source_config(sconfig)))
         restrict_perms_to_user(sourcesfile)
 
     def pyro_enabled(self):

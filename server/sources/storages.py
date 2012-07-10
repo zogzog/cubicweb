@@ -17,6 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """custom storages for the system source"""
 
+import os
 from os import unlink, path as osp
 from contextlib import contextmanager
 
@@ -112,6 +113,8 @@ def fsimport(session):
 class BytesFileSystemStorage(Storage):
     """store Bytes attribute value on the file system"""
     def __init__(self, defaultdir, fsencoding='utf-8'):
+        if type(defaultdir) is unicode:
+            defaultdir = defaultdir.encode(fsencoding)
         self.default_directory = defaultdir
         self.fsencoding = fsencoding
 
@@ -121,7 +124,7 @@ class BytesFileSystemStorage(Storage):
         """
         fpath = source.binary_to_str(value)
         try:
-            return Binary(file(fpath, 'rb').read())
+            return Binary.from_file(fpath)
         except EnvironmentError, ex:
             source.critical("can't open %s: %s", value, ex)
             return None
@@ -129,18 +132,18 @@ class BytesFileSystemStorage(Storage):
     def entity_added(self, entity, attr):
         """an entity using this storage for attr has been added"""
         if entity._cw.transaction_data.get('fs_importing'):
-            binary = Binary(file(entity.cw_edited[attr].getvalue(), 'rb').read())
+            binary = Binary.from_file(entity.cw_edited[attr].getvalue())
         else:
             binary = entity.cw_edited.pop(attr)
             fpath = self.new_fs_path(entity, attr)
             # bytes storage used to store file's path
             entity.cw_edited.edited_attribute(attr, Binary(fpath))
-            file(fpath, 'wb').write(binary.getvalue())
+            binary.to_file(fpath)
             AddFileOp.get_instance(entity._cw).add_data(fpath)
         return binary
 
     def entity_updated(self, entity, attr):
-        """an entity using this storage for attr has been updatded"""
+        """an entity using this storage for attr has been updated"""
         # get the name of the previous file containing the value
         oldpath = self.current_fs_path(entity, attr)
         if entity._cw.transaction_data.get('fs_importing'):
@@ -149,7 +152,7 @@ class BytesFileSystemStorage(Storage):
             # the file as the actual content of the attribute
             fpath = entity.cw_edited[attr].getvalue()
             assert fpath is not None
-            binary = Binary(file(fpath, 'rb').read())
+            binary = Binary.from_file(fpath)
         else:
             # We must store the content of the attributes
             # into a file to stay consistent with the behaviour of entity_add.
@@ -168,20 +171,20 @@ class BytesFileSystemStorage(Storage):
                 fpath = self.new_fs_path(entity, attr)
                 assert not osp.exists(fpath)
                 # write attribute value on disk
-                file(fpath, 'wb').write(binary.getvalue())
+                binary.to_file(fpath)
                 # Mark the new file as added during the transaction.
                 # The file will be removed on rollback
                 AddFileOp.get_instance(entity._cw).add_data(fpath)
-        if oldpath != fpath:
-            # register the new location for the file.
+            # reinstall poped value
             if fpath is None:
                 entity.cw_edited.edited_attribute(attr, None)
             else:
+                # register the new location for the file.
                 entity.cw_edited.edited_attribute(attr, Binary(fpath))
+        if oldpath is not None and oldpath != fpath:
             # Mark the old file as useless so the file will be removed at
             # commit.
-            if oldpath is not None:
-                DeleteFileOp.get_instance(entity._cw).add_data(oldpath)
+            DeleteFileOp.get_instance(entity._cw).add_data(oldpath)
         return binary
 
     def entity_deleted(self, entity, attr):
@@ -200,7 +203,8 @@ class BytesFileSystemStorage(Storage):
         name = entity.cw_attr_metadata(attr, 'name')
         if name is not None:
             basename.append(name.encode(self.fsencoding))
-        fspath = uniquify_path(self.default_directory, '_'.join(basename))
+        fspath = uniquify_path(self.default_directory,
+                               '_'.join(basename))
         if fspath is None:
             msg = entity._cw._('failed to uniquify path (%s, %s)') % (
                 self.default_directory, '_'.join(basename))
@@ -208,9 +212,9 @@ class BytesFileSystemStorage(Storage):
         return fspath
 
     def current_fs_path(self, entity, attr):
-        """return the current fs_path of the tribute.
-
-        Return None is the attr is not stored yet."""
+        """return the current fs_path of the attribute, or None is the attr is
+        not stored yet.
+        """
         sysource = entity._cw.cnxset.source('system')
         cu = sysource.doexec(entity._cw,
                              'SELECT cw_%s FROM cw_%s WHERE cw_eid=%s' % (

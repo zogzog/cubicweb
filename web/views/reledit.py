@@ -74,20 +74,20 @@ class AutoClickAndEditFormView(EntityView):
     # renderer
     _form_renderer_id = 'base'
 
-    def cell_call(self, row, col, rtype=None, role='subject',
-                  reload=False, # controls reloading the whole page after change
-                                # boolean, eid (to redirect), or
-                                # function taking the subject entity & returning a boolean or an eid
-                  rvid=None,    # vid to be applied to other side of rtype (non final relations only)
-                  default_value=None,
-                  formid='base',
-                  action=None
-                  ):
+    def entity_call(self, entity, rtype=None, role='subject',
+                    reload=False, # controls reloading the whole page after change
+                                  # boolean, eid (to redirect), or
+                                  # function taking the subject entity & returning a boolean or an eid
+                    rvid=None,    # vid to be applied to other side of rtype (non final relations only)
+                    default_value=None,
+                    formid='base',
+                    action=None
+                    ):
         """display field to edit entity's `rtype` relation on click"""
         assert rtype
         self._cw.add_css('cubicweb.form.css')
         self._cw.add_js(('cubicweb.reledit.js', 'cubicweb.edition.js', 'cubicweb.ajax.js'))
-        self.entity = self.cw_rset.get_entity(row, col)
+        self.entity = entity
         rschema = self._cw.vreg.schema[rtype]
         self._rules = rctrl.etype_get(self.entity.e_schema.type, rschema.type, role, '*')
         if rvid is not None or default_value is not None:

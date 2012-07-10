@@ -20,12 +20,14 @@
 
 __docformat__ = "restructuredtext en"
 
+import logging
 from random import randint, choice
 from copy import deepcopy
 from datetime import datetime, date, time, timedelta
 from decimal import Decimal
 
 from logilab.common import attrdict
+from logilab.mtconverter import xml_escape
 from yams.constraints import (SizeConstraint, StaticVocabularyConstraint,
                               IntervalBoundConstraint, BoundaryConstraint,
                               Attribute, actual_value)
@@ -238,6 +240,14 @@ title
         # raise exception
         return u'text/plain'
 
+    def generate_CWDataImport_log(self, entity, index, **kwargs):
+        # content_format attribute of EmailPart has no vocabulary constraint, we
+        # need this method else stupid values will be set which make mtconverter
+        # raise exception
+        logs =  [u'%s\t%s\t%s\t%s<br/>' % (logging.ERROR, 'http://url.com?arg1=hop&arg2=hip',
+                                           1, xml_escape('hjoio&oio"'))]
+        return u'<br/>'.join(logs)
+
 
 class autoextend(type):
     def __new__(mcs, name, bases, classdict):
@@ -296,7 +306,7 @@ def make_entity(etype, schema, vreg, index=0, choice_func=_default_choice_func,
     """generates a random entity and returns it as a dict
 
     by default, generate an entity to be inserted in the repository
-    elif form, generate an form dictionnary to be given to a web controller
+    elif form, generate an form dictionary to be given to a web controller
     """
     eschema = schema.eschema(etype)
     valgen = ValueGenerator(eschema, choice_func)

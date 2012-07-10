@@ -62,7 +62,7 @@ class CoreHooksTC(CubicWebTC):
         self.execute('INSERT EmailPart X: X content_format "text/plain", X ordernum 1, X content "this is a test"')
         self.execute('INSERT Email X: X messageid "<1234>", X subject "test", X sender Y, X recipients Y, X parts P '
                      'WHERE Y is EmailAddress, P is EmailPart')
-        self.failUnless(self.execute('Email X WHERE X sender Y'))
+        self.assertTrue(self.execute('Email X WHERE X sender Y'))
         self.commit()
         self.execute('DELETE Email X')
         rset = self.execute('Any X WHERE X is EmailPart')

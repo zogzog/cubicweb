@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -31,6 +31,7 @@ from math import log
 from contextlib import contextmanager
 from warnings import warn
 from types import NoneType
+from itertools import chain
 
 import yams.schema
 
@@ -387,31 +388,6 @@ class CubicWebTC(TestCase):
                 req.cnx.commit()
         return user
 
-    @iclassmethod # XXX turn into a class method
-    def grant_permission(self, session, entity, group, pname=None, plabel=None):
-        """insert a permission on an entity. Will have to commit the main
-        connection to be considered
-        """
-        if not isinstance(session, Session):
-            warn('[3.12] grant_permission arguments are now (session, entity, group, pname[, plabel])',
-                 DeprecationWarning, stacklevel=2)
-            plabel = pname
-            pname = group
-            group = entity
-            entity = session
-            assert not isinstance(self, type)
-            session = self.session
-        pname = unicode(pname)
-        plabel = plabel and unicode(plabel) or unicode(group)
-        e = getattr(entity, 'eid', entity)
-        with security_enabled(session, False, False):
-            peid = session.execute(
-            'INSERT CWPermission X: X name %(pname)s, X label %(plabel)s,'
-            'X require_group G, E require_permission X '
-            'WHERE G name %(group)s, E eid %(e)s',
-            locals())[0][0]
-        return peid
-
     def login(self, login, **kwargs):
         """return a connection for the given login/password"""
         if login == self.admlogin:
@@ -490,6 +466,49 @@ class CubicWebTC(TestCase):
         finally:
             for obj in appobjects:
                 self.vreg.unregister(obj)
+
+    @contextmanager
+    def temporary_permissions(self, *perm_overrides, **perm_kwoverrides):
+        """Set custom schema permissions within context.
+
+        There are two ways to call this method, which may be used together :
+
+        * using positional argument(s):
+
+          .. sourcecode:: python
+                rdef = self.schema['CWUser'].rdef('login')
+                with self.temporary_permissions((rdef, {'read': ()})):
+                    ...
+
+
+        * using named argument(s):
+
+          .. sourcecode:: python
+                rdef = self.schema['CWUser'].rdef('login')
+                with self.temporary_permissions(CWUser={'read': ()}):
+                    ...
+
+        Usually the former will be prefered to override permissions on a
+        relation definition, while the latter is well suited for entity types.
+
+        The allowed keys in the permission dictionary depends on the schema type
+        (entity type / relation definition). Resulting permissions will be
+        similar to `orig_permissions.update(partial_perms)`.
+        """
+        torestore = []
+        for erschema, etypeperms in chain(perm_overrides, perm_kwoverrides.iteritems()):
+            if isinstance(erschema, basestring):
+                erschema = self.schema[erschema]
+            for action, actionperms in etypeperms.iteritems():
+                origperms = erschema.permissions[action]
+                erschema.set_action_permissions(action, actionperms)
+                torestore.append([erschema, action, origperms])
+        yield
+        for erschema, action, permissions in torestore:
+            if action is None:
+                erschema.permissions = permissions
+            else:
+                erschema.set_action_permissions(action, permissions)
 
     def assertModificationDateGreater(self, entity, olddate):
         entity.cw_attr_cache.pop('modification_date', None)
@@ -851,7 +870,7 @@ class CubicWebTC(TestCase):
         output = output.strip()
         validator = self.get_validator(view, output=output)
         if validator is None:
-            return
+            return output # return raw output if no validator is defined
         if isinstance(validator, htmlparser.DTDValidator):
             # XXX remove <canvas> used in progress widget, unknown in html dtd
             output = re.sub('<canvas.*?></canvas>', '', output)
@@ -928,12 +947,6 @@ class CubicWebTC(TestCase):
             warn('[3.8] eidkey is deprecated, you can safely remove this argument',
                  DeprecationWarning, stacklevel=2)
         return self.execute(rql, args, req=req).get_entity(0, 0)
-
-    @deprecated('[3.6] use self.request().create_entity(...)')
-    def add_entity(self, etype, req=None, **kwargs):
-        if req is None:
-            req = self.request()
-        return req.create_entity(etype, **kwargs)
 
 
 # auto-populating test classes and utilities ###################################
@@ -1130,7 +1143,7 @@ class AutomaticWebTest(AutoPopulateTest):
     tags = AutoPopulateTest.tags | Tags('web', 'generated')
 
     def setUp(self):
-        assert not self.__class__ is AutomaticWebTest, 'Please subclass AutomaticWebTest to pprevent database caching issue'
+        assert not self.__class__ is AutomaticWebTest, 'Please subclass AutomaticWebTest to prevent database caching issue'
         super(AutomaticWebTest, self).setUp()
 
         # access to self.app for proper initialization of the authentication

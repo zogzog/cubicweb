@@ -430,7 +430,7 @@ class ResultSetTC(CubicWebTC):
     def test_entities(self):
         rset = self.execute('Any U,G WHERE U in_group G')
         # make sure we have at least one element
-        self.failUnless(rset)
+        self.assertTrue(rset)
         self.assertEqual(set(e.e_schema.type for e in rset.entities(0)),
                           set(['CWUser',]))
         self.assertEqual(set(e.e_schema.type for e in rset.entities(1)),
@@ -439,7 +439,7 @@ class ResultSetTC(CubicWebTC):
     def test_iter_rows_with_entities(self):
         rset = self.execute('Any U,UN,G,GN WHERE U in_group G, U login UN, G name GN')
         # make sure we have at least one element
-        self.failUnless(rset)
+        self.assertTrue(rset)
         out = list(rset.iter_rows_with_entities())[0]
         self.assertEqual( out[0].login, out[1] )
         self.assertEqual( out[2].name, out[3] )

@@ -17,17 +17,24 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Some utilities for CubicWeb server/clients."""
 
+from __future__ import division, with_statement
+
 __docformat__ = "restructuredtext en"
 
-import os
 import sys
 import decimal
 import datetime
 import random
+import re
+
+from operator import itemgetter
 from inspect import getargspec
 from itertools import repeat
 from uuid import uuid4
 from warnings import warn
+from threading import Lock
+
+from logging import getLogger
 
 from logilab.mtconverter import xml_escape
 from logilab.common.deprecation import deprecated
@@ -227,7 +234,7 @@ class HTMLHead(UStringIO):
     xhtml_safe_script_opening = u'<script type="text/javascript"><!--//--><![CDATA[//><!--\n'
     xhtml_safe_script_closing = u'\n//--><!]]></script>'
 
-    def __init__(self, datadir_url=None):
+    def __init__(self, req):
         super(HTMLHead, self).__init__()
         self.jsvars = []
         self.jsfiles = []
@@ -235,8 +242,8 @@ class HTMLHead(UStringIO):
         self.ie_cssfiles = []
         self.post_inlined_scripts = []
         self.pagedata_unload = False
-        self.datadir_url = datadir_url
-
+        self._cw = req
+        self.datadir_url = req.datadir_url
 
     def add_raw(self, rawheader):
         self.write(rawheader)
@@ -348,20 +355,26 @@ class HTMLHead(UStringIO):
                 w(vardecl + u'\n')
             w(self.xhtml_safe_script_closing)
         # 2/ css files
-        for cssfile, media in (self.group_urls(self.cssfiles) if self.datadir_url else self.cssfiles):
+        ie_cssfiles = ((x, (y, z)) for x, y, z in self.ie_cssfiles)
+        if self.datadir_url and self._cw.vreg.config['concat-resources']:
+            cssfiles = self.group_urls(self.cssfiles)
+            ie_cssfiles = self.group_urls(ie_cssfiles)
+            jsfiles = (x for x, _ in self.group_urls((x, None) for x in self.jsfiles))
+        else:
+            cssfiles = self.cssfiles
+            jsfiles = self.jsfiles
+        for cssfile, media in cssfiles:
             w(u'<link rel="stylesheet" type="text/css" media="%s" href="%s"/>\n' %
               (media, xml_escape(cssfile)))
         # 3/ ie css if necessary
-        if self.ie_cssfiles:
-            ie_cssfiles = ((x, (y, z)) for x, y, z in self.ie_cssfiles)
-            for cssfile, (media, iespec) in (self.group_urls(ie_cssfiles) if self.datadir_url else ie_cssfiles):
+        if self.ie_cssfiles: # use self.ie_cssfiles because `ie_cssfiles` is a genexp
+            for cssfile, (media, iespec) in ie_cssfiles:
                 w(u'<!--%s>\n' % iespec)
                 w(u'<link rel="stylesheet" type="text/css" media="%s" href="%s"/>\n' %
                   (media, xml_escape(cssfile)))
             w(u'<![endif]--> \n')
         # 4/ js files
-        jsfiles = ((x, None) for x in self.jsfiles)
-        for jsfile, media in self.group_urls(jsfiles) if self.datadir_url else jsfiles:
+        for jsfile in jsfiles:
             if skiphead:
                 # Don't insert <script> tags directly as they would be
                 # interpreted directly by some browsers (e.g. IE).
@@ -473,10 +486,8 @@ else:
         """define a json encoder to be able to encode yams std types"""
 
         def default(self, obj):
-            if hasattr(obj, 'eid'):
-                d = obj.cw_attr_cache.copy()
-                d['eid'] = obj.eid
-                return d
+            if hasattr(obj, '__json_encode__'):
+                return obj.__json_encode__()
             if isinstance(obj, datetime.datetime):
                 return ustrftime(obj, '%Y/%m/%d %H:%M:%S')
             elif isinstance(obj, datetime.date):
@@ -494,8 +505,8 @@ else:
                 # just return None in those cases.
                 return None
 
-    def json_dumps(value):
-        return json.dumps(value, cls=CubicWebJsonEncoder)
+    def json_dumps(value, **kwargs):
+        return json.dumps(value, cls=CubicWebJsonEncoder, **kwargs)
 
 
     class JSString(str):
@@ -531,6 +542,29 @@ else:
             return something
         return json_dumps(something)
 
+PERCENT_IN_URLQUOTE_RE = re.compile(r'%(?=[0-9a-fA-F]{2})')
+def js_href(javascript_code):
+    """Generate a "javascript: ..." string for an href attribute.
+
+    Some % which may be interpreted in a href context will be escaped.
+
+    In an href attribute, url-quotes-looking fragments are interpreted before
+    being given to the javascript engine. Valid url quotes are in the form
+    ``%xx`` with xx being a byte in hexadecimal form. This means that ``%toto``
+    will be unaltered but ``%babar`` will be mangled because ``ba`` is the
+    hexadecimal representation of 186.
+
+    >>> js_href('alert("babar");')
+    'javascript: alert("babar");'
+    >>> js_href('alert("%babar");')
+    'javascript: alert("%25babar");'
+    >>> js_href('alert("%toto %babar");')
+    'javascript: alert("%toto %25babar");'
+    >>> js_href('alert("%1337%");')
+    'javascript: alert("%251337%");'
+    """
+    return 'javascript: ' + PERCENT_IN_URLQUOTE_RE.sub(r'%25', javascript_code)
+
 
 @deprecated('[3.7] merge_dicts is deprecated')
 def merge_dicts(dict1, dict2):
@@ -539,11 +573,124 @@ def merge_dicts(dict1, dict2):
     dict1.update(dict2)
     return dict1
 
-from logilab.common import date
-_THIS_MOD_NS = globals()
-for funcname in ('date_range', 'todate', 'todatetime', 'datetime2ticks',
-                 'days_in_month', 'days_in_year', 'previous_month',
-                 'next_month', 'first_day', 'last_day',
-                 'strptime'):
-    msg = '[3.6] %s has been moved to logilab.common.date' % funcname
-    _THIS_MOD_NS[funcname] = deprecated(msg)(getattr(date, funcname))
+
+logger = getLogger('cubicweb.utils')
+
+class QueryCache(object):
+    """ a minimalist dict-like object to be used by the querier
+    and native source (replaces lgc.cache for this very usage)
+
+    To be efficient it must be properly used. The usage patterns are
+    quite specific to its current clients.
+
+    The ceiling value should be sufficiently high, else it will be
+    ruthlessly inefficient (there will be warnings when this happens).
+    A good (high enough) value can only be set on a per-application
+    value. A default, reasonnably high value is provided but tuning
+    e.g `rql-cache-size` can certainly help.
+
+    There are two kinds of elements to put in this cache:
+    * frequently used elements
+    * occasional elements
+
+    The former should finish in the _permanent structure after some
+    warmup.
+
+    Occasional elements can be buggy requests (server-side) or
+    end-user (web-ui provided) requests. These have to be cleaned up
+    when they fill the cache, without evicting the usefull, frequently
+    used entries.
+    """
+    # quite arbitrary, but we want to never
+    # immortalize some use-a-little query
+    _maxlevel = 15
+
+    def __init__(self, ceiling=3000):
+        self._max = ceiling
+        # keys belonging forever to this cache
+        self._permanent = set()
+        # mapping of key (that can get wiped) to getitem count
+        self._transient = {}
+        self._data = {}
+        self._lock = Lock()
+
+    def __len__(self):
+        with self._lock:
+            return len(self._data)
+
+    def __getitem__(self, k):
+        with self._lock:
+            if k in self._permanent:
+                return self._data[k]
+            v = self._transient.get(k, _MARKER)
+            if v is _MARKER:
+                self._transient[k] = 1
+                return self._data[k]
+            if v > self._maxlevel:
+                self._permanent.add(k)
+                self._transient.pop(k, None)
+            else:
+                self._transient[k] += 1
+            return self._data[k]
+
+    def __setitem__(self, k, v):
+        with self._lock:
+            if len(self._data) >= self._max:
+                self._try_to_make_room()
+            self._data[k] = v
+
+    def pop(self, key, default=_MARKER):
+        with self._lock:
+            try:
+                if default is _MARKER:
+                    return self._data.pop(key)
+                return self._data.pop(key, default)
+            finally:
+                if key in self._permanent:
+                    self._permanent.remove(key)
+                else:
+                    self._transient.pop(key, None)
+
+    def clear(self):
+        with self._lock:
+            self._clear()
+
+    def _clear(self):
+        self._permanent = set()
+        self._transient = {}
+        self._data = {}
+
+    def _try_to_make_room(self):
+        current_size = len(self._data)
+        items = sorted(self._transient.items(), key=itemgetter(1))
+        level = 0
+        for k, v in items:
+            self._data.pop(k, None)
+            self._transient.pop(k, None)
+            if v > level:
+                datalen = len(self._data)
+                if datalen == 0:
+                    return
+                if (current_size - datalen) / datalen > .1:
+                    break
+                level = v
+        else:
+            # we removed cruft but everything is permanent
+            if len(self._data) >= self._max:
+                logger.warning('Cache %s is full.' % id(self))
+                self._clear()
+
+    def _usage_report(self):
+        with self._lock:
+            return {'itemcount': len(self._data),
+                    'transientcount': len(self._transient),
+                    'permanentcount': len(self._permanent)}
+
+    def popitem(self):
+        raise NotImplementedError()
+
+    def setdefault(self, key, default=None):
+        raise NotImplementedError()
+
+    def update(self, other):
+        raise NotImplementedError()

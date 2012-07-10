@@ -129,7 +129,7 @@ def sqldropschema(schema, driver, text_index=True,
         dbhelper = db.get_db_helper(driver)
         w(dbhelper.sql_drop_fti())
         w('')
-    w(dropschema2sql(schema, prefix=SQL_PREFIX,
+    w(dropschema2sql(dbhelper, schema, prefix=SQL_PREFIX,
                      skip_entities=skip_entities,
                      skip_relations=skip_relations))
     w('')

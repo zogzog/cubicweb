@@ -90,19 +90,30 @@ STRICT_DOCTYPE_NOEXT = u'<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN
 # base view object ############################################################
 
 class View(AppObject):
-    """abstract view class, used as base for every renderable object such
-    as views, templates, some components...web
+    """This class is an abstraction of a view class, used as a base class for
+    every renderable object such as views, templates and other user interface
+    components.
 
-    A view is instantiated to render a [part of a] result set. View
-    subclasses may be parametred using the following class attributes:
+    A `View` is instantiated to render a result set or part of a result
+    set. `View` subclasses may be parametrized using the following class
+    attributes:
 
-    * `templatable` indicates if the view may be embeded in a main
-      template or if it has to be rendered standalone (i.e. XML for
-      instance)
-    * if the view is not templatable, it should set the `content_type` class
-      attribute to the correct MIME type (text/xhtml by default)
-    * the `category` attribute may be used in the interface to regroup related
-      objects together
+    :py:attr:`templatable` indicates if the view may be embedded in a main
+      template or if it has to be rendered standalone (i.e. pure XML views must
+      not be embedded in the main template of HTML pages)
+    :py:attr:`content_type` if the view is not templatable, it should set the
+      `content_type` class attribute to the correct MIME type (text/xhtml being
+      the default)
+    :py:attr:`category` this attribute may be used in the interface to regroup
+      related objects (view kinds) together
+
+    :py:attr:`paginable`
+
+    :py:attr:`binary`
+
+
+    A view writes to its output stream thanks to its attribute `w` (the
+    append method of an `UStreamIO`, except for binary views).
 
     At instantiation time, the standard `_cw`, and `cw_rset` attributes are
     added and the `w` attribute will be set at rendering time to a write
@@ -115,19 +126,7 @@ class View(AppObject):
     binary = False
     add_to_breadcrumbs = True
     category = 'view'
-
-    @property
-    @deprecated('[3.6] need_navigation is deprecated, use .paginable')
-    def need_navigation(self):
-        return True
-
-    @property
-    def paginable(self):
-        if not isinstance(self.__class__.need_navigation, property):
-            warn('[3.6] %s.need_navigation is deprecated, use .paginable'
-                 % self.__class__, DeprecationWarning)
-            return self.need_navigation
-        return True
+    paginable = True
 
     def __init__(self, req=None, rset=None, **kwargs):
         super(View, self).__init__(req, rset=rset, **kwargs)
@@ -195,8 +194,6 @@ class View(AppObject):
         template.expand(context, output)
         return output.getvalue()
 
-    dispatch = deprecated('[3.4] .dispatch is deprecated, use .render')(render)
-
     # should default .call() method add a <div classs="section"> around each
     # rset item
     add_div_section = True
@@ -210,7 +207,7 @@ class View(AppObject):
         """
         rset = self.cw_rset
         if rset is None:
-            raise NotImplementedError, (self, "an rset is required")
+            raise NotImplementedError("%r an rset is required" % self)
         wrap = self.templatable and len(rset) > 1 and self.add_div_section
         # avoid re-selection if rset of size 1, we already have the most
         # specific view
@@ -232,7 +229,7 @@ class View(AppObject):
 
     def cell_call(self, row, col, **kwargs):
         """the view is called for a particular result set cell"""
-        raise NotImplementedError, self
+        raise NotImplementedError(repr(self))
 
     def linkable(self):
         """return True if the view may be linked in a menu
@@ -283,9 +280,6 @@ class View(AppObject):
         """shortcut to self.view method automatically passing self.w as argument
         """
         self._cw.view(__vid, rset, __fallback_vid, w=self.w, **kwargs)
-
-    # XXX Template bw compat
-    template = deprecated('[3.4] .template is deprecated, use .view')(wview)
 
     def whead(self, data):
         self._cw.html_headers.write(data)
@@ -396,7 +390,7 @@ class EntityView(View):
         self.entity_call(self.cw_rset.get_entity(row, col), **kwargs)
 
     def entity_call(self, entity, **kwargs):
-        raise NotImplementedError()
+        raise NotImplementedError('%r %r' % (self.__regid__, self.__class__))
 
 
 class StartupView(View):
@@ -434,6 +428,10 @@ class EntityStartupView(EntityView):
         """return some rql to be executed if the result set is None"""
         return self.default_rql
 
+    def no_entities(self, **kwargs):
+        """override to display something when no entities were found"""
+        pass
+
     def call(self, **kwargs):
         """override call to execute rql returned by the .startup_rql method if
         necessary
@@ -441,8 +439,11 @@ class EntityStartupView(EntityView):
         rset = self.cw_rset
         if rset is None:
             rset = self.cw_rset = self._cw.execute(self.startup_rql())
-        for i in xrange(len(rset)):
-            self.wview(self.__regid__, rset, row=i, **kwargs)
+        if rset:
+            for i in xrange(len(rset)):
+                self.wview(self.__regid__, rset, row=i, **kwargs)
+        else:
+            self.no_entities(**kwargs)
 
 
 class AnyRsetView(View):

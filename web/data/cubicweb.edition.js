@@ -435,11 +435,15 @@ function _displayValidationerrors(formid, eid, errors) {
         }
     }
     if (globalerrors.length) {
-        if (globalerrors.length == 1) {
-            var innernode = SPAN(null, globalerrors[0]);
-        } else {
-            var innernode = UL(null, $.map(globalerrors, partial(LI, null)));
-        }
+       if (globalerrors.length == 1) {
+           var innernode = SPAN(null, globalerrors[0]);
+       } else {
+           var linodes =[];
+           for(var i=0; i<globalerrors.length; i++){
+             linodes.push(LI(null, globalerrors[i]));
+           }
+           var innernode = UL(null, linodes);
+       }
         // insert DIV and innernode before the form
         var div = DIV({
             'class': "errorMessage",
@@ -474,7 +478,7 @@ function handleFormValidationResponse(formid, onsuccess, onfailure, result, cbar
         errmsg = descr;
     } else {
         _displayValidationerrors(formid, descr[0], descr[1]);
-        errmsg = _('please correct errors below');
+        errmsg = _("please correct errors below");
     }
     updateMessage(errmsg);
     // ensure the browser does not scroll down

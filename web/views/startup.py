@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -31,7 +31,7 @@ from logilab.mtconverter import xml_escape
 from cubicweb.view import StartupView
 from cubicweb.selectors import match_user_groups, is_instance
 from cubicweb.schema import display_name
-from cubicweb.web import ajax_replace_url, uicfg, httpcache
+from cubicweb.web import uicfg, httpcache
 
 class ManageView(StartupView):
     """:__regid__: *manage*
@@ -53,7 +53,9 @@ class ManageView(StartupView):
     add_etype_links = ()
     skip_startup_views = set( ('index', 'manage', 'schema', 'owl', 'changelog',
                                'systempropertiesform', 'propertiesform',
-                               'cw.user-management', 'cw.source-management',
+                               'loggedout', 'login',
+                               'cw.users-and-groups-management', 'cw.groups-management', 
+                               'cw.users-management', 'cw.sources-management',
                                'siteinfo', 'info', 'registry', 'gc',
                                'tree') )
 

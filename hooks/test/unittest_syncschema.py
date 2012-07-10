@@ -60,18 +60,18 @@ class SchemaModificationHooksTC(CubicWebTC):
         self.session.set_cnxset()
         dbhelper = self.session.cnxset.source('system').dbhelper
         sqlcursor = self.session.cnxset['system']
-        self.failIf(schema.has_entity('Societe2'))
-        self.failIf(schema.has_entity('concerne2'))
+        self.assertFalse(schema.has_entity('Societe2'))
+        self.assertFalse(schema.has_entity('concerne2'))
         # schema should be update on insertion (after commit)
         eeid = self.execute('INSERT CWEType X: X name "Societe2", X description "", X final FALSE')[0][0]
         self._set_perms(eeid)
         self.execute('INSERT CWRType X: X name "concerne2", X description "", X final FALSE, X symmetric FALSE')
-        self.failIf(schema.has_entity('Societe2'))
-        self.failIf(schema.has_entity('concerne2'))
+        self.assertFalse(schema.has_entity('Societe2'))
+        self.assertFalse(schema.has_entity('concerne2'))
         # have to commit before adding definition relations
         self.commit()
-        self.failUnless(schema.has_entity('Societe2'))
-        self.failUnless(schema.has_relation('concerne2'))
+        self.assertTrue(schema.has_entity('Societe2'))
+        self.assertTrue(schema.has_relation('concerne2'))
         attreid = self.execute('INSERT CWAttribute X: X cardinality "11", X defaultval "noname", '
                                '   X indexed TRUE, X relation_type RT, X from_entity E, X to_entity F '
                                'WHERE RT name "name", E name "Societe2", F name "String"')[0][0]
@@ -80,13 +80,13 @@ class SchemaModificationHooksTC(CubicWebTC):
             'INSERT CWRelation X: X cardinality "**", X relation_type RT, X from_entity E, X to_entity E '
             'WHERE RT name "concerne2", E name "Societe2"')[0][0]
         self._set_perms(concerne2_rdef_eid)
-        self.failIf('name' in schema['Societe2'].subject_relations())
-        self.failIf('concerne2' in schema['Societe2'].subject_relations())
-        self.failIf(self.index_exists('Societe2', 'name'))
+        self.assertFalse('name' in schema['Societe2'].subject_relations())
+        self.assertFalse('concerne2' in schema['Societe2'].subject_relations())
+        self.assertFalse(self.index_exists('Societe2', 'name'))
         self.commit()
-        self.failUnless('name' in schema['Societe2'].subject_relations())
-        self.failUnless('concerne2' in schema['Societe2'].subject_relations())
-        self.failUnless(self.index_exists('Societe2', 'name'))
+        self.assertTrue('name' in schema['Societe2'].subject_relations())
+        self.assertTrue('concerne2' in schema['Societe2'].subject_relations())
+        self.assertTrue(self.index_exists('Societe2', 'name'))
         # now we should be able to insert and query Societe2
         s2eid = self.execute('INSERT Societe2 X: X name "logilab"')[0][0]
         self.execute('Societe2 X WHERE X name "logilab"')
@@ -101,20 +101,20 @@ class SchemaModificationHooksTC(CubicWebTC):
         self.commit()
         self.execute('DELETE CWRelation X WHERE X eid %(x)s', {'x': concerne2_rdef_eid})
         self.commit()
-        self.failUnless('concerne2' in schema['CWUser'].subject_relations())
-        self.failIf('concerne2' in schema['Societe2'].subject_relations())
-        self.failIf(self.execute('Any X WHERE X concerne2 Y'))
+        self.assertTrue('concerne2' in schema['CWUser'].subject_relations())
+        self.assertFalse('concerne2' in schema['Societe2'].subject_relations())
+        self.assertFalse(self.execute('Any X WHERE X concerne2 Y'))
         # schema should be cleaned on delete (after commit)
         self.execute('DELETE CWEType X WHERE X name "Societe2"')
         self.execute('DELETE CWRType X WHERE X name "concerne2"')
-        self.failUnless(self.index_exists('Societe2', 'name'))
-        self.failUnless(schema.has_entity('Societe2'))
-        self.failUnless(schema.has_relation('concerne2'))
+        self.assertTrue(self.index_exists('Societe2', 'name'))
+        self.assertTrue(schema.has_entity('Societe2'))
+        self.assertTrue(schema.has_relation('concerne2'))
         self.commit()
-        self.failIf(self.index_exists('Societe2', 'name'))
-        self.failIf(schema.has_entity('Societe2'))
-        self.failIf(schema.has_entity('concerne2'))
-        self.failIf('concerne2' in schema['CWUser'].subject_relations())
+        self.assertFalse(self.index_exists('Societe2', 'name'))
+        self.assertFalse(schema.has_entity('Societe2'))
+        self.assertFalse(schema.has_entity('concerne2'))
+        self.assertFalse('concerne2' in schema['CWUser'].subject_relations())
 
     def test_is_instance_of_insertions(self):
         seid = self.execute('INSERT Transition T: T name "subdiv"')[0][0]
@@ -123,15 +123,15 @@ class SchemaModificationHooksTC(CubicWebTC):
         instanceof_etypes = [etype for etype, in self.execute('Any ETN WHERE X eid %s, X is_instance_of ET, ET name ETN' % seid)]
         self.assertEqual(sorted(instanceof_etypes), ['BaseTransition', 'Transition'])
         snames = [name for name, in self.execute('Any N WHERE S is BaseTransition, S name N')]
-        self.failIf('subdiv' in snames)
+        self.assertFalse('subdiv' in snames)
         snames = [name for name, in self.execute('Any N WHERE S is_instance_of BaseTransition, S name N')]
-        self.failUnless('subdiv' in snames)
+        self.assertTrue('subdiv' in snames)
 
 
     def test_perms_synchronization_1(self):
         schema = self.repo.schema
         self.assertEqual(schema['CWUser'].get_groups('read'), set(('managers', 'users')))
-        self.failUnless(self.execute('Any X, Y WHERE X is CWEType, X name "CWUser", Y is CWGroup, Y name "users"')[0])
+        self.assertTrue(self.execute('Any X, Y WHERE X is CWEType, X name "CWUser", Y is CWGroup, Y name "users"')[0])
         self.execute('DELETE X read_permission Y WHERE X is CWEType, X name "CWUser", Y name "users"')
         self.assertEqual(schema['CWUser'].get_groups('read'), set(('managers', 'users', )))
         self.commit()
@@ -173,13 +173,13 @@ class SchemaModificationHooksTC(CubicWebTC):
         self.session.set_cnxset()
         dbhelper = self.session.cnxset.source('system').dbhelper
         sqlcursor = self.session.cnxset['system']
-        self.failUnless(self.schema['state_of'].inlined)
+        self.assertTrue(self.schema['state_of'].inlined)
         try:
             self.execute('SET X inlined FALSE WHERE X name "state_of"')
-            self.failUnless(self.schema['state_of'].inlined)
+            self.assertTrue(self.schema['state_of'].inlined)
             self.commit()
-            self.failIf(self.schema['state_of'].inlined)
-            self.failIf(self.index_exists('State', 'state_of'))
+            self.assertFalse(self.schema['state_of'].inlined)
+            self.assertFalse(self.index_exists('State', 'state_of'))
             rset = self.execute('Any X, Y WHERE X state_of Y')
             self.assertEqual(len(rset), 2) # user states
         except Exception:
@@ -187,10 +187,10 @@ class SchemaModificationHooksTC(CubicWebTC):
             traceback.print_exc()
         finally:
             self.execute('SET X inlined TRUE WHERE X name "state_of"')
-            self.failIf(self.schema['state_of'].inlined)
+            self.assertFalse(self.schema['state_of'].inlined)
             self.commit()
-            self.failUnless(self.schema['state_of'].inlined)
-            self.failUnless(self.index_exists('State', 'state_of'))
+            self.assertTrue(self.schema['state_of'].inlined)
+            self.assertTrue(self.index_exists('State', 'state_of'))
             rset = self.execute('Any X, Y WHERE X state_of Y')
             self.assertEqual(len(rset), 2)
 
@@ -200,18 +200,18 @@ class SchemaModificationHooksTC(CubicWebTC):
         sqlcursor = self.session.cnxset['system']
         try:
             self.execute('SET X indexed FALSE WHERE X relation_type R, R name "name"')
-            self.failUnless(self.schema['name'].rdef('Workflow', 'String').indexed)
-            self.failUnless(self.index_exists('Workflow', 'name'))
+            self.assertTrue(self.schema['name'].rdef('Workflow', 'String').indexed)
+            self.assertTrue(self.index_exists('Workflow', 'name'))
             self.commit()
-            self.failIf(self.schema['name'].rdef('Workflow', 'String').indexed)
-            self.failIf(self.index_exists('Workflow', 'name'))
+            self.assertFalse(self.schema['name'].rdef('Workflow', 'String').indexed)
+            self.assertFalse(self.index_exists('Workflow', 'name'))
         finally:
             self.execute('SET X indexed TRUE WHERE X relation_type R, R name "name"')
-            self.failIf(self.schema['name'].rdef('Workflow', 'String').indexed)
-            self.failIf(self.index_exists('Workflow', 'name'))
+            self.assertFalse(self.schema['name'].rdef('Workflow', 'String').indexed)
+            self.assertFalse(self.index_exists('Workflow', 'name'))
             self.commit()
-            self.failUnless(self.schema['name'].rdef('Workflow', 'String').indexed)
-            self.failUnless(self.index_exists('Workflow', 'name'))
+            self.assertTrue(self.schema['name'].rdef('Workflow', 'String').indexed)
+            self.assertTrue(self.index_exists('Workflow', 'name'))
 
     def test_unique_change(self):
         self.session.set_cnxset()
@@ -221,20 +221,20 @@ class SchemaModificationHooksTC(CubicWebTC):
             self.execute('INSERT CWConstraint X: X cstrtype CT, DEF constrained_by X '
                          'WHERE CT name "UniqueConstraint", DEF relation_type RT, DEF from_entity E,'
                          'RT name "name", E name "Workflow"')
-            self.failIf(self.schema['Workflow'].has_unique_values('name'))
-            self.failIf(self.index_exists('Workflow', 'name', unique=True))
+            self.assertFalse(self.schema['Workflow'].has_unique_values('name'))
+            self.assertFalse(self.index_exists('Workflow', 'name', unique=True))
             self.commit()
-            self.failUnless(self.schema['Workflow'].has_unique_values('name'))
-            self.failUnless(self.index_exists('Workflow', 'name', unique=True))
+            self.assertTrue(self.schema['Workflow'].has_unique_values('name'))
+            self.assertTrue(self.index_exists('Workflow', 'name', unique=True))
         finally:
             self.execute('DELETE DEF constrained_by X WHERE X cstrtype CT, '
                          'CT name "UniqueConstraint", DEF relation_type RT, DEF from_entity E,'
                          'RT name "name", E name "Workflow"')
-            self.failUnless(self.schema['Workflow'].has_unique_values('name'))
-            self.failUnless(self.index_exists('Workflow', 'name', unique=True))
+            self.assertTrue(self.schema['Workflow'].has_unique_values('name'))
+            self.assertTrue(self.index_exists('Workflow', 'name', unique=True))
             self.commit()
-            self.failIf(self.schema['Workflow'].has_unique_values('name'))
-            self.failIf(self.index_exists('Workflow', 'name', unique=True))
+            self.assertFalse(self.schema['Workflow'].has_unique_values('name'))
+            self.assertFalse(self.index_exists('Workflow', 'name', unique=True))
 
     def test_required_change_1(self):
         self.execute('SET DEF cardinality "?1" '
@@ -267,8 +267,8 @@ class SchemaModificationHooksTC(CubicWebTC):
                      {'x': attreid})
         self.commit()
         self.schema.rebuild_infered_relations()
-        self.failUnless('Transition' in self.schema['messageid'].subjects())
-        self.failUnless('WorkflowTransition' in self.schema['messageid'].subjects())
+        self.assertTrue('Transition' in self.schema['messageid'].subjects())
+        self.assertTrue('WorkflowTransition' in self.schema['messageid'].subjects())
         self.execute('Any X WHERE X is_instance_of BaseTransition, X messageid "hop"')
 
     def test_change_fulltextindexed(self):
@@ -283,7 +283,7 @@ class SchemaModificationHooksTC(CubicWebTC):
                             'A from_entity E, A relation_type R, R name "subject"')
         self.commit()
         rset = req.execute('Any X WHERE X has_text "rick.roll"')
-        self.failIf(rset)
+        self.assertFalse(rset)
         assert req.execute('SET A fulltextindexed TRUE '
                            'WHERE A from_entity E, A relation_type R, '
                            'E name "Email", R name "subject"')

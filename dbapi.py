@@ -223,12 +223,31 @@ def in_memory_cnx(repo, login, **kwargs):
     return repo_connect(repo, login, cnxprops=cnxprops, **kwargs)
 
 def in_memory_repo_cnx(config, login, **kwargs):
-    """usefull method for testing and scripting to get a dbapi.Connection
+    """useful method for testing and scripting to get a dbapi.Connection
     object connected to an in-memory repository instance
     """
     # connection to the CubicWeb repository
     repo = in_memory_repo(config)
     return repo, in_memory_cnx(repo, login, **kwargs)
+
+
+def anonymous_session(vreg):
+    """return a new anonymous session
+
+    raises an AuthenticationError if anonymous usage is not allowed
+    """
+    anoninfo = vreg.config.anonymous_user()
+    if anoninfo is None: # no anonymous user
+        raise AuthenticationError('anonymous access is not authorized')
+    anon_login, anon_password = anoninfo
+    cnxprops = ConnectionProperties(vreg.config.repo_method)
+    # use vreg's repository cache
+    repo = vreg.config.repository(vreg)
+    anon_cnx = repo_connect(repo, anon_login,
+                            cnxprops=cnxprops, password=anon_password)
+    anon_cnx.vreg = vreg
+    return DBAPISession(anon_cnx, anon_login)
+
 
 class _NeedAuthAccessMock(object):
     def __getattribute__(self, attr):
@@ -365,7 +384,7 @@ class DBAPIRequest(RequestSessionBase):
 
     @deprecated('[3.8] use direct access to req.session.data dictionary')
     def session_data(self):
-        """return a dictionnary containing session data"""
+        """return a dictionary containing session data"""
         return self.session.data
 
     @deprecated('[3.8] use direct access to req.session.data dictionary')
@@ -640,9 +659,9 @@ class Connection(object):
         """return value associated to key in the session's data dictionary or
         session's transaction's data if `txdata` is true.
 
-        If pop is True, value will be removed from the dictionnary.
+        If pop is True, value will be removed from the dictionary.
 
-        If key isn't defined in the dictionnary, value specified by the
+        If key isn't defined in the dictionary, value specified by the
         `default` argument will be returned.
         """
         return self._repo.get_shared_data(self.sessionid, key, default, pop, txdata)

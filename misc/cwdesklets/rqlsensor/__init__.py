@@ -56,8 +56,6 @@ class RQLSensor(Sensor):
     def call_action(self, action, path, args=[]):
         index = path[-1]
         output = self._new_output()
-#        import sys
-#        print >>sys.stderr, action, path, args
         if action=="enter-line":
             # change background
             output.set('resultbg[%s]' % index, 'yellow')

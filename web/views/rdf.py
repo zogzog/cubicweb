@@ -45,7 +45,7 @@ if rdflib is not None:
     class RDFView(EntityView):
         """rdf view for entities"""
         __regid__ = 'rdf'
-        title = _('rdf')
+        title = _('rdf export')
         templatable = False
         content_type = 'text/xml' # +rdf
 

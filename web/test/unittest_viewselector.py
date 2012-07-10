@@ -31,7 +31,7 @@ from cubicweb.web.views import (
     primary, baseviews, tableview, editforms, calendar, management, embedding,
     actions, startup, cwuser, schema, xbel, vcard, owl, treeview, idownloadable,
     wdoc, debug, cwuser, cwproperties, cwsources, workflow, xmlrss, rdf,
-    csvexport)
+    csvexport, json)
 
 from cubes.folder import views as folderviews
 
@@ -90,8 +90,8 @@ class VRegistryTC(ViewSelectorTC):
         req = self.request()
         self.assertListEqual(self.pviews(req, None),
                              [('changelog', wdoc.ChangeLogView),
-                              ('cw.source-management', cwsources.CWSourceManagementView),
-                              ('cw.user-management', cwuser.CWUserManagementView),
+                              ('cw.sources-management', cwsources.CWSourcesManagementView),
+                              ('cw.users-and-groups-management', cwuser.UsersAndGroupsManagementView),
                               ('gc', debug.GCView),
                               ('index', startup.IndexView),
                               ('info', debug.ProcessInformationView),
@@ -117,8 +117,9 @@ class VRegistryTC(ViewSelectorTC):
         self.assertListEqual(self.pviews(req, rset),
                              [('csvexport', csvexport.CSVRsetView),
                               ('ecsvexport', csvexport.CSVEntityView),
-                              ('editable-table', tableview.EditableTableView),
+                              ('ejsonexport', json.JsonEntityView),
                               ('filetree', treeview.FileTreeView),
+                              ('jsonexport', json.JsonRsetView),
                               ('list', baseviews.ListView),
                               ('oneline', baseviews.OneLineView),
                               ('owlabox', owl.OWLABOXView),
@@ -127,7 +128,7 @@ class VRegistryTC(ViewSelectorTC):
                               ('rss', xmlrss.RSSView),
                               ('sameetypelist', baseviews.SameETypeListView),
                               ('security', management.SecurityManagementView),
-                              ('table', tableview.TableView),
+                              ('table', tableview.RsetTableView),
                               ('text', baseviews.TextView),
                               ('treeview', treeview.TreeView),
                               ('xbel', xbel.XbelView),
@@ -140,8 +141,9 @@ class VRegistryTC(ViewSelectorTC):
         self.assertListEqual(self.pviews(req, rset),
                              [('csvexport', csvexport.CSVRsetView),
                               ('ecsvexport', csvexport.CSVEntityView),
-                              ('editable-table', tableview.EditableTableView),
+                              ('ejsonexport', json.JsonEntityView),
                               ('filetree', treeview.FileTreeView),
+                              ('jsonexport', json.JsonRsetView),
                               ('list', baseviews.ListView),
                               ('oneline', baseviews.OneLineView),
                               ('owlabox', owl.OWLABOXView),
@@ -150,7 +152,7 @@ class VRegistryTC(ViewSelectorTC):
                               ('rss', xmlrss.RSSView),
                               ('sameetypelist', baseviews.SameETypeListView),
                               ('security', management.SecurityManagementView),
-                              ('table', tableview.TableView),
+                              ('table', tableview.RsetTableView),
                               ('text', baseviews.TextView),
                               ('treeview', treeview.TreeView),
                               ('xbel', xbel.XbelView),
@@ -163,9 +165,9 @@ class VRegistryTC(ViewSelectorTC):
         req2 = self.request()
         rset1 = req1.execute('CWUser X WHERE X login "admin"')
         rset2 = req2.execute('CWUser X WHERE X login "anon"')
-        self.failUnless(self.vreg['views'].select('propertiesform', req1, rset=None))
-        self.failUnless(self.vreg['views'].select('propertiesform', req1, rset=rset1))
-        self.failUnless(self.vreg['views'].select('propertiesform', req2, rset=rset2))
+        self.assertTrue(self.vreg['views'].select('propertiesform', req1, rset=None))
+        self.assertTrue(self.vreg['views'].select('propertiesform', req1, rset=rset1))
+        self.assertTrue(self.vreg['views'].select('propertiesform', req2, rset=rset2))
 
     def test_propertiesform_anon(self):
         self.login('anon')
@@ -184,9 +186,9 @@ class VRegistryTC(ViewSelectorTC):
         req2 = self.request()
         rset1 = req1.execute('CWUser X WHERE X login "admin"')
         rset2 = req2.execute('CWUser X WHERE X login "jdoe"')
-        self.failUnless(self.vreg['views'].select('propertiesform', req1, rset=None))
+        self.assertTrue(self.vreg['views'].select('propertiesform', req1, rset=None))
         self.assertRaises(NoSelectableObject, self.vreg['views'].select, 'propertiesform', req1, rset=rset1)
-        self.failUnless(self.vreg['views'].select('propertiesform', req2, rset=rset2))
+        self.assertTrue(self.vreg['views'].select('propertiesform', req2, rset=rset2))
 
     def test_possible_views_multiple_different_types(self):
         req = self.request()
@@ -194,8 +196,9 @@ class VRegistryTC(ViewSelectorTC):
         self.assertListEqual(self.pviews(req, rset),
                              [('csvexport', csvexport.CSVRsetView),
                               ('ecsvexport', csvexport.CSVEntityView),
-                              ('editable-table', tableview.EditableTableView),
+                              ('ejsonexport', json.JsonEntityView),
                               ('filetree', treeview.FileTreeView),
+                              ('jsonexport', json.JsonRsetView),
                               ('list', baseviews.ListView),
                               ('oneline', baseviews.OneLineView),
                               ('owlabox', owl.OWLABOXView),
@@ -203,7 +206,7 @@ class VRegistryTC(ViewSelectorTC):
                               ('rsetxml', xmlrss.XMLRsetView),
                               ('rss', xmlrss.RSSView),
                               ('security', management.SecurityManagementView),
-                              ('table', tableview.TableView),
+                              ('table', tableview.RsetTableView),
                               ('text', baseviews.TextView),
                               ('treeview', treeview.TreeView),
                               ('xbel', xbel.XbelView),
@@ -215,9 +218,9 @@ class VRegistryTC(ViewSelectorTC):
         rset = req.execute('Any N, X WHERE X in_group Y, Y name N')
         self.assertListEqual(self.pviews(req, rset),
                              [('csvexport', csvexport.CSVRsetView),
-                              ('editable-table', tableview.EditableTableView),
+                              ('jsonexport', json.JsonRsetView),
                               ('rsetxml', xmlrss.XMLRsetView),
-                              ('table', tableview.TableView),
+                              ('table', tableview.RsetTableView),
                               ])
 
     def test_possible_views_multiple_eusers(self):
@@ -225,11 +228,11 @@ class VRegistryTC(ViewSelectorTC):
         rset = req.execute('CWUser X')
         self.assertListEqual(self.pviews(req, rset),
                              [('csvexport', csvexport.CSVRsetView),
-                              ('cw.user-table', cwuser.CWUserTable),
                               ('ecsvexport', csvexport.CSVEntityView),
-                              ('editable-table', tableview.EditableTableView),
+                              ('ejsonexport', json.JsonEntityView),
                               ('filetree', treeview.FileTreeView),
                               ('foaf', cwuser.FoafView),
+                              ('jsonexport', json.JsonRsetView),
                               ('list', baseviews.ListView),
                               ('oneline', baseviews.OneLineView),
                               ('owlabox', owl.OWLABOXView),
@@ -238,7 +241,7 @@ class VRegistryTC(ViewSelectorTC):
                               ('rss', xmlrss.RSSView),
                               ('sameetypelist', baseviews.SameETypeListView),
                               ('security', management.SecurityManagementView),
-                              ('table', tableview.TableView),
+                              ('table', tableview.RsetTableView),
                               ('text', baseviews.TextView),
                               ('treeview', treeview.TreeView),
                               ('vcard', vcard.VCardCWUserView),
@@ -340,21 +343,21 @@ class VRegistryTC(ViewSelectorTC):
         req = self.request()
         self.assertIsInstance(self.vreg['views'].select('index', req, rset=rset),
                              startup.IndexView)
-        self.failUnlessRaises(NoSelectableObject,
+        self.assertRaises(NoSelectableObject,
                              self.vreg['views'].select, 'primary', req, rset=rset)
-        self.failUnlessRaises(NoSelectableObject,
+        self.assertRaises(NoSelectableObject,
                              self.vreg['views'].select, 'table', req, rset=rset)
 
         # no entity
         req = self.request()
         rset = req.execute('Any X WHERE X eid 999999')
-        self.failUnlessRaises(NoSelectableObject,
+        self.assertRaises(NoSelectableObject,
                               self.vreg['views'].select, 'index', req, rset=rset)
-        self.failUnlessRaises(NoSelectableObject,
+        self.assertRaises(NoSelectableObject,
                               self.vreg['views'].select, 'creation', req, rset=rset)
-        self.failUnlessRaises(NoSelectableObject,
+        self.assertRaises(NoSelectableObject,
                               self.vreg['views'].select, 'primary', req, rset=rset)
-        self.failUnlessRaises(NoSelectableObject,
+        self.assertRaises(NoSelectableObject,
                              self.vreg['views'].select, 'table', req, rset=rset)
         # one entity
         req = self.request()
@@ -366,10 +369,10 @@ class VRegistryTC(ViewSelectorTC):
         self.assertIsInstance(self.vreg['views'].select('edition', req, rset=rset),
                              editforms.EditionFormView)
         self.assertIsInstance(self.vreg['views'].select('table', req, rset=rset),
-                             tableview.TableView)
-        self.failUnlessRaises(NoSelectableObject,
+                             tableview.RsetTableView)
+        self.assertRaises(NoSelectableObject,
                               self.vreg['views'].select, 'creation', req, rset=rset)
-        self.failUnlessRaises(NoSelectableObject,
+        self.assertRaises(NoSelectableObject,
                               self.vreg['views'].select, 'index', req, rset=rset)
         # list of entities of the same type
         req = self.request()
@@ -379,8 +382,8 @@ class VRegistryTC(ViewSelectorTC):
         self.assertIsInstance(self.vreg['views'].select('list', req, rset=rset),
                              baseviews.ListView)
         self.assertIsInstance(self.vreg['views'].select('table', req, rset=rset),
-                             tableview.TableView)
-        self.failUnlessRaises(NoSelectableObject,
+                             tableview.RsetTableView)
+        self.assertRaises(NoSelectableObject,
                               self.vreg['views'].select, 'creation', req, rset=rset)
         # list of entities of different types
         req = self.request()
@@ -390,35 +393,35 @@ class VRegistryTC(ViewSelectorTC):
         self.assertIsInstance(self.vreg['views'].select('list', req, rset=rset),
                                   baseviews.ListView)
         self.assertIsInstance(self.vreg['views'].select('table', req, rset=rset),
-                                  tableview.TableView)
-        self.failUnlessRaises(NoSelectableObject,
+                                  tableview.RsetTableView)
+        self.assertRaises(NoSelectableObject,
                              self.vreg['views'].select, 'creation', req, rset=rset)
-        self.failUnlessRaises(NoSelectableObject,
+        self.assertRaises(NoSelectableObject,
                               self.vreg['views'].select, 'index', req, rset=rset)
         # whatever
         req = self.request()
         rset = req.execute('Any N, X WHERE X in_group Y, Y name N')
         self.assertIsInstance(self.vreg['views'].select('table', req, rset=rset),
-                                  tableview.TableView)
-        self.failUnlessRaises(NoSelectableObject,
+                                  tableview.RsetTableView)
+        self.assertRaises(NoSelectableObject,
                               self.vreg['views'].select, 'index', req, rset=rset)
-        self.failUnlessRaises(NoSelectableObject,
+        self.assertRaises(NoSelectableObject,
                               self.vreg['views'].select, 'creation', req, rset=rset)
-        self.failUnlessRaises(NoSelectableObject,
+        self.assertRaises(NoSelectableObject,
                              self.vreg['views'].select, 'primary', req, rset=rset)
-        self.failUnlessRaises(NoSelectableObject,
+        self.assertRaises(NoSelectableObject,
                              self.vreg['views'].select, 'list', req, rset=rset)
-        self.failUnlessRaises(NoSelectableObject,
+        self.assertRaises(NoSelectableObject,
                              self.vreg['views'].select, 'edition', req, rset=rset)
         # mixed query
         req = self.request()
         rset = req.execute('Any U,G WHERE U is CWUser, G is CWGroup')
-        self.failUnlessRaises(NoSelectableObject,
+        self.assertRaises(NoSelectableObject,
                               self.vreg['views'].select, 'edition', req, rset=rset)
-        self.failUnlessRaises(NoSelectableObject,
+        self.assertRaises(NoSelectableObject,
                               self.vreg['views'].select, 'creation', req, rset=rset)
         self.assertIsInstance(self.vreg['views'].select('table', req, rset=rset),
-                              tableview.TableView)
+                              tableview.RsetTableView)
 
     def test_interface_selector(self):
         image = self.request().create_entity('File', data_name=u'bim.png', data=Binary('bim'))

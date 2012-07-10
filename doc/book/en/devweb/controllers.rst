@@ -26,8 +26,22 @@ list them by category. They are all defined in
   typically using JSON as a serialization format for input, and
   sometimes using either JSON or XML for output;
 
+* the JSonpController is a wrapper around the ``ViewController`` that
+  provides jsonp_ services. Padding can be specified with the
+  ``callback`` request parameter. Only *jsonexport* / *ejsonexport*
+  views can be used. If another ``vid`` is specified, it will be
+  ignored and replaced by *jsonexport*. Request is anonymized
+  to avoid returning sensitive data and reduce the risks of CSRF attacks;
+
 * the Login/Logout controllers make effective user login or logout
   requests
+
+.. warning::
+
+  JsonController will probably be renamed into AjaxController soon since
+  it has nothing to do with json per se.
+
+.. _jsonp: http://en.wikipedia.org/wiki/JSONP
 
 `Edition`:
 

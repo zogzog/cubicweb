@@ -89,19 +89,21 @@ headerBg = lazystr('%(headerBgColor)s url("banner.png") repeat-x top left')
 # h3 { font-size:1.30769em; }
 
 # h
-h1FontSize = '1.5em' # 18px
+h1FontSize = '2.3em' # 25.3833px
 h1Padding = '0 0 0.14em 0 '
 h1Margin = '0.8em 0 0.5em'
 h1Color = '#000'
 h1BorderBottomStyle = lazystr('0.06em solid %(h1Color)s')
 
-h2FontSize = '1.33333em'
-h2Padding = '0.4em 0 0.35em 0'
+h2FontSize = '2em' #
+h2Padding = '0.4em 0 0.35em 0' # 22.0667px
 h2Margin = '0'
 
-h3FontSize = '1.16667em'
+h3FontSize = '1.7em' #18.75px
 h3Padding = '0.5em 0 0.57em 0'
 h3Margin = '0'
+
+h4FontSize = '1.4em' # 15.45px
 
 # links
 aColor = '#e6820e'
@@ -167,7 +169,7 @@ errorMsgBgImg = 'url("error.png") 100% 50% no-repeat'
 errorMsgColor = '#ed0d0d'
 
 # facets
-facet_titleFont = 'bold 100% Georgia'
-facet_overflowedHeight = '12em'
-
-
+facet_titleFont = 'bold SansSerif'
+facet_Padding = '.4em'
+facet_MarginBottom = '.4em'
+facet_vocabMaxHeight = '12em' # ensure < FACET_GROUP_HEIGHT by some const. factor (e.g 3em)

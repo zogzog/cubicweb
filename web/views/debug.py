@@ -42,7 +42,7 @@ def dict_to_html(w, dict):
 class SiteInfoAction(actions.ManagersAction):
     __regid__ = 'siteinfo'
     __select__ = match_user_groups('users','managers')
-    title = _('siteinfo')
+    title = _('Site information')
     category = 'manage'
     order = 1000
 

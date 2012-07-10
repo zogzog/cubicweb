@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -73,11 +73,6 @@ class EditBox(component.CtxComponent): # XXX rename to ActionsBox
                                       ('moreactions', other_menu),
                                       ('addrelated', None)):
             for action in actions.get(category, ()):
-                if category == 'addrelated':
-                    warn('[3.5] "addrelated" category is deprecated, use '
-                         '"moreactions" category w/ "addrelated" submenu',
-                         DeprecationWarning)
-                    defaultmenu = self._get_menu('addrelated', _('add'), _('add'))
                 if action.submenu:
                     menu = self._get_menu(action.submenu)
                 else:

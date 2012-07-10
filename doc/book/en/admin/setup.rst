@@ -63,9 +63,9 @@ For Ubuntu Lucid (Long Term Support) and newer::
 
   deb http://download.logilab.org/production/ lucid/
 
-  Note that for Ubuntu Maverick and newer, you shall use the `lucid`
-  repository and install the ``libgecode19`` package from `lucid
-  universe <http://packages.ubuntu.com/lucid/libgecode19>`_.
+Note that for Ubuntu Maverick and newer, you shall use the `lucid`
+repository and install the ``libgecode19`` package from `lucid
+universe <http://packages.ubuntu.com/lucid/libgecode19>`_.
 
 The repositories are signed with the `Logilab's gnupg key`_. You can download
 and register the key to avoid warnings::

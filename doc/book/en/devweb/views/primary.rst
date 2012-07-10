@@ -180,7 +180,7 @@ override the method ``cell_call()`` of the view ``primary`` in
    from cubicweb.web.views.primary import Primaryview
 
    class BlogEntryPrimaryView(PrimaryView):
-     __select__ = PrimaryView.__select__ & is_instance('BlogEntry')
+       __select__ = PrimaryView.__select__ & is_instance('BlogEntry')
 
        def render_entity_attributes(self, entity):
            self.w(u'<p>published on %s</p>' %

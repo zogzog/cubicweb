@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -54,6 +54,7 @@ def add_types_restriction(schema, rqlst, newroot=None, solutions=None):
             if varname not in newroot.defined_vars or eschema(etype).final:
                 continue
             allpossibletypes.setdefault(varname, set()).add(etype)
+    # XXX could be factorized with add_etypes_restriction from rql 0.31
     for varname in sorted(allpossibletypes):
         var = newroot.defined_vars[varname]
         stinfo = var.stinfo
@@ -76,12 +77,26 @@ def add_types_restriction(schema, rqlst, newroot=None, solutions=None):
                 mytyperel = None
         possibletypes = allpossibletypes[varname]
         if mytyperel is not None:
-            # variable as already some types restriction. new possible types
-            # can only be a subset of existing ones, so only remove no more
-            # possible types
-            for cst in mytyperel.get_nodes(n.Constant):
-                if not cst.value in possibletypes:
-                    cst.parent.remove(cst)
+            if mytyperel.r_type == 'is_instance_of':
+                # turn is_instance_of relation into a is relation since we've
+                # all possible solutions and don't want to bother with
+                # potential is_instance_of incompatibility
+                mytyperel.r_type = 'is'
+                if len(possibletypes) > 1:
+                    node = n.Function('IN')
+                    for etype in possibletypes:
+                        node.append(n.Constant(etype, 'etype'))
+                else:
+                    node = n.Constant(etype, 'etype')
+                comp = mytyperel.children[1]
+                comp.replace(comp.children[0], node)
+            else:
+                # variable has already some strict types restriction. new
+                # possible types can only be a subset of existing ones, so only
+                # remove no more possible types
+                for cst in mytyperel.get_nodes(n.Constant):
+                    if not cst.value in possibletypes:
+                        cst.parent.remove(cst)
         else:
             # we have to add types restriction
             if stinfo.get('scope') is not None:
@@ -207,7 +222,7 @@ class RQLRewriter(object):
             vi = {}
             self.varinfos.append(vi)
             try:
-                vi['const'] = typed_eid(selectvar) # XXX gae
+                vi['const'] = typed_eid(selectvar)
                 vi['rhs_rels'] = vi['lhs_rels'] = {}
             except ValueError:
                 try:
@@ -227,39 +242,44 @@ class RQLRewriter(object):
                                            if not r in sti['rhsrelations'])
                 else:
                     vi['rhs_rels'] = vi['lhs_rels'] = {}
-        parent = None
+        previous = None
         inserted = False
         for rqlexpr in rqlexprs:
             self.current_expr = rqlexpr
             if varexistsmap is None:
                 try:
-                    new = self.insert_snippet(varmap, rqlexpr.snippet_rqlst, parent)
+                    new = self.insert_snippet(varmap, rqlexpr.snippet_rqlst, previous)
                 except Unsupported:
                     continue
                 inserted = True
                 if new is not None and self._insert_scope is None:
                     self.exists_snippet[rqlexpr] = new
-                parent = parent or new
+                previous = previous or new
             else:
                 # called to reintroduce snippet due to ambiguity creation,
                 # so skip snippets which are not introducing this ambiguity
                 exists = varexistsmap[varmap]
-                if self.exists_snippet[rqlexpr] is exists:
+                if self.exists_snippet.get(rqlexpr) is exists:
                     self.insert_snippet(varmap, rqlexpr.snippet_rqlst, exists)
         if varexistsmap is None and not inserted:
             # no rql expression found matching rql solutions. User has no access right
-            raise Unauthorized() # XXX bad constraint when inserting constraints
+            raise Unauthorized() # XXX may also be because of bad constraints in schema definition
 
-    def insert_snippet(self, varmap, snippetrqlst, parent=None):
+    def insert_snippet(self, varmap, snippetrqlst, previous=None):
         new = snippetrqlst.where.accept(self)
         existing = self.existingvars
         self.existingvars = None
         try:
-            return self._insert_snippet(varmap, parent, new)
+            return self._insert_snippet(varmap, previous, new)
         finally:
             self.existingvars = existing
 
-    def _insert_snippet(self, varmap, parent, new):
+    def _insert_snippet(self, varmap, previous, new):
+        """insert `new` snippet into the syntax tree, which have been rewritten
+        using `varmap`. In cases where an action is protected by several rql
+        expresssion, `previous` will be the first rql expression which has been
+        inserted, and so should be ORed with the following expressions.
+        """
         if new is not None:
             if self._insert_scope is None:
                 insert_scope = None
@@ -273,28 +293,28 @@ class RQLRewriter(object):
                 insert_scope = self._insert_scope
             if self._insert_scope is None and any(vi.get('stinfo', {}).get('optrelations')
                                                   for vi in self.varinfos):
-                assert parent is None
-                self._insert_scope = self.snippet_subquery(varmap, new)
+                assert previous is None
+                self._insert_scope, new = self.snippet_subquery(varmap, new)
                 self.insert_pending()
                 #self._insert_scope = None
-                return
+                return new
             if not isinstance(new, (n.Exists, n.Not)):
                 new = n.Exists(new)
-            if parent is None:
+            if previous is None:
                 insert_scope.add_restriction(new)
             else:
-                grandpa = parent.parent
-                or_ = n.Or(parent, new)
-                grandpa.replace(parent, or_)
+                grandpa = previous.parent
+                or_ = n.Or(previous, new)
+                grandpa.replace(previous, or_)
             if not self.removing_ambiguity:
                 try:
                     self.compute_solutions()
                 except Unsupported:
                     # some solutions have been lost, can't apply this rql expr
-                    if parent is None:
+                    if previous is None:
                         self.current_statement().remove_node(new, undefine=True)
                     else:
-                        parent.parent.replace(or_, or_.children[0])
+                        grandpa.replace(or_, previous)
                         self._cleanup_inserted(new)
                     raise
                 else:
@@ -418,7 +438,7 @@ class RQLRewriter(object):
             # some solutions have been lost, can't apply this rql expr
             self.select.remove_subquery(self.select.with_[-1])
             raise
-        return subselect
+        return subselect, snippetrqlst
 
     def remove_ambiguities(self, snippets, newsolutions):
         # the snippet has introduced some ambiguities, we have to resolve them
@@ -475,11 +495,17 @@ class RQLRewriter(object):
 
     def _cleanup_inserted(self, node):
         # cleanup inserted variable references
+        removed = set()
         for vref in node.iget_nodes(n.VariableRef):
             vref.unregister_reference()
             if not vref.variable.stinfo['references']:
                 # no more references, undefine the variable
                 del self.select.defined_vars[vref.name]
+                removed.add(vref.name)
+        for key, newvar in self.rewritten.items(): # I mean items we alter it
+            if newvar in removed:
+                del self.rewritten[key]
+
 
     def _may_be_shared_with(self, sniprel, target):
         """if the snippet relation can be skipped to use a relation from the
@@ -660,7 +686,7 @@ class RQLRewriter(object):
             selectvar, index = self.revvarmap[node.name]
             vi = self.varinfos[index]
             if vi.get('const') is not None:
-                return n.Constant(vi['const'], 'Int') # XXX gae
+                return n.Constant(vi['const'], 'Int')
             return n.VariableRef(stmt.get_variable(selectvar))
         vname_or_term = self._get_varname_or_term(node.name)
         if isinstance(vname_or_term, basestring):

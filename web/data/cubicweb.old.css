@@ -43,7 +43,7 @@ h3 {
 }
 
 h4 {
-  font-size: 120%;
+  font-size: %(h4FontSize)s;
   margin: 0.2em 0px;
 }
 
@@ -64,9 +64,12 @@ a:hover{
   text-decoration: underline;
 }
 
-a img, img {
-  border: none;
+a img{
   text-align: center;
+}
+
+img{
+  border: none;
 }
 
 img.prevnext {
@@ -161,6 +164,9 @@ pre {
   color: #000;
   background-color: #f2f2f2;
   border: 1px solid #ccc;
+  margin: 10px 0;
+  padding-bottom: 12px;
+  padding-left: 5px;
 }
 
 code {
@@ -213,24 +219,43 @@ blockquote {
   visibility: hidden;
 }
 
-li.invisible { list-style: none; background: none; padding: 0px 0px
-1px 1px; }
+li.invisible {
+  list-style: none;
+  background: none;
+  padding: 0px 0px 1px 1px;
+}
 
 li.invisible div {
   display: inline;
 }
 
 .caption {
-    font-weight: bold;
+  font-weight: bold;
 }
 
 .legend{
-    font-style: italic;
+  font-style: italic;
 }
 
-.align-center{
-    text-align: center;
+/* rest related image classes generated with align: directive */
+
+img.align-right {
+  margin-left: auto;
+  display:block;
 }
+
+img.align-left {
+  margin-right: auto;
+  display:block;
+}
+
+img.align-center{
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+  display:block;
+}
+
 
 /***************************************/
 /*   LAYOUT                            */
@@ -813,7 +838,7 @@ table.listing td {
 
 table.listing th {
   font-weight: bold;
-  background: #ebe8d9 url("button.png") repeat-x;
+  background: %(listingHeaderBgColor)s;
 }
 
 table.listing td a,

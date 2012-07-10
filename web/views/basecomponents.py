@@ -207,8 +207,8 @@ class EtypeRestrictionComponent(component.Component):
     to be able to filter accordingly.
     """
     __regid__ = 'etypenavigation'
-    __select__ = multi_etypes_rset() | match_form_params('__restrtype', '__restrtypes',
-                                                       '__restrrql')
+    __select__ = multi_etypes_rset() | match_form_params(
+        '__restrtype', '__restrtypes', '__restrrql')
     cw_property_defs = VISIBLE_PROP_DEF
     # don't want user to hide this component using an cwproperty
     site_wide = True
@@ -237,7 +237,7 @@ class EtypeRestrictionComponent(component.Component):
             else:
                 rqlst.save_state()
                 for select in rqlst.children:
-                    select.add_type_restriction(select.selection[0], etype)
+                    select.add_type_restriction(select.selection[0].variable, etype)
                 newrql = rqlst.as_string(self._cw.encoding, self.cw_rset.args)
                 url = self._cw.build_url(rql=newrql, __restrrql=restrrql,
                                          __restrtype=etype, __restrtypes=','.join(restrtypes))

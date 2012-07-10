@@ -15,10 +15,40 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""navigation components definition for CubicWeb web client"""
+"""This module provides some generic components to navigate in the web
+application.
+
+Pagination
+----------
+
+Several implementations for large result set pagination are provided:
+
+.. autoclass:: PageNavigation
+.. autoclass:: PageNavigationSelect
+.. autoclass:: SortedNavigation
+
+Pagination will appear when needed according to the `page-size` ui property.
+
+This module monkey-patch the :func:`paginate` function to the base :class:`View`
+class, so that you can ask pagination explicitly on every result-set based views.
+
+.. autofunction:: paginate
+
+
+Previous / next navigation
+--------------------------
+
+An adapter and its related component for the somewhat usal "previous / next"
+navigation are provided.
+
+  .. autoclass:: IPrevNextAdapter
+  .. autoclass:: NextPrevNavigationComponent
+"""
 
 __docformat__ = "restructuredtext en"
 _ = unicode
+
+from datetime import datetime
 
 from rql.nodes import VariableRef, Constant
 
@@ -33,7 +63,9 @@ from cubicweb.web.component import EmptyComponent, EntityCtxComponent, Navigatio
 
 
 class PageNavigation(NavigationComponent):
-
+    """The default pagination component: display link to pages where each pages
+    is identified by the item number of its first and last elements.
+    """
     def call(self):
         """displays a resultset by page"""
         params = dict(self._cw.form)
@@ -61,8 +93,12 @@ class PageNavigation(NavigationComponent):
 
 
 class PageNavigationSelect(PageNavigation):
-    """displays a resultset by page as PageNavigationSelect but in a <select>,
-    better when there are a lot of results.
+    """This pagination component displays a result-set by page as
+    :class:`PageNavigation` but in a <select>, which is better when there are a
+    lot of results.
+
+    By default it will be selected when there are more than 4 pages to be
+    displayed.
     """
     __select__ = paginated_rset(4)
 
@@ -84,21 +120,80 @@ class PageNavigationSelect(PageNavigation):
 
 
 class SortedNavigation(NavigationComponent):
-    """sorted navigation apply if navigation is needed (according to page size)
-    and if the result set is sorted
+    """This pagination component will be selected by default if there are less
+    than 4 pages and if the result set is sorted.
+
+    Displayed links to navigate accross pages of a result set are done according
+    to the first variable on which the sort is done, and looks like:
+
+        [ana - cro] | [cro - ghe] | ... | [tim - zou]
+
+    You may want to override this component to customize display in some cases.
+
+    .. automethod:: sort_on
+    .. automethod:: display_func
+    .. automethod:: format_link_content
+    .. automethod:: write_links
+
+    Below an example from the tracker cube:
+
+    .. sourcecode:: python
+
+      class TicketsNavigation(navigation.SortedNavigation):
+          __select__ = (navigation.SortedNavigation.__select__
+                        & ~paginated_rset(4) & is_instance('Ticket'))
+          def sort_on(self):
+              col, attrname = super(TicketsNavigation, self).sort_on()
+              if col == 6:
+                  # sort on state, we don't want that
+                  return None, None
+              return col, attrname
+
+    The idea is that in trackers'ticket tables, result set is first ordered on
+    ticket's state while this doesn't make any sense in the navigation. So we
+    override :meth:`sort_on` so that if we detect such sorting, we disable the
+    feature to go back to item number in the pagination.
+
+    Also notice the `~paginated_rset(4)` in the selector so that if there are
+    more than 4 pages to display, :class:`PageNavigationSelect` will still be
+    selected.
     """
     __select__ = paginated_rset() & sorted_rset()
 
     # number of considered chars to build page links
     nb_chars = 5
 
+    def call(self):
+        # attrname = the name of attribute according to which the sort
+        # is done if any
+        col, attrname = self.sort_on()
+        index_display = self.display_func(self.cw_rset, col, attrname)
+        basepath = self._cw.relative_path(includeparams=False)
+        params = dict(self._cw.form)
+        self.clean_params(params)
+        blocklist = []
+        start = 0
+        total = self.cw_rset.rowcount
+        while start < total:
+            stop = min(start + self.page_size - 1, total - 1)
+            cell = self.format_link_content(index_display(start), index_display(stop))
+            blocklist.append(self.page_link(basepath, params, start, stop, cell))
+            start = stop + 1
+        self.write_links(basepath, params, blocklist)
+
     def display_func(self, rset, col, attrname):
+        """Return a function that will be called with a row number as argument
+        and should return a string to use as link for it.
+        """
         if attrname is not None:
             def index_display(row):
                 if not rset[row][col]: # outer join
                     return u''
                 entity = rset.get_entity(row, col)
                 return entity.printable_value(attrname, format='text/plain')
+        elif col is None: # smart links disabled.
+            def index_display(row):
+                return unicode(row)
         elif self._cw.vreg.schema.eschema(rset.description[0][col]).final:
             def index_display(row):
                 return unicode(rset[row][col])
@@ -107,24 +202,15 @@ class SortedNavigation(NavigationComponent):
                 return rset.get_entity(row, col).view('text')
         return index_display
 
-    def call(self):
-        """displays links to navigate accross pages of a result set
-
-        Displayed result is done according to a variable on which the sort
-        is done, and looks like:
-        [ana - cro] | [cro - ghe] | ... | [tim - zou]
+    def sort_on(self):
+        """Return entity column number / attr name to use for nice display by
+        inspecting the rset'syntax tree.
         """
-        w = self.w
-        rset = self.cw_rset
-        page_size = self.page_size
         rschema = self._cw.vreg.schema.rschema
-        # attrname = the name of attribute according to which the sort
-        # is done if any
-        for sorterm in rset.syntax_tree().children[0].orderby:
+        for sorterm in self.cw_rset.syntax_tree().children[0].orderby:
             if isinstance(sorterm.term, Constant):
                 col = sorterm.term.value - 1
-                index_display = self.display_func(rset, col, None)
-                break
+                return col, None
             var = sorterm.term.get_nodes(VariableRef)[0].variable
             col = None
             for ref in var.references():
@@ -151,29 +237,29 @@ class SortedNavigation(NavigationComponent):
                 col = var.selected_index()
                 attrname = None
             if col is not None:
-                index_display = self.display_func(rset, col, attrname)
-                break
-        else:
-            # nothing usable found, use the first column
-            index_display = self.display_func(rset, 0, None)
-        blocklist = []
-        params = dict(self._cw.form)
-        self.clean_params(params)
-        start = 0
-        basepath = self._cw.relative_path(includeparams=False)
-        while start < rset.rowcount:
-            stop = min(start + page_size - 1, rset.rowcount - 1)
-            cell = self.format_link_content(index_display(start), index_display(stop))
-            blocklist.append(self.page_link(basepath, params, start, stop, cell))
-            start = stop + 1
-        self.write_links(basepath, params, blocklist)
+                # if column type is date[time], set proper 'nb_chars'
+                if var.stinfo['possibletypes'] & frozenset(('TZDatetime', 'Datetime',
+                                                            'Date')):
+                    self.nb_chars = len(self._cw.format_date(datetime.today()))
+                return col, attrname
+        # nothing usable found, use the first column
+        return 0, None
 
     def format_link_content(self, startstr, stopstr):
+        """Return text for a page link, where `startstr` and `stopstr` are the
+        text for the lower/upper boundaries of the page.
+
+        By default text are stripped down to :attr:`nb_chars` characters.
+        """
         text = u'%s - %s' % (startstr.lower()[:self.nb_chars],
                              stopstr.lower()[:self.nb_chars])
         return xml_escape(text)
 
     def write_links(self, basepath, params, blocklist):
+        """Return HTML for the whole navigation: `blocklist` is a list of HTML
+        snippets for each page, `basepath` and `params` will be necessary to
+        build previous/next links.
+        """
         self.w(u'<div class="pagination">')
         self.w(u'%s&#160;' % self.previous_link(basepath, params))
         self.w(u'[&#160;%s&#160;]' % u'&#160;| '.join(blocklist))
@@ -181,11 +267,71 @@ class SortedNavigation(NavigationComponent):
         self.w(u'</div>')
 
 
+def do_paginate(view, rset=None, w=None, show_all_option=True, page_size=None):
+    """write pages index in w stream (default to view.w) and then limit the
+    result set (default to view.rset) to the currently displayed page if we're
+    not explicitly told to display everything (by setting __force_display in
+    req.form)
+    """
+    req = view._cw
+    if rset is None:
+        rset = view.cw_rset
+    if w is None:
+        w = view.w
+    nav = req.vreg['components'].select_or_none(
+        'navigation', req, rset=rset, page_size=page_size, view=view)
+    if nav:
+        if w is None:
+            w = view.w
+        if req.form.get('__force_display'):
+            # allow to come back to the paginated view
+            params = dict(req.form)
+            basepath = req.relative_path(includeparams=False)
+            del params['__force_display']
+            url = nav.page_url(basepath, params)
+            w(u'<div class="displayAllLink"><a href="%s">%s</a></div>\n'
+              % (xml_escape(url), req._('back to pagination (%s results)')
+                                  % nav.page_size))
+        else:
+            # get boundaries before component rendering
+            start, stop = nav.page_boundaries()
+            nav.render(w=w)
+            params = dict(req.form)
+            nav.clean_params(params)
+            # make a link to see them all
+            if show_all_option:
+                basepath = req.relative_path(includeparams=False)
+                params['__force_display'] = 1
+                params['__fromnavigation'] = 1
+                url = nav.page_url(basepath, params)
+                w(u'<div class="displayAllLink"><a href="%s">%s</a></div>\n'
+                  % (xml_escape(url), req._('show %s results') % len(rset)))
+            rset.limit(offset=start, limit=stop-start, inplace=True)
+
+
+def paginate(view, show_all_option=True, w=None, page_size=None, rset=None):
+    """paginate results if the view is paginable
+    """
+    if view.paginable:
+        do_paginate(view, rset, w, show_all_option, page_size)
+
+# monkey patch base View class to add a .paginate([...])
+# method to be called to write pages index in the view and then limit the result
+# set to the current page
+from cubicweb.view import View
+View.do_paginate = do_paginate
+View.paginate = paginate
+View.handle_pagination = False
+
+
 from cubicweb.interfaces import IPrevNext
 
 class IPrevNextAdapter(EntityAdapter):
-    """interface for entities which can be linked to a previous and/or next
+    """Interface for entities which can be linked to a previous and/or next
     entity
+
+    .. automethod:: next_entity
+    .. automethod:: previous_entity
     """
     __needs_bw_compat__ = True
     __regid__ = 'IPrevNext'
@@ -203,6 +349,11 @@ class IPrevNextAdapter(EntityAdapter):
 
 
 class NextPrevNavigationComponent(EntityCtxComponent):
+    """Entities adaptable to the 'IPrevNext' should have this component
+    automatically displayed. You may want to override this component to have a
+    different look and feel.
+    """
+
     __regid__ = 'prevnext'
     # register msg not generated since no entity implements IPrevNext in cubicweb
     # itself
@@ -262,59 +413,3 @@ class NextPrevNavigationComponent(EntityCtxComponent):
         w(u'</div>')
         self._cw.html_headers.add_raw('<link rel="%s" href="%s" />' % (
               type, xml_escape(url)))
-
-
-def do_paginate(view, rset=None, w=None, show_all_option=True, page_size=None):
-    """write pages index in w stream (default to view.w) and then limit the result
-    set (default to view.rset) to the currently displayed page
-    """
-    req = view._cw
-    if rset is None:
-        rset = view.cw_rset
-    if w is None:
-        w = view.w
-    nav = req.vreg['components'].select_or_none(
-        'navigation', req, rset=rset, page_size=page_size, view=view)
-    if nav:
-        if w is None:
-            w = view.w
-        # get boundaries before component rendering
-        start, stop = nav.page_boundaries()
-        nav.render(w=w)
-        params = dict(req.form)
-        nav.clean_params(params)
-        # make a link to see them all
-        if show_all_option:
-            basepath = req.relative_path(includeparams=False)
-            params['__force_display'] = 1
-            url = nav.page_url(basepath, params)
-            w(u'<div class="displayAllLink"><a href="%s">%s</a></div>\n'
-              % (xml_escape(url), req._('show %s results') % len(rset)))
-        rset.limit(offset=start, limit=stop-start, inplace=True)
-
-
-def paginate(view, show_all_option=True, w=None, page_size=None, rset=None):
-    """paginate results if the view is paginable and we're not explictly told to
-    display everything (by setting __force_display in req.form)
-    """
-    if view.paginable and not view._cw.form.get('__force_display'):
-        do_paginate(view, rset, w, show_all_option, page_size)
-
-# monkey patch base View class to add a .paginate([...])
-# method to be called to write pages index in the view and then limit the result
-# set to the current page
-from cubicweb.view import View
-View.do_paginate = do_paginate
-View.paginate = paginate
-
-
-#@deprecated (see below)
-def limit_rset_using_paged_nav(self, req, rset, w, forcedisplay=False,
-                               show_all_option=True, page_size=None):
-    if not (forcedisplay or req.form.get('__force_display') is not None):
-        do_paginate(self, rset, w, show_all_option, page_size)
-
-View.pagination = deprecated('[3.2] .pagination is deprecated, use paginate')(
-    limit_rset_using_paged_nav)
-limit_rset_using_paged_nav = deprecated('[3.6] limit_rset_using_paged_nav is deprecated, use do_paginate')(
-    limit_rset_using_paged_nav)

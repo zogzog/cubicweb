@@ -47,8 +47,8 @@ class UserPreferencesEntityAction(action.Action):
     category = 'mainactions'
 
     def url(self):
-        login = self.cw_rset.get_entity(self.cw_row or 0, self.cw_col or 0).login
-        return self._cw.build_url('cwuser/%s'%login, vid='propertiesform')
+        user = self.cw_rset.get_entity(self.cw_row or 0, self.cw_col or 0)
+        return user.absolute_url(vid='propertiesform')
 
 
 class FoafView(EntityView):
@@ -68,8 +68,8 @@ class FoafView(EntityView):
             self.cell_call(i, 0)
         self.w(u'</rdf:RDF>\n')
 
-    def cell_call(self, row, col):
-        entity = self.cw_rset.complete_entity(row, col)
+    def entity_call(self, entity, **kwargs):
+        entity.complete()
         # account
         self.w(u'<foaf:OnlineAccount rdf:about="%s">\n' % entity.absolute_url())
         self.w(u'  <foaf:accountName>%s</foaf:accountName>\n' % entity.login)
@@ -112,25 +112,29 @@ class CWGroupMainTab(tabs.PrimaryTab):
     __select__ = tabs.PrimaryTab.__select__ & is_instance('CWGroup')
 
     def render_entity_attributes(self, entity):
-        _ = self._cw._
-        rql = 'Any U, FN, LN, CD, LL ORDERBY L WHERE U in_group G, ' \
-              'U login L, U firstname FN, U surname LN, U creation_date CD, ' \
-              'U last_login_time LL, G eid %(x)s'
-        rset = self._cw.execute(rql, {'x': entity.eid})
-        headers = (_(u'user'), _(u'first name'), _(u'last name'),
-                   _(u'creation date'), _(u'last login time'))
-        self.wview('editable-table', rset, 'null', displayfilter=True,
-                   displaycols=range(5), mainindex=0, headers=headers)
+        rset = self._cw.execute(
+            'Any U, FN, LN, CD, LL ORDERBY L WHERE U in_group G, '
+            'U login L, U firstname FN, U surname LN, U creation_date CD, '
+            'U last_login_time LL, G eid %(x)s', {'x': entity.eid})
+        self.wview('cwgroup.users', rset, 'null')
+
+class CWGroupUsersTable(tableview.RsetTableView):
+    __regid__ = 'cwgroup.users'
+    __select__ = is_instance('CWUser')
+    headers = (_(u'user'), _(u'first name'), _(u'last name'),
+               _(u'creation date'), _(u'last login time'))
+    layout_args = {'display_filter': 'top'}
+    finalvid = 'editable-final'
+
 
 class CWGroupPermTab(EntityView):
     __regid__ = 'cwgroup-permissions'
     __select__ = is_instance('CWGroup')
 
-    def cell_call(self, row, col):
+    def entity_call(self, entity):
         self._cw.add_css(('cubicweb.schema.css','cubicweb.acl.css'))
         access_types = ('read', 'delete', 'add', 'update')
         w = self.w
-        entity = self.cw_rset.get_entity(row, col)
         objtype_access = {'CWEType': ('read', 'delete', 'add', 'update'),
                           'CWRelation': ('add', 'delete')}
         rql_cwetype = 'DISTINCT Any X WHERE X %s_permission CWG, X is CWEType, ' \
@@ -148,12 +152,13 @@ class CWGroupPermTab(EntityView):
                 self.w(u'<div>%s:</div>' % self._cw.__(access_type + '_permission'))
                 self.w(u'<div>%s</div><br/>' % self._cw.view('csv', rset, 'null'))
 
+
 class CWGroupInContextView(EntityView):
     __regid__ = 'incontext'
     __select__ = is_instance('CWGroup')
 
-    def cell_call(self, row, col):
-        entity = self.cw_rset.complete_entity(row, col)
+    def entity_call(self, entity, **kwargs):
+        entity.complete()
         self.w(u'<a href="%s" class="%s">%s</a>' % (
             entity.absolute_url(), entity.name, entity.printable_value('name')))
 
@@ -166,58 +171,84 @@ class ManageUsersAction(actions.ManagersAction):
     category = 'manage'
 
 
+class UsersAndGroupsManagementView(tabs.TabsMixin, StartupView):
+    __regid__ = 'cw.users-and-groups-management'
+    __select__ = StartupView.__select__ & match_user_groups('managers')
+    title = _('Users and groups management')
+    tabs = [_('cw.users-management'), _('cw.groups-management'),]
+    default_tab = 'cw.users-management'
+
+    def call(self, **kwargs):
+        """The default view representing the instance's management"""
+        self.w(u'<h1>%s</h1>' % self._cw._(self.title))
+        self.render_tabs(self.tabs, self.default_tab)
+
+
 class CWUserManagementView(StartupView):
-    __regid__ = 'cw.user-management'
+    __regid__ = 'cw.users-management'
+    __select__ = StartupView.__select__ & match_user_groups('managers')
+    cache_max_age = 0 # disable caching
     # XXX one could wish to display for instance only user's firstname/surname
     # for non managers but filtering out NULL cause crash with an ldapuser
     # source.
-    __select__ = StartupView.__select__ & match_user_groups('managers')
-    rql = ('Any U,USN,F,S,U,UAA,UDS, L,UAA,UDSN ORDERBY L WHERE U is CWUser, '
+    rql = ('Any U,US,F,S,U,UAA,UDS, L,UAA,USN,UDSN ORDERBY L WHERE U is CWUser, '
            'U login L, U firstname F, U surname S, '
            'U in_state US, US name USN, '
            'U primary_email UA?, UA address UAA, '
            'U cw_source UDS, US name UDSN')
-    title = _('users and groups management')
-    cache_max_age = 0 # disable caching
 
     def call(self, **kwargs):
-        self.w('<h1>%s</h1>' % self._cw._(self.title))
         self.w(add_etype_button(self._cw, 'CWUser'))
+        self.w(u'<div class="clear"></div>')
+        self.wview('cw.users-table', self._cw.execute(self.rql))
+
+
+class CWUsersTable(tableview.EntityTableView):
+    __regid__ = 'cw.users-table'
+    __select__ = is_instance('CWUser')
+    columns = ['user', 'in_state', 'firstname', 'surname',
+               'in_group', 'primary_email', 'cw_source']
+    layout_args = {'display_filter': 'top'}
+    finalvid = 'editable-final'
+
+    column_renderers = {
+        'user': tableview.EntityTableColRenderer(
+            renderfunc=lambda w,x: w(tags.a(x.login, href=x.absolute_url())),
+            sortfunc=lambda x: x.login),
+        'in_state': tableview.EntityTableColRenderer(
+            renderfunc=lambda w,x: w(x.cw_adapt_to('IWorkflowable').printable_state),
+            sortfunc=lambda x: x.cw_adapt_to('IWorkflowable').printable_state),
+        'in_group': tableview.EntityTableColRenderer(
+            renderfunc=lambda w,x: x.view('reledit', rtype='in_group', role='subject', w=w)),
+        'primary_email': tableview.RelatedEntityColRenderer(
+            getrelated=lambda x:x.primary_email and x.primary_email[0] or None),
+        'cw_source': tableview.RelatedEntityColRenderer(
+            getrelated=lambda x: x.cw_source[0]),
+        }
+
+
+class CWGroupsManagementView(StartupView):
+    __regid__ = 'cw.groups-management'
+    __select__ = StartupView.__select__ & match_user_groups('managers')
+    cache_max_age = 0 # disable caching
+    rql = ('Any G,GN ORDERBY GN WHERE G is CWGroup, G name GN, NOT G name "owners"')
+
+    def call(self, **kwargs):
         self.w(add_etype_button(self._cw, 'CWGroup'))
         self.w(u'<div class="clear"></div>')
-        self.wview('cw.user-table', self._cw.execute(self.rql))
+        self.wview('cw.groups-table', self._cw.execute(self.rql))
 
 
-class CWUserTable(tableview.EditableTableView):
-    __regid__ = 'cw.user-table'
-    __select__ = is_instance('CWUser')
+class CWGroupsTable(tableview.EntityTableView):
+    __regid__ = 'cw.groups-table'
+    __select__ = is_instance('CWGroup')
+    columns = ['group', 'nb_users']
+    layout_args = {'display_filter': 'top'}
 
-    def call(self, **kwargs):
-        headers = (display_name(self._cw, 'CWUser', 'plural'),
-                   display_name(self._cw, 'in_state'),
-                   self._cw._('firstname'), self._cw._('surname'),
-                   display_name(self._cw, 'CWGroup', 'plural'),
-                   display_name(self._cw, 'primary_email'),
-                   display_name(self._cw, 'CWSource'))
-        super(CWUserTable, self).call(
-            paginate=True, displayfilter=True,
-            cellvids={0: 'cw.user.login',
-                      4: 'cw.user-table.group-cell'},
-            headers=headers, **kwargs)
-
-
-class CWUserGroupCell(EntityView):
-    __regid__ = 'cw.user-table.group-cell'
-    __select__ = is_instance('CWUser')
-
-    def cell_call(self, row, col, **kwargs):
-        entity = self.cw_rset.get_entity(row, col)
-        self.w(entity.view('reledit', rtype='in_group', role='subject'))
-
-class CWUserLoginCell(EntityView):
-    __regid__ = 'cw.user.login'
-    __select__ = is_instance('CWUser')
-
-    def cell_call(self, row, col, **kwargs):
-        entity = self.cw_rset.get_entity(row, col)
-        self.w(tags.a(entity.login, href=entity.absolute_url()))
+    column_renderers = {
+        'group': tableview.MainEntityColRenderer(),
+        'nb_users': tableview.EntityTableColRenderer(
+            header=_('num. users'),
+            renderfunc=lambda w,x: w(unicode(x.num_users())),
+            sortfunc=lambda x: x.num_users()),
+        }

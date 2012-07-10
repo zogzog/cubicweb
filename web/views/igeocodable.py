@@ -62,7 +62,7 @@ class GeocodingJsonView(EntityView):
     content_type = 'application/json'
 
     def call(self):
-        zoomlevel = self._cw.form.pop('zoomlevel', 8)
+        zoomlevel = self._cw.form.pop('zoomlevel', None)
         extraparams = self._cw.form.copy()
         extraparams.pop('vid', None)
         extraparams.pop('rql', None)
@@ -74,15 +74,13 @@ class GeocodingJsonView(EntityView):
                 continue
             markers.append(self.build_marker_data(entity, igeocodable,
                                                   extraparams))
-        center = {
-            'latitude': sum(marker['latitude'] for marker in markers) / len(markers),
-            'longitude': sum(marker['longitude'] for marker in markers) / len(markers),
-            }
+        if not markers:
+            return
         geodata = {
-            'zoomlevel': int(zoomlevel),
-            'center': center,
             'markers': markers,
             }
+        if zoomlevel:
+            geodata['zoomlevel'] = int(zoomlevel)
         self.w(json_dumps(geodata))
 
     def build_marker_data(self, entity, igeocodable, extraparams):

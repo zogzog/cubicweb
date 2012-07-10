@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -15,9 +15,6 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""
-
-"""
 from logilab.common.testlib import TestCase, unittest_main
 
 from cubicweb.devtools.testlib import CubicWebTC
@@ -53,8 +50,11 @@ class UrlRewriteTC(CubicWebTC):
             ('/error', dict(vid='error')),
             ('/sparql', dict(vid='sparql')),
             ('/processinfo', dict(vid='processinfo')),
-            ('/cwuser$', {'vid': 'cw.user-management'}),
-            ('/cwsource$', {'vid': 'cw.source-management'}),
+            ('/cwuser$', {'vid': 'cw.users-and-groups-management',
+                          'tab': 'cw_users_management'}),
+            ('/cwgroup$', {'vid': 'cw.users-and-groups-management',
+                           'tab': 'cw_groups_management'}),
+            ('/cwsource$', {'vid': 'cw.sources-management'}),
             ('/schema/([^/]+?)/?$', {'rql': r'Any X WHERE X is CWEType, X name "\1"', 'vid': 'primary'}),
             ('/add/([^/]+?)/?$' , dict(vid='creation', etype=r'\1')),
             ('/doc/images/(.+?)/?$', dict(fid='\\1', vid='wdocimages')),

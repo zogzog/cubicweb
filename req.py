@@ -29,7 +29,7 @@ from logilab.common.decorators import cached
 from logilab.common.deprecation import deprecated
 from logilab.common.date import ustrftime, strptime, todate, todatetime
 
-from cubicweb import Unauthorized, NoSelectableObject, typed_eid
+from cubicweb import Unauthorized, NoSelectableObject, typed_eid, uilib
 from cubicweb.rset import ResultSet
 
 ONESECOND = timedelta(0, 1, 0)
@@ -299,7 +299,7 @@ class RequestSessionBase(object):
 
     @cached
     def user_data(self):
-        """returns a dictionnary with this user's information"""
+        """returns a dictionary with this user's information"""
         userinfo = {}
         if self.is_internal_session:
             userinfo['login'] = "cubicweb"
@@ -324,7 +324,7 @@ class RequestSessionBase(object):
         object isn't selectable, try to select fallback object if
         `__fallback_oid` is specified.
 
-        If specified `initargs` is expected to be a dictionnary containing
+        If specified `initargs` is expected to be a dictionary containing
         arguments that should be given to selection (hence to object's __init__
         as well), but not to render(). Other arbitrary keyword arguments will be
         given to selection *and* to render(), and so should be handled by
@@ -342,6 +342,18 @@ class RequestSessionBase(object):
             view =  self.vreg[__registry].select(__fallback_oid, self,
                                                  rset=rset, **initargs)
         return view.render(w=w, **kwargs)
+
+    def printable_value(self, attrtype, value, props=None, displaytime=True,
+                        formatters=uilib.PRINTERS):
+        """return a displayablye value (i.e. unicode string)"""
+        if value is None:
+            return u''
+        try:
+            as_string = formatters[attrtype]
+        except KeyError:
+            self.error('given bad attrtype %s', attrtype)
+            return unicode(value)
+        return as_string(value, self, props, displaytime)
 
     def format_date(self, date, date_format=None, time=False):
         """return a string for a date time according to instance's
@@ -412,13 +424,3 @@ class RequestSessionBase(object):
     def describe(self, eid, asdict=False):
         """return a tuple (type, sourceuri, extid) for the entity with id <eid>"""
         raise NotImplementedError
-
-    @property
-    @deprecated('[3.6] use _cw.vreg.config')
-    def config(self):
-        return self.vreg.config
-
-    @property
-    @deprecated('[3.6] use _cw.vreg.schema')
-    def schema(self):
-        return self.vreg.schema

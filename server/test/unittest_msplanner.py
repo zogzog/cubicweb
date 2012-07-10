@@ -64,7 +64,7 @@ class FakeDataFeedSource(FakeCardSource):
 
 X_ALL_SOLS = sorted([{'X': 'Affaire'}, {'X': 'BaseTransition'}, {'X': 'Basket'},
                      {'X': 'Bookmark'}, {'X': 'CWAttribute'}, {'X': 'CWCache'},
-                     {'X': 'CWConstraint'}, {'X': 'CWConstraintType'}, {'X': 'CWEType'},
+                     {'X': 'CWConstraint'}, {'X': 'CWConstraintType'}, {'X': 'CWDataImport'}, {'X': 'CWEType'},
                      {'X': 'CWGroup'}, {'X': 'CWPermission'}, {'X': 'CWProperty'},
                      {'X': 'CWRType'}, {'X': 'CWRelation'},
                      {'X': 'CWSource'}, {'X': 'CWSourceHostConfig'}, {'X': 'CWSourceSchemaConfig'},
@@ -72,7 +72,7 @@ X_ALL_SOLS = sorted([{'X': 'Affaire'}, {'X': 'BaseTransition'}, {'X': 'Basket'},
                      {'X': 'Card'}, {'X': 'Comment'}, {'X': 'Division'},
                      {'X': 'Email'}, {'X': 'EmailAddress'}, {'X': 'EmailPart'},
                      {'X': 'EmailThread'}, {'X': 'ExternalUri'}, {'X': 'File'},
-                     {'X': 'Folder'}, {'X': 'Note'},
+                     {'X': 'Folder'}, {'X': 'Note'}, {'X': 'Old'},
                      {'X': 'Personne'}, {'X': 'RQLExpression'}, {'X': 'Societe'},
                      {'X': 'State'}, {'X': 'SubDivision'}, {'X': 'SubWorkflowExitPoint'},
                      {'X': 'Tag'}, {'X': 'TrInfo'}, {'X': 'Transition'},
@@ -767,7 +767,7 @@ class MSPlannerTC(BaseMSPlannerTC):
 
     def test_not_identity(self):
         ueid = self.session.user.eid
-        self._test('Any X WHERE NOT X identity U, U eid %s' % ueid,
+        self._test('Any X WHERE NOT X identity U, U eid %s, X is CWUser' % ueid,
                    [('OneFetchStep',
                      [('Any X WHERE NOT X identity %s, X is CWUser' % ueid, [{'X': 'CWUser'}])],
                      None, None,
@@ -907,6 +907,7 @@ class MSPlannerTC(BaseMSPlannerTC):
         ALL_SOLS = X_ALL_SOLS[:]
         ALL_SOLS.remove({'X': 'CWSourceHostConfig'}) # not authorized
         ALL_SOLS.remove({'X': 'CWSourceSchemaConfig'}) # not authorized
+        ALL_SOLS.remove({'X': 'CWDataImport'}) # not authorized
         self._test('Any MAX(X)',
                    [('FetchStep', [('Any E WHERE E type "X", E is Note', [{'E': 'Note'}])],
                      [self.cards, self.system],  None, {'E': 'table1.C0'}, []),
@@ -920,7 +921,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                                           [{'X': 'Card'}, {'X': 'Note'}, {'X': 'State'}])],
                            [self.cards, self.system], {}, {'X': 'table0.C0'}, []),
                           ('FetchStep',
-                           [('Any X WHERE X is IN(BaseTransition, Bookmark, CWAttribute, CWCache, CWConstraint, CWConstraintType, CWEType, CWGroup, CWPermission, CWProperty, CWRType, CWRelation, CWSource, CWUniqueTogetherConstraint, Comment, Division, Email, EmailAddress, EmailPart, EmailThread, ExternalUri, File, Folder, Personne, RQLExpression, Societe, SubDivision, SubWorkflowExitPoint, Tag, TrInfo, Transition, Workflow, WorkflowTransition)',
+                           [('Any X WHERE X is IN(BaseTransition, Bookmark, CWAttribute, CWCache, CWConstraint, CWConstraintType, CWEType, CWGroup, CWPermission, CWProperty, CWRType, CWRelation, CWSource, CWUniqueTogetherConstraint, Comment, Division, Email, EmailAddress, EmailPart, EmailThread, ExternalUri, File, Folder, Old, Personne, RQLExpression, Societe, SubDivision, SubWorkflowExitPoint, Tag, TrInfo, Transition, Workflow, WorkflowTransition)',
                              [{'X': 'BaseTransition'}, {'X': 'Bookmark'},
                               {'X': 'CWAttribute'}, {'X': 'CWCache'},
                               {'X': 'CWConstraint'}, {'X': 'CWConstraintType'},
@@ -933,7 +934,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                               {'X': 'Email'}, {'X': 'EmailAddress'},
                               {'X': 'EmailPart'}, {'X': 'EmailThread'},
                               {'X': 'ExternalUri'}, {'X': 'File'},
-                              {'X': 'Folder'},
+                              {'X': 'Folder'}, {'X': 'Old'},
                               {'X': 'Personne'}, {'X': 'RQLExpression'},
                               {'X': 'Societe'}, {'X': 'SubDivision'},
                               {'X': 'SubWorkflowExitPoint'}, {'X': 'Tag'},
@@ -957,7 +958,7 @@ class MSPlannerTC(BaseMSPlannerTC):
         ueid = self.session.user.eid
         X_ET_ALL_SOLS = []
         for s in X_ALL_SOLS:
-            if s in ({'X': 'CWSourceHostConfig'}, {'X': 'CWSourceSchemaConfig'}):
+            if s in ({'X': 'CWSourceHostConfig'}, {'X': 'CWSourceSchemaConfig'}, {'X': 'CWDataImport'}):
                 continue # not authorized
             ets = {'ET': 'CWEType'}
             ets.update(s)
@@ -986,11 +987,12 @@ class MSPlannerTC(BaseMSPlannerTC):
                        [self.system], {'X': 'table3.C0'}, {'ET': 'table0.C0', 'X': 'table0.C1'}, []),
                       # extra UnionFetchStep could be avoided but has no cost, so don't care
                       ('UnionFetchStep',
-                       [('FetchStep', [('Any ET,X WHERE X is ET, ET is CWEType, X is IN(BaseTransition, Bookmark, CWAttribute, CWCache, CWConstraint, CWConstraintType, CWEType, CWGroup, CWPermission, CWProperty, CWRType, CWRelation, CWSource, CWUniqueTogetherConstraint, Comment, Division, Email, EmailAddress, EmailPart, EmailThread, ExternalUri, File, Folder, Personne, RQLExpression, Societe, SubDivision, SubWorkflowExitPoint, Tag, TrInfo, Transition, Workflow, WorkflowTransition)',
+                       [('FetchStep', [('Any ET,X WHERE X is ET, ET is CWEType, X is IN(BaseTransition, Bookmark, CWAttribute, CWCache, CWConstraint, CWConstraintType, CWEType, CWGroup, CWPermission, CWProperty, CWRType, CWRelation, CWSource, CWUniqueTogetherConstraint, Comment, Division, Email, EmailAddress, EmailPart, EmailThread, ExternalUri, File, Folder, Old, Personne, RQLExpression, Societe, SubDivision, SubWorkflowExitPoint, Tag, TrInfo, Transition, Workflow, WorkflowTransition)',
                                         [{'X': 'BaseTransition', 'ET': 'CWEType'},
                                          {'X': 'Bookmark', 'ET': 'CWEType'}, {'X': 'CWAttribute', 'ET': 'CWEType'},
                                          {'X': 'CWCache', 'ET': 'CWEType'}, {'X': 'CWConstraint', 'ET': 'CWEType'},
-                                         {'X': 'CWConstraintType', 'ET': 'CWEType'}, {'X': 'CWEType', 'ET': 'CWEType'},
+                                         {'X': 'CWConstraintType', 'ET': 'CWEType'},
+                                         {'X': 'CWEType', 'ET': 'CWEType'},
                                          {'X': 'CWGroup', 'ET': 'CWEType'}, {'X': 'CWPermission', 'ET': 'CWEType'},
                                          {'X': 'CWProperty', 'ET': 'CWEType'}, {'X': 'CWRType', 'ET': 'CWEType'},
                                          {'X': 'CWSource', 'ET': 'CWEType'},
@@ -1001,7 +1003,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                                          {'X': 'EmailAddress', 'ET': 'CWEType'}, {'X': 'EmailPart', 'ET': 'CWEType'},
                                          {'X': 'EmailThread', 'ET': 'CWEType'}, {'X': 'ExternalUri', 'ET': 'CWEType'},
                                          {'X': 'File', 'ET': 'CWEType'}, {'X': 'Folder', 'ET': 'CWEType'},
-                                         {'X': 'Personne', 'ET': 'CWEType'},
+                                         {'X': 'Old', 'ET': 'CWEType'}, {'X': 'Personne', 'ET': 'CWEType'},
                                          {'X': 'RQLExpression', 'ET': 'CWEType'}, {'X': 'Societe', 'ET': 'CWEType'},
                                          {'X': 'SubDivision', 'ET': 'CWEType'}, {'X': 'SubWorkflowExitPoint', 'ET': 'CWEType'},
                                          {'X': 'Tag', 'ET': 'CWEType'}, {'X': 'TrInfo', 'ET': 'CWEType'},
@@ -2661,7 +2663,7 @@ class MSPlannerTwoSameExternalSourcesTC(BasePlannerTC):
                      None, {'X': 'table0.C0'}, []),
                     ('UnionStep', None, None,
                      [('OneFetchStep',
-                       [(u'Any X WHERE X owned_by U, U login "anon", U is CWUser, X is IN(Affaire, BaseTransition, Basket, Bookmark, CWAttribute, CWCache, CWConstraint, CWConstraintType, CWEType, CWGroup, CWPermission, CWProperty, CWRType, CWRelation, CWSource, CWSourceHostConfig, CWSourceSchemaConfig, CWUniqueTogetherConstraint, CWUser, Division, Email, EmailAddress, EmailPart, EmailThread, ExternalUri, File, Folder, Personne, RQLExpression, Societe, SubDivision, SubWorkflowExitPoint, Tag, TrInfo, Transition, Workflow, WorkflowTransition)',
+                       [(u'Any X WHERE X owned_by U, U login "anon", U is CWUser, X is IN(Affaire, BaseTransition, Basket, Bookmark, CWAttribute, CWCache, CWConstraint, CWConstraintType, CWDataImport, CWEType, CWGroup, CWPermission, CWProperty, CWRType, CWRelation, CWSource, CWSourceHostConfig, CWSourceSchemaConfig, CWUniqueTogetherConstraint, CWUser, Division, Email, EmailAddress, EmailPart, EmailThread, ExternalUri, File, Folder, Old, Personne, RQLExpression, Societe, SubDivision, SubWorkflowExitPoint, Tag, TrInfo, Transition, Workflow, WorkflowTransition)',
                          [{'U': 'CWUser', 'X': 'Affaire'},
                           {'U': 'CWUser', 'X': 'BaseTransition'},
                           {'U': 'CWUser', 'X': 'Basket'},
@@ -2670,6 +2672,7 @@ class MSPlannerTwoSameExternalSourcesTC(BasePlannerTC):
                           {'U': 'CWUser', 'X': 'CWCache'},
                           {'U': 'CWUser', 'X': 'CWConstraint'},
                           {'U': 'CWUser', 'X': 'CWConstraintType'},
+                          {'U': 'CWUser', 'X': 'CWDataImport'},
                           {'U': 'CWUser', 'X': 'CWEType'},
                           {'U': 'CWUser', 'X': 'CWGroup'},
                           {'U': 'CWUser', 'X': 'CWPermission'},
@@ -2689,6 +2692,7 @@ class MSPlannerTwoSameExternalSourcesTC(BasePlannerTC):
                           {'U': 'CWUser', 'X': 'ExternalUri'},
                           {'U': 'CWUser', 'X': 'File'},
                           {'U': 'CWUser', 'X': 'Folder'},
+                          {'U': 'CWUser', 'X': 'Old'},
                           {'U': 'CWUser', 'X': 'Personne'},
                           {'U': 'CWUser', 'X': 'RQLExpression'},
                           {'U': 'CWUser', 'X': 'Societe'},

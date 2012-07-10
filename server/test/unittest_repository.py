@@ -98,13 +98,13 @@ class RepositoryTC(CubicWebTC):
                                            ('nom', 'prenom', 'inline2'))
 
     def test_all_entities_have_owner(self):
-        self.failIf(self.execute('Any X WHERE NOT X owned_by U'))
+        self.assertFalse(self.execute('Any X WHERE NOT X owned_by U'))
 
     def test_all_entities_have_is(self):
-        self.failIf(self.execute('Any X WHERE NOT X is ET'))
+        self.assertFalse(self.execute('Any X WHERE NOT X is ET'))
 
     def test_all_entities_have_cw_source(self):
-        self.failIf(self.execute('Any X WHERE NOT X cw_source S'))
+        self.assertFalse(self.execute('Any X WHERE NOT X cw_source S'))
 
     def test_connect(self):
         cnxid = self.repo.connect(self.admlogin, password=self.admpassword)
@@ -147,7 +147,7 @@ class RepositoryTC(CubicWebTC):
                           'INSERT CWUser X: X login %(login)s, X upassword %(passwd)s',
                           {'login': u"tutetute", 'passwd': 'tutetute'})
         self.assertRaises(ValidationError, self.repo.commit, cnxid)
-        self.failIf(self.repo.execute(cnxid, 'CWUser X WHERE X login "tutetute"'))
+        self.assertFalse(self.repo.execute(cnxid, 'CWUser X WHERE X login "tutetute"'))
         self.repo.close(cnxid)
 
     def test_rollback_on_execute_validation_error(self):
@@ -160,12 +160,12 @@ class RepositoryTC(CubicWebTC):
         with self.temporary_appobjects(ValidationErrorAfterHook):
             self.assertRaises(ValidationError,
                               self.execute, 'SET X name "toto" WHERE X is CWGroup, X name "guests"')
-            self.failUnless(self.execute('Any X WHERE X is CWGroup, X name "toto"'))
+            self.assertTrue(self.execute('Any X WHERE X is CWGroup, X name "toto"'))
             with self.assertRaises(QueryError) as cm:
                 self.commit()
             self.assertEqual(str(cm.exception), 'transaction must be rollbacked')
             self.rollback()
-            self.failIf(self.execute('Any X WHERE X is CWGroup, X name "toto"'))
+            self.assertFalse(self.execute('Any X WHERE X is CWGroup, X name "toto"'))
 
     def test_rollback_on_execute_unauthorized(self):
         class UnauthorizedAfterHook(Hook):
@@ -177,12 +177,12 @@ class RepositoryTC(CubicWebTC):
         with self.temporary_appobjects(UnauthorizedAfterHook):
             self.assertRaises(Unauthorized,
                               self.execute, 'SET X name "toto" WHERE X is CWGroup, X name "guests"')
-            self.failUnless(self.execute('Any X WHERE X is CWGroup, X name "toto"'))
+            self.assertTrue(self.execute('Any X WHERE X is CWGroup, X name "toto"'))
             with self.assertRaises(QueryError) as cm:
                 self.commit()
             self.assertEqual(str(cm.exception), 'transaction must be rollbacked')
             self.rollback()
-            self.failIf(self.execute('Any X WHERE X is CWGroup, X name "toto"'))
+            self.assertFalse(self.execute('Any X WHERE X is CWGroup, X name "toto"'))
 
 
     def test_close(self):
@@ -364,13 +364,13 @@ class RepositoryTC(CubicWebTC):
             cnx.load_appobjects(subpath=('entities',))
             # check we can get the schema
             schema = cnx.get_schema()
-            self.failUnless(cnx.vreg)
-            self.failUnless('etypes'in cnx.vreg)
+            self.assertTrue(cnx.vreg)
+            self.assertTrue('etypes'in cnx.vreg)
             cu = cnx.cursor()
             rset = cu.execute('Any U,G WHERE U in_group G')
             user = iter(rset.entities()).next()
-            self.failUnless(user._cw)
-            self.failUnless(user._cw.vreg)
+            self.assertTrue(user._cw)
+            self.assertTrue(user._cw.vreg)
             from cubicweb.entities import authobjs
             self.assertIsInstance(user._cw.user, authobjs.CWUser)
             cnx.close()
@@ -425,7 +425,7 @@ class RepositoryTC(CubicWebTC):
 
     def test_schema_is_relation(self):
         no_is_rset = self.execute('Any X WHERE NOT X is ET')
-        self.failIf(no_is_rset, no_is_rset.description)
+        self.assertFalse(no_is_rset, no_is_rset.description)
 
 #     def test_perfo(self):
 #         self.set_debug(True)
@@ -509,7 +509,7 @@ class RepositoryTC(CubicWebTC):
             events = ('before_update_entity',)
             def __call__(self):
                 # invoiced attribute shouldn't be considered "edited" before the hook
-                self._test.failIf('invoiced' in self.entity.cw_edited,
+                self._test.assertFalse('invoiced' in self.entity.cw_edited,
                                   'cw_edited cluttered by previous update')
                 self.entity.cw_edited['invoiced'] = 10
         with self.temporary_appobjects(DummyBeforeHook):
@@ -582,7 +582,7 @@ class FTITC(CubicWebTC):
         self.session.set_cnxset()
         cu = self.session.system_sql('SELECT mtime FROM entities WHERE eid = %s' % eidp)
         mtime = cu.fetchone()[0]
-        self.failUnless(omtime < mtime)
+        self.assertTrue(omtime < mtime)
         self.commit()
         date, modified, deleted = self.repo.entities_modified_since(('Personne',), omtime)
         self.assertEqual(modified, [('Personne', eidp)])
@@ -627,7 +627,7 @@ class FTITC(CubicWebTC):
     def test_no_uncessary_ftiindex_op(self):
         req = self.request()
         req.create_entity('Workflow', name=u'dummy workflow', description=u'huuuuu')
-        self.failIf(any(x for x in self.session.pending_operations
+        self.assertFalse(any(x for x in self.session.pending_operations
                         if isinstance(x, native.FTIndexEntityOp)))
 
 
@@ -639,7 +639,7 @@ class DBInitTC(CubicWebTC):
                           [u'system.version.basket', u'system.version.card', u'system.version.comment',
                            u'system.version.cubicweb', u'system.version.email',
                            u'system.version.file', u'system.version.folder',
-                           u'system.version.tag'])
+                           u'system.version.localperms', u'system.version.tag'])
 
 CALLED = []
 

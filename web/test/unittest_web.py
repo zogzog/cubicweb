@@ -34,8 +34,8 @@ class AjaxReplaceUrlTC(TestCase):
         arurl = req.ajax_replace_url
         # NOTE: for the simplest use cases, we could use doctest
         url = arurl('foo', **kwargs)
-        self.failUnless(url.startswith('javascript:'))
-        self.failUnless(url.endswith('()'))
+        self.assertTrue(url.startswith('javascript:'))
+        self.assertTrue(url.endswith('()'))
         cbname = url.split()[1][:-2]
         self.assertMultiLineEqual(
             'function %s() { $("#foo").loadxhtml("http://testing.fr/cubicweb/json?%s",{"pageid": "%s"},"get","replace"); }' % (cbname, qs, req.pageid),

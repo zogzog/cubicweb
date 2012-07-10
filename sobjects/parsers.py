@@ -233,13 +233,13 @@ class CWEntityXMLParser(datafeed.DataFeedXMLParser):
             try:
                 related_items = rels[role][rtype]
             except KeyError:
-                self.source.error('relation %s-%s not found in xml export of %s',
-                                  rtype, role, etype)
+                self.import_log.record_error('relation %s-%s not found in xml export of %s'
+                                             % (rtype, role, etype))
                 continue
             try:
                 linker = self.select_linker(action, rtype, role, entity)
             except RegistryException:
-                self.source.error('no linker for action %s', action)
+                self.import_log.record_error('no linker for action %s' % action)
             else:
                 linker.link_items(related_items, rules)
 
@@ -430,15 +430,15 @@ class CWEntityXMLActionLink(CWEntityXMLActionCopy):
         def issubset(x,y):
             return all(z in y for z in x)
         eids = [] # local eids
-        source = self.parser.source
+        log = self.parser.import_log
         for item, rels in others:
             if item['cwtype'] != ttype:
                 continue
             if not issubset(searchattrs, item):
                 item, rels = self.parser.complete_item(item, rels)
                 if not issubset(searchattrs, item):
-                    source.error('missing attribute, got %s expected keys %s',
-                                 item, searchattrs)
+                    log.record_error('missing attribute, got %s expected keys %s'
+                                     % (item, searchattrs))
                     continue
             # XXX str() needed with python < 2.6
             kwargs = dict((str(attr), item[attr]) for attr in searchattrs)
@@ -449,11 +449,11 @@ class CWEntityXMLActionLink(CWEntityXMLActionCopy):
                 entity = self._cw.create_entity(item['cwtype'], **kwargs)
             else:
                 if len(targets) > 1:
-                    source.error('ambiguous link: found %s entity %s with attributes %s',
-                                 len(targets), item['cwtype'], kwargs)
+                    log.record_error('ambiguous link: found %s entity %s with attributes %s'
+                                     % (len(targets), item['cwtype'], kwargs))
                 else:
-                    source.error('can not find %s entity with attributes %s',
-                                 item['cwtype'], kwargs)
+                    log.record_error('can not find %s entity with attributes %s'
+                                     % (item['cwtype'], kwargs))
                 continue
             eids.append(entity.eid)
             self.parser.process_relations(entity, rels)

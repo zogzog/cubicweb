@@ -34,12 +34,12 @@ class ActionsTC(CubicWebTC):
         req = self.request()
         rset = self.execute('Any X WHERE X login "admin"', req=req)
         actions = self.vreg['actions'].poss_visible_objects(req, rset=rset)
-        self.failUnless([action for action in actions if action.__regid__ == 'sendemail'])
+        self.assertTrue([action for action in actions if action.__regid__ == 'sendemail'])
         self.login('anon')
         req = self.request()
         rset = self.execute('Any X WHERE X login "anon"', req=req)
         actions = self.vreg['actions'].poss_visible_objects(req, rset=rset)
-        self.failIf([action for action in actions if action.__regid__ == 'sendemail'])
+        self.assertFalse([action for action in actions if action.__regid__ == 'sendemail'])
 
 if __name__ == '__main__':
     unittest_main()

@@ -25,11 +25,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 from email.header import Header
-try:
-    from socket import gethostname
-except ImportError:
-    def gethostname(): # gae
-        return 'XXX'
+from socket import gethostname
 
 from cubicweb.view import EntityView
 from cubicweb.entity import Entity

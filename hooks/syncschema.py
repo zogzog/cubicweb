@@ -268,9 +268,8 @@ class CWETypeAddOp(MemSchemaOperation):
             try:
                 rschema = schema[rtype]
             except KeyError:
-                if rtype == 'cw_source':
-                    continue # XXX 3.10 migration
-                raise
+                self.critical('rtype %s was not handled at cwetype creation time', rtype)
+                continue
             sampletype = rschema.subjects()[0]
             desttype = rschema.objects()[0]
             rdef = copy(rschema.rdef(sampletype, desttype))
@@ -300,6 +299,9 @@ class CWETypeRenameOp(MemSchemaOperation):
         self.info('renamed table %s to %s', oldname, newname)
         sqlexec('UPDATE entities SET type=%(newname)s WHERE type=%(oldname)s',
                 {'newname': newname, 'oldname': oldname})
+        for eid, (etype, uri, extid, auri) in self.session.repo._type_source_cache.items():
+            if etype == oldname:
+                self.session.repo._type_source_cache[eid] = (newname, uri, extid, auri)
         sqlexec('UPDATE deleted_entities SET type=%(newname)s WHERE type=%(oldname)s',
                 {'newname': newname, 'oldname': oldname})
         # XXX transaction records
@@ -484,8 +486,17 @@ class CWAttributeAddOp(MemSchemaOperation):
         # set default value, using sql for performance and to avoid
         # modification_date update
         if default:
-            session.system_sql('UPDATE %s SET %s=%%(default)s' % (table, column),
-                               {'default': default})
+            if rdefdef.object in ('Date', 'Datetime', 'TZDatetime'):
+                # XXX may may want to use creation_date
+                if default == 'TODAY':
+                    default = syssource.dbhelper.sql_current_date()
+                elif default == 'NOW':
+                    default = syssource.dbhelper.sql_current_timestamp()
+                session.system_sql('UPDATE %s SET %s=%s'
+                                   % (table, column, default))
+            else:
+                session.system_sql('UPDATE %s SET %s=%%(default)s' % (table, column),
+                                   {'default': default})
 
     def revertprecommit_event(self):
         # revert changes on in memory schema

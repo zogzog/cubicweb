@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -111,21 +111,12 @@ class TableViewTC(CubicWebTC):
 
     def test_sortvalue(self):
         e, _, view = self._prepare_entity()
-        expected = ['<toto>', 'loo"ong blabla'[:10], e.creation_date.strftime('%Y/%m/%d %H:%M:%S')]
-        got = [loadjson(view.sortvalue(0, i)) for i in xrange(3)]
-        self.assertListEqual(got, expected)
+        colrenderers = view.build_column_renderers()[:3]
+        self.assertListEqual([renderer.sortvalue(0) for renderer in colrenderers],
+                             [u'<toto>', u'loo"ong blabla', e.creation_date])
         # XXX sqlite does not handle Interval correctly
         # value = loadjson(view.sortvalue(0, 3))
         # self.assertAlmostEquals(value, rset.rows[0][3].seconds)
-
-    def test_sortvalue_with_display_col(self):
-        e, rset, view = self._prepare_entity()
-        labels = view.columns_labels()
-        table = TableWidget(view)
-        table.columns = view.get_columns(labels, [1, 2], None, None, None, None, 0)
-        expected = ['loo"ong blabla'[:10], e.creation_date.strftime('%Y/%m/%d %H:%M:%S')]
-        got = [loadjson(value) for _, value in table.itercols(0)]
-        self.assertListEqual(got, expected)
 
 
 class HTMLStreamTests(CubicWebTC):

@@ -75,6 +75,7 @@ Other widgets
 
 .. autoclass:: cubicweb.web.formwidgets.PasswordInput
 .. autoclass:: cubicweb.web.formwidgets.IntervalWidget
+.. autoclass:: cubicweb.web.formwidgets.BitSelect
 .. autoclass:: cubicweb.web.formwidgets.HorizontalLayoutWidget
 .. autoclass:: cubicweb.web.formwidgets.EditableURLWidget
 
@@ -285,13 +286,6 @@ class FieldWidget(object):
     def values_and_attributes(self, form, field):
         return self.values(form, field), self.attributes(form, field)
 
-    @deprecated('[3.6] use values_and_attributes')
-    def _render_attrs(self, form, field):
-        """return html tag name, attributes and a list of values for the field
-        """
-        values, attrs = self.values_and_attributes(form, field)
-        return field.input_name(form, self.suffix), values, attrs
-
 
 class Input(FieldWidget):
     """abstract widget class for <input> tag based widgets"""
@@ -435,7 +429,7 @@ class Select(FieldWidget):
     an unicode string, or a list of unicode strings.
     """
     vocabulary_widget = True
-    default_size = 5
+    default_size = 10
 
     def __init__(self, attrs=None, multiple=False, **kwargs):
         super(Select, self).__init__(attrs, **kwargs)
@@ -459,7 +453,7 @@ class Select(FieldWidget):
                 oattrs.setdefault('label', label or '')
                 options.append(u'<optgroup %s>' % uilib.sgml_attributes(oattrs))
                 optgroup_opened = True
-            elif value in curvalues:
+            elif self.value_selected(value, curvalues):
                 options.append(tags.option(label, value=value,
                                            selected='selected', **oattrs))
             else:
@@ -474,6 +468,104 @@ class Select(FieldWidget):
             attrs['size'] = size
         return tags.select(name=field.input_name(form, self.suffix),
                            multiple=self._multiple, options=options, **attrs)
+
+    def value_selected(self, value, curvalues):
+        return value in curvalues
+
+
+class InOutWidget(Select):
+    needs_js = ('cubicweb.widgets.js', )
+    default_size = 10
+    template = """
+<table id="%(widgetid)s">
+  <tr>
+    <td>%(inoutinput)s</td>
+    <td><div style="margin-bottom:3px">%(addinput)s</div>
+        <div>%(removeinput)s</div>
+    </td>
+    <td>%(resinput)s</td>
+  </tr>
+</table>
+"""
+    add_button = ('<input type="button" id="cwinoutadd" class="wdgButton cwinoutadd" '
+                  'value="&gt;&gt;" size="10" />')
+    remove_button = ('<input type="button" class="wdgButton cwinoutremove" '
+                     'value="&lt;&lt;" size="10" />')
+
+    def __init__(self, *args, **kwargs):
+        super(InOutWidget, self).__init__(*args, **kwargs)
+        self._multiple = True
+
+    def render_select(self, form, field, name, selected=False):
+        values, attrs = self.values_and_attributes(form, field)
+        options = []
+        inputs = []
+        for option in field.vocabulary(form):
+            try:
+                label, value, _oattrs = option
+            except ValueError:
+                label, value = option
+            if selected:
+                # add values
+                if value in values:
+                    options.append(tags.option(label, value=value))
+                    # add hidden inputs
+                    inputs.append(tags.input(value=value,
+                                             name=field.dom_id(form),
+                                             type="hidden"))
+            else:
+                options.append(tags.option(label, value=value))
+        if 'size' not in attrs:
+            attrs['size'] = self.default_size
+        if 'id' in attrs :
+            attrs.pop('id')
+        return tags.select(name=name, multiple=self._multiple, id=name,
+                           options=options, **attrs) + '\n'.join(inputs)
+
+
+    def _render(self, form, field, renderer):
+        domid = field.dom_id(form)
+        jsnodes = {'widgetid': domid,
+                   'from': 'from_' + domid,
+                   'to': 'to_' + domid}
+        form._cw.add_onload(u'$(cw.jqNode("%s")).cwinoutwidget("%s", "%s");'
+                            % (jsnodes['widgetid'], jsnodes['from'], jsnodes['to']))
+        field.required = True
+        return (self.template %
+                {'widgetid': jsnodes['widgetid'],
+                 # helpinfo select tag
+                 'inoutinput' : self.render_select(form, field, jsnodes['from']),
+                 # select tag with resultats
+                 'resinput' : self.render_select(form, field, jsnodes['to'], selected=True),
+                 'addinput' : self.add_button % jsnodes,
+                 'removeinput': self.remove_button % jsnodes
+                 })
+
+class BitSelect(Select):
+    """Select widget for IntField using a vocabulary with bit masks as values.
+
+    See also :class:`~cubicweb.web.facet.BitFieldFacet`.
+    """
+    def __init__(self, attrs=None, multiple=True, **kwargs):
+        super(BitSelect, self).__init__(attrs, multiple=multiple, **kwargs)
+
+    def value_selected(self, value, curvalues):
+        mask = reduce(lambda x, y: int(x) | int(y), curvalues, 0)
+        return int(value) & mask
+
+    def process_field_data(self, form, field):
+        """Return process posted value(s) for widget and return something
+        understandable by the associated `field`. That value may be correctly
+        typed or a string that the field may parse.
+        """
+        val = super(BitSelect, self).process_field_data(form, field)
+        if isinstance(val, list):
+            val = reduce(lambda x, y: int(x) | int(y), val, 0)
+        elif val:
+            val = int(val)
+        else:
+            val = 0
+        return val
 
 
 class CheckBox(Input):
@@ -734,14 +826,7 @@ class AutoCompletionWidget(TextInput):
     def __init__(self, *args, **kwargs):
         self.autocomplete_settings = kwargs.pop('autocomplete_settings',
                                                 self.default_settings)
-        try:
-            self.autocomplete_initfunc = kwargs.pop('autocomplete_initfunc')
-        except KeyError:
-            warn('[3.6] use autocomplete_initfunc argument of %s constructor '
-                 'instead of relying on autocomplete_initfuncs dictionary on '
-                 'the entity class' % self.__class__.__name__,
-                 DeprecationWarning)
-            self.autocomplete_initfunc = None
+        self.autocomplete_initfunc = kwargs.pop('autocomplete_initfunc')
         super(AutoCompletionWidget, self).__init__(*args, **kwargs)
 
     def values(self, form, field):
@@ -763,11 +848,7 @@ class AutoCompletionWidget(TextInput):
         return super(AutoCompletionWidget, self)._render(form, field, renderer)
 
     def _get_url(self, entity, field):
-        if self.autocomplete_initfunc is None:
-            # XXX for bw compat
-            fname = entity.autocomplete_initfuncs[field.name]
-        else:
-            fname = self.autocomplete_initfunc
+        fname = self.autocomplete_initfunc
         return entity._cw.build_url('json', fname=fname, mode='remote',
                                     pageid=entity._cw.pageid)
 
@@ -778,12 +859,7 @@ class StaticFileAutoCompletionWidget(AutoCompletionWidget):
     wdgtype = 'StaticFileSuggestField'
 
     def _get_url(self, entity, field):
-        if self.autocomplete_initfunc is None:
-            # XXX for bw compat
-            fname = entity.autocomplete_initfuncs[field.name]
-        else:
-            fname = self.autocomplete_initfunc
-        return entity._cw.data_url(fname)
+        return entity._cw.data_url(self.autocomplete_initfunc)
 
 
 class RestrictedAutoCompletionWidget(AutoCompletionWidget):
@@ -1015,55 +1091,3 @@ class ImgButton(object):
             'label': label, 'imgsrc': imgsrc,
             'domid': self.domid, 'href': self.href}
 
-class InOutWidget(Select):
-    needs_js = ('cubicweb.widgets.js', )
-    template = """
-<table id="%(widgetid)s">
-<tr><td>%(inoutinput)s</td>
-    <td><div style="margin-bottom:3px">%(addinput)s</div> <div>%(removeinput)s</div></td>
-    <td>%(resinput)s</td></tr>
-</table>
-"""
-    add_button = """<input type="button" id="cwinoutadd"  class="wdgButton cwinoutadd" value="&gt;&gt;" size="10" />"""
-    remove_button ="""<input type="button" class="wdgButton cwinoutremove" value="&lt;&lt;" size="10" />"""
-
-    def __init__(self, attrs=None):
-        super(InOutWidget, self).__init__(attrs, multiple=True)
-
-    def render_select(self, form, field, name, selected=False):
-        values, attrs = self.values_and_attributes(form, field)
-        options = []
-        inputs = []
-        for _option in field.vocabulary(form):
-            try:
-                label, value, oattrs = _option
-            except ValueError:
-                label, value = _option
-            if selected:
-                # add values
-                if value in values:
-                    options.append(tags.option(label, value=value))
-                    # add hidden inputs
-                    inputs.append(tags.input(value=value, name=field.dom_id(form), type="hidden"))
-            else:
-                options.append(tags.option(label, value=value))
-        if 'size' not in attrs:
-            attrs['size'] = 5
-        if 'id' in attrs :
-            attrs.pop('id')
-        return tags.select(name=name, multiple=self._multiple, id=name,
-                           options=options, **attrs) + '\n'.join(inputs)
-
-
-    def _render(self, form, field, renderer):
-        domid = field.dom_id(form)
-        jsnodes = {'widgetid': domid, 'from': 'from_' + domid, 'to': 'to_' + domid}
-        form._cw.add_onload(u'$(cw.jqNode("%s")).cwinoutwidget("%s", "%s");'
-                            % (jsnodes['widgetid'], jsnodes['from'], jsnodes['to']))
-        field.required=True
-        return self.template % {'widgetid': jsnodes['widgetid'],
-                                'inoutinput' : self.render_select(form, field, jsnodes['from']), # helpinfo select tag
-                                'resinput' : self.render_select(form, field, jsnodes['to'], selected=True), # select tag with resultats
-                                'addinput' : self.add_button % jsnodes,
-                                'removeinput': self.remove_button % jsnodes
-                                }

@@ -21,6 +21,8 @@ __docformat__ = "restructuredtext en"
 
 from warnings import warn
 
+from logilab.common.deprecation import deprecated
+
 from rql.utils import rqlvar_maker
 
 from cubicweb import Binary, ValidationError, typed_eid
@@ -35,6 +37,13 @@ class IEditControlAdapter(EntityAdapter):
     __needs_bw_compat__ = True
     __regid__ = 'IEditControl'
     __select__ = is_instance('Any')
+
+    def __init__(self, _cw, **kwargs):
+        if self.__class__ is not IEditControlAdapter:
+            warn('[3.14] IEditControlAdapter is deprecated, override EditController'
+                 ' using match_edited_type or match_form_id selectors for example.',
+                 DeprecationWarning)
+        super(IEditControlAdapter, self).__init__(_cw, **kwargs)
 
     @implements_adapter_compat('IEditControl')
     def after_deletion_path(self):
@@ -140,12 +149,6 @@ class EditController(basecontrollers.ViewController):
             todelete = req.list_form_param('__delete', req.form, pop=True)
             if todelete:
                 autoform.delete_relations(self._cw, todelete)
-        if req.form.has_key('__insert'):
-            warn('[3.6] stop using __insert, support will be removed',
-                 DeprecationWarning)
-            toinsert = req.list_form_param('__insert', req.form, pop=True)
-            if toinsert:
-                autoform.insert_relations(self._cw, toinsert)
         self._cw.remove_pending_operations()
         if self.errors:
             errors = dict((f.name, unicode(ex)) for f, ex in self.errors)

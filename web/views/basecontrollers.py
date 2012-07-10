@@ -31,14 +31,10 @@ from cubicweb.utils import UStringIO, json, json_dumps
 from cubicweb.uilib import exc_message
 from cubicweb.selectors import authenticated_user, anonymous_user, match_form_params
 from cubicweb.mail import format_mail
-from cubicweb.web import Redirect, RemoteCallFailed, DirectResponse
+from cubicweb.web import Redirect, RemoteCallFailed, DirectResponse, facet
 from cubicweb.web.controller import Controller
 from cubicweb.web.views import vid_from_rset, formrenderers
 
-try:
-    from cubicweb.web import facet as facetbase
-except ImportError: # gae
-    facetbase = None
 
 def jsonize(func):
     """decorator to sets correct content_type and calls `json_dumps` on
@@ -353,8 +349,10 @@ class JSonController(Controller):
             if vtitle:
                 stream.write(u'<h1 class="vtitle">%s</h1>\n' % vtitle)
             paginate = True
-        if paginate:
-            view.paginate()
+        nav_html = UStringIO()
+        if paginate and not view.handle_pagination:
+            view.paginate(w=nav_html.write)
+        stream.write(nav_html.getvalue())
         if divid == 'pageContent':
             stream.write(u'<div id="contentmain">')
         view.render(**kwargs)
@@ -364,7 +362,7 @@ class JSonController(Controller):
             stream.write(extresources)
             stream.write(u'</div>\n')
         if divid == 'pageContent':
-            stream.write(u'</div></div>')
+            stream.write(u'</div>%s</div>' % nav_html.getvalue())
         return stream.getvalue()
 
     @xhtmlize
@@ -489,25 +487,24 @@ class JSonController(Controller):
             return None
         return cb(self._cw)
 
-    if facetbase is not None:
-        @jsonize
-        def js_filter_build_rql(self, names, values):
-            form = self._rebuild_posted_form(names, values)
-            self._cw.form = form
-            builder = facetbase.FilterRQLBuilder(self._cw)
-            return builder.build_rql()
+    @jsonize
+    def js_filter_build_rql(self, names, values):
+        form = self._rebuild_posted_form(names, values)
+        self._cw.form = form
+        builder = facet.FilterRQLBuilder(self._cw)
+        return builder.build_rql()
 
-        @jsonize
-        def js_filter_select_content(self, facetids, rql, mainvar):
-            # Union unsupported yet
-            select = self._cw.vreg.parse(self._cw, rql).children[0]
-            filtered_variable = facetbase.get_filtered_variable(select, mainvar)
-            facetbase.prepare_select(select, filtered_variable)
-            update_map = {}
-            for facetid in facetids:
-                facet = facetbase.get_facet(self._cw, facetid, select, filtered_variable)
-                update_map[facetid] = facet.possible_values()
-            return update_map
+    @jsonize
+    def js_filter_select_content(self, facetids, rql, mainvar):
+        # Union unsupported yet
+        select = self._cw.vreg.parse(self._cw, rql).children[0]
+        filtered_variable = facet.get_filtered_variable(select, mainvar)
+        facet.prepare_select(select, filtered_variable)
+        update_map = {}
+        for fid in facetids:
+            fobj = facet.get_facet(self._cw, fid, select, filtered_variable)
+            update_map[fid] = fobj.possible_values()
+        return update_map
 
     def js_unregister_user_callback(self, cbname):
         self._cw.unregister_callback(self._cw.pageid, cbname)
@@ -583,12 +580,11 @@ class MailBugReportController(Controller):
     __select__ = match_form_params('description')
 
     def publish(self, rset=None):
-        body = self._cw.form['description']
-        self.sendmail(self._cw.config['submit-mail'],
-                      self._cw._('%s error report') % self._cw.config.appid,
-                      body)
-        url = self._cw.build_url(__message=self._cw._('bug report sent'))
-        raise Redirect(url)
+        req = self._cw
+        self.sendmail(req.vreg.config['submit-mail'],
+                      req._('%s error report') % req.vreg.config.appid,
+                      req.form['description'])
+        raise Redirect(req.build_url(__message=req._('bug report sent')))
 
 
 class UndoController(Controller):

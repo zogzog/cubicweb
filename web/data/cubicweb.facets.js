@@ -49,6 +49,7 @@ function facetFormContent($form) {
 }
 
 
+// XXX deprecate vidargs once TableView is gone
 function buildRQL(divid, vid, paginate, vidargs) {
     jQuery(CubicWeb).trigger('facets-content-loading', [divid, vid, paginate, vidargs]);
     var $form = $('#' + divid + 'Form');
@@ -77,7 +78,7 @@ function buildRQL(divid, vid, paginate, vidargs) {
         copyParam(zipped, extraparams, 'vid');
         extraparams['divid'] = divid;
         copyParam(zipped, extraparams, 'divid');
-        copyParam(zipped, extraparams, 'subvid');
+        copyParam(zipped, extraparams, 'subvid'); // XXX deprecate once TableView is gone
         copyParam(zipped, extraparams, 'fromformfilter');
         // paginate used to know if the filter box is acting, in which case we
         // want to reload action box to match current selection (we don't want
@@ -180,11 +181,11 @@ function initFacetBoxEvents(root) {
                         $this.find('img').each(function(i) {
                             if (this.getAttribute('cubicweb:unselimg')) {
                                 this.setAttribute('src', UNSELECTED_BORDER_IMG);
-                                this.setAttribute('alt', (_('not selected')));
+                                this.setAttribute('alt', (_("not selected")));
                             }
                             else {
                                 this.setAttribute('src', UNSELECTED_IMG);
-                                this.setAttribute('alt', (_('not selected')));
+                                this.setAttribute('alt', (_("not selected")));
                             }
                         });
                         var index = parseInt($this.attr('cubicweb:idx'));
@@ -212,7 +213,7 @@ function initFacetBoxEvents(root) {
                         }
                         jQuery(this).addClass('facetValueSelected');
                         var $img = jQuery(this).find('img');
-                        $img.attr('src', SELECTED_IMG).attr('alt', (_('selected')));
+                        $img.attr('src', SELECTED_IMG).attr('alt', (_("selected")));
                     }
                     buildRQL.apply(null, jsfacetargs);
                     facet.find('.facetBody').animate({
@@ -226,7 +227,7 @@ function initFacetBoxEvents(root) {
                         buildRQL.apply(null, jsfacetargs);
                     }
                 });
-                facet.find('div.facetTitle').click(function() {
+                facet.find('div.facetTitle.hideFacetBody').click(function() {
                     facet.find('div.facetBody').toggleClass('hidden').toggleClass('opened');
                     jQuery(this).toggleClass('opened');
                 });

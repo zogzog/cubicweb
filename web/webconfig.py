@@ -21,7 +21,7 @@ __docformat__ = "restructuredtext en"
 _ = unicode
 
 import os
-from os.path import join, exists, split
+from os.path import join, exists, split, isdir
 from warnings import warn
 
 from logilab.common.decorators import cached
@@ -115,6 +115,16 @@ class WebConfiguration(CubicWebConfiguration):
           'where the cubicweb web server is listening on port 8080.',
           'group': 'main', 'level': 3,
           }),
+        ('https-deny-anonymous',
+         {'type': 'yn',
+          'default': False,
+          'help': 'Prevent anonymous user to browse thought https version of '
+                  'the site (https-url). Login form will then be displayed '
+                  'until logged',
+          'group': 'web',
+          'level': 2
+         }
+          ),
         ('auth-mode',
          {'type' : 'choice',
           'choices' : ('cookie', 'http'),
@@ -201,6 +211,12 @@ have the python imaging library installed to use captcha)',
          {'type' : 'yn',
           'default': True,
           'help': 'use cubicweb.old.css instead of 3.9 cubicweb.css',
+          'group': 'web', 'level': 2,
+          }),
+        ('concat-resources',
+         {'type' : 'yn',
+          'default': True,
+          'help': 'use modconcat-like URLS to concat and serve JS / CSS files',
           'group': 'web', 'level': 2,
           }),
         ))
@@ -389,7 +405,8 @@ have the python imaging library installed to use captcha)',
         rdir, filename = split(rpath)
         if rdir:
             staticdir = join(staticdir, rdir)
-            os.makedirs(staticdir)
+            if not isdir(staticdir) and 'w' in mode:
+                os.makedirs(staticdir)
         return file(join(staticdir, filename), mode)
 
     def static_file_add(self, rpath, data):

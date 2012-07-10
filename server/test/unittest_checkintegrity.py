@@ -46,9 +46,9 @@ class CheckIntegrityTC(TestCase):
     def test_reindex_all(self):
         self.execute('INSERT Personne X: X nom "toto", X prenom "tutu"')
         self.session.commit(False)
-        self.failUnless(self.execute('Any X WHERE X has_text "tutu"'))
+        self.assertTrue(self.execute('Any X WHERE X has_text "tutu"'))
         reindex_entities(self.repo.schema, self.session, withpb=False)
-        self.failUnless(self.execute('Any X WHERE X has_text "tutu"'))
+        self.assertTrue(self.execute('Any X WHERE X has_text "tutu"'))
 
     def test_reindex_etype(self):
         self.execute('INSERT Personne X: X nom "toto", X prenom "tutu"')
@@ -56,8 +56,8 @@ class CheckIntegrityTC(TestCase):
         self.session.commit(False)
         reindex_entities(self.repo.schema, self.session, withpb=False,
                          etypes=('Personne',))
-        self.failUnless(self.execute('Any X WHERE X has_text "tutu"'))
-        self.failUnless(self.execute('Any X WHERE X has_text "toto"'))
+        self.assertTrue(self.execute('Any X WHERE X has_text "tutu"'))
+        self.assertTrue(self.execute('Any X WHERE X has_text "toto"'))
 
 if __name__ == '__main__':
     unittest_main()

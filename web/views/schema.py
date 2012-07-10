@@ -143,13 +143,13 @@ class SecurityViewMixIn(object):
 class SchemaView(tabs.TabsMixin, StartupView):
     """display schema information (graphically, listing tables...) in tabs"""
     __regid__ = 'schema'
-    title = _('instance schema')
+    title = _('data model schema')
     tabs = [_('schema-diagram'), _('schema-entity-types'),
             _('schema-relation-types')]
     default_tab = 'schema-diagram'
 
     def call(self):
-        self.w(u'<h1>%s</h1>' % self._cw._('Schema of the data model'))
+        self.w(u'<h1>%s</h1>' % self._cw._(self.title))
         self.render_tabs(self.tabs, self.default_tab)
 
 
@@ -204,11 +204,11 @@ class CWETypeDescriptionTab(tabs.PrimaryTab):
         _ = self._cw._
         # inheritance
         if entity.specializes:
-            self.w(u'<div>%s' % _('Parent class:'))
+            self.w(u'<div><strong>%s</strong>' % _('Parent class:'))
             self.wview('csv', entity.related('specializes', 'subject'))
             self.w(u'</div>')
         if entity.reverse_specializes:
-            self.w(u'<div>%s' % _('Sub-classes:'))
+            self.w(u'<div><strong>%s</strong>' % _('Sub-classes:'))
             self.wview('csv', entity.related('specializes', 'object'))
             self.w(u'</div>')
         # entity schema image
@@ -565,8 +565,14 @@ class CWSchemaDotPropsHandler(s2d.SchemaDotPropsHandler):
 
     def edge_properties(self, rschema, subjnode, objnode):
         """return default DOT drawing options for a relation schema"""
+        # Inheritance relation (i.e 'specializes').
+        if rschema is None:
+            kwargs = {'label': 'Parent class',
+                      'color' : 'grey',  'style' : 'filled',
+                      'arrowhead': 'empty',
+                      'fontsize': '10px'}
         # symmetric rels are handled differently, let yams decide what's best
-        if rschema.symmetric:
+        elif rschema.symmetric:
             kwargs = {'label': rschema.type,
                       'color': '#887788', 'style': 'dashed',
                       'dir': 'both', 'arrowhead': 'normal', 'arrowtail': 'normal',
@@ -676,14 +682,6 @@ class RQLExpressionIBreadCrumbsAdapter(ibreadcrumbs.IBreadCrumbsAdapter):
     def parent_entity(self):
         return self.entity.expression_of
 
-class CWPermissionIBreadCrumbsAdapter(ibreadcrumbs.IBreadCrumbsAdapter):
-    __select__ = is_instance('CWPermission')
-    def parent_entity(self):
-        # XXX useless with permission propagation
-        permissionof = getattr(self.entity, 'reverse_require_permission', ())
-        if len(permissionof) == 1:
-            return permissionof[0]
-
 
 # misc: facets, actions ########################################################
 
@@ -697,7 +695,7 @@ class ViewSchemaAction(action.Action):
     __regid__ = 'schema'
     __select__ = yes()
 
-    title = _("data model schema")
+    title = _('data model schema')
     order = 30
     category = 'manage'
 

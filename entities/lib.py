@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -39,7 +39,7 @@ def mangle_email(address):
 
 class EmailAddress(AnyEntity):
     __regid__ = 'EmailAddress'
-    fetch_attrs, fetch_order = fetch_config(['address', 'alias'])
+    fetch_attrs, cw_fetch_order = fetch_config(['address', 'alias'])
     rest_attr = 'eid'
 
     def dc_title(self):
@@ -53,10 +53,6 @@ class EmailAddress(AnyEntity):
 
     @property
     def prefered(self):
-        return self.prefered_form and self.prefered_form[0] or self
-
-    @deprecated('[3.6] use .prefered')
-    def canonical_form(self):
         return self.prefered_form and self.prefered_form[0] or self
 
     def related_emails(self, skipeids=None):
@@ -94,7 +90,7 @@ class EmailAddress(AnyEntity):
 class Bookmark(AnyEntity):
     """customized class for Bookmark entities"""
     __regid__ = 'Bookmark'
-    fetch_attrs, fetch_order = fetch_config(['title', 'path'])
+    fetch_attrs, cw_fetch_order = fetch_config(['title', 'path'])
 
     def actual_url(self):
         url = self._cw.build_url(self.path)
@@ -114,7 +110,7 @@ class Bookmark(AnyEntity):
 class CWProperty(AnyEntity):
     __regid__ = 'CWProperty'
 
-    fetch_attrs, fetch_order = fetch_config(['pkey', 'value'])
+    fetch_attrs, cw_fetch_order = fetch_config(['pkey', 'value'])
     rest_attr = 'pkey'
 
     def typed_value(self):
@@ -130,7 +126,7 @@ class CWProperty(AnyEntity):
 class CWCache(AnyEntity):
     """Cache"""
     __regid__ = 'CWCache'
-    fetch_attrs, fetch_order = fetch_config(['name'])
+    fetch_attrs, cw_fetch_order = fetch_config(['name'])
 
     def touch(self):
         self._cw.execute('SET X timestamp %(t)s WHERE X eid %(x)s',

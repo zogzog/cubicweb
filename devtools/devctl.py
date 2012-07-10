@@ -32,7 +32,7 @@ from warnings import warn
 from logilab.common import STD_BLACKLIST
 
 from cubicweb.__pkginfo__ import version as cubicwebversion
-from cubicweb import CW_SOFTWARE_ROOT as BASEDIR, BadCommandUsage
+from cubicweb import CW_SOFTWARE_ROOT as BASEDIR, BadCommandUsage, ExecutionError
 from cubicweb.cwctl import CWCTL
 from cubicweb.cwconfig import CubicWebNoAppConfiguration
 from cubicweb.toolsutils import (SKEL_EXCLUDE, Command, copy_skeleton,
@@ -263,10 +263,7 @@ def _iter_vreg_objids(vreg, done):
                 objid = '%s_%s' % (reg, obj.__regid__)
                 if objid in done:
                     break
-                try: # XXX < 3.6 bw compat
-                    pdefs = obj.property_defs
-                except AttributeError:
-                    pdefs = getattr(obj, 'cw_property_defs', {})
+                pdefs = getattr(obj, 'cw_property_defs', {})
                 if pdefs:
                     yield objid
                     done.add(objid)
@@ -306,7 +303,7 @@ class UpdateCubicWebCatalogCommand(Command):
         from logilab.common.shellutils import globfind, find, rm
         from logilab.common.modutils import get_module_files
         from cubicweb.i18n import extract_from_tal, execute
-        tempdir = tempfile.mkdtemp()
+        tempdir = tempfile.mkdtemp(prefix='cw-')
         cwi18ndir = WebConfiguration.i18n_lib_dir()
         print '-> extract schema messages.'
         schemapot = osp.join(tempdir, 'schema.pot')
@@ -380,7 +377,8 @@ class UpdateCubeCatalogCommand(Command):
                      for cube in DevConfiguration.available_cubes()]
             cubes = [cubepath for cubepath in cubes
                      if osp.exists(osp.join(cubepath, 'i18n'))]
-        update_cubes_catalogs(cubes)
+        if not update_cubes_catalogs(cubes):
+            raise ExecutionError("update cubes i18n catalog failed")
 
 
 def update_cubes_catalogs(cubes):
@@ -394,6 +392,7 @@ def update_cubes_catalogs(cubes):
             import traceback
             traceback.print_exc()
             print '-> error while updating catalogs for cube', cubedir
+            return False
         else:
             # instructions pour la suite
             if toedit:
@@ -402,6 +401,7 @@ def update_cubes_catalogs(cubes):
                 print '* ' + '\n* '.join(toedit)
                 print ('When you are done, run "cubicweb-ctl i18ninstance '
                        '<yourinstance>" to see changes in your instances.')
+            return True
 
 def update_cube_catalogs(cubedir):
     import shutil
@@ -726,7 +726,7 @@ class GenerateSchema(Command):
     min_args = max_args = 1
     options = [
         ('output-file',
-         {'type':'file', 'default': None,
+         {'type':'string', 'default': None,
           'metavar': '<file>', 'short':'o', 'help':'output image file',
           'input':False,
           }),

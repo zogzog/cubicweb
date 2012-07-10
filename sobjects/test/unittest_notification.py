@@ -30,29 +30,29 @@ class MessageIdTC(TestCase):
     def test_base(self):
         msgid1 = construct_message_id('testapp', 21)
         msgid2 = construct_message_id('testapp', 21)
-        self.failIfEqual(msgid1, msgid2)
-        self.failIf('&' in msgid1)
-        self.failIf('=' in msgid1)
-        self.failIf('/' in msgid1)
-        self.failIf('+' in msgid1)
+        self.assertNotEqual(msgid1, msgid2)
+        self.assertFalse('&' in msgid1)
+        self.assertFalse('=' in msgid1)
+        self.assertFalse('/' in msgid1)
+        self.assertFalse('+' in msgid1)
         values = parse_message_id(msgid1, 'testapp')
-        self.failUnless(values)
+        self.assertTrue(values)
         # parse_message_id should work with or without surrounding <>
-        self.failUnlessEqual(values, parse_message_id(msgid1[1:-1], 'testapp'))
-        self.failUnlessEqual(values['eid'], '21')
-        self.failUnless('timestamp' in values)
-        self.failUnlessEqual(parse_message_id(msgid1[1:-1], 'anotherapp'), None)
+        self.assertEqual(values, parse_message_id(msgid1[1:-1], 'testapp'))
+        self.assertEqual(values['eid'], '21')
+        self.assertTrue('timestamp' in values)
+        self.assertEqual(parse_message_id(msgid1[1:-1], 'anotherapp'), None)
 
     def test_notimestamp(self):
         msgid1 = construct_message_id('testapp', 21, False)
         msgid2 = construct_message_id('testapp', 21, False)
         values = parse_message_id(msgid1, 'testapp')
-        self.failUnlessEqual(values, {'eid': '21'})
+        self.assertEqual(values, {'eid': '21'})
 
     def test_parse_message_doesnt_raise(self):
-        self.failUnlessEqual(parse_message_id('oijioj@bla.bla', 'tesapp'), None)
-        self.failUnlessEqual(parse_message_id('oijioj@bla', 'tesapp'), None)
-        self.failUnlessEqual(parse_message_id('oijioj', 'tesapp'), None)
+        self.assertEqual(parse_message_id('oijioj@bla.bla', 'tesapp'), None)
+        self.assertEqual(parse_message_id('oijioj@bla', 'tesapp'), None)
+        self.assertEqual(parse_message_id('oijioj', 'tesapp'), None)
 
 
     def test_nonregr_empty_message_id(self):
@@ -86,7 +86,7 @@ class StatusChangeViewsTC(CubicWebTC):
         req = self.request()
         u = self.create_user(req, 'toto')
         u.cw_adapt_to('IWorkflowable').fire_transition('deactivate', comment=u'yeah')
-        self.failIf(MAILBOX)
+        self.assertFalse(MAILBOX)
         self.commit()
         self.assertEqual(len(MAILBOX), 1)
         email = MAILBOX[0]
@@ -99,7 +99,7 @@ yeah
 
 url: http://testing.fr/cubicweb/cwuser/toto
 ''')
-        self.assertEqual(email.subject, 'status changed cwuser #%s (admin)' % u.eid)
+        self.assertEqual(email.subject, 'status changed CWUser #%s (admin)' % u.eid)
 
 if __name__ == '__main__':
     unittest_main()

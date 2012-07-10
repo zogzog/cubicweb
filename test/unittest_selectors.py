@@ -24,7 +24,7 @@ from logilab.common.testlib import TestCase, unittest_main
 from cubicweb import Binary
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.appobject import Selector, AndSelector, OrSelector
-from cubicweb.selectors import (is_instance, adaptable, match_user_groups,
+from cubicweb.selectors import (is_instance, adaptable, match_kwargs, match_user_groups,
                                 multi_lines_rset, score_entity, is_in_state,
                                 on_transition, rql_condition, relation_possible)
 from cubicweb.web import action
@@ -87,11 +87,11 @@ class SelectorsTC(TestCase):
 
     def test_composition(self):
         selector = (_1_() & _1_()) & (_1_() & _1_())
-        self.failUnless(isinstance(selector, AndSelector))
+        self.assertTrue(isinstance(selector, AndSelector))
         self.assertEqual(len(selector.selectors), 4)
         self.assertEqual(selector(None), 4)
         selector = (_1_() & _0_()) | (_1_() & _1_())
-        self.failUnless(isinstance(selector, OrSelector))
+        self.assertTrue(isinstance(selector, OrSelector))
         self.assertEqual(len(selector.selectors), 2)
         self.assertEqual(selector(None), 2)
 
@@ -151,13 +151,13 @@ class ImplementsSelectorTC(CubicWebTC):
         rset = f.as_rset()
         anyscore = is_instance('Any')(f.__class__, req, rset=rset)
         idownscore = adaptable('IDownloadable')(f.__class__, req, rset=rset)
-        self.failUnless(idownscore > anyscore, (idownscore, anyscore))
+        self.assertTrue(idownscore > anyscore, (idownscore, anyscore))
         filescore = is_instance('File')(f.__class__, req, rset=rset)
-        self.failUnless(filescore > idownscore, (filescore, idownscore))
+        self.assertTrue(filescore > idownscore, (filescore, idownscore))
 
     def test_etype_inheritance_no_yams_inheritance(self):
         cls = self.vreg['etypes'].etype_class('Personne')
-        self.failIf(is_instance('Societe').score_class(cls, self.request()))
+        self.assertFalse(is_instance('Societe').score_class(cls, self.request()))
 
     def test_yams_inheritance(self):
         cls = self.vreg['etypes'].etype_class('Transition')
@@ -327,7 +327,7 @@ class MatchUserGroupsTC(CubicWebTC):
         self.vreg._loadedmods[__name__] = {}
         self.vreg.register(SomeAction)
         SomeAction.__registered__(self.vreg['actions'])
-        self.failUnless(SomeAction in self.vreg['actions']['yo'], self.vreg['actions'])
+        self.assertTrue(SomeAction in self.vreg['actions']['yo'], self.vreg['actions'])
         try:
             # login as a simple user
             req = self.request()
@@ -336,18 +336,18 @@ class MatchUserGroupsTC(CubicWebTC):
             # it should not be possible to use SomeAction not owned objects
             req = self.request()
             rset = req.execute('Any G WHERE G is CWGroup, G name "managers"')
-            self.failIf('yo' in dict(self.pactions(req, rset)))
+            self.assertFalse('yo' in dict(self.pactions(req, rset)))
             # insert a new card, and check that we can use SomeAction on our object
             self.execute('INSERT Card C: C title "zoubidou"')
             self.commit()
             req = self.request()
             rset = req.execute('Card C WHERE C title "zoubidou"')
-            self.failUnless('yo' in dict(self.pactions(req, rset)), self.pactions(req, rset))
+            self.assertTrue('yo' in dict(self.pactions(req, rset)), self.pactions(req, rset))
             # make sure even managers can't use the action
             self.restore_connection()
             req = self.request()
             rset = req.execute('Card C WHERE C title "zoubidou"')
-            self.failIf('yo' in dict(self.pactions(req, rset)))
+            self.assertFalse('yo' in dict(self.pactions(req, rset)))
         finally:
             del self.vreg[SomeAction.__registry__][SomeAction.__regid__]
 
@@ -403,6 +403,20 @@ class MultiLinesRsetSelectorTC(CubicWebTC):
             selector = multi_lines_rset(expected, operator)
             yield self.assertEqual, selector(None, self.req, rset=self.rset), assertion
 
+    def test_match_kwargs_default(self):
+        selector = match_kwargs( set( ('a', 'b') ) )
+        self.assertEqual(selector(None, None, a=1, b=2), 2)
+        self.assertEqual(selector(None, None, a=1), 0)
+        self.assertEqual(selector(None, None, c=1), 0)
+        self.assertEqual(selector(None, None, a=1, c=1), 0)
+
+    def test_match_kwargs_any(self):
+        selector = match_kwargs( set( ('a', 'b') ), mode='any')
+        self.assertEqual(selector(None, None, a=1, b=2), 2)
+        self.assertEqual(selector(None, None, a=1), 1)
+        self.assertEqual(selector(None, None, c=1), 0)
+        self.assertEqual(selector(None, None, a=1, c=1), 1)
+
 
 class ScoreEntitySelectorTC(CubicWebTC):
 
@@ -418,7 +432,7 @@ class ScoreEntitySelectorTC(CubicWebTC):
         rset = req.execute('Any G LIMIT 2 WHERE G is CWGroup')
         selector = score_entity(lambda x: 10)
         self.assertEqual(selector(None, req, rset=rset), 20)
-        selector = score_entity(lambda x: 10, once_is_enough=True)
+        selector = score_entity(lambda x: 10, mode='any')
         self.assertEqual(selector(None, req, rset=rset), 10)
 
     def test_rql_condition_entity(self):

@@ -40,10 +40,6 @@ function buildWidgets(root) {
     });
 }
 
-// we need to differenciate cases where initFacetBoxEvents is called
-// with one argument or without any argument. If we use `initFacetBoxEvents`
-// as the direct callback on the jQuery.ready event, jQuery will pass some argument
-// of his, so we use this small anonymous function instead.
 jQuery(document).ready(function() {
     buildWidgets();
 });

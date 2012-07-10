@@ -25,8 +25,11 @@ except ImportError:
     print 'Win32 extensions for Python are likely not installed.'
     sys.exit(3)
 
+from os.path import join
 
 from cubicweb.etwist.server import (CubicWebRootResource, reactor, server)
+
+from logilab.common.shellutils import rm
 
 import logging
 from logging import getLogger, handlers
@@ -74,6 +77,9 @@ class CWService(object, win32serviceutil.ServiceFramework):
             config.init_log(force=True)
             config.debugmode = False
             logger.info('starting cubicweb instance %s ', self.instance)
+            config.info('clear ui caches')
+            for cachedir in ('uicache', 'uicachehttps'):
+                rm(join(config.appdatahome, cachedir, '*'))
             root_resource = CubicWebRootResource(config)
             website = server.Site(root_resource)
             # serve it via standard HTTP on port set in the configuration

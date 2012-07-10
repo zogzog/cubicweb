@@ -243,19 +243,11 @@ class AutoformSectionRelationTags(RelationTagsSet):
         for formtype, section in sectdict.iteritems():
             formsections.add('%s_%s' % (formtype, section))
 
-    def tag_relation(self, key, formtype, section=None):
+    def tag_relation(self, key, formtype, section):
         if isinstance(formtype, tuple):
             for ftype in formtype:
                 self.tag_relation(key, ftype, section)
             return
-        if section is None:
-            tag = formtype
-            for formtype, section in self.bw_tag_map[tag].iteritems():
-                warn('[3.6] add tag to autoform section by specifying form '
-                     'type and tag. Replace %s by formtype="%s", section="%s"'
-                     % (tag, formtype, section), DeprecationWarning,
-                     stacklevel=3)
-                self.tag_relation(key, formtype, section)
         assert formtype in self._allowed_form_types, \
                'formtype should be in (%s), not %s' % (
             ','.join(self._allowed_form_types), formtype)
@@ -378,7 +370,7 @@ autoform_field_kwargs = RelationTagsDict('autoform_field_kwargs')
 autoform_permissions_overrides = RelationTagsSet('autoform_permissions_overrides')
 
 class ReleditTags(NoTargetRelationTagsDict):
-    """Associate to relation a dictionnary to control `reledit` (e.g. edition of
+    """Associate to relation a dictionary to control `reledit` (e.g. edition of
     attributes / relations from within views).
 
     Possible keys and associated values are:
@@ -450,20 +442,3 @@ def init_actionbox_appearsin_addmenu(rtag, sschema, rschema, oschema, role):
 
 actionbox_appearsin_addmenu = RelationTagsBool('actionbox_appearsin_addmenu',
                                                init_actionbox_appearsin_addmenu)
-
-
-# deprecated ###################################################################
-
-class AutoformIsInlined(RelationTags):
-    """XXX for < 3.6 bw compat"""
-    def tag_relation(self, key, tag):
-        warn('autoform_is_inlined is deprecated, use autoform_section '
-             'with formtype="main", section="inlined"',
-             DeprecationWarning, stacklevel=3)
-        section = tag and 'inlined' or 'hidden'
-        autoform_section.tag_relation(key, 'main', section)
-
-# inlined view flag for non final relations: when True for an entry, the
-# entity(ies) at the other end of the relation will be editable from the
-# form of the edited entity
-autoform_is_inlined = AutoformIsInlined('autoform_is_inlined')

@@ -27,8 +27,4 @@ ceux-ci n'apparaîtront pas dans le formulaire de modification à moins que vous
 ayez le droit de les modifier.
 
 
-Pour plus de détails sur les relations possibles, veuillez vous réferer au
-schéma_ du composant signet.
-
-.. _`schéma`: eetype/Bookmark?vid=eschema
 .. _`préférences utilisateurs`: myprefs

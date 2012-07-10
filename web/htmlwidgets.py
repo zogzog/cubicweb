@@ -350,7 +350,7 @@ class TableWidget(HTMLWidget):
             self.w(u'<tr class="%s" %s>' % (klass, self.highlight))
             for column, sortvalue in self.itercols(rowindex):
                 attrs = dict(column.cell_attrs)
-                attrs["cubicweb:sortvalue"] = 'json:' + sortvalue
+                attrs["cubicweb:sortvalue"] = sortvalue
                 attrs = ('%s="%s"' % (name, value) for name, value in attrs.iteritems())
                 self.w(u'<td %s>' % (' '.join(attrs)))
                 for cellvid, colindex in column.cellrenderers:

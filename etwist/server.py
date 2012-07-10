@@ -94,6 +94,15 @@ class NoListingFile(static.File):
     def directoryListing(self):
         return ForbiddenDirectoryLister()
 
+    def createSimilarFile(self, path):
+        # we override this method because twisted calls __init__
+        # which we overload with a different signature
+        f = self.__class__(self.config, path)
+        f.processors = self.processors
+        f.indexNames = self.indexNames[:]
+        f.childNotFound = self.childNotFound
+        return f
+
 
 class DataLookupDirectory(NoListingFile):
     def __init__(self, config, path):
@@ -340,7 +349,7 @@ class CubicWebRootResource(resource.Resource):
             self.appli.connect(req)
         except Redirect, ex:
             return self.redirect(request=req, location=ex.location)
-        if https and req.session.anonymous_session:
+        if https and req.session.anonymous_session and self.config['https-deny-anonymous']:
             # don't allow anonymous on https connection
             return self.request_auth(request=req)
         if self.url_rewriter is not None:

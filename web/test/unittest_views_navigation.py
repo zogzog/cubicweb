@@ -126,12 +126,12 @@ class NavigationTC(CubicWebTC):
     #         req, rset=rset, view=view, context='navtop')
     #     # breadcrumbs should be in headers by default
     #     clsids = set(obj.id for obj in objs)
-    #     self.failUnless('breadcrumbs' in clsids)
+    #     self.assertTrue('breadcrumbs' in clsids)
     #     objs = self.vreg['ctxcomponents'].poss_visible_objects(
     #         req, rset=rset, view=view, context='navbottom')
     #     # breadcrumbs should _NOT_ be in footers by default
     #     clsids = set(obj.id for obj in objs)
-    #     self.failIf('breadcrumbs' in clsids)
+    #     self.assertFalse('breadcrumbs' in clsids)
     #     self.execute('INSERT CWProperty P: P pkey "ctxcomponents.breadcrumbs.context", '
     #                  'P value "navbottom"')
     #     # breadcrumbs should now be in footers
@@ -140,12 +140,12 @@ class NavigationTC(CubicWebTC):
     #         req, rset=rset, view=view, context='navbottom')
 
     #     clsids = [obj.id for obj in objs]
-    #     self.failUnless('breadcrumbs' in clsids)
+    #     self.assertTrue('breadcrumbs' in clsids)
     #     objs = self.vreg['ctxcomponents'].poss_visible_objects(
     #         req, rset=rset, view=view, context='navtop')
 
     #     clsids = [obj.id for obj in objs]
-    #     self.failIf('breadcrumbs' in clsids)
+    #     self.assertFalse('breadcrumbs' in clsids)
 
 
 if __name__ == '__main__':

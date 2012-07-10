@@ -103,28 +103,26 @@ def _build_substep_query(select, origrqlst):
     When select has nothing selected, search in origrqlst for restriction that
     should be considered.
     """
+    if origrqlst.where is not None and not select.selection:
+        # no selection, append one randomly by searching for a relation which is
+        # neither a type restriction (is) nor an eid specification (not neged
+        # eid with constant node)
+        for rel in origrqlst.where.iget_nodes(Relation):
+            if rel.neged(strict=True) or not (
+                rel.is_types_restriction() or
+                (rel.r_type == 'eid'
+                 and isinstance(rel.get_variable_parts()[1], Constant))):
+                select.append_selected(rel.children[0].copy(select))
+                break
+        else:
+            return
     if select.selection:
         if origrqlst.where is not None:
             select.set_where(origrqlst.where.copy(select))
+        if getattr(origrqlst, 'having', None):
+            select.set_having([sq.copy(select) for sq in origrqlst.having])
         return select
-    if origrqlst.where is None:
-        return
-    for rel in origrqlst.where.iget_nodes(Relation):
-        # search for a relation which is neither a type restriction (is) nor an
-        # eid specification (not neged eid with constant node
-        if rel.neged(strict=True) or not (
-            rel.is_types_restriction() or
-            (rel.r_type == 'eid'
-             and isinstance(rel.get_variable_parts()[1], Constant))):
-            break
-    else:
-        return
-    select.set_where(origrqlst.where.copy(select))
-    if not select.selection:
-        # no selection, append one randomly
-        select.append_selected(rel.children[0].copy(select))
-    return select
-
+    return None
 
 class SSPlanner(object):
     """SingleSourcePlanner: build execution plan for rql queries
@@ -204,38 +202,40 @@ class SSPlanner(object):
         steps = []
         for etype, var in rqlst.main_variables:
             step = DeleteEntitiesStep(plan)
-            step.children += self._sel_variable_step(plan, rqlst.solutions,
-                                                     rqlst.where, etype, var)
+            step.children += self._sel_variable_step(plan, rqlst, etype, var)
             steps.append(step)
         for relation in rqlst.main_relations:
             step = DeleteRelationsStep(plan, relation.r_type)
-            step.children += self._sel_relation_steps(plan, rqlst.solutions,
-                                                      rqlst.where, relation)
+            step.children += self._sel_relation_steps(plan, rqlst, relation)
             steps.append(step)
         return steps
 
-    def _sel_variable_step(self, plan, solutions, restriction, etype, varref):
+    def _sel_variable_step(self, plan, rqlst, etype, varref):
         """handle the selection of variables for a delete query"""
         select = Select()
         varref = varref.copy(select)
         select.defined_vars = {varref.name: varref.variable}
         select.append_selected(varref)
-        if restriction is not None:
-            select.set_where(restriction.copy(select))
+        if rqlst.where is not None:
+            select.set_where(rqlst.where.copy(select))
+        if getattr(rqlst, 'having', None):
+            select.set_having([x.copy(select) for x in rqlst.having])
         if etype != 'Any':
             select.add_type_restriction(varref.variable, etype)
-        return self._select_plan(plan, select, solutions)
+        return self._select_plan(plan, select, rqlst.solutions)
 
-    def _sel_relation_steps(self, plan, solutions, restriction, relation):
+    def _sel_relation_steps(self, plan, rqlst, relation):
         """handle the selection of relations for a delete query"""
         select = Select()
         lhs, rhs = relation.get_variable_parts()
         select.append_selected(lhs.copy(select))
         select.append_selected(rhs.copy(select))
         select.set_where(relation.copy(select))
-        if restriction is not None:
-            select.add_restriction(restriction.copy(select))
-        return self._select_plan(plan, select, solutions)
+        if rqlst.where is not None:
+            select.add_restriction(rqlst.where.copy(select))
+        if getattr(rqlst, 'having', None):
+            select.set_having([x.copy(select) for x in rqlst.having])
+        return self._select_plan(plan, select, rqlst.solutions)
 
     def build_set_plan(self, plan, rqlst):
         """get an execution plan from an SET RQL query"""
@@ -392,7 +392,8 @@ class OneFetchStep(LimitOffsetMixIn, Step):
         # cachekey
         if inputmap or self.plan.cache_key is None:
             cachekey = None
-        # union may have been splited into subqueries, rebuild a cache key
+        # union may have been splited into subqueries, in which case we can't
+        # use plan.cache_key, rebuild a cache key
         elif isinstance(self.plan.cache_key, tuple):
             cachekey = list(self.plan.cache_key)
             cachekey[0] = union.as_string()

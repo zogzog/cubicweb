@@ -28,7 +28,8 @@ from logilab.mtconverter import xml_escape
 from cubicweb import tags, uilib
 from cubicweb.entity import Entity
 from cubicweb.selectors import (is_instance, one_line_rset, adaptable,
-                                one_etype_rset, multi_lines_rset, any_rset)
+                                one_etype_rset, multi_lines_rset, any_rset,
+                                match_form_params)
 from cubicweb.view import EntityView, EntityAdapter
 from cubicweb.web.views import basecomponents
 # don't use AnyEntity since this may cause bug with isinstance() due to reloading
@@ -120,7 +121,10 @@ class BreadCrumbEntityVComponent(basecomponents.HeaderComponent):
     # XXX support kwargs for compat with other components which gets the view as
     # argument
     def render(self, w, **kwargs):
-        entity = self.cw_rset.get_entity(0, 0)
+        try:
+            entity = self.cw_extra_kwargs['entity']
+        except KeyError:
+            entity = self.cw_rset.get_entity(0, 0)
         adapter = ibreadcrumb_adapter(entity)
         view = self.cw_extra_kwargs.get('view')
         path = adapter.breadcrumbs(view)
@@ -188,6 +192,17 @@ class BreadCrumbAnyRSetVComponent(BreadCrumbEntityVComponent):
             w(self.separator)
         w(self._cw._('search'))
         w(u'</span>')
+
+
+class BreadCrumbLinkToVComponent(BreadCrumbEntityVComponent):
+    __select__ = basecomponents.HeaderComponent.__select__ & match_form_params('__linkto')
+
+    def render(self, w, **kwargs):
+        eid = self._cw.list_form_param('__linkto')[0].split(':')[1]
+        entity = self._cw.entity_from_eid(eid)
+        ecmp = self._cw.vreg[self.__registry__].select(
+            self.__regid__, self._cw, entity=entity, **kwargs)
+        ecmp.render(w, **kwargs)
 
 
 class BreadCrumbView(EntityView):

@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -78,7 +78,7 @@ class CSVEntityView(CSVMixIn, EntityView):
     contents)
     """
     __regid__ = 'ecsvexport'
-    title = _('csv entities export')
+    title = _('csv export (entities)')
 
     def call(self):
         req = self._cw

@@ -169,6 +169,8 @@ Configuring logging
     file to write messages
 
 
+.. _PersistentProperties:
+
 Configuring persistent properties
 ---------------------------------
 Other configuration settings are in the form of entities `CWProperty`

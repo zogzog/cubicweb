@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -25,7 +25,6 @@ __docformat__ = "restructuredtext en"
 
 from itertools import repeat
 
-from logilab.common.cache import Cache
 from logilab.common.compat import any
 from rql import RQLSyntaxError
 from rql.stmts import Union, Select
@@ -36,6 +35,7 @@ from cubicweb import ValidationError, Unauthorized, QueryError, UnknownEid
 from cubicweb import server, typed_eid
 from cubicweb.rset import ResultSet
 
+from cubicweb.utils import QueryCache
 from cubicweb.server.utils import cleanup_solutions
 from cubicweb.server.rqlannotation import SQLGenAnnotator, set_qdata
 from cubicweb.server.ssplanner import READ_ONLY_RTYPES, add_types_restriction
@@ -390,7 +390,7 @@ class ExecutionPlan(object):
                 if var.stinfo['constnode'] is not None:
                     eid = var.stinfo['constnode'].eval(self.args)
                     varkwargs[var.name] = typed_eid(eid)
-        # dictionnary of variables restricted for security reason
+        # dictionary of variables restricted for security reason
         localchecks = {}
         restricted_vars = set()
         newsolutions = []
@@ -417,7 +417,7 @@ class ExecutionPlan(object):
                         if rqlexpr.check(session, eid):
                             break
                     else:
-                        raise Unauthorized()
+                        raise Unauthorized('No read acces on %r with eid %i.' % (var, eid))
                 restricted_vars.update(localcheck)
                 localchecks.setdefault(tuple(localcheck.iteritems()), []).append(solution)
         # raise Unautorized exception if the user can't access to any solution
@@ -599,7 +599,7 @@ class QuerierHelper(object):
         self.schema = schema
         repo = self._repo
         # rql st and solution cache.
-        self._rql_cache = Cache(repo.config['rql-cache-size'])
+        self._rql_cache = QueryCache(repo.config['rql-cache-size'])
         # rql cache key cache. Don't bother using a Cache instance: we should
         # have a limited number of queries in there, since there are no entries
         # in this cache for user queries (which have no args)
@@ -668,7 +668,7 @@ class QuerierHelper(object):
                 print '*'*80
             print 'querier input', repr(rql), repr(args)
         # parse the query and binds variables
-        cachekey = rql
+        cachekey = (rql,)
         try:
             if args:
                 # search for named args in query which are eids (hence
@@ -699,7 +699,7 @@ class QuerierHelper(object):
                 # we want queries such as "Any X WHERE X eid 9999" return an
                 # empty result instead of raising UnknownEid
                 return empty_rset(rql, args, rqlst)
-            if args and not rql in self._rql_ck_cache:
+            if args and rql not in self._rql_ck_cache:
                 self._rql_ck_cache[rql] = eidkeys
                 if eidkeys:
                     cachekey = self._repo.querier_cache_key(session, rql, args,
@@ -722,6 +722,11 @@ class QuerierHelper(object):
             # a new syntax tree is built from them.
             rqlst = rqlst.copy()
             self._annotate(rqlst)
+            if args:
+                # different SQL generated when some argument is None or not (IS
+                # NULL). This should be considered when computing sql cache key
+                cachekey += tuple(sorted([k for k,v in args.iteritems()
+                                          if v is None]))
         # make an execution plan
         plan = self.plan_factory(rqlst, args, session)
         plan.cache_key = cachekey
