@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -406,8 +406,6 @@ class CubicWebPublisher(object):
                     content = self.need_login_content(req)
         return content
 
-
-
     def core_handle(self, req, path):
         """method called by the main publisher to process <path>
 
@@ -524,7 +522,8 @@ class CubicWebPublisher(object):
 
     def error_handler(self, req, ex, tb=False):
         excinfo = sys.exc_info()
-        self.exception(repr(ex))
+        if tb:
+            self.exception(repr(ex))
         req.set_header('Cache-Control', 'no-cache')
         req.remove_header('Etag')
         req.reset_message()
