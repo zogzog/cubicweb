@@ -16,33 +16,33 @@ classes are registered in order to initialize the class according to its schema:
 
 `Formatting and output generation`:
 
-* `view(__vid, __registry='views', **kwargs)`, applies the given view to the entity
+* :meth:`view(__vid, __registry='views', **kwargs)`, applies the given view to the entity
   (and returns an unicode string)
 
-* `absolute_url(*args, **kwargs)`, returns an absolute URL including the base-url
+* :meth:`absolute_url(*args, **kwargs)`, returns an absolute URL including the base-url
 
-* `rest_path()`, returns a relative REST URL to get the entity
+* :meth:`rest_path()`, returns a relative REST URL to get the entity
 
-* `printable_value(attr, value=_marker, attrtype=None, format='text/html', displaytime=True)`,
+* :meth:`printable_value(attr, value=_marker, attrtype=None, format='text/html', displaytime=True)`,
   returns a string enabling the display of an attribute value in a given format
   (the value is automatically recovered if necessary)
 
 `Data handling`:
 
-* `as_rset()`, converts the entity into an equivalent result set simulating the
+* :meth:`as_rset()`, converts the entity into an equivalent result set simulating the
   request `Any X WHERE X eid _eid_`
 
-* `complete(skip_bytes=True)`, executes a request that recovers at
+* :meth:`complete(skip_bytes=True)`, executes a request that recovers at
   once all the missing attributes of an entity
 
-* `get_value(name)`, returns the value associated to the attribute name given
+* :meth:`get_value(name)`, returns the value associated to the attribute name given
   in parameter
 
-* `related(rtype, role='subject', limit=None, entities=False)`,
+* :meth:`related(rtype, role='subject', limit=None, entities=False)`,
   returns a list of entities related to the current entity by the
   relation given in parameter
 
-* `unrelated(rtype, targettype, role='subject', limit=None)`,
+* :meth:`unrelated(rtype, targettype, role='subject', limit=None)`,
   returns a result set corresponding to the entities not (yet)
   related to the current entity by the relation given in parameter
   and satisfying its constraints
@@ -56,7 +56,7 @@ classes are registered in order to initialize the class according to its schema:
 * :meth:`copy_relations(ceid)`, copies the relations of the entities having the eid
   given in the parameters on the current entity
 
-* `delete()` allows to delete the entity
+* :meth:`cw_delete()` allows to delete the entity
 
 
 The :class:`AnyEntity` class
@@ -78,40 +78,30 @@ support for the `Dublin Core`_ metadata.
 
 `Standard meta-data (Dublin Core)`:
 
-* `dc_title()`, returns a unicode string corresponding to the
+* :meth:`dc_title()`, returns a unicode string corresponding to the
   meta-data `Title` (used by default is the first non-meta attribute
   of the entity schema)
 
-* `dc_long_title()`, same as dc_title but can return a more
+* :meth:`dc_long_title()`, same as dc_title but can return a more
   detailed title
 
-* `dc_description(format='text/plain')`, returns a unicode string
+* :meth:`dc_description(format='text/plain')`, returns a unicode string
   corresponding to the meta-data `Description` (looks for a
   description attribute by default)
 
-* `dc_authors()`, returns a unicode string corresponding to the meta-data
+* :meth:`dc_authors()`, returns a unicode string corresponding to the meta-data
   `Authors` (owners by default)
 
-* `dc_creator()`, returns a unicode string corresponding to the
+* :meth:`dc_creator()`, returns a unicode string corresponding to the
   creator of the entity
 
-* `dc_date(date_format=None)`, returns a unicode string corresponding to
+* :meth:`dc_date(date_format=None)`, returns a unicode string corresponding to
   the meta-data `Date` (update date by default)
 
-* `dc_type(form='')`, returns a string to display the entity type by
+* :meth:`dc_type(form='')`, returns a string to display the entity type by
   specifying the preferred form (`plural` for a plural form)
 
-* `dc_language()`, returns the language used by the entity
-
-
-`Misc methods`:
-
-* `after_deletion_path`, return (path, parameters) which should be
-  used as redirect information when this entity is being deleted
-
-* `pre_web_edit`, callback called by the web editcontroller when an
-  entity will be created/modified, to let a chance to do some entity
-  specific stuff (does nothing by default)
+* :meth:`dc_language()`, returns the language used by the entity
 
 Inheritance
 -----------
