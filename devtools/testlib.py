@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -31,6 +31,7 @@ from math import log
 from contextlib import contextmanager
 from warnings import warn
 from types import NoneType
+from itertools import chain
 
 import yams.schema
 
@@ -465,6 +466,49 @@ class CubicWebTC(TestCase):
         finally:
             for obj in appobjects:
                 self.vreg.unregister(obj)
+
+    @contextmanager
+    def temporary_permissions(self, *perm_overrides, **perm_kwoverrides):
+        """Set custom schema permissions within context.
+
+        There are two ways to call this method, which may be used together :
+
+        * using positional argument(s):
+
+          .. sourcecode:: python
+                rdef = self.schema['CWUser'].rdef('login')
+                with self.temporary_permissions((rdef, {'read': ()})):
+                    ...
+
+
+        * using named argument(s):
+
+          .. sourcecode:: python
+                rdef = self.schema['CWUser'].rdef('login')
+                with self.temporary_permissions(CWUser={'read': ()}):
+                    ...
+
+        Usually the former will be prefered to override permissions on a
+        relation definition, while the latter is well suited for entity types.
+
+        The allowed keys in the permission dictionary depends on the schema type
+        (entity type / relation definition). Resulting permissions will be
+        similar to `orig_permissions.update(partial_perms)`.
+        """
+        torestore = []
+        for erschema, etypeperms in chain(perm_overrides, perm_kwoverrides.iteritems()):
+            if isinstance(erschema, basestring):
+                erschema = self.schema[erschema]
+            for action, actionperms in etypeperms.iteritems():
+                origperms = erschema.permissions[action]
+                erschema.set_action_permissions(action, actionperms)
+                torestore.append([erschema, action, origperms])
+        yield
+        for erschema, action, permissions in torestore:
+            if action is None:
+                erschema.permissions = permissions
+            else:
+                erschema.set_action_permissions(action, permissions)
 
     def assertModificationDateGreater(self, entity, olddate):
         entity.cw_attr_cache.pop('modification_date', None)

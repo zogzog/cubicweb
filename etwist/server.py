@@ -57,7 +57,7 @@ from cubicweb.etwist.http import HTTPResponse
 def start_task(interval, func):
     lc = task.LoopingCall(func)
     # wait until interval has expired to actually start the task, else we have
-    # to wait all task to be finished for the server to be actually started
+    # to wait all tasks to be finished for the server to be actually started
     lc.start(interval, now=False)
 
 def host_prefixed_baseurl(baseurl, host):

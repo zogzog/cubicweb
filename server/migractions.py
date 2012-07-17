@@ -1075,7 +1075,7 @@ class ServerMigrationHelper(MigrationHelper):
         if commit:
             self.commit()
 
-    def cmd_rename_relation(self, oldname, newname, commit=True):
+    def cmd_rename_relation_type(self, oldname, newname, commit=True):
         """rename an existing relation
 
         `oldname` is a string giving the name of the existing relation
@@ -1525,6 +1525,10 @@ class ServerMigrationHelper(MigrationHelper):
     @deprecated("[3.7] use session.enable_hook_categories('integrity')")
     def cmd_reactivate_verification_hooks(self):
         self.session.enable_hook_categories('integrity')
+
+    @deprecated("[3.15] use session.rename_relation_type(oldname, newname)")
+    def cmd_rename_relation(self, oldname, newname, commit=True):
+        self.session.rename_relation_type(oldname, newname, commit)
 
 
 class ForRqlIterator:
