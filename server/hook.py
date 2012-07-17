@@ -152,7 +152,7 @@ containing the entity instance.
 
   On those events, the entity has no `cw_edited` dictionary.
 
-.. note:: `self.entity.set_attributes(age=42)` will set the `age` attribute to
+.. note:: `self.entity.cw_set(age=42)` will set the `age` attribute to
   42. But to do so, it will generate a rql query that will have to be processed,
   hence may trigger some hooks, etc. This could lead to infinitely looping hooks.
 

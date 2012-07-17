@@ -38,7 +38,7 @@ life span, limited to the hook, operation or view within which the
 object was built.
 
 Setting an attribute or relation value can be done in the context of a
-Hook/Operation, using the obj.set_relations(x=42) notation or a plain
+Hook/Operation, using the obj.cw_set(x=42) notation or a plain
 RQL SET expression.
 
 In views, it would be preferable to encapsulate the necessary logic in

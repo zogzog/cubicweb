@@ -63,7 +63,7 @@ class WorkflowBuildingTC(CubicWebTC):
         # gnark gnark
         bar = wf.add_state(u'bar')
         self.commit()
-        bar.set_attributes(name=u'foo')
+        bar.cw_set(name=u'foo')
         with self.assertRaises(ValidationError) as cm:
             self.commit()
         self.assertEqual(cm.exception.errors, {'name-subject': 'workflow already have a state of that name'})
@@ -86,7 +86,7 @@ class WorkflowBuildingTC(CubicWebTC):
         # gnark gnark
         biz = wf.add_transition(u'biz', (bar,), foo)
         self.commit()
-        biz.set_attributes(name=u'baz')
+        biz.cw_set(name=u'baz')
         with self.assertRaises(ValidationError) as cm:
             self.commit()
         self.assertEqual(cm.exception.errors, {'name-subject': 'workflow already have a transition of that name'})
@@ -516,7 +516,7 @@ class AutoTransitionTC(CubicWebTC):
                           ['rest'])
         self.assertEqual(parse_hist(iworkflowable.workflow_history),
                           [('asleep', 'asleep', 'rest', None)])
-        user.set_attributes(surname=u'toto') # fulfill condition
+        user.cw_set(surname=u'toto') # fulfill condition
         self.commit()
         iworkflowable.fire_transition('rest')
         self.commit()

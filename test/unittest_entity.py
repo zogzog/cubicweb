@@ -687,23 +687,23 @@ du :eid:`1:*ReST*`'''
         self.assertEqual(card4.rest_path(), unicode(card4.eid))
 
 
-    def test_set_attributes(self):
+    def test_cw_set_attributes(self):
         req = self.request()
         person = req.create_entity('Personne', nom=u'di mascio', prenom=u'adrien')
         self.assertEqual(person.prenom, u'adrien')
         self.assertEqual(person.nom, u'di mascio')
-        person.set_attributes(prenom=u'sylvain', nom=u'thénault')
+        person.cw_set(prenom=u'sylvain', nom=u'thénault')
         person = self.execute('Personne P').get_entity(0, 0) # XXX retreival needed ?
         self.assertEqual(person.prenom, u'sylvain')
         self.assertEqual(person.nom, u'thénault')
 
-    def test_set_relations(self):
+    def test_cw_set_relations(self):
         req = self.request()
         person = req.create_entity('Personne', nom=u'chauvat', prenom=u'nicolas')
         note = req.create_entity('Note', type=u'x')
-        note.set_relations(ecrit_par=person)
+        note.cw_set(ecrit_par=person)
         note = req.create_entity('Note', type=u'y')
-        note.set_relations(ecrit_par=person.eid)
+        note.cw_set(ecrit_par=person.eid)
         self.assertEqual(len(person.reverse_ecrit_par), 2)
 
     def test_metainformation_and_external_absolute_url(self):

@@ -67,9 +67,9 @@ class CoreHooksTC(CubicWebTC):
         entity = self.request().create_entity('Workflow', name=u'wf1',
                                               description_format=u'text/html',
                                               description=u'yo')
-        entity.set_attributes(name=u'wf2')
+        entity.cw_set(name=u'wf2')
         self.assertEqual(entity.description, u'yo')
-        entity.set_attributes(description=u'R&D<p>yo')
+        entity.cw_set(description=u'R&D<p>yo')
         entity.cw_attr_cache.pop('description')
         self.assertEqual(entity.description, u'R&amp;D<p>yo</p>')
 

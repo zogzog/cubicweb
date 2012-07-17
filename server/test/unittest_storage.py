@@ -99,7 +99,7 @@ class StorageTC(CubicWebTC):
         f1 = self.create_file()
         self.commit()
         self.assertEqual(file(expected_filepath).read(), 'the-data')
-        f1.set_attributes(data=Binary('the new data'))
+        f1.cw_set(data=Binary('the new data'))
         self.rollback()
         self.assertEqual(file(expected_filepath).read(), 'the-data')
         f1.cw_delete()
@@ -204,7 +204,7 @@ class StorageTC(CubicWebTC):
         # use self.session to use server-side cache
         f1 = self.session.create_entity('File', data=Binary('some data'),
                                         data_format=u'text/plain', data_name=u'foo')
-        # NOTE: do not use set_attributes() which would automatically
+        # NOTE: do not use cw_set() which would automatically
         #       update f1's local dict. We want the pure rql version to work
         self.execute('SET F data %(d)s WHERE F eid %(f)s',
                      {'d': Binary('some other data'), 'f': f1.eid})
@@ -218,7 +218,7 @@ class StorageTC(CubicWebTC):
         # use self.session to use server-side cache
         f1 = self.session.create_entity('File', data=Binary('some data'),
                                         data_format=u'text/plain', data_name=u'foo.txt')
-        # NOTE: do not use set_attributes() which would automatically
+        # NOTE: do not use cw_set() which would automatically
         #       update f1's local dict. We want the pure rql version to work
         self.commit()
         old_path = self.fspath(f1)
@@ -240,7 +240,7 @@ class StorageTC(CubicWebTC):
         # use self.session to use server-side cache
         f1 = self.session.create_entity('File', data=Binary('some data'),
                                         data_format=u'text/plain', data_name=u'foo.txt')
-        # NOTE: do not use set_attributes() which would automatically
+        # NOTE: do not use cw_set() which would automatically
         #       update f1's local dict. We want the pure rql version to work
         self.commit()
         old_path = self.fspath(f1)
@@ -265,7 +265,7 @@ class StorageTC(CubicWebTC):
         f = self.session.create_entity('Affaire', opt_attr=Binary('toto'))
         self.session.commit()
         self.session.set_cnxset()
-        f.set_attributes(opt_attr=None)
+        f.cw_set(opt_attr=None)
         self.session.commit()
 
     @tag('fs_importing', 'update')

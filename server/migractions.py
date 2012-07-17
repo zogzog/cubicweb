@@ -1321,7 +1321,7 @@ class ServerMigrationHelper(MigrationHelper):
         except Exception:
             self.cmd_create_entity('CWProperty', pkey=unicode(pkey), value=value)
         else:
-            prop.set_attributes(value=value)
+            prop.cw_set(value=value)
 
     # other data migration commands ###########################################
 

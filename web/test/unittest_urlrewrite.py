@@ -105,9 +105,9 @@ class RgxActionRewriteTC(CubicWebTC):
     def setup_database(self):
         req = self.request()
         self.p1 = self.create_user(req, u'user1')
-        self.p1.set_attributes(firstname=u'joe', surname=u'Dalton')
+        self.p1.cw_set(firstname=u'joe', surname=u'Dalton')
         self.p2 = self.create_user(req, u'user2')
-        self.p2.set_attributes(firstname=u'jack', surname=u'Dalton')
+        self.p2.cw_set(firstname=u'jack', surname=u'Dalton')
 
     def test_rgx_action_with_transforms(self):
         class TestSchemaBasedRewriter(SchemaBasedRewriter):

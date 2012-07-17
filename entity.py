@@ -452,26 +452,13 @@ class Entity(AppObject):
         return mainattr, needcheck
 
     @classmethod
-    def cw_instantiate(cls, execute, **kwargs):
-        """add a new entity of this given type
-
-        Example (in a shell session):
-
-        >>> companycls = vreg['etypes'].etype_class(('Company')
-        >>> personcls = vreg['etypes'].etype_class(('Person')
-        >>> c = companycls.cw_instantiate(session.execute, name=u'Logilab')
-        >>> p = personcls.cw_instantiate(session.execute, firstname=u'John', lastname=u'Doe',
-        ...                              works_for=c)
-
-        You can also set relation where the entity has 'object' role by
-        prefixing the relation by 'reverse_'.
-        """
-        rql = 'INSERT %s X' % cls.__regid__
+    def _cw_build_entity_query(cls, kwargs):
         relations = []
         restrictions = set()
         pending_relations = []
         eschema = cls.e_schema
         qargs = {}
+        attrcache = {}
         for attr, value in kwargs.items():
             if attr.startswith('reverse_'):
                 attr = attr[len('reverse_'):]
@@ -491,6 +478,9 @@ class Entity(AppObject):
                     continue
             if rschema.final: # attribute
                 relations.append('X %s %%(%s)s' % (attr, attr))
+                attrcache[attr] = value
+            elif value is None:
+                pending_relations.append( (attr, role, value) )
             else:
                 rvar = attr.upper()
                 if role == 'object':
@@ -503,19 +493,51 @@ class Entity(AppObject):
                 if hasattr(value, 'eid'):
                     value = value.eid
             qargs[attr] = value
+        rql = u''
         if relations:
-            rql = '%s: %s' % (rql, ', '.join(relations))
+            rql += ', '.join(relations)
         if restrictions:
-            rql = '%s WHERE %s' % (rql, ', '.join(restrictions))
-        created = execute(rql, qargs).get_entity(0, 0)
+            rql += ' WHERE %s' % ', '.join(restrictions)
+        return rql, qargs, pending_relations, attrcache
+
+    @classmethod
+    def _cw_handle_pending_relations(cls, eid, pending_relations, execute):
         for attr, role, values in pending_relations:
             if role == 'object':
                 restr = 'Y %s X' % attr
             else:
                 restr = 'X %s Y' % attr
+            if values is None:
+                execute('DELETE %s WHERE X eid %%(x)s' % restr, {'x': eid})
+                continue
             execute('SET %s WHERE X eid %%(x)s, Y eid IN (%s)' % (
                 restr, ','.join(str(getattr(r, 'eid', r)) for r in values)),
-                    {'x': created.eid}, build_descr=False)
+                    {'x': eid}, build_descr=False)
+
+    @classmethod
+    def cw_instantiate(cls, execute, **kwargs):
+        """add a new entity of this given type
+
+        Example (in a shell session):
+
+        >>> companycls = vreg['etypes'].etype_class(('Company')
+        >>> personcls = vreg['etypes'].etype_class(('Person')
+        >>> c = companycls.cw_instantiate(session.execute, name=u'Logilab')
+        >>> p = personcls.cw_instantiate(session.execute, firstname=u'John', lastname=u'Doe',
+        ...                              works_for=c)
+
+        You can also set relations where the entity has 'object' role by
+        prefixing the relation name by 'reverse_'. Also, relation values may be
+        an entity or eid, a list of entities or eids.
+        """
+        rql, qargs, pending_relations, attrcache = cls._cw_build_entity_query(kwargs)
+        if rql:
+            rql = 'INSERT %s X: %s' % (cls.__regid__, rql)
+        else:
+            rql = 'INSERT %s X' % (cls.__regid__)
+        created = execute(rql, qargs).get_entity(0, 0)
+        created.cw_attr_cache.update(attrcache)
+        cls._cw_handle_pending_relations(created.eid, pending_relations, execute)
         return created
 
     def __init__(self, req, rset=None, row=None, col=0):
@@ -1212,54 +1234,41 @@ class Entity(AppObject):
 
     # raw edition utilities ###################################################
 
-    def set_attributes(self, **kwargs): # XXX cw_set_attributes
+    def cw_set(self, **kwargs):
+        """update this entity using given attributes / relation, working in the
+        same fashion as :meth:`cw_instantiate`.
+
+        Example (in a shell session):
+
+        >>> c = rql('Any X WHERE X is Company').get_entity(0, 0)
+        >>> p = rql('Any X WHERE X is Person').get_entity(0, 0)
+        >>> c.set(name=u'Logilab')
+        >>> p.set(firstname=u'John', lastname=u'Doe', works_for=c)
+
+        You can also set relations where the entity has 'object' role by
+        prefixing the relation name by 'reverse_'.  Also, relation values may be
+        an entity or eid, a list of entities or eids, or None (meaning that all
+        relations of the given type from or to this object should be deleted).
+        """
         _check_cw_unsafe(kwargs)
         assert kwargs
         assert self.cw_is_saved(), "should not call set_attributes while entity "\
                "hasn't been saved yet"
-        relations = ['X %s %%(%s)s' % (key, key) for key in kwargs]
-        # and now update the database
-        kwargs['x'] = self.eid
-        self._cw.execute('SET %s WHERE X eid %%(x)s' % ','.join(relations),
-                         kwargs)
-        kwargs.pop('x')
+        rql, qargs, pending_relations, attrcache = self._cw_build_entity_query(kwargs)
+        if rql:
+            rql = 'SET ' + rql
+            qargs['x'] = self.eid
+            if ' WHERE ' in rql:
+                rql += ', X eid %(x)s'
+            else:
+                rql += ' WHERE X eid %(x)s'
+            self._cw.execute(rql, qargs)
         # update current local object _after_ the rql query to avoid
         # interferences between the query execution itself and the cw_edited /
         # skip_security machinery
-        self.cw_attr_cache.update(kwargs)
-
-    def set_relations(self, **kwargs): # XXX cw_set_relations
-        """add relations to the given object. To set a relation where this entity
-        is the object of the relation, use 'reverse_'<relation> as argument name.
-
-        Values may be an entity or eid, a list of entities or eids, or None
-        (meaning that all relations of the given type from or to this object
-        should be deleted).
-        """
-        # XXX update cache
-        _check_cw_unsafe(kwargs)
-        for attr, values in kwargs.iteritems():
-            if attr.startswith('reverse_'):
-                restr = 'Y %s X' % attr[len('reverse_'):]
-            else:
-                restr = 'X %s Y' % attr
-            if values is None:
-                self._cw.execute('DELETE %s WHERE X eid %%(x)s' % restr,
-                                 {'x': self.eid})
-                continue
-            if not isinstance(values, (tuple, list, set, frozenset)):
-                values = (values,)
-            eids = []
-            for val in values:
-                try:
-                    eids.append(str(val.eid))
-                except AttributeError:
-                    try:
-                        eids.append(str(typed_eid(val)))
-                    except (ValueError, TypeError):
-                        raise Exception('expected an Entity or eid, got %s' % val)
-            self._cw.execute('SET %s WHERE X eid %%(x)s, Y eid IN (%s)' % (
-                    restr, ','.join(eids)), {'x': self.eid})
+        self.cw_attr_cache.update(attrcache)
+        self._cw_handle_pending_relations(self.eid, pending_relations, self._cw.execute)
+        # XXX update relation cache
 
     def cw_delete(self, **kwargs):
         assert self.has_eid(), self.eid
@@ -1273,6 +1282,21 @@ class Entity(AppObject):
             self._cw.local_perm_cache.pop((rqlexpr.eid, (('x', self.eid),)), None)
 
     # deprecated stuff #########################################################
+
+    @deprecated('[3.15] use cw_set() instead')
+    def set_attributes(self, **kwargs): # XXX cw_set_attributes
+        self.cw_set(**kwargs)
+
+    @deprecated('[3.15] use cw_set() instead')
+    def set_relations(self, **kwargs): # XXX cw_set_relations
+        """add relations to the given object. To set a relation where this entity
+        is the object of the relation, use 'reverse_'<relation> as argument name.
+
+        Values may be an entity or eid, a list of entities or eids, or None
+        (meaning that all relations of the given type from or to this object
+        should be deleted).
+        """
+        self.cw_set(**kwargs)
 
     @deprecated('[3.13] use entity.cw_clear_all_caches()')
     def clear_all_caches(self):

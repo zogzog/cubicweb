@@ -9,5 +9,5 @@ for rqlcstr in rql('Any X,XT,XV WHERE X is CWConstraint, X cstrtype XT, X value 
     expression = rqlcstr.value
     mainvars = guess_rrqlexpr_mainvars(expression)
     yamscstr = CONSTRAINTS[rqlcstr.type](expression, mainvars)
-    rqlcstr.set_attributes(value=yamscstr.serialize())
+    rqlcstr.cw_set(value=yamscstr.serialize())
     print 'updated', rqlcstr.type, rqlcstr.value.strip()

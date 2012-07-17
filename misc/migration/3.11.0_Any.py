@@ -81,5 +81,5 @@ else:
         rset = session.execute('Any V WHERE X is CWProperty, X value V, X pkey %(k)s',
                                {'k': pkey})
         timestamp = int(rset[0][0])
-        sourceentity.set_attributes(latest_retrieval=datetime.fromtimestamp(timestamp))
+        sourceentity.cw_set(latest_retrieval=datetime.fromtimestamp(timestamp))
         session.execute('DELETE CWProperty X WHERE X pkey %(k)s', {'k': pkey})

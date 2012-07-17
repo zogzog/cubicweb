@@ -51,7 +51,7 @@ class _CWSourceCfgMixIn(object):
                     continue
                 raise
         cfgstr = unicode(generate_source_config(sconfig), self._cw.encoding)
-        self.set_attributes(config=cfgstr)
+        self.cw_set(config=cfgstr)
 
 
 class CWSource(_CWSourceCfgMixIn, AnyEntity):
@@ -181,5 +181,5 @@ class CWDataImport(AnyEntity):
     def write_log(self, session, **kwargs):
         if 'status' not in kwargs:
             kwargs['status'] = getattr(self, '_status', u'success')
-        self.set_attributes(log=u'<br/>'.join(self._logs), **kwargs)
+        self.cw_set(log=u'<br/>'.join(self._logs), **kwargs)
         self._logs = []

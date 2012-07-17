@@ -70,7 +70,7 @@ for entities in todelete.values():
 
 
 source_ent = rql('CWSource S WHERE S eid %(s)s', {'s': source.eid}).get_entity(0, 0)
-source_ent.set_attributes(type=u"ldapfeed", parser=u"ldapfeed")
+source_ent.cw_set(type=u"ldapfeed", parser=u"ldapfeed")
 
 
 commit()

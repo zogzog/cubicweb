@@ -335,7 +335,7 @@ class SetModificationDateOnStateChange(WorkflowHook):
             return
         entity = self._cw.entity_from_eid(self.eidfrom)
         try:
-            entity.set_attributes(modification_date=datetime.now())
+            entity.cw_set(modification_date=datetime.now())
         except RepositoryError, ex:
             # usually occurs if entity is coming from a read-only source
             # (eg ldap user)

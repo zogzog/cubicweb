@@ -70,13 +70,13 @@ from http://www.cubicweb.org/project/cubicweb-keyword).
 
         def test_cannot_create_cycles(self):
             # direct obvious cycle
-            self.assertRaises(ValidationError, self.kw1.set_relations,
+            self.assertRaises(ValidationError, self.kw1.cw_set,
                               subkeyword_of=self.kw1)
             # testing indirect cycles
             kw3 = self.execute('INSERT Keyword SK: SK name "kwgroup2", SK included_in C, '
                                'SK subkeyword_of K WHERE C name "classif1", K eid %s'
                                % self.kw1.eid).get_entity(0,0)
-            self.kw1.set_relations(subkeyword_of=kw3)
+            self.kw1.cw_set(subkeyword_of=kw3)
             self.assertRaises(ValidationError, self.commit)
 
 The test class defines a :meth:`setup_database` method which populates the
@@ -192,10 +192,10 @@ Let us look at simple example from the ``blog`` cube.
                                 description=u'cubicweb is beautiful')
             blog_entry_1 = req.create_entity('BlogEntry', title=u'hop',
                                              content=u'cubicweb hop')
-            blog_entry_1.set_relations(entry_of=cubicweb_blog)
+            blog_entry_1.cw_set(entry_of=cubicweb_blog)
             blog_entry_2 = req.create_entity('BlogEntry', title=u'yes',
                                              content=u'cubicweb yes')
-            blog_entry_2.set_relations(entry_of=cubicweb_blog)
+            blog_entry_2.cw_set(entry_of=cubicweb_blog)
             self.assertEqual(len(MAILBOX), 0)
             self.commit()
             self.assertEqual(len(MAILBOX), 2)

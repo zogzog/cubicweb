@@ -206,10 +206,11 @@ Hooks writing tips
 Reminder
 ~~~~~~~~
 
-You should never use the `entity.foo = 42` notation to update an
-entity. It will not do what you expect (updating the
-database). Instead, use the :meth:`set_attributes` and
-:meth:`set_relations` methods.
+You should never use the `entity.foo = 42` notation to update an entity. It will
+not do what you expect (updating the database). Instead, use the
+:meth:`~cubicweb.entity.Entity.cw_set` method or direct access to entity's
+:attr:`cw_edited` attribute if you're writing a hook for 'before_add_entity' or
+'before_update_entity' event.
 
 
 How to choose between a before and an after event ?

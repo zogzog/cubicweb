@@ -294,7 +294,7 @@ class SchemaModificationHooksTC(CubicWebTC):
     def test_change_fulltext_container(self):
         req = self.request()
         target = req.create_entity(u'EmailAddress', address=u'rick.roll@dance.com')
-        target.set_relations(reverse_use_email=req.user)
+        target.cw_set(reverse_use_email=req.user)
         self.commit()
         rset = req.execute('Any X WHERE X has_text "rick.roll"')
         self.assertIn(req.user.eid, [item[0] for item in rset])

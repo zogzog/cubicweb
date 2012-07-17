@@ -101,7 +101,7 @@ class CWUser(AnyEntity):
                 kwargs['for_user'] = self
             self._cw.create_entity('CWProperty', **kwargs)
         else:
-            prop.set_attributes(value=value)
+            prop.cw_set(value=value)
 
     def matching_groups(self, groups):
         """return the number of the given group(s) in which the user is

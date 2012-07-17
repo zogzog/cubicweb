@@ -47,16 +47,13 @@ classes are registered in order to initialize the class according to its schema:
   related to the current entity by the relation given in parameter
   and satisfying its constraints
 
-* `set_attributes(**kwargs)`, updates the attributes list with the corresponding
-  values given named parameters
+* :meth:`cw_set(**kwargs)`, updates entity's attributes and/or relation with the
+  corresponding values given named parameters. To set a relation where this
+  entity is the object of the relation, use `reverse_<relation>` as argument
+  name.  Values may be an entity, a list of entities, or None (meaning that all
+  relations of the given type from or to this object should be deleted).
 
-* `set_relations(**kwargs)`, add relations to the given object. To
-  set a relation where this entity is the object of the relation,
-  use `reverse_<relation>` as argument name.  Values may be an
-  entity, a list of entities, or None (meaning that all relations of
-  the given type from or to this object should be deleted).
-
-* `copy_relations(ceid)`, copies the relations of the entities having the eid
+* :meth:`copy_relations(ceid)`, copies the relations of the entities having the eid
   given in the parameters on the current entity
 
 * `delete()` allows to delete the entity
