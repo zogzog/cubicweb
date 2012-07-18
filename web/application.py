@@ -381,6 +381,9 @@ class CubicWebPublisher(object):
                     content = self.loggedout_content(req)
                     # let the explicitly reset http credential
                     raise AuthenticationError()
+        except Redirect, ex:
+            # authentication needs redirection (eg openid)
+            content = self.redirect_handler(req, ex)
         # Wrong, absent or Reseted credential
         except AuthenticationError:
             # If there is an https url configured and
@@ -445,17 +448,9 @@ class CubicWebPublisher(object):
                 result = ex.content
                 req.status_out = ex.status
             except Redirect, ex:
-                # handle redirect
-                # - comply to ex status
-                # - set header field
-                #
-                # Redirect Maybe be is raised by edit controller when
-                # everything went fine, so try to commit
-                self.debug('redirecting to %s', str(ex.location))
-                req.headers_out.setHeader('location', str(ex.location))
-                assert 300<= ex.status < 400
-                req.status_out = ex.status
-                result = ''
+                # Redirect may be raised by edit controller when everything went
+                # fine, so attempt to commit
+                result = self.redirect_handler(req, ex)
             if req.cnx:
                 txuuid = req.cnx.commit()
                 commited = True
@@ -501,7 +496,20 @@ class CubicWebPublisher(object):
         self.debug('query %s executed in %s sec', req.relative_path(), clock() - tstart)
         return result
 
-    ### Error handler
+    # Error handlers
+
+    def redirect_handler(self, req, ex):
+        """handle redirect
+        - comply to ex status
+        - set header field
+        - return empty content
+        """
+        self.debug('redirecting to %s', str(ex.location))
+        req.headers_out.setHeader('location', str(ex.location))
+        assert 300 <= ex.status < 400
+        req.status_out = ex.status
+        return ''
+
     def validation_error_handler(self, req, ex):
         ex.errors = dict((k, v) for k, v in ex.errors.items())
         if '__errorurl' in req.form:
@@ -550,8 +558,6 @@ class CubicWebPublisher(object):
             msg = u'<span class="undo">[<a href="%s">%s</a>]</span>' %(
             req.build_url('undo', txuuid=txuuid), req._('undo'))
             req.append_to_redirect_message(msg)
-
-
 
     def ajax_error_handler(self, req, ex):
         req.set_header('content-type', 'application/json')
