@@ -28,7 +28,7 @@ from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.mttransforms import HAS_TAL
 from cubicweb.entities import fetch_config
 from cubicweb.uilib import soup2xhtml
-from cubicweb.schema import RQLVocabularyConstraint
+from cubicweb.schema import RQLVocabularyConstraint, RRQLExpression
 
 class EntityTC(CubicWebTC):
 
@@ -360,6 +360,18 @@ class EntityTC(CubicWebTC):
             'S is Personne, S nom AA, S prenom AB, S modification_date AC, '
             'NOT (S connait AD, AD nom "toto"), AD is Personne, '
             'EXISTS(S travaille AE, AE nom "tutu")')
+
+    def test_unrelated_rql_security_rel_perms(self):
+        '''check `connait` add permission has no effect for a new entity on the
+        unrelated rql'''
+        rdef = self.schema['Personne'].rdef('connait')
+        perm_rrqle = RRQLExpression('U has_update_permission S')
+        with self.temporary_permissions((rdef, {'add': (perm_rrqle,)})):
+            person = self.vreg['etypes'].etype_class('Personne')(self.request())
+            rql = person.cw_unrelated_rql('connait', 'Personne', 'subject')[0]
+        self.assertEqual(rql, 'Any O,AA,AB,AC ORDERBY AC DESC WHERE '
+                         'O is Personne, O nom AA, O prenom AB, '
+                         'O modification_date AC')
 
     def test_unrelated_rql_constraints_edition_subject(self):
         person = self.request().create_entity('Personne', nom=u'sylvain')
