@@ -32,7 +32,6 @@ from cubicweb.devtools.repotest import RQLGeneratorTC
 from cubicweb.devtools.httptest import get_available_port
 from cubicweb.devtools import get_test_db_handler
 
-from cubicweb.server.session import security_enabled
 from cubicweb.server.sources.ldapuser import GlobTrFunc, UnknownEid, RQL2LDAPFilter
 
 CONFIG = u'user-base-dn=ou=People,dc=cubicweb,dc=test'
@@ -110,10 +109,9 @@ class DeleteStuffFromLDAPFeedSourceTC(LDAPTestBase):
 
     def _pull(self):
         with self.session.repo.internal_session() as isession:
-            with security_enabled(isession, read=False, write=False):
-                lfsource = isession.repo.sources_by_uri['ldapuser']
-                stats = lfsource.pull_data(isession, force=True, raise_on_error=True)
-                isession.commit()
+            lfsource = isession.repo.sources_by_uri['ldapuser']
+            stats = lfsource.pull_data(isession, force=True, raise_on_error=True)
+            isession.commit()
 
     def test_delete(self):
         """ delete syt, pull, check deactivation, repull,

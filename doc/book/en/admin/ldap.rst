@@ -29,6 +29,15 @@ Credential checks are _always_ done against the LDAP server.
 The base functionality for this is in
 :file:`cubicweb/server/sources/ldapuser.py`.
 
+External dependencies
+---------------------
+
+You'll need the following packages to make CubicWeb interact with your LDAP /
+Active Directory server:
+
+* python-ldap
+* ldaputils if using `ldapfeed` source
+
 Configurations options
 ----------------------
 

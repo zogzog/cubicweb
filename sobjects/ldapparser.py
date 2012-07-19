@@ -71,7 +71,9 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
         session.commit(free_cnxset=False)
 
     def update_if_necessary(self, entity, attrs):
-        entity.complete(tuple(attrs))
+        # disable read security to allow password selection
+        with entity._cw.security_enabled(read=False):
+            entity.complete(tuple(attrs))
         if entity.__regid__ == 'CWUser':
             wf = entity.cw_adapt_to('IWorkflowable')
             if wf.state == 'deactivated':
