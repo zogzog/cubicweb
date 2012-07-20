@@ -28,7 +28,7 @@ controller and the ``ajax-func`` cubicweb registry.
 functions that can be called from the javascript world.
 
 To register a new remote function, either decorate your function
-with the :ref:`cubicweb.web.views.ajaxcontroller.ajaxfunc` decorator:
+with the :func:`cubicweb.web.views.ajaxcontroller.ajaxfunc` decorator:
 
 .. sourcecode:: python
 

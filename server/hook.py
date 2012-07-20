@@ -236,8 +236,8 @@ filter them in or out. Note that ending the transaction with commit()
 or rollback() will restore the hooks.
 
 
-Hooks specific predicate
-~~~~~~~~~~~~~~~~~~~~~~~
+Hooks specific predicates
+~~~~~~~~~~~~~~~~~~~~~~~~~
 .. autoclass:: cubicweb.server.hook.match_rtype
 .. autoclass:: cubicweb.server.hook.match_rtype_sets
 
@@ -473,16 +473,18 @@ class match_rtype_sets(ExpectedValuePredicate):
     argument. The goal of this predicate is that it keeps reference to original sets,
     so modification to thoses sets are considered by the predicate. For instance
 
-    MYSET = set()
+    .. sourcecode:: python
 
-    class Hook1(Hook):
-        __regid__ = 'hook1'
-        __select__ = Hook.__select__ & match_rtype_sets(MYSET)
-        ...
+      MYSET = set()
 
-    class Hook2(Hook):
-        __regid__ = 'hook2'
-        __select__ = Hook.__select__ & match_rtype_sets(MYSET)
+      class Hook1(Hook):
+          __regid__ = 'hook1'
+          __select__ = Hook.__select__ & match_rtype_sets(MYSET)
+          ...
+
+      class Hook2(Hook):
+          __regid__ = 'hook2'
+          __select__ = Hook.__select__ & match_rtype_sets(MYSET)
 
     Client code can now change `MYSET`, this will changes the selection criteria
     of :class:`Hook1` and :class:`Hook1`.
