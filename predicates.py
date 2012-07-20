@@ -352,12 +352,12 @@ class EntityPredicate(EClassPredicate):
     """
 
     def __call__(self, cls, req, rset=None, row=None, col=0, accept_none=None,
-                 **kwargs):
-        if not rset and not kwargs.get('entity'):
+                 entity=None, **kwargs):
+        if not rset and entity is None:
             return 0
         score = 0
-        if kwargs.get('entity'):
-            score = self.score_entity(kwargs['entity'])
+        if entity is not None:
+            score = self.score_entity(entity)
         elif row is None:
             col = col or 0
             if accept_none is None:
@@ -1076,9 +1076,9 @@ class has_permission(EntityPredicate):
 
     # don't use EntityPredicate.__call__ but this optimized implementation to
     # avoid considering each entity when it's not necessary
-    def __call__(self, cls, req, rset=None, row=None, col=0, **kwargs):
-        if kwargs.get('entity'):
-            return self.score_entity(kwargs['entity'])
+    def __call__(self, cls, req, rset=None, row=None, col=0, entity=None, **kwargs):
+        if entity is not None:
+            return self.score_entity(entity)
         if rset is None:
             return 0
         if row is None:
