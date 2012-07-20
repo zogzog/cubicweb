@@ -306,7 +306,10 @@ CFGTYPE2ETYPE_MAP = {
 _forced_mode = os.environ.get('CW_MODE')
 assert _forced_mode in (None, 'system', 'user')
 
-CWDEV = exists(join(CW_SOFTWARE_ROOT, '.hg'))
+# CWDEV tells whether directories such as i18n/, web/data/, etc. (ie containing
+# some other resources than python libraries) are located with the python code
+# or as a 'shared' cube
+CWDEV = exists(join(CW_SOFTWARE_ROOT, 'i18n'))
 
 try:
     _INSTALL_PREFIX = os.environ['CW_INSTALL_PREFIX']
