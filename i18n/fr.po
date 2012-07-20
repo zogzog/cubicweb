@@ -223,9 +223,6 @@ msgstr "ET"
 msgid "About this site"
 msgstr "À propos de ce site"
 
-msgid "Action"
-msgstr "Action"
-
 #, python-format
 msgid "Added relation : %(entity_from)s %(rtype)s %(entity_to)s"
 msgstr "Relation ajoutée : %(entity_from)s %(rtype)s %(entity_to)s"
@@ -274,6 +271,10 @@ msgstr "Naviguer par catégorie"
 
 msgid "Browse by entity type"
 msgstr "Naviguer par type d'entité"
+
+#, python-format
+msgid "By %(user)s on %(dt)s [%(undo_link)s]"
+msgstr "Par %(user)s le %(dt)s [%(undo_link)s] "
 
 msgid "Bytes"
 msgstr "Donnée binaires"
@@ -775,9 +776,6 @@ msgstr "Heure internationale"
 msgid "TZTime_plural"
 msgstr "Heures internationales"
 
-msgid "Target"
-msgstr ""
-
 #, python-format
 msgid "The view %s can not be applied to this query"
 msgstr "La vue %s ne peut être appliquée à cette requête"
@@ -911,10 +909,6 @@ msgstr "Entité %(etype)s mise à jour : %(entity)s"
 
 msgid "Used by:"
 msgstr "Utilisé par :"
-
-#, python-format
-msgid "By %(user)s on %(dt)s [%(undo_link)s]"
-msgstr "Par %(user)s le %(dt)s [%(undo_link)s] "
 
 msgid "Users and groups management"
 msgstr "Gestion des utilisateurs et groupes"
@@ -2110,9 +2104,6 @@ msgstr "gestion des sources de données"
 msgid "date"
 msgstr "date"
 
-msgid "day"
-msgstr "jour"
-
 msgid "deactivate"
 msgstr "désactiver"
 
@@ -2124,9 +2115,6 @@ msgstr "décembre"
 
 msgid "default"
 msgstr "valeur par défaut"
-
-msgid "default /base view for (transaction) actions "
-msgstr ""
 
 msgid "default text format for rich text fields."
 msgstr "format de texte par défaut pour les champs textes"
@@ -2779,6 +2767,9 @@ msgstr "hCalendar"
 msgid "has_text"
 msgstr "contient le texte"
 
+msgid "header-center"
+msgstr "en-tête (centre)"
+
 msgid "header-left"
 msgstr "en-tête (gauche)"
 
@@ -3137,9 +3128,6 @@ msgstr "journal"
 msgid "log in"
 msgstr "s'identifier"
 
-msgid "log out first"
-msgstr "déconnecter vous d'abord"
-
 msgid "login"
 msgstr "identifiant"
 
@@ -3240,9 +3228,6 @@ msgstr "modifier"
 
 msgid "monday"
 msgstr "lundi"
-
-msgid "month"
-msgstr "mois"
 
 msgid "more actions"
 msgstr "plus d'actions"
@@ -4140,10 +4125,14 @@ msgid "the value \"%s\" is already used, use another one"
 msgstr "la valeur \"%s\" est déjà utilisée, veuillez utiliser une autre valeur"
 
 msgid "there is no next page"
-msgstr "il n'y a pas de page suivante"
+msgstr "Il n'y a pas de page suivante"
 
 msgid "there is no previous page"
-msgstr "il n'y a pas de page précédente"
+msgstr "Il n'y a pas de page précédente"
+
+#, python-format
+msgid "there is no transaction #%s"
+msgstr "Il n'y a pas de transaction #%s"
 
 msgid "this action is not reversible!"
 msgstr ""
@@ -4228,9 +4217,6 @@ msgstr "transitions vers cet état"
 msgctxt "State"
 msgid "to_state_object"
 msgstr "transition vers cet état"
-
-msgid "today"
-msgstr "aujourd'hui"
 
 msgid "todo_by"
 msgstr "à faire par"
@@ -4356,11 +4342,11 @@ msgstr "inaccessible"
 msgid "unauthorized value"
 msgstr "valeur non autorisée"
 
+msgid "undefined user"
+msgstr "utilisateur inconnu"
+
 msgid "undo"
 msgstr "annuler"
-
-msgid "undo last change"
-msgstr "annuler dernier changement"
 
 msgid "unique identifier used to connect to the application"
 msgstr "identifiant unique utilisé pour se connecter à l'application"
@@ -4595,9 +4581,6 @@ msgstr ""
 msgid "wednesday"
 msgstr "mercredi"
 
-msgid "week"
-msgstr "semaine"
-
 #, python-format
 msgid "welcome %s !"
 msgstr "bienvenue %s !"
@@ -4696,3 +4679,24 @@ msgid "you should un-inline relation %s which is supported and may be crossed "
 msgstr ""
 "vous devriez enlevé la mise en ligne de la relation %s qui est supportée et "
 "peut-être croisée"
+
+#~ msgid "Action"
+#~ msgstr "Action"
+
+#~ msgid "day"
+#~ msgstr "jour"
+
+#~ msgid "log out first"
+#~ msgstr "déconnecter vous d'abord"
+
+#~ msgid "month"
+#~ msgstr "mois"
+
+#~ msgid "today"
+#~ msgstr "aujourd'hui"
+
+#~ msgid "undo last change"
+#~ msgstr "annuler dernier changement"
+
+#~ msgid "week"
+#~ msgstr "semaine"

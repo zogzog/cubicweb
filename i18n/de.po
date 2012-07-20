@@ -222,9 +222,6 @@ msgstr "UND"
 msgid "About this site"
 msgstr "Über diese Seite"
 
-msgid "Action"
-msgstr ""
-
 #, python-format
 msgid "Added relation : %(entity_from)s %(rtype)s %(entity_to)s"
 msgstr ""
@@ -273,6 +270,10 @@ msgstr "nach Kategorien navigieren"
 
 msgid "Browse by entity type"
 msgstr "nach Identitätstyp navigieren"
+
+#, python-format
+msgid "By %(user)s on %(dt)s [%(undo_link)s]"
+msgstr ""
 
 msgid "Bytes"
 msgstr "Bytes"
@@ -774,9 +775,6 @@ msgstr ""
 msgid "TZTime_plural"
 msgstr ""
 
-msgid "Target"
-msgstr ""
-
 #, python-format
 msgid "The view %s can not be applied to this query"
 msgstr "Die Ansicht %s ist auf diese Anfrage nicht anwendbar."
@@ -908,10 +906,6 @@ msgstr ""
 
 msgid "Used by:"
 msgstr "benutzt von:"
-
-#, python-format
-msgid "User %(user_eid)s on %(dt)s [%(undo_link)s] \n"
-msgstr ""
 
 msgid "Users and groups management"
 msgstr ""
@@ -2069,9 +2063,6 @@ msgstr ""
 msgid "date"
 msgstr "Datum"
 
-msgid "day"
-msgstr ""
-
 msgid "deactivate"
 msgstr "deaktivieren"
 
@@ -2083,9 +2074,6 @@ msgstr "Dezember"
 
 msgid "default"
 msgstr "Standardwert"
-
-msgid "default /base view for (transaction) actions "
-msgstr ""
 
 msgid "default text format for rich text fields."
 msgstr "Standardformat für Textfelder"
@@ -2729,6 +2717,9 @@ msgstr "hCalendar"
 msgid "has_text"
 msgstr "enthält Text"
 
+msgid "header-center"
+msgstr ""
+
 msgid "header-left"
 msgstr ""
 
@@ -3088,9 +3079,6 @@ msgstr ""
 msgid "log in"
 msgstr "anmelden"
 
-msgid "log out first"
-msgstr "Melden Sie sich zuerst ab."
-
 msgid "login"
 msgstr "Anmeldung"
 
@@ -3192,9 +3180,6 @@ msgstr "ändern"
 
 msgid "monday"
 msgstr "Montag"
-
-msgid "month"
-msgstr ""
 
 msgid "more actions"
 msgstr "weitere Aktionen"
@@ -4085,6 +4070,10 @@ msgstr ""
 msgid "there is no previous page"
 msgstr ""
 
+#, python-format
+msgid "there is no transaction #%s"
+msgstr ""
+
 msgid "this action is not reversible!"
 msgstr "Achtung! Diese Aktion ist unumkehrbar."
 
@@ -4167,9 +4156,6 @@ msgstr "Übergänge zu dem Zustand"
 msgctxt "State"
 msgid "to_state_object"
 msgstr "Übergang zu diesem Zustand"
-
-msgid "today"
-msgstr ""
 
 msgid "todo_by"
 msgstr "zu erledigen bis"
@@ -4295,11 +4281,11 @@ msgstr "nicnt zugänglich"
 msgid "unauthorized value"
 msgstr "ungültiger Wert"
 
+msgid "undefined user"
+msgstr ""
+
 msgid "undo"
 msgstr "rückgängig machen"
-
-msgid "undo last change"
-msgstr ""
 
 msgid "unique identifier used to connect to the application"
 msgstr "eindeutiger Bezeichner zur Verbindung mit der Anwendung"
@@ -4537,9 +4523,6 @@ msgstr "Momentan können wir diese sparql-Anfrage noch nicht ausführen."
 msgid "wednesday"
 msgstr "Mittwoch"
 
-msgid "week"
-msgstr "Woche"
-
 #, python-format
 msgid "welcome %s !"
 msgstr "Willkommen %s !"
@@ -4642,3 +4625,9 @@ msgstr ""
 #~ msgstr ""
 #~ "Kann die Relation %(rtype)s der Entität %(eid)s nicht wieder herstellen, "
 #~ "diese Relation existiert nicht mehr in dem Schema."
+
+#~ msgid "log out first"
+#~ msgstr "Melden Sie sich zuerst ab."
+
+#~ msgid "week"
+#~ msgstr "Woche"
