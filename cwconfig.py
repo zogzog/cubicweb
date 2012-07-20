@@ -171,6 +171,7 @@ _ = unicode
 
 import sys
 import os
+import stat
 import logging
 import logging.config
 from smtplib import SMTP
@@ -1076,7 +1077,12 @@ the repository',
         If not, try to fix this, letting exception propagate when not possible.
         """
         if not exists(path):
-            os.makedirs(path)
+            self.info('creating %s directory', path)
+            try:
+                os.makedirs(path)
+            except OSError, ex:
+                self.warning('error while creating %s directory: %s', path, ex)
+                return
         if self['uid']:
             try:
                 uid = int(self['uid'])
@@ -1090,10 +1096,20 @@ the repository',
                 return
         fstat = os.stat(path)
         if fstat.st_uid != uid:
-            os.chown(path, uid, os.getgid())
-        import stat
+            self.info('giving ownership of %s directory to %s', path, self['uid'])
+            try:
+                os.chown(path, uid, os.getgid())
+            except OSError, ex:
+                self.warning('error while giving ownership of %s directory to %s: %s',
+                             path, self['uid'], ex)
         if not (fstat.st_mode & stat.S_IWUSR):
-            os.chmod(path, fstat.st_mode | stat.S_IWUSR)
+            self.info('forcing write permission on directory %s', path)
+            try:
+                os.chmod(path, fstat.st_mode | stat.S_IWUSR)
+            except OSError, ex:
+                self.warning('error while forcing write permission on directory %s: %s',
+                             path, ex)
+                return
 
     @cached
     def instance_md5_version(self):
