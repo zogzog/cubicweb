@@ -843,16 +843,16 @@ class LoginControllerTC(CubicWebTC):
 
     def test_login_with_dest(self):
         req = self.request()
-        req.form = {'postlogin_path': '/elephants/babar'}
+        req.form = {'postlogin_path': 'elephants/babar'}
         with self.assertRaises(Redirect) as cm:
             self.ctrl_publish(req, ctrl='login')
-        self.assertEqual('/elephants/babar', cm.exception.location)
+        self.assertEqual(req.build_url('elephants/babar'), cm.exception.location)
 
     def test_login_no_dest(self):
         req = self.request()
         with self.assertRaises(Redirect) as cm:
             self.ctrl_publish(req, ctrl='login')
-        self.assertEqual('.', cm.exception.location)
+        self.assertEqual(req.base_url(), cm.exception.location)
 
 if __name__ == '__main__':
     unittest_main()
