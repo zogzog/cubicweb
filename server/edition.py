@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -61,7 +61,10 @@ class EditedEntity(dict):
         # attributes, else we may accidentaly skip a desired security check
         if attr not in self:
             self.skip_security.add(attr)
-        self.entity._cw_dont_cache_attribute(attr)
+        elif value != self[attr]:
+            # also, if value differs, mark attribute as needing purge by the
+            # client
+            self.entity._cw_dont_cache_attribute(attr)
         self.edited_attribute(attr, value)
 
     def __delitem__(self, attr):

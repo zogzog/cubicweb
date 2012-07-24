@@ -562,6 +562,7 @@ class Entity(AppObject):
         for key in self._cw.get_shared_data('%s.dont-cache-attrs' % self.eid,
                                             default=(), txdata=True, pop=True):
             attrcache.pop(key, None)
+            self.cw_attr_cache.pop(key, None)
         self.cw_attr_cache.update(attrcache)
 
     def _cw_dont_cache_attribute(self, attr):
