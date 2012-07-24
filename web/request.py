@@ -96,9 +96,9 @@ class CubicWebRequestBase(DBAPIRequest):
         super(CubicWebRequestBase, self).__init__(vreg)
         #: (Boolean) Is this an https request.
         self.https = https
-        #: User interface property (vary with https) (see uiprops_)
+        #: User interface property (vary with https) (see :ref:`uiprops`)
         self.uiprops = None
-        #: url for serving datadir (vary with https) (see resources_)
+        #: url for serving datadir (vary with https) (see :ref:`resources`)
         self.datadir_url = None
         if https:
             self.uiprops = vreg.config.https_uiprops
@@ -171,7 +171,7 @@ class CubicWebRequestBase(DBAPIRequest):
     def authmode(self):
         """Authentification mode of the instance
 
-        (see `Configuring the Web server`_)"""
+        (see :ref:`Configuring the Web server`)"""
         return self.vreg.config['auth-mode']
 
     # Various variable generator.

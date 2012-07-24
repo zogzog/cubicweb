@@ -237,7 +237,7 @@ or rollback() will restore the hooks.
 
 
 Hooks specific predicate
-~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~
 .. autoclass:: cubicweb.server.hook.match_rtype
 .. autoclass:: cubicweb.server.hook.match_rtype_sets
 

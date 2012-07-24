@@ -65,7 +65,7 @@ set has a tabular structure with rows and columns, hence cells):
 
 Other basic view classes
 ````````````````````````
-Here are some of the subclasses of :ref:`View` defined in :ref:`cubicweb.view`
+Here are some of the subclasses of :class:`~cubicweb.view.View` defined in :mod:`cubicweb.view`
 that are more concrete as they relate to data rendering within the application:
 
 .. autoclass:: cubicweb.view.EntityView

@@ -476,6 +476,7 @@ class CubicWebTC(TestCase):
         * using positional argument(s):
 
           .. sourcecode:: python
+
                 rdef = self.schema['CWUser'].rdef('login')
                 with self.temporary_permissions((rdef, {'read': ()})):
                     ...
@@ -484,6 +485,7 @@ class CubicWebTC(TestCase):
         * using named argument(s):
 
           .. sourcecode:: python
+
                 rdef = self.schema['CWUser'].rdef('login')
                 with self.temporary_permissions(CWUser={'read': ()}):
                     ...
