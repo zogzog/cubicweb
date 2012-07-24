@@ -455,7 +455,7 @@ class Entity(AppObject):
     def _cw_build_entity_query(cls, kwargs):
         relations = []
         restrictions = set()
-        pending_relations = []
+        pendingrels = []
         eschema = cls.e_schema
         qargs = {}
         attrcache = {}
@@ -474,13 +474,13 @@ class Entity(AppObject):
                     value = iter(value).next()
                 else:
                     # prepare IN clause
-                    pending_relations.append( (attr, role, value) )
+                    pendingrels.append( (attr, role, value) )
                     continue
             if rschema.final: # attribute
                 relations.append('X %s %%(%s)s' % (attr, attr))
                 attrcache[attr] = value
             elif value is None:
-                pending_relations.append( (attr, role, value) )
+                pendingrels.append( (attr, role, value) )
             else:
                 rvar = attr.upper()
                 if role == 'object':
@@ -498,11 +498,11 @@ class Entity(AppObject):
             rql += ', '.join(relations)
         if restrictions:
             rql += ' WHERE %s' % ', '.join(restrictions)
-        return rql, qargs, pending_relations, attrcache
+        return rql, qargs, pendingrels, attrcache
 
     @classmethod
-    def _cw_handle_pending_relations(cls, eid, pending_relations, execute):
-        for attr, role, values in pending_relations:
+    def _cw_handle_pending_relations(cls, eid, pendingrels, execute):
+        for attr, role, values in pendingrels:
             if role == 'object':
                 restr = 'Y %s X' % attr
             else:
@@ -530,14 +530,15 @@ class Entity(AppObject):
         prefixing the relation name by 'reverse_'. Also, relation values may be
         an entity or eid, a list of entities or eids.
         """
-        rql, qargs, pending_relations, attrcache = cls._cw_build_entity_query(kwargs)
+        rql, qargs, pendingrels, attrcache = cls._cw_build_entity_query(kwargs)
         if rql:
             rql = 'INSERT %s X: %s' % (cls.__regid__, rql)
         else:
             rql = 'INSERT %s X' % (cls.__regid__)
         created = execute(rql, qargs).get_entity(0, 0)
+        created._cw_update_attr_cache(attrcache)
         created.cw_attr_cache.update(attrcache)
-        cls._cw_handle_pending_relations(created.eid, pending_relations, execute)
+        cls._cw_handle_pending_relations(created.eid, pendingrels, execute)
         return created
 
     def __init__(self, req, rset=None, row=None, col=0):
@@ -556,6 +557,19 @@ class Entity(AppObject):
 
     def __cmp__(self, other):
         raise NotImplementedError('comparison not implemented for %s' % self.__class__)
+
+    def _cw_update_attr_cache(self, attrcache):
+        for key in self._cw.get_shared_data('%s.dont-cache-attrs' % self.eid,
+                                            default=(), txdata=True, pop=True):
+            attrcache.pop(key, None)
+        self.cw_attr_cache.update(attrcache)
+
+    def _cw_dont_cache_attribute(self, attr):
+        """repository side method called when some attribute have been
+        transformed by a hook, hence original value should not be cached by
+        client
+        """
+        self._cw.transaction_data.setdefault('%s.dont-cache-attrs' % self.eid, set()).add(attr)
 
     def __json_encode__(self):
         """custom json dumps hook to dump the entity's eid
@@ -1254,7 +1268,7 @@ class Entity(AppObject):
         assert kwargs
         assert self.cw_is_saved(), "should not call set_attributes while entity "\
                "hasn't been saved yet"
-        rql, qargs, pending_relations, attrcache = self._cw_build_entity_query(kwargs)
+        rql, qargs, pendingrels, attrcache = self._cw_build_entity_query(kwargs)
         if rql:
             rql = 'SET ' + rql
             qargs['x'] = self.eid
@@ -1266,8 +1280,8 @@ class Entity(AppObject):
         # update current local object _after_ the rql query to avoid
         # interferences between the query execution itself and the cw_edited /
         # skip_security machinery
-        self.cw_attr_cache.update(attrcache)
-        self._cw_handle_pending_relations(self.eid, pending_relations, self._cw.execute)
+        self._cw_update_attr_cache(attrcache)
+        self._cw_handle_pending_relations(self.eid, pendingrels, self._cw.execute)
         # XXX update relation cache
 
     def cw_delete(self, **kwargs):
