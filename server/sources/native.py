@@ -613,12 +613,10 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         etype = entities[0].__regid__
         for attr, storage in self._storages.get(etype, {}).items():
             for entity in entities:
-                try:
-                    edited = entity.cw_edited
-                except AttributeError:
-                    assert event == 'deleted'
-                    getattr(storage, 'entity_deleted')(entity, attr)
+                if event == 'deleted':
+                    storage.entity_deleted(entity, attr)
                 else:
+                    edited = entity.cw_edited
                     if attr in edited:
                         handler = getattr(storage, 'entity_%s' % event)
                         to_restore = handler(entity, attr)
