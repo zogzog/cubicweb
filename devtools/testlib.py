@@ -817,9 +817,8 @@ class CubicWebTC(TestCase):
         """
         req = req or rset and rset.req or self.request()
         req.form['vid'] = vid
-        kwargs['rset'] = rset
         viewsreg = self.vreg['views']
-        view = viewsreg.select(vid, req, **kwargs)
+        view = viewsreg.select(vid, req, rset=rset, **kwargs)
         # set explicit test description
         if rset is not None:
             self.set_description("testing vid=%s defined in %s with (%s)" % (
@@ -831,10 +830,8 @@ class CubicWebTC(TestCase):
             viewfunc = view.render
         else:
             kwargs['view'] = view
-            templateview = viewsreg.select(template, req, **kwargs)
             viewfunc = lambda **k: viewsreg.main_template(req, template,
-                                                          **kwargs)
-        kwargs.pop('rset')
+                                                          rset=rset, **kwargs)
         return self._test_view(viewfunc, view, template, kwargs)
 
 
