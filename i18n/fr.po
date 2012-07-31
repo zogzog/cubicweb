@@ -3331,6 +3331,9 @@ msgstr "haut de page du contenu principal"
 msgid "new"
 msgstr "nouveau"
 
+msgid "next page"
+msgstr "page suivante"
+
 msgid "next_results"
 msgstr "résultats suivants"
 
@@ -3533,6 +3536,9 @@ msgstr "forme préférée de"
 
 msgid "preferences"
 msgstr "préférences"
+
+msgid "previous page"
+msgstr "page précédente"
 
 msgid "previous_results"
 msgstr "résultats précédents"

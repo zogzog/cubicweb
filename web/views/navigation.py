@@ -364,11 +364,13 @@ class NextPrevNavigationComponent(EntityCtxComponent):
 
     @property
     def prev_icon(self):
-        return '<img src="%s"/>' % xml_escape(self._cw.data_url('go_prev.png'))
+        return '<img src="%s" alt="%s" />' % (
+            xml_escape(self._cw.data_url('go_prev.png')), self._cw._('previous page'))
 
     @property
     def next_icon(self):
-        return '<img src="%s"/>' % xml_escape(self._cw.data_url('go_next.png'))
+        return '<img src="%s" alt="%s" />' % (
+            xml_escape(self._cw.data_url('go_next.png')), self._cw._('next page'))
 
     def init_rendering(self):
         adapter = self.entity.cw_adapt_to('IPrevNext')

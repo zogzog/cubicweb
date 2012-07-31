@@ -3199,6 +3199,9 @@ msgstr "page top"
 msgid "new"
 msgstr ""
 
+msgid "next page"
+msgstr ""
+
 msgid "next_results"
 msgstr "next results"
 
@@ -3397,6 +3400,9 @@ msgid "prefered_form_object"
 msgstr "prefered over"
 
 msgid "preferences"
+msgstr ""
+
+msgid "previous page"
 msgstr ""
 
 msgid "previous_results"

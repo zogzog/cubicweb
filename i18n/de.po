@@ -3283,6 +3283,9 @@ msgstr "zum Hauptinhalt springen"
 msgid "new"
 msgstr "neu"
 
+msgid "next page"
+msgstr ""
+
 msgid "next_results"
 msgstr "weitere Ergebnisse"
 
@@ -3483,6 +3486,9 @@ msgstr "bevorzugte form von"
 
 msgid "preferences"
 msgstr "Einstellungen"
+
+msgid "previous page"
+msgstr ""
 
 msgid "previous_results"
 msgstr "vorige Ergebnisse"

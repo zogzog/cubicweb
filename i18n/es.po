@@ -3324,6 +3324,9 @@ msgstr "Encabezado del contenido principal"
 msgid "new"
 msgstr "Nuevo"
 
+msgid "next page"
+msgstr ""
+
 msgid "next_results"
 msgstr "Siguientes resultados"
 
@@ -3524,6 +3527,9 @@ msgstr "Email principal de"
 
 msgid "preferences"
 msgstr "Preferencias"
+
+msgid "previous page"
+msgstr ""
 
 msgid "previous_results"
 msgstr "Resultados Anteriores"
