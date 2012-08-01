@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -90,6 +90,7 @@ class LazyViewMixin(object):
 
 class TabsMixin(LazyViewMixin):
     """a tab mixin to easily get jQuery based, lazy, ajax tabs"""
+    lazy = True
 
     @property
     def cookie_name(self):
@@ -118,11 +119,11 @@ class TabsMixin(LazyViewMixin):
             else:
                 tabid, tabkwargs = tab
                 tabkwargs = tabkwargs.copy()
-            tabkwargs.setdefault('rset', self.cw_rset)
             vid = tabkwargs.get('vid', tabid)
             domid = uilib.domid(tabid)
             try:
-                viewsvreg.select(vid, self._cw, **tabkwargs)
+                viewsvreg.select(vid, self._cw, rset=self.cw_rset,
+                                 tabid=domid, **tabkwargs)
             except NoSelectableObject:
                 continue
             selected_tabs.append((tabid, domid, tabkwargs))
@@ -157,16 +158,20 @@ class TabsMixin(LazyViewMixin):
         w(u'</ul>')
         for tabid, domid, tabkwargs in tabs:
             w(u'<div id="%s">' % domid)
-            tabkwargs.setdefault('tabid', domid)
-            tabkwargs.setdefault('vid', tabid)
             tabkwargs.setdefault('rset', self.cw_rset)
-            self.lazyview(**tabkwargs)
+            if self.lazy:
+                tabkwargs.setdefault('tabid', domid)
+                tabkwargs.setdefault('vid', tabid)
+                self.lazyview(**tabkwargs)
+            else:
+                self._cw.view(tabid, w=self.w, **tabkwargs)
             w(u'</div>')
         w(u'</div>')
         # call the setTab() JS function *after* each tab is generated
         # because the callback binding needs to be done before
         # XXX make work history: true
-        self._cw.add_onload(u"""
+        if self.lazy:
+            self._cw.add_onload(u"""
   jQuery('#entity-tabs-%(eeid)s').tabs(
     { selected: %(tabindex)s,
       select: function(event, ui) {
