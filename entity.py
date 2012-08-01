@@ -1298,11 +1298,11 @@ class Entity(AppObject):
 
     # deprecated stuff #########################################################
 
-    @deprecated('[3.15] use cw_set() instead')
+    @deprecated('[3.16] use cw_set() instead')
     def set_attributes(self, **kwargs): # XXX cw_set_attributes
         self.cw_set(**kwargs)
 
-    @deprecated('[3.15] use cw_set() instead')
+    @deprecated('[3.16] use cw_set() instead')
     def set_relations(self, **kwargs): # XXX cw_set_relations
         """add relations to the given object. To set a relation where this entity
         is the object of the relation, use 'reverse_'<relation> as argument name.
