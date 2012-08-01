@@ -781,6 +781,14 @@ class JSonControllerTC(AjaxControllerTC):
         res, req = self.remote_call('foo')
         self.assertEqual(res, '12')
 
+    def test_monkeypatch_jsoncontroller_stdfunc(self):
+        @monkeypatch(JSonController)
+        @jsonize
+        def js_reledit_form(self):
+            return 12
+        res, req = self.remote_call('reledit_form')
+        self.assertEqual(res, '12')
+
 
 class UndoControllerTC(CubicWebTC):
 

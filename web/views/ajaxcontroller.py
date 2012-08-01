@@ -63,6 +63,7 @@ implement the ``__call__`` method:
 
 __docformat__ = "restructuredtext en"
 
+from warnings import warn
 from functools import partial
 
 from logilab.common.date import strptime
@@ -114,22 +115,20 @@ class AjaxController(Controller):
             fname = self._cw.form['fname']
         except KeyError:
             raise RemoteCallFailed('no method specified')
+        # 1/ check first for old-style (JSonController) ajax func for bw compat
         try:
-            func = self._cw.vreg['ajax-func'].select(fname, self._cw)
-        except ObjectNotFound:
-            # function not found in the registry, inspect JSonController for
-            # backward compatibility
+            func = getattr(basecontrollers.JSonController, 'js_%s' % fname).im_func
+            func = partial(func, self)
+        except AttributeError:
+            # 2/ check for new-style (AjaxController) ajax func
             try:
-                func = getattr(basecontrollers.JSonController, 'js_%s' % fname).im_func
-                func = partial(func, self)
-            except AttributeError:
+                func = self._cw.vreg['ajax-func'].select(fname, self._cw)
+            except ObjectNotFound:
                 raise RemoteCallFailed('no %s method' % fname)
-            else:
-                self.warning('remote function %s found on JSonController, '
-                             'use AjaxFunction / @ajaxfunc instead', fname)
-        except NoSelectableObject:
-            raise RemoteCallFailed('method %s not available in this context'
-                                   % fname)
+        else:
+            warn('[3.15] remote function %s found on JSonController, '
+                 'use AjaxFunction / @ajaxfunc instead' % fname,
+                 DeprecationWarning, stacklevel=2)
         # no <arg> attribute means the callback takes no argument
         args = self._cw.form.get('arg', ())
         if not isinstance(args, (list, tuple)):
