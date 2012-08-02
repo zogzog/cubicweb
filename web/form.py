@@ -88,23 +88,19 @@ class Form(AppObject):
 
     def __init__(self, req, rset=None, row=None, col=None,
                  submitmsg=None, mainform=True, **kwargs):
-        super(Form, self).__init__(req, rset=rset, row=row, col=col)
+        # process kwargs first so we can properly pass them to Form and match
+        # order expectation (ie cw_extra_kwargs populated almost first)
+        hiddens, extrakw = self._process_kwargs(kwargs)
+        # now call ancestor init
+        super(Form, self).__init__(req, rset=rset, row=row, col=col, **extrakw)
+        # then continue with further specific initialization
         self.fields = list(self.__class__._fields_)
+        for key, val in hiddens:
+            self.add_hidden(key, val)
         if mainform:
             formid = kwargs.pop('formvid', self.__regid__)
             self.add_hidden(u'__form_id', formid)
             self._posting = self._cw.form.get('__form_id') == formid
-        for key, val in kwargs.iteritems():
-            if key in controller.NAV_FORM_PARAMETERS:
-                self.add_hidden(key, val)
-            elif key == 'redirect_path':
-                self.add_hidden(u'__redirectpath', val)
-            elif hasattr(self.__class__, key) and not key[0] == '_':
-                setattr(self, key, val)
-            else:
-                self.cw_extra_kwargs[key] = val
-            # skip other parameters, usually given for selection
-            # (else write a custom class to handle them)
         if mainform:
             self.add_hidden(u'__errorurl', self.session_key())
             self.add_hidden(u'__domid', self.domid)
@@ -118,6 +114,22 @@ class Form(AppObject):
                         self.add_hidden(param, value)
         if submitmsg is not None:
             self.set_message(submitmsg)
+
+    def _process_kwargs(self, kwargs):
+        hiddens = []
+        extrakw = {}
+        # search for navigation parameters and customization of existing
+        # attributes; remaining stuff goes in extrakwargs
+        for key, val in kwargs.iteritems():
+            if key in controller.NAV_FORM_PARAMETERS:
+                hiddens.append( (key, val) )
+            elif key == 'redirect_path':
+                hiddens.append( (u'__redirectpath', val) )
+            elif hasattr(self.__class__, key) and not key[0] == '_':
+                setattr(self, key, val)
+            else:
+                extrakw[key] = val
+        return hiddens, extrakw
 
     def set_message(self, submitmsg):
         """sets a submitmsg if exists, using _cwmsgid mechanism """
