@@ -61,10 +61,8 @@ class EditedEntity(dict):
         # attributes, else we may accidentaly skip a desired security check
         if attr not in self:
             self.skip_security.add(attr)
-        elif value != self[attr]:
-            # also, if value differs, mark attribute as needing purge by the
-            # client
-            self.entity._cw_dont_cache_attribute(attr)
+        # mark attribute as needing purge by the client
+        self.entity._cw_dont_cache_attribute(attr)
         self.edited_attribute(attr, value)
 
     def __delitem__(self, attr):
