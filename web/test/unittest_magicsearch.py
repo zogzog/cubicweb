@@ -235,7 +235,6 @@ class RQLSuggestionsBuilderTC(CubicWebTC):
     def suggestions(self, rql):
         req = self.request()
         rbs = self.vreg['components'].select('rql.suggestions', req)
-        rbs.attr_value_limit = 10 # limit to 10 to ease vocabulry tests
         return rbs.build_suggestions(rql)
 
     def test_no_restrictions_rql(self):
@@ -319,6 +318,11 @@ class RQLSuggestionsBuilderTC(CubicWebTC):
             req.create_entity('Personne', nom=u'n%s' % i, prenom=u'p%s' % i)
         self.assertListEqual(['Any X WHERE X is Personne, X nom "n0"',
                               'Any X WHERE X is Personne, X nom "n1"',
+                              'Any X WHERE X is Personne, X nom "n10"',
+                              'Any X WHERE X is Personne, X nom "n11"',
+                              'Any X WHERE X is Personne, X nom "n12"',
+                              'Any X WHERE X is Personne, X nom "n13"',
+                              'Any X WHERE X is Personne, X nom "n14"',
                               'Any X WHERE X is Personne, X nom "n2"',
                               'Any X WHERE X is Personne, X nom "n3"',
                               'Any X WHERE X is Personne, X nom "n4"',

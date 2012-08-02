@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -452,7 +452,7 @@ class RQLSuggestionsBuilder(Component):
             else:
                 restrictions, incomplete_part = '', restrictions
                 user_rql = variables
-            select = parse(user_rql).children[0]
+            select = parse(user_rql, print_errors=False).children[0]
             req.vreg.rqlhelper.annotate(select)
             req.vreg.solutions(req, select, {})
             if restrictions:
