@@ -559,10 +559,14 @@ class Entity(AppObject):
         raise NotImplementedError('comparison not implemented for %s' % self.__class__)
 
     def _cw_update_attr_cache(self, attrcache):
-        for key in self._cw.get_shared_data('%s.dont-cache-attrs' % self.eid,
-                                            default=(), txdata=True, pop=True):
-            attrcache.pop(key, None)
-            self.cw_attr_cache.pop(key, None)
+        # if context is a repository session, don't consider dont-cache-attrs as
+        # the instance already hold modified values and loosing them could
+        # introduce severe problems
+        if self._cw.is_request:
+            for attr in self._cw.get_shared_data('%s.dont-cache-attrs' % self.eid,
+                                                 default=(), txdata=True, pop=True):
+                attrcache.pop(attr, None)
+                self.cw_attr_cache.pop(attr, None)
         self.cw_attr_cache.update(attrcache)
 
     def _cw_dont_cache_attribute(self, attr):

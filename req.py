@@ -62,6 +62,8 @@ class RequestSessionBase(object):
     :attribute vreg.schema: the instance's schema
     :attribute vreg.config: the instance's configuration
     """
+    is_request = True # False for repository session
+
     def __init__(self, vreg):
         self.vreg = vreg
         try:

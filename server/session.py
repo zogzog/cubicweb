@@ -241,6 +241,7 @@ class Session(RequestSessionBase):
       :attr:`running_dbapi_query`, boolean flag telling if the executing query
       is coming from a dbapi connection or is a query from within the repository
     """
+    is_request = False
     is_internal_session = False
 
     def __init__(self, user, repo, cnxprops=None, _id=None):
