@@ -1,3 +1,9 @@
+cubicweb (3.15.3-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Pierre-Yves David <pierre-yves.david@logilab.fr>  Tue, 21 Aug 2012 14:19:31 +0200
+
 cubicweb (3.15.2-1) unstable; urgency=low
 
   * new upstream release
