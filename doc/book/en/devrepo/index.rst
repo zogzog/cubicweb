@@ -21,3 +21,5 @@ separate layer and has its own whole chapter.
    testing.rst
    migration.rst
    profiling.rst
+   fti.rst
+
