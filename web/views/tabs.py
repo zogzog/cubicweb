@@ -119,11 +119,11 @@ class TabsMixin(LazyViewMixin):
             else:
                 tabid, tabkwargs = tab
                 tabkwargs = tabkwargs.copy()
+            tabkwargs.setdefault('rset', self.cw_rset)
             vid = tabkwargs.get('vid', tabid)
             domid = uilib.domid(tabid)
             try:
-                viewsvreg.select(vid, self._cw, rset=self.cw_rset,
-                                 tabid=domid, **tabkwargs)
+                viewsvreg.select(vid, self._cw, tabid=domid, **tabkwargs)
             except NoSelectableObject:
                 continue
             selected_tabs.append((tabid, domid, tabkwargs))
@@ -158,7 +158,6 @@ class TabsMixin(LazyViewMixin):
         w(u'</ul>')
         for tabid, domid, tabkwargs in tabs:
             w(u'<div id="%s">' % domid)
-            tabkwargs.setdefault('rset', self.cw_rset)
             if self.lazy:
                 tabkwargs.setdefault('tabid', domid)
                 tabkwargs.setdefault('vid', tabid)
