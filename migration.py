@@ -514,7 +514,9 @@ class ConfigurationProblem(object):
                     elif op == None:
                         continue
                     else:
-                        print 'unable to handle this case', oper, version, op, ver
+                        print ('unable to handle %s in %s, set to `%s %s` '
+                               'but currently up to `%s %s`' %
+                               (cube, source, oper, version, op, ver))
             # "solve" constraint satisfaction problem
             if cube not in self.cubes:
                 self.errors.append( ('add', cube, version, source) )
