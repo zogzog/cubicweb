@@ -171,7 +171,7 @@ class TabsMixin(LazyViewMixin):
         # XXX make work history: true
         if self.lazy:
             self._cw.add_onload(u"""
-  jQuery('#entity-tabs-%(eeid)s').tabs(
+  jQuery('#entity-tabs-%(uid)s').tabs(
     { selected: %(tabindex)s,
       select: function(event, ui) {
         setTab(ui.panel.id, '%(cookiename)s');
@@ -179,9 +179,13 @@ class TabsMixin(LazyViewMixin):
     });
   setTab('%(domid)s', '%(cookiename)s');
 """ % {'tabindex'   : active_tab_idx,
-       'domid'        : active_tab,
-       'eeid'       : (entity and entity.eid or uid),
+       'domid'      : active_tab,
+       'uid'        : uid,
        'cookiename' : self.cookie_name})
+        else:
+            self._cw.add_onload(
+                u"jQuery('#entity-tabs-%(uid)s').tabs({selected: %(tabindex)s});"
+                % {'tabindex': active_tab_idx, 'uid': uid})
 
 
 class EntityRelationView(EntityView):
@@ -222,8 +226,7 @@ class TabbedPrimaryView(TabsMixin, primary.PrimaryView):
     tabs = [_('main_tab')]
     default_tab = 'main_tab'
 
-    def cell_call(self, row, col):
-        entity = self.cw_rset.complete_entity(row, col)
+    def render_entity(self, entity):
         self.render_entity_toolbox(entity)
         self.w(u'<div class="tabbedprimary"></div>')
         self.render_entity_title(entity)
