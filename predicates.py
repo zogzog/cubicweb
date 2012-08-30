@@ -558,7 +558,7 @@ def any_rset(cls, req, rset=None, **kwargs):
 @objectify_predicate
 def nonempty_rset(cls, req, rset=None, **kwargs):
     """Return 1 for result set containing one ore more rows."""
-    if rset is not None and rset.rowcount:
+    if rset:
         return 1
     return 0
 
@@ -567,7 +567,7 @@ def nonempty_rset(cls, req, rset=None, **kwargs):
 @objectify_predicate
 def empty_rset(cls, req, rset=None, **kwargs):
     """Return 1 for result set which doesn't contain any row."""
-    if rset is not None and rset.rowcount == 0:
+    if rset is not None and len(rset) == 0:
         return 1
     return 0
 
@@ -580,7 +580,7 @@ def one_line_rset(cls, req, rset=None, row=None, **kwargs):
     """
     if rset is None and 'entity' in kwargs:
         return 1
-    if rset is not None and (row is not None or rset.rowcount == 1):
+    if rset is not None and (row is not None or len(rset) == 1):
         return 1
     return 0
 
@@ -608,7 +608,7 @@ class multi_lines_rset(Predicate):
         return self.operator(num, self.expected)
 
     def __call__(self, cls, req, rset=None, **kwargs):
-        return int(rset is not None and self.match_expected(rset.rowcount))
+        return int(rset is not None and self.match_expected(len(rset)))
 
 
 class multi_columns_rset(multi_lines_rset):
@@ -648,7 +648,7 @@ class paginated_rset(Predicate):
                 page_size = req.property_value('navigation.page-size')
             else:
                 page_size = int(page_size)
-        if rset.rowcount <= (page_size*self.nbpages):
+        if len(rset) <= (page_size*self.nbpages):
             return 0
         return self.nbpages
 
