@@ -138,6 +138,8 @@ class DeleteStuffFromLDAPFeedSourceTC(LDAPTestBase):
                          'deactivated')
         # test reactivating the user isn't enough to authenticate, as the native source
         # refuse to authenticate user from other sources
+        os.system(deletecmd)
+        self._pull()
         user = self.execute('CWUser U WHERE U login "syt"').get_entity(0, 0)
         user.cw_adapt_to('IWorkflowable').fire_transition('activate')
         self.commit()
