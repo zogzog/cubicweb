@@ -4,6 +4,7 @@ Once this script is run, execute c-c db-check to cleanup relation tables.
 """
 import sys
 from collections import defaultdict
+from logilab.common.shellutils import generate_password
 
 try:
     source_name, = __args__
@@ -57,7 +58,7 @@ for entity in rql('Any X WHERE X cw_source S, S eid %(s)s', {'s': source.eid}).e
     if not entity.modification_date:
         entity.cw_edited['modification_date'] = datetime.now()
     if not entity.upassword:
-        entity.cw_edited['upassword'] = u''
+        entity.cw_edited['upassword'] = generate_password()
     extid = entity.cw_metainformation()['extid']
     if not entity.cwuri:
         entity.cw_edited['cwuri'] = '%s/?dn=%s' % (
