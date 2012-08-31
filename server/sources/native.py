@@ -1595,9 +1595,10 @@ class BaseAuthentifier(object):
         pass
 
 class LoginPasswordAuthentifier(BaseAuthentifier):
-    passwd_rql = "Any P WHERE X is CWUser, X login %(login)s, X upassword P"
-    auth_rql = "Any X WHERE X is CWUser, X login %(login)s, X upassword %(pwd)s"
-    _sols = ({'X': 'CWUser', 'P': 'Password'},)
+    passwd_rql = 'Any P WHERE X is CWUser, X login %(login)s, X upassword P'
+    auth_rql = ('Any X WHERE X is CWUser, X login %(login)s, X upassword %(pwd)s, '
+                'X cw_source S, S name "system"')
+    _sols = ({'X': 'CWUser', 'P': 'Password', 'S': 'CWSource'},)
 
     def set_schema(self, schema):
         """set the instance'schema"""

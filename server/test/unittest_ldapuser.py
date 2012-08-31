@@ -136,6 +136,12 @@ class DeleteStuffFromLDAPFeedSourceTC(LDAPTestBase):
         self.assertEqual(self.execute('Any N WHERE U login "syt", '
                                       'U in_state S, S name N').rows[0][0],
                          'deactivated')
+        # test reactivating the user isn't enough to authenticate, as the native source
+        # refuse to authenticate user from other sources
+        user = self.execute('CWUser U WHERE U login "syt"').get_entity(0, 0)
+        user.cw_adapt_to('IWorkflowable').fire_transition('activate')
+        self.commit()
+        self.assertRaises(AuthenticationError, self.repo.connect, 'syt', password='syt')
 
 class LDAPFeedSourceTC(LDAPTestBase):
     test_db_id = 'ldap-feed'
