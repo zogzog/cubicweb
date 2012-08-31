@@ -755,7 +755,13 @@ class CWUniqueTogetherConstraintDelOp(MemSchemaOperation):
         cols = ['%s%s' % (prefix, c) for c in self.cols]
         sqls = dbhelper.sqls_drop_multicol_unique_index(table, cols)
         for sql in sqls:
-            session.system_sql(sql)
+            try:
+                session.system_sql(sql)
+            except Exception: # should be ProgrammingError
+                if sql.startswith('DROP'):
+                    self.critical('execute of `%s` failed', sql)
+                    continue
+                raise
 
     # XXX revertprecommit_event
 
