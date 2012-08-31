@@ -1,3 +1,9 @@
+cubicweb (3.15.4-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Julien Cristau <jcristau@debian.org>  Fri, 31 Aug 2012 16:43:11 +0200
+
 cubicweb (3.15.3-1) unstable; urgency=low
 
   * New upstream release
