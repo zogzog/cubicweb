@@ -30,6 +30,8 @@ from yams.schema import role_name
 from rql.nodes import Constant
 from rql.utils import rqlvar_maker
 
+from Pyro.errors import ConnectionClosedError
+
 from cubicweb import dbapi, server
 from cubicweb import ValidationError, BadConnectionId, UnknownEid
 from cubicweb.schema import VIRTUAL_RTYPES
