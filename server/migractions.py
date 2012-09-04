@@ -1526,9 +1526,9 @@ class ServerMigrationHelper(MigrationHelper):
     def cmd_reactivate_verification_hooks(self):
         self.session.enable_hook_categories('integrity')
 
-    @deprecated("[3.15] use session.rename_relation_type(oldname, newname)")
+    @deprecated("[3.15] use rename_relation_type(oldname, newname)")
     def cmd_rename_relation(self, oldname, newname, commit=True):
-        self.session.rename_relation_type(oldname, newname, commit)
+        self.cmd_rename_relation_type(oldname, newname, commit)
 
 
 class ForRqlIterator:
