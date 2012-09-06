@@ -1546,7 +1546,7 @@ class Repository(object):
         activintegrity = session.is_hook_category_activated('activeintegrity')
         for rtype, eids_subj_obj in relations.iteritems():
             if server.DEBUG & server.DBG_REPO:
-                for subjeid, objeid in relations:
+                for subjeid, objeid in eids_subj_obj:
                     print 'ADD relation', subjeid, rtype, objeid
             for subjeid, objeid in eids_subj_obj:
                 source = self.locate_relation_source(session, subjeid, rtype, objeid)
