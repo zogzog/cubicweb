@@ -3321,6 +3321,9 @@ msgstr "Encabezado del contenido principal"
 msgid "new"
 msgstr "Nuevo"
 
+msgid "next page"
+msgstr ""
+
 msgid "next_results"
 msgstr "Siguientes resultados"
 
@@ -3521,6 +3524,9 @@ msgstr "Email principal de"
 
 msgid "preferences"
 msgstr "Preferencias"
+
+msgid "previous page"
+msgstr ""
 
 msgid "previous_results"
 msgstr "Resultados Anteriores"
@@ -4669,3 +4675,10 @@ msgid "you should un-inline relation %s which is supported and may be crossed "
 msgstr ""
 "usted debe  quitar la puesta en línea de la relación %s que es aceptada y "
 "puede ser cruzada"
+
+#~ msgid ""
+#~ "Can't restore relation %(rtype)s of entity %(eid)s, this relation does "
+#~ "not exists anymore in the schema."
+#~ msgstr ""
+#~ "No puede restaurar la relación %(rtype)s de la entidad %(eid)s, esta "
+#~ "relación ya no existe en el esquema."

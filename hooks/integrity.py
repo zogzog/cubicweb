@@ -301,11 +301,10 @@ class _DelayedDeleteOp(hook.DataOperationMixIn, hook.Operation):
     def precommit_event(self):
         session = self.session
         pendingeids = session.transaction_data.get('pendingeids', ())
-        neweids = session.transaction_data.get('neweids', ())
         eids_by_etype_rtype = {}
         for eid, rtype in self.get_data():
-            # don't do anything if the entity is being created or deleted
-            if not (eid in pendingeids or eid in neweids):
+            # don't do anything if the entity is being deleted
+            if eid not in pendingeids:
                 etype = session.describe(eid)[0]
                 key = (etype, rtype)
                 if key not in eids_by_etype_rtype:

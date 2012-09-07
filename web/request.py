@@ -170,8 +170,7 @@ class CubicWebRequestBase(DBAPIRequest):
     @property
     def authmode(self):
         """Authentification mode of the instance
-
-        (see :ref:`Configuring the Web server`)"""
+        (see :ref:`WebServerConfig`)"""
         return self.vreg.config['auth-mode']
 
     # Various variable generator.

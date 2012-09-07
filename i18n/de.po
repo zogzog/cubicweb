@@ -3280,6 +3280,9 @@ msgstr "zum Hauptinhalt springen"
 msgid "new"
 msgstr "neu"
 
+msgid "next page"
+msgstr ""
+
 msgid "next_results"
 msgstr "weitere Ergebnisse"
 
@@ -3480,6 +3483,9 @@ msgstr "bevorzugte form von"
 
 msgid "preferences"
 msgstr "Einstellungen"
+
+msgid "previous page"
+msgstr ""
 
 msgid "previous_results"
 msgstr "vorige Ergebnisse"
@@ -4618,3 +4624,10 @@ msgstr "Sie sollten diese Eigenschaft wahrscheinlich löschen."
 #, python-format
 msgid "you should un-inline relation %s which is supported and may be crossed "
 msgstr ""
+
+#~ msgid ""
+#~ "Can't restore relation %(rtype)s of entity %(eid)s, this relation does "
+#~ "not exists anymore in the schema."
+#~ msgstr ""
+#~ "Kann die Relation %(rtype)s der Entität %(eid)s nicht wieder herstellen, "
+#~ "diese Relation existiert nicht mehr in dem Schema."

@@ -331,10 +331,9 @@ have the python imaging library installed to use captcha)',
         self.datadir_url = baseurl + data_relpath
 
     def data_relpath(self):
-        if (self.debugmode or self.mode == 'test'):
+        if self.mode == 'test':
             return 'data/'
-        else:
-            return 'data/%s/' % self.instance_md5_version()
+        return 'data/%s/' % self.instance_md5_version()
 
     def _build_ui_properties(self):
         # self.datadir_url[:-1] to remove trailing /

@@ -1153,6 +1153,9 @@ class Entity(AppObject):
         # insert security RQL expressions granting the permission to 'add' the
         # relation into the rql syntax tree, if necessary
         rqlexprs = rdef.get_rqlexprs('add')
+        if not self.has_eid():
+            rqlexprs = [rqlexpr for rqlexpr in rqlexprs
+                        if searchedvar.name in rqlexpr.mainvars]
         if rqlexprs and not rdef.has_perm(self._cw, 'add', **sec_check_args):
             # compute a varmap suitable to RQLRewriter.rewrite argument
             varmap = dict((v, v) for v in (searchedvar.name, evar.name)

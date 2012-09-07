@@ -87,10 +87,20 @@ class INotifiableAdapter(view.EntityAdapter):
 
 
 class IFTIndexableAdapter(view.EntityAdapter):
+    """standard adapter to handle fulltext indexing
+
+    .. automethod:: cubicweb.entities.adapters.IFTIndexableAdapter.fti_containers
+    .. automethod:: cubicweb.entities.adapters.IFTIndexableAdapter.get_words
+    """
     __regid__ = 'IFTIndexable'
     __select__ = is_instance('Any')
 
     def fti_containers(self, _done=None):
+        """return the list of entities to index when handling ``self.entity``
+
+        The actual list of entities depends on ``fulltext_container`` usage
+        in the datamodel definition
+        """
         if _done is None:
             _done = set()
         entity = self.entity

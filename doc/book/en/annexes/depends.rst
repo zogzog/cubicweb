@@ -45,6 +45,9 @@ to have installed in order for CubicWeb to work:
 * indexer - http://www.logilab.org/project/indexer -
   http://pypi.python.org/pypi/indexer - included in the forest
 
+* passlib - https://code.google.com/p/passlib/ -
+  http://pypi.python.org/pypi/passlib
+
 To use network communication between cubicweb instances / clients:
 
 * Pyro - http://www.xs4all.nl/~irmen/pyro3/ - http://pypi.python.org/pypi/Pyro

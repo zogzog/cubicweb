@@ -106,7 +106,8 @@ class transaction(object):
         self.free_cnxset = free_cnxset
 
     def __enter__(self):
-        pass
+        # ensure session has a cnxset
+        self.session.set_cnxset()
 
     def __exit__(self, exctype, exc, traceback):
         if exctype:

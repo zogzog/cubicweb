@@ -2765,7 +2765,7 @@ msgid "has_text"
 msgstr "contient le texte"
 
 msgid "header-center"
-msgstr ""
+msgstr "en-tête (centre)"
 
 msgid "header-left"
 msgstr "en-tête (gauche)"
@@ -3328,6 +3328,9 @@ msgstr "haut de page du contenu principal"
 msgid "new"
 msgstr "nouveau"
 
+msgid "next page"
+msgstr "page suivante"
+
 msgid "next_results"
 msgstr "résultats suivants"
 
@@ -3530,6 +3533,9 @@ msgstr "forme préférée de"
 
 msgid "preferences"
 msgstr "préférences"
+
+msgid "previous page"
+msgstr "page précédente"
 
 msgid "previous_results"
 msgstr "résultats précédents"
@@ -4122,10 +4128,14 @@ msgid "the value \"%s\" is already used, use another one"
 msgstr "la valeur \"%s\" est déjà utilisée, veuillez utiliser une autre valeur"
 
 msgid "there is no next page"
-msgstr "il n'y a pas de page suivante"
+msgstr "Il n'y a pas de page suivante"
 
 msgid "there is no previous page"
-msgstr "il n'y a pas de page précédente"
+msgstr "Il n'y a pas de page précédente"
+
+#, python-format
+msgid "there is no transaction #%s"
+msgstr "Il n'y a pas de transaction #%s"
 
 #, python-format
 msgid "there is no transaction #%s"
@@ -4343,7 +4353,7 @@ msgid "unauthorized value"
 msgstr "valeur non autorisée"
 
 msgid "undefined user"
-msgstr ""
+msgstr "utilisateur inconnu"
 
 msgid "undo"
 msgstr "annuler"
@@ -4679,3 +4689,24 @@ msgid "you should un-inline relation %s which is supported and may be crossed "
 msgstr ""
 "vous devriez enlevé la mise en ligne de la relation %s qui est supportée et "
 "peut-être croisée"
+
+#~ msgid "Action"
+#~ msgstr "Action"
+
+#~ msgid "day"
+#~ msgstr "jour"
+
+#~ msgid "log out first"
+#~ msgstr "déconnecter vous d'abord"
+
+#~ msgid "month"
+#~ msgstr "mois"
+
+#~ msgid "today"
+#~ msgstr "aujourd'hui"
+
+#~ msgid "undo last change"
+#~ msgstr "annuler dernier changement"
+
+#~ msgid "week"
+#~ msgstr "semaine"

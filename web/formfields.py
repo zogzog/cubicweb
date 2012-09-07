@@ -313,6 +313,7 @@ class Field(object):
 
     def role_name(self):
         """return <field.name>-<field.role> if role is specified, else field.name"""
+        assert self.name, 'field without a name (give it to constructor for explicitly built fields)'
         if self.role is not None:
             return role_name(self.name, self.role)
         return self.name

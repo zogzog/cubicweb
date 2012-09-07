@@ -449,7 +449,7 @@ class BaseLogForm(forms.FieldsForm):
 
     def form_action(self):
         if self.action is None:
-            # reuse existing redirection if it exist
+            # reuse existing redirection if it exists
             target = self._cw.form.get('postlogin_path',
                                        self._cw.relative_path())
             url_args = {}

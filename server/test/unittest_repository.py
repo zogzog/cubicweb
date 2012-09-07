@@ -113,6 +113,8 @@ class RepositoryTC(CubicWebTC):
         self.assertRaises(AuthenticationError,
                           self.repo.connect, self.admlogin, password='nimportnawak')
         self.assertRaises(AuthenticationError,
+                          self.repo.connect, self.admlogin, password='')
+        self.assertRaises(AuthenticationError,
                           self.repo.connect, self.admlogin, password=None)
         self.assertRaises(AuthenticationError,
                           self.repo.connect, None, password=None)

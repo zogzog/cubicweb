@@ -22,6 +22,7 @@ in |cubicweb|.
    breadcrumbs
    idownloadable
    wdoc
+
 ..   editforms
 ..   embedding
 

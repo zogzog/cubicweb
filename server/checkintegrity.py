@@ -317,7 +317,7 @@ def check_mandatory_relations(schema, session, eids, fix=1):
     print 'Checking mandatory relations'
     msg = '%s #%s is missing mandatory %s relation %s (autofix will delete the entity)'
     for rschema in schema.relations():
-        if rschema.final or rschema.type in PURE_VIRTUAL_RTYPES:
+        if rschema.final or rschema in PURE_VIRTUAL_RTYPES or rschema in ('is', 'is_instance_of'):
             continue
         smandatory = set()
         omandatory = set()

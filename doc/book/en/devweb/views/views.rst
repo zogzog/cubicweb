@@ -32,8 +32,8 @@ score, or they were deliberately excluded by the main template logic.
 Basic class for views
 ~~~~~~~~~~~~~~~~~~~~~
 
-Class `View` (`cubicweb.view`)
-```````````````````````````````
+Class :class:`~cubicweb.view.View`
+``````````````````````````````````
 
 .. autoclass:: cubicweb.view.View
 

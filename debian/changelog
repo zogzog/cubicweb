@@ -1,6 +1,24 @@
+cubicweb (3.15.4-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Julien Cristau <jcristau@debian.org>  Fri, 31 Aug 2012 16:43:11 +0200
+
+cubicweb (3.15.3-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Pierre-Yves David <pierre-yves.david@logilab.fr>  Tue, 21 Aug 2012 14:19:31 +0200
+
+cubicweb (3.15.2-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Sylvain Thénault <sylvain.thenault@logilab.fr>  Fri, 20 Jul 2012 15:17:17 +0200
+
 cubicweb (3.15.1-1) quantal; urgency=low
 
-  * new upstream release 
+  * new upstream release
 
  -- David Douard <david.douard@logilab.fr>  Mon, 11 Jun 2012 09:45:24 +0200
 
@@ -9,6 +27,12 @@ cubicweb (3.15.0-1) unstable; urgency=low
   * new upstream release
 
  -- Sylvain Thénault <sylvain.thenault@logilab.fr>  Thu, 12 Apr 2012 13:52:05 +0200
+
+cubicweb (3.14.9-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Pierre-Yves David <pierre-yves.david@logilab.fr>  Tue, 31 Jul 2012 16:16:28 +0200
 
 cubicweb (3.14.8-1) unstable; urgency=low
 
