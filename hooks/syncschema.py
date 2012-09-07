@@ -757,9 +757,9 @@ class CWUniqueTogetherConstraintDelOp(MemSchemaOperation):
         for sql in sqls:
             try:
                 session.system_sql(sql)
-            except Exception: # should be ProgrammingError
+            except Exception, exc: # should be ProgrammingError
                 if sql.startswith('DROP'):
-                    self.critical('execute of `%s` failed', sql)
+                    self.error('execute of `%s` failed (cause: %s)', sql, exc)
                     continue
                 raise
 
