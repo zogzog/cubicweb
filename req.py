@@ -77,6 +77,17 @@ class RequestSessionBase(object):
         self.local_perm_cache = {}
         self._ = unicode
 
+    def set_language(self, lang):
+        """install i18n configuration for `lang` translation.
+
+        Raises :exc:`KeyError` if translation doesn't exist.
+        """
+        self.lang = lang
+        gettext, pgettext = self.vreg.config.translations[lang]
+        # use _cw.__ to translate a message without registering it to the catalog
+        self._ = self.__ = gettext
+        self.pgettext = pgettext
+
     def property_value(self, key):
         """return value of the property with the given key, giving priority to
         user specific value if any, else using site value

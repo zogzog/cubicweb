@@ -747,10 +747,10 @@ class Repository(object):
         raise `AuthenticationError` if the authentication failed
         raise `ConnectionError` if we can't open a connection
         """
+        cnxprops = kwargs.pop('cnxprops', None)
         # use an internal connection
         with self.internal_session() as session:
             # try to get a user object
-            cnxprops = kwargs.pop('cnxprops', None)
             user = self.authenticate_user(session, login, **kwargs)
         session = Session(user, self, cnxprops)
         user._cw = user.cw_rset.req = session
@@ -901,21 +901,8 @@ class Repository(object):
         * update user information on each user's request (i.e. groups and
           custom properties)
         """
-        session = self._get_session(sessionid, setcnxset=False)
-        if props is not None:
-            self.set_session_props(sessionid, props)
-        user = session.user
+        user = self._get_session(sessionid, setcnxset=False).user
         return user.eid, user.login, user.groups, user.properties
-
-    def set_session_props(self, sessionid, props):
-        """this method should be used by client to:
-        * check session id validity
-        * update user information on each user's request (i.e. groups and
-          custom properties)
-        """
-        session = self._get_session(sessionid, setcnxset=False)
-        for prop, value in props.items():
-            session.change_property(prop, value)
 
     def undoable_transactions(self, sessionid, ueid=None, txid=None,
                               **actionfilters):

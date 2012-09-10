@@ -265,7 +265,7 @@ class Session(RequestSessionBase):
         # and the rql server
         self.data = {}
         # i18n initialization
-        self.set_language(cnxprops.lang)
+        self.set_language(user.prefered_language())
         # internals
         self._tx_data = {}
         self.__threaddata = threading.local()
@@ -462,28 +462,6 @@ class Session(RequestSessionBase):
             source.warning("trying to reconnect")
             self.cnxset.reconnect(source)
             return source.doexec(self, sql, args, rollback=rollback_on_failure)
-
-    def set_language(self, language):
-        """i18n configuration for translation"""
-        language = language or self.user.property_value('ui.language')
-        try:
-            gettext, pgettext = self.vreg.config.translations[language]
-            self._ = self.__ = gettext
-            self.pgettext = pgettext
-        except KeyError:
-            language = self.vreg.property_value('ui.language')
-            try:
-                gettext, pgettext = self.vreg.config.translations[language]
-                self._ = self.__ = gettext
-                self.pgettext = pgettext
-            except KeyError:
-                self._ = self.__ = unicode
-                self.pgettext = lambda x, y: y
-        self.lang = language
-
-    def change_property(self, prop, value):
-        assert prop == 'lang' # this is the only one changeable property for now
-        self.set_language(value)
 
     def deleted_in_transaction(self, eid):
         """return True if the entity of the given eid is being deleted in the

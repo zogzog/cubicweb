@@ -226,14 +226,6 @@ class CubicWebRequestBase(DBAPIRequest):
         # 3. default language
         self.set_default_language(vreg)
 
-    def set_language(self, lang):
-        gettext, self.pgettext = self.translations[lang]
-        self._ = self.__ = gettext
-        self.lang = lang
-        self.debug('request language: %s', lang)
-        if self.cnx:
-            self.cnx.set_session_props(lang=lang)
-
     # input form parameters management ########################################
 
     # common form parameters which should be protected against html values

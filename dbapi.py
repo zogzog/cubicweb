@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -80,9 +80,8 @@ def multiple_connections_unfix():
 
 
 class ConnectionProperties(object):
-    def __init__(self, cnxtype=None, lang=None, close=True, log=False):
+    def __init__(self, cnxtype=None, close=True, log=False):
         self.cnxtype = cnxtype or 'pyro'
-        self.lang = lang
         self.log_queries = log
         self.close_on_del = close
 
@@ -283,6 +282,8 @@ class DBAPISession(object):
         return '<DBAPISession %r>' % self.sessionid
 
 class DBAPIRequest(RequestSessionBase):
+    #: Request language identifier eg: 'en'
+    lang = None
 
     def __init__(self, vreg, session=None):
         super(DBAPIRequest, self).__init__(vreg)
@@ -292,9 +293,6 @@ class DBAPIRequest(RequestSessionBase):
             self.translations = vreg.config.translations
         except AttributeError:
             self.translations = {}
-        #: Request language identifier eg: 'en'
-        self.lang = None
-        self.set_default_language(vreg)
         #: cache entities built during the request
         self._eid_cache = {}
         if session is not None:
@@ -304,6 +302,7 @@ class DBAPIRequest(RequestSessionBase):
             # established
             self.session = None
             self.cnx = self.user = _NeedAuthAccessMock()
+        self.set_default_language(vreg)
 
     def from_controller(self):
         return 'view'
@@ -317,7 +316,7 @@ class DBAPIRequest(RequestSessionBase):
             self.cnx = session.cnx
             self.execute = session.cnx.cursor(self).execute
             if user is None:
-                user = self.cnx.user(self, {'lang': self.lang})
+                user = self.cnx.user(self)
         if user is not None:
             self.user = user
             self.set_entity_cache(user)
@@ -330,19 +329,15 @@ class DBAPIRequest(RequestSessionBase):
 
     def set_default_language(self, vreg):
         try:
-            self.lang = vreg.property_value('ui.language')
+            lang = vreg.property_value('ui.language')
         except Exception: # property may not be registered
-            self.lang = 'en'
-        # use req.__ to translate a message without registering it to the catalog
+            lang = 'en'
         try:
-            gettext, pgettext = self.translations[self.lang]
-            self._ = self.__ = gettext
-            self.pgettext = pgettext
+            self.set_language(lang)
         except KeyError:
             # this occurs usually during test execution
             self._ = self.__ = unicode
             self.pgettext = lambda x, y: unicode(y)
-        self.debug('request default language: %s', self.lang)
 
     # server-side service call #################################################
 
@@ -668,11 +663,6 @@ class Connection(object):
         return {'txid': currentThread().getName()}
 
     # session data methods #####################################################
-
-    @check_not_closed
-    def set_session_props(self, **props):
-        """raise `BadConnectionId` if the connection is no more valid"""
-        self._repo.set_session_props(self.sessionid, props)
 
     @check_not_closed
     def get_shared_data(self, key, default=None, pop=False, txdata=False):
