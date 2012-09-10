@@ -52,7 +52,9 @@ class CustomMD5Crypt(uh.HasSalt, uh.GenericHandler):
         return md5crypt(secret, self.salt.encode('ascii')).decode('utf-8')
     _calc_checksum = calc_checksum
 
-_CRYPTO_CTX = CryptContext(['sha512_crypt', CustomMD5Crypt, 'des_crypt', 'ldap_salted_sha1'])
+_CRYPTO_CTX = CryptContext(['sha512_crypt', CustomMD5Crypt, 'des_crypt', 'ldap_salted_sha1'],
+                           deprecated=['cubicwebmd5crypt', 'des_crypt'])
+verify_and_update = _CRYPTO_CTX.verify_and_update
 
 def crypt_password(passwd, salt=None):
     """return the encrypted password using the given salt or a generated one

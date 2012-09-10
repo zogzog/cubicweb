@@ -61,7 +61,7 @@ from cubicweb.utils import QueryCache
 from cubicweb.schema import VIRTUAL_RTYPES
 from cubicweb.cwconfig import CubicWebNoAppConfiguration
 from cubicweb.server import hook
-from cubicweb.server.utils import crypt_password, eschema_eid
+from cubicweb.server.utils import crypt_password, eschema_eid, verify_and_update
 from cubicweb.server.sqlutils import SQL_PREFIX, SQLAdapterMixIn
 from cubicweb.server.rqlannotation import set_qdata
 from cubicweb.server.hook import CleanupDeletedEidsCacheOp
@@ -1629,7 +1629,22 @@ class LoginPasswordAuthentifier(BaseAuthentifier):
         # get eid from login and (crypted) password
         rset = self.source.syntax_tree_search(session, self._auth_rqlst, args)
         try:
-            return rset[0][0]
+            user = rset[0][0]
+            # If the stored hash uses a deprecated scheme (e.g. DES or MD5 used
+            # before 3.14.7), update with a fresh one
+            if pwd.getvalue():
+                verify, newhash = verify_and_update(password, pwd.getvalue())
+                if not verify: # should not happen, but...
+                    raise AuthenticationError('bad password')
+                if newhash:
+                    session.system_sql("UPDATE %s SET %s=%%(newhash)s WHERE %s=%%(login)s" % (
+                                        SQL_PREFIX + 'CWUser',
+                                        SQL_PREFIX + 'upassword',
+                                        SQL_PREFIX + 'login'),
+                                       {'newhash': self.source._binary(newhash),
+                                        'login': login})
+                    session.commit(free_cnxset=False)
+            return user
         except IndexError:
             raise AuthenticationError('bad password')
 
