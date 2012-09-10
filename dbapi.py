@@ -598,9 +598,9 @@ class Connection(object):
             esubpath.remove('views')
             esubpath.append(join('web', 'views'))
         config.init_cubes(cubes)
-        vpath = config.build_vregistry_path(reversed(config.cubes_path()),
-                                            evobjpath=esubpath,
-                                            tvobjpath=subpath)
+        vpath = config.build_appobjects_path(reversed(config.cubes_path()),
+                                             evobjpath=esubpath,
+                                             tvobjpath=subpath)
         self.vreg.register_objects(vpath)
 
     def use_web_compatible_requests(self, baseurl, sitetitle=None):

@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -261,7 +261,7 @@ class talbased(object):
         return wrapped
 
     def _compiled_template(self, instance):
-        for fileordirectory in instance.config.vregistry_path():
+        for fileordirectory in instance.config.appobjects_path():
             filepath = join(fileordirectory, self.filename)
             if isdir(fileordirectory) and exists(filepath):
                 return compile_template_file(filepath)

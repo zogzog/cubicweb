@@ -588,7 +588,7 @@ class CWRegistryStore(RegistryStore):
         """set instance'schema and load application objects"""
         self._set_schema(schema)
         # now we can load application's web objects
-        self.reload(self.config.vregistry_path(), force_reload=False)
+        self.reload(self.config.appobjects_path(), force_reload=False)
         # map lowered entity type names to their actual name
         self.case_insensitive_etypes = {}
         for eschema in self.schema.entities():
@@ -598,7 +598,7 @@ class CWRegistryStore(RegistryStore):
             clear_cache(eschema, 'meta_attributes')
 
     def reload_if_needed(self):
-        path = self.config.vregistry_path()
+        path = self.config.appobjects_path()
         if self.is_reload_needed(path):
             self.reload(path)
 
@@ -614,7 +614,7 @@ class CWRegistryStore(RegistryStore):
             cfg = self.config
             for cube in cfg.expand_cubes(cubes, with_recommends=True):
                 if not cube in cubes:
-                    cpath = cfg.build_vregistry_cube_path([cfg.cube_dir(cube)])
+                    cpath = cfg.build_appobjects_cube_path([cfg.cube_dir(cube)])
                     cleanup_sys_modules(cpath)
         self.register_objects(path)
         CW_EVENT_MANAGER.emit('after-registry-reload')
