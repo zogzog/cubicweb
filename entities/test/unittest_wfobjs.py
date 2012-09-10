@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -126,8 +126,9 @@ class WorkflowTC(CubicWebTC):
         self.assertEqual(trs[0].destination(None).name, u'deactivated')
         # test a std user get no possible transition
         cnx = self.login('member')
+        req = self.request()
         # fetch the entity using the new session
-        trs = list(cnx.user().cw_adapt_to('IWorkflowable').possible_transitions())
+        trs = list(req.user.cw_adapt_to('IWorkflowable').possible_transitions())
         self.assertEqual(len(trs), 0)
         cnx.close()
 
@@ -173,7 +174,7 @@ class WorkflowTC(CubicWebTC):
 
     def test_goback_transition(self):
         req = self.request()
-        wf = self.session.user.cw_adapt_to('IWorkflowable').current_workflow
+        wf = req.user.cw_adapt_to('IWorkflowable').current_workflow
         asleep = wf.add_state('asleep')
         wf.add_transition('rest', (wf.state_by_name('activated'),
                                    wf.state_by_name('deactivated')),
@@ -212,7 +213,7 @@ class WorkflowTC(CubicWebTC):
         req = self.request()
         iworkflowable = req.entity_from_eid(self.member.eid).cw_adapt_to('IWorkflowable')
         iworkflowable.fire_transition('deactivate')
-        cnx.commit()
+        req.cu.commit()
         with self.assertRaises(ValidationError) as cm:
             iworkflowable.fire_transition('activate')
         self.assertEqual(cm.exception.errors, {'by_transition-subject': "transition may not be fired"})
@@ -556,13 +557,12 @@ class WorkflowHooksTC(CubicWebTC):
 
     def setUp(self):
         CubicWebTC.setUp(self)
-        self.wf = self.session.user.cw_adapt_to('IWorkflowable').current_workflow
-        self.session.set_cnxset()
+        req = self.request()
+        self.wf = req.user.cw_adapt_to('IWorkflowable').current_workflow
         self.s_activated = self.wf.state_by_name('activated').eid
         self.s_deactivated = self.wf.state_by_name('deactivated').eid
         self.s_dummy = self.wf.add_state(u'dummy').eid
         self.wf.add_transition(u'dummy', (self.s_deactivated,), self.s_dummy)
-        req = self.request()
         ueid = self.create_user(req, 'stduser', commit=False).eid
         # test initial state is set
         rset = self.execute('Any N WHERE S name N, X in_state S, X eid %(x)s',
