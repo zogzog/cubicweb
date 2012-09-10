@@ -64,8 +64,11 @@ def crypt_password(passwd, salt=None):
     # empty hash, accept any password for backwards compat
     if salt == '':
         return salt
-    if _CRYPTO_CTX.verify(passwd, salt):
-        return salt
+    try:
+        if _CRYPTO_CTX.verify(passwd, salt):
+            return salt
+    except ValueError: # e.g. couldn't identify hash
+        pass
     # wrong password
     return ''
 
