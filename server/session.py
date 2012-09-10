@@ -30,20 +30,15 @@ from warnings import warn
 from logilab.common.deprecation import deprecated
 from logilab.common.textutils import unormalize
 from logilab.common.registry import objectify_predicate
-from rql import CoercionError
-from rql.nodes import ETYPE_PYOBJ_MAP, etype_from_pyobj
-from yams import BASE_TYPES
 
-from cubicweb import Binary, UnknownEid, QueryError, schema
+from cubicweb import UnknownEid, QueryError, schema
 from cubicweb.req import RequestSessionBase
 from cubicweb.dbapi import ConnectionProperties
-from cubicweb.utils import make_uid, RepeatList
+from cubicweb.utils import make_uid
 from cubicweb.rqlrewrite import RQLRewriter
 from cubicweb.server import ShuttingDown
 from cubicweb.server.edition import EditedEntity
 
-
-ETYPE_PYOBJ_MAP[Binary] = 'Bytes'
 
 NO_UNDO_TYPES = schema.SCHEMA_TYPES.copy()
 NO_UNDO_TYPES.add('CWCache')
@@ -54,25 +49,6 @@ NO_UNDO_TYPES.add('is')
 NO_UNDO_TYPES.add('is_instance_of')
 NO_UNDO_TYPES.add('cw_source')
 # XXX rememberme,forgotpwd,apycot,vcsfile
-
-def _make_description(selected, args, solution):
-    """return a description for a result set"""
-    description = []
-    for term in selected:
-        description.append(term.get_type(solution, args))
-    return description
-
-def selection_idx_type(i, rqlst, args):
-    """try to return type of term at index `i` of the rqlst's selection"""
-    for select in rqlst.children:
-        term = select.selection[i]
-        for solution in select.solutions:
-            try:
-                ttype = term.get_type(solution, args)
-                if ttype is not None:
-                    return ttype
-            except CoercionError:
-                return None
 
 @objectify_predicate
 def is_user_session(cls, req, **kwargs):

@@ -29,10 +29,10 @@ from cubicweb import QueryError, Unauthorized, Binary
 from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.server.utils import crypt_password
 from cubicweb.server.sources.native import make_schema
+from cubicweb.server.querier import manual_build_descr, _make_description
 from cubicweb.devtools import get_test_db_handler, TestServerConfiguration
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.devtools.repotest import tuplify, BaseQuerierTC
-from unittest_session import Variable
 
 class FixedOffset(tzinfo):
     def __init__(self, hours=0):
@@ -85,6 +85,30 @@ def tearDownClass(cls, *args):
     cnx.close()
     repo.shutdown()
     del repo, cnx
+
+
+class Variable:
+    def __init__(self, name):
+        self.name = name
+        self.children = []
+
+    def get_type(self, solution, args=None):
+        return solution[self.name]
+    def as_string(self):
+        return self.name
+
+class Function:
+    def __init__(self, name, varname):
+        self.name = name
+        self.children = [Variable(varname)]
+    def get_type(self, solution, args=None):
+        return 'Int'
+
+class MakeDescriptionTC(TestCase):
+    def test_known_values(self):
+        solution = {'A': 'Int', 'B': 'CWUser'}
+        self.assertEqual(_make_description((Function('max', 'A'), Variable('B')), {}, solution),
+                          ['Int','CWUser'])
 
 
 class UtilsTC(BaseQuerierTC):
@@ -241,6 +265,28 @@ class UtilsTC(BaseQuerierTC):
         self.assertEqual(rset.description[0][0], 'String')
         rset = self.execute('Any %(x)s', {'x': u'str'})
         self.assertEqual(rset.description[0][0], 'String')
+
+    def test_build_descr1(self):
+        rset = self.execute('(Any U,L WHERE U login L) UNION (Any G,N WHERE G name N, G is CWGroup)')
+        rset.req = self.transaction
+        orig_length = len(rset)
+        rset.rows[0][0] = 9999999
+        description = manual_build_descr(rset.req, rset.syntax_tree(), None, rset.rows)
+        self.assertEqual(len(description), orig_length - 1)
+        self.assertEqual(len(rset.rows), orig_length - 1)
+        self.assertNotEqual(rset.rows[0][0], 9999999)
+
+    def test_build_descr2(self):
+        rset = self.execute('Any X,Y WITH X,Y BEING ((Any G,NULL WHERE G is CWGroup) UNION (Any U,G WHERE U in_group G))')
+        for x, y in rset.description:
+            if y is not None:
+                self.assertEqual(y, 'CWGroup')
+
+    def test_build_descr3(self):
+        rset = self.execute('(Any G,NULL WHERE G is CWGroup) UNION (Any U,G WHERE U in_group G)')
+        for x, y in rset.description:
+            if y is not None:
+                self.assertEqual(y, 'CWGroup')
 
 
 class QuerierTC(BaseQuerierTC):
