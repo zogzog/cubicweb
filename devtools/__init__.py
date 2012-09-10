@@ -355,7 +355,7 @@ class TestDataBaseHandler(object):
     def _restore_database(self, backup_coordinates, config):
         """Actual restore of the current database.
 
-        Use the value tostored in db_cache as input """
+        Use the value stored in db_cache as input """
         raise NotImplementedError()
 
     def get_repo(self, startup=False):
@@ -466,7 +466,6 @@ class TestDataBaseHandler(object):
         ``pre_setup_func`` to setup the database.
 
         This function backup any database it build"""
-
         if self.has_cache(test_db_id):
             return #test_db_id, 'already in cache'
         if test_db_id is DEFAULT_EMPTY_DB_ID:
@@ -723,7 +722,7 @@ class SQLiteTestDataBaseHandler(TestDataBaseHandler):
         dbfile = self.absolute_dbfile()
         self._cleanup_database(dbfile)
         shutil.copy(backup_coordinates, dbfile)
-        repo = self.get_repo()
+        self.get_repo()
 
     def init_test_database(self):
         """initialize a fresh sqlite databse used for testing purpose"""

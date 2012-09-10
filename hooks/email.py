@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""hooks to ensure use_email / primary_email relations consistency
+"""hooks to ensure use_email / primary_email relations consistency"""
 
-"""
 __docformat__ = "restructuredtext en"
 
 from cubicweb.server import hook

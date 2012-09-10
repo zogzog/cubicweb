@@ -445,7 +445,7 @@ class CubicWebTC(TestCase):
         finally:
             self.session.set_cnxset() # ensure cnxset still set after commit
 
-    # # server side db api #######################################################
+    # server side db api #######################################################
 
     def sexecute(self, rql, args=None, eid_key=None):
         if eid_key is not None:
