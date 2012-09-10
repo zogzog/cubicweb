@@ -261,30 +261,34 @@ def may_have_permission(self, action, req):
     return self.has_local_role(action) or self.has_perm(req, action)
 PermissionMixIn.may_have_permission = may_have_permission
 
-def has_perm(self, session, action, **kwargs):
+def has_perm(self, _cw, action, **kwargs):
     """return true if the action is granted globaly or localy"""
     try:
-        self.check_perm(session, action, **kwargs)
+        self.check_perm(_cw, action, **kwargs)
         return True
     except Unauthorized:
         return False
 PermissionMixIn.has_perm = has_perm
 
-def check_perm(self, session, action, **kwargs):
-    # NB: session may be a server session or a request object check user is
-    # in an allowed group, if so that's enough internal sessions should
-    # always stop there
+def check_perm(self, _cw, action, **kwargs):
+    # NB: _cw may be a server transaction or a request object.
+    #
+    # check user is in an allowed group, if so that's enough internal
+    # transactions should always stop there
     groups = self.get_groups(action)
-    if session.user.matching_groups(groups):
+    if _cw.user.matching_groups(groups):
         return
     # if 'owners' in allowed groups, check if the user actually owns this
     # object, if so that's enough
+    #
+    # NB: give _cw to user.owns since user is not be bound to a transaction on
+    # the repository side
     if 'owners' in groups and (
           kwargs.get('creating')
-          or ('eid' in kwargs and session.user.owns(kwargs['eid']))):
+          or ('eid' in kwargs and _cw.user.owns(kwargs['eid']))):
         return
     # else if there is some rql expressions, check them
-    if any(rqlexpr.check(session, **kwargs)
+    if any(rqlexpr.check(_cw, **kwargs)
            for rqlexpr in self.get_rqlexprs(action)):
         return
     raise Unauthorized(action, str(self))
@@ -467,45 +471,45 @@ class CubicWebRelationSchema(RelationSchema):
                     return True
         return False
 
-    def has_perm(self, session, action, **kwargs):
+    def has_perm(self, _cw, action, **kwargs):
         """return true if the action is granted globaly or localy"""
         if self.final:
             assert not ('fromeid' in kwargs or 'toeid' in kwargs), kwargs
             assert action in ('read', 'update')
             if 'eid' in kwargs:
-                subjtype = session.describe(kwargs['eid'])[0]
+                subjtype = _cw.describe(kwargs['eid'])[0]
             else:
                 subjtype = objtype = None
         else:
             assert not 'eid' in kwargs, kwargs
             assert action in ('read', 'add', 'delete')
             if 'fromeid' in kwargs:
-                subjtype = session.describe(kwargs['fromeid'])[0]
+                subjtype = _cw.describe(kwargs['fromeid'])[0]
             elif 'frometype' in kwargs:
                 subjtype = kwargs.pop('frometype')
             else:
                 subjtype = None
             if 'toeid' in kwargs:
-                objtype = session.describe(kwargs['toeid'])[0]
+                objtype = _cw.describe(kwargs['toeid'])[0]
             elif 'toetype' in kwargs:
                 objtype = kwargs.pop('toetype')
             else:
                 objtype = None
         if objtype and subjtype:
-            return self.rdef(subjtype, objtype).has_perm(session, action, **kwargs)
+            return self.rdef(subjtype, objtype).has_perm(_cw, action, **kwargs)
         elif subjtype:
             for tschema in self.targets(subjtype, 'subject'):
                 rdef = self.rdef(subjtype, tschema)
-                if not rdef.has_perm(session, action, **kwargs):
+                if not rdef.has_perm(_cw, action, **kwargs):
                     return False
         elif objtype:
             for tschema in self.targets(objtype, 'object'):
                 rdef = self.rdef(tschema, objtype)
-                if not rdef.has_perm(session, action, **kwargs):
+                if not rdef.has_perm(_cw, action, **kwargs):
                     return False
         else:
             for rdef in self.rdefs.itervalues():
-                if not rdef.has_perm(session, action, **kwargs):
+                if not rdef.has_perm(_cw, action, **kwargs):
                     return False
         return True
 
@@ -754,17 +758,17 @@ class RQLExpression(object):
             return rql, found, keyarg
         return rqlst.as_string(), None, None
 
-    def _check(self, session, **kwargs):
+    def _check(self, _cw, **kwargs):
         """return True if the rql expression is matching the given relation
         between fromeid and toeid
 
-        session may actually be a request as well
+        _cw may be a request or a server side transaction
         """
         creating = kwargs.get('creating')
         if not creating and self.eid is not None:
             key = (self.eid, tuple(sorted(kwargs.iteritems())))
             try:
-                return session.local_perm_cache[key]
+                return _cw.local_perm_cache[key]
             except KeyError:
                 pass
         rql, has_perm_defs, keyarg = self.transform_has_permission()
@@ -772,50 +776,50 @@ class RQLExpression(object):
         if creating and 'X' in self.rqlst.defined_vars:
             return True
         if keyarg is None:
-            kwargs.setdefault('u', session.user.eid)
+            kwargs.setdefault('u', _cw.user.eid)
             try:
-                rset = session.execute(rql, kwargs, build_descr=True)
+                rset = _cw.execute(rql, kwargs, build_descr=True)
             except NotImplementedError:
                 self.critical('cant check rql expression, unsupported rql %s', rql)
                 if self.eid is not None:
-                    session.local_perm_cache[key] = False
+                    _cw.local_perm_cache[key] = False
                 return False
             except TypeResolverException, ex:
                 # some expression may not be resolvable with current kwargs
                 # (type conflict)
                 self.warning('%s: %s', rql, str(ex))
                 if self.eid is not None:
-                    session.local_perm_cache[key] = False
+                    _cw.local_perm_cache[key] = False
                 return False
             except Unauthorized, ex:
                 self.debug('unauthorized %s: %s', rql, str(ex))
                 if self.eid is not None:
-                    session.local_perm_cache[key] = False
+                    _cw.local_perm_cache[key] = False
                 return False
         else:
-            rset = session.eid_rset(kwargs[keyarg])
+            rset = _cw.eid_rset(kwargs[keyarg])
         # if no special has_*_permission relation in the rql expression, just
         # check the result set contains something
         if has_perm_defs is None:
             if rset:
                 if self.eid is not None:
-                    session.local_perm_cache[key] = True
+                    _cw.local_perm_cache[key] = True
                 return True
         elif rset:
             # check every special has_*_permission relation is satisfied
-            get_eschema = session.vreg.schema.eschema
+            get_eschema = _cw.vreg.schema.eschema
             try:
                 for eaction, col in has_perm_defs:
                     for i in xrange(len(rset)):
                         eschema = get_eschema(rset.description[i][col])
-                        eschema.check_perm(session, eaction, eid=rset[i][col])
+                        eschema.check_perm(_cw, eaction, eid=rset[i][col])
                 if self.eid is not None:
-                    session.local_perm_cache[key] = True
+                    _cw.local_perm_cache[key] = True
                 return True
             except Unauthorized:
                 pass
         if self.eid is not None:
-            session.local_perm_cache[key] = False
+            _cw.local_perm_cache[key] = False
         return False
 
     @property
@@ -843,15 +847,15 @@ class ERQLExpression(RQLExpression):
             rql += ', U eid %(u)s'
         return rql
 
-    def check(self, session, eid=None, creating=False, **kwargs):
+    def check(self, _cw, eid=None, creating=False, **kwargs):
         if 'X' in self.rqlst.defined_vars:
             if eid is None:
                 if creating:
-                    return self._check(session, creating=True, **kwargs)
+                    return self._check(_cw, creating=True, **kwargs)
                 return False
             assert creating == False
-            return self._check(session, x=eid, **kwargs)
-        return self._check(session, **kwargs)
+            return self._check(_cw, x=eid, **kwargs)
+        return self._check(_cw, **kwargs)
 
 
 def vargraph(rqlst):
@@ -904,7 +908,7 @@ class RRQLExpression(RQLExpression):
             rql += ', U eid %(u)s'
         return rql
 
-    def check(self, session, fromeid=None, toeid=None):
+    def check(self, _cw, fromeid=None, toeid=None):
         kwargs = {}
         if 'S' in self.rqlst.defined_vars:
             if fromeid is None:
@@ -914,7 +918,7 @@ class RRQLExpression(RQLExpression):
             if toeid is None:
                 return False
             kwargs['o'] = toeid
-        return self._check(session, **kwargs)
+        return self._check(_cw, **kwargs)
 
 
 # in yams, default 'update' perm for attributes granted to managers and owners.
@@ -1024,7 +1028,7 @@ class RepoEnforcedRQLConstraintMixIn(object):
                     'expression': self.expression}
             raise ValidationError(maineid, {qname: msg})
 
-    def exec_query(self, session, eidfrom, eidto):
+    def exec_query(self, _cw, eidfrom, eidto):
         if eidto is None:
             # checking constraint for an attribute relation
             expression = 'S eid %(s)s, ' + self.expression
@@ -1034,11 +1038,11 @@ class RepoEnforcedRQLConstraintMixIn(object):
             args = {'s': eidfrom, 'o': eidto}
         if 'U' in self.rqlst.defined_vars:
             expression = 'U eid %(u)s, ' + expression
-            args['u'] = session.user.eid
+            args['u'] = _cw.user.eid
         rql = 'Any %s WHERE %s' % (','.join(sorted(self.mainvars)), expression)
         if self.distinct_query:
             rql = 'DISTINCT ' + rql
-        return session.execute(rql, args, build_descr=False)
+        return _cw.execute(rql, args, build_descr=False)
 
 
 class RQLConstraint(RepoEnforcedRQLConstraintMixIn, RQLVocabularyConstraint):
@@ -1061,7 +1065,7 @@ class RQLUniqueConstraint(RepoEnforcedRQLConstraintMixIn, BaseRQLConstraint):
     """
     # XXX turns mainvars into a required argument in __init__
     distinct_query = True
-
+ 
     def match_condition(self, session, eidfrom, eidto):
         return len(self.exec_query(session, eidfrom, eidto)) <= 1
 
