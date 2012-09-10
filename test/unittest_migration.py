@@ -108,7 +108,13 @@ class BaseCreationTC(TestCase):
         self.assertEqual(source['db-driver'], 'sqlite')
         handler = get_test_db_handler(config)
         handler.init_test_database()
-
+        handler.build_db_cache()
+        repo, cnx = handler.get_repo_and_cnx()
+        cu = cnx.cursor()
+        self.assertEqual(cu.execute('Any SN WHERE X is CWUser, X login "admin", X in_state S, S name SN').rows,
+                          [['activated']])
+        cnx.close()
+        repo.shutdown()
 
 if __name__ == '__main__':
     unittest_main()
