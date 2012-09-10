@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -350,8 +350,8 @@ class RQLConstraintTC(CubicWebTC):
 
 class WorkflowShemaTC(CubicWebTC):
     def test_trinfo_default_format(self):
-         tr = self.session.user.cw_adapt_to('IWorkflowable').fire_transition('deactivate')
-         self.assertEqual(tr.comment_format, 'text/plain')
+        tr = self.request().user.cw_adapt_to('IWorkflowable').fire_transition('deactivate')
+        self.assertEqual(tr.comment_format, 'text/plain')
 
 if __name__ == '__main__':
     unittest_main()
