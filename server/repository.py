@@ -207,16 +207,10 @@ class Repository(object):
         elif config.creating:
             # repository creation
             config.bootstrap_cubes()
-            self.set_schema(config.load_schema(), resetvreg=False)
-            # need to load the Any and CWUser entity types
-            etdirectory = join(CW_SOFTWARE_ROOT, 'entities')
-            self.vreg.init_registration([etdirectory])
-            for modname in ('__init__', 'authobjs', 'wfobjs'):
-                self.vreg.load_file(join(etdirectory, '%s.py' % modname),
-                                    'cubicweb.entities.%s' % modname)
-            hooksdirectory = join(CW_SOFTWARE_ROOT, 'hooks')
-            self.vreg.load_file(join(hooksdirectory, 'metadata.py'),
-                                'cubicweb.hooks.metadata')
+            # trigger vreg initialisation of entity classes
+            config.cubicweb_appobject_path = set(('hooks', 'entities'))
+            config.cube_appobject_path = set(('hooks', 'entities'))
+            self.set_schema(config.load_schema())
         elif config.read_instance_schema:
             # normal start: load the instance schema from the database
             self.fill_schema()

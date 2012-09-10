@@ -224,10 +224,6 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     config._cubes = None # avoid assertion error
     repo, cnx = in_memory_repo_cnx(config, login, password=pwd)
     repo.system_source.eid = ssource.eid # redo this manually
-    # trigger vreg initialisation of entity classes
-    config.cubicweb_appobject_path = set(('entities',))
-    config.cube_appobject_path = set(('entities',))
-    repo.vreg.set_schema(repo.schema)
     assert len(repo.sources) == 1, repo.sources
     handler = config.migration_handler(schema, interactive=False,
                                        cnx=cnx, repo=repo)
