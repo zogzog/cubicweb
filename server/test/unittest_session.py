@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -62,27 +62,6 @@ class SessionTC(CubicWebTC):
         self.assertEqual(session.hooks_mode, session.HOOKS_ALLOW_ALL)
         self.assertEqual(session.disabled_hook_categories, set())
         self.assertEqual(session.enabled_hook_categories, set())
-
-    def test_build_descr1(self):
-        rset = self.execute('(Any U,L WHERE U login L) UNION (Any G,N WHERE G name N, G is CWGroup)')
-        orig_length = len(rset)
-        rset.rows[0][0] = 9999999
-        description = self.session.build_description(rset.syntax_tree(), None, rset.rows)
-        self.assertEqual(len(description), orig_length - 1)
-        self.assertEqual(len(rset.rows), orig_length - 1)
-        self.assertFalse(rset.rows[0][0] == 9999999)
-
-    def test_build_descr2(self):
-        rset = self.execute('Any X,Y WITH X,Y BEING ((Any G,NULL WHERE G is CWGroup) UNION (Any U,G WHERE U in_group G))')
-        for x, y in rset.description:
-            if y is not None:
-                self.assertEqual(y, 'CWGroup')
-
-    def test_build_descr3(self):
-        rset = self.execute('(Any G,NULL WHERE G is CWGroup) UNION (Any U,G WHERE U in_group G)')
-        for x, y in rset.description:
-            if y is not None:
-                self.assertEqual(y, 'CWGroup')
 
 
 if __name__ == '__main__':
