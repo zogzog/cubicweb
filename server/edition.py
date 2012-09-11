@@ -61,8 +61,6 @@ class EditedEntity(dict):
         # attributes, else we may accidentaly skip a desired security check
         if attr not in self:
             self.skip_security.add(attr)
-        # mark attribute as needing purge by the client
-        self.entity._cw_dont_cache_attribute(attr)
         self.edited_attribute(attr, value)
 
     def __delitem__(self, attr):
@@ -105,6 +103,8 @@ class EditedEntity(dict):
         assert not self.saved, 'too late to modify edited attributes'
         super(EditedEntity, self).__setitem__(attr, value)
         self.entity.cw_attr_cache[attr] = value
+        # mark attribute as needing purge by the client
+        self.entity._cw_dont_cache_attribute(attr)
 
     def oldnewvalue(self, attr):
         """returns the couple (old attr value, new attr value)

@@ -118,7 +118,7 @@ class StorageTC(CubicWebTC):
     def test_bfss_fs_importing_doesnt_touch_path(self):
         self.session.transaction_data['fs_importing'] = True
         filepath = osp.abspath(__file__)
-        f1 = self.session.create_entity('File', data=Binary(filepath),
+        f1 = self.request().create_entity('File', data=Binary(filepath),
                                         data_format=u'text/plain', data_name=u'foo')
         self.assertEqual(self.fspath(f1), filepath)
 
