@@ -120,6 +120,26 @@ def del_existing_rel_if_needed(session, eidfrom, rtype, eidto):
                             {'x': eidfrom, 'y': eidto})
 
 
+def preprocess_inlined_relations(session, entity):
+    """when an entity is added, check if it has some inlined relation which
+    requires to be extrated for proper call hooks
+    """
+    relations = []
+    activeintegrity = session.is_hook_category_activated('activeintegrity')
+    eschema = entity.e_schema
+    for attr in entity.cw_edited.iterkeys():
+        rschema = eschema.subjrels[attr]
+        if not rschema.final: # inlined relation
+            value = entity.cw_edited[attr]
+            relations.append((attr, value))
+            session.update_rel_cache_add(entity.eid, attr, value)
+            rdef = session.rtype_eids_rdef(attr, entity.eid, value)
+            if rdef.cardinality[1] in '1?' and activeintegrity:
+                with security_enabled(session, read=False):
+                    session.execute('DELETE X %s Y WHERE Y eid %%(y)s' % attr,
+                                    {'x': entity.eid, 'y': value})
+    return relations
+
 
 class NullEventBus(object):
     def publish(self, msg):
@@ -1353,7 +1373,6 @@ class Repository(object):
         entity._cw_is_saved = False # entity has an eid but is not yet saved
         # init edited_attributes before calling before_add_entity hooks
         entity.cw_edited = edited
-        eschema = entity.e_schema
         source = self.locate_etype_source(entity.__regid__)
         # allocate an eid to the entity before calling hooks
         entity.eid = self.system_source.create_eid(session)
@@ -1364,19 +1383,7 @@ class Repository(object):
         prefill_entity_caches(entity)
         if source.should_call_hooks:
             self.hm.call_hooks('before_add_entity', session, entity=entity)
-        relations = []
-        activeintegrity = session.is_hook_category_activated('activeintegrity')
-        for attr in edited.iterkeys():
-            rschema = eschema.subjrels[attr]
-            if not rschema.final: # inlined relation
-                value = edited[attr]
-                relations.append((attr, value))
-                session.update_rel_cache_add(entity.eid, attr, value)
-                rdef = session.rtype_eids_rdef(attr, entity.eid, value)
-                if rdef.cardinality[1] in '1?' and activeintegrity:
-                    with security_enabled(session, read=False):
-                        session.execute('DELETE X %s Y WHERE Y eid %%(y)s' % attr,
-                                        {'x': entity.eid, 'y': value})
+        relations = preprocess_inlined_relations(session, entity)
         edited.set_defaults()
         if session.is_hook_category_activated('integrity'):
             edited.check(creation=True)
