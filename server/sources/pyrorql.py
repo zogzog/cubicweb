@@ -91,5 +91,9 @@ registered. If not set, default to the value from all_in_one.conf.',
         except AttributeError:
             # inmemory connection
             pass
-        return super(PyroRQLSource, self).check_connection(cnx)
+        try:
+            return super(PyroRQLSource, self).check_connection(cnx)
+        except ConnectionClosedError:
+            # try to reconnect
+            return self.get_connection()
 
