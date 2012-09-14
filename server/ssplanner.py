@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -27,7 +27,6 @@ from rql.nodes import Constant, Relation
 from cubicweb import QueryError, typed_eid
 from cubicweb.schema import VIRTUAL_RTYPES
 from cubicweb.rqlrewrite import add_types_restriction
-from cubicweb.server.session import security_enabled
 from cubicweb.server.edition import EditedEntity
 
 READ_ONLY_RTYPES = set(('eid', 'has_text', 'is', 'is_instance_of', 'identity'))
@@ -87,7 +86,7 @@ def _extract_eid_consts(plan, rqlst):
                 # the generated select substep if not emited (eg nothing
                 # to be selected)
                 if checkread and eid not in neweids:
-                    with security_enabled(session, read=False):
+                    with session.security_enabled(read=False):
                         eschema(session.describe(eid)[0]).check_perm(
                             session, 'read', eid=eid)
                 eidconsts[lhs.variable] = eid

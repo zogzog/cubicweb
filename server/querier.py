@@ -42,7 +42,6 @@ from cubicweb.server.utils import cleanup_solutions
 from cubicweb.server.rqlannotation import SQLGenAnnotator, set_qdata
 from cubicweb.server.ssplanner import READ_ONLY_RTYPES, add_types_restriction
 from cubicweb.server.edition import EditedEntity
-from cubicweb.server.session import security_enabled
 
 
 ETYPE_PYOBJ_MAP[Binary] = 'Bytes'
@@ -262,7 +261,7 @@ class ExecutionPlan(object):
                 cached = True
             else:
                 noinvariant = set()
-                with security_enabled(self.session, read=False):
+                with self.session.security_enabled(read=False):
                     self._insert_security(union, noinvariant)
                 if key is not None:
                     self.session.transaction_data[key] = (union, self.args)

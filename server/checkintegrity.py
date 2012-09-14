@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -32,7 +32,6 @@ from logilab.common.shellutils import ProgressBar
 
 from cubicweb.schema import PURE_VIRTUAL_RTYPES, VIRTUAL_RTYPES
 from cubicweb.server.sqlutils import SQL_PREFIX
-from cubicweb.server.session import security_enabled
 
 def notify_fixed(fix):
     if fix:
@@ -394,7 +393,7 @@ def check(repo, cnx, checks, reindex, fix, withpb=True):
     # yo, launch checks
     if checks:
         eids_cache = {}
-        with security_enabled(session, read=False, write=False): # ensure no read security
+        with session.security_enabled(read=False, write=False): # ensure no read security
             for check in checks:
                 check_func = globals()['check_%s' % check]
                 check_func(repo.schema, session, eids_cache, fix=fix)

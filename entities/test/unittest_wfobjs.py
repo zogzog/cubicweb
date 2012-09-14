@@ -20,7 +20,6 @@ from __future__ import with_statement
 
 from cubicweb import ValidationError
 from cubicweb.devtools.testlib import CubicWebTC
-from cubicweb.server.session import security_enabled
 
 
 def add_wf(self, etype, name=None, default=False):
@@ -155,7 +154,7 @@ class WorkflowTC(CubicWebTC):
         wf = add_wf(self, 'CWUser')
         s = wf.add_state(u'foo', initial=True)
         self.commit()
-        with security_enabled(self.session, write=False):
+        with self.session.security_enabled(write=False):
             with self.assertRaises(ValidationError) as cm:
                 self.session.execute('SET X in_state S WHERE X eid %(x)s, S eid %(s)s',
                                      {'x': self.user().eid, 's': s.eid})

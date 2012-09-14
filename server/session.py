@@ -470,7 +470,7 @@ class Session(RequestSessionBase):
 
     DEFAULT_SECURITY = object() # evaluated to true by design
 
-    def security_enabled(self, read=False, write=False):
+    def security_enabled(self, read=None, write=None):
         return security_enabled(self, read=read, write=write)
 
     def init_security(self, read, write):

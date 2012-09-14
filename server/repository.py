@@ -56,8 +56,7 @@ from cubicweb import (CW_SOFTWARE_ROOT, CW_MIGRATION_MAP, QueryError,
                       RepositoryError, UniqueTogetherError, typed_eid, onevent)
 from cubicweb import cwvreg, schema, server
 from cubicweb.server import ShuttingDown, utils, hook, pool, querier, sources
-from cubicweb.server.session import Session, InternalSession, InternalManager, \
-     security_enabled
+from cubicweb.server.session import Session, InternalSession, InternalManager
 from cubicweb.server.ssplanner import EditedEntity
 
 NO_CACHE_RELATIONS = set( [('owned_by', 'object'),
@@ -109,12 +108,12 @@ def del_existing_rel_if_needed(session, eidfrom, rtype, eidto):
     # * we don't want read permissions to be applied but we want delete
     #   permission to be checked
     if card[0] in '1?':
-        with security_enabled(session, read=False):
+        with session.security_enabled(read=False):
             session.execute('DELETE X %s Y WHERE X eid %%(x)s, '
                             'NOT Y eid %%(y)s' % rtype,
                                 {'x': eidfrom, 'y': eidto})
     if card[1] in '1?':
-        with security_enabled(session, read=False):
+        with session.security_enabled(read=False):
             session.execute('DELETE X %s Y WHERE Y eid %%(y)s, '
                             'NOT X eid %%(x)s' % rtype,
                             {'x': eidfrom, 'y': eidto})
@@ -1200,7 +1199,7 @@ class Repository(object):
             source = self.sources_by_eid[scleanup]
         # delete remaining relations: if user can delete the entity, he can
         # delete all its relations without security checking
-        with security_enabled(session, read=False, write=False):
+        with session.security_enabled(read=False, write=False):
             eid = entity.eid
             for rschema, _, role in entity.e_schema.relation_definitions():
                 rtype = rschema.type
@@ -1242,7 +1241,7 @@ class Repository(object):
             source = self.sources_by_eid[scleanup]
         # delete remaining relations: if user can delete the entity, he can
         # delete all its relations without security checking
-        with security_enabled(session, read=False, write=False):
+        with session.security_enabled(read=False, write=False):
             in_eids = ','.join([str(_e.eid) for _e in entities])
             for rschema, _, role in entities[0].e_schema.relation_definitions():
                 rtype = rschema.type
@@ -1355,7 +1354,7 @@ class Repository(object):
                 session.update_rel_cache_add(entity.eid, attr, value)
                 rdef = session.rtype_eids_rdef(attr, entity.eid, value)
                 if rdef.cardinality[1] in '1?' and activeintegrity:
-                    with security_enabled(session, read=False):
+                    with session.security_enabled(read=False):
                         session.execute('DELETE X %s Y WHERE Y eid %%(y)s' % attr,
                                         {'x': entity.eid, 'y': value})
         edited.set_defaults()
@@ -1541,7 +1540,7 @@ class Repository(object):
                 rdef = session.rtype_eids_rdef(rtype, subjeid, objeid)
                 card = rdef.cardinality
                 if card[0] in '?1':
-                    with security_enabled(session, read=False):
+                    with session.security_enabled(read=False):
                         session.execute('DELETE X %s Y WHERE X eid %%(x)s, '
                                         'NOT Y eid %%(y)s' % rtype,
                                         {'x': subjeid, 'y': objeid})
@@ -1552,7 +1551,7 @@ class Repository(object):
                         continue
                     subjects[subjeid] = len(relations_by_rtype[rtype]) - 1
                 if card[1] in '?1':
-                    with security_enabled(session, read=False):
+                    with session.security_enabled(read=False):
                         session.execute('DELETE X %s Y WHERE Y eid %%(y)s, '
                                         'NOT X eid %%(x)s' % rtype,
                                         {'x': subjeid, 'y': objeid})

@@ -264,7 +264,6 @@ from cubicweb import RegistryNotFound
 from cubicweb.cwvreg import CWRegistry, CWRegistryStore
 from cubicweb.predicates import ExpectedValuePredicate, is_instance
 from cubicweb.appobject import AppObject
-from cubicweb.server.session import security_enabled
 
 ENTITIES_HOOKS = set(('before_add_entity',    'after_add_entity',
                       'before_update_entity', 'after_update_entity',
@@ -322,11 +321,11 @@ class HooksRegistry(CWRegistry):
             pruned = self.get_pruned_hooks(session, event,
                                            entities, eids_from_to, kwargs)
             # by default, hooks are executed with security turned off
-            with security_enabled(session, read=False):
+            with session.security_enabled(read=False):
                 for _kwargs in _iter_kwargs(entities, eids_from_to, kwargs):
                     hooks = sorted(self.filtered_possible_objects(pruned, session, **_kwargs),
                                    key=lambda x: x.order)
-                    with security_enabled(session, write=False):
+                    with session.security_enabled(write=False):
                         for hook in hooks:
                             hook()
 
