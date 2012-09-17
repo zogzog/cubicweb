@@ -2603,6 +2603,9 @@ msgstr "Nombre"
 msgid "foaf"
 msgstr "Amigo de un Amigo, FOAF"
 
+msgid "focus on this selection"
+msgstr ""
+
 msgid "follow"
 msgstr "Seguir la liga"
 

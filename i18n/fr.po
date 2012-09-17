@@ -2611,6 +2611,9 @@ msgstr "prénom"
 msgid "foaf"
 msgstr "foaf"
 
+msgid "focus on this selection"
+msgstr "afficher cette sélection"
+
 msgid "follow"
 msgstr "suivre le lien"
 
@@ -4137,10 +4140,6 @@ msgstr "Il n'y a pas de page précédente"
 msgid "there is no transaction #%s"
 msgstr "Il n'y a pas de transaction #%s"
 
-#, python-format
-msgid "there is no transaction #%s"
-msgstr ""
-
 msgid "this action is not reversible!"
 msgstr ""
 "Attention ! Cette opération va détruire les données de façon irréversible."
@@ -4695,6 +4694,9 @@ msgstr ""
 
 #~ msgid "day"
 #~ msgstr "jour"
+
+#~ msgid "jump to selection"
+#~ msgstr "afficher cette sélection"
 
 #~ msgid "log out first"
 #~ msgstr "déconnecter vous d'abord"

@@ -68,6 +68,14 @@ function buildRQL(divid, vid, paginate, vidargs) {
             var bkUrl = $bkLink.attr('cubicweb:target') + '&path=' + encodeURIComponent(bkPath);
             $bkLink.attr('href', bkUrl);
         }
+        var $focusLink = jQuery('#focusLink');
+        if ($focusLink.length) {
+            var url = baseuri()+ 'view?rql=' + encodeURIComponent(rql);
+            if (vid) {
+                url += '&vid=' + encodeURIComponent(vid);
+            }
+            $focusLink.attr('href', url);
+        }
         var toupdate = result[1];
         var extraparams = vidargs;
         if (paginate) { extraparams['paginate'] = '1'; } // XXX in vidargs

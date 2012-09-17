@@ -2508,6 +2508,9 @@ msgstr "firstname"
 msgid "foaf"
 msgstr ""
 
+msgid "focus on this selection"
+msgstr ""
+
 msgid "follow"
 msgstr ""
 
