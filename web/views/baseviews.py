@@ -565,8 +565,9 @@ class GroupByView(EntityView):
         w = self.w
         w(u'<ul class="boxListing">')
         for key in displayed:
-            w(u'<li>%s</li>\n' %
-              self.index_link(basepath, key, index[key]))
+            if key:
+                w(u'<li>%s</li>\n' %
+                  self.index_link(basepath, key, index[key]))
         if needmore:
             url = self._cw.build_url('view', vid=self.__regid__,
                                      rql=self.cw_rset.printable_rql())
@@ -616,6 +617,8 @@ class AuthorView(GroupByView):
         return (None, None)
 
     def index_link(self, basepath, key, items):
+        if key[0] is None:
+            return
         label = u'%s [%s]' % (key[0], len(items))
         etypes = set(entity.__regid__ for entity in items)
         vtitle = self._cw._('%(etype)s by %(author)s') % {
