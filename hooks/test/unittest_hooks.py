@@ -170,6 +170,7 @@ class SchemaHooksTC(CubicWebTC):
         try:
             self.execute('INSERT CWUser X: X login "admin"')
         except ValidationError, ex:
+            ex.tr(unicode)
             self.assertIsInstance(ex.entity, int)
             self.assertEqual(ex.errors, {'login-subject': 'the value "admin" is already used, use another one'})
 

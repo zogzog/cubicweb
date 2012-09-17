@@ -190,6 +190,7 @@ class ViewController(Controller):
 
 def _validation_error(req, ex):
     req.cnx.rollback()
+    ex.tr(req._) # translate messages using ui language
     # XXX necessary to remove existant validation error?
     # imo (syt), it's not necessary
     req.session.data.pop(req.form.get('__errorurl'), None)

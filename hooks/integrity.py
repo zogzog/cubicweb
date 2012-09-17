@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -20,12 +20,11 @@ validity
 """
 
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 from threading import Lock
 
-from yams.schema import role_name
-
-from cubicweb import ValidationError
+from cubicweb import validation_error
 from cubicweb.schema import (META_RTYPES, WORKFLOW_RTYPES,
                              RQLConstraint, RQLUniqueConstraint)
 from cubicweb.predicates import is_instance
@@ -87,11 +86,11 @@ class _CheckRequiredRelationOperation(hook.DataOperationMixIn,
                 continue
             if not session.execute(self.base_rql % rtype, {'x': eid}):
                 etype = session.describe(eid)[0]
-                _ = session._
                 msg = _('at least one relation %(rtype)s is required on '
                         '%(etype)s (%(eid)s)')
-                msg %= {'rtype': _(rtype), 'etype': _(etype), 'eid': eid}
-                raise ValidationError(eid, {role_name(rtype, self.role): msg})
+                raise validation_error(eid, {(rtype, self.role): msg},
+                                       {'rtype': rtype, 'etype': etype, 'eid': eid},
+                                       ['rtype', 'etype'])
 
 
 class _CheckSRelationOp(_CheckRequiredRelationOperation):
@@ -231,9 +230,9 @@ class CheckUniqueHook(IntegrityHook):
                 rql = '%s X WHERE X %s %%(val)s' % (entity.e_schema, attr)
                 rset = self._cw.execute(rql, {'val': val})
                 if rset and rset[0][0] != entity.eid:
-                    msg = self._cw._('the value "%s" is already used, use another one')
-                    qname = role_name(attr, 'subject')
-                    raise ValidationError(entity.eid, {qname: msg % val})
+                    msg = _('the value "%s" is already used, use another one')
+                    raise validation_error(entity, {(attr, 'subject'): msg},
+                                           (val,))
 
 
 class DontRemoveOwnersGroupHook(IntegrityHook):
@@ -246,15 +245,12 @@ class DontRemoveOwnersGroupHook(IntegrityHook):
     def __call__(self):
         entity = self.entity
         if self.event == 'before_delete_entity' and entity.name == 'owners':
-            msg = self._cw._('can\'t be deleted')
-            raise ValidationError(entity.eid, {None: msg})
+            raise validation_error(entity, {None: _("can't be deleted")})
         elif self.event == 'before_update_entity' \
                  and 'name' in entity.cw_edited:
             oldname, newname = entity.cw_edited.oldnewvalue('name')
             if oldname == 'owners' and newname != oldname:
-                qname = role_name('name', 'subject')
-                msg = self._cw._('can\'t be changed')
-                raise ValidationError(entity.eid, {qname: msg})
+                raise validation_error(entity, {('name', 'subject'): _("can't be changed")})
 
 
 class TidyHtmlFields(IntegrityHook):

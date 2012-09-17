@@ -1,4 +1,4 @@
-# copyright 2010-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2010-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -17,12 +17,13 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """hooks for repository sources synchronization"""
 
+_ = unicode
+
 from socket import gethostname
 
 from logilab.common.decorators import clear_cache
-from yams.schema import role_name
 
-from cubicweb import ValidationError
+from cubicweb import validation_error
 from cubicweb.predicates import is_instance
 from cubicweb.server import SOURCE_TYPES, hook
 
@@ -46,9 +47,8 @@ class SourceAddedHook(SourceHook):
         try:
             sourcecls = SOURCE_TYPES[self.entity.type]
         except KeyError:
-            msg = self._cw._('unknown source type')
-            raise ValidationError(self.entity.eid,
-                                  {role_name('type', 'subject'): msg})
+            msg = _('unknown source type')
+            raise validation_error(self.entity, {('type', 'subject'): msg})
         sourcecls.check_conf_dict(self.entity.eid, self.entity.host_config,
                                   fail_if_unknown=not self._cw.vreg.config.repairing)
         SourceAddedOp(self._cw, entity=self.entity)
@@ -65,7 +65,8 @@ class SourceRemovedHook(SourceHook):
     events = ('before_delete_entity',)
     def __call__(self):
         if self.entity.name == 'system':
-            raise ValidationError(self.entity.eid, {None: 'cant remove system source'})
+            msg = _("You cannot remove the system source")
+            raise validation_error(self.entity, {None: msg})
         SourceRemovedOp(self._cw, uri=self.entity.name)
 
 
@@ -154,8 +155,8 @@ class SourceMappingImmutableHook(SourceHook):
     events = ('before_add_relation',)
     def __call__(self):
         if not self._cw.added_in_transaction(self.eidfrom):
-            msg = self._cw._("can't change this relation")
-            raise ValidationError(self.eidfrom, {self.rtype: msg})
+            msg = _("You can't change this relation")
+            raise validation_error(self.eidfrom, {self.rtype: msg})
 
 
 class SourceMappingChangedOp(hook.DataOperationMixIn, hook.Operation):

@@ -143,8 +143,7 @@ class EditedEntity(dict):
                          for rtype in self]
         try:
             entity.e_schema.check(dict_protocol_catcher(entity),
-                                  creation=creation, _=entity._cw._,
-                                  relations=relations)
+                                  creation=creation, relations=relations)
         except ValidationError, ex:
             ex.entity = self.entity
             raise
