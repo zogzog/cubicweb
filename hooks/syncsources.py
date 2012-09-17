@@ -47,11 +47,15 @@ class SourceAddedHook(SourceHook):
         try:
             sourcecls = SOURCE_TYPES[self.entity.type]
         except KeyError:
-            msg = _('unknown source type')
+            msg = _('Unknown source type')
             raise validation_error(self.entity, {('type', 'subject'): msg})
-        sourcecls.check_conf_dict(self.entity.eid, self.entity.host_config,
-                                  fail_if_unknown=not self._cw.vreg.config.repairing)
-        SourceAddedOp(self._cw, entity=self.entity)
+        # ignore creation of the system source done during database
+        # initialisation, as config for this source is in a file and handling
+        # is done separatly (no need for the operation either)
+        if self.entity.name != 'system':
+            sourcecls.check_conf_dict(self.entity.eid, self.entity.host_config,
+                                      fail_if_unknown=not self._cw.vreg.config.repairing)
+            SourceAddedOp(self._cw, entity=self.entity)
 
 
 class SourceRemovedOp(hook.Operation):
@@ -117,11 +121,18 @@ class SourceUpdatedHook(SourceHook):
     __select__ = SourceHook.__select__ & is_instance('CWSource')
     events = ('before_update_entity',)
     def __call__(self):
-        if 'config' in self.entity.cw_edited:
-            SourceConfigUpdatedOp.get_instance(self._cw).add_data(self.entity)
         if 'name' in self.entity.cw_edited:
             oldname, newname = self.entity.cw_edited.oldnewvalue('name')
+            if oldname == 'system':
+                msg = _("You cannot rename the system source")
+                raise validation_error(self.entity, {('name', 'subject'): msg})
             SourceRenamedOp(self._cw, oldname=oldname, newname=newname)
+        if 'config' in self.entity.cw_edited:
+            if self.entity.name == 'system' and self.entity.config:
+                msg = _("Configuration of the system source goes to "
+                        "the 'sources' file, not in the database")
+                raise validation_error(self.entity, {('config', 'subject'): msg})
+            SourceConfigUpdatedOp.get_instance(self._cw).add_data(self.entity)
 
 
 class SourceHostConfigUpdatedHook(SourceHook):
