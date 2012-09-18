@@ -917,7 +917,7 @@ inmemory:// (default) use an in-memory repository.',
                     break
             cnx.load_appobjects()
             repo = cnx._repo
-            mih = ServerMigrationHelper(None, repo=repo, cnx=cnx,
+            mih = ServerMigrationHelper(None, repo=repo, cnx=cnx, verbosity=0,
                                          # hack so it don't try to load fs schema
                                         schema=1)
         else:
