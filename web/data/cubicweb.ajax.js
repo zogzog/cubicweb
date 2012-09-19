@@ -70,7 +70,7 @@ jQuery.extend(Deferred.prototype, {
                 callback.apply(null, args);
             }
         } catch(error) {
-            this.error(this.xhr, null, error);
+            this.error(this._req, null, error);
         }
     },
 
