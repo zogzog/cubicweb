@@ -197,14 +197,12 @@ Hooks control
 ~~~~~~~~~~~~~
 
 It is sometimes convenient to explicitly enable or disable some hooks. For
-instance if you want to disable some integrity checking hook.  This can be
+instance if you want to disable some integrity checking hook. This can be
 controlled more finely through the `category` class attribute, which is a string
 giving a category name.  One can then uses the
-:class:`~cubicweb.server.session.hooks_control` context manager to explicitly
-enable or disable some categories.
-
-.. autoclass:: cubicweb.server.session.hooks_control
-
+:meth:`~cubicweb.server.session.Session.deny_all_hooks_but` and
+:meth:`~cubicweb.server.session.Session.allow_all_hooks_but` context managers to
+explicitly enable or disable some categories.
 
 The existing categories are:
 
@@ -230,10 +228,8 @@ The existing categories are:
 * ``bookmark``, bookmark entities handling hooks
 
 
-Nothing precludes one to invent new categories and use the
-:class:`~cubicweb.server.session.hooks_control` context manager to
-filter them in or out. Note that ending the transaction with commit()
-or rollback() will restore the hooks.
+Nothing precludes one to invent new categories and use existing mechanisms to
+filter them in or out.
 
 
 Hooks specific predicates

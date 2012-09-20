@@ -18,7 +18,6 @@
 from __future__ import with_statement
 
 from cubicweb.devtools.testlib import CubicWebTC
-from cubicweb.server.session import hooks_control
 
 
 class InternalSessionTC(CubicWebTC):
@@ -36,7 +35,7 @@ class SessionTC(CubicWebTC):
         self.assertEqual(session.disabled_hook_categories, set())
         self.assertEqual(session.enabled_hook_categories, set())
         self.assertEqual(len(session._tx_data), 1)
-        with hooks_control(session, session.HOOKS_DENY_ALL, 'metadata'):
+        with session.deny_all_hooks_but('metadata'):
             self.assertEqual(session.hooks_mode, session.HOOKS_DENY_ALL)
             self.assertEqual(session.disabled_hook_categories, set())
             self.assertEqual(session.enabled_hook_categories, set(('metadata',)))
@@ -48,7 +47,7 @@ class SessionTC(CubicWebTC):
             self.assertEqual(session.hooks_mode, session.HOOKS_DENY_ALL)
             self.assertEqual(session.disabled_hook_categories, set())
             self.assertEqual(session.enabled_hook_categories, set(('metadata',)))
-            with hooks_control(session, session.HOOKS_ALLOW_ALL, 'integrity'):
+            with session.allow_all_hooks_but('integrity'):
                 self.assertEqual(session.hooks_mode, session.HOOKS_ALLOW_ALL)
                 self.assertEqual(session.disabled_hook_categories, set(('integrity',)))
                 self.assertEqual(session.enabled_hook_categories, set(('metadata',))) # not changed in such case
@@ -65,4 +64,5 @@ class SessionTC(CubicWebTC):
 
 
 if __name__ == '__main__':
+    from logilab.common.testlib import unittest_main
     unittest_main()

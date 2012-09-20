@@ -108,6 +108,11 @@ class hooks_control(object):
 
        with hooks_control(self.session, self.session.HOOKS_DENY_ALL, 'integrity'):
            # ... do stuff with none but 'integrity' hooks activated
+
+    This is an internal api, you should rather use
+    :meth:`~cubicweb.server.session.Session.deny_all_hooks_but` or
+    :meth:`~cubicweb.server.session.Session.allow_all_hooks_but` session
+    methods.
     """
     def __init__(self, session, mode, *categories):
         self.session = session
@@ -217,6 +222,9 @@ class Session(RequestSessionBase):
 
       :attr:`running_dbapi_query`, boolean flag telling if the executing query
       is coming from a dbapi connection or is a query from within the repository
+
+    .. automethod:: cubicweb.server.session.deny_all_hooks_but
+    .. automethod:: cubicweb.server.session.all_all_hooks_but
     """
     is_request = False
     is_internal_session = False

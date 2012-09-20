@@ -247,15 +247,13 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
 
 def initialize_schema(config, schema, mhandler, event='create'):
     from cubicweb.server.schemaserial import serialize_schema
-    from cubicweb.server.session import hooks_control
     session = mhandler.session
     cubes = config.cubes()
     # deactivate every hooks but those responsible to set metadata
     # so, NO INTEGRITY CHECKS are done, to have quicker db creation.
     # Active integrity is kept else we may pb such as two default
     # workflows for one entity type.
-    with hooks_control(session, session.HOOKS_DENY_ALL, 'metadata',
-                       'activeintegrity'):
+    with session.deny_all_hooks_but('metadata', 'activeintegrity'):
         # execute cubicweb's pre<event> script
         mhandler.cmd_exec_event_script('pre%s' % event)
         # execute cubes pre<event> script if any
