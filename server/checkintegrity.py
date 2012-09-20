@@ -398,13 +398,13 @@ def check(repo, cnx, checks, reindex, fix, withpb=True):
                 check_func = globals()['check_%s' % check]
                 check_func(repo.schema, session, eids_cache, fix=fix)
         if fix:
-            cnx.commit()
+            session.commit()
         else:
             print
         if not fix:
             print 'WARNING: Diagnostic run, nothing has been corrected'
     if reindex:
-        cnx.rollback()
+        session.rollback()
         session.set_cnxset()
         reindex_entities(repo.schema, session, withpb=withpb)
-        cnx.commit()
+        session.commit()

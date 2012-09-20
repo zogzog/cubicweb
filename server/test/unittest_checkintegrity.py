@@ -29,8 +29,9 @@ class CheckIntegrityTC(TestCase):
         handler = get_test_db_handler(TestServerConfiguration(apphome=self.datadir))
         handler.build_db_cache()
         self.repo, self.cnx = handler.get_repo_and_cnx()
-        self.execute = self.cnx.cursor().execute
-        self.session = self.repo._sessions[self.cnx.sessionid]
+        session = self.repo._get_session(self.cnx.sessionid, setcnxset=True)
+        self.session = session
+        self.execute = session.execute
         sys.stderr = sys.stdout = StringIO()
 
     def tearDown(self):
