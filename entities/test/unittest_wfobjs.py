@@ -622,23 +622,22 @@ class WorkflowHooksTC(CubicWebTC):
         cnx.close()
 
     def test_transition_checking3(self):
-        cnx = self.login('stduser')
-        session = self.session
-        user = cnx.user(session)
-        iworkflowable = user.cw_adapt_to('IWorkflowable')
-        iworkflowable.fire_transition('deactivate')
-        cnx.commit()
-        session.set_cnxset()
-        with self.assertRaises(ValidationError) as cm:
+        with self.login('stduser') as cnx:
+            session = self.session
+            user = cnx.user(session)
+            iworkflowable = user.cw_adapt_to('IWorkflowable')
             iworkflowable.fire_transition('deactivate')
-        self.assertEqual(self._cleanup_msg(cm.exception.errors['by_transition-subject']),
-                                            u"transition isn't allowed from")
-        cnx.rollback()
-        session.set_cnxset()
-        # get back now
-        iworkflowable.fire_transition('activate')
-        cnx.commit()
-        cnx.close()
+            session.commit()
+            session.set_cnxset()
+            with self.assertRaises(ValidationError) as cm:
+                iworkflowable.fire_transition('deactivate')
+            self.assertEqual(self._cleanup_msg(cm.exception.errors['by_transition-subject']),
+                                                u"transition isn't allowed from")
+            session.rollback()
+            session.set_cnxset()
+            # get back now
+            iworkflowable.fire_transition('activate')
+            session.commit()
 
 
 if __name__ == '__main__':
