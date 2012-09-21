@@ -1213,6 +1213,9 @@ class InternalManager(object):
             return 'en'
         return None
 
+    def prefered_language(self, language=None):
+        # mock CWUser.prefered_language, mainly for testing purpose
+        return self.property_value('ui.language')
 
 from logging import getLogger
 from cubicweb import set_log_methods
