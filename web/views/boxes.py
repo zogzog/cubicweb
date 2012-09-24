@@ -48,7 +48,7 @@ from cubicweb.web import component, box, htmlwidgets
 BoxTemplate = box.BoxTemplate
 BoxHtml = htmlwidgets.BoxHtml
 
-class EditBox(component.CtxComponent): # XXX rename to ActionsBox
+class EditBox(component.CtxComponent):
     """
     box with all actions impacting the entity displayed: edit, copy, delete
     change state, add related entities...
@@ -58,6 +58,7 @@ class EditBox(component.CtxComponent): # XXX rename to ActionsBox
     title = _('actions')
     order = 2
     contextual = True
+    __select__ = component.CtxComponent.__select__ & non_final_entity()
 
     def init_rendering(self):
         super(EditBox, self).init_rendering()
