@@ -597,7 +597,12 @@ class Connection(object):
             esubpath = list(subpath)
             esubpath.remove('views')
             esubpath.append(join('web', 'views'))
+        # first load available configs, necessary for proper persistent
+        # properties initialization
+        config.load_available_configs()
+        # then init cubes
         config.init_cubes(cubes)
+        # then load appobjects into the registry
         vpath = config.build_vregistry_path(reversed(config.cubes_path()),
                                             evobjpath=esubpath,
                                             tvobjpath=subpath)
