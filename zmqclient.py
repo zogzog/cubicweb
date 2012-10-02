@@ -43,12 +43,9 @@ class ZMQRepositoryClient(object):
     ZMQ is used as the transport layer and cPickle is used to serialize data.
     """
 
-    def __init__(self, config, vreg=None):
-        self.config = config
-        self.vreg = vreg
+    def __init__(self, zmq_address):
         self.socket = ctx.socket(zmq.REQ)
-        self.host = config.get('base-url')
-        self.socket.connect(self.host)
+        self.socket.connect(zmq_address)
 
     def __zmqcall__(self, name, *args, **kwargs):
          self.socket.send_pyobj([name, args, kwargs])

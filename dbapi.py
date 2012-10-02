@@ -104,7 +104,7 @@ def get_repository(method, database=None, config=None, vreg=None):
         return Repository(config, TasksManager(), vreg=vreg)
     elif method == 'zmq':
         from cubicweb.zmqclient import ZMQRepositoryClient
-        return ZMQRepositoryClient(config, vreg=vreg)
+        return ZMQRepositoryClient(database)
     else: # method == 'pyro'
         # resolve the Pyro object
         from logilab.common.pyro_ext import ns_get_proxy, get_proxy
