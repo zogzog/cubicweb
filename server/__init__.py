@@ -165,6 +165,8 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     # on connection
     config.creating = True
     config.consider_user_state = False
+    config.cubicweb_appobject_path = set(('hooks', 'entities'))
+    config.cube_appobject_path = set(('hooks', 'entities'))
     # only enable the system source at initialization time
     repo = Repository(config, vreg=vreg)
     schema = repo.schema
@@ -242,6 +244,9 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     # restore initial configuration
     config.creating = False
     config.consider_user_state = True
+    # (drop instance attribute to get back to class attribute)
+    del config.cubicweb_appobject_path
+    del config.cube_appobject_path
     print '-> database for instance %s initialized.' % config.appid
 
 

@@ -223,19 +223,13 @@ class Repository(object):
             config['connections-pool-size'] = 1
             # will be reinitialized later from cubes found in the database
             config._cubes = None
-        elif config.creating:
-            # repository creation
-            config.bootstrap_cubes()
-            # trigger vreg initialisation of entity classes
-            config.cubicweb_appobject_path = set(('hooks', 'entities'))
-            config.cube_appobject_path = set(('hooks', 'entities'))
-            self.set_schema(config.load_schema())
         elif config.read_instance_schema:
             # normal start: load the instance schema from the database
             self.fill_schema()
         else:
-            # test start: use the file system schema (quicker)
-            self.warning("set fs instance'schema")
+            if not config.creating:
+                # test start: use the file system schema (quicker)
+                self.warning("set fs instance'schema")
             config.bootstrap_cubes()
             self.set_schema(config.load_schema())
         if not config.creating:
