@@ -16,6 +16,12 @@ web = 'http://www.cubicweb.org/project/%%s' %% distname
 __depends__ =  %(dependencies)s
 __recommends__ = {}
 
+classifiers = [
+    'Environment :: Web Environment',
+    'Framework :: CubicWeb',
+    'Programming Language :: Python',
+    'Programming Language :: JavaScript',
+    ]
 
 from os import listdir as _listdir
 from os.path import join, isdir
