@@ -318,20 +318,11 @@ class RequestSessionBase(object):
     def user_data(self):
         """returns a dictionary with this user's information"""
         userinfo = {}
-        if self.is_internal_session:
-            userinfo['login'] = "cubicweb"
-            userinfo['name'] = "cubicweb"
-            userinfo['email'] = ""
-            return userinfo
         user = self.user
         userinfo['login'] = user.login
         userinfo['name'] = user.name()
         userinfo['email'] = user.cw_adapt_to('IEmailable').get_email()
         return userinfo
-
-    def is_internal_session(self):
-        """overrided on the server-side"""
-        return False
 
     # formating methods #######################################################
 

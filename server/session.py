@@ -1217,6 +1217,21 @@ class InternalManager(object):
         # mock CWUser.prefered_language, mainly for testing purpose
         return self.property_value('ui.language')
 
+    # CWUser compat for notification ###########################################
+
+    def name(self):
+        return 'cubicweb'
+
+    class _IEmailable:
+        @staticmethod
+        def get_email():
+            return ''
+
+    def cw_adapt_to(self, iface):
+        if iface == 'IEmailable':
+            return self._IEmailable
+        return None
+
 from logging import getLogger
 from cubicweb import set_log_methods
 set_log_methods(Session, getLogger('cubicweb.session'))
