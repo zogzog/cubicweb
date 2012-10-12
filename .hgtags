@@ -264,3 +264,5 @@ fe5e60862b64f1beed2ccdf3a9c96502dfcd811b cubicweb-debian-version-3.15.1-1
 9aa5553b26520ceb68539e7a32721b5cd5393e16 cubicweb-debian-version-3.15.2-1
 0e012eb80990ca6f91aa9a8ad3324fbcf51435b1 cubicweb-version-3.15.3
 7ad423a5b6a883dbdf00e6c87a5f8ab121041640 cubicweb-debian-version-3.15.3-1
+63260486de89a9dc32128cd0eacef891a668977b cubicweb-version-3.15.4
+70cb36c826df86de465f9b69647cef7096dcf12c cubicweb-debian-version-3.15.4-1

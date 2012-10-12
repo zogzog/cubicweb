@@ -30,6 +30,7 @@ from cookielib import CookieJar
 from lxml import etree
 
 from cubicweb import RegistryNotFound, ObjectNotFound, ValidationError, UnknownEid
+from cubicweb.server.repository import preprocess_inlined_relations
 from cubicweb.server.sources import AbstractSource
 from cubicweb.appobject import AppObject
 
@@ -254,11 +255,20 @@ class DataFeedSource(AbstractSource):
         """called by the repository after an entity stored here has been
         inserted in the system table.
         """
+        relations = preprocess_inlined_relations(session, entity)
         if session.is_hook_category_activated('integrity'):
             entity.cw_edited.check(creation=True)
         self.repo.system_source.add_entity(session, entity)
         entity.cw_edited.saved = entity._cw_is_saved = True
         sourceparams['parser'].after_entity_copy(entity, sourceparams)
+        # call hooks for inlined relations
+        call_hooks = self.repo.hm.call_hooks
+        if self.should_call_hooks:
+            for attr, value in relations:
+                call_hooks('before_add_relation', session,
+                           eidfrom=entity.eid, rtype=attr, eidto=value)
+                call_hooks('after_add_relation', session,
+                           eidfrom=entity.eid, rtype=attr, eidto=value)
 
     def source_cwuris(self, session):
         sql = ('SELECT extid, eid, type FROM entities, cw_source_relation '
@@ -398,6 +408,7 @@ class DataFeedParser(AppObject):
             if attrs:
                 entity.cw_set(**attrs)
                 self.notify_updated(entity)
+
 
 class DataFeedXMLParser(DataFeedParser):
 

@@ -103,7 +103,7 @@ def get_repository(method, database=None, config=None, vreg=None):
         return Repository(config, TasksManager(), vreg=vreg)
     elif method == 'zmq':
         from cubicweb.zmqclient import ZMQRepositoryClient
-        return ZMQRepositoryClient(config, vreg=vreg)
+        return ZMQRepositoryClient(database)
     else: # method == 'pyro'
         # resolve the Pyro object
         from logilab.common.pyro_ext import ns_get_proxy, get_proxy
@@ -592,7 +592,12 @@ class Connection(object):
             esubpath = list(subpath)
             esubpath.remove('views')
             esubpath.append(join('web', 'views'))
+        # first load available configs, necessary for proper persistent
+        # properties initialization
+        config.load_available_configs()
+        # then init cubes
         config.init_cubes(cubes)
+        # then load appobjects into the registry
         vpath = config.build_appobjects_path(reversed(config.cubes_path()),
                                              evobjpath=esubpath,
                                              tvobjpath=subpath)

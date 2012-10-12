@@ -25,7 +25,7 @@ from __future__ import with_statement
 from logilab.common.decorators import cached
 from logilab.common.shellutils import generate_password
 
-from cubicweb import Binary
+from cubicweb import Binary, ConfigurationError
 from cubicweb.server.utils import crypt_password
 from cubicweb.server.sources import datafeed
 
@@ -92,7 +92,12 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
             tdict = {}
         for sattr, tattr in self.source.user_attrs.iteritems():
             if tattr not in self.non_attribute_keys:
-                tdict[tattr] = sdict[sattr]
+                try:
+                    tdict[tattr] = sdict[sattr]
+                except KeyError:
+                    raise ConfigurationError('source attribute %s is not present '
+                                             'in the source, please check the '
+                                             'user-attrs-map field' % sattr)
         return tdict
 
     def before_entity_copy(self, entity, sourceparams):

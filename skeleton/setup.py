@@ -41,7 +41,7 @@ from distutils.command import install_data
 
 # import required features
 from __pkginfo__ import modname, version, license, description, web, \
-     author, author_email
+     author, author_email, classifiers
 
 if exists('README'):
     long_description = file('README').read()
@@ -193,6 +193,7 @@ def install(**kwargs):
                  data_files = data_files,
                  ext_modules = ext_modules,
                  cmdclass = cmdclass,
+                 classifiers = classifiers,
                  **kwargs
                  )
 

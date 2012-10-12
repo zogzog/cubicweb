@@ -416,8 +416,7 @@ class RepositoryTC(CubicWebTC):
     def _zmq_client(self, done):
         cnxprops = ConnectionProperties('zmq')
         try:
-            cnx = connect(self.repo.config.appid, u'admin', password=u'gingkow',
-                          host='tcp://127.0.0.1:41415',
+            cnx = connect('tcp://127.0.0.1:41415', u'admin', password=u'gingkow',
                           cnxprops=cnxprops,
                           initlog=False) # don't reset logging configuration
             try:

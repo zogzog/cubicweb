@@ -25,9 +25,10 @@ from logilab.common.testlib import unittest_main, TestCase
 from rql import RQLException
 
 from cubicweb.devtools.testlib import CubicWebTC
-from cubicweb import Unauthorized, ValidationError, QueryError
+from cubicweb import Unauthorized, ValidationError, QueryError, Binary
 from cubicweb.schema import ERQLExpression
 from cubicweb.server.querier import check_read_access
+from cubicweb.server.utils import _CRYPTO_CTX
 
 
 class BaseSecurityTC(CubicWebTC):
@@ -35,7 +36,8 @@ class BaseSecurityTC(CubicWebTC):
     def setup_database(self):
         super(BaseSecurityTC, self).setup_database()
         self.create_user(self.request(), 'iaminusersgrouponly')
-
+        hash = _CRYPTO_CTX.encrypt('oldpassword', scheme='des_crypt')
+        self.create_user(self.request(), 'oldpassword', password=Binary(hash))
 
 class LowLevelSecurityFunctionTC(BaseSecurityTC):
 
@@ -59,6 +61,18 @@ class LowLevelSecurityFunctionTC(BaseSecurityTC):
         with self.login('iaminusersgrouponly') as cu:
             self.assertRaises(Unauthorized,
                               cu.execute, 'Any X,P WHERE X is CWUser, X upassword P')
+
+    def test_update_password(self):
+        """Ensure that if a user's password is stored with a deprecated hash, it will be updated on next login"""
+        oldhash = str(self.session.system_sql("SELECT cw_upassword FROM cw_CWUser WHERE cw_login = 'oldpassword'").fetchone()[0])
+        with self.login('oldpassword') as cu:
+            pass
+        newhash = str(self.session.system_sql("SELECT cw_upassword FROM cw_CWUser WHERE cw_login = 'oldpassword'").fetchone()[0])
+        self.assertNotEqual(oldhash, newhash)
+        self.assertTrue(newhash.startswith('$6$'))
+        with self.login('oldpassword') as cu:
+            pass
+        self.assertEqual(newhash, str(self.session.system_sql("SELECT cw_upassword FROM cw_CWUser WHERE cw_login = 'oldpassword'").fetchone()[0]))
 
 
 class SecurityRewritingTC(BaseSecurityTC):

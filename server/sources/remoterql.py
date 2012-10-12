@@ -302,7 +302,7 @@ repository (default to 5 minutes).',
             try:
                 cnx.check()
                 return # ok
-            except (BadConnectionId, ConnectionClosedError):
+            except BadConnectionId:
                 pass
         # try to reconnect
         return self.get_connection()
