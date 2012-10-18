@@ -3,11 +3,6 @@
 Frequently Asked Questions (FAQ)
 ================================
 
-[XXX 'copy answer from forum' means reusing text from
-http://groups.google.com/group/google-appengine/browse_frm/thread/c9476925f5f66ec6
-and
-http://groups.google.com/group/google-appengine/browse_frm/thread/f48cf6099973aef5/c28cd6934dd72457
-]
 
 Generalities
 ````````````
