@@ -53,6 +53,11 @@ if hasattr(rdf, 'RDFView') is not None: # not available if rdf lib not installed
 
 assert RDFVIEWS
 
+if hasattr(rdf, 'RDFView'): # not available if rdflib not installed
+    RDFVIEWS = [('rdf', rdf.RDFView)]
+else:
+    RDFVIEWS = []
+
 class ViewSelectorTC(CubicWebTC):
 
     def setup_database(self):
