@@ -223,15 +223,15 @@ class Repository(object):
             config['connections-pool-size'] = 1
             # will be reinitialized later from cubes found in the database
             config._cubes = None
-        elif config.read_instance_schema:
-            # normal start: load the instance schema from the database
-            self.fill_schema()
-        else:
+        elif config.creating or not config.read_instance_schema:
             if not config.creating:
                 # test start: use the file system schema (quicker)
                 self.warning("set fs instance'schema")
             config.bootstrap_cubes()
             self.set_schema(config.load_schema())
+        else:
+            # normal start: load the instance schema from the database
+            self.fill_schema()
         if not config.creating:
             self.init_sources_from_database()
             if 'CWProperty' in self.schema:
