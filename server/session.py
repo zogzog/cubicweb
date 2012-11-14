@@ -302,6 +302,8 @@ class Session(RequestSessionBase):
             self.set_tx_data()
             return self.__threaddata.txdata
 
+    def get_option_value(self, option, foreid=None):
+        return self.repo.get_option_value(option, foreid)
 
     def hijack_user(self, user):
         """return a fake request/session using specified user"""
