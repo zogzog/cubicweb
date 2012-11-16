@@ -15,11 +15,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""cubicweb ldap feed source
-
-unlike ldapuser source, this source is copy based and will import ldap content
-(beside passwords for authentication) into the system source.
-"""
+"""cubicweb ldap feed source"""
 
 from cubicweb.server.sources import datafeed
 from cubicweb.server import ldaputils
@@ -27,7 +23,10 @@ from cubicweb.server import ldaputils
 
 class LDAPFeedSource(ldaputils.LDAPSourceMixIn,
                      datafeed.DataFeedSource):
-    """LDAP feed source"""
+    """LDAP feed source: unlike ldapuser source, this source is copy based and
+    will import ldap content (beside passwords for authentication) into the
+    system source.
+    """
     support_entities = {'CWUser': False}
     use_cwuri_as_url = False
 

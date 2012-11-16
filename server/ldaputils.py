@@ -137,13 +137,13 @@ You can set multiple groups by separating them by a comma.',
     def _entity_update(self, source_entity):
         if self.urls:
             if len(self.urls) > 1:
-                raise ValidationError(source_entity, {'url': _('can only have one url')})
+                raise ValidationError(source_entity.eid, {'url': _('can only have one url')})
             try:
                 protocol, hostport = self.urls[0].split('://')
             except ValueError:
-                raise ValidationError(source_entity, {'url': _('badly formatted url')})
+                raise ValidationError(source_entity.eid, {'url': _('badly formatted url')})
             if protocol not in PROTO_PORT:
-                raise ValidationError(source_entity, {'url': _('unsupported protocol')})
+                raise ValidationError(source_entity.eid, {'url': _('unsupported protocol')})
 
     def update_config(self, source_entity, typedconfig):
         """update configuration from source entity. `typedconfig` is config

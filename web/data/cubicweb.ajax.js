@@ -696,7 +696,7 @@ function reloadCtxComponentsSection(context, actualEid, creationEid) {
 
 
 /**
- * .. function:: reload(domid, registry, formparams, *render_args)
+ * .. function:: reload(domid, compid, registry, formparams, *render_args)
  *
  * `js_render` based reloading of views and components.
  */

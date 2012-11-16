@@ -307,6 +307,9 @@ class DBAPIRequest(RequestSessionBase):
     def from_controller(self):
         return 'view'
 
+    def get_option_value(self, option, foreid=None):
+        return self.cnx.get_option_value(option, foreid)
+
     def set_session(self, session, user=None):
         """method called by the session handler when the user is authenticated
         or an anonymous connection is open

@@ -151,7 +151,8 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
             elif self.sourceuris:
                 # pop from sourceuris anyway, else email may be removed by the
                 # source once import is finished
-                self.sourceuris.pop(str(userdict['dn'] + '@@' + emailaddr), None)
+                uri = userdict['dn'] + '@@' + emailaddr.encode('utf-8')
+                self.sourceuris.pop(uri, None)
             # XXX else check use_email relation?
 
     @cached

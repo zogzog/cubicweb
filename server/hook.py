@@ -552,9 +552,14 @@ class Hook(AppObject):
             raise Exception('bad .events attribute %s on %s.%s' % (
                 cls.events, cls.__module__, cls.__name__))
 
+    @classmethod
+    def __registered__(cls, reg):
+        cls.check_events()
+
     @classproperty
     def __registries__(cls):
-        cls.check_events()
+        if cls.events is None:
+            return []
         return ['%s_hooks' % ev for ev in cls.events]
 
     known_args = set(('entity', 'rtype', 'eidfrom', 'eidto', 'repo', 'timestamp'))

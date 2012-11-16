@@ -23,9 +23,9 @@ from datetime import timedelta, datetime
 
 from cubicweb.server import hook
 
-class ServerStartupHook(hook.Hook):
-    """task to cleanup expirated auth cookie entities"""
-    __regid__ = 'cw.start-looping-tasks'
+class TransactionsCleanupStartupHook(hook.Hook):
+    """start task to cleanup transaction data"""
+    __regid__ = 'cw.looping-tasks.transactions-cleanup'
     events = ('server_startup',)
 
     def __call__(self):
@@ -49,6 +49,13 @@ class ServerStartupHook(hook.Hook):
         if self.repo.config['undo-enabled']:
             self.repo.looping_task(60*60*24, cleanup_old_transactions,
                                    self.repo)
+
+class UpdateFeedsStartupHook(hook.Hook):
+    """start task to update datafeed based sources"""
+    __regid__ = 'cw.looping-tasks.update-feeds'
+    events = ('server_startup',)
+
+    def __call__(self):
         def update_feeds(repo):
             # don't iter on repo.sources which doesn't include copy based
             # sources (the one we're looking for)
@@ -66,6 +73,13 @@ class ServerStartupHook(hook.Hook):
                     session.close()
         self.repo.looping_task(60, update_feeds, self.repo)
 
+
+class DataImportsCleanupStartupHook(hook.Hook):
+    """start task to cleanup old data imports (ie datafeed import logs)"""
+    __regid__ = 'cw.looping-tasks.dataimports-cleanup'
+    events = ('server_startup',)
+
+    def __call__(self):
         def expire_dataimports(repo=self.repo):
             for source in repo.sources_by_eid.itervalues():
                 if (not source.copy_based_source
@@ -74,7 +88,8 @@ class ServerStartupHook(hook.Hook):
                 session = repo.internal_session()
                 try:
                     mindate = datetime.now() - timedelta(seconds=source.config['logs-lifetime'])
-                    session.execute('DELETE CWDataImport X WHERE X start_timestamp < %(time)s', {'time': mindate})
+                    session.execute('DELETE CWDataImport X WHERE X start_timestamp < %(time)s',
+                                    {'time': mindate})
                     session.commit()
                 finally:
                     session.close()

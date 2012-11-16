@@ -88,6 +88,9 @@ class RequestSessionBase(object):
         self._ = self.__ = gettext
         self.pgettext = pgettext
 
+    def get_option_value(self, option, foreid=None):
+        raise NotImplementedError
+
     def property_value(self, key):
         """return value of the property with the given key, giving priority to
         user specific value if any, else using site value
