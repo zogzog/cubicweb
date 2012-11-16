@@ -165,14 +165,12 @@ class SchemaHooksTC(CubicWebTC):
                           self.execute, 'INSERT CWRType X: X name "in_group"')
 
     def test_validation_unique_constraint(self):
-        self.assertRaises(ValidationError,
-                          self.execute, 'INSERT CWUser X: X login "admin"')
-        try:
+        with self.assertRaises(ValidationError) as cm:
             self.execute('INSERT CWUser X: X login "admin"')
-        except ValidationError, ex:
-            ex.tr(unicode)
-            self.assertIsInstance(ex.entity, int)
-            self.assertEqual(ex.errors, {'login-subject': 'the value "admin" is already used, use another one'})
+        ex = cm.exception
+        ex.translate(unicode)
+        self.assertIsInstance(ex.entity, int)
+        self.assertEqual(ex.errors, {'login-subject': 'the value "admin" is already used, use another one'})
 
 
 if __name__ == '__main__':

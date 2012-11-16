@@ -510,7 +510,7 @@ class CubicWebPublisher(object):
         return ''
 
     def validation_error_handler(self, req, ex):
-        ex.tr(req._) # translate messages using ui language
+        ex.translate(req._) # translate messages using ui language
         if '__errorurl' in req.form:
             forminfo = {'error': ex,
                         'values': req.form,

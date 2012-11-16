@@ -77,7 +77,7 @@ class EditControllerTC(CubicWebTC):
                     }
         with self.assertRaises(ValidationError) as cm:
             self.ctrl_publish(req)
-        cm.exception.tr(unicode)
+        cm.exception.translate(unicode)
         self.assertEqual(cm.exception.errors, {'login-subject': 'the value "admin" is already used, use another one'})
 
     def test_user_editing_itself(self):
@@ -250,7 +250,7 @@ class EditControllerTC(CubicWebTC):
                 }
         with self.assertRaises(ValidationError) as cm:
             self.ctrl_publish(req)
-        cm.exception.tr(unicode)
+        cm.exception.translate(unicode)
         self.assertEqual(cm.exception.errors, {'amount-subject': 'value -10 must be >= 0'})
         req = self.request(rollbackfirst=True)
         req.form = {'eid': ['X'],
@@ -261,7 +261,7 @@ class EditControllerTC(CubicWebTC):
                     }
         with self.assertRaises(ValidationError) as cm:
             self.ctrl_publish(req)
-        cm.exception.tr(unicode)
+        cm.exception.translate(unicode)
         self.assertEqual(cm.exception.errors, {'amount-subject': 'value 110 must be <= 100'})
         req = self.request(rollbackfirst=True)
         req.form = {'eid': ['X'],

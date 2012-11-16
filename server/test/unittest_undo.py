@@ -228,7 +228,7 @@ class UndoableTransactionTC(CubicWebTC):
             "%s doesn't exist anymore." % g.eid])
         with self.assertRaises(ValidationError) as cm:
             self.commit()
-        cm.exception.tr(unicode)
+        cm.exception.translate(unicode)
         self.assertEqual(cm.exception.entity, self.toto.eid)
         self.assertEqual(cm.exception.errors,
                           {'in_group-subject': u'at least one relation in_group is '

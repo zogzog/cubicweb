@@ -215,7 +215,7 @@ def validation_error(entity, errors, substitutions=None, i18nvalues=None):
     """
     if substitutions is None:
         # set empty dict else translation won't be done for backward
-        # compatibility reason (see ValidationError.tr method)
+        # compatibility reason (see ValidationError.translate method)
         substitutions = {}
     for key in errors.keys():
         if isinstance(key, tuple):

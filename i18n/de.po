@@ -50,16 +50,20 @@ msgid "\"role=subject\" or \"role=object\" must be specified in options"
 msgstr ""
 
 #, python-format
+msgid "%(KEY-cstr)s constraint failed for value %(KEY-value)r"
+msgstr ""
+
+#, python-format
+msgid "%(KEY-value)r doesn't match the %(KEY-regexp)r regular expression"
+msgstr ""
+
+#, python-format
 msgid "%(attr)s set to %(newvalue)s"
 msgstr "%(attr)s geändert in %(newvalue)s"
 
 #, python-format
 msgid "%(attr)s updated from %(oldvalue)s to %(newvalue)s"
 msgstr "%(attr)s geändert von %(oldvalue)s in %(newvalue)s"
-
-#, python-format
-msgid "%(cstr)s constraint failed for value %(value)r"
-msgstr "%(cstr)s Einschränkung verletzt für Wert %(value)r"
 
 #, python-format
 msgid "%(etype)s by %(author)s"
@@ -72,10 +76,6 @@ msgstr "%(firstname)s %(surname)s"
 #, python-format
 msgid "%(subject)s %(etype)s #%(eid)s (%(login)s)"
 msgstr "%(subject)s %(etype)s #%(eid)s (%(login)s)"
-
-#, python-format
-msgid "%(value)r doesn't match the %(regexp)r regular expression"
-msgstr "%(value)r entspricht nicht dem regulären Ausdruck %(regexp)r"
 
 #, python-format
 msgid "%d days"
@@ -425,6 +425,11 @@ msgstr ""
 "machen, dieser Typ existiert nicht mehr."
 
 msgid "Click to sort on this column"
+msgstr ""
+
+msgid ""
+"Configuration of the system source goes to the 'sources' file, not in the "
+"database"
 msgstr ""
 
 #, python-format
@@ -897,6 +902,9 @@ msgstr ""
 msgid "UniqueConstraint"
 msgstr "eindeutige Einschränkung"
 
+msgid "Unknown source type"
+msgstr ""
+
 msgid "Unreachable objects"
 msgstr "unzugängliche Objekte"
 
@@ -954,6 +962,15 @@ msgstr ""
 
 msgid "You can use any of the following substitutions in your text"
 msgstr "Sie können die folgenden Ersetzungen in Ihrem Text verwenden:"
+
+msgid "You can't change this relation"
+msgstr ""
+
+msgid "You cannot remove the system source"
+msgstr ""
+
+msgid "You cannot rename the system source"
+msgstr ""
 
 msgid ""
 "You have no access to this view or it can not be used to display the current "
@@ -1384,11 +1401,7 @@ msgstr "kann nicht geändert werden"
 msgid "can't be deleted"
 msgstr "kann nicht entfernt werden"
 
-#, python-format
-msgid "can't change the %s attribute"
-msgstr "Kann das Attribut %s nicht ändern."
-
-msgid "can't change this relation"
+msgid "can't change this attribute"
 msgstr ""
 
 #, python-format
@@ -2854,8 +2867,8 @@ msgid "incorrect captcha value"
 msgstr "Unzulässiger Wert für Überschrift"
 
 #, python-format
-msgid "incorrect value (%(value)s) for type \"%(type)s\""
-msgstr "Wert %(value)s ungültig für den Typ \"%(type)s\""
+msgid "incorrect value (%(KEY-value)r) for type \"%(KEY-type)s\""
+msgstr ""
 
 msgid "index this attribute's value in the plain text index"
 msgstr "indizieren des Wertes dieses Attributs im Volltext-Index"
@@ -2933,8 +2946,8 @@ msgid "invalid action %r"
 msgstr "Ungültige Aktion %r"
 
 #, python-format
-msgid "invalid value %(value)s, it must be one of %(choices)s"
-msgstr "Wert %(value)s ungültig, er muss zwischen %(choices)s"
+msgid "invalid value %(KEY-value)s, it must be one of %(KEY-choices)s"
+msgstr ""
 
 msgid "is"
 msgstr "vom Typ"
@@ -4314,9 +4327,6 @@ msgstr ""
 msgid "unknown property key %s"
 msgstr "Unbekannter Eigentumsschlüssel %s"
 
-msgid "unknown source type"
-msgstr ""
-
 msgid "unknown vocabulary:"
 msgstr "Unbekanntes Wörterbuch : "
 
@@ -4462,15 +4472,7 @@ msgid "value"
 msgstr "Wert"
 
 #, python-format
-msgid "value %(value)s must be %(op)s %(boundary)s"
-msgstr ""
-
-#, python-format
-msgid "value %(value)s must be <= %(boundary)s"
-msgstr ""
-
-#, python-format
-msgid "value %(value)s must be >= %(boundary)s"
+msgid "value %(KEY-value)s must be %(KEY-op)s %(KEY-boundary)s"
 msgstr ""
 
 msgid "value associated to this key is not editable manually"
@@ -4479,11 +4481,11 @@ msgstr ""
 "werden."
 
 #, python-format
-msgid "value should have maximum size of %s but found %s"
+msgid "value should have maximum size of %(KEY-max)s but found %(KEY-size)s"
 msgstr ""
 
 #, python-format
-msgid "value should have minimum size of %s but found %s"
+msgid "value should have minimum size of %(KEY-min)s but found %(KEY-size)s"
 msgstr ""
 
 msgid "vcard"
@@ -4628,9 +4630,24 @@ msgstr "Sie sollten diese Eigenschaft wahrscheinlich löschen."
 msgid "you should un-inline relation %s which is supported and may be crossed "
 msgstr ""
 
+#~ msgid "%(cstr)s constraint failed for value %(value)r"
+#~ msgstr "%(cstr)s Einschränkung verletzt für Wert %(value)r"
+
+#~ msgid "%(value)r doesn't match the %(regexp)r regular expression"
+#~ msgstr "%(value)r entspricht nicht dem regulären Ausdruck %(regexp)r"
+
 #~ msgid ""
 #~ "Can't restore relation %(rtype)s of entity %(eid)s, this relation does "
 #~ "not exists anymore in the schema."
 #~ msgstr ""
 #~ "Kann die Relation %(rtype)s der Entität %(eid)s nicht wieder herstellen, "
 #~ "diese Relation existiert nicht mehr in dem Schema."
+
+#~ msgid "can't change the %s attribute"
+#~ msgstr "Kann das Attribut %s nicht ändern."
+
+#~ msgid "incorrect value (%(value)s) for type \"%(type)s\""
+#~ msgstr "Wert %(value)s ungültig für den Typ \"%(type)s\""
+
+#~ msgid "invalid value %(value)s, it must be one of %(choices)s"
+#~ msgstr "Wert %(value)s ungültig, er muss zwischen %(choices)s"

@@ -50,16 +50,21 @@ msgstr ""
 "\"role=subject\" ou \"role=object\" doit être specifié dans les options"
 
 #, python-format
+msgid "%(KEY-cstr)s constraint failed for value %(KEY-value)r"
+msgstr "la valeur %(KEY-value)r ne satisfait pas la contrainte %(KEY-cstr)s"
+
+#, python-format
+msgid "%(KEY-value)r doesn't match the %(KEY-regexp)r regular expression"
+msgstr ""
+"%(KEY-value)r ne correspond pas à l'expression régulière %(KEY-regexp)r"
+
+#, python-format
 msgid "%(attr)s set to %(newvalue)s"
 msgstr "%(attr)s modifié à %(newvalue)s"
 
 #, python-format
 msgid "%(attr)s updated from %(oldvalue)s to %(newvalue)s"
 msgstr "%(attr)s modifié de %(oldvalue)s à %(newvalue)s"
-
-#, python-format
-msgid "%(cstr)s constraint failed for value %(value)r"
-msgstr "la valeur %(value)r ne satisfait pas la contrainte %(cstr)s"
 
 #, python-format
 msgid "%(etype)s by %(author)s"
@@ -72,10 +77,6 @@ msgstr "%(firstname)s %(surname)s"
 #, python-format
 msgid "%(subject)s %(etype)s #%(eid)s (%(login)s)"
 msgstr "%(subject)s %(etype)s #%(eid)s (%(login)s)"
-
-#, python-format
-msgid "%(value)r doesn't match the %(regexp)r regular expression"
-msgstr "%(value)r ne correspond pas à l'expression régulière %(regexp)r"
 
 #, python-format
 msgid "%d days"
@@ -426,6 +427,11 @@ msgstr ""
 
 msgid "Click to sort on this column"
 msgstr "Cliquer pour trier sur cette colonne"
+
+msgid ""
+"Configuration of the system source goes to the 'sources' file, not in the "
+"database"
+msgstr ""
 
 #, python-format
 msgid "Created %(etype)s : %(entity)s"
@@ -900,6 +906,9 @@ msgstr "Annuler"
 msgid "UniqueConstraint"
 msgstr "contrainte d'unicité"
 
+msgid "Unknown source type"
+msgstr "Type de source inconnue"
+
 msgid "Unreachable objects"
 msgstr "Objets inaccessibles"
 
@@ -959,6 +968,15 @@ msgid "You can use any of the following substitutions in your text"
 msgstr ""
 "Vous pouvez utiliser n'importe quelle substitution parmi la liste suivante "
 "dans le contenu de votre courriel."
+
+msgid "You can't change this relation"
+msgstr "Vous ne pouvez pas modifier cette relation"
+
+msgid "You cannot remove the system source"
+msgstr "Vous ne pouvez pas supprimer la source système"
+
+msgid "You cannot rename the system source"
+msgstr "Vous ne pouvez pas renommer la source système"
 
 msgid ""
 "You have no access to this view or it can not be used to display the current "
@@ -1301,7 +1319,7 @@ msgid "bad value"
 msgstr "mauvaise valeur"
 
 msgid "badly formatted url"
-msgstr ""
+msgstr "URL mal formattée"
 
 msgid "base url"
 msgstr "url de base"
@@ -1389,7 +1407,7 @@ msgid "can not resolve entity types:"
 msgstr "impossible d'interpréter les types d'entités :"
 
 msgid "can only have one url"
-msgstr ""
+msgstr "ne supporte qu'une seule URL"
 
 msgid "can't be changed"
 msgstr "ne peut-être modifié"
@@ -1397,12 +1415,8 @@ msgstr "ne peut-être modifié"
 msgid "can't be deleted"
 msgstr "ne peut-être supprimé"
 
-#, python-format
-msgid "can't change the %s attribute"
-msgstr "ne peut changer l'attribut %s"
-
-msgid "can't change this relation"
-msgstr "ne peut modifier cette relation"
+msgid "can't change this attribute"
+msgstr "cet attribut ne peut pas être modifié"
 
 #, python-format
 msgid "can't connect to source %s, some data may be missing"
@@ -2902,8 +2916,8 @@ msgid "incorrect captcha value"
 msgstr "valeur de captcha incorrecte"
 
 #, python-format
-msgid "incorrect value (%(value)s) for type \"%(type)s\""
-msgstr "valeur %(value)s incorrecte pour le type \"%(type)s\""
+msgid "incorrect value (%(KEY-value)r) for type \"%(KEY-type)s\""
+msgstr "la valeur %(KEY-value)s est incorrecte pour le type \"%(KEY-type)s\""
 
 msgid "index this attribute's value in the plain text index"
 msgstr "indexer la valeur de cet attribut dans l'index plein texte"
@@ -2982,8 +2996,9 @@ msgid "invalid action %r"
 msgstr "action %r invalide"
 
 #, python-format
-msgid "invalid value %(value)s, it must be one of %(choices)s"
-msgstr "valeur %(value)s incorrect, doit être parmi %(choices)s"
+msgid "invalid value %(KEY-value)s, it must be one of %(KEY-choices)s"
+msgstr ""
+"la valeur %(KEY-value)s est incorrecte, elle doit être parmi %(KEY-choices)s"
 
 msgid "is"
 msgstr "de type"
@@ -4375,14 +4390,11 @@ msgstr "options inconnues : %s"
 msgid "unknown property key %s"
 msgstr "clé de propriété inconnue : %s"
 
-msgid "unknown source type"
-msgstr "type de source inconnu"
-
 msgid "unknown vocabulary:"
 msgstr "vocabulaire inconnu : "
 
 msgid "unsupported protocol"
-msgstr ""
+msgstr "protocole non supporté"
 
 msgid "upassword"
 msgstr "mot de passe"
@@ -4521,27 +4533,23 @@ msgid "value"
 msgstr "valeur"
 
 #, python-format
-msgid "value %(value)s must be %(op)s %(boundary)s"
-msgstr "la valeur %(value)s doit être %(op)s %(boundary)s"
-
-#, python-format
-msgid "value %(value)s must be <= %(boundary)s"
-msgstr "la valeur %(value)s doit être <= %(boundary)s"
-
-#, python-format
-msgid "value %(value)s must be >= %(boundary)s"
-msgstr "la valeur %(value)s doit être >= %(boundary)s"
+msgid "value %(KEY-value)s must be %(KEY-op)s %(KEY-boundary)s"
+msgstr "la valeur %(KEY-value)s n'est pas %(KEY-op)s %(KEY-boundary)s"
 
 msgid "value associated to this key is not editable manually"
 msgstr "la valeur associée à cette clé n'est pas éditable manuellement"
 
 #, python-format
-msgid "value should have maximum size of %s but found %s"
-msgstr "la taille maximum est %s mais cette valeur est de taille %s"
+msgid "value should have maximum size of %(KEY-max)s but found %(KEY-size)s"
+msgstr ""
+"la taille maximum est %(KEY-max)s  mais cette valeur est de taille "
+"%(KEY-size)s"
 
 #, python-format
-msgid "value should have minimum size of %s but found %s"
-msgstr "la taille minimum est %s mais cette valeur est de taille %s"
+msgid "value should have minimum size of %(KEY-min)s but found %(KEY-size)s"
+msgstr ""
+"la taille minimum est %(KEY-min)s  mais cette valeur est de taille "
+"%(KEY-size)s"
 
 msgid "vcard"
 msgstr "vcard"
