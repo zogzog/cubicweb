@@ -221,6 +221,25 @@ class BaseFacetTC(CubicWebTC):
         self.assertEqual(f.select.as_string(),
                           "DISTINCT Any  WHERE X ordernum XO, X is CWAttribute, X ordernum C HAVING 3 = (C & 3)")
 
+    def test_bitfield_0_value(self):
+        req, rset, rqlst, filtered_variable = self.prepare_rqlst(
+            'CWAttribute X WHERE X ordernum XO',
+            expected_baserql='Any X WHERE X ordernum XO, X is CWAttribute',
+            expected_preparedrql='DISTINCT Any  WHERE X ordernum XO, X is CWAttribute')
+        f = facet.BitFieldFacet(req, rset=rset,
+                                select=rqlst.children[0],
+                                filtered_variable=filtered_variable)
+        f.choices = [('zero', 0,), ('un', 1,), ('deux', 2,)]
+        f.rtype = 'ordernum'
+        self.assertEqual(f.vocabulary(),
+                          [(u'deux', 2), (u'un', 1), (u'zero', 0)])
+        self.assertEqual(f.possible_values(),
+                          ['2', '1', '0'])
+        req.form[f.__regid__] = '0'
+        f.add_rql_restrictions()
+        self.assertEqual(f.select.as_string(),
+                          "DISTINCT Any  WHERE X ordernum XO, X is CWAttribute, X ordernum C HAVING 0 = C")
+
     def test_rql_path_eid(self):
         req, rset, rqlst, filtered_variable = self.prepare_rqlst()
         class RPF(facet.RQLPathFacet):
