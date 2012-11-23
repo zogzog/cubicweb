@@ -175,7 +175,6 @@ class CubicWebTC(TestCase):
     """
     appid = 'data'
     configcls = devtools.ApptestConfiguration
-    reset_schema = reset_vreg = False # reset schema / vreg between tests
     tags = TestCase.tags | Tags('cubicweb', 'cw_repo')
     test_db_id = DEFAULT_EMPTY_DB_ID
     _cnxs = set() # establised connection

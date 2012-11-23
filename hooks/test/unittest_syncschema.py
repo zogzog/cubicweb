@@ -30,7 +30,6 @@ def tearDownModule(*args):
     del SchemaModificationHooksTC.schema_eids
 
 class SchemaModificationHooksTC(CubicWebTC):
-    reset_schema = True
 
     def setUp(self):
         super(SchemaModificationHooksTC, self).setUp()
