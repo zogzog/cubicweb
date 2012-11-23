@@ -537,7 +537,6 @@ class Entity(AppObject):
             rql = 'INSERT %s X' % (cls.__regid__)
         created = execute(rql, qargs).get_entity(0, 0)
         created._cw_update_attr_cache(attrcache)
-        created.cw_attr_cache.update(attrcache)
         cls._cw_handle_pending_relations(created.eid, pendingrels, execute)
         return created
 
