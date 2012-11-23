@@ -152,6 +152,7 @@ class BytesFileSystemStorage(Storage):
         """an entity using this storage for attr has been added"""
         if entity._cw.transaction_data.get('fs_importing'):
             binary = Binary.from_file(entity.cw_edited[attr].getvalue())
+            entity._cw_dont_cache_attribute(attr, repo_side=True)
         else:
             binary = entity.cw_edited.pop(attr)
             fpath = self.new_fs_path(entity, attr)
@@ -170,6 +171,7 @@ class BytesFileSystemStorage(Storage):
             # We do not need to create it but we need to fetch the content of
             # the file as the actual content of the attribute
             fpath = entity.cw_edited[attr].getvalue()
+            entity._cw_dont_cache_attribute(attr, repo_side=True)
             assert fpath is not None
             binary = Binary.from_file(fpath)
         else:
