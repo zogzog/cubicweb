@@ -633,7 +633,7 @@ class CubicWebTC(TestCase):
     @cached
     def app(self):
         """return a cubicweb publisher"""
-        publisher = application.CubicWebPublisher(self.config)
+        publisher = application.CubicWebPublisher(self.repo, self.config)
         def raise_error_handler(*args, **kwargs):
             raise
         publisher.error_handler = raise_error_handler

@@ -62,7 +62,8 @@ class CubicWebRootResource(resource.Resource):
         self.config = config
         # instantiate publisher here and not in init_publisher to get some
         # checks done before daemonization (eg versions consistency)
-        self.appli = CubicWebPublisher(config)
+        repo = config.repository()
+        self.appli = CubicWebPublisher(repo, config)
         self.base_url = config['base-url']
         self.https_url = config['https-url']
         global MAX_POST_LENGTH

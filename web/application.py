@@ -250,18 +250,20 @@ class CubicWebPublisher(object):
     The http server will call its main entry point ``application.handle_request``.
 
     .. automethod:: cubicweb.web.application.CubicWebPublisher.main_handle_request
+
+    You have to provide both a repository and web-server config at
+    initialization. In all in one instance both config will be the same.
     """
 
-    def __init__(self, config,
-                 session_handler_fact=CookieSessionHandler):
+    def __init__(self, repo, config, session_handler_fact=CookieSessionHandler):
         self.info('starting web instance from %s', config.apphome)
-        # connect to the repository and get instance's schema
-        self.repo = config.repository()
-        vreg = self.vreg = self.repo.vreg
-        if not vreg.initialized:
+        self.repo = repo
+        self.vreg = repo.vreg
+        # get instance's schema
+        if not self.vreg.initialized:
             config.init_cubes(self.repo.get_cubes())
-            vreg.init_properties(self.repo.properties())
-            vreg.set_schema(self.repo.get_schema())
+            self.vreg.init_properties(self.repo.properties())
+            self.vreg.set_schema(self.repo.get_schema())
         # set the correct publish method
         if config['query-log-file']:
             from threading import Lock
