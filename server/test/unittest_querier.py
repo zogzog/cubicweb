@@ -268,7 +268,7 @@ class UtilsTC(BaseQuerierTC):
 
     def test_build_descr1(self):
         rset = self.execute('(Any U,L WHERE U login L) UNION (Any G,N WHERE G name N, G is CWGroup)')
-        rset.req = self.transaction
+        rset.req = self.session
         orig_length = len(rset)
         rset.rows[0][0] = 9999999
         description = manual_build_descr(rset.req, rset.syntax_tree(), None, rset.rows)
