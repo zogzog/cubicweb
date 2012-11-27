@@ -865,6 +865,13 @@ msgstr "Ce workflow"
 msgid "This WorkflowTransition"
 msgstr "Cette transition workflow"
 
+msgid ""
+"This action is forbidden. If you think it should be allowed, please contact "
+"the site administrator."
+msgstr ""
+"Cette action est interdite. Si toutefois vous pensez qu'elle devrait être "
+"autorisée, veuillez contacter l'administrateur du site."
+
 msgid "This entity type permissions:"
 msgstr "Permissions pour ce type d'entité"
 
