@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -219,6 +219,12 @@ have the python imaging library installed to use captcha)',
           'help': 'use modconcat-like URLS to concat and serve JS / CSS files',
           'group': 'web', 'level': 2,
           }),
+        ('anonymize-jsonp-queries',
+         {'type': 'yn',
+          'default': True,
+          'help': 'anonymize the connection before executing any jsonp query.',
+          'group': 'web', 'level': 1
+          }),
         ))
 
     def fckeditor_installed(self):
@@ -251,7 +257,7 @@ have the python imaging library installed to use captcha)',
 
     def anonymous_user(self):
         """return a login and password to use for anonymous users.
-        
+
         None may be returned for both if anonymous connection is not
         allowed or if an empty login is used in configuration
         """
