@@ -196,8 +196,11 @@ class StorageTC(CubicWebTC):
         filepath = osp.abspath(__file__)
         f1 = self.session.create_entity('File', data=Binary(filepath),
                                         data_format=u'text/plain', data_name=u'foo')
-        self.assertEqual(f1.data.getvalue(), file(filepath).read(),
-                          'files content differ')
+        cw_value = f1.data.getvalue()
+        fs_value = file(filepath).read()
+        if cw_value != fs_value:
+            self.fail('cw value %r is different from file content' % cw_value)
+
 
     @tag('update')
     def test_bfss_update_with_existing_data(self):
