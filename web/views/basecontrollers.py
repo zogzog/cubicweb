@@ -27,7 +27,8 @@ from warnings import warn
 from logilab.common.deprecation import deprecated
 
 from cubicweb import (NoSelectableObject, ObjectNotFound, ValidationError,
-                      AuthenticationError, typed_eid, UndoTransactionException)
+                      AuthenticationError, typed_eid, UndoTransactionException,
+                      Forbidden)
 from cubicweb.utils import json_dumps
 from cubicweb.predicates import (authenticated_user, anonymous_user,
                                 match_form_params)
@@ -276,9 +277,15 @@ class MailBugReportController(Controller):
 
     def publish(self, rset=None):
         req = self._cw
+        desc = req.form['description']
+        # The description is generated and signed by cubicweb itself, check
+        # description's signature so we don't want to send spam here
+        sign = req.form.get('__signature', '')
+        if not (sign and req.vreg.config.check_text_sign(desc, sign)):
+            raise Forbidden('Invalid content')
         self.sendmail(req.vreg.config['submit-mail'],
                       req._('%s error report') % req.vreg.config.appid,
-                      req.form['description'])
+                      desc)
         raise Redirect(req.build_url(__message=req._('bug report sent')))
 
 

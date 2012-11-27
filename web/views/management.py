@@ -20,6 +20,7 @@
 __docformat__ = "restructuredtext en"
 _ = unicode
 
+
 from logilab.mtconverter import xml_escape
 from logilab.common.registry import yes
 
@@ -148,6 +149,8 @@ class ErrorView(AnyRsetView):
             form.add_hidden('description', binfo,
                             # we must use a text area to keep line breaks
                             widget=wdgs.TextArea({'class': 'hidden'}))
+            # add a signature so one can't send arbitrary text
+            form.add_hidden('__signature', req.vreg.config.sign_text(binfo))
             form.add_hidden('__bugreporting', '1')
             form.form_buttons = [wdgs.SubmitButton(MAIL_SUBMIT_MSGID)]
             form.action = req.build_url('reportbug')
