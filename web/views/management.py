@@ -171,7 +171,7 @@ class CwStats(View):
     """A textual stats output for monitoring tools such as munin """
 
     __regid__ = 'processinfo'
-    content_type = 'text/txt'
+    content_type = 'text/plain'
     templatable = False
     __select__ = none_rset() & match_user_groups('users', 'managers')
 
