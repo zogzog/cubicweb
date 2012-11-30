@@ -39,6 +39,7 @@ from cubicweb.server.repository import Repository
 from cubicweb.server.serverconfig import (
     USER_OPTIONS, ServerConfiguration, SourceConfiguration,
     ask_source_config, generate_source_config)
+from yams.diff import schema_diff
 
 # utility functions ###########################################################
 
@@ -1065,12 +1066,31 @@ class SynchronizeSourceCommand(Command):
             if val:
                 print key, ':', val
 
+class SchemaDiffCommand(Command):
+    """ generate a diff between schema and fsschema description
+    <instance>
+      the name of a diff tool to compare the two generated file
+    <diff-tool>
+    """
+    name = 'schema-diff'
+    arguments = '<instance> <diff-tool>'
+    min_args = max_args = 2
+
+    def run(self, args):
+        appid = args.pop(0)
+        diff_tool = args.pop(0)
+        config = ServerConfiguration.config_for(appid)
+        repo, cnx = repo_cnx(config)
+        session = repo._get_session(cnx.sessionid, setcnxset=True)
+        fsschema = config.load_schema(expand_cubes=True)
+        schema_diff(repo.schema, fsschema, diff_tool)
+
 
 for cmdclass in (CreateInstanceDBCommand, InitInstanceCommand,
                  GrantUserOnInstanceCommand, ResetAdminPasswordCommand,
                  StartRepositoryCommand,
                  DBDumpCommand, DBRestoreCommand, DBCopyCommand,
                  AddSourceCommand, CheckRepositoryCommand, RebuildFTICommand,
-                 SynchronizeInstanceSchemaCommand, SynchronizeSourceCommand
+                 SynchronizeInstanceSchemaCommand, SynchronizeSourceCommand, SchemaDiffCommand,
                  ):
     CWCTL.register(cmdclass)
