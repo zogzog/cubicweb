@@ -22,6 +22,7 @@ __docformat__ = "restructuredtext en"
 import time
 import random
 import base64
+import urllib
 from hashlib import sha1 # pylint: disable=E0611
 from Cookie import SimpleCookie
 from calendar import timegm
@@ -38,7 +39,6 @@ from logilab.common.deprecation import deprecated
 from logilab.mtconverter import xml_escape
 
 from cubicweb.dbapi import DBAPIRequest
-from cubicweb.mail import header
 from cubicweb.uilib import remove_html_tags, js
 from cubicweb.utils import SizeConstrainedList, HTMLHead, make_uid
 from cubicweb.view import STRICT_DOCTYPE, TRANSITIONAL_DOCTYPE_NOEXT
@@ -608,10 +608,17 @@ class CubicWebRequestBase(DBAPIRequest):
             content_type += ';charset=' + (encoding or self.encoding)
         self.set_header('content-type', content_type)
         if filename:
-            if isinstance(filename, unicode):
-                filename = header(filename).encode()
-            self.set_header('content-disposition', 'inline; filename=%s'
-                            % filename)
+            header = ['attachment']
+            try:
+                filename = filename.encode('ascii')
+                header.append('filename=' + filename)
+            except UnicodeEncodeError:
+                # fallback filename for very old browser
+                header.append('filename=' + filename.encode('ascii', 'ignore'))
+                # encoded filename according RFC5987
+                filename = urllib.quote(filename.encode('utf-8'), '')
+                header.append("filename*=utf-8''" + filename)
+            self.set_header('content-disposition', ';'.join(header))
 
     # high level methods for HTML headers management ##########################
 

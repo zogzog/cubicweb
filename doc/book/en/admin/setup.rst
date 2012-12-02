@@ -51,7 +51,7 @@ dependencies (like databases) are automatically installed.
 Depending on the distribution you are using, add the appropriate line to your
 `list of sources` (for example by editing ``/etc/apt/sources.list``).
 
-For Debian Squeeze (stable)::
+For Debian 6.0 Squeeze (stable)::
 
   deb http://download.logilab.org/production/ squeeze/
 
@@ -59,13 +59,9 @@ For Debian Sid (unstable)::
 
   deb http://download.logilab.org/production/ sid/
 
-For Ubuntu Lucid (Long Term Support) and newer::
+For Ubuntu 12.04 Precise Pangolin (Long Term Support) and newer::
 
-  deb http://download.logilab.org/production/ lucid/
-
-Note that for Ubuntu Maverick and newer, you shall use the `lucid`
-repository and install the ``libgecode19`` package from `lucid
-universe <http://packages.ubuntu.com/lucid/libgecode19>`_.
+  deb http://download.logilab.org/production/ precise/
 
 The repositories are signed with the `Logilab's gnupg key`_. You can download
 and register the key to avoid warnings::

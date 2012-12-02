@@ -44,7 +44,7 @@ packages installation.
 Create an instance
 -------------------
 
-You must ensure `~/cubicweb.d/` exists prior to this. On windows, the
+You must ensure `~/etc/cubicweb.d/` exists prior to this. On windows, the
 '~' part will probably expand to 'Documents and Settings/user'.
 
 To create an instance from an existing cube, execute the following

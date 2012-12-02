@@ -1388,11 +1388,16 @@ class BitFieldFacet(AttributeFacet):
             return
         if isinstance(value, list):
             value = reduce(lambda x, y: int(x) | int(y), value)
+        else:
+            value = int(value)
         attr_var = self.select.make_variable()
         self.select.add_relation(self.filtered_variable, self.rtype, attr_var)
         comp = nodes.Comparison('=', nodes.Constant(value, 'Int'))
-        comp.append(nodes.MathExpression('&', nodes.variable_ref(attr_var),
-                                         nodes.Constant(value, 'Int')))
+        if value == 0:
+            comp.append(nodes.variable_ref(attr_var))
+        else:
+            comp.append(nodes.MathExpression('&', nodes.variable_ref(attr_var),
+                                             nodes.Constant(value, 'Int')))
         having = self.select.having
         if having:
             self.select.replace(having[0], nodes.And(having[0], comp))
@@ -1402,7 +1407,7 @@ class BitFieldFacet(AttributeFacet):
     def rset_vocabulary(self, rset):
         mask = reduce(lambda x, y: x | (y[0] or 0), rset, 0)
         return sorted([(self._cw._(label), val) for label, val in self.choices
-                       if val & mask])
+                       if not val or val & mask])
 
     def possible_values(self):
         return [unicode(val) for label, val in self.vocabulary()]

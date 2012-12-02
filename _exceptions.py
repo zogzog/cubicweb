@@ -103,6 +103,10 @@ class Unauthorized(SecurityError):
         except Exception, ex:
             return str(ex)
 
+class Forbidden(SecurityError):
+    """raised when a user tries to perform a forbidden action
+    """
+
 # source exceptions ###########################################################
 
 class EidNotInSource(SourceException):

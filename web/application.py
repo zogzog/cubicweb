@@ -34,7 +34,8 @@ from rql import BadRQLQuery
 
 from cubicweb import set_log_methods, cwvreg
 from cubicweb import (
-    ValidationError, Unauthorized, AuthenticationError, NoSelectableObject,
+    ValidationError, Unauthorized, Forbidden,
+    AuthenticationError, NoSelectableObject,
     BadConnectionId, CW_EVENT_MANAGER)
 from cubicweb.dbapi import DBAPISession, anonymous_session
 from cubicweb.web import LOGGER, component
@@ -468,6 +469,11 @@ class CubicWebPublisher(object):
             req.data['errmsg'] = req._('You\'re not authorized to access this page. '
                                        'If you think you should, please contact the site administrator.')
             req.status_out = httplib.UNAUTHORIZED
+            result = self.error_handler(req, ex, tb=False)
+        except Forbidden, ex:
+            req.data['errmsg'] = req._('This action is forbidden. '
+                                       'If you think it should be allowed, please contact the site administrator.')
+            req.status_out = httplib.FORBIDDEN
             result = self.error_handler(req, ex, tb=False)
         except (BadRQLQuery, RequestError), ex:
             result = self.error_handler(req, ex, tb=False)
