@@ -302,10 +302,11 @@ class UpdateCubicWebCatalogCommand(Command):
         from logilab.common.fileutils import ensure_fs_mode
         from logilab.common.shellutils import globfind, find, rm
         from logilab.common.modutils import get_module_files
-        from cubicweb.i18n import extract_from_tal, execute
+        from cubicweb.i18n import extract_from_tal, execute2
         tempdir = tempfile.mkdtemp(prefix='cw-')
         cwi18ndir = WebConfiguration.i18n_lib_dir()
-        print '-> extract schema messages.'
+        print '-> extract messages:',
+        print 'schema',
         schemapot = osp.join(tempdir, 'schema.pot')
         potfiles = [schemapot]
         potfiles.append(schemapot)
@@ -314,7 +315,7 @@ class UpdateCubicWebCatalogCommand(Command):
         schemapotstream = file(schemapot, 'w')
         generate_schema_pot(schemapotstream.write, cubedir=None)
         schemapotstream.close()
-        print '-> extract TAL messages.'
+        print 'TAL',
         tali18nfile = osp.join(tempdir, 'tali18n.py')
         extract_from_tal(find(osp.join(BASEDIR, 'web'), ('.py', '.pt')),
                          tali18nfile)
@@ -329,26 +330,29 @@ class UpdateCubicWebCatalogCommand(Command):
                                 ('tal', [tali18nfile], None),
                                 ('js', jsfiles, 'java'),
                                 ]:
-            cmd = 'xgettext --no-location --omit-header -k_ -o %s %s'
-            if lang is not None:
-                cmd += ' -L %s' % lang
             potfile = osp.join(tempdir, '%s.pot' % id)
-            execute(cmd % (potfile, ' '.join('"%s"' % f for f in files)))
+            cmd = ['xgettext', '--no-location', '--omit-header', '-k_']
+            if lang is not None:
+                cmd.extend(['-L', lang])
+            cmd.extend(['-o', potfile])
+            cmd.extend(files)
+            execute2(cmd)
             if osp.exists(potfile):
                 potfiles.append(potfile)
             else:
                 print '-> WARNING: %s file was not generated' % potfile
         print '-> merging %i .pot files' % len(potfiles)
         cubicwebpot = osp.join(tempdir, 'cubicweb.pot')
-        execute('msgcat -o %s %s'
-                % (cubicwebpot, ' '.join('"%s"' % f for f in potfiles)))
+        cmd = ['msgcat', '-o', cubicwebpot] + potfiles
+        execute2(cmd)
         print '-> merging main pot file with existing translations.'
         chdir(cwi18ndir)
         toedit = []
         for lang in CubicWebNoAppConfiguration.cw_languages():
             target = '%s.po' % lang
-            execute('msgmerge -N --sort-output -o "%snew" "%s" "%s"'
-                    % (target, target, cubicwebpot))
+            cmd = ['msgmerge', '-N', '--sort-output', '-o',
+                   target+'new', target, cubicwebpot]
+            execute2(cmd)
             ensure_fs_mode(target)
             shutil.move('%snew' % target, target)
             toedit.append(osp.abspath(target))
@@ -382,16 +386,21 @@ class UpdateCubeCatalogCommand(Command):
 
 
 def update_cubes_catalogs(cubes):
+    from subprocess import CalledProcessError
     for cubedir in cubes:
         if not osp.isdir(cubedir):
             print '-> ignoring %s that is not a directory.' % cubedir
             continue
         try:
             toedit = update_cube_catalogs(cubedir)
+        except CalledProcessError, exc:
+            print '\n*** error while updating catalogs for cube', cubedir
+            print 'cmd:\n%s' % exc.cmd
+            print 'stdout:\n%s\nstderr:\n%s' % exc.data
         except Exception:
             import traceback
             traceback.print_exc()
-            print '-> error while updating catalogs for cube', cubedir
+            print '*** error while updating catalogs for cube', cubedir
             return False
         else:
             # instructions pour la suite
@@ -408,7 +417,7 @@ def update_cube_catalogs(cubedir):
     import tempfile
     from logilab.common.fileutils import ensure_fs_mode
     from logilab.common.shellutils import find, rm
-    from cubicweb.i18n import extract_from_tal, execute
+    from cubicweb.i18n import extract_from_tal, execute2
     cube = osp.basename(osp.normpath(cubedir))
     tempdir = tempfile.mkdtemp()
     print underline_title('Updating i18n catalogs for cube %s' % cube)
@@ -421,7 +430,8 @@ def update_cube_catalogs(cubedir):
         potfiles = [osp.join('i18n', 'static-messages.pot')]
     else:
         potfiles = []
-    print '-> extract schema messages'
+    print '-> extracting messages:',
+    print 'schema',
     schemapot = osp.join(tempdir, 'schema.pot')
     potfiles.append(schemapot)
     # explicit close necessary else the file may not be yet flushed when
@@ -429,50 +439,55 @@ def update_cube_catalogs(cubedir):
     schemapotstream = file(schemapot, 'w')
     generate_schema_pot(schemapotstream.write, cubedir)
     schemapotstream.close()
-    print '-> extract TAL messages'
+    print 'TAL',
     tali18nfile = osp.join(tempdir, 'tali18n.py')
     ptfiles = find('.', ('.py', '.pt'), blacklist=STD_BLACKLIST+('test',))
     extract_from_tal(ptfiles, tali18nfile)
-    print '-> extract Javascript messages'
+    print 'Javascript'
     jsfiles =  [jsfile for jsfile in find('.', '.js')
                 if osp.basename(jsfile).startswith('cub')]
     if jsfiles:
         tmppotfile = osp.join(tempdir, 'js.pot')
-        execute('xgettext --no-location --omit-header -k_ -L java '
-                '--from-code=utf-8 -o %s %s' % (tmppotfile, ' '.join(jsfiles)))
+        cmd = ['xgettext', '--no-location', '--omit-header', '-k_', '-L', 'java',
+               '--from-code=utf-8', '-o', tmppotfile] + jsfiles
+        execute2(cmd)
         # no pot file created if there are no string to translate
         if osp.exists(tmppotfile):
             potfiles.append(tmppotfile)
-    print '-> create cube-specific catalog'
+    print '-> creating cube-specific catalog'
     tmppotfile = osp.join(tempdir, 'generated.pot')
     cubefiles = find('.', '.py', blacklist=STD_BLACKLIST+('test',))
     cubefiles.append(tali18nfile)
-    execute('xgettext --no-location --omit-header -k_ -o %s %s'
-            % (tmppotfile, ' '.join('"%s"' % f for f in cubefiles)))
+    cmd = ['xgettext', '--no-location', '--omit-header', '-k_', '-o', tmppotfile]
+    cmd.extend(cubefiles)
+    execute2(cmd)
     if osp.exists(tmppotfile): # doesn't exists of no translation string found
         potfiles.append(tmppotfile)
     potfile = osp.join(tempdir, 'cube.pot')
-    print '-> merging %i .pot files:' % len(potfiles)
-    execute('msgcat -o %s %s' % (potfile,
-                                 ' '.join('"%s"' % f for f in potfiles)))
+    print '-> merging %i .pot files' % len(potfiles)
+    cmd = ['msgcat', '-o', potfile]
+    cmd.extend(potfiles)
+    execute2(cmd)
     if not osp.exists(potfile):
         print 'no message catalog for cube', cube, 'nothing to translate'
         # cleanup
         rm(tempdir)
         return ()
-    print '-> merging main pot file with existing translations:'
+    print '-> merging main pot file with existing translations:',
     chdir('i18n')
     toedit = []
     for lang in CubicWebNoAppConfiguration.cw_languages():
-        print '-> language', lang
+        print lang,
         cubepo = '%s.po' % lang
         if not osp.exists(cubepo):
             shutil.copy(potfile, cubepo)
         else:
-            execute('msgmerge -N -s -o %snew %s %s' % (cubepo, cubepo, potfile))
+            cmd = ['msgmerge','-N','-s','-o', cubepo+'new', cubepo, potfile]
+            execute2(cmd)
             ensure_fs_mode(cubepo)
             shutil.move('%snew' % cubepo, cubepo)
         toedit.append(osp.abspath(cubepo))
+    print
     # cleanup
     rm(tempdir)
     return toedit
