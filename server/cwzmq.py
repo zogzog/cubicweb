@@ -32,6 +32,23 @@ from cubicweb.server.server import QuitEvent
 ctx = zmq.Context()
 
 class ZMQComm(object):
+    """
+    A simple ZMQ-based notification bus.
+
+    There should at most one instance of this class attached to a
+    Repository. A typical usage may be something like::
+
+        def callback(msg):
+            self.info('received message: %s', ' '.join(msg))
+        repo.app_instances_bus.subscribe('hello', callback)
+
+    to subsribe to the 'hello' kind of message. On the other side, to
+    emit a notification, call::
+
+       repo.app_instances_bus.publish(['hello', 'world'])
+
+    See http://docs.cubicweb.org for more details.
+    """
     def __init__(self):
         self.ioloop = ioloop.IOLoop()
         self._topics = {}
