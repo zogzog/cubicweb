@@ -1061,7 +1061,7 @@ class ServerMigrationHelper(MigrationHelper):
                         rdef = copy(rschema.rdef(rschema.subjects(objtype)[0], objtype))
                         rdef.subject = etype
                         rdef.rtype = self.repo.schema.rschema(rschema)
-                        rdef.object = self.repo.schema.rschema(objtype)
+                        rdef.object = self.repo.schema.eschema(objtype)
                         ss.execschemarql(execute, rdef,
                                          ss.rdef2rql(rdef, cmap, gmap))
         if commit:
