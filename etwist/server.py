@@ -57,12 +57,12 @@ def host_prefixed_baseurl(baseurl, host):
 
 
 class CubicWebRootResource(resource.Resource):
-    def __init__(self, config, vreg=None):
+    def __init__(self, config):
         resource.Resource.__init__(self)
         self.config = config
         # instantiate publisher here and not in init_publisher to get some
         # checks done before daemonization (eg versions consistency)
-        self.appli = CubicWebPublisher(config, vreg=vreg)
+        self.appli = CubicWebPublisher(config)
         self.base_url = config['base-url']
         self.https_url = config['https-url']
         global MAX_POST_LENGTH
@@ -270,12 +270,12 @@ from cubicweb import set_log_methods
 LOGGER = getLogger('cubicweb.twisted')
 set_log_methods(CubicWebRootResource, LOGGER)
 
-def run(config, vreg=None, debug=None):
+def run(config, debug=None):
     if debug is not None:
         config.debugmode = debug
     config.check_writeable_uid_directory(config.appdatahome)
     # create the site
-    root_resource = CubicWebRootResource(config, vreg=vreg)
+    root_resource = CubicWebRootResource(config)
     website = server.Site(root_resource)
     # serve it via standard HTTP on port set in the configuration
     port = config['port'] or 8080

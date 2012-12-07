@@ -253,14 +253,11 @@ class CubicWebPublisher(object):
     """
 
     def __init__(self, config,
-                 session_handler_fact=CookieSessionHandler,
-                 vreg=None):
+                 session_handler_fact=CookieSessionHandler):
         self.info('starting web instance from %s', config.apphome)
-        if vreg is None:
-            vreg = cwvreg.CWRegistryStore(config)
-        self.vreg = vreg
         # connect to the repository and get instance's schema
-        self.repo = config.repository(vreg)
+        self.repo = config.repository()
+        vreg = self.vreg = self.repo.vreg
         if not vreg.initialized:
             config.init_cubes(self.repo.get_cubes())
             vreg.init_properties(self.repo.properties())

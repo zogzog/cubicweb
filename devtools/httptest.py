@@ -101,7 +101,7 @@ class CubicWebServerTC(CubicWebTC):
 
         reactor.addSystemEventTrigger('after', 'startup', semaphore.release)
         t = threading.Thread(target=safe_run, name='cubicweb_test_web_server',
-                             args=(self.config, self.vreg, True))
+                             args=(self.config, True))
         self.web_thread = t
         t.start()
         semaphore.acquire()
