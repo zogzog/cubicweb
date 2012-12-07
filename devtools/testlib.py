@@ -251,10 +251,13 @@ class CubicWebTC(TestCase):
         # no direct assignation to cls.cnx anymore.
         # cnx is now an instance property that use a class protected attributes.
         cls.set_cnx(cnx)
-        cls.vreg = cls.repo.vreg
         cls.websession = dbapi.DBAPISession(cnx, cls.admlogin)
         cls._orig_cnx = (cnx, cls.websession)
         cls.config.repository = lambda x=None: cls.repo
+
+    @classproperty
+    def vreg(cls):
+        return cls.repo.vreg
 
     def _close_cnx(self):
         for cnx in list(self._cnxs):
