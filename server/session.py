@@ -31,7 +31,7 @@ from logilab.common.deprecation import deprecated
 from logilab.common.textutils import unormalize
 from logilab.common.registry import objectify_predicate
 
-from cubicweb import UnknownEid, QueryError, schema
+from cubicweb import UnknownEid, QueryError, schema, server
 from cubicweb.req import RequestSessionBase
 from cubicweb.dbapi import ConnectionProperties
 from cubicweb.utils import make_uid
@@ -939,16 +939,21 @@ class Session(RequestSessionBase):
         # information:
         # - processed by the precommit/commit event or not
         # - if processed, is it the failed operation
+        debug = server.DEBUG & server.DBG_OPS
         try:
             # by default, operations are executed with security turned off
             with security_enabled(self, False, False):
                 processed = []
                 self.commit_state = 'precommit'
+                if debug:
+                    print self.commit_state, '*' * 20
                 try:
                     while self.pending_operations:
                         operation = self.pending_operations.pop(0)
                         operation.processed = 'precommit'
                         processed.append(operation)
+                        if debug:
+                            print operation
                         operation.handle_event('precommit_event')
                     self.pending_operations[:] = processed
                     self.debug('precommit session %s done', self.id)
@@ -964,7 +969,11 @@ class Session(RequestSessionBase):
                     # instead of having to implements rollback, revertprecommit
                     # and revertcommit, that will be enough in mont case.
                     operation.failed = True
+                    if debug:
+                        print self.commit_state, '*' * 20
                     for operation in reversed(processed):
+                        if debug:
+                            print operation
                         try:
                             operation.handle_event('revertprecommit_event')
                         except BaseException:
@@ -977,8 +986,12 @@ class Session(RequestSessionBase):
                     raise
                 self.cnxset.commit()
                 self.commit_state = 'postcommit'
+                if debug:
+                    print self.commit_state, '*' * 20
                 while self.pending_operations:
                     operation = self.pending_operations.pop(0)
+                    if debug:
+                        print operation
                     operation.processed = 'postcommit'
                     try:
                         operation.handle_event('postcommit_event')

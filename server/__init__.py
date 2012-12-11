@@ -77,10 +77,14 @@ DBG_SQL  = 2
 DBG_REPO = 4
 #: multi-sources
 DBG_MS   = 8
+#: hooks
+DBG_HOOKS = 16
+#: operations
+DBG_OPS = 32
 #: more verbosity
-DBG_MORE = 16
+DBG_MORE = 64
 #: all level enabled
-DBG_ALL  = DBG_RQL + DBG_SQL + DBG_REPO + DBG_MS + DBG_MORE
+DBG_ALL  = DBG_RQL + DBG_SQL + DBG_REPO + DBG_MS + DBG_HOOKS + DBG_OPS + DBG_MORE
 
 #: current debug mode
 DEBUG = 0

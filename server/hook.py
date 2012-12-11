@@ -260,7 +260,7 @@ from logilab.common.logging_ext import set_log_methods
 from logilab.common.registry import (Predicate, NotPredicate, OrPredicate,
                                      classid, objectify_predicate, yes)
 
-from cubicweb import RegistryNotFound
+from cubicweb import RegistryNotFound, server
 from cubicweb.cwvreg import CWRegistry, CWRegistryStore
 from cubicweb.predicates import ExpectedValuePredicate, is_instance
 from cubicweb.appobject import AppObject
@@ -325,8 +325,11 @@ class HooksRegistry(CWRegistry):
                 for _kwargs in _iter_kwargs(entities, eids_from_to, kwargs):
                     hooks = sorted(self.filtered_possible_objects(pruned, session, **_kwargs),
                                    key=lambda x: x.order)
+                    debug = server.DEBUG & server.DBG_HOOKS
                     with session.security_enabled(write=False):
                         for hook in hooks:
+                            if debug:
+                                print event, _kwargs, hook
                             hook()
 
     def get_pruned_hooks(self, session, event, entities, eids_from_to, kwargs):
