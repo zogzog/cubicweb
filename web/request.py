@@ -611,7 +611,7 @@ class CubicWebRequestBase(DBAPIRequest):
         self.set_cookie(name, '', maxage=0, expires=date(2000, 1, 1))
 
     def set_content_type(self, content_type, filename=None, encoding=None,
-                         disposition='attachment'):
+                         disposition='inline'):
         """set output content type for this request. An optional filename
         may be given.
 
