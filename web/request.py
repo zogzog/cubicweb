@@ -619,15 +619,21 @@ class CubicWebRequestBase(DBAPIRequest):
         self.set_header('content-type', content_type)
         if filename:
             header = ['attachment']
+            unicode_filename = None
             try:
-                filename = filename.encode('ascii')
-                header.append('filename=' + filename)
+                ascii_filename = filename.encode('ascii')
             except UnicodeEncodeError:
                 # fallback filename for very old browser
-                header.append('filename=' + filename.encode('ascii', 'ignore'))
+                unicode_filename = filename
+                ascii_filename = filename.encode('ascii', 'ignore')
+            # escape " and \
+            # see http://greenbytes.de/tech/tc2231/#attwithfilenameandextparamescaped
+            ascii_filename = ascii_filename.replace('\x5c', r'\\').replace('"', r'\"')
+            header.append('filename="%s"' % ascii_filename)
+            if unicode_filename is not None:
                 # encoded filename according RFC5987
-                filename = urllib.quote(filename.encode('utf-8'), '')
-                header.append("filename*=utf-8''" + filename)
+                urlquoted_filename = urllib.quote(unicode_filename.encode('utf-8'), '')
+                header.append("filename*=utf-8''" + urlquoted_filename)
             self.set_header('content-disposition', ';'.join(header))
 
     # high level methods for HTML headers management ##########################
