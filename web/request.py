@@ -610,15 +610,20 @@ class CubicWebRequestBase(DBAPIRequest):
             name = bwcompat
         self.set_cookie(name, '', maxage=0, expires=date(2000, 1, 1))
 
-    def set_content_type(self, content_type, filename=None, encoding=None):
+    def set_content_type(self, content_type, filename=None, encoding=None,
+                         disposition='attachment'):
         """set output content type for this request. An optional filename
-        may be given
+        may be given.
+
+        The disposition argument may be `attachement` or `inline` as specified
+        for the Content-disposition HTTP header. The disposition parameter have
+        no effect if no filename are specified.
         """
         if content_type.startswith('text/') and ';charset=' not in content_type:
             content_type += ';charset=' + (encoding or self.encoding)
         self.set_header('content-type', content_type)
         if filename:
-            header = ['attachment']
+            header = [disposition]
             unicode_filename = None
             try:
                 ascii_filename = filename.encode('ascii')
