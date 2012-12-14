@@ -1,0 +1,21 @@
+What's new in CubicWeb 3.16?
+============================
+
+New functionnalities
+--------------------
+
+* Add a new dataimport store (`SQLGenObjectStore`). This store enables a fast
+  import of data (entity creation, link creation) in CubicWeb, by directly
+  flushing information in SQL.  This may only be used with PostgreSQL, as it
+  requires the 'COPY FROM' command.
+
+API changes
+-----------
+
+Unintrusive API changes
+-----------------------
+
+
+
+User interface changes
+----------------------

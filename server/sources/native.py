@@ -961,6 +961,14 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             cnx.commit()
             return eid
 
+    def _handle_is_relation_sql(self, session, sql, attrs):
+        """ Handler for specific is_relation sql that may be
+        overwritten in some stores"""
+        self.doexec(session, sql % attrs)
+
+    _handle_insert_entity_sql = doexec
+    _handle_is_instance_of_sql = _handle_source_relation_sql = _handle_is_relation_sql
+
     def add_info(self, session, entity, source, extid, complete):
         """add type and source info for an eid into the system table"""
         # begin by inserting eid/type/source/extid into the entities table
@@ -970,21 +978,22 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         uri = 'system' if source.copy_based_source else source.uri
         attrs = {'type': entity.__regid__, 'eid': entity.eid, 'extid': extid,
                  'source': uri, 'asource': source.uri, 'mtime': datetime.utcnow()}
-        self.doexec(session, self.sqlgen.insert('entities', attrs), attrs)
+        self._handle_insert_entity_sql(session, self.sqlgen.insert('entities', attrs), attrs)
         # insert core relations: is, is_instance_of and cw_source
         try:
-            self.doexec(session, 'INSERT INTO is_relation(eid_from,eid_to) VALUES (%s,%s)'
-                        % (entity.eid, eschema_eid(session, entity.e_schema)))
+            self._handle_is_relation_sql(session, 'INSERT INTO is_relation(eid_from,eid_to) VALUES (%s,%s)',
+                                         (entity.eid, eschema_eid(session, entity.e_schema)))
         except IndexError:
             # during schema serialization, skip
             pass
         else:
             for eschema in entity.e_schema.ancestors() + [entity.e_schema]:
-                self.doexec(session, 'INSERT INTO is_instance_of_relation(eid_from,eid_to) VALUES (%s,%s)'
-                           % (entity.eid, eschema_eid(session, eschema)))
+                self._handle_is_relation_sql(session,
+                                             'INSERT INTO is_instance_of_relation(eid_from,eid_to) VALUES (%s,%s)',
+                                             (entity.eid, eschema_eid(session, eschema)))
         if 'CWSource' in self.schema and source.eid is not None: # else, cw < 3.10
-            self.doexec(session, 'INSERT INTO cw_source_relation(eid_from,eid_to) '
-                        'VALUES (%s,%s)' % (entity.eid, source.eid))
+            self._handle_is_relation_sql(session, 'INSERT INTO cw_source_relation(eid_from,eid_to) VALUES (%s,%s)',
+                                         (entity.eid, source.eid))
         # now we can update the full text index
         if self.do_fti and self.need_fti_indexation(entity.__regid__):
             if complete:
