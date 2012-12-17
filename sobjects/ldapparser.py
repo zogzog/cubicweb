@@ -40,7 +40,7 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
         """IDataFeedParser main entry point"""
         source = self.source
         searchstr = '(&%s)' % ''.join(source.base_filters)
-        self.warning('processing ldapfeed stuff %s %s', source, searchstr)
+        self.debug('processing ldapfeed stuff %s %s', source, searchstr)
         for userdict in source._search(self._cw, source.user_base_dn,
                                        source.user_base_scope, searchstr):
             self.warning('fetched user %s', userdict)
