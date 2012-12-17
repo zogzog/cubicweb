@@ -47,6 +47,12 @@ if applcubicwebversion < (3, 17, 0) and cubicwebversion >= (3, 17, 0):
         if not confirm('In cubicweb 3.17 embedding views have been moved to the embed '
                        'cube, which is not installed.  Continue anyway?'):
             raise
+    try:
+        add_cube('geocoding', update_database=False)
+    except ImportError:
+        if not confirm('In cubicweb 3.17 geocoding views have been moved to the geocoding '
+                       'cube, which is not installed.  Continue anyway?'):
+            raise
 
 if applcubicwebversion <= (3, 13, 0) and cubicwebversion >= (3, 13, 1):
     sql('ALTER TABLE entities ADD asource VARCHAR(64)')
