@@ -17,6 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """cubicweb ldap feed source"""
 
+from cubicweb.cwconfig import merge_options
 from cubicweb.server.sources import datafeed
 from cubicweb.server import ldaputils
 
@@ -30,5 +31,7 @@ class LDAPFeedSource(ldaputils.LDAPSourceMixIn,
     support_entities = {'CWUser': False}
     use_cwuri_as_url = False
 
-    options = datafeed.DataFeedSource.options + ldaputils.LDAPSourceMixIn.options
+    options = merge_options(datafeed.DataFeedSource.options
+                            + ldaputils.LDAPSourceMixIn.options,
+                            optgroup='ldap-source')
 

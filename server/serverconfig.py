@@ -82,7 +82,9 @@ def generate_source_config(sconfig, encoding=sys.stdin.encoding):
     """serialize a repository source configuration as text"""
     stream = StringIO()
     optsbysect = list(sconfig.options_by_section())
-    assert len(optsbysect) == 1, 'all options for a source should be in the same group'
+    assert len(optsbysect) == 1, (
+        'all options for a source should be in the same group, got %s'
+        % [x[0] for x in optsbysect])
     lgconfig.ini_format(stream, optsbysect[0][1], encoding)
     return stream.getvalue()
 
