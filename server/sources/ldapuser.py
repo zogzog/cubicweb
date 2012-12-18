@@ -19,7 +19,7 @@
 
 this source is for now limited to a read-only CWUser source
 """
-from __future__ import division
+from __future__ import division, with_statement
 from base64 import b64decode
 
 import ldap
