@@ -95,6 +95,23 @@ class LDAPTestBase(CubicWebTC):
     def tearDownClass(cls):
         terminate_slapd(cls)
 
+class CheckWrongGroup(LDAPTestBase):
+
+    def test_wrong_group(self):
+        self.session.create_entity('CWSource', name=u'ldapuser', type=u'ldapfeed', parser=u'ldapfeed',
+                                   url=URL, config=CONFIG)
+        self.commit()
+        with self.session.repo.internal_session(safe=True) as session:
+            source = self.session.execute('CWSource S WHERE S type="ldapfeed"').get_entity(0,0)
+            config = source.repo_source.check_config(source)
+            # inject a bogus group here, along with at least a valid one
+            config['user-default-group'] = ('thisgroupdoesnotexists','users')
+            source.repo_source.update_config(source, config)
+            session.commit(free_cnxset=False)
+            # here we emitted an error log entry
+            stats = source.repo_source.pull_data(session, force=True, raise_on_error=True)
+            session.commit()
+
 class DeleteStuffFromLDAPFeedSourceTC(LDAPTestBase):
     test_db_id = 'ldap-feed'
 

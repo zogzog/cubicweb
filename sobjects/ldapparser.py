@@ -130,8 +130,10 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
         super(DataFeedLDAPAdapter, self).after_entity_copy(entity, sourceparams)
         if entity.__regid__ == 'EmailAddress':
             return
-        groups = [self._get_group(n) for n in self.source.user_default_groups]
-        entity.set_relations(in_group=groups)
+        groups = filter(None, [self._get_group(name)
+                               for name in self.source.user_default_groups])
+        if groups:
+            entity.set_relations(in_group=groups)
         self._process_email(entity, sourceparams)
 
     def is_deleted(self, extidplus, etype, eid):
@@ -172,5 +174,11 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
 
     @cached
     def _get_group(self, name):
-        return self._cw.execute('Any X WHERE X is CWGroup, X name %(name)s',
-                                {'name': name}).get_entity(0, 0)
+        try:
+            return self._cw.execute('Any X WHERE X is CWGroup, X name %(name)s',
+                                    {'name': name}).get_entity(0, 0)
+        except IndexError:
+            self.error('group %r referenced by source configuration %r does not exist'
+                       % (name, self.source.uri))
+            return None
+
