@@ -23,6 +23,7 @@ __docformat__ = "restructuredtext en"
 _ = unicode
 
 from cubicweb.utils import json_dumps
+from cubicweb.predicates import any_rset
 from cubicweb.view import EntityView, AnyRsetView
 from cubicweb.web.application import anonymized_request
 from cubicweb.web.views import basecontrollers
@@ -90,6 +91,7 @@ class JsonMixIn(object):
 class JsonRsetView(JsonMixIn, AnyRsetView):
     """dumps raw result set in JSON format"""
     __regid__ = 'jsonexport'
+    __select__ = any_rset() # means rset might be empty or have any shape
     title = _('json-export-view')
 
     def call(self):
