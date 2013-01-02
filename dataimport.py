@@ -397,7 +397,7 @@ def _execmany_thread(sql_connect, statements, dump_output_dir=None,
         cnx.commit()
         cu.close()
 
-def _create_copyfrom_buffer(data, columns, encoding='utf-8'):
+def _create_copyfrom_buffer(data, columns, encoding='utf-8', replace_sep=None):
     """
     Create a StringIO buffer for 'COPY FROM' command.
     Deals with Unicode, Int, Float, Date...
@@ -420,10 +420,17 @@ def _create_copyfrom_buffer(data, columns, encoding='utf-8'):
                 value = str(value)
             elif isinstance(value, (str, unicode)):
                 # Remove separators used in string formatting
-                if u'\t' in value or u'\r' in value or u'\n' in value:
-                    return
+                for _char in (u'\t', u'\r', u'\n'):
+                    if _char in value:
+                        # If a replace_sep is given, replace
+                        # the separator instead of returning None
+                        # (and thus avoid empty buffer)
+                        if replace_sep:
+                            value = value.replace(_char, replace_sep)
+                        else:
+                            return
                 value = value.replace('\\', r'\\')
-                if not value:
+                if value is None:
                     return
                 if isinstance(value, unicode):
                     value = value.encode(encoding)
