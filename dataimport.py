@@ -124,15 +124,33 @@ def ucsvreader_pb(stream_or_path, encoding='utf-8', separator=',', quote='"',
     print ' %s rows imported' % rowcount
 
 def ucsvreader(stream, encoding='utf-8', separator=',', quote='"',
-               skipfirst=False):
+               skipfirst=False, ignore_errors=False):
     """A csv reader that accepts files with any encoding and outputs unicode
     strings
     """
     it = iter(csv.reader(stream, delimiter=separator, quotechar=quote))
-    if skipfirst:
-        it.next()
-    for row in it:
-        yield [item.decode(encoding) for item in row]
+    if not ignore_errors:
+        if skipfirst:
+            it.next()
+        for row in it:
+            yield [item.decode(encoding) for item in row]
+    else:
+        # Skip first line
+        try:
+            row = it.next()
+        except csv.Error:
+            pass
+        # Safe version, that can cope with error in CSV file
+        while True:
+            try:
+                row = it.next()
+            # End of CSV, break
+            except StopIteration:
+                break
+            # Error in CSV, ignore line and continue
+            except csv.Error:
+                continue
+            yield [item.decode(encoding) for item in row]
 
 def callfunc_every(func, number, iterable):
     """yield items of `iterable` one by one and call function `func`
