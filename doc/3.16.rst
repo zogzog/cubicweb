@@ -19,3 +19,6 @@ Unintrusive API changes
 
 User interface changes
 ----------------------
+
+* Remove changelog view, as nor cubicweb nor known cubes/applications were properly
+  feeding related files

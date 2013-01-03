@@ -60,7 +60,6 @@ class UrlRewriteTC(CubicWebTC):
             ('/doc/images/(.+?)/?$', dict(fid='\\1', vid='wdocimages')),
             ('/doc/?$', dict(fid='main', vid='wdoc')),
             ('/doc/(.+?)/?$', dict(fid='\\1', vid='wdoc')),
-            ('/changelog/?$', dict(vid='changelog')),
             # now in SchemaBasedRewriter
             #('/search/(.+)$', dict(rql=r'Any X WHERE X has_text "\1"')),
             ])

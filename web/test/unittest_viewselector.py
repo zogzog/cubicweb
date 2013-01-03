@@ -93,8 +93,7 @@ class VRegistryTC(ViewSelectorTC):
     def test_possible_views_none_rset(self):
         req = self.request()
         self.assertListEqual(self.pviews(req, None),
-                             [('changelog', wdoc.ChangeLogView),
-                              ('cw.sources-management', cwsources.CWSourcesManagementView),
+                             [('cw.sources-management', cwsources.CWSourcesManagementView),
                               ('cw.users-and-groups-management', cwuser.UsersAndGroupsManagementView),
                               ('gc', debug.GCView),
                               ('index', startup.IndexView),

@@ -51,7 +51,7 @@ class ManageView(StartupView):
     title = _('manage')
     http_cache_manager = httpcache.EtagHTTPCacheManager
     add_etype_links = ()
-    skip_startup_views = set( ('index', 'manage', 'schema', 'owl', 'changelog',
+    skip_startup_views = set( ('index', 'manage', 'schema', 'owl', 
                                'systempropertiesform', 'propertiesform',
                                'loggedout', 'login',
                                'cw.users-and-groups-management', 'cw.groups-management', 

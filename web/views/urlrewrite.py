@@ -109,7 +109,6 @@ class SimpleReqRewriter(URLRewriter):
         (rgx('/doc/images/(.+?)/?'), dict(vid='wdocimages', fid=r'\1')),
         (rgx('/doc/?'), dict(vid='wdoc', fid=r'main')),
         (rgx('/doc/(.+?)/?'), dict(vid='wdoc', fid=r'\1')),
-        (rgx('/changelog/?'), dict(vid='changelog')),
         ]
 
     def rewrite(self, req, uri):
