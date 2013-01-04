@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -67,26 +67,11 @@ directory (default to once a day).',
 
     )
 
-    def __init__(self, repo, source_config, eid=None):
-        AbstractSource.__init__(self, repo, source_config, eid)
-        self.update_config(None, self.check_conf_dict(eid, source_config,
-                                                      fail_if_unknown=False))
-
-    def _entity_update(self, source_entity):
-        # XXX copy from datafeed source
-        if source_entity.url:
-            self.urls = [url.strip() for url in source_entity.url.splitlines()
-                         if url.strip()]
-        else:
-            self.urls = []
-        # /end XXX
-        ldaputils.LDAPSourceMixIn._entity_update(self, source_entity)
-
     def update_config(self, source_entity, typedconfig):
         """update configuration from source entity. `typedconfig` is config
         properly typed with defaults set
         """
-        ldaputils.LDAPSourceMixIn.update_config(self, source_entity, typedconfig)
+        super(LDAPUserSource, self).update_config(source_entity, typedconfig)
         self._interval = typedconfig['synchronization-interval']
         self._cache_ttl = max(71, typedconfig['cache-life-time'])
         self.reset_caches()

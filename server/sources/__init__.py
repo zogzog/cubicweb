@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -133,6 +133,8 @@ class AbstractSource(object):
         self.uri = source_config.pop('uri')
         set_log_methods(self, getLogger('cubicweb.sources.'+self.uri))
         source_config.pop('type')
+        self.update_config(None, self.check_conf_dict(eid, source_config,
+                                                      fail_if_unknown=False))
 
     def __repr__(self):
         return '<%s %s source %s @%#x>' % (self.uri, self.__class__.__name__,
@@ -206,7 +208,17 @@ class AbstractSource(object):
         """update configuration from source entity. `typedconfig` is config
         properly typed with defaults set
         """
-        pass
+        if source_entity is not None:
+            self._entity_update(source_entity)
+        self.config = typedconfig
+
+    def _entity_update(self, source_entity):
+        source_entity.complete()
+        if source_entity.url:
+            self.urls = [url.strip() for url in source_entity.url.splitlines()
+                         if url.strip()]
+        else:
+            self.urls = []
 
     # source initialization / finalization #####################################
 
@@ -222,7 +234,8 @@ class AbstractSource(object):
         """method called by the repository once ready to handle request.
         `activated` is a boolean flag telling if the source is activated or not.
         """
-        pass
+        if activated:
+            self._entity_update(source_entity)
 
     PUBLIC_KEYS = ('type', 'uri', 'use-cwuri-as-url')
     def remove_sensitive_information(self, sourcedef):

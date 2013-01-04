@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -135,6 +135,7 @@ You can set multiple groups by separating them by a comma.',
     _conn = None
 
     def _entity_update(self, source_entity):
+        super(LDAPSourceMixIn, self)._entity_update(source_entity)
         if self.urls:
             if len(self.urls) > 1:
                 raise ValidationError(source_entity.eid, {'url': _('can only have one url')})
@@ -149,6 +150,7 @@ You can set multiple groups by separating them by a comma.',
         """update configuration from source entity. `typedconfig` is config
         properly typed with defaults set
         """
+        super(LDAPSourceMixIn, self).update_config(source_entity, typedconfig)
         self.authmode = typedconfig['auth-mode']
         self._authenticate = getattr(self, '_auth_%s' % self.authmode)
         self.cnx_dn = typedconfig['data-cnx-dn']

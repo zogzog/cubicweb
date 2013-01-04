@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -32,13 +32,3 @@ class LDAPFeedSource(ldaputils.LDAPSourceMixIn,
 
     options = datafeed.DataFeedSource.options + ldaputils.LDAPSourceMixIn.options
 
-    def update_config(self, source_entity, typedconfig):
-        """update configuration from source entity. `typedconfig` is config
-        properly typed with defaults set
-        """
-        datafeed.DataFeedSource.update_config(self, source_entity, typedconfig)
-        ldaputils.LDAPSourceMixIn.update_config(self, source_entity, typedconfig)
-
-    def _entity_update(self, source_entity):
-        datafeed.DataFeedSource._entity_update(self, source_entity)
-        ldaputils.LDAPSourceMixIn._entity_update(self, source_entity)

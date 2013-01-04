@@ -1,4 +1,4 @@
-# copyright 2010-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2010-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -81,43 +81,30 @@ class DataFeedSource(AbstractSource):
           }),
         )
 
-    def __init__(self, repo, source_config, eid=None):
-        AbstractSource.__init__(self, repo, source_config, eid)
-        self.update_config(None, self.check_conf_dict(eid, source_config,
-                                                      fail_if_unknown=False))
-
     def check_config(self, source_entity):
         """check configuration of source entity"""
-        typedconfig = super(DataFeedSource, self).check_config(source_entity)
-        if typedconfig['synchronization-interval'] < 60:
+        typed_config = super(DataFeedSource, self).check_config(source_entity)
+        if typed_config['synchronization-interval'] < 60:
             _ = source_entity._cw._
             msg = _('synchronization-interval must be greater than 1 minute')
             raise ValidationError(source_entity.eid, {'config': msg})
-        return typedconfig
+        return typed_config
 
     def _entity_update(self, source_entity):
-        source_entity.complete()
+        super(DataFeedSource, self)._entity_update(source_entity)
         self.parser_id = source_entity.parser
         self.latest_retrieval = source_entity.latest_retrieval
-        if source_entity.url:
-            self.urls = [url.strip() for url in source_entity.url.splitlines()
-                         if url.strip()]
-        else:
-            self.urls = []
 
-    def update_config(self, source_entity, typedconfig):
-        """update configuration from source entity. `typedconfig` is config
+    def update_config(self, source_entity, typed_config):
+        """update configuration from source entity. `typed_config` is config
         properly typed with defaults set
         """
-        self.synchro_interval = timedelta(seconds=typedconfig['synchronization-interval'])
-        self.max_lock_lifetime = timedelta(seconds=typedconfig['max-lock-lifetime'])
-        if source_entity is not None:
-            self._entity_update(source_entity)
-        self.config = typedconfig
+        super(DataFeedSource, self).update_config(source_entity, typed_config)
+        self.synchro_interval = timedelta(seconds=typed_config['synchronization-interval'])
+        self.max_lock_lifetime = timedelta(seconds=typed_config['max-lock-lifetime'])
 
     def init(self, activated, source_entity):
-        if activated:
-            self._entity_update(source_entity)
+        super(DataFeedSource, self).init(activated, source_entity)
         self.parser_id = source_entity.parser
         self.load_mapping(source_entity._cw)
 

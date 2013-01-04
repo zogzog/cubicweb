@@ -99,12 +99,11 @@ repository (default to 5 minutes).',
 
     def __init__(self, repo, source_config, eid=None):
         super(RemoteSource, self).__init__(repo, source_config, eid)
-        self.update_config(None, self.check_conf_dict(eid, source_config,
-                                                      fail_if_unknown=False))
         self._query_cache = TimedCache(1800)
 
     def update_config(self, source_entity, processed_config):
         """update configuration from source entity"""
+        super(RemoteSource, self).update_config(source_entity, processed_config)
         baseurl = processed_config.get('base-url')
         if baseurl and not baseurl.endswith('/'):
             processed_config['base-url'] += '/'
