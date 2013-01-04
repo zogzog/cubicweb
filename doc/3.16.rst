@@ -55,3 +55,11 @@ User interface changes
 
 * Remove changelog view, as nor cubicweb nor known cubes/applications were properly
   feeding related files
+
+
+Other changes
+-------------
+
+* 'pyrorql' sources will be automatically updated to use an URL to locate the source
+  rather than configuration option. 'zmqrql' sources were broken before this change,
+  so no upgrade needed...

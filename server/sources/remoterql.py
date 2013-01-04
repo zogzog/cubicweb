@@ -49,8 +49,6 @@ class ReplaceByInOperator(Exception):
 class RemoteSource(AbstractSource):
     """Generic external repository source"""
 
-    CNX_TYPE = None # Must be ovewritted !
-
     # boolean telling if modification hooks should be called when something is
     # modified in this source
     should_call_hooks = False
@@ -112,14 +110,10 @@ repository (default to 5 minutes).',
         if source_entity is not None:
             self.latest_retrieval = source_entity.latest_retrieval
 
-    def _get_connection(self):
-        """open and return a connection to the source"""
-        self.info('connecting to source %(base-url)s with user %(cubicweb-user)s',
-                  self.config)
-        cnxprops = ConnectionProperties(cnxtype=self.CNX_TYPE)
-        return dbapi.connect(login=self.config['cubicweb-user'],
-                             password=self.config['cubicweb-password'],
-                             cnxprops=cnxprops)
+    def _entity_update(self, source_entity):
+        super(RemoteSource, self)._entity_update(source_entity)
+        if self.urls and len(self.urls) > 1:
+            raise ValidationError(source_entity.eid, {'url': _('can only have one url')})
 
     def get_connection(self):
         try:
@@ -128,6 +122,13 @@ repository (default to 5 minutes).',
             self.critical("can't get connection to source %s: %s", self.uri, ex)
             return ConnectionWrapper()
 
+    def _get_connection(self):
+        """open and return a connection to the source"""
+        self.info('connecting to source %s as user %s',
+                  self.urls[0], self.config['cubicweb-user'])
+        # XXX check protocol according to source type (zmq / pyro)
+        return dbapi.connect(self.urls[0], login=self.config['cubicweb-user'],
+                             password=self.config['cubicweb-password'])
 
     def reset_caches(self):
         """method called during test to reset potential source caches"""
@@ -238,7 +239,7 @@ repository (default to 5 minutes).',
         """synchronize content known by this repository with content in the
         external repository
         """
-        self.info('synchronizing remote %s source %s', (self.CNX_TYPE, self.uri))
+        self.info('synchronizing remote source %s', self.uri)
         cnx = self.get_connection()
         try:
             extrepo = cnx._repo
