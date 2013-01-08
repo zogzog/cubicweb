@@ -113,6 +113,23 @@ class DeleteStuffFromLDAPFeedSourceTC(LDAPTestBase):
             stats = lfsource.pull_data(isession, force=True, raise_on_error=True)
             isession.commit()
 
+    def test_filter_inactivate(self):
+        """ filtered out people should be deactivated, unable to authenticate """
+        source = self.session.execute('CWSource S WHERE S type="ldapfeed"').get_entity(0,0)
+        config = source.repo_source.check_config(source)
+        # filter with adim's phone number
+        config['user-filter'] = u'(%s=%s)' % ('telephoneNumber', '109')
+        source.repo_source.update_config(source, config)
+        self.commit()
+        self._pull()
+        self.assertRaises(AuthenticationError, self.repo.connect, 'syt', password='syt')
+        self.assertEqual(self.execute('Any N WHERE U login "syt", '
+                                      'U in_state S, S name N').rows[0][0],
+                         'deactivated')
+        self.assertEqual(self.execute('Any N WHERE U login "adim", '
+                                      'U in_state S, S name N').rows[0][0],
+                         'activated')
+
     def test_delete(self):
         """ delete syt, pull, check deactivation, repull,
         readd syt, pull, check activation
