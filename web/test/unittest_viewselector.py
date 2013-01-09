@@ -39,7 +39,6 @@ USERACTIONS = [actions.UserPreferencesAction,
                actions.LogoutAction]
 SITEACTIONS = [actions.ManageAction]
 FOOTERACTIONS = [wdoc.HelpAction,
-                 wdoc.ChangeLogAction,
                  wdoc.AboutAction,
                  actions.PoweredByAction]
 MANAGEACTIONS = [actions.SiteConfigurationAction,
