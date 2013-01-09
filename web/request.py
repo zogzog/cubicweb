@@ -600,24 +600,35 @@ class CubicWebRequestBase(DBAPIRequest):
             name = bwcompat
         self.set_cookie(name, '', maxage=0, expires=date(2000, 1, 1))
 
-    def set_content_type(self, content_type, filename=None, encoding=None):
+    def set_content_type(self, content_type, filename=None, encoding=None,
+                         disposition='inline'):
         """set output content type for this request. An optional filename
-        may be given
+        may be given.
+
+        The disposition argument may be `attachement` or `inline` as specified
+        for the Content-disposition HTTP header. The disposition parameter have
+        no effect if no filename are specified.
         """
         if content_type.startswith('text/') and ';charset=' not in content_type:
             content_type += ';charset=' + (encoding or self.encoding)
         self.set_header('content-type', content_type)
         if filename:
-            header = ['attachment']
+            header = [disposition]
+            unicode_filename = None
             try:
-                filename = filename.encode('ascii')
-                header.append('filename=' + filename)
+                ascii_filename = filename.encode('ascii')
             except UnicodeEncodeError:
                 # fallback filename for very old browser
-                header.append('filename=' + filename.encode('ascii', 'ignore'))
+                unicode_filename = filename
+                ascii_filename = filename.encode('ascii', 'ignore')
+            # escape " and \
+            # see http://greenbytes.de/tech/tc2231/#attwithfilenameandextparamescaped
+            ascii_filename = ascii_filename.replace('\x5c', r'\\').replace('"', r'\"')
+            header.append('filename="%s"' % ascii_filename)
+            if unicode_filename is not None:
                 # encoded filename according RFC5987
-                filename = urllib.quote(filename.encode('utf-8'), '')
-                header.append("filename*=utf-8''" + filename)
+                urlquoted_filename = urllib.quote(unicode_filename.encode('utf-8'), '')
+                header.append("filename*=utf-8''" + urlquoted_filename)
             self.set_header('content-disposition', ';'.join(header))
 
     # high level methods for HTML headers management ##########################

@@ -19,7 +19,7 @@
 
 this source is for now limited to a read-only CWUser source
 """
-from __future__ import division
+from __future__ import division, with_statement
 from base64 import b64decode
 
 import ldap
@@ -114,7 +114,8 @@ directory (default to once a day).',
                                    self._query_cache.clear_expired)
 
     def synchronize(self):
-        self.pull_data(self.repo.internal_session())
+        with self.repo.internal_session() as session:
+            self.pull_data(session)
 
     def pull_data(self, session, force=False, raise_on_error=False):
         """synchronize content known by this repository with content in the
@@ -123,51 +124,47 @@ directory (default to once a day).',
         self.info('synchronizing ldap source %s', self.uri)
         ldap_emailattr = self.user_rev_attrs['email']
         assert ldap_emailattr
-        session = self.repo.internal_session()
         execute = session.execute
-        try:
-            cursor = session.system_sql("SELECT eid, extid FROM entities WHERE "
-                                        "source='%s'" % self.uri)
-            for eid, b64extid in cursor.fetchall():
-                extid = b64decode(b64extid)
-                self.debug('ldap eid %s', eid)
-                # if no result found, _search automatically delete entity information
-                res = self._search(session, extid, BASE)
-                self.debug('ldap search %s', res)
-                if res:
-                    ldapemailaddr = res[0].get(ldap_emailattr)
-                    if ldapemailaddr:
-                        if isinstance(ldapemailaddr, list):
-                            ldapemailaddr = ldapemailaddr[0] # XXX consider only the first email in the list
-                        rset = execute('Any X,A WHERE '
-                                       'X address A, U use_email X, U eid %(u)s',
-                                       {'u': eid})
-                        ldapemailaddr = unicode(ldapemailaddr)
-                        for emaileid, emailaddr, in rset:
-                            if emailaddr == ldapemailaddr:
-                                break
+        cursor = session.system_sql("SELECT eid, extid FROM entities WHERE "
+                                    "source='%s'" % self.uri)
+        for eid, b64extid in cursor.fetchall():
+            extid = b64decode(b64extid)
+            self.debug('ldap eid %s', eid)
+            # if no result found, _search automatically delete entity information
+            res = self._search(session, extid, BASE)
+            self.debug('ldap search %s', res)
+            if res:
+                ldapemailaddr = res[0].get(ldap_emailattr)
+                if ldapemailaddr:
+                    if isinstance(ldapemailaddr, list):
+                        ldapemailaddr = ldapemailaddr[0] # XXX consider only the first email in the list
+                    rset = execute('Any X,A WHERE '
+                                   'X address A, U use_email X, U eid %(u)s',
+                                   {'u': eid})
+                    ldapemailaddr = unicode(ldapemailaddr)
+                    for emaileid, emailaddr, in rset:
+                        if emailaddr == ldapemailaddr:
+                            break
+                    else:
+                        self.debug('updating email address of user %s to %s',
+                                  extid, ldapemailaddr)
+                        emailrset = execute('EmailAddress A WHERE A address %(addr)s',
+                                            {'addr': ldapemailaddr})
+                        if emailrset:
+                            execute('SET U use_email X WHERE '
+                                    'X eid %(x)s, U eid %(u)s',
+                                    {'x': emailrset[0][0], 'u': eid})
+                        elif rset:
+                            if not execute('SET X address %(addr)s WHERE '
+                                           'U primary_email X, U eid %(u)s',
+                                           {'addr': ldapemailaddr, 'u': eid}):
+                                execute('SET X address %(addr)s WHERE '
+                                        'X eid %(x)s',
+                                        {'addr': ldapemailaddr, 'x': rset[0][0]})
                         else:
-                            self.debug('updating email address of user %s to %s',
-                                      extid, ldapemailaddr)
-                            emailrset = execute('EmailAddress A WHERE A address %(addr)s',
-                                                {'addr': ldapemailaddr})
-                            if emailrset:
-                                execute('SET U use_email X WHERE '
-                                        'X eid %(x)s, U eid %(u)s',
-                                        {'x': emailrset[0][0], 'u': eid})
-                            elif rset:
-                                if not execute('SET X address %(addr)s WHERE '
-                                               'U primary_email X, U eid %(u)s',
-                                               {'addr': ldapemailaddr, 'u': eid}):
-                                    execute('SET X address %(addr)s WHERE '
-                                            'X eid %(x)s',
-                                            {'addr': ldapemailaddr, 'x': rset[0][0]})
-                            else:
-                                # no email found, create it
-                                _insert_email(session, ldapemailaddr, eid)
-        finally:
-            session.commit()
-            session.close()
+                            # no email found, create it
+                            _insert_email(session, ldapemailaddr, eid)
+        session.commit()
 
     def ldap_name(self, var):
         if var.stinfo['relations']:

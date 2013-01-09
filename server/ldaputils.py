@@ -222,19 +222,6 @@ You can set multiple groups by separating them by a comma.',
             raise AuthenticationError()
         return eid
 
-    def object_exists_in_ldap(self, dn):
-        cnx = self.get_connection().cnx #session.cnxset.connection(self.uri).cnx
-        if cnx is None:
-            self.warning('Could not establish connexion with LDAP server, assuming dn %s exists', dn)
-            return True # ldap unreachable, let's not touch it
-        try:
-            cnx.search_s(dn, self.user_base_scope)
-        except ldap.PARTIAL_RESULTS:
-            self.warning('PARTIAL RESULTS for dn %s', dn)
-        except ldap.NO_SUCH_OBJECT:
-            return False
-        return True
-
     def _connect(self, user=None, userpwd=None):
         protocol, hostport = self.connection_info()
         self.info('connecting %s://%s as %s', protocol, hostport,

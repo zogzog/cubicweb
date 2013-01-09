@@ -81,12 +81,19 @@ LDAP source internal configuration:
 Other notes
 -----------
 
-* Yes, cubicweb is able to start if ldap cannot be reached, even on c-c start,
-  though that will slow down the instance, since it will indefinitly attempt
-  to connect to the ldap on each query on users.
+* Cubicweb is able to start if ldap cannot be reached, even on
+  cubicweb-ctl start ... If some source ldap server cannot be used
+  while an instance is running, the corresponding users won't be
+  authenticated but their status will not change (e.g. they will not
+  be deactivated)
 
 * Changing the name of the ldap server in your script is fine, changing the base
   DN isn't since it's used to identify already known users from others
+
+* When a user is removed from an LDAP source, it is deactivated in the
+  CubicWeb instance; when a deactivated user comes back in the LDAP
+  source, it (automatically) is activated again
+
 
 * You can use the :class:`CWSourceHostConfig` to have variants for a source
   configuration according to the host the instance is running on. To do so go on

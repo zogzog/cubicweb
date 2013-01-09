@@ -37,6 +37,13 @@ class JsonViewsTC(CubicWebTC):
         self.assertEqual(req.headers_out.getRawHeaders('content-type'), ['application/json'])
         self.assertEqual(data, '[["guests", 1], ["managers", 1]]')
 
+    def test_json_rsetexport_empty_rset(self):
+        req = self.request()
+        rset = req.execute('Any X WHERE X is CWUser, X login "foobarbaz"')
+        data = self.view('jsonexport', rset)
+        self.assertEqual(req.headers_out.getRawHeaders('content-type'), ['application/json'])
+        self.assertEqual(data, '[]')
+
     def test_json_rsetexport_with_jsonp(self):
         req = self.request()
         req.form.update({'callback': 'foo',

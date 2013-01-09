@@ -80,7 +80,7 @@ if duplicates:
     pprint(duplicates)
 
 print len(todelete), 'entities will be deleted'
-for etype, entities in todelete.values():
+for etype, entities in todelete.iteritems():
     print 'deleting', etype, [e.login for e in entities]
     system_source.delete_info_multi(session, entities, source_name)
 

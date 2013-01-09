@@ -111,8 +111,8 @@ class VRegistryTC(ViewSelectorTC):
     def test_possible_views_noresult(self):
         req = self.request()
         rset = req.execute('Any X WHERE X eid 999999')
-        self.assertListEqual(self.pviews(req, rset),
-                             [])
+        self.assertListEqual([('jsonexport', json.JsonRsetView)],
+                             self.pviews(req, rset))
 
     def test_possible_views_one_egroup(self):
         req = self.request()

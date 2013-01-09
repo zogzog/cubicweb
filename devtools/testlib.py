@@ -815,7 +815,11 @@ class CubicWebTC(TestCase):
         :returns: an instance of `cubicweb.devtools.htmlparser.PageInfo`
                   encapsulation the generated HTML
         """
-        req = req or rset and rset.req or self.request()
+        if req is None:
+            if rset is None:
+                req = self.request()
+            else:
+                req = rset.req
         req.form['vid'] = vid
         viewsreg = self.vreg['views']
         view = viewsreg.select(vid, req, rset=rset, **kwargs)

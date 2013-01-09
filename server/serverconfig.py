@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -292,7 +292,7 @@ and if not set, it will be choosen randomly',
                 return True
             return source.uri in self.sources_mode
         if self.quick_start:
-            return False
+            return source.uri == 'system'
         return (not source.disabled and (
             not self.enabled_sources or source.uri in self.enabled_sources))
 

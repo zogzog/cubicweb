@@ -100,7 +100,8 @@ class DownloadView(EntityView):
             contenttype = adapter.download_content_type()
         self._cw.set_content_type(contenttype or self.content_type,
                                   filename=adapter.download_file_name(),
-                                  encoding=encoding)
+                                  encoding=encoding,
+                                  disposition='attachment')
 
     def call(self):
         entity = self.cw_rset.complete_entity(self.cw_row or 0, self.cw_col or 0)

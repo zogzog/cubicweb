@@ -640,7 +640,7 @@ Other functions
 | :func:`FSPATH(X)`     | expect X to be an attribute whose value is stored in a             |
 |                       | :class:`BFSStorage` and return its path on the file system         |
 +-----------------------+--------------------------------------------------------------------+
-| :func:`FTKIRANK(X)`   | expect X to be an entity used in a has_text relation, and return a |
+| :func:`FTIRANK(X)`    | expect X to be an entity used in a has_text relation, and return a |
 |                       | number corresponding to the rank order of each resulting entity    |
 +-----------------------+--------------------------------------------------------------------+
 | :func:`CAST(Type, X)` | expect X to be an attribute and return it casted into the given    |

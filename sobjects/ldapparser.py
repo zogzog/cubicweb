@@ -22,7 +22,7 @@ unlike ldapuser source, this source is copy based and will import ldap content
 """
 from __future__ import with_statement
 
-from logilab.common.decorators import cached
+from logilab.common.decorators import cached, cachedproperty
 from logilab.common.shellutils import generate_password
 
 from cubicweb import Binary, ConfigurationError
@@ -36,15 +36,27 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
     # attributes of the cw user
     non_attribute_keys = set(('email',))
 
+    @cachedproperty
+    def searchfilterstr(self):
+        """ ldap search string, including user-filter """
+        return '(&%s)' % ''.join(self.source.base_filters)
+
+    @cachedproperty
+    def source_entities_by_extid(self):
+        source = self.source
+        return dict((userdict['dn'], userdict)
+                    for userdict in source._search(self._cw,
+                                                   source.user_base_dn,
+                                                   source.user_base_scope,
+                                                   self.searchfilterstr))
+
     def process(self, url, raise_on_error=False):
         """IDataFeedParser main entry point"""
-        source = self.source
-        searchstr = '(&%s)' % ''.join(source.base_filters)
-        self.warning('processing ldapfeed stuff %s %s', source, searchstr)
-        for userdict in source._search(self._cw, source.user_base_dn,
-                                       source.user_base_scope, searchstr):
+        self.debug('processing ldapfeed source %s %s', self.source, self.searchfilterstr)
+        for userdict in self.source_entities_by_extid.itervalues():
             self.warning('fetched user %s', userdict)
-            entity = self.extid2entity(userdict['dn'], 'CWUser', **userdict)
+            extid = userdict['dn']
+            entity = self.extid2entity(extid, 'CWUser', **userdict)
             if entity is not None and not self.created_during_pull(entity):
                 self.notify_updated(entity)
                 attrs = self.ldap2cwattrs(userdict)
@@ -78,7 +90,8 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
         if entity.__regid__ == 'CWUser':
             wf = entity.cw_adapt_to('IWorkflowable')
             if wf.state == 'deactivated':
-                self.warning('update on deactivated user %s', entity.login)
+                wf.fire_transition('activate')
+                self.warning('user %s reactivated', entity.login)
         mdate = attrs.get('modification_date')
         if not mdate or mdate > entity.modification_date:
             attrs = dict( (k, v) for k, v in attrs.iteritems()
@@ -121,12 +134,14 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
         entity.cw_set(in_group=groups)
         self._process_email(entity, sourceparams)
 
-    def is_deleted(self, extid, etype, eid):
+    def is_deleted(self, extidplus, etype, eid):
         try:
-            extid, _ = extid.rsplit('@@', 1)
+            extid, _ = extidplus.rsplit('@@', 1)
         except ValueError:
-            pass
-        return not self.source.object_exists_in_ldap(extid)
+            # for some reason extids here tend to come in both forms, e.g:
+            # dn, dn@@Babar
+            extid = extidplus
+        return extid not in self.source_entities_by_extid
 
     def _process_email(self, entity, userdict):
         try:
