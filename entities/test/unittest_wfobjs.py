@@ -212,7 +212,7 @@ class WorkflowTC(CubicWebTC):
         req = self.request()
         iworkflowable = req.entity_from_eid(self.member.eid).cw_adapt_to('IWorkflowable')
         iworkflowable.fire_transition('deactivate')
-        req.cu.commit()
+        cnx.commit()
         with self.assertRaises(ValidationError) as cm:
             iworkflowable.fire_transition('activate')
         self.assertEqual(cm.exception.errors, {'by_transition-subject': "transition may not be fired"})
@@ -624,7 +624,7 @@ class WorkflowHooksTC(CubicWebTC):
     def test_transition_checking3(self):
         with self.login('stduser') as cnx:
             session = self.session
-            user = cnx.user(session)
+            user = self.user()
             iworkflowable = user.cw_adapt_to('IWorkflowable')
             iworkflowable.fire_transition('deactivate')
             session.commit()
