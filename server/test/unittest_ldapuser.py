@@ -113,7 +113,7 @@ class DeleteStuffFromLDAPFeedSourceTC(LDAPTestBase):
             stats = lfsource.pull_data(isession, force=True, raise_on_error=True)
             isession.commit()
 
-    def test_filter_inactivate(self):
+    def test_a_filter_inactivate(self):
         """ filtered out people should be deactivated, unable to authenticate """
         source = self.session.execute('CWSource S WHERE S type="ldapfeed"').get_entity(0,0)
         config = source.repo_source.check_config(source)
@@ -126,6 +126,17 @@ class DeleteStuffFromLDAPFeedSourceTC(LDAPTestBase):
         self.assertEqual(self.execute('Any N WHERE U login "syt", '
                                       'U in_state S, S name N').rows[0][0],
                          'deactivated')
+        self.assertEqual(self.execute('Any N WHERE U login "adim", '
+                                      'U in_state S, S name N').rows[0][0],
+                         'activated')
+        # unfilter, syt should be activated again
+        config['user-filter'] = u''
+        source.repo_source.update_config(source, config)
+        self.commit()
+        self._pull()
+        self.assertEqual(self.execute('Any N WHERE U login "syt", '
+                                      'U in_state S, S name N').rows[0][0],
+                         'activated')
         self.assertEqual(self.execute('Any N WHERE U login "adim", '
                                       'U in_state S, S name N').rows[0][0],
                          'activated')
@@ -149,10 +160,9 @@ class DeleteStuffFromLDAPFeedSourceTC(LDAPTestBase):
         self.tearDownClass()
         self.setUpClass()
         self._pull()
-        # still deactivated, but a warning has been emitted ...
         self.assertEqual(self.execute('Any N WHERE U login "syt", '
                                       'U in_state S, S name N').rows[0][0],
-                         'deactivated')
+                         'activated')
         # test reactivating the user isn't enough to authenticate, as the native source
         # refuse to authenticate user from other sources
         os.system(deletecmd)

@@ -90,7 +90,8 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
         if entity.__regid__ == 'CWUser':
             wf = entity.cw_adapt_to('IWorkflowable')
             if wf.state == 'deactivated':
-                self.warning('update on deactivated user %s', entity.login)
+                wf.fire_transition('activate')
+                self.warning('user %s reactivated', entity.login)
         mdate = attrs.get('modification_date')
         if not mdate or mdate > entity.modification_date:
             attrs = dict( (k, v) for k, v in attrs.iteritems()
