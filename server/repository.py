@@ -748,9 +748,6 @@ class Repository(object):
     def connect(self, login, **kwargs):
         """open a connection for a given user
 
-        base_url may be needed to send mails
-        cnxtype indicate if this is a pyro connection or a in-memory connection
-
         raise `AuthenticationError` if the authentication failed
         raise `ConnectionError` if we can't open a connection
         """
