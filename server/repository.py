@@ -186,7 +186,7 @@ class Repository(object):
         self.shutting_down = False
         # sources (additional sources info in the system database)
         self.system_source = self.get_source('native', 'system',
-                                             config.sources()['system'])
+                                             config.sources()['system'].copy())
         self.sources = [self.system_source]
         self.sources_by_uri = {'system': self.system_source}
         # querier helper, need to be created after sources initialization
