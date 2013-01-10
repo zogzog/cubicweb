@@ -36,10 +36,10 @@ from logging import getLogger
 from logilab.common.deprecation import deprecated, class_renamed
 from logilab.common.decorators import classproperty
 from logilab.common.logging_ext import set_log_methods
-from logilab.common.registry import yes
 
-# XXX for bw compat
-from logilab.common.registry import objectify_predicate, traced_selection, Predicate
+# first line imports for bw compat
+from logilab.common.registry import (objectify_predicate, traced_selection, Predicate,
+                                     RegistrableObject, yes)
 
 
 objectify_selector = deprecated('[3.15] objectify_selector has been '
@@ -57,26 +57,11 @@ def lltrace(func):
 
 # the base class for all appobjects ############################################
 
-class AppObject(object):
+class AppObject(RegistrableObject):
     """This is the base class for CubicWeb application objects which are
-    selected according to a context (usually at least a request and a result
-    set).
+    selected in a request context.
 
     The following attributes should be set on concrete appobject classes:
-
-    :attr:`__registry__`
-      name of the registry for this object (string like 'views',
-      'templates'...)
-
-    :attr:`__regid__`
-      object's identifier in the registry (string like 'main',
-      'primary', 'folder_box')
-
-    :attr:`__select__`
-      class'selector
-
-    Moreover, the `__abstract__` attribute may be set to True to indicate that a
-    class is abstract and should not be registered.
 
     At selection time, the following attributes are set on the instance:
 
@@ -107,42 +92,8 @@ class AppObject(object):
       * do not inherit directly from this class but from a more specific class
         such as `AnyEntity`, `EntityView`, `AnyRsetView`, `Action`...
 
-      * to be recordable, a subclass has to define its registry (attribute
-        `__registry__`) and its identifier (attribute `__regid__`). Usually
-        you don't have to take care of the registry since it's set by the base
-        class, only the identifier `id`
-
-      * application objects are designed to be loaded by the vregistry and
-        should be accessed through it, not by direct instantiation, besides
-        to use it as base classe.
-
-
-      * When we inherit from `AppObject` (even not directly), you *always* have
-        to use **super()** to get the methods and attributes of the superclasses,
-        and not use the class identifier.
-
-        For example, instead of writting::
-
-          class Truc(PrimaryView):
-              def f(self, arg1):
-                  PrimaryView.f(self, arg1)
-
-        You must write::
-
-          class Truc(PrimaryView):
-              def f(self, arg1):
-                  super(Truc, self).f(arg1)
-
     """
-    __registry__ = None
-    __regid__ = None
     __select__ = yes()
-
-    @classproperty
-    def __registries__(cls):
-        if cls.__registry__ is None:
-            return ()
-        return (cls.__registry__,)
 
     @classmethod
     def __registered__(cls, registry):
