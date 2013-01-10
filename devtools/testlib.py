@@ -403,7 +403,7 @@ class CubicWebTC(TestCase):
         autoclose = kwargs.pop('autoclose', True)
         if not kwargs:
             kwargs['password'] = str(login)
-        self.set_cnx(dbapi.repo_connect(self.repo, unicode(login), **kwargs))
+        self.set_cnx(dbapi._repo_connect(self.repo, unicode(login), **kwargs))
         self.websession = dbapi.DBAPISession(self.cnx)
         if login == self.vreg.config.anonymous_user()[0]:
             self.cnx.anonymous_connection = True

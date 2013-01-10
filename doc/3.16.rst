@@ -33,6 +33,8 @@ API changes
     `Session`. The former is replaced by a is_repo_in_memory property
     and the later is totaly useless.
 
+  * Turn `repo_connect` into `_repo_connect` to mark it as private function.
+
   * Deprecate `in_memory_cnx` which becomes useless, use `_repo_connect` instead
     if necessary.
 

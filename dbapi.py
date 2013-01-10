@@ -132,7 +132,7 @@ def get_repository(uri=None, config=None, vreg=None):
         raise ConnectionError('unknown protocol: `%s`' % method)
 
 
-def repo_connect(repo, login, **kwargs):
+def _repo_connect(repo, login, **kwargs):
     """Constructor to create a new connection to the given CubicWeb repository.
 
     Returns a Connection instance.
@@ -233,7 +233,7 @@ def connect(database, login=None,
         vreg.set_schema(schema)
     else:
         vreg = None
-    cnx = repo_connect(repo, login, cnxprops=cnxprops, **kwargs)
+    cnx = _repo_connect(repo, login, cnxprops=cnxprops, **kwargs)
     cnx.vreg = vreg
     return cnx
 
@@ -253,7 +253,7 @@ def in_memory_repo_cnx(config, login, **kwargs):
     """
     # connection to the CubicWeb repository
     repo = in_memory_repo(config)
-    return repo, repo_connect(repo, login, **kwargs)
+    return repo, _repo_connect(repo, login, **kwargs)
 
 # XXX web only method, move to webconfig?
 def anonymous_session(vreg):
@@ -267,7 +267,7 @@ def anonymous_session(vreg):
     anon_login, anon_password = anoninfo
     # use vreg's repository cache
     repo = vreg.config.repository(vreg)
-    anon_cnx = repo_connect(repo, anon_login, password=anon_password)
+    anon_cnx = _repo_connect(repo, anon_login, password=anon_password)
     anon_cnx.vreg = vreg
     return DBAPISession(anon_cnx, anon_login)
 
@@ -877,4 +877,4 @@ class Connection(object):
         return self._repo.undo_transaction(self.sessionid, txuuid,
                                            **self._txid())
 
-in_memory_cnx = deprecated('[3.16] use repo_connect instead)')(repo_connect)
+in_memory_cnx = deprecated('[3.16] use _repo_connect instead)')(_repo_connect)

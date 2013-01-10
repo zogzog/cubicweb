@@ -56,7 +56,7 @@ from cubicweb.schema import (ETYPE_NAME_MAP, META_RTYPES, VIRTUAL_RTYPES,
                              PURE_VIRTUAL_RTYPES,
                              CubicWebRelationSchema, order_eschemas)
 from cubicweb.cwvreg import CW_EVENT_MANAGER
-from cubicweb.dbapi import get_repository, repo_connect
+from cubicweb.dbapi import get_repository, _repo_connect
 from cubicweb.migration import MigrationHelper, yes
 from cubicweb.server import hook
 try:
@@ -279,7 +279,7 @@ class ServerMigrationHelper(MigrationHelper):
                 login, pwd = manager_userpasswd()
             while True:
                 try:
-                    self._cnx = repo_connect(self.repo, login, password=pwd)
+                    self._cnx = _repo_connect(self.repo, login, password=pwd)
                     if not 'managers' in self._cnx.user(self.session).groups:
                         print 'migration need an account in the managers group'
                     else:

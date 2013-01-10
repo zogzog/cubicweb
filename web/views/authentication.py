@@ -27,7 +27,7 @@ from logilab.common.decorators import clear_cache
 
 from cubicweb import AuthenticationError, BadConnectionId
 from cubicweb.view import Component
-from cubicweb.dbapi import repo_connect, ConnectionProperties
+from cubicweb.dbapi import _repo_connect, ConnectionProperties
 from cubicweb.web import InvalidSession
 from cubicweb.web.application import AbstractAuthenticationManager
 
@@ -170,7 +170,7 @@ class RepositoryAuthenticationManager(AbstractAuthenticationManager):
 
     def _authenticate(self, login, authinfo):
         cnxprops = ConnectionProperties(close=False, log=self.log_queries)
-        cnx = repo_connect(self.repo, login, cnxprops=cnxprops, **authinfo)
+        cnx = _repo_connect(self.repo, login, cnxprops=cnxprops, **authinfo)
         # decorate connection
         cnx.vreg = self.vreg
         return cnx
