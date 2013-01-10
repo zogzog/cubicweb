@@ -144,6 +144,17 @@ class RelationTags(RegistrableRtags):
         self._tagdefs[_ensure_str_key(key)] = tag
         return tag
 
+    def _tag_etype_attr(self, etype, attr, desttype='*', *args, **kwargs):
+        if isinstance(attr, basestring):
+            attr, role = attr, 'subject'
+        else:
+            attr, role = attr
+        if role == 'subject':
+            self.tag_subject_of((etype, attr, desttype), *args, **kwargs)
+        else:
+            self.tag_object_of((desttype, attr, etype), *args, **kwargs)
+
+
     # rtag runtime api ########################################################
 
     def del_rtag(self, *key):

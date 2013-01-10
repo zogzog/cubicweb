@@ -354,17 +354,183 @@ class AutoformSectionRelationTags(RelationTagsSet):
                     continue
             yield (rschema, targetschemas, role)
 
+    def hide_field(self, etype, attr, desttype='*', formtype='main'):
+        """hide `attr` in `etype` forms.
+
+        :param etype: the entity type as a string
+        :param attr: the name of the attribute or relation to hide
+        :param formtype: which form will be affected ('main', 'inlined', etc.),
+         *main* by default.
+
+        `attr` can be a string or 2-tuple (relname, role_of_etype_in_the_rel)
+
+        Examples:
+
+        .. sourcecode:: python
+
+          from cubicweb.web.views.uicfg import autoform_section as afs
+          afs.hide_field('CWUser', 'login')
+          afs.hide_field('*', 'name')
+          afs.hide_field('CWUser', 'use_email', formtype='inlined')
+
+        """
+        self._tag_etype_attr(etype, attr, desttype,
+                             formtype=formtype, section='hidden')
+
+    def hide_fields(self, etype, attrs, formtype='main'):
+        """simple for-loop wrapper around :func:`hide_field`.
+
+        :param etype: the entity type as a string
+        :param attrs: the ordered list of attribute names (or relations)
+        :param formtype: which form will be affected ('main', 'inlined', etc.),
+         *main* by default.
+
+        `attrs` can be strings or 2-tuples (relname, role_of_etype_in_the_rel)
+
+        Examples:
+
+        .. sourcecode:: python
+
+          from cubicweb.web.views.uicfg import autoform_section as afs
+          afs.hide_fields('CWUser', ('login', ('use_email', 'subject')),
+                          formtype='inlined')
+        """
+        for attr in attrs:
+            self.hide_field(etype, attr, formtype=formtype)
+
+    def edit_inline(self, etype, attr, desttype='*', formtype=('main', 'inlined')):
+        """edit `attr` with and inlined form.
+
+        :param etype: the entity type as a string
+        :param attr: the name of the attribute or relation
+        :param desttype: the destination type(s) concerned, default is everything
+        :param formtype: which form will be affected ('main', 'inlined', etc.),
+          *main* and *inlined* by default.
+
+        `attr` can be a string or 2-tuple (relname, role_of_etype_in_the_relation)
+
+        Examples:
+
+        .. sourcecode:: python
+
+          from cubicweb.web.views.uicfg import autoform_section as afs
+
+          afs.edit_inline('*', 'use_email')
+      """
+        self._tag_etype_attr(etype, attr, desttype, formtype=formtype,
+                             section='inlined')
+
+    def edit_as_attr(self, etype, attr, desttype='*', formtype=('main', 'muledit')):
+        """make `attr` appear in the *attributes* section of `etype` form.
+
+        :param etype: the entity type as a string
+        :param attr: the name of the attribute or relation
+        :param desttype: the destination type(s) concerned, default is everything
+        :param formtype: which form will be affected ('main', 'inlined', etc.),
+          *main* and *muledit* by default.
+
+        `attr` can be a string or 2-tuple (relname, role_of_etype_in_the_relation)
+
+        Examples:
+
+        .. sourcecode:: python
+
+          from cubicweb.web.views.uicfg import autoform_section as afs
+
+          afs.edit_as_attr('CWUser', 'in_group')
+        """
+        self._tag_etype_attr(etype, attr, desttype,
+                             formtype=formtype, section='attributes')
+
+    def set_muledit_editable(self, etype, attrs):
+        """make `attrs` appear in muledit form of `etype`.
+
+        :param etype: the entity type as a string
+        :param attrs: the ordered list of attribute names (or relations)
+
+        `attrs` can be strings or 2-tuples (relname, role_of_etype_in_the_relation)
+
+        Examples:
+
+        .. sourcecode:: python
+
+          from cubicweb.web.views.uicfg import autoform_section as afs
+
+          afs.set_muledit_editable('CWUser', ('firstname', 'surname', 'in_group'))
+        """
+        for attr in attrs:
+            self.edit_as_attr(self, etype, attr, formtype='muledit')
+
 autoform_section = AutoformSectionRelationTags()
 
+
 # relations'field class
+
 class AutoformFieldTags(RelationTags):
     __regid__ = 'autoform_field'
 
+    def set_field(self, etype, attr, field):
+        """sets the `attr` field of `etype`.
+
+        :param etype: the entity type as a string
+        :param attr: the name of the attribute or relation
+
+        `attr` can be a string or 2-tuple (relname, role_of_etype_in_the_relation)
+
+        """
+        self._tag_etype_attr(etype, attr, '*', field)
+
 autoform_field = AutoformFieldTags()
 
+
 # relations'field explicit kwargs (given to field's __init__)
+
 class AutoformFieldKwargsTags(RelationTagsDict):
     __regid__ = 'autoform_field_kwargs'
+
+    def set_fields_order(self, etype, attrs):
+        """specify the field order in `etype` main edition form.
+
+        :param etype: the entity type as a string
+        :param attrs: the ordered list of attribute names (or relations)
+
+        `attrs` can be strings or 2-tuples (relname, role_of_etype_in_the_rel)
+
+        Unspecified fields will be displayed after specified ones, their
+        order being consistent with the schema definition.
+
+        Examples:
+
+        .. sourcecode:: python
+
+          from cubicweb.web.views.uicfg import autoform_field_kwargs as affk
+          affk.set_fields_order('CWUser', ('firstname', 'surname', 'login'))
+          affk.set_fields_order('CWUser', ('firstname', ('in_group', 'subject'),
+                                'surname', 'login'))
+
+        """
+        for index, attr in enumerate(attrs):
+            self._tag_etype_attr(etype, attr, '*', {'order': index})
+
+    def set_field_kwargs(self, etype, attr, **kwargs):
+        """tag `attr` field of `etype` with additional named paremeters.
+
+        :param etype: the entity type as a string
+        :param attr: the name of the attribute or relation
+
+        `attr` can be a string or 2-tuple (relname, role_of_etype_in_the_relation)
+
+        Examples:
+
+        .. sourcecode:: python
+
+          from cubicweb.web.views.uicfg import autoform_field_kwargs as affk
+          affk.set_field_kwargs('Person', 'works_for', widget=fwdgs.AutoCompletionWidget())
+          affk.set_field_kwargs('CWUser', 'login', label=_('login or email address'),
+                                widget=fwdgs.TextInput(attrs={'size': 30}))
+        """
+        self._tag_etype_attr(etype, attr, '*', kwargs)
+
 
 autoform_field_kwargs = AutoformFieldKwargsTags()
 
@@ -442,6 +608,7 @@ reledit_ctrl = ReleditTags()
 # boxes.EditBox configuration #################################################
 
 # 'link' / 'create' relation tags, used to control the "add entity" submenu
+
 class ActionBoxUicfg(RelationTagsBool):
     __regid__ = 'actionbox_appearsin_addmenu'
 
@@ -453,6 +620,39 @@ class ActionBoxUicfg(RelationTagsBool):
             rdef = rschema.rdef(sschema, oschema)
             if not rdef.role_cardinality(role) in '?1' and rdef.composite == role:
                 self.tag_relation((sschema, rschema, oschema, role), True)
+
+    def _tag_etype_attr(self, etype, attr, desttype='*', *args, **kwargs):
+        if isinstance(attr, basestring):
+            attr, role = attr, 'subject'
+        else:
+            attr, role = attr
+        if role == 'subject':
+            self.tag_subject_of((etype, attr, desttype), *args, **kwargs)
+        else:
+            self.tag_object_of((desttype, attr, etype), *args, **kwargs)
+
+    def append_to_addmenu(self, etype, attr, createdtype='*'):
+        """adds `attr` in the actions box *addrelated* submenu of `etype`.
+
+        :param etype: the entity type as a string
+        :param attr: the name of the attribute or relation to hide
+        :param createdtype: the target type of the relation (optional, defaults to '*' (all possible types))
+
+        `attr` can be a string or 2-tuple (relname, role_of_etype_in_the_relation)
+
+        """
+        self._tag_etype_attr(etype, attr, createdtype, True)
+
+    def remove_from_addmenu(self, etype, attr, createdtype='*'):
+        """removes `attr` from the actions box *addrelated* submenu of `etype`.
+
+        :param etype: the entity type as a string
+        :param attr: the name of the attribute or relation to hide
+        :param createdtype: the target type of the relation (optional, defaults to '*' (all possible types))
+
+        `attr` can be a string or 2-tuple (relname, role_of_etype_in_the_relation)
+        """
+        self._tag_etype_attr(etype, attr, createdtype, False)
 
 actionbox_appearsin_addmenu = ActionBoxUicfg()
 
