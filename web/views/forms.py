@@ -56,7 +56,8 @@ from cubicweb import ValidationError, typed_eid
 from cubicweb.utils import support_args
 from cubicweb.predicates import non_final_entity, match_kwargs, one_line_rset
 from cubicweb.web import RequestError, ProcessFormError
-from cubicweb.web import uicfg, form, formwidgets as fwdgs
+from cubicweb.web import form, formwidgets as fwdgs
+from cubicweb.web.views import uicfg
 from cubicweb.web.formfields import guess_field
 
 

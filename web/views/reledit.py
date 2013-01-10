@@ -34,7 +34,8 @@ from cubicweb.schema import display_name
 from cubicweb.utils import json, json_dumps
 from cubicweb.predicates import non_final_entity, match_kwargs
 from cubicweb.view import EntityView
-from cubicweb.web import uicfg, stdmsgs
+from cubicweb.web import stdmsgs
+from cubicweb.web.views import uicfg
 from cubicweb.web.form import FieldNotFound
 from cubicweb.web.formwidgets import Button, SubmitButton
 from cubicweb.web.views.ajaxcontroller import ajaxfunc

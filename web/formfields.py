@@ -79,7 +79,8 @@ from yams.constraints import (SizeConstraint, StaticVocabularyConstraint,
 from cubicweb import Binary, tags, uilib
 from cubicweb.utils import support_args
 from cubicweb.web import INTERNAL_FIELD_VALUE, ProcessFormError, eid_param, \
-     formwidgets as fw, uicfg
+     formwidgets as fw
+from cubicweb.web.views import uicfg
 
 
 class UnmodifiedField(Exception):

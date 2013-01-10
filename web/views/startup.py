@@ -31,7 +31,8 @@ from logilab.mtconverter import xml_escape
 from cubicweb.view import StartupView
 from cubicweb.predicates import match_user_groups, is_instance
 from cubicweb.schema import display_name
-from cubicweb.web import uicfg, httpcache
+from cubicweb.web import httpcache
+from cubicweb.web.views import uicfg
 
 class ManageView(StartupView):
     """:__regid__: *manage*

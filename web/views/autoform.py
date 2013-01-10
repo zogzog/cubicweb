@@ -135,9 +135,9 @@ from cubicweb.predicates import (
     match_kwargs, match_form_params, non_final_entity,
     specified_etype_implements)
 from cubicweb.utils import json_dumps
-from cubicweb.web import (stdmsgs, uicfg, eid_param,
+from cubicweb.web import (stdmsgs, eid_param,
                           form as f, formwidgets as fw, formfields as ff)
-from cubicweb.web.views import forms
+from cubicweb.web.views import uicfg, forms
 from cubicweb.web.views.ajaxcontroller import ajaxfunc
 
 _AFS = uicfg.autoform_section

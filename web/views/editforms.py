@@ -34,10 +34,10 @@ from cubicweb.predicates import (match_kwargs, one_line_rset, non_final_entity,
                                 specified_etype_implements, is_instance)
 from cubicweb.view import EntityView
 from cubicweb.schema import display_name
-from cubicweb.web import uicfg, stdmsgs, eid_param, \
+from cubicweb.web import stdmsgs, eid_param, \
      formfields as ff, formwidgets as fw
 from cubicweb.web.form import FormViewMixIn, FieldNotFound
-from cubicweb.web.views import forms, reledit
+from cubicweb.web.views import uicfg, forms, reledit
 
 _pvdc = uicfg.primaryview_display_ctrl
 

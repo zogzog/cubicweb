@@ -215,7 +215,7 @@ the `Person displayed_on File` relation. We can do this simply by adding a
 
     from logilab.common.decorators import monkeypatch
     from cubicweb import ValidationError
-    from cubicweb.web import uicfg, component
+    from cubicweb.web.views import uicfg, component
     from cubicweb.web.views import basecontrollers
 
     # hide displayed_on relation using uicfg since it will be displayed by the box below

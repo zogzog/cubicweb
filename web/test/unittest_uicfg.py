@@ -18,7 +18,8 @@
 import copy
 from logilab.common.testlib import tag
 from cubicweb.devtools.testlib import CubicWebTC
-from cubicweb.web import uicfg, uihelper, formwidgets as fwdgs
+from cubicweb.web import uihelper, formwidgets as fwdgs
+from cubicweb.web.views import uicfg
 
 abaa = uicfg.actionbox_appearsin_addmenu
 

@@ -36,7 +36,7 @@ from cubicweb.predicates import (match_form_params, match_context,
 from cubicweb.schema import display_name
 from cubicweb.utils import wrap_on_write
 from cubicweb.uilib import toggle_action
-from cubicweb.web import component, uicfg
+from cubicweb.web import component
 from cubicweb.web.htmlwidgets import MenuWidget, PopupBoxMenu
 
 VISIBLE_PROP_DEF = {

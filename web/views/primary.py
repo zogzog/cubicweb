@@ -50,7 +50,8 @@ from cubicweb.utils import support_args
 from cubicweb.predicates import match_kwargs, match_context
 from cubicweb.view import EntityView
 from cubicweb.schema import META_RTYPES, VIRTUAL_RTYPES, display_name
-from cubicweb.web import uicfg, component
+from cubicweb.web import component
+from cubicweb.web.views import uicfg
 
 
 class PrimaryView(EntityView):

@@ -97,7 +97,7 @@ def cleanup_sys_modules(config):
                 break
     # fresh rtags
     from cubicweb import rtags
-    from cubicweb.web import uicfg
+    from cubicweb.web.views import uicfg
     rtags.RTAGS[:] = []
     reload(uicfg)
 
@@ -129,7 +129,7 @@ def generate_schema_pot(w, cubedir=None):
 def _generate_schema_pot(w, vreg, schema, libconfig=None):
     from copy import deepcopy
     from cubicweb.i18n import add_msg
-    from cubicweb.web import uicfg
+    from cubicweb.web.views import uicfg
     from cubicweb.schema import NO_I18NCONTEXT, CONSTRAINTS
     w('# schema pot file, generated on %s\n'
       % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))

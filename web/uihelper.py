@@ -45,7 +45,7 @@ be clearer to read than a bunch of sequential function calls.
 """
 __docformat__ = "restructuredtext en"
 
-from cubicweb.web import uicfg
+from cubicweb.web.views import uicfg
 from functools import partial
 
 def _tag_rel(rtag, etype, attr, desttype='*', *args, **kwargs):

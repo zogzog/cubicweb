@@ -20,7 +20,7 @@ mainly regression-preventing tests for reledit views
 """
 
 from cubicweb.devtools.testlib import CubicWebTC
-from cubicweb.web.uicfg import reledit_ctrl
+from cubicweb.web.views.uicfg import reledit_ctrl
 
 class ReleditMixinTC(object):
 

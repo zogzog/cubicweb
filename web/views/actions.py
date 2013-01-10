@@ -32,8 +32,8 @@ from cubicweb.predicates import (EntityPredicate,
     authenticated_user, match_user_groups, match_search_state,
     has_permission, has_add_permission, is_instance, debug_mode,
     )
-from cubicweb.web import uicfg, controller, action
-from cubicweb.web.views import linksearch_select_url, vid_from_rset
+from cubicweb.web import controller, action
+from cubicweb.web.views import uicfg, linksearch_select_url, vid_from_rset
 
 
 class has_editable_relation(EntityPredicate):

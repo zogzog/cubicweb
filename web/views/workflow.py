@@ -36,10 +36,10 @@ from cubicweb.predicates import (has_related_entities, one_line_rset,
                                 score_entity, is_instance, adaptable)
 from cubicweb.view import EntityView
 from cubicweb.schema import display_name
-from cubicweb.web import uicfg, stdmsgs, action, component, form, action
+from cubicweb.web import stdmsgs, action, component, form, action
 from cubicweb.web import formfields as ff, formwidgets as fwdgs
 from cubicweb.web.views import TmpFileViewMixin
-from cubicweb.web.views import forms, primary, ibreadcrumbs
+from cubicweb.web.views import uicfg, forms, primary, ibreadcrumbs
 from cubicweb.web.views.tabs import TabbedPrimaryView, PrimaryTab
 from cubicweb.web.views.dotgraphview import DotGraphView, DotPropsHandler
 
