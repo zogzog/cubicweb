@@ -66,7 +66,7 @@ class State(EntityType):
     name = String(required=True, indexed=True, internationalizable=True,
                   maxsize=256,
                   constraints=[RQLUniqueConstraint('S name N, S state_of WF, Y state_of WF, Y name N', 'Y',
-                                                   _('workflow already have a state of that name'))])
+                                                   _('workflow already has a state of that name'))])
     description = RichString(default_format='text/rest',
                              description=_('semantic description of this state'))
 
