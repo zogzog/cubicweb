@@ -74,7 +74,7 @@ binary-indep: build install
 	dh_installman -i
 	dh_installchangelogs -i
 	dh_link -i
-	dh_compress -i -X.py -X.ini -X.xml -X.js -X.rst
+	dh_compress -i -X.py -X.ini -X.xml -X.js -X.rst -X.txt
 	dh_fixperms -i
 	dh_installdeb -i
 	dh_gencontrol  -i
