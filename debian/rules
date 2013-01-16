@@ -18,6 +18,11 @@ build-stamp:
 	# distributions and we don't want to block a new release of Cubicweb
 	# because of documentation issues.
 	-PYTHONPATH=$${PYTHONPATH:+$${PYTHONPATH}:}$(CURDIR)/debian/pythonpath $(MAKE) -C doc/book/en all
+	# squeeze has a broken combination of jquery and sphinx, fix it up so search works(ish)
+	if grep -q jQuery\\.className doc/html/_static/doctools.js && grep -q "jQuery JavaScript Library v1\.4\." doc/html/_static/jquery.js; then \
+	    echo 'Patching doctools.js for jQuery 1.4 compat'; \
+	    sed -i 's/jQuery\.className.has(node\.parentNode, className)/jQuery(node.parentNode).hasClass(className)/' doc/html/_static/doctools.js; \
+	fi
 	rm -rf debian/pythonpath
 	touch build-stamp
 
