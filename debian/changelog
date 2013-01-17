@@ -1,3 +1,12 @@
+cubicweb (3.15.8-2) UNRELEASED; urgency=low
+
+  * Don't compress txt files.  They're used by the doc's search functionality,
+    and the javascript gets confused if it receives gzip instead of text.
+  * Work around broken combination of jquery 1.4 and sphinx 0.6 in squeeze by
+    patching up doctools.js.
+
+ -- Julien Cristau <jcristau@debian.org>  Wed, 09 Jan 2013 19:09:16 +0100
+
 cubicweb (3.15.8-1) squeeze; urgency=low
 
   * New upstream release
