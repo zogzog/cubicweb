@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -45,6 +45,7 @@ from logilab.common.shellutils import getlogin
 
 from cubicweb import ValidationError, NoSelectableObject, AuthenticationError
 from cubicweb import cwconfig, dbapi, devtools, web, server
+from cubicweb.utils import json
 from cubicweb.sobjects import notification
 from cubicweb.web import Redirect, application
 from cubicweb.server.session import Session, security_enabled
@@ -84,6 +85,11 @@ def unprotected_entities(schema, strict=False):
     else:
         protected_entities = yams.schema.BASE_TYPES.union(SYSTEM_ENTITIES)
     return set(schema.entities()) - protected_entities
+
+class JsonValidator(object):
+    def parse_string(self, data):
+        json.loads(data)
+        return data
 
 # email handling, to test emails sent by an application ########################
 
@@ -793,11 +799,11 @@ class CubicWebTC(TestCase):
         #'application/xhtml+xml': DTDValidator,
         'application/xml': htmlparser.SaxOnlyValidator,
         'text/xml': htmlparser.SaxOnlyValidator,
+        'application/json': JsonValidator,
         'text/plain': None,
         'text/comma-separated-values': None,
         'text/x-vcard': None,
         'text/calendar': None,
-        'application/json': None,
         'image/png': None,
         }
     # maps vid : validator name (override content_type_validators)
