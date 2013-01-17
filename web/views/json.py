@@ -111,12 +111,7 @@ class JsonEntityView(JsonMixIn, EntityView):
     title = _('json-entities-export-view')
 
     def call(self):
-        entities = []
-        for entity in self.cw_rset.entities():
-            entity.complete() # fetch all attributes
-            # hack to add extra metadata
-            entity.cw_attr_cache.update({
-                    '__cwetype__': entity.__regid__,
-                    })
-            entities.append(entity)
-        self.wdata(entities)
+        if self.cw_rset is None:
+            self.wdata([self.cw_extra_kwargs.get('entity')])
+        else:
+            self.wdata(list(self.cw_rset.entities()))
