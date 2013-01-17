@@ -606,6 +606,16 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
                           {'ti': trinfo.eid})
 
     def test_emailaddress_security(self):
+        # check for prexisting email adresse
+        if self.execute('Any X WHERE X is EmailAddress'):
+            rset = self.execute('Any X, U WHERE X is EmailAddress, U use_email X')
+            msg = ['Preexisting email readable by anon found!']
+            tmpl = '  - "%s" used by user "%s"'
+            for i in xrange(len(rset)):
+                email, user = rset.get_entity(i, 0), rset.get_entity(i, 1)
+                msg.append(tmpl % (email.dc_title(), user.dc_title()))
+            raise RuntimeError('\n'.join(msg))
+        # actual test
         self.execute('INSERT EmailAddress X: X address "hop"').get_entity(0, 0)
         self.execute('INSERT EmailAddress X: X address "anon", U use_email X WHERE U login "anon"').get_entity(0, 0)
         self.commit()
