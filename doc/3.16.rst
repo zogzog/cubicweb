@@ -15,7 +15,8 @@ API changes
 Unintrusive API changes
 -----------------------
 
-
+* Drop of `cubicweb.web.uicfg.AutoformSectionRelationTags.bw_tag_map`,
+  deprecated since 3,6.
 
 User interface changes
 ----------------------

@@ -166,14 +166,6 @@ def _card_and_comp(sschema, rschema, oschema, role):
 class AutoformSectionRelationTags(RelationTagsSet):
     """autoform relations'section"""
 
-    bw_tag_map = {
-        'primary':   {'main': 'attributes', 'muledit': 'attributes'},
-        'secondary': {'main': 'attributes', 'muledit': 'hidden'},
-        'metadata':  {'main': 'metadata'},
-        'generic':   {'main': 'relations'},
-        'generated': {'main': 'hidden'},
-        }
-
     _allowed_form_types = ('main', 'inlined', 'muledit')
     _allowed_values = {'main': ('attributes', 'inlined', 'relations',
                                 'metadata', 'hidden'),
