@@ -154,11 +154,6 @@ class UtilsTC(TestCase):
 
 
 class ApplicationTC(CubicWebTC):
-    def setUp(self):
-        super(ApplicationTC, self).setUp()
-        def raise_hdlr(*args, **kwargs):
-            raise
-        self.app.error_handler = raise_hdlr
 
     @classproperty
     def config(cls):
