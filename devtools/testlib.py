@@ -665,11 +665,11 @@ class CubicWebTC(TestCase):
     def app_publish(self, *args, **kwargs):
         return self.app_handle_request(*args, **kwargs)
 
-    def ctrl_publish(self, req, ctrl='edit'):
+    def ctrl_publish(self, req, ctrl='edit', rset=None):
         """call the publish method of the edit controller"""
         ctrl = self.vreg['controllers'].select(ctrl, req, appli=self.app)
         try:
-            result = ctrl.publish()
+            result = ctrl.publish(rset)
             req.cnx.commit()
         except web.Redirect:
             req.cnx.commit()
@@ -681,7 +681,7 @@ class CubicWebTC(TestCase):
 
         req.form will be setup using the url's query string
         """
-        req = self.request()
+        req = self.request(url=url)
         if isinstance(url, unicode):
             url = url.encode(req.encoding) # req.setup_params() expects encoded strings
         querystring = urlparse.urlparse(url)[-2]
@@ -689,16 +689,21 @@ class CubicWebTC(TestCase):
         req.setup_params(params)
         return req
 
-    def url_publish(self, url):
-        """takes `url`, uses application's app_resolver to find the
-        appropriate controller, and publishes the result.
+    def url_publish(self, url, data=None):
+        """takes `url`, uses application's app_resolver to find the appropriate
+        controller and result set, then publishes the result.
+
+        To simulate post of www-form-encoded data, give a `data` dictionary
+        containing desired key/value associations.
 
         This should pretty much correspond to what occurs in a real CW server
         except the apache-rewriter component is not called.
         """
         req = self.req_from_url(url)
+        if data is not None:
+            req.form.update(data)
         ctrlid, rset = self.app.url_resolver.process(req, req.relative_path(False))
-        return self.ctrl_publish(req, ctrlid)
+        return self.ctrl_publish(req, ctrlid, rset)
 
     @staticmethod
     def _parse_location(req, location):
