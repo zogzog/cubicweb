@@ -493,7 +493,7 @@ Let's synchronize the data model as we've done earlier: ::
   entering the migration python shell
   just type migration commands or arbitrary python code and type ENTER to execute it
   type "exit" or Ctrl-D to quit the shell and resume operation
-  >>> add_cubes('comment', 'tag')
+  >>> add_cubes(('comment', 'tag'))
   >>>
 
 Then restart the instance. Let's look at a blog entry:
