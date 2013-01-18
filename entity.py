@@ -20,6 +20,7 @@
 __docformat__ = "restructuredtext en"
 
 from warnings import warn
+from functools import partial
 
 from logilab.common import interface
 from logilab.common.decorators import cached
@@ -561,19 +562,40 @@ class Entity(AppObject):
         # if context is a repository session, don't consider dont-cache-attrs as
         # the instance already hold modified values and loosing them could
         # introduce severe problems
+        get_set = partial(self._cw.get_shared_data, default=(), txdata=True,
+                          pop=True)
+        uncached_attrs = set()
+        uncached_attrs.update(get_set('%s.storage-special-process-attrs' % self.eid))
         if self._cw.is_request:
-            for attr in self._cw.get_shared_data('%s.dont-cache-attrs' % self.eid,
-                                                 default=(), txdata=True, pop=True):
-                attrcache.pop(attr, None)
-                self.cw_attr_cache.pop(attr, None)
+            uncached_attrs.update(get_set('%s.dont-cache-attrs' % self.eid))
+        for attr in uncached_attrs:
+            attrcache.pop(attr, None)
+            self.cw_attr_cache.pop(attr, None)
         self.cw_attr_cache.update(attrcache)
 
-    def _cw_dont_cache_attribute(self, attr):
-        """repository side method called when some attribute have been
+    def _cw_dont_cache_attribute(self, attr, repo_side=False):
+        """Repository side method called when some attribute has been
         transformed by a hook, hence original value should not be cached by
-        client
+        the client.
+
+        If repo_side is True, this means that the attribute has been
+        transformed by a *storage*, hence the original value should
+        not be cached **by anyone**.
+
+        This only applies to a storage special case where the value
+        specified in creation or update is **not** the value that will
+        be transparently exposed later.
+
+        For example we have a special "fs_importing" mode in BFSS
+        where a file path is given as attribute value and stored as is
+        in the data base. Later access to the attribute will provide
+        the content of the file at the specified path. We do not want
+        the "filepath" value to be cached.
         """
         self._cw.transaction_data.setdefault('%s.dont-cache-attrs' % self.eid, set()).add(attr)
+        if repo_side:
+            trdata = self._cw.transaction_data
+            trdata.setdefault('%s.storage-special-process-attrs' % self.eid, set()).add(attr)
 
     def __json_encode__(self):
         """custom json dumps hook to dump the entity's eid
