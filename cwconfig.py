@@ -353,28 +353,6 @@ class CubicWebNoAppConfiguration(ConfigurationMixIn):
           'help': 'permission umask for files created by the server',
           'group': 'main', 'level': 2,
           }),
-        # pyro options
-        ('pyro-instance-id',
-         {'type' : 'string',
-          'default': Method('default_instance_id'),
-          'help': 'identifier of the CubicWeb instance in the Pyro name server',
-          'group': 'pyro', 'level': 1,
-          }),
-        ('pyro-ns-host',
-         {'type' : 'string',
-          'default': '',
-          'help': 'Pyro name server\'s host. If not set, will be detected by a \
-broadcast query. It may contains port information using <host>:<port> notation. \
-Use "NO_PYRONS" to create a Pyro server but not register to a pyro nameserver',
-          'group': 'pyro', 'level': 1,
-          }),
-        ('pyro-ns-group',
-         {'type' : 'string',
-          'default': 'cubicweb',
-          'help': 'Pyro name server\'s group where the repository will be \
-registered.',
-          'group': 'pyro', 'level': 1,
-          }),
         # common configuration options which are potentially required as soon as
         # you're using "base" application objects (ie to really server/web
         # specific)

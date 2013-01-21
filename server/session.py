@@ -33,7 +33,6 @@ from logilab.common.registry import objectify_predicate
 
 from cubicweb import UnknownEid, QueryError, schema, server
 from cubicweb.req import RequestSessionBase
-from cubicweb.dbapi import ConnectionProperties
 from cubicweb.utils import make_uid
 from cubicweb.rqlrewrite import RQLRewriter
 from cubicweb.server import ShuttingDown
@@ -232,10 +231,8 @@ class Session(RequestSessionBase):
     def __init__(self, user, repo, cnxprops=None, _id=None):
         super(Session, self).__init__(repo.vreg)
         self.id = _id or make_uid(unormalize(user.login).encode('UTF8'))
-        cnxprops = cnxprops or ConnectionProperties('inmemory')
         self.user = user
         self.repo = repo
-        self.cnxtype = cnxprops.cnxtype
         self.timestamp = time()
         self.default_mode = 'read'
         # undo support
@@ -258,8 +255,8 @@ class Session(RequestSessionBase):
         self._closed_lock = threading.Lock()
 
     def __unicode__(self):
-        return '<%ssession %s (%s 0x%x)>' % (
-            self.cnxtype, unicode(self.user.login), self.id, id(self))
+        return '<session %s (%s 0x%x)>' % (
+            unicode(self.user.login), self.id, id(self))
 
     def transaction(self, free_cnxset=True):
         """return context manager to enter a transaction for the session: when
@@ -1185,7 +1182,6 @@ class InternalSession(Session):
         super(InternalSession, self).__init__(InternalManager(), repo, cnxprops,
                                               _id='internal')
         self.user._cw = self # XXX remove when "vreg = user._cw.vreg" hack in entity.py is gone
-        self.cnxtype = 'inmemory'
         if not safe:
             self.disable_hook_categories('integrity')
 

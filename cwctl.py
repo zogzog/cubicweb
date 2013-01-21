@@ -27,6 +27,7 @@ __docformat__ = "restructuredtext en"
 import sys
 from warnings import warn
 from os import remove, listdir, system, pathsep
+from os.path import exists, join, isfile, isdir, dirname, abspath
 try:
     from os import kill, getpgid
 except ImportError:
@@ -36,9 +37,6 @@ except ImportError:
         """win32 getpgid implementation"""
 
 
-from os.path import exists, join, isfile, isdir, dirname, abspath
-
-from urlparse import urlparse
 
 from logilab.common.clcommands import CommandLine
 from logilab.common.shellutils import ASK
@@ -874,40 +872,30 @@ sources for migration will be automatically selected.",
           'help': 'URI of the CubicWeb repository to connect to. URI can be \
 pyro://[host:port] the Pyro name server host; if the pyro nameserver is not set, \
 it will be detected by using a broadcast query, a ZMQ URL or \
-inmemory:// (default) use an in-memory repository.',
+inmemory:// (default) use an in-memory repository. THIS OPTION IS DEPRECATED, \
+directly give URI as instance id instead',
           'group': 'remote'
           }),
         )
 
     def run(self, args):
-        appid = args.pop(0)
+        from urlparse import urlparse
+        appuri = args.pop(0)
         if self.config.repo_uri:
-            uri = urlparse(self.config.repo_uri)
-            if uri.scheme == 'pyro':
-                cnxtype = uri.scheme
-                hostport = uri.netloc
-            elif uri.scheme == 'inmemory':
-                cnxtype = ''
-                hostport = ''
-            else:
-                cnxtype = 'zmq'
-                hostport = self.config.repo_uri
-        else:
-            cnxtype = ''
-
-        if cnxtype:
+            warn('[3.16] --repo-uri option is deprecated, directly give the URI as instance id',
+                 DeprecationWarning)
+            if urlparse(self.config.repo_uri).scheme in ('pyro', 'inmemory'):
+                appuri = '%s/%s' % (self.config.repo_uri.rstrip('/'), appuri)
+        scheme = urlparse(self.config.repo_uri).scheme
+        if scheme not in ('', 'inmemory'):
             from cubicweb import AuthenticationError
-            from cubicweb.dbapi import connect, ConnectionProperties
+            from cubicweb.dbapi import connect
             from cubicweb.server.utils import manager_userpasswd
             from cubicweb.server.migractions import ServerMigrationHelper
-            cnxprops = ConnectionProperties(cnxtype=cnxtype)
-
             while True:
                 try:
                     login, pwd = manager_userpasswd(msg=None)
-                    cnx = connect(appid, login=login, password=pwd,
-                                  host=hostport, mulcnx=False,
-                                  cnxprops=cnxprops)
+                    cnx = connect(appuri, login=login, password=pwd, mulcnx=False)
                 except AuthenticationError, ex:
                     print ex
                 except (KeyboardInterrupt, EOFError):
@@ -943,7 +931,7 @@ inmemory:// (default) use an in-memory repository.',
             else:
                 mih.interactive_shell()
         finally:
-            if not cnxtype: # shutdown in-memory repo
+            if scheme in ('', 'inmemory'): # shutdown in-memory repo
                 mih.shutdown()
             else:
                 cnx.close()

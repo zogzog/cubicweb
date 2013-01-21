@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -31,6 +31,7 @@ from itertools import count
 from warnings import warn
 from os.path import join
 from uuid import uuid4
+from urlparse import  urlparse
 
 from logilab.common.logging_ext import set_log_methods
 from logilab.common.decorators import monkeypatch
@@ -81,56 +82,70 @@ def multiple_connections_unfix():
 
 class ConnectionProperties(object):
     def __init__(self, cnxtype=None, close=True, log=False):
-        self.cnxtype = cnxtype or 'pyro'
+        if cnxtype is not None:
+            warn('[3.16] cnxtype argument is deprecated', DeprecationWarning,
+                 stacklevel=2)
+        self.cnxtype = cnxtype
         self.log_queries = log
         self.close_on_del = close
 
 
-def get_repository(method, database=None, config=None, vreg=None):
-    """get a proxy object to the CubicWeb repository, using a specific RPC method.
+def get_repository(uri=None, config=None, vreg=None):
+    """get a repository for the given URI or config/vregistry (in case we're
+    loading the repository for a client, eg web server, configuration).
 
-    Only 'in-memory' and 'pyro' are supported for now. Either vreg or config
-    argument should be given
+    The returned repository may be an in-memory repository or a proxy object
+    using a specific RPC method, depending on the given URI (pyro or zmq).
     """
-    assert method in ('pyro', 'inmemory', 'zmq')
-    assert vreg or config
-    if vreg and not config:
-        config = vreg.config
+    if uri is None:
+        uri = config['repository-uri'] or config.appid
+    puri = urlparse(uri)
+    method = puri.scheme.lower() or 'inmemory'
     if method == 'inmemory':
         # get local access to the repository
         from cubicweb.server.repository import Repository
         from cubicweb.server.utils import TasksManager
         return Repository(config, TasksManager(), vreg=vreg)
-    elif method == 'zmq':
-        from cubicweb.zmqclient import ZMQRepositoryClient
-        return ZMQRepositoryClient(database)
-    else: # method == 'pyro'
+    elif method in ('pyro', 'pyroloc'):
         # resolve the Pyro object
         from logilab.common.pyro_ext import ns_get_proxy, get_proxy
-        pyroid = database or config['pyro-instance-id'] or config.appid
         try:
-            if config['pyro-ns-host'] == 'NO_PYRONS':
-                return get_proxy(pyroid)
+            if puri.scheme == 'pyroloc':
+                return get_proxy(uri)
+            path = puri.path.rstrip('/')
+            if not path:
+                raise ConnectionError(
+                    "can't find instance name in %s (expected to be the path component)"
+                    % uri)
+            if '.' in path:
+                nsgroup, nsid = path.rsplit('.', 1)
             else:
-                return ns_get_proxy(pyroid, defaultnsgroup=config['pyro-ns-group'],
-                                    nshost=config['pyro-ns-host'])
+                nsgroup = 'cubicweb'
+                nsid = path
+            return ns_get_proxy(nsid, defaultnsgroup=nsgroup, nshost=puri.netloc)
         except Exception, ex:
             raise ConnectionError(str(ex))
+    elif method == 'tcp': # use zmq (see zmq documentation)
+        from cubicweb.zmqclient import ZMQRepositoryClient
+        return ZMQRepositoryClient(uri)
+    else:
+        raise ConnectionError('unknown protocol: `%s`' % method)
+
 
 def repo_connect(repo, login, **kwargs):
-    """Constructor to create a new connection to the CubicWeb repository.
+    """Constructor to create a new connection to the given CubicWeb repository.
 
     Returns a Connection instance.
+
+    Raises AuthenticationError if authentication failed
     """
-    if not 'cnxprops' in kwargs:
-        kwargs['cnxprops'] = ConnectionProperties('inmemory')
     cnxid = repo.connect(unicode(login), **kwargs)
-    cnx = Connection(repo, cnxid, kwargs['cnxprops'])
-    if kwargs['cnxprops'].cnxtype == 'inmemory':
+    cnx = Connection(repo, cnxid, kwargs.get('cnxprops'))
+    if cnx.is_repo_in_memory:
         cnx.vreg = repo.vreg
     return cnx
 
-def connect(database=None, login=None, host=None, group=None,
+def connect(database, login=None,
             cnxprops=None, setvreg=True, mulcnx=True, initlog=True, **kwargs):
     """Constructor for creating a connection to the CubicWeb repository.
     Returns a :class:`Connection` object.
@@ -139,24 +154,31 @@ def connect(database=None, login=None, host=None, group=None,
 
       cnx = connect('myinstance', login='me', password='toto')
 
-    Arguments:
+    `database` may be:
 
-    :database:
-      the instance's pyro identifier.
+    * a simple instance id for in-memory connection
+
+    * an uri like scheme://host:port/instanceid where scheme may be one of
+      'pyro', 'pyroloc', 'inmemory' or a schema supported by ZMQ
+
+      * if scheme is 'pyro', <host:port> determine the name server address. If
+        not specified (e.g. 'pyro:///instanceid'), it will be detected through a
+        broadcast query. The instance id is the name of the instance in the name
+        server and may be prefixed by a group (e.g.
+        'pyro:///:cubicweb.instanceid')
+
+      * if scheme is 'pyroloc', it's expected to be a bare pyro location URI
+
+      * if scheme is handled by ZMQ (eg 'tcp'), you should not specify an
+        instance id
+
+    Other arguments:
 
     :login:
       the user login to use to authenticate.
 
-    :host:
-      - pyro: nameserver host. Will be detected using broadcast query if unspecified
-      - zmq: repository host socket address
-
-    :group:
-      the instance's pyro nameserver group. You don't have to specify it unless
-      tweaked in instance's configuration.
-
     :cnxprops:
-      an optional :class:`ConnectionProperties` instance, allowing to specify
+      a :class:`ConnectionProperties` instance, allowing to specify
       the connection method (eg in memory or pyro). A Pyro connection will be
       established if you don't specify that argument.
 
@@ -178,20 +200,25 @@ def connect(database=None, login=None, host=None, group=None,
       there goes authentication tokens. You usually have to specify a password
       for the given user, using a named 'password' argument.
     """
-    cnxprops = cnxprops or ConnectionProperties()
-    method = cnxprops.cnxtype
-    if method == 'pyro':
-        config = cwconfig.CubicWebNoAppConfiguration()
-        if host:
-            config.global_set_option('pyro-ns-host', host)
-        if group:
-            config.global_set_option('pyro-ns-group', group)
-    elif method == 'zmq':
-        config = cwconfig.CubicWebNoAppConfiguration()
+    if urlparse(database).scheme is None:
+        warn('[3.16] give an qualified URI as database instead of using '
+             'host/cnxprops to specify the connection method',
+             DeprecationWarning, stacklevel=2)
+        if cnxprops.cnxtype == 'zmq':
+            database = kwargs.pop('host')
+        elif cnxprops.cnxtype == 'inmemory':
+            database = 'inmemory://' + database
+        else:
+            database = 'pyro://%s/%s.%s' % (kwargs.pop('host', ''),
+                                            kwargs.pop('group', 'cubicweb'),
+                                            database)
+    puri = urlparse(database)
+    method = puri.scheme.lower()
+    if method == 'inmemory':
+        config = cwconfig.instance_configuration(puuri.path)
     else:
-        assert database
-        config = cwconfig.instance_configuration(database)
-    repo = get_repository(method, database, config=config)
+        config = cwconfig.CubicWebNoAppConfiguration()
+    repo = get_repository(database, config=config)
     if method == 'inmemory':
         vreg = repo.vreg
     elif setvreg:
@@ -218,14 +245,7 @@ def in_memory_repo(config):
     else:
         vreg = None
     # get local access to the repository
-    return get_repository('inmemory', config=config, vreg=vreg)
-
-def in_memory_cnx(repo, login, **kwargs):
-    """Establish a In memory connection to a <repo> for the user with <login>
-
-    additionel credential might be required"""
-    cnxprops = ConnectionProperties('inmemory')
-    return repo_connect(repo, login, cnxprops=cnxprops, **kwargs)
+    return get_repository('inmemory://', config=config, vreg=vreg)
 
 def in_memory_repo_cnx(config, login, **kwargs):
     """useful method for testing and scripting to get a dbapi.Connection
@@ -233,9 +253,9 @@ def in_memory_repo_cnx(config, login, **kwargs):
     """
     # connection to the CubicWeb repository
     repo = in_memory_repo(config)
-    return repo, in_memory_cnx(repo, login, **kwargs)
+    return repo, repo_connect(repo, login, **kwargs)
 
-
+# XXX web only method, move to webconfig?
 def anonymous_session(vreg):
     """return a new anonymous session
 
@@ -245,11 +265,9 @@ def anonymous_session(vreg):
     if anoninfo is None: # no anonymous user
         raise AuthenticationError('anonymous access is not authorized')
     anon_login, anon_password = anoninfo
-    cnxprops = ConnectionProperties(vreg.config.repo_method)
     # use vreg's repository cache
     repo = vreg.config.repository(vreg)
-    anon_cnx = repo_connect(repo, anon_login,
-                            cnxprops=cnxprops, password=anon_password)
+    anon_cnx = repo_connect(repo, anon_login, password=anon_password)
     anon_cnx.vreg = vreg
     return DBAPISession(anon_cnx, anon_login)
 
@@ -280,6 +298,7 @@ class DBAPISession(object):
 
     def __repr__(self):
         return '<DBAPISession %r>' % self.sessionid
+
 
 class DBAPIRequest(RequestSessionBase):
     #: Request language identifier eg: 'en'
@@ -535,15 +554,22 @@ class Connection(object):
         self._repo = repo
         self.sessionid = cnxid
         self._close_on_del = getattr(cnxprops, 'close_on_del', True)
-        self._cnxtype = getattr(cnxprops, 'cnxtype', 'pyro')
         self._web_request = False
         if cnxprops and cnxprops.log_queries:
             self.executed_queries = []
             self.cursor_class = LogCursor
-        if self._cnxtype == 'pyro':
-            # check client/server compat
-            if self._repo.get_versions()['cubicweb'] < (3, 8, 6):
-                self._txid = lambda cursor=None: {}
+
+    @property
+    def is_repo_in_memory(self):
+        """return True if this is a local, aka in-memory, connection to the
+        repository
+        """
+        try:
+            from cubicweb.server.repository import Repository
+        except ImportError:
+            # code not available, no way
+            return False
+        return isinstance(self._repo, Repository)
 
     def __repr__(self):
         if self.anonymous_connection:
@@ -850,3 +876,5 @@ class Connection(object):
         """
         return self._repo.undo_transaction(self.sessionid, txuuid,
                                            **self._txid())
+
+in_memory_cnx = deprecated('[3.16] use repo_connect instead)')(repo_connect)

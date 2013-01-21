@@ -9,8 +9,33 @@ New functionnalities
   flushing information in SQL.  This may only be used with PostgreSQL, as it
   requires the 'COPY FROM' command.
 
+
 API changes
 -----------
+
+* db-api/configuration: all the external repository connection information is
+  now in an URL (see #2521848), allowing to drop specific options of pyro ns
+  host, group, etc and fix broken ZMQ source. Configuration related changes:
+
+  * Dropped 'pyro-ns-host', 'pyro-instance-id', 'pyro-ns-group' from client side
+    config, in favor of 'repository-uri'. **NO MIGRATION DONE**, supposing there
+    is no web-only config in the wild.
+
+  * Stop discovering the connection method through `repo_method` class attribute
+    of the configuration, varying according to the configuration class. This is
+    a first step on the way to a simpler configuration handling.
+
+  DB-API related changes:
+
+  * Stop indicating the connection method using `ConnectionProperties`.
+
+  * Drop `_cnxtype` attribute from `Connection` and `cnxtype` from
+    `Session`. The former is replaced by a is_repo_in_memory property
+    and the later is totaly useless.
+
+  * Deprecate `in_memory_cnx` which becomes useless, use `_repo_connect` instead
+    if necessary.
+
 
 Unintrusive API changes
 -----------------------

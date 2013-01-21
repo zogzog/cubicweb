@@ -36,7 +36,7 @@ from cubicweb import (BadConnectionId, RepositoryError, ValidationError,
                       UnknownEid, AuthenticationError, Unauthorized, QueryError)
 from cubicweb.predicates import is_instance
 from cubicweb.schema import CubicWebSchema, RQLConstraint
-from cubicweb.dbapi import connect, multiple_connections_unfix, ConnectionProperties
+from cubicweb.dbapi import connect, multiple_connections_unfix
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.devtools.repotest import tuplify
 from cubicweb.server import repository, hook
@@ -360,7 +360,8 @@ class RepositoryTC(CubicWebTC):
 
 
     def _pyro_client(self, done):
-        cnx = connect(self.repo.config.appid, u'admin', password='gingkow',
+        cnx = connect('pyro:///'+self.repo.config.appid,
+                      u'admin', password='gingkow',
                       initlog=False) # don't reset logging configuration
         try:
             cnx.load_appobjects(subpath=('entities',))
@@ -414,10 +415,8 @@ class RepositoryTC(CubicWebTC):
         srv.quit()
 
     def _zmq_client(self, done):
-        cnxprops = ConnectionProperties('zmq')
         try:
             cnx = connect('tcp://127.0.0.1:41415', u'admin', password=u'gingkow',
-                          cnxprops=cnxprops,
                           initlog=False) # don't reset logging configuration
             try:
                 cnx.load_appobjects(subpath=('entities',))

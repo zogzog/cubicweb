@@ -169,8 +169,7 @@ class RepositoryAuthenticationManager(AbstractAuthenticationManager):
         raise AuthenticationError()
 
     def _authenticate(self, login, authinfo):
-        cnxprops = ConnectionProperties(self.vreg.config.repo_method,
-                                        close=False, log=self.log_queries)
+        cnxprops = ConnectionProperties(close=False, log=self.log_queries)
         cnx = repo_connect(self.repo, login, cnxprops=cnxprops, **authinfo)
         # decorate connection
         cnx.vreg = self.vreg

@@ -132,7 +132,7 @@ class ServerMigrationHelper(MigrationHelper):
 
     @cached
     def repo_connect(self):
-        self.repo = get_repository(method='inmemory', config=self.config)
+        self.repo = get_repository(config=self.config)
         return self.repo
 
     def cube_upgraded(self, cube, version):

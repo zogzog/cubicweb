@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -46,7 +46,7 @@ class WebCreateHandler(CommandHandler):
         if not automatic:
             print '\n' + underline_title('Generic web configuration')
             config = self.config
-            if config.repo_method == 'pyro' or config.pyro_enabled():
+            if config['repository-uri'].startswith('pyro://') or config.pyro_enabled():
                 print '\n' + underline_title('Pyro configuration')
                 config.input_config('pyro', inputlevel)
             config.input_config('web', inputlevel)

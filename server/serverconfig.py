@@ -195,7 +195,7 @@ specific recipient rules.',
 notified of every changes.',
           'group': 'email', 'level': 2,
           }),
-        # pyro server.serverconfig
+        # pyro services config
         ('pyro-host',
          {'type' : 'string',
           'default': None,
@@ -203,6 +203,27 @@ notified of every changes.',
 gethostname(). It may contains port information using <host>:<port> notation, \
 and if not set, it will be choosen randomly',
           'group': 'pyro', 'level': 3,
+          }),
+        ('pyro-instance-id',
+         {'type' : 'string',
+          'default': lgconfig.Method('default_instance_id'),
+          'help': 'identifier of the CubicWeb instance in the Pyro name server',
+          'group': 'pyro', 'level': 1,
+          }),
+        ('pyro-ns-host',
+         {'type' : 'string',
+          'default': '',
+          'help': 'Pyro name server\'s host. If not set, will be detected by a \
+broadcast query. It may contains port information using <host>:<port> notation. \
+Use "NO_PYRONS" to create a Pyro server but not register to a pyro nameserver',
+          'group': 'pyro', 'level': 1,
+          }),
+        ('pyro-ns-group',
+         {'type' : 'string',
+          'default': 'cubicweb',
+          'help': 'Pyro name server\'s group where the repository will be \
+registered.',
+          'group': 'pyro', 'level': 1,
           }),
         # zmq services config
         ('zmq-repository-address',

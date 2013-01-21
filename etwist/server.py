@@ -85,7 +85,7 @@ class CubicWebRootResource(resource.Resource):
         config = self.config
         # when we have an in-memory repository, clean unused sessions every XX
         # seconds and properly shutdown the server
-        if config.repo_method == 'inmemory':
+        if config['repository-uri'] == 'inmemory://':
             if config.pyro_enabled():
                 # if pyro is enabled, we have to register to the pyro name
                 # server, create a pyro daemon, and create a task to handle pyro

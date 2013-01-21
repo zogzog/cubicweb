@@ -217,7 +217,6 @@ class TestServerConfiguration(ServerConfiguration):
 
 
 class BaseApptestConfiguration(TestServerConfiguration, TwistedConfiguration):
-    repo_method = 'inmemory'
     name = 'all-in-one' # so it search for all-in-one.conf, not repository.conf
     options = cwconfig.merge_options(TestServerConfiguration.options
                                      + TwistedConfiguration.options)
@@ -385,15 +384,14 @@ class TestDataBaseHandler(object):
         repo.turn_repo_off = partial(turn_repo_off, repo)
         return repo
 
-
     def get_cnx(self):
         """return Connection object on the current repository"""
-        from cubicweb.dbapi import in_memory_cnx
+        from cubicweb.dbapi import repo_connect
         repo = self.get_repo()
         sources = self.config.sources()
         login  = unicode(sources['admin']['login'])
         password = sources['admin']['password'] or 'xxx'
-        cnx = in_memory_cnx(repo, login, password=password)
+        cnx = repo_connect(repo, login, password=password)
         return cnx
 
     def get_repo_and_cnx(self, db_id=DEFAULT_EMPTY_DB_ID):
