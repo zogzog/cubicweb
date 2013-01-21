@@ -76,7 +76,9 @@ class SecurityManagementView(SecurityViewMixIn, EntityView):
                                          domid='ownership%s' % entity.eid,
                                          __redirectvid='security',
                                          __redirectpath=entity.rest_path())
-        field = guess_field(entity.e_schema, self._cw.vreg.schema.rschema('owned_by'))
+        field = guess_field(entity.e_schema,
+                            self._cw.vreg.schema['owned_by'],
+                            req=self._cw)
         form.append_field(field)
         form.render(w=self.w, display_progress_div=False)
 

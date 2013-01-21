@@ -291,7 +291,8 @@ class AddRelatedActions(action.Action):
         method to return an empty list. If you only want some, you can configure
         them by using uicfg.actionbox_appearsin_addmenu
         """
-        appearsin_addmenu = uicfg.actionbox_appearsin_addmenu
+        appearsin_addmenu = self._cw.vreg['uicfg'].select(
+            'actionbox_appearsin_addmenu', self._cw, entity=entity)
         req = self._cw
         eschema = entity.e_schema
         for role, rschemas in (('subject', eschema.subject_relations()),

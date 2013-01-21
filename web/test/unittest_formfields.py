@@ -35,10 +35,14 @@ def setUpModule(*args):
     config.bootstrap_cubes()
     schema = config.load_schema()
 
-class GuessFieldTC(TestCase):
+class GuessFieldTC(CubicWebTC):
+
+    def setUp(self):
+        super(GuessFieldTC, self).setUp()
+        self.req = self.request()
 
     def test_state_fields(self):
-        title_field = guess_field(schema['State'], schema['name'])
+        title_field = guess_field(schema['State'], schema['name'], req=self.req)
         self.assertIsInstance(title_field, StringField)
         self.assertEqual(title_field.required, True)
 
@@ -48,7 +52,7 @@ class GuessFieldTC(TestCase):
 #         self.assertEqual(synopsis_field.required, False)
 #         self.assertEqual(synopsis_field.help, 'an abstract for this state')
 
-        description_field = guess_field(schema['State'], schema['description'])
+        description_field = guess_field(schema['State'], schema['description'], req=self.req)
         self.assertIsInstance(description_field, RichTextField)
         self.assertEqual(description_field.required, False)
         self.assertEqual(description_field.format_field, None)
@@ -56,7 +60,8 @@ class GuessFieldTC(TestCase):
         # description_format_field = guess_field(schema['State'], schema['description_format'])
         # self.assertEqual(description_format_field, None)
 
-        description_format_field = guess_field(schema['State'], schema['description_format'])
+        description_format_field = guess_field(schema['State'], schema['description_format'],
+                                               req=self.req)
         self.assertEqual(description_format_field.internationalizable, True)
         self.assertEqual(description_format_field.sort, True)
 
@@ -66,22 +71,22 @@ class GuessFieldTC(TestCase):
 
 
     def test_cwuser_fields(self):
-        upassword_field = guess_field(schema['CWUser'], schema['upassword'])
+        upassword_field = guess_field(schema['CWUser'], schema['upassword'], req=self.req)
         self.assertIsInstance(upassword_field, StringField)
         self.assertIsInstance(upassword_field.widget, PasswordInput)
         self.assertEqual(upassword_field.required, True)
 
-        last_login_time_field = guess_field(schema['CWUser'], schema['last_login_time'])
+        last_login_time_field = guess_field(schema['CWUser'], schema['last_login_time'], req=self.req)
         self.assertIsInstance(last_login_time_field, DateTimeField)
         self.assertEqual(last_login_time_field.required, False)
 
-        in_group_field = guess_field(schema['CWUser'], schema['in_group'])
+        in_group_field = guess_field(schema['CWUser'], schema['in_group'], req=self.req)
         self.assertIsInstance(in_group_field, RelationField)
         self.assertEqual(in_group_field.required, True)
         self.assertEqual(in_group_field.role, 'subject')
         self.assertEqual(in_group_field.help, 'groups grant permissions to the user')
 
-        owned_by_field = guess_field(schema['CWUser'], schema['owned_by'], 'object')
+        owned_by_field = guess_field(schema['CWUser'], schema['owned_by'], 'object', req=self.req)
         self.assertIsInstance(owned_by_field, RelationField)
         self.assertEqual(owned_by_field.required, False)
         self.assertEqual(owned_by_field.role, 'object')
@@ -95,7 +100,7 @@ class GuessFieldTC(TestCase):
         # data_name_field = guess_field(schema['File'], schema['data_name'])
         # self.assertEqual(data_name_field, None)
 
-        data_field = guess_field(schema['File'], schema['data'])
+        data_field = guess_field(schema['File'], schema['data'], req=self.req)
         self.assertIsInstance(data_field, FileField)
         self.assertEqual(data_field.required, True)
         self.assertIsInstance(data_field.format_field, StringField)
@@ -103,7 +108,7 @@ class GuessFieldTC(TestCase):
         self.assertIsInstance(data_field.name_field, StringField)
 
     def test_constraints_priority(self):
-        salesterm_field = guess_field(schema['Salesterm'], schema['reason'])
+        salesterm_field = guess_field(schema['Salesterm'], schema['reason'], req=self.req)
         constraints = schema['reason'].rdef('Salesterm', 'String').constraints
         self.assertEqual([c.__class__ for c in constraints],
                           [SizeConstraint, StaticVocabularyConstraint])
@@ -112,7 +117,7 @@ class GuessFieldTC(TestCase):
 
 
     def test_bool_field_base(self):
-        field = guess_field(schema['CWAttribute'], schema['indexed'])
+        field = guess_field(schema['CWAttribute'], schema['indexed'], req=self.req)
         self.assertIsInstance(field, BooleanField)
         self.assertEqual(field.required, False)
         self.assertIsInstance(field.widget, Radio)
@@ -121,7 +126,7 @@ class GuessFieldTC(TestCase):
 
     def test_bool_field_explicit_choices(self):
         field = guess_field(schema['CWAttribute'], schema['indexed'],
-                            choices=[(u'maybe', '1'), (u'no', '')])
+                            choices=[(u'maybe', '1'), (u'no', '')], req=self.req)
         self.assertIsInstance(field.widget, Radio)
         self.assertEqual(field.vocabulary(mock(req=mock(_=unicode))),
                           [(u'maybe', '1'), (u'no', '')])

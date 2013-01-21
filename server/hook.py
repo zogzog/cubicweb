@@ -258,7 +258,7 @@ from logilab.common.decorators import classproperty, cached
 from logilab.common.deprecation import deprecated, class_renamed
 from logilab.common.logging_ext import set_log_methods
 from logilab.common.registry import (Predicate, NotPredicate, OrPredicate,
-                                     classid, objectify_predicate, yes)
+                                     objectify_predicate, yes)
 
 from cubicweb import RegistryNotFound, server
 from cubicweb.cwvreg import CWRegistry, CWRegistryStore
@@ -768,7 +768,7 @@ class Operation(object):
         """delegate event handling to the opertaion"""
         if event == 'postcommit_event' and hasattr(self, 'commit_event'):
             warn('[3.10] %s: commit_event method has been replaced by postcommit_event'
-                 % classid(self.__class__), DeprecationWarning)
+                 % self.__class__, DeprecationWarning)
             self.commit_event() # pylint: disable=E1101
         getattr(self, event)()
 

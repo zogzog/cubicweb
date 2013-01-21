@@ -107,6 +107,24 @@ class DefinitionOrderTC(CubicWebTC):
         self.assertEqual(afk_get('CWUser', 'firstname', 'String', 'subject'), {'order': 1})
 
 
+class UicfgRegistryTC(CubicWebTC):
+
+    def test_default_uicfg_object(self):
+        'CW default ui config objects must be registered in uicfg registry'
+        onames = ('autoform_field', 'autoform_section', 'autoform_field_kwargs')
+        for oname in onames:
+            obj = self.vreg['uicfg'].select_or_none(oname)
+            self.assertTrue(obj is not None, '%s not found in uicfg registry'
+                            % oname)
+
+    def test_custom_uicfg(self):
+        ASRT = uicfg.AutoformSectionRelationTags
+        custom_afs = ASRT()
+        custom_afs.__select__ = ASRT.__select__ & ASRT.__select__
+        self.vreg['uicfg'].register(custom_afs)
+        obj = self.vreg['uicfg'].select_or_none('autoform_section')
+        self.assertTrue(obj is custom_afs)
+
 
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main

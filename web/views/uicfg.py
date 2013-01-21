@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -15,7 +15,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""This module (``cubicweb.web.uicfg``) regroups a set of structures that may be
+"""This module (``cubicweb.web.views.uicfg``) regroups a set of structures that may be
 used to configure various options of the generated web interface.
 
 To configure the interface generation, we use ``RelationTag`` objects.
@@ -34,7 +34,7 @@ Index view configuration
 
 .. sourcecode:: python
 
-    from cubicweb.web import uicfg
+    from cubicweb.web.views import uicfg
     # force hiding
     uicfg.indexview_etype_section['HideMe'] = 'subobject'
     # force display
@@ -62,51 +62,59 @@ from logilab.common.compat import any
 from cubicweb import neg_role
 from cubicweb.rtags import (RelationTags, RelationTagsBool, RelationTagsSet,
                             RelationTagsDict, NoTargetRelationTagsDict,
-                            register_rtag, _ensure_str_key)
+                            _ensure_str_key)
 from cubicweb.schema import META_RTYPES, INTERNAL_TYPES, WORKFLOW_TYPES
 
 
 # primary view configuration ##################################################
 
-def init_primaryview_section(rtag, sschema, rschema, oschema, role):
-    if rtag.get(sschema, rschema, oschema, role) is None:
-        rdef = rschema.rdef(sschema, oschema)
-        if rschema.final:
-            if rschema.meta or sschema.is_metadata(rschema) \
-                    or oschema.type in ('Password', 'Bytes'):
-                section = 'hidden'
-            else:
-                section = 'attributes'
-        else:
-            if rdef.role_cardinality(role) in '1+':
-                section = 'attributes'
-            elif rdef.composite == neg_role(role):
-                section = 'relations'
-            else:
-                section = 'sideboxes'
-        rtag.tag_relation((sschema, rschema, oschema, role), section)
+class PrimaryViewSectionRelationTags(RelationTags):
+    """primary view section configuration"""
+    __regid__ = 'primaryview_section'
 
-primaryview_section = RelationTags('primaryview_section',
-                                   init_primaryview_section,
-                                   frozenset(('attributes', 'relations',
-                                              'sideboxes', 'hidden')))
+    _allowed_values = frozenset(('attributes', 'relations',
+                                 'sideboxes', 'hidden'))
+
+    def _init(self, sschema, rschema, oschema, role):
+        if self.get(sschema, rschema, oschema, role) is None:
+            rdef = rschema.rdef(sschema, oschema)
+            if rschema.final:
+                if rschema.meta or sschema.is_metadata(rschema) \
+                        or oschema.type in ('Password', 'Bytes'):
+                    section = 'hidden'
+                else:
+                    section = 'attributes'
+            else:
+                if rdef.role_cardinality(role) in '1+':
+                    section = 'attributes'
+                elif rdef.composite == neg_role(role):
+                    section = 'relations'
+                else:
+                    section = 'sideboxes'
+            self.tag_relation((sschema, rschema, oschema, role), section)
+
+primaryview_section = PrimaryViewSectionRelationTags()
 
 
 class DisplayCtrlRelationTags(NoTargetRelationTagsDict):
+    """primary view display controller configuration"""
+    __regid__ = 'primaryview_display_ctrl'
+
     def __init__(self, *args, **kwargs):
         super(DisplayCtrlRelationTags, self).__init__(*args, **kwargs)
         self.counter = 0
 
-def init_primaryview_display_ctrl(rtag, sschema, rschema, oschema, role):
-    if role == 'subject':
-        oschema = '*'
-    else:
-        sschema = '*'
-    rtag.counter += 1
-    rtag.setdefault((sschema, rschema, oschema, role), 'order', rtag.counter)
+    def _init(self, sschema, rschema, oschema, role):
+        if role == 'subject':
+            oschema = '*'
+        else:
+            sschema = '*'
+        self.counter += 1
+        self.setdefault((sschema, rschema, oschema, role),
+                        'order',
+                        self.counter)
 
-primaryview_display_ctrl = DisplayCtrlRelationTags('primaryview_display_ctrl',
-                                                   init_primaryview_display_ctrl)
+primaryview_display_ctrl = DisplayCtrlRelationTags()
 
 
 # index view configuration ####################################################
@@ -117,10 +125,9 @@ primaryview_display_ctrl = DisplayCtrlRelationTags('primaryview_display_ctrl',
 # * 'hidden'
 # * 'subobject' (not displayed by default)
 
-class InitializableDict(dict):
+class InitializableDict(dict): # XXX not a rtag. Turn into an appobject?
     def __init__(self, *args, **kwargs):
         super(InitializableDict, self).__init__(*args, **kwargs)
-        register_rtag(self)
         self.__defaults = dict(self)
 
     def init(self, schema, check=True):
@@ -144,6 +151,7 @@ indexview_etype_section = InitializableDict(
     CWUser='system', CWGroup='system',
     )
 
+
 # autoform.AutomaticEntityForm configuration ##################################
 
 def _formsections_as_dict(formsections):
@@ -165,6 +173,7 @@ def _card_and_comp(sschema, rschema, oschema, role):
 
 class AutoformSectionRelationTags(RelationTagsSet):
     """autoform relations'section"""
+    __regid__ = 'autoform_section'
 
     _allowed_form_types = ('main', 'inlined', 'muledit')
     _allowed_values = {'main': ('attributes', 'inlined', 'relations',
@@ -177,8 +186,7 @@ class AutoformSectionRelationTags(RelationTagsSet):
         super(AutoformSectionRelationTags, self).init(schema, check)
         self.apply(schema, self._initfunc_step2)
 
-    @staticmethod
-    def _initfunc(self, sschema, rschema, oschema, role):
+    def _init(self, sschema, rschema, oschema, role):
         formsections = self.init_get(sschema, rschema, oschema, role)
         if formsections is None:
             formsections = self.tag_container_cls()
@@ -190,7 +198,6 @@ class AutoformSectionRelationTags(RelationTagsSet):
         key = _ensure_str_key( (sschema, rschema, oschema, role) )
         self._tagdefs[key] = formsections
 
-    @staticmethod
     def _initfunc_step2(self, sschema, rschema, oschema, role):
         formsections = self.get(sschema, rschema, oschema, role)
         sectdict = _formsections_as_dict(formsections)
@@ -266,9 +273,9 @@ class AutoformSectionRelationTags(RelationTagsSet):
                 section, value = tag.split('_', 1)
                 rtags[section] = value
         cls = self.tag_container_cls
-        rtags = cls('_'.join([section,value]) for section,value in rtags.iteritems())
+        rtags = cls('_'.join([section,value])
+                    for section,value in rtags.iteritems())
         return rtags
-
 
     def get(self, *key):
         # overriden to avoid recomputing done in parent classes
@@ -284,7 +291,8 @@ class AutoformSectionRelationTags(RelationTagsSet):
         """
         tag = '%s_%s' % (formtype, section)
         eschema  = entity.e_schema
-        permsoverrides = autoform_permissions_overrides
+        cw = entity._cw
+        permsoverrides = cw.vreg['uicfg'].select('autoform_permissions_overrides', cw, entity=entity)
         if entity.has_eid():
             eid = entity.eid
         else:
@@ -296,7 +304,6 @@ class AutoformSectionRelationTags(RelationTagsSet):
         else:
             assert section not in ('attributes', 'metadata', 'hidden')
             relpermission = permission
-        cw = entity._cw
         for rschema, targetschemas, role in eschema.relation_definitions(True):
             _targetschemas = []
             for tschema in targetschemas:
@@ -347,19 +354,29 @@ class AutoformSectionRelationTags(RelationTagsSet):
                     continue
             yield (rschema, targetschemas, role)
 
-autoform_section = AutoformSectionRelationTags('autoform_section')
+autoform_section = AutoformSectionRelationTags()
 
 # relations'field class
-autoform_field = RelationTags('autoform_field')
+class AutoformFieldTags(RelationTags):
+    __regid__ = 'autoform_field'
+
+autoform_field = AutoformFieldTags()
 
 # relations'field explicit kwargs (given to field's __init__)
-autoform_field_kwargs = RelationTagsDict('autoform_field_kwargs')
+class AutoformFieldKwargsTags(RelationTagsDict):
+    __regid__ = 'autoform_field_kwargs'
+
+autoform_field_kwargs = AutoformFieldKwargsTags()
 
 
 # set of tags of the form <action>_on_new on relations. <action> is a
 # schema action (add/update/delete/read), and when such a tag is found
 # permissions checking is by-passed and supposed to be ok
-autoform_permissions_overrides = RelationTagsSet('autoform_permissions_overrides')
+class AutoFormPermissionsOverrides(RelationTagsSet):
+    __regid__ = 'autoform_permissions_overrides'
+
+autoform_permissions_overrides = AutoFormPermissionsOverrides()
+
 
 class ReleditTags(NoTargetRelationTagsDict):
     """Associate to relation a dictionary to control `reledit` (e.g. edition of
@@ -388,6 +405,7 @@ class ReleditTags(NoTargetRelationTagsDict):
       support target entity edition. By default, the 'related' option is taken
       whenever the relation is composite.
     """
+    __regid__ = 'reledit'
     _keys = frozenset('novalue_label novalue_include_rtype reload rvid edit_target'.split())
 
     def tag_relation(self, key, tag):
@@ -395,42 +413,51 @@ class ReleditTags(NoTargetRelationTagsDict):
             assert tagkey in self._keys, 'tag %r not in accepted tags: %r' % (tag, self._keys)
         return super(ReleditTags, self).tag_relation(key, tag)
 
-def init_reledit_ctrl(rtag, sschema, rschema, oschema, role):
-    values = rtag.get(sschema, rschema, oschema, role)
-    if not rschema.final:
-        composite = rschema.rdef(sschema, oschema).composite == role
-        if role == 'subject':
-            oschema = '*'
-        else:
-            sschema = '*'
-        edittarget = values.get('edit_target')
-        if edittarget not in (None, 'rtype', 'related'):
-            rtag.warning('reledit: wrong value for edit_target on relation %s: %s',
-                         rschema, edittarget)
-            edittarget = None
-        if not edittarget:
-            edittarget = 'related' if composite else 'rtype'
-            rtag.tag_relation((sschema, rschema, oschema, role),
-                              {'edit_target': edittarget})
-    if not 'novalue_include_rtype' in values:
-        showlabel = primaryview_display_ctrl.get(
-            sschema, rschema, oschema, role).get('showlabel', True)
-        rtag.tag_relation((sschema, rschema, oschema, role),
-                          {'novalue_include_rtype': not showlabel})
+    def _init(self, sschema, rschema, oschema, role):
+        values = self.get(sschema, rschema, oschema, role)
+        if not rschema.final:
+            composite = rschema.rdef(sschema, oschema).composite == role
+            if role == 'subject':
+                oschema = '*'
+            else:
+                sschema = '*'
+            edittarget = values.get('edit_target')
+            if edittarget not in (None, 'rtype', 'related'):
+                self.warning('reledit: wrong value for edit_target on relation %s: %s',
+                             rschema, edittarget)
+                edittarget = None
+            if not edittarget:
+                edittarget = 'related' if composite else 'rtype'
+                self.tag_relation((sschema, rschema, oschema, role),
+                                  {'edit_target': edittarget})
+        if not 'novalue_include_rtype' in values:
+            showlabel = primaryview_display_ctrl.get(
+                sschema, rschema, oschema, role).get('showlabel', True)
+            self.tag_relation((sschema, rschema, oschema, role),
+                              {'novalue_include_rtype': not showlabel})
 
-reledit_ctrl = ReleditTags('reledit', init_reledit_ctrl)
+reledit_ctrl = ReleditTags()
+
 
 # boxes.EditBox configuration #################################################
 
 # 'link' / 'create' relation tags, used to control the "add entity" submenu
-def init_actionbox_appearsin_addmenu(rtag, sschema, rschema, oschema, role):
-    if rtag.get(sschema, rschema, oschema, role) is None:
-        if rschema in META_RTYPES:
-            rtag.tag_relation((sschema, rschema, oschema, role), False)
-            return
-        rdef = rschema.rdef(sschema, oschema)
-        if not rdef.role_cardinality(role) in '?1' and rdef.composite == role:
-            rtag.tag_relation((sschema, rschema, oschema, role), True)
+class ActionBoxUicfg(RelationTagsBool):
+    __regid__ = 'actionbox_appearsin_addmenu'
 
-actionbox_appearsin_addmenu = RelationTagsBool('actionbox_appearsin_addmenu',
-                                               init_actionbox_appearsin_addmenu)
+    def _init(self, sschema, rschema, oschema, role):
+        if self.get(sschema, rschema, oschema, role) is None:
+            if rschema in META_RTYPES:
+                self.tag_relation((sschema, rschema, oschema, role), False)
+                return
+            rdef = rschema.rdef(sschema, oschema)
+            if not rdef.role_cardinality(role) in '?1' and rdef.composite == role:
+                self.tag_relation((sschema, rschema, oschema, role), True)
+
+actionbox_appearsin_addmenu = ActionBoxUicfg()
+
+
+
+def registration_callback(vreg):
+    vreg.register_all(globals().values(), __name__)
+    indexview_etype_section.init(vreg.schema)

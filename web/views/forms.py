@@ -302,9 +302,6 @@ class FieldsForm(form.Form):
             return processed
 
 
-_AFF = uicfg.autoform_field
-_AFF_KWARGS = uicfg.autoform_field_kwargs
-
 class EntityFieldsForm(FieldsForm):
     """This class is designed for forms used to edit some entities. It should
     handle for you all the underlying stuff necessary to properly work with the
@@ -315,6 +312,8 @@ class EntityFieldsForm(FieldsForm):
     __select__ = (match_kwargs('entity')
                   | (one_line_rset() & non_final_entity()))
     domid = 'entityForm'
+    uicfg_aff = uicfg.autoform_field
+    uicfg_affk = uicfg.autoform_field_kwargs
 
     @iclassmethod
     def field_by_name(cls_or_self, name, role=None, eschema=None):
@@ -330,15 +329,21 @@ class EntityFieldsForm(FieldsForm):
             rschema = eschema.schema.rschema(name)
             # XXX use a sample target type. Document this.
             tschemas = rschema.targets(eschema, role)
-            fieldcls = _AFF.etype_get(eschema, rschema, role, tschemas[0])
-            kwargs = _AFF_KWARGS.etype_get(eschema, rschema, role, tschemas[0])
+            fieldcls = cls_or_self.uicfg_aff.etype_get(
+                eschema, rschema, role, tschemas[0])
+            kwargs = cls_or_self.uicfg_affk.etype_get(
+                eschema, rschema, role, tschemas[0])
             if kwargs is None:
                 kwargs = {}
             if fieldcls:
                 if not isinstance(fieldcls, type):
                     return fieldcls # already and instance
                 return fieldcls(name=name, role=role, eidparam=True, **kwargs)
-            field = guess_field(eschema, rschema, role, eidparam=True, **kwargs)
+            if isinstance(cls_or_self, type):
+                req = None
+            else:
+                req = cls_or_self._cw
+            field = guess_field(eschema, rschema, role, req=req, eidparam=True, **kwargs)
             if field is None:
                 raise
             return field
@@ -350,6 +355,10 @@ class EntityFieldsForm(FieldsForm):
             self.edited_entity = rset.complete_entity(row or 0, col or 0)
         msg = kwargs.pop('submitmsg', None)
         super(EntityFieldsForm, self).__init__(_cw, rset, row, col, **kwargs)
+        self.uicfg_aff = self._cw.vreg['uicfg'].select(
+            'autoform_field', self._cw, entity=self.edited_entity)
+        self.uicfg_affk = self._cw.vreg['uicfg'].select(
+            'autoform_field_kwargs', self._cw, entity=self.edited_entity)
         self.add_hidden('__type', self.edited_entity.__regid__, eidparam=True)
         self.add_hidden('eid', self.edited_entity.eid)
         # mainform default to true in parent, hence default to True

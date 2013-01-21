@@ -38,17 +38,20 @@ Three primitives are defined:
 __docformat__ = "restructuredtext en"
 
 import logging
+from warnings import warn
 
 from logilab.common.logging_ext import set_log_methods
-
-RTAGS = []
-def register_rtag(rtag):
-    RTAGS.append(rtag)
+from logilab.common.registry import RegistrableInstance, yes
 
 def _ensure_str_key(key):
     return tuple(str(k) for k in key)
 
-class RelationTags(object):
+class RegistrableRtags(RegistrableInstance):
+    __registry__ = 'uicfg'
+    __select__ = yes()
+
+
+class RelationTags(RegistrableRtags):
     """a tag store for full relation definitions :
 
          (subject type, relation type, object type, tagged)
@@ -58,18 +61,17 @@ class RelationTags(object):
     This class associates a single tag to each key.
     """
     _allowed_values = None
-    _initfunc = None
-    def __init__(self, name=None, initfunc=None, allowed_values=None):
-        self._name = name or '<unknown>'
+    # _init expected to be a method (introduced in 3.17), while _initfunc a
+    # function given as __init__ argument and kept for bw compat
+    _init = _initfunc = None
+
+    def __init__(self):
         self._tagdefs = {}
-        if allowed_values is not None:
-            self._allowed_values = allowed_values
-        if initfunc is not None:
-            self._initfunc = initfunc
-        register_rtag(self)
 
     def __repr__(self):
-        return '%s: %s' % (self._name, repr(self._tagdefs))
+        # find a way to have more infos but keep it readable
+        # (in error messages in case of an ambiguity for instance)
+        return '%s (%s): %s' % (id(self), self.__regid__, self.__class__)
 
     # dict compat
     def __getitem__(self, key):
@@ -100,8 +102,8 @@ class RelationTags(object):
                                      (stype, rtype, otype, tagged), value, ertype)
                         self.del_rtag(stype, rtype, otype, tagged)
                         break
-        if self._initfunc is not None:
-            self.apply(schema, self._initfunc)
+        if self._init is not None:
+            self.apply(schema, self._init)
 
     def apply(self, schema, func):
         for eschema in schema.entities():
@@ -113,7 +115,7 @@ class RelationTags(object):
                         sschema, oschema = eschema, tschema
                     else:
                         sschema, oschema = tschema, eschema
-                    func(self, sschema, rschema, oschema, role)
+                    func(sschema, rschema, oschema, role)
 
     # rtag declaration api ####################################################
 
@@ -250,4 +252,6 @@ class NoTargetRelationTagsDict(RelationTagsDict):
                 key = list(key)
             key[0] = '*'
         super(NoTargetRelationTagsDict, self).tag_relation(key, tag)
+
+
 set_log_methods(RelationTags, logging.getLogger('cubicweb.rtags'))

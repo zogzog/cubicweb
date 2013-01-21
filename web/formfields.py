@@ -82,7 +82,6 @@ from cubicweb.web import INTERNAL_FIELD_VALUE, ProcessFormError, eid_param, \
      formwidgets as fw
 from cubicweb.web.views import uicfg
 
-
 class UnmodifiedField(Exception):
     """raise this when a field has not actually been edited and you want to skip
     it
@@ -466,8 +465,6 @@ class Field(object):
             # attribute or relation
             return True
         # if it's a non final relation, we need the eids
-        # XXX underlying regression: getattr(ent, 'foo') used to return
-        #     a tuple, now we get a list
         if isinstance(previous_value, (list, tuple)):
             # widget should return a set of untyped eids
             previous_value = set(e.eid for e in previous_value)
@@ -1164,7 +1161,7 @@ class RelationField(Field):
 
 _AFF_KWARGS = uicfg.autoform_field_kwargs
 
-def guess_field(eschema, rschema, role='subject', **kwargs):
+def guess_field(eschema, rschema, role='subject', req=None, **kwargs):
     """This function return the most adapted field to edit the given relation
     (`rschema`) where the given entity type (`eschema`) is the subject or object
     (`role`).
@@ -1212,12 +1209,16 @@ def guess_field(eschema, rschema, role='subject', **kwargs):
                     kwargs['max_length'] = cstr.max
             return StringField(**kwargs)
         if fieldclass is FileField:
+            if req:
+                aff_kwargs = req.vreg['uicfg'].select('autoform_field_kwargs', req)
+            else:
+                aff_kwargs = _AFF_KWARGS
             for metadata in KNOWN_METAATTRIBUTES:
                 metaschema = eschema.has_metadata(rschema, metadata)
                 if metaschema is not None:
-                    metakwargs = _AFF_KWARGS.etype_get(eschema, metaschema, 'subject')
+                    metakwargs = aff_kwargs.etype_get(eschema, metaschema, 'subject')
                     kwargs['%s_field' % metadata] = guess_field(eschema, metaschema,
-                                                                **metakwargs)
+                                                                req=req, **metakwargs)
         return fieldclass(**kwargs)
     return RelationField.fromcardinality(card, **kwargs)
 

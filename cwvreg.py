@@ -197,12 +197,13 @@ import sys
 from os.path import join, dirname, realpath
 from warnings import warn
 from datetime import datetime, date, time, timedelta
+from functools import partial
 
 from logilab.common.decorators import cached, clear_cache
 from logilab.common.deprecation import deprecated, class_deprecated
 from logilab.common.modutils import cleanup_sys_modules
 from logilab.common.registry import (
-    RegistryStore, Registry, classid,
+    RegistryStore, Registry, obj_registries,
     ObjectNotFound, NoSelectableObject, RegistryNotFound)
 
 from rql import RQLHelper
@@ -210,13 +211,15 @@ from yams.constraints import BASE_CONVERTERS
 
 from cubicweb import (CW_SOFTWARE_ROOT, ETYPE_NAME_MAP, CW_EVENT_MANAGER,
                       Binary, UnknownProperty, UnknownEid)
-from cubicweb.rtags import RTAGS
 from cubicweb.predicates import (implements, appobject_selectable,
                                  _reset_is_instance_cache)
 
-def clear_rtag_objects():
-    for rtag in RTAGS:
-        rtag.clear()
+# backward compat: those modules are now refering to app objects in
+# cw.web.views.uicfg and import * from backward compat. On registry reload, we
+# should pop those modules from the cache so references are properly updated on
+# subsequent reload
+CW_EVENT_MANAGER.bind('before-registry-reload', partial(sys.modules.pop, 'cubicweb.web.uicfg', None))
+CW_EVENT_MANAGER.bind('before-registry-reload', partial(sys.modules.pop, 'cubicweb.web.uihelper', None))
 
 def use_interfaces(obj):
     """return interfaces required by the given object by searching for
@@ -261,6 +264,15 @@ def related_appobject(obj, appobjectattr='__appobject__'):
     through the __appobject__ attribute
     """
     return getattr(obj, appobjectattr, obj)
+
+
+class InstancesRegistry(CWRegistry):
+
+    def selected(self, winner, args, kwargs):
+        """overriden to avoid the default 'instanciation' behaviour, ie
+        winner(*args, **kwargs)
+        """
+        return winner
 
 
 class ETypeRegistry(CWRegistry):
@@ -497,6 +509,7 @@ class CWRegistryStore(RegistryStore):
                         'views': ViewsRegistry,
                         'actions': ActionsRegistry,
                         'ctxcomponents': CtxComponentsRegistry,
+                        'uicfg': InstancesRegistry,
                         }
 
     def __init__(self, config, initlog=True):
@@ -517,11 +530,6 @@ class CWRegistryStore(RegistryStore):
             sys.path.remove(CW_SOFTWARE_ROOT)
         self.schema = None
         self.initialized = False
-        # XXX give force_reload (or refactor [re]loading...)
-        if self.config.mode != 'test':
-            # don't clear rtags during test, this may cause breakage with
-            # manually imported appobject modules
-            CW_EVENT_MANAGER.bind('before-registry-reload', clear_rtag_objects)
         self['boxes'] = BwCompatCWRegistry(self, 'boxes', 'ctxcomponents')
         self['contentnavigation'] = BwCompatCWRegistry(self, 'contentnavigation', 'ctxcomponents')
 
@@ -695,8 +703,9 @@ class CWRegistryStore(RegistryStore):
                                    or iface
                                    for iface in ifaces)
                 if not ('Any' in ifaces or ifaces & implemented_interfaces):
+                    reg = self[obj_registries(obj)[0]]
                     self.debug('unregister %s (no implemented '
-                               'interface among %s)', classid(obj), ifaces)
+                               'interface among %s)', reg.objid(obj), ifaces)
                     self.unregister(obj)
             # since 3.9: remove appobjects which depending on other, unexistant
             # appobjects
@@ -704,8 +713,7 @@ class CWRegistryStore(RegistryStore):
                 try:
                     registry = self[regname]
                 except RegistryNotFound:
-                    self.debug('unregister %s (no registry %s)', classid(obj),
-                               regname)
+                    self.debug('unregister %s (no registry %s)', obj, regname)
                     self.unregister(obj)
                     continue
                 for regid in regids:
@@ -713,12 +721,14 @@ class CWRegistryStore(RegistryStore):
                         break
                 else:
                     self.debug('unregister %s (no %s object in registry %s)',
-                               classid(obj), ' or '.join(regids), regname)
+                               registry.objid(obj), ' or '.join(regids), regname)
                     self.unregister(obj)
         super(CWRegistryStore, self).initialization_completed()
-        for rtag in RTAGS:
-            # don't check rtags if we don't want to cleanup_interface_sobjects
-            rtag.init(self.schema, check=self.config.cleanup_interface_sobjects)
+        if 'uicfg' in self: # 'uicfg' is not loaded in a pure repository mode
+            for rtags in self['uicfg'].values():
+                for rtag in rtags:
+                    # don't check rtags if we don't want to cleanup_interface_sobjects
+                    rtag.init(self.schema, check=self.config.cleanup_interface_sobjects)
 
     # rql parsing utilities ####################################################
 

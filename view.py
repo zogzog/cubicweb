@@ -26,7 +26,7 @@ from warnings import warn
 from functools import partial
 
 from logilab.common.deprecation import deprecated
-from logilab.common.registry import classid, yes
+from logilab.common.registry import yes
 from logilab.mtconverter import xml_escape
 
 from rql import nodes
@@ -608,7 +608,7 @@ def implements_adapter_compat(iface):
             if hasattr(entity, func.__name__):
                 warn('[3.9] %s method is deprecated, define it on a custom '
                      '%s for %s instead' % (func.__name__, iface,
-                                            classid(entity.__class__)),
+                                            entity.__class__),
                      DeprecationWarning)
                 member = getattr(entity, func.__name__)
                 if callable(member):

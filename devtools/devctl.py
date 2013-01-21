@@ -95,11 +95,6 @@ def cleanup_sys_modules(config):
             if mod.__file__.startswith(path):
                 del sys.modules[name]
                 break
-    # fresh rtags
-    from cubicweb import rtags
-    from cubicweb.web.views import uicfg
-    rtags.RTAGS[:] = []
-    reload(uicfg)
 
 def generate_schema_pot(w, cubedir=None):
     """generate a pot file with schema specific i18n messages
@@ -129,7 +124,6 @@ def generate_schema_pot(w, cubedir=None):
 def _generate_schema_pot(w, vreg, schema, libconfig=None):
     from copy import deepcopy
     from cubicweb.i18n import add_msg
-    from cubicweb.web.views import uicfg
     from cubicweb.schema import NO_I18NCONTEXT, CONSTRAINTS
     w('# schema pot file, generated on %s\n'
       % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
@@ -138,22 +132,21 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None):
     w('\n')
     vregdone = set()
     if libconfig is not None:
-        from cubicweb.cwvreg import CWRegistryStore, clear_rtag_objects
+        from cubicweb.cwvreg import CWRegistryStore
         libschema = libconfig.load_schema(remove_unused_rtypes=False)
-        afs = deepcopy(uicfg.autoform_section)
-        appearsin_addmenu = deepcopy(uicfg.actionbox_appearsin_addmenu)
-        clear_rtag_objects()
+        afs = vreg['uicfg'].select('autoform_section')
+        appearsin_addmenu = vreg['uicfg'].select('actionbox_appearsin_addmenu')
         cleanup_sys_modules(libconfig)
         libvreg = CWRegistryStore(libconfig)
         libvreg.set_schema(libschema) # trigger objects registration
-        libafs = uicfg.autoform_section
-        libappearsin_addmenu = uicfg.actionbox_appearsin_addmenu
+        libafs = libvreg['uicfg'].select('autoform_section')
+        libappearsin_addmenu = libvreg['uicfg'].select('actionbox_appearsin_addmenu')
         # prefill vregdone set
         list(_iter_vreg_objids(libvreg, vregdone))
     else:
         libschema = {}
-        afs = uicfg.autoform_section
-        appearsin_addmenu = uicfg.actionbox_appearsin_addmenu
+        afs = vreg['uicfg'].select('autoform_section')
+        appearsin_addmenu = vreg['uicfg'].select('actionbox_appearsin_addmenu')
         for cstrtype in CONSTRAINTS:
             add_msg(w, cstrtype)
     done = set()
