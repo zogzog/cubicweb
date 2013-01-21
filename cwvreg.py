@@ -544,20 +544,6 @@ class CWRegistryStore(RegistryStore):
     def itervalues(self):
         return (value for key, value in self.items())
 
-    def load_module(self, module):
-        """ variation from the base implementation:
-        apply related_appobject to the automatically registered objects
-        """
-        self.info('loading %s from %s', module.__name__, module.__file__)
-        if hasattr(module, 'registration_callback'):
-            module.registration_callback(self)
-            return
-        for objname, obj in vars(module).iteritems():
-            if objname.startswith('_'):
-                continue
-            self._load_ancestors_then_object(module.__name__,
-                                             related_appobject(obj))
-
     def reset(self):
         CW_EVENT_MANAGER.emit('before-registry-reset', self)
         super(CWRegistryStore, self).reset()
