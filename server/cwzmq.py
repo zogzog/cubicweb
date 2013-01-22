@@ -31,6 +31,13 @@ from cubicweb.server.server import QuitEvent
 
 ctx = zmq.Context()
 
+def cwproto_to_zmqaddr(address):
+    """ converts a cw-zmq address (like zmqpickle-tcp://<ip>:<port>)
+    into a proper zmq address (tcp://<ip>:<port>)
+    """
+    assert address.startswith('zmqpickle-'), 'bad protocol string %s' % address
+    return address.split('-', 1)[1] # chop the `zmqpickle-` prefix
+
 class ZMQComm(object):
     """
     A simple ZMQ-based notification bus.
@@ -140,7 +147,7 @@ class ZMQRepositoryServer(object):
         self.events = []
 
     def connect(self, address):
-        self.address = address
+        self.address = cwproto_to_zmqaddr(address)
 
     def run(self):
         """enter the service loop"""

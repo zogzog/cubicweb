@@ -125,7 +125,7 @@ def get_repository(uri=None, config=None, vreg=None):
             return ns_get_proxy(nsid, defaultnsgroup=nsgroup, nshost=puri.netloc)
         except Exception, ex:
             raise ConnectionError(str(ex))
-    elif method == 'tcp': # use zmq (see zmq documentation)
+    elif method.startswith('zmqpickle-'):
         from cubicweb.zmqclient import ZMQRepositoryClient
         return ZMQRepositoryClient(uri)
     else:

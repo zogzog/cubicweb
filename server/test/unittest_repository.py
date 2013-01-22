@@ -396,7 +396,7 @@ class RepositoryTC(CubicWebTC):
         t.start()
 
         zmq_server = ZMQRepositoryServer(self.repo)
-        zmq_server.connect('tcp://127.0.0.1:41415')
+        zmq_server.connect('zmqpickle-tcp://127.0.0.1:41415')
 
         t2 = threading.Thread(target=self._zmq_quit, args=(done, zmq_server,))
         t2.start()
@@ -416,7 +416,7 @@ class RepositoryTC(CubicWebTC):
 
     def _zmq_client(self, done):
         try:
-            cnx = connect('tcp://127.0.0.1:41415', u'admin', password=u'gingkow',
+            cnx = connect('zmqpickle-tcp://127.0.0.1:41415', u'admin', password=u'gingkow',
                           initlog=False) # don't reset logging configuration
             try:
                 cnx.load_appobjects(subpath=('entities',))

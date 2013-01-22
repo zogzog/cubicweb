@@ -195,9 +195,9 @@ dispatching messages.
       self._cw.repo.app_instances_bus.publish(['hello', 'world'])
 
 The `zmq-address-pub` configuration variable contains the address used
-by the instance for sending messages, e.g. `tcp://*:1234`.  The
+by the instance for sending messages, e.g. `zmqpickle-tcp://*:1234`.  The
 `zmq-address-sub` variable contains a comma-separated list of addresses
-to listen on, e.g. `tcp://localhost:1234, tcp://192.168.1.1:2345`.
+to listen on, e.g. `zmqpickle-tcp://localhost:1234, zmqpickle-tcp://192.168.1.1:2345`.
 
 
 Hooks writing tips

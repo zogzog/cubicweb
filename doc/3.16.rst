@@ -36,6 +36,11 @@ API changes
   * Deprecate `in_memory_cnx` which becomes useless, use `_repo_connect` instead
     if necessary.
 
+* the "tcp://" uri scheme used for ZMQ communications (in a way
+  reminiscent of Pyro) is now named "zmqpickle-tcp://", so as to make
+  room for future zmq-based lightweight communications (without python
+  objects pickling).
+
 
 Unintrusive API changes
 -----------------------

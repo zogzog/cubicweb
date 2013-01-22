@@ -23,6 +23,7 @@ _ = unicode
 from functools import partial
 import zmq
 
+from cubicweb.server.cwzmq import cwproto_to_zmqaddr
 
 # XXX hack to overpass old zmq limitation that force to have
 # only one context per python process
@@ -33,9 +34,9 @@ except ImportError:
 
 class ZMQRepositoryClient(object):
     """
-    This class delegate the overall repository stuff to a remote source.
+    This class delegates the overall repository stuff to a remote source.
 
-    So calling a method of this repository will results on calling the
+    So calling a method of this repository will result on calling the
     corresponding method of the remote source repository.
 
     Any raised exception on the remote source is propagated locally.
@@ -44,8 +45,13 @@ class ZMQRepositoryClient(object):
     """
 
     def __init__(self, zmq_address):
+        """A zmq address provided here will be like
+        `zmqpickle-tcp://127.0.0.1:42000`.  W
+
+        We chop the prefix to get a real zmq address.
+        """
         self.socket = ctx.socket(zmq.REQ)
-        self.socket.connect(zmq_address)
+        self.socket.connect(cwproto_to_zmqaddr(zmq_address))
 
     def __zmqcall__(self, name, *args, **kwargs):
          self.socket.send_pyobj([name, args, kwargs])
