@@ -23,6 +23,7 @@ import shutil
 import time
 from os.path import join, exists
 import subprocess
+import tempfile
 
 from logilab.common.testlib import TestCase, unittest_main, mock_object, Tags
 
@@ -39,16 +40,13 @@ URL = None
 
 def create_slapd_configuration(cls):
     global URL
+    slapddir = tempfile.mkdtemp('cw-unittest-ldap')
     config = cls.config
-    basedir = join(config.apphome, "ldapdb")
     slapdconf = join(config.apphome, "slapd.conf")
     confin = file(join(config.apphome, "slapd.conf.in")).read()
     confstream = file(slapdconf, 'w')
-    confstream.write(confin % {'apphome': config.apphome})
+    confstream.write(confin % {'apphome': config.apphome, 'testdir': slapddir})
     confstream.close()
-    if exists(basedir):
-        shutil.rmtree(basedir)
-    os.makedirs(basedir)
     # fill ldap server with some data
     ldiffile = join(config.apphome, "ldap_test.ldif")
     config.info('Initing ldap database')
@@ -69,6 +67,7 @@ def create_slapd_configuration(cls):
         raise EnvironmentError('Cannot start slapd with cmdline="%s" (from directory "%s")' %
                                (" ".join(cmdline), os.getcwd()))
     URL = u'ldap://%s' % host
+    return slapddir
 
 def terminate_slapd(cls):
     config = cls.config
@@ -89,11 +88,15 @@ class LDAPTestBase(CubicWebTC):
     def setUpClass(cls):
         from cubicweb.cwctl import init_cmdline_log_threshold
         init_cmdline_log_threshold(cls.config, cls.loglevel)
-        create_slapd_configuration(cls)
+        cls._tmpdir = create_slapd_configuration(cls)
 
     @classmethod
     def tearDownClass(cls):
         terminate_slapd(cls)
+        try:
+            shutil.rmtree(cls._tmpdir)
+        except:
+            pass
 
 class CheckWrongGroup(LDAPTestBase):
 
