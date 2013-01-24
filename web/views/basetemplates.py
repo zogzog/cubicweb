@@ -498,7 +498,7 @@ class LogFormView(View):
         if config['auth-mode'] != 'http':
             self.login_form(id) # Cookie authentication
         w(u'</div>')
-        if self._cw.https and config.anonymous_user()[0]:
+        if self._cw.https and config.anonymous_user()[0] and config['https-deny-anonymous']:
             path = xml_escape(config['base-url'] + self._cw.relative_path())
             w(u'<div class="loginMessage"><a href="%s">%s</a></div>\n'
               % (path, self._cw._('No account? Try public access at %s') % path))
