@@ -1,4 +1,4 @@
-# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -51,7 +51,7 @@ def create_slapd_configuration(cls):
     ldiffile = join(config.apphome, "ldap_test.ldif")
     config.info('Initing ldap database')
     cmdline = "/usr/sbin/slapadd -f %s -l %s -c" % (slapdconf, ldiffile)
-    subprocess.check_call(cmdline, shell=True) == 0
+    subprocess.call(cmdline, shell=True)
 
     #ldapuri = 'ldapi://' + join(basedir, "ldapi").replace('/', '%2f')
     port = get_available_port(xrange(9000, 9100))
@@ -114,14 +114,6 @@ class CheckWrongGroup(LDAPTestBase):
             # here we emitted an error log entry
             stats = source.repo_source.pull_data(session, force=True, raise_on_error=True)
             session.commit()
-
-    def setUp(self):
-        super(LDAPTestBase, self).setUp()
-        # ldap source url in the database may use a different port as the one
-        # just attributed
-        lfsource = self.repo.sources_by_uri['ldapuser']
-        lfsource.urls = [URL]
-
 
 class DeleteStuffFromLDAPFeedSourceTC(LDAPTestBase):
     test_db_id = 'ldap-feed'
@@ -200,7 +192,6 @@ class DeleteStuffFromLDAPFeedSourceTC(LDAPTestBase):
         self.commit()
         self.assertRaises(AuthenticationError, self.repo.connect, 'syt', password='syt')
 
-
 class LDAPFeedSourceTC(LDAPTestBase):
     test_db_id = 'ldap-feed'
 
@@ -212,6 +203,13 @@ class LDAPFeedSourceTC(LDAPTestBase):
         isession = session.repo.internal_session(safe=True)
         lfsource = isession.repo.sources_by_uri['ldapuser']
         stats = lfsource.pull_data(isession, force=True, raise_on_error=True)
+
+    def setUp(self):
+        super(LDAPFeedSourceTC, self).setUp()
+        # ldap source url in the database may use a different port as the one
+        # just attributed
+        lfsource = self.repo.sources_by_uri['ldapuser']
+        lfsource.urls = [URL]
 
     def assertMetadata(self, entity):
         self.assertTrue(entity.creation_date)
