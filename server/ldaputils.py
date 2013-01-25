@@ -38,6 +38,7 @@ from ldap.filter import filter_format
 from ldapurl import LDAPUrl
 
 from cubicweb import ValidationError, AuthenticationError, Binary
+from cubicweb.server import utils
 from cubicweb.server.sources import ConnectionWrapper
 
 _ = unicode
@@ -336,7 +337,11 @@ You can set multiple groups by separating them by a comma.',
         itemdict = {'dn': dn}
         for key, value in iterator:
             if self.user_attrs.get(key) == 'upassword': # XXx better password detection
-                itemdict[key] = Binary(value[0].encode('utf-8'))
+                value = value[0].encode('utf-8')
+                # we only support ldap_salted_sha1 for ldap sources, see: server/utils.py
+                if not value.startswith('{SSHA}'):
+                    value = utils.crypt_password(value)
+                itemdict[key] = Binary(value)
             else:
                 for i, val in enumerate(value):
                     value[i] = unicode(val, 'utf-8', 'replace')

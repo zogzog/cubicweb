@@ -49,5 +49,5 @@ suffix          "dc=cubicweb,dc=test"
 rootdn          "cn=admin,dc=cubicweb,dc=test"
 rootpw          "cw"
 # Where the database file are physically stored for database #1
-directory       "%(apphome)s/ldapdb"
+directory       "%(testdir)s"
 
