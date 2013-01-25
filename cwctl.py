@@ -28,6 +28,8 @@ import sys
 from warnings import warn
 from os import remove, listdir, system, pathsep
 from os.path import exists, join, isfile, isdir, dirname, abspath
+from urlparse import urlparse
+
 try:
     from os import kill, getpgid
 except ImportError:
@@ -878,48 +880,59 @@ directly give URI as instance id instead',
           }),
         )
 
+    def _handle_inmemory(self, appid):
+        """ returns migration context handler & shutdown function """
+        config = cwcfg.config_for(appid)
+        if self.config.ext_sources:
+            assert not self.config.system_only
+            sources = self.config.ext_sources
+        elif self.config.system_only:
+            sources = ('system',)
+        else:
+            sources = ('all',)
+        config.set_sources_mode(sources)
+        config.repairing = self.config.force
+        mih = config.migration_handler()
+        return mih, lambda: mih.shutdown()
+
+    def _handle_networked(self, appuri):
+        """ returns migration context handler & shutdown function """
+        from cubicweb import AuthenticationError
+        from cubicweb.dbapi import connect
+        from cubicweb.server.utils import manager_userpasswd
+        from cubicweb.server.migractions import ServerMigrationHelper
+        while True:
+            try:
+                login, pwd = manager_userpasswd(msg=None)
+                cnx = connect(appuri, login=login, password=pwd, mulcnx=False)
+            except AuthenticationError, ex:
+                print ex
+            except (KeyboardInterrupt, EOFError):
+                print
+                sys.exit(0)
+            else:
+                break
+        cnx.load_appobjects()
+        repo = cnx._repo
+        mih = ServerMigrationHelper(None, repo=repo, cnx=cnx, verbosity=0,
+                                    # hack so it don't try to load fs schema
+                                    schema=1)
+        return mih, lambda: cnx.close()
+
     def run(self, args):
-        from urlparse import urlparse
         appuri = args.pop(0)
         if self.config.repo_uri:
             warn('[3.16] --repo-uri option is deprecated, directly give the URI as instance id',
                  DeprecationWarning)
             if urlparse(self.config.repo_uri).scheme in ('pyro', 'inmemory'):
                 appuri = '%s/%s' % (self.config.repo_uri.rstrip('/'), appuri)
-        scheme = urlparse(self.config.repo_uri).scheme
-        if scheme not in ('', 'inmemory'):
-            from cubicweb import AuthenticationError
-            from cubicweb.dbapi import connect
-            from cubicweb.server.utils import manager_userpasswd
-            from cubicweb.server.migractions import ServerMigrationHelper
-            while True:
-                try:
-                    login, pwd = manager_userpasswd(msg=None)
-                    cnx = connect(appuri, login=login, password=pwd, mulcnx=False)
-                except AuthenticationError, ex:
-                    print ex
-                except (KeyboardInterrupt, EOFError):
-                    print
-                    sys.exit(0)
-                else:
-                    break
-            cnx.load_appobjects()
-            repo = cnx._repo
-            mih = ServerMigrationHelper(None, repo=repo, cnx=cnx, verbosity=0,
-                                         # hack so it don't try to load fs schema
-                                        schema=1)
+
+        from cubicweb.utils import parse_repo_uri
+        protocol, hostport, appid = parse_repo_uri(appuri)
+        if protocol == 'inmemory':
+            mih, shutdown_callback = self._handle_inmemory(appid)
         else:
-            config = cwcfg.config_for(appid)
-            if self.config.ext_sources:
-                assert not self.config.system_only
-                sources = self.config.ext_sources
-            elif self.config.system_only:
-                sources = ('system',)
-            else:
-                sources = ('all',)
-            config.set_sources_mode(sources)
-            config.repairing = self.config.force
-            mih = config.migration_handler()
+            mih, shutdown_callback = self._handle_networked(appuri)
         try:
             if args:
                 # use cmdline parser to access left/right attributes only
@@ -931,10 +944,7 @@ directly give URI as instance id instead',
             else:
                 mih.interactive_shell()
         finally:
-            if scheme in ('', 'inmemory'): # shutdown in-memory repo
-                mih.shutdown()
-            else:
-                cnx.close()
+            shutdown_callback()
 
 
 class RecompileInstanceCatalogsCommand(InstanceCommand):

@@ -40,6 +40,7 @@ from logilab.common.deprecation import deprecated
 from cubicweb import ETYPE_NAME_MAP, ConnectionError, AuthenticationError,\
      cwvreg, cwconfig
 from cubicweb.req import RequestSessionBase
+from cubicweb.utils import parse_repo_uri
 
 
 _MARKER = object()
@@ -90,6 +91,11 @@ class ConnectionProperties(object):
         self.close_on_del = close
 
 
+def _get_inmemory_repo(config, vreg=None):
+    from cubicweb.server.repository import Repository
+    from cubicweb.server.utils import TasksManager
+    return Repository(config, TasksManager(), vreg=vreg)
+
 def get_repository(uri=None, config=None, vreg=None):
     """get a repository for the given URI or config/vregistry (in case we're
     loading the repository for a client, eg web server, configuration).
@@ -97,39 +103,48 @@ def get_repository(uri=None, config=None, vreg=None):
     The returned repository may be an in-memory repository or a proxy object
     using a specific RPC method, depending on the given URI (pyro or zmq).
     """
+    try:
+        return _get_repository(uri, config, vreg)
+    except ConnectionError:
+        raise
+    except Exception, exc:
+        raise ConnectionError('cause: %r' % exc)
+
+def _get_repository(uri=None, config=None, vreg=None):
+    """ implements get_repository (see above) """
     if uri is None:
-        uri = config['repository-uri'] or config.appid
-    puri = urlparse(uri)
-    method = puri.scheme.lower() or 'inmemory'
-    if method == 'inmemory':
-        # get local access to the repository
-        from cubicweb.server.repository import Repository
-        from cubicweb.server.utils import TasksManager
-        return Repository(config, TasksManager(), vreg=vreg)
-    elif method in ('pyro', 'pyroloc'):
-        # resolve the Pyro object
-        from logilab.common.pyro_ext import ns_get_proxy, get_proxy
-        try:
-            if puri.scheme == 'pyroloc':
-                return get_proxy(uri)
-            path = puri.path.rstrip('/')
-            if not path:
-                raise ConnectionError(
-                    "can't find instance name in %s (expected to be the path component)"
-                    % uri)
-            if '.' in path:
-                nsgroup, nsid = path.rsplit('.', 1)
-            else:
-                nsgroup = 'cubicweb'
-                nsid = path
-            return ns_get_proxy(nsid, defaultnsgroup=nsgroup, nshost=puri.netloc)
-        except Exception, ex:
-            raise ConnectionError(str(ex))
-    elif method.startswith('zmqpickle-'):
+        return _get_inmemory_repo(config, vreg)
+
+    protocol, hostport, appid = parse_repo_uri(uri)
+
+    if protocol == 'inmemory':
+        # me may have been called with a dummy 'inmemory://' uri ...
+        return _get_inmemory_repo(config, vreg)
+
+    if protocol == 'pyroloc': # direct connection to the instance
+        from logilab.common.pyro_ext import get_proxy
+        uri = uri.replace('pyroloc', 'PYRO')
+        return get_proxy(uri)
+
+    if protocol == 'pyro': # connection mediated through the pyro ns
+        from logilab.common.pyro_ext import ns_get_proxy
+        path = appid.strip('/')
+        if not path:
+            raise ConnectionError(
+                "can't find instance name in %s (expected to be the path component)"
+                % uri)
+        if '.' in path:
+            nsgroup, nsid = path.rsplit('.', 1)
+        else:
+            nsgroup = 'cubicweb'
+            nsid = path
+        return ns_get_proxy(nsid, defaultnsgroup=nsgroup, nshost=hostport)
+
+    if protocol.startswith('zmqpickle-'):
         from cubicweb.zmqclient import ZMQRepositoryClient
         return ZMQRepositoryClient(uri)
     else:
-        raise ConnectionError('unknown protocol: `%s`' % method)
+        raise ConnectionError('unknown protocol: `%s`' % protocol)
 
 
 def _repo_connect(repo, login, **kwargs):
@@ -159,15 +174,13 @@ def connect(database, login=None,
     * a simple instance id for in-memory connection
 
     * an uri like scheme://host:port/instanceid where scheme may be one of
-      'pyro', 'pyroloc', 'inmemory' or a schema supported by ZMQ
+      'pyro', 'inmemory' or 'zmqpickle'
 
       * if scheme is 'pyro', <host:port> determine the name server address. If
         not specified (e.g. 'pyro:///instanceid'), it will be detected through a
         broadcast query. The instance id is the name of the instance in the name
         server and may be prefixed by a group (e.g.
         'pyro:///:cubicweb.instanceid')
-
-      * if scheme is 'pyroloc', it's expected to be a bare pyro location URI
 
       * if scheme is handled by ZMQ (eg 'tcp'), you should not specify an
         instance id
@@ -215,7 +228,7 @@ def connect(database, login=None,
     puri = urlparse(database)
     method = puri.scheme.lower()
     if method == 'inmemory':
-        config = cwconfig.instance_configuration(puuri.path)
+        config = cwconfig.instance_configuration(puri.path)
     else:
         config = cwconfig.CubicWebNoAppConfiguration()
     repo = get_repository(database, config=config)

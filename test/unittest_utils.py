@@ -26,7 +26,7 @@ from logilab.common.testlib import TestCase, DocTest, unittest_main
 
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.utils import (make_uid, UStringIO, SizeConstrainedList,
-                            RepeatList, HTMLHead, QueryCache)
+                            RepeatList, HTMLHead, QueryCache, parse_repo_uri)
 from cubicweb.entity import Entity
 
 try:
@@ -49,6 +49,25 @@ class MakeUidTC(TestCase):
                 self.fail('make_uid must not return something begining with '
                           'some numeric character, got %s' % uid)
             d.add(uid)
+
+
+class TestParseRepoUri(TestCase):
+
+    def test_parse_repo_uri(self):
+        self.assertEqual(('inmemory', None, 'myapp'),
+                         parse_repo_uri('myapp'))
+        self.assertEqual(('inmemory', None, 'myapp'),
+                         parse_repo_uri('inmemory://myapp'))
+        self.assertEqual(('pyro', 'pyro-ns-host:pyro-ns-port', '/myapp'),
+                         parse_repo_uri('pyro://pyro-ns-host:pyro-ns-port/myapp'))
+        self.assertEqual(('pyroloc', 'host:port', '/appkey'),
+                         parse_repo_uri('pyroloc://host:port/appkey'))
+        self.assertEqual(('zmqpickle-tcp', '127.0.0.1:666', ''),
+                         parse_repo_uri('zmqpickle-tcp://127.0.0.1:666'))
+        with self.assertRaises(NotImplementedError):
+            parse_repo_uri('foo://bar')
+
+
 
 class TestQueryCache(TestCase):
     def test_querycache(self):

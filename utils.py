@@ -33,6 +33,7 @@ from itertools import repeat
 from uuid import uuid4
 from warnings import warn
 from threading import Lock
+from urlparse import urlparse
 
 from logging import getLogger
 
@@ -572,6 +573,25 @@ def merge_dicts(dict1, dict2):
     dict1 = dict(dict1)
     dict1.update(dict2)
     return dict1
+
+
+def parse_repo_uri(uri):
+    """ transform a command line uri into a (protocol, hostport, appid), e.g:
+    <myapp>                      -> 'inmemory', None, '<myapp>'
+    inmemory://<myapp>           -> 'inmemory', None, '<myapp>'
+    pyro://[host][:port]         -> 'pyro', 'host:port', None
+    zmqpickle://[host][:port]    -> 'zmqpickle', 'host:port', None
+    """
+    parseduri = urlparse(uri)
+    scheme = parseduri.scheme
+    if scheme == '':
+        return ('inmemory', None, parseduri.path)
+    if scheme == 'inmemory':
+        return (scheme, None, parseduri.netloc)
+    if scheme in ('pyro', 'pyroloc') or scheme.startswith('zmqpickle-'):
+        return (scheme, parseduri.netloc, parseduri.path)
+    raise NotImplementedError('URI protocol not implemented for `%s`' % uri)
+
 
 
 logger = getLogger('cubicweb.utils')
