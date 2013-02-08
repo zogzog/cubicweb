@@ -64,6 +64,8 @@ Example of use (run this with `cubicweb-ctl shell instance import-script.py`):
 .. BUG file with one column are not parsable
 .. TODO rollback() invocation is not possible yet
 """
+from __future__ import with_statement
+
 __docformat__ = "restructuredtext en"
 
 import sys
