@@ -205,9 +205,12 @@ class InstanceCommandFork(InstanceCommand):
 class ListCommand(Command):
     """List configurations, cubes and instances.
 
-    list available configurations, installed cubes, and registered instances
+    List available configurations, installed cubes, and registered instances.
+
+    If given, the optional argument allows to restrict listing only a category of items.
     """
     name = 'list'
+    arguments = '[all|cubes|configurations|instances]'
     options = (
         ('verbose',
          {'short': 'v', 'action' : 'store_true',
@@ -216,92 +219,107 @@ class ListCommand(Command):
 
     def run(self, args):
         """run the command with its specific arguments"""
-        if args:
+        if not args:
+            mode = 'all'
+        elif len(args) == 1:
+            mode = args[0]
+        else:
             raise BadCommandUsage('Too many arguments')
+
         from cubicweb.migration import ConfigurationProblem
-        print 'CubicWeb %s (%s mode)' % (cwcfg.cubicweb_version(), cwcfg.mode)
-        print
-        print 'Available configurations:'
-        for config in CONFIGURATIONS:
-            print '*', config.name
-            for line in config.__doc__.splitlines():
-                line = line.strip()
-                if not line:
-                    continue
-                print '   ', line
-        print
-        cfgpb = ConfigurationProblem(cwcfg)
-        try:
-            cubesdir = pathsep.join(cwcfg.cubes_search_path())
-            namesize = max(len(x) for x in cwcfg.available_cubes())
-        except ConfigurationError as ex:
-            print 'No cubes available:', ex
-        except ValueError:
-            print 'No cubes available in %s' % cubesdir
-        else:
-            print 'Available cubes (%s):' % cubesdir
-            for cube in cwcfg.available_cubes():
-                try:
-                    tinfo = cwcfg.cube_pkginfo(cube)
-                    tversion = tinfo.version
-                    cfgpb.add_cube(cube, tversion)
-                except (ConfigurationError, AttributeError) as ex:
-                    tinfo = None
-                    tversion = '[missing cube information: %s]' % ex
-                print '* %s %s' % (cube.ljust(namesize), tversion)
-                if self.config.verbose:
-                    if tinfo:
-                        descr = getattr(tinfo, 'description', '')
-                        if not descr:
-                            descr = getattr(tinfo, 'short_desc', '')
-                            if descr:
-                                warn('[3.8] short_desc is deprecated, update %s'
-                                     ' pkginfo' % cube, DeprecationWarning)
-                            else:
-                                descr = tinfo.__doc__
-                        if descr:
-                            print '    '+ '    \n'.join(descr.splitlines())
-                    modes = detect_available_modes(cwcfg.cube_dir(cube))
-                    print '    available modes: %s' % ', '.join(modes)
-        print
-        try:
-            regdir = cwcfg.instances_dir()
-        except ConfigurationError as ex:
-            print 'No instance available:', ex
+
+        if mode == 'all':
+            print 'CubicWeb %s (%s mode)' % (cwcfg.cubicweb_version(), cwcfg.mode)
             print
-            return
-        instances = list_instances(regdir)
-        if instances:
-            print 'Available instances (%s):' % regdir
-            for appid in instances:
-                modes = cwcfg.possible_configurations(appid)
-                if not modes:
-                    print '* %s (BROKEN instance, no configuration found)' % appid
-                    continue
-                print '* %s (%s)' % (appid, ', '.join(modes))
-                try:
-                    config = cwcfg.config_for(appid, modes[0])
-                except Exception as exc:
-                    print '    (BROKEN instance, %s)' % exc
-                    continue
-        else:
-            print 'No instance available in %s' % regdir
-        print
-        # configuration management problem solving
-        cfgpb.solve()
-        if cfgpb.warnings:
-            print 'Warnings:\n', '\n'.join('* '+txt for txt in cfgpb.warnings)
-        if cfgpb.errors:
-            print 'Errors:'
-            for op, cube, version, src in cfgpb.errors:
-                if op == 'add':
-                    print '* cube', cube,
-                    if version:
-                        print ' version', version,
-                    print 'is not installed, but required by %s' % src
-                else:
-                    print '* cube %s version %s is installed, but version %s is required by %s' % (
-                        cube, cfgpb.cubes[cube], version, src)
+
+        if mode in ('all', 'config', 'configurations'):
+            print 'Available configurations:'
+            for config in CONFIGURATIONS:
+                print '*', config.name
+                for line in config.__doc__.splitlines():
+                    line = line.strip()
+                    if not line:
+                        continue
+                    print '   ', line
+            print
+
+        if mode in ('all', 'cubes'):
+            cfgpb = ConfigurationProblem(cwcfg)
+            try:
+                cubesdir = pathsep.join(cwcfg.cubes_search_path())
+                namesize = max(len(x) for x in cwcfg.available_cubes())
+            except ConfigurationError as ex:
+                print 'No cubes available:', ex
+            except ValueError:
+                print 'No cubes available in %s' % cubesdir
+            else:
+                print 'Available cubes (%s):' % cubesdir
+                for cube in cwcfg.available_cubes():
+                    try:
+                        tinfo = cwcfg.cube_pkginfo(cube)
+                        tversion = tinfo.version
+                        cfgpb.add_cube(cube, tversion)
+                    except (ConfigurationError, AttributeError) as ex:
+                        tinfo = None
+                        tversion = '[missing cube information: %s]' % ex
+                    print '* %s %s' % (cube.ljust(namesize), tversion)
+                    if self.config.verbose:
+                        if tinfo:
+                            descr = getattr(tinfo, 'description', '')
+                            if not descr:
+                                descr = getattr(tinfo, 'short_desc', '')
+                                if descr:
+                                    warn('[3.8] short_desc is deprecated, update %s'
+                                         ' pkginfo' % cube, DeprecationWarning)
+                                else:
+                                    descr = tinfo.__doc__
+                            if descr:
+                                print '    '+ '    \n'.join(descr.splitlines())
+                        modes = detect_available_modes(cwcfg.cube_dir(cube))
+                        print '    available modes: %s' % ', '.join(modes)
+            print
+
+        if mode in ('all', 'instances'):
+            try:
+                regdir = cwcfg.instances_dir()
+            except ConfigurationError as ex:
+                print 'No instance available:', ex
+                print
+                return
+            instances = list_instances(regdir)
+            if instances:
+                print 'Available instances (%s):' % regdir
+                for appid in instances:
+                    modes = cwcfg.possible_configurations(appid)
+                    if not modes:
+                        print '* %s (BROKEN instance, no configuration found)' % appid
+                        continue
+                    print '* %s (%s)' % (appid, ', '.join(modes))
+                    try:
+                        config = cwcfg.config_for(appid, modes[0])
+                    except Exception as exc:
+                        print '    (BROKEN instance, %s)' % exc
+                        continue
+            else:
+                print 'No instance available in %s' % regdir
+            print
+
+        if mode == 'all':
+            # configuration management problem solving
+            cfgpb.solve()
+            if cfgpb.warnings:
+                print 'Warnings:\n', '\n'.join('* '+txt for txt in cfgpb.warnings)
+            if cfgpb.errors:
+                print 'Errors:'
+                for op, cube, version, src in cfgpb.errors:
+                    if op == 'add':
+                        print '* cube', cube,
+                        if version:
+                            print ' version', version,
+                        print 'is not installed, but required by %s' % src
+                    else:
+                        print '* cube %s version %s is installed, but version %s is required by %s' % (
+                            cube, cfgpb.cubes[cube], version, src)
 
 def check_options_consistency(config):
     if config.automatic and config.config_level > 0:
