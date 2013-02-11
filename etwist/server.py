@@ -31,7 +31,6 @@ from time import mktime
 from datetime import date, timedelta
 from urlparse import urlsplit, urlunsplit
 from cgi import FieldStorage, parse_header
-from cStringIO import StringIO
 
 from twisted.internet import reactor, task, threads
 from twisted.internet.defer import maybeDeferred
@@ -40,6 +39,7 @@ from twisted.web import static, resource
 from twisted.web.server import NOT_DONE_YET
 
 
+from logilab.mtconverter import xml_escape
 from logilab.common.decorators import monkeypatch
 
 from cubicweb import (AuthenticationError, ConfigurationError,
@@ -144,9 +144,8 @@ class CubicWebRootResource(resource.Resource):
             request.process_multipart()
             return self._render_request(request)
         except Exception:
-            errorstream = StringIO()
-            traceback.print_exc(file=errorstream)
-            return HTTPResponse(stream='<pre>%s</pre>' % errorstream.getvalue(),
+            trace = traceback.format_exc()
+            return HTTPResponse(stream='<pre>%s</pre>' % xml_escape(trace),
                                 code=500, twisted_request=request)
 
     def _render_request(self, request):
