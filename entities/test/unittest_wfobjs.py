@@ -96,7 +96,7 @@ class WorkflowTC(CubicWebTC):
     def setup_database(self):
         req = self.request()
         rschema = self.schema['in_state']
-        for rdef in rschema.rdefs.values():
+        for rdef in rschema.rdefs.itervalues():
             self.assertEqual(rdef.cardinality, '1*')
         self.member = self.create_user(req, 'member')
 

@@ -1011,4 +1011,4 @@ def registration_callback(vreg):
             AutomaticEntityForm.error('field for %s %s may not be found in schema' % (rtype, role))
             return None
 
-    vreg.register_all(globals().values(), __name__)
+    vreg.register_all(globals().itervalues(), __name__)

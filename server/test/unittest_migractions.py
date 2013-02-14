@@ -472,7 +472,7 @@ class MigrationCommandsTC(CubicWebTC):
     def test_add_remove_cube_and_deps(self):
         cubes = set(self.config.cubes())
         schema = self.repo.schema
-        self.assertEqual(sorted((str(s), str(o)) for s, o in schema['see_also'].rdefs.keys()),
+        self.assertEqual(sorted((str(s), str(o)) for s, o in schema['see_also'].rdefs.iterkeys()),
                           sorted([('EmailThread', 'EmailThread'), ('Folder', 'Folder'),
                                   ('Bookmark', 'Bookmark'), ('Bookmark', 'Note'),
                                   ('Note', 'Note'), ('Note', 'Bookmark')]))
@@ -487,7 +487,7 @@ class MigrationCommandsTC(CubicWebTC):
                 for ertype in ('Email', 'EmailThread', 'EmailPart', 'File',
                                'sender', 'in_thread', 'reply_to', 'data_format'):
                     self.assertFalse(ertype in schema, ertype)
-                self.assertEqual(sorted(schema['see_also'].rdefs.keys()),
+                self.assertEqual(sorted(schema['see_also'].rdefs.iterkeys()),
                                   sorted([('Folder', 'Folder'),
                                           ('Bookmark', 'Bookmark'),
                                           ('Bookmark', 'Note'),
@@ -510,7 +510,7 @@ class MigrationCommandsTC(CubicWebTC):
             for ertype in ('Email', 'EmailThread', 'EmailPart', 'File',
                            'sender', 'in_thread', 'reply_to', 'data_format'):
                 self.assertTrue(ertype in schema, ertype)
-            self.assertEqual(sorted(schema['see_also'].rdefs.keys()),
+            self.assertEqual(sorted(schema['see_also'].rdefs.iterkeys()),
                               sorted([('EmailThread', 'EmailThread'), ('Folder', 'Folder'),
                                       ('Bookmark', 'Bookmark'),
                                       ('Bookmark', 'Note'),

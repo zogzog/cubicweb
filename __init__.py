@@ -215,7 +215,7 @@ def validation_error(entity, errors, substitutions=None, i18nvalues=None):
         # set empty dict else translation won't be done for backward
         # compatibility reason (see ValidationError.translate method)
         substitutions = {}
-    for key in errors.keys():
+    for key in list(errors):
         if isinstance(key, tuple):
             errors[rname(*key)] = errors.pop(key)
     return ValidationError(getattr(entity, 'eid', entity), errors,

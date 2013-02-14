@@ -238,8 +238,8 @@ class FormRenderer(AppObject):
         if form.fieldsets_in_order:
             fieldsets = form.fieldsets_in_order
         else:
-            fieldsets = byfieldset.keys()
-        for fieldset in fieldsets:
+            fieldsets = byfieldset.iterkeys()
+        for fieldset in list(fieldsets):
             try:
                 fields = byfieldset.pop(fieldset)
             except KeyError:

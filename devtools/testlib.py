@@ -1206,7 +1206,7 @@ def not_selected(vreg, appobject):
 #     # XXX broken
 #     from cubicweb.devtools.apptest import TestEnvironment
 #     env = testclass._env = TestEnvironment('data', configcls=testclass.configcls)
-#     for reg in env.vreg.values():
+#     for reg in env.vreg.itervalues():
 #         reg._selected = {}
 #         try:
 #             orig_select_best = reg.__class__.__orig_select_best

@@ -187,7 +187,7 @@ class AbstractSource(object):
         except KeyError:
             pass
         # check for unknown options
-        if confdict and not confdict.keys() == ['adapter']:
+        if confdict and tuple(confdict) != ('adapter',):
             if fail_if_unknown:
                 msg = _('unknown options %s') % ', '.join(confdict)
                 raise ValidationError(eid, {role_name('config', 'subject'): msg})
@@ -242,7 +242,7 @@ class AbstractSource(object):
         """remove sensitive information such as login / password from source
         definition
         """
-        for key in sourcedef.keys():
+        for key in list(sourcedef):
             if not key in self.PUBLIC_KEYS:
                 sourcedef.pop(key)
 

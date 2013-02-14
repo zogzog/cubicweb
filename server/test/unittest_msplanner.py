@@ -149,7 +149,7 @@ class PartPlanInformationTC(BaseMSPlannerTC):
         plan.preprocess(union)
         ppi = PartPlanInformation(plan, union.children[0])
         for sourcevars in ppi._sourcesterms.itervalues():
-            for var in sourcevars.keys():
+            for var in list(sourcevars):
                 solindices = sourcevars.pop(var)
                 sourcevars[var._ms_table_key()] = solindices
         self.assertEqual(ppi._sourcesterms, sourcesterms)

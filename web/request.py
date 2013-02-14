@@ -459,7 +459,7 @@ class CubicWebRequestBase(DBAPIRequest):
 
     def clear_user_callbacks(self):
         if self.session is not None: # XXX
-            for key in self.session.data.keys():
+            for key in list(self.session.data):
                 if key.startswith('cb_'):
                     del self.session.data[key]
 
@@ -753,8 +753,7 @@ class CubicWebRequestBase(DBAPIRequest):
     def from_controller(self):
         """return the id (string) of the controller issuing the request"""
         controller = self.relative_path(False).split('/', 1)[0]
-        registered_controllers = self.vreg['controllers'].keys()
-        if controller in registered_controllers:
+        if controller in self.vreg['controllers']:
             return controller
         return 'view'
 

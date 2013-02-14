@@ -393,7 +393,7 @@ def _execmany_thread(sql_connect, statements, dump_output_dir=None,
                 if isinstance(data[0], (tuple, list)):
                     columns = None
                 else:
-                    columns = data[0].keys()
+                    columns = list(data[0])
                 execmany_func(cu, statement, data, table, columns, encoding)
             except Exception:
                 print 'unable to copy data into table %s', table
@@ -755,7 +755,7 @@ class CWImportController(object):
                     self.tell(pformat(sorted(error[1])))
 
     def _print_stats(self):
-        nberrors = sum(len(err) for err in self.errors.values())
+        nberrors = sum(len(err) for err in self.errors.itervalues())
         self.tell('\nImport statistics: %i entities, %i types, %i relations and %i errors'
                   % (self.store.nb_inserted_entities,
                      self.store.nb_inserted_types,
@@ -1056,7 +1056,7 @@ class SQLGenSourceWrapper(object):
                 # for a given inlined relation,
                 # browse each couple to be inserted
                 for data in datalist:
-                    keys = data.keys()
+                    keys = list(data)
                     # For inlined relations, it exists only two case:
                     # (rtype, cw_eid) or (cw_eid, rtype)
                     if keys[0] == 'cw_eid':

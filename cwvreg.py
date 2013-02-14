@@ -91,7 +91,7 @@ Examples:
    # web/views/basecomponents.py
    def registration_callback(vreg):
       # register everything in the module except SeeAlsoComponent
-      vreg.register_all(globals().values(), __name__, (SeeAlsoVComponent,))
+      vreg.register_all(globals().itervalues(), __name__, (SeeAlsoVComponent,))
       # conditionally register SeeAlsoVComponent
       if 'see_also' in vreg.schema:
           vreg.register(SeeAlsoVComponent)
@@ -624,7 +624,7 @@ class CWRegistryStore(RegistryStore):
         """
         self.schema = schema
         for registry, regcontent in self.items():
-            for objects in regcontent.values():
+            for objects in regcontent.itervalues():
                 for obj in objects:
                     obj.schema = schema
 
@@ -725,7 +725,7 @@ class CWRegistryStore(RegistryStore):
                     self.unregister(obj)
         super(CWRegistryStore, self).initialization_completed()
         if 'uicfg' in self: # 'uicfg' is not loaded in a pure repository mode
-            for rtags in self['uicfg'].values():
+            for rtags in self['uicfg'].itervalues():
                 for rtag in rtags:
                     # don't check rtags if we don't want to cleanup_interface_sobjects
                     rtag.init(self.schema, check=self.config.cleanup_interface_sobjects)

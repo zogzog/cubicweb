@@ -194,7 +194,7 @@ class CWEntityXMLParserTC(CubicWebTC):
                           })
         session = self.repo.internal_session(safe=True)
         stats = dfsource.pull_data(session, force=True, raise_on_error=True)
-        self.assertEqual(sorted(stats.keys()), ['checked', 'created', 'updated'])
+        self.assertEqual(sorted(stats), ['checked', 'created', 'updated'])
         self.assertEqual(len(stats['created']), 2)
         self.assertEqual(stats['updated'], set())
 

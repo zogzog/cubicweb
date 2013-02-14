@@ -123,7 +123,7 @@ def preprocess_inlined_relations(session, entity):
     relations = []
     activeintegrity = session.is_hook_category_activated('activeintegrity')
     eschema = entity.e_schema
-    for attr in entity.cw_edited.iterkeys():
+    for attr in entity.cw_edited:
         rschema = eschema.subjrels[attr]
         if not rschema.final: # inlined relation
             value = entity.cw_edited[attr]
@@ -201,7 +201,7 @@ class Repository(object):
             # changed.  To any existing user object have a different class than
             # the new loaded one. We are hot fixing this.
             usercls = self.vreg['etypes'].etype_class('CWUser')
-            for session in self._sessions.values():
+            for session in self._sessions.itervalues():
                 if not isinstance(session.user, InternalManager):
                     session.user.__class__ = usercls
 
@@ -327,7 +327,7 @@ class Repository(object):
         self.querier.set_schema(schema)
         # don't use self.sources, we may want to give schema even to disabled
         # sources
-        for source in self.sources_by_uri.values():
+        for source in self.sources_by_uri.itervalues():
             source.set_schema(schema)
         self.schema = schema
 
@@ -415,7 +415,7 @@ class Repository(object):
         # XXX: session.cnxset is accessed from a local storage, would be interesting
         #      to see if there is a cnxset set in any thread specific data)
         return '%s: %s (%s)' % (self._cnxsets_pool.qsize(),
-                                ','.join(session.user.login for session in self._sessions.values()
+                                ','.join(session.user.login for session in self._sessions.itervalues()
                                          if session.cnxset),
                                 threading.currentThread())
     def shutdown(self):
@@ -729,7 +729,7 @@ class Repository(object):
                                      for rschema, _eschema in cwuser.attribute_definitions()
                                      if not rschema.meta)
         cwuserattrs = self._cwuser_attrs
-        for k in chain(fetch_attrs, query_attrs.iterkeys()):
+        for k in chain(fetch_attrs, query_attrs):
             if k not in cwuserattrs:
                 raise Exception('bad input for find_user')
         with self.internal_session() as session:
@@ -738,7 +738,7 @@ class Repository(object):
             rql = 'Any %s WHERE X is CWUser, ' % ','.join(var[1] for var in vars)
             rql += ','.join('X %s %s' % (var[0], var[1]) for var in vars) + ','
             rset = session.execute(rql + ','.join('X %s %%(%s)s' % (attr, attr)
-                                                  for attr in query_attrs.iterkeys()),
+                                                  for attr in query_attrs),
                                    query_attrs)
             return rset.rows
 
@@ -962,7 +962,7 @@ class Repository(object):
 
     def close_sessions(self):
         """close every opened sessions"""
-        for sessionid in self._sessions.keys():
+        for sessionid in self._sessions:
             try:
                 self.close(sessionid, checkshuttingdown=False)
             except Exception: # XXX BaseException?
@@ -976,7 +976,7 @@ class Repository(object):
         self.debug('cleaning session unused since %s',
                    strftime('%T', localtime(mintime)))
         nbclosed = 0
-        for session in self._sessions.values():
+        for session in self._sessions.itervalues():
             if session.timestamp < mintime:
                 self.close(session.id)
                 nbclosed += 1

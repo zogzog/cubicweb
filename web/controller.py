@@ -152,7 +152,7 @@ class Controller(AppObject):
                 and '_cwmsgid' in newparams):
                 # are we here on creation or modification?
                 if any(eid == self._edited_entity.eid
-                       for eid in self._cw.data.get('eidmap', {}).values()):
+                       for eid in self._cw.data.get('eidmap', {}).itervalues()):
                     msg = self._cw._('click here to see created entity')
                 else:
                     msg = self._cw._('click here to see edited entity')

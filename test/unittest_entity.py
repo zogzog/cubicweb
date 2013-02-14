@@ -127,11 +127,11 @@ class EntityTC(CubicWebTC):
         self.assertEqual(user._cw_related_cache, {})
         email = user.primary_email[0]
         self.assertEqual(sorted(user._cw_related_cache), ['primary_email_subject'])
-        self.assertEqual(email._cw_related_cache.keys(), ['primary_email_object'])
+        self.assertEqual(list(email._cw_related_cache), ['primary_email_object'])
         groups = user.in_group
         self.assertEqual(sorted(user._cw_related_cache), ['in_group_subject', 'primary_email_subject'])
         for group in groups:
-            self.assertFalse('in_group_subject' in group._cw_related_cache, group._cw_related_cache.keys())
+            self.assertFalse('in_group_subject' in group._cw_related_cache, list(group._cw_related_cache))
 
     def test_related_limit(self):
         req = self.request()

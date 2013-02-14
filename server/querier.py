@@ -530,7 +530,7 @@ class InsertPlan(ExecutionPlan):
 
     def relation_defs(self):
         """return the list for relation definitions to insert"""
-        for rdefs in self._expanded_r_defs.values():
+        for rdefs in self._expanded_r_defs.itervalues():
             for rdef in rdefs:
                 yield rdef
         for rdef in self.r_defs:

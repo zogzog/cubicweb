@@ -247,11 +247,10 @@ repository (default to 5 minutes).',
             # fake connection wrapper returned when we can't connect to the
             # external source (hence we've no chance to synchronize...)
             return
-        etypes = self.support_entities.keys()
+        etypes = list(self.support_entities)
         if mtime is None:
             mtime = self.latest_retrieval
-        updatetime, modified, deleted = extrepo.entities_modified_since(
-            etypes, mtime)
+        updatetime, modified, deleted = extrepo.entities_modified_since(etypes, mtime)
         self._query_cache.clear()
         repo = self.repo
         session = repo.internal_session()

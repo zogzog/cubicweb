@@ -74,7 +74,7 @@ for entity in rql('Any X WHERE X cw_source S, S eid %(s)s', {'s': source.eid}).e
 
 # only cleanup entities table, remaining stuff should be cleaned by a c-c
 # db-check to be run after this script
-for entities in todelete.values():
+for entities in todelete.itervalues():
     system_source.delete_info_multi(session, entities, source_name)
 
 
@@ -87,7 +87,7 @@ for mappart in rql('Any X,SCH WHERE X cw_schema SCH, X cw_for_source S, S eid %(
     if schemaent.__regid__ != 'CWEType':
         assert schemaent.__regid__ == 'CWRType'
         sch = schema._eid_index[schemaent.eid]
-        for rdef in sch.rdefs.values():
+        for rdef in sch.rdefs.itervalues():
             if not source.support_entity(rdef.subject) \
                     or not source.support_entity(rdef.object):
                 continue

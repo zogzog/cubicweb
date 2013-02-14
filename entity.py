@@ -553,7 +553,7 @@ class Entity(AppObject):
 
     def __repr__(self):
         return '<Entity %s %s %s at %s>' % (
-            self.e_schema, self.eid, self.cw_attr_cache.keys(), id(self))
+            self.e_schema, self.eid, list(self.cw_attr_cache), id(self))
 
     def __cmp__(self, other):
         raise NotImplementedError('comparison not implemented for %s' % self.__class__)

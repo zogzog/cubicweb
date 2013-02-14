@@ -425,7 +425,7 @@ class CubicWebPublisher(object):
         """
         # don't log form values they may contains sensitive information
         self.debug('publish "%s" (%s, form params: %s)',
-                   path, req.session.sessionid, req.form.keys())
+                   path, req.session.sessionid, list(req.form))
         # remove user callbacks on a new request (except for json controllers
         # to avoid callbacks being unregistered before they could be called)
         tstart = clock()

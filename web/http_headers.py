@@ -27,7 +27,7 @@ header_case_mapping = {}
 
 def casemappingify(d):
     global header_case_mapping
-    newd = dict([(key.lower(),key) for key in d.keys()])
+    newd = dict([(key.lower(),key) for key in d])
     header_case_mapping.update(newd)
 
 def lowerify(d):

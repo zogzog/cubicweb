@@ -575,7 +575,7 @@ class ReleditTags(NoTargetRelationTagsDict):
     _keys = frozenset('novalue_label novalue_include_rtype reload rvid edit_target'.split())
 
     def tag_relation(self, key, tag):
-        for tagkey in tag.iterkeys():
+        for tagkey in tag:
             assert tagkey in self._keys, 'tag %r not in accepted tags: %r' % (tag, self._keys)
         return super(ReleditTags, self).tag_relation(key, tag)
 
@@ -659,5 +659,5 @@ actionbox_appearsin_addmenu = ActionBoxUicfg()
 
 
 def registration_callback(vreg):
-    vreg.register_all(globals().values(), __name__)
+    vreg.register_all(globals().itervalues(), __name__)
     indexview_etype_section.init(vreg.schema)
