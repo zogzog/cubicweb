@@ -17,8 +17,6 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """json export views"""
 
-from __future__ import with_statement
-
 __docformat__ = "restructuredtext en"
 _ = unicode
 

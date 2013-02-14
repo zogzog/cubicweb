@@ -21,7 +21,6 @@
 Note:
   syncschema.py hooks are mostly tested in server/test/unittest_migrations.py
 """
-from __future__ import with_statement
 
 from cubicweb import ValidationError
 from cubicweb.devtools.testlib import CubicWebTC

@@ -17,8 +17,6 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unit tests for module cubicweb.schema"""
 
-from __future__ import with_statement
-
 import sys
 from os.path import join, isabs, basename, dirname
 

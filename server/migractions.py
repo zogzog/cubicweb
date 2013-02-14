@@ -26,9 +26,6 @@ The following data actions are supported for now:
 * add an entity
 * execute raw RQL queries
 """
-
-from __future__ import with_statement
-
 __docformat__ = "restructuredtext en"
 
 import sys

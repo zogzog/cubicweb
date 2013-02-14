@@ -17,8 +17,6 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """plan execution of rql queries on a single source"""
 
-from __future__ import with_statement
-
 __docformat__ = "restructuredtext en"
 
 from rql.stmts import Union, Select

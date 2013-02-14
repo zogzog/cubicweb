@@ -17,8 +17,6 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """cubicweb.web.views.basecontrollers unit tests"""
 
-from __future__ import with_statement
-
 from urlparse import urlsplit, urlunsplit, urljoin
 # parse_qs is deprecated in cgi and has been moved to urlparse in Python 2.6
 try:

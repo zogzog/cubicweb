@@ -25,8 +25,6 @@ Additional boxes (disabled by default):
 * possible views box
 * startup views box
 """
-from __future__ import with_statement
-
 __docformat__ = "restructuredtext en"
 _ = unicode
 

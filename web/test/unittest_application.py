@@ -17,8 +17,6 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unit tests for cubicweb.web.application"""
 
-from __future__ import with_statement
-
 import base64, Cookie
 import sys
 from urllib import unquote

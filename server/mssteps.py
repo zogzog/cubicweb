@@ -22,8 +22,6 @@ FIXME : this code needs refactoring. Some problems :
 * each step has is own members (this is not necessarily bad, but a bit messy
   for now)
 """
-from __future__ import with_statement
-
 __docformat__ = "restructuredtext en"
 
 from rql.nodes import VariableRef, Variable, Function

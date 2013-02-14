@@ -18,7 +18,6 @@
 """datafeed sources: copy data from an external data stream into the system
 database
 """
-from __future__ import with_statement
 
 import urllib2
 import StringIO

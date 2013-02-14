@@ -18,9 +18,6 @@
 """Helper classes to execute RQL queries on a set of sources, performing
 security checking and data aggregation.
 """
-
-from __future__ import with_statement
-
 __docformat__ = "restructuredtext en"
 
 from itertools import repeat

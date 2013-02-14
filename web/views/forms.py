@@ -41,7 +41,6 @@ Actually there exists a third form class:
 
 but you'll use this one rarely.
 """
-from __future__ import with_statement
 __docformat__ = "restructuredtext en"
 
 from warnings import warn

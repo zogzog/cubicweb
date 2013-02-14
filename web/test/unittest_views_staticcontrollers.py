@@ -1,5 +1,3 @@
-from __future__ import with_statement
-
 from logilab.common.testlib import tag, Tags
 from cubicweb.devtools.testlib import CubicWebTC
 

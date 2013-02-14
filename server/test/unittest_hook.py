@@ -18,16 +18,12 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unit/functional tests for cubicweb.server.hook"""
 
-from __future__ import with_statement
-
 from logilab.common.testlib import TestCase, unittest_main, mock_object
-
 
 from cubicweb.devtools import TestServerConfiguration, fake
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.server import hook
 from cubicweb.hooks import integrity, syncschema
-
 
 def clean_session_ops(func):
     def wrapper(self, *args, **kwargs):

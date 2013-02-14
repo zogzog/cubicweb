@@ -26,9 +26,6 @@ repository mainly:
 * handles session management
 * provides method for pyro registration, to call if pyro is enabled
 """
-
-from __future__ import with_statement
-
 __docformat__ = "restructuredtext en"
 
 import sys

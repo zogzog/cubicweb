@@ -17,8 +17,6 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unit tests for module cubicweb.server.msplanner"""
 
-from __future__ import with_statement
-
 from logilab.common.decorators import clear_cache
 from yams.buildobjs import RelationDefinition
 from rql import BadRQLQuery

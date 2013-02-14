@@ -20,9 +20,6 @@
 * integrity of a CubicWeb repository. Hum actually only the system database is
   checked.
 """
-
-from __future__ import with_statement
-
 __docformat__ = "restructuredtext en"
 
 import sys

@@ -18,8 +18,6 @@
 """this module contains base classes and utilities for integration with running
 http server
 """
-from __future__ import with_statement
-
 __docformat__ = "restructuredtext en"
 
 import threading

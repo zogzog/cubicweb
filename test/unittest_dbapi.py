@@ -17,8 +17,6 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unittest for cubicweb.dbapi"""
 
-from __future__ import with_statement
-
 from copy import copy
 
 from logilab.common import tempattr

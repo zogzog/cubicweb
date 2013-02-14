@@ -20,8 +20,6 @@
 * the rql input form
 * the logged user link
 """
-from __future__ import with_statement
-
 __docformat__ = "restructuredtext en"
 _ = unicode
 

@@ -21,8 +21,6 @@
 The server module contains functions to initialize a new repository.
 """
 
-from __future__ import with_statement
-
 __docformat__ = "restructuredtext en"
 
 import sys

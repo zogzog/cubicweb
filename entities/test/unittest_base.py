@@ -17,9 +17,7 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unit tests for cubicweb.entities.base module
-
 """
-from __future__ import with_statement
 
 from logilab.common.testlib import unittest_main
 from logilab.common.decorators import clear_cache

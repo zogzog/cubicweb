@@ -17,8 +17,6 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unit tests for module cubicweb.server.migractions"""
 
-from __future__ import with_statement
-
 from copy import deepcopy
 from datetime import date
 from os.path import join

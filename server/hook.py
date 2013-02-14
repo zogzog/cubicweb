@@ -245,9 +245,6 @@ Hooks and operations classes
 .. autoclass:: cubicweb.server.hook.LateOperation
 .. autoclass:: cubicweb.server.hook.DataOperationMixIn
 """
-
-from __future__ import with_statement
-
 __docformat__ = "restructuredtext en"
 
 from warnings import warn

@@ -18,7 +18,6 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unit tests for modules cubicweb.server.querier and cubicweb.server.ssplanner
 """
-from __future__ import with_statement
 
 from datetime import date, datetime, timedelta, tzinfo
 

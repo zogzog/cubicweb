@@ -19,7 +19,6 @@
 
 it should only include low level schema changes
 """
-from __future__ import with_statement
 
 from cubicweb.server.session import hooks_control
 from cubicweb.server import schemaserial as ss

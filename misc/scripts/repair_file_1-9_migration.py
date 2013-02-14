@@ -4,7 +4,6 @@ FYI, this migration occurred :
 * on our intranet on July 07 2010
 * on our extranet on July 16 2010
 """
-from __future__ import with_statement
 
 try:
     backupinstance, = __args__

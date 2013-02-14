@@ -23,9 +23,6 @@ Notes:
   string. This is because it should actually be Bytes but we want an index on
   it for fast querying.
 """
-
-from __future__ import with_statement
-
 __docformat__ = "restructuredtext en"
 
 try:
