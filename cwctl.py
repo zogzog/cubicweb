@@ -165,11 +165,11 @@ class InstanceCommand(Command):
         cmdmeth = getattr(self, '%s_instance' % self.name)
         try:
             status = cmdmeth(appid)
-        except (ExecutionError, ConfigurationError), ex:
+        except (ExecutionError, ConfigurationError) as ex:
             sys.stderr.write('instance %s not %s: %s\n' % (
                     appid, self.actionverb, ex))
             status = 4
-        except Exception, ex:
+        except Exception as ex:
             import traceback
             traceback.print_exc()
             sys.stderr.write('instance %s not %s: %s\n' % (
@@ -234,7 +234,7 @@ class ListCommand(Command):
         try:
             cubesdir = pathsep.join(cwcfg.cubes_search_path())
             namesize = max(len(x) for x in cwcfg.available_cubes())
-        except ConfigurationError, ex:
+        except ConfigurationError as ex:
             print 'No cubes available:', ex
         except ValueError:
             print 'No cubes available in %s' % cubesdir
@@ -245,7 +245,7 @@ class ListCommand(Command):
                     tinfo = cwcfg.cube_pkginfo(cube)
                     tversion = tinfo.version
                     cfgpb.add_cube(cube, tversion)
-                except (ConfigurationError, AttributeError), ex:
+                except (ConfigurationError, AttributeError) as ex:
                     tinfo = None
                     tversion = '[missing cube information: %s]' % ex
                 print '* %s %s' % (cube.ljust(namesize), tversion)
@@ -266,7 +266,7 @@ class ListCommand(Command):
         print
         try:
             regdir = cwcfg.instances_dir()
-        except ConfigurationError, ex:
+        except ConfigurationError as ex:
             print 'No instance available:', ex
             print
             return
@@ -281,7 +281,7 @@ class ListCommand(Command):
                 print '* %s (%s)' % (appid, ', '.join(modes))
                 try:
                     config = cwcfg.config_for(appid, modes[0])
-                except Exception, exc:
+                except Exception as exc:
                     print '    (BROKEN instance, %s)' % exc
                     continue
         else:
@@ -365,7 +365,7 @@ class CreateInstanceCommand(Command):
         try:
             templdirs = [cwcfg.cube_dir(cube)
                          for cube in cubes]
-        except ConfigurationError, ex:
+        except ConfigurationError as ex:
             print ex
             print '\navailable cubes:',
             print ', '.join(cwcfg.available_cubes())
@@ -466,7 +466,7 @@ class DeleteInstanceCommand(Command):
         # remove instance data directory
         try:
             rm(config.appdatahome)
-        except OSError, ex:
+        except OSError as ex:
             import errno
             if ex.errno != errno.ENOENT:
                 raise
@@ -561,7 +561,7 @@ class StopInstanceCommand(InstanceCommand):
         else:
             try:
                 wait_process_end(pid)
-            except ExecutionError, ex:
+            except ExecutionError as ex:
                 sys.stderr.write('%s\ntrying SIGKILL\n' % ex)
                 try:
                     kill(pid, signal.SIGKILL)
@@ -905,7 +905,7 @@ directly give URI as instance id instead',
             try:
                 login, pwd = manager_userpasswd(msg=None)
                 cnx = connect(appuri, login=login, password=pwd, mulcnx=False)
-            except AuthenticationError, ex:
+            except AuthenticationError as ex:
                 print ex
             except (KeyboardInterrupt, EOFError):
                 print
@@ -1013,10 +1013,10 @@ def run(args):
     cwcfg.load_cwctl_plugins()
     try:
         CWCTL.run(args)
-    except ConfigurationError, err:
+    except ConfigurationError as err:
         print 'ERROR: ', err
         sys.exit(1)
-    except ExecutionError, err:
+    except ExecutionError as err:
         print err
         sys.exit(2)
 

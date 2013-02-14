@@ -349,7 +349,7 @@ class QSPreProcessor(BaseQueryProcessor):
             try:
                 word1 = left_words[0]
                 return self._two_words_query(word1, quoted_part)
-            except BadRQLQuery, error:
+            except BadRQLQuery as error:
                 raise BadRQLQuery("unable to handle request %r" % ori_rql)
         # Case (2) : Company name "My own company";
         elif len(left_words) == 2:
@@ -400,10 +400,10 @@ class MagicSearchComponent(Component):
                 # FIXME : we don't want to catch any exception type here !
                 except (RQLSyntaxError, BadRQLQuery):
                     pass
-                except Unauthorized, ex:
+                except Unauthorized as ex:
                     unauthorized = ex
                     continue
-                except Exception, ex:
+                except Exception as ex:
                     LOGGER.debug('%s: %s', ex.__class__.__name__, ex)
                     continue
             if unauthorized:
@@ -461,7 +461,7 @@ class RQLSuggestionsBuilder(Component):
             else:
                 return ['%s WHERE %s' % (user_rql, suggestion)
                         for suggestion in self.rql_build_suggestions(select, incomplete_part)]
-        except Exception, exc: # we never want to crash
+        except Exception as exc: # we never want to crash
             self.debug('failed to build suggestions: %s', exc)
             return []
 

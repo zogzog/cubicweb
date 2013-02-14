@@ -332,7 +332,7 @@ class ApplicationTC(CubicWebTC):
         self.assertAuthFailure(req)
         try:
             form = self.app_handle_request(req, 'login')
-        except Redirect, redir:
+        except Redirect as redir:
             self.fail('anonymous user should get login form')
         self.assertTrue('__login' in form)
         self.assertTrue('__password' in form)

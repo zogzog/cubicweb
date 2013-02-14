@@ -216,7 +216,7 @@ def mk_entity(row, map):
                 res[dest] = func(res[dest])
                 if res[dest] is None:
                     break
-        except ValueError, err:
+        except ValueError as err:
             raise ValueError('error with %r field: %s' % (src, err)), None, sys.exc_info()[-1]
     return res
 
@@ -744,7 +744,7 @@ class CWImportController(object):
             txuuid = self.store.commit()
             if txuuid is not None:
                 self.tell('Transaction commited (txuuid: %s)' % txuuid)
-        except QueryError, ex:
+        except QueryError as ex:
             self.tell('Transaction aborted: %s' % ex)
         self._print_stats()
         if self.errors:

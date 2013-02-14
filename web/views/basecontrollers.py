@@ -212,14 +212,14 @@ def _validate_form(req, vreg):
         return (False, {None: req._('not authorized')}, None)
     try:
         ctrl.publish(None)
-    except ValidationError, ex:
+    except ValidationError as ex:
         return (False, _validation_error(req, ex), ctrl._edited_entity)
-    except Redirect, ex:
+    except Redirect as ex:
         try:
             txuuid = req.cnx.commit() # ValidationError may be raised on commit
-        except ValidationError, ex:
+        except ValidationError as ex:
             return (False, _validation_error(req, ex), ctrl._edited_entity)
-        except Exception, ex:
+        except Exception as ex:
             req.cnx.rollback()
             req.exception('unexpected error while validating form')
             return (False, str(ex).decode('utf-8'), ctrl._edited_entity)
@@ -231,7 +231,7 @@ def _validate_form(req, vreg):
             if ctrl._edited_entity:
                 ctrl._edited_entity.complete()
             return (True, ex.location, ctrl._edited_entity)
-    except Exception, ex:
+    except Exception as ex:
         req.cnx.rollback()
         req.exception('unexpected error while validating form')
         return (False, str(ex).decode('utf-8'), ctrl._edited_entity)
@@ -298,7 +298,7 @@ class UndoController(Controller):
         txuuid = self._cw.form['txuuid']
         try:
             self._cw.cnx.undo_transaction(txuuid)
-        except UndoTransactionException, exc:
+        except UndoTransactionException as exc:
             errors = exc.errors
             #This will cause a rollback in main_publish
             raise ValidationError(None, {None: '\n'.join(errors)})

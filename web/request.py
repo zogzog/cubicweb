@@ -880,7 +880,7 @@ class CubicWebRequestBase(DBAPIRequest):
                 user, passwd = base64.decodestring(rest).split(":", 1)
                 # XXX HTTP header encoding: use email.Header?
                 return user.decode('UTF8'), passwd
-            except Exception, ex:
+            except Exception as ex:
                 self.debug('bad authorization %s (%s: %s)',
                            auth, ex.__class__.__name__, ex)
         return None, None

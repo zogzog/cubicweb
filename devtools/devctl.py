@@ -386,7 +386,7 @@ def update_cubes_catalogs(cubes):
             continue
         try:
             toedit = update_cube_catalogs(cubedir)
-        except CalledProcessError, exc:
+        except CalledProcessError as exc:
             print '\n*** error while updating catalogs for cube', cubedir
             print 'cmd:\n%s' % exc.cmd
             print 'stdout:\n%s\nstderr:\n%s' % exc.data
@@ -606,7 +606,7 @@ layout, and a full featured cube with "full" layout.',
             print "-> creating cubes directory", cubesdir
             try:
                 mkdir(cubesdir)
-            except OSError, err:
+            except OSError as err:
                 self.fail("failed to create directory %r\n(%s)"
                           % (cubesdir, err))
         cubedir = osp.join(cubesdir, cubename)
@@ -694,7 +694,7 @@ class ExamineLogCommand(Command):
         for filepath in args:
             try:
                 stream = file(filepath)
-            except OSError, ex:
+            except OSError as ex:
                 raise BadCommandUsage("can't open rql log file %s: %s"
                                       % (filepath, ex))
             for lineno, line in enumerate(stream):
@@ -711,7 +711,7 @@ class ExamineLogCommand(Command):
                     clocktime = float(chunks[0][1:])
                     cputime = float(chunks[-3])
                     req.append( (clocktime, cputime) )
-                except Exception, exc:
+                except Exception as exc:
                     sys.stderr.write('Line %s: %s (%s)\n' % (lineno, exc, line))
         stat = []
         for rql, times in requests.iteritems():

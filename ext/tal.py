@@ -182,7 +182,7 @@ class CubicWebTemplate(simpleTAL.HTMLTemplate):
         """ Internally used when expanding a template that is part of a context."""
         try:
             interpreter.execute(self)
-        except UnicodeError, unierror:
+        except UnicodeError as unierror:
             LOGGER.exception(str(unierror))
             raise simpleTALES.ContextContentException("found non-unicode %r string in Context!" % unierror.args[1]), None, sys.exc_info()[-1]
 
@@ -230,7 +230,7 @@ def evaluatePython (self, expr):
     # XXX precompile expr will avoid late syntax error
     try:
         result = eval(expr, globals, locals)
-    except Exception, ex:
+    except Exception as ex:
         ex = ex.__class__('in %r: %s' % (expr, ex))
         raise ex, None, sys.exc_info()[-1]
     if (isinstance (result, simpleTALES.ContextVariable)):

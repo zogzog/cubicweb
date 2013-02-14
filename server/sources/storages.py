@@ -144,7 +144,7 @@ class BytesFileSystemStorage(Storage):
         fpath = source.binary_to_str(value)
         try:
             return Binary.from_file(fpath)
-        except EnvironmentError, ex:
+        except EnvironmentError as ex:
             source.critical("can't open %s: %s", value, ex)
             return None
 
@@ -264,7 +264,7 @@ class AddFileOp(hook.DataOperationMixIn, hook.Operation):
         for filepath in self.get_data():
             try:
                 unlink(filepath)
-            except Exception, ex:
+            except Exception as ex:
                 self.error('cant remove %s: %s' % (filepath, ex))
 
 class DeleteFileOp(hook.DataOperationMixIn, hook.Operation):
@@ -272,5 +272,5 @@ class DeleteFileOp(hook.DataOperationMixIn, hook.Operation):
         for filepath in self.get_data():
             try:
                 unlink(filepath)
-            except Exception, ex:
+            except Exception as ex:
                 self.error('cant remove %s: %s' % (filepath, ex))

@@ -114,7 +114,7 @@ def rql_role(role, rawtext, text, lineno, inliner, options={}, content=[]):
             vid = 'noresult'
         view = _cw.vreg['views'].select(vid, _cw, rset=rset)
         content = view.render()
-    except Exception, exc:
+    except Exception as exc:
         content = 'an error occured while interpreting this rql directive: %r' % exc
     set_classes(options)
     return [nodes.raw('', content, format='html')], []
@@ -155,7 +155,7 @@ def winclude_directive(name, arguments, options, content, lineno,
             source_path=path, encoding=encoding,
             error_handler=state.document.settings.input_encoding_error_handler,
             handle_io_errors=None)
-    except IOError, error:
+    except IOError as error:
         severe = state_machine.reporter.severe(
               'Problems with "%s" directive path:\n%s: %s.'
               % (name, error.__class__.__name__, error),
@@ -163,7 +163,7 @@ def winclude_directive(name, arguments, options, content, lineno,
         return [severe]
     try:
         include_text = include_file.read()
-    except UnicodeError, error:
+    except UnicodeError as error:
         severe = state_machine.reporter.severe(
               'Problem with "%s" directive:\n%s: %s'
               % (name, error.__class__.__name__, error),

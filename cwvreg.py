@@ -816,10 +816,10 @@ class CWRegistryStore(RegistryStore):
         for key, val in propvalues:
             try:
                 values[key] = self.typed_value(key, val)
-            except ValueError, ex:
+            except ValueError as ex:
                 self.warning('%s (you should probably delete that property '
                              'from the database)', ex)
-            except UnknownProperty, ex:
+            except UnknownProperty as ex:
                 self.warning('%s (you should probably delete that property '
                              'from the database)', ex)
 

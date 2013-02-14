@@ -315,7 +315,7 @@ class CubicWebTC(TestCase):
         try:
             self._init_repo()
             self.addCleanup(self._close_cnx)
-        except Exception, ex:
+        except Exception as ex:
             self.__class__._repo_init_failed = ex
             raise
         resume_tracing()
@@ -720,7 +720,7 @@ class CubicWebTC(TestCase):
         """
         try:
             callback(req)
-        except Redirect, ex:
+        except Redirect as ex:
             return self._parse_location(req, ex.location)
         else:
             self.fail('expected a Redirect exception')
@@ -1087,7 +1087,7 @@ class AutoPopulateTest(CubicWebTC):
         for rql, args in q:
             try:
                 cu.execute(rql, args)
-            except ValidationError, ex:
+            except ValidationError as ex:
                 # failed to satisfy some constraint
                 print 'error in automatic db population', ex
                 self.session.commit_state = None # reset uncommitable flag

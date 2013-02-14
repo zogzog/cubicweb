@@ -399,7 +399,7 @@ class ExecutionPlan(object):
         for solution in rqlst.solutions:
             try:
                 localcheck = check_read_access(session, rqlst, solution, self.args)
-            except Unauthorized, ex:
+            except Unauthorized as ex:
                 msg = 'remove %s from solutions since %s has no %s access to %s'
                 msg %= (solution, session.user.login, ex.args[0], ex.args[1])
                 msgs.append(msg)

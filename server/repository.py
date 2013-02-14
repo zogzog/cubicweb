@@ -343,7 +343,7 @@ class Repository(object):
                 deserialize_schema(appschema, session)
             except BadSchemaDefinition:
                 raise
-            except Exception, ex:
+            except Exception as ex:
                 import traceback
                 traceback.print_exc()
                 raise Exception('Is the database initialised ? (cause: %s)' %
@@ -785,7 +785,7 @@ class Repository(object):
                 return rset
             except (Unauthorized, RQLSyntaxError):
                 raise
-            except ValidationError, ex:
+            except ValidationError as ex:
                 # need ValidationError normalization here so error may pass
                 # through pyro
                 if hasattr(ex.entity, 'eid'):
@@ -1357,7 +1357,7 @@ class Repository(object):
             edited.check(creation=True)
         try:
             source.add_entity(session, entity)
-        except UniqueTogetherError, exc:
+        except UniqueTogetherError as exc:
             userhdlr = session.vreg['adapters'].select(
                 'IUserFriendlyError', session, entity=entity, exc=exc)
             userhdlr.raise_user_exception()
@@ -1423,7 +1423,7 @@ class Repository(object):
             try:
                 source.update_entity(session, entity)
                 edited.saved = True
-            except UniqueTogetherError, exc:
+            except UniqueTogetherError as exc:
                 etype, rtypes = exc.args
                 problems = {}
                 for col in rtypes:

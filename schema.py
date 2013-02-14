@@ -784,14 +784,14 @@ class RQLExpression(object):
                 if self.eid is not None:
                     _cw.local_perm_cache[key] = False
                 return False
-            except TypeResolverException, ex:
+            except TypeResolverException as ex:
                 # some expression may not be resolvable with current kwargs
                 # (type conflict)
                 self.warning('%s: %s', rql, str(ex))
                 if self.eid is not None:
                     _cw.local_perm_cache[key] = False
                 return False
-            except Unauthorized, ex:
+            except Unauthorized as ex:
                 self.debug('unauthorized %s: %s', rql, str(ex))
                 if self.eid is not None:
                     _cw.local_perm_cache[key] = False

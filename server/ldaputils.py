@@ -212,7 +212,7 @@ You can set multiple groups by separating them by a comma.',
         # check password by establishing a (unused) connection
         try:
             self._connect(user, password)
-        except ldap.LDAPError, ex:
+        except ldap.LDAPError as ex:
             # Something went wrong, most likely bad credentials
             self.info('while trying to authenticate %s: %s', user, ex)
             raise AuthenticationError()
@@ -305,7 +305,7 @@ You can set multiple groups by separating them by a comma.',
             self.info('ldap NO SUCH OBJECT %s %s %s', base, scope, searchstr)
             self._process_no_such_object(session, base)
             return []
-        # except ldap.REFERRAL, e:
+        # except ldap.REFERRAL as e:
         #     cnx = self.handle_referral(e)
         #     try:
         #         res = cnx.search_s(base, scope, searchstr, attrs)

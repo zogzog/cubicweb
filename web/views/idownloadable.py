@@ -153,7 +153,7 @@ class IDownloadablePrimaryView(primary.PrimaryView):
             try:
                 self.w(entity._cw_mtc_transform(adapter.download_data(), sourcemt,
                                                 targetmt, adapter.download_encoding()))
-            except Exception, ex:
+            except Exception as ex:
                 self.exception('while rendering data for %s', entity)
                 msg = self._cw._("can't display data, unexpected error: %s") \
                       % xml_escape(unicode(ex))

@@ -101,10 +101,10 @@ def compile_i18n_catalogs(sourcedirs, destdir, langs):
             except OSError:
                 pass # suppose not exists
             execute2(['msgfmt', mergedpo, '-o', applmo])
-        except CalledProcessError, exc:
+        except CalledProcessError as exc:
             errors.append(u'while handling language %s:\ncmd:\n%s\nstdout:\n%s\nstderr:\n%s\n' %
                           (lang, exc.cmd, repr(exc.data[0]), repr(exc.data[1])))
-        except Exception, exc:
+        except Exception as exc:
             errors.append(u'while handling language %s: %s' % (lang, exc))
         try:
             # clean everything

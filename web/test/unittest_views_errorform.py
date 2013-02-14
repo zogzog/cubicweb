@@ -50,7 +50,7 @@ class ErrorViewTC(CubicWebTC):
         with self.temporary_appobjects(MyWrongView):
             try:
                 self.view('my-view')
-            except Exception, e:
+            except Exception as e:
                 import sys
                 self.req.data['excinfo'] = sys.exc_info()
                 self.req.data['ex'] = e

@@ -40,7 +40,7 @@ class ApacheURLRewriteTC(TestCase):
         try:
             urlrewriter.rewrite('logilab.fr', '/whatever', req)
             self.fail('redirect exception expected')
-        except Redirect, ex:
+        except Redirect as ex:
             self.assertEqual(ex.location, 'http://www.logilab.fr/whatever')
         self.assertEqual(urlrewriter.rewrite('www.logilab.fr', '/whatever', req),
                           '/whatever')

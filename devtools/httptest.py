@@ -50,7 +50,7 @@ def get_available_port(ports_scan):
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock = s.connect(("localhost", port))
-        except socket.error, err:
+        except socket.error as err:
             if err.args[0] in (111, 106):
                 return port
         finally:
@@ -179,7 +179,7 @@ class CubicWebServerTC(CubicWebTC):
     def tearDown(self):
         try:
             self.stop_server()
-        except error.ReactorNotRunning, err:
+        except error.ReactorNotRunning as err:
             # Server could be launched manually
             print err
         super(CubicWebServerTC, self).tearDown()

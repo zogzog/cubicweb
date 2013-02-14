@@ -155,7 +155,7 @@ class RQLGeneratorTC(TestCase):
         if cls.backend is not None:
             try:
                 cls.dbhelper = get_db_helper(cls.backend)
-            except ImportError, ex:
+            except ImportError as ex:
                 raise SkipTest(str(ex))
 
     def setUp(self):

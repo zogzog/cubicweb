@@ -442,11 +442,11 @@ def uniquetogether2rql(eschema, unique_together):
 def _ervalues(erschema):
     try:
         type_ = unicode(erschema.type)
-    except UnicodeDecodeError, e:
+    except UnicodeDecodeError as e:
         raise Exception("can't decode %s [was %s]" % (erschema.type, e))
     try:
         desc = unicode(erschema.description) or u''
-    except UnicodeDecodeError, e:
+    except UnicodeDecodeError as e:
         raise Exception("can't decode %s [was %s]" % (erschema.description, e))
     return {
         'name': type_,

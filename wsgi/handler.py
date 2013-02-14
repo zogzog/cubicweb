@@ -118,7 +118,7 @@ class CubicWebWSGIApplication(object):
         try:
             path = req.path
             result = self.appli.handle_request(req, path)
-        except DirectResponse, ex:
+        except DirectResponse as ex:
             return ex.response
         return WSGIResponse(req.status_out, req, result)
 

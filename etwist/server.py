@@ -169,7 +169,7 @@ class CubicWebRootResource(resource.Resource):
         try:
             ### Try to generate the actual request content
             content = self.appli.handle_request(req, path)
-        except DirectResponse, ex:
+        except DirectResponse as ex:
             return ex.response
         # at last: create twisted object
         return HTTPResponse(code    = req.status_out,

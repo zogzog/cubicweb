@@ -498,7 +498,7 @@ class TextSearchResultView(EntityView):
         for attr in entity.e_schema.indexable_attributes():
             try:
                 value = xml_escape(entity.printable_value(attr, format='text/plain').lower())
-            except TransformError, ex:
+            except TransformError as ex:
                 continue
             except Exception:
                 continue

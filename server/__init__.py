@@ -183,7 +183,7 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
         dropsql = sqldropschema(schema, driver)
         try:
             sqlexec(dropsql, execute, pbtitle=_title)
-        except Exception, ex:
+        except Exception as ex:
             print '-> drop failed, skipped (%s).' % ex
             sqlcnx.rollback()
     _title = '-> creating tables '

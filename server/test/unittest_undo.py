@@ -52,7 +52,7 @@ class UndoableTransactionTC(CubicWebTC):
             expected_errors = []
         try:
             self.cnx.undo_transaction(txuuid)
-        except UndoTransactionException, exn:
+        except UndoTransactionException as exn:
             errors = exn.errors
         else:
             errors = []

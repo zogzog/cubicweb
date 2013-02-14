@@ -293,7 +293,7 @@ class FieldsForm(form.Form):
                 try:
                     for field, value in field.process_posted(self):
                         processed[field.role_name()] = value
-                except ProcessFormError, exc:
+                except ProcessFormError as exc:
                     errors.append((field, exc))
             if errors:
                 errors = dict((f.role_name(), unicode(ex)) for f, ex in errors)

@@ -285,7 +285,7 @@ def check_relations(schema, session, eids, fix=1):
             continue
         try:
             cursor = session.system_sql('SELECT eid_from FROM %s_relation;' % rschema)
-        except Exception, ex:
+        except Exception as ex:
             # usually because table doesn't exist
             print 'ERROR', ex
             continue

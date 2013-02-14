@@ -988,7 +988,7 @@ class DateField(StringField):
                 return None
             try:
                 value = form._cw.parse_datetime(value, self.etype)
-            except ValueError, ex:
+            except ValueError as ex:
                 raise ProcessFormError(unicode(ex))
         return value
 

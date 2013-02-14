@@ -177,7 +177,7 @@ class AbstractSource(object):
                 # type check
                 try:
                     value = configuration.convert(value, optdict, optname)
-                except Exception, ex:
+                except Exception as ex:
                     msg = unicode(ex) # XXX internationalization
                     raise ValidationError(eid, {role_name('config', 'subject'): msg})
             processed[optname] = value

@@ -91,7 +91,7 @@ class CWService(object, win32serviceutil.ServiceFramework):
             logger.info('instance started on %s', root_resource.base_url)
             self.ReportServiceStatus(win32service.SERVICE_RUNNING)
             reactor.run()
-        except Exception, e:
+        except Exception as e:
             logger.error('service %s stopped (cause: %s)' % (self.instance, e))
             logger.exception('what happened ...')
         self.ReportServiceStatus(win32service.SERVICE_STOPPED)

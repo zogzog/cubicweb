@@ -129,7 +129,7 @@ def export(from_dir, to_dir,
                 shutil.copy2(src, dest)
     try:
         os.mkdir(to_dir)
-    except OSError, ex:
+    except OSError as ex:
         # file exists ?
         import errno
         if ex.errno != errno.EEXIST:

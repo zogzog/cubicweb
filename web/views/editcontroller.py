@@ -132,7 +132,7 @@ class EditController(basecontrollers.ViewController):
                 # __type and eid
                 formparams = req.extract_entity_params(eid, minparams=2)
                 eid = self.edit_entity(formparams)
-        except (RequestError, NothingToEdit), ex:
+        except (RequestError, NothingToEdit) as ex:
             if '__linkto' in req.form and 'eid' in req.form:
                 self.execute_linkto()
             elif not ('__delete' in req.form or '__insert' in req.form):
@@ -159,7 +159,7 @@ class EditController(basecontrollers.ViewController):
         try:
             entity = self._cw.execute(rql, rqlquery.kwargs).get_entity(0, 0)
             neweid = entity.eid
-        except ValidationError, ex:
+        except ValidationError as ex:
             self._to_create[eid] = ex.entity
             if self._cw.ajax_request: # XXX (syt) why?
                 ex.entity = eid
@@ -249,7 +249,7 @@ class EditController(basecontrollers.ViewController):
                     else:
                         self._pending_fields.add( (form, field) )
 
-        except ProcessFormError, exc:
+        except ProcessFormError as exc:
             self.errors.append((field, exc))
 
     def handle_inlined_relation(self, form, field, values, origvalues, rqlquery):

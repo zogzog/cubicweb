@@ -94,7 +94,7 @@ class EmbedController(Controller):
                 body = embed_external_page(embedded_url, prefix,
                                            headers, req.form.get('custom_css'))
                 body = soup2xhtml(body, self._cw.encoding)
-            except HTTPError, err:
+            except HTTPError as err:
                 body = '<h2>%s</h2><h3>%s</h3>' % (
                     _('error while embedding page'), err)
         rset = self.process_rql()

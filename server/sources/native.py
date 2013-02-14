@@ -83,7 +83,7 @@ class LogCursor(object):
             print 'exec', query, args
         try:
             self.cu.execute(str(query), args)
-        except Exception, ex:
+        except Exception as ex:
             print "sql: %r\n args: %s\ndbms message: %r" % (
                 query, args, ex.args[0])
             raise
@@ -411,7 +411,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             # test if 'asource' column exists
             query = self.dbhelper.sql_add_limit_offset('SELECT asource FROM entities', 1)
             source_entity._cw.system_sql(query)
-        except Exception, ex:
+        except Exception as ex:
             self.eid_type_source = self.eid_type_source_pre_131
 
     def shutdown(self):
@@ -536,7 +536,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             self.warning("trying to reconnect")
             session.cnxset.reconnect(self)
             cursor = self.doexec(session, sql, args)
-        except (self.DbapiError,), exc:
+        except self.DbapiError as exc:
             # We get this one with pyodbc and SQL Server when connection was reset
             if exc.args[0] == '08S01' and session.mode != 'write':
                 self.warning("trying to reconnect")
@@ -736,7 +736,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         try:
             # str(query) to avoid error if it's an unicode string
             cursor.execute(str(query), args)
-        except Exception, ex:
+        except Exception as ex:
             if self.repo.config.mode != 'test':
                 # during test we get those message when trying to alter sqlite
                 # db schema
@@ -747,7 +747,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                     session.cnxset.connection(self.uri).rollback()
                     if self.repo.config.mode != 'test':
                         self.critical('transaction has been rollbacked')
-                except Exception, ex:
+                except Exception as ex:
                     pass
             if ex.__class__.__name__ == 'IntegrityError':
                 # need string comparison because of various backends
@@ -777,7 +777,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         try:
             # str(query) to avoid error if it's an unicode string
             cursor.executemany(str(query), args)
-        except Exception, ex:
+        except Exception as ex:
             if self.repo.config.mode != 'test':
                 # during test we get those message when trying to alter sqlite
                 # db schema
@@ -941,7 +941,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             self.warning("trying to reconnect create eid connection")
             self._eid_creation_cnx = None
             return self._create_eid() # pylint: disable=E1102
-        except (self.DbapiError,), exc:
+        except self.DbapiError as exc:
             # We get this one with pyodbc and SQL Server when connection was reset
             if exc.args[0] == '08S01':
                 self.warning("trying to reconnect create eid connection")
@@ -1309,14 +1309,14 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         subj, rtype, obj = action.eid_from, action.rtype, action.eid_to
         try:
             sentity, oentity, rdef = _undo_rel_info(session, subj, rtype, obj)
-        except _UndoException, ex:
+        except _UndoException as ex:
             errors.append(unicode(ex))
         else:
             for role, entity in (('subject', sentity),
                                  ('object', oentity)):
                 try:
                     _undo_check_relation_target(entity, rdef, role)
-                except _UndoException, ex:
+                except _UndoException as ex:
                     errors.append(unicode(ex))
                     continue
         if not errors:
@@ -1392,7 +1392,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         subj, rtype, obj = action.eid_from, action.rtype, action.eid_to
         try:
             sentity, oentity, rdef = _undo_rel_info(session, subj, rtype, obj)
-        except _UndoException, ex:
+        except _UndoException as ex:
             errors.append(unicode(ex))
         else:
             rschema = rdef.rtype

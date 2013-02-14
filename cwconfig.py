@@ -473,7 +473,7 @@ this option is set to yes",
         try:
             parent = __import__('cubes.%s.__pkginfo__' % cube)
             return getattr(parent, cube).__pkginfo__
-        except Exception, ex:
+        except Exception as ex:
             raise ConfigurationError(
                 'unable to find packaging information for cube %s (%s: %s)'
                 % (cube, ex.__class__.__name__, ex))
@@ -580,7 +580,7 @@ this option is set to yes",
                                if dep in cubes)
         try:
             return ordered_nodes(graph)
-        except UnorderableGraph, ex:
+        except UnorderableGraph as ex:
             raise ConfigurationError('cycles in cubes dependencies: %s'
                                      % ex.cycles)
 
@@ -614,7 +614,7 @@ this option is set to yes",
             if exists(join(CW_SOFTWARE_ROOT, ctlfile)):
                 try:
                     load_module_from_file(join(CW_SOFTWARE_ROOT, ctlfile))
-                except ImportError, err:
+                except ImportError as err:
                     cls.error('could not import the command provider %s: %s',
                               ctlfile, err)
                 cls.info('loaded cubicweb-ctl plugin %s', ctlfile)
@@ -643,7 +643,7 @@ this option is set to yes",
         for cube in cls.available_cubes():
             try:
                 __import__('cubes.%s' % cube)
-            except Exception, ex:
+            except Exception as ex:
                 cls.warning("can't init cube %s: %s", cube, ex)
 
     cubicweb_appobject_path = set(['entities'])
@@ -1055,7 +1055,7 @@ the repository',
             self.info('creating %s directory', path)
             try:
                 os.makedirs(path)
-            except OSError, ex:
+            except OSError as ex:
                 self.warning('error while creating %s directory: %s', path, ex)
                 return
         if self['uid']:
@@ -1074,14 +1074,14 @@ the repository',
             self.info('giving ownership of %s directory to %s', path, self['uid'])
             try:
                 os.chown(path, uid, os.getgid())
-            except OSError, ex:
+            except OSError as ex:
                 self.warning('error while giving ownership of %s directory to %s: %s',
                              path, self['uid'], ex)
         if not (fstat.st_mode & stat.S_IWUSR):
             self.info('forcing write permission on directory %s', path)
             try:
                 os.chmod(path, fstat.st_mode | stat.S_IWUSR)
-            except OSError, ex:
+            except OSError as ex:
                 self.warning('error while forcing write permission on directory %s: %s',
                              path, ex)
                 return
@@ -1191,7 +1191,7 @@ the repository',
         try:
             try:
                 smtp = SMTP(server, port)
-            except Exception, ex:
+            except Exception as ex:
                 self.exception("can't connect to smtp server %s:%s (%s)",
                                server, port, ex)
                 return False
@@ -1199,7 +1199,7 @@ the repository',
             for msg, recipients in msgs:
                 try:
                     smtp.sendmail(heloaddr, recipients, msg.as_string())
-                except Exception, ex:
+                except Exception as ex:
                     self.exception("error sending mail to %s (%s)",
                                    recipients, ex)
             smtp.close()
@@ -1314,7 +1314,7 @@ def register_stored_procedures():
             fpath = source.binary_to_str(value)
             try:
                 return Binary(fpath)
-            except OSError, ex:
+            except OSError as ex:
                 source.critical("can't open %s: %s", fpath, ex)
                 return None
 

@@ -135,7 +135,7 @@ class AjaxController(Controller):
             args = (args,)
         try:
             args = [json.loads(arg) for arg in args]
-        except ValueError, exc:
+        except ValueError as exc:
             self.exception('error while decoding json arguments for '
                            'js_%s: %s (err: %s)', fname, args, exc)
             raise RemoteCallFailed(exc_message(exc, self._cw.encoding))
@@ -143,7 +143,7 @@ class AjaxController(Controller):
             result = func(*args)
         except (RemoteCallFailed, DirectResponse):
             raise
-        except Exception, exc:
+        except Exception as exc:
             self.exception('an exception occurred while calling js_%s(%s): %s',
                            fname, args, exc)
             raise RemoteCallFailed(exc_message(exc, self._cw.encoding))
@@ -214,7 +214,7 @@ class AjaxFunction(AppObject):
             self._cw.ensure_ro_rql(rql)
         try:
             return self._cw.execute(rql, args)
-        except Exception, ex:
+        except Exception as ex:
             self.exception("error in _exec(rql=%s): %s", rql, ex)
             return None
         return None

@@ -256,7 +256,7 @@ class Layout(Component):
         view = self.cw_extra_kwargs['view']
         try:
             view.init_rendering()
-        except Unauthorized, ex:
+        except Unauthorized as ex:
             self.warning("can't render %s: %s", view, ex)
             return False
         except EmptyComponent:

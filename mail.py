@@ -212,7 +212,7 @@ class NotificationView(EntityView):
                 subject = self.subject()
             except SkipEmail:
                 continue
-            except Exception, ex:
+            except Exception as ex:
                 # shouldn't make the whole transaction fail because of rendering
                 # error (unauthorized or such) XXX check it doesn't actually
                 # occurs due to rollback on such error

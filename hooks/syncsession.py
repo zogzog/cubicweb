@@ -167,7 +167,7 @@ class AddCWPropertyHook(SyncSessionHook):
         except UnknownProperty:
             msg = _('unknown property key %s')
             raise validation_error(self.entity, {('pkey', 'subject'): msg}, (key,))
-        except ValueError, ex:
+        except ValueError as ex:
             raise validation_error(self.entity,
                                   {('value', 'subject'): str(ex)})
         if not session.user.matching_groups('managers'):
@@ -193,7 +193,7 @@ class UpdateCWPropertyHook(AddCWPropertyHook):
             value = session.vreg.typed_value(key, value)
         except UnknownProperty:
             return
-        except ValueError, ex:
+        except ValueError as ex:
             raise validation_error(entity, {('value', 'subject'): str(ex)})
         if entity.for_user:
             for session_ in get_user_sessions(session.repo, entity.for_user[0].eid):

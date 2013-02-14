@@ -100,7 +100,7 @@ class Unauthorized(SecurityError):
             if self.args:
                 return ' '.join(self.args)
             return self.msg
-        except Exception, ex:
+        except Exception as ex:
             return str(ex)
 
 class Forbidden(SecurityError):

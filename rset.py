@@ -642,7 +642,7 @@ class ResultSet(object):
                 try:
                     entity = self.get_entity(row, index)
                     return entity, rel.r_type
-                except NotAnEntity, exc:
+                except NotAnEntity as exc:
                     return None, None
         return None, None
 

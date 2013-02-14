@@ -368,7 +368,7 @@ class CWRTypeUpdateOp(MemSchemaOperation):
             for etype in rschema.subjects():
                 try:
                     add_inline_relation_column(session, str(etype), rtype)
-                except Exception, ex:
+                except Exception as ex:
                     # the column probably already exists. this occurs when the
                     # entity's type has just been added or if the column has not
                     # been previously dropped (eg sqlite)
@@ -459,7 +459,7 @@ class CWAttributeAddOp(MemSchemaOperation):
                                    % (table, column, attrtype)),
                                rollback_on_failure=False)
             self.info('added column %s to table %s', table, column)
-        except Exception, ex:
+        except Exception as ex:
             # the column probably already exists. this occurs when
             # the entity's type has just been added or if the column
             # has not been previously dropped
@@ -468,7 +468,7 @@ class CWAttributeAddOp(MemSchemaOperation):
             try:
                 syssource.create_index(session, table, column,
                                       unique=extra_unique_index)
-            except Exception, ex:
+            except Exception as ex:
                 self.error('error while creating index for %s.%s: %s',
                            table, column, ex)
         # final relations are not infered, propagate
@@ -757,7 +757,7 @@ class CWUniqueTogetherConstraintDelOp(MemSchemaOperation):
         for sql in sqls:
             try:
                 session.system_sql(sql)
-            except Exception, exc: # should be ProgrammingError
+            except Exception as exc: # should be ProgrammingError
                 if sql.startswith('DROP'):
                     self.error('execute of `%s` failed (cause: %s)', sql, exc)
                     continue

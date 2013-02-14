@@ -82,7 +82,7 @@ class FirefoxHelper(object):
             check_call(self.firefox_cmd + ['-CreateProfile',
                         '%s %s' % (self._profile_name, self._tmp_dir)],
                                   stdout=stdout, stderr=stderr)
-        except CalledProcessError, cpe:
+        except CalledProcessError as cpe:
             stdout.seek(0)
             stderr.seek(0)
             raise VerboseCalledProcessError(cpe.returncode, cpe.cmd, stdout.read(), stderr.read())

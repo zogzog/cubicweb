@@ -238,13 +238,13 @@ directory (default to once a day).',
             # handle restriction
             try:
                 eidfilters_, ldapfilter = generator.generate(rqlst, mainvar)
-            except GotDN, ex:
+            except GotDN as ex:
                 assert ex.dn, 'no dn!'
                 try:
                     res = [self._cache[ex.dn]]
                 except KeyError:
                     res = self._search(session, ex.dn, BASE)
-            except UnknownEid, ex:
+            except UnknownEid as ex:
                 # raised when we are looking for the dn of an eid which is not
                 # coming from this source
                 res = []

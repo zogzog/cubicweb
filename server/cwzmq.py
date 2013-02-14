@@ -221,7 +221,7 @@ class ZMQRepositoryServer(object):
             for cmd in cmds:
                 result = self.process_cmd(cmd)
                 self.send_data(result)
-        except Exception, exc:
+        except Exception as exc:
             traceback.print_exc()
             self.send_data(exc)
 
@@ -235,7 +235,7 @@ class ZMQRepositoryServer(object):
             self.loop.add_callback(self.loop.stop)
             self.stream.on_recv(None)
             self.stream.close()
-        except Exception, e:
+        except Exception as e:
             print e
             pass
         if shutdown_repo and not self.repo.shutting_down:

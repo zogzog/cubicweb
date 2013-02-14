@@ -101,7 +101,7 @@ class PropertySheet(dict):
             # this in the source css file ?
             try:
                 content = self.compile(content)
-            except ValueError, ex:
+            except ValueError as ex:
                 self.error("can't process %s/%s: %s", rdirectory, rid, ex)
                 adirectory = rdirectory
             else:

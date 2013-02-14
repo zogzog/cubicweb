@@ -77,7 +77,7 @@ class HeaderHandler(object):
                 header = p(header)
                 # if isinstance(h, types.GeneratorType):
                 #     h=list(h)
-        except ValueError,v:
+        except ValueError as v:
             # print v
             header=None
 
@@ -528,7 +528,7 @@ def parseContentType(header):
 def parseContentMD5(header):
     try:
         return base64.decodestring(header)
-    except Exception,e:
+    except Exception as e:
         raise ValueError(e)
 
 def parseContentRange(header):

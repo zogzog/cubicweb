@@ -28,7 +28,7 @@ class TwistedCWAnonTC(CubicWebServerTC):
     def test_response(self):
         try:
             response = self.web_get()
-        except httplib.NotConnected, ex:
+        except httplib.NotConnected as ex:
             self.fail("Can't connection to test server: %s" % ex)
 
     def test_response_anon(self):

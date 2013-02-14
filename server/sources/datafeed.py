@@ -207,14 +207,14 @@ class DataFeedSource(AbstractSource):
             try:
                 if parser.process(url, raise_on_error):
                     error = True
-            except IOError, exc:
+            except IOError as exc:
                 if raise_on_error:
                     raise
                 parser.import_log.record_error(
                     'could not pull data while processing %s: %s'
                     % (url, exc))
                 error = True
-            except Exception, exc:
+            except Exception as exc:
                 if raise_on_error:
                     raise
                 self.exception('error while processing %s: %s',
@@ -318,7 +318,7 @@ class DataFeedParser(AppObject):
             eid = session.repo.extid2eid(source, str(uri), etype, session,
                                          complete=False, commit=False,
                                          sourceparams=sourceparams)
-        except ValidationError, ex:
+        except ValidationError as ex:
             # XXX use critical so they are seen during tests. Should consider
             # raise_on_error instead?
             self.source.critical('error while creating %s: %s', etype, ex)
@@ -402,7 +402,7 @@ class DataFeedXMLParser(DataFeedParser):
         """IDataFeedParser main entry point"""
         try:
             parsed = self.parse(url)
-        except Exception, ex:
+        except Exception as ex:
             if raise_on_error:
                 raise
             self.import_log.record_error(str(ex))
@@ -424,7 +424,7 @@ class DataFeedXMLParser(DataFeedParser):
                 # other a chance to get our connections set
                 commit()
                 set_cnxset()
-            except ValidationError, exc:
+            except ValidationError as exc:
                 if raise_on_error:
                     raise
                 self.source.error('Skipping %s because of validation error %s'
@@ -455,7 +455,7 @@ class DataFeedXMLParser(DataFeedParser):
         if extid.startswith('http'):
             try:
                 _OPENER.open(self.normalize_url(extid)) # XXX HTTP HEAD request
-            except urllib2.HTTPError, ex:
+            except urllib2.HTTPError as ex:
                 if ex.code == 404:
                     return True
         elif extid.startswith('file://'):

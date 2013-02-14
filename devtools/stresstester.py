@@ -132,7 +132,7 @@ def run(args):
         opts, args = getopt.getopt(args, 'hn:t:u:p:P:o:', ['help', 'user=', 'password=',
                                                            'nb-times=', 'nb-threads=',
                                                            'profile', 'report-output=',])
-    except Exception, ex:
+    except Exception as ex:
         print ex
         usage(1)
     repeat = 100

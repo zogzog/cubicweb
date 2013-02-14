@@ -155,7 +155,7 @@ class ServerMigrationHelper(MigrationHelper):
         try:
             return super(ServerMigrationHelper, self).cmd_process_script(
                   migrscript, funcname, *args, **kwargs)
-        except ExecutionError, err:
+        except ExecutionError as err:
             sys.stderr.write("-> %s\n" % err)
         except BaseException:
             self.rollback()
@@ -193,7 +193,7 @@ class ServerMigrationHelper(MigrationHelper):
             for source in repo.sources:
                 try:
                     source.backup(osp.join(tmpdir, source.uri), self.confirm, format=format)
-                except Exception, ex:
+                except Exception as ex:
                     print '-> error trying to backup %s [%s]' % (source.uri, ex)
                     if not self.confirm('Continue anyway?', default='n'):
                         raise SystemExit(1)
@@ -252,7 +252,7 @@ class ServerMigrationHelper(MigrationHelper):
                 continue
             try:
                 source.restore(osp.join(tmpdir, source.uri), self.confirm, drop, format)
-            except Exception, exc:
+            except Exception as exc:
                 print '-> error trying to restore %s [%s]' % (source.uri, exc)
                 if not self.confirm('Continue anyway?', default='n'):
                     raise SystemExit(1)
@@ -398,7 +398,7 @@ class ServerMigrationHelper(MigrationHelper):
             try:
                 sqlexec(open(fpath).read(), self.session.system_sql, False,
                         delimiter=';;')
-            except Exception, exc:
+            except Exception as exc:
                 print '-> ERROR:', exc, ', skipping', fpath
 
     # schema synchronization internals ########################################
@@ -1457,7 +1457,7 @@ class ServerMigrationHelper(MigrationHelper):
             if not ask_confirm or self.confirm('Execute rql: %s ?' % msg):
                 try:
                     res = execute(rql, kwargs, build_descr=build_descr)
-                except Exception, ex:
+                except Exception as ex:
                     if self.confirm('Error: %s\nabort?' % ex, pdb=True):
                         raise
         return res
@@ -1551,7 +1551,7 @@ class ForRqlIterator:
                 raise StopIteration
         try:
             return self._h._cw.execute(rql, kwargs)
-        except Exception, ex:
+        except Exception as ex:
             if self._h.confirm('Error: %s\nabort?' % ex):
                 raise
             else:

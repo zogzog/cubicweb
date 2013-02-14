@@ -118,7 +118,7 @@ repository (default to 5 minutes).',
     def get_connection(self):
         try:
             return self._get_connection()
-        except ConnectionError, ex:
+        except ConnectionError as ex:
             self.critical("can't get connection to source %s: %s", self.uri, ex)
             return ConnectionWrapper()
 
@@ -337,7 +337,7 @@ repository (default to 5 minutes).',
         translator = RQL2RQL(self)
         try:
             rql = translator.generate(session, union, args)
-        except UnknownEid, ex:
+        except UnknownEid as ex:
             if server.DEBUG:
                 print '  unknown eid', ex, 'no results'
             return []
@@ -345,7 +345,7 @@ repository (default to 5 minutes).',
             print '  translated rql', rql
         try:
             rset = cu.execute(rql, args)
-        except Exception, ex:
+        except Exception as ex:
             self.exception(str(ex))
             msg = session._("error while querying source %s, some data may be missing")
             session.set_shared_data('sources_error', msg % self.uri, txdata=True)
@@ -573,7 +573,7 @@ class RQL2RQL(object):
                 return
             # XXX what about optional relation or outer NOT EXISTS()
             raise
-        except ReplaceByInOperator, ex:
+        except ReplaceByInOperator as ex:
             rhs = 'IN (%s)' % ','.join(eid for eid in ex.eids)
         self.need_translation = False
         self.current_operator = None
@@ -600,7 +600,7 @@ class RQL2RQL(object):
         for child in node.children:
             try:
                 rql = child.accept(self)
-            except UnknownEid, ex:
+            except UnknownEid as ex:
                 continue
             res.append(rql)
         if not res:

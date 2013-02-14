@@ -107,7 +107,7 @@ def get_repository(uri=None, config=None, vreg=None):
         return _get_repository(uri, config, vreg)
     except ConnectionError:
         raise
-    except Exception, exc:
+    except Exception as exc:
         raise ConnectionError('cause: %r' % exc)
 
 def _get_repository(uri=None, config=None, vreg=None):

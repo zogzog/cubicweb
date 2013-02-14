@@ -349,7 +349,7 @@ class PropertyValueField(StringField):
             return
         try:
             pdef = form._cw.vreg.property_info(entity.pkey)
-        except UnknownProperty, ex:
+        except UnknownProperty as ex:
             form.warning('%s (you should probably delete that property '
                          'from the database)', ex)
             msg = form._cw._('you should probably delete that property')

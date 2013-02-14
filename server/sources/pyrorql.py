@@ -34,7 +34,7 @@ class PyroRQLSource(RemoteSource):
     def get_connection(self):
         try:
             return self._get_connection()
-        except (ConnectionError, PyroError), ex:
+        except (ConnectionError, PyroError) as ex:
             self.critical("can't get connection to source %s: %s", self.uri, ex)
             return ConnectionWrapper()
 

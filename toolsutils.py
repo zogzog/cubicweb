@@ -59,7 +59,7 @@ def create_dir(directory):
     try:
         makedirs(directory)
         print '-> created directory %s' % directory
-    except OSError, ex:
+    except OSError as ex:
         import errno
         if ex.errno != errno.EEXIST:
             raise
@@ -185,7 +185,7 @@ def read_config(config_file, raise_if_unreadable=False):
             option = option.strip().replace(' ', '_')
             value = value.strip()
             current[option] = value or None
-    except IOError, ex:
+    except IOError as ex:
         if raise_if_unreadable:
             raise ExecutionError('%s. Are you logged with the correct user '
                                  'to use this instance?' % ex)
