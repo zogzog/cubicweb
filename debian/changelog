@@ -4,6 +4,12 @@ cubicweb (3.16.0-1) squeeze; urgency=low
 
  -- Aurélien Campéas <aurelien.campeas@logilab.fr>  Wed, 23 Jan 2013 17:40:00 +0100
 
+cubicweb (3.15.9-1) squeeze; urgency=low
+
+  * New upstream release
+
+ -- David Douard <david.douard@logilab.fr>  Fri, 25 Jan 2013 17:49:58 +0100
+
 cubicweb (3.15.8-2) UNRELEASED; urgency=low
 
   * Don't compress txt files.  They're used by the doc's search functionality,
