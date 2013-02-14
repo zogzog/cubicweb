@@ -43,7 +43,7 @@ class SendEmailAction(action.Action):
 
     def url(self):
         params = {'vid': 'massmailing', '__force_display': 1}
-        if self._cw.form.has_key('rql'):
+        if 'rql' in self._cw.form:
             params['rql'] = self._cw.form['rql']
         return self._cw.build_url(self._cw.relative_path(includeparams=False),
                                   **params)

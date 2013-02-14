@@ -57,7 +57,7 @@ def _extract_const_attributes(plan, rqlst, to_build):
                 if attrtype == 'Password' and isinstance(value, unicode):
                     value = value.encode('UTF8')
                 edef.edited_attribute(rtype, value)
-            elif to_build.has_key(str(rhs)):
+            elif str(rhs) in to_build:
                 # create a relation between two newly created variables
                 plan.add_relation_def((edef, rtype, to_build[rhs.name]))
             else:

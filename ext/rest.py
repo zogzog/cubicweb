@@ -169,7 +169,7 @@ def winclude_directive(name, arguments, options, content, lineno,
               % (name, error.__class__.__name__, error),
               nodes.literal_block(block_text, block_text), line=lineno)
         return [severe]
-    if options.has_key('literal'):
+    if 'literal' in options:
         literal_block = nodes.literal_block(include_text, include_text,
                                             source=path)
         literal_block.line = 1

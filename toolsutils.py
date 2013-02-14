@@ -176,7 +176,7 @@ def read_config(config_file, raise_if_unreadable=False):
                 if option[0] == '[':
                     # start a section
                     section = option[1:-1]
-                    assert not config.has_key(section), \
+                    assert section not in config, \
                            'Section %s is defined more than once' % section
                     config[section] = current = {}
                     continue

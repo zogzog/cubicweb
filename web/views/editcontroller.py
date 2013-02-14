@@ -145,7 +145,7 @@ class EditController(basecontrollers.ViewController):
         for querydef in self.relations_rql:
             self._cw.execute(*querydef)
         # XXX this processes *all* pending operations of *all* entities
-        if req.form.has_key('__delete'):
+        if '__delete' in req.form:
             todelete = req.list_form_param('__delete', req.form, pop=True)
             if todelete:
                 autoform.delete_relations(self._cw, todelete)
@@ -212,11 +212,11 @@ class EditController(basecontrollers.ViewController):
             self._update_entity(eid, rqlquery)
         if is_main_entity:
             self.notify_edited(entity)
-        if formparams.has_key('__delete'):
+        if '__delete' in formparams:
             # XXX deprecate?
             todelete = self._cw.list_form_param('__delete', formparams, pop=True)
             autoform.delete_relations(self._cw, todelete)
-        if formparams.has_key('__cloned_eid'):
+        if '__cloned_eid' in formparams:
             entity.copy_relations(typed_eid(formparams['__cloned_eid']))
         if is_main_entity: # only execute linkto for the main entity
             self.execute_linkto(entity.eid)

@@ -501,7 +501,7 @@ class InsertPlan(ExecutionPlan):
                 self.e_defs.append(row)
         # now, see if this entity def is referenced as subject in some relation
         # definition
-        if self._r_subj_index.has_key(edef):
+        if edef in self._r_subj_index:
             for rdef in self._r_subj_index[edef]:
                 expanded = self._expanded(rdef)
                 result = []
@@ -511,7 +511,7 @@ class InsertPlan(ExecutionPlan):
                 self._expanded_r_defs[rdef] = result
         # and finally, see if this entity def is referenced as object in some
         # relation definition
-        if self._r_obj_index.has_key(edef):
+        if edef in self._r_obj_index:
             for rdef in self._r_obj_index[edef]:
                 expanded = self._expanded(rdef)
                 result = []

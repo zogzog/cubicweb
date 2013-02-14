@@ -28,7 +28,7 @@ from cubicweb.server.migractions import ServerMigrationHelper
 
 class Schema(dict):
     def has_entity(self, e_type):
-        return self.has_key(e_type)
+        return e_type in self
 
 SMIGRDIR = join(dirname(__file__), 'data', 'server_migration') + '/'
 TMIGRDIR = join(dirname(__file__), 'data', 'migration') + '/'

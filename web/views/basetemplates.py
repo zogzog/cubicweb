@@ -92,7 +92,7 @@ def templatable_view(cls, req, rset, *args, **kwargs):
         return 1
     if view.binary:
         return 0
-    if req.form.has_key('__notemplate'):
+    if '__notemplate' in req.form:
         return 0
     return view.templatable
 
@@ -105,7 +105,8 @@ class NonTemplatableViewTemplate(MainTemplate):
     def call(self, view):
         view.set_request_content_type()
         view.set_stream()
-        if (self._cw.form.has_key('__notemplate') and view.templatable
+        if (('__notemplate' in self._cw.form)
+            and view.templatable
             and view.content_type == self._cw.html_content_type()):
             view.w(self._cw.document_surrounding_div())
             view.render()

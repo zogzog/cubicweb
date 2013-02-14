@@ -898,7 +898,7 @@ class Entity(AppObject):
         selected = []
         for attr in (attributes or self._cw_to_complete_attributes(skip_bytes, skip_pwd)):
             # if attribute already in entity, nothing to do
-            if self.cw_attr_cache.has_key(attr):
+            if attr in self.cw_attr_cache:
                 continue
             # case where attribute must be completed, but is not yet in entity
             var = varmaker.next()

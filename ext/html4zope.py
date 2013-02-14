@@ -123,14 +123,14 @@ class HTMLTranslator(CSS1HTMLTranslator):
 
     def visit_reference(self, node):
         """syt: i want absolute urls"""
-        if node.has_key('refuri'):
+        if 'refuri' in node:
             href = node['refuri']
             if ( self.settings.cloak_email_addresses
                  and href.startswith('mailto:')):
                 href = self.cloak_mailto(href)
                 self.in_mailto = 1
         else:
-            assert node.has_key('refid'), \
+            assert 'refid' in node, \
                    'References must have "refuri" or "refid" attribute.'
             href = '%s#%s' % (self.base_url, node['refid'])
         atts = {'href': href, 'class': 'reference'}

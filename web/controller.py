@@ -127,9 +127,9 @@ class Controller(AppObject):
         msg = self._cw.message
         if msg:
             newparams['_cwmsgid'] = self._cw.set_redirect_message(msg)
-        if self._cw.form.has_key('__action_apply'):
+        if '__action_apply' in self._cw.form:
             self._return_to_edition_view(newparams)
-        if self._cw.form.has_key('__action_cancel'):
+        if '__action_cancel' in self._cw.form:
             self._return_to_lastpage(newparams)
         else:
             self._return_to_original_view(newparams)
