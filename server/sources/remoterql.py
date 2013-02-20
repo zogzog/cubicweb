@@ -136,6 +136,7 @@ repository (default to 5 minutes).',
 
     def init(self, activated, source_entity):
         """method called by the repository once ready to handle request"""
+        super(RemoteSource, self).init(activated, source_entity)
         self.load_mapping(source_entity._cw)
         if activated:
             interval = self.config['synchronization-interval']
