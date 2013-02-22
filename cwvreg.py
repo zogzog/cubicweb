@@ -197,7 +197,7 @@ import sys
 from os.path import join, dirname, realpath
 from warnings import warn
 from datetime import datetime, date, time, timedelta
-from functools import partial
+from functools import partial, reduce
 
 from logilab.common.decorators import cached, clear_cache
 from logilab.common.deprecation import deprecated, class_deprecated

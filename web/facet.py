@@ -49,6 +49,7 @@ to skip those classes...
 __docformat__ = "restructuredtext en"
 _ = unicode
 
+from functools import reduce
 from warnings import warn
 from copy import deepcopy
 from datetime import datetime, timedelta

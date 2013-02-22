@@ -94,6 +94,7 @@ argument given to :meth:`render` will be `None`.
 """
 __docformat__ = "restructuredtext en"
 
+from functools import reduce
 from datetime import date
 from warnings import warn
 
