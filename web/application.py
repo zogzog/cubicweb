@@ -485,6 +485,7 @@ class CubicWebPublisher(object):
             raise
         ### Last defense line
         except BaseException as ex:
+            req.status_out = httplib.INTERNAL_SERVER_ERROR
             result = self.error_handler(req, ex, tb=True)
         finally:
             if req.cnx and not commited:
@@ -538,6 +539,7 @@ class CubicWebPublisher(object):
             self.exception(repr(ex))
         req.set_header('Cache-Control', 'no-cache')
         req.remove_header('Etag')
+        req.remove_header('Content-disposition')
         req.reset_message()
         req.reset_headers()
         if req.ajax_request:
