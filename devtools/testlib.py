@@ -705,6 +705,20 @@ class CubicWebTC(TestCase):
         ctrlid, rset = self.app.url_resolver.process(req, req.relative_path(False))
         return self.ctrl_publish(req, ctrlid, rset)
 
+    def http_publish(self, url, data=None):
+        """like `url_publish`, except this returns a http response, even in case of errors"""
+        req = self.req_from_url(url)
+        if data is not None:
+            req.form.update(data)
+        # remove the monkey patched error handler
+        fake_error_handler = self.app.error_handler
+        del self.app.error_handler
+        try:
+            result = self.app_handle_request(req, req.relative_path(False))
+        finally:
+            self.app.error_handler = fake_error_handler
+        return result, req
+
     @staticmethod
     def _parse_location(req, location):
         try:
