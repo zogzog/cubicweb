@@ -521,8 +521,8 @@ class Entity(AppObject):
 
         Example (in a shell session):
 
-        >>> companycls = vreg['etypes'].etype_class(('Company')
-        >>> personcls = vreg['etypes'].etype_class(('Person')
+        >>> companycls = vreg['etypes'].etype_class('Company')
+        >>> personcls = vreg['etypes'].etype_class('Person')
         >>> c = companycls.cw_instantiate(session.execute, name=u'Logilab')
         >>> p = personcls.cw_instantiate(session.execute, firstname=u'John', lastname=u'Doe',
         ...                              works_for=c)
