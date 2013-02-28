@@ -139,7 +139,7 @@ scripts:
 * `drop_relation_type(rtype, commit=True)`, removes a relation type and all the
   definitions of this type.
 
-* `rename_relationi_type(oldname, newname, commit=True)`, renames a relation type.
+* `rename_relation_type(oldname, newname, commit=True)`, renames a relation type.
 
 * `add_relation_definition(subjtype, rtype, objtype, commit=True)`, adds a new
   relation definition.
