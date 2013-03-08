@@ -830,10 +830,7 @@ class ShellCommand(Command):
     in batch mode.
 
     By default it will connect to a local instance using an in memory
-    connection, unless -P option is specified, in which case you will be
-    connected through pyro. In the later case, you won't have access to
-    repository internals (session, etc...) so most migration commands won't be
-    available.
+    connection, unless an URL to a running instance is specified.
 
     Arguments after bare "--" string will not be processed by the shell command
     You can use it to pass extra arguments to your script and expect for
