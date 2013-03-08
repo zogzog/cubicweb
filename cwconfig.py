@@ -581,8 +581,7 @@ this option is set to yes",
         try:
             return ordered_nodes(graph)
         except UnorderableGraph as ex:
-            raise ConfigurationError('cycles in cubes dependencies: %s'
-                                     % ex.cycles)
+            raise ConfigurationError(ex)
 
     @classmethod
     def cls_adjust_sys_path(cls):
