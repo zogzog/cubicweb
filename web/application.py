@@ -541,7 +541,7 @@ class CubicWebPublisher(object):
         req.reset_message()
         req.reset_headers()
         if req.ajax_request:
-            return ajax_error_handler(req, ex)
+            return self.ajax_error_handler(req, ex)
         try:
             req.data['ex'] = ex
             if tb:
