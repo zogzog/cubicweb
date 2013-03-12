@@ -108,7 +108,9 @@ class NavigationComponent(Component):
         view = self.cw_extra_kwargs.get('view')
         if view is not None and hasattr(view, 'page_navigation_url'):
             url = view.page_navigation_url(self, path, params)
-        elif path == 'json':
+        elif path in ('json', 'ajax'):
+            # 'ajax' is the new correct controller, but the old 'json'
+            # controller should still be supported
             url = self.ajax_page_url(**params)
         else:
             url = self._cw.build_url(path, **params)
