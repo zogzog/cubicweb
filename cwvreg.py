@@ -197,7 +197,7 @@ import sys
 from os.path import join, dirname, realpath
 from warnings import warn
 from datetime import datetime, date, time, timedelta
-from functools import partial
+from functools import partial, reduce
 
 from logilab.common.decorators import cached, clear_cache
 from logilab.common.deprecation import deprecated, class_deprecated
@@ -210,16 +210,25 @@ from rql import RQLHelper
 from yams.constraints import BASE_CONVERTERS
 
 from cubicweb import (CW_SOFTWARE_ROOT, ETYPE_NAME_MAP, CW_EVENT_MANAGER,
-                      Binary, UnknownProperty, UnknownEid)
+                      onevent, Binary, UnknownProperty, UnknownEid)
 from cubicweb.predicates import (implements, appobject_selectable,
                                  _reset_is_instance_cache)
 
-# backward compat: those modules are now refering to app objects in
-# cw.web.views.uicfg and import * from backward compat. On registry reload, we
-# should pop those modules from the cache so references are properly updated on
-# subsequent reload
-CW_EVENT_MANAGER.bind('before-registry-reload', partial(sys.modules.pop, 'cubicweb.web.uicfg', None))
-CW_EVENT_MANAGER.bind('before-registry-reload', partial(sys.modules.pop, 'cubicweb.web.uihelper', None))
+
+@onevent('before-registry-reload')
+def cleanup_uicfg_compat():
+    """ backward compat: those modules are now refering to app objects in
+    cw.web.views.uicfg and import * from backward compat. On registry reload, we
+    should pop those modules from the cache so references are properly updated on
+    subsequent reload
+    """
+    if 'cubicweb.web' in sys.modules:
+        if getattr(sys.modules['cubicweb.web'], 'uicfg', None):
+            del sys.modules['cubicweb.web'].uicfg
+        if getattr(sys.modules['cubicweb.web'], 'uihelper', None):
+            del sys.modules['cubicweb.web'].uihelper
+    sys.modules.pop('cubicweb.web.uicfg', None)
+    sys.modules.pop('cubicweb.web.uihelper', None)
 
 def use_interfaces(obj):
     """return interfaces required by the given object by searching for

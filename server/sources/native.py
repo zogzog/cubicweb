@@ -406,6 +406,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
 
 
     def init(self, activated, source_entity):
+        super(NativeSQLSource, self).init(activated, source_entity)
         self.init_creating(source_entity._cw.cnxset)
         try:
             # test if 'asource' column exists

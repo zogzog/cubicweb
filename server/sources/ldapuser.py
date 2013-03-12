@@ -88,9 +88,9 @@ directory (default to once a day).',
 
     def init(self, activated, source_entity):
         """method called by the repository once ready to handle request"""
+        super(LDAPUserSource, self).init(activated, source_entity)
         if activated:
             self.info('ldap init')
-            self._entity_update(source_entity)
             # set minimum period of 5min 1s (the additional second is to
             # minimize resonnance effet)
             if self.user_rev_attrs['email']:

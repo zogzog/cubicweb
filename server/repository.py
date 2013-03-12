@@ -962,7 +962,7 @@ class Repository(object):
 
     def close_sessions(self):
         """close every opened sessions"""
-        for sessionid in self._sessions:
+        for sessionid in list(self._sessions):
             try:
                 self.close(sessionid, checkshuttingdown=False)
             except Exception: # XXX BaseException?

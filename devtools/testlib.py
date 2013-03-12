@@ -85,8 +85,7 @@ def unprotected_entities(schema, strict=False):
 
 class JsonValidator(object):
     def parse_string(self, data):
-        json.loads(data)
-        return data
+        return json.loads(data)
 
 # email handling, to test emails sent by an application ########################
 

@@ -21,6 +21,7 @@ __docformat__ = "restructuredtext en"
 _ = unicode
 
 import operator
+from functools import reduce
 
 from cubicweb.predicates import (is_instance, authenticated_user,
                                 adaptable, match_form_params)

@@ -103,15 +103,6 @@ def get_repository(uri=None, config=None, vreg=None):
     The returned repository may be an in-memory repository or a proxy object
     using a specific RPC method, depending on the given URI (pyro or zmq).
     """
-    try:
-        return _get_repository(uri, config, vreg)
-    except ConnectionError:
-        raise
-    except Exception as exc:
-        raise ConnectionError('cause: %r' % exc)
-
-def _get_repository(uri=None, config=None, vreg=None):
-    """ implements get_repository (see above) """
     if uri is None:
         return _get_inmemory_repo(config, vreg)
 
