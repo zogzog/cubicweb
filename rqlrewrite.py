@@ -30,7 +30,7 @@ from yams import BadSchemaDefinition
 from logilab.common import tempattr
 from logilab.common.graph import has_path
 
-from cubicweb import Unauthorized, typed_eid
+from cubicweb import Unauthorized
 
 
 def add_types_restriction(schema, rqlst, newroot=None, solutions=None):
@@ -220,7 +220,7 @@ class RQLRewriter(object):
             vi = {}
             self.varinfos.append(vi)
             try:
-                vi['const'] = typed_eid(selectvar)
+                vi['const'] = int(selectvar)
                 vi['rhs_rels'] = vi['lhs_rels'] = {}
             except ValueError:
                 try:

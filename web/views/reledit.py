@@ -29,7 +29,7 @@ from logilab.mtconverter import xml_escape
 from logilab.common.deprecation import deprecated, class_renamed
 from logilab.common.decorators import cached
 
-from cubicweb import neg_role, typed_eid
+from cubicweb import neg_role
 from cubicweb.schema import display_name
 from cubicweb.utils import json, json_dumps
 from cubicweb.predicates import non_final_entity, match_kwargs
@@ -402,7 +402,7 @@ def reledit_form(self):
     req = self._cw
     args = dict((x, req.form[x])
                 for x in ('formid', 'rtype', 'role', 'reload', 'action'))
-    rset = req.eid_rset(typed_eid(self._cw.form['eid']))
+    rset = req.eid_rset(int(self._cw.form['eid']))
     try:
         args['reload'] = json.loads(args['reload'])
     except ValueError: # not true/false, an absolute url

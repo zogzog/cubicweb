@@ -127,7 +127,7 @@ from logilab.mtconverter import xml_escape
 from logilab.common.decorators import iclassmethod, cached
 from logilab.common.deprecation import deprecated
 
-from cubicweb import typed_eid, neg_role, uilib
+from cubicweb import neg_role, uilib
 from cubicweb.schema import display_name
 from cubicweb.view import EntityView
 from cubicweb.predicates import (
@@ -415,7 +415,7 @@ def parse_relations_descr(rdescr):
         subjs, rtype, objs = rstr.split(':')
         for subj in subjs.split('_'):
             for obj in objs.split('_'):
-                yield typed_eid(subj), rtype, typed_eid(obj)
+                yield int(subj), rtype, int(obj)
 
 def delete_relations(req, rdefs):
     """delete relations from the repository"""
@@ -460,12 +460,12 @@ def cancel_edition(self, errorurl):
 def _add_pending(req, eidfrom, rel, eidto, kind):
     key = 'pending_%s' % kind
     pendings = req.session.data.setdefault(key, set())
-    pendings.add( (typed_eid(eidfrom), rel, typed_eid(eidto)) )
+    pendings.add( (int(eidfrom), rel, int(eidto)) )
 
 def _remove_pending(req, eidfrom, rel, eidto, kind):
     key = 'pending_%s' % kind
     pendings = req.session.data[key]
-    pendings.remove( (typed_eid(eidfrom), rel, typed_eid(eidto)) )
+    pendings.remove( (int(eidfrom), rel, int(eidto)) )
 
 @ajaxfunc(output_type='json')
 def remove_pending_insert(self, (eidfrom, rel, eidto)):
@@ -606,7 +606,7 @@ class GenericRelationsField(ff.Field):
         for pendingid in pending_inserts:
             eidfrom, rtype, eidto = pendingid.split(':')
             pendingid = 'id' + pendingid
-            if typed_eid(eidfrom) == entity.eid: # subject
+            if int(eidfrom) == entity.eid: # subject
                 label = display_name(form._cw, rtype, 'subject',
                                      entity.__regid__)
                 reid = eidto

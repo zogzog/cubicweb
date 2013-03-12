@@ -31,7 +31,7 @@ from rql.nodes import (Relation, VariableRef, Constant, SubQuery, Function,
 from yams import BASE_TYPES
 
 from cubicweb import ValidationError, Unauthorized, QueryError, UnknownEid
-from cubicweb import Binary, server, typed_eid
+from cubicweb import Binary, server
 from cubicweb.rset import ResultSet
 
 from cubicweb.utils import QueryCache, RepeatList
@@ -391,7 +391,7 @@ class ExecutionPlan(object):
             for var in rqlst.defined_vars.itervalues():
                 if var.stinfo['constnode'] is not None:
                     eid = var.stinfo['constnode'].eval(self.args)
-                    varkwargs[var.name] = typed_eid(eid)
+                    varkwargs[var.name] = int(eid)
         # dictionary of variables restricted for security reason
         localchecks = {}
         restricted_vars = set()
@@ -563,11 +563,11 @@ class InsertPlan(ExecutionPlan):
         for subj, rtype, obj in self.relation_defs():
             # if a string is given into args instead of an int, we get it here
             if isinstance(subj, basestring):
-                subj = typed_eid(subj)
+                subj = int(subj)
             elif not isinstance(subj, (int, long)):
                 subj = subj.entity.eid
             if isinstance(obj, basestring):
-                obj = typed_eid(obj)
+                obj = int(obj)
             elif not isinstance(obj, (int, long)):
                 obj = obj.entity.eid
             if repo.schema.rschema(rtype).inlined:

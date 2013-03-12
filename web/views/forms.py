@@ -51,7 +51,7 @@ from logilab.common.compat import any
 from logilab.common.textutils import splitstrip
 from logilab.common.deprecation import deprecated
 
-from cubicweb import ValidationError, typed_eid
+from cubicweb import ValidationError
 from cubicweb.utils import support_args
 from cubicweb.predicates import non_final_entity, match_kwargs, one_line_rset
 from cubicweb.web import RequestError, ProcessFormError
@@ -404,7 +404,7 @@ class EntityFieldsForm(FieldsForm):
         linked_to = {}
         for linkto in self._cw.list_form_param('__linkto'):
             ltrtype, eid, ltrole = linkto.split(':')
-            linked_to.setdefault((ltrtype, ltrole), []).append(typed_eid(eid))
+            linked_to.setdefault((ltrtype, ltrole), []).append(int(eid))
         return linked_to
 
     def session_key(self):
@@ -436,7 +436,7 @@ class EntityFieldsForm(FieldsForm):
         # created entity)
         assert eid or eid == 0, repr(eid) # 0 is a valid eid
         try:
-            return typed_eid(eid)
+            return int(eid)
         except ValueError:
             try:
                 return self._cw.data['eidmap'][eid]

@@ -33,7 +33,7 @@ from rql.stmts import Select
 from rql.nodes import (Not, VariableRef, Constant, make_relation,
                        Relation as RqlRelation)
 
-from cubicweb import Unauthorized, typed_eid, neg_role
+from cubicweb import Unauthorized, neg_role
 from cubicweb.utils import support_args
 from cubicweb.rset import ResultSet
 from cubicweb.appobject import AppObject
@@ -627,7 +627,7 @@ class Entity(AppObject):
         meaning that the entity has to be created
         """
         try:
-            typed_eid(self.eid)
+            int(self.eid)
             return True
         except (ValueError, TypeError):
             return False

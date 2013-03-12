@@ -26,7 +26,7 @@ __docformat__ = "restructuredtext en"
 
 import re
 
-from cubicweb import UnknownEid, typed_eid
+from cubicweb import UnknownEid
 from cubicweb.view import Component
 
 
@@ -66,7 +66,7 @@ class ChangeStateTextParser(TextParser):
     def parse(self, caller, text):
         for trname, eid in self.instr_rgx.findall(text):
             try:
-                entity = self._cw.entity_from_eid(typed_eid(eid))
+                entity = self._cw.entity_from_eid(int(eid))
             except UnknownEid:
                 self.error("can't get entity with eid %s", eid)
                 continue

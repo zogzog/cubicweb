@@ -24,7 +24,7 @@ from warnings import warn
 from logilab.common.deprecation import deprecated
 from logilab.common.decorators import cached
 
-from cubicweb import Unauthorized, typed_eid
+from cubicweb import Unauthorized
 from cubicweb.entity import Entity
 
 

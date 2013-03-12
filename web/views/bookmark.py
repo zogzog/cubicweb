@@ -22,7 +22,7 @@ _ = unicode
 
 from logilab.mtconverter import xml_escape
 
-from cubicweb import Unauthorized, typed_eid
+from cubicweb import Unauthorized
 from cubicweb.predicates import is_instance, one_line_rset
 from cubicweb.web import action, component, htmlwidgets, formwidgets as fw
 from cubicweb.web.views import uicfg, primary
@@ -137,4 +137,4 @@ class BookmarksBox(component.CtxComponent):
 @ajaxfunc
 def delete_bookmark(self, beid):
     rql = 'DELETE B bookmarked_by U WHERE B eid %(b)s, U eid %(u)s'
-    self._cw.execute(rql, {'b': typed_eid(beid), 'u' : self._cw.user.eid})
+    self._cw.execute(rql, {'b': int(beid), 'u' : self._cw.user.eid})

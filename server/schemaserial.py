@@ -26,7 +26,7 @@ from logilab.common.shellutils import ProgressBar
 
 from yams import BadSchemaDefinition, schema as schemamod, buildobjs as ybo
 
-from cubicweb import CW_SOFTWARE_ROOT, typed_eid
+from cubicweb import CW_SOFTWARE_ROOT
 from cubicweb.schema import (CONSTRAINTS, ETYPE_NAME_MAP,
                              VIRTUAL_RTYPES, PURE_VIRTUAL_RTYPES)
 from cubicweb.server import sqlutils
@@ -58,7 +58,7 @@ def group_mapping(cursor, interactive=True):
                 if not value:
                     continue
                 try:
-                    eid = typed_eid(value)
+                    eid = int(value)
                 except ValueError:
                     print 'eid should be an integer'
                     continue

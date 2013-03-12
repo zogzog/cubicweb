@@ -64,7 +64,7 @@ from logilab.common.registry import yes
 
 from rql import nodes, utils
 
-from cubicweb import Unauthorized, typed_eid
+from cubicweb import Unauthorized
 from cubicweb.schema import display_name
 from cubicweb.uilib import css_em_num_value
 from cubicweb.utils import make_uid
@@ -500,8 +500,7 @@ class VocabularyFacet(AbstractFacet):
         return FacetVocabularyWidget
 
     def get_selected(self):
-        return frozenset(typed_eid(eid)
-                         for eid in self._cw.list_form_param(self.__regid__))
+        return frozenset(int(eid) for eid in self._cw.list_form_param(self.__regid__))
 
     def get_widget(self):
         """Return the widget instance to use to display this facet.

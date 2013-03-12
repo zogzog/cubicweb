@@ -27,7 +27,7 @@ from warnings import warn
 from logilab.common.deprecation import deprecated
 
 from cubicweb import (NoSelectableObject, ObjectNotFound, ValidationError,
-                      AuthenticationError, typed_eid, UndoTransactionException,
+                      AuthenticationError, UndoTransactionException,
                       Forbidden)
 from cubicweb.utils import json_dumps
 from cubicweb.predicates import (authenticated_user, anonymous_user,
@@ -176,7 +176,7 @@ class ViewController(Controller):
         if not '__linkto' in req.form:
             return
         if eid is None:
-            eid = typed_eid(req.form['eid'])
+            eid = int(req.form['eid'])
         for linkto in req.list_form_param('__linkto', pop=True):
             rtype, eids, target = linkto.split(':')
             assert target in ('subject', 'object')
@@ -186,7 +186,7 @@ class ViewController(Controller):
             else:
                 rql = 'SET Y %s X WHERE X eid %%(x)s, Y eid %%(y)s' % rtype
             for teid in eids:
-                req.execute(rql, {'x': eid, 'y': typed_eid(teid)})
+                req.execute(rql, {'x': eid, 'y': int(teid)})
 
 
 def _validation_error(req, ex):

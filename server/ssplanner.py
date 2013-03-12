@@ -22,7 +22,7 @@ __docformat__ = "restructuredtext en"
 from rql.stmts import Union, Select
 from rql.nodes import Constant, Relation
 
-from cubicweb import QueryError, typed_eid
+from cubicweb import QueryError
 from cubicweb.schema import VIRTUAL_RTYPES
 from cubicweb.rqlrewrite import add_types_restriction
 from cubicweb.server.edition import EditedEntity
@@ -79,7 +79,7 @@ def _extract_eid_consts(plan, rqlst):
         if rel.r_type == 'eid' and not rel.neged(strict=True):
             lhs, rhs = rel.get_variable_parts()
             if isinstance(rhs, Constant):
-                eid = typed_eid(rhs.eval(plan.args))
+                eid = int(rhs.eval(plan.args))
                 # check read permission here since it may not be done by
                 # the generated select substep if not emited (eg nothing
                 # to be selected)
@@ -516,7 +516,7 @@ class DeleteEntitiesStep(Step):
         """execute this step"""
         results = self.execute_child()
         if results:
-            todelete = frozenset(typed_eid(eid) for eid, in results)
+            todelete = frozenset(int(eid) for eid, in results)
             session = self.plan.session
             session.repo.glob_delete_entities(session, todelete)
         return results
@@ -562,7 +562,7 @@ class UpdateStep(Step):
                 lhsval = _handle_relterm(lhsinfo, row, newrow)
                 rhsval = _handle_relterm(rhsinfo, row, newrow)
                 if rschema.final or rschema.inlined:
-                    eid = typed_eid(lhsval)
+                    eid = int(lhsval)
                     try:
                         edited = edefs[eid]
                     except KeyError:

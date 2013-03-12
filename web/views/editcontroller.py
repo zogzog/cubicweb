@@ -25,7 +25,7 @@ from logilab.common.deprecation import deprecated
 
 from rql.utils import rqlvar_maker
 
-from cubicweb import Binary, ValidationError, typed_eid
+from cubicweb import Binary, ValidationError
 from cubicweb.view import EntityAdapter, implements_adapter_compat
 from cubicweb.predicates import is_instance
 from cubicweb.web import (INTERNAL_FIELD_VALUE, RequestError, NothingToEdit,
@@ -67,7 +67,7 @@ class IEditControlAdapter(EntityAdapter):
 
 def valerror_eid(eid):
     try:
-        return typed_eid(eid)
+        return int(eid)
     except (ValueError, TypeError):
         return eid
 
@@ -217,7 +217,7 @@ class EditController(basecontrollers.ViewController):
             todelete = self._cw.list_form_param('__delete', formparams, pop=True)
             autoform.delete_relations(self._cw, todelete)
         if '__cloned_eid' in formparams:
-            entity.copy_relations(typed_eid(formparams['__cloned_eid']))
+            entity.copy_relations(int(formparams['__cloned_eid']))
         if is_main_entity: # only execute linkto for the main entity
             self.execute_linkto(entity.eid)
         return eid

@@ -42,7 +42,7 @@ from logilab.common.decorators import classproperty
 from yams.constraints import BASE_CONVERTERS
 from yams.schema import role_name as rn
 
-from cubicweb import ValidationError, RegistryException, typed_eid
+from cubicweb import ValidationError, RegistryException
 from cubicweb.view import Component
 from cubicweb.server.sources import datafeed
 from cubicweb.server.hook import match_rtype
@@ -326,10 +326,10 @@ class CWEntityXMLItemBuilder(Component):
         item['cwtype'] = unicode(node.tag)
         item.setdefault('cwsource', None)
         try:
-            item['eid'] = typed_eid(item['eid'])
+            item['eid'] = int(item['eid'])
         except KeyError:
             # cw < 3.11 compat mode XXX
-            item['eid'] = typed_eid(node.find('eid').text)
+            item['eid'] = int(node.find('eid').text)
             item['cwuri'] = node.find('cwuri').text
         rels = {}
         for child in node:

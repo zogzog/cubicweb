@@ -29,7 +29,7 @@ from logilab.common.decorators import cached
 from logilab.common.deprecation import deprecated
 from logilab.common.date import ustrftime, strptime, todate, todatetime
 
-from cubicweb import Unauthorized, NoSelectableObject, typed_eid, uilib
+from cubicweb import Unauthorized, NoSelectableObject, uilib
 from cubicweb.rset import ResultSet
 
 ONESECOND = timedelta(0, 1, 0)
@@ -114,7 +114,7 @@ class RequestSessionBase(object):
         (we have the eid, we can suppose it exists and user has access to the
         entity)
         """
-        eid = typed_eid(eid)
+        eid = int(eid)
         if etype is None:
             etype = self.describe(eid)[0]
         rset = ResultSet([(eid,)], 'Any X WHERE X eid %(x)s', {'x': eid},
