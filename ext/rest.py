@@ -96,7 +96,16 @@ def eid_reference_role(role, rawtext, text, lineno, inliner,
                             **options)], []
 
 def rql_role(role, rawtext, text, lineno, inliner, options={}, content=[]):
-    """:rql:`Any X,Y WHERE X is CWUser, X login Y:table`"""
+    """:rql:`<rql-expr>` or :rql:`<rql-expr>:<vid>`
+
+    Example: :rql:`Any X,Y WHERE X is CWUser, X login Y:table`
+
+    Replace the directive with the output of applying the view to the resultset
+    returned by the query.
+
+    "X eid %(userid)s" can be used in the RQL query for this query will be
+    executed with the argument {'userid': _cw.user.eid}.
+    """
     _cw = inliner.document.settings.context._cw
     text = text.strip()
     if ':' in text:

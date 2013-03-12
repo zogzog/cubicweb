@@ -20,9 +20,11 @@
 from logilab.common.testlib import TestCase, unittest_main
 
 from cubicweb import ValidationError
+from cubicweb.schema import META_RTYPES
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.devtools.repotest import schema_eids_idx, restore_schema_eids_idx
+
 
 def tearDownModule(*args):
     del SchemaModificationHooksTC.schema_eids
@@ -115,6 +117,33 @@ class SchemaModificationHooksTC(CubicWebTC):
         self.assertFalse(schema.has_entity('Societe2'))
         self.assertFalse(schema.has_entity('concerne2'))
         self.assertFalse('concerne2' in schema['CWUser'].subject_relations())
+
+    def test_metartype_with_nordefs(self):
+        META_RTYPES.add('custom_meta')
+        self.execute('INSERT CWRType X: X name "custom_meta", X description "", '
+                     'X final FALSE, X symmetric FALSE')
+        self.commit()
+        eeid = self.execute('INSERT CWEType X: X name "NEWEtype", '
+                            'X description "", X final FALSE')[0][0]
+        self._set_perms(eeid)
+        self.commit()
+        META_RTYPES.remove('custom_meta')
+
+    def test_metartype_with_somerdefs(self):
+        META_RTYPES.add('custom_meta')
+        self.execute('INSERT CWRType X: X name "custom_meta", X description "", '
+                     'X final FALSE, X symmetric FALSE')
+        self.commit()
+        rdefeid = self.execute('INSERT CWRelation X: X cardinality "**", X relation_type RT, '
+                               '   X from_entity E, X to_entity E '
+                               'WHERE RT name "custom_meta", E name "CWUser"')[0][0]
+        self._set_perms(rdefeid)
+        self.commit()
+        eeid = self.execute('INSERT CWEType X: X name "NEWEtype", '
+                            'X description "", X final FALSE')[0][0]
+        self._set_perms(eeid)
+        self.commit()
+        META_RTYPES.remove('custom_meta')
 
     def test_is_instance_of_insertions(self):
         seid = self.execute('INSERT Transition T: T name "subdiv"')[0][0]

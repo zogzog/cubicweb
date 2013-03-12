@@ -111,15 +111,18 @@ methods that are quite useful in day-to-day practice:
    :members:
 
 
-The `Cursor` API
-~~~~~~~~~~~~~~~~
+The `Cursor` and `Connection` API
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The whole cursor API is developped below.
 
 .. note::
 
-  In practice we use the `.execute` method on the _cw object of
+  In practice you'll usually use the `.execute` method on the _cw object of
   appobjects. Usage of other methods is quite rare.
 
 .. autoclass:: cubicweb.dbapi.Cursor
+   :members:
+
+.. autoclass:: cubicweb.dbapi.Connection
    :members:
