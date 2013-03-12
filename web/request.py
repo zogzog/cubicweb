@@ -23,6 +23,7 @@ import time
 import random
 import base64
 import urllib
+from StringIO import StringIO
 from hashlib import sha1 # pylint: disable=E0611
 from Cookie import SimpleCookie
 from calendar import timegm
@@ -114,6 +115,8 @@ class CubicWebRequestBase(DBAPIRequest):
             self._headers_in.addRawHeader(k, v)
         #: form parameters
         self.setup_params(form)
+        #: received body
+        self.content = StringIO()
         #: dictionary that may be used to store request data that has to be
         #: shared among various components used to publish the request (views,
         #: controller, application...)

@@ -39,6 +39,7 @@ class CubicWebTwistedRequestAdapter(CubicWebRequestBase):
                 self.form[key] = (name, stream)
             else:
                 self.form[key] = (unicode(name, self.encoding), stream)
+        self.content = self._twreq.content # stream
 
     def http_method(self):
         """returns 'POST', 'GET', 'HEAD', etc."""
