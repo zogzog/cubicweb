@@ -72,7 +72,7 @@ class SupervisingTC(CubicWebTC):
 
 * added relation bookmarked_by from bookmark #EID to cwuser #EID
 
-* updated comment #EID (#EID)
+* updated comment #EID (duh?)
   http://testing.fr/cubicweb/comment/EID
 
 * deleted relation comments from comment #EID to card #EID''',
