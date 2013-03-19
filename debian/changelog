@@ -1,3 +1,9 @@
+cubicweb (3.15.10-1) squeeze; urgency=low
+
+  * New upstream release
+
+ -- Aurélien Campéas <aurelien.campeas@logilab.fr>  Tue, 19 Mar 2013 16:56:00 +0100
+
 cubicweb (3.15.9-1) squeeze; urgency=low
 
   * New upstream release
