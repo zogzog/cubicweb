@@ -997,30 +997,38 @@ class Entity(AppObject):
           :exc:`Unauthorized`, else (the default), the exception is propagated
         """
         rtype = str(rtype)
-        try:
-            return self._cw_relation_cache(rtype, role, entities, limit)
-        except KeyError:
-            pass
+        if limit is None:
+            # we cannot do much wrt cache on limited queries
+            cache_key = '%s_%s' % (rtype, role)
+            if cache_key in self._cw_related_cache:
+                return self._cw_related_cache[cache_key][entities]
         if not self.has_eid():
             if entities:
                 return []
             return self._cw.empty_rset()
-        rql = self.cw_related_rql(rtype, role)
+        rql = self.cw_related_rql(rtype, role, limit=limit)
         try:
             rset = self._cw.execute(rql, {'x': self.eid})
         except Unauthorized:
             if not safe:
                 raise
             rset = self._cw.empty_rset()
-        self.cw_set_relation_cache(rtype, role, rset)
-        return self.related(rtype, role, limit, entities)
+        if entities:
+            if limit is None:
+                self.cw_set_relation_cache(rtype, role, rset)
+                return self.related(rtype, role, limit, entities)
+            return list(rset.entities())
+        else:
+            return rset
 
-    def cw_related_rql(self, rtype, role='subject', targettypes=None):
+    def cw_related_rql(self, rtype, role='subject', targettypes=None, limit=None):
         vreg = self._cw.vreg
         rschema = vreg.schema[rtype]
         select = Select()
         mainvar, evar = select.get_variable('X'), select.get_variable('E')
         select.add_selected(mainvar)
+        if limit is not None:
+            select.set_limit(limit)
         select.add_eid_restriction(evar, 'x', 'Substitute')
         if role == 'subject':
             rel = make_relation(evar, rtype, (mainvar,), VariableRef)
@@ -1075,7 +1083,7 @@ class Entity(AppObject):
     # generic vocabulary methods ##############################################
 
     def cw_unrelated_rql(self, rtype, targettype, role, ordermethod=None,
-                         vocabconstraints=True, lt_infos={}):
+                         vocabconstraints=True, lt_infos={}, limit=None):
         """build a rql to fetch `targettype` entities unrelated to this entity
         using (rtype, role) relation.
 
@@ -1104,6 +1112,8 @@ class Entity(AppObject):
             searchedvar = subjvar = select.get_variable('S')
             evar = objvar = select.get_variable('O')
         select.add_selected(searchedvar)
+        if limit is not None:
+            select.set_limit(limit)
         # initialize some variables according to `self` existence
         if rdef.role_cardinality(neg_role(role)) in '?1':
             # if cardinality in '1?', we want a target entity which isn't
@@ -1197,14 +1207,10 @@ class Entity(AppObject):
         by a given relation, with self as subject or object
         """
         try:
-            rql, args = self.cw_unrelated_rql(rtype, targettype, role,
-                                              ordermethod, lt_infos=lt_infos)
+            rql, args = self.cw_unrelated_rql(rtype, targettype, role, limit=limit,
+                                              ordermethod=ordermethod, lt_infos=lt_infos)
         except Unauthorized:
             return self._cw.empty_rset()
-        # XXX should be set in unrelated rql when manipulating the AST
-        if limit is not None:
-            before, after = rql.split(' WHERE ', 1)
-            rql = '%s LIMIT %s WHERE %s' % (before, limit, after)
         return self._cw.execute(rql, args)
 
     # relations cache handling #################################################
@@ -1214,18 +1220,6 @@ class Entity(AppObject):
         instance, else the content of the cache (a 2-uple (rset, entities)).
         """
         return self._cw_related_cache.get('%s_%s' % (rtype, role))
-
-    def _cw_relation_cache(self, rtype, role, entities=True, limit=None):
-        """return values for the given relation if it's cached on the instance,
-        else raise `KeyError`
-        """
-        res = self._cw_related_cache['%s_%s' % (rtype, role)][entities]
-        if limit is not None and limit < len(res):
-            if entities:
-                res = res[:limit]
-            else:
-                res = res.limit(limit)
-        return res
 
     def cw_set_relation_cache(self, rtype, role, rset):
         """set cached values for the given relation"""

@@ -141,6 +141,9 @@ class EntityTC(CubicWebTC):
         self.execute('SET X tags Y WHERE X is Tag, Y is Personne')
         self.assertEqual(len(p.related('tags', 'object', limit=2)), 2)
         self.assertEqual(len(p.related('tags', 'object')), 4)
+        p.cw_clear_all_caches()
+        self.assertEqual(len(p.related('tags', 'object', entities=True, limit=2)), 2)
+        self.assertEqual(len(p.related('tags', 'object', entities=True)), 4)
 
     def test_cw_instantiate_relation(self):
         req = self.request()
