@@ -156,7 +156,7 @@ class CubicWebServerTC(CubicWebTC):
             response = self.web_get('logout')
         self._ident_cookie = None
 
-    def web_request(self, path='', method='GET', body=None, headers=None)
+    def web_request(self, path='', method='GET', body=None, headers=None):
         """Return an httplib.HTTPResponse object for the specified path
 
         Use available credential if available.
