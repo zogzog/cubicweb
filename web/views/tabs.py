@@ -66,7 +66,7 @@ class LazyViewMixin(object):
         if tabid is None:
             tabid = uilib.domid(vid)
         w(u'<div id="lazy-%s" cubicweb:loadurl="%s">' % (
-            tabid, xml_escape(self._cw.build_url('json', **urlparams))))
+            tabid, xml_escape(self._cw.build_url('ajax', **urlparams))))
         if show_spinbox:
             # Don't use ``alt`` since image is a *visual* helper for ajax
             w(u'<img style="display: none" src="%s" alt="" id="%s-hole"/>'

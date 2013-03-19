@@ -108,7 +108,9 @@ class NavigationComponent(Component):
         view = self.cw_extra_kwargs.get('view')
         if view is not None and hasattr(view, 'page_navigation_url'):
             url = view.page_navigation_url(self, path, params)
-        elif path == 'json':
+        elif path in ('json', 'ajax'):
+            # 'ajax' is the new correct controller, but the old 'json'
+            # controller should still be supported
             url = self.ajax_page_url(**params)
         else:
             url = self._cw.build_url(path, **params)
@@ -121,7 +123,7 @@ class NavigationComponent(Component):
     def ajax_page_url(self, **params):
         divid = params.setdefault('divid', 'pageContent')
         params['rql'] = self.cw_rset.printable_rql()
-        return js_href("$(%s).loadxhtml('json', %s, 'get', 'swap')" % (
+        return js_href("$(%s).loadxhtml(AJAX_PREFIX_URL, %s, 'get', 'swap')" % (
             json_dumps('#'+divid), js.ajaxFuncArgs('view', params)))
 
     def page_link(self, path, params, start, stop, content):

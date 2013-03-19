@@ -704,7 +704,10 @@ class CubicWebRequestBase(DBAPIRequest):
         # after having url unescaping the content. This may make appear some
         # quote or other special characters that will break the js expression.
         extraparams.setdefault('fname', 'view')
-        url = self.build_url('json', **extraparams)
+        # remove pageid from the generated URL as it's forced as a parameter
+        # to the loadxhtml call below.
+        extraparams.pop('pageid', None)
+        url = self.build_url('ajax', **extraparams)
         cbname = build_cb_uid(url[:50])
         # think to propagate pageid. XXX see https://www.cubicweb.org/ticket/1753121
         jscode = u'function %s() { $("#%s").%s; }' % (
