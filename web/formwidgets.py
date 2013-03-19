@@ -842,7 +842,7 @@ class AutoCompletionWidget(TextInput):
 
     def _get_url(self, entity, field):
         fname = self.autocomplete_initfunc
-        return entity._cw.build_url('json', fname=fname, mode='remote',
+        return entity._cw.build_url('ajax', fname=fname, mode='remote',
                                     pageid=entity._cw.pageid)
 
 

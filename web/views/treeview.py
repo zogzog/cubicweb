@@ -239,7 +239,7 @@ class TreeViewItemView(EntityView):
             w(u'<li class="%s">' % u' '.join(liclasses))
         else:
             rql = itree.children_rql() % {'x': entity.eid}
-            url = xml_escape(self._cw.build_url('json', rql=rql, vid=parentvid,
+            url = xml_escape(self._cw.build_url('ajax', rql=rql, vid=parentvid,
                                                 pageid=self._cw.pageid,
                                                 treeid=treeid,
                                                 fname='view',
