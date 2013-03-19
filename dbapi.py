@@ -204,13 +204,13 @@ def connect(database, login=None,
       there goes authentication tokens. You usually have to specify a password
       for the given user, using a named 'password' argument.
     """
-    if urlparse(database).scheme is None:
+    if not urlparse(database).scheme:
         warn('[3.16] give an qualified URI as database instead of using '
              'host/cnxprops to specify the connection method',
              DeprecationWarning, stacklevel=2)
-        if cnxprops.cnxtype == 'zmq':
+        if cnxprops and cnxprops.cnxtype == 'zmq':
             database = kwargs.pop('host')
-        elif cnxprops.cnxtype == 'inmemory':
+        elif cnxprops and cnxprops.cnxtype == 'inmemory':
             database = 'inmemory://' + database
         else:
             database = 'pyro://%s/%s.%s' % (kwargs.pop('host', ''),
