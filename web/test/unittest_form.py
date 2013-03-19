@@ -59,23 +59,26 @@ class EntityFieldsFormTC(CubicWebTC):
         self.req = self.request()
         self.entity = self.user(self.req)
 
-    def test_form_field_vocabulary_unrelated(self):
+    def test_form_field_choices(self):
         b = self.req.create_entity('BlogEntry', title=u'di mascii code', content=u'a best-seller')
         t = self.req.create_entity('Tag', name=u'x')
         form1 = self.vreg['forms'].select('edition', self.req, entity=t)
-        unrelated = [reid for rview, reid in form1.field_by_name('tags', 'subject', t.e_schema).choices(form1)]
-        self.assertTrue(unicode(b.eid) in unrelated, unrelated)
+        choices = [reid for rview, reid in form1.field_by_name('tags', 'subject', t.e_schema).choices(form1)]
+        self.assertIn(unicode(b.eid), choices)
         form2 = self.vreg['forms'].select('edition', self.req, entity=b)
-        unrelated = [reid for rview, reid in form2.field_by_name('tags', 'object', t.e_schema).choices(form2)]
-        self.assertTrue(unicode(t.eid) in unrelated, unrelated)
+        choices = [reid for rview, reid in form2.field_by_name('tags', 'object', t.e_schema).choices(form2)]
+        self.assertIn(unicode(t.eid), choices)
+
+        b.cw_clear_all_caches()
+        t.cw_clear_all_caches()
         self.execute('SET X tags Y WHERE X is Tag, Y is BlogEntry')
-        unrelated = [reid for rview, reid in form1.field_by_name('tags', 'subject', t.e_schema).choices(form1)]
-        self.assertFalse(unicode(b.eid) in unrelated, unrelated)
-        unrelated = [reid for rview, reid in form2.field_by_name('tags', 'object', t.e_schema).choices(form2)]
-        self.assertFalse(unicode(t.eid) in unrelated, unrelated)
 
+        choices = [reid for rview, reid in form1.field_by_name('tags', 'subject', t.e_schema).choices(form1)]
+        self.assertIn(unicode(b.eid), choices)
+        choices = [reid for rview, reid in form2.field_by_name('tags', 'object', t.e_schema).choices(form2)]
+        self.assertIn(unicode(t.eid), choices)
 
-    def test_form_field_vocabulary_new_entity(self):
+    def test_form_field_choices_new_entity(self):
         e = self.vreg['etypes'].etype_class('CWUser')(self.request())
         form = self.vreg['forms'].select('edition', self.req, entity=e)
         unrelated = [rview for rview, reid in form.field_by_name('in_group', 'subject').choices(form)]
