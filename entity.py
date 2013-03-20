@@ -20,6 +20,7 @@
 __docformat__ = "restructuredtext en"
 
 from warnings import warn
+from functools import partial
 
 from logilab.common import interface
 from logilab.common.decorators import cached
@@ -452,26 +453,13 @@ class Entity(AppObject):
         return mainattr, needcheck
 
     @classmethod
-    def cw_instantiate(cls, execute, **kwargs):
-        """add a new entity of this given type
-
-        Example (in a shell session):
-
-        >>> companycls = vreg['etypes'].etype_class(('Company')
-        >>> personcls = vreg['etypes'].etype_class(('Person')
-        >>> c = companycls.cw_instantiate(session.execute, name=u'Logilab')
-        >>> p = personcls.cw_instantiate(session.execute, firstname=u'John', lastname=u'Doe',
-        ...                              works_for=c)
-
-        You can also set relation where the entity has 'object' role by
-        prefixing the relation by 'reverse_'.
-        """
-        rql = 'INSERT %s X' % cls.__regid__
+    def _cw_build_entity_query(cls, kwargs):
         relations = []
         restrictions = set()
-        pending_relations = []
+        pendingrels = []
         eschema = cls.e_schema
         qargs = {}
+        attrcache = {}
         for attr, value in kwargs.items():
             if attr.startswith('reverse_'):
                 attr = attr[len('reverse_'):]
@@ -487,10 +475,13 @@ class Entity(AppObject):
                     value = iter(value).next()
                 else:
                     # prepare IN clause
-                    pending_relations.append( (attr, role, value) )
+                    pendingrels.append( (attr, role, value) )
                     continue
             if rschema.final: # attribute
                 relations.append('X %s %%(%s)s' % (attr, attr))
+                attrcache[attr] = value
+            elif value is None:
+                pendingrels.append( (attr, role, value) )
             else:
                 rvar = attr.upper()
                 if role == 'object':
@@ -503,19 +494,51 @@ class Entity(AppObject):
                 if hasattr(value, 'eid'):
                     value = value.eid
             qargs[attr] = value
+        rql = u''
         if relations:
-            rql = '%s: %s' % (rql, ', '.join(relations))
+            rql += ', '.join(relations)
         if restrictions:
-            rql = '%s WHERE %s' % (rql, ', '.join(restrictions))
-        created = execute(rql, qargs).get_entity(0, 0)
-        for attr, role, values in pending_relations:
+            rql += ' WHERE %s' % ', '.join(restrictions)
+        return rql, qargs, pendingrels, attrcache
+
+    @classmethod
+    def _cw_handle_pending_relations(cls, eid, pendingrels, execute):
+        for attr, role, values in pendingrels:
             if role == 'object':
                 restr = 'Y %s X' % attr
             else:
                 restr = 'X %s Y' % attr
+            if values is None:
+                execute('DELETE %s WHERE X eid %%(x)s' % restr, {'x': eid})
+                continue
             execute('SET %s WHERE X eid %%(x)s, Y eid IN (%s)' % (
                 restr, ','.join(str(getattr(r, 'eid', r)) for r in values)),
-                    {'x': created.eid}, build_descr=False)
+                    {'x': eid}, build_descr=False)
+
+    @classmethod
+    def cw_instantiate(cls, execute, **kwargs):
+        """add a new entity of this given type
+
+        Example (in a shell session):
+
+        >>> companycls = vreg['etypes'].etype_class('Company')
+        >>> personcls = vreg['etypes'].etype_class('Person')
+        >>> c = companycls.cw_instantiate(session.execute, name=u'Logilab')
+        >>> p = personcls.cw_instantiate(session.execute, firstname=u'John', lastname=u'Doe',
+        ...                              works_for=c)
+
+        You can also set relations where the entity has 'object' role by
+        prefixing the relation name by 'reverse_'. Also, relation values may be
+        an entity or eid, a list of entities or eids.
+        """
+        rql, qargs, pendingrels, attrcache = cls._cw_build_entity_query(kwargs)
+        if rql:
+            rql = 'INSERT %s X: %s' % (cls.__regid__, rql)
+        else:
+            rql = 'INSERT %s X' % (cls.__regid__)
+        created = execute(rql, qargs).get_entity(0, 0)
+        created._cw_update_attr_cache(attrcache)
+        cls._cw_handle_pending_relations(created.eid, pendingrels, execute)
         return created
 
     def __init__(self, req, rset=None, row=None, col=0):
@@ -530,10 +553,49 @@ class Entity(AppObject):
 
     def __repr__(self):
         return '<Entity %s %s %s at %s>' % (
-            self.e_schema, self.eid, self.cw_attr_cache.keys(), id(self))
+            self.e_schema, self.eid, list(self.cw_attr_cache), id(self))
 
     def __cmp__(self, other):
         raise NotImplementedError('comparison not implemented for %s' % self.__class__)
+
+    def _cw_update_attr_cache(self, attrcache):
+        # if context is a repository session, don't consider dont-cache-attrs as
+        # the instance already hold modified values and loosing them could
+        # introduce severe problems
+        get_set = partial(self._cw.get_shared_data, default=(), txdata=True,
+                          pop=True)
+        uncached_attrs = set()
+        uncached_attrs.update(get_set('%s.storage-special-process-attrs' % self.eid))
+        if self._cw.is_request:
+            uncached_attrs.update(get_set('%s.dont-cache-attrs' % self.eid))
+        for attr in uncached_attrs:
+            attrcache.pop(attr, None)
+            self.cw_attr_cache.pop(attr, None)
+        self.cw_attr_cache.update(attrcache)
+
+    def _cw_dont_cache_attribute(self, attr, repo_side=False):
+        """Repository side method called when some attribute has been
+        transformed by a hook, hence original value should not be cached by
+        the client.
+
+        If repo_side is True, this means that the attribute has been
+        transformed by a *storage*, hence the original value should
+        not be cached **by anyone**.
+
+        This only applies to a storage special case where the value
+        specified in creation or update is **not** the value that will
+        be transparently exposed later.
+
+        For example we have a special "fs_importing" mode in BFSS
+        where a file path is given as attribute value and stored as is
+        in the data base. Later access to the attribute will provide
+        the content of the file at the specified path. We do not want
+        the "filepath" value to be cached.
+        """
+        self._cw.transaction_data.setdefault('%s.dont-cache-attrs' % self.eid, set()).add(attr)
+        if repo_side:
+            trdata = self._cw.transaction_data
+            trdata.setdefault('%s.storage-special-process-attrs' % self.eid, set()).add(attr)
 
     def __json_encode__(self):
         """custom json dumps hook to dump the entity's eid
@@ -836,7 +898,7 @@ class Entity(AppObject):
         selected = []
         for attr in (attributes or self._cw_to_complete_attributes(skip_bytes, skip_pwd)):
             # if attribute already in entity, nothing to do
-            if self.cw_attr_cache.has_key(attr):
+            if attr in self.cw_attr_cache:
                 continue
             # case where attribute must be completed, but is not yet in entity
             var = varmaker.next()
@@ -935,30 +997,38 @@ class Entity(AppObject):
           :exc:`Unauthorized`, else (the default), the exception is propagated
         """
         rtype = str(rtype)
-        try:
-            return self._cw_relation_cache(rtype, role, entities, limit)
-        except KeyError:
-            pass
+        if limit is None:
+            # we cannot do much wrt cache on limited queries
+            cache_key = '%s_%s' % (rtype, role)
+            if cache_key in self._cw_related_cache:
+                return self._cw_related_cache[cache_key][entities]
         if not self.has_eid():
             if entities:
                 return []
             return self._cw.empty_rset()
-        rql = self.cw_related_rql(rtype, role)
+        rql = self.cw_related_rql(rtype, role, limit=limit)
         try:
             rset = self._cw.execute(rql, {'x': self.eid})
         except Unauthorized:
             if not safe:
                 raise
             rset = self._cw.empty_rset()
-        self.cw_set_relation_cache(rtype, role, rset)
-        return self.related(rtype, role, limit, entities)
+        if entities:
+            if limit is None:
+                self.cw_set_relation_cache(rtype, role, rset)
+                return self.related(rtype, role, limit, entities)
+            return list(rset.entities())
+        else:
+            return rset
 
-    def cw_related_rql(self, rtype, role='subject', targettypes=None):
+    def cw_related_rql(self, rtype, role='subject', targettypes=None, limit=None):
         vreg = self._cw.vreg
         rschema = vreg.schema[rtype]
         select = Select()
         mainvar, evar = select.get_variable('X'), select.get_variable('E')
         select.add_selected(mainvar)
+        if limit is not None:
+            select.set_limit(limit)
         select.add_eid_restriction(evar, 'x', 'Substitute')
         if role == 'subject':
             rel = make_relation(evar, rtype, (mainvar,), VariableRef)
@@ -1013,7 +1083,7 @@ class Entity(AppObject):
     # generic vocabulary methods ##############################################
 
     def cw_unrelated_rql(self, rtype, targettype, role, ordermethod=None,
-                         vocabconstraints=True, lt_infos={}):
+                         vocabconstraints=True, lt_infos={}, limit=None):
         """build a rql to fetch `targettype` entities unrelated to this entity
         using (rtype, role) relation.
 
@@ -1042,6 +1112,8 @@ class Entity(AppObject):
             searchedvar = subjvar = select.get_variable('S')
             evar = objvar = select.get_variable('O')
         select.add_selected(searchedvar)
+        if limit is not None:
+            select.set_limit(limit)
         # initialize some variables according to `self` existence
         if rdef.role_cardinality(neg_role(role)) in '?1':
             # if cardinality in '1?', we want a target entity which isn't
@@ -1135,14 +1207,10 @@ class Entity(AppObject):
         by a given relation, with self as subject or object
         """
         try:
-            rql, args = self.cw_unrelated_rql(rtype, targettype, role,
-                                              ordermethod, lt_infos=lt_infos)
+            rql, args = self.cw_unrelated_rql(rtype, targettype, role, limit=limit,
+                                              ordermethod=ordermethod, lt_infos=lt_infos)
         except Unauthorized:
             return self._cw.empty_rset()
-        # XXX should be set in unrelated rql when manipulating the AST
-        if limit is not None:
-            before, after = rql.split(' WHERE ', 1)
-            rql = '%s LIMIT %s WHERE %s' % (before, limit, after)
         return self._cw.execute(rql, args)
 
     # relations cache handling #################################################
@@ -1152,18 +1220,6 @@ class Entity(AppObject):
         instance, else the content of the cache (a 2-uple (rset, entities)).
         """
         return self._cw_related_cache.get('%s_%s' % (rtype, role))
-
-    def _cw_relation_cache(self, rtype, role, entities=True, limit=None):
-        """return values for the given relation if it's cached on the instance,
-        else raise `KeyError`
-        """
-        res = self._cw_related_cache['%s_%s' % (rtype, role)][entities]
-        if limit is not None and limit < len(res):
-            if entities:
-                res = res[:limit]
-            else:
-                res = res.limit(limit)
-        return res
 
     def cw_set_relation_cache(self, rtype, role, rset):
         """set cached values for the given relation"""
@@ -1215,54 +1271,41 @@ class Entity(AppObject):
 
     # raw edition utilities ###################################################
 
-    def set_attributes(self, **kwargs): # XXX cw_set_attributes
+    def cw_set(self, **kwargs):
+        """update this entity using given attributes / relation, working in the
+        same fashion as :meth:`cw_instantiate`.
+
+        Example (in a shell session):
+
+        >>> c = rql('Any X WHERE X is Company').get_entity(0, 0)
+        >>> p = rql('Any X WHERE X is Person').get_entity(0, 0)
+        >>> c.set(name=u'Logilab')
+        >>> p.set(firstname=u'John', lastname=u'Doe', works_for=c)
+
+        You can also set relations where the entity has 'object' role by
+        prefixing the relation name by 'reverse_'.  Also, relation values may be
+        an entity or eid, a list of entities or eids, or None (meaning that all
+        relations of the given type from or to this object should be deleted).
+        """
         _check_cw_unsafe(kwargs)
         assert kwargs
         assert self.cw_is_saved(), "should not call set_attributes while entity "\
                "hasn't been saved yet"
-        relations = ['X %s %%(%s)s' % (key, key) for key in kwargs]
-        # and now update the database
-        kwargs['x'] = self.eid
-        self._cw.execute('SET %s WHERE X eid %%(x)s' % ','.join(relations),
-                         kwargs)
-        kwargs.pop('x')
+        rql, qargs, pendingrels, attrcache = self._cw_build_entity_query(kwargs)
+        if rql:
+            rql = 'SET ' + rql
+            qargs['x'] = self.eid
+            if ' WHERE ' in rql:
+                rql += ', X eid %(x)s'
+            else:
+                rql += ' WHERE X eid %(x)s'
+            self._cw.execute(rql, qargs)
         # update current local object _after_ the rql query to avoid
         # interferences between the query execution itself and the cw_edited /
         # skip_security machinery
-        self.cw_attr_cache.update(kwargs)
-
-    def set_relations(self, **kwargs): # XXX cw_set_relations
-        """add relations to the given object. To set a relation where this entity
-        is the object of the relation, use 'reverse_'<relation> as argument name.
-
-        Values may be an entity or eid, a list of entities or eids, or None
-        (meaning that all relations of the given type from or to this object
-        should be deleted).
-        """
-        # XXX update cache
-        _check_cw_unsafe(kwargs)
-        for attr, values in kwargs.iteritems():
-            if attr.startswith('reverse_'):
-                restr = 'Y %s X' % attr[len('reverse_'):]
-            else:
-                restr = 'X %s Y' % attr
-            if values is None:
-                self._cw.execute('DELETE %s WHERE X eid %%(x)s' % restr,
-                                 {'x': self.eid})
-                continue
-            if not isinstance(values, (tuple, list, set, frozenset)):
-                values = (values,)
-            eids = []
-            for val in values:
-                try:
-                    eids.append(str(val.eid))
-                except AttributeError:
-                    try:
-                        eids.append(str(typed_eid(val)))
-                    except (ValueError, TypeError):
-                        raise Exception('expected an Entity or eid, got %s' % val)
-            self._cw.execute('SET %s WHERE X eid %%(x)s, Y eid IN (%s)' % (
-                    restr, ','.join(eids)), {'x': self.eid})
+        self._cw_update_attr_cache(attrcache)
+        self._cw_handle_pending_relations(self.eid, pendingrels, self._cw.execute)
+        # XXX update relation cache
 
     def cw_delete(self, **kwargs):
         assert self.has_eid(), self.eid
@@ -1276,6 +1319,21 @@ class Entity(AppObject):
             self._cw.local_perm_cache.pop((rqlexpr.eid, (('x', self.eid),)), None)
 
     # deprecated stuff #########################################################
+
+    @deprecated('[3.16] use cw_set() instead')
+    def set_attributes(self, **kwargs): # XXX cw_set_attributes
+        self.cw_set(**kwargs)
+
+    @deprecated('[3.16] use cw_set() instead')
+    def set_relations(self, **kwargs): # XXX cw_set_relations
+        """add relations to the given object. To set a relation where this entity
+        is the object of the relation, use 'reverse_'<relation> as argument name.
+
+        Values may be an entity or eid, a list of entities or eids, or None
+        (meaning that all relations of the given type from or to this object
+        should be deleted).
+        """
+        self.cw_set(**kwargs)
 
     @deprecated('[3.13] use entity.cw_clear_all_caches()')
     def clear_all_caches(self):

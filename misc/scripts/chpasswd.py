@@ -42,7 +42,7 @@ if pass1 != pass2:
 crypted = crypt_password(pass1)
 
 cwuser = rset.get_entity(0,0)
-cwuser.set_attributes(upassword=Binary(crypted))
+cwuser.cw_set(upassword=Binary(crypted))
 commit()
 
 print("password updated.")

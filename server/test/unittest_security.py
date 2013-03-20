@@ -16,7 +16,6 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """functional tests for server'security"""
-from __future__ import with_statement
 
 import sys
 
@@ -473,9 +472,9 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
             anon = cu.connection.user(self.session)
             # anonymous user can only read itself
             rset = cu.execute('Any L WHERE X owned_by U, U login L')
-            self.assertEqual(rset.rows, [['anon']])
+            self.assertEqual([['anon']], rset.rows)
             rset = cu.execute('CWUser X')
-            self.assertEqual(rset.rows, [[anon.eid]])
+            self.assertEqual([[anon.eid]], rset.rows)
             # anonymous user can read groups (necessary to check allowed transitions for instance)
             self.assert_(cu.execute('CWGroup X'))
             # should only be able to read the anonymous user, not another one
@@ -488,7 +487,7 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
             #                  {'x': self.user.eid})
 
             rset = cu.execute('CWUser X WHERE X eid %(x)s', {'x': anon.eid})
-            self.assertEqual(rset.rows, [[anon.eid]])
+            self.assertEqual([[anon.eid]], rset.rows)
             # but can't modify it
             cu.execute('SET X login "toto" WHERE X eid %(x)s', {'x': anon.eid})
             self.assertRaises(Unauthorized, self.commit)

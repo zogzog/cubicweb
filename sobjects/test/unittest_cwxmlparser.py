@@ -16,12 +16,9 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import with_statement
-
 from datetime import datetime
 
 from cubicweb.devtools.testlib import CubicWebTC
-
 from cubicweb.sobjects.cwxmlparser import CWEntityXMLParser
 
 orig_parse = CWEntityXMLParser.parse
@@ -197,7 +194,7 @@ class CWEntityXMLParserTC(CubicWebTC):
                           })
         session = self.repo.internal_session(safe=True)
         stats = dfsource.pull_data(session, force=True, raise_on_error=True)
-        self.assertEqual(sorted(stats.keys()), ['checked', 'created', 'updated'])
+        self.assertEqual(sorted(stats), ['checked', 'created', 'updated'])
         self.assertEqual(len(stats['created']), 2)
         self.assertEqual(stats['updated'], set())
 

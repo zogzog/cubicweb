@@ -20,8 +20,6 @@
 unlike ldapuser source, this source is copy based and will import ldap content
 (beside passwords for authentication) into the system source.
 """
-from __future__ import with_statement
-
 from logilab.common.decorators import cached, cachedproperty
 from logilab.common.shellutils import generate_password
 
@@ -97,7 +95,7 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
             attrs = dict( (k, v) for k, v in attrs.iteritems()
                           if v != getattr(entity, k))
             if attrs:
-                entity.set_attributes(**attrs)
+                entity.cw_set(**attrs)
                 self.notify_updated(entity)
 
     def ldap2cwattrs(self, sdict, tdict=None):
@@ -133,7 +131,7 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
         groups = filter(None, [self._get_group(name)
                                for name in self.source.user_default_groups])
         if groups:
-            entity.set_relations(in_group=groups)
+            entity.cw_set(in_group=groups)
         self._process_email(entity, sourceparams)
 
     def is_deleted(self, extidplus, etype, eid):
@@ -162,9 +160,9 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
                 email = self.extid2entity(emailextid, 'EmailAddress',
                                           address=emailaddr)
                 if entity.primary_email:
-                    entity.set_relations(use_email=email)
+                    entity.cw_set(use_email=email)
                 else:
-                    entity.set_relations(primary_email=email)
+                    entity.cw_set(primary_email=email)
             elif self.sourceuris:
                 # pop from sourceuris anyway, else email may be removed by the
                 # source once import is finished

@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -50,7 +50,8 @@ from cubicweb.utils import support_args
 from cubicweb.predicates import match_kwargs, match_context
 from cubicweb.view import EntityView
 from cubicweb.schema import META_RTYPES, VIRTUAL_RTYPES, display_name
-from cubicweb.web import uicfg, component
+from cubicweb.web import component
+from cubicweb.web.views import uicfg
 
 
 class PrimaryView(EntityView):
@@ -96,8 +97,8 @@ class PrimaryView(EntityView):
     title = _('primary')
     show_attr_label = True
     show_rel_label = True
-    rsection = uicfg.primaryview_section
-    display_ctrl = uicfg.primaryview_display_ctrl
+    rsection = None
+    display_ctrl = None
     main_related_section = True
 
     def html_headers(self):
@@ -110,6 +111,13 @@ class PrimaryView(EntityView):
 
     def entity_call(self, entity):
         entity.complete()
+        uicfg_reg = self._cw.vreg['uicfg']
+        if self.rsection is None:
+            self.rsection = uicfg_reg.select('primaryview_section',
+                                             self._cw, entity=entity)
+        if self.display_ctrl is None:
+            self.display_ctrl = uicfg_reg.select('primaryview_display_ctrl',
+                                                 self._cw, entity=entity)
         self.render_entity(entity)
 
     def render_entity(self, entity):
@@ -226,6 +234,7 @@ class PrimaryView(EntityView):
 
     def render_entity_relations(self, entity):
         """Renders all relations in the 'relations' section."""
+        defaultlimit = self._cw.property_value('navigation.related-limit')
         for rschema, tschemas, role, dispctrl in self._section_def(entity, 'relations'):
             if rschema.final or dispctrl.get('rtypevid'):
                 vid = dispctrl.get('vid', 'reledit')
@@ -239,7 +248,9 @@ class PrimaryView(EntityView):
                 value = rview.render(row=entity.cw_row, col=entity.cw_col,
                                      rtype=rschema.type, role=role)
             else:
-                rset = self._relation_rset(entity, rschema, role, dispctrl)
+                vid = dispctrl.get('vid', 'autolimited')
+                limit = defaultlimit if vid == 'autolimited' else None
+                rset = self._relation_rset(entity, rschema, role, dispctrl, limit=limit)
                 if not rset:
                     continue
                 if hasattr(self, '_render_relation'):
@@ -249,7 +260,6 @@ class PrimaryView(EntityView):
                          'been renamed to render_relation, please update %s'
                          % self.__class__, DeprecationWarning)
                     continue
-                vid = dispctrl.get('vid', 'autolimited')
                 try:
                     rview = self._cw.vreg['views'].select(
                         vid, self._cw, rset=rset, dispctrl=dispctrl)
@@ -293,12 +303,14 @@ class PrimaryView(EntityView):
     def _prepare_side_boxes(self, entity):
         sideboxes = []
         boxesreg = self._cw.vreg['ctxcomponents']
+        defaultlimit = self._cw.property_value('navigation.related-limit')
         for rschema, tschemas, role, dispctrl in self._section_def(entity, 'sideboxes'):
-            rset = self._relation_rset(entity, rschema, role, dispctrl)
+            vid = dispctrl.get('vid', 'autolimited')
+            limit = defaultlimit if vid == 'autolimited' else None
+            rset = self._relation_rset(entity, rschema, role, dispctrl, limit=limit)
             if not rset:
                 continue
             label = self._rel_label(entity, rschema, role, dispctrl)
-            vid = dispctrl.get('vid', 'autolimited')
             box = boxesreg.select('rsetbox', self._cw, rset=rset,
                                   vid=vid, title=label, dispctrl=dispctrl,
                                   context='incontext')
@@ -331,9 +343,9 @@ class PrimaryView(EntityView):
                 rdefs.append( (rschema, matchtschemas, role, dispctrl) )
         return sorted(rdefs, key=lambda x: x[-1]['order'])
 
-    def _relation_rset(self, entity, rschema, role, dispctrl):
+    def _relation_rset(self, entity, rschema, role, dispctrl, limit=None):
         try:
-            rset = entity.related(rschema.type, role)
+            rset = entity.related(rschema.type, role, limit=limit)
         except Unauthorized:
             return
         if 'filter' in dispctrl:

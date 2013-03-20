@@ -28,12 +28,12 @@ from cubicweb import UnknownProperty
 from cubicweb.predicates import (one_line_rset, none_rset, is_instance,
                                  match_user_groups, logged_user_in_rset)
 from cubicweb.view import StartupView
-from cubicweb.web import uicfg, stdmsgs
+from cubicweb.web import stdmsgs
 from cubicweb.web.form import FormViewMixIn
 from cubicweb.web.formfields import FIELDS, StringField
 from cubicweb.web.formwidgets import (Select, TextInput, Button, SubmitButton,
                                       FieldWidget)
-from cubicweb.web.views import primary, formrenderers, editcontroller
+from cubicweb.web.views import uicfg, primary, formrenderers, editcontroller
 from cubicweb.web.views.ajaxcontroller import ajaxfunc
 
 uicfg.primaryview_section.tag_object_of(('*', 'for_user', '*'), 'hidden')
@@ -349,7 +349,7 @@ class PropertyValueField(StringField):
             return
         try:
             pdef = form._cw.vreg.property_info(entity.pkey)
-        except UnknownProperty, ex:
+        except UnknownProperty as ex:
             form.warning('%s (you should probably delete that property '
                          'from the database)', ex)
             msg = form._cw._('you should probably delete that property')

@@ -24,8 +24,7 @@ from logilab.mtconverter import xml_escape
 from cubicweb.schema import display_name
 from cubicweb.predicates import is_instance
 from cubicweb import Unauthorized
-from cubicweb.web import uicfg
-from cubicweb.web.views import baseviews, primary, ibreadcrumbs
+from cubicweb.web.views import uicfg, baseviews, primary, ibreadcrumbs
 
 _pvs = uicfg.primaryview_section
 _pvs.tag_subject_of(('*', 'use_email', '*'), 'attributes')

@@ -82,7 +82,7 @@ class FirefoxHelper(object):
             check_call(self.firefox_cmd + ['-CreateProfile',
                         '%s %s' % (self._profile_name, self._tmp_dir)],
                                   stdout=stdout, stderr=stderr)
-        except CalledProcessError, cpe:
+        except CalledProcessError as cpe:
             stdout.seek(0)
             stderr.seek(0)
             raise VerboseCalledProcessError(cpe.returncode, cpe.cmd, stdout.read(), stderr.read())
@@ -189,11 +189,13 @@ class QUnitTestCase(CubicWebServerTC):
                     yield InnerTest(test_name, self.fail, msg)
             except Empty:
                 error = True
-                yield InnerTest(test_file, raise_exception, RuntimeError, "%s did not report execution end. %i test processed so far." % (test_file, test_count))
-
+                msg = '%s inactivity timeout (%is). %i test results received'
+                yield InnerTest(test_file, raise_exception, RuntimeError,
+                                 msg % (test_file, timeout, test_count))
         browser.stop()
         if test_count <= 0 and not error:
-            yield InnerTest(test_name, raise_exception, RuntimeError, 'No test yielded by qunit for %s' % test_file)
+            yield InnerTest(test_name, raise_exception, RuntimeError,
+                            'No test yielded by qunit for %s' % test_file)
 
 class QUnitResultController(Controller):
 

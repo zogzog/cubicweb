@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -23,9 +23,6 @@ Notes:
   string. This is because it should actually be Bytes but we want an index on
   it for fast querying.
 """
-
-from __future__ import with_statement
-
 __docformat__ = "restructuredtext en"
 
 try:
@@ -86,7 +83,7 @@ class LogCursor(object):
             print 'exec', query, args
         try:
             self.cu.execute(str(query), args)
-        except Exception, ex:
+        except Exception as ex:
             print "sql: %r\n args: %s\ndbms message: %r" % (
                 query, args, ex.args[0])
             raise
@@ -409,12 +406,13 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
 
 
     def init(self, activated, source_entity):
+        super(NativeSQLSource, self).init(activated, source_entity)
         self.init_creating(source_entity._cw.cnxset)
         try:
             # test if 'asource' column exists
             query = self.dbhelper.sql_add_limit_offset('SELECT asource FROM entities', 1)
             source_entity._cw.system_sql(query)
-        except Exception, ex:
+        except Exception as ex:
             self.eid_type_source = self.eid_type_source_pre_131
 
     def shutdown(self):
@@ -539,7 +537,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             self.warning("trying to reconnect")
             session.cnxset.reconnect(self)
             cursor = self.doexec(session, sql, args)
-        except (self.DbapiError,), exc:
+        except self.DbapiError as exc:
             # We get this one with pyodbc and SQL Server when connection was reset
             if exc.args[0] == '08S01' and session.mode != 'write':
                 self.warning("trying to reconnect")
@@ -739,7 +737,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         try:
             # str(query) to avoid error if it's an unicode string
             cursor.execute(str(query), args)
-        except Exception, ex:
+        except Exception as ex:
             if self.repo.config.mode != 'test':
                 # during test we get those message when trying to alter sqlite
                 # db schema
@@ -750,7 +748,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                     session.cnxset.connection(self.uri).rollback()
                     if self.repo.config.mode != 'test':
                         self.critical('transaction has been rollbacked')
-                except Exception, ex:
+                except Exception as ex:
                     pass
             if ex.__class__.__name__ == 'IntegrityError':
                 # need string comparison because of various backends
@@ -780,7 +778,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         try:
             # str(query) to avoid error if it's an unicode string
             cursor.executemany(str(query), args)
-        except Exception, ex:
+        except Exception as ex:
             if self.repo.config.mode != 'test':
                 # during test we get those message when trying to alter sqlite
                 # db schema
@@ -944,7 +942,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             self.warning("trying to reconnect create eid connection")
             self._eid_creation_cnx = None
             return self._create_eid() # pylint: disable=E1102
-        except (self.DbapiError,), exc:
+        except self.DbapiError as exc:
             # We get this one with pyodbc and SQL Server when connection was reset
             if exc.args[0] == '08S01':
                 self.warning("trying to reconnect create eid connection")
@@ -961,6 +959,14 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             cnx.commit()
             return eid
 
+    def _handle_is_relation_sql(self, session, sql, attrs):
+        """ Handler for specific is_relation sql that may be
+        overwritten in some stores"""
+        self.doexec(session, sql % attrs)
+
+    _handle_insert_entity_sql = doexec
+    _handle_is_instance_of_sql = _handle_source_relation_sql = _handle_is_relation_sql
+
     def add_info(self, session, entity, source, extid, complete):
         """add type and source info for an eid into the system table"""
         # begin by inserting eid/type/source/extid into the entities table
@@ -970,21 +976,22 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         uri = 'system' if source.copy_based_source else source.uri
         attrs = {'type': entity.__regid__, 'eid': entity.eid, 'extid': extid,
                  'source': uri, 'asource': source.uri, 'mtime': datetime.utcnow()}
-        self.doexec(session, self.sqlgen.insert('entities', attrs), attrs)
+        self._handle_insert_entity_sql(session, self.sqlgen.insert('entities', attrs), attrs)
         # insert core relations: is, is_instance_of and cw_source
         try:
-            self.doexec(session, 'INSERT INTO is_relation(eid_from,eid_to) VALUES (%s,%s)'
-                        % (entity.eid, eschema_eid(session, entity.e_schema)))
+            self._handle_is_relation_sql(session, 'INSERT INTO is_relation(eid_from,eid_to) VALUES (%s,%s)',
+                                         (entity.eid, eschema_eid(session, entity.e_schema)))
         except IndexError:
             # during schema serialization, skip
             pass
         else:
             for eschema in entity.e_schema.ancestors() + [entity.e_schema]:
-                self.doexec(session, 'INSERT INTO is_instance_of_relation(eid_from,eid_to) VALUES (%s,%s)'
-                           % (entity.eid, eschema_eid(session, eschema)))
+                self._handle_is_relation_sql(session,
+                                             'INSERT INTO is_instance_of_relation(eid_from,eid_to) VALUES (%s,%s)',
+                                             (entity.eid, eschema_eid(session, eschema)))
         if 'CWSource' in self.schema and source.eid is not None: # else, cw < 3.10
-            self.doexec(session, 'INSERT INTO cw_source_relation(eid_from,eid_to) '
-                        'VALUES (%s,%s)' % (entity.eid, source.eid))
+            self._handle_is_relation_sql(session, 'INSERT INTO cw_source_relation(eid_from,eid_to) VALUES (%s,%s)',
+                                         (entity.eid, source.eid))
         # now we can update the full text index
         if self.do_fti and self.need_fti_indexation(entity.__regid__):
             if complete:
@@ -1303,14 +1310,14 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         subj, rtype, obj = action.eid_from, action.rtype, action.eid_to
         try:
             sentity, oentity, rdef = _undo_rel_info(session, subj, rtype, obj)
-        except _UndoException, ex:
+        except _UndoException as ex:
             errors.append(unicode(ex))
         else:
             for role, entity in (('subject', sentity),
                                  ('object', oentity)):
                 try:
                     _undo_check_relation_target(entity, rdef, role)
-                except _UndoException, ex:
+                except _UndoException as ex:
                     errors.append(unicode(ex))
                     continue
         if not errors:
@@ -1386,7 +1393,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         subj, rtype, obj = action.eid_from, action.rtype, action.eid_to
         try:
             sentity, oentity, rdef = _undo_rel_info(session, subj, rtype, obj)
-        except _UndoException, ex:
+        except _UndoException as ex:
             errors.append(unicode(ex))
         else:
             rschema = rdef.rtype

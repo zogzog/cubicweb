@@ -51,7 +51,7 @@ For instance, to hide the ``title`` attribute of the ``Blog`` entity:
 
 .. sourcecode:: python
 
-   from cubicweb.web import uicfg
+   from cubicweb.web.views import uicfg
    uicfg.primaryview_section.tag_attribute(('Blog', 'title'), 'hidden')
 
 **Relations** can be either displayed in one of the three sections or hidden.

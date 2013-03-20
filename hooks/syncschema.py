@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -24,6 +24,7 @@ checking for schema consistency is done in hooks.py
 """
 
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 from copy import copy
 from yams.schema import BASE_TYPES, RelationSchema, RelationDefinitionSchema
@@ -31,7 +32,7 @@ from yams import buildobjs as ybo, schema2sql as y2sql
 
 from logilab.common.decorators import clear_cache
 
-from cubicweb import ValidationError
+from cubicweb import validation_error
 from cubicweb.predicates import is_instance
 from cubicweb.schema import (SCHEMA_TYPES, META_RTYPES, VIRTUAL_RTYPES,
                              CONSTRAINTS, ETYPE_NAME_MAP, display_name)
@@ -127,10 +128,9 @@ def check_valid_changes(session, entity, ro_attrs=('name', 'final')):
         if attr in ro_attrs:
             origval, newval = entity.cw_edited.oldnewvalue(attr)
             if newval != origval:
-                errors[attr] = session._("can't change the %s attribute") % \
-                               display_name(session, attr)
+                errors[attr] = _("can't change this attribute")
     if errors:
-        raise ValidationError(entity.eid, errors)
+        raise validation_error(entity, errors)
 
 
 class _MockEntity(object): # XXX use a named tuple with python 2.6
@@ -219,7 +219,7 @@ class MemSchemaNotifyChanges(hook.SingleLastOperation):
             repo.set_schema(repo.schema, rebuildinfered=rebuildinfered)
             # CWUser class might have changed, update current session users
             cwuser_cls = self.session.vreg['etypes'].etype_class('CWUser')
-            for session in repo._sessions.values():
+            for session in repo._sessions.itervalues():
                 session.user.__class__ = cwuser_cls
         except Exception:
             self.critical('error while setting schema', exc_info=True)
@@ -375,7 +375,7 @@ class CWRTypeUpdateOp(MemSchemaOperation):
             for etype in rschema.subjects():
                 try:
                     add_inline_relation_column(session, str(etype), rtype)
-                except Exception, ex:
+                except Exception as ex:
                     # the column probably already exists. this occurs when the
                     # entity's type has just been added or if the column has not
                     # been previously dropped (eg sqlite)
@@ -466,7 +466,7 @@ class CWAttributeAddOp(MemSchemaOperation):
                                    % (table, column, attrtype)),
                                rollback_on_failure=False)
             self.info('added column %s to table %s', table, column)
-        except Exception, ex:
+        except Exception as ex:
             # the column probably already exists. this occurs when
             # the entity's type has just been added or if the column
             # has not been previously dropped
@@ -475,7 +475,7 @@ class CWAttributeAddOp(MemSchemaOperation):
             try:
                 syssource.create_index(session, table, column,
                                       unique=extra_unique_index)
-            except Exception, ex:
+            except Exception as ex:
                 self.error('error while creating index for %s.%s: %s',
                            table, column, ex)
         # final relations are not infered, propagate
@@ -764,7 +764,7 @@ class CWUniqueTogetherConstraintDelOp(MemSchemaOperation):
         for sql in sqls:
             try:
                 session.system_sql(sql)
-            except Exception, exc: # should be ProgrammingError
+            except Exception as exc: # should be ProgrammingError
                 if sql.startswith('DROP'):
                     self.error('execute of `%s` failed (cause: %s)', sql, exc)
                     continue
@@ -920,7 +920,7 @@ class DelCWETypeHook(SyncSchemaHook):
         # final entities can't be deleted, don't care about that
         name = self.entity.name
         if name in CORE_TYPES:
-            raise ValidationError(self.entity.eid, {None: self._cw._('can\'t be deleted')})
+            raise validation_error(self.entity, {None: _("can't be deleted")})
         # delete every entities of this type
         if name not in ETYPE_NAME_MAP:
             self._cw.execute('DELETE %s X' % name)
@@ -990,7 +990,7 @@ class DelCWRTypeHook(SyncSchemaHook):
     def __call__(self):
         name = self.entity.name
         if name in CORE_TYPES:
-            raise ValidationError(self.entity.eid, {None: self._cw._('can\'t be deleted')})
+            raise validation_error(self.entity, {None: _("can't be deleted")})
         # delete relation definitions using this relation type
         self._cw.execute('DELETE CWAttribute X WHERE X relation_type Y, Y eid %(x)s',
                         {'x': self.entity.eid})

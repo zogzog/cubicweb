@@ -152,7 +152,7 @@ containing the entity instance.
 
   On those events, the entity has no `cw_edited` dictionary.
 
-.. note:: `self.entity.set_attributes(age=42)` will set the `age` attribute to
+.. note:: `self.entity.cw_set(age=42)` will set the `age` attribute to
   42. But to do so, it will generate a rql query that will have to be processed,
   hence may trigger some hooks, etc. This could lead to infinitely looping hooks.
 
@@ -197,14 +197,12 @@ Hooks control
 ~~~~~~~~~~~~~
 
 It is sometimes convenient to explicitly enable or disable some hooks. For
-instance if you want to disable some integrity checking hook.  This can be
+instance if you want to disable some integrity checking hook. This can be
 controlled more finely through the `category` class attribute, which is a string
 giving a category name.  One can then uses the
-:class:`~cubicweb.server.session.hooks_control` context manager to explicitly
-enable or disable some categories.
-
-.. autoclass:: cubicweb.server.session.hooks_control
-
+:meth:`~cubicweb.server.session.Session.deny_all_hooks_but` and
+:meth:`~cubicweb.server.session.Session.allow_all_hooks_but` context managers to
+explicitly enable or disable some categories.
 
 The existing categories are:
 
@@ -230,10 +228,8 @@ The existing categories are:
 * ``bookmark``, bookmark entities handling hooks
 
 
-Nothing precludes one to invent new categories and use the
-:class:`~cubicweb.server.session.hooks_control` context manager to
-filter them in or out. Note that ending the transaction with commit()
-or rollback() will restore the hooks.
+Nothing precludes one to invent new categories and use existing mechanisms to
+filter them in or out.
 
 
 Hooks specific predicates
@@ -249,9 +245,6 @@ Hooks and operations classes
 .. autoclass:: cubicweb.server.hook.LateOperation
 .. autoclass:: cubicweb.server.hook.DataOperationMixIn
 """
-
-from __future__ import with_statement
-
 __docformat__ = "restructuredtext en"
 
 from warnings import warn
@@ -262,13 +255,12 @@ from logilab.common.decorators import classproperty, cached
 from logilab.common.deprecation import deprecated, class_renamed
 from logilab.common.logging_ext import set_log_methods
 from logilab.common.registry import (Predicate, NotPredicate, OrPredicate,
-                                     classid, objectify_predicate, yes)
+                                     objectify_predicate, yes)
 
-from cubicweb import RegistryNotFound
+from cubicweb import RegistryNotFound, server
 from cubicweb.cwvreg import CWRegistry, CWRegistryStore
 from cubicweb.predicates import ExpectedValuePredicate, is_instance
 from cubicweb.appobject import AppObject
-from cubicweb.server.session import security_enabled
 
 ENTITIES_HOOKS = set(('before_add_entity',    'after_add_entity',
                       'before_update_entity', 'after_update_entity',
@@ -326,12 +318,15 @@ class HooksRegistry(CWRegistry):
             pruned = self.get_pruned_hooks(session, event,
                                            entities, eids_from_to, kwargs)
             # by default, hooks are executed with security turned off
-            with security_enabled(session, read=False):
+            with session.security_enabled(read=False):
                 for _kwargs in _iter_kwargs(entities, eids_from_to, kwargs):
                     hooks = sorted(self.filtered_possible_objects(pruned, session, **_kwargs),
                                    key=lambda x: x.order)
-                    with security_enabled(session, write=False):
+                    debug = server.DEBUG & server.DBG_HOOKS
+                    with session.security_enabled(write=False):
                         for hook in hooks:
+                            if debug:
+                                print event, _kwargs, hook
                             hook()
 
     def get_pruned_hooks(self, session, event, entities, eids_from_to, kwargs):
@@ -770,7 +765,7 @@ class Operation(object):
         """delegate event handling to the opertaion"""
         if event == 'postcommit_event' and hasattr(self, 'commit_event'):
             warn('[3.10] %s: commit_event method has been replaced by postcommit_event'
-                 % classid(self.__class__), DeprecationWarning)
+                 % self.__class__, DeprecationWarning)
             self.commit_event() # pylint: disable=E1101
         getattr(self, event)()
 

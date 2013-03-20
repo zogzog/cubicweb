@@ -20,8 +20,6 @@ tree.
 
 This is used for instance for read security checking in the repository.
 """
-from __future__ import with_statement
-
 __docformat__ = "restructuredtext en"
 
 from rql import nodes as n, stmts, TypeResolverException

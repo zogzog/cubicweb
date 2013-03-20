@@ -39,7 +39,6 @@ USERACTIONS = [actions.UserPreferencesAction,
                actions.LogoutAction]
 SITEACTIONS = [actions.ManageAction]
 FOOTERACTIONS = [wdoc.HelpAction,
-                 wdoc.ChangeLogAction,
                  wdoc.AboutAction,
                  actions.PoweredByAction]
 MANAGEACTIONS = [actions.SiteConfigurationAction,
@@ -79,11 +78,11 @@ class VRegistryTC(ViewSelectorTC):
             self.assertEqual(len(content), expected, content)
             return
         try:
-            self.assertSetEqual(content.keys(), expected)
+            self.assertSetEqual(list(content), expected)
         except Exception:
-            print registry, sorted(expected), sorted(content.keys())
-            print 'no more', [v for v in expected if not v in content.keys()]
-            print 'missing', [v for v in content.keys() if not v in expected]
+            print registry, sorted(expected), sorted(content)
+            print 'no more', [v for v in expected if not v in content]
+            print 'missing', [v for v in content if not v in expected]
             raise
 
     def setUp(self):
@@ -93,8 +92,7 @@ class VRegistryTC(ViewSelectorTC):
     def test_possible_views_none_rset(self):
         req = self.request()
         self.assertListEqual(self.pviews(req, None),
-                             [('changelog', wdoc.ChangeLogView),
-                              ('cw.sources-management', cwsources.CWSourcesManagementView),
+                             [('cw.sources-management', cwsources.CWSourcesManagementView),
                               ('cw.users-and-groups-management', cwuser.UsersAndGroupsManagementView),
                               ('gc', debug.GCView),
                               ('index', startup.IndexView),
@@ -488,14 +486,14 @@ class VRegistryTC(ViewSelectorTC):
 
 
     def test_properties(self):
-        self.assertEqual(sorted(k for k in self.vreg['propertydefs'].keys()
-                                 if k.startswith('ctxcomponents.edit_box')),
-                          ['ctxcomponents.edit_box.context',
-                           'ctxcomponents.edit_box.order',
-                           'ctxcomponents.edit_box.visible'])
-        self.assertEqual([k for k in self.vreg['propertyvalues'].keys()
-                           if not k.startswith('system.version')],
-                          [])
+        self.assertEqual(sorted(k for k in self.vreg['propertydefs'].iterkeys()
+                                if k.startswith('ctxcomponents.edit_box')),
+                         ['ctxcomponents.edit_box.context',
+                          'ctxcomponents.edit_box.order',
+                          'ctxcomponents.edit_box.visible'])
+        self.assertEqual([k for k in self.vreg['propertyvalues'].iterkeys()
+                          if not k.startswith('system.version')],
+                         [])
         self.assertEqual(self.vreg.property_value('ctxcomponents.edit_box.visible'), True)
         self.assertEqual(self.vreg.property_value('ctxcomponents.edit_box.order'), 2)
         self.assertEqual(self.vreg.property_value('ctxcomponents.possible_views_box.visible'), False)

@@ -1,4 +1,4 @@
-# copyright 2010-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2010-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -17,12 +17,13 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """hooks for repository sources synchronization"""
 
+_ = unicode
+
 from socket import gethostname
 
 from logilab.common.decorators import clear_cache
-from yams.schema import role_name
 
-from cubicweb import ValidationError
+from cubicweb import validation_error
 from cubicweb.predicates import is_instance
 from cubicweb.server import SOURCE_TYPES, hook
 
@@ -46,12 +47,15 @@ class SourceAddedHook(SourceHook):
         try:
             sourcecls = SOURCE_TYPES[self.entity.type]
         except KeyError:
-            msg = self._cw._('unknown source type')
-            raise ValidationError(self.entity.eid,
-                                  {role_name('type', 'subject'): msg})
-        sourcecls.check_conf_dict(self.entity.eid, self.entity.host_config,
-                                  fail_if_unknown=not self._cw.vreg.config.repairing)
-        SourceAddedOp(self._cw, entity=self.entity)
+            msg = _('Unknown source type')
+            raise validation_error(self.entity, {('type', 'subject'): msg})
+        # ignore creation of the system source done during database
+        # initialisation, as config for this source is in a file and handling
+        # is done separatly (no need for the operation either)
+        if self.entity.name != 'system':
+            sourcecls.check_conf_dict(self.entity.eid, self.entity.host_config,
+                                      fail_if_unknown=not self._cw.vreg.config.repairing)
+            SourceAddedOp(self._cw, entity=self.entity)
 
 
 class SourceRemovedOp(hook.Operation):
@@ -65,7 +69,8 @@ class SourceRemovedHook(SourceHook):
     events = ('before_delete_entity',)
     def __call__(self):
         if self.entity.name == 'system':
-            raise ValidationError(self.entity.eid, {None: 'cant remove system source'})
+            msg = _("You cannot remove the system source")
+            raise validation_error(self.entity, {None: msg})
         SourceRemovedOp(self._cw, uri=self.entity.name)
 
 
@@ -116,11 +121,18 @@ class SourceUpdatedHook(SourceHook):
     __select__ = SourceHook.__select__ & is_instance('CWSource')
     events = ('before_update_entity',)
     def __call__(self):
-        if 'config' in self.entity.cw_edited:
-            SourceConfigUpdatedOp.get_instance(self._cw).add_data(self.entity)
         if 'name' in self.entity.cw_edited:
             oldname, newname = self.entity.cw_edited.oldnewvalue('name')
+            if oldname == 'system':
+                msg = _("You cannot rename the system source")
+                raise validation_error(self.entity, {('name', 'subject'): msg})
             SourceRenamedOp(self._cw, oldname=oldname, newname=newname)
+        if 'config' in self.entity.cw_edited:
+            if self.entity.name == 'system' and self.entity.config:
+                msg = _("Configuration of the system source goes to "
+                        "the 'sources' file, not in the database")
+                raise validation_error(self.entity, {('config', 'subject'): msg})
+            SourceConfigUpdatedOp.get_instance(self._cw).add_data(self.entity)
 
 
 class SourceHostConfigUpdatedHook(SourceHook):
@@ -154,8 +166,8 @@ class SourceMappingImmutableHook(SourceHook):
     events = ('before_add_relation',)
     def __call__(self):
         if not self._cw.added_in_transaction(self.eidfrom):
-            msg = self._cw._("can't change this relation")
-            raise ValidationError(self.eidfrom, {self.rtype: msg})
+            msg = _("You can't change this relation")
+            raise validation_error(self.eidfrom, {self.rtype: msg})
 
 
 class SourceMappingChangedOp(hook.DataOperationMixIn, hook.Operation):

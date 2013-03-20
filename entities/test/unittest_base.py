@@ -17,9 +17,7 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unit tests for cubicweb.entities.base module
-
 """
-from __future__ import with_statement
 
 from logilab.common.testlib import unittest_main
 from logilab.common.decorators import clear_cache
@@ -70,7 +68,7 @@ class EmailAddressTC(BaseEntityTC):
         email1 = self.execute('INSERT EmailAddress X: X address "maarten.ter.huurne@philips.com"').get_entity(0, 0)
         email2 = self.execute('INSERT EmailAddress X: X address "maarten@philips.com"').get_entity(0, 0)
         email3 = self.execute('INSERT EmailAddress X: X address "toto@logilab.fr"').get_entity(0, 0)
-        email1.set_relations(prefered_form=email2)
+        email1.cw_set(prefered_form=email2)
         self.assertEqual(email1.prefered.eid, email2.eid)
         self.assertEqual(email2.prefered.eid, email2.eid)
         self.assertEqual(email3.prefered.eid, email3.eid)
@@ -104,10 +102,10 @@ class CWUserTC(BaseEntityTC):
         e = self.execute('CWUser U WHERE U login "member"').get_entity(0, 0)
         self.assertEqual(e.dc_title(), 'member')
         self.assertEqual(e.name(), 'member')
-        e.set_attributes(firstname=u'bouah')
+        e.cw_set(firstname=u'bouah')
         self.assertEqual(e.dc_title(), 'member')
         self.assertEqual(e.name(), u'bouah')
-        e.set_attributes(surname=u'lôt')
+        e.cw_set(surname=u'lôt')
         self.assertEqual(e.dc_title(), 'member')
         self.assertEqual(e.name(), u'bouah lôt')
 

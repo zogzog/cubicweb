@@ -103,9 +103,9 @@ class ProcessInformationView(StartupView):
                    % (element, xml_escape(unicode(stats[element])),
                       element.endswith('percent') and '%' or '' ))
         w(u'</table>')
-        if req.cnx._cnxtype == 'inmemory' and req.user.is_in_group('managers'):
+        if req.cnx.is_repo_in_memory and req.user.is_in_group('managers'):
             w(u'<h3>%s</h3>' % _('opened sessions'))
-            sessions = repo._sessions.values()
+            sessions = repo._sessions.itervalues()
             if sessions:
                 w(u'<ul>')
                 for session in sessions:

@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -16,11 +16,8 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import with_statement
-
 from cubicweb import ValidationError
 from cubicweb.devtools.testlib import CubicWebTC
-from cubicweb.server.session import security_enabled
 
 
 def add_wf(self, etype, name=None, default=False):
@@ -64,7 +61,7 @@ class WorkflowBuildingTC(CubicWebTC):
         # gnark gnark
         bar = wf.add_state(u'bar')
         self.commit()
-        bar.set_attributes(name=u'foo')
+        bar.cw_set(name=u'foo')
         with self.assertRaises(ValidationError) as cm:
             self.commit()
         self.assertEqual({'name-subject': 'workflow already has a state of that name'},
@@ -88,7 +85,7 @@ class WorkflowBuildingTC(CubicWebTC):
         # gnark gnark
         biz = wf.add_transition(u'biz', (bar,), foo)
         self.commit()
-        biz.set_attributes(name=u'baz')
+        biz.cw_set(name=u'baz')
         with self.assertRaises(ValidationError) as cm:
             self.commit()
         self.assertEqual(cm.exception.errors, {'name-subject': 'workflow already have a transition of that name'})
@@ -99,7 +96,7 @@ class WorkflowTC(CubicWebTC):
     def setup_database(self):
         req = self.request()
         rschema = self.schema['in_state']
-        for rdef in rschema.rdefs.values():
+        for rdef in rschema.rdefs.itervalues():
             self.assertEqual(rdef.cardinality, '1*')
         self.member = self.create_user(req, 'member')
 
@@ -128,8 +125,9 @@ class WorkflowTC(CubicWebTC):
         self.assertEqual(trs[0].destination(None).name, u'deactivated')
         # test a std user get no possible transition
         cnx = self.login('member')
+        req = self.request()
         # fetch the entity using the new session
-        trs = list(cnx.user().cw_adapt_to('IWorkflowable').possible_transitions())
+        trs = list(req.user.cw_adapt_to('IWorkflowable').possible_transitions())
         self.assertEqual(len(trs), 0)
         cnx.close()
 
@@ -156,7 +154,7 @@ class WorkflowTC(CubicWebTC):
         wf = add_wf(self, 'CWUser')
         s = wf.add_state(u'foo', initial=True)
         self.commit()
-        with security_enabled(self.session, write=False):
+        with self.session.security_enabled(write=False):
             with self.assertRaises(ValidationError) as cm:
                 self.session.execute('SET X in_state S WHERE X eid %(x)s, S eid %(s)s',
                                      {'x': self.user().eid, 's': s.eid})
@@ -175,7 +173,7 @@ class WorkflowTC(CubicWebTC):
 
     def test_goback_transition(self):
         req = self.request()
-        wf = self.session.user.cw_adapt_to('IWorkflowable').current_workflow
+        wf = req.user.cw_adapt_to('IWorkflowable').current_workflow
         asleep = wf.add_state('asleep')
         wf.add_transition('rest', (wf.state_by_name('activated'),
                                    wf.state_by_name('deactivated')),
@@ -518,7 +516,7 @@ class AutoTransitionTC(CubicWebTC):
                           ['rest'])
         self.assertEqual(parse_hist(iworkflowable.workflow_history),
                           [('asleep', 'asleep', 'rest', None)])
-        user.set_attributes(surname=u'toto') # fulfill condition
+        user.cw_set(surname=u'toto') # fulfill condition
         self.commit()
         iworkflowable.fire_transition('rest')
         self.commit()
@@ -558,13 +556,12 @@ class WorkflowHooksTC(CubicWebTC):
 
     def setUp(self):
         CubicWebTC.setUp(self)
-        self.wf = self.session.user.cw_adapt_to('IWorkflowable').current_workflow
-        self.session.set_cnxset()
+        req = self.request()
+        self.wf = req.user.cw_adapt_to('IWorkflowable').current_workflow
         self.s_activated = self.wf.state_by_name('activated').eid
         self.s_deactivated = self.wf.state_by_name('deactivated').eid
         self.s_dummy = self.wf.add_state(u'dummy').eid
         self.wf.add_transition(u'dummy', (self.s_deactivated,), self.s_dummy)
-        req = self.request()
         ueid = self.create_user(req, 'stduser', commit=False).eid
         # test initial state is set
         rset = self.execute('Any N WHERE S name N, X in_state S, X eid %(x)s',
@@ -625,23 +622,22 @@ class WorkflowHooksTC(CubicWebTC):
         cnx.close()
 
     def test_transition_checking3(self):
-        cnx = self.login('stduser')
-        session = self.session
-        user = cnx.user(session)
-        iworkflowable = user.cw_adapt_to('IWorkflowable')
-        iworkflowable.fire_transition('deactivate')
-        cnx.commit()
-        session.set_cnxset()
-        with self.assertRaises(ValidationError) as cm:
+        with self.login('stduser') as cnx:
+            session = self.session
+            user = self.user()
+            iworkflowable = user.cw_adapt_to('IWorkflowable')
             iworkflowable.fire_transition('deactivate')
-        self.assertEqual(self._cleanup_msg(cm.exception.errors['by_transition-subject']),
-                                            u"transition isn't allowed from")
-        cnx.rollback()
-        session.set_cnxset()
-        # get back now
-        iworkflowable.fire_transition('activate')
-        cnx.commit()
-        cnx.close()
+            session.commit()
+            session.set_cnxset()
+            with self.assertRaises(ValidationError) as cm:
+                iworkflowable.fire_transition('deactivate')
+            self.assertEqual(self._cleanup_msg(cm.exception.errors['by_transition-subject']),
+                                                u"transition isn't allowed from")
+            session.rollback()
+            session.set_cnxset()
+            # get back now
+            iworkflowable.fire_transition('activate')
+            session.commit()
 
 
 if __name__ == '__main__':

@@ -1,4 +1,4 @@
-# copyright 2010-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2010-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -33,9 +33,9 @@ from cubicweb.predicates import (is_instance, score_entity, has_related_entities
                                 match_user_groups, match_kwargs, match_view)
 from cubicweb.view import EntityView, StartupView
 from cubicweb.schema import META_RTYPES, VIRTUAL_RTYPES, display_name
-from cubicweb.web import uicfg, formwidgets as wdgs, facet
+from cubicweb.web import formwidgets as wdgs, facet
 from cubicweb.web.views import add_etype_button
-from cubicweb.web.views import (tabs, actions, ibreadcrumbs, navigation,
+from cubicweb.web.views import (uicfg, tabs, actions, ibreadcrumbs, navigation,
                                 tableview, pyviews)
 
 

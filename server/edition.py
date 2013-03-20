@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -16,9 +16,6 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """helper classes to handle server-side edition of entities"""
-
-from __future__ import with_statement
-
 __docformat__ = "restructuredtext en"
 
 from copy import copy
@@ -103,6 +100,8 @@ class EditedEntity(dict):
         assert not self.saved, 'too late to modify edited attributes'
         super(EditedEntity, self).__setitem__(attr, value)
         self.entity.cw_attr_cache[attr] = value
+        # mark attribute as needing purge by the client
+        self.entity._cw_dont_cache_attribute(attr)
 
     def oldnewvalue(self, attr):
         """returns the couple (old attr value, new attr value)
@@ -141,9 +140,8 @@ class EditedEntity(dict):
                          for rtype in self]
         try:
             entity.e_schema.check(dict_protocol_catcher(entity),
-                                  creation=creation, _=entity._cw._,
-                                  relations=relations)
-        except ValidationError, ex:
+                                  creation=creation, relations=relations)
+        except ValidationError as ex:
             ex.entity = self.entity
             raise
 

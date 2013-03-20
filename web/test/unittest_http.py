@@ -21,7 +21,7 @@ def _test_cache(hin, hout, method='GET'):
     status = None
     try:
         req.validate_cache()
-    except StatusResponse, ex:
+    except StatusResponse as ex:
         status = ex.status
     return status, req
 

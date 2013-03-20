@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -21,7 +21,6 @@
 Note:
   syncschema.py hooks are mostly tested in server/test/unittest_migrations.py
 """
-from __future__ import with_statement
 
 from cubicweb import ValidationError
 from cubicweb.devtools.testlib import CubicWebTC
@@ -31,9 +30,11 @@ class CWPropertyHooksTC(CubicWebTC):
     def test_unexistant_cwproperty(self):
         with self.assertRaises(ValidationError) as cm:
             self.execute('INSERT CWProperty X: X pkey "bla.bla", X value "hop", X for_user U')
+        cm.exception.translate(unicode)
         self.assertEqual(cm.exception.errors, {'pkey-subject': 'unknown property key bla.bla'})
         with self.assertRaises(ValidationError) as cm:
             self.execute('INSERT CWProperty X: X pkey "bla.bla", X value "hop"')
+        cm.exception.translate(unicode)
         self.assertEqual(cm.exception.errors, {'pkey-subject': 'unknown property key bla.bla'})
 
     def test_site_wide_cwproperty(self):

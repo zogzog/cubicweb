@@ -17,7 +17,7 @@ def turn_function_to_class(node):
 def cubicweb_transform(module):
     # handle objectify_predicate decorator (and its former name until bw compat
     # is kept). Only look at module level functions, should be enough.
-    for assnodes in module.locals.values():
+    for assnodes in module.locals.itervalues():
         for node in assnodes:
             if isinstance(node, scoped_nodes.Function) and node.decorators:
                 for decorator in node.decorators.nodes:

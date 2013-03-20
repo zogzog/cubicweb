@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -126,7 +126,6 @@ from warnings import warn
 from logilab.mtconverter import xml_escape
 from logilab.common.decorators import iclassmethod, cached
 from logilab.common.deprecation import deprecated
-from logilab.common.registry import classid
 
 from cubicweb import typed_eid, neg_role, uilib
 from cubicweb.schema import display_name
@@ -135,13 +134,10 @@ from cubicweb.predicates import (
     match_kwargs, match_form_params, non_final_entity,
     specified_etype_implements)
 from cubicweb.utils import json_dumps
-from cubicweb.web import (stdmsgs, uicfg, eid_param,
+from cubicweb.web import (stdmsgs, eid_param,
                           form as f, formwidgets as fw, formfields as ff)
-from cubicweb.web.views import forms
+from cubicweb.web.views import uicfg, forms
 from cubicweb.web.views.ajaxcontroller import ajaxfunc
-
-_AFS = uicfg.autoform_section
-_AFFK = uicfg.autoform_field_kwargs
 
 
 # inlined form handling ########################################################
@@ -755,6 +751,8 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
 
     def __init__(self, *args, **kwargs):
         super(AutomaticEntityForm, self).__init__(*args, **kwargs)
+        self.uicfg_afs = self._cw.vreg['uicfg'].select(
+            'autoform_section', self._cw, entity=self.edited_entity)
         entity = self.edited_entity
         if entity.has_eid():
             entity.complete()
@@ -820,8 +818,8 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
 
     def _inlined_form_view_field(self, view):
         # XXX allow more customization
-        kwargs = _AFFK.etype_get(self.edited_entity.e_schema, view.rtype,
-                                 view.role, view.etype)
+        kwargs = self.uicfg_affk.etype_get(self.edited_entity.e_schema,
+                                           view.rtype, view.role, view.etype)
         if kwargs is None:
             kwargs = {}
         return InlinedFormField(view=view, **kwargs)
@@ -832,7 +830,7 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
         """return a list of (relation schema, target schemas, role) matching
         given category(ies) and permission
         """
-        return _AFS.relations_by_section(
+        return self.uicfg_afs.relations_by_section(
             self.edited_entity, self.formtype, section, permission, strict)
 
     def editable_attributes(self, strict=False):
@@ -963,6 +961,7 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
 
 ## default form ui configuration ##############################################
 
+_AFS = uicfg.autoform_section
 # use primary and not generated for eid since it has to be an hidden
 _AFS.tag_attribute(('*', 'eid'), 'main', 'attributes')
 _AFS.tag_attribute(('*', 'eid'), 'muledit', 'attributes')
@@ -994,6 +993,7 @@ _AFS.tag_subject_of(('CWRelation', 'relation_type', '*'), 'main', 'inlined')
 _AFS.tag_subject_of(('CWRelation', 'from_entity', '*'), 'main', 'inlined')
 _AFS.tag_subject_of(('CWRelation', 'to_entity', '*'), 'main', 'inlined')
 
+_AFFK = uicfg.autoform_field_kwargs
 _AFFK.tag_attribute(('RQLExpression', 'expression'),
                     {'widget': fw.TextInput})
 _AFFK.tag_subject_of(('TrInfo', 'wf_info_for', '*'),
@@ -1011,4 +1011,4 @@ def registration_callback(vreg):
             AutomaticEntityForm.error('field for %s %s may not be found in schema' % (rtype, role))
             return None
 
-    vreg.register_all(globals().values(), __name__)
+    vreg.register_all(globals().itervalues(), __name__)

@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -17,8 +17,6 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """user authentication component"""
 
-from __future__ import with_statement
-
 __docformat__ = "restructuredtext en"
 
 from threading import Lock
@@ -27,7 +25,7 @@ from logilab.common.decorators import clear_cache
 
 from cubicweb import AuthenticationError, BadConnectionId
 from cubicweb.view import Component
-from cubicweb.dbapi import repo_connect, ConnectionProperties
+from cubicweb.dbapi import _repo_connect, ConnectionProperties
 from cubicweb.web import InvalidSession
 from cubicweb.web.application import AbstractAuthenticationManager
 
@@ -169,9 +167,8 @@ class RepositoryAuthenticationManager(AbstractAuthenticationManager):
         raise AuthenticationError()
 
     def _authenticate(self, login, authinfo):
-        cnxprops = ConnectionProperties(self.vreg.config.repo_method,
-                                        close=False, log=self.log_queries)
-        cnx = repo_connect(self.repo, login, cnxprops=cnxprops, **authinfo)
+        cnxprops = ConnectionProperties(close=False, log=self.log_queries)
+        cnx = _repo_connect(self.repo, login, cnxprops=cnxprops, **authinfo)
         # decorate connection
         cnx.vreg = self.vreg
         return cnx

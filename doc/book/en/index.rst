@@ -65,6 +65,7 @@ The chatter lover will join the `jabber forum`_, the `mailing-list`_ and the blo
    :maxdepth: 2
 
    admin/index
+   additionnal_services/index
    annexes/index
 
 See also:

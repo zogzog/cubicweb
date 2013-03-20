@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -79,7 +79,7 @@ class InsertAttrRelationTC(CubicWebTC):
         select = self.parse('DISTINCT Any V,TN,L ORDERBY TN,L WHERE T nom TN, V connait T, T is Personne, V is CWUser,'
                             'NOT V in_state VS, VS name "published", V login L')
         rschema = self.schema['connait']
-        for rdefs in rschema.rdefs.values():
+        for rdefs in rschema.rdefs.itervalues():
             rdefs.cardinality =  '++'
         try:
             self.assertEqual(self._generate(select, 'in_state', 'subject', 'name'),
@@ -87,7 +87,7 @@ class InsertAttrRelationTC(CubicWebTC):
                               "NOT EXISTS(V in_state VS), VS name 'published', "
                               "V in_state A, A name B")
         finally:
-            for rdefs in rschema.rdefs.values():
+            for rdefs in rschema.rdefs.itervalues():
                 rdefs.cardinality =  '**'
 
     def test_nonregr3(self):

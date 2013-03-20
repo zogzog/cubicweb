@@ -37,7 +37,7 @@ class Validator(object):
         try:
             data = self.preprocess_data(data)
             return PageInfo(data, etree.fromstring(data, self.parser))
-        except etree.XMLSyntaxError, exc:
+        except etree.XMLSyntaxError as exc:
             def save_in(fname=''):
                 file(fname, 'w').write(data)
             new_exc = AssertionError(u'invalid xml %s' % exc)

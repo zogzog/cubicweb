@@ -49,8 +49,6 @@ class ReplaceByInOperator(Exception):
 class RemoteSource(AbstractSource):
     """Generic external repository source"""
 
-    CNX_TYPE = None # Must be ovewritted !
-
     # boolean telling if modification hooks should be called when something is
     # modified in this source
     should_call_hooks = False
@@ -99,12 +97,11 @@ repository (default to 5 minutes).',
 
     def __init__(self, repo, source_config, eid=None):
         super(RemoteSource, self).__init__(repo, source_config, eid)
-        self.update_config(None, self.check_conf_dict(eid, source_config,
-                                                      fail_if_unknown=False))
         self._query_cache = TimedCache(1800)
 
     def update_config(self, source_entity, processed_config):
         """update configuration from source entity"""
+        super(RemoteSource, self).update_config(source_entity, processed_config)
         baseurl = processed_config.get('base-url')
         if baseurl and not baseurl.endswith('/'):
             processed_config['base-url'] += '/'
@@ -113,22 +110,25 @@ repository (default to 5 minutes).',
         if source_entity is not None:
             self.latest_retrieval = source_entity.latest_retrieval
 
-    def _get_connection(self):
-        """open and return a connection to the source"""
-        self.info('connecting to source %(base-url)s with user %(cubicweb-user)s',
-                  self.config)
-        cnxprops = ConnectionProperties(cnxtype=self.CNX_TYPE)
-        return dbapi.connect(login=self.config['cubicweb-user'],
-                             password=self.config['cubicweb-password'],
-                             cnxprops=cnxprops)
+    def _entity_update(self, source_entity):
+        super(RemoteSource, self)._entity_update(source_entity)
+        if self.urls and len(self.urls) > 1:
+            raise ValidationError(source_entity.eid, {'url': _('can only have one url')})
 
     def get_connection(self):
         try:
             return self._get_connection()
-        except ConnectionError, ex:
+        except ConnectionError as ex:
             self.critical("can't get connection to source %s: %s", self.uri, ex)
             return ConnectionWrapper()
 
+    def _get_connection(self):
+        """open and return a connection to the source"""
+        self.info('connecting to source %s as user %s',
+                  self.urls[0], self.config['cubicweb-user'])
+        # XXX check protocol according to source type (zmq / pyro)
+        return dbapi.connect(self.urls[0], login=self.config['cubicweb-user'],
+                             password=self.config['cubicweb-password'])
 
     def reset_caches(self):
         """method called during test to reset potential source caches"""
@@ -136,6 +136,7 @@ repository (default to 5 minutes).',
 
     def init(self, activated, source_entity):
         """method called by the repository once ready to handle request"""
+        super(RemoteSource, self).init(activated, source_entity)
         self.load_mapping(source_entity._cw)
         if activated:
             interval = self.config['synchronization-interval']
@@ -239,7 +240,7 @@ repository (default to 5 minutes).',
         """synchronize content known by this repository with content in the
         external repository
         """
-        self.info('synchronizing remote %s source %s', (self.CNX_TYPE, self.uri))
+        self.info('synchronizing remote source %s', self.uri)
         cnx = self.get_connection()
         try:
             extrepo = cnx._repo
@@ -247,11 +248,10 @@ repository (default to 5 minutes).',
             # fake connection wrapper returned when we can't connect to the
             # external source (hence we've no chance to synchronize...)
             return
-        etypes = self.support_entities.keys()
+        etypes = list(self.support_entities)
         if mtime is None:
             mtime = self.latest_retrieval
-        updatetime, modified, deleted = extrepo.entities_modified_since(
-            etypes, mtime)
+        updatetime, modified, deleted = extrepo.entities_modified_since(etypes, mtime)
         self._query_cache.clear()
         repo = self.repo
         session = repo.internal_session()
@@ -337,7 +337,7 @@ repository (default to 5 minutes).',
         translator = RQL2RQL(self)
         try:
             rql = translator.generate(session, union, args)
-        except UnknownEid, ex:
+        except UnknownEid as ex:
             if server.DEBUG:
                 print '  unknown eid', ex, 'no results'
             return []
@@ -345,7 +345,7 @@ repository (default to 5 minutes).',
             print '  translated rql', rql
         try:
             rset = cu.execute(rql, args)
-        except Exception, ex:
+        except Exception as ex:
             self.exception(str(ex))
             msg = session._("error while querying source %s, some data may be missing")
             session.set_shared_data('sources_error', msg % self.uri, txdata=True)
@@ -573,7 +573,7 @@ class RQL2RQL(object):
                 return
             # XXX what about optional relation or outer NOT EXISTS()
             raise
-        except ReplaceByInOperator, ex:
+        except ReplaceByInOperator as ex:
             rhs = 'IN (%s)' % ','.join(eid for eid in ex.eids)
         self.need_translation = False
         self.current_operator = None
@@ -600,7 +600,7 @@ class RQL2RQL(object):
         for child in node.children:
             try:
                 rql = child.accept(self)
-            except UnknownEid, ex:
+            except UnknownEid as ex:
                 continue
             res.append(rql)
         if not res:

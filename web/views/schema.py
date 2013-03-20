@@ -39,9 +39,9 @@ from cubicweb.schema import (META_RTYPES, SCHEMA_TYPES, SYSTEM_RTYPES,
 from cubicweb.utils import make_uid
 from cubicweb.view import EntityView, StartupView
 from cubicweb import tags, uilib
-from cubicweb.web import action, facet, uicfg, schemaviewer
+from cubicweb.web import action, facet, schemaviewer
 from cubicweb.web.views import TmpFileViewMixin
-from cubicweb.web.views import primary, baseviews, tabs, tableview, ibreadcrumbs
+from cubicweb.web.views import uicfg, primary, baseviews, tabs, tableview, ibreadcrumbs
 
 ALWAYS_SKIP_TYPES = BASE_TYPES | SCHEMA_TYPES
 SKIP_TYPES  = (ALWAYS_SKIP_TYPES | META_RTYPES | SYSTEM_RTYPES | WORKFLOW_TYPES

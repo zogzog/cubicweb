@@ -9,7 +9,7 @@ Uploaders: Sylvain Thenault <sylvain.thenault@logilab.fr>,
            Nicolas Chauvat <nicolas.chauvat@logilab.fr>
 Build-Depends:
  debhelper (>= 7),
- python (>= 2.5),
+ python (>= 2.6),
  python-central (>= 0.5),
  python-sphinx,
  python-logilab-common,
@@ -20,7 +20,7 @@ Build-Depends:
  python-lxml,
 Standards-Version: 3.9.1
 Homepage: http://www.cubicweb.org
-XS-Python-Version: >= 2.5
+XS-Python-Version: >= 2.6
 
 Package: cubicweb
 Architecture: all
@@ -107,7 +107,7 @@ Description: web interface library for the CubicWeb framework
 Package: cubicweb-common
 Architecture: all
 XB-Python-Version: ${python:Versions}
-Depends: ${misc:Depends}, ${python:Depends}, graphviz, gettext, python-logilab-mtconverter (>= 0.8.0), python-logilab-common (>= 0.58.0), python-yams (>= 0.34.0), python-rql (>= 0.31.2), python-lxml
+Depends: ${misc:Depends}, ${python:Depends}, graphviz, gettext, python-logilab-mtconverter (>= 0.8.0), python-logilab-common (>= 0.59.0), python-yams (>= 0.36.0), python-rql (>= 0.31.2), python-lxml
 Recommends: python-simpletal (>= 4.0), python-crypto
 Conflicts: cubicweb-core
 Replaces: cubicweb-core

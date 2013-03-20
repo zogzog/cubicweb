@@ -82,7 +82,9 @@ def generate_source_config(sconfig, encoding=sys.stdin.encoding):
     """serialize a repository source configuration as text"""
     stream = StringIO()
     optsbysect = list(sconfig.options_by_section())
-    assert len(optsbysect) == 1, 'all options for a source should be in the same group'
+    assert len(optsbysect) == 1, (
+        'all options for a source should be in the same group, got %s'
+        % [x[0] for x in optsbysect])
     lgconfig.ini_format(stream, optsbysect[0][1], encoding)
     return stream.getvalue()
 
@@ -195,7 +197,7 @@ specific recipient rules.',
 notified of every changes.',
           'group': 'email', 'level': 2,
           }),
-        # pyro server.serverconfig
+        # pyro services config
         ('pyro-host',
          {'type' : 'string',
           'default': None,
@@ -204,23 +206,47 @@ gethostname(). It may contains port information using <host>:<port> notation, \
 and if not set, it will be choosen randomly',
           'group': 'pyro', 'level': 3,
           }),
+        ('pyro-instance-id',
+         {'type' : 'string',
+          'default': lgconfig.Method('default_instance_id'),
+          'help': 'identifier of the CubicWeb instance in the Pyro name server',
+          'group': 'pyro', 'level': 1,
+          }),
+        ('pyro-ns-host',
+         {'type' : 'string',
+          'default': '',
+          'help': 'Pyro name server\'s host. If not set, will be detected by a \
+broadcast query. It may contains port information using <host>:<port> notation. \
+Use "NO_PYRONS" to create a Pyro server but not register to a pyro nameserver',
+          'group': 'pyro', 'level': 1,
+          }),
+        ('pyro-ns-group',
+         {'type' : 'string',
+          'default': 'cubicweb',
+          'help': 'Pyro name server\'s group where the repository will be \
+registered.',
+          'group': 'pyro', 'level': 1,
+          }),
         # zmq services config
         ('zmq-repository-address',
          {'type' : 'string',
           'default': None,
-          'help': 'ZMQ URI on which the repository will be bound to.',
+          'help': ('ZMQ URI on which the repository will be bound '
+                   'to (of the form `zmqpickle-tcp://<ipaddr><port>`).'),
           'group': 'zmq', 'level': 3,
           }),
          ('zmq-address-sub',
           {'type' : 'csv',
            'default' : None,
-           'help': ('List of ZMQ addresses to subscribe to (requires pyzmq)'),
+           'help': ('List of ZMQ addresses to subscribe to (requires pyzmq) '
+                    '(of the form `zmqpickle-tcp://<ipaddr><port>`)'),
            'group': 'zmq', 'level': 1,
            }),
          ('zmq-address-pub',
           {'type' : 'string',
            'default' : None,
-           'help': ('ZMQ address to use for publishing (requires pyzmq)'),
+           'help': ('ZMQ address to use for publishing (requires pyzmq) '
+                    '(of the form `zmqpickle-tcp://<ipaddr><port>`)'),
            'group': 'zmq', 'level': 1,
            }),
         ) + CubicWebConfiguration.options)

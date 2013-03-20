@@ -127,9 +127,9 @@ class Controller(AppObject):
         msg = self._cw.message
         if msg:
             newparams['_cwmsgid'] = self._cw.set_redirect_message(msg)
-        if self._cw.form.has_key('__action_apply'):
+        if '__action_apply' in self._cw.form:
             self._return_to_edition_view(newparams)
-        if self._cw.form.has_key('__action_cancel'):
+        if '__action_cancel' in self._cw.form:
             self._return_to_lastpage(newparams)
         else:
             self._return_to_original_view(newparams)
@@ -152,7 +152,7 @@ class Controller(AppObject):
                 and '_cwmsgid' in newparams):
                 # are we here on creation or modification?
                 if any(eid == self._edited_entity.eid
-                       for eid in self._cw.data.get('eidmap', {}).values()):
+                       for eid in self._cw.data.get('eidmap', {}).itervalues()):
                     msg = self._cw._('click here to see created entity')
                 else:
                     msg = self._cw._('click here to see edited entity')

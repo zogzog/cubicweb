@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -182,7 +182,7 @@ class CubicWebTemplate(simpleTAL.HTMLTemplate):
         """ Internally used when expanding a template that is part of a context."""
         try:
             interpreter.execute(self)
-        except UnicodeError, unierror:
+        except UnicodeError as unierror:
             LOGGER.exception(str(unierror))
             raise simpleTALES.ContextContentException("found non-unicode %r string in Context!" % unierror.args[1]), None, sys.exc_info()[-1]
 
@@ -230,7 +230,7 @@ def evaluatePython (self, expr):
     # XXX precompile expr will avoid late syntax error
     try:
         result = eval(expr, globals, locals)
-    except Exception, ex:
+    except Exception as ex:
         ex = ex.__class__('in %r: %s' % (expr, ex))
         raise ex, None, sys.exc_info()[-1]
     if (isinstance (result, simpleTALES.ContextVariable)):
@@ -261,7 +261,7 @@ class talbased(object):
         return wrapped
 
     def _compiled_template(self, instance):
-        for fileordirectory in instance.config.vregistry_path():
+        for fileordirectory in instance.config.appobjects_path():
             filepath = join(fileordirectory, self.filename)
             if isdir(fileordirectory) and exists(filepath):
                 return compile_template_file(filepath)

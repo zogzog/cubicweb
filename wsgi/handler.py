@@ -106,8 +106,8 @@ class CubicWebWSGIApplication(object):
     def __init__(self, config, vreg=None):
         self.appli = CubicWebPublisher(config, vreg=vreg)
         self.config = config
-        self.base_url = config['base-url']
-        self.https_url = config['https-url']
+        self.base_url = self.config['base-url']
+        self.https_url = self.config['https-url']
         self.url_rewriter = self.appli.vreg['components'].select_or_none('urlrewriter')
 
     def _render(self, req):
@@ -118,7 +118,7 @@ class CubicWebWSGIApplication(object):
         try:
             path = req.path
             result = self.appli.handle_request(req, path)
-        except DirectResponse, ex:
+        except DirectResponse as ex:
             return ex.response
         return WSGIResponse(req.status_out, req, result)
 

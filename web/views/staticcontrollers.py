@@ -22,7 +22,6 @@
 - /fckeditor/...
 
 """
-from __future__ import with_statement
 
 import os
 import os.path as osp

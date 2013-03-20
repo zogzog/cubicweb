@@ -28,8 +28,8 @@ from cubicweb import tags
 from cubicweb.schema import display_name
 from cubicweb.predicates import one_line_rset, is_instance, match_user_groups
 from cubicweb.view import EntityView, StartupView
-from cubicweb.web import action, uicfg, formwidgets
-from cubicweb.web.views import tabs, tableview, actions, add_etype_button
+from cubicweb.web import action, formwidgets
+from cubicweb.web.views import uicfg, tabs, tableview, actions, add_etype_button
 
 _pvs = uicfg.primaryview_section
 _pvs.tag_attribute(('CWUser', 'login'), 'hidden')

@@ -104,7 +104,7 @@ class RQLSensor(Sensor):
         output = self._new_output()
         try:
             self.__run_query(output)
-        except Exception, ex:
+        except Exception as ex:
             import traceback
             traceback.print_exc()
             output.set('layout', 'vertical, 10')

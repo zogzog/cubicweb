@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -132,7 +132,7 @@ class EditController(basecontrollers.ViewController):
                 # __type and eid
                 formparams = req.extract_entity_params(eid, minparams=2)
                 eid = self.edit_entity(formparams)
-        except (RequestError, NothingToEdit), ex:
+        except (RequestError, NothingToEdit) as ex:
             if '__linkto' in req.form and 'eid' in req.form:
                 self.execute_linkto()
             elif not ('__delete' in req.form or '__insert' in req.form):
@@ -145,7 +145,7 @@ class EditController(basecontrollers.ViewController):
         for querydef in self.relations_rql:
             self._cw.execute(*querydef)
         # XXX this processes *all* pending operations of *all* entities
-        if req.form.has_key('__delete'):
+        if '__delete' in req.form:
             todelete = req.list_form_param('__delete', req.form, pop=True)
             if todelete:
                 autoform.delete_relations(self._cw, todelete)
@@ -159,7 +159,7 @@ class EditController(basecontrollers.ViewController):
         try:
             entity = self._cw.execute(rql, rqlquery.kwargs).get_entity(0, 0)
             neweid = entity.eid
-        except ValidationError, ex:
+        except ValidationError as ex:
             self._to_create[eid] = ex.entity
             if self._cw.ajax_request: # XXX (syt) why?
                 ex.entity = eid
@@ -212,11 +212,11 @@ class EditController(basecontrollers.ViewController):
             self._update_entity(eid, rqlquery)
         if is_main_entity:
             self.notify_edited(entity)
-        if formparams.has_key('__delete'):
+        if '__delete' in formparams:
             # XXX deprecate?
             todelete = self._cw.list_form_param('__delete', formparams, pop=True)
             autoform.delete_relations(self._cw, todelete)
-        if formparams.has_key('__cloned_eid'):
+        if '__cloned_eid' in formparams:
             entity.copy_relations(typed_eid(formparams['__cloned_eid']))
         if is_main_entity: # only execute linkto for the main entity
             self.execute_linkto(entity.eid)
@@ -249,7 +249,7 @@ class EditController(basecontrollers.ViewController):
                     else:
                         self._pending_fields.add( (form, field) )
 
-        except ProcessFormError, exc:
+        except ProcessFormError as exc:
             self.errors.append((field, exc))
 
     def handle_inlined_relation(self, form, field, values, origvalues, rqlquery):

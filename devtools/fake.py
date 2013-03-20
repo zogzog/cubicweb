@@ -155,6 +155,12 @@ class FakeSession(RequestSessionBase):
     def set_entity_cache(self, entity):
         pass
 
+    def security_enabled(self, read=False, write=False):
+        class FakeCM(object):
+            def __enter__(self): pass
+            def __exit__(self, exctype, exc, traceback): pass
+        return FakeCM()
+
     # for use with enabled_security context manager
     read_security = write_security = True
     def init_security(self, *args):

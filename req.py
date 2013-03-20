@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -62,6 +62,8 @@ class RequestSessionBase(object):
     :attribute vreg.schema: the instance's schema
     :attribute vreg.config: the instance's configuration
     """
+    is_request = True # False for repository session
+
     def __init__(self, vreg):
         self.vreg = vreg
         try:
@@ -74,6 +76,17 @@ class RequestSessionBase(object):
         # connection
         self.local_perm_cache = {}
         self._ = unicode
+
+    def set_language(self, lang):
+        """install i18n configuration for `lang` translation.
+
+        Raises :exc:`KeyError` if translation doesn't exist.
+        """
+        self.lang = lang
+        gettext, pgettext = self.vreg.config.translations[lang]
+        # use _cw.__ to translate a message without registering it to the catalog
+        self._ = self.__ = gettext
+        self.pgettext = pgettext
 
     def get_option_value(self, option, foreid=None):
         raise NotImplementedError
@@ -308,20 +321,11 @@ class RequestSessionBase(object):
     def user_data(self):
         """returns a dictionary with this user's information"""
         userinfo = {}
-        if self.is_internal_session:
-            userinfo['login'] = "cubicweb"
-            userinfo['name'] = "cubicweb"
-            userinfo['email'] = ""
-            return userinfo
         user = self.user
         userinfo['login'] = user.login
         userinfo['name'] = user.name()
         userinfo['email'] = user.cw_adapt_to('IEmailable').get_email()
         return userinfo
-
-    def is_internal_session(self):
-        """overrided on the server-side"""
-        return False
 
     # formating methods #######################################################
 
@@ -426,7 +430,7 @@ class RequestSessionBase(object):
         """return the root url of the instance
         """
         if secure:
-            raise NotImplementedError()
+            return self.vreg.config.get('https-url', self.vreg.config['base-url'])
         return self.vreg.config['base-url']
 
     # abstract methods to override according to the web front-end #############

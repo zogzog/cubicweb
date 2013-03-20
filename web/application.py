@@ -17,8 +17,6 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """CubicWeb web client application object"""
 
-from __future__ import with_statement
-
 __docformat__ = "restructuredtext en"
 
 import sys
@@ -364,7 +362,7 @@ class CubicWebPublisher(object):
                 ### Try to generate the actual request content
                 content = self.core_handle(req, path)
             # Handle user log-out
-            except LogOut, ex:
+            except LogOut as ex:
                 # When authentification is handled by cookie the code that
                 # raised LogOut must has invalidated the cookie. We can just
                 # reload the original url without authentification
@@ -382,7 +380,7 @@ class CubicWebPublisher(object):
                     content = self.loggedout_content(req)
                     # let the explicitly reset http credential
                     raise AuthenticationError()
-        except Redirect, ex:
+        except Redirect as ex:
             # authentication needs redirection (eg openid)
             content = self.redirect_handler(req, ex)
         # Wrong, absent or Reseted credential
@@ -427,7 +425,7 @@ class CubicWebPublisher(object):
         """
         # don't log form values they may contains sensitive information
         self.debug('publish "%s" (%s, form params: %s)',
-                   path, req.session.sessionid, req.form.keys())
+                   path, req.session.sessionid, list(req.form))
         # remove user callbacks on a new request (except for json controllers
         # to avoid callbacks being unregistered before they could be called)
         tstart = clock()
@@ -443,12 +441,12 @@ class CubicWebPublisher(object):
                     raise Unauthorized(req._('not authorized'))
                 req.update_search_state()
                 result = controller.publish(rset=rset)
-            except StatusResponse, ex:
+            except StatusResponse as ex:
                 warn('StatusResponse is deprecated use req.status_out',
                      DeprecationWarning)
                 result = ex.content
                 req.status_out = ex.status
-            except Redirect, ex:
+            except Redirect as ex:
                 # Redirect may be raised by edit controller when everything went
                 # fine, so attempt to commit
                 result = self.redirect_handler(req, ex)
@@ -458,25 +456,24 @@ class CubicWebPublisher(object):
                 if txuuid is not None:
                     req.data['last_undoable_transaction'] = txuuid
         ### error case
-        except NotFound, ex:
+        except NotFound as ex:
             result = self.notfound_content(req)
             req.status_out = ex.status
-        except ValidationError, ex:
-            req.status_out = httplib.CONFLICT
+        except ValidationError as ex:
             result = self.validation_error_handler(req, ex)
-        except RemoteCallFailed, ex:
+        except RemoteCallFailed as ex:
             result = self.ajax_error_handler(req, ex)
-        except Unauthorized, ex:
+        except Unauthorized as ex:
             req.data['errmsg'] = req._('You\'re not authorized to access this page. '
                                        'If you think you should, please contact the site administrator.')
             req.status_out = httplib.UNAUTHORIZED
             result = self.error_handler(req, ex, tb=False)
-        except Forbidden, ex:
+        except Forbidden as ex:
             req.data['errmsg'] = req._('This action is forbidden. '
                                        'If you think it should be allowed, please contact the site administrator.')
             req.status_out = httplib.FORBIDDEN
             result = self.error_handler(req, ex, tb=False)
-        except (BadRQLQuery, RequestError), ex:
+        except (BadRQLQuery, RequestError) as ex:
             result = self.error_handler(req, ex, tb=False)
         ### pass through exception
         except DirectResponse:
@@ -486,8 +483,8 @@ class CubicWebPublisher(object):
         except (AuthenticationError, LogOut):
             # the rollback is handled in the finally
             raise
-        ### Last defence line
-        except BaseException, ex:
+        ### Last defense line
+        except BaseException as ex:
             result = self.error_handler(req, ex, tb=True)
         finally:
             if req.cnx and not commited:
@@ -517,7 +514,7 @@ class CubicWebPublisher(object):
         return ''
 
     def validation_error_handler(self, req, ex):
-        ex.errors = dict((k, v) for k, v in ex.errors.items())
+        ex.translate(req._) # translate messages using ui language
         if '__errorurl' in req.form:
             forminfo = {'error': ex,
                         'values': req.form,
@@ -532,6 +529,7 @@ class CubicWebPublisher(object):
             req.headers_out.setHeader('location', str(location))
             req.status_out = httplib.SEE_OTHER
             return ''
+        req.status_out = httplib.CONFLICT
         return self.error_handler(req, ex, tb=False)
 
     def error_handler(self, req, ex, tb=False):

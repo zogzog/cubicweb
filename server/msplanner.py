@@ -1075,7 +1075,7 @@ class PartPlanInformation(object):
         """return all sources supporting given term / solindices"""
         sources = [selected_source]
         sourcesterms = self._sourcesterms
-        for source in sourcesterms.keys():
+        for source in list(sourcesterms):
             if source is selected_source:
                 continue
             if not (term in sourcesterms[source] and
@@ -1099,9 +1099,9 @@ class PartPlanInformation(object):
         # term has to belong to the same scope if there is more
         # than the system source remaining
         if len(sourcesterms) > 1 and not scope is self.rqlst:
-            candidates = (t for t in sourceterms.keys() if scope is ms_scope(t))
+            candidates = (t for t in sourceterms if scope is ms_scope(t))
         else:
-            candidates = sourceterms #.iterkeys()
+            candidates = sourceterms
         # we only want one unlinked term in each generated query
         candidates = [t for t in candidates
                       if isinstance(t, (Constant, Relation)) or

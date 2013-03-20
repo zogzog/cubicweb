@@ -49,6 +49,7 @@ to skip those classes...
 __docformat__ = "restructuredtext en"
 _ = unicode
 
+from functools import reduce
 from warnings import warn
 from copy import deepcopy
 from datetime import datetime, timedelta
@@ -154,7 +155,7 @@ def prepare_select(select, filtered_variable):
     for term in select.selection[:]:
         select.remove_selected(term)
     # remove unbound variables which only have some type restriction
-    for dvar in select.defined_vars.values():
+    for dvar in list(select.defined_vars.itervalues()):
         if not (dvar is filtered_variable or dvar.stinfo['relations']):
             select.undefine_variable(dvar)
     # global tree config: DISTINCT, LIMIT, OFFSET
@@ -303,7 +304,7 @@ def _may_be_removed(rel, schema, variable):
         # optional relation
         return ovar
     if all(rdef.cardinality[cardidx] in '1+'
-           for rdef in rschema.rdefs.values()):
+           for rdef in rschema.rdefs.itervalues()):
         # mandatory relation without any restriction on the other variable
         for orel in ovar.stinfo['relations']:
             if rel is orel:

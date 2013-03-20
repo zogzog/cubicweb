@@ -10,6 +10,7 @@ the *CubicWeb* framework.
    publisher
    controllers
    request
+   searchbar
    views/index
    rtags
    ajax

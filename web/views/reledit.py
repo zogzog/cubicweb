@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -34,7 +34,8 @@ from cubicweb.schema import display_name
 from cubicweb.utils import json, json_dumps
 from cubicweb.predicates import non_final_entity, match_kwargs
 from cubicweb.view import EntityView
-from cubicweb.web import uicfg, stdmsgs
+from cubicweb.web import stdmsgs
+from cubicweb.web.views import uicfg
 from cubicweb.web.form import FieldNotFound
 from cubicweb.web.formwidgets import Button, SubmitButton
 from cubicweb.web.views.ajaxcontroller import ajaxfunc
@@ -49,8 +50,6 @@ class _DummyForm(object):
         pass
     def add_hidden(self, *args):
         pass
-
-rctrl = uicfg.reledit_ctrl
 
 class AutoClickAndEditFormView(EntityView):
     __regid__ = 'reledit'
@@ -90,6 +89,7 @@ class AutoClickAndEditFormView(EntityView):
         self._cw.add_js(('cubicweb.reledit.js', 'cubicweb.edition.js', 'cubicweb.ajax.js'))
         self.entity = entity
         rschema = self._cw.vreg.schema[rtype]
+        rctrl = self._cw.vreg['uicfg'].select('reledit', self._cw, entity=entity)
         self._rules = rctrl.etype_get(self.entity.e_schema.type, rschema.type, role, '*')
         if rvid is not None or default_value is not None:
             warn('[3.9] specifying rvid/default_value on select is deprecated, '

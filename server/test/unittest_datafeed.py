@@ -1,4 +1,4 @@
-# copyright 2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2011-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -15,7 +15,6 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-from __future__ import with_statement
 
 from datetime import timedelta
 
@@ -54,7 +53,7 @@ class DataFeedTC(CubicWebTC):
             stats = dfsource.pull_data(session, force=True)
             self.commit()
             # test import stats
-            self.assertEqual(sorted(stats.keys()), ['checked', 'created', 'updated'])
+            self.assertEqual(sorted(stats), ['checked', 'created', 'updated'])
             self.assertEqual(len(stats['created']), 1)
             entity = self.execute('Card X').get_entity(0, 0)
             self.assertIn(entity.eid, stats['created'])

@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -16,8 +16,6 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """cubicweb.web.views.basecontrollers unit tests"""
-
-from __future__ import with_statement
 
 from urlparse import urlsplit, urlunsplit, urljoin
 # parse_qs is deprecated in cgi and has been moved to urlparse in Python 2.6
@@ -77,6 +75,7 @@ class EditControllerTC(CubicWebTC):
                     }
         with self.assertRaises(ValidationError) as cm:
             self.ctrl_publish(req)
+        cm.exception.translate(unicode)
         self.assertEqual(cm.exception.errors, {'login-subject': 'the value "admin" is already used, use another one'})
 
     def test_user_editing_itself(self):
@@ -249,6 +248,7 @@ class EditControllerTC(CubicWebTC):
                 }
         with self.assertRaises(ValidationError) as cm:
             self.ctrl_publish(req)
+        cm.exception.translate(unicode)
         self.assertEqual(cm.exception.errors, {'amount-subject': 'value -10 must be >= 0'})
         req = self.request(rollbackfirst=True)
         req.form = {'eid': ['X'],
@@ -259,6 +259,7 @@ class EditControllerTC(CubicWebTC):
                     }
         with self.assertRaises(ValidationError) as cm:
             self.ctrl_publish(req)
+        cm.exception.translate(unicode)
         self.assertEqual(cm.exception.errors, {'amount-subject': 'value 110 must be <= 100'})
         req = self.request(rollbackfirst=True)
         req.form = {'eid': ['X'],

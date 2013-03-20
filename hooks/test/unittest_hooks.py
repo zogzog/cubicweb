@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -21,7 +21,6 @@
 Note:
   syncschema.py hooks are mostly tested in server/test/unittest_migrations.py
 """
-from __future__ import with_statement
 
 from datetime import datetime
 
@@ -67,10 +66,9 @@ class CoreHooksTC(CubicWebTC):
         entity = self.request().create_entity('Workflow', name=u'wf1',
                                               description_format=u'text/html',
                                               description=u'yo')
-        entity.set_attributes(name=u'wf2')
+        entity.cw_set(name=u'wf2')
         self.assertEqual(entity.description, u'yo')
-        entity.set_attributes(description=u'R&D<p>yo')
-        entity.cw_attr_cache.pop('description')
+        entity.cw_set(description=u'R&D<p>yo')
         self.assertEqual(entity.description, u'R&amp;D<p>yo</p>')
 
     def test_metadata_cwuri(self):
@@ -166,13 +164,12 @@ class SchemaHooksTC(CubicWebTC):
                           self.execute, 'INSERT CWRType X: X name "in_group"')
 
     def test_validation_unique_constraint(self):
-        self.assertRaises(ValidationError,
-                          self.execute, 'INSERT CWUser X: X login "admin"')
-        try:
+        with self.assertRaises(ValidationError) as cm:
             self.execute('INSERT CWUser X: X login "admin"')
-        except ValidationError, ex:
-            self.assertIsInstance(ex.entity, int)
-            self.assertEqual(ex.errors, {'login-subject': 'the value "admin" is already used, use another one'})
+        ex = cm.exception
+        ex.translate(unicode)
+        self.assertIsInstance(ex.entity, int)
+        self.assertEqual(ex.errors, {'login-subject': 'the value "admin" is already used, use another one'})
 
 
 if __name__ == '__main__':

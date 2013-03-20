@@ -42,15 +42,19 @@ msgid "\"role=subject\" or \"role=object\" must be specified in options"
 msgstr ""
 
 #, python-format
+msgid "%(KEY-cstr)s constraint failed for value %(KEY-value)r"
+msgstr ""
+
+#, python-format
+msgid "%(KEY-value)r doesn't match the %(KEY-regexp)r regular expression"
+msgstr ""
+
+#, python-format
 msgid "%(attr)s set to %(newvalue)s"
 msgstr ""
 
 #, python-format
 msgid "%(attr)s updated from %(oldvalue)s to %(newvalue)s"
-msgstr ""
-
-#, python-format
-msgid "%(cstr)s constraint failed for value %(value)r"
 msgstr ""
 
 #, python-format
@@ -63,10 +67,6 @@ msgstr ""
 
 #, python-format
 msgid "%(subject)s %(etype)s #%(eid)s (%(login)s)"
-msgstr ""
-
-#, python-format
-msgid "%(value)r doesn't match the %(regexp)r regular expression"
 msgstr ""
 
 #, python-format
@@ -403,6 +403,11 @@ msgid ""
 msgstr ""
 
 msgid "Click to sort on this column"
+msgstr ""
+
+msgid ""
+"Configuration of the system source goes to the 'sources' file, not in the "
+"database"
 msgstr ""
 
 #, python-format
@@ -878,6 +883,9 @@ msgstr ""
 msgid "UniqueConstraint"
 msgstr "unique constraint"
 
+msgid "Unknown source type"
+msgstr ""
+
 msgid "Unreachable objects"
 msgstr ""
 
@@ -929,6 +937,15 @@ msgstr ""
 msgid "You can use any of the following substitutions in your text"
 msgstr ""
 
+msgid "You can't change this relation"
+msgstr ""
+
+msgid "You cannot remove the system source"
+msgstr ""
+
+msgid "You cannot rename the system source"
+msgstr ""
+
 msgid ""
 "You have no access to this view or it can not be used to display the current "
 "data."
@@ -966,9 +983,6 @@ msgid ""
 msgstr ""
 
 msgid "abstract base class for transitions"
-msgstr ""
-
-msgid "action menu"
 msgstr ""
 
 msgid "action(s) on this selection"
@@ -1349,11 +1363,7 @@ msgstr ""
 msgid "can't be deleted"
 msgstr ""
 
-#, python-format
-msgid "can't change the %s attribute"
-msgstr ""
-
-msgid "can't change this relation"
+msgid "can't change this attribute"
 msgstr ""
 
 #, python-format
@@ -2516,6 +2526,9 @@ msgstr "firstname"
 msgid "foaf"
 msgstr ""
 
+msgid "focus on this selection"
+msgstr ""
+
 msgid "follow"
 msgstr ""
 
@@ -2788,7 +2801,7 @@ msgid "incorrect captcha value"
 msgstr ""
 
 #, python-format
-msgid "incorrect value (%(value)s) for type \"%(type)s\""
+msgid "incorrect value (%(KEY-value)r) for type \"%(KEY-type)s\""
 msgstr ""
 
 msgid "index this attribute's value in the plain text index"
@@ -2865,7 +2878,7 @@ msgid "invalid action %r"
 msgstr ""
 
 #, python-format
-msgid "invalid value %(value)s, it must be one of %(choices)s"
+msgid "invalid value %(KEY-value)s, it must be one of %(KEY-choices)s"
 msgstr ""
 
 msgid "is"
@@ -4074,6 +4087,9 @@ msgstr "to do by"
 msgid "toggle check boxes"
 msgstr ""
 
+msgid "toggle filter"
+msgstr ""
+
 msgid "tr_count"
 msgstr "transition number"
 
@@ -4216,9 +4232,6 @@ msgstr ""
 msgid "unknown property key %s"
 msgstr ""
 
-msgid "unknown source type"
-msgstr ""
-
 msgid "unknown vocabulary:"
 msgstr ""
 
@@ -4355,26 +4368,18 @@ msgid "value"
 msgstr ""
 
 #, python-format
-msgid "value %(value)s must be %(op)s %(boundary)s"
-msgstr ""
-
-#, python-format
-msgid "value %(value)s must be <= %(boundary)s"
-msgstr ""
-
-#, python-format
-msgid "value %(value)s must be >= %(boundary)s"
+msgid "value %(KEY-value)s must be %(KEY-op)s %(KEY-boundary)s"
 msgstr ""
 
 msgid "value associated to this key is not editable manually"
 msgstr ""
 
 #, python-format
-msgid "value should have maximum size of %s but found %s"
+msgid "value should have maximum size of %(KEY-max)s but found %(KEY-size)s"
 msgstr ""
 
 #, python-format
-msgid "value should have minimum size of %s but found %s"
+msgid "value should have minimum size of %(KEY-min)s but found %(KEY-size)s"
 msgstr ""
 
 msgid "vcard"

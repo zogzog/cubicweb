@@ -93,7 +93,7 @@ def cartesian_product(seqin):
 
 def cleanup_solutions(rqlst, solutions):
     for sol in solutions:
-        for vname in sol.keys():
+        for vname in list(sol):
             if not (vname in rqlst.defined_vars or vname in rqlst.aliases):
                 del sol[vname]
 

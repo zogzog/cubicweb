@@ -68,7 +68,7 @@ The `reledit_ctrl` rtag
 
 The behaviour of reledited attributes/relations can be finely
 controlled using the reledit_ctrl rtag, defined in
-:mod:`cubicweb.web.uicfg`.
+:mod:`cubicweb.web.views.uicfg`.
 
 This rtag provides four control variables:
 
@@ -93,7 +93,7 @@ Let's see how to use these controls.
 .. sourcecode:: python
 
     from logilab.mtconverter import xml_escape
-    from cubicweb.web.uicfg import reledit_ctrl
+    from cubicweb.web.views.uicfg import reledit_ctrl
     reledit_ctrl.tag_attribute(('Company', 'name'),
                                {'reload': lambda x:x.eid,
                                 'default_value': xml_escape(u'<logilab tastes better>')})
@@ -125,7 +125,7 @@ it for some attribute or relation, you have use `uicfg`:
 
 .. sourcecode:: python
 
-    import uicfg.primaryview_display_ctrl as _pvdc
+    from cubicweb.web.views.uicfg import primaryview_display_ctrl as _pvdc
     _pvdc.tag_attribute(('Company', 'name'), {'vid': 'incontext'})
 
 To deactivate it everywhere it's used automatically, you may use the code snippet

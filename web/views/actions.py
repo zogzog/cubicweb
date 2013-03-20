@@ -32,8 +32,8 @@ from cubicweb.predicates import (EntityPredicate,
     authenticated_user, match_user_groups, match_search_state,
     has_permission, has_add_permission, is_instance, debug_mode,
     )
-from cubicweb.web import uicfg, controller, action
-from cubicweb.web.views import linksearch_select_url, vid_from_rset
+from cubicweb.web import controller, action
+from cubicweb.web.views import uicfg, linksearch_select_url, vid_from_rset
 
 
 class has_editable_relation(EntityPredicate):
@@ -291,7 +291,8 @@ class AddRelatedActions(action.Action):
         method to return an empty list. If you only want some, you can configure
         them by using uicfg.actionbox_appearsin_addmenu
         """
-        appearsin_addmenu = uicfg.actionbox_appearsin_addmenu
+        appearsin_addmenu = self._cw.vreg['uicfg'].select(
+            'actionbox_appearsin_addmenu', self._cw, entity=entity)
         req = self._cw
         eschema = entity.e_schema
         for role, rschemas in (('subject', eschema.subject_relations()),

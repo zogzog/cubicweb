@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -77,6 +77,19 @@ class CWUser(AnyEntity):
             self._properties = dict((p.pkey, p.value) for p in self.reverse_for_user)
             return self._properties
 
+    def prefered_language(self, language=None):
+        """return language used by this user, if explicitly defined (eg not
+        using http negociation)
+        """
+        language = language or self.property_value('ui.language')
+        vreg = self._cw.vreg
+        try:
+            vreg.config.translations[language]
+        except KeyError:
+            language = vreg.property_value('ui.language')
+            assert language in vreg.config.translations[language], language
+        return language
+
     def property_value(self, key):
         try:
             # properties stored on the user aren't correctly typed
@@ -101,7 +114,7 @@ class CWUser(AnyEntity):
                 kwargs['for_user'] = self
             self._cw.create_entity('CWProperty', **kwargs)
         else:
-            prop.set_attributes(value=value)
+            prop.cw_set(value=value)
 
     def matching_groups(self, groups):
         """return the number of the given group(s) in which the user is

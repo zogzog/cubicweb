@@ -84,6 +84,13 @@ class WebConfiguration(CubicWebConfiguration):
     uiprops = {'FCKEDITOR_PATH': ''}
 
     options = merge_options(CubicWebConfiguration.options + (
+        ('repository-uri',
+         {'type' : 'string',
+          'default': 'inmemory://',
+          'help': 'see `cubicweb.dbapi.connect` documentation for possible value',
+          'group': 'web', 'level': 2,
+          }),
+
         ('anonymous-user',
          {'type' : 'string',
           'default': None,
@@ -238,10 +245,6 @@ have the python imaging library installed to use captcha)',
                 continue
             yield key, pdef
 
-    # method used to connect to the repository: 'inmemory' / 'pyro'
-    # Pyro repository by default
-    repo_method = 'pyro'
-
     # don't use @cached: we want to be able to disable it while this must still
     # be cached
     def repository(self, vreg=None):
@@ -250,7 +253,7 @@ have the python imaging library installed to use captcha)',
             return self.__repo
         except AttributeError:
             from cubicweb.dbapi import get_repository
-            repo = get_repository(self.repo_method, vreg=vreg, config=self)
+            repo = get_repository(config=self, vreg=vreg)
             self.__repo = repo
             return repo
 

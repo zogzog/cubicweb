@@ -205,60 +205,6 @@ class InlineHelpImageView(StartupView):
         self.w(open(join(resourcedir, rid)).read())
 
 
-class ChangeLogView(StartupView):
-    __regid__ = 'changelog'
-    title = _('What\'s new?')
-    maxentries = 25
-
-    def call(self):
-        rid = 'ChangeLog_%s' % (self._cw.lang)
-        allentries = []
-        title = self._cw._(self.title)
-        restdata = ['.. -*- coding: utf-8 -*-', '', title, '='*len(title), '']
-        w = restdata.append
-        today = date.today()
-        for fpath in self._cw.vreg.config.locate_all_files(rid):
-            cl = ChangeLog(fpath)
-            encoding = 'utf-8'
-            # additional content may be found in title
-            for line in (cl.title + cl.additional_content).splitlines():
-                m = CHARSET_DECL_RGX.search(line)
-                if m is not None:
-                    encoding = m.group(1)
-                    continue
-                elif line.startswith('.. '):
-                    w(unicode(line, encoding))
-            for entry in cl.entries:
-                if entry.date:
-                    edate = todate(strptime(entry.date, '%Y-%m-%d'))
-                else:
-                    edate = today
-                messages = []
-                for msglines, submsgs in entry.messages:
-                    msgstr = unicode(' '.join(l.strip() for l in msglines), encoding)
-                    msgstr += u'\n\n'
-                    for submsglines in submsgs:
-                        msgstr += '     - ' + unicode(' '.join(l.strip() for l in submsglines), encoding)
-                        msgstr += u'\n'
-                    messages.append(msgstr)
-                entry = (edate, messages)
-                allentries.insert(bisect_right(allentries, entry), entry)
-        latestdate = None
-        i = 0
-        for edate, messages in reversed(allentries):
-            if latestdate != edate:
-                fdate = self._cw.format_date(edate)
-                w(u'\n%s' % fdate)
-                w('~' * len(fdate))
-                latestdate = edate
-            for msg in messages:
-                w(u'* %s' % msg)
-                i += 1
-                if i > self.maxentries:
-                    break
-        w('') # blank line
-        self.w(rest_publish(self, '\n'.join(restdata)))
-
 
 class HelpAction(action.Action):
     __regid__ = 'help'
@@ -270,17 +216,6 @@ class HelpAction(action.Action):
 
     def url(self):
         return self._cw.build_url('doc/main')
-
-class ChangeLogAction(action.Action):
-    __regid__ = 'changelog'
-    __select__ = yes()
-
-    category = 'footer'
-    order = 1
-    title = ChangeLogView.title
-
-    def url(self):
-        return self._cw.build_url('changelog')
 
 
 class AboutAction(action.Action):

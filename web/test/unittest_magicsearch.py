@@ -230,5 +230,118 @@ class ProcessorChainTC(CubicWebTC):
         self.assertEqual(rset.rql, 'Any X ORDERBY FTIRANK(X) DESC WHERE X has_text %(text)s')
         self.assertEqual(rset.args, {'text': u'utilisateur Smith'})
 
+
+class RQLSuggestionsBuilderTC(CubicWebTC):
+    def suggestions(self, rql):
+        req = self.request()
+        rbs = self.vreg['components'].select('rql.suggestions', req)
+        return rbs.build_suggestions(rql)
+
+    def test_no_restrictions_rql(self):
+        self.assertListEqual([], self.suggestions(''))
+        self.assertListEqual([], self.suggestions('An'))
+        self.assertListEqual([], self.suggestions('Any X'))
+        self.assertListEqual([], self.suggestions('Any X, Y'))
+
+    def test_invalid_rql(self):
+        self.assertListEqual([], self.suggestions('blabla'))
+        self.assertListEqual([], self.suggestions('Any X WHERE foo, bar'))
+
+    def test_is_rql(self):
+        self.assertListEqual(['Any X WHERE X is %s' % eschema
+                              for eschema in sorted(self.vreg.schema.entities())
+                              if not eschema.final],
+                             self.suggestions('Any X WHERE X is'))
+
+        self.assertListEqual(['Any X WHERE X is Personne', 'Any X WHERE X is Project'],
+                             self.suggestions('Any X WHERE X is P'))
+
+        self.assertListEqual(['Any X WHERE X is Personne, Y is Personne',
+                              'Any X WHERE X is Personne, Y is Project'],
+                             self.suggestions('Any X WHERE X is Personne, Y is P'))
+
+
+    def test_relations_rql(self):
+        self.assertListEqual(['Any X WHERE X is Personne, X ass A',
+                              'Any X WHERE X is Personne, X datenaiss A',
+                              'Any X WHERE X is Personne, X description A',
+                              'Any X WHERE X is Personne, X fax A',
+                              'Any X WHERE X is Personne, X nom A',
+                              'Any X WHERE X is Personne, X prenom A',
+                              'Any X WHERE X is Personne, X promo A',
+                              'Any X WHERE X is Personne, X salary A',
+                              'Any X WHERE X is Personne, X sexe A',
+                              'Any X WHERE X is Personne, X tel A',
+                              'Any X WHERE X is Personne, X test A',
+                              'Any X WHERE X is Personne, X titre A',
+                              'Any X WHERE X is Personne, X travaille A',
+                              'Any X WHERE X is Personne, X web A',
+                              ],
+                             self.suggestions('Any X WHERE X is Personne, X '))
+        self.assertListEqual(['Any X WHERE X is Personne, X tel A',
+                              'Any X WHERE X is Personne, X test A',
+                              'Any X WHERE X is Personne, X titre A',
+                              'Any X WHERE X is Personne, X travaille A',
+                              ],
+                             self.suggestions('Any X WHERE X is Personne, X t'))
+        # try completion on selected
+        self.assertListEqual(['Any X WHERE X is Personne, Y is Societe, X tel A',
+                              'Any X WHERE X is Personne, Y is Societe, X test A',
+                              'Any X WHERE X is Personne, Y is Societe, X titre A',
+                              'Any X WHERE X is Personne, Y is Societe, X travaille Y',
+                              ],
+                             self.suggestions('Any X WHERE X is Personne, Y is Societe, X t'))
+        # invalid relation should not break
+        self.assertListEqual([],
+                             self.suggestions('Any X WHERE X is Personne, X asdasd'))
+
+    def test_attribute_vocabulary_rql(self):
+        self.assertListEqual(['Any X WHERE X is Personne, X promo "bon"',
+                              'Any X WHERE X is Personne, X promo "pasbon"',
+                              ],
+                             self.suggestions('Any X WHERE X is Personne, X promo "'))
+        self.assertListEqual(['Any X WHERE X is Personne, X promo "pasbon"',
+                              ],
+                             self.suggestions('Any X WHERE X is Personne, X promo "p'))
+        # "bon" should be considered complete, hence no suggestion
+        self.assertListEqual([],
+                             self.suggestions('Any X WHERE X is Personne, X promo "bon"'))
+        # no valid vocabulary starts with "po"
+        self.assertListEqual([],
+                             self.suggestions('Any X WHERE X is Personne, X promo "po'))
+
+    def test_attribute_value_rql(self):
+        # suggestions should contain any possible value for
+        # a given attribute (limited to 10)
+        req = self.request()
+        for i in xrange(15):
+            req.create_entity('Personne', nom=u'n%s' % i, prenom=u'p%s' % i)
+        self.assertListEqual(['Any X WHERE X is Personne, X nom "n0"',
+                              'Any X WHERE X is Personne, X nom "n1"',
+                              'Any X WHERE X is Personne, X nom "n10"',
+                              'Any X WHERE X is Personne, X nom "n11"',
+                              'Any X WHERE X is Personne, X nom "n12"',
+                              'Any X WHERE X is Personne, X nom "n13"',
+                              'Any X WHERE X is Personne, X nom "n14"',
+                              'Any X WHERE X is Personne, X nom "n2"',
+                              'Any X WHERE X is Personne, X nom "n3"',
+                              'Any X WHERE X is Personne, X nom "n4"',
+                              'Any X WHERE X is Personne, X nom "n5"',
+                              'Any X WHERE X is Personne, X nom "n6"',
+                              'Any X WHERE X is Personne, X nom "n7"',
+                              'Any X WHERE X is Personne, X nom "n8"',
+                              'Any X WHERE X is Personne, X nom "n9"',
+                              ],
+                             self.suggestions('Any X WHERE X is Personne, X nom "'))
+        self.assertListEqual(['Any X WHERE X is Personne, X nom "n1"',
+                              'Any X WHERE X is Personne, X nom "n10"',
+                              'Any X WHERE X is Personne, X nom "n11"',
+                              'Any X WHERE X is Personne, X nom "n12"',
+                              'Any X WHERE X is Personne, X nom "n13"',
+                              'Any X WHERE X is Personne, X nom "n14"',
+                              ],
+                             self.suggestions('Any X WHERE X is Personne, X nom "n1'))
+
+
 if __name__ == '__main__':
     unittest_main()

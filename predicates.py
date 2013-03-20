@@ -737,12 +737,16 @@ class implements(EClassPredicate):
     See :class:`~cubicweb.predicates.EClassPredicate` documentation for entity
     class lookup / score rules according to the input context.
 
-    .. note:: when interface is an entity class, the score will reflect class
-              proximity so the most specific object will be selected.
+    .. note::
 
-    .. note:: deprecated in cubicweb >= 3.9, use either
-              :class:`~cubicweb.predicates.is_instance` or
-              :class:`~cubicweb.predicates.adaptable`.
+       when interface is an entity class, the score will reflect class
+       proximity so the most specific object will be selected.
+
+    .. note::
+
+       deprecated in cubicweb >= 3.9, use either
+       :class:`~cubicweb.predicates.is_instance` or
+       :class:`~cubicweb.predicates.adaptable`.
     """
 
     def __init__(self, *expected_ifaces, **kwargs):

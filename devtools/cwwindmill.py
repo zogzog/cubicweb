@@ -35,7 +35,7 @@ try:
     import windmill
     from windmill.dep import functest
     from windmill.bin.admin_lib import configure_global_settings, setup, teardown
-except ImportError, ex:
+except ImportError:
     windmill = None
 
 from cubicweb.devtools.httptest import CubicWebServerTC, CubicWebServerConfig

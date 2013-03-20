@@ -290,7 +290,7 @@ repository.',
         try:
             # str(query) to avoid error if it's an unicode string
             cursor.execute(str(query), args)
-        except Exception, ex:
+        except Exception as ex:
             self.critical("sql: %r\n args: %s\ndbms message: %r",
                           query, args, ex.args[0])
             try:

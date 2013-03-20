@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -18,15 +18,15 @@
 """Core hooks: synchronize living session on persistent data changes"""
 
 __docformat__ = "restructuredtext en"
+_ = unicode
 
-from yams.schema import role_name
-from cubicweb import UnknownProperty, ValidationError, BadConnectionId
+from cubicweb import UnknownProperty, BadConnectionId, validation_error
 from cubicweb.predicates import is_instance
 from cubicweb.server import hook
 
 
 def get_user_sessions(repo, ueid):
-    for session in repo._sessions.values():
+    for session in repo._sessions.itervalues():
         if ueid == session.user.eid:
             yield session
 
@@ -165,13 +165,11 @@ class AddCWPropertyHook(SyncSessionHook):
         try:
             value = session.vreg.typed_value(key, value)
         except UnknownProperty:
-            qname = role_name('pkey', 'subject')
-            msg = session._('unknown property key %s') % key
-            raise ValidationError(self.entity.eid, {qname: msg})
-        except ValueError, ex:
-            qname = role_name('value', 'subject')
-            raise ValidationError(self.entity.eid,
-                                  {qname: session._(str(ex))})
+            msg = _('unknown property key %s')
+            raise validation_error(self.entity, {('pkey', 'subject'): msg}, (key,))
+        except ValueError as ex:
+            raise validation_error(self.entity,
+                                  {('value', 'subject'): str(ex)})
         if not session.user.matching_groups('managers'):
             session.add_relation(self.entity.eid, 'for_user', session.user.eid)
         else:
@@ -195,9 +193,8 @@ class UpdateCWPropertyHook(AddCWPropertyHook):
             value = session.vreg.typed_value(key, value)
         except UnknownProperty:
             return
-        except ValueError, ex:
-            qname = role_name('value', 'subject')
-            raise ValidationError(entity.eid, {qname: session._(str(ex))})
+        except ValueError as ex:
+            raise validation_error(entity, {('value', 'subject'): str(ex)})
         if entity.for_user:
             for session_ in get_user_sessions(session.repo, entity.for_user[0].eid):
                 _ChangeCWPropertyOp(session, cwpropdict=session_.user.properties,
@@ -237,10 +234,8 @@ class AddForUserRelationHook(SyncSessionHook):
         key, value = session.execute('Any K,V WHERE P eid %(x)s,P pkey K,P value V',
                                      {'x': eidfrom})[0]
         if session.vreg.property_info(key)['sitewide']:
-            qname = role_name('for_user', 'subject')
-            msg = session._("site-wide property can't be set for user")
-            raise ValidationError(eidfrom,
-                                  {qname: msg})
+            msg = _("site-wide property can't be set for user")
+            raise validation_error(eidfrom, {('for_user', 'subject'): msg})
         for session_ in get_user_sessions(session.repo, self.eidto):
             _ChangeCWPropertyOp(session, cwpropdict=session_.user.properties,
                               key=key, value=value)

@@ -294,6 +294,7 @@ In that case, we simply use attribute notation provided by the ORM to get the
 folder in which the current file (e.g. `self.entity`) is located.
 
 .. Note::
+
    The :class:`IBreadCrumbs` interface is a `breadcrumbs` method, but the default
    :class:`IBreadCrumbsAdapter` provides a default implementation for it that will look
    at the value returned by its `parent_entity` method. It also provides a
@@ -331,6 +332,7 @@ instance. The second command start it in debug mode, so I can open my browser an
 navigate through the web site to see if everything is ok...
 
 .. Note::
+
    In the 'cubicweb-ctl i18ncube' command, `sytweb` refers to the **cube**, while
    in the two other, it refers to the **instance** (if you can't see the
    difference, reread CubicWeb's concept chapter !).

@@ -115,7 +115,6 @@ try:
     class AllInOneConfiguration(TwistedConfiguration, ServerConfiguration):
         """repository and web instance in the same twisted process"""
         name = 'all-in-one'
-        repo_method = 'inmemory'
         options = merge_options(TwistedConfiguration.options
                                 + ServerConfiguration.options)
 

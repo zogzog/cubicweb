@@ -26,6 +26,7 @@ from logilab.mtconverter import xml_escape
 from logilab.common.decorators import cachedproperty
 from logilab.common.registry import objectify_predicate, yes
 
+from cubicweb import tags
 from cubicweb.predicates import (non_final_entity, multi_lines_rset,
                                  match_context_prop, relation_possible)
 from cubicweb.utils import json_dumps
@@ -234,6 +235,7 @@ class FilterBox(FacetFilterMixIn, component.CtxComponent):
             vid = req.form.get('vid')
         if self.bk_linkbox_template and req.vreg.schema['Bookmark'].has_perm(req, 'add'):
             w(self.bookmark_link(rset))
+        w(self.focus_link(rset))
         hiddens = {}
         for param in ('subvid', 'vtitle'):
             if param in req.form:
@@ -269,6 +271,9 @@ class FilterBox(FacetFilterMixIn, component.CtxComponent):
                 req._('bookmark this search'))
         return self.bk_linkbox_template % bk_link
 
+    def focus_link(self, rset):
+        return self.bk_linkbox_template % tags.a(self._cw._('focus on this selection'),
+                                                 href=self._cw.url(), id='focusLink')
 
 class FilterTable(FacetFilterMixIn, AnyRsetView):
     __regid__ = 'facet.filtertable'

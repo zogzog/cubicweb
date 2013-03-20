@@ -15,7 +15,7 @@ an entity automatically related to the initial entity (context in
 which the box is displayed). By default, the links generated in this
 box are computed from the schema properties of the displayed entity,
 but it is possible to explicitly specify them thanks to the
-`cubicweb.web.uicfg.rmode` *relation tag*:
+`cubicweb.web.views.uicfg.rmode` *relation tag*:
 
 * `link`, indicates that a relation is in general created pointing
   to an existing entity and that we should not to display a link

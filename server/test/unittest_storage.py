@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -16,8 +16,6 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unit tests for module cubicweb.server.sources.storages"""
-
-from __future__ import with_statement
 
 from logilab.common.testlib import unittest_main, tag, Tags
 from cubicweb.devtools.testlib import CubicWebTC
@@ -99,7 +97,7 @@ class StorageTC(CubicWebTC):
         f1 = self.create_file()
         self.commit()
         self.assertEqual(file(expected_filepath).read(), 'the-data')
-        f1.set_attributes(data=Binary('the new data'))
+        f1.cw_set(data=Binary('the new data'))
         self.rollback()
         self.assertEqual(file(expected_filepath).read(), 'the-data')
         f1.cw_delete()
@@ -118,7 +116,7 @@ class StorageTC(CubicWebTC):
     def test_bfss_fs_importing_doesnt_touch_path(self):
         self.session.transaction_data['fs_importing'] = True
         filepath = osp.abspath(__file__)
-        f1 = self.session.create_entity('File', data=Binary(filepath),
+        f1 = self.request().create_entity('File', data=Binary(filepath),
                                         data_format=u'text/plain', data_name=u'foo')
         self.assertEqual(self.fspath(f1), filepath)
 
@@ -196,15 +194,18 @@ class StorageTC(CubicWebTC):
         filepath = osp.abspath(__file__)
         f1 = self.session.create_entity('File', data=Binary(filepath),
                                         data_format=u'text/plain', data_name=u'foo')
-        self.assertEqual(f1.data.getvalue(), file(filepath).read(),
-                          'files content differ')
+        cw_value = f1.data.getvalue()
+        fs_value = file(filepath).read()
+        if cw_value != fs_value:
+            self.fail('cw value %r is different from file content' % cw_value)
+
 
     @tag('update')
     def test_bfss_update_with_existing_data(self):
         # use self.session to use server-side cache
         f1 = self.session.create_entity('File', data=Binary('some data'),
                                         data_format=u'text/plain', data_name=u'foo')
-        # NOTE: do not use set_attributes() which would automatically
+        # NOTE: do not use cw_set() which would automatically
         #       update f1's local dict. We want the pure rql version to work
         self.execute('SET F data %(d)s WHERE F eid %(f)s',
                      {'d': Binary('some other data'), 'f': f1.eid})
@@ -218,7 +219,7 @@ class StorageTC(CubicWebTC):
         # use self.session to use server-side cache
         f1 = self.session.create_entity('File', data=Binary('some data'),
                                         data_format=u'text/plain', data_name=u'foo.txt')
-        # NOTE: do not use set_attributes() which would automatically
+        # NOTE: do not use cw_set() which would automatically
         #       update f1's local dict. We want the pure rql version to work
         self.commit()
         old_path = self.fspath(f1)
@@ -240,7 +241,7 @@ class StorageTC(CubicWebTC):
         # use self.session to use server-side cache
         f1 = self.session.create_entity('File', data=Binary('some data'),
                                         data_format=u'text/plain', data_name=u'foo.txt')
-        # NOTE: do not use set_attributes() which would automatically
+        # NOTE: do not use cw_set() which would automatically
         #       update f1's local dict. We want the pure rql version to work
         self.commit()
         old_path = self.fspath(f1)
@@ -265,7 +266,7 @@ class StorageTC(CubicWebTC):
         f = self.session.create_entity('Affaire', opt_attr=Binary('toto'))
         self.session.commit()
         self.session.set_cnxset()
-        f.set_attributes(opt_attr=None)
+        f.cw_set(opt_attr=None)
         self.session.commit()
 
     @tag('fs_importing', 'update')

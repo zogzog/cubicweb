@@ -46,7 +46,7 @@ else:
                    '%s relation should not be in support_relations' % rtype
         return mapping
     # for now, only pyrorql sources have a mapping
-    for source in repo.sources_by_uri.values():
+    for source in repo.sources_by_uri.itervalues():
         if not isinstance(source, PyroRQLSource):
             continue
         sourceentity = session.entity_from_eid(source.eid)
@@ -81,5 +81,5 @@ else:
         rset = session.execute('Any V WHERE X is CWProperty, X value V, X pkey %(k)s',
                                {'k': pkey})
         timestamp = int(rset[0][0])
-        sourceentity.set_attributes(latest_retrieval=datetime.fromtimestamp(timestamp))
+        sourceentity.cw_set(latest_retrieval=datetime.fromtimestamp(timestamp))
         session.execute('DELETE CWProperty X WHERE X pkey %(k)s', {'k': pkey})

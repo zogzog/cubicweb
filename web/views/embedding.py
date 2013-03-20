@@ -94,7 +94,7 @@ class EmbedController(Controller):
                 body = embed_external_page(embedded_url, prefix,
                                            headers, req.form.get('custom_css'))
                 body = soup2xhtml(body, self._cw.encoding)
-            except HTTPError, err:
+            except HTTPError as err:
                 body = '<h2>%s</h2><h3>%s</h3>' % (
                     _('error while embedding page'), err)
         rset = self.process_rql()
@@ -127,7 +127,7 @@ class EmbedAction(Action):
     def url(self, row=0):
         entity = self.cw_rset.get_entity(row, 0)
         url = urljoin(self._cw.base_url(), entity.cw_adapt_to('IEmbedable').embeded_url())
-        if self._cw.form.has_key('rql'):
+        if 'rql' in self._cw.form:
             return self._cw.build_url('embed', url=url, rql=self._cw.form['rql'])
         return self._cw.build_url('embed', url=url)
 

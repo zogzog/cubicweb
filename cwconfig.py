@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -353,28 +353,6 @@ class CubicWebNoAppConfiguration(ConfigurationMixIn):
           'help': 'permission umask for files created by the server',
           'group': 'main', 'level': 2,
           }),
-        # pyro options
-        ('pyro-instance-id',
-         {'type' : 'string',
-          'default': Method('default_instance_id'),
-          'help': 'identifier of the CubicWeb instance in the Pyro name server',
-          'group': 'pyro', 'level': 1,
-          }),
-        ('pyro-ns-host',
-         {'type' : 'string',
-          'default': '',
-          'help': 'Pyro name server\'s host. If not set, will be detected by a \
-broadcast query. It may contains port information using <host>:<port> notation. \
-Use "NO_PYRONS" to create a Pyro server but not register to a pyro nameserver',
-          'group': 'pyro', 'level': 1,
-          }),
-        ('pyro-ns-group',
-         {'type' : 'string',
-          'default': 'cubicweb',
-          'help': 'Pyro name server\'s group where the repository will be \
-registered.',
-          'group': 'pyro', 'level': 1,
-          }),
         # common configuration options which are potentially required as soon as
         # you're using "base" application objects (ie to really server/web
         # specific)
@@ -495,7 +473,7 @@ this option is set to yes",
         try:
             parent = __import__('cubes.%s.__pkginfo__' % cube)
             return getattr(parent, cube).__pkginfo__
-        except Exception, ex:
+        except Exception as ex:
             raise ConfigurationError(
                 'unable to find packaging information for cube %s (%s: %s)'
                 % (cube, ex.__class__.__name__, ex))
@@ -602,9 +580,8 @@ this option is set to yes",
                                if dep in cubes)
         try:
             return ordered_nodes(graph)
-        except UnorderableGraph, ex:
-            raise ConfigurationError('cycles in cubes dependencies: %s'
-                                     % ex.cycles)
+        except UnorderableGraph as ex:
+            raise ConfigurationError(ex)
 
     @classmethod
     def cls_adjust_sys_path(cls):
@@ -636,7 +613,7 @@ this option is set to yes",
             if exists(join(CW_SOFTWARE_ROOT, ctlfile)):
                 try:
                     load_module_from_file(join(CW_SOFTWARE_ROOT, ctlfile))
-                except ImportError, err:
+                except ImportError as err:
                     cls.error('could not import the command provider %s: %s',
                               ctlfile, err)
                 cls.info('loaded cubicweb-ctl plugin %s', ctlfile)
@@ -665,59 +642,11 @@ this option is set to yes",
         for cube in cls.available_cubes():
             try:
                 __import__('cubes.%s' % cube)
-            except Exception, ex:
+            except Exception as ex:
                 cls.warning("can't init cube %s: %s", cube, ex)
 
     cubicweb_appobject_path = set(['entities'])
     cube_appobject_path = set(['entities'])
-
-    @classmethod
-    def build_vregistry_path(cls, templpath, evobjpath=None, tvobjpath=None):
-        """given a list of directories, return a list of sub files and
-        directories that should be loaded by the instance objects registry.
-
-        :param evobjpath:
-          optional list of sub-directories (or files without the .py ext) of
-          the cubicweb library that should be tested and added to the output list
-          if they exists. If not give, default to `cubicweb_appobject_path` class
-          attribute.
-        :param tvobjpath:
-          optional list of sub-directories (or files without the .py ext) of
-          directories given in `templpath` that should be tested and added to
-          the output list if they exists. If not give, default to
-          `cube_appobject_path` class attribute.
-        """
-        vregpath = cls.build_vregistry_cubicweb_path(evobjpath)
-        vregpath += cls.build_vregistry_cube_path(templpath, tvobjpath)
-        return vregpath
-
-    @classmethod
-    def build_vregistry_cubicweb_path(cls, evobjpath=None):
-        vregpath = []
-        if evobjpath is None:
-            evobjpath = cls.cubicweb_appobject_path
-        # NOTE: for the order, see http://www.cubicweb.org/ticket/2330799
-        #       it is clearly a workaround
-        for subdir in sorted(evobjpath, key=lambda x:x != 'entities'):
-            path = join(CW_SOFTWARE_ROOT, subdir)
-            if exists(path):
-                vregpath.append(path)
-        return vregpath
-
-    @classmethod
-    def build_vregistry_cube_path(cls, templpath, tvobjpath=None):
-        vregpath = []
-        if tvobjpath is None:
-            tvobjpath = cls.cube_appobject_path
-        for directory in templpath:
-            # NOTE: for the order, see http://www.cubicweb.org/ticket/2330799
-            for subdir in sorted(tvobjpath, key=lambda x:x != 'entities'):
-                path = join(directory, subdir)
-                if exists(path):
-                    vregpath.append(path)
-                elif exists(path + '.py'):
-                    vregpath.append(path + '.py')
-        return vregpath
 
     def __init__(self, debugmode=False):
         if debugmode:
@@ -766,11 +695,56 @@ this option is set to yes",
         # configure simpleTal logger
         logging.getLogger('simpleTAL').setLevel(logging.ERROR)
 
-    def vregistry_path(self):
+    def appobjects_path(self):
         """return a list of files or directories where the registry will look
         for application objects. By default return nothing in NoApp config.
         """
         return []
+
+    def build_appobjects_path(self, templpath, evobjpath=None, tvobjpath=None):
+        """given a list of directories, return a list of sub files and
+        directories that should be loaded by the instance objects registry.
+
+        :param evobjpath:
+          optional list of sub-directories (or files without the .py ext) of
+          the cubicweb library that should be tested and added to the output list
+          if they exists. If not give, default to `cubicweb_appobject_path` class
+          attribute.
+        :param tvobjpath:
+          optional list of sub-directories (or files without the .py ext) of
+          directories given in `templpath` that should be tested and added to
+          the output list if they exists. If not give, default to
+          `cube_appobject_path` class attribute.
+        """
+        vregpath = self.build_appobjects_cubicweb_path(evobjpath)
+        vregpath += self.build_appobjects_cube_path(templpath, tvobjpath)
+        return vregpath
+
+    def build_appobjects_cubicweb_path(self, evobjpath=None):
+        vregpath = []
+        if evobjpath is None:
+            evobjpath = self.cubicweb_appobject_path
+        # NOTE: for the order, see http://www.cubicweb.org/ticket/2330799
+        #       it is clearly a workaround
+        for subdir in sorted(evobjpath, key=lambda x:x != 'entities'):
+            path = join(CW_SOFTWARE_ROOT, subdir)
+            if exists(path):
+                vregpath.append(path)
+        return vregpath
+
+    def build_appobjects_cube_path(self, templpath, tvobjpath=None):
+        vregpath = []
+        if tvobjpath is None:
+            tvobjpath = self.cube_appobject_path
+        for directory in templpath:
+            # NOTE: for the order, see http://www.cubicweb.org/ticket/2330799
+            for subdir in sorted(tvobjpath, key=lambda x:x != 'entities'):
+                path = join(directory, subdir)
+                if exists(path):
+                    vregpath.append(path)
+                elif exists(path + '.py'):
+                    vregpath.append(path + '.py')
+        return vregpath
 
     apphome = None
 
@@ -1080,7 +1054,7 @@ the repository',
             self.info('creating %s directory', path)
             try:
                 os.makedirs(path)
-            except OSError, ex:
+            except OSError as ex:
                 self.warning('error while creating %s directory: %s', path, ex)
                 return
         if self['uid']:
@@ -1099,14 +1073,14 @@ the repository',
             self.info('giving ownership of %s directory to %s', path, self['uid'])
             try:
                 os.chown(path, uid, os.getgid())
-            except OSError, ex:
+            except OSError as ex:
                 self.warning('error while giving ownership of %s directory to %s: %s',
                              path, self['uid'], ex)
         if not (fstat.st_mode & stat.S_IWUSR):
             self.info('forcing write permission on directory %s', path)
             try:
                 os.chmod(path, fstat.st_mode | stat.S_IWUSR)
-            except OSError, ex:
+            except OSError as ex:
                 self.warning('error while forcing write permission on directory %s: %s',
                              path, ex)
                 return
@@ -1177,14 +1151,14 @@ the repository',
                     self.exception('localisation support error for language %s',
                                    language)
 
-    def vregistry_path(self):
+    def appobjects_path(self):
         """return a list of files or directories where the registry will look
         for application objects
         """
         templpath = list(reversed(self.cubes_path()))
         if self.apphome: # may be unset in tests
             templpath.append(self.apphome)
-        return self.build_vregistry_path(templpath)
+        return self.build_appobjects_path(templpath)
 
     def set_sources_mode(self, sources):
         if not 'all' in sources:
@@ -1216,7 +1190,7 @@ the repository',
         try:
             try:
                 smtp = SMTP(server, port)
-            except Exception, ex:
+            except Exception as ex:
                 self.exception("can't connect to smtp server %s:%s (%s)",
                                server, port, ex)
                 return False
@@ -1224,7 +1198,7 @@ the repository',
             for msg, recipients in msgs:
                 try:
                     smtp.sendmail(heloaddr, recipients, msg.as_string())
-                except Exception, ex:
+                except Exception as ex:
                     self.exception("error sending mail to %s (%s)",
                                    recipients, ex)
             smtp.close()
@@ -1339,7 +1313,7 @@ def register_stored_procedures():
             fpath = source.binary_to_str(value)
             try:
                 return Binary(fpath)
-            except OSError, ex:
+            except OSError as ex:
                 source.critical("can't open %s: %s", fpath, ex)
                 return None
 

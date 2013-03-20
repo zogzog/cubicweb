@@ -16,9 +16,6 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Repository users' and internal' sessions."""
-
-from __future__ import with_statement
-
 __docformat__ = "restructuredtext en"
 
 import sys
@@ -30,20 +27,14 @@ from warnings import warn
 from logilab.common.deprecation import deprecated
 from logilab.common.textutils import unormalize
 from logilab.common.registry import objectify_predicate
-from rql import CoercionError
-from rql.nodes import ETYPE_PYOBJ_MAP, etype_from_pyobj
-from yams import BASE_TYPES
 
-from cubicweb import Binary, UnknownEid, QueryError, schema
+from cubicweb import UnknownEid, QueryError, schema, server
 from cubicweb.req import RequestSessionBase
-from cubicweb.dbapi import ConnectionProperties
-from cubicweb.utils import make_uid, RepeatList
+from cubicweb.utils import make_uid
 from cubicweb.rqlrewrite import RQLRewriter
 from cubicweb.server import ShuttingDown
 from cubicweb.server.edition import EditedEntity
 
-
-ETYPE_PYOBJ_MAP[Binary] = 'Bytes'
 
 NO_UNDO_TYPES = schema.SCHEMA_TYPES.copy()
 NO_UNDO_TYPES.add('CWCache')
@@ -54,25 +45,6 @@ NO_UNDO_TYPES.add('is')
 NO_UNDO_TYPES.add('is_instance_of')
 NO_UNDO_TYPES.add('cw_source')
 # XXX rememberme,forgotpwd,apycot,vcsfile
-
-def _make_description(selected, args, solution):
-    """return a description for a result set"""
-    description = []
-    for term in selected:
-        description.append(term.get_type(solution, args))
-    return description
-
-def selection_idx_type(i, rqlst, args):
-    """try to return type of term at index `i` of the rqlst's selection"""
-    for select in rqlst.children:
-        term = select.selection[i]
-        for solution in select.solutions:
-            try:
-                ttype = term.get_type(solution, args)
-                if ttype is not None:
-                    return ttype
-            except CoercionError:
-                return None
 
 @objectify_predicate
 def is_user_session(cls, req, **kwargs):
@@ -132,6 +104,11 @@ class hooks_control(object):
 
        with hooks_control(self.session, self.session.HOOKS_DENY_ALL, 'integrity'):
            # ... do stuff with none but 'integrity' hooks activated
+
+    This is an internal api, you should rather use
+    :meth:`~cubicweb.server.session.Session.deny_all_hooks_but` or
+    :meth:`~cubicweb.server.session.Session.allow_all_hooks_but` session
+    methods.
     """
     def __init__(self, session, mode, *categories):
         self.session = session
@@ -241,16 +218,18 @@ class Session(RequestSessionBase):
 
       :attr:`running_dbapi_query`, boolean flag telling if the executing query
       is coming from a dbapi connection or is a query from within the repository
+
+    .. automethod:: cubicweb.server.session.deny_all_hooks_but
+    .. automethod:: cubicweb.server.session.all_all_hooks_but
     """
+    is_request = False
     is_internal_session = False
 
     def __init__(self, user, repo, cnxprops=None, _id=None):
         super(Session, self).__init__(repo.vreg)
         self.id = _id or make_uid(unormalize(user.login).encode('UTF8'))
-        cnxprops = cnxprops or ConnectionProperties('inmemory')
         self.user = user
         self.repo = repo
-        self.cnxtype = cnxprops.cnxtype
         self.timestamp = time()
         self.default_mode = 'read'
         # undo support
@@ -264,7 +243,7 @@ class Session(RequestSessionBase):
         # and the rql server
         self.data = {}
         # i18n initialization
-        self.set_language(cnxprops.lang)
+        self.set_language(user.prefered_language())
         # internals
         self._tx_data = {}
         self.__threaddata = threading.local()
@@ -273,8 +252,8 @@ class Session(RequestSessionBase):
         self._closed_lock = threading.Lock()
 
     def __unicode__(self):
-        return '<%ssession %s (%s 0x%x)>' % (
-            self.cnxtype, unicode(self.user.login), self.id, id(self))
+        return '<session %s (%s 0x%x)>' % (
+            unicode(self.user.login), self.id, id(self))
 
     def transaction(self, free_cnxset=True):
         """return context manager to enter a transaction for the session: when
@@ -464,28 +443,6 @@ class Session(RequestSessionBase):
             self.cnxset.reconnect(source)
             return source.doexec(self, sql, args, rollback=rollback_on_failure)
 
-    def set_language(self, language):
-        """i18n configuration for translation"""
-        language = language or self.user.property_value('ui.language')
-        try:
-            gettext, pgettext = self.vreg.config.translations[language]
-            self._ = self.__ = gettext
-            self.pgettext = pgettext
-        except KeyError:
-            language = self.vreg.property_value('ui.language')
-            try:
-                gettext, pgettext = self.vreg.config.translations[language]
-                self._ = self.__ = gettext
-                self.pgettext = pgettext
-            except KeyError:
-                self._ = self.__ = unicode
-                self.pgettext = lambda x, y: y
-        self.lang = language
-
-    def change_property(self, prop, value):
-        assert prop == 'lang' # this is the only one changeable property for now
-        self.set_language(value)
-
     def deleted_in_transaction(self, eid):
         """return True if the entity of the given eid is being deleted in the
         current transaction
@@ -509,7 +466,7 @@ class Session(RequestSessionBase):
 
     DEFAULT_SECURITY = object() # evaluated to true by design
 
-    def security_enabled(self, read=False, write=False):
+    def security_enabled(self, read=None, write=None):
         return security_enabled(self, read=read, write=write)
 
     def init_security(self, read, write):
@@ -976,16 +933,21 @@ class Session(RequestSessionBase):
         # information:
         # - processed by the precommit/commit event or not
         # - if processed, is it the failed operation
+        debug = server.DEBUG & server.DBG_OPS
         try:
             # by default, operations are executed with security turned off
             with security_enabled(self, False, False):
                 processed = []
                 self.commit_state = 'precommit'
+                if debug:
+                    print self.commit_state, '*' * 20
                 try:
                     while self.pending_operations:
                         operation = self.pending_operations.pop(0)
                         operation.processed = 'precommit'
                         processed.append(operation)
+                        if debug:
+                            print operation
                         operation.handle_event('precommit_event')
                     self.pending_operations[:] = processed
                     self.debug('precommit session %s done', self.id)
@@ -1001,7 +963,11 @@ class Session(RequestSessionBase):
                     # instead of having to implements rollback, revertprecommit
                     # and revertcommit, that will be enough in mont case.
                     operation.failed = True
+                    if debug:
+                        print self.commit_state, '*' * 20
                     for operation in reversed(processed):
+                        if debug:
+                            print operation
                         try:
                             operation.handle_event('revertprecommit_event')
                         except BaseException:
@@ -1014,8 +980,12 @@ class Session(RequestSessionBase):
                     raise
                 self.cnxset.commit()
                 self.commit_state = 'postcommit'
+                if debug:
+                    print self.commit_state, '*' * 20
                 while self.pending_operations:
                     operation = self.pending_operations.pop(0)
+                    if debug:
+                        print operation
                     operation.processed = 'postcommit'
                     try:
                         operation.handle_event('postcommit_event')
@@ -1154,71 +1124,6 @@ class Session(RequestSessionBase):
             self._threaddata._rewriter = RQLRewriter(self)
             return self._threaddata._rewriter
 
-    def build_description(self, rqlst, args, result):
-        """build a description for a given result"""
-        if len(rqlst.children) == 1 and len(rqlst.children[0].solutions) == 1:
-            # easy, all lines are identical
-            selected = rqlst.children[0].selection
-            solution = rqlst.children[0].solutions[0]
-            description = _make_description(selected, args, solution)
-            return RepeatList(len(result), tuple(description))
-        # hard, delegate the work :o)
-        return self.manual_build_descr(rqlst, args, result)
-
-    def manual_build_descr(self, rqlst, args, result):
-        """build a description for a given result by analysing each row
-
-        XXX could probably be done more efficiently during execution of query
-        """
-        # not so easy, looks for variable which changes from one solution
-        # to another
-        unstables = rqlst.get_variable_indices()
-        basedescr = []
-        todetermine = []
-        for i in xrange(len(rqlst.children[0].selection)):
-            ttype = selection_idx_type(i, rqlst, args)
-            if ttype is None or ttype == 'Any':
-                ttype = None
-                isfinal = True
-            else:
-                isfinal = ttype in BASE_TYPES
-            if ttype is None or i in unstables:
-                basedescr.append(None)
-                todetermine.append( (i, isfinal) )
-            else:
-                basedescr.append(ttype)
-        if not todetermine:
-            return RepeatList(len(result), tuple(basedescr))
-        return self._build_descr(result, basedescr, todetermine)
-
-    def _build_descr(self, result, basedescription, todetermine):
-        description = []
-        etype_from_eid = self.describe
-        todel = []
-        for i, row in enumerate(result):
-            row_descr = basedescription[:]
-            for index, isfinal in todetermine:
-                value = row[index]
-                if value is None:
-                    # None value inserted by an outer join, no type
-                    row_descr[index] = None
-                    continue
-                if isfinal:
-                    row_descr[index] = etype_from_pyobj(value)
-                else:
-                    try:
-                        row_descr[index] = etype_from_eid(value)[0]
-                    except UnknownEid:
-                        self.error('wrong eid %s in repository, you should '
-                                   'db-check the database' % value)
-                        todel.append(i)
-                        break
-            else:
-                description.append(tuple(row_descr))
-        for i in reversed(todel):
-            del result[i]
-        return description
-
     # deprecated ###############################################################
 
     @deprecated('[3.13] use getattr(session.rtype_eids_rdef(rtype, eidfrom, eidto), prop)')
@@ -1274,7 +1179,6 @@ class InternalSession(Session):
         super(InternalSession, self).__init__(InternalManager(), repo, cnxprops,
                                               _id='internal')
         self.user._cw = self # XXX remove when "vreg = user._cw.vreg" hack in entity.py is gone
-        self.cnxtype = 'inmemory'
         if not safe:
             self.disable_hook_categories('integrity')
 
@@ -1317,6 +1221,24 @@ class InternalManager(object):
             return 'en'
         return None
 
+    def prefered_language(self, language=None):
+        # mock CWUser.prefered_language, mainly for testing purpose
+        return self.property_value('ui.language')
+
+    # CWUser compat for notification ###########################################
+
+    def name(self):
+        return 'cubicweb'
+
+    class _IEmailable:
+        @staticmethod
+        def get_email():
+            return ''
+
+    def cw_adapt_to(self, iface):
+        if iface == 'IEmailable':
+            return self._IEmailable
+        return None
 
 from logging import getLogger
 from cubicweb import set_log_methods

@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -63,13 +63,13 @@ class ConnectionsSet(object):
         # FIXME: what happends if a commit fail
         # would need a two phases commit or like, but I don't know how to do
         # this using the db-api...
-        for source, cnx in self.source_cnxs.values():
+        for source, cnx in self.source_cnxs.itervalues():
             # let exception propagates
             cnx.commit()
 
     def rollback(self):
         """rollback the current transaction for this user"""
-        for source, cnx in self.source_cnxs.values():
+        for source, cnx in self.source_cnxs.itervalues():
             # catch exceptions, rollback other sources anyway
             try:
                 cnx.rollback()
@@ -83,12 +83,12 @@ class ConnectionsSet(object):
         """close all connections in the set"""
         if i_know_what_i_do is not True: # unexpected closing safety belt
             raise RuntimeError('connections set shouldn\'t be closed')
-        for cu in self._cursors.values():
+        for cu in self._cursors.itervalues():
             try:
                 cu.close()
             except Exception:
                 continue
-        for _, cnx in self.source_cnxs.values():
+        for _, cnx in self.source_cnxs.itervalues():
             try:
                 cnx.close()
             except Exception:
@@ -102,7 +102,7 @@ class ConnectionsSet(object):
 
     def cnxset_freed(self):
         """connections set is being freed from a session"""
-        for source, cnx in self.source_cnxs.values():
+        for source, cnx in self.source_cnxs.itervalues():
             source.cnxset_freed(cnx)
 
     def sources(self):
@@ -114,7 +114,7 @@ class ConnectionsSet(object):
             if uri == 'system':
                 continue
             yield source
-        #return [source_cnx[0] for source_cnx in self.source_cnxs.values()]
+        #return [source_cnx[0] for source_cnx in self.source_cnxs.itervalues()]
 
     def source(self, uid):
         """return the source object with the given uri"""

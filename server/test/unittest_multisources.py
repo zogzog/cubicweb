@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -33,7 +33,6 @@ class ExternalSource2Configuration(TestServerConfiguration):
 MTIME = datetime.utcnow() - timedelta(0, 10)
 
 EXTERN_SOURCE_CFG = u'''
-pyro-ns-id = extern
 cubicweb-user = admin
 cubicweb-password = gingkow
 base-url=http://extern.org/
@@ -60,8 +59,9 @@ def pre_setup_database_extern(session, config):
 
 def pre_setup_database_multi(session, config):
     session.create_entity('CWSource', name=u'extern', type=u'pyrorql',
-                                 config=EXTERN_SOURCE_CFG)
+                          url=u'pyro:///extern', config=EXTERN_SOURCE_CFG)
     session.commit()
+
 
 class TwoSourcesTC(CubicWebTC):
     """Main repo -> extern-multi -> extern
@@ -89,7 +89,6 @@ class TwoSourcesTC(CubicWebTC):
         cls.cnx2.close()
         cls.cnx3.close()
         TestServerConfiguration.no_sqlite_wrap = False
-
 
     @classmethod
     def _init_repo(cls):
@@ -122,12 +121,11 @@ class TwoSourcesTC(CubicWebTC):
     def pre_setup_database(session, config):
         for uri, src_config in [('extern', EXTERN_SOURCE_CFG),
                             ('extern-multi', '''
-pyro-ns-id = extern-multi
 cubicweb-user = admin
 cubicweb-password = gingkow
 ''')]:
             source = session.create_entity('CWSource', name=unicode(uri),
-                                           type=u'pyrorql',
+                                           type=u'pyrorql', url=u'pyro:///extern-multi',
                                            config=unicode(src_config))
             session.commit()
             add_extern_mapping(source)

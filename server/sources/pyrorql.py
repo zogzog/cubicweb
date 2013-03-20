@@ -23,9 +23,6 @@ _ = unicode
 import threading
 from Pyro.errors import PyroError, ConnectionClosedError
 
-from logilab.common.configuration import REQUIRED
-
-from cubicweb import dbapi
 from cubicweb import ConnectionError
 from cubicweb.server.sources import ConnectionWrapper
 
@@ -34,48 +31,10 @@ from cubicweb.server.sources.remoterql import RemoteSource
 class PyroRQLSource(RemoteSource):
     """External repository source, using Pyro connection"""
 
-    CNX_TYPE = 'pyro'
-
-    options = RemoteSource.options + (
-        # XXX pyro-ns host/port
-        ('pyro-ns-id',
-         {'type' : 'string',
-          'default': REQUIRED,
-          'help': 'identifier of the repository in the pyro name server',
-          'group': 'remote-source', 'level': 0,
-          }),
-        ('pyro-ns-host',
-         {'type' : 'string',
-          'default': None,
-          'help': 'Pyro name server\'s host. If not set, default to the value \
-from all_in_one.conf. It may contains port information using <host>:<port> notation.',
-          'group': 'remote-source', 'level': 1,
-          }),
-        ('pyro-ns-group',
-         {'type' : 'string',
-          'default': None,
-          'help': 'Pyro name server\'s group where the repository will be \
-registered. If not set, default to the value from all_in_one.conf.',
-          'group': 'remote-source', 'level': 2,
-          }),
-    )
-
-    def _get_connection(self):
-        """open and return a connection to the source"""
-        nshost = self.config.get('pyro-ns-host') or self.repo.config['pyro-ns-host']
-        nsgroup = self.config.get('pyro-ns-group') or self.repo.config['pyro-ns-group']
-        self.info('connecting to instance :%s.%s for user %s',
-                  nsgroup, self.config['pyro-ns-id'], self.config['cubicweb-user'])
-        return dbapi.connect(database=self.config['pyro-ns-id'],
-                             login=self.config['cubicweb-user'],
-                             password=self.config['cubicweb-password'],
-                             host=nshost, group=nsgroup,
-                             setvreg=False)
-
     def get_connection(self):
         try:
             return self._get_connection()
-        except (ConnectionError, PyroError), ex:
+        except (ConnectionError, PyroError) as ex:
             self.critical("can't get connection to source %s: %s", self.uri, ex)
             return ConnectionWrapper()
 

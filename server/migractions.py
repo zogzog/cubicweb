@@ -26,9 +26,6 @@ The following data actions are supported for now:
 * add an entity
 * execute raw RQL queries
 """
-
-from __future__ import with_statement
-
 __docformat__ = "restructuredtext en"
 
 import sys
@@ -56,7 +53,7 @@ from cubicweb.schema import (ETYPE_NAME_MAP, META_RTYPES, VIRTUAL_RTYPES,
                              PURE_VIRTUAL_RTYPES,
                              CubicWebRelationSchema, order_eschemas)
 from cubicweb.cwvreg import CW_EVENT_MANAGER
-from cubicweb.dbapi import get_repository, repo_connect
+from cubicweb.dbapi import get_repository, _repo_connect
 from cubicweb.migration import MigrationHelper, yes
 from cubicweb.server import hook
 try:
@@ -132,7 +129,7 @@ class ServerMigrationHelper(MigrationHelper):
 
     @cached
     def repo_connect(self):
-        self.repo = get_repository(method='inmemory', config=self.config)
+        self.repo = get_repository(config=self.config)
         return self.repo
 
     def cube_upgraded(self, cube, version):
@@ -158,7 +155,7 @@ class ServerMigrationHelper(MigrationHelper):
         try:
             return super(ServerMigrationHelper, self).cmd_process_script(
                   migrscript, funcname, *args, **kwargs)
-        except ExecutionError, err:
+        except ExecutionError as err:
             sys.stderr.write("-> %s\n" % err)
         except BaseException:
             self.rollback()
@@ -196,7 +193,7 @@ class ServerMigrationHelper(MigrationHelper):
             for source in repo.sources:
                 try:
                     source.backup(osp.join(tmpdir, source.uri), self.confirm, format=format)
-                except Exception, ex:
+                except Exception as ex:
                     print '-> error trying to backup %s [%s]' % (source.uri, ex)
                     if not self.confirm('Continue anyway?', default='n'):
                         raise SystemExit(1)
@@ -255,7 +252,7 @@ class ServerMigrationHelper(MigrationHelper):
                 continue
             try:
                 source.restore(osp.join(tmpdir, source.uri), self.confirm, drop, format)
-            except Exception, exc:
+            except Exception as exc:
                 print '-> error trying to restore %s [%s]' % (source.uri, exc)
                 if not self.confirm('Continue anyway?', default='n'):
                     raise SystemExit(1)
@@ -279,7 +276,7 @@ class ServerMigrationHelper(MigrationHelper):
                 login, pwd = manager_userpasswd()
             while True:
                 try:
-                    self._cnx = repo_connect(self.repo, login, password=pwd)
+                    self._cnx = _repo_connect(self.repo, login, password=pwd)
                     if not 'managers' in self._cnx.user(self.session).groups:
                         print 'migration need an account in the managers group'
                     else:
@@ -401,7 +398,7 @@ class ServerMigrationHelper(MigrationHelper):
             try:
                 sqlexec(open(fpath).read(), self.session.system_sql, False,
                         delimiter=';;')
-            except Exception, exc:
+            except Exception as exc:
                 print '-> ERROR:', exc, ', skipping', fpath
 
     # schema synchronization internals ########################################
@@ -460,7 +457,7 @@ class ServerMigrationHelper(MigrationHelper):
                                      {'x': expreid}, ask_confirm=False)
                 else:
                     newexprs.pop(expression)
-            for expression in newexprs.values():
+            for expression in newexprs.itervalues():
                 expr = expression.expression
                 if not confirm or self.confirm('Add %s expression for %s permission of %s?'
                                                % (expr, action, erschema)):
@@ -1321,7 +1318,7 @@ class ServerMigrationHelper(MigrationHelper):
         except Exception:
             self.cmd_create_entity('CWProperty', pkey=unicode(pkey), value=value)
         else:
-            prop.set_attributes(value=value)
+            prop.cw_set(value=value)
 
     # other data migration commands ###########################################
 
@@ -1460,7 +1457,7 @@ class ServerMigrationHelper(MigrationHelper):
             if not ask_confirm or self.confirm('Execute rql: %s ?' % msg):
                 try:
                     res = execute(rql, kwargs, build_descr=build_descr)
-                except Exception, ex:
+                except Exception as ex:
                     if self.confirm('Error: %s\nabort?' % ex, pdb=True):
                         raise
         return res
@@ -1554,7 +1551,7 @@ class ForRqlIterator:
                 raise StopIteration
         try:
             return self._h._cw.execute(rql, kwargs)
-        except Exception, ex:
+        except Exception as ex:
             if self._h.confirm('Error: %s\nabort?' % ex):
                 raise
             else:

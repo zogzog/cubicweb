@@ -1,4 +1,4 @@
-# copyright 2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2011-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -45,207 +45,30 @@ be clearer to read than a bunch of sequential function calls.
 """
 __docformat__ = "restructuredtext en"
 
-from cubicweb.web import uicfg
-from functools import partial
 
-def _tag_rel(rtag, etype, attr, desttype='*', *args, **kwargs):
-    if isinstance(attr, basestring):
-        attr, role = attr, 'subject'
-    else:
-        attr, role = attr
-    if role == 'subject':
-        rtag.tag_subject_of((etype, attr, desttype), *args, **kwargs)
-    else:
-        rtag.tag_object_of((desttype, attr, etype), *args, **kwargs)
+from logilab.common.deprecation import deprecated
+from cubicweb.web.views import uicfg
 
 
 ## generic uicfg helpers ######################################################
-def append_to_addmenu(etype, attr, createdtype='*'):
-    """adds `attr` in the actions box *addrelated* submenu of `etype`.
 
-    :param etype: the entity type as a string
-    :param attr: the name of the attribute or relation to hide
-
-    `attr` can be a string or 2-tuple (relname, role_of_etype_in_the_relation)
-
-    """
-    _tag_rel(uicfg.actionbox_appearsin_addmenu, etype, attr, createdtype, True)
-
-def remove_from_addmenu(etype, attr, createdtype='*'):
-    """removes `attr` from the actions box *addrelated* submenu of `etype`.
-
-    :param etype: the entity type as a string
-    :param attr: the name of the attribute or relation to hide
-
-    `attr` can be a string or 2-tuple (relname, role_of_etype_in_the_relation)
-    """
-    _tag_rel(uicfg.actionbox_appearsin_addmenu, etype, attr, createdtype, False)
-
-
-## form uicfg helpers ##########################################################
-def set_fields_order(etype, attrs):
-    """specify the field order in `etype` main edition form.
-
-    :param etype: the entity type as a string
-    :param attrs: the ordered list of attribute names (or relations)
-
-    `attrs` can be strings or 2-tuples (relname, role_of_etype_in_the_relation)
-
-    Unspecified fields will be displayed after specified ones, their
-    order being consistent with the schema definition.
-
-    Examples:
-
-.. sourcecode:: python
-
-  from cubicweb.web import uihelper
-  uihelper.set_fields_order('CWUser', ('firstname', 'surname', 'login'))
-  uihelper.set_fields_order('CWUser', ('firstname', ('in_group', 'subject'), 'surname', 'login'))
-
-    """
-    afk = uicfg.autoform_field_kwargs
-    for index, attr in enumerate(attrs):
-        _tag_rel(afk, etype, attr, '*', {'order': index})
-
-
-def hide_field(etype, attr, desttype='*', formtype='main'):
-    """hide `attr` in `etype` forms.
-
-    :param etype: the entity type as a string
-    :param attr: the name of the attribute or relation to hide
-    :param formtype: which form will be affected ('main', 'inlined', etc.), *main* by default.
-
-    `attr` can be a string or 2-tuple (relname, role_of_etype_in_the_relation)
-
-    Examples:
-
-.. sourcecode:: python
-
-  from cubicweb.web import uihelper
-  uihelper.hide_field('CWUser', 'login')
-  uihelper.hide_field('*', 'name')
-  uihelper.hide_field('CWUser', 'use_email', formtype='inlined')
-
-    """
-    _tag_rel(uicfg.autoform_section, etype, attr, desttype,
-             formtype=formtype, section='hidden')
-
-
-def hide_fields(etype, attrs, formtype='main'):
-    """simple for-loop wrapper around :func:`hide_field`.
-
-    :param etype: the entity type as a string
-    :param attrs: the ordered list of attribute names (or relations)
-    :param formtype: which form will be affected ('main', 'inlined', etc.), *main* by default.
-
-    `attrs` can be strings or 2-tuples (relname, role_of_etype_in_the_relation)
-
-    Examples:
-
-.. sourcecode:: python
-
-  from cubicweb.web import uihelper
-  uihelper.hide_fields('CWUser', ('login', ('use_email', 'subject')), formtype='inlined')
-    """
-    for attr in attrs:
-        hide_field(etype, attr, formtype=formtype)
-
-
-def set_field_kwargs(etype, attr, **kwargs):
-    """tag `attr` field of `etype` with additional named paremeters.
-
-    :param etype: the entity type as a string
-    :param attr: the name of the attribute or relation
-
-    `attr` can be a string or 2-tuple (relname, role_of_etype_in_the_relation)
-
-    Examples:
-
-.. sourcecode:: python
-
-  from cubicweb.web import uihelper, formwidgets as fwdgs
-
-  uihelper.set_field_kwargs('Person', 'works_for', widget=fwdgs.AutoCompletionWidget())
-  uihelper.set_field_kwargs('CWUser', 'login', label=_('login or email address'),
-                            widget=fwdgs.TextInput(attrs={'size': 30}))
-    """
-    _tag_rel(uicfg.autoform_field_kwargs, etype, attr, '*', kwargs)
-
-
-def set_field(etype, attr, field):
-    """sets the `attr` field of `etype`.
-
-    :param etype: the entity type as a string
-    :param attr: the name of the attribute or relation
-
-    `attr` can be a string or 2-tuple (relname, role_of_etype_in_the_relation)
-
-    """
-    _tag_rel(uicfg.autoform_field, etype, attr, '*', field)
-
-
-def edit_inline(etype, attr, desttype='*', formtype=('main', 'inlined')):
-    """edit `attr` with and inlined form.
-
-    :param etype: the entity type as a string
-    :param attr: the name of the attribute or relation
-    :param desttype: the destination type(s) concerned, default is everything
-    :param formtype: which form will be affected ('main', 'inlined', etc.), *main* and *inlined* by default.
-
-    `attr` can be a string or 2-tuple (relname, role_of_etype_in_the_relation)
-
-    Examples:
-
-.. sourcecode:: python
-
-  from cubicweb.web import uihelper
-
-  uihelper.edit_inline('*', 'use_email')
-  """
-    _tag_rel(uicfg.autoform_section, etype, attr, desttype,
-             formtype=formtype, section='inlined')
-
-
-def edit_as_attr(etype, attr, desttype='*', formtype=('main', 'muledit')):
-    """make `attr` appear in the *attributes* section of `etype` form.
-
-    :param etype: the entity type as a string
-    :param attr: the name of the attribute or relation
-    :param desttype: the destination type(s) concerned, default is everything
-    :param formtype: which form will be affected ('main', 'inlined', etc.), *main* and *muledit* by default.
-
-    `attr` can be a string or 2-tuple (relname, role_of_etype_in_the_relation)
-
-    Examples:
-
-.. sourcecode:: python
-
-  from cubicweb.web import uihelper
-
-  uihelper.edit_as_attr('CWUser', 'in_group')
-    """
-    _tag_rel(uicfg.autoform_section, etype, attr, desttype,
-             formtype=formtype, section='attributes')
-
-
-def set_muledit_editable(etype, attrs):
-    """make `attrs` appear in muledit form of `etype`.
-
-    :param etype: the entity type as a string
-    :param attrs: the ordered list of attribute names (or relations)
-
-    `attrs` can be strings or 2-tuples (relname, role_of_etype_in_the_relation)
-
-    Examples:
-
-.. sourcecode:: python
-
-  from cubicweb.web import uihelper
-
-  uihelper.set_muledit_editable('CWUser', ('firstname', 'surname', 'in_group'))
-    """
-    for attr in attrs:
-        edit_as_attr(etype, attr, formtype='muledit')
+backward_compat_funcs = (('append_to_addmenu', uicfg.actionbox_appearsin_addmenu),
+                         ('remove_from_addmenu', uicfg.actionbox_appearsin_addmenu),
+                         ('set_fields_order', uicfg.autoform_field_kwargs),
+                         ('hide_field', uicfg.autoform_section),
+                         ('hide_fields', uicfg.autoform_section),
+                         ('set_field_kwargs', uicfg.autoform_field_kwargs),
+                         ('set_field', uicfg.autoform_field),
+                         ('edit_inline', uicfg.autoform_section),
+                         ('edit_as_attr', uicfg.autoform_section),
+                         ('set_muledit_editable', uicfg.autoform_section),
+                         )
+
+for funcname, tag in backward_compat_funcs:
+    msg = ('[3.16] uihelper.%(name)s is deprecated, please use '
+           'web.uicfg.%(classname)s.%(name)s' % dict(
+               name=funcname, classname=tag.__class__.__name__))
+    globals()[funcname] = deprecated(msg)(getattr(tag, funcname))
 
 
 class meta_formconfig(type):
@@ -253,17 +76,23 @@ class meta_formconfig(type):
     def __init__(cls, name, bases, classdict):
         if cls.etype is None:
             return
+        if cls.uicfg_afs is None:
+            uicfg_afs = uicfg.autoform_section
+        if cls.uicfg_aff is None:
+            uicfg_aff = uicfg.autoform_field
+        if cls.uicfg_affk is None:
+            uicfg_affk = uicfg.autoform_field_kwargs
         for attr_role in cls.hidden:
-            hide_field(cls.etype, attr_role, formtype=cls.formtype)
+            uicfg_afs.hide_field(cls.etype, attr_role, formtype=cls.formtype)
         for attr_role in cls.rels_as_attrs:
-            edit_as_attr(cls.etype, attr_role, formtype=cls.formtype)
+            uicfg_afs.edit_as_attr(cls.etype, attr_role, formtype=cls.formtype)
         for attr_role in cls.inlined:
-            edit_inline(cls.etype, attr_role, formtype=cls.formtype)
+            uicfg_afs.edit_inline(cls.etype, attr_role, formtype=cls.formtype)
         for rtype, widget in cls.widgets.items():
-            set_field_kwargs(cls.etype, rtype, widget=widget)
+            uicfg_affk.set_field_kwargs(cls.etype, rtype, widget=widget)
         for rtype, field in cls.fields.items():
-            set_field(cls.etype, rtype, field)
-        set_fields_order(cls.etype, cls.fields_order)
+            uicfg_aff.set_field(cls.etype, rtype, field)
+        uicfg_affk.set_fields_order(cls.etype, cls.fields_order)
         super(meta_formconfig, cls).__init__(name, bases, classdict)
 
 
@@ -303,6 +132,18 @@ class FormConfig:
     :attr:`fields`
       a dictionary mapping attribute names to field instances.
 
+    :attr:`uicfg_afs`
+      an instance of ``cubicweb.web.uicfg.AutoformSectionRelationTags``
+      Default is None, meaning ``cubicweb.web.uicfg.autoform_section`` is used.
+
+    :attr:`uicfg_aff`
+      an instance of ``cubicweb.web.uicfg.AutoformFieldTags``
+      Default is None, meaning ``cubicweb.web.uicfg.autoform_field`` is used.
+
+    :attr:`uicfg_affk`
+      an instance of ``cubicweb.web.uicfg.AutoformFieldKwargsTags``
+      Default is None, meaning ``cubicweb.web.uicfg.autoform_field_kwargs`` is used.
+
     Examples:
 
 .. sourcecode:: python
@@ -333,3 +174,6 @@ class FormConfig:
     fields_order = ()
     widgets = {}
     fields = {}
+    uicfg_afs = None
+    uicfg_aff = None
+    uicfg_affk = None

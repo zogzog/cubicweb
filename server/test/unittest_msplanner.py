@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -16,8 +16,6 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unit tests for module cubicweb.server.msplanner"""
-
-from __future__ import with_statement
 
 from logilab.common.decorators import clear_cache
 from yams.buildobjs import RelationDefinition
@@ -151,7 +149,7 @@ class PartPlanInformationTC(BaseMSPlannerTC):
         plan.preprocess(union)
         ppi = PartPlanInformation(plan, union.children[0])
         for sourcevars in ppi._sourcesterms.itervalues():
-            for var in sourcevars.keys():
+            for var in list(sourcevars):
                 solindices = sourcevars.pop(var)
                 sourcevars[var._ms_table_key()] = solindices
         self.assertEqual(ppi._sourcesterms, sourcesterms)

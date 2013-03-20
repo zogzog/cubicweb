@@ -19,7 +19,6 @@
 
 it should only include low level schema changes
 """
-from __future__ import with_statement
 
 from cubicweb.server.session import hooks_control
 from cubicweb.server import schemaserial as ss
@@ -77,7 +76,7 @@ elif applcubicwebversion < (3, 6, 0) and cubicwebversion >= (3, 6, 0):
     with hooks_control(session, session.HOOKS_ALLOW_ALL, 'integrity'):
         for rschema in repo.schema.relations():
             rpermsdict = permsdict.get(rschema.eid, {})
-            for rdef in rschema.rdefs.values():
+            for rdef in rschema.rdefs.itervalues():
                 for action in rdef.ACTIONS:
                     actperms = []
                     for something in rpermsdict.get(action == 'update' and 'add' or action, ()):

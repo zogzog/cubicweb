@@ -112,6 +112,17 @@ class ResultSetTC(CubicWebTC):
         #                  '%stask/title/go' % baseurl)
         # empty _restpath should not crash
         self.compare_urls(req.build_url('view', _restpath=''), baseurl)
+        self.assertNotIn('https', req.build_url('view', vid='foo', rql='yo',
+                                                  __secure__=True))
+        try:
+            self.config.global_set_option('https-url', 'https://testing.fr/')
+            self.assertTrue('https', req.build_url('view', vid='foo', rql='yo',
+                                                     __secure__=True))
+            self.compare_urls(req.build_url('view', vid='foo', rql='yo',
+                                            __secure__=True),
+                              '%sview?vid=foo&rql=yo' % req.base_url(secure=True))
+        finally:
+            self.config.global_set_option('https-url', None)
 
 
     def test_build(self):
@@ -334,9 +345,9 @@ class ResultSetTC(CubicWebTC):
         e = rset.get_entity(0, 0)
         # if any of the assertion below fails with a KeyError, the relation is not cached
         # related entities should be an empty list
-        self.assertEqual(e._cw_relation_cache('primary_email', 'subject', True), ())
+        self.assertEqual(e._cw_related_cache['primary_email_subject'][True], ())
         # related rset should be an empty rset
-        cached = e._cw_relation_cache('primary_email', 'subject', False)
+        cached = e._cw_related_cache['primary_email_subject'][False]
         self.assertIsInstance(cached, ResultSet)
         self.assertEqual(cached.rowcount, 0)
 

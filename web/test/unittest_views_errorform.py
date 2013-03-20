@@ -16,8 +16,6 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import with_statement
-
 from logilab.common.testlib import unittest_main
 from logilab.mtconverter import html_unescape
 
@@ -52,7 +50,7 @@ class ErrorViewTC(CubicWebTC):
         with self.temporary_appobjects(MyWrongView):
             try:
                 self.view('my-view')
-            except Exception, e:
+            except Exception as e:
                 import sys
                 self.req.data['excinfo'] = sys.exc_info()
                 self.req.data['ex'] = e

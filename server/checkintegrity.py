@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -20,9 +20,6 @@
 * integrity of a CubicWeb repository. Hum actually only the system database is
   checked.
 """
-
-from __future__ import with_statement
-
 __docformat__ = "restructuredtext en"
 
 import sys
@@ -32,7 +29,6 @@ from logilab.common.shellutils import ProgressBar
 
 from cubicweb.schema import PURE_VIRTUAL_RTYPES, VIRTUAL_RTYPES
 from cubicweb.server.sqlutils import SQL_PREFIX
-from cubicweb.server.session import security_enabled
 
 def notify_fixed(fix):
     if fix:
@@ -289,7 +285,7 @@ def check_relations(schema, session, eids, fix=1):
             continue
         try:
             cursor = session.system_sql('SELECT eid_from FROM %s_relation;' % rschema)
-        except Exception, ex:
+        except Exception as ex:
             # usually because table doesn't exist
             print 'ERROR', ex
             continue
@@ -321,7 +317,7 @@ def check_mandatory_relations(schema, session, eids, fix=1):
             continue
         smandatory = set()
         omandatory = set()
-        for rdef in rschema.rdefs.values():
+        for rdef in rschema.rdefs.itervalues():
             if rdef.cardinality[0] in '1+':
                 smandatory.add(rdef.subject)
             if rdef.cardinality[1] in '1+':
@@ -349,7 +345,7 @@ def check_mandatory_attributes(schema, session, eids, fix=1):
     for rschema in schema.relations():
         if not rschema.final or rschema in VIRTUAL_RTYPES:
             continue
-        for rdef in rschema.rdefs.values():
+        for rdef in rschema.rdefs.itervalues():
             if rdef.cardinality[0] in '1+':
                 rql = 'Any X WHERE X %s NULL, X is %s, X cw_source S, S name "system"' % (
                     rschema, rdef.subject)
@@ -394,18 +390,18 @@ def check(repo, cnx, checks, reindex, fix, withpb=True):
     # yo, launch checks
     if checks:
         eids_cache = {}
-        with security_enabled(session, read=False, write=False): # ensure no read security
+        with session.security_enabled(read=False, write=False): # ensure no read security
             for check in checks:
                 check_func = globals()['check_%s' % check]
                 check_func(repo.schema, session, eids_cache, fix=fix)
         if fix:
-            cnx.commit()
+            session.commit()
         else:
             print
         if not fix:
             print 'WARNING: Diagnostic run, nothing has been corrected'
     if reindex:
-        cnx.rollback()
+        session.rollback()
         session.set_cnxset()
         reindex_entities(repo.schema, session, withpb=withpb)
-        cnx.commit()
+        session.commit()

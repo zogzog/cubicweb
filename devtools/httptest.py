@@ -18,8 +18,6 @@
 """this module contains base classes and utilities for integration with running
 http server
 """
-from __future__ import with_statement
-
 __docformat__ = "restructuredtext en"
 
 import threading
@@ -52,7 +50,7 @@ def get_available_port(ports_scan):
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock = s.connect(("localhost", port))
-        except socket.error, err:
+        except socket.error as err:
             if err.args[0] in (111, 106):
                 return port
         finally:
@@ -158,7 +156,7 @@ class CubicWebServerTC(CubicWebTC):
             response = self.web_get('logout')
         self._ident_cookie = None
 
-    def web_get(self, path='', headers=None):
+    def web_request(self, path='', method='GET', body=None, headers=None):
         """Return an httplib.HTTPResponse object for the specified path
 
         Use available credential if available.
@@ -168,11 +166,14 @@ class CubicWebServerTC(CubicWebTC):
         if self._ident_cookie is not None:
             assert 'Cookie' not in headers
             headers['Cookie'] = self._ident_cookie
-        self._web_test_cnx.request("GET", '/' + path, headers=headers)
+        self._web_test_cnx.request(method, '/' + path, headers=headers, body=body)
         response = self._web_test_cnx.getresponse()
         response.body = response.read() # to chain request
         response.read = lambda : response.body
         return response
+
+    def web_get(self, path='', body=None, headers=None):
+        return self.web_request(path=path, body=body, headers=headers)
 
     def setUp(self):
         super(CubicWebServerTC, self).setUp()
@@ -181,7 +182,7 @@ class CubicWebServerTC(CubicWebTC):
     def tearDown(self):
         try:
             self.stop_server()
-        except error.ReactorNotRunning, err:
+        except error.ReactorNotRunning as err:
             # Server could be launched manually
             print err
         super(CubicWebServerTC, self).tearDown()

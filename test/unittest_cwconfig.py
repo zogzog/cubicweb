@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -101,10 +101,10 @@ class CubicWebConfigurationTC(TestCase):
         self.assertEqual(self.config.expand_cubes(('email', 'comment')),
                           ['email', 'comment', 'file'])
 
-    def test_vregistry_path(self):
+    def test_appobjects_path(self):
         self.config.__class__.CUBES_PATH = [CUSTOM_CUBES_DIR]
         self.config.adjust_sys_path()
-        self.assertEqual([unabsolutize(p) for p in self.config.vregistry_path()],
+        self.assertEqual([unabsolutize(p) for p in self.config.appobjects_path()],
                           ['entities', 'web/views', 'sobjects', 'hooks',
                            'file/entities', 'file/views.py', 'file/hooks',
                            'email/entities.py', 'email/views', 'email/hooks.py',

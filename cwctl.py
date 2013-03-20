@@ -27,6 +27,9 @@ __docformat__ = "restructuredtext en"
 import sys
 from warnings import warn
 from os import remove, listdir, system, pathsep
+from os.path import exists, join, isfile, isdir, dirname, abspath
+from urlparse import urlparse
+
 try:
     from os import kill, getpgid
 except ImportError:
@@ -36,9 +39,6 @@ except ImportError:
         """win32 getpgid implementation"""
 
 
-from os.path import exists, join, isfile, isdir, dirname, abspath
-
-from urlparse import urlparse
 
 from logilab.common.clcommands import CommandLine
 from logilab.common.shellutils import ASK
@@ -165,11 +165,11 @@ class InstanceCommand(Command):
         cmdmeth = getattr(self, '%s_instance' % self.name)
         try:
             status = cmdmeth(appid)
-        except (ExecutionError, ConfigurationError), ex:
+        except (ExecutionError, ConfigurationError) as ex:
             sys.stderr.write('instance %s not %s: %s\n' % (
                     appid, self.actionverb, ex))
             status = 4
-        except Exception, ex:
+        except Exception as ex:
             import traceback
             traceback.print_exc()
             sys.stderr.write('instance %s not %s: %s\n' % (
@@ -234,7 +234,7 @@ class ListCommand(Command):
         try:
             cubesdir = pathsep.join(cwcfg.cubes_search_path())
             namesize = max(len(x) for x in cwcfg.available_cubes())
-        except ConfigurationError, ex:
+        except ConfigurationError as ex:
             print 'No cubes available:', ex
         except ValueError:
             print 'No cubes available in %s' % cubesdir
@@ -245,7 +245,7 @@ class ListCommand(Command):
                     tinfo = cwcfg.cube_pkginfo(cube)
                     tversion = tinfo.version
                     cfgpb.add_cube(cube, tversion)
-                except (ConfigurationError, AttributeError), ex:
+                except (ConfigurationError, AttributeError) as ex:
                     tinfo = None
                     tversion = '[missing cube information: %s]' % ex
                 print '* %s %s' % (cube.ljust(namesize), tversion)
@@ -266,7 +266,7 @@ class ListCommand(Command):
         print
         try:
             regdir = cwcfg.instances_dir()
-        except ConfigurationError, ex:
+        except ConfigurationError as ex:
             print 'No instance available:', ex
             print
             return
@@ -281,7 +281,7 @@ class ListCommand(Command):
                 print '* %s (%s)' % (appid, ', '.join(modes))
                 try:
                     config = cwcfg.config_for(appid, modes[0])
-                except Exception, exc:
+                except Exception as exc:
                     print '    (BROKEN instance, %s)' % exc
                     continue
         else:
@@ -365,7 +365,7 @@ class CreateInstanceCommand(Command):
         try:
             templdirs = [cwcfg.cube_dir(cube)
                          for cube in cubes]
-        except ConfigurationError, ex:
+        except ConfigurationError as ex:
             print ex
             print '\navailable cubes:',
             print ', '.join(cwcfg.available_cubes())
@@ -466,7 +466,7 @@ class DeleteInstanceCommand(Command):
         # remove instance data directory
         try:
             rm(config.appdatahome)
-        except OSError, ex:
+        except OSError as ex:
             import errno
             if ex.errno != errno.ENOENT:
                 raise
@@ -561,7 +561,7 @@ class StopInstanceCommand(InstanceCommand):
         else:
             try:
                 wait_process_end(pid)
-            except ExecutionError, ex:
+            except ExecutionError as ex:
                 sys.stderr.write('%s\ntrying SIGKILL\n' % ex)
                 try:
                     kill(pid, signal.SIGKILL)
@@ -871,64 +871,65 @@ sources for migration will be automatically selected.",
           'help': 'URI of the CubicWeb repository to connect to. URI can be \
 pyro://[host:port] the Pyro name server host; if the pyro nameserver is not set, \
 it will be detected by using a broadcast query, a ZMQ URL or \
-inmemory:// (default) use an in-memory repository.',
+inmemory:// (default) use an in-memory repository. THIS OPTION IS DEPRECATED, \
+directly give URI as instance id instead',
           'group': 'remote'
           }),
         )
 
+    def _handle_inmemory(self, appid):
+        """ returns migration context handler & shutdown function """
+        config = cwcfg.config_for(appid)
+        if self.config.ext_sources:
+            assert not self.config.system_only
+            sources = self.config.ext_sources
+        elif self.config.system_only:
+            sources = ('system',)
+        else:
+            sources = ('all',)
+        config.set_sources_mode(sources)
+        config.repairing = self.config.force
+        mih = config.migration_handler()
+        return mih, lambda: mih.shutdown()
+
+    def _handle_networked(self, appuri):
+        """ returns migration context handler & shutdown function """
+        from cubicweb import AuthenticationError
+        from cubicweb.dbapi import connect
+        from cubicweb.server.utils import manager_userpasswd
+        from cubicweb.server.migractions import ServerMigrationHelper
+        while True:
+            try:
+                login, pwd = manager_userpasswd(msg=None)
+                cnx = connect(appuri, login=login, password=pwd, mulcnx=False)
+            except AuthenticationError as ex:
+                print ex
+            except (KeyboardInterrupt, EOFError):
+                print
+                sys.exit(0)
+            else:
+                break
+        cnx.load_appobjects()
+        repo = cnx._repo
+        mih = ServerMigrationHelper(None, repo=repo, cnx=cnx, verbosity=0,
+                                    # hack so it don't try to load fs schema
+                                    schema=1)
+        return mih, lambda: cnx.close()
+
     def run(self, args):
-        appid = args.pop(0)
+        appuri = args.pop(0)
         if self.config.repo_uri:
-            uri = urlparse(self.config.repo_uri)
-            if uri.scheme == 'pyro':
-                cnxtype = uri.scheme
-                hostport = uri.netloc
-            elif uri.scheme == 'inmemory':
-                cnxtype = ''
-                hostport = ''
-            else:
-                cnxtype = 'zmq'
-                hostport = self.config.repo_uri
-        else:
-            cnxtype = ''
+            warn('[3.16] --repo-uri option is deprecated, directly give the URI as instance id',
+                 DeprecationWarning)
+            if urlparse(self.config.repo_uri).scheme in ('pyro', 'inmemory'):
+                appuri = '%s/%s' % (self.config.repo_uri.rstrip('/'), appuri)
 
-        if cnxtype:
-            from cubicweb import AuthenticationError
-            from cubicweb.dbapi import connect, ConnectionProperties
-            from cubicweb.server.utils import manager_userpasswd
-            from cubicweb.server.migractions import ServerMigrationHelper
-            cnxprops = ConnectionProperties(cnxtype=cnxtype)
-
-            while True:
-                try:
-                    login, pwd = manager_userpasswd(msg=None)
-                    cnx = connect(appid, login=login, password=pwd,
-                                  host=hostport, mulcnx=False,
-                                  cnxprops=cnxprops)
-                except AuthenticationError, ex:
-                    print ex
-                except (KeyboardInterrupt, EOFError):
-                    print
-                    sys.exit(0)
-                else:
-                    break
-            cnx.load_appobjects()
-            repo = cnx._repo
-            mih = ServerMigrationHelper(None, repo=repo, cnx=cnx, verbosity=0,
-                                         # hack so it don't try to load fs schema
-                                        schema=1)
+        from cubicweb.utils import parse_repo_uri
+        protocol, hostport, appid = parse_repo_uri(appuri)
+        if protocol == 'inmemory':
+            mih, shutdown_callback = self._handle_inmemory(appid)
         else:
-            config = cwcfg.config_for(appid)
-            if self.config.ext_sources:
-                assert not self.config.system_only
-                sources = self.config.ext_sources
-            elif self.config.system_only:
-                sources = ('system',)
-            else:
-                sources = ('all',)
-            config.set_sources_mode(sources)
-            config.repairing = self.config.force
-            mih = config.migration_handler()
+            mih, shutdown_callback = self._handle_networked(appuri)
         try:
             if args:
                 # use cmdline parser to access left/right attributes only
@@ -940,10 +941,7 @@ inmemory:// (default) use an in-memory repository.',
             else:
                 mih.interactive_shell()
         finally:
-            if not cnxtype: # shutdown in-memory repo
-                mih.shutdown()
-            else:
-                cnx.close()
+            shutdown_callback()
 
 
 class RecompileInstanceCatalogsCommand(InstanceCommand):
@@ -1012,10 +1010,10 @@ def run(args):
     cwcfg.load_cwctl_plugins()
     try:
         CWCTL.run(args)
-    except ConfigurationError, err:
+    except ConfigurationError as err:
         print 'ERROR: ', err
         sys.exit(1)
-    except ExecutionError, err:
+    except ExecutionError as err:
         print err
         sys.exit(2)
 

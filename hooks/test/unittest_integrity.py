@@ -18,8 +18,6 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """functional tests for integrity hooks"""
 
-from __future__ import with_statement
-
 from cubicweb import ValidationError
 from cubicweb.devtools.testlib import CubicWebTC
 

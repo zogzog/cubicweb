@@ -18,8 +18,6 @@
 """CubicWeb is a generic framework to quickly build applications which describes
 relations between entitites.
 """
-from __future__ import with_statement
-
 __docformat__ = "restructuredtext en"
 
 # ignore the pygments UserWarnings
@@ -199,3 +197,26 @@ def onevent(event, *args, **kwargs):
         CW_EVENT_MANAGER.bind(event, func, *args, **kwargs)
         return func
     return _decorator
+
+
+from yams.schema import role_name as rname
+
+def validation_error(entity, errors, substitutions=None, i18nvalues=None):
+    """easy way to retrieve a :class:`cubicweb.ValidationError` for an entity or eid.
+
+    You may also have 2-tuple as error keys, :func:`yams.role_name` will be
+    called automatically for them.
+
+    Messages in errors **should not be translated yet**, though marked for
+    internationalization. You may give an additional substition dictionary that
+    will be used for interpolation after the translation.
+    """
+    if substitutions is None:
+        # set empty dict else translation won't be done for backward
+        # compatibility reason (see ValidationError.translate method)
+        substitutions = {}
+    for key in list(errors):
+        if isinstance(key, tuple):
+            errors[rname(*key)] = errors.pop(key)
+    return ValidationError(getattr(entity, 'eid', entity), errors,
+                           substitutions, i18nvalues)

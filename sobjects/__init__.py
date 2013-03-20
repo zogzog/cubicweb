@@ -20,7 +20,7 @@
 import os.path as osp
 
 def registration_callback(vreg):
-    vreg.register_all(globals().values(), __name__)
+    vreg.register_all(globals().itervalues(), __name__)
     global URL_MAPPING
     URL_MAPPING = {}
     if vreg.config.apphome:

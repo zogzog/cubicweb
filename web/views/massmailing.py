@@ -21,6 +21,7 @@ __docformat__ = "restructuredtext en"
 _ = unicode
 
 import operator
+from functools import reduce
 
 from cubicweb.predicates import (is_instance, authenticated_user,
                                 adaptable, match_form_params)
@@ -43,7 +44,7 @@ class SendEmailAction(action.Action):
 
     def url(self):
         params = {'vid': 'massmailing', '__force_display': 1}
-        if self._cw.form.has_key('rql'):
+        if 'rql' in self._cw.form:
             params['rql'] = self._cw.form['rql']
         return self._cw.build_url(self._cw.relative_path(includeparams=False),
                                   **params)

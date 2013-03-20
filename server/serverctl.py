@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -208,7 +208,7 @@ ERROR = nullobject()
 def confirm_on_error_or_die(msg, func, *args, **kwargs):
     try:
         return func(*args, **kwargs)
-    except Exception, ex:
+    except Exception as ex:
         print 'ERROR', ex
         if not ASK.confirm('An error occurred while %s. Continue anyway?' % msg):
             raise ExecutionError(str(ex))
@@ -382,7 +382,7 @@ class CreateInstanceDBCommand(Command):
                 if automatic or ASK.confirm('Create language %s ?' % extlang):
                     try:
                         helper.create_language(cursor, extlang)
-                    except Exception, exc:
+                    except Exception as exc:
                         print '-> ERROR:', exc
                         print '-> could not create language %s, some stored procedures might be unusable' % extlang
                         cnx.rollback()
@@ -442,14 +442,14 @@ class InitInstanceCommand(Command):
         config = ServerConfiguration.config_for(appid)
         try:
             system = config.sources()['system']
-            extra_args=system.get('db-extra-arguments')
+            extra_args = system.get('db-extra-arguments')
             extra = extra_args and {'extra_args': extra_args} or {}
             get_connection(
                 system['db-driver'], database=system['db-name'],
                 host=system.get('db-host'), port=system.get('db-port'),
                 user=system.get('db-user') or '', password=system.get('db-password') or '',
                 **extra)
-        except Exception, ex:
+        except Exception as ex:
             raise ConfigurationError(
                 'You seem to have provided wrong connection information in '\
                 'the %s file. Resolve this first (error: %s).'
@@ -552,7 +552,7 @@ class GrantUserOnInstanceCommand(Command):
         try:
             sqlexec(sqlgrants(schema, source['db-driver'], user,
                               set_owner=set_owner), cursor)
-        except Exception, ex:
+        except Exception as ex:
             cnx.rollback()
             import traceback
             traceback.print_exc()
@@ -620,7 +620,7 @@ class ResetAdminPasswordCommand(Command):
             sconfig['password'] = pwd
             sourcescfg['admin'] = sconfig
             config.write_sources_file(sourcescfg)
-        except Exception, ex:
+        except Exception as ex:
             cnx.rollback()
             import traceback
             traceback.print_exc()
@@ -868,7 +868,7 @@ class DBRestoreCommand(Command):
             if not self.config.no_drop:
                 try:
                     CWCTL.run(['db-create', '--automatic', appid])
-                except SystemExit, exc:
+                except SystemExit as exc:
                     # continue if the command exited with status 0 (success)
                     if exc.code:
                         raise
@@ -879,7 +879,7 @@ class DBRestoreCommand(Command):
         if self.config.format == 'portable':
             try:
                 CWCTL.run(['db-rebuild-fti', appid])
-            except SystemExit, exc:
+            except SystemExit as exc:
                 if exc.code:
                     raise
 

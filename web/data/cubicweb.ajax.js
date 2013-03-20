@@ -70,7 +70,7 @@ jQuery.extend(Deferred.prototype, {
                 callback.apply(null, args);
             }
         } catch(error) {
-            this.error(this.xhr, null, error);
+            this.error(this._req, null, error);
         }
     },
 
@@ -704,7 +704,7 @@ function reload(domid, compid, registry, formparams  /* ... */) {
     var ajaxArgs = ['render', formparams, registry, compid];
     ajaxArgs = ajaxArgs.concat(cw.utils.sliceList(arguments, 4));
     var params = ajaxFuncArgs.apply(null, ajaxArgs);
-    return $('#'+domid).loadxhtml(AJAX_BASE_URL, params, null, 'swap');
+    return $('#'+domid).loadxhtml(AJAX_BASE_URL, params, null, 'swap', true);
 }
 
 /* ajax tabs ******************************************************************/

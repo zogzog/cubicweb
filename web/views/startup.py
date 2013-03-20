@@ -31,7 +31,8 @@ from logilab.mtconverter import xml_escape
 from cubicweb.view import StartupView
 from cubicweb.predicates import match_user_groups, is_instance
 from cubicweb.schema import display_name
-from cubicweb.web import uicfg, httpcache
+from cubicweb.web import httpcache
+from cubicweb.web.views import uicfg
 
 class ManageView(StartupView):
     """:__regid__: *manage*
@@ -51,7 +52,7 @@ class ManageView(StartupView):
     title = _('manage')
     http_cache_manager = httpcache.EtagHTTPCacheManager
     add_etype_links = ()
-    skip_startup_views = set( ('index', 'manage', 'schema', 'owl', 'changelog',
+    skip_startup_views = set( ('index', 'manage', 'schema', 'owl', 
                                'systempropertiesform', 'propertiesform',
                                'loggedout', 'login',
                                'cw.users-and-groups-management', 'cw.groups-management', 

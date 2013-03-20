@@ -1,6 +1,4 @@
-from __future__ import with_statement
 import sys
-
 
 if confirm('fix some corrupted entities noticed on several instances?'):
     rql('DELETE CWConstraint X WHERE NOT E constrained_by X')

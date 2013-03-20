@@ -18,8 +18,6 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unit tests for module cubicweb.server.repository"""
 
-from __future__ import with_statement
-
 import os
 import sys
 import threading
@@ -36,7 +34,7 @@ from cubicweb import (BadConnectionId, RepositoryError, ValidationError,
                       UnknownEid, AuthenticationError, Unauthorized, QueryError)
 from cubicweb.predicates import is_instance
 from cubicweb.schema import CubicWebSchema, RQLConstraint
-from cubicweb.dbapi import connect, multiple_connections_unfix, ConnectionProperties
+from cubicweb.dbapi import connect, multiple_connections_unfix
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.devtools.repotest import tuplify
 from cubicweb.server import repository, hook
@@ -360,7 +358,8 @@ class RepositoryTC(CubicWebTC):
 
 
     def _pyro_client(self, done):
-        cnx = connect(self.repo.config.appid, u'admin', password='gingkow',
+        cnx = connect('pyro:///'+self.repo.config.appid,
+                      u'admin', password='gingkow',
                       initlog=False) # don't reset logging configuration
         try:
             cnx.load_appobjects(subpath=('entities',))
@@ -395,7 +394,7 @@ class RepositoryTC(CubicWebTC):
         t.start()
 
         zmq_server = ZMQRepositoryServer(self.repo)
-        zmq_server.connect('tcp://127.0.0.1:41415')
+        zmq_server.connect('zmqpickle-tcp://127.0.0.1:41415')
 
         t2 = threading.Thread(target=self._zmq_quit, args=(done, zmq_server,))
         t2.start()
@@ -414,10 +413,8 @@ class RepositoryTC(CubicWebTC):
         srv.quit()
 
     def _zmq_client(self, done):
-        cnxprops = ConnectionProperties('zmq')
         try:
-            cnx = connect('tcp://127.0.0.1:41415', u'admin', password=u'gingkow',
-                          cnxprops=cnxprops,
+            cnx = connect('zmqpickle-tcp://127.0.0.1:41415', u'admin', password=u'gingkow',
                           initlog=False) # don't reset logging configuration
             try:
                 cnx.load_appobjects(subpath=('entities',))
@@ -522,7 +519,7 @@ class RepositoryTC(CubicWebTC):
         self.commit()
         self.assertEqual(len(c.reverse_fiche), 1)
 
-    def test_set_attributes_in_before_update(self):
+    def test_cw_set_in_before_update(self):
         # local hook
         class DummyBeforeHook(Hook):
             __regid__ = 'dummy-before-hook'
@@ -534,31 +531,31 @@ class RepositoryTC(CubicWebTC):
                 pendings = self._cw.transaction_data.setdefault('pending', set())
                 if self.entity.eid not in pendings:
                     pendings.add(self.entity.eid)
-                    self.entity.set_attributes(alias=u'foo')
+                    self.entity.cw_set(alias=u'foo')
         with self.temporary_appobjects(DummyBeforeHook):
             req = self.request()
             addr = req.create_entity('EmailAddress', address=u'a@b.fr')
-            addr.set_attributes(address=u'a@b.com')
+            addr.cw_set(address=u'a@b.com')
             rset = self.execute('Any A,AA WHERE X eid %(x)s, X address A, X alias AA',
                                 {'x': addr.eid})
             self.assertEqual(rset.rows, [[u'a@b.com', u'foo']])
 
-    def test_set_attributes_in_before_add(self):
+    def test_cw_set_in_before_add(self):
         # local hook
         class DummyBeforeHook(Hook):
             __regid__ = 'dummy-before-hook'
             __select__ = Hook.__select__ & is_instance('EmailAddress')
             events = ('before_add_entity',)
             def __call__(self):
-                # set_attributes is forbidden within before_add_entity()
-                self.entity.set_attributes(alias=u'foo')
+                # cw_set is forbidden within before_add_entity()
+                self.entity.cw_set(alias=u'foo')
         with self.temporary_appobjects(DummyBeforeHook):
             req = self.request()
             # XXX will fail with python -O
             self.assertRaises(AssertionError, req.create_entity,
                               'EmailAddress', address=u'a@b.fr')
 
-    def test_multiple_edit_set_attributes(self):
+    def test_multiple_edit_cw_set(self):
         """make sure cw_edited doesn't get cluttered
         by previous entities on multiple set
         """
@@ -664,7 +661,7 @@ class FTITC(CubicWebTC):
         self.commit()
         rset = req.execute('Any X WHERE X has_text %(t)s', {'t': 'toto'})
         self.assertEqual(rset.rows, [])
-        req.user.set_relations(use_email=toto)
+        req.user.cw_set(use_email=toto)
         self.commit()
         rset = req.execute('Any X WHERE X has_text %(t)s', {'t': 'toto'})
         self.assertEqual(rset.rows, [[req.user.eid]])
@@ -674,11 +671,11 @@ class FTITC(CubicWebTC):
         rset = req.execute('Any X WHERE X has_text %(t)s', {'t': 'toto'})
         self.assertEqual(rset.rows, [])
         tutu = req.create_entity('EmailAddress', address=u'tutu@logilab.fr')
-        req.user.set_relations(use_email=tutu)
+        req.user.cw_set(use_email=tutu)
         self.commit()
         rset = req.execute('Any X WHERE X has_text %(t)s', {'t': 'tutu'})
         self.assertEqual(rset.rows, [[req.user.eid]])
-        tutu.set_attributes(address=u'hip@logilab.fr')
+        tutu.cw_set(address=u'hip@logilab.fr')
         self.commit()
         rset = req.execute('Any X WHERE X has_text %(t)s', {'t': 'tutu'})
         self.assertEqual(rset.rows, [])
@@ -790,7 +787,7 @@ class PerformanceTest(CubicWebTC):
             personnes.append(p)
         abraham = req.create_entity('Personne', nom=u'Abraham', prenom=u'John', sexe=u'M')
         for j in xrange(0, 2000, 100):
-            abraham.set_relations(personne_composite=personnes[j:j+100])
+            abraham.cw_set(personne_composite=personnes[j:j+100])
         t1 = time.time()
         self.info('creation: %.2gs', (t1 - t0))
         req.cnx.commit()
@@ -816,7 +813,7 @@ class PerformanceTest(CubicWebTC):
         t1 = time.time()
         self.info('creation: %.2gs', (t1 - t0))
         for j in xrange(100, 2000, 100):
-            abraham.set_relations(personne_composite=personnes[j:j+100])
+            abraham.cw_set(personne_composite=personnes[j:j+100])
         t2 = time.time()
         self.info('more relations: %.2gs', (t2-t1))
         req.cnx.commit()
@@ -836,7 +833,7 @@ class PerformanceTest(CubicWebTC):
         t1 = time.time()
         self.info('creation: %.2gs', (t1 - t0))
         for j in xrange(100, 2000, 100):
-            abraham.set_relations(personne_inlined=personnes[j:j+100])
+            abraham.cw_set(personne_inlined=personnes[j:j+100])
         t2 = time.time()
         self.info('more relations: %.2gs', (t2-t1))
         req.cnx.commit()
@@ -917,7 +914,7 @@ class PerformanceTest(CubicWebTC):
         p1 = req.create_entity('Personne', nom=u'Vincent')
         p2 = req.create_entity('Personne', nom=u'Florent')
         w = req.create_entity('Affaire', ref=u'wc')
-        w.set_relations(todo_by=[p1,p2])
+        w.cw_set(todo_by=[p1,p2])
         w.cw_clear_all_caches()
         self.commit()
         self.assertEqual(len(w.todo_by), 1)
@@ -928,9 +925,9 @@ class PerformanceTest(CubicWebTC):
         p1 = req.create_entity('Personne', nom=u'Vincent')
         p2 = req.create_entity('Personne', nom=u'Florent')
         w = req.create_entity('Affaire', ref=u'wc')
-        w.set_relations(todo_by=p1)
+        w.cw_set(todo_by=p1)
         self.commit()
-        w.set_relations(todo_by=p2)
+        w.cw_set(todo_by=p2)
         w.cw_clear_all_caches()
         self.commit()
         self.assertEqual(len(w.todo_by), 1)

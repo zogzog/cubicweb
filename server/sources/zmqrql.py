@@ -24,4 +24,3 @@ from cubicweb.server.sources.remoterql import RemoteSource
 
 class ZMQRQLSource(RemoteSource):
     """External repository source, using ZMQ sockets"""
-    CNX_TYPE = 'zmq'

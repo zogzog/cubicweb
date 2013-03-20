@@ -67,7 +67,7 @@ class UpdateFeedsStartupHook(hook.Hook):
                 session = repo.internal_session(safe=True)
                 try:
                     source.pull_data(session)
-                except Exception, exc:
+                except Exception as exc:
                     session.exception('while trying to update feed %s', source)
                 finally:
                     session.close()

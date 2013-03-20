@@ -20,7 +20,7 @@
 from logilab.common.testlib import TestCase, unittest_main, mock_object as mock
 
 from cubicweb.devtools import TestServerConfiguration, fake
-from cubicweb.web import uicfg, formwidgets, formfields
+from cubicweb.web import formwidgets, formfields
 
 from cubes.file.entities import File
 

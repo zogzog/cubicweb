@@ -27,7 +27,7 @@ header_case_mapping = {}
 
 def casemappingify(d):
     global header_case_mapping
-    newd = dict([(key.lower(),key) for key in d.keys()])
+    newd = dict([(key.lower(),key) for key in d])
     header_case_mapping.update(newd)
 
 def lowerify(d):
@@ -77,7 +77,7 @@ class HeaderHandler(object):
                 header = p(header)
                 # if isinstance(h, types.GeneratorType):
                 #     h=list(h)
-        except ValueError,v:
+        except ValueError as v:
             # print v
             header=None
 
@@ -528,7 +528,7 @@ def parseContentType(header):
 def parseContentMD5(header):
     try:
         return base64.decodestring(header)
-    except Exception,e:
+    except Exception as e:
         raise ValueError(e)
 
 def parseContentRange(header):
@@ -1292,8 +1292,7 @@ class Headers(object):
 
     def __contains__(self, name):
         """Does a header with the given name exist?"""
-        name=name.lower()
-        return self._raw_headers.has_key(name)
+        return name.lower() in self._raw_headers
 
     hasHeader = __contains__
 
@@ -1377,7 +1376,7 @@ class Headers(object):
     def removeHeader(self, name):
         """Removes the header named."""
         name=name.lower()
-        if self._raw_headers.has_key(name):
+        if name in self._raw_headers:
             del self._raw_headers[name]
             del self._headers[name]
 

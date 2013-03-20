@@ -35,7 +35,7 @@ class stockproc(FunctionDescr):
     supported_backends = ('postgres', 'sqlite', 'mysql')
 try:
     register_function(stockproc)
-except AssertionError, ex:
+except AssertionError as ex:
     pass # already registered
 
 
@@ -1294,7 +1294,7 @@ class PostgresSQLGeneratorTC(RQLGeneratorTC):
                                             varmap=varmap)
             args.update(nargs)
             self.assertMultiLineEqual(strip(r % args), self._norm_sql(sql))
-        except Exception, ex:
+        except Exception as ex:
             if 'r' in locals():
                 try:
                     print (r%args).strip()
@@ -1319,7 +1319,7 @@ class PostgresSQLGeneratorTC(RQLGeneratorTC):
             rqlst = self._prepare(rql)
             r, args, cbs = self.o.generate(rqlst, args)
             self.assertEqual((r.strip(), args), sql)
-        except Exception, ex:
+        except Exception as ex:
             print rql
             if 'r' in locals():
                 print r.strip()

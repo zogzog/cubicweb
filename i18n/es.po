@@ -51,16 +51,20 @@ msgstr ""
 "\"role=subject\" o \"role=object\" debe ser especificado en las opciones"
 
 #, python-format
+msgid "%(KEY-cstr)s constraint failed for value %(KEY-value)r"
+msgstr ""
+
+#, python-format
+msgid "%(KEY-value)r doesn't match the %(KEY-regexp)r regular expression"
+msgstr ""
+
+#, python-format
 msgid "%(attr)s set to %(newvalue)s"
 msgstr "%(attr)s modificado a %(newvalue)s"
 
 #, python-format
 msgid "%(attr)s updated from %(oldvalue)s to %(newvalue)s"
 msgstr "%(attr)s modificado de %(oldvalue)s a %(newvalue)s"
-
-#, python-format
-msgid "%(cstr)s constraint failed for value %(value)r"
-msgstr "el valor %(value)r no satisface la condición %(cstr)s"
 
 #, python-format
 msgid "%(etype)s by %(author)s"
@@ -73,10 +77,6 @@ msgstr "%(firstname)s %(surname)s"
 #, python-format
 msgid "%(subject)s %(etype)s #%(eid)s (%(login)s)"
 msgstr "%(subject)s %(etype)s #%(eid)s (%(login)s)"
-
-#, python-format
-msgid "%(value)r doesn't match the %(regexp)r regular expression"
-msgstr "%(value)r no corresponde a la expresión regular %(regexp)r"
 
 #, python-format
 msgid "%d days"
@@ -425,6 +425,11 @@ msgstr ""
 "tipo ya no existe"
 
 msgid "Click to sort on this column"
+msgstr ""
+
+msgid ""
+"Configuration of the system source goes to the 'sources' file, not in the "
+"database"
 msgstr ""
 
 #, python-format
@@ -905,6 +910,9 @@ msgstr ""
 msgid "UniqueConstraint"
 msgstr "Restricción de Unicidad"
 
+msgid "Unknown source type"
+msgstr ""
+
 msgid "Unreachable objects"
 msgstr "Objetos inaccesibles"
 
@@ -965,6 +973,15 @@ msgstr ""
 "Puede realizar cualquiera de las siguientes sustituciones en el contenido de "
 "su email."
 
+msgid "You can't change this relation"
+msgstr ""
+
+msgid "You cannot remove the system source"
+msgstr ""
+
+msgid "You cannot rename the system source"
+msgstr ""
+
 msgid ""
 "You have no access to this view or it can not be used to display the current "
 "data."
@@ -1015,9 +1032,6 @@ msgstr ""
 
 msgid "abstract base class for transitions"
 msgstr "Clase de base abstracta para la transiciones"
-
-msgid "action menu"
-msgstr ""
 
 msgid "action(s) on this selection"
 msgstr "Acción(es) en esta selección"
@@ -1403,12 +1417,8 @@ msgstr "No puede ser modificado"
 msgid "can't be deleted"
 msgstr "No puede ser eliminado"
 
-#, python-format
-msgid "can't change the %s attribute"
-msgstr "no puede modificar el atributo %s"
-
-msgid "can't change this relation"
-msgstr "no puede modificar esta relación"
+msgid "can't change this attribute"
+msgstr ""
 
 #, python-format
 msgid "can't connect to source %s, some data may be missing"
@@ -2611,6 +2621,9 @@ msgstr "Nombre"
 msgid "foaf"
 msgstr "Amigo de un Amigo, FOAF"
 
+msgid "focus on this selection"
+msgstr ""
+
 msgid "follow"
 msgstr "Seguir la liga"
 
@@ -2901,8 +2914,8 @@ msgid "incorrect captcha value"
 msgstr "Valor del Captcha incorrecto"
 
 #, python-format
-msgid "incorrect value (%(value)s) for type \"%(type)s\""
-msgstr "valor %(value)s incorrecto para el tipo \"%(type)s\""
+msgid "incorrect value (%(KEY-value)r) for type \"%(KEY-type)s\""
+msgstr ""
 
 msgid "index this attribute's value in the plain text index"
 msgstr "Indexar el valor de este atributo en el índice de texto simple"
@@ -2981,8 +2994,8 @@ msgid "invalid action %r"
 msgstr "Acción %r invalida"
 
 #, python-format
-msgid "invalid value %(value)s, it must be one of %(choices)s"
-msgstr "Valor %(value)s incorrecto, debe estar entre %(choices)s"
+msgid "invalid value %(KEY-value)s, it must be one of %(KEY-choices)s"
+msgstr ""
 
 msgid "is"
 msgstr "es"
@@ -4224,6 +4237,9 @@ msgstr "Asignada a"
 msgid "toggle check boxes"
 msgstr "Cambiar valor"
 
+msgid "toggle filter"
+msgstr "esconder/mostrar el filtro"
+
 msgid "tr_count"
 msgstr "n° de transición"
 
@@ -4365,9 +4381,6 @@ msgstr "opciones desconocidas: %s"
 #, python-format
 msgid "unknown property key %s"
 msgstr "Clave de Propiedad desconocida: %s"
-
-msgid "unknown source type"
-msgstr "tipo de fuente desconocida"
 
 msgid "unknown vocabulary:"
 msgstr "Vocabulario desconocido: "
@@ -4514,26 +4527,18 @@ msgid "value"
 msgstr "Vampr"
 
 #, python-format
-msgid "value %(value)s must be %(op)s %(boundary)s"
-msgstr ""
-
-#, python-format
-msgid "value %(value)s must be <= %(boundary)s"
-msgstr ""
-
-#, python-format
-msgid "value %(value)s must be >= %(boundary)s"
+msgid "value %(KEY-value)s must be %(KEY-op)s %(KEY-boundary)s"
 msgstr ""
 
 msgid "value associated to this key is not editable manually"
 msgstr "El valor asociado a este elemento no es editable manualmente"
 
 #, python-format
-msgid "value should have maximum size of %s but found %s"
+msgid "value should have maximum size of %(KEY-max)s but found %(KEY-size)s"
 msgstr ""
 
 #, python-format
-msgid "value should have minimum size of %s but found %s"
+msgid "value should have minimum size of %(KEY-min)s but found %(KEY-size)s"
 msgstr ""
 
 msgid "vcard"
@@ -4681,6 +4686,12 @@ msgstr ""
 "usted debe  quitar la puesta en línea de la relación %s que es aceptada y "
 "puede ser cruzada"
 
+#~ msgid "%(cstr)s constraint failed for value %(value)r"
+#~ msgstr "el valor %(value)r no satisface la condición %(cstr)s"
+
+#~ msgid "%(value)r doesn't match the %(regexp)r regular expression"
+#~ msgstr "%(value)r no corresponde a la expresión regular %(regexp)r"
+
 #~ msgid ""
 #~ "Can't restore relation %(rtype)s of entity %(eid)s, this relation does "
 #~ "not exists anymore in the schema."
@@ -4688,17 +4699,17 @@ msgstr ""
 #~ "No puede restaurar la relación %(rtype)s de la entidad %(eid)s, esta "
 #~ "relación ya no existe en el esquema."
 
-#~ msgid "day"
-#~ msgstr "día"
+#~ msgid "can't change the %s attribute"
+#~ msgstr "no puede modificar el atributo %s"
 
-#~ msgid "log out first"
-#~ msgstr "Desconéctese primero"
+#~ msgid "can't change this relation"
+#~ msgstr "no puede modificar esta relación"
 
-#~ msgid "month"
-#~ msgstr "mes"
+#~ msgid "incorrect value (%(value)s) for type \"%(type)s\""
+#~ msgstr "valor %(value)s incorrecto para el tipo \"%(type)s\""
 
-#~ msgid "today"
-#~ msgstr "hoy"
+#~ msgid "invalid value %(value)s, it must be one of %(choices)s"
+#~ msgstr "Valor %(value)s incorrecto, debe estar entre %(choices)s"
 
-#~ msgid "week"
-#~ msgstr "sem."
+#~ msgid "unknown source type"
+#~ msgstr "tipo de fuente desconocida"

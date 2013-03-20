@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -16,8 +16,6 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unit tests for cubicweb.web.application"""
-
-from __future__ import with_statement
 
 import base64, Cookie
 import sys
@@ -334,7 +332,7 @@ class ApplicationTC(CubicWebTC):
         self.assertAuthFailure(req)
         try:
             form = self.app_handle_request(req, 'login')
-        except Redirect, redir:
+        except Redirect as redir:
             self.fail('anonymous user should get login form')
         self.assertTrue('__login' in form)
         self.assertTrue('__password' in form)

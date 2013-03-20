@@ -1,0 +1,97 @@
+What's new in CubicWeb 3.16?
+============================
+
+New functionalities
+--------------------
+
+* Add a new dataimport store (`SQLGenObjectStore`). This store enables a fast
+  import of data (entity creation, link creation) in CubicWeb, by directly
+  flushing information in SQL.  This may only be used with PostgreSQL, as it
+  requires the 'COPY FROM' command.
+
+
+API changes
+-----------
+
+* Orm: `set_attributes` and `set_relations` are unified (and
+  deprecated) in favor of `cw_set` that works in all cases.
+
+* db-api/configuration: all the external repository connection information is
+  now in an URL (see `#2521848 <http://www.cubicweb.org/2521848>`_),
+  allowing to drop specific options of pyro nameserver host, group, etc and fix
+  broken `ZMQ <http://www.zeromq.org/>`_ source. Configuration related changes:
+
+  * Dropped 'pyro-ns-host', 'pyro-instance-id', 'pyro-ns-group' from the client side
+    configuration, in favor of 'repository-uri'. **NO MIGRATION IS DONE**,
+    supposing there is no web-only configuration in the wild.
+
+  * Stop discovering the connection method through `repo_method` class attribute
+    of the configuration, varying according to the configuration class. This is
+    a first step on the way to a simpler configuration handling.
+
+  DB-API related changes:
+
+  * Stop indicating the connection method using `ConnectionProperties`.
+
+  * Drop `_cnxtype` attribute from `Connection` and `cnxtype` from
+    `Session`. The former is replaced by a `is_repo_in_memory` property
+    and the later is totaly useless.
+
+  * Turn `repo_connect` into `_repo_connect` to mark it as a private function.
+
+  * Deprecate `in_memory_cnx` which becomes useless, use `_repo_connect` instead
+    if necessary.
+
+* the "tcp://" uri scheme used for `ZMQ <http://www.zeromq.org/>`_
+  communications (in a way reminiscent of Pyro) is now named
+  "zmqpickle-tcp://", so as to make room for future zmq-based lightweight
+  communications (without python objects pickling).
+
+* Request.base_url gets a `secure=True` optional parameter that yields
+  an https url if possible, allowing hook-generated content to send
+  secure urls (e.g. when sending mail notifications)
+
+* Dataimport ucsvreader gets a new boolean `ignore_errors`
+  parameter.
+
+
+Unintrusive API changes
+-----------------------
+
+* Drop of `cubicweb.web.uicfg.AutoformSectionRelationTags.bw_tag_map`,
+  deprecated since 3.6.
+
+
+User interface changes
+----------------------
+
+* The RQL search bar has now some auto-completion support. It means
+  relation types or entity types can be suggested while typing. It is
+  an awesome improvement over the current behaviour !
+
+* The `action box` associated with `table` views (from `tableview.py`)
+  has been transformed into a nice-looking series of small tabs; it
+  means that the possible actions are immediately visible and need not
+  be discovered by clicking on an almost invisible icon on the upper
+  right.
+
+* The `uicfg` module has moved to web/views/ and ui configuration
+  objects are now selectable. This will reduce the amount of
+  subclassing and whole methods replacement usually needed to
+  customize the ui behaviour in many cases.
+
+* Remove changelog view, as neither cubicweb nor known
+  cubes/applications were properly feeding related files.
+
+
+Other changes
+-------------
+
+* 'pyrorql' sources will be automatically updated to use an URL to locate the source
+  rather than configuration option. 'zmqrql' sources were broken before this change,
+  so no upgrade is needed...
+
+* Debugging filters for Hooks and Operations have been added.
+
+* Some cubicweb-ctl commands used to show the output of `msgcat` and
+  `msgfmt`; they don't anymore.

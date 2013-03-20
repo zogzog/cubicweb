@@ -196,7 +196,7 @@ Here is the code in cube's *hooks.py*:
 	    for eid in self.get_data():
 		entity = self.session.entity_from_eid(eid)
 		if entity.visibility == 'parent':
-		    entity.set_attributes(visibility=u'authenticated')
+		    entity.cw_set(visibility=u'authenticated')
 
     class SetVisibilityHook(hook.Hook):
 	__regid__ = 'sytweb.setvisibility'
@@ -215,7 +215,7 @@ Here is the code in cube's *hooks.py*:
 	    parent = self._cw.entity_from_eid(self.eidto)
 	    child = self._cw.entity_from_eid(self.eidfrom)
 	    if child.visibility == 'parent':
-		child.set_attributes(visibility=parent.visibility)
+		child.cw_set(visibility=parent.visibility)
 
 Notice:
 
@@ -344,7 +344,7 @@ model, in *test/unittest_sytweb.py*:
 	    self.assertEquals(len(req.execute('Folder X')), 0) # restricted...
 	    # may_be_read_by propagation
 	    self.restore_connection()
-	    folder.set_relations(may_be_read_by=toto)
+	    folder.cw_set(may_be_read_by=toto)
 	    self.commit()
 	    photo1.clear_all_caches()
 	    self.failUnless(photo1.may_be_read_by)

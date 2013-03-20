@@ -16,9 +16,6 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """this module contains base classes and utilities for cubicweb tests"""
-
-from __future__ import with_statement
-
 __docformat__ = "restructuredtext en"
 
 import os
@@ -48,7 +45,7 @@ from cubicweb import cwconfig, dbapi, devtools, web, server
 from cubicweb.utils import json
 from cubicweb.sobjects import notification
 from cubicweb.web import Redirect, application
-from cubicweb.server.session import Session, security_enabled
+from cubicweb.server.session import Session
 from cubicweb.server.hook import SendMailOp
 from cubicweb.devtools import SYSTEM_ENTITIES, SYSTEM_RELATIONS, VIEW_VALIDATORS
 from cubicweb.devtools import BASE_URL, fake, htmlparser, DEFAULT_EMPTY_DB_ID
@@ -88,8 +85,7 @@ def unprotected_entities(schema, strict=False):
 
 class JsonValidator(object):
     def parse_string(self, data):
-        json.loads(data)
-        return data
+        return json.loads(data)
 
 # email handling, to test emails sent by an application ########################
 
@@ -318,7 +314,7 @@ class CubicWebTC(TestCase):
         try:
             self._init_repo()
             self.addCleanup(self._close_cnx)
-        except Exception, ex:
+        except Exception as ex:
             self.__class__._repo_init_failed = ex
             raise
         resume_tracing()
@@ -403,7 +399,7 @@ class CubicWebTC(TestCase):
         autoclose = kwargs.pop('autoclose', True)
         if not kwargs:
             kwargs['password'] = str(login)
-        self.set_cnx(dbapi.repo_connect(self.repo, unicode(login), **kwargs))
+        self.set_cnx(dbapi._repo_connect(self.repo, unicode(login), **kwargs))
         self.websession = dbapi.DBAPISession(self.cnx)
         if login == self.vreg.config.anonymous_user()[0]:
             self.cnx.anonymous_connection = True
@@ -451,7 +447,7 @@ class CubicWebTC(TestCase):
         finally:
             self.session.set_cnxset() # ensure cnxset still set after commit
 
-    # # server side db api #######################################################
+    # server side db api #######################################################
 
     def sexecute(self, rql, args=None, eid_key=None):
         if eid_key is not None:
@@ -668,11 +664,11 @@ class CubicWebTC(TestCase):
     def app_publish(self, *args, **kwargs):
         return self.app_handle_request(*args, **kwargs)
 
-    def ctrl_publish(self, req, ctrl='edit'):
+    def ctrl_publish(self, req, ctrl='edit', rset=None):
         """call the publish method of the edit controller"""
         ctrl = self.vreg['controllers'].select(ctrl, req, appli=self.app)
         try:
-            result = ctrl.publish()
+            result = ctrl.publish(rset)
             req.cnx.commit()
         except web.Redirect:
             req.cnx.commit()
@@ -684,7 +680,7 @@ class CubicWebTC(TestCase):
 
         req.form will be setup using the url's query string
         """
-        req = self.request()
+        req = self.request(url=url)
         if isinstance(url, unicode):
             url = url.encode(req.encoding) # req.setup_params() expects encoded strings
         querystring = urlparse.urlparse(url)[-2]
@@ -692,16 +688,35 @@ class CubicWebTC(TestCase):
         req.setup_params(params)
         return req
 
-    def url_publish(self, url):
-        """takes `url`, uses application's app_resolver to find the
-        appropriate controller, and publishes the result.
+    def url_publish(self, url, data=None):
+        """takes `url`, uses application's app_resolver to find the appropriate
+        controller and result set, then publishes the result.
+
+        To simulate post of www-form-encoded data, give a `data` dictionary
+        containing desired key/value associations.
 
         This should pretty much correspond to what occurs in a real CW server
         except the apache-rewriter component is not called.
         """
         req = self.req_from_url(url)
+        if data is not None:
+            req.form.update(data)
         ctrlid, rset = self.app.url_resolver.process(req, req.relative_path(False))
-        return self.ctrl_publish(req, ctrlid)
+        return self.ctrl_publish(req, ctrlid, rset)
+
+    def http_publish(self, url, data=None):
+        """like `url_publish`, except this returns a http response, even in case of errors"""
+        req = self.req_from_url(url)
+        if data is not None:
+            req.form.update(data)
+        # remove the monkey patched error handler
+        fake_error_handler = self.app.error_handler
+        del self.app.error_handler
+        try:
+            result = self.app_handle_request(req, req.relative_path(False))
+        finally:
+            self.app.error_handler = fake_error_handler
+        return result, req
 
     @staticmethod
     def _parse_location(req, location):
@@ -723,7 +738,7 @@ class CubicWebTC(TestCase):
         """
         try:
             callback(req)
-        except Redirect, ex:
+        except Redirect as ex:
             return self._parse_location(req, ex.location)
         else:
             self.fail('expected a Redirect exception')
@@ -1060,7 +1075,7 @@ class AutoPopulateTest(CubicWebTC):
         """this method populates the database with `how_many` entities
         of each possible type. It also inserts random relations between them
         """
-        with security_enabled(self.session, read=False, write=False):
+        with self.session.security_enabled(read=False, write=False):
             self._auto_populate(how_many)
 
     def _auto_populate(self, how_many):
@@ -1090,7 +1105,7 @@ class AutoPopulateTest(CubicWebTC):
         for rql, args in q:
             try:
                 cu.execute(rql, args)
-            except ValidationError, ex:
+            except ValidationError as ex:
                 # failed to satisfy some constraint
                 print 'error in automatic db population', ex
                 self.session.commit_state = None # reset uncommitable flag
@@ -1209,7 +1224,7 @@ def not_selected(vreg, appobject):
 #     # XXX broken
 #     from cubicweb.devtools.apptest import TestEnvironment
 #     env = testclass._env = TestEnvironment('data', configcls=testclass.configcls)
-#     for reg in env.vreg.values():
+#     for reg in env.vreg.itervalues():
 #         reg._selected = {}
 #         try:
 #             orig_select_best = reg.__class__.__orig_select_best

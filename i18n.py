@@ -54,19 +54,16 @@ def add_msg(w, msgid, msgctx=None):
         w('msgid "%s"\n' % msgid[0])
     w('msgstr ""\n\n')
 
-
-def execute(cmd):
-    """display the command, execute it and raise an Exception if returned
-    status != 0
-    """
-    from subprocess import call
-    # use getcwdu as cmd may be unicode and cwd may contains non-ascii
-    # characters
-    print cmd.replace(os.getcwdu() + os.sep, '')
-    status = call(cmd, shell=True)
-    if status != 0:
-        raise Exception('status = %s' % status)
-
+def execute2(args):
+    # XXX replace this with check_output in Python 2.7
+    from subprocess import Popen, PIPE, CalledProcessError
+    p = Popen(args, stdout=PIPE, stderr=PIPE)
+    out, err = p.communicate()
+    if p.returncode != 0:
+        exc = CalledProcessError(p.returncode, args[0])
+        exc.cmd = args
+        exc.data = (out, err)
+        raise exc
 
 def available_catalogs(i18ndir=None):
     if i18ndir is None:
@@ -81,6 +78,7 @@ def available_catalogs(i18ndir=None):
 def compile_i18n_catalogs(sourcedirs, destdir, langs):
     """generate .mo files for a set of languages into the `destdir` i18n directory
     """
+    from subprocess import CalledProcessError
     from logilab.common.fileutils import ensure_fs_mode
     print '-> compiling message catalogs to %s' % destdir
     errors = []
@@ -93,17 +91,21 @@ def compile_i18n_catalogs(sourcedirs, destdir, langs):
         mergedpo = join(destdir, '%s_merged.po' % lang)
         try:
             # merge instance/cubes messages catalogs with the stdlib's one
-            execute('msgcat --use-first --sort-output --strict -o "%s" %s'
-                    % (mergedpo, ' '.join('"%s"' % f for f in pofiles)))
+            cmd = ['msgcat', '--use-first', '--sort-output', '--strict',
+                   '-o', mergedpo] + pofiles
+            execute2(cmd)
             # make sure the .mo file is writeable and compiles with *msgfmt*
             applmo = join(destdir, lang, 'LC_MESSAGES', 'cubicweb.mo')
             try:
                 ensure_fs_mode(applmo)
             except OSError:
                 pass # suppose not exists
-            execute('msgfmt "%s" -o "%s"' % (mergedpo, applmo))
-        except Exception, ex:
-            errors.append('while handling language %s: %s' % (lang, ex))
+            execute2(['msgfmt', mergedpo, '-o', applmo])
+        except CalledProcessError as exc:
+            errors.append(u'while handling language %s:\ncmd:\n%s\nstdout:\n%s\nstderr:\n%s\n' %
+                          (lang, exc.cmd, repr(exc.data[0]), repr(exc.data[1])))
+        except Exception as exc:
+            errors.append(u'while handling language %s: %s' % (lang, exc))
         try:
             # clean everything
             os.unlink(mergedpo)

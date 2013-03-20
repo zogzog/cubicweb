@@ -20,8 +20,6 @@
 * the rql input form
 * the logged user link
 """
-from __future__ import with_statement
-
 __docformat__ = "restructuredtext en"
 _ = unicode
 
@@ -36,7 +34,7 @@ from cubicweb.predicates import (match_form_params, match_context,
 from cubicweb.schema import display_name
 from cubicweb.utils import wrap_on_write
 from cubicweb.uilib import toggle_action
-from cubicweb.web import component, uicfg
+from cubicweb.web import component
 from cubicweb.web.htmlwidgets import MenuWidget, PopupBoxMenu
 
 VISIBLE_PROP_DEF = {
@@ -59,6 +57,14 @@ class RQLInputForm(component.Component):
         # display multilines query as one line
         rql = rset is not None and rset.printable_rql(encoded=False) or req.form.get('rql', '')
         rql = rql.replace(u"\n", u" ")
+        rql_suggestion_comp = self._cw.vreg['components'].select_or_none('rql.suggestions', self._cw)
+        if rql_suggestion_comp is not None:
+            # enable autocomplete feature only if the rql
+            # suggestions builder is available
+            self._cw.add_css('jquery.ui.css')
+            self._cw.add_js(('cubicweb.ajax.js', 'jquery.ui.js'))
+            self._cw.add_onload('$("#rql").autocomplete({source: "%s"});'
+                                % (req.build_url('json', fname='rql_suggest')))
         self.w(u'''<div id="rqlinput" class="%s"><form action="%s"><fieldset>
 <input type="text" id="rql" name="rql" value="%s"  title="%s" tabindex="%s" accesskey="q" class="searchField" />
 ''' % (not self.cw_propval('visible') and 'hidden' or '',

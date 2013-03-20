@@ -18,29 +18,31 @@
 """Helper classes to execute RQL queries on a set of sources, performing
 security checking and data aggregation.
 """
-
-from __future__ import with_statement
-
 __docformat__ = "restructuredtext en"
 
 from itertools import repeat
 
 from logilab.common.compat import any
-from rql import RQLSyntaxError
+from rql import RQLSyntaxError, CoercionError
 from rql.stmts import Union, Select
+from rql.nodes import ETYPE_PYOBJ_MAP, etype_from_pyobj
 from rql.nodes import (Relation, VariableRef, Constant, SubQuery, Function,
                        Exists, Not)
+from yams import BASE_TYPES
 
 from cubicweb import ValidationError, Unauthorized, QueryError, UnknownEid
-from cubicweb import server, typed_eid
+from cubicweb import Binary, server, typed_eid
 from cubicweb.rset import ResultSet
 
-from cubicweb.utils import QueryCache
+from cubicweb.utils import QueryCache, RepeatList
 from cubicweb.server.utils import cleanup_solutions
 from cubicweb.server.rqlannotation import SQLGenAnnotator, set_qdata
 from cubicweb.server.ssplanner import READ_ONLY_RTYPES, add_types_restriction
 from cubicweb.server.edition import EditedEntity
-from cubicweb.server.session import security_enabled
+
+
+ETYPE_PYOBJ_MAP[Binary] = 'Bytes'
+
 
 def empty_rset(rql, args, rqlst=None):
     """build an empty result set object"""
@@ -256,7 +258,7 @@ class ExecutionPlan(object):
                 cached = True
             else:
                 noinvariant = set()
-                with security_enabled(self.session, read=False):
+                with self.session.security_enabled(read=False):
                     self._insert_security(union, noinvariant)
                 if key is not None:
                     self.session.transaction_data[key] = (union, self.args)
@@ -397,7 +399,7 @@ class ExecutionPlan(object):
         for solution in rqlst.solutions:
             try:
                 localcheck = check_read_access(session, rqlst, solution, self.args)
-            except Unauthorized, ex:
+            except Unauthorized as ex:
                 msg = 'remove %s from solutions since %s has no %s access to %s'
                 msg %= (solution, session.user.login, ex.args[0], ex.args[1])
                 msgs.append(msg)
@@ -499,7 +501,7 @@ class InsertPlan(ExecutionPlan):
                 self.e_defs.append(row)
         # now, see if this entity def is referenced as subject in some relation
         # definition
-        if self._r_subj_index.has_key(edef):
+        if edef in self._r_subj_index:
             for rdef in self._r_subj_index[edef]:
                 expanded = self._expanded(rdef)
                 result = []
@@ -509,7 +511,7 @@ class InsertPlan(ExecutionPlan):
                 self._expanded_r_defs[rdef] = result
         # and finally, see if this entity def is referenced as object in some
         # relation definition
-        if self._r_obj_index.has_key(edef):
+        if edef in self._r_obj_index:
             for rdef in self._r_obj_index[edef]:
                 expanded = self._expanded(rdef)
                 result = []
@@ -528,7 +530,7 @@ class InsertPlan(ExecutionPlan):
 
     def relation_defs(self):
         """return the list for relation definitions to insert"""
-        for rdefs in self._expanded_r_defs.values():
+        for rdefs in self._expanded_r_defs.itervalues():
             for rdef in rdefs:
                 yield rdef
         for rdef in self.r_defs:
@@ -751,14 +753,22 @@ class QuerierHelper(object):
         if build_descr:
             if rqlst.TYPE == 'select':
                 # sample selection
-                descr = session.build_description(orig_rqlst, args, results)
+                if len(rqlst.children) == 1 and len(rqlst.children[0].solutions) == 1:
+                    # easy, all lines are identical
+                    selected = rqlst.children[0].selection
+                    solution = rqlst.children[0].solutions[0]
+                    description = _make_description(selected, args, solution)
+                    descr = RepeatList(len(results), tuple(description))
+                else:
+                    # hard, delegate the work :o)
+                    descr = manual_build_descr(session, rqlst, args, results)
             elif rqlst.TYPE == 'insert':
                 # on insert plan, some entities may have been auto-casted,
                 # so compute description manually even if there is only
                 # one solution
                 basedescr = [None] * len(plan.selected)
                 todetermine = zip(xrange(len(plan.selected)), repeat(False))
-                descr = session._build_descr(results, basedescr, todetermine)
+                descr = _build_descr(session, results, basedescr, todetermine)
             # FIXME: get number of affected entities / relations on non
             # selection queries ?
         # return a result set object
@@ -772,3 +782,77 @@ from logging import getLogger
 from cubicweb import set_log_methods
 LOGGER = getLogger('cubicweb.querier')
 set_log_methods(QuerierHelper, LOGGER)
+
+
+def manual_build_descr(tx, rqlst, args, result):
+    """build a description for a given result by analysing each row
+
+    XXX could probably be done more efficiently during execution of query
+    """
+    # not so easy, looks for variable which changes from one solution
+    # to another
+    unstables = rqlst.get_variable_indices()
+    basedescr = []
+    todetermine = []
+    for i in xrange(len(rqlst.children[0].selection)):
+        ttype = _selection_idx_type(i, rqlst, args)
+        if ttype is None or ttype == 'Any':
+            ttype = None
+            isfinal = True
+        else:
+            isfinal = ttype in BASE_TYPES
+        if ttype is None or i in unstables:
+            basedescr.append(None)
+            todetermine.append( (i, isfinal) )
+        else:
+            basedescr.append(ttype)
+    if not todetermine:
+        return RepeatList(len(result), tuple(basedescr))
+    return _build_descr(tx, result, basedescr, todetermine)
+
+def _build_descr(tx, result, basedescription, todetermine):
+    description = []
+    etype_from_eid = tx.describe
+    todel = []
+    for i, row in enumerate(result):
+        row_descr = basedescription[:]
+        for index, isfinal in todetermine:
+            value = row[index]
+            if value is None:
+                # None value inserted by an outer join, no type
+                row_descr[index] = None
+                continue
+            if isfinal:
+                row_descr[index] = etype_from_pyobj(value)
+            else:
+                try:
+                    row_descr[index] = etype_from_eid(value)[0]
+                except UnknownEid:
+                    tx.error('wrong eid %s in repository, you should '
+                             'db-check the database' % value)
+                    todel.append(i)
+                    break
+        else:
+            description.append(tuple(row_descr))
+    for i in reversed(todel):
+        del result[i]
+    return description
+
+def _make_description(selected, args, solution):
+    """return a description for a result set"""
+    description = []
+    for term in selected:
+        description.append(term.get_type(solution, args))
+    return description
+
+def _selection_idx_type(i, rqlst, args):
+    """try to return type of term at index `i` of the rqlst's selection"""
+    for select in rqlst.children:
+        term = select.selection[i]
+        for solution in select.solutions:
+            try:
+                ttype = term.get_type(solution, args)
+                if ttype is not None:
+                    return ttype
+            except CoercionError:
+                return None

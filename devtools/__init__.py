@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -16,8 +16,6 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Test tools for cubicweb"""
-
-from __future__ import with_statement
 
 __docformat__ = "restructuredtext en"
 
@@ -217,7 +215,6 @@ class TestServerConfiguration(ServerConfiguration):
 
 
 class BaseApptestConfiguration(TestServerConfiguration, TwistedConfiguration):
-    repo_method = 'inmemory'
     name = 'all-in-one' # so it search for all-in-one.conf, not repository.conf
     options = cwconfig.merge_options(TestServerConfiguration.options
                                      + TwistedConfiguration.options)
@@ -355,7 +352,7 @@ class TestDataBaseHandler(object):
     def _restore_database(self, backup_coordinates, config):
         """Actual restore of the current database.
 
-        Use the value tostored in db_cache as input """
+        Use the value stored in db_cache as input """
         raise NotImplementedError()
 
     def get_repo(self, startup=False):
@@ -385,15 +382,14 @@ class TestDataBaseHandler(object):
         repo.turn_repo_off = partial(turn_repo_off, repo)
         return repo
 
-
     def get_cnx(self):
         """return Connection object on the current repository"""
-        from cubicweb.dbapi import in_memory_cnx
+        from cubicweb.dbapi import _repo_connect
         repo = self.get_repo()
         sources = self.config.sources()
         login  = unicode(sources['admin']['login'])
         password = sources['admin']['password'] or 'xxx'
-        cnx = in_memory_cnx(repo, login, password=password)
+        cnx = _repo_connect(repo, login, password=password)
         return cnx
 
     def get_repo_and_cnx(self, db_id=DEFAULT_EMPTY_DB_ID):
@@ -466,7 +462,6 @@ class TestDataBaseHandler(object):
         ``pre_setup_func`` to setup the database.
 
         This function backup any database it build"""
-
         if self.has_cache(test_db_id):
             return #test_db_id, 'already in cache'
         if test_db_id is DEFAULT_EMPTY_DB_ID:
@@ -723,7 +718,7 @@ class SQLiteTestDataBaseHandler(TestDataBaseHandler):
         dbfile = self.absolute_dbfile()
         self._cleanup_database(dbfile)
         shutil.copy(backup_coordinates, dbfile)
-        repo = self.get_repo()
+        self.get_repo()
 
     def init_test_database(self):
         """initialize a fresh sqlite databse used for testing purpose"""

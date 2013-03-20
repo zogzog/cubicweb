@@ -18,8 +18,6 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unit tests for cubicweb.web.views.entities module"""
 
-from __future__ import with_statement
-
 from datetime import datetime
 
 from logilab.common import tempattr
@@ -129,11 +127,11 @@ class EntityTC(CubicWebTC):
         self.assertEqual(user._cw_related_cache, {})
         email = user.primary_email[0]
         self.assertEqual(sorted(user._cw_related_cache), ['primary_email_subject'])
-        self.assertEqual(email._cw_related_cache.keys(), ['primary_email_object'])
+        self.assertEqual(list(email._cw_related_cache), ['primary_email_object'])
         groups = user.in_group
         self.assertEqual(sorted(user._cw_related_cache), ['in_group_subject', 'primary_email_subject'])
         for group in groups:
-            self.assertFalse('in_group_subject' in group._cw_related_cache, group._cw_related_cache.keys())
+            self.assertFalse('in_group_subject' in group._cw_related_cache, list(group._cw_related_cache))
 
     def test_related_limit(self):
         req = self.request()
@@ -143,6 +141,9 @@ class EntityTC(CubicWebTC):
         self.execute('SET X tags Y WHERE X is Tag, Y is Personne')
         self.assertEqual(len(p.related('tags', 'object', limit=2)), 2)
         self.assertEqual(len(p.related('tags', 'object')), 4)
+        p.cw_clear_all_caches()
+        self.assertEqual(len(p.related('tags', 'object', entities=True, limit=2)), 2)
+        self.assertEqual(len(p.related('tags', 'object', entities=True)), 4)
 
     def test_cw_instantiate_relation(self):
         req = self.request()
@@ -701,23 +702,23 @@ du :eid:`1:*ReST*`'''
         self.assertEqual(card4.rest_path(), unicode(card4.eid))
 
 
-    def test_set_attributes(self):
+    def test_cw_set_attributes(self):
         req = self.request()
         person = req.create_entity('Personne', nom=u'di mascio', prenom=u'adrien')
         self.assertEqual(person.prenom, u'adrien')
         self.assertEqual(person.nom, u'di mascio')
-        person.set_attributes(prenom=u'sylvain', nom=u'thénault')
+        person.cw_set(prenom=u'sylvain', nom=u'thénault')
         person = self.execute('Personne P').get_entity(0, 0) # XXX retreival needed ?
         self.assertEqual(person.prenom, u'sylvain')
         self.assertEqual(person.nom, u'thénault')
 
-    def test_set_relations(self):
+    def test_cw_set_relations(self):
         req = self.request()
         person = req.create_entity('Personne', nom=u'chauvat', prenom=u'nicolas')
         note = req.create_entity('Note', type=u'x')
-        note.set_relations(ecrit_par=person)
+        note.cw_set(ecrit_par=person)
         note = req.create_entity('Note', type=u'y')
-        note.set_relations(ecrit_par=person.eid)
+        note.cw_set(ecrit_par=person.eid)
         self.assertEqual(len(person.reverse_ecrit_par), 2)
 
     def test_metainformation_and_external_absolute_url(self):

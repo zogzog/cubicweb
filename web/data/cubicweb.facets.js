@@ -11,7 +11,7 @@ var UNSELECTED_BORDER_IMG = baseuri() + "data/black-uncheck.png";
 
 
 function copyParam(origparams, newparams, param) {
-    var index = jQuery.inArray(param, origparams[0]);
+    var index = $.inArray(param, origparams[0]);
     if (index > - 1) {
         newparams[param] = origparams[1][index];
     }
@@ -22,14 +22,14 @@ function facetFormContent($form) {
     var names = [];
     var values = [];
     $form.find('.facet').each(function() {
-        var facetName = jQuery(this).find('.facetTitle').attr('cubicweb:facetName');
+        var facetName = $(this).find('.facetTitle').attr('cubicweb:facetName');
         // FacetVocabularyWidget
-        jQuery(this).find('.facetValueSelected').each(function(x) {
+        $(this).find('.facetValueSelected').each(function(x) {
             names.push(facetName);
             values.push(this.getAttribute('cubicweb:value'));
         });
         // FacetStringWidget (e.g. has-text)
-        jQuery(this).find('input:text').each(function(){
+        $(this).find('input:text').each(function(){
             names.push(facetName);
             values.push(this.value);
         });
@@ -51,7 +51,7 @@ function facetFormContent($form) {
 
 // XXX deprecate vidargs once TableView is gone
 function buildRQL(divid, vid, paginate, vidargs) {
-    jQuery(CubicWeb).trigger('facets-content-loading', [divid, vid, paginate, vidargs]);
+    $(CubicWeb).trigger('facets-content-loading', [divid, vid, paginate, vidargs]);
     var $form = $('#' + divid + 'Form');
     var zipped = facetFormContent($form);
     zipped[0].push('facetargs');
@@ -59,7 +59,7 @@ function buildRQL(divid, vid, paginate, vidargs) {
     var d = loadRemote(AJAX_BASE_URL, ajaxFuncArgs('filter_build_rql', null, zipped[0], zipped[1]));
     d.addCallback(function(result) {
         var rql = result[0];
-        var $bkLink = jQuery('#facetBkLink');
+        var $bkLink = $('#facetBkLink');
         if ($bkLink.length) {
             var bkPath = 'view?rql=' + encodeURIComponent(rql);
             if (vid) {
@@ -67,6 +67,14 @@ function buildRQL(divid, vid, paginate, vidargs) {
             }
             var bkUrl = $bkLink.attr('cubicweb:target') + '&path=' + encodeURIComponent(bkPath);
             $bkLink.attr('href', bkUrl);
+        }
+        var $focusLink = $('#focusLink');
+        if ($focusLink.length) {
+            var url = baseuri()+ 'view?rql=' + encodeURIComponent(rql);
+            if (vid) {
+                url += '&vid=' + encodeURIComponent(vid);
+            }
+            $focusLink.attr('href', url);
         }
         var toupdate = result[1];
         var extraparams = vidargs;
@@ -91,20 +99,20 @@ function buildRQL(divid, vid, paginate, vidargs) {
                                      null, 'swap');
         d.addCallback(function() {
             // XXX rql/vid in extraparams
-            jQuery(CubicWeb).trigger('facets-content-loaded', [divid, rql, vid, extraparams]);
+            $(CubicWeb).trigger('facets-content-loaded', [divid, rql, vid, extraparams]);
         });
         if (paginate) {
             // FIXME the edit box might not be displayed in which case we don't
             // know where to put the potential new one, just skip this case for
             // now
-            var $node = jQuery('#edit_box');
+            var $node = $('#edit_box');
             if ($node.length) {
                 $node.loadxhtml(AJAX_BASE_URL, ajaxFuncArgs('render', {
                     'rql': rql
                 },
                 'ctxcomponents', 'edit_box'));
             }
-            $node = jQuery('#breadcrumbs');
+            $node = $('#breadcrumbs');
             if ($node.length) {
                 $node.loadxhtml(AJAX_BASE_URL, ajaxFuncArgs('render', {
                     'rql': rql
@@ -113,7 +121,7 @@ function buildRQL(divid, vid, paginate, vidargs) {
             }
         }
         var mainvar = null;
-        var index = jQuery.inArray('mainvar', zipped[0]);
+        var index = $.inArray('mainvar', zipped[0]);
         if (index > - 1) {
             mainvar = zipped[1][index];
         }
@@ -126,13 +134,13 @@ function buildRQL(divid, vid, paginate, vidargs) {
                 //$form.find('div[cubicweb\\:facetName="' + facetName + '"] ~ div .facetCheckBox').each(function() {
                 $form.find('div').filter(function () {return $(this).attr('cubicweb:facetName') == facetName}).parent().find('.facetCheckBox').each(function() {
                     var value = this.getAttribute('cubicweb:value');
-                    if (jQuery.inArray(value, values) == -1) {
-                        if (!jQuery(this).hasClass('facetValueDisabled')) {
-                            jQuery(this).addClass('facetValueDisabled');
+                    if ($.inArray(value, values) == -1) {
+                        if (!$(this).hasClass('facetValueDisabled')) {
+                            $(this).addClass('facetValueDisabled');
                         }
                     } else {
-                        if (jQuery(this).hasClass('facetValueDisabled')) {
-                            jQuery(this).removeClass('facetValueDisabled');
+                        if ($(this).hasClass('facetValueDisabled')) {
+                            $(this).removeClass('facetValueDisabled');
                         }
                     }
                 });
@@ -145,8 +153,8 @@ function buildRQL(divid, vid, paginate, vidargs) {
 function initFacetBoxEvents(root) {
     // facetargs : (divid, vid, paginate, extraargs)
     root = root || document;
-    jQuery(root).find('form').each(function() {
-        var form = jQuery(this);
+    $(root).find('form').each(function() {
+        var form = $(this);
         // NOTE: don't evaluate facetargs here but in callbacks since its value
         //       may changes and we must send its value when the callback is
         //       called, not when the page is initialized
@@ -159,19 +167,19 @@ function initFacetBoxEvents(root) {
                 return false;
             });
             var divid = jsfacetargs[0];
-            if (jQuery('#'+divid).length) {
+            if ($('#'+divid).length) {
                 var $loadingDiv = $(DIV({id:'facetLoading'},
                                         facetLoadingMsg));
                 $loadingDiv.corner();
-                $(jQuery('#'+divid).get(0).parentNode).append($loadingDiv);
-           }
+                $($('#'+divid).get(0).parentNode).append($loadingDiv);
+            }
             form.find('div.facet').each(function() {
-                var facet = jQuery(this);
+                var facet = $(this);
                 facet.find('div.facetCheckBox').each(function(i) {
                     this.setAttribute('cubicweb:idx', i);
                 });
                 facet.find('div.facetCheckBox').click(function() {
-                    var $this = jQuery(this);
+                    var $this = $(this);
                     // NOTE : add test on the facet operator (i.e. OR, AND)
                     // if ($this.hasClass('facetValueDisabled')){
                     //          return
@@ -181,23 +189,22 @@ function initFacetBoxEvents(root) {
                         $this.find('img').each(function(i) {
                             if (this.getAttribute('cubicweb:unselimg')) {
                                 this.setAttribute('src', UNSELECTED_BORDER_IMG);
-                                this.setAttribute('alt', (_("not selected")));
                             }
                             else {
                                 this.setAttribute('src', UNSELECTED_IMG);
-                                this.setAttribute('alt', (_("not selected")));
                             }
+                            this.setAttribute('alt', (_("not selected")));
                         });
                         var index = parseInt($this.attr('cubicweb:idx'));
                         // we dont need to move the element when cubicweb:idx == 0
                         if (index > 0) {
-                            var shift = jQuery.grep(facet.find('.facetValueSelected'), function(n) {
+                            var shift = $.grep(facet.find('.facetValueSelected'), function(n) {
                                 var nindex = parseInt(n.getAttribute('cubicweb:idx'));
                                 return nindex > index;
                             }).length;
                             index += shift;
                             var parent = this.parentNode;
-                            var $insertAfter = jQuery(parent).find('.facetCheckBox:nth(' + index + ')');
+                            var $insertAfter = $(parent).find('.facetCheckBox:nth(' + index + ')');
                             if (! ($insertAfter.length == 1 && shift == 0)) {
                                 // only rearrange element if necessary
                                 $insertAfter.after(this);
@@ -209,10 +216,10 @@ function initFacetBoxEvents(root) {
                             lastSelected.after(this);
                         } else {
                             var parent = this.parentNode;
-                            jQuery(parent).prepend(this);
+                            $(parent).prepend(this);
                         }
-                        jQuery(this).addClass('facetValueSelected');
-                        var $img = jQuery(this).find('img');
+                        $(this).addClass('facetValueSelected');
+                        var $img = $(this).find('img');
                         $img.attr('src', SELECTED_IMG).attr('alt', (_("selected")));
                     }
                     buildRQL.apply(null, jsfacetargs);
@@ -229,7 +236,7 @@ function initFacetBoxEvents(root) {
                 });
                 facet.find('div.facetTitle.hideFacetBody').click(function() {
                     facet.find('div.facetBody').toggleClass('hidden').toggleClass('opened');
-                    jQuery(this).toggleClass('opened');
+                    $(this).toggleClass('opened');
                 });
 
             });
@@ -242,20 +249,20 @@ function initFacetBoxEvents(root) {
 // persistent search (eg crih)
 function reorderFacetsItems(root) {
     root = root || document;
-    jQuery(root).find('form').each(function() {
-        var form = jQuery(this);
+    $(root).find('form').each(function() {
+        var form = $(this);
         if (form.attr('cubicweb:facetargs')) {
             form.find('div.facet').each(function() {
-                var facet = jQuery(this);
+                var facet = $(this);
                 var lastSelected = null;
                 facet.find('div.facetCheckBox').each(function(i) {
-                    var $this = jQuery(this);
+                    var $this = $(this);
                     if ($this.hasClass('facetValueSelected')) {
                         if (lastSelected) {
                             lastSelected.after(this);
                         } else {
                             var parent = this.parentNode;
-                            jQuery(parent).prepend(this);
+                            $(parent).prepend(this);
                         }
                         lastSelected = $this;
                     }
@@ -282,18 +289,18 @@ function updateFacetTitles() {
 // argument or without any argument. If we use `initFacetBoxEvents` as the
 // direct callback on the jQuery.ready event, jQuery will pass some argument of
 // his, so we use this small anonymous function instead.
-jQuery(document).ready(function() {
+$(document).ready(function() {
     initFacetBoxEvents();
-    jQuery(cw).bind('facets-content-loaded', onFacetContentLoaded);
-    jQuery(cw).bind('facets-content-loading', onFacetFiltering);
-    jQuery(cw).bind('facets-content-loading', updateFacetTitles);
+    $(cw).bind('facets-content-loaded', onFacetContentLoaded);
+    $(cw).bind('facets-content-loading', onFacetFiltering);
+    $(cw).bind('facets-content-loading', updateFacetTitles);
 });
 
 function showFacetLoading(parentid) {
     var loadingWidth = 200; // px
     var loadingHeight = 100; // px
-    var $msg = jQuery('#facetLoading');
-    var $parent = jQuery('#' + parentid);
+    var $msg = $('#facetLoading');
+    var $parent = $('#' + parentid);
     var leftPos = $parent.offset().left + ($parent.width() - loadingWidth) / 2;
     $parent.fadeTo('normal', 0.2);
     $msg.css('left', leftPos).show();
@@ -304,11 +311,11 @@ function onFacetFiltering(event, divid /* ... */) {
 }
 
 function onFacetContentLoaded(event, divid, rql, vid, extraparams) {
-    jQuery('#facetLoading').hide();
+    $('#facetLoading').hide();
 }
 
-jQuery(document).ready(function () {
-    if (jQuery('div.facetBody').length) {
+$(document).ready(function () {
+    if ($('div.facetBody').length) {
         var $loadingDiv = $(DIV({id:'facetLoading'},
                                 facetLoadingMsg));
         $loadingDiv.corner();

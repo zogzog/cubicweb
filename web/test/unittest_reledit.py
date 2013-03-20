@@ -20,7 +20,7 @@ mainly regression-preventing tests for reledit views
 """
 
 from cubicweb.devtools.testlib import CubicWebTC
-from cubicweb.web.uicfg import reledit_ctrl
+from cubicweb.web.views.uicfg import reledit_ctrl
 
 class ReleditMixinTC(object):
 
@@ -175,8 +175,8 @@ class ClickAndEditFormUICFGTC(ReleditMixinTC, CubicWebTC):
 
     def setup_database(self):
         super(ClickAndEditFormUICFGTC, self).setup_database()
-        self.tick.set_relations(concerns=self.proj)
-        self.proj.set_relations(manager=self.toto)
+        self.tick.cw_set(concerns=self.proj)
+        self.proj.cw_set(manager=self.toto)
 
     def test_with_uicfg(self):
         old_rctl = reledit_ctrl._tagdefs.copy()

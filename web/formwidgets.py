@@ -94,6 +94,7 @@ argument given to :meth:`render` will be `None`.
 """
 __docformat__ = "restructuredtext en"
 
+from functools import reduce
 from datetime import date
 from warnings import warn
 
@@ -769,13 +770,13 @@ class JQueryDateTimePicker(FieldWidget):
             return None
         try:
             date = todatetime(req.parse_datetime(datestr, 'Date'))
-        except ValueError, exc:
+        except ValueError as exc:
             raise ProcessFormError(unicode(exc))
         if timestr is None:
             return date
         try:
             time = req.parse_datetime(timestr, 'Time')
-        except ValueError, exc:
+        except ValueError as exc:
             raise ProcessFormError(unicode(exc))
         return date.replace(hour=time.hour, minute=time.minute, second=time.second)
 
