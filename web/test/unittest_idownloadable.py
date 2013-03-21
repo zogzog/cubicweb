@@ -25,29 +25,40 @@ from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb import view
 from cubicweb.predicates import is_instance
 
+class IDownloadableUser(view.EntityAdapter):
+    __regid__ = 'IDownloadable'
+    __select__ = is_instance('CWUser')
+
+    def download_content_type(self):
+        """return MIME type of the downloadable content"""
+        return 'text/plain'
+
+    def download_encoding(self):
+        """return encoding of the downloadable content"""
+        return 'ascii'
+
+    def download_file_name(self):
+        """return file name of the downloadable content"""
+        return  self.entity.name() + '.txt'
+
+    def download_data(self):
+        return 'Babar is not dead!'
+
+
+class BrokenIDownloadableGroup(IDownloadableUser):
+    __regid__ = 'IDownloadable'
+    __select__ = is_instance('CWGroup')
+
+    def download_file_name(self):
+        return  self.entity.name + '.txt'
+
+    def download_data(self):
+        raise IOError()
 
 class IDownloadableTC(CubicWebTC):
 
     def setUp(self):
         super(IDownloadableTC, self).setUp()
-        class IDownloadableUser(view.EntityAdapter):
-            __regid__ = 'IDownloadable'
-            __select__ = is_instance('CWUser')
-
-            def download_content_type(self):
-                """return MIME type of the downloadable content"""
-                return 'text/plain'
-
-            def download_encoding(self):
-                """return encoding of the downloadable content"""
-                return 'ascii'
-
-            def download_file_name(self):
-                """return file name of the downloadable content"""
-                return  self.entity.name() + '.txt'
-
-            def download_data(self):
-                return 'Babar is not dead!'
         self.vreg.register(IDownloadableUser)
         self.addCleanup(partial(self.vreg.unregister, IDownloadableUser))
 
@@ -55,7 +66,7 @@ class IDownloadableTC(CubicWebTC):
         req = self.request()
         req.form['vid'] = 'download'
         req.form['eid'] = str(req.user.eid)
-        data = self.ctrl_publish(req,'view')
+        data = self.ctrl_publish(req, 'view')
         get = req.headers_out.getRawHeaders
         self.assertEqual(['attachment;filename="admin.txt"'],
                          get('content-disposition'))
@@ -121,6 +132,25 @@ class IDownloadableTC(CubicWebTC):
             get = req.headers_out.getRawHeaders
             self.assertEqual(["""attachment;filename="Brte_h_grand_nm_a_va_totallement_dborder_de_la_limite_l.txt";filename*=utf-8''B%C3%A8rte_h%C3%B4_grand_n%C3%B4m_%C3%A7a_va_totallement_d%C3%A9border_de_la_limite_l%C3%A0.txt"""],
                              get('content-disposition'))
+
+
+    def test_download_data_error(self):
+        self.vreg.register(BrokenIDownloadableGroup)
+        self.addCleanup(partial(self.vreg.unregister, BrokenIDownloadableGroup))
+        req = self.request()
+        req.form['vid'] = 'download'
+        req.form['eid'] = str(req.execute('CWGroup X WHERE X name "managers"')[0][0])
+        errhdlr = self.app.__dict__.pop('error_handler') # temporarily restore error handler
+        try:
+            data = self.app_handle_request(req)
+        finally:
+            self.app.error_handler = errhdlr
+        get = req.headers_out.getRawHeaders
+        self.assertEqual(['application/xhtml+xml'],
+                         get('content-type'))
+        self.assertEqual(None,
+                         get('content-disposition'))
+        self.assertEqual(req.status_out, 500)
 
 if __name__ == '__main__':
     unittest_main()
