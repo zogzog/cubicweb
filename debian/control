@@ -16,7 +16,7 @@ Build-Depends:
  python-unittest2,
  python-logilab-mtconverter,
  python-rql,
- python-yams,
+ python-yams (>= 0.37),
  python-lxml,
 Standards-Version: 3.9.1
 Homepage: http://www.cubicweb.org
