@@ -67,7 +67,6 @@ class FirefoxHelper(object):
         self._tmp_dir = mkdtemp(prefix='cwtest-ffxprof-')
         self._profile_data = {'uid': uuid4()}
         self._profile_name = self.profile_name_mask % self._profile_data
-        fnull = open(os.devnull, 'w')
         stdout = TemporaryFile()
         stderr = TemporaryFile()
         self.firefox_cmd = ['firefox', '-no-remote']
