@@ -23,7 +23,7 @@ from logilab.common.decorators import clear_cache
 from yams.schema import role_name
 
 from cubicweb import ValidationError
-from cubicweb.selectors import is_instance
+from cubicweb.predicates import is_instance
 from cubicweb.server import SOURCE_TYPES, hook
 
 class SourceHook(hook.Hook):

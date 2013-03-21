@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -1247,13 +1247,9 @@ stmts.Select.set_statement_type = bw_set_statement_type
 
 # XXX deprecated
 
-from yams.buildobjs import RichString
 from yams.constraints import StaticVocabularyConstraint
 
-try: # for yams < 0.35
-    RichString = class_moved(RichString)
-except TypeError:
-    RichString = moved('yams.buildobjs', 'RichString')
+RichString = moved('yams.buildobjs', 'RichString')
 
 StaticVocabularyConstraint = class_moved(StaticVocabularyConstraint)
 FormatConstraint = class_moved(FormatConstraint)

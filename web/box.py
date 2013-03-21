@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -25,7 +25,7 @@ from logilab.common.deprecation import class_deprecated, class_renamed
 
 from cubicweb import Unauthorized, role as get_role
 from cubicweb.schema import display_name
-from cubicweb.selectors import no_cnx, one_line_rset
+from cubicweb.predicates import no_cnx, one_line_rset
 from cubicweb.view import View
 from cubicweb.web import INTERNAL_FIELD_VALUE, stdmsgs
 from cubicweb.web.htmlwidgets import (BoxLink, BoxWidget, SideBoxWidget,

@@ -1,8 +1,34 @@
+# -*- coding: utf-8 -*-
+# copyright 2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
+#
+# This file is part of CubicWeb.
+#
+# CubicWeb is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 2.1 of the License, or (at your option)
+# any later version.
+#
+# CubicWeb is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 from cubicweb.devtools.testlib import CubicWebTC
 
 from cubicweb.utils import json
 
+from cubicweb.web.application import anonymized_request
+
 class JsonViewsTC(CubicWebTC):
+    anonymize = True
+    res_jsonp_data = '[["guests", 1]]'
+
+    def setUp(self):
+        super(JsonViewsTC, self).setUp()
+        self.config.global_set_option('anonymize-jsonp-queries', self.anonymize)
 
     def test_json_rsetexport(self):
         req = self.request()
@@ -10,6 +36,13 @@ class JsonViewsTC(CubicWebTC):
         data = self.view('jsonexport', rset)
         self.assertEqual(req.headers_out.getRawHeaders('content-type'), ['application/json'])
         self.assertEqual(data, '[["guests", 1], ["managers", 1]]')
+
+    def test_json_rsetexport_empty_rset(self):
+        req = self.request()
+        rset = req.execute('Any X WHERE X is CWUser, X login "foobarbaz"')
+        data = self.view('jsonexport', rset)
+        self.assertEqual(req.headers_out.getRawHeaders('content-type'), ['application/json'])
+        self.assertEqual(data, '[]')
 
     def test_json_rsetexport_with_jsonp(self):
         req = self.request()
@@ -19,7 +52,7 @@ class JsonViewsTC(CubicWebTC):
         data = self.ctrl_publish(req, ctrl='jsonp')
         self.assertEqual(req.headers_out.getRawHeaders('content-type'), ['application/javascript'])
         # because jsonp anonymizes data, only 'guests' group should be found
-        self.assertEqual(data, 'foo([["guests", 1]])')
+        self.assertEqual(data, 'foo(%s)' % self.res_jsonp_data)
 
     def test_json_rsetexport_with_jsonp_and_bad_vid(self):
         req = self.request()
@@ -30,7 +63,7 @@ class JsonViewsTC(CubicWebTC):
         data = self.ctrl_publish(req, ctrl='jsonp')
         self.assertEqual(req.headers_out.getRawHeaders('content-type'), ['application/javascript'])
         # result should be plain json, not the table view
-        self.assertEqual(data, 'foo([["guests", 1]])')
+        self.assertEqual(data, 'foo(%s)' % self.res_jsonp_data)
 
     def test_json_ersetexport(self):
         req = self.request()
@@ -40,6 +73,10 @@ class JsonViewsTC(CubicWebTC):
         self.assertEqual(data[0]['name'], 'guests')
         self.assertEqual(data[1]['name'], 'managers')
 
+
+class NotAnonymousJsonViewsTC(JsonViewsTC):
+    anonymize = False
+    res_jsonp_data = '[["guests", 1], ["managers", 1]]'
 
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main

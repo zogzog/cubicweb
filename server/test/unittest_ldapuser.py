@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -16,100 +16,271 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """cubicweb.server.sources.ldapusers unit and functional tests"""
+from __future__ import with_statement
 
 import os
 import shutil
 import time
-from os.path import abspath, join, exists
+from os.path import join, exists
 import subprocess
-from socket import socket, error as socketerror
+import tempfile
 
 from logilab.common.testlib import TestCase, unittest_main, mock_object, Tags
+
+from cubicweb import AuthenticationError
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.devtools.repotest import RQLGeneratorTC
 from cubicweb.devtools.httptest import get_available_port
 from cubicweb.devtools import get_test_db_handler
 
-from cubicweb.server.sources.ldapuser import *
+from cubicweb.server.sources.ldapuser import GlobTrFunc, UnknownEid, RQL2LDAPFilter
 
-CONFIG = u'''host=%s
-user-base-dn=ou=People,dc=cubicweb,dc=test
-user-scope=ONELEVEL
-user-classes=top,posixAccount
-user-login-attr=uid
-user-default-group=users
-user-attrs-map=gecos:email,uid:login
-'''
+CONFIG = u'user-base-dn=ou=People,dc=cubicweb,dc=test'
+URL = None
 
-
-def setUpModule(*args):
-    create_slapd_configuration(LDAPUserSourceTC.config)
-
-def tearDownModule(*args):
-    terminate_slapd()
-
-def create_slapd_configuration(config):
-    global slapd_process, CONFIG
-    basedir = join(config.apphome, "ldapdb")
+def create_slapd_configuration(cls):
+    global URL
+    slapddir = tempfile.mkdtemp('cw-unittest-ldap')
+    config = cls.config
     slapdconf = join(config.apphome, "slapd.conf")
     confin = file(join(config.apphome, "slapd.conf.in")).read()
     confstream = file(slapdconf, 'w')
-    confstream.write(confin % {'apphome': config.apphome})
+    confstream.write(confin % {'apphome': config.apphome, 'testdir': slapddir})
     confstream.close()
-    if not exists(basedir):
-        os.makedirs(basedir)
-        # fill ldap server with some data
-        ldiffile = join(config.apphome, "ldap_test.ldif")
-        print "Initing ldap database"
-        cmdline = "/usr/sbin/slapadd -f %s -l %s -c" % (slapdconf, ldiffile)
-        subprocess.call(cmdline, shell=True)
-
+    # fill ldap server with some data
+    ldiffile = join(config.apphome, "ldap_test.ldif")
+    config.info('Initing ldap database')
+    cmdline = "/usr/sbin/slapadd -f %s -l %s -c" % (slapdconf, ldiffile)
+    subprocess.call(cmdline, shell=True)
 
     #ldapuri = 'ldapi://' + join(basedir, "ldapi").replace('/', '%2f')
     port = get_available_port(xrange(9000, 9100))
     host = 'localhost:%s' % port
     ldapuri = 'ldap://%s' % host
     cmdline = ["/usr/sbin/slapd", "-f",  slapdconf,  "-h",  ldapuri, "-d", "0"]
-    print 'Starting slapd:', ' '.join(cmdline)
-    slapd_process = subprocess.Popen(cmdline)
+    config.info('Starting slapd:', ' '.join(cmdline))
+    cls.slapd_process = subprocess.Popen(cmdline)
     time.sleep(0.2)
-    if slapd_process.poll() is None:
-        print "slapd started with pid %s" % slapd_process.pid
+    if cls.slapd_process.poll() is None:
+        config.info('slapd started with pid %s' % cls.slapd_process.pid)
     else:
         raise EnvironmentError('Cannot start slapd with cmdline="%s" (from directory "%s")' %
                                (" ".join(cmdline), os.getcwd()))
-    CONFIG = CONFIG % host
+    URL = u'ldap://%s' % host
+    return slapddir
 
-def terminate_slapd():
-    global slapd_process
-    if slapd_process.returncode is None:
-        print "terminating slapd"
-        if hasattr(slapd_process, 'terminate'):
-            slapd_process.terminate()
+def terminate_slapd(cls):
+    config = cls.config
+    if cls.slapd_process and cls.slapd_process.returncode is None:
+        config.info('terminating slapd')
+        if hasattr(cls.slapd_process, 'terminate'):
+            cls.slapd_process.terminate()
         else:
             import os, signal
-            os.kill(slapd_process.pid, signal.SIGTERM)
-        slapd_process.wait()
-        print "DONE"
-    del slapd_process
+            os.kill(cls.slapd_process.pid, signal.SIGTERM)
+        cls.slapd_process.wait()
+        config.info('DONE')
 
-class LDAPUserSourceTC(CubicWebTC):
+class LDAPTestBase(CubicWebTC):
+    loglevel = 'ERROR'
+
+    @classmethod
+    def setUpClass(cls):
+        from cubicweb.cwctl import init_cmdline_log_threshold
+        init_cmdline_log_threshold(cls.config, cls.loglevel)
+        cls._tmpdir = create_slapd_configuration(cls)
+
+    @classmethod
+    def tearDownClass(cls):
+        terminate_slapd(cls)
+        try:
+            shutil.rmtree(cls._tmpdir)
+        except:
+            pass
+
+class CheckWrongGroup(LDAPTestBase):
+
+    def test_wrong_group(self):
+        self.session.create_entity('CWSource', name=u'ldapuser', type=u'ldapfeed', parser=u'ldapfeed',
+                                   url=URL, config=CONFIG)
+        self.commit()
+        with self.session.repo.internal_session(safe=True) as session:
+            source = self.session.execute('CWSource S WHERE S type="ldapfeed"').get_entity(0,0)
+            config = source.repo_source.check_config(source)
+            # inject a bogus group here, along with at least a valid one
+            config['user-default-group'] = ('thisgroupdoesnotexists','users')
+            source.repo_source.update_config(source, config)
+            session.commit(free_cnxset=False)
+            # here we emitted an error log entry
+            stats = source.repo_source.pull_data(session, force=True, raise_on_error=True)
+            session.commit()
+
+class DeleteStuffFromLDAPFeedSourceTC(LDAPTestBase):
+    test_db_id = 'ldap-feed'
+
+    @classmethod
+    def pre_setup_database(cls, session, config):
+        session.create_entity('CWSource', name=u'ldapuser', type=u'ldapfeed', parser=u'ldapfeed',
+                              url=URL, config=CONFIG)
+        session.commit()
+        with session.repo.internal_session(safe=True) as isession:
+            lfsource = isession.repo.sources_by_uri['ldapuser']
+            stats = lfsource.pull_data(isession, force=True, raise_on_error=True)
+
+    def _pull(self):
+        with self.session.repo.internal_session() as isession:
+            lfsource = isession.repo.sources_by_uri['ldapuser']
+            stats = lfsource.pull_data(isession, force=True, raise_on_error=True)
+            isession.commit()
+
+    def test_a_filter_inactivate(self):
+        """ filtered out people should be deactivated, unable to authenticate """
+        source = self.session.execute('CWSource S WHERE S type="ldapfeed"').get_entity(0,0)
+        config = source.repo_source.check_config(source)
+        # filter with adim's phone number
+        config['user-filter'] = u'(%s=%s)' % ('telephoneNumber', '109')
+        source.repo_source.update_config(source, config)
+        self.commit()
+        self._pull()
+        self.assertRaises(AuthenticationError, self.repo.connect, 'syt', password='syt')
+        self.assertEqual(self.execute('Any N WHERE U login "syt", '
+                                      'U in_state S, S name N').rows[0][0],
+                         'deactivated')
+        self.assertEqual(self.execute('Any N WHERE U login "adim", '
+                                      'U in_state S, S name N').rows[0][0],
+                         'activated')
+        # unfilter, syt should be activated again
+        config['user-filter'] = u''
+        source.repo_source.update_config(source, config)
+        self.commit()
+        self._pull()
+        self.assertEqual(self.execute('Any N WHERE U login "syt", '
+                                      'U in_state S, S name N').rows[0][0],
+                         'activated')
+        self.assertEqual(self.execute('Any N WHERE U login "adim", '
+                                      'U in_state S, S name N').rows[0][0],
+                         'activated')
+
+    def test_delete(self):
+        """ delete syt, pull, check deactivation, repull,
+        readd syt, pull, check activation
+        """
+        uri = self.repo.sources_by_uri['ldapuser'].urls[0]
+        deletecmd = ("ldapdelete -H %s 'uid=syt,ou=People,dc=cubicweb,dc=test' "
+                     "-v -x -D cn=admin,dc=cubicweb,dc=test -w'cw'" % uri)
+        os.system(deletecmd)
+        self._pull()
+        self.assertRaises(AuthenticationError, self.repo.connect, 'syt', password='syt')
+        self.assertEqual(self.execute('Any N WHERE U login "syt", '
+                                      'U in_state S, S name N').rows[0][0],
+                         'deactivated')
+        # check that it doesn't choke
+        self._pull()
+        # reset the fscking ldap thing
+        self.tearDownClass()
+        self.setUpClass()
+        self._pull()
+        self.assertEqual(self.execute('Any N WHERE U login "syt", '
+                                      'U in_state S, S name N').rows[0][0],
+                         'activated')
+        # test reactivating the user isn't enough to authenticate, as the native source
+        # refuse to authenticate user from other sources
+        os.system(deletecmd)
+        self._pull()
+        user = self.execute('CWUser U WHERE U login "syt"').get_entity(0, 0)
+        user.cw_adapt_to('IWorkflowable').fire_transition('activate')
+        self.commit()
+        self.assertRaises(AuthenticationError, self.repo.connect, 'syt', password='syt')
+
+class LDAPFeedSourceTC(LDAPTestBase):
+    test_db_id = 'ldap-feed'
+
+    @classmethod
+    def pre_setup_database(cls, session, config):
+        session.create_entity('CWSource', name=u'ldapuser', type=u'ldapfeed', parser=u'ldapfeed',
+                              url=URL, config=CONFIG)
+        session.commit()
+        isession = session.repo.internal_session(safe=True)
+        lfsource = isession.repo.sources_by_uri['ldapuser']
+        stats = lfsource.pull_data(isession, force=True, raise_on_error=True)
+
+    def setUp(self):
+        super(LDAPFeedSourceTC, self).setUp()
+        # ldap source url in the database may use a different port as the one
+        # just attributed
+        lfsource = self.repo.sources_by_uri['ldapuser']
+        lfsource.urls = [URL]
+
+    def assertMetadata(self, entity):
+        self.assertTrue(entity.creation_date)
+        self.assertTrue(entity.modification_date)
+
+    def test_authenticate(self):
+        source = self.repo.sources_by_uri['ldapuser']
+        self.session.set_cnxset()
+        # ensure we won't be logged against
+        self.assertRaises(AuthenticationError,
+                          source.authenticate, self.session, 'toto', 'toto')
+        self.assertTrue(source.authenticate(self.session, 'syt', 'syt'))
+        self.assertTrue(self.repo.connect('syt', password='syt'))
+
+    def test_base(self):
+        # check a known one
+        rset = self.sexecute('CWUser X WHERE X login %(login)s', {'login': 'syt'})
+        e = rset.get_entity(0, 0)
+        self.assertEqual(e.login, 'syt')
+        e.complete()
+        self.assertMetadata(e)
+        self.assertEqual(e.firstname, None)
+        self.assertEqual(e.surname, None)
+        self.assertEqual(e.in_group[0].name, 'users')
+        self.assertEqual(e.owned_by[0].login, 'syt')
+        self.assertEqual(e.created_by, ())
+        self.assertEqual(e.primary_email[0].address, 'Sylvain Thenault')
+        # email content should be indexed on the user
+        rset = self.sexecute('CWUser X WHERE X has_text "thenault"')
+        self.assertEqual(rset.rows, [[e.eid]])
+
+    def test_copy_to_system_source(self):
+        source = self.repo.sources_by_uri['ldapuser']
+        eid = self.sexecute('CWUser X WHERE X login %(login)s', {'login': 'syt'})[0][0]
+        self.sexecute('SET X cw_source S WHERE X eid %(x)s, S name "system"', {'x': eid})
+        self.commit()
+        source.reset_caches()
+        rset = self.sexecute('CWUser X WHERE X login %(login)s', {'login': 'syt'})
+        self.assertEqual(len(rset), 1)
+        e = rset.get_entity(0, 0)
+        self.assertEqual(e.eid, eid)
+        self.assertEqual(e.cw_metainformation(), {'source': {'type': u'native',
+                                                             'uri': u'system',
+                                                             'use-cwuri-as-url': False},
+                                                  'type': 'CWUser',
+                                                  'extid': None})
+        self.assertEqual(e.cw_source[0].name, 'system')
+        self.assertTrue(e.creation_date)
+        self.assertTrue(e.modification_date)
+        source.pull_data(self.session)
+        rset = self.sexecute('CWUser X WHERE X login %(login)s', {'login': 'syt'})
+        self.assertEqual(len(rset), 1)
+        self.assertTrue(self.repo.system_source.authenticate(
+                self.session, 'syt', password='syt'))
+
+
+class LDAPUserSourceTC(LDAPFeedSourceTC):
     test_db_id = 'ldap-user'
     tags = CubicWebTC.tags | Tags(('ldap'))
 
     @classmethod
     def pre_setup_database(cls, session, config):
         session.create_entity('CWSource', name=u'ldapuser', type=u'ldapuser',
-                              config=CONFIG)
+                              url=URL, config=CONFIG)
         session.commit()
         # XXX keep it there
         session.execute('CWUser U')
 
-    def test_authenticate(self):
-        source = self.repo.sources_by_uri['ldapuser']
-        self.session.set_cnxset()
-        self.assertRaises(AuthenticationError,
-                          source.authenticate, self.session, 'toto', 'toto')
+    def assertMetadata(self, entity):
+        self.assertEqual(entity.creation_date, None)
+        self.assertEqual(entity.modification_date, None)
 
     def test_synchronize(self):
         source = self.repo.sources_by_uri['ldapuser']
@@ -121,8 +292,7 @@ class LDAPUserSourceTC(CubicWebTC):
         e = rset.get_entity(0, 0)
         self.assertEqual(e.login, 'syt')
         e.complete()
-        self.assertEqual(e.creation_date, None)
-        self.assertEqual(e.modification_date, None)
+        self.assertMetadata(e)
         self.assertEqual(e.firstname, None)
         self.assertEqual(e.surname, None)
         self.assertEqual(e.in_group[0].name, 'users')
@@ -347,27 +517,6 @@ class LDAPUserSourceTC(CubicWebTC):
         rset = cu.execute('Any F WHERE X has_text "iaminguestsgrouponly", X firstname F')
         self.assertEqual(rset.rows, [[None]])
 
-    def test_copy_to_system_source(self):
-        source = self.repo.sources_by_uri['ldapuser']
-        eid = self.sexecute('CWUser X WHERE X login %(login)s', {'login': 'syt'})[0][0]
-        self.sexecute('SET X cw_source S WHERE X eid %(x)s, S name "system"', {'x': eid})
-        self.commit()
-        source.reset_caches()
-        rset = self.sexecute('CWUser X WHERE X login %(login)s', {'login': 'syt'})
-        self.assertEqual(len(rset), 1)
-        e = rset.get_entity(0, 0)
-        self.assertEqual(e.eid, eid)
-        self.assertEqual(e.cw_metainformation(), {'source': {'type': u'native', 'uri': u'system', 'use-cwuri-as-url': False},
-                                                  'type': 'CWUser',
-                                                  'extid': None})
-        self.assertEqual(e.cw_source[0].name, 'system')
-        self.assertTrue(e.creation_date)
-        self.assertTrue(e.modification_date)
-        # XXX test some password has been set
-        source.synchronize()
-        rset = self.sexecute('CWUser X WHERE X login %(login)s', {'login': 'syt'})
-        self.assertEqual(len(rset), 1)
-
     def test_nonregr1(self):
         self.sexecute('Any X,AA ORDERBY AA DESC WHERE E eid %(x)s, E owned_by X, '
                      'X modification_date AA',
@@ -403,7 +552,6 @@ class LDAPUserSourceTC(CubicWebTC):
                      'OR (EXISTS(U in_group H, ME in_group H, NOT H name "users")), U login UL, U is CWUser)',
                      {'x': self.session.user.eid})
 
-
 class GlobTrFuncTC(TestCase):
 
     def test_count(self):
@@ -437,6 +585,7 @@ class GlobTrFuncTC(TestCase):
         trfunc = GlobTrFunc('max', 1)
         res = trfunc.apply([[1, 2], [2, 4], [3, 6], [1, 5]])
         self.assertEqual(res, [[1, 5], [2, 4], [3, 6]])
+
 
 class RQL2LDAPFilterTC(RQLGeneratorTC):
 

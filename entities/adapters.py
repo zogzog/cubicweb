@@ -1,4 +1,4 @@
-# copyright 2010-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2010-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -29,7 +29,7 @@ from logilab.common.decorators import cached
 from logilab.common.deprecation import class_deprecated
 
 from cubicweb import ValidationError, view
-from cubicweb.selectors import (implements, is_instance, relation_possible,
+from cubicweb.predicates import (implements, is_instance, relation_possible,
                                 match_exception)
 from cubicweb.interfaces import IDownloadable, ITree, IProgress, IMileStone
 
@@ -87,10 +87,20 @@ class INotifiableAdapter(view.EntityAdapter):
 
 
 class IFTIndexableAdapter(view.EntityAdapter):
+    """standard adapter to handle fulltext indexing
+
+    .. automethod:: cubicweb.entities.adapters.IFTIndexableAdapter.fti_containers
+    .. automethod:: cubicweb.entities.adapters.IFTIndexableAdapter.get_words
+    """
     __regid__ = 'IFTIndexable'
     __select__ = is_instance('Any')
 
     def fti_containers(self, _done=None):
+        """return the list of entities to index when handling ``self.entity``
+
+        The actual list of entities depends on ``fulltext_container`` usage
+        in the datamodel definition
+        """
         if _done is None:
             _done = set()
         entity = self.entity

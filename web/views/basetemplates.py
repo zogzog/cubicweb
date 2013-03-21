@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -22,9 +22,10 @@ _ = unicode
 
 from logilab.mtconverter import xml_escape
 from logilab.common.deprecation import class_renamed
+from logilab.common.registry import objectify_predicate
+from logilab.common.decorators import classproperty
 
-from cubicweb.appobject import objectify_selector
-from cubicweb.selectors import match_kwargs, no_cnx, anonymous_user
+from cubicweb.predicates import match_kwargs, no_cnx, anonymous_user
 from cubicweb.view import View, MainTemplate, NOINDEX, NOFOLLOW, StartupView
 from cubicweb.utils import UStringIO
 from cubicweb.schema import display_name
@@ -84,7 +85,7 @@ class LoggedOutTemplate(StartupView):
             self.w(u'<h2>%s</h2>' % msg)
 
 
-@objectify_selector
+@objectify_predicate
 def templatable_view(cls, req, rset, *args, **kwargs):
     view = kwargs.pop('view', None)
     if view is None:
@@ -328,7 +329,9 @@ class HTMLPageHeader(View):
     __regid__ = 'header'
     main_cell_components = ('appliname', 'breadcrumbs')
     headers = (('headtext', 'header-left'),
-               ('header-right', 'header-right'))
+               ('header-center', 'header-center'),
+               ('header-right', 'header-right')
+               )
 
     def call(self, view, **kwargs):
         self.main_header(view)
@@ -417,26 +420,56 @@ class HTMLContentFooter(View):
                 comp.render(w=self.w, view=view)
             self.w(u'</div>')
 
+class BaseLogForm(forms.FieldsForm):
+    """Abstract Base login form to be used by any login form
+    """
+    __abstract__ = True
 
-class LogForm(forms.FieldsForm):
     __regid__ = 'logform'
     domid = 'loginForm'
     needs_css = ('cubicweb.login.css',)
-    onclick = "javascript: cw.htmlhelpers.popupLoginBox('%s', '%s');"
+
+    onclick_base = "javascript: cw.htmlhelpers.popupLoginBox('%s', '%s');"
+    onclick_args = (None, None)
+
+    @classproperty
+    def form_buttons(cls):
+        # we use a property because sub class will need to define their own onclick_args.
+        # Therefor we can't juste make the string formating when instanciating this class
+        onclick = cls.onclick_base % cls.onclick_args
+        form_buttons = [fw.SubmitButton(label=_('log in'),
+                                    attrs={'class': 'loginButton'}),
+                        fw.ResetButton(label=_('cancel'),
+                                       attrs={'class': 'loginButton',
+                                              'onclick': onclick}),]
+        ## Can't shortcut next access because __dict__ is a "dictproxy" which 
+        ## does not support items assignement.
+        # cls.__dict__['form_buttons'] = form_buttons
+        return form_buttons
+
+    def form_action(self):
+        if self.action is None:
+            # reuse existing redirection if it exists
+            target = self._cw.form.get('postlogin_path',
+                                       self._cw.relative_path())
+            url_args = {}
+            if target and target != '/':
+                url_args['postlogin_path'] = target
+            return self._cw.build_url('login', __secure__=True, **url_args)
+        return super(LogForm, self).form_action()
+
+class LogForm(BaseLogForm):
+    """Simple login form that send username and password
+    """
+    __regid__ = 'logform'
+    domid = 'loginForm'
+    needs_css = ('cubicweb.login.css',)
     # XXX have to recall fields name since python is mangling __login/__password
     __login = ff.StringField('__login', widget=fw.TextInput({'class': 'data'}))
     __password = ff.StringField('__password', label=_('password'),
                                 widget=fw.PasswordSingleInput({'class': 'data'}))
-    form_buttons = [fw.SubmitButton(label=_('log in'),
-                                    attrs={'class': 'loginButton'}),
-                    fw.ResetButton(label=_('cancel'),
-                                   attrs={'class': 'loginButton',
-                                          'onclick': onclick % ('popupLoginBox', '__login')}),]
 
-    def form_action(self):
-        if self.action is None:
-            return login_form_url(self._cw)
-        return super(LogForm, self).form_action()
+    onclick_args =  ('popupLoginBox', '__login')
 
 
 class LogFormView(View):
@@ -482,12 +515,3 @@ class LogFormView(View):
         cw.html_headers.add_onload('jQuery("#__login:visible").focus()')
 
 LogFormTemplate = class_renamed('LogFormTemplate', LogFormView)
-
-
-def login_form_url(req):
-    if req.https:
-        return req.url()
-    httpsurl = req.vreg.config.get('https-url')
-    if httpsurl:
-        return req.url().replace(req.base_url(), httpsurl)
-    return req.url()

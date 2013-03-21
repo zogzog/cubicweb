@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -23,125 +23,12 @@ from logilab.common.testlib import TestCase, unittest_main
 
 from cubicweb import Binary
 from cubicweb.devtools.testlib import CubicWebTC
-from cubicweb.appobject import Selector, AndSelector, OrSelector
-from cubicweb.selectors import (is_instance, adaptable, match_kwargs, match_user_groups,
+from cubicweb.predicates import (is_instance, adaptable, match_kwargs, match_user_groups,
                                 multi_lines_rset, score_entity, is_in_state,
-                                on_transition, rql_condition, relation_possible)
+                                rql_condition, relation_possible)
+from cubicweb.selectors import on_transition # XXX on_transition is deprecated
 from cubicweb.web import action
 
-
-class _1_(Selector):
-    def __call__(self, *args, **kwargs):
-        return 1
-
-class _0_(Selector):
-    def __call__(self, *args, **kwargs):
-        return 0
-
-def _2_(*args, **kwargs):
-    return 2
-
-
-class SelectorsTC(TestCase):
-    def test_basic_and(self):
-        selector = _1_() & _1_()
-        self.assertEqual(selector(None), 2)
-        selector = _1_() & _0_()
-        self.assertEqual(selector(None), 0)
-        selector = _0_() & _1_()
-        self.assertEqual(selector(None), 0)
-
-    def test_basic_or(self):
-        selector = _1_() | _1_()
-        self.assertEqual(selector(None), 1)
-        selector = _1_() | _0_()
-        self.assertEqual(selector(None), 1)
-        selector = _0_() | _1_()
-        self.assertEqual(selector(None), 1)
-        selector = _0_() | _0_()
-        self.assertEqual(selector(None), 0)
-
-    def test_selector_and_function(self):
-        selector = _1_() & _2_
-        self.assertEqual(selector(None), 3)
-        selector = _2_ & _1_()
-        self.assertEqual(selector(None), 3)
-
-    def test_three_and(self):
-        selector = _1_() & _1_() & _1_()
-        self.assertEqual(selector(None), 3)
-        selector = _1_() & _0_() & _1_()
-        self.assertEqual(selector(None), 0)
-        selector = _0_() & _1_() & _1_()
-        self.assertEqual(selector(None), 0)
-
-    def test_three_or(self):
-        selector = _1_() | _1_() | _1_()
-        self.assertEqual(selector(None), 1)
-        selector = _1_() | _0_() | _1_()
-        self.assertEqual(selector(None), 1)
-        selector = _0_() | _1_() | _1_()
-        self.assertEqual(selector(None), 1)
-        selector = _0_() | _0_() | _0_()
-        self.assertEqual(selector(None), 0)
-
-    def test_composition(self):
-        selector = (_1_() & _1_()) & (_1_() & _1_())
-        self.assertTrue(isinstance(selector, AndSelector))
-        self.assertEqual(len(selector.selectors), 4)
-        self.assertEqual(selector(None), 4)
-        selector = (_1_() & _0_()) | (_1_() & _1_())
-        self.assertTrue(isinstance(selector, OrSelector))
-        self.assertEqual(len(selector.selectors), 2)
-        self.assertEqual(selector(None), 2)
-
-    def test_search_selectors(self):
-        sel = is_instance('something')
-        self.assertIs(sel.search_selector(is_instance), sel)
-        csel = AndSelector(sel, Selector())
-        self.assertIs(csel.search_selector(is_instance), sel)
-        csel = AndSelector(Selector(), sel)
-        self.assertIs(csel.search_selector(is_instance), sel)
-        self.assertIs(csel.search_selector((AndSelector, OrSelector)), csel)
-        self.assertIs(csel.search_selector((OrSelector, AndSelector)), csel)
-        self.assertIs(csel.search_selector((is_instance, score_entity)),  sel)
-        self.assertIs(csel.search_selector((score_entity, is_instance)), sel)
-
-    def test_inplace_and(self):
-        selector = _1_()
-        selector &= _1_()
-        selector &= _1_()
-        self.assertEqual(selector(None), 3)
-        selector = _1_()
-        selector &= _0_()
-        selector &= _1_()
-        self.assertEqual(selector(None), 0)
-        selector = _0_()
-        selector &= _1_()
-        selector &= _1_()
-        self.assertEqual(selector(None), 0)
-        selector = _0_()
-        selector &= _0_()
-        selector &= _0_()
-        self.assertEqual(selector(None), 0)
-
-    def test_inplace_or(self):
-        selector = _1_()
-        selector |= _1_()
-        selector |= _1_()
-        self.assertEqual(selector(None), 1)
-        selector = _1_()
-        selector |= _0_()
-        selector |= _1_()
-        self.assertEqual(selector(None), 1)
-        selector = _0_()
-        selector |= _1_()
-        selector |= _1_()
-        self.assertEqual(selector(None), 1)
-        selector = _0_()
-        selector |= _0_()
-        selector |= _0_()
-        self.assertEqual(selector(None), 0)
 
 
 class ImplementsSelectorTC(CubicWebTC):

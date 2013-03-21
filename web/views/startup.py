@@ -29,7 +29,7 @@ from logilab.common.deprecation import deprecated
 from logilab.mtconverter import xml_escape
 
 from cubicweb.view import StartupView
-from cubicweb.selectors import match_user_groups, is_instance
+from cubicweb.predicates import match_user_groups, is_instance
 from cubicweb.schema import display_name
 from cubicweb.web import uicfg, httpcache
 

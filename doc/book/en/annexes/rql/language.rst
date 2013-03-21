@@ -614,15 +614,18 @@ Date extraction functions
 +--------------------------+----------------------------------------+
 | :func:`YEAR(Date)`       | return the year of a date or datetime  |
 +--------------------------+----------------------------------------+
-| :func:`MONTH(Date)`      | return the year of a date or datetime  |
+| :func:`MONTH(Date)`      | return the month of a date or datetime |
 +--------------------------+----------------------------------------+
-| :func:`DAY(Date)`        | return the year of a date or datetime  |
+| :func:`DAY(Date)`        | return the day of a date or datetime   |
 +--------------------------+----------------------------------------+
-| :func:`HOUR(Datetime)`   | return the year of a datetime          |
+| :func:`HOUR(Datetime)`   | return the hours of a datetime         |
 +--------------------------+----------------------------------------+
-| :func:`MINUTE(Datetime)` | return the year of a datetime          |
+| :func:`MINUTE(Datetime)` | return the minutes of a datetime       |
 +--------------------------+----------------------------------------+
-| :func:`SECOND(Datetime)` | return the year of a datetime          |
+| :func:`SECOND(Datetime)` | return the seconds of a datetime       |
++--------------------------+----------------------------------------+
+| :func:`WEEKDAY(Date)`    | return the day of week of a date or    |
+|                          | datetime.  Sunday == 1, Saturday == 7. |
 +--------------------------+----------------------------------------+
 
 .. _RQLOtherFunctions:
@@ -637,7 +640,7 @@ Other functions
 | :func:`FSPATH(X)`     | expect X to be an attribute whose value is stored in a             |
 |                       | :class:`BFSStorage` and return its path on the file system         |
 +-----------------------+--------------------------------------------------------------------+
-| :func:`FTKIRANK(X)`   | expect X to be an entity used in a has_text relation, and return a |
+| :func:`FTIRANK(X)`    | expect X to be an entity used in a has_text relation, and return a |
 |                       | number corresponding to the rank order of each resulting entity    |
 +-----------------------+--------------------------------------------------------------------+
 | :func:`CAST(Type, X)` | expect X to be an attribute and return it casted into the given    |

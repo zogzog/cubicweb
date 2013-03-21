@@ -22,11 +22,12 @@ _ = unicode
 
 from logilab.mtconverter import xml_escape
 
-from cubicweb import Unauthorized
-from cubicweb.selectors import is_instance, one_line_rset
+from cubicweb import Unauthorized, typed_eid
+from cubicweb.predicates import is_instance, one_line_rset
 from cubicweb.web import (action, component, uicfg, htmlwidgets,
                           formwidgets as fw)
 from cubicweb.web.views import primary
+from cubicweb.web.views.ajaxcontroller import ajaxfunc
 
 _abaa = uicfg.actionbox_appearsin_addmenu
 _abaa.tag_subject_of(('*', 'bookmarked_by', '*'), False)
@@ -133,3 +134,8 @@ class BookmarksBox(component.CtxComponent):
             menu.append(self.link(req._('pick existing bookmarks'), url))
             self.append(menu)
         self.render_items(w)
+
+@ajaxfunc
+def delete_bookmark(self, beid):
+    rql = 'DELETE B bookmarked_by U WHERE B eid %(b)s, U eid %(u)s'
+    self._cw.execute(rql, {'b': typed_eid(beid), 'u' : self._cw.user.eid})

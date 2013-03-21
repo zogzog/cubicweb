@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -24,8 +24,8 @@ from itertools import repeat
 
 from logilab.common.textutils import normalize_text
 from logilab.common.deprecation import class_renamed, class_moved, deprecated
+from logilab.common.registry import yes
 
-from cubicweb.selectors import yes
 from cubicweb.view import Component
 from cubicweb.mail import NotificationView as BaseNotificationView, SkipEmail
 from cubicweb.server.hook import SendMailOp

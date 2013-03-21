@@ -82,7 +82,7 @@ pre {
   letter-spacing: 0.015em;
   padding: 0.6em;
   margin: 0 2em 1.7em;
-  background-color: %(listingHihligthedBgColor)s;
+  background-color: %(listingHighlightedBgColor)s;
   border: 1px solid %(listingBorderColor)s;
 }
 
@@ -242,11 +242,19 @@ table#header a {
 
 table#header td#header-right {
   padding-top: 1em;
-  float: right;
+  white-space: nowrap;
 }
 
 table#header img#logo{
   vertical-align: middle;
+}
+
+table#header td#headtext {
+  white-space: nowrap;
+}
+
+table#header td#header-center{
+ width: 100%;
 }
 
 span#appliName {
@@ -575,7 +583,7 @@ input.rqlsubmit{
   vertical-align: bottom;
 }
 
-input#norql{
+input.norql{
   width:155px;
   margin-right: 2px;
 }
@@ -811,7 +819,7 @@ table.listing td.top {
 
 table.listing input,
 table.listing textarea {
- background: %(listingHihligthedBgColor)s;
+ background: %(listingHighlightedBgColor)s;
 }
 
 table.htableForm label, table.oneRowTableForm label {

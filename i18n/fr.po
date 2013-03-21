@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: cubicweb 2.46.0\n"
-"PO-Revision-Date: 2012-02-08 17:43+0100\n"
+"PO-Revision-Date: 2012-02-15 16:08+0100\n"
 "Last-Translator: Logilab Team <contact@logilab.fr>\n"
 "Language-Team: fr <contact@logilab.fr>\n"
 "Language: \n"
@@ -147,6 +147,10 @@ msgstr "l'action '%s' nécessite une option 'linkattr'"
 msgid "(UNEXISTANT EID)"
 msgstr "(EID INTROUVABLE)"
 
+#, python-format
+msgid "(suppressed) entity #%d"
+msgstr "entité #%d (supprimée)"
+
 msgid "**"
 msgstr "0..n 0..n"
 
@@ -219,6 +223,10 @@ msgstr "ET"
 msgid "About this site"
 msgstr "À propos de ce site"
 
+#, python-format
+msgid "Added relation : %(entity_from)s %(rtype)s %(entity_to)s"
+msgstr "Relation ajoutée : %(entity_from)s %(rtype)s %(entity_to)s"
+
 msgid "Any"
 msgstr "Tous"
 
@@ -263,6 +271,10 @@ msgstr "Naviguer par catégorie"
 
 msgid "Browse by entity type"
 msgstr "Naviguer par type d'entité"
+
+#, python-format
+msgid "By %(user)s on %(dt)s [%(undo_link)s]"
+msgstr "Par %(user)s le %(dt)s [%(undo_link)s] "
 
 msgid "Bytes"
 msgstr "Donnée binaires"
@@ -390,14 +402,6 @@ msgstr ""
 
 #, python-format
 msgid ""
-"Can't restore relation %(rtype)s of entity %(eid)s, this relation does not "
-"exists anymore in the schema."
-msgstr ""
-"Ne peut restaurer la relation %(rtype)s de l'entité %(eid)s, cette relation "
-"n'existe plus dans le schéma"
-
-#, python-format
-msgid ""
 "Can't restore relation %(rtype)s, %(role)s entity %(eid)s doesn't exist "
 "anymore."
 msgstr ""
@@ -423,6 +427,10 @@ msgstr ""
 msgid "Click to sort on this column"
 msgstr "Cliquer pour trier sur cette colonne"
 
+#, python-format
+msgid "Created %(etype)s : %(entity)s"
+msgstr "Entité %(etype)s crée : %(entity)s"
+
 msgid "DEBUG"
 msgstr "DEBUG"
 
@@ -447,6 +455,14 @@ msgstr "Nombre décimal"
 
 msgid "Decimal_plural"
 msgstr "Nombres décimaux"
+
+#, python-format
+msgid "Delete relation : %(entity_from)s %(rtype)s %(entity_to)s"
+msgstr "Relation supprimée : %(entity_from)s %(rtype)s %(entity_to)s"
+
+#, python-format
+msgid "Deleted %(etype)s : %(entity)s"
+msgstr "Entité %(etype)s supprimée : %(entity)s"
 
 msgid "Detected problems"
 msgstr "Problèmes détectés"
@@ -849,6 +865,13 @@ msgstr "Ce workflow"
 msgid "This WorkflowTransition"
 msgstr "Cette transition workflow"
 
+msgid ""
+"This action is forbidden. If you think it should be allowed, please contact "
+"the site administrator."
+msgstr ""
+"Cette action est interdite. Si toutefois vous pensez qu'elle devrait être "
+"autorisée, veuillez contacter l'administrateur du site."
+
 msgid "This entity type permissions:"
 msgstr "Permissions pour ce type d'entité"
 
@@ -875,11 +898,21 @@ msgstr ""
 "URLs depuis lesquelles le contenu sera importé. Vous pouvez mettre une URL "
 "par ligne."
 
+msgid "Undoable actions"
+msgstr "Action annulables"
+
+msgid "Undoing"
+msgstr "Annuler"
+
 msgid "UniqueConstraint"
 msgstr "contrainte d'unicité"
 
 msgid "Unreachable objects"
 msgstr "Objets inaccessibles"
+
+#, python-format
+msgid "Updated %(etype)s : %(entity)s"
+msgstr "Entité %(etype)s mise à jour : %(entity)s"
 
 msgid "Used by:"
 msgstr "Utilisé par :"
@@ -1277,6 +1310,9 @@ msgstr "retour à la vue paginée (%s résultats)"
 msgid "bad value"
 msgstr "mauvaise valeur"
 
+msgid "badly formatted url"
+msgstr ""
+
 msgid "base url"
 msgstr "url de base"
 
@@ -1362,6 +1398,9 @@ msgstr "afficher un calendrier"
 msgid "can not resolve entity types:"
 msgstr "impossible d'interpréter les types d'entités :"
 
+msgid "can only have one url"
+msgstr ""
+
 msgid "can't be changed"
 msgstr "ne peut-être modifié"
 
@@ -1395,6 +1434,28 @@ msgstr "ne peut mélanger dontcross et write options"
 #, python-format
 msgid "can't parse %(value)r (expected %(format)s)"
 msgstr "ne peut analyser %(value)r (format attendu : %(format)s)"
+
+#, python-format
+msgid ""
+"can't restore entity %(eid)s of type %(eschema)s, target of %(rtype)s (eid "
+"%(value)s) does not exist any longer"
+msgstr ""
+"impossible de rétablir l'entité %(eid)s de type %(eschema)s, cible de la "
+"relation %(rtype)s (eid %(value)s) n'existe plus"
+
+#, python-format
+msgid ""
+"can't restore relation %(rtype)s of entity %(eid)s, this relation does not "
+"exist in the schema anymore."
+msgstr ""
+"impossible de rétablir la relation %(rtype)s sur l'entité %(eid)s, cette "
+"relation n'existe plus dans le schéma."
+
+#, python-format
+msgid "can't restore state of entity %s, it has been deleted inbetween"
+msgstr ""
+"impossible de rétablir l'état de l'entité %s, elle a été supprimée entre-"
+"temps"
 
 #, python-format
 msgid ""
@@ -2049,9 +2110,6 @@ msgstr "gestion des sources de données"
 
 msgid "date"
 msgstr "date"
-
-msgid "day"
-msgstr "jour"
 
 msgid "deactivate"
 msgstr "désactiver"
@@ -2716,6 +2774,9 @@ msgstr "hCalendar"
 msgid "has_text"
 msgstr "contient le texte"
 
+msgid "header-center"
+msgstr "en-tête (centre)"
+
 msgid "header-left"
 msgstr "en-tête (gauche)"
 
@@ -3074,9 +3135,6 @@ msgstr "journal"
 msgid "log in"
 msgstr "s'identifier"
 
-msgid "log out first"
-msgstr "déconnecter vous d'abord"
-
 msgid "login"
 msgstr "identifiant"
 
@@ -3177,9 +3235,6 @@ msgstr "modifier"
 
 msgid "monday"
 msgstr "lundi"
-
-msgid "month"
-msgstr "mois"
 
 msgid "more actions"
 msgstr "plus d'actions"
@@ -3282,6 +3337,9 @@ msgstr "haut de page du contenu principal"
 
 msgid "new"
 msgstr "nouveau"
+
+msgid "next page"
+msgstr "page suivante"
 
 msgid "next_results"
 msgstr "résultats suivants"
@@ -3485,6 +3543,9 @@ msgstr "forme préférée de"
 
 msgid "preferences"
 msgstr "préférences"
+
+msgid "previous page"
+msgstr "page précédente"
 
 msgid "previous_results"
 msgstr "résultats précédents"
@@ -4077,10 +4138,14 @@ msgid "the value \"%s\" is already used, use another one"
 msgstr "la valeur \"%s\" est déjà utilisée, veuillez utiliser une autre valeur"
 
 msgid "there is no next page"
-msgstr "il n'y a pas de page suivante"
+msgstr "Il n'y a pas de page suivante"
 
 msgid "there is no previous page"
-msgstr "il n'y a pas de page précédente"
+msgstr "Il n'y a pas de page précédente"
+
+#, python-format
+msgid "there is no transaction #%s"
+msgstr "Il n'y a pas de transaction #%s"
 
 msgid "this action is not reversible!"
 msgstr ""
@@ -4165,9 +4230,6 @@ msgstr "transitions vers cet état"
 msgctxt "State"
 msgid "to_state_object"
 msgstr "transition vers cet état"
-
-msgid "today"
-msgstr "aujourd'hui"
 
 msgid "todo_by"
 msgstr "à faire par"
@@ -4293,6 +4355,9 @@ msgstr "inaccessible"
 msgid "unauthorized value"
 msgstr "valeur non autorisée"
 
+msgid "undefined user"
+msgstr "utilisateur inconnu"
+
 msgid "undo"
 msgstr "annuler"
 
@@ -4319,6 +4384,9 @@ msgstr "type de source inconnu"
 
 msgid "unknown vocabulary:"
 msgstr "vocabulaire inconnu : "
+
+msgid "unsupported protocol"
+msgstr ""
 
 msgid "upassword"
 msgstr "mot de passe"
@@ -4526,9 +4594,6 @@ msgstr ""
 msgid "wednesday"
 msgstr "mercredi"
 
-msgid "week"
-msgstr "semaine"
-
 #, python-format
 msgid "welcome %s !"
 msgstr "bienvenue %s !"
@@ -4628,27 +4693,23 @@ msgstr ""
 "vous devriez enlevé la mise en ligne de la relation %s qui est supportée et "
 "peut-être croisée"
 
-#~ msgid "(loading ...)"
-#~ msgstr "(chargement ...)"
+#~ msgid "Action"
+#~ msgstr "Action"
 
-#~ msgid "follow this link if javascript is deactivated"
-#~ msgstr "suivez ce lien si javascript est désactivé"
+#~ msgid "day"
+#~ msgstr "jour"
 
-#~ msgid ""
-#~ "how to format date and time in the ui (\"man strftime\" for format "
-#~ "description)"
-#~ msgstr ""
-#~ "comment formater la date dans l'interface (\"man strftime\" pour la "
-#~ "description du format)"
+#~ msgid "log out first"
+#~ msgstr "déconnecter vous d'abord"
 
-#~ msgid ""
-#~ "how to format date in the ui (\"man strftime\" for format description)"
-#~ msgstr ""
-#~ "comment formater la date dans l'interface (\"man strftime\" pour la "
-#~ "description du format)"
+#~ msgid "month"
+#~ msgstr "mois"
 
-#~ msgid ""
-#~ "how to format time in the ui (\"man strftime\" for format description)"
-#~ msgstr ""
-#~ "comment formater l'heure dans l'interface (\"man strftime\" pour la "
-#~ "description du format)"
+#~ msgid "today"
+#~ msgstr "aujourd'hui"
+
+#~ msgid "undo last change"
+#~ msgstr "annuler dernier changement"
+
+#~ msgid "week"
+#~ msgstr "semaine"

@@ -147,7 +147,7 @@ class MoreFieldsTC(CubicWebTC):
     def test_property_key_field(self):
         from cubicweb.web.views.cwproperties import PropertyKeyField
         req = self.request()
-        field = PropertyKeyField()
+        field = PropertyKeyField(name='test')
         e = self.vreg['etypes'].etype_class('CWProperty')(req)
         renderer = self.vreg['formrenderers'].select('base', req)
         form = EntityFieldsForm(req, entity=e)

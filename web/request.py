@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -22,11 +22,13 @@ __docformat__ = "restructuredtext en"
 import time
 import random
 import base64
+import urllib
 from hashlib import sha1 # pylint: disable=E0611
 from Cookie import SimpleCookie
 from calendar import timegm
-from datetime import date
+from datetime import date, datetime
 from urlparse import urlsplit
+import httplib
 from itertools import count
 from warnings import warn
 
@@ -37,14 +39,13 @@ from logilab.common.deprecation import deprecated
 from logilab.mtconverter import xml_escape
 
 from cubicweb.dbapi import DBAPIRequest
-from cubicweb.mail import header
 from cubicweb.uilib import remove_html_tags, js
 from cubicweb.utils import SizeConstrainedList, HTMLHead, make_uid
 from cubicweb.view import STRICT_DOCTYPE, TRANSITIONAL_DOCTYPE_NOEXT
 from cubicweb.web import (INTERNAL_FIELD_VALUE, LOGGER, NothingToEdit,
                           RequestError, StatusResponse)
-from cubicweb.web.httpcache import GMTOFFSET
-from cubicweb.web.http_headers import Headers, Cookie
+from cubicweb.web.httpcache import GMTOFFSET, get_validators
+from cubicweb.web.http_headers import Headers, Cookie, parseDateTime
 
 _MARKER = object()
 
@@ -81,34 +82,53 @@ def list_form_param(form, param, pop=False):
 
 
 class CubicWebRequestBase(DBAPIRequest):
-    """abstract HTTP request, should be extended according to the HTTP backend"""
-    json_request = False # to be set to True by json controllers
+    """abstract HTTP request, should be extended according to the HTTP backend
+    Immutable attributes that describe the received query and generic configuration
+    """
+    ajax_request = False # to be set to True by ajax controllers
 
-    def __init__(self, vreg, https, form=None):
+    def __init__(self, vreg, https=False, form=None, headers={}):
+        """
+        :vreg: Vregistry,
+        :https: boolean, s this a https request
+        :form: Forms value
+        """
         super(CubicWebRequestBase, self).__init__(vreg)
+        #: (Boolean) Is this an https request.
         self.https = https
+        #: User interface property (vary with https) (see :ref:`uiprops`)
+        self.uiprops = None
+        #: url for serving datadir (vary with https) (see :ref:`resources`)
+        self.datadir_url = None
         if https:
             self.uiprops = vreg.config.https_uiprops
             self.datadir_url = vreg.config.https_datadir_url
         else:
             self.uiprops = vreg.config.uiprops
             self.datadir_url = vreg.config.datadir_url
-        # raw html headers that can be added from any view
+        #: raw html headers that can be added from any view
         self.html_headers = HTMLHead(self)
-        # form parameters
+        #: received headers
+        self._headers_in = Headers()
+        for k, v in headers.iteritems():
+            self._headers_in.addRawHeader(k, v)
+        #: form parameters
         self.setup_params(form)
-        # dictionary that may be used to store request data that has to be
-        # shared among various components used to publish the request (views,
-        # controller, application...)
+        #: dictionary that may be used to store request data that has to be
+        #: shared among various components used to publish the request (views,
+        #: controller, application...)
         self.data = {}
-        # search state: 'normal' or 'linksearch' (eg searching for an object
-        # to create a relation with another)
+        #:  search state: 'normal' or 'linksearch' (eg searching for an object
+        #:  to create a relation with another)
         self.search_state = ('normal',)
-        # page id, set by htmlheader template
+        #: page id, set by htmlheader template
         self.pageid = None
         self._set_pageid()
         # prepare output header
+        #: Header used for the final response
         self.headers_out = Headers()
+        #: HTTP status use by the final response
+        self.status_out  = 200
 
     def _set_pageid(self):
         """initialize self.pageid
@@ -121,9 +141,40 @@ class CubicWebRequestBase(DBAPIRequest):
             self.html_headers.define_var('pageid', pid, override=False)
         self.pageid = pid
 
+    def _get_json_request(self):
+        warn('[3.15] self._cw.json_request is deprecated, use self._cw.ajax_request instead',
+             DeprecationWarning, stacklevel=2)
+        return self.ajax_request
+    def _set_json_request(self, value):
+        warn('[3.15] self._cw.json_request is deprecated, use self._cw.ajax_request instead',
+             DeprecationWarning, stacklevel=2)
+        self.ajax_request = value
+    json_request = property(_get_json_request, _set_json_request)
+
+    def base_url(self, secure=None):
+        """return the root url of the instance
+
+        secure = False -> base-url
+        secure = None  -> https-url if req.https
+        secure = True  -> https if it exist
+        """
+        if secure is None:
+            secure = self.https
+        base_url = None
+        if secure:
+            base_url = self.vreg.config.get('https-url')
+        if base_url is None:
+            base_url = super(CubicWebRequestBase, self).base_url()
+        return base_url
+
     @property
     def authmode(self):
+        """Authentification mode of the instance
+
+        (see :ref:`WebServerConfig`)"""
         return self.vreg.config['auth-mode']
+
+    # Various variable generator.
 
     @property
     def varmaker(self):
@@ -258,7 +309,6 @@ class CubicWebRequestBase(DBAPIRequest):
         if form is None:
             form = self.form
         return list_form_param(form, param, pop)
-
 
     def reset_headers(self):
         """used by AutomaticWebTest to clear html headers between tests on
@@ -560,18 +610,36 @@ class CubicWebRequestBase(DBAPIRequest):
             name = bwcompat
         self.set_cookie(name, '', maxage=0, expires=date(2000, 1, 1))
 
-    def set_content_type(self, content_type, filename=None, encoding=None):
+    def set_content_type(self, content_type, filename=None, encoding=None,
+                         disposition='inline'):
         """set output content type for this request. An optional filename
-        may be given
+        may be given.
+
+        The disposition argument may be `attachement` or `inline` as specified
+        for the Content-disposition HTTP header. The disposition parameter have
+        no effect if no filename are specified.
         """
         if content_type.startswith('text/') and ';charset=' not in content_type:
             content_type += ';charset=' + (encoding or self.encoding)
         self.set_header('content-type', content_type)
         if filename:
-            if isinstance(filename, unicode):
-                filename = header(filename).encode()
-            self.set_header('content-disposition', 'inline; filename=%s'
-                            % filename)
+            header = [disposition]
+            unicode_filename = None
+            try:
+                ascii_filename = filename.encode('ascii')
+            except UnicodeEncodeError:
+                # fallback filename for very old browser
+                unicode_filename = filename
+                ascii_filename = filename.encode('ascii', 'ignore')
+            # escape " and \
+            # see http://greenbytes.de/tech/tc2231/#attwithfilenameandextparamescaped
+            ascii_filename = ascii_filename.replace('\x5c', r'\\').replace('"', r'\"')
+            header.append('filename="%s"' % ascii_filename)
+            if unicode_filename is not None:
+                # encoded filename according RFC5987
+                urlquoted_filename = urllib.quote(unicode_filename.encode('utf-8'), '')
+                header.append("filename*=utf-8''" + urlquoted_filename)
+            self.set_header('content-disposition', ';'.join(header))
 
     # high level methods for HTML headers management ##########################
 
@@ -646,7 +714,10 @@ class CubicWebRequestBase(DBAPIRequest):
         # after having url unescaping the content. This may make appear some
         # quote or other special characters that will break the js expression.
         extraparams.setdefault('fname', 'view')
-        url = self.build_url('json', **extraparams)
+        # remove pageid from the generated URL as it's forced as a parameter
+        # to the loadxhtml call below.
+        extraparams.pop('pageid', None)
+        url = self.build_url('ajax', **extraparams)
         cbname = build_cb_uid(url[:50])
         # think to propagate pageid. XXX see https://www.cubicweb.org/ticket/1753121
         jscode = u'function %s() { $("#%s").%s; }' % (
@@ -701,14 +772,33 @@ class CubicWebRequestBase(DBAPIRequest):
         return 'view'
 
     def validate_cache(self):
-        """raise a `DirectResponse` exception if a cached page along the way
+        """raise a `StatusResponse` exception if a cached page along the way
         exists and is still usable.
 
         calls the client-dependant implementation of `_validate_cache`
         """
-        self._validate_cache()
-        if self.http_method() == 'HEAD':
-            raise StatusResponse(200, '')
+        modified = True
+        if self.get_header('Cache-Control') not in ('max-age=0', 'no-cache'):
+            # Here, we search for any invalid 'not modified' condition
+            # see http://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html#sec13.3
+            validators = get_validators(self._headers_in)
+            if validators: # if we have no
+                modified = any(func(val, self.headers_out) for func, val in validators)
+        # Forge expected response
+        if modified:
+            if 'Expires' not in self.headers_out:
+                # Expires header seems to be required by IE7 -- Are you sure ?
+                self.add_header('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT')
+            if self.http_method() == 'HEAD':
+                raise StatusResponse(200, '')
+            # /!\ no raise, the function returns and we keep processing the request)
+        else:
+            # overwrite headers_out to forge a brand new not-modified response
+            self.headers_out = self._forge_cached_headers()
+            if self.http_method() in ('HEAD', 'GET'):
+                raise StatusResponse(httplib.NOT_MODIFIED)
+            else:
+                raise StatusResponse(httplib.PRECONDITION_FAILED)
 
     # abstract methods to override according to the web front-end #############
 
@@ -716,11 +806,19 @@ class CubicWebRequestBase(DBAPIRequest):
         """returns 'POST', 'GET', 'HEAD', etc."""
         raise NotImplementedError()
 
-    def _validate_cache(self):
-        """raise a `DirectResponse` exception if a cached page along the way
-        exists and is still usable
-        """
-        raise NotImplementedError()
+    def _forge_cached_headers(self):
+        # overwrite headers_out to forge a brand new not-modified response
+        headers = Headers()
+        for header in (
+            # Required from sec 10.3.5:
+            'date', 'etag', 'content-location', 'expires',
+            'cache-control', 'vary',
+            # Others:
+            'server', 'proxy-authenticate', 'www-authenticate', 'warning'):
+            value = self._headers_in.getRawHeaders(header)
+            if value is not None:
+                headers.setRawHeaders(header, value)
+        return headers
 
     def relative_path(self, includeparams=True):
         """return the normalized path of the request (ie at least relative
@@ -732,12 +830,37 @@ class CubicWebRequestBase(DBAPIRequest):
         """
         raise NotImplementedError()
 
-    def get_header(self, header, default=None):
-        """return the value associated with the given input HTTP header,
-        raise KeyError if the header is not set
-        """
-        raise NotImplementedError()
+    # http headers ############################################################
 
+    ### incoming headers
+
+    def get_header(self, header, default=None, raw=True):
+        """return the value associated with the given input header, raise
+        KeyError if the header is not set
+        """
+        if raw:
+            return self._headers_in.getRawHeaders(header, [default])[0]
+        return self._headers_in.getHeader(header, default)
+
+    def header_accept_language(self):
+        """returns an ordered list of preferred languages"""
+        acceptedlangs = self.get_header('Accept-Language', raw=False) or {}
+        for lang, _ in sorted(acceptedlangs.iteritems(), key=lambda x: x[1],
+                              reverse=True):
+            lang = lang.split('-')[0]
+            yield lang
+
+    def header_if_modified_since(self):
+        """If the HTTP header If-modified-since is set, return the equivalent
+        date time value (GMT), else return None
+        """
+        mtime = self.get_header('If-modified-since', raw=False)
+        if mtime:
+            # :/ twisted is returned a localized time stamp
+            return datetime.fromtimestamp(mtime) + GMTOFFSET
+        return None
+
+    ### outcoming headers
     def set_header(self, header, value, raw=True):
         """set an output HTTP header"""
         if raw:
@@ -785,12 +908,6 @@ class CubicWebRequestBase(DBAPIRequest):
         values = _parse_accept_header(accepteds, value_parser, value_sort_key)
         return (raw_value for (raw_value, parsed_value, score) in values)
 
-    def header_if_modified_since(self):
-        """If the HTTP header If-modified-since is set, return the equivalent
-        mx date time value (GMT), else return None
-        """
-        raise NotImplementedError()
-
     def demote_to_html(self):
         """helper method to dynamically set request content type to text/html
 
@@ -804,6 +921,8 @@ class CubicWebRequestBase(DBAPIRequest):
                                 "in the instance configuration file.")
             self.set_content_type('text/html')
             self.main_stream.set_doctype(TRANSITIONAL_DOCTYPE_NOEXT)
+
+    # xml doctype #############################################################
 
     def set_doctype(self, doctype, reset_xmldecl=True):
         """helper method to dynamically change page doctype

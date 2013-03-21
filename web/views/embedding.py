@@ -29,7 +29,7 @@ from urllib import quote as urlquote # XXX should use view.url_quote method
 
 from logilab.mtconverter import guess_encoding
 
-from cubicweb.selectors import (one_line_rset, score_entity, implements,
+from cubicweb.predicates import (one_line_rset, score_entity, implements,
                                 adaptable, match_search_state)
 from cubicweb.interfaces import IEmbedable
 from cubicweb.view import NOINDEX, NOFOLLOW, EntityAdapter, implements_adapter_compat

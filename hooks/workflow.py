@@ -24,7 +24,7 @@ from datetime import datetime
 from yams.schema import role_name
 
 from cubicweb import RepositoryError, ValidationError
-from cubicweb.selectors import is_instance, adaptable
+from cubicweb.predicates import is_instance, adaptable
 from cubicweb.server import hook
 
 

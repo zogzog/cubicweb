@@ -31,7 +31,7 @@ from logilab.mtconverter import xml_escape
 from logilab.common.graph import escape
 
 from cubicweb import Unauthorized
-from cubicweb.selectors import (has_related_entities, one_line_rset,
+from cubicweb.predicates import (has_related_entities, one_line_rset,
                                 relation_possible, match_form_params,
                                 score_entity, is_instance, adaptable)
 from cubicweb.view import EntityView
@@ -315,7 +315,7 @@ def _wf_items_for_relation(req, wfeid, wfrelation, field):
     wf = req.entity_from_eid(wfeid)
     rschema = req.vreg.schema[field.name]
     param = 'toeid' if field.role == 'subject' else 'fromeid'
-    return sorted((e.view('combobox'), e.eid)
+    return sorted((e.view('combobox'), unicode(e.eid))
                   for e in getattr(wf, 'reverse_%s' % wfrelation)
                   if rschema.has_perm(req, 'add', **{param: e.eid}))
 
@@ -330,12 +330,14 @@ _afs.tag_attribute(('TrInfo', 'tr_count'), 'main', 'hidden')
 
 def transition_states_vocabulary(form, field):
     entity = form.edited_entity
-    if not entity.has_eid():
+    if entity.has_eid():
+        wfeid = entity.transition_of[0].eid
+    else:
         eids = form.linked_to.get(('transition_of', 'subject'))
         if not eids:
             return []
-        return _wf_items_for_relation(form._cw, eids[0], 'state_of', field)
-    return field.relvoc_unrelated(form)
+        wfeid = eids[0]
+    return _wf_items_for_relation(form._cw, wfeid, 'state_of', field)
 
 _afs.tag_subject_of(('*', 'destination_state', '*'), 'main', 'attributes')
 _affk.tag_subject_of(('*', 'destination_state', '*'),
@@ -348,12 +350,14 @@ _affk.tag_object_of(('*', 'allowed_transition', '*'),
 
 def state_transitions_vocabulary(form, field):
     entity = form.edited_entity
-    if not entity.has_eid():
+    if entity.has_eid():
+        wfeid = entity.state_of[0].eid
+    else :
         eids = form.linked_to.get(('state_of', 'subject'))
-        if eids:
-            return _wf_items_for_relation(form._cw, eids[0], 'transition_of', field)
-        return []
-    return field.relvoc_unrelated(form)
+        if not eids:
+            return []
+        wfeid = eids[0]
+    return _wf_items_for_relation(form._cw, wfeid, 'transition_of', field)
 
 _afs.tag_subject_of(('State', 'allowed_transition', '*'), 'main', 'attributes')
 _affk.tag_subject_of(('State', 'allowed_transition', '*'),

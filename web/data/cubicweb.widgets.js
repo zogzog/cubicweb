@@ -45,11 +45,11 @@ jQuery(document).ready(function() {
 });
 
 function postJSON(url, data, callback) {
-    return jQuery.post(url, data, callback, 'json');
+    return jQuery.post(url, data, callback, AJAX_BASE_URL);
 }
 
 function getJSON(url, data, callback) {
-    return jQuery.get(url, data, callback, 'json');
+    return jQuery.get(url, data, callback, AJAX_BASE_URL);
 }
 
 

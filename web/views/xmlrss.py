@@ -25,7 +25,7 @@ from time import timezone
 
 from logilab.mtconverter import xml_escape
 
-from cubicweb.selectors import (is_instance, non_final_entity, one_line_rset,
+from cubicweb.predicates import (is_instance, non_final_entity, one_line_rset,
                                 appobject_selectable, adaptable)
 from cubicweb.view import EntityView, EntityAdapter, AnyRsetView, Component
 from cubicweb.view import implements_adapter_compat

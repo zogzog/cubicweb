@@ -55,7 +55,8 @@ class WorkflowBuildingTC(CubicWebTC):
         wf.add_state(u'foo')
         with self.assertRaises(ValidationError) as cm:
             self.commit()
-        self.assertEqual(cm.exception.errors, {'name-subject': 'workflow already have a state of that name'})
+        self.assertEqual({'name-subject': 'workflow already has a state of that name'},
+                         cm.exception.errors)
         # no pb if not in the same workflow
         wf2 = add_wf(self, 'Company')
         foo = wf2.add_state(u'foo', initial=True)
@@ -66,7 +67,8 @@ class WorkflowBuildingTC(CubicWebTC):
         bar.set_attributes(name=u'foo')
         with self.assertRaises(ValidationError) as cm:
             self.commit()
-        self.assertEqual(cm.exception.errors, {'name-subject': 'workflow already have a state of that name'})
+        self.assertEqual({'name-subject': 'workflow already has a state of that name'},
+                         cm.exception.errors)
 
     def test_duplicated_transition(self):
         wf = add_wf(self, 'Company')

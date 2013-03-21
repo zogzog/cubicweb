@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -68,8 +68,8 @@ __docformat__ = "restructuredtext en"
 _ = unicode
 
 from cubicweb import target
-from cubicweb.selectors import (partial_relation_possible, match_search_state,
-                                one_line_rset)
+from cubicweb.predicates import (partial_relation_possible, match_search_state,
+                                 one_line_rset)
 from cubicweb.appobject import AppObject
 
 

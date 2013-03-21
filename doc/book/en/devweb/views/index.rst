@@ -18,10 +18,11 @@ in |cubicweb|.
    boxes
    table
    xmlrss
-..   editforms
    urlpublish
    breadcrumbs
    idownloadable
    wdoc
+
+..   editforms
 ..   embedding
 

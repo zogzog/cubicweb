@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -59,6 +59,7 @@ from logilab.common.decorators import cached, cachedproperty
 from logilab.common.date import datetime2ticks, ustrftime, ticks2datetime
 from logilab.common.compat import all
 from logilab.common.deprecation import deprecated
+from logilab.common.registry import yes
 
 from rql import nodes, utils
 
@@ -66,7 +67,7 @@ from cubicweb import Unauthorized, typed_eid
 from cubicweb.schema import display_name
 from cubicweb.uilib import css_em_num_value
 from cubicweb.utils import make_uid
-from cubicweb.selectors import match_context_prop, partial_relation_possible, yes
+from cubicweb.predicates import match_context_prop, partial_relation_possible
 from cubicweb.appobject import AppObject
 from cubicweb.web import RequestError, htmlwidgets
 
@@ -1387,11 +1388,16 @@ class BitFieldFacet(AttributeFacet):
             return
         if isinstance(value, list):
             value = reduce(lambda x, y: int(x) | int(y), value)
+        else:
+            value = int(value)
         attr_var = self.select.make_variable()
         self.select.add_relation(self.filtered_variable, self.rtype, attr_var)
         comp = nodes.Comparison('=', nodes.Constant(value, 'Int'))
-        comp.append(nodes.MathExpression('&', nodes.variable_ref(attr_var),
-                                         nodes.Constant(value, 'Int')))
+        if value == 0:
+            comp.append(nodes.variable_ref(attr_var))
+        else:
+            comp.append(nodes.MathExpression('&', nodes.variable_ref(attr_var),
+                                             nodes.Constant(value, 'Int')))
         having = self.select.having
         if having:
             self.select.replace(having[0], nodes.And(having[0], comp))
@@ -1401,7 +1407,7 @@ class BitFieldFacet(AttributeFacet):
     def rset_vocabulary(self, rset):
         mask = reduce(lambda x, y: x | (y[0] or 0), rset, 0)
         return sorted([(self._cw._(label), val) for label, val in self.choices
-                       if val & mask])
+                       if not val or val & mask])
 
     def possible_values(self):
         return [unicode(val) for label, val in self.vocabulary()]

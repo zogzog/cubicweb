@@ -1,4 +1,4 @@
-# copyright 2010-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2010-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -22,14 +22,15 @@ from __future__ import with_statement
 
 import urllib2
 import StringIO
+from os.path import exists
 from datetime import datetime, timedelta
 from base64 import b64decode
 from cookielib import CookieJar
 
 from lxml import etree
-from logilab.mtconverter import xml_escape
 
 from cubicweb import RegistryNotFound, ObjectNotFound, ValidationError, UnknownEid
+from cubicweb.server.repository import preprocess_inlined_relations
 from cubicweb.server.sources import AbstractSource
 from cubicweb.appobject import AppObject
 
@@ -67,7 +68,7 @@ class DataFeedSource(AbstractSource):
           }),
         ('delete-entities',
          {'type' : 'yn',
-          'default': True,
+          'default': False,
           'help': ('Should already imported entities not found anymore on the '
                    'external source be deleted?'),
           'group': 'datafeed-source', 'level': 2,
@@ -79,6 +80,7 @@ class DataFeedSource(AbstractSource):
           'group': 'datafeed-source', 'level': 2,
           }),
         )
+
     def __init__(self, repo, source_config, eid=None):
         AbstractSource.__init__(self, repo, source_config, eid)
         self.update_config(None, self.check_conf_dict(eid, source_config,
@@ -102,6 +104,7 @@ class DataFeedSource(AbstractSource):
                          if url.strip()]
         else:
             self.urls = []
+
     def update_config(self, source_entity, typedconfig):
         """update configuration from source entity. `typedconfig` is config
         properly typed with defaults set
@@ -150,21 +153,24 @@ class DataFeedSource(AbstractSource):
 
     def update_latest_retrieval(self, session):
         self.latest_retrieval = datetime.utcnow()
+        session.set_cnxset()
         session.execute('SET X latest_retrieval %(date)s WHERE X eid %(x)s',
                         {'x': self.eid, 'date': self.latest_retrieval})
+        session.commit()
 
     def acquire_synchronization_lock(self, session):
         # XXX race condition until WHERE of SET queries is executed using
         # 'SELECT FOR UPDATE'
         now = datetime.utcnow()
+        session.set_cnxset()
         if not session.execute(
             'SET X in_synchronization %(now)s WHERE X eid %(x)s, '
             'X in_synchronization NULL OR X in_synchronization < %(maxdt)s',
             {'x': self.eid, 'now': now, 'maxdt': now - self.max_lock_lifetime}):
             self.error('concurrent synchronization detected, skip pull')
-            session.commit(free_cnxset=False)
+            session.commit()
             return False
-        session.commit(free_cnxset=False)
+        session.commit()
         return True
 
     def release_synchronization_lock(self, session):
@@ -190,29 +196,22 @@ class DataFeedSource(AbstractSource):
             self.release_synchronization_lock(session)
 
     def _pull_data(self, session, force=False, raise_on_error=False):
-        if self.config['delete-entities']:
-            myuris = self.source_cwuris(session)
-        else:
-            myuris = None
         importlog = self.init_import_log(session)
+        myuris = self.source_cwuris(session)
         parser = self._get_parser(session, sourceuris=myuris, import_log=importlog)
         if self.process_urls(parser, self.urls, raise_on_error):
             self.warning("some error occured, don't attempt to delete entities")
-        elif self.config['delete-entities'] and myuris:
-            byetype = {}
-            for eid, etype in myuris.values():
-                byetype.setdefault(etype, []).append(str(eid))
-            self.error('delete %s entities %s', self.uri, byetype)
-            for etype, eids in byetype.iteritems():
-                session.execute('DELETE %s X WHERE X eid IN (%s)'
-                                % (etype, ','.join(eids)))
+        else:
+            parser.handle_deletion(self.config, session, myuris)
         self.update_latest_retrieval(session)
         stats = parser.stats
         if stats.get('created'):
             importlog.record_info('added %s entities' % len(stats['created']))
         if stats.get('updated'):
             importlog.record_info('updated %s entities' % len(stats['updated']))
+        session.set_cnxset()
         importlog.write_log(session, end_timestamp=self.latest_retrieval)
+        session.commit()
         return stats
 
     def process_urls(self, parser, urls, raise_on_error=False):
@@ -256,18 +255,27 @@ class DataFeedSource(AbstractSource):
         """called by the repository after an entity stored here has been
         inserted in the system table.
         """
+        relations = preprocess_inlined_relations(session, entity)
         if session.is_hook_category_activated('integrity'):
             entity.cw_edited.check(creation=True)
         self.repo.system_source.add_entity(session, entity)
         entity.cw_edited.saved = entity._cw_is_saved = True
         sourceparams['parser'].after_entity_copy(entity, sourceparams)
+        # call hooks for inlined relations
+        call_hooks = self.repo.hm.call_hooks
+        if self.should_call_hooks:
+            for attr, value in relations:
+                call_hooks('before_add_relation', session,
+                           eidfrom=entity.eid, rtype=attr, eidto=value)
+                call_hooks('after_add_relation', session,
+                           eidfrom=entity.eid, rtype=attr, eidto=value)
 
     def source_cwuris(self, session):
         sql = ('SELECT extid, eid, type FROM entities, cw_source_relation '
                'WHERE entities.eid=cw_source_relation.eid_from '
                'AND cw_source_relation.eid_to=%s' % self.eid)
         return dict((b64decode(uri), (eid, type))
-                    for uri, eid, type in session.system_sql(sql))
+                    for uri, eid, type in session.system_sql(sql).fetchall())
 
     def init_import_log(self, session, **kwargs):
         dataimport = session.create_entity('CWDataImport', cw_import_of=self,
@@ -275,6 +283,7 @@ class DataFeedSource(AbstractSource):
                                            **kwargs)
         dataimport.init()
         return dataimport
+
 
 class DataFeedParser(AppObject):
     __registry__ = 'parsers'
@@ -284,8 +293,14 @@ class DataFeedParser(AppObject):
         self.source = source
         self.sourceuris = sourceuris
         self.import_log = import_log
-        self.stats = {'created': set(),
-                      'updated': set()}
+        self.stats = {'created': set(), 'updated': set(), 'checked': set()}
+
+    def normalize_url(self, url):
+        from cubicweb.sobjects import URL_MAPPING # available after registration
+        for mappedurl in URL_MAPPING:
+            if url.startswith(mappedurl):
+                return url.replace(mappedurl, URL_MAPPING[mappedurl], 1)
+        return url
 
     def add_schema_config(self, schemacfg, checkonly=False):
         """added CWSourceSchemaConfig, modify mapping accordingly"""
@@ -339,7 +354,7 @@ class DataFeedParser(AppObject):
             self.sourceuris.pop(str(uri), None)
         return session.entity_from_eid(eid, etype)
 
-    def process(self, url, partialcommit=True):
+    def process(self, url, raise_on_error=False):
         """main callback: process the url"""
         raise NotImplementedError
 
@@ -358,10 +373,46 @@ class DataFeedParser(AppObject):
     def notify_updated(self, entity):
         return self.stats['updated'].add(entity.eid)
 
+    def notify_checked(self, entity):
+        return self.stats['checked'].add(entity.eid)
+
+    def is_deleted(self, extid, etype, eid):
+        """return True if the entity of given external id, entity type and eid
+        is actually deleted. Always return True by default, put more sensible
+        stuff in sub-classes.
+        """
+        return True
+
+    def handle_deletion(self, config, session, myuris):
+        if config['delete-entities'] and myuris:
+            byetype = {}
+            for extid, (eid, etype) in myuris.iteritems():
+                if self.is_deleted(extid, etype, eid):
+                    byetype.setdefault(etype, []).append(str(eid))
+            for etype, eids in byetype.iteritems():
+                self.warning('delete %s %s entities', len(eids), etype)
+                session.set_cnxset()
+                session.execute('DELETE %s X WHERE X eid IN (%s)'
+                                % (etype, ','.join(eids)))
+                session.commit()
+
+    def update_if_necessary(self, entity, attrs):
+        entity.complete(tuple(attrs))
+        # check modification date and compare attribute values to only update
+        # what's actually needed
+        self.notify_checked(entity)
+        mdate = attrs.get('modification_date')
+        if not mdate or mdate > entity.modification_date:
+            attrs = dict( (k, v) for k, v in attrs.iteritems()
+                          if v != getattr(entity, k))
+            if attrs:
+                entity.set_attributes(**attrs)
+                self.notify_updated(entity)
+
 
 class DataFeedXMLParser(DataFeedParser):
 
-    def process(self, url, raise_on_error=False, partialcommit=True):
+    def process(self, url, raise_on_error=False):
         """IDataFeedParser main entry point"""
         try:
             parsed = self.parse(url)
@@ -383,30 +434,23 @@ class DataFeedXMLParser(DataFeedParser):
         for args in parsed:
             try:
                 self.process_item(*args)
-                if partialcommit:
-                    # commit+set_cnxset instead of commit(free_cnxset=False) to let
-                    # other a chance to get our connections set
-                    commit()
-                    set_cnxset()
+                # commit+set_cnxset instead of commit(free_cnxset=False) to let
+                # other a chance to get our connections set
+                commit()
+                set_cnxset()
             except ValidationError, exc:
                 if raise_on_error:
                     raise
-                if partialcommit:
-                    self.source.error('Skipping %s because of validation error %s' % (args, exc))
-                    rollback()
-                    set_cnxset()
-                    error = True
-                else:
-                    raise
+                self.source.error('Skipping %s because of validation error %s'
+                                  % (args, exc))
+                rollback()
+                set_cnxset()
+                error = True
         return error
 
     def parse(self, url):
         if url.startswith('http'):
-            from cubicweb.sobjects.parsers import URL_MAPPING
-            for mappedurl in URL_MAPPING:
-                if url.startswith(mappedurl):
-                    url = url.replace(mappedurl, URL_MAPPING[mappedurl], 1)
-                    break
+            url = self.normalize_url(url)
             self.source.info('GET %s', url)
             stream = _OPENER.open(url)
         elif url.startswith('file://'):
@@ -420,6 +464,17 @@ class DataFeedXMLParser(DataFeedParser):
 
     def process_item(self, *args):
         raise NotImplementedError
+
+    def is_deleted(self, extid, etype, eid):
+        if extid.startswith('http'):
+            try:
+                _OPENER.open(self.normalize_url(extid)) # XXX HTTP HEAD request
+            except urllib2.HTTPError, ex:
+                if ex.code == 404:
+                    return True
+        elif extid.startswith('file://'):
+            return exists(extid[7:])
+        return False
 
 # use a cookie enabled opener to use session cookie if any
 _OPENER = urllib2.build_opener()

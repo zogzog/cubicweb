@@ -45,7 +45,7 @@ if windmill is None:
         tags = CubicWebServerTC.tags & Tags(('windmill',))
 
         def testWindmill(self):
-            self.skipTest("can't import windmill %s" % ex)
+            self.skipTest("can't import windmill")
 else:
     # Excerpt from :ref:`windmill.authoring.unit`
     class UnitTestReporter(functest.reports.FunctestReportInterface):

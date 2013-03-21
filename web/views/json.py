@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -23,6 +23,7 @@ __docformat__ = "restructuredtext en"
 _ = unicode
 
 from cubicweb.utils import json_dumps
+from cubicweb.predicates import any_rset
 from cubicweb.view import EntityView, AnyRsetView
 from cubicweb.web.application import anonymized_request
 from cubicweb.web.views import basecontrollers
@@ -50,14 +51,20 @@ class JsonpController(basecontrollers.ViewController):
                 self._cw.form['vid'] = 'jsonexport'
         else: # if no vid is specified, use jsonexport
             self._cw.form['vid'] = 'jsonexport'
-        with anonymized_request(self._cw):
-            json_data = super(JsonpController, self).publish(rset)
-            if 'callback' in self._cw.form: # jsonp
-                json_padding = self._cw.form['callback']
-                # use ``application/javascript`` is ``callback`` parameter is
-                # provided, let ``application/json`` otherwise
-                self._cw.set_content_type('application/javascript')
-                json_data = '%s(%s)' % (json_padding, json_data)
+        if self._cw.vreg.config['anonymize-jsonp-queries']:
+            with anonymized_request(self._cw):
+                return self._get_json_data(rset)
+        else:
+            return self._get_json_data(rset)
+
+    def _get_json_data(self, rset):
+        json_data = super(JsonpController, self).publish(rset)
+        if 'callback' in self._cw.form: # jsonp
+            json_padding = self._cw.form['callback']
+            # use ``application/javascript`` is ``callback`` parameter is
+            # provided, let ``application/json`` otherwise
+            self._cw.set_content_type('application/javascript')
+            json_data = '%s(%s)' % (json_padding, json_data)
         return json_data
 
 
@@ -84,6 +91,7 @@ class JsonMixIn(object):
 class JsonRsetView(JsonMixIn, AnyRsetView):
     """dumps raw result set in JSON format"""
     __regid__ = 'jsonexport'
+    __select__ = any_rset() # means rset might be empty or have any shape
     title = _('json-export-view')
 
     def call(self):

@@ -54,7 +54,7 @@ class DataFeedTC(CubicWebTC):
             stats = dfsource.pull_data(session, force=True)
             self.commit()
             # test import stats
-            self.assertEqual(sorted(stats.keys()), ['created', 'updated'])
+            self.assertEqual(sorted(stats.keys()), ['checked', 'created', 'updated'])
             self.assertEqual(len(stats['created']), 1)
             entity = self.execute('Card X').get_entity(0, 0)
             self.assertIn(entity.eid, stats['created'])

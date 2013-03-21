@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -18,7 +18,7 @@
 """only for unit tests !"""
 
 from cubicweb.view import EntityView
-from cubicweb.selectors import is_instance
+from cubicweb.predicates import is_instance
 
 HTML_PAGE = u"""<html>
   <body>

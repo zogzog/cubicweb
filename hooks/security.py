@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -21,8 +21,9 @@ the user connected to a session
 
 __docformat__ = "restructuredtext en"
 
+from logilab.common.registry import objectify_predicate
+
 from cubicweb import Unauthorized
-from cubicweb.selectors import objectify_selector, lltrace
 from cubicweb.server import BEFORE_ADD_RELATIONS, ON_COMMIT_ADD_RELATIONS, hook
 
 
@@ -64,8 +65,7 @@ class CheckRelationPermissionOp(hook.DataOperationMixIn, hook.LateOperation):
             rdef.check_perm(session, action, fromeid=eidfrom, toeid=eidto)
 
 
-@objectify_selector
-@lltrace
+@objectify_predicate
 def write_security_enabled(cls, req, **kwargs):
     if req is None or not req.write_security:
         return 0

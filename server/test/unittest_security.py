@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """functional tests for server'security"""
+from __future__ import with_statement
 
 import sys
 
@@ -24,9 +25,10 @@ from logilab.common.testlib import unittest_main, TestCase
 from rql import RQLException
 
 from cubicweb.devtools.testlib import CubicWebTC
-from cubicweb import Unauthorized, ValidationError, QueryError
+from cubicweb import Unauthorized, ValidationError, QueryError, Binary
 from cubicweb.schema import ERQLExpression
 from cubicweb.server.querier import check_read_access
+from cubicweb.server.utils import _CRYPTO_CTX
 
 
 class BaseSecurityTC(CubicWebTC):
@@ -34,7 +36,8 @@ class BaseSecurityTC(CubicWebTC):
     def setup_database(self):
         super(BaseSecurityTC, self).setup_database()
         self.create_user(self.request(), 'iaminusersgrouponly')
-
+        hash = _CRYPTO_CTX.encrypt('oldpassword', scheme='des_crypt')
+        self.create_user(self.request(), 'oldpassword', password=Binary(hash))
 
 class LowLevelSecurityFunctionTC(BaseSecurityTC):
 
@@ -58,6 +61,18 @@ class LowLevelSecurityFunctionTC(BaseSecurityTC):
         with self.login('iaminusersgrouponly') as cu:
             self.assertRaises(Unauthorized,
                               cu.execute, 'Any X,P WHERE X is CWUser, X upassword P')
+
+    def test_update_password(self):
+        """Ensure that if a user's password is stored with a deprecated hash, it will be updated on next login"""
+        oldhash = str(self.session.system_sql("SELECT cw_upassword FROM cw_CWUser WHERE cw_login = 'oldpassword'").fetchone()[0])
+        with self.login('oldpassword') as cu:
+            pass
+        newhash = str(self.session.system_sql("SELECT cw_upassword FROM cw_CWUser WHERE cw_login = 'oldpassword'").fetchone()[0])
+        self.assertNotEqual(oldhash, newhash)
+        self.assertTrue(newhash.startswith('$6$'))
+        with self.login('oldpassword') as cu:
+            pass
+        self.assertEqual(newhash, str(self.session.system_sql("SELECT cw_upassword FROM cw_CWUser WHERE cw_login = 'oldpassword'").fetchone()[0]))
 
 
 class SecurityRewritingTC(BaseSecurityTC):
@@ -589,6 +604,24 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
         self.assertRaises(Unauthorized,
                           self.execute, 'SET TI to_state S WHERE TI eid %(ti)s, S name "pitetre"',
                           {'ti': trinfo.eid})
+
+    def test_emailaddress_security(self):
+        # check for prexisting email adresse
+        if self.execute('Any X WHERE X is EmailAddress'):
+            rset = self.execute('Any X, U WHERE X is EmailAddress, U use_email X')
+            msg = ['Preexisting email readable by anon found!']
+            tmpl = '  - "%s" used by user "%s"'
+            for i in xrange(len(rset)):
+                email, user = rset.get_entity(i, 0), rset.get_entity(i, 1)
+                msg.append(tmpl % (email.dc_title(), user.dc_title()))
+            raise RuntimeError('\n'.join(msg))
+        # actual test
+        self.execute('INSERT EmailAddress X: X address "hop"').get_entity(0, 0)
+        self.execute('INSERT EmailAddress X: X address "anon", U use_email X WHERE U login "anon"').get_entity(0, 0)
+        self.commit()
+        self.assertEqual(len(self.execute('Any X WHERE X is EmailAddress')), 2)
+        self.login('anon')
+        self.assertEqual(len(self.execute('Any X WHERE X is EmailAddress')), 1)
 
 if __name__ == '__main__':
     unittest_main()

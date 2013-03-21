@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -45,6 +45,7 @@ from logilab.common.shellutils import getlogin
 
 from cubicweb import ValidationError, NoSelectableObject, AuthenticationError
 from cubicweb import cwconfig, dbapi, devtools, web, server
+from cubicweb.utils import json
 from cubicweb.sobjects import notification
 from cubicweb.web import Redirect, application
 from cubicweb.server.session import Session, security_enabled
@@ -84,6 +85,11 @@ def unprotected_entities(schema, strict=False):
     else:
         protected_entities = yams.schema.BASE_TYPES.union(SYSTEM_ENTITIES)
     return set(schema.entities()) - protected_entities
+
+class JsonValidator(object):
+    def parse_string(self, data):
+        json.loads(data)
+        return data
 
 # email handling, to test emails sent by an application ########################
 
@@ -476,6 +482,7 @@ class CubicWebTC(TestCase):
         * using positional argument(s):
 
           .. sourcecode:: python
+
                 rdef = self.schema['CWUser'].rdef('login')
                 with self.temporary_permissions((rdef, {'read': ()})):
                     ...
@@ -484,6 +491,7 @@ class CubicWebTC(TestCase):
         * using named argument(s):
 
           .. sourcecode:: python
+
                 rdef = self.schema['CWUser'].rdef('login')
                 with self.temporary_permissions(CWUser={'read': ()}):
                     ...
@@ -636,9 +644,9 @@ class CubicWebTC(TestCase):
         return publisher
 
     requestcls = fake.FakeRequest
-    def request(self, rollbackfirst=False, url=None, **kwargs):
+    def request(self, rollbackfirst=False, url=None, headers={}, **kwargs):
         """return a web ui request"""
-        req = self.requestcls(self.vreg, url=url, form=kwargs)
+        req = self.requestcls(self.vreg, url=url, headers=headers, form=kwargs)
         if rollbackfirst:
             self.websession.cnx.rollback()
         req.set_session(self.websession)
@@ -649,11 +657,16 @@ class CubicWebTC(TestCase):
         dump = json.dumps
         args = [dump(arg) for arg in args]
         req = self.request(fname=fname, pageid='123', arg=args)
-        ctrl = self.vreg['controllers'].select('json', req)
+        ctrl = self.vreg['controllers'].select('ajax', req)
         return ctrl.publish(), req
 
-    def app_publish(self, req, path='view'):
-        return self.app.publish(path, req)
+    def app_handle_request(self, req, path='view'):
+        return self.app.core_handle(req, path)
+
+    @deprecated("[3.15] app_handle_request is the new and better way"
+                " (beware of small semantic changes)")
+    def app_publish(self, *args, **kwargs):
+        return self.app_handle_request(*args, **kwargs)
 
     def ctrl_publish(self, req, ctrl='edit'):
         """call the publish method of the edit controller"""
@@ -690,6 +703,20 @@ class CubicWebTC(TestCase):
         ctrlid, rset = self.app.url_resolver.process(req, req.relative_path(False))
         return self.ctrl_publish(req, ctrlid)
 
+    @staticmethod
+    def _parse_location(req, location):
+        try:
+            path, params = location.split('?', 1)
+        except ValueError:
+            path = location
+            params = {}
+        else:
+            cleanup = lambda p: (p[0], unquote(p[1]))
+            params = dict(cleanup(p.split('=', 1)) for p in params.split('&') if p)
+        if path.startswith(req.base_url()): # may be relative
+            path = path[len(req.base_url()):]
+        return path, params
+
     def expect_redirect(self, callback, req):
         """call the given callback with req as argument, expecting to get a
         Redirect exception
@@ -697,25 +724,24 @@ class CubicWebTC(TestCase):
         try:
             callback(req)
         except Redirect, ex:
-            try:
-                path, params = ex.location.split('?', 1)
-            except ValueError:
-                path = ex.location
-                params = {}
-            else:
-                cleanup = lambda p: (p[0], unquote(p[1]))
-                params = dict(cleanup(p.split('=', 1)) for p in params.split('&') if p)
-            if path.startswith(req.base_url()): # may be relative
-                path = path[len(req.base_url()):]
-            return path, params
+            return self._parse_location(req, ex.location)
         else:
             self.fail('expected a Redirect exception')
 
-    def expect_redirect_publish(self, req, path='edit'):
+    def expect_redirect_handle_request(self, req, path='edit'):
         """call the publish method of the application publisher, expecting to
         get a Redirect exception
         """
-        return self.expect_redirect(lambda x: self.app_publish(x, path), req)
+        result = self.app_handle_request(req, path)
+        self.assertTrue(300 <= req.status_out <400, req.status_out)
+        location = req.get_response_header('location')
+        return self._parse_location(req, location)
+
+    @deprecated("[3.15] expect_redirect_handle_request is the new and better way"
+                " (beware of small semantic changes)")
+    def expect_redirect_publish(self, *args, **kwargs):
+        return self.expect_redirect_handle_request(*args, **kwargs)
+
 
     def set_auth_mode(self, authmode, anonuser=None):
         self.set_option('auth-mode', authmode)
@@ -741,13 +767,11 @@ class CubicWebTC(TestCase):
 
     def assertAuthSuccess(self, req, origsession, nbsessions=1):
         sh = self.app.session_handler
-        path, params = self.expect_redirect(lambda x: self.app.connect(x), req)
+        self.app.connect(req)
         session = req.session
         self.assertEqual(len(self.open_sessions), nbsessions, self.open_sessions)
         self.assertEqual(session.login, origsession.login)
         self.assertEqual(session.anonymous_session, False)
-        self.assertEqual(path, 'view')
-        self.assertMessageEqual(req, params, 'welcome %s !' % req.user.login)
 
     def assertAuthFailure(self, req, nbsessions=0):
         self.app.connect(req)
@@ -775,11 +799,11 @@ class CubicWebTC(TestCase):
         #'application/xhtml+xml': DTDValidator,
         'application/xml': htmlparser.SaxOnlyValidator,
         'text/xml': htmlparser.SaxOnlyValidator,
+        'application/json': JsonValidator,
         'text/plain': None,
         'text/comma-separated-values': None,
         'text/x-vcard': None,
         'text/calendar': None,
-        'application/json': None,
         'image/png': None,
         }
     # maps vid : validator name (override content_type_validators)
@@ -797,11 +821,14 @@ class CubicWebTC(TestCase):
         :returns: an instance of `cubicweb.devtools.htmlparser.PageInfo`
                   encapsulation the generated HTML
         """
-        req = req or rset and rset.req or self.request()
+        if req is None:
+            if rset is None:
+                req = self.request()
+            else:
+                req = rset.req
         req.form['vid'] = vid
-        kwargs['rset'] = rset
         viewsreg = self.vreg['views']
-        view = viewsreg.select(vid, req, **kwargs)
+        view = viewsreg.select(vid, req, rset=rset, **kwargs)
         # set explicit test description
         if rset is not None:
             self.set_description("testing vid=%s defined in %s with (%s)" % (
@@ -813,10 +840,8 @@ class CubicWebTC(TestCase):
             viewfunc = view.render
         else:
             kwargs['view'] = view
-            templateview = viewsreg.select(template, req, **kwargs)
             viewfunc = lambda **k: viewsreg.main_template(req, template,
-                                                          **kwargs)
-        kwargs.pop('rset')
+                                                          rset=rset, **kwargs)
         return self._test_view(viewfunc, view, template, kwargs)
 
 

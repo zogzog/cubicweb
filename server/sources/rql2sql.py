@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -1284,10 +1284,10 @@ class SQLGenerator(object):
     def _visit_var_attr_relation(self, relation, rhs_vars):
         """visit an attribute relation with variable(s) in the RHS
 
-        attribute variables are used either in the selection or for
-        unification (eg X attr1 A, Y attr2 A). In case of selection,
-        nothing to do here.
+        attribute variables are used either in the selection or for unification
+        (eg X attr1 A, Y attr2 A). In case of selection, nothing to do here.
         """
+        ored = relation.ored()
         for vref in rhs_vars:
             var = vref.variable
             if var.name in self._varmap:
@@ -1298,10 +1298,21 @@ class SQLGenerator(object):
                 principal = 1
             else:
                 principal = var.stinfo.get('principal')
-            if principal is not None and principal is not relation:
+            # we've to return some sql if:
+            # 1. visited relation is ored
+            # 2. variable's principal is not this relation and not 1.
+            if ored or (principal is not None and principal is not relation
+                        and not getattr(principal, 'ored', lambda : 0)()):
                 # we have to generate unification expression
-                lhssql = self._inlined_var_sql(relation.children[0].variable,
-                                               relation.r_type)
+                if principal is relation:
+                    # take care if ored case and principal is the relation to
+                    # use the right relation in the unification term
+                    _rel = [rel for rel in var.stinfo['rhsrelations']
+                            if not rel is principal][0]
+                else:
+                    _rel = relation
+                lhssql = self._inlined_var_sql(_rel.children[0].variable,
+                                               _rel.r_type)
                 try:
                     self._state.ignore_varmap = True
                     sql = lhssql + relation.children[1].accept(self)

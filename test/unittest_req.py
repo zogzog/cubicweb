@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -36,7 +36,7 @@ class RequestTC(TestCase):
         req = RequestSessionBase(None)
         req.from_controller = lambda : 'view'
         req.relative_path = lambda includeparams=True: None
-        req.base_url = lambda : 'http://testing.fr/cubicweb/'
+        req.base_url = lambda secure=None: 'http://testing.fr/cubicweb/'
         self.assertEqual(req.build_url(), u'http://testing.fr/cubicweb/view')
         self.assertEqual(req.build_url(None), u'http://testing.fr/cubicweb/view')
         self.assertEqual(req.build_url('one'), u'http://testing.fr/cubicweb/one')

@@ -22,12 +22,13 @@ from __future__ import with_statement
 from logilab.common.testlib import unittest_main, tag, Tags
 from cubicweb.devtools.testlib import CubicWebTC
 
+import os
 import os.path as osp
 import shutil
 import tempfile
 
 from cubicweb import Binary, QueryError
-from cubicweb.selectors import is_instance
+from cubicweb.predicates import is_instance
 from cubicweb.server.sources import storages
 from cubicweb.server.hook import Hook, Operation
 
@@ -90,6 +91,8 @@ class StorageTC(CubicWebTC):
         expected_filepath = osp.join(self.tempdir, '%s_data_%s' %
                                      (f1.eid, f1.data_name))
         self.assertTrue(osp.isfile(expected_filepath))
+        # file should be read only
+        self.assertFalse(os.access(expected_filepath, os.W_OK))
         self.assertEqual(file(expected_filepath).read(), 'the-data')
         self.rollback()
         self.assertFalse(osp.isfile(expected_filepath))

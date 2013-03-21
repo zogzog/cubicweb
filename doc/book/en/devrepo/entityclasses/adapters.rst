@@ -45,9 +45,9 @@ entity being adapted.
 
    Adapters came with the notion of service identified by the registry identifier
    of an adapters, hence dropping the need for explicit interface and the
-   :class:`cubicweb.selectors.implements` selector. You should instead use
-   :class:`cubicweb.selectors.is_instance` when you want to select on an entity
-   type, or :class:`cubicweb.selectors.adaptable` when you want to select on a
+   :class:`cubicweb.predicates.implements` selector. You should instead use
+   :class:`cubicweb.predicates.is_instance` when you want to select on an entity
+   type, or :class:`cubicweb.predicates.adaptable` when you want to select on a
    service.
 
 
@@ -79,7 +79,7 @@ Here we go with a small example. Before:
 
 .. sourcecode:: python
 
-    from cubicweb.selectors import implements
+    from cubicweb.predicates import implements
     from cubicweb.interfaces import ITree
     from cubicweb.mixins import ITreeMixIn
 
@@ -97,7 +97,7 @@ After:
 
 .. sourcecode:: python
 
-    from cubicweb.selectors import adaptable, is_instance
+    from cubicweb.predicates import adaptable, is_instance
     from cubicweb.entities.adapters import ITreeAdapter
 
     class MyEntityITreeAdapter(ITreeAdapter):

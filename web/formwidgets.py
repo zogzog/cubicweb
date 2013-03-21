@@ -672,10 +672,11 @@ class JQueryDatePicker(FieldWidget):
     """
     needs_js = ('jquery.ui.js', )
     needs_css = ('jquery.ui.css',)
+    default_size = 10
 
     def __init__(self, datestr=None, **kwargs):
         super(JQueryDatePicker, self).__init__(**kwargs)
-        self.datestr = datestr
+        self.value = datestr
 
     def _render(self, form, field, renderer):
         req = form._cw
@@ -689,44 +690,36 @@ class JQueryDatePicker(FieldWidget):
                        '{buttonImage: "%s", dateFormat: "%s", firstDay: 1,'
                        ' showOn: "button", buttonImageOnly: true})' % (
                            domid, req.uiprops['CALENDAR_ICON'], fmt))
-        if self.datestr is None:
+        return self._render_input(form, field, domid)
+
+    def _render_input(self, form, field, domid):
+        if self.value is None:
             value = self.values(form, field)[0]
         else:
-            value = self.datestr
-        attrs = {}
-        if self.settabindex:
-            attrs['tabindex'] = req.next_tabindex()
-        return tags.input(id=domid, name=domid, value=value,
-                          type='text', size='10', **attrs)
+            value = self.value
+        attrs = self.attributes(form, field)
+        attrs.setdefault('size', unicode(self.default_size))
+        return tags.input(name=domid, value=value, type='text', **attrs)
 
 
-class JQueryTimePicker(FieldWidget):
+class JQueryTimePicker(JQueryDatePicker):
     """Use jquery.timePicker to define a time picker. Will return the time as an
     unicode string.
     """
     needs_js = ('jquery.timePicker.js',)
     needs_css = ('jquery.timepicker.css',)
+    default_size = 5
 
     def __init__(self, timestr=None, timesteps=30, separator=u':', **kwargs):
-        super(JQueryTimePicker, self).__init__(**kwargs)
-        self.timestr = timestr
+        super(JQueryTimePicker, self).__init__(timestr, **kwargs)
         self.timesteps = timesteps
         self.separator = separator
 
     def _render(self, form, field, renderer):
-        req = form._cw
         domid = field.dom_id(form, self.suffix)
-        req.add_onload(u'cw.jqNode("%s").timePicker({selectedTime: "%s", step: %s, separator: "%s"})' % (
-            domid, self.timestr, self.timesteps, self.separator))
-        if self.timestr is None:
-            value = self.values(form, field)[0]
-        else:
-            value = self.timestr
-        attrs = {}
-        if self.settabindex:
-            attrs['tabindex'] = req.next_tabindex()
-        return tags.input(id=domid, name=domid, value=value,
-                          type='text', size='5')
+        form._cw.add_onload(u'cw.jqNode("%s").timePicker({step: %s, separator: "%s"})' % (
+                domid, self.timesteps, self.separator))
+        return self._render_input(form, field, domid)
 
 
 class JQueryDateTimePicker(FieldWidget):
@@ -849,7 +842,7 @@ class AutoCompletionWidget(TextInput):
 
     def _get_url(self, entity, field):
         fname = self.autocomplete_initfunc
-        return entity._cw.build_url('json', fname=fname, mode='remote',
+        return entity._cw.build_url('ajax', fname=fname, mode='remote',
                                     pageid=entity._cw.pageid)
 
 

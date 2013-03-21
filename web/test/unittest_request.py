@@ -5,7 +5,9 @@ from logilab.common.testlib import TestCase, unittest_main
 
 from functools import partial
 
-from cubicweb.web.request import (_parse_accept_header,
+from cubicweb.devtools.fake import FakeConfig
+
+from cubicweb.web.request import (CubicWebRequestBase, _parse_accept_header,
                                   _mimetype_sort_key, _mimetype_parser, _charset_sort_key)
 
 
@@ -64,6 +66,24 @@ class AcceptParserTC(TestCase):
                          [('ISO-8859-1', 'ISO-8859-1', 1.0),
                           ('utf-8', 'utf-8', 0.7),
                           ('*', '*', 0.7)])
+
+    def test_base_url(self):
+        dummy_vreg = type('DummyVreg', (object,), {})()
+        dummy_vreg.config = FakeConfig()
+        dummy_vreg.config['base-url'] = 'http://babar.com/'
+        dummy_vreg.config['https-url'] = 'https://toto.com/'
+
+        req = CubicWebRequestBase(dummy_vreg, https=False)
+        self.assertEqual('http://babar.com/', req.base_url())
+        self.assertEqual('http://babar.com/', req.base_url(False))
+        self.assertEqual('https://toto.com/', req.base_url(True))
+
+        req = CubicWebRequestBase(dummy_vreg, https=True)
+        self.assertEqual('https://toto.com/', req.base_url())
+        self.assertEqual('http://babar.com/', req.base_url(False))
+        self.assertEqual('https://toto.com/', req.base_url(True))
+
+
 
 if __name__ == '__main__':
     unittest_main()

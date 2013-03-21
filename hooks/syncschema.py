@@ -32,7 +32,7 @@ from yams import buildobjs as ybo, schema2sql as y2sql
 from logilab.common.decorators import clear_cache
 
 from cubicweb import ValidationError
-from cubicweb.selectors import is_instance
+from cubicweb.predicates import is_instance
 from cubicweb.schema import (SCHEMA_TYPES, META_RTYPES, VIRTUAL_RTYPES,
                              CONSTRAINTS, ETYPE_NAME_MAP, display_name)
 from cubicweb.server import hook, schemaserial as ss
@@ -244,7 +244,7 @@ class CWETypeAddOp(MemSchemaOperation):
     * create the necessary table
     * set creation_date and modification_date by creating the necessary
       CWAttribute entities
-    * add owned_by relation by creating the necessary CWRelation entity
+    * add <meta rtype> relation by creating the necessary CWRelation entity
     """
     entity = None # make pylint happy
 
@@ -270,9 +270,16 @@ class CWETypeAddOp(MemSchemaOperation):
             except KeyError:
                 self.critical('rtype %s was not handled at cwetype creation time', rtype)
                 continue
+            if not rschema.rdefs:
+                self.warning('rtype %s has no relation definition yet', rtype)
+                continue
             sampletype = rschema.subjects()[0]
             desttype = rschema.objects()[0]
-            rdef = copy(rschema.rdef(sampletype, desttype))
+            try:
+                rdef = copy(rschema.rdef(sampletype, desttype))
+            except KeyError:
+                # this combo does not exist because this is not a universal META_RTYPE
+                continue
             rdef.subject = _MockEntity(eid=entity.eid)
             mock = _MockEntity(eid=None)
             ss.execschemarql(session.execute, mock, ss.rdef2rql(rdef, cmap, gmap))
@@ -755,7 +762,13 @@ class CWUniqueTogetherConstraintDelOp(MemSchemaOperation):
         cols = ['%s%s' % (prefix, c) for c in self.cols]
         sqls = dbhelper.sqls_drop_multicol_unique_index(table, cols)
         for sql in sqls:
-            session.system_sql(sql)
+            try:
+                session.system_sql(sql)
+            except Exception, exc: # should be ProgrammingError
+                if sql.startswith('DROP'):
+                    self.error('execute of `%s` failed (cause: %s)', sql, exc)
+                    continue
+                raise
 
     # XXX revertprecommit_event
 

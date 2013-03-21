@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -32,7 +32,7 @@ from cubicweb.schema import display_name
 from cubicweb.uilib import js, domid
 from cubicweb.utils import json_dumps, js_href
 from cubicweb.view import ReloadableMixIn, Component
-from cubicweb.selectors import (no_cnx, paginated_rset, one_line_rset,
+from cubicweb.predicates import (no_cnx, paginated_rset, one_line_rset,
                                 non_final_entity, partial_relation_possible,
                                 partial_has_related_entities)
 from cubicweb.appobject import AppObject
@@ -108,7 +108,9 @@ class NavigationComponent(Component):
         view = self.cw_extra_kwargs.get('view')
         if view is not None and hasattr(view, 'page_navigation_url'):
             url = view.page_navigation_url(self, path, params)
-        elif path == 'json':
+        elif path in ('json', 'ajax'):
+            # 'ajax' is the new correct controller, but the old 'json'
+            # controller should still be supported
             url = self.ajax_page_url(**params)
         else:
             url = self._cw.build_url(path, **params)
@@ -121,7 +123,7 @@ class NavigationComponent(Component):
     def ajax_page_url(self, **params):
         divid = params.setdefault('divid', 'pageContent')
         params['rql'] = self.cw_rset.printable_rql()
-        return js_href("$(%s).loadxhtml('json', %s, 'get', 'swap')" % (
+        return js_href("$(%s).loadxhtml(AJAX_PREFIX_URL, %s, 'get', 'swap')" % (
             json_dumps('#'+divid), js.ajaxFuncArgs('view', params)))
 
     def page_link(self, path, params, start, stop, content):

@@ -137,6 +137,10 @@ msgstr ""
 msgid "(UNEXISTANT EID)"
 msgstr ""
 
+#, python-format
+msgid "(suppressed) entity #%d"
+msgstr ""
+
 msgid "**"
 msgstr "0..n 0..n"
 
@@ -207,6 +211,10 @@ msgstr ""
 msgid "About this site"
 msgstr ""
 
+#, python-format
+msgid "Added relation : %(entity_from)s %(rtype)s %(entity_to)s"
+msgstr ""
+
 msgid "Any"
 msgstr ""
 
@@ -250,6 +258,10 @@ msgid "Browse by category"
 msgstr ""
 
 msgid "Browse by entity type"
+msgstr ""
+
+#, python-format
+msgid "By %(user)s on %(dt)s [%(undo_link)s]"
 msgstr ""
 
 msgid "Bytes"
@@ -374,12 +386,6 @@ msgstr ""
 
 #, python-format
 msgid ""
-"Can't restore relation %(rtype)s of entity %(eid)s, this relation does not "
-"exists anymore in the schema."
-msgstr ""
-
-#, python-format
-msgid ""
 "Can't restore relation %(rtype)s, %(role)s entity %(eid)s doesn't exist "
 "anymore."
 msgstr ""
@@ -397,6 +403,10 @@ msgid ""
 msgstr ""
 
 msgid "Click to sort on this column"
+msgstr ""
+
+#, python-format
+msgid "Created %(etype)s : %(entity)s"
 msgstr ""
 
 msgid "DEBUG"
@@ -423,6 +433,14 @@ msgstr "Decimal number"
 
 msgid "Decimal_plural"
 msgstr "Decimal numbers"
+
+#, python-format
+msgid "Delete relation : %(entity_from)s %(rtype)s %(entity_to)s"
+msgstr ""
+
+#, python-format
+msgid "Deleted %(etype)s : %(entity)s"
+msgstr ""
 
 msgid "Detected problems"
 msgstr ""
@@ -822,6 +840,11 @@ msgstr "This workflow"
 msgid "This WorkflowTransition"
 msgstr "This workflow-transition"
 
+msgid ""
+"This action is forbidden. If you think it should be allowed, please contact "
+"the site administrator."
+msgstr ""
+
 msgid "This entity type permissions:"
 msgstr ""
 
@@ -846,10 +869,20 @@ msgstr "Transitions"
 msgid "URLs from which content will be imported. You can put one url per line"
 msgstr ""
 
+msgid "Undoable actions"
+msgstr ""
+
+msgid "Undoing"
+msgstr ""
+
 msgid "UniqueConstraint"
 msgstr "unique constraint"
 
 msgid "Unreachable objects"
+msgstr ""
+
+#, python-format
+msgid "Updated %(etype)s : %(entity)s"
 msgstr ""
 
 msgid "Used by:"
@@ -1220,6 +1253,9 @@ msgstr ""
 msgid "bad value"
 msgstr ""
 
+msgid "badly formatted url"
+msgstr ""
+
 msgid "base url"
 msgstr ""
 
@@ -1304,6 +1340,9 @@ msgstr ""
 msgid "can not resolve entity types:"
 msgstr ""
 
+msgid "can only have one url"
+msgstr ""
+
 msgid "can't be changed"
 msgstr ""
 
@@ -1336,6 +1375,22 @@ msgstr ""
 
 #, python-format
 msgid "can't parse %(value)r (expected %(format)s)"
+msgstr ""
+
+#, python-format
+msgid ""
+"can't restore entity %(eid)s of type %(eschema)s, target of %(rtype)s (eid "
+"%(value)s) does not exist any longer"
+msgstr ""
+
+#, python-format
+msgid ""
+"can't restore relation %(rtype)s of entity %(eid)s, this relation does not "
+"exist in the schema anymore."
+msgstr ""
+
+#, python-format
+msgid "can't restore state of entity %s, it has been deleted inbetween"
 msgstr ""
 
 #, python-format
@@ -1968,9 +2023,6 @@ msgid "data sources management"
 msgstr ""
 
 msgid "date"
-msgstr ""
-
-msgid "day"
 msgstr ""
 
 msgid "deactivate"
@@ -2610,6 +2662,9 @@ msgstr ""
 msgid "has_text"
 msgstr "has text"
 
+msgid "header-center"
+msgstr ""
+
 msgid "header-left"
 msgstr "header (left)"
 
@@ -2948,9 +3003,6 @@ msgstr ""
 msgid "log in"
 msgstr ""
 
-msgid "log out first"
-msgstr ""
-
 msgid "login"
 msgstr ""
 
@@ -3052,9 +3104,6 @@ msgstr ""
 msgid "monday"
 msgstr ""
 
-msgid "month"
-msgstr ""
-
 msgid "more actions"
 msgstr ""
 
@@ -3153,6 +3202,9 @@ msgid "navtop"
 msgstr "page top"
 
 msgid "new"
+msgstr ""
+
+msgid "next page"
 msgstr ""
 
 msgid "next_results"
@@ -3353,6 +3405,9 @@ msgid "prefered_form_object"
 msgstr "prefered over"
 
 msgid "preferences"
+msgstr ""
+
+msgid "previous page"
 msgstr ""
 
 msgid "previous_results"
@@ -3926,6 +3981,10 @@ msgstr ""
 msgid "there is no previous page"
 msgstr ""
 
+#, python-format
+msgid "there is no transaction #%s"
+msgstr ""
+
 msgid "this action is not reversible!"
 msgstr ""
 
@@ -4008,9 +4067,6 @@ msgstr "transitions to this state"
 msgctxt "State"
 msgid "to_state_object"
 msgstr "transitions to this state"
-
-msgid "today"
-msgstr ""
 
 msgid "todo_by"
 msgstr "to do by"
@@ -4136,6 +4192,9 @@ msgstr ""
 msgid "unauthorized value"
 msgstr ""
 
+msgid "undefined user"
+msgstr ""
+
 msgid "undo"
 msgstr ""
 
@@ -4161,6 +4220,9 @@ msgid "unknown source type"
 msgstr ""
 
 msgid "unknown vocabulary:"
+msgstr ""
+
+msgid "unsupported protocol"
 msgstr ""
 
 msgid "upassword"
@@ -4359,9 +4421,6 @@ msgid "we are not yet ready to handle this query"
 msgstr ""
 
 msgid "wednesday"
-msgstr ""
-
-msgid "week"
 msgstr ""
 
 #, python-format

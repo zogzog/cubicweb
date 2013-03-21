@@ -21,7 +21,7 @@ __docformat__ = "restructuredtext en"
 
 from cubicweb import role
 from cubicweb.view import View
-from cubicweb.selectors import match_form_params, match_kwargs
+from cubicweb.predicates import match_form_params, match_kwargs
 from cubicweb.web import component, stdmsgs, formwidgets as fw
 
 class AddRelationView(component.EditRelationMixIn, View):

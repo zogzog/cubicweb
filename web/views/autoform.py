@@ -126,18 +126,19 @@ from warnings import warn
 from logilab.mtconverter import xml_escape
 from logilab.common.decorators import iclassmethod, cached
 from logilab.common.deprecation import deprecated
+from logilab.common.registry import classid
 
 from cubicweb import typed_eid, neg_role, uilib
-from cubicweb.vregistry import classid
 from cubicweb.schema import display_name
 from cubicweb.view import EntityView
-from cubicweb.selectors import (
+from cubicweb.predicates import (
     match_kwargs, match_form_params, non_final_entity,
     specified_etype_implements)
 from cubicweb.utils import json_dumps
 from cubicweb.web import (stdmsgs, uicfg, eid_param,
                           form as f, formwidgets as fw, formfields as ff)
 from cubicweb.web.views import forms
+from cubicweb.web.views.ajaxcontroller import ajaxfunc
 
 _AFS = uicfg.autoform_section
 _AFFK = uicfg.autoform_field_kwargs
@@ -435,6 +436,57 @@ def insert_relations(req, rdefs):
     for subj, rtype, obj in parse_relations_descr(rdefs):
         rql = 'SET X %s Y where X eid %%(x)s, Y eid %%(y)s' % rtype
         execute(rql, {'x': subj, 'y': obj})
+
+
+# ajax edition helpers ########################################################
+@ajaxfunc(output_type='xhtml', check_pageid=True)
+def inline_creation_form(self, peid, petype, ttype, rtype, role, i18nctx):
+    view = self._cw.vreg['views'].select('inline-creation', self._cw,
+                                         etype=ttype, rtype=rtype, role=role,
+                                         peid=peid, petype=petype)
+    return self._call_view(view, i18nctx=i18nctx)
+
+@ajaxfunc(output_type='json')
+def validate_form(self, action, names, values):
+    return self.validate_form(action, names, values)
+
+@ajaxfunc
+def cancel_edition(self, errorurl):
+    """cancelling edition from javascript
+
+    We need to clear associated req's data :
+      - errorurl
+      - pending insertions / deletions
+    """
+    self._cw.cancel_edition(errorurl)
+
+
+def _add_pending(req, eidfrom, rel, eidto, kind):
+    key = 'pending_%s' % kind
+    pendings = req.session.data.setdefault(key, set())
+    pendings.add( (typed_eid(eidfrom), rel, typed_eid(eidto)) )
+
+def _remove_pending(req, eidfrom, rel, eidto, kind):
+    key = 'pending_%s' % kind
+    pendings = req.session.data[key]
+    pendings.remove( (typed_eid(eidfrom), rel, typed_eid(eidto)) )
+
+@ajaxfunc(output_type='json')
+def remove_pending_insert(self, (eidfrom, rel, eidto)):
+    _remove_pending(self._cw, eidfrom, rel, eidto, 'insert')
+
+@ajaxfunc(output_type='json')
+def add_pending_inserts(self, tripletlist):
+    for eidfrom, rel, eidto in tripletlist:
+        _add_pending(self._cw, eidfrom, rel, eidto, 'insert')
+
+@ajaxfunc(output_type='json')
+def remove_pending_delete(self, (eidfrom, rel, eidto)):
+    _remove_pending(self._cw, eidfrom, rel, eidto, 'delete')
+
+@ajaxfunc(output_type='json')
+def add_pending_delete(self, (eidfrom, rel, eidto)):
+    _add_pending(self._cw, eidfrom, rel, eidto, 'delete')
 
 
 class GenericRelationsWidget(fw.FieldWidget):

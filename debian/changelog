@@ -1,3 +1,73 @@
+cubicweb (3.15.10-1) squeeze; urgency=low
+
+  * New upstream release
+
+ -- Aurélien Campéas <aurelien.campeas@logilab.fr>  Tue, 19 Mar 2013 16:56:00 +0100
+
+cubicweb (3.15.9-1) squeeze; urgency=low
+
+  * New upstream release
+  * Don't compress txt files.  They're used by the doc's search functionality,
+    and the javascript gets confused if it receives gzip instead of text.
+  * Work around broken combination of jquery 1.4 and sphinx 0.6 in squeeze by
+    patching up doctools.js.
+
+ -- David Douard <david.douard@logilab.fr>  Fri, 25 Jan 2013 17:49:58 +0100
+
+cubicweb (3.15.8-1) squeeze; urgency=low
+
+  * New upstream release
+
+ -- Aurélien Campéas <aurelien.campeas@logilab.fr>  Wed, 09 Jan 2013 15:40:00 +0100
+
+cubicweb (3.15.7-1) squeeze; urgency=low
+
+  * New upstream release
+
+ -- David Douard <david.douard@logilab.fr>  Wed, 12 Dec 2012 22:10:45 +0100
+
+cubicweb (3.15.6-1) squeeze; urgency=low
+
+  * New upstream release
+
+ -- David Douard <david.douard@logilab.fr>  Fri, 30 Nov 2012 19:25:20 +0100
+
+cubicweb (3.15.5-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Aurélien Campéas <aurelien.campeas@logilab.fr>  Wed, 24 Oct 2012 12:07:00 +0200
+
+cubicweb (3.15.4-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Julien Cristau <jcristau@debian.org>  Fri, 31 Aug 2012 16:43:11 +0200
+
+cubicweb (3.15.3-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Pierre-Yves David <pierre-yves.david@logilab.fr>  Tue, 21 Aug 2012 14:19:31 +0200
+
+cubicweb (3.15.2-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Sylvain Thénault <sylvain.thenault@logilab.fr>  Fri, 20 Jul 2012 15:17:17 +0200
+
+cubicweb (3.15.1-1) quantal; urgency=low
+
+  * new upstream release
+
+ -- David Douard <david.douard@logilab.fr>  Mon, 11 Jun 2012 09:45:24 +0200
+
+cubicweb (3.15.0-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Sylvain Thénault <sylvain.thenault@logilab.fr>  Thu, 12 Apr 2012 13:52:05 +0200
+
 cubicweb (3.14.9-1) unstable; urgency=low
 
   * new upstream release

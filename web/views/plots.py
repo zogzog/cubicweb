@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -22,14 +22,14 @@ _ = unicode
 
 from logilab.common.date import datetime2ticks
 from logilab.common.deprecation import class_deprecated
+from logilab.common.registry import objectify_predicate
 from logilab.mtconverter import xml_escape
 
 from cubicweb.utils import UStringIO, json_dumps
-from cubicweb.appobject import objectify_selector
-from cubicweb.selectors import multi_columns_rset
+from cubicweb.predicates import multi_columns_rset
 from cubicweb.web.views import baseviews
 
-@objectify_selector
+@objectify_predicate
 def all_columns_are_numbers(cls, req, rset=None, *args, **kwargs):
     """accept result set with at least one line and two columns of result
     all columns after second must be of numerical types"""
@@ -38,14 +38,14 @@ def all_columns_are_numbers(cls, req, rset=None, *args, **kwargs):
             return 0
     return 1
 
-@objectify_selector
+@objectify_predicate
 def second_column_is_number(cls, req, rset=None, *args, **kwargs):
     etype = rset.description[0][1]
     if etype not  in ('Int', 'BigInt', 'Float'):
         return 0
     return 1
 
-@objectify_selector
+@objectify_predicate
 def columns_are_date_then_numbers(cls, req, rset=None, *args, **kwargs):
     etypes = rset.description[0]
     if etypes[0] not in ('Date', 'Datetime', 'TZDatetime'):

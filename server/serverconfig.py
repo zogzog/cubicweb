@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -140,12 +140,9 @@ connections will have this number of opened connections.',
           'help': 'size of the parsed rql cache size.',
           'group': 'main', 'level': 3,
           }),
-        ('undo-support',
-         {'type' : 'string', 'default': '',
-          'help': 'string defining actions that will have undo support: \
-[C]reate [U]pdate [D]elete entities / [A]dd [R]emove relation. Leave it empty \
-for no undo support, set it to CUDAR for full undo support, or to DR for \
-support undoing of deletion only.',
+        ('undo-enabled',
+         {'type' : 'yn', 'default': False,
+          'help': 'enable undo support',
           'group': 'main', 'level': 3,
           }),
         ('keep-transaction-lifetime',
@@ -207,6 +204,25 @@ gethostname(). It may contains port information using <host>:<port> notation, \
 and if not set, it will be choosen randomly',
           'group': 'pyro', 'level': 3,
           }),
+        # zmq services config
+        ('zmq-repository-address',
+         {'type' : 'string',
+          'default': None,
+          'help': 'ZMQ URI on which the repository will be bound to.',
+          'group': 'zmq', 'level': 3,
+          }),
+         ('zmq-address-sub',
+          {'type' : 'csv',
+           'default' : None,
+           'help': ('List of ZMQ addresses to subscribe to (requires pyzmq)'),
+           'group': 'zmq', 'level': 1,
+           }),
+         ('zmq-address-pub',
+          {'type' : 'string',
+           'default' : None,
+           'help': ('ZMQ address to use for publishing (requires pyzmq)'),
+           'group': 'zmq', 'level': 1,
+           }),
         ) + CubicWebConfiguration.options)
 
     # should we init the connections pool (eg connect to sources). This is
@@ -276,7 +292,7 @@ and if not set, it will be choosen randomly',
                 return True
             return source.uri in self.sources_mode
         if self.quick_start:
-            return False
+            return source.uri == 'system'
         return (not source.disabled and (
             not self.enabled_sources or source.uri in self.enabled_sources))
 

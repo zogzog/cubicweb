@@ -26,7 +26,7 @@ into `mycube/hooks.py`. If this file were to grow too much, we can easily have a
 .. sourcecode:: python
 
    from cubicweb import ValidationError
-   from cubicweb.selectors import is_instance
+   from cubicweb.predicates import is_instance
    from cubicweb.server.hook import Hook
 
    class PersonAgeRange(Hook):
@@ -160,6 +160,44 @@ operation creation are handled nicely by :func:`set_operation`.
 
 A more realistic example can be found in the advanced tutorial chapter
 :ref:`adv_tuto_security_propagation`.
+
+
+Inter-instance communication
+----------------------------
+
+If your application consists of several instances, you may need some means to
+communicate between them.  Cubicweb provides a publish/subscribe mechanism
+using ØMQ_.  In order to use it, use
+:meth:`~cubicweb.server.cwzmq.ZMQComm.add_subscription` on the
+`repo.app_instances_bus` object.  The `callback` will get the message (as a
+list).  A message can be sent by calling
+:meth:`~cubicweb.server.cwzmq.ZMQComm.publish` on `repo.app_instances_bus`.
+The first element of the message is the topic which is used for filtering and
+dispatching messages.
+
+.. _ØMQ: http://www.zeromq.org/
+
+.. sourcecode:: python
+
+  class FooHook(hook.Hook):
+      events = ('server_startup',)
+      __regid__ = 'foo_startup'
+
+      def __call__(self):
+          def callback(msg):
+              self.info('received message: %s', ' '.join(msg))
+          self.repo.app_instances_bus.subscribe('hello', callback)
+
+.. sourcecode:: python
+
+  def do_foo(self):
+      actually_do_foo()
+      self._cw.repo.app_instances_bus.publish(['hello', 'world'])
+
+The `zmq-address-pub` configuration variable contains the address used
+by the instance for sending messages, e.g. `tcp://*:1234`.  The
+`zmq-address-sub` variable contains a comma-separated list of addresses
+to listen on, e.g. `tcp://localhost:1234, tcp://192.168.1.1:2345`.
 
 
 Hooks writing tips

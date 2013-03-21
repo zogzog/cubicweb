@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -23,7 +23,7 @@ __docformat__ = "restructuredtext en"
 from logilab.database import get_db_helper
 
 from cubicweb.req import RequestSessionBase
-from cubicweb.cwvreg import CubicWebVRegistry
+from cubicweb.cwvreg import CWRegistryStore
 from cubicweb.web.request import CubicWebRequestBase
 from cubicweb.web.http_headers import Headers
 
@@ -33,7 +33,9 @@ from cubicweb.devtools import BASE_URL, BaseApptestConfiguration
 class FakeConfig(dict, BaseApptestConfiguration):
     translations = {}
     uiprops = {}
+    https_uiprops = {}
     apphome = None
+    debugmode = False
     def __init__(self, appid='data', apphome=None, cubes=()):
         self.appid = appid
         self.apphome = apphome
@@ -43,6 +45,7 @@ class FakeConfig(dict, BaseApptestConfiguration):
         self['base-url'] = BASE_URL
         self['rql-cache-size'] = 3000
         self.datadir_url = BASE_URL + 'data/'
+        self.https_datadir_url = (BASE_URL + 'data/').replace('http://', 'https://')
 
     def cubes(self, expand=False):
         return self._cubes
@@ -56,12 +59,12 @@ class FakeRequest(CubicWebRequestBase):
 
     def __init__(self, *args, **kwargs):
         if not (args or 'vreg' in kwargs):
-            kwargs['vreg'] = CubicWebVRegistry(FakeConfig(), initlog=False)
+            kwargs['vreg'] = CWRegistryStore(FakeConfig(), initlog=False)
         kwargs['https'] = False
+        self._http_method = kwargs.pop('method', 'GET')
         self._url = kwargs.pop('url', None) or 'view?rql=Blop&vid=blop'
         super(FakeRequest, self).__init__(*args, **kwargs)
         self._session_data = {}
-        self._headers_in = Headers()
 
     def set_cookie(self, name, value, maxage=300, expires=None, secure=False):
         super(FakeRequest, self).set_cookie(name, value, maxage, expires, secure)
@@ -73,8 +76,8 @@ class FakeRequest(CubicWebRequestBase):
         """returns an ordered list of preferred languages"""
         return ('en',)
 
-    def header_if_modified_since(self):
-        return None
+    def http_method(self):
+        return self._http_method
 
     def relative_path(self, includeparams=True):
         """return the normalized path of the request (ie at least relative
@@ -89,35 +92,23 @@ class FakeRequest(CubicWebRequestBase):
             return url
         return url.split('?', 1)[0]
 
-    def get_header(self, header, default=None, raw=True):
-        """return the value associated with the given input header, raise
-        KeyError if the header is not set
-        """
-        if raw:
-            return self._headers_in.getRawHeaders(header, [default])[0]
-        return self._headers_in.getHeader(header, default)
-
-    ## extend request API to control headers in / out values
     def set_request_header(self, header, value, raw=False):
-        """set an input HTTP header"""
+        """set an incoming HTTP header (For test purpose only)"""
         if isinstance(value, basestring):
             value = [value]
-        if raw:
+        if raw: #
+            # adding encoded header is important, else page content
+            # will be reconverted back to unicode and apart unefficiency, this
+            # may cause decoding problem (e.g. when downloading a file)
             self._headers_in.setRawHeaders(header, value)
-        else:
-            self._headers_in.setHeader(header, value)
+        else: #
+            self._headers_in.setHeader(header, value) #
 
     def get_response_header(self, header, default=None, raw=False):
-        """return the value associated with the given input header,
-        raise KeyError if the header is not set
-        """
-        if raw:
-            return self.headers_out.getRawHeaders(header, default)[0]
-        else:
-            return self.headers_out.getHeader(header, default)
-
-    def validate_cache(self):
-        pass
+        """return output header (For test purpose only"""
+        if raw: #
+            return self.headers_out.getRawHeaders(header, [default])[0]
+        return self.headers_out.getHeader(header, default)
 
     def build_url_params(self, **kwargs):
         # overriden to get predictable resultts
@@ -144,7 +135,7 @@ class FakeSession(RequestSessionBase):
         if vreg is None:
             vreg = getattr(self.repo, 'vreg', None)
         if vreg is None:
-            vreg = CubicWebVRegistry(FakeConfig(), initlog=False)
+            vreg = CWRegistryStore(FakeConfig(), initlog=False)
         self.vreg = vreg
         self.cnxset = FakeConnectionsSet()
         self.user = user or FakeUser()
@@ -179,7 +170,7 @@ class FakeRepo(object):
         self._count = 0
         self.schema = schema
         self.config = config or FakeConfig()
-        self.vreg = vreg or CubicWebVRegistry(self.config, initlog=False)
+        self.vreg = vreg or CWRegistryStore(self.config, initlog=False)
         self.vreg.schema = schema
         self.sources = []
 

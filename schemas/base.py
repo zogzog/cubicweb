@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -51,7 +51,9 @@ class CWUser(WorkflowableEntityType):
 class EmailAddress(EntityType):
     """an electronic mail address associated to a short alias"""
     __permissions__ = {
-        'read':   ('managers', 'users', 'guests',), # XXX if P use_email X, U has_read_permission P
+        # application that wishes public email, or use it for something else
+        # than users (eg Company, Person), should explicitly change permissions
+        'read':   ('managers', ERQLExpression('U use_email X')),
         'add':    ('managers', 'users',),
         'delete': ('managers', 'owners', ERQLExpression('P use_email X, U has_update_permission P')),
         'update': ('managers', 'owners', ERQLExpression('P use_email X, U has_update_permission P')),

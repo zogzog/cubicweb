@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -22,16 +22,15 @@ from logilab.common.testlib import unittest_main
 
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb import CW_SOFTWARE_ROOT as BASE, Binary, UnknownProperty
-from cubicweb.selectors import (match_user_groups, is_instance,
-                                specified_etype_implements, rql_condition,
-                                traced_selection)
+from cubicweb.predicates import (match_user_groups, is_instance,
+                                 specified_etype_implements, rql_condition)
 from cubicweb.web import NoSelectableObject
 from cubicweb.web.action import Action
 from cubicweb.web.views import (
     primary, baseviews, tableview, editforms, calendar, management, embedding,
     actions, startup, cwuser, schema, xbel, vcard, owl, treeview, idownloadable,
     wdoc, debug, cwuser, cwproperties, cwsources, workflow, xmlrss, rdf,
-    csvexport, json)
+    csvexport, json, undohistory)
 
 from cubes.folder import views as folderviews
 
@@ -53,6 +52,11 @@ if hasattr(rdf, 'RDFView') is not None: # not available if rdf lib not installed
     RDFVIEWS = [('rdf', rdf.RDFView)]
 
 assert RDFVIEWS
+
+if hasattr(rdf, 'RDFView'): # not available if rdflib not installed
+    RDFVIEWS = [('rdf', rdf.RDFView)]
+else:
+    RDFVIEWS = []
 
 class ViewSelectorTC(CubicWebTC):
 
@@ -103,13 +107,14 @@ class VRegistryTC(ViewSelectorTC):
                               ('siteinfo', debug.SiteInfoView),
                               ('systempropertiesform', cwproperties.SystemCWPropertiesForm),
                               ('tree', folderviews.FolderTreeView),
+                              ('undohistory', undohistory.UndoHistoryView),
                               ])
 
     def test_possible_views_noresult(self):
         req = self.request()
         rset = req.execute('Any X WHERE X eid 999999')
-        self.assertListEqual(self.pviews(req, rset),
-                             [])
+        self.assertListEqual([('jsonexport', json.JsonRsetView)],
+                             self.pviews(req, rset))
 
     def test_possible_views_one_egroup(self):
         req = self.request()

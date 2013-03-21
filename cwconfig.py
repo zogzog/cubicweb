@@ -171,6 +171,7 @@ _ = unicode
 
 import sys
 import os
+import stat
 import logging
 import logging.config
 from smtplib import SMTP
@@ -306,7 +307,10 @@ CFGTYPE2ETYPE_MAP = {
 _forced_mode = os.environ.get('CW_MODE')
 assert _forced_mode in (None, 'system', 'user')
 
-CWDEV = exists(join(CW_SOFTWARE_ROOT, '.hg'))
+# CWDEV tells whether directories such as i18n/, web/data/, etc. (ie containing
+# some other resources than python libraries) are located with the python code
+# or as a 'shared' cube
+CWDEV = exists(join(CW_SOFTWARE_ROOT, 'i18n'))
 
 try:
     _INSTALL_PREFIX = os.environ['CW_INSTALL_PREFIX']
@@ -385,14 +389,6 @@ registered.',
           'default': False,
           'help': 'allow users to login with their primary email if set',
           'group': 'main', 'level': 2,
-          }),
-        ('use-request-subdomain',
-         {'type' : 'yn',
-          'default': None,
-          'help': ('if set, base-url subdomain is replaced by the request\'s '
-                   'host, to help managing sites with several subdomains in a '
-                   'single cubicweb instance'),
-          'group': 'main', 'level': 1,
           }),
         ('mangle-emails',
          {'type' : 'yn',
@@ -828,7 +824,7 @@ this option is set to yes",
     _cubes = None
 
     def init_cubes(self, cubes):
-        assert self._cubes is None, self._cubes
+        assert self._cubes is None, repr(self._cubes)
         self._cubes = self.reorder_cubes(cubes)
         # load cubes'__init__.py file first
         for cube in cubes:
@@ -1081,7 +1077,12 @@ the repository',
         If not, try to fix this, letting exception propagate when not possible.
         """
         if not exists(path):
-            os.makedirs(path)
+            self.info('creating %s directory', path)
+            try:
+                os.makedirs(path)
+            except OSError, ex:
+                self.warning('error while creating %s directory: %s', path, ex)
+                return
         if self['uid']:
             try:
                 uid = int(self['uid'])
@@ -1095,10 +1096,20 @@ the repository',
                 return
         fstat = os.stat(path)
         if fstat.st_uid != uid:
-            os.chown(path, uid, os.getgid())
-        import stat
+            self.info('giving ownership of %s directory to %s', path, self['uid'])
+            try:
+                os.chown(path, uid, os.getgid())
+            except OSError, ex:
+                self.warning('error while giving ownership of %s directory to %s: %s',
+                             path, self['uid'], ex)
         if not (fstat.st_mode & stat.S_IWUSR):
-            os.chmod(path, fstat.st_mode | stat.S_IWUSR)
+            self.info('forcing write permission on directory %s', path)
+            try:
+                os.chmod(path, fstat.st_mode | stat.S_IWUSR)
+            except OSError, ex:
+                self.warning('error while forcing write permission on directory %s: %s',
+                             path, ex)
+                return
 
     @cached
     def instance_md5_version(self):
@@ -1160,8 +1171,11 @@ the repository',
                 tr = translation('cubicweb', path, languages=[language])
                 self.translations[language] = (tr.ugettext, tr.upgettext)
             except (ImportError, AttributeError, IOError):
-                self.exception('localisation support error for language %s',
-                               language)
+                if self.mode != 'test':
+                    # in test contexts, data/i18n does not exist, hence
+                    # logging will only pollute the logs
+                    self.exception('localisation support error for language %s',
+                                   language)
 
     def vregistry_path(self):
         """return a list of files or directories where the registry will look

@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -21,10 +21,12 @@ __docformat__ = "restructuredtext en"
 _ = unicode
 
 import os
+import hmac
+from uuid import uuid4
 from os.path import join, exists, split, isdir
 from warnings import warn
 
-from logilab.common.decorators import cached
+from logilab.common.decorators import cached, cachedproperty
 from logilab.common.deprecation import deprecated
 
 from cubicweb import ConfigurationError
@@ -219,6 +221,12 @@ have the python imaging library installed to use captcha)',
           'help': 'use modconcat-like URLS to concat and serve JS / CSS files',
           'group': 'web', 'level': 2,
           }),
+        ('anonymize-jsonp-queries',
+         {'type': 'yn',
+          'default': True,
+          'help': 'anonymize the connection before executing any jsonp query.',
+          'group': 'web', 'level': 1
+          }),
         ))
 
     def fckeditor_installed(self):
@@ -251,7 +259,7 @@ have the python imaging library installed to use captcha)',
 
     def anonymous_user(self):
         """return a login and password to use for anonymous users.
-        
+
         None may be returned for both if anonymous connection is not
         allowed or if an empty login is used in configuration
         """
@@ -265,6 +273,25 @@ have the python imaging library installed to use captcha)',
         except UnicodeDecodeError:
             raise ConfigurationError("anonymous information should only contains ascii")
         return user, passwd
+
+    @cachedproperty
+    def _instance_salt(self):
+        """This random key/salt is used to sign content to be sent back by
+        browsers, eg. in the error report form.
+        """
+        return str(uuid4())
+
+    def sign_text(self, text):
+        """sign some text for later checking"""
+        # replace \r\n so we do not depend on whether a browser "reencode"
+        # original message using \r\n or not
+        return hmac.new(self._instance_salt,
+                        text.strip().replace('\r\n', '\n')).hexdigest()
+
+    def check_text_sign(self, text, signature):
+        """check the text signature is equal to the given signature"""
+        return self.sign_text(text) == signature
+
 
     def locate_resource(self, rid):
         """return the (directory, filename) where the given resource
@@ -321,17 +348,19 @@ have the python imaging library installed to use captcha)',
         if not (self.repairing or self.creating):
             self.global_set_option('base-url', baseurl)
         httpsurl = self['https-url']
-        if (self.debugmode or self.mode == 'test'):
-            datadir_path = 'data/'
-        else:
-            datadir_path = 'data/%s/' % self.instance_md5_version()
+        data_relpath = self.data_relpath()
         if httpsurl:
             if httpsurl[-1] != '/':
                 httpsurl += '/'
                 if not self.repairing:
                     self.global_set_option('https-url', httpsurl)
-            self.https_datadir_url = httpsurl + datadir_path
-        self.datadir_url = baseurl + datadir_path
+            self.https_datadir_url = httpsurl + data_relpath
+        self.datadir_url = baseurl + data_relpath
+
+    def data_relpath(self):
+        if self.mode == 'test':
+            return 'data/'
+        return 'data/%s/' % self.instance_md5_version()
 
     def _build_ui_properties(self):
         # self.datadir_url[:-1] to remove trailing /

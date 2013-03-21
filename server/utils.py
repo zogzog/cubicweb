@@ -52,7 +52,9 @@ class CustomMD5Crypt(uh.HasSalt, uh.GenericHandler):
         return md5crypt(secret, self.salt.encode('ascii')).decode('utf-8')
     _calc_checksum = calc_checksum
 
-_CRYPTO_CTX = CryptContext(['sha512_crypt', CustomMD5Crypt, 'des_crypt'])
+_CRYPTO_CTX = CryptContext(['sha512_crypt', CustomMD5Crypt, 'des_crypt', 'ldap_salted_sha1'],
+                           deprecated=['cubicwebmd5crypt', 'des_crypt'])
+verify_and_update = _CRYPTO_CTX.verify_and_update
 
 def crypt_password(passwd, salt=None):
     """return the encrypted password using the given salt or a generated one
@@ -62,8 +64,11 @@ def crypt_password(passwd, salt=None):
     # empty hash, accept any password for backwards compat
     if salt == '':
         return salt
-    if _CRYPTO_CTX.verify(passwd, salt):
-        return salt
+    try:
+        if _CRYPTO_CTX.verify(passwd, salt):
+            return salt
+    except ValueError: # e.g. couldn't identify hash
+        pass
     # wrong password
     return ''
 
@@ -139,12 +144,12 @@ def func_name(func):
 
 class LoopTask(object):
     """threaded task restarting itself once executed"""
-    def __init__(self, repo, interval, func, args):
+    def __init__(self, tasks_manager, interval, func, args):
         if interval <= 0:
             raise ValueError('Loop task interval must be > 0 '
                              '(current value: %f for %s)' % \
                              (interval, func_name(func)))
-        self.repo = repo
+        self._tasks_manager = tasks_manager
         self.interval = interval
         def auto_restart_func(self=self, func=func, args=args):
             restart = True
@@ -157,7 +162,7 @@ class LoopTask(object):
             except BaseException:
                 restart = False
             finally:
-                if restart and not self.repo.shutting_down:
+                if restart and tasks_manager.running:
                     self.start()
         self.func = auto_restart_func
         self.name = func_name(func)
@@ -203,3 +208,54 @@ class RepoThread(Thread):
 
     def getName(self):
         return '%s(%s)' % (self._name, Thread.getName(self))
+
+class TasksManager(object):
+    """Object dedicated manage background task"""
+
+    def __init__(self):
+        self.running = False
+        self._tasks = []
+        self._looping_tasks = []
+
+    def add_looping_task(self, interval, func, *args):
+        """register a function to be called every `interval` seconds.
+
+        looping tasks can only be registered during repository initialization,
+        once done this method will fail.
+        """
+        task = LoopTask(self, interval, func, args)
+        if self.running:
+            self._start_task(task)
+        else:
+            self._tasks.append(task)
+
+    def _start_task(self, task):
+        self._looping_tasks.append(task)
+        self.info('starting task %s with interval %.2fs', task.name,
+                  task.interval)
+        task.start()
+
+    def start(self):
+        """Start running looping task"""
+        assert self.running == False # bw compat purpose maintly
+        while self._tasks:
+            task = self._tasks.pop()
+            self._start_task(task)
+        self.running = True
+
+    def stop(self):
+        """Stop all running task.
+
+        returns when all task have been cancel and none are running anymore"""
+        if self.running:
+            while self._looping_tasks:
+                looptask = self._looping_tasks.pop()
+                self.info('canceling task %s...', looptask.name)
+                looptask.cancel()
+                looptask.join()
+                self.info('task %s finished', looptask.name)
+
+from logging import getLogger
+from cubicweb import set_log_methods
+set_log_methods(TasksManager, getLogger('cubicweb.repository'))
+

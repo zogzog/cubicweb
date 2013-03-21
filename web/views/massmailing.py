@@ -22,7 +22,7 @@ _ = unicode
 
 import operator
 
-from cubicweb.selectors import (is_instance, authenticated_user,
+from cubicweb.predicates import (is_instance, authenticated_user,
                                 adaptable, match_form_params)
 from cubicweb.view import EntityView
 from cubicweb.web import (Redirect, stdmsgs, controller, action,

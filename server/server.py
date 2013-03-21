@@ -26,6 +26,7 @@ import warnings
 from time import localtime, mktime
 
 from cubicweb.cwconfig import CubicWebConfiguration
+from cubicweb.server.utils import TasksManager
 from cubicweb.server.repository import Repository
 
 class Finished(Exception):
@@ -77,7 +78,7 @@ class RepositoryServer(object):
     def __init__(self, config):
         """make the repository available as a PyRO object"""
         self.config = config
-        self.repo = Repository(config)
+        self.repo = Repository(config, TasksManager())
         self.ns = None
         self.quiting = None
         # event queue

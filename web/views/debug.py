@@ -25,7 +25,7 @@ from time import strftime, localtime
 from logilab.mtconverter import xml_escape
 
 from cubicweb import BadConnectionId
-from cubicweb.selectors import none_rset, match_user_groups
+from cubicweb.predicates import none_rset, match_user_groups
 from cubicweb.view import StartupView
 from cubicweb.web.views import actions, tabs
 
@@ -131,10 +131,13 @@ class ProcessInformationView(StartupView):
             sessions = SESSION_MANAGER.current_sessions()
             w(u'<h3>%s</h3>' % _('opened web sessions'))
             if sessions:
+                n_no_cnx_sessions = 0
                 w(u'<ul>')
                 for session in sessions:
                     if not session.cnx:
-                        w(u'<li>%s (NO CNX)</li>' % session.sessionid)
+                        # We do not want to list all sessions without cnx
+                        # Their session ID are useless, hence we just count them
+                        n_no_cnx_sessions += 1
                         continue
                     try:
                         last_usage_time = session.cnx.check()
@@ -148,6 +151,9 @@ class ProcessInformationView(StartupView):
                     dict_to_html(w, session.data)
                     w(u'</li>')
                 w(u'</ul>')
+                if n_no_cnx_sessions > 0:
+                    w(u'<h3>%s %s</h3>' % (n_no_cnx_sessions,
+                                           _('web sessions without CNX')))
             else:
                 w(u'<p>%s</p>' % _('no web sessions found'))
 

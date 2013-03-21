@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -26,7 +26,7 @@ from logilab.common.deprecation import class_deprecated
 from logilab.mtconverter import xml_escape
 
 from cubicweb.utils import make_uid
-from cubicweb.selectors import adaptable
+from cubicweb.predicates import adaptable
 from cubicweb.schema import display_name
 from cubicweb.view import EntityView
 from cubicweb.web.views.tableview import EntityAttributesTableView

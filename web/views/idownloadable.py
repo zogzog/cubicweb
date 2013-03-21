@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -27,8 +27,8 @@ from logilab.common.deprecation import class_renamed, deprecated
 
 from cubicweb import tags
 from cubicweb.view import EntityView
-from cubicweb.selectors import (one_line_rset, is_instance, match_context_prop,
-                                adaptable, has_mimetype)
+from cubicweb.predicates import (one_line_rset, is_instance, match_context_prop,
+                                 adaptable, has_mimetype)
 from cubicweb.mttransforms import ENGINE
 from cubicweb.web import component, httpcache
 from cubicweb.web.views import primary, baseviews
@@ -100,7 +100,8 @@ class DownloadView(EntityView):
             contenttype = adapter.download_content_type()
         self._cw.set_content_type(contenttype or self.content_type,
                                   filename=adapter.download_file_name(),
-                                  encoding=encoding)
+                                  encoding=encoding,
+                                  disposition='attachment')
 
     def call(self):
         entity = self.cw_rset.complete_entity(self.cw_row or 0, self.cw_col or 0)

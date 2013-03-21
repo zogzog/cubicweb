@@ -12,6 +12,7 @@ the *CubicWeb* framework.
    request
    views/index
    rtags
+   ajax
    js
    css
    edition/index

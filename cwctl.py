@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -37,6 +37,8 @@ except ImportError:
 
 
 from os.path import exists, join, isfile, isdir, dirname, abspath
+
+from urlparse import urlparse
 
 from logilab.common.clcommands import CommandLine
 from logilab.common.shellutils import ASK
@@ -828,10 +830,7 @@ class ShellCommand(Command):
     in batch mode.
 
     By default it will connect to a local instance using an in memory
-    connection, unless -P option is specified, in which case you will be
-    connected through pyro. In the later case, you won't have access to
-    repository internals (session, etc...) so most migration commands won't be
-    available.
+    connection, unless an URL to a running instance is specified.
 
     Arguments after bare "--" string will not be processed by the shell command
     You can use it to pass extra arguments to your script and expect for
@@ -867,31 +866,45 @@ sources for migration will be automatically selected.",
           'group': 'local'
           }),
 
-        ('pyro',
-         {'short': 'P', 'action' : 'store_true',
-          'help': 'connect to a running instance through Pyro.',
-          'group': 'remote',
-          }),
-        ('pyro-ns-host',
-         {'short': 'H', 'type' : 'string', 'metavar': '<host[:port]>',
-          'help': 'Pyro name server host. If not set, will be detected by '
-          'using a broadcast query.',
+        ('repo-uri',
+         {'short': 'H', 'type' : 'string', 'metavar': '<protocol>://<[host][:port]>',
+          'help': 'URI of the CubicWeb repository to connect to. URI can be \
+pyro://[host:port] the Pyro name server host; if the pyro nameserver is not set, \
+it will be detected by using a broadcast query, a ZMQ URL or \
+inmemory:// (default) use an in-memory repository.',
           'group': 'remote'
           }),
         )
 
     def run(self, args):
         appid = args.pop(0)
-        if self.config.pyro:
+        if self.config.repo_uri:
+            uri = urlparse(self.config.repo_uri)
+            if uri.scheme == 'pyro':
+                cnxtype = uri.scheme
+                hostport = uri.netloc
+            elif uri.scheme == 'inmemory':
+                cnxtype = ''
+                hostport = ''
+            else:
+                cnxtype = 'zmq'
+                hostport = self.config.repo_uri
+        else:
+            cnxtype = ''
+
+        if cnxtype:
             from cubicweb import AuthenticationError
-            from cubicweb.dbapi import connect
+            from cubicweb.dbapi import connect, ConnectionProperties
             from cubicweb.server.utils import manager_userpasswd
             from cubicweb.server.migractions import ServerMigrationHelper
+            cnxprops = ConnectionProperties(cnxtype=cnxtype)
+
             while True:
                 try:
                     login, pwd = manager_userpasswd(msg=None)
                     cnx = connect(appid, login=login, password=pwd,
-                                  host=self.config.pyro_ns_host, mulcnx=False)
+                                  host=hostport, mulcnx=False,
+                                  cnxprops=cnxprops)
                 except AuthenticationError, ex:
                     print ex
                 except (KeyboardInterrupt, EOFError):
@@ -901,7 +914,7 @@ sources for migration will be automatically selected.",
                     break
             cnx.load_appobjects()
             repo = cnx._repo
-            mih = ServerMigrationHelper(None, repo=repo, cnx=cnx,
+            mih = ServerMigrationHelper(None, repo=repo, cnx=cnx, verbosity=0,
                                          # hack so it don't try to load fs schema
                                         schema=1)
         else:
@@ -927,7 +940,7 @@ sources for migration will be automatically selected.",
             else:
                 mih.interactive_shell()
         finally:
-            if not self.config.pyro:
+            if not cnxtype: # shutdown in-memory repo
                 mih.shutdown()
             else:
                 cnx.close()

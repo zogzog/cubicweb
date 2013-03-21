@@ -75,6 +75,9 @@ class RequestSessionBase(object):
         self.local_perm_cache = {}
         self._ = unicode
 
+    def get_option_value(self, option, foreid=None):
+        raise NotImplementedError
+
     def property_value(self, key):
         """return value of the property with the given key, giving priority to
         user specific value if any, else using site value
@@ -204,6 +207,9 @@ class RequestSessionBase(object):
         parameters. Values are automatically URL quoted, and the
         publishing method to use may be specified or will be guessed.
 
+        if ``__secure__`` argument is True, the request will try to build a
+        https url.
+
         raises :exc:`ValueError` if None is found in arguments
         """
         # use *args since we don't want first argument to be "anonymous" to
@@ -222,7 +228,8 @@ class RequestSessionBase(object):
                 method = 'view'
         base_url = kwargs.pop('base_url', None)
         if base_url is None:
-            base_url = self.base_url()
+            secure = kwargs.pop('__secure__', None)
+            base_url = self.base_url(secure=secure)
         if '_restpath' in kwargs:
             assert method == 'view', method
             path = kwargs.pop('_restpath')
@@ -415,8 +422,11 @@ class RequestSessionBase(object):
             raise ValueError(self._('can\'t parse %(value)r (expected %(format)s)')
                              % {'value': value, 'format': format})
 
-    def base_url(self):
-        """return the root url of the instance"""
+    def base_url(self, secure=None):
+        """return the root url of the instance
+        """
+        if secure:
+            raise NotImplementedError()
         return self.vreg.config['base-url']
 
     # abstract methods to override according to the web front-end #############

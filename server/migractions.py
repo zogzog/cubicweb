@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -51,14 +51,13 @@ from yams.schema2sql import eschema2sql, rschema2sql
 from yams.schema import RelationDefinitionSchema
 
 from cubicweb import CW_SOFTWARE_ROOT, AuthenticationError, ExecutionError
-from cubicweb.selectors import is_instance
+from cubicweb.predicates import is_instance
 from cubicweb.schema import (ETYPE_NAME_MAP, META_RTYPES, VIRTUAL_RTYPES,
                              PURE_VIRTUAL_RTYPES,
                              CubicWebRelationSchema, order_eschemas)
 from cubicweb.cwvreg import CW_EVENT_MANAGER
 from cubicweb.dbapi import get_repository, repo_connect
 from cubicweb.migration import MigrationHelper, yes
-from cubicweb.server.session import hooks_control
 from cubicweb.server import hook
 try:
     from cubicweb.server import SOURCE_TYPES, schemaserial as ss
@@ -152,7 +151,7 @@ class ServerMigrationHelper(MigrationHelper):
             elif options.backup_db:
                 self.backup_database(askconfirm=False)
         # disable notification during migration
-        with hooks_control(self.session, self.session.HOOKS_ALLOW_ALL, 'notification'):
+        with self.session.allow_all_hooks_but('notification'):
             super(ServerMigrationHelper, self).migrate(vcconf, toupgrade, options)
 
     def cmd_process_script(self, migrscript, funcname=None, *args, **kwargs):
@@ -376,6 +375,9 @@ class ServerMigrationHelper(MigrationHelper):
             self.confirm = yes
             self.execscript_confirm = yes
             try:
+                if event == 'postcreate':
+                    with self.session.allow_all_hooks_but():
+                        return self.cmd_process_script(apc, funcname, *args, **kwargs)
                 return self.cmd_process_script(apc, funcname, *args, **kwargs)
             finally:
                 self.confirm = confirm
@@ -698,8 +700,9 @@ class ServerMigrationHelper(MigrationHelper):
                                                  str(totype))
         # execute post-create files
         for cube in reversed(newcubes):
-            self.cmd_exec_event_script('postcreate', cube)
-            self.commit()
+            with self.session.allow_all_hooks_but():
+                self.cmd_exec_event_script('postcreate', cube)
+                self.commit()
 
     def cmd_remove_cube(self, cube, removedeps=False):
         removedcubes = super(ServerMigrationHelper, self).cmd_remove_cube(
@@ -1058,7 +1061,7 @@ class ServerMigrationHelper(MigrationHelper):
                         rdef = copy(rschema.rdef(rschema.subjects(objtype)[0], objtype))
                         rdef.subject = etype
                         rdef.rtype = self.repo.schema.rschema(rschema)
-                        rdef.object = self.repo.schema.rschema(objtype)
+                        rdef.object = self.repo.schema.eschema(objtype)
                         ss.execschemarql(execute, rdef,
                                          ss.rdef2rql(rdef, cmap, gmap))
         if commit:
@@ -1072,7 +1075,7 @@ class ServerMigrationHelper(MigrationHelper):
         if commit:
             self.commit()
 
-    def cmd_rename_relation(self, oldname, newname, commit=True):
+    def cmd_rename_relation_type(self, oldname, newname, commit=True):
         """rename an existing relation
 
         `oldname` is a string giving the name of the existing relation
@@ -1465,7 +1468,7 @@ class ServerMigrationHelper(MigrationHelper):
     def rqliter(self, rql, kwargs=None, ask_confirm=True):
         return ForRqlIterator(self, rql, kwargs, ask_confirm)
 
-    # broken db commands ######################################################
+    # low-level commands to repair broken system database ######################
 
     def cmd_change_attribute_type(self, etype, attr, newtype, commit=True):
         """low level method to change the type of an entity attribute. This is
@@ -1522,6 +1525,10 @@ class ServerMigrationHelper(MigrationHelper):
     @deprecated("[3.7] use session.enable_hook_categories('integrity')")
     def cmd_reactivate_verification_hooks(self):
         self.session.enable_hook_categories('integrity')
+
+    @deprecated("[3.15] use rename_relation_type(oldname, newname)")
+    def cmd_rename_relation(self, oldname, newname, commit=True):
+        self.cmd_rename_relation_type(oldname, newname, commit)
 
 
 class ForRqlIterator:

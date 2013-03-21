@@ -1,4 +1,4 @@
-# copyright 2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2011-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -22,7 +22,7 @@ from datetime import datetime
 
 from cubicweb.devtools.testlib import CubicWebTC
 
-from cubicweb.sobjects.parsers import CWEntityXMLParser
+from cubicweb.sobjects.cwxmlparser import CWEntityXMLParser
 
 orig_parse = CWEntityXMLParser.parse
 
@@ -162,15 +162,15 @@ class CWEntityXMLParserTC(CubicWebTC):
         dfsource = self.repo.sources_by_uri['myfeed']
         parser = dfsource._get_parser(self.session)
         self.assertEqual(parser.complete_url('http://www.cubicweb.org/CWUser'),
-                         'http://www.cubicweb.org/CWUser?relation=tags-object&relation=in_group-subject&relation=in_state-subject&relation=use_email-subject&vid=xml')
+                         'http://www.cubicweb.org/CWUser?relation=tags-object&relation=in_group-subject&relation=in_state-subject&relation=use_email-subject')
         self.assertEqual(parser.complete_url('http://www.cubicweb.org/cwuser'),
-                         'http://www.cubicweb.org/cwuser?relation=tags-object&relation=in_group-subject&relation=in_state-subject&relation=use_email-subject&vid=xml')
+                         'http://www.cubicweb.org/cwuser?relation=tags-object&relation=in_group-subject&relation=in_state-subject&relation=use_email-subject')
         self.assertEqual(parser.complete_url('http://www.cubicweb.org/cwuser?vid=rdf&relation=hop'),
                          'http://www.cubicweb.org/cwuser?relation=hop&relation=tags-object&relation=in_group-subject&relation=in_state-subject&relation=use_email-subject&vid=rdf')
         self.assertEqual(parser.complete_url('http://www.cubicweb.org/?rql=cwuser&vid=rdf&relation=hop'),
                          'http://www.cubicweb.org/?rql=cwuser&relation=hop&vid=rdf')
         self.assertEqual(parser.complete_url('http://www.cubicweb.org/?rql=cwuser&relation=hop'),
-                         'http://www.cubicweb.org/?rql=cwuser&relation=hop&vid=xml')
+                         'http://www.cubicweb.org/?rql=cwuser&relation=hop')
 
 
     def test_actions(self):
@@ -197,7 +197,7 @@ class CWEntityXMLParserTC(CubicWebTC):
                           })
         session = self.repo.internal_session(safe=True)
         stats = dfsource.pull_data(session, force=True, raise_on_error=True)
-        self.assertEqual(sorted(stats.keys()), ['created', 'updated'])
+        self.assertEqual(sorted(stats.keys()), ['checked', 'created', 'updated'])
         self.assertEqual(len(stats['created']), 2)
         self.assertEqual(stats['updated'], set())
 
@@ -233,14 +233,16 @@ class CWEntityXMLParserTC(CubicWebTC):
         with session.security_enabled(read=False): # avoid Unauthorized due to password selection
             stats = dfsource.pull_data(session, force=True, raise_on_error=True)
         self.assertEqual(stats['created'], set())
-        self.assertEqual(len(stats['updated']), 2)
+        self.assertEqual(len(stats['updated']), 0)
+        self.assertEqual(len(stats['checked']), 2)
         self.repo._type_source_cache.clear()
         self.repo._extid_cache.clear()
         session.set_cnxset()
         with session.security_enabled(read=False): # avoid Unauthorized due to password selection
             stats = dfsource.pull_data(session, force=True, raise_on_error=True)
         self.assertEqual(stats['created'], set())
-        self.assertEqual(len(stats['updated']), 2)
+        self.assertEqual(len(stats['updated']), 0)
+        self.assertEqual(len(stats['checked']), 2)
         session.commit()
 
         # test move to system source

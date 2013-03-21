@@ -58,9 +58,9 @@ def multiple_connections_fix():
     attributes since classes are not designed to be shared among multiple
     registries.
     """
-    defaultcls = cwvreg.VRegistry.REGISTRY_FACTORY[None]
+    defaultcls = cwvreg.CWRegistryStore.REGISTRY_FACTORY[None]
 
-    etypescls = cwvreg.VRegistry.REGISTRY_FACTORY['etypes']
+    etypescls = cwvreg.CWRegistryStore.REGISTRY_FACTORY['etypes']
     orig_etype_class = etypescls.orig_etype_class = etypescls.etype_class
     @monkeypatch(defaultcls)
     def etype_class(self, etype):
@@ -75,7 +75,7 @@ def multiple_connections_fix():
         return usercls
 
 def multiple_connections_unfix():
-    etypescls = cwvreg.VRegistry.REGISTRY_FACTORY['etypes']
+    etypescls = cwvreg.CWRegistryStore.REGISTRY_FACTORY['etypes']
     etypescls.etype_class = etypescls.orig_etype_class
 
 
@@ -93,14 +93,18 @@ def get_repository(method, database=None, config=None, vreg=None):
     Only 'in-memory' and 'pyro' are supported for now. Either vreg or config
     argument should be given
     """
-    assert method in ('pyro', 'inmemory')
+    assert method in ('pyro', 'inmemory', 'zmq')
     assert vreg or config
     if vreg and not config:
         config = vreg.config
     if method == 'inmemory':
         # get local access to the repository
         from cubicweb.server.repository import Repository
-        return Repository(config, vreg=vreg)
+        from cubicweb.server.utils import TasksManager
+        return Repository(config, TasksManager(), vreg=vreg)
+    elif method == 'zmq':
+        from cubicweb.zmqclient import ZMQRepositoryClient
+        return ZMQRepositoryClient(database)
     else: # method == 'pyro'
         # resolve the Pyro object
         from logilab.common.pyro_ext import ns_get_proxy, get_proxy
@@ -145,8 +149,8 @@ def connect(database=None, login=None, host=None, group=None,
       the user login to use to authenticate.
 
     :host:
-      the pyro nameserver host. Will be detected using broadcast query if
-      unspecified.
+      - pyro: nameserver host. Will be detected using broadcast query if unspecified
+      - zmq: repository host socket address
 
     :group:
       the instance's pyro nameserver group. You don't have to specify it unless
@@ -183,6 +187,8 @@ def connect(database=None, login=None, host=None, group=None,
             config.global_set_option('pyro-ns-host', host)
         if group:
             config.global_set_option('pyro-ns-group', group)
+    elif method == 'zmq':
+        config = cwconfig.CubicWebNoAppConfiguration()
     else:
         assert database
         config = cwconfig.instance_configuration(database)
@@ -192,7 +198,7 @@ def connect(database=None, login=None, host=None, group=None,
     elif setvreg:
         if mulcnx:
             multiple_connections_fix()
-        vreg = cwvreg.CubicWebVRegistry(config, initlog=initlog)
+        vreg = cwvreg.CWRegistryStore(config, initlog=initlog)
         schema = repo.get_schema()
         for oldetype, newetype in ETYPE_NAME_MAP.items():
             if oldetype in schema:
@@ -207,7 +213,7 @@ def connect(database=None, login=None, host=None, group=None,
 
 def in_memory_repo(config):
     """Return and in_memory Repository object from a config (or vreg)"""
-    if isinstance(config, cwvreg.CubicWebVRegistry):
+    if isinstance(config, cwvreg.CWRegistryStore):
         vreg = config
         config = None
     else:
@@ -280,13 +286,16 @@ class DBAPIRequest(RequestSessionBase):
 
     def __init__(self, vreg, session=None):
         super(DBAPIRequest, self).__init__(vreg)
+        #: 'language' => translation_function() mapping
         try:
             # no vreg or config which doesn't handle translations
             self.translations = vreg.config.translations
         except AttributeError:
             self.translations = {}
+        #: Request language identifier eg: 'en'
+        self.lang = None
         self.set_default_language(vreg)
-        # cache entities built during the request
+        #: cache entities built during the request
         self._eid_cache = {}
         if session is not None:
             self.set_session(session)
@@ -298,6 +307,9 @@ class DBAPIRequest(RequestSessionBase):
 
     def from_controller(self):
         return 'view'
+
+    def get_option_value(self, option, foreid=None):
+        return self.cnx.get_option_value(option, foreid)
 
     def set_session(self, session, user=None):
         """method called by the session handler when the user is authenticated
@@ -334,6 +346,11 @@ class DBAPIRequest(RequestSessionBase):
             self._ = self.__ = unicode
             self.pgettext = lambda x, y: unicode(y)
         self.debug('request default language: %s', self.lang)
+
+    # server-side service call #################################################
+
+    def call_service(self, regid, async=False, **kwargs):
+        return self.cnx.call_service(regid, async, **kwargs)
 
     # entities cache management ###############################################
 
@@ -556,6 +573,12 @@ class Connection(object):
             except Exception:
                 pass
 
+    # server-side service call #################################################
+
+    @check_not_closed
+    def call_service(self, regid, async=False, **kwargs):
+        return self._repo.call_service(self.sessionid, regid, async, **kwargs)
+
     # connection initialization methods ########################################
 
     def load_appobjects(self, cubes=_MARKER, subpath=None, expand=True):
@@ -577,7 +600,12 @@ class Connection(object):
             esubpath = list(subpath)
             esubpath.remove('views')
             esubpath.append(join('web', 'views'))
+        # first load available configs, necessary for proper persistent
+        # properties initialization
+        config.load_available_configs()
+        # then init cubes
         config.init_cubes(cubes)
+        # then load appobjects into the registry
         vpath = config.build_vregistry_path(reversed(config.cubes_path()),
                                             evobjpath=esubpath,
                                             tvobjpath=subpath)

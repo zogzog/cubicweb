@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -24,6 +24,9 @@ __docformat__ = "restructuredtext en"
 import sys
 from time import clock, time
 from contextlib import contextmanager
+from warnings import warn
+
+import httplib
 
 from logilab.common.deprecation import deprecated
 
@@ -31,13 +34,16 @@ from rql import BadRQLQuery
 
 from cubicweb import set_log_methods, cwvreg
 from cubicweb import (
-    ValidationError, Unauthorized, AuthenticationError, NoSelectableObject,
+    ValidationError, Unauthorized, Forbidden,
+    AuthenticationError, NoSelectableObject,
     BadConnectionId, CW_EVENT_MANAGER)
 from cubicweb.dbapi import DBAPISession, anonymous_session
 from cubicweb.web import LOGGER, component
 from cubicweb.web import (
     StatusResponse, DirectResponse, Redirect, NotFound, LogOut,
     RemoteCallFailed, InvalidSession, RequestError)
+
+from cubicweb.web.request import CubicWebRequestBase
 
 # make session manager available through a global variable so the debug view can
 # print information about web session
@@ -276,7 +282,7 @@ class CubicWebPublisher(object):
                  vreg=None):
         self.info('starting web instance from %s', config.apphome)
         if vreg is None:
-            vreg = cwvreg.CubicWebVRegistry(config)
+            vreg = cwvreg.CWRegistryStore(config)
         self.vreg = vreg
         # connect to the repository and get instance's schema
         self.repo = config.repository(vreg)
@@ -288,11 +294,11 @@ class CubicWebPublisher(object):
         if config['query-log-file']:
             from threading import Lock
             self._query_log = open(config['query-log-file'], 'a')
-            self.publish = self.log_publish
+            self.handle_request = self.log_handle_request
             self._logfile_lock = Lock()
         else:
             self._query_log = None
-            self.publish = self.main_publish
+            self.handle_request = self.main_handle_request
         # instantiate session and url resolving helpers
         self.session_handler = session_handler_fact(self)
         self.set_urlresolver()
@@ -311,12 +317,12 @@ class CubicWebPublisher(object):
 
     # publish methods #########################################################
 
-    def log_publish(self, path, req):
+    def log_handle_request(self, req, path):
         """wrapper around _publish to log all queries executed for a given
         accessed path
         """
         try:
-            return self.main_publish(path, req)
+            return self.main_handle_request(req, path)
         finally:
             cnx = req.cnx
             if cnx:
@@ -332,7 +338,79 @@ class CubicWebPublisher(object):
                     except Exception:
                         self.exception('error while logging queries')
 
-    def main_publish(self, path, req):
+
+
+    def main_handle_request(self, req, path):
+        if not isinstance(req, CubicWebRequestBase):
+            warn('[3.15] Application entry poin arguments are now (req, path) '
+                 'not (path, req)', DeprecationWarning, 2)
+            req, path = path, req
+        if req.authmode == 'http':
+            # activate realm-based auth
+            realm = self.vreg.config['realm']
+            req.set_header('WWW-Authenticate', [('Basic', {'realm' : realm })], raw=False)
+        content = ''
+        try:
+            self.connect(req)
+            # DENY https acces for anonymous_user
+            if (req.https
+                and req.session.anonymous_session
+                and self.vreg.config['https-deny-anonymous']):
+                # don't allow anonymous on https connection
+                raise AuthenticationError()
+            # nested try to allow LogOut to delegate logic to AuthenticationError
+            # handler
+            try:
+                ### Try to generate the actual request content
+                content = self.core_handle(req, path)
+            # Handle user log-out
+            except LogOut, ex:
+                # When authentification is handled by cookie the code that
+                # raised LogOut must has invalidated the cookie. We can just
+                # reload the original url without authentification
+                if self.vreg.config['auth-mode'] == 'cookie' and ex.url:
+                    req.headers_out.setHeader('location', str(ex.url))
+                if ex.status is not None:
+                    req.status_out = httplib.SEE_OTHER
+                # When the authentification is handled by http we must
+                # explicitly ask for authentification to flush current http
+                # authentification information
+                else:
+                    # Render "logged out" content.
+                    # assignement to ``content`` prevent standard
+                    # AuthenticationError code to overwrite it.
+                    content = self.loggedout_content(req)
+                    # let the explicitly reset http credential
+                    raise AuthenticationError()
+        except Redirect, ex:
+            # authentication needs redirection (eg openid)
+            content = self.redirect_handler(req, ex)
+        # Wrong, absent or Reseted credential
+        except AuthenticationError:
+            # If there is an https url configured and
+            # the request do not used https, redirect to login form
+            https_url = self.vreg.config['https-url']
+            if https_url and req.base_url() != https_url:
+                req.status_out = httplib.SEE_OTHER
+                req.headers_out.setHeader('location', https_url + 'login')
+            else:
+                # We assume here that in http auth mode the user *May* provide
+                # Authentification Credential if asked kindly.
+                if self.vreg.config['auth-mode'] == 'http':
+                    req.status_out = httplib.UNAUTHORIZED
+                # In the other case (coky auth) we assume that there is no way
+                # for the user to provide them...
+                # XXX But WHY ?
+                else:
+                    req.status_out = httplib.FORBIDDEN
+                # If previous error handling already generated a custom content
+                # do not overwrite it. This is used by LogOut Except
+                # XXX ensure we don't actually serve content
+                if not content:
+                    content = self.need_login_content(req)
+        return content
+
+    def core_handle(self, req, path):
         """method called by the main publisher to process <path>
 
         should return a string containing the resulting page or raise a
@@ -347,86 +425,96 @@ class CubicWebPublisher(object):
         :rtype: str
         :return: the result of the pusblished url
         """
-        path = path or 'view'
         # don't log form values they may contains sensitive information
-        self.info('publish "%s" (%s, form params: %s)',
-                  path, req.session.sessionid, req.form.keys())
+        self.debug('publish "%s" (%s, form params: %s)',
+                   path, req.session.sessionid, req.form.keys())
         # remove user callbacks on a new request (except for json controllers
         # to avoid callbacks being unregistered before they could be called)
         tstart = clock()
         commited = False
         try:
+            ### standard processing of the request
             try:
                 ctrlid, rset = self.url_resolver.process(req, path)
                 try:
                     controller = self.vreg['controllers'].select(ctrlid, req,
                                                                  appli=self)
                 except NoSelectableObject:
-                    if ctrlid == 'login':
-                        raise Unauthorized(req._('log out first'))
                     raise Unauthorized(req._('not authorized'))
                 req.update_search_state()
                 result = controller.publish(rset=rset)
-                if req.cnx:
-                    # no req.cnx if anonymous aren't allowed and we are
-                    # displaying some anonymous enabled view such as the cookie
-                    # authentication form
-                    req.cnx.commit()
-                    commited = True
-            except (StatusResponse, DirectResponse):
-                if req.cnx:
-                    req.cnx.commit()
-                raise
-            except (AuthenticationError, LogOut):
-                raise
-            except Redirect:
-                # redirect is raised by edit controller when everything went fine,
-                # so try to commit
-                try:
-                    if req.cnx:
-                        txuuid = req.cnx.commit()
-                        if txuuid is not None:
-                            msg = u'<span class="undo">[<a href="%s">%s</a>]</span>' %(
-                                req.build_url('undo', txuuid=txuuid), req._('undo'))
-                            req.append_to_redirect_message(msg)
-                except ValidationError, ex:
-                    self.validation_error_handler(req, ex)
-                except Unauthorized, ex:
-                    req.data['errmsg'] = req._('You\'re not authorized to access this page. '
-                                               'If you think you should, please contact the site administrator.')
-                    self.error_handler(req, ex, tb=False)
-                except Exception, ex:
-                    self.error_handler(req, ex, tb=True)
-                else:
-                    # delete validation errors which may have been previously set
-                    if '__errorurl' in req.form:
-                        req.session.data.pop(req.form['__errorurl'], None)
-                    raise
-            except RemoteCallFailed, ex:
-                req.set_header('content-type', 'application/json')
-                raise StatusResponse(500, ex.dumps())
-            except NotFound:
-                raise StatusResponse(404, self.notfound_content(req))
-            except ValidationError, ex:
-                self.validation_error_handler(req, ex)
-            except Unauthorized, ex:
-                self.error_handler(req, ex, tb=False, code=403)
-            except (BadRQLQuery, RequestError), ex:
-                self.error_handler(req, ex, tb=False)
-            except BaseException, ex:
-                self.error_handler(req, ex, tb=True)
-            except:
-                self.critical('Catch all triggered!!!')
-                self.exception('this is what happened')
-                result = 'oops'
+            except StatusResponse, ex:
+                warn('StatusResponse is deprecated use req.status_out',
+                     DeprecationWarning)
+                result = ex.content
+                req.status_out = ex.status
+            except Redirect, ex:
+                # Redirect may be raised by edit controller when everything went
+                # fine, so attempt to commit
+                result = self.redirect_handler(req, ex)
+            if req.cnx:
+                txuuid = req.cnx.commit()
+                commited = True
+                if txuuid is not None:
+                    req.data['last_undoable_transaction'] = txuuid
+        ### error case
+        except NotFound, ex:
+            result = self.notfound_content(req)
+            req.status_out = ex.status
+        except ValidationError, ex:
+            req.status_out = httplib.CONFLICT
+            result = self.validation_error_handler(req, ex)
+        except RemoteCallFailed, ex:
+            result = self.ajax_error_handler(req, ex)
+        except Unauthorized, ex:
+            req.data['errmsg'] = req._('You\'re not authorized to access this page. '
+                                       'If you think you should, please contact the site administrator.')
+            req.status_out = httplib.UNAUTHORIZED
+            result = self.error_handler(req, ex, tb=False)
+        except Forbidden, ex:
+            req.data['errmsg'] = req._('This action is forbidden. '
+                                       'If you think it should be allowed, please contact the site administrator.')
+            req.status_out = httplib.FORBIDDEN
+            result = self.error_handler(req, ex, tb=False)
+        except (BadRQLQuery, RequestError), ex:
+            result = self.error_handler(req, ex, tb=False)
+        ### pass through exception
+        except DirectResponse:
+            if req.cnx:
+                req.cnx.commit()
+            raise
+        except (AuthenticationError, LogOut):
+            # the rollback is handled in the finally
+            raise
+        ### Last defence line
+        except BaseException, ex:
+            result = self.error_handler(req, ex, tb=True)
         finally:
             if req.cnx and not commited:
                 try:
                     req.cnx.rollback()
                 except Exception:
                     pass # ignore rollback error at this point
-        self.info('query %s executed in %s sec', req.relative_path(), clock() - tstart)
+            # request may be referenced by "onetime callback", so clear its entity
+            # cache to avoid memory usage
+            req.drop_entity_cache()
+        self.add_undo_link_to_msg(req)
+        self.debug('query %s executed in %s sec', req.relative_path(), clock() - tstart)
         return result
+
+    # Error handlers
+
+    def redirect_handler(self, req, ex):
+        """handle redirect
+        - comply to ex status
+        - set header field
+        - return empty content
+        """
+        self.debug('redirecting to %s', str(ex.location))
+        req.headers_out.setHeader('location', str(ex.location))
+        assert 300 <= ex.status < 400
+        req.status_out = ex.status
+        return ''
 
     def validation_error_handler(self, req, ex):
         ex.errors = dict((k, v) for k, v in ex.errors.items())
@@ -440,18 +528,22 @@ class CubicWebPublisher(object):
             # session key is 'url + #<form dom id', though we usually don't want
             # the browser to move to the form since it hides the global
             # messages.
-            raise Redirect(req.form['__errorurl'].rsplit('#', 1)[0])
-        self.error_handler(req, ex, tb=False)
+            location = req.form['__errorurl'].rsplit('#', 1)[0]
+            req.headers_out.setHeader('location', str(location))
+            req.status_out = httplib.SEE_OTHER
+            return ''
+        return self.error_handler(req, ex, tb=False)
 
-    def error_handler(self, req, ex, tb=False, code=500):
+    def error_handler(self, req, ex, tb=False):
         excinfo = sys.exc_info()
-        self.exception(repr(ex))
+        if tb:
+            self.exception(repr(ex))
         req.set_header('Cache-Control', 'no-cache')
         req.remove_header('Etag')
         req.reset_message()
         req.reset_headers()
-        if req.json_request:
-            raise RemoteCallFailed(unicode(ex))
+        if req.ajax_request:
+            return self.ajax_error_handler(req, ex)
         try:
             req.data['ex'] = ex
             if tb:
@@ -462,7 +554,27 @@ class CubicWebPublisher(object):
             content = self.vreg['views'].main_template(req, template, view=errview)
         except Exception:
             content = self.vreg['views'].main_template(req, 'error-template')
-        raise StatusResponse(code, content)
+        if getattr(ex, 'status', None) is not None:
+            req.status_out = ex.status
+        return content
+
+    def add_undo_link_to_msg(self, req):
+        txuuid = req.data.get('last_undoable_transaction')
+        if txuuid is not None:
+            msg = u'<span class="undo">[<a href="%s">%s</a>]</span>' %(
+            req.build_url('undo', txuuid=txuuid), req._('undo'))
+            req.append_to_redirect_message(msg)
+
+    def ajax_error_handler(self, req, ex):
+        req.set_header('content-type', 'application/json')
+        status = ex.status
+        if status is None:
+            status = httplib.INTERNAL_SERVER_ERROR
+        json_dumper = getattr(ex, 'dumps', lambda : unicode(ex))
+        req.status_out = status
+        return json_dumper()
+
+    # special case handling
 
     def need_login_content(self, req):
         return self.vreg['views'].main_template(req, 'login')
@@ -475,6 +587,8 @@ class CubicWebPublisher(object):
         view = self.vreg['views'].select('404', req)
         template = self.main_template_id(req)
         return self.vreg['views'].main_template(req, template, view=view)
+
+    # template stuff
 
     def main_template_id(self, req):
         template = req.form.get('__template', req.property_value('ui.main-template'))

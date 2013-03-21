@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -24,6 +24,7 @@ from warnings import warn
 from logilab.common import interface
 from logilab.common.decorators import cached
 from logilab.common.deprecation import deprecated
+from logilab.common.registry import yes
 from logilab.mtconverter import TransformData, TransformError, xml_escape
 
 from rql.utils import rqlvar_maker
@@ -34,7 +35,6 @@ from rql.nodes import (Not, VariableRef, Constant, make_relation,
 from cubicweb import Unauthorized, typed_eid, neg_role
 from cubicweb.utils import support_args
 from cubicweb.rset import ResultSet
-from cubicweb.selectors import yes
 from cubicweb.appobject import AppObject
 from cubicweb.req import _check_cw_unsafe
 from cubicweb.schema import (RQLVocabularyConstraint, RQLConstraint,
@@ -1112,6 +1112,9 @@ class Entity(AppObject):
         # insert security RQL expressions granting the permission to 'add' the
         # relation into the rql syntax tree, if necessary
         rqlexprs = rdef.get_rqlexprs('add')
+        if not self.has_eid():
+            rqlexprs = [rqlexpr for rqlexpr in rqlexprs
+                        if searchedvar.name in rqlexpr.mainvars]
         if rqlexprs and not rdef.has_perm(self._cw, 'add', **sec_check_args):
             # compute a varmap suitable to RQLRewriter.rewrite argument
             varmap = dict((v, v) for v in (searchedvar.name, evar.name)

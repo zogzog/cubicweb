@@ -313,6 +313,7 @@ class Field(object):
 
     def role_name(self):
         """return <field.name>-<field.role> if role is specified, else field.name"""
+        assert self.name, 'field without a name (give it to constructor for explicitly built fields)'
         if self.role is not None:
             return role_name(self.name, self.role)
         return self.name
@@ -360,7 +361,7 @@ class Field(object):
         if self.eidparam and self.role is not None:
             if form._cw.vreg.schema.rschema(self.name).final:
                 return form.edited_entity.e_schema.default(self.name)
-            return ()
+            return form.linked_to.get((self.name, self.role), ())
         return None
 
     def example_format(self, req):

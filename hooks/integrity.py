@@ -28,7 +28,7 @@ from yams.schema import role_name
 from cubicweb import ValidationError
 from cubicweb.schema import (META_RTYPES, WORKFLOW_RTYPES,
                              RQLConstraint, RQLUniqueConstraint)
-from cubicweb.selectors import is_instance
+from cubicweb.predicates import is_instance
 from cubicweb.uilib import soup2xhtml
 from cubicweb.server import hook
 

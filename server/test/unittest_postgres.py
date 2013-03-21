@@ -25,7 +25,7 @@ from logilab.common.testlib import SkipTest
 
 from cubicweb.devtools import ApptestConfiguration
 from cubicweb.devtools.testlib import CubicWebTC
-from cubicweb.selectors import is_instance
+from cubicweb.predicates import is_instance
 from cubicweb.entities.adapters import IFTIndexableAdapter
 
 AT_LOGILAB = socket.gethostname().endswith('.logilab.fr') # XXX
@@ -50,7 +50,7 @@ class PostgresFTITC(CubicWebTC):
                                content=u'cubicweb cubicweb')
         self.commit()
         self.assertEqual(req.execute('Card X ORDERBY FTIRANK(X) DESC WHERE X has_text "cubicweb"').rows,
-                          [[c1.eid], [c3.eid], [c2.eid]])
+                         [(c1.eid,), (c3.eid,), (c2.eid,)])
 
 
     def test_attr_weight(self):
@@ -67,7 +67,7 @@ class PostgresFTITC(CubicWebTC):
                                    content=u'autre chose')
             self.commit()
             self.assertEqual(req.execute('Card X ORDERBY FTIRANK(X) DESC WHERE X has_text "cubicweb"').rows,
-                              [[c3.eid], [c1.eid], [c2.eid]])
+                             [(c3.eid,), (c1.eid,), (c2.eid,)])
 
     def test_entity_weight(self):
         class PersonneIFTIndexableAdapter(IFTIndexableAdapter):
@@ -80,7 +80,7 @@ class PostgresFTITC(CubicWebTC):
             c3 = req.create_entity('Comment', content=u'cubicweb cubicweb cubicweb', comments=c1)
             self.commit()
             self.assertEqual(req.execute('Any X ORDERBY FTIRANK(X) DESC WHERE X has_text "cubicweb"').rows,
-                              [[c1.eid], [c3.eid], [c2.eid]])
+                              [(c1.eid,), (c3.eid,), (c2.eid,)])
 
 
     def test_tz_datetime(self):

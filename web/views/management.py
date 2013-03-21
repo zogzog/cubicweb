@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -20,9 +20,11 @@
 __docformat__ = "restructuredtext en"
 _ = unicode
 
-from logilab.mtconverter import xml_escape
 
-from cubicweb.selectors import yes, none_rset, match_user_groups, authenticated_user
+from logilab.mtconverter import xml_escape
+from logilab.common.registry import yes
+
+from cubicweb.predicates import none_rset, match_user_groups, authenticated_user
 from cubicweb.view import AnyRsetView, StartupView, EntityView, View
 from cubicweb.uilib import html_traceback, rest_traceback, exc_message
 from cubicweb.web import formwidgets as wdgs
@@ -147,6 +149,8 @@ class ErrorView(AnyRsetView):
             form.add_hidden('description', binfo,
                             # we must use a text area to keep line breaks
                             widget=wdgs.TextArea({'class': 'hidden'}))
+            # add a signature so one can't send arbitrary text
+            form.add_hidden('__signature', req.vreg.config.sign_text(binfo))
             form.add_hidden('__bugreporting', '1')
             form.form_buttons = [wdgs.SubmitButton(MAIL_SUBMIT_MSGID)]
             form.action = req.build_url('reportbug')
@@ -170,7 +174,7 @@ class CwStats(View):
     """A textual stats output for monitoring tools such as munin """
 
     __regid__ = 'processinfo'
-    content_type = 'text/txt'
+    content_type = 'text/plain'
     templatable = False
     __select__ = none_rset() & match_user_groups('users', 'managers')
 

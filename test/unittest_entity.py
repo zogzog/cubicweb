@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -18,14 +18,19 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unit tests for cubicweb.web.views.entities module"""
 
+from __future__ import with_statement
+
 from datetime import datetime
+
 from logilab.common import tempattr
+from logilab.common.decorators import clear_cache
+
 from cubicweb import Binary, Unauthorized
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.mttransforms import HAS_TAL
 from cubicweb.entities import fetch_config
 from cubicweb.uilib import soup2xhtml
-from cubicweb.schema import RQLVocabularyConstraint
+from cubicweb.schema import RQLVocabularyConstraint, RRQLExpression
 
 class EntityTC(CubicWebTC):
 
@@ -316,12 +321,22 @@ class EntityTC(CubicWebTC):
                          'WHERE NOT S use_email O, O eid %(x)s, S is CWUser, '
                          'S login AA, S firstname AB, S surname AC, S modification_date AD')
         self.login('anon')
-        email = self.execute('Any X WHERE X eid %(x)s', {'x': email.eid}).get_entity(0, 0)
-        rql = email.cw_unrelated_rql('use_email', 'CWUser', 'object')[0]
-        self.assertEqual(rql, 'Any S,AA,AB,AC,AD ORDERBY AA '
-                         'WHERE NOT S use_email O, O eid %(x)s, S is CWUser, '
-                         'S login AA, S firstname AB, S surname AC, S modification_date AD, '
-                         'AE eid %(AF)s, EXISTS(S identity AE, NOT AE in_group AG, AG name "guests", AG is CWGroup)')
+        rperms = self.schema['EmailAddress'].permissions['read']
+        clear_cache(self.schema['EmailAddress'], 'get_groups')
+        clear_cache(self.schema['EmailAddress'], 'get_rqlexprs')
+        self.schema['EmailAddress'].permissions['read'] = ('managers', 'users', 'guests',)
+        try:
+            email = self.execute('Any X WHERE X eid %(x)s', {'x': email.eid}).get_entity(0, 0)
+            rql = email.cw_unrelated_rql('use_email', 'CWUser', 'object')[0]
+            self.assertEqual(rql, 'Any S,AA,AB,AC,AD ORDERBY AA '
+                             'WHERE NOT S use_email O, O eid %(x)s, S is CWUser, '
+                             'S login AA, S firstname AB, S surname AC, S modification_date AD, '
+                             'AE eid %(AF)s, EXISTS(S identity AE, NOT AE in_group AG, AG name "guests", AG is CWGroup)')
+        finally:
+            clear_cache(self.schema['EmailAddress'], 'get_groups')
+            clear_cache(self.schema['EmailAddress'], 'get_rqlexprs')
+            self.schema['EmailAddress'].permissions['read'] = rperms
+
 
     def test_unrelated_rql_security_nonexistant(self):
         self.login('anon')
@@ -347,6 +362,18 @@ class EntityTC(CubicWebTC):
             'S is Personne, S nom AA, S prenom AB, S modification_date AC, '
             'NOT (S connait AD, AD nom "toto"), AD is Personne, '
             'EXISTS(S travaille AE, AE nom "tutu")')
+
+    def test_unrelated_rql_security_rel_perms(self):
+        '''check `connait` add permission has no effect for a new entity on the
+        unrelated rql'''
+        rdef = self.schema['Personne'].rdef('connait')
+        perm_rrqle = RRQLExpression('U has_update_permission S')
+        with self.temporary_permissions((rdef, {'add': (perm_rrqle,)})):
+            person = self.vreg['etypes'].etype_class('Personne')(self.request())
+            rql = person.cw_unrelated_rql('connait', 'Personne', 'subject')[0]
+        self.assertEqual(rql, 'Any O,AA,AB,AC ORDERBY AC DESC WHERE '
+                         'O is Personne, O nom AA, O prenom AB, '
+                         'O modification_date AC')
 
     def test_unrelated_rql_constraints_edition_subject(self):
         person = self.request().create_entity('Personne', nom=u'sylvain')
@@ -459,31 +486,40 @@ class EntityTC(CubicWebTC):
                           1)
 
     def test_unrelated_security(self):
-        email = self.execute('INSERT EmailAddress X: X address "hop"').get_entity(0, 0)
-        rset = email.unrelated('use_email', 'CWUser', 'object')
-        self.assertEqual([x.login for x in rset.entities()], [u'admin', u'anon'])
-        user = self.request().user
-        rset = user.unrelated('use_email', 'EmailAddress', 'subject')
-        self.assertEqual([x.address for x in rset.entities()], [u'hop'])
-        req = self.request()
-        self.create_user(req, 'toto')
-        self.login('toto')
-        email = self.execute('Any X WHERE X eid %(x)s', {'x': email.eid}).get_entity(0, 0)
-        rset = email.unrelated('use_email', 'CWUser', 'object')
-        self.assertEqual([x.login for x in rset.entities()], ['toto'])
-        user = self.request().user
-        rset = user.unrelated('use_email', 'EmailAddress', 'subject')
-        self.assertEqual([x.address for x in rset.entities()], ['hop'])
-        user = self.execute('Any X WHERE X login "admin"').get_entity(0, 0)
-        rset = user.unrelated('use_email', 'EmailAddress', 'subject')
-        self.assertEqual([x.address for x in rset.entities()], [])
-        self.login('anon')
-        email = self.execute('Any X WHERE X eid %(x)s', {'x': email.eid}).get_entity(0, 0)
-        rset = email.unrelated('use_email', 'CWUser', 'object')
-        self.assertEqual([x.login for x in rset.entities()], [])
-        user = self.request().user
-        rset = user.unrelated('use_email', 'EmailAddress', 'subject')
-        self.assertEqual([x.address for x in rset.entities()], [])
+        rperms = self.schema['EmailAddress'].permissions['read']
+        clear_cache(self.schema['EmailAddress'], 'get_groups')
+        clear_cache(self.schema['EmailAddress'], 'get_rqlexprs')
+        self.schema['EmailAddress'].permissions['read'] = ('managers', 'users', 'guests',)
+        try:
+            email = self.execute('INSERT EmailAddress X: X address "hop"').get_entity(0, 0)
+            rset = email.unrelated('use_email', 'CWUser', 'object')
+            self.assertEqual([x.login for x in rset.entities()], [u'admin', u'anon'])
+            user = self.request().user
+            rset = user.unrelated('use_email', 'EmailAddress', 'subject')
+            self.assertEqual([x.address for x in rset.entities()], [u'hop'])
+            req = self.request()
+            self.create_user(req, 'toto')
+            self.login('toto')
+            email = self.execute('Any X WHERE X eid %(x)s', {'x': email.eid}).get_entity(0, 0)
+            rset = email.unrelated('use_email', 'CWUser', 'object')
+            self.assertEqual([x.login for x in rset.entities()], ['toto'])
+            user = self.request().user
+            rset = user.unrelated('use_email', 'EmailAddress', 'subject')
+            self.assertEqual([x.address for x in rset.entities()], ['hop'])
+            user = self.execute('Any X WHERE X login "admin"').get_entity(0, 0)
+            rset = user.unrelated('use_email', 'EmailAddress', 'subject')
+            self.assertEqual([x.address for x in rset.entities()], [])
+            self.login('anon')
+            email = self.execute('Any X WHERE X eid %(x)s', {'x': email.eid}).get_entity(0, 0)
+            rset = email.unrelated('use_email', 'CWUser', 'object')
+            self.assertEqual([x.login for x in rset.entities()], [])
+            user = self.request().user
+            rset = user.unrelated('use_email', 'EmailAddress', 'subject')
+            self.assertEqual([x.address for x in rset.entities()], [])
+        finally:
+            clear_cache(self.schema['EmailAddress'], 'get_groups')
+            clear_cache(self.schema['EmailAddress'], 'get_rqlexprs')
+            self.schema['EmailAddress'].permissions['read'] = rperms
 
     def test_unrelated_new_entity(self):
         e = self.vreg['etypes'].etype_class('CWUser')(self.request())

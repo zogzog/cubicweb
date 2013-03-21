@@ -20,7 +20,7 @@
 """
 __docformat__ = "restructuredtext en"
 
-from cubicweb.selectors import is_instance
+from cubicweb.predicates import is_instance
 from cubicweb.view import EntityView
 
 _ = unicode

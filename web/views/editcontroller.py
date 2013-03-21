@@ -27,7 +27,7 @@ from rql.utils import rqlvar_maker
 
 from cubicweb import Binary, ValidationError, typed_eid
 from cubicweb.view import EntityAdapter, implements_adapter_compat
-from cubicweb.selectors import is_instance
+from cubicweb.predicates import is_instance
 from cubicweb.web import (INTERNAL_FIELD_VALUE, RequestError, NothingToEdit,
                           ProcessFormError)
 from cubicweb.web.views import basecontrollers, autoform
@@ -161,7 +161,7 @@ class EditController(basecontrollers.ViewController):
             neweid = entity.eid
         except ValidationError, ex:
             self._to_create[eid] = ex.entity
-            if self._cw.json_request: # XXX (syt) why?
+            if self._cw.ajax_request: # XXX (syt) why?
                 ex.entity = eid
             raise
         self._to_create[eid] = neweid

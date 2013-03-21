@@ -22,7 +22,7 @@ _ = unicode
 
 from logilab.mtconverter import xml_escape
 
-from cubicweb.selectors import is_instance
+from cubicweb.predicates import is_instance
 from cubicweb.view import EntityView
 from cubicweb.web.views.xmlrss import XMLView
 

@@ -45,9 +45,9 @@ database        bdb
 suffix          "dc=cubicweb,dc=test"
 
 # rootdn directive for specifying a superuser on the database. This is needed
-# for syncrepl.
-#rootdn          "cn=admin,dc=cubicweb,dc=test"
-#rootpw          "cubicwebrocks"
+# for syncrepl. and ldapdelete easyness
+rootdn          "cn=admin,dc=cubicweb,dc=test"
+rootpw          "cw"
 # Where the database file are physically stored for database #1
-directory       "%(apphome)s/ldapdb"
+directory       "%(testdir)s"
 
