@@ -140,7 +140,7 @@ if ! which xauth >/dev/null; then
 fi
 
 # tidy up after ourselves
-trap clean_up EXIT
+trap clean_up EXIT TERM
 
 # If the user did not specify an X authorization file to use, set up a temporary
 # directory to house one.
@@ -178,13 +178,8 @@ EOF
     exit 1
 done
 
-# Start the command and save its exit status.
-set +e
-DISPLAY=:$SERVERNUM XAUTHORITY=$AUTHFILE "$@" 2>&1
-RETVAL=$?
-set -e
-
-# Return the executed command's exit status.
-exit $RETVAL
+# Start the command
+DISPLAY=:$SERVERNUM XAUTHORITY=$AUTHFILE "$@" 2>&1 &
+wait $!
 
 # vim:set ai et sts=4 sw=4 tw=80:
