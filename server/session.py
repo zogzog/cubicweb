@@ -258,7 +258,7 @@ class Session(RequestSessionBase):
       :attr:`data` is a dictionary containing shared data, used to communicate
       extra information between the client and the repository
 
-      :attr:`_tx_data` is a dictionary of :class:`TransactionData` instance, one
+      :attr:`_txs` is a dictionary of :class:`TransactionData` instance, one
       for each running transaction. The key is the transaction id. By default
       the transaction id is the thread name but it can be otherwise (per dbapi
       cursor for instance, or per thread name *from another process*).
@@ -381,8 +381,9 @@ class Session(RequestSessionBase):
         self.data = {}
         # i18n initialization
         self.set_language(user.prefered_language())
-        # internals
-        self._tx_data = {}
+        ### internals
+        # Transaction of this section
+        self._txs = {}
         # Data local to the thread
         self.__threaddata = threading.local()
         self._threads_in_transaction = set()
@@ -393,22 +394,22 @@ class Session(RequestSessionBase):
         return '<session %s (%s 0x%x)>' % (
             unicode(self.user.login), self.id, id(self))
 
-    def set_tx_data(self, txid=None):
+    def set_tx(self, txid=None):
         if txid is None:
             txid = threading.currentThread().getName()
         try:
-            self.__threaddata.txdata = self._tx_data[txid]
+            self.__threaddata.txdata = self._txs[txid]
         except KeyError:
             rewriter = RQLRewriter(self)
             tx = Transaction(txid, self.default_mode, rewriter)
-            self.__threaddata.txdata = self._tx_data[txid] = tx
+            self.__threaddata.txdata = self._txs[txid] = tx
 
     @property
     def _threaddata(self):
         try:
             return self.__threaddata.txdata
         except AttributeError:
-            self.set_tx_data()
+            self.set_tx()
             return self.__threaddata.txdata
 
     def get_option_value(self, option, foreid=None):
@@ -1018,7 +1019,7 @@ class Session(RequestSessionBase):
                 self._clear_tx_storage(txstore)
 
     def _clear_thread_storage(self, txstore):
-        self._tx_data.pop(txstore.transactionid, None)
+        self._txs.pop(txstore.transactionid, None)
         try:
             del self.__threaddata.txdata
         except AttributeError:
@@ -1170,11 +1171,11 @@ class Session(RequestSessionBase):
                 self._free_thread_cnxset(thread, cnxset, force_close=True)
         self.rollback()
         del self.__threaddata
-        del self._tx_data
+        del self._txs
 
     @property
     def closed(self):
-        return not hasattr(self, '_tx_data')
+        return not hasattr(self, '_txs')
 
     # transaction data/operations management ##################################
 

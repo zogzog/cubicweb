@@ -844,7 +844,7 @@ class Repository(object):
         self.debug('begin commit for session %s', sessionid)
         try:
             session = self._get_session(sessionid)
-            session.set_tx_data(txid)
+            session.set_tx(txid)
             return session.commit()
         except (ValidationError, Unauthorized):
             raise
@@ -857,7 +857,7 @@ class Repository(object):
         self.debug('begin rollback for session %s', sessionid)
         try:
             session = self._get_session(sessionid)
-            session.set_tx_data(txid)
+            session.set_tx(txid)
             session.rollback()
         except Exception:
             self.exception('unexpected error')
@@ -1005,7 +1005,7 @@ class Repository(object):
         except KeyError:
             raise BadConnectionId('No such session %s' % sessionid)
         if setcnxset:
-            session.set_tx_data(txid) # must be done before set_cnxset
+            session.set_tx(txid) # must be done before set_cnxset
             session.set_cnxset()
         return session
 
