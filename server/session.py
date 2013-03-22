@@ -388,7 +388,7 @@ class Session(RequestSessionBase):
         self.__threaddata = threading.local()
         self._threads_in_transaction = set()
         self._closed = False
-        self._closed_lock = threading.Lock()
+        self._lock = threading.RLock()
 
     def __unicode__(self):
         return '<session %s (%s 0x%x)>' % (
@@ -861,7 +861,7 @@ class Session(RequestSessionBase):
 
     def set_cnxset(self):
         """the session need a connections set to execute some queries"""
-        with self._closed_lock:
+        with self._lock:
             if self._closed:
                 self.free_cnxset(True)
                 raise Exception('try to set connections set on a closed session %s' % self.id)
@@ -1153,7 +1153,7 @@ class Session(RequestSessionBase):
 
     def close(self):
         """do not close connections set on session close, since they are shared now"""
-        with self._closed_lock:
+        with self._lock:
             self._closed = True
         # copy since _threads_in_transaction maybe modified while waiting
         for thread, cnxset in self._threads_in_transaction.copy():
