@@ -453,9 +453,9 @@ class Session(RequestSessionBase):
         # share pending_operations, else operation added in the hi-jacked
         # session such as SendMailOp won't ever be processed
         tx.pending_operations = self.pending_operations
-        # everything in transaction_data should be copied back but the entity
+        # everything in tx.data should be copied back but the entity
         # type cache we don't want to avoid security pb
-        tx.data = self.transaction_data.copy()
+        tx.data = self._tx.data.copy()
         tx.data.pop('ecache', None)
         return session
 
@@ -605,13 +605,13 @@ class Session(RequestSessionBase):
         """return True if the entity of the given eid is being deleted in the
         current transaction
         """
-        return eid in self.transaction_data.get('pendingeids', ())
+        return eid in self._tx.data.get('pendingeids', ())
 
     def added_in_transaction(self, eid):
         """return True if the entity of the given eid is being created in the
         current transaction
         """
-        return eid in self.transaction_data.get('neweids', ())
+        return eid in self._tx.data.get('neweids', ())
 
     def rtype_eids_rdef(self, rtype, eidfrom, eidto):
         # use type_and_source_from_eid instead of type_from_eid for optimization
@@ -921,14 +921,14 @@ class Session(RequestSessionBase):
     def _touch(self):
         """update latest session usage timestamp and reset mode to read"""
         self.timestamp = time()
-        self.local_perm_cache.clear() # XXX simply move in transaction_data, no?
+        self.local_perm_cache.clear() # XXX simply move in tx.data, no?
 
     # shared data handling ###################################################
 
     def get_shared_data(self, key, default=None, pop=False, txdata=False):
         """return value associated to `key` in session data"""
         if txdata:
-            data = self.transaction_data
+            data = self._tx.data
         else:
             data = self.data
         if pop:
@@ -939,7 +939,7 @@ class Session(RequestSessionBase):
     def set_shared_data(self, key, value, txdata=False):
         """set value associated to `key` in session data"""
         if txdata:
-            self.transaction_data[key] = value
+            self._tx.data[key] = value
         else:
             self.data[key] = value
 
@@ -962,22 +962,22 @@ class Session(RequestSessionBase):
         #     may be an acceptable risk. Anyway we could activate it or not
         #     according to a configuration option
         try:
-            self.transaction_data['ecache'].setdefault(entity.eid, entity)
+            self._tx.data['ecache'].setdefault(entity.eid, entity)
         except KeyError:
-            self.transaction_data['ecache'] = ecache = {}
+            self._tx.data['ecache'] = ecache = {}
             ecache[entity.eid] = entity
 
     def entity_cache(self, eid):
-        return self.transaction_data['ecache'][eid]
+        return self._tx.data['ecache'][eid]
 
     def cached_entities(self):
-        return self.transaction_data.get('ecache', {}).values()
+        return self._tx.data.get('ecache', {}).values()
 
     def drop_entity_cache(self, eid=None):
         if eid is None:
-            self.transaction_data.pop('ecache', None)
+            self._tx.data.pop('ecache', None)
         else:
-            del self.transaction_data['ecache'][eid]
+            del self._tx.data['ecache'][eid]
 
     def from_controller(self):
         """return the id (string) of the controller issuing the request (no
@@ -1221,17 +1221,17 @@ class Session(RequestSessionBase):
 
     def transaction_uuid(self, set=True):
         try:
-            return self.transaction_data['tx_uuid']
+            return self._tx.data['tx_uuid']
         except KeyError:
             if not set:
                 return
-            self.transaction_data['tx_uuid'] = uuid = uuid4().hex
+            self._tx.data['tx_uuid'] = uuid = uuid4().hex
             self.repo.system_source.start_undoable_transaction(self, uuid)
             return uuid
 
     def transaction_inc_action_counter(self):
-        num = self.transaction_data.setdefault('tx_action_count', 0) + 1
-        self.transaction_data['tx_action_count'] = num
+        num = self._tx.data.setdefault('tx_action_count', 0) + 1
+        self._tx.data['tx_action_count'] = num
         return num
 
     # querier helpers #########################################################
