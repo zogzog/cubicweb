@@ -395,6 +395,9 @@ class Session(RequestSessionBase):
             unicode(self.user.login), self.id, id(self))
 
     def set_tx(self, txid=None):
+        """set the default transaction of the current thread to <txid>
+
+        Transaction is created if necessary"""
         if txid is None:
             txid = threading.currentThread().getName()
         try:
