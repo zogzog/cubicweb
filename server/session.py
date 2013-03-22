@@ -263,15 +263,15 @@ class Session(RequestSessionBase):
       the transaction id is the thread name but it can be otherwise (per dbapi
       cursor for instance, or per thread name *from another process*).
 
-      :attr:`__threaddata` is a thread local storage whose `txdata` attribute
-      refers to the proper instance of :class:`TransactionData` according to the
+      :attr:`__threaddata` is a thread local storage whose `tx` attribute
+      refers to the proper instance of :class:`Transaction` according to the
       transaction.
 
       :attr:`_threads_in_transaction` is a set of (thread, connections set)
       referencing threads that currently hold a connections set for the session.
     .. automethod:: cubicweb.server.session.transaction
 
-    You should not have to use neither :attr:`_txdata` nor :attr:`__threaddata`,
+    You should not have to use neither :attr:`_tx` nor :attr:`__threaddata`,
     simply access transaction data transparently through the :attr:`_threaddata`
     property. Also, you usually don't have to access it directly since current
     transaction's data may be accessed/modified through properties / methods:
@@ -398,19 +398,19 @@ class Session(RequestSessionBase):
         if txid is None:
             txid = threading.currentThread().getName()
         try:
-            self.__threaddata.txdata = self._txs[txid]
+            self.__threaddata.tx = self._txs[txid]
         except KeyError:
             rewriter = RQLRewriter(self)
             tx = Transaction(txid, self.default_mode, rewriter)
-            self.__threaddata.txdata = self._txs[txid] = tx
+            self.__threaddata.tx = self._txs[txid] = tx
 
     @property
     def _threaddata(self):
         try:
-            return self.__threaddata.txdata
+            return self.__threaddata.tx
         except AttributeError:
             self.set_tx()
-            return self.__threaddata.txdata
+            return self.__threaddata.tx
 
     def get_option_value(self, option, foreid=None):
         return self.repo.get_option_value(option, foreid)
@@ -1005,7 +1005,7 @@ class Session(RequestSessionBase):
         by _touch
         """
         try:
-            txstore = self.__threaddata.txdata
+            txstore = self.__threaddata.tx
         except AttributeError:
             pass
         else:
@@ -1021,7 +1021,7 @@ class Session(RequestSessionBase):
     def _clear_thread_storage(self, txstore):
         self._txs.pop(txstore.transactionid, None)
         try:
-            del self.__threaddata.txdata
+            del self.__threaddata.tx
         except AttributeError:
             pass
 
