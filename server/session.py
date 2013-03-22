@@ -623,10 +623,10 @@ class Session(RequestSessionBase):
         return oldread, oldwrite
 
     def reset_security(self, read, write):
-        txstore = self._tx
-        txstore.ctx_count -= 1
-        if txstore.ctx_count == 0:
-            self._clear_thread_storage(txstore)
+        tx = self._tx
+        tx.ctx_count -= 1
+        if tx.ctx_count == 0:
+            self._clear_thread_storage(tx)
         else:
             if read is not None:
                 self.set_read_security(read)
@@ -636,10 +636,10 @@ class Session(RequestSessionBase):
     @property
     def read_security(self):
         """return a boolean telling if read security is activated or not"""
-        txstore = self._tx
-        if txstore is None:
+        tx = self._tx
+        if tx is None:
             return DEFAULT_SECURITY
-        return txstore.read_security
+        return tx.read_security
 
     def set_read_security(self, activated):
         """[de]activate read security, returning the previous value set for
@@ -648,11 +648,11 @@ class Session(RequestSessionBase):
         you should usually use the `security_enabled` context manager instead
         of this to change security settings.
         """
-        txstore = self._tx
-        if txstore is None:
+        tx = self._tx
+        if tx is None:
             return DEFAULT_SECURITY
-        oldmode = txstore.read_security
-        txstore.read_security = activated
+        oldmode = tx.read_security
+        tx.read_security = activated
         # dbapi_query used to detect hooks triggered by a 'dbapi' query (eg not
         # issued on the session). This is tricky since we the execution model of
         # a (write) user query is:
@@ -669,17 +669,17 @@ class Session(RequestSessionBase):
         # else (False actually) is not perfect but should be enough
         #
         # also reset dbapi_query to true when we go back to DEFAULT_SECURITY
-        txstore.dbapi_query = (oldmode is DEFAULT_SECURITY
+        tx.dbapi_query = (oldmode is DEFAULT_SECURITY
                                or activated is DEFAULT_SECURITY)
         return oldmode
 
     @property
     def write_security(self):
         """return a boolean telling if write security is activated or not"""
-        txstore = self._tx
-        if txstore is None:
+        tx = self._tx
+        if tx is None:
             return DEFAULT_SECURITY
-        return txstore.write_security
+        return tx.write_security
 
     def set_write_security(self, activated):
         """[de]activate write security, returning the previous value set for
@@ -688,11 +688,11 @@ class Session(RequestSessionBase):
         you should usually use the `security_enabled` context manager instead
         of this to change security settings.
         """
-        txstore = self._tx
-        if txstore is None:
+        tx = self._tx
+        if tx is None:
             return DEFAULT_SECURITY
-        oldmode = txstore.write_security
-        txstore.write_security = activated
+        oldmode = tx.write_security
+        tx.write_security = activated
         return oldmode
 
     @property
@@ -732,10 +732,10 @@ class Session(RequestSessionBase):
         return oldmode, changes
 
     def reset_hooks_mode_categories(self, oldmode, mode, categories):
-        txstore = self._tx
-        txstore.ctx_count -= 1
-        if txstore.ctx_count == 0:
-            self._clear_thread_storage(txstore)
+        tx = self._tx
+        tx.ctx_count -= 1
+        if tx.ctx_count == 0:
+            self._clear_thread_storage(tx)
         else:
             try:
                 if categories:
@@ -1005,29 +1005,29 @@ class Session(RequestSessionBase):
         by _touch
         """
         try:
-            txstore = self.__threaddata.tx
+            tx = self.__threaddata.tx
         except AttributeError:
             pass
         else:
             if free_cnxset:
                 self.free_cnxset()
-                if txstore.ctx_count == 0:
-                    self._clear_thread_storage(txstore)
+                if tx.ctx_count == 0:
+                    self._clear_thread_storage(tx)
                 else:
-                    self._clear_tx_storage(txstore)
+                    self._clear_tx_storage(tx)
             else:
-                self._clear_tx_storage(txstore)
+                self._clear_tx_storage(tx)
 
-    def _clear_thread_storage(self, txstore):
-        self._txs.pop(txstore.transactionid, None)
+    def _clear_thread_storage(self, tx):
+        self._txs.pop(tx.transactionid, None)
         try:
             del self.__threaddata.tx
         except AttributeError:
             pass
 
-    def _clear_tx_storage(self, txstore):
-        txstore.clear()
-        txstore._rewriter = RQLRewriter(self)
+    def _clear_tx_storage(self, tx):
+        tx.clear()
+        tx._rewriter = RQLRewriter(self)
 
     def commit(self, free_cnxset=True, reset_pool=None):
         """commit the current session's transaction"""
