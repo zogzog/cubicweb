@@ -165,7 +165,7 @@ class Transaction(object):
 
     Internal transaction data:
 
-      :attr:`transaction_data`,is a dictionary containing some shared data
+      :attr:`data`,is a dictionary containing some shared data
       cleared at the end of the transaction. Hooks and operations may put
       arbitrary data in there, and this may also be used as a communication
       channel between the client and the repository.
@@ -208,7 +208,7 @@ class Transaction(object):
         self.cnxset = None
 
         #: dict containing arbitrary data cleared at the end of the transaction
-        self.transaction_data = {}
+        self.data = {}
         #: ordered list of operations to be processed on commit/rollback
         self.pending_operations = []
         #: (None, 'precommit', 'postcommit', 'uncommitable')
@@ -228,10 +228,14 @@ class Transaction(object):
         # RQLRewriter are not thread safe
         self._rewriter = rewriter
 
+    @property
+    def transaction_data(self):
+        return self.data
+
 
     def clear(self):
         """reset internal data"""
-        self.transaction_data = {}
+        self.data = {}
         #: ordered list of operations to be processed on commit/rollback
         self.pending_operations = []
         #: (None, 'precommit', 'postcommit', 'uncommitable')
@@ -451,8 +455,8 @@ class Session(RequestSessionBase):
         tx.pending_operations = self.pending_operations
         # everything in transaction_data should be copied back but the entity
         # type cache we don't want to avoid security pb
-        tx.transaction_data = self.transaction_data.copy()
-        tx.transaction_data.pop('ecache', None)
+        tx.data = self.transaction_data.copy()
+        tx.data.pop('ecache', None)
         return session
 
     def add_relation(self, fromeid, rtype, toeid):
