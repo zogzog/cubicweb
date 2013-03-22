@@ -48,28 +48,28 @@ NO_UNDO_TYPES.add('cw_source')
 
 @objectify_predicate
 def is_user_session(cls, req, **kwargs):
-    """repository side only predicate returning 1 if the session is a regular
-    user session and not an internal session
-    """
+    """return 1 when session is not internal.
+
+    This predicate can only be used repository side only. """
     return not req.is_internal_session
 
 @objectify_predicate
 def is_internal_session(cls, req, **kwargs):
-    """repository side only predicate returning 1 if the session is not a regular
-    user session but an internal session
-    """
+    """return 1 when session is not internal.
+
+    This predicate can only be used repository side only. """
     return req.is_internal_session
 
 @objectify_predicate
 def repairing(cls, req, **kwargs):
-    """repository side only predicate returning 1 if the session is not a regular
-    user session but an internal session
-    """
+    """return 1 when repository is running in repair mode"""
     return req.vreg.config.repairing
 
 
 class transaction(object):
-    """context manager to enter a transaction for a session: when exiting the
+    """Ensure that the transaction is either commited or rollbacked at exit
+
+    Context manager to enter a transaction for a session: when exiting the
     `with` block on exception, call `session.rollback()`, else call
     `session.commit()` on normal exit
     """
@@ -124,8 +124,9 @@ class hooks_control(object):
 
 
 class security_enabled(object):
-    """context manager to control security w/ session.execute, since by
-    default security is disabled on queries executed on the repository
+    """context manager to control security w/ session.execute,
+
+    By default security is disabled on queries executed on the repository
     side.
     """
     def __init__(self, session, read=None, write=None):
@@ -142,14 +143,22 @@ class security_enabled(object):
 
 
 class TransactionData(object):
+    """Small object hold core Transaction data"""
     def __init__(self, txid):
+        #: transaction unique id
         self.transactionid = txid
+        #: reentrance handling
         self.ctx_count = 0
 
 
 class Session(RequestSessionBase):
-    """Repository usersession, tie a session id, user, connections set and
-    other session data all together.
+    """Repository user session
+
+    This tie all together:
+     * session id,
+     * user,
+     * connections set,
+     * other session data.
 
     About session storage / transactions
     ------------------------------------
@@ -172,6 +181,7 @@ class Session(RequestSessionBase):
 
       :attr:`_threads_in_transaction` is a set of (thread, connections set)
       referencing threads that currently hold a connections set for the session.
+    .. automethod:: cubicweb.server.session.transaction
 
     You should not have to use neither :attr:`_txdata` nor :attr:`__threaddata`,
     simply access transaction data transparently through the :attr:`_threaddata`
@@ -184,10 +194,23 @@ class Session(RequestSessionBase):
       this may also be used as a communication channel between the client and
       the repository.
 
+    .. automethod:: cubicweb.server.session.Session.get_shared_data
+    .. automethod:: cubicweb.server.session.Session.set_shared_data
+    .. automethod:: cubicweb.server.session.Session.added_in_transaction
+    .. automethod:: cubicweb.server.session.Session.deleted_in_transaction
+
+    Transaction state information:
+
+      :attr:`running_dbapi_query`, boolean flag telling if the executing query
+      is coming from a dbapi connection or is a query from within the repository
+
       :attr:`cnxset`, the connections set to use to execute queries on sources.
       During a transaction, the connection set may be freed so that is may be
       used by another session as long as no writing is done. This means we can
       have multiple sessions with a reasonably low connections set pool size.
+
+    .. automethod:: cubicweb.server.session.set_cnxset
+    .. automethod:: cubicweb.server.session.free_cnxset
 
       :attr:`mode`, string telling the connections set handling mode, may be one
       of 'read' (connections set may be freed), 'write' (some write was done in
@@ -204,8 +227,23 @@ class Session(RequestSessionBase):
       'uncommitable' (some :exc:`ValidationError` or :exc:`Unauthorized` error
       has been raised during the transaction and so it must be rollbacked).
 
+    .. automethod:: cubicweb.server.session.Session.commit
+    .. automethod:: cubicweb.server.session.Session.rollback
+    .. automethod:: cubicweb.server.session.Session.close
+    .. automethod:: cubicweb.server.session.Session.closed
+
+    Security level Management:
+
       :attr:`read_security` and :attr:`write_security`, boolean flags telling if
       read/write security is currently activated.
+
+    .. automethod:: cubicweb.server.session.Session.set_write_security
+    .. automethod:: cubicweb.server.session.Session.set_read_security
+    .. automethod:: cubicweb.server.session.Session.init_security
+    .. automethod:: cubicweb.server.session.Session.reset_security
+    .. automethod:: cubicweb.server.session.Session.security_enabled
+
+    Hooks Management:
 
       :attr:`hooks_mode`, may be either `HOOKS_ALLOW_ALL` or `HOOKS_DENY_ALL`.
 
@@ -215,12 +253,23 @@ class Session(RequestSessionBase):
       :attr:`disabled_hook_categories`, when :attr:`hooks_mode` is
       `HOOKS_ALLOW_ALL`, this set contains hooks categories that are disabled.
 
+    .. automethod:: cubicweb.server.session.Session.deny_all_hooks_but
+    .. automethod:: cubicweb.server.session.Session.allow_all_hooks_but
+    .. automethod:: cubicweb.server.session.Session.is_hook_category_activated
+    .. automethod:: cubicweb.server.session.Session.is_hook_activated
 
-      :attr:`running_dbapi_query`, boolean flag telling if the executing query
-      is coming from a dbapi connection or is a query from within the repository
+    Data manipulation:
 
-    .. automethod:: cubicweb.server.session.deny_all_hooks_but
-    .. automethod:: cubicweb.server.session.all_all_hooks_but
+    .. automethod:: cubicweb.server.session.Session.add_relation
+    .. automethod:: cubicweb.server.session.Session.add_relations
+    .. automethod:: cubicweb.server.session.Session.delete_relation
+
+    Other:
+
+    .. automethod:: cubicweb.server.session.Session.call_service
+
+
+
     """
     is_request = False
     is_internal_session = False
@@ -246,6 +295,7 @@ class Session(RequestSessionBase):
         self.set_language(user.prefered_language())
         # internals
         self._tx_data = {}
+        # Data local to the thread
         self.__threaddata = threading.local()
         self._threads_in_transaction = set()
         self._closed = False
