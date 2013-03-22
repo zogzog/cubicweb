@@ -161,14 +161,14 @@ class Transaction(object):
       transaction, with or without writing)
     """
 
-    def __init__(self, txid):
+    def __init__(self, txid, mode='read'):
         #: transaction unique id
         self.transactionid = txid
         #: reentrance handling
         self.ctx_count = 0
 
         #: connection handling mode
-        self.mode = None
+        self.mode = mode
         #: connection set used to execute queries on sources
         self.cnxset = None
 
@@ -342,7 +342,8 @@ class Session(RequestSessionBase):
         try:
             self.__threaddata.txdata = self._tx_data[txid]
         except KeyError:
-            self.__threaddata.txdata = self._tx_data[txid] = Transaction(txid)
+            tx = Transaction(txid, self.default_mode)
+            self.__threaddata.txdata = self._tx_data[txid] = tx
 
     @property
     def _threaddata(self):
@@ -784,7 +785,7 @@ class Session(RequestSessionBase):
             self.default_mode = 'read'
 
     def get_mode(self):
-        return getattr(self._threaddata, 'mode', self.default_mode)
+        return self._threaddata.mode
     def set_mode(self, value):
         self._threaddata.mode = value
     mode = property(get_mode, set_mode,
