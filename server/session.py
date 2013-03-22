@@ -189,6 +189,11 @@ class Transaction(object):
       :attr:`disabled_hook_categories`, when :attr:`hooks_mode` is
       `HOOKS_ALLOW_ALL`, this set contains hooks categories that are disabled.
 
+    Security level Management:
+
+      :attr:`read_security` and :attr:`write_security`, boolean flags telling if
+      read/write security is currently activated.
+
     """
 
     def __init__(self, txid, mode='read'):
@@ -214,6 +219,11 @@ class Transaction(object):
         self.disabled_hook_cats = set()
         self.enabled_hook_cats = set()
         self.pruned_hooks_cache = {}
+
+
+        ### security control attributes
+        self.read_security = DEFAULT_SECURITY
+        self.write_security = DEFAULT_SECURITY
 
 
     def clear(self):
@@ -623,11 +633,7 @@ class Session(RequestSessionBase):
         txstore = self._threaddata
         if txstore is None:
             return DEFAULT_SECURITY
-        try:
-            return txstore.read_security
-        except AttributeError:
-            txstore.read_security = DEFAULT_SECURITY
-            return txstore.read_security
+        return txstore.read_security
 
     def set_read_security(self, activated):
         """[de]activate read security, returning the previous value set for
@@ -639,7 +645,7 @@ class Session(RequestSessionBase):
         txstore = self._threaddata
         if txstore is None:
             return DEFAULT_SECURITY
-        oldmode = getattr(txstore, 'read_security', DEFAULT_SECURITY)
+        oldmode = txstore.read_security
         txstore.read_security = activated
         # dbapi_query used to detect hooks triggered by a 'dbapi' query (eg not
         # issued on the session). This is tricky since we the execution model of
@@ -667,11 +673,7 @@ class Session(RequestSessionBase):
         txstore = self._threaddata
         if txstore is None:
             return DEFAULT_SECURITY
-        try:
-            return txstore.write_security
-        except AttributeError:
-            txstore.write_security = DEFAULT_SECURITY
-            return txstore.write_security
+        return txstore.write_security
 
     def set_write_security(self, activated):
         """[de]activate write security, returning the previous value set for
@@ -683,7 +685,7 @@ class Session(RequestSessionBase):
         txstore = self._threaddata
         if txstore is None:
             return DEFAULT_SECURITY
-        oldmode = getattr(txstore, 'write_security', DEFAULT_SECURITY)
+        oldmode = txstore.write_security
         txstore.write_security = activated
         return oldmode
 
