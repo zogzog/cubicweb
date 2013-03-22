@@ -393,16 +393,6 @@ class Session(RequestSessionBase):
         return '<session %s (%s 0x%x)>' % (
             unicode(self.user.login), self.id, id(self))
 
-    def transaction(self, free_cnxset=True):
-        """return context manager to enter a transaction for the session: when
-        exiting the `with` block on exception, call `session.rollback()`, else
-        call `session.commit()` on normal exit.
-
-        The `free_cnxset` will be given to rollback/commit methods to indicate
-        wether the connections set should be freed or not.
-        """
-        return transaction(self, free_cnxset)
-
     def set_tx_data(self, txid=None):
         if txid is None:
             txid = threading.currentThread().getName()
@@ -423,6 +413,17 @@ class Session(RequestSessionBase):
 
     def get_option_value(self, option, foreid=None):
         return self.repo.get_option_value(option, foreid)
+
+    def transaction(self, free_cnxset=True):
+        """return context manager to enter a transaction for the session: when
+        exiting the `with` block on exception, call `session.rollback()`, else
+        call `session.commit()` on normal exit.
+
+        The `free_cnxset` will be given to rollback/commit methods to indicate
+        wether the connections set should be freed or not.
+        """
+        return transaction(self, free_cnxset)
+
 
     def hijack_user(self, user):
         """return a fake request/session using specified user"""
