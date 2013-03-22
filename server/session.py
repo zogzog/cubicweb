@@ -417,6 +417,7 @@ class Session(RequestSessionBase):
 
     @property
     def _tx(self):
+        """default transaction for current session in current thread"""
         try:
             return self.__threaddata.tx
         except AttributeError:
