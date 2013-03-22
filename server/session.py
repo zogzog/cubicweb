@@ -178,6 +178,16 @@ class Transaction(object):
       'uncommitable' (some :exc:`ValidationError` or :exc:`Unauthorized` error
       has been raised during the transaction and so it must be rollbacked).
 
+    Hooks controls:
+
+      :attr:`hooks_mode`, may be either `HOOKS_ALLOW_ALL` or `HOOKS_DENY_ALL`.
+
+      :attr:`enabled_hook_categories`, when :attr:`hooks_mode` is
+      `HOOKS_DENY_ALL`, this set contains hooks categories that are enabled.
+
+      :attr:`disabled_hook_categories`, when :attr:`hooks_mode` is
+      `HOOKS_ALLOW_ALL`, this set contains hooks categories that are disabled.
+
     """
 
     def __init__(self, txid, mode='read'):
@@ -198,6 +208,13 @@ class Transaction(object):
         #: (None, 'precommit', 'postcommit', 'uncommitable')
         self.commit_state = None
 
+        ### hook control attribute
+        self.hooks_mode = HOOKS_ALLOW_ALL
+        self.disabled_hook_cats = set()
+        self.enabled_hook_cats = set()
+        self.pruned_hooks_cache = {}
+
+
     def clear(self):
         """reset internal data"""
         self.transaction_data = {}
@@ -205,6 +222,7 @@ class Transaction(object):
         self.pending_operations = []
         #: (None, 'precommit', 'postcommit', 'uncommitable')
         self.commit_state = None
+        self.pruned_hooks_cache = {}
 
 
 class Session(RequestSessionBase):
@@ -688,11 +706,11 @@ class Session(RequestSessionBase):
 
     @property
     def hooks_mode(self):
-        return getattr(self._threaddata, 'hooks_mode', self.HOOKS_ALLOW_ALL)
+        return self._threaddata.hooks_mode
 
     def set_hooks_mode(self, mode):
-        oldmode = getattr(self._threaddata, 'hooks_mode', self.HOOKS_ALLOW_ALL)
         assert mode is HOOKS_ALLOW_ALL or mode is HOOKS_DENY_ALL
+        oldmode = self._threaddata.hooks_mode
         self._threaddata.hooks_mode = mode
         return oldmode
 
@@ -722,19 +740,11 @@ class Session(RequestSessionBase):
 
     @property
     def disabled_hook_categories(self):
-        try:
-            return getattr(self._threaddata, 'disabled_hook_cats')
-        except AttributeError:
-            cats = self._threaddata.disabled_hook_cats = set()
-            return cats
+        return self._threaddata.disabled_hook_cats
 
     @property
     def enabled_hook_categories(self):
-        try:
-            return getattr(self._threaddata, 'enabled_hook_cats')
-        except AttributeError:
-            cats = self._threaddata.enabled_hook_cats = set()
-            return cats
+        return self._threaddata.enabled_hook_cats
 
     def disable_hook_categories(self, *categories):
         """disable the given hook categories:
@@ -1009,11 +1019,10 @@ class Session(RequestSessionBase):
 
     def _clear_tx_storage(self, txstore):
         txstore.clear()
-        for name in ('_rewriter', 'pruned_hooks_cache'):
-            try:
-                delattr(txstore, name)
-            except AttributeError:
-                continue
+        try:
+            del txstore._rewriter
+        except AttributeError:
+            pass
 
     def commit(self, free_cnxset=True, reset_pool=None):
         """commit the current session's transaction"""
@@ -1175,11 +1184,7 @@ class Session(RequestSessionBase):
 
     @property
     def pruned_hooks_cache(self):
-        try:
-            return self._threaddata.pruned_hooks_cache
-        except AttributeError:
-            self._threaddata.pruned_hooks_cache = {}
-            return self._threaddata.pruned_hooks_cache
+        return self._threaddata.pruned_hooks_cache
 
     def add_operation(self, operation, index=None):
         """add an operation"""
