@@ -143,13 +143,34 @@ class security_enabled(object):
 
 
 class Transaction(object):
-    """Small object hold core Transaction data"""
+    """Repository Transaction
+
+    Holds all transaction related data
+
+    Database connections resource:
+
+      :attr:`cnxset`, the connections set to use to execute queries on sources.
+      If the transaction is read only, the connection set may be freed between
+      actual query. This allows multiple transaction with a reasonable low
+      connection set pool size. control mechanism is detailed below
+
+      :attr:`mode`, string telling the connections set handling mode, may be one
+      of 'read' (connections set may be freed), 'write' (some write was done in
+      the connections set, it can't be freed before end of the transaction),
+      'transaction' (we want to keep the connections set during all the
+      transaction, with or without writing)
+    """
+
     def __init__(self, txid):
         #: transaction unique id
         self.transactionid = txid
         #: reentrance handling
         self.ctx_count = 0
 
+        #: connection handling mode
+        self.mode = None
+        #: connection set used to execute queries on sources
+        self.cnxset = None
 
 class Session(RequestSessionBase):
     """Repository user session
