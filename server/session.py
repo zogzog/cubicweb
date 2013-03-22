@@ -142,7 +142,7 @@ class security_enabled(object):
         self.session.reset_security(self.oldread, self.oldwrite)
 
 
-class TransactionData(object):
+class Transaction(object):
     """Small object hold core Transaction data"""
     def __init__(self, txid):
         #: transaction unique id
@@ -321,7 +321,7 @@ class Session(RequestSessionBase):
         try:
             self.__threaddata.txdata = self._tx_data[txid]
         except KeyError:
-            self.__threaddata.txdata = self._tx_data[txid] = TransactionData(txid)
+            self.__threaddata.txdata = self._tx_data[txid] = Transaction(txid)
 
     @property
     def _threaddata(self):
