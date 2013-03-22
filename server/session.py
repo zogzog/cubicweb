@@ -394,18 +394,26 @@ class Session(RequestSessionBase):
         return '<session %s (%s 0x%x)>' % (
             unicode(self.user.login), self.id, id(self))
 
+    def get_tx(self, txid):
+        """return the <txid> transaction attached to this session
+
+        Transaction is created if necessary"""
+        with self._lock: # no transaction exist with the same id
+            try:
+                tx = self._txs[txid]
+            except KeyError:
+                rewriter = RQLRewriter(self)
+                tx = Transaction(txid, self.default_mode, rewriter)
+                self._txs[txid] = tx
+        return tx
+
     def set_tx(self, txid=None):
         """set the default transaction of the current thread to <txid>
 
         Transaction is created if necessary"""
         if txid is None:
             txid = threading.currentThread().getName()
-        try:
-            self.__threaddata.tx = self._txs[txid]
-        except KeyError:
-            rewriter = RQLRewriter(self)
-            tx = Transaction(txid, self.default_mode, rewriter)
-            self.__threaddata.tx = self._txs[txid] = tx
+        self.__threaddata.tx = self.get_tx(txid)
 
     @property
     def _tx(self):
