@@ -141,6 +141,8 @@ class security_enabled(object):
     def __exit__(self, exctype, exc, traceback):
         self.session.reset_security(self.oldread, self.oldwrite)
 
+HOOKS_ALLOW_ALL = object()
+HOOKS_DENY_ALL = object()
 
 class Transaction(object):
     """Repository Transaction
@@ -679,21 +681,18 @@ class Session(RequestSessionBase):
     # hooks activation control #################################################
     # all hooks should be activated during normal execution
 
-    HOOKS_ALLOW_ALL = object()
-    HOOKS_DENY_ALL = object()
-
     def allow_all_hooks_but(self, *categories):
-        return hooks_control(self, self.HOOKS_ALLOW_ALL, *categories)
+        return hooks_control(self, HOOKS_ALLOW_ALL, *categories)
     def deny_all_hooks_but(self, *categories):
-        return hooks_control(self, self.HOOKS_DENY_ALL, *categories)
+        return hooks_control(self, HOOKS_DENY_ALL, *categories)
 
     @property
     def hooks_mode(self):
         return getattr(self._threaddata, 'hooks_mode', self.HOOKS_ALLOW_ALL)
 
     def set_hooks_mode(self, mode):
-        assert mode is self.HOOKS_ALLOW_ALL or mode is self.HOOKS_DENY_ALL
         oldmode = getattr(self._threaddata, 'hooks_mode', self.HOOKS_ALLOW_ALL)
+        assert mode is HOOKS_ALLOW_ALL or mode is HOOKS_DENY_ALL
         self._threaddata.hooks_mode = mode
         return oldmode
 
@@ -745,7 +744,7 @@ class Session(RequestSessionBase):
         """
         changes = set()
         self.pruned_hooks_cache.clear()
-        if self.hooks_mode is self.HOOKS_DENY_ALL:
+        if self.hooks_mode is HOOKS_DENY_ALL:
             enabledcats = self.enabled_hook_categories
             for category in categories:
                 if category in enabledcats:
@@ -767,7 +766,7 @@ class Session(RequestSessionBase):
         """
         changes = set()
         self.pruned_hooks_cache.clear()
-        if self.hooks_mode is self.HOOKS_DENY_ALL:
+        if self.hooks_mode is HOOKS_DENY_ALL:
             enabledcats = self.enabled_hook_categories
             for category in categories:
                 if category not in enabledcats:
@@ -785,7 +784,7 @@ class Session(RequestSessionBase):
         """return a boolean telling if the given category is currently activated
         or not
         """
-        if self.hooks_mode is self.HOOKS_DENY_ALL:
+        if self.hooks_mode is HOOKS_DENY_ALL:
             return category in self.enabled_hook_categories
         return category not in self.disabled_hook_categories
 
@@ -1264,6 +1263,10 @@ class Session(RequestSessionBase):
     # these are overridden by set_log_methods below
     # only defining here to prevent pylint from complaining
     info = warning = error = critical = exception = debug = lambda msg,*a,**kw: None
+
+Session.HOOKS_ALLOW_ALL = HOOKS_ALLOW_ALL
+Session.HOOKS_DENY_ALL = HOOKS_DENY_ALL
+
 
 
 class InternalSession(Session):
