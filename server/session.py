@@ -143,6 +143,7 @@ class security_enabled(object):
 
 HOOKS_ALLOW_ALL = object()
 HOOKS_DENY_ALL = object()
+DEFAULT_SECURITY = object() # evaluated to true by design
 
 class Transaction(object):
     """Repository Transaction
@@ -589,7 +590,6 @@ class Session(RequestSessionBase):
 
     # security control #########################################################
 
-    DEFAULT_SECURITY = object() # evaluated to true by design
 
     def security_enabled(self, read=None, write=None):
         return security_enabled(self, read=read, write=write)
@@ -622,11 +622,11 @@ class Session(RequestSessionBase):
         """return a boolean telling if read security is activated or not"""
         txstore = self._threaddata
         if txstore is None:
-            return self.DEFAULT_SECURITY
+            return DEFAULT_SECURITY
         try:
             return txstore.read_security
         except AttributeError:
-            txstore.read_security = self.DEFAULT_SECURITY
+            txstore.read_security = DEFAULT_SECURITY
             return txstore.read_security
 
     def set_read_security(self, activated):
@@ -638,8 +638,8 @@ class Session(RequestSessionBase):
         """
         txstore = self._threaddata
         if txstore is None:
-            return self.DEFAULT_SECURITY
-        oldmode = getattr(txstore, 'read_security', self.DEFAULT_SECURITY)
+            return DEFAULT_SECURITY
+        oldmode = getattr(txstore, 'read_security', DEFAULT_SECURITY)
         txstore.read_security = activated
         # dbapi_query used to detect hooks triggered by a 'dbapi' query (eg not
         # issued on the session). This is tricky since we the execution model of
@@ -657,8 +657,8 @@ class Session(RequestSessionBase):
         # else (False actually) is not perfect but should be enough
         #
         # also reset dbapi_query to true when we go back to DEFAULT_SECURITY
-        txstore.dbapi_query = (oldmode is self.DEFAULT_SECURITY
-                               or activated is self.DEFAULT_SECURITY)
+        txstore.dbapi_query = (oldmode is DEFAULT_SECURITY
+                               or activated is DEFAULT_SECURITY)
         return oldmode
 
     @property
@@ -666,11 +666,11 @@ class Session(RequestSessionBase):
         """return a boolean telling if write security is activated or not"""
         txstore = self._threaddata
         if txstore is None:
-            return self.DEFAULT_SECURITY
+            return DEFAULT_SECURITY
         try:
             return txstore.write_security
         except AttributeError:
-            txstore.write_security = self.DEFAULT_SECURITY
+            txstore.write_security = DEFAULT_SECURITY
             return txstore.write_security
 
     def set_write_security(self, activated):
@@ -682,8 +682,8 @@ class Session(RequestSessionBase):
         """
         txstore = self._threaddata
         if txstore is None:
-            return self.DEFAULT_SECURITY
-        oldmode = getattr(txstore, 'write_security', self.DEFAULT_SECURITY)
+            return DEFAULT_SECURITY
+        oldmode = getattr(txstore, 'write_security', DEFAULT_SECURITY)
         txstore.write_security = activated
         return oldmode
 
@@ -1271,6 +1271,7 @@ class Session(RequestSessionBase):
 
 Session.HOOKS_ALLOW_ALL = HOOKS_ALLOW_ALL
 Session.HOOKS_DENY_ALL = HOOKS_DENY_ALL
+Session.DEFAULT_SECURITY = DEFAULT_SECURITY
 
 
 
