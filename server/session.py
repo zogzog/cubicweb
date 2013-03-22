@@ -196,7 +196,7 @@ class Transaction(object):
 
     """
 
-    def __init__(self, txid, mode='read'):
+    def __init__(self, txid, mode, rewriter):
         #: transaction unique id
         self.transactionid = txid
         #: reentrance handling
@@ -224,6 +224,9 @@ class Transaction(object):
         ### security control attributes
         self.read_security = DEFAULT_SECURITY
         self.write_security = DEFAULT_SECURITY
+
+        # RQLRewriter are not thread safe
+        self._rewriter = rewriter
 
 
     def clear(self):
@@ -406,7 +409,8 @@ class Session(RequestSessionBase):
         try:
             self.__threaddata.txdata = self._tx_data[txid]
         except KeyError:
-            tx = Transaction(txid, self.default_mode)
+            rewriter = RQLRewriter(self)
+            tx = Transaction(txid, self.default_mode, rewriter)
             self.__threaddata.txdata = self._tx_data[txid] = tx
 
     @property
@@ -1021,10 +1025,7 @@ class Session(RequestSessionBase):
 
     def _clear_tx_storage(self, txstore):
         txstore.clear()
-        try:
-            del txstore._rewriter
-        except AttributeError:
-            pass
+        txstore._rewriter = RQLRewriter(self)
 
     def commit(self, free_cnxset=True, reset_pool=None):
         """commit the current session's transaction"""
@@ -1220,11 +1221,7 @@ class Session(RequestSessionBase):
     @property
     def rql_rewriter(self):
         # in thread local storage since the rewriter isn't thread safe
-        try:
-            return self._threaddata._rewriter
-        except AttributeError:
-            self._threaddata._rewriter = RQLRewriter(self)
-            return self._threaddata._rewriter
+        return self._threaddata._rewriter
 
     # deprecated ###############################################################
 
