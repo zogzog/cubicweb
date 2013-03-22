@@ -272,7 +272,7 @@ class Session(RequestSessionBase):
     .. automethod:: cubicweb.server.session.transaction
 
     You should not have to use neither :attr:`_tx` nor :attr:`__threaddata`,
-    simply access transaction data transparently through the :attr:`_threaddata`
+    simply access transaction data transparently through the :attr:`_tx`
     property. Also, you usually don't have to access it directly since current
     transaction's data may be accessed/modified through properties / methods:
 
@@ -405,7 +405,7 @@ class Session(RequestSessionBase):
             self.__threaddata.tx = self._txs[txid] = tx
 
     @property
-    def _threaddata(self):
+    def _tx(self):
         try:
             return self.__threaddata.tx
         except AttributeError:
@@ -429,18 +429,18 @@ class Session(RequestSessionBase):
     def hijack_user(self, user):
         """return a fake request/session using specified user"""
         session = Session(user, self.repo)
-        threaddata = session._threaddata
-        threaddata.cnxset = self.cnxset
+        tx = session._tx
+        tx.cnxset = self.cnxset
         # we attributed a connections set, need to update ctx_count else it will be freed
         # while undesired
-        threaddata.ctx_count = 1
+        tx.ctx_count = 1
         # share pending_operations, else operation added in the hi-jacked
         # session such as SendMailOp won't ever be processed
-        threaddata.pending_operations = self.pending_operations
+        tx.pending_operations = self.pending_operations
         # everything in transaction_data should be copied back but the entity
         # type cache we don't want to avoid security pb
-        threaddata.transaction_data = self.transaction_data.copy()
-        threaddata.transaction_data.pop('ecache', None)
+        tx.transaction_data = self.transaction_data.copy()
+        tx.transaction_data.pop('ecache', None)
         return session
 
     def add_relation(self, fromeid, rtype, toeid):
@@ -619,11 +619,11 @@ class Session(RequestSessionBase):
             oldwrite = None
         else:
             oldwrite = self.set_write_security(write)
-        self._threaddata.ctx_count += 1
+        self._tx.ctx_count += 1
         return oldread, oldwrite
 
     def reset_security(self, read, write):
-        txstore = self._threaddata
+        txstore = self._tx
         txstore.ctx_count -= 1
         if txstore.ctx_count == 0:
             self._clear_thread_storage(txstore)
@@ -636,7 +636,7 @@ class Session(RequestSessionBase):
     @property
     def read_security(self):
         """return a boolean telling if read security is activated or not"""
-        txstore = self._threaddata
+        txstore = self._tx
         if txstore is None:
             return DEFAULT_SECURITY
         return txstore.read_security
@@ -648,7 +648,7 @@ class Session(RequestSessionBase):
         you should usually use the `security_enabled` context manager instead
         of this to change security settings.
         """
-        txstore = self._threaddata
+        txstore = self._tx
         if txstore is None:
             return DEFAULT_SECURITY
         oldmode = txstore.read_security
@@ -676,7 +676,7 @@ class Session(RequestSessionBase):
     @property
     def write_security(self):
         """return a boolean telling if write security is activated or not"""
-        txstore = self._threaddata
+        txstore = self._tx
         if txstore is None:
             return DEFAULT_SECURITY
         return txstore.write_security
@@ -688,7 +688,7 @@ class Session(RequestSessionBase):
         you should usually use the `security_enabled` context manager instead
         of this to change security settings.
         """
-        txstore = self._threaddata
+        txstore = self._tx
         if txstore is None:
             return DEFAULT_SECURITY
         oldmode = txstore.write_security
@@ -702,7 +702,7 @@ class Session(RequestSessionBase):
 
         To be used in hooks, else may have a wrong value.
         """
-        return getattr(self._threaddata, 'dbapi_query', True)
+        return getattr(self._tx, 'dbapi_query', True)
 
     # hooks activation control #################################################
     # all hooks should be activated during normal execution
@@ -714,12 +714,12 @@ class Session(RequestSessionBase):
 
     @property
     def hooks_mode(self):
-        return self._threaddata.hooks_mode
+        return self._tx.hooks_mode
 
     def set_hooks_mode(self, mode):
         assert mode is HOOKS_ALLOW_ALL or mode is HOOKS_DENY_ALL
-        oldmode = self._threaddata.hooks_mode
-        self._threaddata.hooks_mode = mode
+        oldmode = self._tx.hooks_mode
+        self._tx.hooks_mode = mode
         return oldmode
 
     def init_hooks_mode_categories(self, mode, categories):
@@ -728,11 +728,11 @@ class Session(RequestSessionBase):
             changes = self.enable_hook_categories(*categories)
         else:
             changes = self.disable_hook_categories(*categories)
-        self._threaddata.ctx_count += 1
+        self._tx.ctx_count += 1
         return oldmode, changes
 
     def reset_hooks_mode_categories(self, oldmode, mode, categories):
-        txstore = self._threaddata
+        txstore = self._tx
         txstore.ctx_count -= 1
         if txstore.ctx_count == 0:
             self._clear_thread_storage(txstore)
@@ -748,11 +748,11 @@ class Session(RequestSessionBase):
 
     @property
     def disabled_hook_categories(self):
-        return self._threaddata.disabled_hook_cats
+        return self._tx.disabled_hook_cats
 
     @property
     def enabled_hook_categories(self):
-        return self._threaddata.enabled_hook_cats
+        return self._tx.enabled_hook_cats
 
     def disable_hook_categories(self, *categories):
         """disable the given hook categories:
@@ -835,17 +835,17 @@ class Session(RequestSessionBase):
             self.default_mode = 'read'
 
     def get_mode(self):
-        return self._threaddata.mode
+        return self._tx.mode
     def set_mode(self, value):
-        self._threaddata.mode = value
+        self._tx.mode = value
     mode = property(get_mode, set_mode,
                     doc='transaction mode (read/write/transaction), resetted to'
                     ' default_mode on commit / rollback')
 
     def get_commit_state(self):
-        return self._threaddata.commit_state
+        return self._tx.commit_state
     def set_commit_state(self, value):
-        self._threaddata.commit_state = value
+        self._tx.commit_state = value
     commit_state = property(get_commit_state, set_commit_state)
 
     @property
@@ -854,7 +854,7 @@ class Session(RequestSessionBase):
         if self._closed:
             self.free_cnxset(True)
             raise Exception('try to access connections set on a closed session %s' % self.id)
-        return getattr(self._threaddata, 'cnxset', None)
+        return getattr(self._tx, 'cnxset', None)
 
     def set_cnxset(self):
         """the session need a connections set to execute some queries"""
@@ -864,17 +864,17 @@ class Session(RequestSessionBase):
                 raise Exception('try to set connections set on a closed session %s' % self.id)
             if self.cnxset is None:
                 # get connections set first to avoid race-condition
-                self._threaddata.cnxset = cnxset = self.repo._get_cnxset()
-                self._threaddata.ctx_count += 1
+                self._tx.cnxset = cnxset = self.repo._get_cnxset()
+                self._tx.ctx_count += 1
                 try:
                     cnxset.cnxset_set()
                 except Exception:
-                    self._threaddata.cnxset = None
+                    self._tx.cnxset = None
                     self.repo._free_cnxset(cnxset)
                     raise
                 self._threads_in_transaction.add(
                     (threading.currentThread(), cnxset) )
-            return self._threaddata.cnxset
+            return self._tx.cnxset
 
     def _free_thread_cnxset(self, thread, cnxset, force_close=False):
         try:
@@ -895,12 +895,12 @@ class Session(RequestSessionBase):
         """the session is no longer using its connections set, at least for some time"""
         # cnxset may be none if no operation has been done since last commit
         # or rollback
-        cnxset = getattr(self._threaddata, 'cnxset', None)
+        cnxset = getattr(self._tx, 'cnxset', None)
         if cnxset is not None and (ignoremode or self.mode == 'read'):
             # even in read mode, we must release the current transaction
             self._free_thread_cnxset(threading.currentThread(), cnxset)
-            del self._threaddata.cnxset
-            self._threaddata.ctx_count -= 1
+            del self._tx.cnxset
+            self._tx.ctx_count -= 1
 
     def _touch(self):
         """update latest session usage timestamp and reset mode to read"""
@@ -1124,7 +1124,7 @@ class Session(RequestSessionBase):
                  DeprecationWarning, stacklevel=2)
             free_cnxset = reset_pool
         # don't use self.cnxset, rollback may be called with _closed == True
-        cnxset = getattr(self._threaddata, 'cnxset', None)
+        cnxset = getattr(self._tx, 'cnxset', None)
         if cnxset is None:
             self._clear_thread_data()
             self._touch()
@@ -1181,15 +1181,15 @@ class Session(RequestSessionBase):
 
     @property
     def transaction_data(self):
-        return self._threaddata.transaction_data
+        return self._tx.transaction_data
 
     @property
     def pending_operations(self):
-        return self._threaddata.pending_operations
+        return self._tx.pending_operations
 
     @property
     def pruned_hooks_cache(self):
-        return self._threaddata.pruned_hooks_cache
+        return self._tx.pruned_hooks_cache
 
     def add_operation(self, operation, index=None):
         """add an operation"""
@@ -1223,7 +1223,7 @@ class Session(RequestSessionBase):
     @property
     def rql_rewriter(self):
         # in thread local storage since the rewriter isn't thread safe
-        return self._threaddata._rewriter
+        return self._tx._rewriter
 
     # deprecated ###############################################################
 
@@ -1300,7 +1300,7 @@ class InternalSession(Session):
         if self.repo.shutting_down:
             self.free_cnxset(True)
             raise ShuttingDown('repository is shutting down')
-        return getattr(self._threaddata, 'cnxset', None)
+        return getattr(self._tx, 'cnxset', None)
 
 
 class InternalManager(object):
