@@ -652,10 +652,7 @@ class Session(RequestSessionBase):
     @property
     def read_security(self):
         """return a boolean telling if read security is activated or not"""
-        tx = self._tx
-        if tx is None:
-            return DEFAULT_SECURITY
-        return tx.read_security
+        return  self._tx.read_security
 
     def set_read_security(self, activated):
         """[de]activate read security, returning the previous value set for
@@ -665,8 +662,6 @@ class Session(RequestSessionBase):
         of this to change security settings.
         """
         tx = self._tx
-        if tx is None:
-            return DEFAULT_SECURITY
         oldmode = tx.read_security
         tx.read_security = activated
         # dbapi_query used to detect hooks triggered by a 'dbapi' query (eg not
@@ -692,10 +687,7 @@ class Session(RequestSessionBase):
     @property
     def write_security(self):
         """return a boolean telling if write security is activated or not"""
-        tx = self._tx
-        if tx is None:
-            return DEFAULT_SECURITY
-        return tx.write_security
+        return self._tx.write_security
 
     def set_write_security(self, activated):
         """[de]activate write security, returning the previous value set for
@@ -705,8 +697,6 @@ class Session(RequestSessionBase):
         of this to change security settings.
         """
         tx = self._tx
-        if tx is None:
-            return DEFAULT_SECURITY
         oldmode = tx.write_security
         tx.write_security = activated
         return oldmode
