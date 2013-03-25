@@ -274,6 +274,23 @@ class Transaction(object):
         else:
             del self.data['ecache'][eid]
 
+    # Tracking of entity added of removed in the transaction ##################
+    #
+    # Those are function to  allows cheap call from client in other process.
+
+    def deleted_in_transaction(self, eid):
+        """return True if the entity of the given eid is being deleted in the
+        current transaction
+        """
+        return eid in self.data.get('pendingeids', ())
+
+    def added_in_transaction(self, eid):
+        """return True if the entity of the given eid is being created in the
+        current transaction
+        """
+        return eid in self.data.get('neweids', ())
+
+
 
 
 def tx_attr(attr_name):
@@ -652,17 +669,8 @@ class Session(RequestSessionBase):
             self.cnxset.reconnect(source)
             return source.doexec(self, sql, args, rollback=rollback_on_failure)
 
-    def deleted_in_transaction(self, eid):
-        """return True if the entity of the given eid is being deleted in the
-        current transaction
-        """
-        return eid in self._tx.data.get('pendingeids', ())
-
-    def added_in_transaction(self, eid):
-        """return True if the entity of the given eid is being created in the
-        current transaction
-        """
-        return eid in self._tx.data.get('neweids', ())
+    deleted_in_transaction =  tx_meth('deleted_in_transaction')
+    added_in_transaction   =  tx_meth('added_in_transaction')
 
     def rtype_eids_rdef(self, rtype, eidfrom, eidto):
         # use type_and_source_from_eid instead of type_from_eid for optimization
