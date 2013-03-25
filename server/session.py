@@ -497,8 +497,6 @@ class Session(RequestSessionBase):
       :attr:`read_security` and :attr:`write_security`, boolean flags telling if
       read/write security is currently activated.
 
-    .. automethod:: cubicweb.server.session.Session.set_write_security
-    .. automethod:: cubicweb.server.session.Session.set_read_security
     .. automethod:: cubicweb.server.session.Session.init_security
     .. automethod:: cubicweb.server.session.Session.reset_security
     .. automethod:: cubicweb.server.session.Session.security_enabled
@@ -789,11 +787,13 @@ class Session(RequestSessionBase):
         if read is None:
             oldread = None
         else:
-            oldread = self.set_read_security(read)
+            oldread = self._tx.read_security
+            self._tx.read_security = read
         if write is None:
             oldwrite = None
         else:
-            oldwrite = self.set_write_security(write)
+            oldwrite = self._tx.write_security
+            self._tx.write_security = write
         self._tx.ctx_count += 1
         return oldread, oldwrite
 
@@ -804,34 +804,12 @@ class Session(RequestSessionBase):
             self._clear_thread_storage(tx)
         else:
             if read is not None:
-                self.set_read_security(read)
+                self._tx.read_security = read
             if write is not None:
-                self.set_write_security(write)
+                self._tx.write_security = write
 
-    def set_read_security(self, activated):
-        """[de]activate read security, returning the previous value set for
-        later restoration.
-
-        you should usually use the `security_enabled` context manager instead
-        of this to change security settings.
-        """
-        oldmode = self._tx.read_security
-        self._tx.read_security = activated
-        return oldmode
-
-    def set_write_security(self, activated):
-        """[de]activate write security, returning the previous value set for
-        later restoration.
-
-        you should usually use the `security_enabled` context manager instead
-        of this to change security settings.
-        """
-        oldmode = self._tx.write_security
-        self._tx.write_security = activated
-        return oldmode
-
-    read_security = tx_attr('read_security')
-    write_security = tx_attr('write_security')
+    read_security = tx_attr('read_security', writable=True)
+    write_security = tx_attr('write_security', writable=True)
     running_dbapi_query = tx_attr('running_dbapi_query')
 
     # hooks activation control #################################################

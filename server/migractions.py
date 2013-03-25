@@ -300,8 +300,8 @@ class ServerMigrationHelper(MigrationHelper):
         if self.config is not None:
             session = self.repo._get_session(self.cnx.sessionid)
             if session.cnxset is None:
-                session.set_read_security(False)
-                session.set_write_security(False)
+                session.read_security = False
+                session.write_security = False
             session.set_cnxset()
             return session
         # no access to session on remote instance

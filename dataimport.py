@@ -735,8 +735,8 @@ class NoHookRQLObjectStore(RQLObjectStore):
         self._nb_inserted_relations = 0
         self.rql = session.execute
         # deactivate security
-        session.set_read_security(False)
-        session.set_write_security(False)
+        session.read_security = False
+        session.write_security = False
 
     def create_entity(self, etype, **kwargs):
         for k, v in kwargs.iteritems():
