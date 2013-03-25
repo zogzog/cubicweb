@@ -159,6 +159,23 @@ class Transaction(object):
       the connections set, it can't be freed before end of the transaction),
       'transaction' (we want to keep the connections set during all the
       transaction, with or without writing)
+
+    Internal transaction data:
+
+      :attr:`transaction_data`,is a dictionary containing some shared data
+      cleared at the end of the transaction. Hooks and operations may put
+      arbitrary data in there, and this may also be used as a communication
+      channel between the client and the repository.
+
+      :attr:`pending_operations`, ordered list of operations to be processed on
+      commit/rollback
+
+      :attr:`commit_state`, describing the transaction commit state, may be one
+      of None (not yet committing), 'precommit' (calling precommit event on
+      operations), 'postcommit' (calling postcommit event on operations),
+      'uncommitable' (some :exc:`ValidationError` or :exc:`Unauthorized` error
+      has been raised during the transaction and so it must be rollbacked).
+
     """
 
     def __init__(self, txid, mode='read'):
@@ -171,6 +188,22 @@ class Transaction(object):
         self.mode = mode
         #: connection set used to execute queries on sources
         self.cnxset = None
+
+        #: dict containing arbitrary data cleared at the end of the transaction
+        self.transaction_data = {}
+        #: ordered list of operations to be processed on commit/rollback
+        self.pending_operations = []
+        #: (None, 'precommit', 'postcommit', 'uncommitable')
+        self.commit_state = None
+
+    def clear(self):
+        """reset internal data"""
+        self.transaction_data = {}
+        #: ordered list of operations to be processed on commit/rollback
+        self.pending_operations = []
+        #: (None, 'precommit', 'postcommit', 'uncommitable')
+        self.commit_state = None
+
 
 class Session(RequestSessionBase):
     """Repository user session
@@ -793,7 +826,7 @@ class Session(RequestSessionBase):
                     ' default_mode on commit / rollback')
 
     def get_commit_state(self):
-        return getattr(self._threaddata, 'commit_state', None)
+        return self._threaddata.commit_state
     def set_commit_state(self, value):
         self._threaddata.commit_state = value
     commit_state = property(get_commit_state, set_commit_state)
@@ -976,9 +1009,8 @@ class Session(RequestSessionBase):
             pass
 
     def _clear_tx_storage(self, txstore):
-        for name in ('commit_state', 'transaction_data',
-                     'pending_operations', '_rewriter',
-                     'pruned_hooks_cache'):
+        txstore.clear()
+        for name in ('_rewriter', 'pruned_hooks_cache'):
             try:
                 delattr(txstore, name)
             except AttributeError:
@@ -1136,19 +1168,11 @@ class Session(RequestSessionBase):
 
     @property
     def transaction_data(self):
-        try:
-            return self._threaddata.transaction_data
-        except AttributeError:
-            self._threaddata.transaction_data = {}
-            return self._threaddata.transaction_data
+        return self._threaddata.transaction_data
 
     @property
     def pending_operations(self):
-        try:
-            return self._threaddata.pending_operations
-        except AttributeError:
-            self._threaddata.pending_operations = []
-            return self._threaddata.pending_operations
+        return self._threaddata.pending_operations
 
     @property
     def pruned_hooks_cache(self):
