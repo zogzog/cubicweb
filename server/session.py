@@ -243,6 +243,15 @@ class Transaction(object):
         self.pruned_hooks_cache = {}
 
 
+def tx_attr(attr_name):
+    """return a property to forward attribute access to transaction.
+
+    This is to be used by session"""
+    @property
+    def attr_from_tx(session):
+        return getattr(session._tx, attr_name)
+    return attr_from_tx
+
 class Session(RequestSessionBase):
     """Repository user session
 
@@ -649,10 +658,7 @@ class Session(RequestSessionBase):
             if write is not None:
                 self.set_write_security(write)
 
-    @property
-    def read_security(self):
-        """return a boolean telling if read security is activated or not"""
-        return  self._tx.read_security
+    read_security = tx_attr('read_security')
 
     def set_read_security(self, activated):
         """[de]activate read security, returning the previous value set for
@@ -684,10 +690,7 @@ class Session(RequestSessionBase):
                                or activated is DEFAULT_SECURITY)
         return oldmode
 
-    @property
-    def write_security(self):
-        """return a boolean telling if write security is activated or not"""
-        return self._tx.write_security
+    write_security = tx_attr('write_security')
 
     def set_write_security(self, activated):
         """[de]activate write security, returning the previous value set for
@@ -718,9 +721,7 @@ class Session(RequestSessionBase):
     def deny_all_hooks_but(self, *categories):
         return hooks_control(self, HOOKS_DENY_ALL, *categories)
 
-    @property
-    def hooks_mode(self):
-        return self._tx.hooks_mode
+    hooks_mode = tx_attr('hooks_mode')
 
     def set_hooks_mode(self, mode):
         assert mode is HOOKS_ALLOW_ALL or mode is HOOKS_DENY_ALL
@@ -752,13 +753,8 @@ class Session(RequestSessionBase):
             finally:
                 self.set_hooks_mode(oldmode)
 
-    @property
-    def disabled_hook_categories(self):
-        return self._tx.disabled_hook_cats
-
-    @property
-    def enabled_hook_categories(self):
-        return self._tx.enabled_hook_cats
+    disabled_hook_categories = tx_attr('disabled_hook_cats')
+    enabled_hook_categories = tx_attr('enabled_hook_cats')
 
     def disable_hook_categories(self, *categories):
         """disable the given hook categories:
@@ -1185,17 +1181,9 @@ class Session(RequestSessionBase):
 
     # transaction data/operations management ##################################
 
-    @property
-    def transaction_data(self):
-        return self._tx.transaction_data
-
-    @property
-    def pending_operations(self):
-        return self._tx.pending_operations
-
-    @property
-    def pruned_hooks_cache(self):
-        return self._tx.pruned_hooks_cache
+    transaction_data = tx_attr('data')
+    pending_operations = tx_attr('pending_operations')
+    pruned_hooks_cache = tx_attr('pruned_hooks_cache')
 
     def add_operation(self, operation, index=None):
         """add an operation"""
@@ -1226,10 +1214,7 @@ class Session(RequestSessionBase):
 
     # querier helpers #########################################################
 
-    @property
-    def rql_rewriter(self):
-        # in thread local storage since the rewriter isn't thread safe
-        return self._tx._rewriter
+    rql_rewriter = tx_attr('_rewriter')
 
     # deprecated ###############################################################
 
