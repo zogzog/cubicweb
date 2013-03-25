@@ -254,11 +254,8 @@ class Transaction(object):
 
     def set_entity_cache(self, entity):
         """Add `entity` to the transaction entity cache"""
-        try:
-            self.data['ecache'].setdefault(entity.eid, entity)
-        except KeyError:
-            self.data['ecache'] = ecache = {}
-            ecache[entity.eid] = entity
+        ecache = self.data.setdefault('ecache', {})
+        ecache.setdefault(entity.eid, entity)
 
     def entity_cache(self, eid):
         """get cache entity for `eid`"""
