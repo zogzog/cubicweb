@@ -242,6 +242,42 @@ class Transaction(object):
         self.commit_state = None
         self.pruned_hooks_cache = {}
 
+    # Entity cache management #################################################
+    #
+    # The transaction entity cache as held in tx.data it is removed at end the
+    # end of the transaction (commit and rollback)
+    #
+    # XXX transaction level caching may be a pb with multiple repository
+    # instances, but 1. this is probably not the only one :$ and 2. it may be
+    # an acceptable risk. Anyway we could activate it or not according to a
+    # configuration option
+
+    def set_entity_cache(self, entity):
+        """Add `entity` to the transaction entity cache"""
+        try:
+            self.data['ecache'].setdefault(entity.eid, entity)
+        except KeyError:
+            self.data['ecache'] = ecache = {}
+            ecache[entity.eid] = entity
+
+    def entity_cache(self, eid):
+        """get cache entity for `eid`"""
+        return self.data['ecache'][eid]
+
+    def cached_entities(self):
+        """return the whole entity cache"""
+        return self.data.get('ecache', {}).values()
+
+    def drop_entity_cache(self, eid=None):
+        """drop entity from the cache
+
+        If eid is None, the whole cache is dropped"""
+        if eid is None:
+            self.data.pop('ecache', None)
+        else:
+            del self.data['ecache'][eid]
+
+
 
 def tx_attr(attr_name):
     """return a property to forward attribute access to transaction.
@@ -251,6 +287,15 @@ def tx_attr(attr_name):
     def attr_from_tx(session):
         return getattr(session._tx, attr_name)
     return attr_from_tx
+
+def tx_meth(meth_name):
+    """return a function forwarding calls to transaction.
+
+    This is to be used by session"""
+    def meth_from_tx(session, *args, **kwargs):
+        return getattr(session._tx, meth_name)(*args, **kwargs)
+    return meth_from_tx
+
 
 class Session(RequestSessionBase):
     """Repository user session
@@ -942,28 +987,10 @@ class Session(RequestSessionBase):
         """return a rql cursor"""
         return self
 
-    def set_entity_cache(self, entity):
-        # XXX session level caching may be a pb with multiple repository
-        #     instances, but 1. this is probably not the only one :$ and 2. it
-        #     may be an acceptable risk. Anyway we could activate it or not
-        #     according to a configuration option
-        try:
-            self._tx.data['ecache'].setdefault(entity.eid, entity)
-        except KeyError:
-            self._tx.data['ecache'] = ecache = {}
-            ecache[entity.eid] = entity
-
-    def entity_cache(self, eid):
-        return self._tx.data['ecache'][eid]
-
-    def cached_entities(self):
-        return self._tx.data.get('ecache', {}).values()
-
-    def drop_entity_cache(self, eid=None):
-        if eid is None:
-            self._tx.data.pop('ecache', None)
-        else:
-            del self._tx.data['ecache'][eid]
+    set_entity_cache  = tx_meth('set_entity_cache')
+    entity_cache      = tx_meth('entity_cache')
+    cache_entities    = tx_meth('cached_entities')
+    drop_entity_cache = tx_meth('drop_entity_cache')
 
     def from_controller(self):
         """return the id (string) of the controller issuing the request (no
