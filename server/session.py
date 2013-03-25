@@ -183,10 +183,10 @@ class Transaction(object):
 
       :attr:`hooks_mode`, may be either `HOOKS_ALLOW_ALL` or `HOOKS_DENY_ALL`.
 
-      :attr:`enabled_hook_categories`, when :attr:`hooks_mode` is
+      :attr:`enabled_hook_cats`, when :attr:`hooks_mode` is
       `HOOKS_DENY_ALL`, this set contains hooks categories that are enabled.
 
-      :attr:`disabled_hook_categories`, when :attr:`hooks_mode` is
+      :attr:`disabled_hook_cats`, when :attr:`hooks_mode` is
       `HOOKS_ALLOW_ALL`, this set contains hooks categories that are disabled.
 
     Security level Management:
@@ -298,6 +298,66 @@ class Transaction(object):
             self.pending_operations.append(operation)
         else:
             self.pending_operations.insert(index, operation)
+
+    # Hooks control ###########################################################
+
+    def disable_hook_categories(self, *categories):
+        """disable the given hook categories:
+
+        - on HOOKS_DENY_ALL mode, ensure those categories are not enabled
+        - on HOOKS_ALLOW_ALL mode, ensure those categories are disabled
+        """
+        changes = set()
+        self.pruned_hooks_cache.clear()
+        if self.hooks_mode is HOOKS_DENY_ALL:
+            enabledcats = self.enabled_hook_cats
+            for category in categories:
+                if category in enabledcats:
+                    enabledcats.remove(category)
+                    changes.add(category)
+        else:
+            disabledcats = self.disabled_hook_cats
+            for category in categories:
+                if category not in disabledcats:
+                    disabledcats.add(category)
+                    changes.add(category)
+        return tuple(changes)
+
+    def enable_hook_categories(self, *categories):
+        """enable the given hook categories:
+
+        - on HOOKS_DENY_ALL mode, ensure those categories are enabled
+        - on HOOKS_ALLOW_ALL mode, ensure those categories are not disabled
+        """
+        changes = set()
+        self.pruned_hooks_cache.clear()
+        if self.hooks_mode is HOOKS_DENY_ALL:
+            enabledcats = self.enabled_hook_cats
+            for category in categories:
+                if category not in enabledcats:
+                    enabledcats.add(category)
+                    changes.add(category)
+        else:
+            disabledcats = self.disabled_hook_cats
+            for category in categories:
+                if category in disabledcats:
+                    disabledcats.remove(category)
+                    changes.add(category)
+        return tuple(changes)
+
+    def is_hook_category_activated(self, category):
+        """return a boolean telling if the given category is currently activated
+        or not
+        """
+        if self.hooks_mode is HOOKS_DENY_ALL:
+            return category in self.enabled_hook_cats
+        return category not in self.disabled_hook_cats
+
+    def is_hook_activated(self, hook):
+        """return a boolean telling if the given hook class is currently
+        activated or not
+        """
+        return self.is_hook_category_activated(hook.category)
 
 
 def tx_attr(attr_name, writable=False):
@@ -817,64 +877,10 @@ class Session(RequestSessionBase):
 
     disabled_hook_categories = tx_attr('disabled_hook_cats')
     enabled_hook_categories = tx_attr('enabled_hook_cats')
-
-    def disable_hook_categories(self, *categories):
-        """disable the given hook categories:
-
-        - on HOOKS_DENY_ALL mode, ensure those categories are not enabled
-        - on HOOKS_ALLOW_ALL mode, ensure those categories are disabled
-        """
-        changes = set()
-        self.pruned_hooks_cache.clear()
-        if self.hooks_mode is HOOKS_DENY_ALL:
-            enabledcats = self.enabled_hook_categories
-            for category in categories:
-                if category in enabledcats:
-                    enabledcats.remove(category)
-                    changes.add(category)
-        else:
-            disabledcats = self.disabled_hook_categories
-            for category in categories:
-                if category not in disabledcats:
-                    disabledcats.add(category)
-                    changes.add(category)
-        return tuple(changes)
-
-    def enable_hook_categories(self, *categories):
-        """enable the given hook categories:
-
-        - on HOOKS_DENY_ALL mode, ensure those categories are enabled
-        - on HOOKS_ALLOW_ALL mode, ensure those categories are not disabled
-        """
-        changes = set()
-        self.pruned_hooks_cache.clear()
-        if self.hooks_mode is HOOKS_DENY_ALL:
-            enabledcats = self.enabled_hook_categories
-            for category in categories:
-                if category not in enabledcats:
-                    enabledcats.add(category)
-                    changes.add(category)
-        else:
-            disabledcats = self.disabled_hook_categories
-            for category in categories:
-                if category in disabledcats:
-                    disabledcats.remove(category)
-                    changes.add(category)
-        return tuple(changes)
-
-    def is_hook_category_activated(self, category):
-        """return a boolean telling if the given category is currently activated
-        or not
-        """
-        if self.hooks_mode is HOOKS_DENY_ALL:
-            return category in self.enabled_hook_categories
-        return category not in self.disabled_hook_categories
-
-    def is_hook_activated(self, hook):
-        """return a boolean telling if the given hook class is currently
-        activated or not
-        """
-        return self.is_hook_category_activated(hook.category)
+    disable_hook_categories = tx_meth('disable_hook_categories')
+    enable_hook_categories = tx_meth('enable_hook_categories')
+    is_hook_category_activated = tx_meth('is_hook_category_activated')
+    is_hook_activated = tx_meth('is_hook_activated')
 
     # connection management ###################################################
 
