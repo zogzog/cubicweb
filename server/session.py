@@ -300,15 +300,19 @@ class Transaction(object):
             self.pending_operations.insert(index, operation)
 
 
-
-def tx_attr(attr_name):
+def tx_attr(attr_name, writable=False):
     """return a property to forward attribute access to transaction.
 
     This is to be used by session"""
-    @property
+    args = {}
     def attr_from_tx(session):
         return getattr(session._tx, attr_name)
-    return attr_from_tx
+    args['fget'] = attr_from_tx
+    if writable:
+        def write_attr(session, value):
+            return setattr(session._tx, attr_name, value)
+        args['fset'] = write_attr
+    return property(**args)
 
 def tx_meth(meth_name):
     """return a function forwarding calls to transaction.
@@ -902,11 +906,7 @@ class Session(RequestSessionBase):
                     doc='transaction mode (read/write/transaction), resetted to'
                     ' default_mode on commit / rollback')
 
-    def get_commit_state(self):
-        return self._tx.commit_state
-    def set_commit_state(self, value):
-        self._tx.commit_state = value
-    commit_state = property(get_commit_state, set_commit_state)
+    commit_state = tx_attr('commit_state', writable=True)
 
     @property
     def cnxset(self):
