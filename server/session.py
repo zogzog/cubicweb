@@ -152,6 +152,9 @@ class Transaction(object):
 
     Database connections resource:
 
+      :attr:`running_dbapi_query`, boolean flag telling if the executing query
+      is coming from a dbapi connection or is a query from within the repository
+
       :attr:`cnxset`, the connections set to use to execute queries on sources.
       If the transaction is read only, the connection set may be freed between
       actual query. This allows multiple transaction with a reasonable low
@@ -206,6 +209,8 @@ class Transaction(object):
         self.mode = mode
         #: connection set used to execute queries on sources
         self.cnxset = None
+        #: is this transaction from a client or internal to the repo
+        self.running_dbapi_query = True
 
         #: dict containing arbitrary data cleared at the end of the transaction
         self.data = {}
@@ -786,9 +791,9 @@ class Session(RequestSessionBase):
         tx = self._tx
         oldmode = tx.read_security
         tx.read_security = activated
-        # dbapi_query used to detect hooks triggered by a 'dbapi' query (eg not
-        # issued on the session). This is tricky since we the execution model of
-        # a (write) user query is:
+        # running_dbapi_query used to detect hooks triggered by a 'dbapi' query
+        # (eg not issued on the session). This is tricky since we the execution
+        # model of a (write) user query is:
         #
         # repository.execute (security enabled)
         #  \-> querier.execute
@@ -801,8 +806,9 @@ class Session(RequestSessionBase):
         # recalling the first transition from DEFAULT_SECURITY to something
         # else (False actually) is not perfect but should be enough
         #
-        # also reset dbapi_query to true when we go back to DEFAULT_SECURITY
-        tx.dbapi_query = (oldmode is DEFAULT_SECURITY
+        # also reset running_dbapi_query to true when we go back to
+        # DEFAULT_SECURITY
+        tx.running_dbapi_query = (oldmode is DEFAULT_SECURITY
                                or activated is DEFAULT_SECURITY)
         return oldmode
 
@@ -820,14 +826,7 @@ class Session(RequestSessionBase):
         tx.write_security = activated
         return oldmode
 
-    @property
-    def running_dbapi_query(self):
-        """return a boolean telling if it's triggered by a db-api query or by
-        a session query.
-
-        To be used in hooks, else may have a wrong value.
-        """
-        return getattr(self._tx, 'dbapi_query', True)
+    running_dbapi_query = tx_attr('running_dbapi_query')
 
     # hooks activation control #################################################
     # all hooks should be activated during normal execution
