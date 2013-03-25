@@ -309,18 +309,15 @@ class Transaction(object):
         """
         changes = set()
         self.pruned_hooks_cache.clear()
+        categories = set(categories)
         if self.hooks_mode is HOOKS_DENY_ALL:
             enabledcats = self.enabled_hook_cats
-            for category in categories:
-                if category in enabledcats:
-                    enabledcats.remove(category)
-                    changes.add(category)
+            changes = enabledcats & categories
+            enabledcats -= changes # changes is small hence faster
         else:
             disabledcats = self.disabled_hook_cats
-            for category in categories:
-                if category not in disabledcats:
-                    disabledcats.add(category)
-                    changes.add(category)
+            changes = categories - disabledcats
+            disabledcats |= changes # changes is small hence faster
         return tuple(changes)
 
     def enable_hook_categories(self, *categories):
@@ -331,18 +328,15 @@ class Transaction(object):
         """
         changes = set()
         self.pruned_hooks_cache.clear()
+        categories = set(categories)
         if self.hooks_mode is HOOKS_DENY_ALL:
             enabledcats = self.enabled_hook_cats
-            for category in categories:
-                if category not in enabledcats:
-                    enabledcats.add(category)
-                    changes.add(category)
+            changes = categories - enabledcats
+            enabledcats |= changes # changes is small hence faster
         else:
             disabledcats = self.disabled_hook_cats
-            for category in categories:
-                if category in disabledcats:
-                    disabledcats.remove(category)
-                    changes.add(category)
+            changes = disabledcats & categories
+            disabledcats -= changes # changes is small hence faster
         return tuple(changes)
 
     def is_hook_category_activated(self, category):
