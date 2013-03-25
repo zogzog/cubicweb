@@ -290,6 +290,14 @@ class Transaction(object):
         """
         return eid in self.data.get('neweids', ())
 
+    # Operation management ####################################################
+
+    def add_operation(self, operation, index=None):
+        """add an operation to be executed at the end of the transaction"""
+        if index is None:
+            self.pending_operations.append(operation)
+        else:
+            self.pending_operations.insert(index, operation)
 
 
 
@@ -1216,13 +1224,7 @@ class Session(RequestSessionBase):
     transaction_data = tx_attr('data')
     pending_operations = tx_attr('pending_operations')
     pruned_hooks_cache = tx_attr('pruned_hooks_cache')
-
-    def add_operation(self, operation, index=None):
-        """add an operation"""
-        if index is None:
-            self.pending_operations.append(operation)
-        else:
-            self.pending_operations.insert(index, operation)
+    add_operation      = tx_meth('add_operation')
 
     # undo support ############################################################
 
