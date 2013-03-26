@@ -897,7 +897,7 @@ class Session(RequestSessionBase):
         if self._closed:
             self.free_cnxset(True)
             raise Exception('try to access connections set on a closed session %s' % self.id)
-        return getattr(self._tx, 'cnxset', None)
+        return self._tx.cnxset
 
     def set_cnxset(self):
         """the session need a connections set to execute some queries"""
@@ -938,11 +938,11 @@ class Session(RequestSessionBase):
         """the session is no longer using its connections set, at least for some time"""
         # cnxset may be none if no operation has been done since last commit
         # or rollback
-        cnxset = getattr(self._tx, 'cnxset', None)
+        cnxset = self._tx.cnxset
         if cnxset is not None and (ignoremode or self.mode == 'read'):
             # even in read mode, we must release the current transaction
             self._free_thread_cnxset(threading.currentThread(), cnxset)
-            del self._tx.cnxset
+            self._tx.cnxset = None
             self._tx.ctx_count -= 1
 
     def _touch(self):
@@ -1149,7 +1149,7 @@ class Session(RequestSessionBase):
                  DeprecationWarning, stacklevel=2)
             free_cnxset = reset_pool
         # don't use self.cnxset, rollback may be called with _closed == True
-        cnxset = getattr(self._tx, 'cnxset', None)
+        cnxset = self._tx.cnxset
         if cnxset is None:
             self._clear_thread_data()
             self._touch()
@@ -1286,7 +1286,7 @@ class InternalSession(Session):
         if self.repo.shutting_down:
             self.free_cnxset(True)
             raise ShuttingDown('repository is shutting down')
-        return getattr(self._tx, 'cnxset', None)
+        return self._tx.cnxset
 
 
 class InternalManager(object):
