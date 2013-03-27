@@ -113,34 +113,34 @@ class hooks_control(object):
     def __init__(self, session, mode, *categories):
         assert mode in (HOOKS_ALLOW_ALL, HOOKS_DENY_ALL)
         self.session = session
+        self.tx = session._tx
         self.mode = mode
         self.categories = categories
         self.oldmode = None
         self.changes = ()
 
     def __enter__(self):
-        self.oldmode = self.session._tx.hooks_mode
-        self.session._tx.hooks_mode = self.mode
+        self.oldmode = self.tx.hooks_mode
+        self.tx.hooks_mode = self.mode
         if self.mode is HOOKS_DENY_ALL:
-            self.changes = self.session.enable_hook_categories(*self.categories)
+            self.changes = self.tx.enable_hook_categories(*self.categories)
         else:
-            self.changes = self.session.disable_hook_categories(*self.categories)
-        self.session._tx.ctx_count += 1
+            self.changes = self.tx.disable_hook_categories(*self.categories)
+        self.tx.ctx_count += 1
 
     def __exit__(self, exctype, exc, traceback):
-        tx = self.session._tx
-        tx.ctx_count -= 1
-        if tx.ctx_count == 0:
-            self.session._clear_thread_storage(tx)
+        self.tx.ctx_count -= 1
+        if self.tx.ctx_count == 0:
+            self.session._clear_thread_storage(self.tx)
         else:
             try:
                 if self.categories:
                     if self.mode is HOOKS_DENY_ALL:
-                        self.session.disable_hook_categories(*self.categories)
+                        self.tx.disable_hook_categories(*self.categories)
                     else:
-                        self.session.enable_hook_categories(*self.categories)
+                        self.tx.enable_hook_categories(*self.categories)
             finally:
-                self.session._tx.hooks_mode = self.oldmode
+                self.tx.hooks_mode = self.oldmode
 
 
 class security_enabled(object):
