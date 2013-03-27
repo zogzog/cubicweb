@@ -990,14 +990,10 @@ class Session(RequestSessionBase):
 
     hooks_mode = tx_attr('hooks_mode')
 
-    def set_hooks_mode(self, mode):
+    def init_hooks_mode_categories(self, mode, categories):
         assert mode is HOOKS_ALLOW_ALL or mode is HOOKS_DENY_ALL
         oldmode = self._tx.hooks_mode
         self._tx.hooks_mode = mode
-        return oldmode
-
-    def init_hooks_mode_categories(self, mode, categories):
-        oldmode = self.set_hooks_mode(mode)
         if mode is self.HOOKS_DENY_ALL:
             changes = self.enable_hook_categories(*categories)
         else:
@@ -1018,7 +1014,7 @@ class Session(RequestSessionBase):
                     else:
                         return self.enable_hook_categories(*categories)
             finally:
-                self.set_hooks_mode(oldmode)
+                self._tx.hooks_mode = oldmode
 
     disabled_hook_categories = tx_attr('disabled_hook_cats')
     enabled_hook_categories = tx_attr('enabled_hook_cats')
