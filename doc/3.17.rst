@@ -6,3 +6,11 @@ API changes
 
 * The SIOC views and adapters have been removed from CubicWeb and moved to the
   `sioc` cube.
+
+
+Deprecated Code Drops
+----------------------
+
+* The progress views and adapters have been removed from CubicWeb. These
+  classes were deprecated since 3.14.0. They are still available in the
+  `iprogress` cube.

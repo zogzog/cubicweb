@@ -54,23 +54,23 @@ class VRegistryTC(TestCase):
 
 
     def test_load_subinterface_based_appobjects(self):
-        self.vreg.register_objects([join(BASE, 'web', 'views', 'iprogress.py')])
-        # check progressbar was kicked
-        self.assertFalse(self.vreg['views'].get('progressbar'))
+        self.vreg.register_objects([join(BASE, 'web', 'views', 'idownloadable.py')])
+        # check downloadlink was kicked
+        self.assertFalse(self.vreg['views'].get('downloadlink'))
         # we've to emulate register_objects to add custom MyCard objects
         path = [join(BASE, 'entities', '__init__.py'),
                 join(BASE, 'entities', 'adapters.py'),
-                join(BASE, 'web', 'views', 'iprogress.py')]
+                join(BASE, 'web', 'views', 'idownloadable.py')]
         filemods = self.vreg.init_registration(path, None)
         for filepath, modname in filemods:
             self.vreg.load_file(filepath, modname)
-        class CardIProgressAdapter(EntityAdapter):
-            __regid__ = 'IProgress'
+        class CardIDownloadableAdapter(EntityAdapter):
+            __regid__ = 'IDownloadable'
         self.vreg._loadedmods[__name__] = {}
-        self.vreg.register(CardIProgressAdapter)
+        self.vreg.register(CardIDownloadableAdapter)
         self.vreg.initialization_completed()
         # check progressbar isn't kicked
-        self.assertEqual(len(self.vreg['views']['progressbar']), 1)
+        self.assertEqual(len(self.vreg['views']['downloadlink']), 1)
 
     def test_properties(self):
         self.vreg.reset()
