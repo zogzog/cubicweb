@@ -335,18 +335,18 @@ class Transaction(object):
 
     """
 
-    def __init__(self, txid, cnxset_tracker, mode, rewriter):
+    def __init__(self, txid, session, rewriter):
         #: transaction unique id
         self.transactionid = txid
         #: reentrance handling
         self.ctx_count = 0
 
         #: connection handling mode
-        self.mode = mode
+        self.mode = session.default_mode
         #: connection set used to execute queries on sources
         self._cnxset = None
         #: CnxSetTracker used to report cnxset usage
-        self._cnxset_tracker = cnxset_tracker
+        self._cnxset_tracker = session._cnxset_tracker
         #: is this transaction from a client or internal to the repo
         self.running_dbapi_query = True
 
@@ -726,8 +726,7 @@ class Session(RequestSessionBase):
                 tx = self._txs[txid]
             except KeyError:
                 rewriter = RQLRewriter(self)
-                tx = Transaction(txid, self._cnxset_tracker, self.default_mode,
-                                 rewriter)
+                tx = Transaction(txid, self, rewriter)
                 self._txs[txid] = tx
         return tx
 
