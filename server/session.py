@@ -1269,28 +1269,6 @@ class Session(RequestSessionBase):
     def reset_pool(self):
         return self.free_cnxset()
 
-    @deprecated("[3.7] execute is now unsafe by default in hooks/operation. You"
-                " can also control security with the security_enabled context "
-                "manager")
-    def unsafe_execute(self, rql, kwargs=None, eid_key=None, build_descr=True,
-                       propagate=False):
-        """like .execute but with security checking disabled (this method is
-        internal to the server, it's not part of the db-api)
-        """
-        with security_enabled(self, read=False, write=False):
-            return self.execute(rql, kwargs, eid_key, build_descr)
-
-    @property
-    @deprecated("[3.7] is_super_session is deprecated, test "
-                "session.read_security and or session.write_security")
-    def is_super_session(self):
-        return not self.read_security or not self.write_security
-
-    @deprecated("[3.7] session is actual session")
-    def actual_session(self):
-        """return the original parent session if any, else self"""
-        return self
-
     # these are overridden by set_log_methods below
     # only defining here to prevent pylint from complaining
     info = warning = error = critical = exception = debug = lambda msg,*a,**kw: None
