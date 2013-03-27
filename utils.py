@@ -263,10 +263,7 @@ class HTMLHead(UStringIO):
     def add_post_inline_script(self, content):
         self.post_inlined_scripts.append(content)
 
-    def add_onload(self, jscode, jsoncall=_MARKER):
-        if jsoncall is not _MARKER:
-            warn('[3.7] specifying jsoncall is not needed anymore',
-                 DeprecationWarning, stacklevel=2)
+    def add_onload(self, jscode):
         self.add_post_inline_script(u"""$(cw).one('server-response', function(event) {
 %s});""" % jscode)
 
@@ -565,14 +562,6 @@ def js_href(javascript_code):
     'javascript: alert("%251337%");'
     """
     return 'javascript: ' + PERCENT_IN_URLQUOTE_RE.sub(r'%25', javascript_code)
-
-
-@deprecated('[3.7] merge_dicts is deprecated')
-def merge_dicts(dict1, dict2):
-    """update a copy of `dict1` with `dict2`"""
-    dict1 = dict(dict1)
-    dict1.update(dict2)
-    return dict1
 
 
 def parse_repo_uri(uri):
