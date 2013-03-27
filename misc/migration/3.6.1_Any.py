@@ -1,2 +1,1 @@
-sync_schema_props_perms(syncprops=False)
-sync_schema_props_perms('destination_state', syncperms=False)
+raise NotImplementedError("Cannot migrate such an old version. Use intermediate Cubiweb version (try 3.16.x)")
