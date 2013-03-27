@@ -111,16 +111,36 @@ class hooks_control(object):
     methods.
     """
     def __init__(self, session, mode, *categories):
+        assert mode in (HOOKS_ALLOW_ALL, HOOKS_DENY_ALL)
         self.session = session
         self.mode = mode
         self.categories = categories
+        self.oldmode = None
+        self.changes = ()
 
     def __enter__(self):
-        self.oldmode, self.changes = self.session.init_hooks_mode_categories(
-            self.mode, self.categories)
+        self.oldmode = self.session._tx.hooks_mode
+        self.session._tx.hooks_mode = self.mode
+        if self.mode is HOOKS_DENY_ALL:
+            self.changes = self.session.enable_hook_categories(*self.categories)
+        else:
+            self.changes = self.session.disable_hook_categories(*self.categories)
+        self.session._tx.ctx_count += 1
 
     def __exit__(self, exctype, exc, traceback):
-        self.session.reset_hooks_mode_categories(self.oldmode, self.mode, self.changes)
+        tx = self.session._tx
+        tx.ctx_count -= 1
+        if tx.ctx_count == 0:
+            self.session._clear_thread_storage(tx)
+        else:
+            try:
+                if self.categories:
+                    if self.mode is HOOKS_DENY_ALL:
+                        self.session.disable_hook_categories(*self.categories)
+                    else:
+                        self.session.enable_hook_categories(*self.categories)
+            finally:
+                self.session._tx.hooks_mode = self.oldmode
 
 
 class security_enabled(object):
@@ -989,32 +1009,6 @@ class Session(RequestSessionBase):
         return hooks_control(self, HOOKS_DENY_ALL, *categories)
 
     hooks_mode = tx_attr('hooks_mode')
-
-    def init_hooks_mode_categories(self, mode, categories):
-        assert mode is HOOKS_ALLOW_ALL or mode is HOOKS_DENY_ALL
-        oldmode = self._tx.hooks_mode
-        self._tx.hooks_mode = mode
-        if mode is self.HOOKS_DENY_ALL:
-            changes = self.enable_hook_categories(*categories)
-        else:
-            changes = self.disable_hook_categories(*categories)
-        self._tx.ctx_count += 1
-        return oldmode, changes
-
-    def reset_hooks_mode_categories(self, oldmode, mode, categories):
-        tx = self._tx
-        tx.ctx_count -= 1
-        if tx.ctx_count == 0:
-            self._clear_thread_storage(tx)
-        else:
-            try:
-                if categories:
-                    if mode is self.HOOKS_DENY_ALL:
-                        return self.disable_hook_categories(*categories)
-                    else:
-                        return self.enable_hook_categories(*categories)
-            finally:
-                self._tx.hooks_mode = oldmode
 
     disabled_hook_categories = tx_attr('disabled_hook_cats')
     enabled_hook_categories = tx_attr('enabled_hook_cats')
