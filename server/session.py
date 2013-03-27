@@ -227,7 +227,7 @@ class Transaction(object):
 
 
         ### security control attributes
-        self.read_security = DEFAULT_SECURITY
+        self._read_security = DEFAULT_SECURITY # handled by a property
         self.write_security = DEFAULT_SECURITY
 
         # RQLRewriter are not thread safe
@@ -357,6 +357,35 @@ class Transaction(object):
         activated or not
         """
         return self.is_hook_category_activated(hook.category)
+
+    # Security management #####################################################
+    @property
+    def read_security(self):
+        return self._read_security
+
+    @read_security.setter
+    def read_security(self, activated):
+        oldmode = self._read_security
+        self._read_security = activated
+        # running_dbapi_query used to detect hooks triggered by a 'dbapi' query
+        # (eg not issued on the session). This is tricky since we the execution
+        # model of a (write) user query is:
+        #
+        # repository.execute (security enabled)
+        #  \-> querier.execute
+        #       \-> repo.glob_xxx (add/update/delete entity/relation)
+        #            \-> deactivate security before calling hooks
+        #                 \-> WE WANT TO CHECK QUERY NATURE HERE
+        #                      \-> potentially, other calls to querier.execute
+        #
+        # so we can't rely on simply checking session.read_security, but
+        # recalling the first transition from DEFAULT_SECURITY to something
+        # else (False actually) is not perfect but should be enough
+        #
+        # also reset running_dbapi_query to true when we go back to
+        # DEFAULT_SECURITY
+        self.running_dbapi_query = (oldmode is DEFAULT_SECURITY
+                                    or activated is DEFAULT_SECURITY)
 
 
 def tx_attr(attr_name, writable=False):
@@ -779,8 +808,6 @@ class Session(RequestSessionBase):
             if write is not None:
                 self.set_write_security(write)
 
-    read_security = tx_attr('read_security')
-
     def set_read_security(self, activated):
         """[de]activate read security, returning the previous value set for
         later restoration.
@@ -788,31 +815,9 @@ class Session(RequestSessionBase):
         you should usually use the `security_enabled` context manager instead
         of this to change security settings.
         """
-        tx = self._tx
-        oldmode = tx.read_security
-        tx.read_security = activated
-        # running_dbapi_query used to detect hooks triggered by a 'dbapi' query
-        # (eg not issued on the session). This is tricky since we the execution
-        # model of a (write) user query is:
-        #
-        # repository.execute (security enabled)
-        #  \-> querier.execute
-        #       \-> repo.glob_xxx (add/update/delete entity/relation)
-        #            \-> deactivate security before calling hooks
-        #                 \-> WE WANT TO CHECK QUERY NATURE HERE
-        #                      \-> potentially, other calls to querier.execute
-        #
-        # so we can't rely on simply checking session.read_security, but
-        # recalling the first transition from DEFAULT_SECURITY to something
-        # else (False actually) is not perfect but should be enough
-        #
-        # also reset running_dbapi_query to true when we go back to
-        # DEFAULT_SECURITY
-        tx.running_dbapi_query = (oldmode is DEFAULT_SECURITY
-                               or activated is DEFAULT_SECURITY)
+        oldmode = self._tx.read_security
+        self._tx.read_security = activated
         return oldmode
-
-    write_security = tx_attr('write_security')
 
     def set_write_security(self, activated):
         """[de]activate write security, returning the previous value set for
@@ -821,11 +826,12 @@ class Session(RequestSessionBase):
         you should usually use the `security_enabled` context manager instead
         of this to change security settings.
         """
-        tx = self._tx
-        oldmode = tx.write_security
-        tx.write_security = activated
+        oldmode = self._tx.write_security
+        self._tx.write_security = activated
         return oldmode
 
+    read_security = tx_attr('read_security')
+    write_security = tx_attr('write_security')
     running_dbapi_query = tx_attr('running_dbapi_query')
 
     # hooks activation control #################################################
