@@ -1,2 +1,8 @@
 What's new in CubicWeb 3.17?
 ============================
+
+API changes
+-----------
+
+* The SIOC views and adapters have been removed from CubicWeb and moved to the
+  `sioc` cube.
