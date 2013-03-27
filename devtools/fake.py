@@ -163,10 +163,6 @@ class FakeSession(RequestSessionBase):
 
     # for use with enabled_security context manager
     read_security = write_security = True
-    def init_security(self, *args):
-        return None, None
-    def reset_security(self, *args):
-        return
 
 class FakeRepo(object):
     querier = None

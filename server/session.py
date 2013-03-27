@@ -153,13 +153,32 @@ class security_enabled(object):
         self.session = session
         self.read = read
         self.write = write
+        self.oldread = None
+        self.oldwrite = None
 
     def __enter__(self):
-        self.oldread, self.oldwrite = self.session.init_security(
-            self.read, self.write)
+        if self.read is None:
+            self.oldread = None
+        else:
+            self.oldread = self.session._tx.read_security
+            self.session._tx.read_security = self.read
+        if self.write is None:
+            self.oldwrite = None
+        else:
+            self.oldwrite = self.session._tx.write_security
+            self.session._tx.write_security = self.write
+        self.session._tx.ctx_count += 1
 
     def __exit__(self, exctype, exc, traceback):
-        self.session.reset_security(self.oldread, self.oldwrite)
+        tx = self.session._tx
+        tx.ctx_count -= 1
+        if tx.ctx_count == 0:
+            self.session._clear_thread_storage(tx)
+        else:
+            if self.oldread is not None:
+                self.session._tx.read_security = self.oldread
+            if self.oldwrite is not None:
+                self.session._tx.write_security = self.oldwrite
 
 HOOKS_ALLOW_ALL = object()
 HOOKS_DENY_ALL = object()
@@ -693,8 +712,6 @@ class Session(RequestSessionBase):
       :attr:`read_security` and :attr:`write_security`, boolean flags telling if
       read/write security is currently activated.
 
-    .. automethod:: cubicweb.server.session.Session.init_security
-    .. automethod:: cubicweb.server.session.Session.reset_security
     .. automethod:: cubicweb.server.session.Session.security_enabled
 
     Hooks Management:
@@ -970,31 +987,6 @@ class Session(RequestSessionBase):
 
     def security_enabled(self, read=None, write=None):
         return security_enabled(self, read=read, write=write)
-
-    def init_security(self, read, write):
-        if read is None:
-            oldread = None
-        else:
-            oldread = self._tx.read_security
-            self._tx.read_security = read
-        if write is None:
-            oldwrite = None
-        else:
-            oldwrite = self._tx.write_security
-            self._tx.write_security = write
-        self._tx.ctx_count += 1
-        return oldread, oldwrite
-
-    def reset_security(self, read, write):
-        tx = self._tx
-        tx.ctx_count -= 1
-        if tx.ctx_count == 0:
-            self._clear_thread_storage(tx)
-        else:
-            if read is not None:
-                self._tx.read_security = read
-            if write is not None:
-                self._tx.write_security = write
 
     read_security = tx_attr('read_security', writable=True)
     write_security = tx_attr('write_security', writable=True)
