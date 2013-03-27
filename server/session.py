@@ -1031,14 +1031,7 @@ class Session(RequestSessionBase):
         else: # mode == 'write'
             self.default_mode = 'read'
 
-    def get_mode(self):
-        return self._tx.mode
-    def set_mode(self, value):
-        self._tx.mode = value
-    mode = property(get_mode, set_mode,
-                    doc='transaction mode (read/write/transaction), resetted to'
-                    ' default_mode on commit / rollback')
-
+    mode = tx_attr('mode', writable=True)
     commit_state = tx_attr('commit_state', writable=True)
 
     @property
