@@ -37,7 +37,6 @@ from cubicweb import Unauthorized, neg_role
 from cubicweb.utils import support_args
 from cubicweb.rset import ResultSet
 from cubicweb.appobject import AppObject
-from cubicweb.req import _check_cw_unsafe
 from cubicweb.schema import (RQLVocabularyConstraint, RQLConstraint,
                              GeneratedConstraint)
 from cubicweb.rqlrewrite import RQLRewriter
@@ -1287,7 +1286,6 @@ class Entity(AppObject):
         an entity or eid, a list of entities or eids, or None (meaning that all
         relations of the given type from or to this object should be deleted).
         """
-        _check_cw_unsafe(kwargs)
         assert kwargs
         assert self.cw_is_saved(), "should not call set_attributes while entity "\
                "hasn't been saved yet"

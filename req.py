@@ -38,12 +38,6 @@ CACHE_REGISTRY = {}
 class FindEntityError(Exception):
     """raised when find_one_entity() can not return one and only one entity"""
 
-def _check_cw_unsafe(kwargs):
-    if kwargs.pop('_cw_unsafe', False):
-        warn('[3.7] _cw_unsafe argument is deprecated, now unsafe by '
-             'default, control it using cw_[read|write]_security.',
-             DeprecationWarning, stacklevel=3)
-
 class Cache(dict):
     def __init__(self):
         super(Cache, self).__init__()
@@ -154,7 +148,6 @@ class RequestSessionBase(object):
         ...               works_for=c)
 
         """
-        _check_cw_unsafe(kwargs)
         cls = self.vreg['etypes'].etype_class(etype)
         return cls.cw_instantiate(self.execute, **kwargs)
 
