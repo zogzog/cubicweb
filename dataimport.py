@@ -560,10 +560,6 @@ class RQLObjectStore(ObjectStore):
         self.session = session
         self._commit = commit or session.commit
 
-    @deprecated("[3.7] checkpoint() deprecated. use commit() instead")
-    def checkpoint(self):
-        self.commit()
-
     def commit(self):
         txuuid = self._commit()
         self.session.set_cnxset()
