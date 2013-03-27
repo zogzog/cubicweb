@@ -311,7 +311,8 @@ class BasePlannerTC(BaseQuerierTC):
             del self.repo.sources_by_uri[source.uri]
         undo_monkey_patch()
         for session in self._dumb_sessions:
-            session._tx.cnxset = None
+            if session._tx.cnxset is not None:
+                session._tx.cnxset = None
             session.close()
 
     def _prepare_plan(self, rql, kwargs=None):
