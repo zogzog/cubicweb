@@ -1515,14 +1515,6 @@ class ServerMigrationHelper(MigrationHelper):
         if commit:
             self.commit()
 
-    @deprecated("[3.7] use session.disable_hook_categories('integrity')")
-    def cmd_deactivate_verification_hooks(self):
-        self.session.disable_hook_categories('integrity')
-
-    @deprecated("[3.7] use session.enable_hook_categories('integrity')")
-    def cmd_reactivate_verification_hooks(self):
-        self.session.enable_hook_categories('integrity')
-
     @deprecated("[3.15] use rename_relation_type(oldname, newname)")
     def cmd_rename_relation(self, oldname, newname, commit=True):
         self.cmd_rename_relation_type(oldname, newname, commit)
