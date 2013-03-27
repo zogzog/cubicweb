@@ -7,6 +7,9 @@ API changes
 * The SIOC views and adapters have been removed from CubicWeb and moved to the
   `sioc` cube.
 
+* The web page embedding views and adapters have been removed from CubicWeb and
+  moved to the `embed` cube.
+
 
 Deprecated Code Drops
 ----------------------

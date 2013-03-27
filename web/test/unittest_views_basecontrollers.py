@@ -533,18 +533,6 @@ class EditControllerTC(CubicWebTC):
             p.__class__.skip_copy_for = old_skips
 
 
-class EmbedControllerTC(CubicWebTC):
-
-    def test_nonregr_embed_publish(self):
-        # This test looks a bit stupid but at least it will probably
-        # fail if the controller API changes and if EmbedController is not
-        # updated (which is what happened before this test)
-        req = self.request()
-        req.form['url'] = 'http://www.logilab.fr/'
-        controller = self.vreg['controllers'].select('embed', req)
-        result = controller.publish(rset=None)
-
-
 class ReportBugControllerTC(CubicWebTC):
 
     def test_usable_by_guest(self):
