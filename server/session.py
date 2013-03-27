@@ -368,6 +368,13 @@ class Transaction(object):
         self._read_security = DEFAULT_SECURITY # handled by a property
         self.write_security = DEFAULT_SECURITY
 
+        # undo control
+        config = session.repo.config
+        if config.creating or config.repairing or session.is_internal_session:
+            self.undo_actions = False
+        else:
+            self.undo_actions = config['undo-enabled']
+
         # RQLRewriter are not thread safe
         self._rewriter = rewriter
 
@@ -544,6 +551,22 @@ class Transaction(object):
         self.running_dbapi_query = (oldmode is DEFAULT_SECURITY
                                     or activated is DEFAULT_SECURITY)
 
+    # undo support ############################################################
+
+    def ertype_supports_undo(self, ertype):
+        return self.undo_actions and ertype not in NO_UNDO_TYPES
+
+    def transaction_uuid(self, set=True):
+        uuid = self.data.get('tx_uuid')
+        if set and uuid is None:
+            raise KeyError
+        return uuid
+
+    def transaction_inc_action_counter(self):
+        num = self.data.setdefault('tx_action_count', 0) + 1
+        self.data['tx_action_count'] = num
+        return num
+
 
 def tx_attr(attr_name, writable=False):
     """return a property to forward attribute access to transaction.
@@ -692,11 +715,6 @@ class Session(RequestSessionBase):
         self.repo = repo
         self.timestamp = time()
         self.default_mode = 'read'
-        # undo support
-        if repo.config.creating or repo.config.repairing or self.is_internal_session:
-            self.undo_actions = False
-        else:
-            self.undo_actions = repo.config['undo-enabled']
         # short cut to querier .execute method
         self._execute = repo.querier.execute
         # shared data, used to communicate extra information between the client
@@ -1350,23 +1368,16 @@ class Session(RequestSessionBase):
 
     # undo support ############################################################
 
-    def ertype_supports_undo(self, ertype):
-        return self.undo_actions  and ertype not in NO_UNDO_TYPES
+    ertype_supports_undo = tx_meth('ertype_supports_undo')
+    transaction_inc_action_counter = tx_meth('transaction_inc_action_counter')
 
     def transaction_uuid(self, set=True):
         try:
-            return self._tx.data['tx_uuid']
+            return self._tx.transaction_uuid(set=set)
         except KeyError:
-            if not set:
-                return
             self._tx.data['tx_uuid'] = uuid = uuid4().hex
             self.repo.system_source.start_undoable_transaction(self, uuid)
             return uuid
-
-    def transaction_inc_action_counter(self):
-        num = self._tx.data.setdefault('tx_action_count', 0) + 1
-        self._tx.data['tx_action_count'] = num
-        return num
 
     # querier helpers #########################################################
 
