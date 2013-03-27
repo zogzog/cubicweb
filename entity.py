@@ -1395,10 +1395,6 @@ class Entity(AppObject):
 
     @deprecated('[3.10] use entity.cw_attr_cache[attr]')
     def __getitem__(self, key):
-        if key == 'eid':
-            warn('[3.7] entity["eid"] is deprecated, use entity.eid instead',
-                 DeprecationWarning, stacklevel=2)
-            return self.eid
         return self.cw_attr_cache[key]
 
     @deprecated('[3.10] use entity.cw_attr_cache.get(attr[, default])')
@@ -1422,15 +1418,10 @@ class Entity(AppObject):
         the attribute to skip_security since we don't want to check security
         for such attributes set by hooks.
         """
-        if attr == 'eid':
-            warn('[3.7] entity["eid"] = value is deprecated, use entity.eid = value instead',
-                 DeprecationWarning, stacklevel=2)
-            self.eid = value
-        else:
-            try:
-                self.cw_edited[attr] = value
-            except AttributeError:
-                self.cw_attr_cache[attr] = value
+        try:
+            self.cw_edited[attr] = value
+        except AttributeError:
+            self.cw_attr_cache[attr] = value
 
     @deprecated('[3.10] use del entity.cw_edited[attr]')
     def __delitem__(self, attr):
