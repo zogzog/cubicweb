@@ -17,3 +17,5 @@ Deprecated Code Drops
 * The progress views and adapters have been removed from CubicWeb. These
   classes were deprecated since 3.14.0. They are still available in the
   `iprogress` cube.
+
+* API deprecated since 3.7 have been dropped.
