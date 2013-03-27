@@ -151,6 +151,7 @@ class security_enabled(object):
     """
     def __init__(self, session, read=None, write=None):
         self.session = session
+        self.tx = session._tx
         self.read = read
         self.write = write
         self.oldread = None
@@ -160,25 +161,24 @@ class security_enabled(object):
         if self.read is None:
             self.oldread = None
         else:
-            self.oldread = self.session._tx.read_security
-            self.session._tx.read_security = self.read
+            self.oldread = self.tx.read_security
+            self.tx.read_security = self.read
         if self.write is None:
             self.oldwrite = None
         else:
-            self.oldwrite = self.session._tx.write_security
-            self.session._tx.write_security = self.write
-        self.session._tx.ctx_count += 1
+            self.oldwrite = self.tx.write_security
+            self.tx.write_security = self.write
+        self.tx.ctx_count += 1
 
     def __exit__(self, exctype, exc, traceback):
-        tx = self.session._tx
-        tx.ctx_count -= 1
-        if tx.ctx_count == 0:
-            self.session._clear_thread_storage(tx)
+        self.tx.ctx_count -= 1
+        if self.tx.ctx_count == 0:
+            self.session._clear_thread_storage(self.tx)
         else:
             if self.oldread is not None:
-                self.session._tx.read_security = self.oldread
+                self.tx.read_security = self.oldread
             if self.oldwrite is not None:
-                self.session._tx.write_security = self.oldwrite
+                self.tx.write_security = self.oldwrite
 
 HOOKS_ALLOW_ALL = object()
 HOOKS_DENY_ALL = object()
