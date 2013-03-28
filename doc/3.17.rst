@@ -1,6 +1,16 @@
 What's new in CubicWeb 3.17?
 ============================
 
+New functionalities
+--------------------
+
+* add a command to compare db schema and file system schema
+  (see `#464991 <http://www.cubicweb.org/464991>`_)
+
+* Add CubicWebRequestBase.content with the content of the HTTP request (see #2742453)
+  (see `#2742453 <http://www.cubicweb.org/2742453>`_)
+
+
 API changes
 -----------
 
@@ -9,6 +19,9 @@ API changes
 
 * The web page embedding views and adapters have been removed from CubicWeb and
   moved to the `embed` cube.
+
+* drop typed_eid() in favour of int() (see `#2742462 <http://www.cubicweb.org/2742462>`_)
+
 
 
 Deprecated Code Drops
