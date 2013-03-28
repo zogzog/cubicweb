@@ -24,12 +24,15 @@ __docformat__ = 'restructuredtext en'
 # completion). So import locally in command helpers.
 import sys
 import os
+from contextlib import contextmanager
 import logging
 import subprocess
 
 from logilab.common import nullobject
 from logilab.common.configuration import Configuration, merge_options
 from logilab.common.shellutils import ASK, generate_password
+
+from logilab.database import get_db_helper, get_connection
 
 from cubicweb import AuthenticationError, ExecutionError, ConfigurationError
 from cubicweb.toolsutils import Command, CommandHandler, underline_title
@@ -47,7 +50,6 @@ def source_cnx(source, dbname=None, special_privs=False, interactive=True):
     given server.serverconfig
     """
     from getpass import getpass
-    from logilab.database import get_connection, get_db_helper
     dbhost = source.get('db-host')
     if dbname is None:
         dbname = source['db-name']
@@ -104,7 +106,6 @@ def system_source_cnx(source, dbms_system_base=False,
     create/drop the instance database)
     """
     if dbms_system_base:
-        from logilab.database import get_db_helper
         system_db = get_db_helper(source['db-driver']).system_database()
         return source_cnx(source, system_db, special_privs=special_privs,
                           interactive=interactive)
@@ -116,7 +117,6 @@ def _db_sys_cnx(source, special_privs, interactive=True):
     database)
     """
     import logilab.common as lgp
-    from logilab.database import get_db_helper
     lgp.USE_MX_DATETIME = False
     driver = source['db-driver']
     helper = get_db_helper(driver)
@@ -205,56 +205,71 @@ class RepositoryCreateHandler(CommandHandler):
             print ('-> nevermind, you can do it later with '
                    '"cubicweb-ctl db-create %s".' % self.config.appid)
 
-ERROR = nullobject()
 
-def confirm_on_error_or_die(msg, func, *args, **kwargs):
+@contextmanager
+def db_sys_transaction(source, privilege):
+    """Open a transaction to the system database"""
+    cnx = _db_sys_cnx(source, privilege)
+    cursor = cnx.cursor()
     try:
-        return func(*args, **kwargs)
-    except Exception as ex:
-        print 'ERROR', ex
-        if not ASK.confirm('An error occurred while %s. Continue anyway?' % msg):
-            raise ExecutionError(str(ex))
-    return ERROR
+        yield cursor
+    except:
+        cnx.rollback()
+        cnx.close()
+        raise
+    else:
+        cnx.commit()
+        cnx.close()
+
 
 class RepositoryDeleteHandler(CommandHandler):
     cmdname = 'delete'
     cfgname = 'repository'
 
+    def _drop_database(self, source):
+        dbname = source['db-name']
+        if source['db-driver'] == 'sqlite':
+            print 'deleting database file %(db-name)s' % source
+            os.unlink(source['db-name'])
+            print '-> database %(db-name)s dropped.' % source
+        else:
+            helper = get_db_helper(source['db-driver'])
+            with db_sys_transaction(source, privilege='DROP DATABASE') as cursor:
+                print 'dropping database %(db-name)s' % source
+                cursor.execute('DROP DATABASE "%(db-name)s"' % source)
+                print '-> database %(db-name)s dropped.' % source
+
+    def _drop_user(self, source):
+        user = source['db-user'] or None
+        if user is not None:
+            with db_sys_transaction(source, privilege='DROP USER') as cursor:
+                print 'dropping user %s' % user
+                cursor.execute('DROP USER %s' % user)
+
+    def _cleanup_steps(self, source):
+        # 1/ delete database
+        yield ('Delete database "%(db-name)s"' % source,
+               self._drop_database, True)
+        # 2/ delete user
+        helper = get_db_helper(source['db-driver'])
+        if source['db-user'] and helper.users_support:
+            # XXX should check we are not connected as user
+            yield ('Delete user "%(db-user)s"' % source,
+                   self._drop_user, False)
+
     def cleanup(self):
         """remove instance's configuration and database"""
-        from logilab.database import get_db_helper
         source = self.config.system_source_config
-        dbname = source['db-name']
-        helper = get_db_helper(source['db-driver'])
-        if ASK.confirm('Delete database %s ?' % dbname):
-            if source['db-driver'] == 'sqlite':
-                if confirm_on_error_or_die(
-                    'deleting database file %s' % dbname,
-                    os.unlink, source['db-name']) is not ERROR:
-                    print '-> database %s dropped.' % dbname
-                return
-            user = source['db-user'] or None
-            cnx = confirm_on_error_or_die('connecting to database %s' % dbname,
-                                          _db_sys_cnx, source, 'DROP DATABASE')
-            if cnx is ERROR:
-                return
-            cursor = cnx.cursor()
-            try:
-                if confirm_on_error_or_die(
-                    'dropping database %s' % dbname,
-                    cursor.execute, 'DROP DATABASE "%s"' % dbname) is not ERROR:
-                    print '-> database %s dropped.' % dbname
-                # XXX should check we are not connected as user
-                if user and helper.users_support and \
-                       ASK.confirm('Delete user %s ?' % user, default_is_yes=False):
-                    if confirm_on_error_or_die(
-                        'dropping user %s' % user,
-                        cursor.execute, 'DROP USER %s' % user) is not ERROR:
-                        print '-> user %s dropped.' % user
-                cnx.commit()
-            except BaseException:
-                cnx.rollback()
-                raise
+        for msg, step, default in self._cleanup_steps(source):
+            if ASK.confirm(msg, default_is_yes=default):
+                try:
+                    step(source)
+                except Exception as exc:
+                    print 'ERROR', exc
+                    if ASK.confirm('An error occurred. Continue anyway?',
+                                   default_is_yes=False):
+                        continue
+                    raise ExecutionError(str(exc))
 
 
 class RepositoryStartHandler(CommandHandler):
@@ -294,6 +309,7 @@ def createdb(helper, source, dbcnx, cursor, **kwargs):
         helper.create_database(cursor, source['db-name'],
                                dbencoding=source['db-encoding'], **kwargs)
 
+
 class CreateInstanceDBCommand(Command):
     """Create the system database of an instance (run after 'create').
 
@@ -331,7 +347,6 @@ class CreateInstanceDBCommand(Command):
 
     def run(self, args):
         """run the command with its specific arguments"""
-        from logilab.database import get_db_helper
         check_options_consistency(self.config)
         automatic = self.get('automatic')
         appid = args.pop()
@@ -439,7 +454,6 @@ class InitInstanceCommand(Command):
         check_options_consistency(self.config)
         print '\n'+underline_title('Initializing the system database')
         from cubicweb.server import init_repository
-        from logilab.database import get_connection
         appid = args[0]
         config = ServerConfiguration.config_for(appid)
         try:
@@ -603,7 +617,6 @@ class ResetAdminPasswordCommand(Command):
             sys.exit(1)
         cnx = source_cnx(sourcescfg['system'])
         driver = sourcescfg['system']['db-driver']
-        from logilab.database import get_db_helper
         dbhelper = get_db_helper(driver)
         cursor = cnx.cursor()
         # check admin exists
