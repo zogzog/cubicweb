@@ -507,6 +507,8 @@ class CWAttributeAddOp(MemSchemaOperation):
 
     def revertprecommit_event(self):
         # revert changes on in memory schema
+        if getattr(self, 'rdefdef', None) is None:
+            return
         self.session.vreg.schema.del_relation_def(
             self.rdefdef.subject, self.rdefdef.name, self.rdefdef.object)
         # XXX revert changes on database
