@@ -116,7 +116,7 @@ ul{
   list-style-type: none;
 }
 
-ul li {
+ul > li {
   margin-top: 2px;
   padding: 0px 0px 2px 8px;
   background: url("bullet_orange.png") 0% 6px no-repeat;
@@ -1077,3 +1077,21 @@ div.ui-tabs .ui-tabs-panel {
   padding-left:0.5em;
   color:inherit;
 }
+
+/* cubicweb.views.undohistory uses :
+ *   - span.undo around undo link
+ *   - ul.undo-transactions to list transaction
+ *   - ol.undo-actions to list actions in a transaction
+ */
+
+span.undo {
+  border: 1pt;
+}
+
+ol.undo-actions > li {
+  margin-left: 2em;
+  margin-top: 2px;
+  padding: 0px 0px 2px 0px;
+  background-image: none;
+}
+
