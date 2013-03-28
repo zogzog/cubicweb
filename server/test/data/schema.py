@@ -52,6 +52,7 @@ class Affaire(WorkflowableEntityType):
 
 
 class Societe(EntityType):
+    __unique_together__ = [('nom', 'type', 'cp')]
     __permissions__ = {
         'read': ('managers', 'users', 'guests'),
         'update': ('managers', 'owners', ERQLExpression('U login L, X nom L')),
