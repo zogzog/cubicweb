@@ -756,13 +756,17 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                     mo = re.search('unique_cw_[^ ]+_idx', arg)
                     if mo is not None:
                         index_name = mo.group(0)
-                        elements = index_name.rstrip('_idx').split('_cw_')[1:]
+                        # right-chop '_idx' postfix
+                        # (garanteed to be there, see regexp above)
+                        elements = index_name[:-4].split('_cw_')[1:]
                         etype = elements[0]
                         rtypes = elements[1:]
                         raise UniqueTogetherError(etype, rtypes)
                     mo = re.search('columns (.*) are not unique', arg)
                     if mo is not None: # sqlite in use
-                        rtypes = [c.strip().lstrip('cw_') for c in mo.group(1).split(',')]
+                        # we left chop the 'cw_' prefix of attribute names
+                        rtypes = [c.strip()[3:]
+                                  for c in mo.group(1).split(',')]
                         etype = '???'
                         raise UniqueTogetherError(etype, rtypes)
             raise
