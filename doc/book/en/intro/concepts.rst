@@ -89,7 +89,7 @@ etc. This is used for example to send email notifications when the
 state of an object changes. See :ref:`HookIntro` below.
 
 .. [1] not to be confused with a Mercurial repository or a Debian repository.
-.. _`Python Remote Objects`: http://pyro.sourceforge.net/
+.. _`Python Remote Objects`: http://pythonhosted.org/Pyro4/
 
 .. _WebEngineIntro:
 
