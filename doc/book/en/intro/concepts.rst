@@ -29,8 +29,7 @@ and available under a free software license.
 
 .. note::
 
- The command :command:`cubicweb-ctl list` displays the list of cubes
- installed on your system.
+ The command :command:`cubicweb-ctl list` displays the list of available cubes.
 
 .. _`CubicWeb.org Forge`: http://www.cubicweb.org/project/
 .. _`cubicweb-blog`: http://www.cubicweb.org/project/cubicweb-blog
