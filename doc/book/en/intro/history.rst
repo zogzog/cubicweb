@@ -28,5 +28,5 @@ without hampering the fast-paced stream of changes thanks to the time
 and energy originally put in the design of the framework.
 
 
-.. _Narval: http://www.logilab.org/project/narval
+.. _Narval: http://www.logilab.org/project/narval-moved
 .. _Logilab: http://www.logilab.fr/
