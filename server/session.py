@@ -391,6 +391,7 @@ class Transaction(object):
 
         #: server.Repository object
         self.repo = session.repo
+        self.vreg = self.repo.vreg
 
         #: connection handling mode
         self.mode = session.default_mode
@@ -663,6 +664,29 @@ class Transaction(object):
     def source_from_eid(self, eid):
         """return the source where the entity with id <eid> is located"""
         return self.repo.source_from_eid(eid, self)
+
+    # resource accessors ######################################################
+
+    def system_sql(self, sql, args=None, rollback_on_failure=True):
+        """return a sql cursor on the system database"""
+        if sql.split(None, 1)[0].upper() != 'SELECT':
+            self.mode = 'write'
+        source = self.cnxset.source('system')
+        try:
+            return source.doexec(self, sql, args, rollback=rollback_on_failure)
+        except (source.OperationalError, source.InterfaceError):
+            if not rollback_on_failure:
+                raise
+            source.warning("trying to reconnect")
+            self.cnxset.reconnect(source)
+            return source.doexec(self, sql, args, rollback=rollback_on_failure)
+
+    def rtype_eids_rdef(self, rtype, eidfrom, eidto):
+        # use type_and_source_from_eid instead of type_from_eid for optimization
+        # (avoid two extra methods call)
+        subjtype = self.repo.type_and_source_from_eid(eidfrom, self)[0]
+        objtype = self.repo.type_and_source_from_eid(eidto, self)[0]
+        return self.vreg.schema.rschema(rtype).rdefs[(subjtype, objtype)]
 
 
 def tx_attr(attr_name, writable=False):
@@ -1016,29 +1040,10 @@ class Session(RequestSessionBase):
 
     # resource accessors ######################################################
 
-    def system_sql(self, sql, args=None, rollback_on_failure=True):
-        """return a sql cursor on the system database"""
-        if sql.split(None, 1)[0].upper() != 'SELECT':
-            self.mode = 'write'
-        source = self.cnxset.source('system')
-        try:
-            return source.doexec(self, sql, args, rollback=rollback_on_failure)
-        except (source.OperationalError, source.InterfaceError):
-            if not rollback_on_failure:
-                raise
-            source.warning("trying to reconnect")
-            self.cnxset.reconnect(source)
-            return source.doexec(self, sql, args, rollback=rollback_on_failure)
-
-    deleted_in_transaction =  tx_meth('deleted_in_transaction')
-    added_in_transaction   =  tx_meth('added_in_transaction')
-
-    def rtype_eids_rdef(self, rtype, eidfrom, eidto):
-        # use type_and_source_from_eid instead of type_from_eid for optimization
-        # (avoid two extra methods call)
-        subjtype = self.repo.type_and_source_from_eid(eidfrom, self)[0]
-        objtype = self.repo.type_and_source_from_eid(eidto, self)[0]
-        return self.vreg.schema.rschema(rtype).rdefs[(subjtype, objtype)]
+    system_sql = tx_meth('system_sql')
+    deleted_in_transaction = tx_meth('deleted_in_transaction')
+    added_in_transaction = tx_meth('added_in_transaction')
+    rtype_eids_rdef = tx_meth('rtype_eids_rdef')
 
     # security control #########################################################
 
