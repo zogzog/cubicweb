@@ -341,6 +341,9 @@ class Transaction(object):
       actual query. This allows multiple transaction with a reasonable low
       connection set pool size. control mechanism is detailed below
 
+    .. automethod:: cubicweb.server.session.Transaction.set_cnxset
+    .. automethod:: cubicweb.server.session.Transaction.free_cnxset
+
       :attr:`mode`, string telling the connections set handling mode, may be one
       of 'read' (connections set may be freed), 'write' (some write was done in
       the connections set, it can't be freed before end of the transaction),
@@ -458,6 +461,35 @@ class Transaction(object):
                 self._cnxset_tracker.record(self.transactionid, new_cnxset)
                 self._cnxset = new_cnxset
                 self.ctx_count += 1
+
+    def set_cnxset(self):
+        """the transaction need a connections set to execute some queries"""
+        if self.cnxset is None:
+            cnxset = self.repo._get_cnxset()
+            try:
+                self.cnxset = cnxset
+                try:
+                    cnxset.cnxset_set()
+                except:
+                    self.cnxset = None
+                    raise
+            except:
+                self.repo._free_cnxset(cnxset)
+                raise
+        return self.cnxset
+
+    def free_cnxset(self, ignoremode=False):
+        """the transaction is no longer using its connections set, at least for some time"""
+        # cnxset may be none if no operation has been done since last commit
+        # or rollback
+        cnxset = self.cnxset
+        if cnxset is not None and (ignoremode or self.mode == 'read'):
+            try:
+                self.cnxset = None
+            finally:
+                cnxset.cnxset_freed()
+                self.repo._free_cnxset(cnxset)
+
 
     # Entity cache management #################################################
     #
@@ -1057,33 +1089,8 @@ class Session(RequestSessionBase):
             if self._closed:
                 self.free_cnxset(True)
                 raise Exception('try to set connections set on a closed session %s' % self.id)
-            tx = self._tx
-            if tx.cnxset is None:
-                cnxset = self.repo._get_cnxset()
-                try:
-                    self._tx.cnxset = cnxset
-                    try:
-                        cnxset.cnxset_set()
-                    except:
-                        self._tx.cnxset = None
-                        raise
-                except:
-                    self.repo._free_cnxset(cnxset)
-                    raise
-        return tx.cnxset
-
-    def free_cnxset(self, ignoremode=False):
-        """the session is no longer using its connections set, at least for some time"""
-        # cnxset may be none if no operation has been done since last commit
-        # or rollback
-        tx = self._tx
-        cnxset = tx.cnxset
-        if cnxset is not None and (ignoremode or self.mode == 'read'):
-            try:
-                tx.cnxset = None
-            finally:
-                cnxset.cnxset_freed()
-                self.repo._free_cnxset(cnxset)
+            return self._tx.set_cnxset()
+    free_cnxset = tx_meth('free_cnxset')
 
     def _touch(self):
         """update latest session usage timestamp and reset mode to read"""
