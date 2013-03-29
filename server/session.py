@@ -646,6 +646,23 @@ class Transaction(object):
         num = self.data.setdefault('tx_action_count', 0) + 1
         self.data['tx_action_count'] = num
         return num
+    # db-api like interface ###################################################
+
+    def source_defs(self):
+        return self.repo.source_defs()
+
+    def describe(self, eid, asdict=False):
+        """return a tuple (type, sourceuri, extid) for the entity with id <eid>"""
+        metas = self.repo.type_and_source_from_eid(eid, self)
+        if asdict:
+            return dict(zip(('type', 'source', 'extid', 'asource'), metas))
+       # XXX :-1 for cw compat, use asdict=True for full information
+        return metas[:-1]
+
+
+    def source_from_eid(self, eid):
+        """return the source where the entity with id <eid> is located"""
+        return self.repo.source_from_eid(eid, self)
 
 
 def tx_attr(attr_name, writable=False):
@@ -1141,22 +1158,10 @@ class Session(RequestSessionBase):
         """
         return 'view'
 
-    def source_defs(self):
-        return self.repo.source_defs()
+    source_defs = tx_meth('source_defs')
+    describe = tx_meth('describe')
+    source_from_eid = tx_meth('source_from_eid')
 
-    def describe(self, eid, asdict=False):
-        """return a tuple (type, sourceuri, extid) for the entity with id <eid>"""
-        metas = self.repo.type_and_source_from_eid(eid, self)
-        if asdict:
-            return dict(zip(('type', 'source', 'extid', 'asource'), metas))
-       # XXX :-1 for cw compat, use asdict=True for full information
-        return metas[:-1]
-
-    # db-api like interface ###################################################
-
-    def source_from_eid(self, eid):
-        """return the source where the entity with id <eid> is located"""
-        return self.repo.source_from_eid(eid, self)
 
     def execute(self, rql, kwargs=None, eid_key=None, build_descr=True):
         """db-api like method directly linked to the querier execute method.
