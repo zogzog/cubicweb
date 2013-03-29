@@ -359,7 +359,7 @@ class CnxSetTracker(object):
                 timeout -= time() - start
             return tuple(self._record)
 
-class Connection(object):
+class Connection(RequestSessionBase):
     """Repository Connection
 
     Holds all connection related data
@@ -417,6 +417,8 @@ class Connection(object):
     """
 
     def __init__(self, cnxid, session, rewriter):
+        # using super(Connection, self) confuse some test hack
+        RequestSessionBase.__init__(self, session.vreg)
         #: connection unique id
         self.connectionid = cnxid
         #: reentrance handling
