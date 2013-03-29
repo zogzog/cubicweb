@@ -145,8 +145,11 @@ class _hooks_control(object):
             finally:
                 self.tx.hooks_mode = self.oldmode
 
+@deprecated('[3.17] use <object>.security_enabled instead')
+def security_enabled(obj, *args, **kwargs):
+    return obj.security_enabled(*args, **kwargs)
 
-class security_enabled(object):
+class _security_enabled(object):
     """context manager to control security w/ session.execute,
 
     By default security is disabled on queries executed on the repository
@@ -855,7 +858,7 @@ class Session(RequestSessionBase):
         '''
         edited_entities = {}
         relations_dict = {}
-        with security_enabled(self, False, False):
+        with self.security_enabled(False, False):
             for rtype, eids in relations:
                 if self.vreg.schema[rtype].inlined:
                     for fromeid, toeid in eids:
@@ -884,7 +887,7 @@ class Session(RequestSessionBase):
         You may use this in hooks when you know both eids of the relation you
         want to delete.
         """
-        with security_enabled(self, False, False):
+        with self.security_enabled(False, False):
             if self.vreg.schema[rtype].inlined:
                 entity = self.entity_from_eid(fromeid)
                 entity.cw_attr_cache[rtype] = None
@@ -989,7 +992,7 @@ class Session(RequestSessionBase):
 
 
     def security_enabled(self, read=None, write=None):
-        return security_enabled(self, read=read, write=write)
+        return _security_enabled(self, read=read, write=write)
 
     read_security = tx_attr('read_security', writable=True)
     write_security = tx_attr('write_security', writable=True)
@@ -1212,7 +1215,7 @@ class Session(RequestSessionBase):
         debug = server.DEBUG & server.DBG_OPS
         try:
             # by default, operations are executed with security turned off
-            with security_enabled(self, False, False):
+            with self.security_enabled(False, False):
                 processed = []
                 self.commit_state = 'precommit'
                 if debug:
@@ -1291,7 +1294,7 @@ class Session(RequestSessionBase):
             return
         try:
             # by default, operations are executed with security turned off
-            with security_enabled(self, False, False):
+            with self.security_enabled(False, False):
                 while self.pending_operations:
                     try:
                         operation = self.pending_operations.pop(0)
