@@ -87,8 +87,11 @@ class transaction(object):
         else:
             self.session.commit(free_cnxset=self.free_cnxset)
 
+@deprecated('[3.17] use <object>.allow/deny_all_hooks_but instead')
+def hooks_control(obj, *args, **kwargs):
+    return obj.hooks_control(*args, **kwargs)
 
-class hooks_control(object):
+class _hooks_control(object):
     """context manager to control activated hooks categories.
 
     If mode is session.`HOOKS_DENY_ALL`, given hooks categories will
@@ -99,10 +102,10 @@ class hooks_control(object):
 
     .. sourcecode:: python
 
-       with hooks_control(self.session, self.session.HOOKS_ALLOW_ALL, 'integrity'):
+       with _hooks_control(self.session, self.session.HOOKS_ALLOW_ALL, 'integrity'):
            # ... do stuff with all but 'integrity' hooks activated
 
-       with hooks_control(self.session, self.session.HOOKS_DENY_ALL, 'integrity'):
+       with _hooks_control(self.session, self.session.HOOKS_DENY_ALL, 'integrity'):
            # ... do stuff with none but 'integrity' hooks activated
 
     This is an internal api, you should rather use
@@ -996,9 +999,9 @@ class Session(RequestSessionBase):
     # all hooks should be activated during normal execution
 
     def allow_all_hooks_but(self, *categories):
-        return hooks_control(self, HOOKS_ALLOW_ALL, *categories)
+        return _hooks_control(self, HOOKS_ALLOW_ALL, *categories)
     def deny_all_hooks_but(self, *categories):
-        return hooks_control(self, HOOKS_DENY_ALL, *categories)
+        return _hooks_control(self, HOOKS_DENY_ALL, *categories)
 
     hooks_mode = tx_attr('hooks_mode')
 
