@@ -386,6 +386,9 @@ class Transaction(object):
         #: reentrance handling
         self.ctx_count = 0
 
+        #: server.Repository object
+        self.repo = session.repo
+
         #: connection handling mode
         self.mode = session.default_mode
         #: connection set used to execute queries on sources
