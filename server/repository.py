@@ -883,6 +883,9 @@ class Repository(object):
         and :class:`cubicweb.server.Service`
         """
         session = self._get_session(sessionid)
+        return self._call_service_with_session(session, regid, async, **kwargs)
+
+    def _call_service_with_session(self, session, regid, async, **kwargs):
         if async:
             self.info('calling service %s asynchronously', regid)
             def task():
