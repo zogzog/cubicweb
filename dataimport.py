@@ -431,7 +431,14 @@ def _create_copyfrom_buffer(data, columns, encoding='utf-8', replace_sep=None):
         # If an error is raised, do not continue.
         formatted_row = []
         for col in columns:
-            value = row[col]
+            if isinstance(row, dict):
+                value = row.get(col)
+            elif isinstance(row, (tuple, list)):
+                value = row[col]
+            else:
+                raise ValueError("Input data of improper type: %s; "
+                                 "expected tuple, list or dict." 
+                                 % type(row).__name__)
             if value is None:
                 value = 'NULL'
             elif isinstance(value, (long, int, float)):
