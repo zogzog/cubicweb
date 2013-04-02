@@ -882,10 +882,11 @@ class Repository(object):
         See :class:`cubicweb.dbapi.Connection.call_service`
         and :class:`cubicweb.server.Service`
         """
+        session = self._get_session(sessionid)
         def task():
-            session = self._get_session(sessionid, setcnxset=True)
-            service = session.vreg['services'].select(regid, session, **kwargs)
+            session.set_cnxset()
             try:
+                service = session.vreg['services'].select(regid, session, **kwargs)
                 return service.call(**kwargs)
             finally:
                 session.rollback() # free cnxset
