@@ -30,16 +30,6 @@ class ActionsTC(CubicWebTC):
         vaction = [action for action in actions if action.__regid__ == 'view'][0]
         self.assertEqual(vaction.url(), 'http://testing.fr/cubicweb/view?rql=CWUser%20X')
 
-    def test_sendmail_action(self):
-        req = self.request()
-        rset = self.execute('Any X WHERE X login "admin"', req=req)
-        actions = self.vreg['actions'].poss_visible_objects(req, rset=rset)
-        self.assertTrue([action for action in actions if action.__regid__ == 'sendemail'])
-        self.login('anon')
-        req = self.request()
-        rset = self.execute('Any X WHERE X login "anon"', req=req)
-        actions = self.vreg['actions'].poss_visible_objects(req, rset=rset)
-        self.assertFalse([action for action in actions if action.__regid__ == 'sendemail'])
 
 if __name__ == '__main__':
     unittest_main()

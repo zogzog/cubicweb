@@ -544,21 +544,6 @@ class ReportBugControllerTC(CubicWebTC):
         self.vreg['controllers'].select('reportbug', self.request(description='hop'))
 
 
-class SendMailControllerTC(CubicWebTC):
-
-    def test_not_usable_by_guest(self):
-        self.assertRaises(NoSelectableObject,
-                          self.vreg['controllers'].select, 'sendmail', self.request())
-        self.vreg['controllers'].select('sendmail',
-                                        self.request(subject='toto',
-                                                     recipient='toto@logilab.fr',
-                                                     mailbody='hop'))
-        self.login('anon')
-        self.assertRaises(NoSelectableObject,
-                          self.vreg['controllers'].select, 'sendmail', self.request())
-
-
-
 class AjaxControllerTC(CubicWebTC):
     tested_controller = 'ajax'
 

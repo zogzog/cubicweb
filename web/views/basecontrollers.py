@@ -271,7 +271,6 @@ class JSonController(Controller):
         return ajax_controller.publish(rset)
 
 
-# XXX move to massmailing
 class MailBugReportController(Controller):
     __regid__ = 'reportbug'
     __select__ = match_form_params('description')

@@ -14,13 +14,16 @@ New functionalities
 API changes
 -----------
 
+* drop typed_eid() in favour of int() (see `#2742462 <http://www.cubicweb.org/2742462>`_)
+
 * The SIOC views and adapters have been removed from CubicWeb and moved to the
   `sioc` cube.
 
 * The web page embedding views and adapters have been removed from CubicWeb and
   moved to the `embed` cube.
 
-* drop typed_eid() in favour of int() (see `#2742462 <http://www.cubicweb.org/2742462>`_)
+* The email sending views and controllers have been removed from CubicWeb and
+  moved to the `massmailing` cube.
 
 
 

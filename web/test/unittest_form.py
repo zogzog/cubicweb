@@ -122,14 +122,6 @@ class EntityFieldsFormTC(CubicWebTC):
         data = form.render(row=0, rtype='content', formid='base', action='edit_rtype')
         self.assertTrue('content_format' in data)
 
-    # form view tests #########################################################
-
-    def test_massmailing_formview(self):
-        self.execute('INSERT EmailAddress X: X address L + "@cubicweb.org", '
-                     'U use_email X WHERE U is CWUser, U login L')
-        rset = self.execute('CWUser X')
-        self.view('massmailing', rset, template=None)
-
 
     # form tests ##############################################################
 
