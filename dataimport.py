@@ -523,6 +523,18 @@ class ObjectStore(object):
         """
         pass
 
+    def flush(self):
+        """The method is provided so that all stores share a common API.
+        It just tries to call the commit method.
+        """
+        print 'starting flush'
+        try:
+            self.commit()
+        except:
+            print 'failed to flush'
+        else:
+            print 'flush done'
+
     def rql(self, *args):
         if self._rql is not None:
             return self._rql(*args)
@@ -1010,6 +1022,8 @@ class SQLGenSourceWrapper(object):
                                encoding=self.dbencoding)
         except:
             print 'failed to flush'
+        else:
+            print 'flush done'
         finally:
             _entities_sql.clear()
             _relations_sql.clear()
