@@ -68,6 +68,7 @@ class RequestSessionBase(object):
         # cache result of execution for (rql expr / eids),
         # should be emptied on commit/rollback of the server session / web
         # connection
+        self.user = None
         self.local_perm_cache = {}
         self._ = unicode
 
