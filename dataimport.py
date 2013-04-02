@@ -1052,7 +1052,9 @@ class SQLGenSourceWrapper(object):
                 else:
                     raise ValueError('You should give the subject etype for '
                                      'inlined relation %s'
-                                     ', as it cannot be inferred' % rtype)
+                                     ', as it cannot be inferred: '
+                                     'this type is given as keyword argument '
+                                     '``subjtype``'% rtype)
             statement = self.sqlgen.update(SQL_PREFIX + subjtype,
                                            data, ['cw_eid'])
         else:
