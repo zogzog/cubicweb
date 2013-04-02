@@ -883,19 +883,20 @@ class Repository(object):
         and :class:`cubicweb.server.Service`
         """
         session = self._get_session(sessionid)
-        def task():
-            session.set_cnxset()
-            try:
-                service = session.vreg['services'].select(regid, session, **kwargs)
-                return service.call(**kwargs)
-            finally:
-                session.rollback() # free cnxset
         if async:
             self.info('calling service %s asynchronously', regid)
+            def task():
+                session.set_cnxset()
+                try:
+                    service = session.vreg['services'].select(regid, session, **kwargs)
+                    return service.call(**kwargs)
+                finally:
+                    session.rollback() # free cnxset
             self.threaded_task(task)
         else:
             self.info('calling service %s synchronously', regid)
-            return task()
+            service = session.vreg['services'].select(regid, session, **kwargs)
+            return service.call(**kwargs)
 
     def user_info(self, sessionid, props=None):
         """this method should be used by client to:
