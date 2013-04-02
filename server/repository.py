@@ -882,19 +882,24 @@ class Repository(object):
         See :class:`cubicweb.dbapi.Connection.call_service`
         and :class:`cubicweb.server.Service`
         """
-        def task():
-            session = self._get_session(sessionid, setcnxset=True)
-            service = session.vreg['services'].select(regid, session, **kwargs)
-            try:
-                return service.call(**kwargs)
-            finally:
-                session.rollback() # free cnxset
+        session = self._get_session(sessionid)
+        return self._call_service_with_session(session, regid, async, **kwargs)
+
+    def _call_service_with_session(self, session, regid, async, **kwargs):
         if async:
             self.info('calling service %s asynchronously', regid)
+            def task():
+                session.set_cnxset()
+                try:
+                    service = session.vreg['services'].select(regid, session, **kwargs)
+                    return service.call(**kwargs)
+                finally:
+                    session.rollback() # free cnxset
             self.threaded_task(task)
         else:
             self.info('calling service %s synchronously', regid)
-            return task()
+            service = session.vreg['services'].select(regid, session, **kwargs)
+            return service.call(**kwargs)
 
     def user_info(self, sessionid, props=None):
         """this method should be used by client to:

@@ -77,6 +77,10 @@ class RqlQuery(object):
         self.restrictions = []
         self.kwargs = {}
 
+    def __repr__(self):
+        return ('Query <edited=%r restrictions=%r kwargs=%r>' % (
+            self.edited, self.restrictions, self.kwargs))
+
     def insert_query(self, etype):
         if self.edited:
             rql = 'INSERT %s X: %s' % (etype, ','.join(self.edited))

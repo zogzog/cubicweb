@@ -1085,3 +1085,21 @@ img.ui-datepicker-trigger {
   margin-left: 0.5em;
   vertical-align: bottom;
 }
+
+/* cubicweb.views.undohistory uses :
+ *   - span.undo around undo link
+ *   - ul.undo-transactions to list transaction
+ *   - ol.undo-actions to list actions in a transaction
+ */
+
+span.undo {
+  border: 1pt;
+}
+
+ol.undo-actions > li {
+  margin-left: 2em;
+  margin-top: 2px;
+  padding: 0px 0px 2px 0px;
+  background-image: none;
+}
+

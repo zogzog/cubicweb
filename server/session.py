@@ -1142,7 +1142,8 @@ class Session(RequestSessionBase):
     # server-side service call #################################################
 
     def call_service(self, regid, async=False, **kwargs):
-        return self.repo.call_service(self.id, regid, async, **kwargs)
+        return self.repo._call_service_with_session(self, regid, async,
+                                                    **kwargs)
 
 
     # request interface #######################################################
