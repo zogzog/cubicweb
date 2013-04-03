@@ -667,13 +667,13 @@ layout, and a full featured cube with "full" layout.',
 class ExamineLogCommand(Command):
     """Examine a rql log file.
 
-    will print out the following table
+    Will print out the following table
 
-      total execution time || number of occurences || rql query
+      Percentage; Cumulative Time (clock); Cumulative Time (CPU); Occurences; Query
 
-    sorted by descending total execution time
+    sorted by descending cumulative time (clock). Time are expressed in seconds.
 
-    chances are the lines at the top are the ones that will bring the higher
+    Chances are the lines at the top are the ones that will bring the higher
     benefit after optimisation. Start there.
     """
     arguments = 'rql.log'
