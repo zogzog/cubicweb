@@ -365,6 +365,12 @@ class CreateInstanceCommand(Command):
           ' "list" command. Default to "all-in-one", e.g. an installation '
           'embedding both the RQL repository and the web server.',
           }),
+        ('no-post-create',
+         {'short': 'P',
+          'action': 'store_true',
+          'default': False,
+          'help': 'do not run post-create tasks (database creation, etc.)',
+          }),
         )
 
     def run(self, args):
@@ -433,7 +439,8 @@ class CreateInstanceCommand(Command):
             print 'set %s as owner of the data directory' % config['uid']
             chown(config.appdatahome, config['uid'])
         print '\n-> creation done for %s\n' % repr(config.apphome)[1:-1]
-        helper.postcreate(self.config.automatic)
+        if not self.config.no_post_create:
+            helper.postcreate(self.config.automatic)
 
     def _handle_win32(self, config, appid):
         if sys.platform != 'win32':
