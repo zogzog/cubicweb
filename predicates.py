@@ -479,11 +479,8 @@ class appobject_selectable(Predicate):
 
     def __call__(self, cls, req, **kwargs):
         for regid in self.regids:
-            try:
-                req.vreg[self.registry].select(regid, req, **kwargs)
+            if req.vreg[self.registry].select_or_none(regid, req, **kwargs) is not None:
                 return self.selectable_score
-            except NoSelectableObject:
-                continue
         return 0
 
 
