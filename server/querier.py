@@ -63,8 +63,9 @@ def update_varmap(varmap, selected, table):
 def check_no_password_selected(rqlst):
     """check that Password entities are not selected"""
     for solution in rqlst.solutions:
-        if 'Password' in solution.itervalues():
-            raise Unauthorized('Password selection is not allowed')
+        for var, etype in solution.iteritems():
+            if etype == 'Password':
+                raise Unauthorized('Password selection is not allowed (%s)' % var)
 
 def term_etype(session, term, solution, args):
     """return the entity type for the given term (a VariableRef or a Constant
