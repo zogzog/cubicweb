@@ -10,6 +10,9 @@ New functionalities
 * Add CubicWebRequestBase.content with the content of the HTTP request (see #2742453)
   (see `#2742453 <http://www.cubicweb.org/2742453>`_)
 
+* Add directive bookmark to ReST rendering
+  (see `#2545595 <http://www.cubicweb.org/ticket/2545595>`_)
+
 
 API changes
 -----------

@@ -75,5 +75,12 @@ class RestTC(CubicWebTC):
         out = rest_publish(context, ':rql:`Any X WHERE X is CWUser`')
         self.assertEqual(out, u'<p><h1>CWUser_plural</h1><div class="section"><a href="http://testing.fr/cubicweb/cwuser/admin" title="">admin</a></div><div class="section"><a href="http://testing.fr/cubicweb/cwuser/anon" title="">anon</a></div></p>\n')
 
+    def test_bookmark_role(self):
+        context = self.context()
+        rset = self.execute('INSERT Bookmark X: X title "hello", X path "/view?rql=Any X WHERE X is CWUser"')
+        eid = rset[0][0]
+        out = rest_publish(context, ':bookmark:`%s`' % eid)
+        self.assertEqual(out, u'<p><h1>CWUser_plural</h1><div class="section"><a href="http://testing.fr/cubicweb/cwuser/admin" title="">admin</a></div><div class="section"><a href="http://testing.fr/cubicweb/cwuser/anon" title="">anon</a></div></p>\n')
+
 if __name__ == '__main__':
     unittest_main()
