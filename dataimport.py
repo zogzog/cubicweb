@@ -70,6 +70,7 @@ import csv
 import sys
 import threading
 import traceback
+import warnings
 import cPickle
 import os.path as osp
 import inspect
@@ -431,14 +432,16 @@ def _create_copyfrom_buffer(data, columns, encoding='utf-8', replace_sep=None):
         # If an error is raised, do not continue.
         formatted_row = []
         for col in columns:
-            if isinstance(row, dict):
-                value = row.get(col)
-            elif isinstance(row, (tuple, list)):
+            try:
                 value = row[col]
-            else:
-                raise ValueError("Input data of improper type: %s; "
-                                 "expected tuple, list or dict." 
-                                 % type(row).__name__)
+            except KeyError:
+                warnings.warn(u"Column %s is not accessible in row %s" 
+                              % (col, row), RuntimeWarning)
+                # XXX 'value' set to None so that the import does not end in 
+                # error. 
+                # Instead, the extra keys are set to NULL from the 
+                # database point of view.
+                value = None
             if value is None:
                 value = 'NULL'
             elif isinstance(value, (long, int, float)):
