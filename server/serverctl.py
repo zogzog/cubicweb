@@ -39,7 +39,6 @@ from cubicweb.server.repository import Repository
 from cubicweb.server.serverconfig import (
     USER_OPTIONS, ServerConfiguration, SourceConfiguration,
     ask_source_config, generate_source_config)
-from yams.diff import schema_diff
 
 # utility functions ###########################################################
 
@@ -1077,6 +1076,7 @@ class SchemaDiffCommand(Command):
     min_args = max_args = 2
 
     def run(self, args):
+        from yams.diff import schema_diff
         appid = args.pop(0)
         diff_tool = args.pop(0)
         config = ServerConfiguration.config_for(appid)
