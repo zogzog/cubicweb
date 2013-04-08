@@ -190,7 +190,7 @@ from operator import eq
 
 from logilab.common.compat import all, any
 from logilab.common.interface import implements as implements_iface
-from logilab.common.registry import Predicate, objectify_predicate
+from logilab.common.registry import Predicate, objectify_predicate, yes
 
 from yams.schema import BASE_TYPES, role_name
 from rql.nodes import Function
@@ -200,6 +200,9 @@ from cubicweb import (Unauthorized, NoSelectableObject, NotAnEntity,
 # even if not used, let yes here so it's importable through this module
 from cubicweb.uilib import eid_param
 from cubicweb.schema import split_expression
+
+# remember, these imports are there for bw compat only
+__BACKWARD_COMPAT_IMPORTS = (yes,)
 
 def score_interface(etypesreg, eclass, iface):
     """Return XXX if the give object (maybe an instance or class) implements
