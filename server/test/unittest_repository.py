@@ -42,9 +42,6 @@ from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.server.hook import Hook
 from cubicweb.server.sources import native
 
-# start name server anyway, process will fail if already running
-os.system('pyro-ns >/dev/null 2>/dev/null &')
-
 
 class RepositoryTC(CubicWebTC):
     """ singleton providing access to a persistent storage for entities
@@ -350,10 +347,12 @@ class RepositoryTC(CubicWebTC):
         import Pyro
         Pyro.config.PYRO_MULTITHREADED = 0
         done = []
-        # the client part has to be in the thread due to sqlite limitations
-        t = threading.Thread(target=self._pyro_client, args=(done,))
+        self.repo.config.global_set_option('pyro-ns-host', 'NO_PYRONS')
+        daemon = self.repo.pyro_register()
         try:
-            daemon = self.repo.pyro_register()
+            uri = self.repo.pyro_uri.replace('PYRO', 'pyroloc')
+            # the client part has to be in the thread due to sqlite limitations
+            t = threading.Thread(target=self._pyro_client, args=(uri, done))
             t.start()
             while not done:
                 daemon.handleRequests(1.0)
@@ -366,8 +365,8 @@ class RepositoryTC(CubicWebTC):
             pyro_ext._DAEMONS.clear()
 
 
-    def _pyro_client(self, done):
-        cnx = connect('pyro:///'+self.repo.config.appid,
+    def _pyro_client(self, uri, done):
+        cnx = connect(uri,
                       u'admin', password='gingkow',
                       initlog=False) # don't reset logging configuration
         try:
