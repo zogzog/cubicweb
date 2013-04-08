@@ -100,11 +100,13 @@ class CubicWebRequestBase(DBAPIRequest):
         self.uiprops = None
         #: url for serving datadir (vary with https) (see :ref:`resources`)
         self.datadir_url = None
-        if https:
+        if https and vreg.config.https_uiprops is not None:
             self.uiprops = vreg.config.https_uiprops
-            self.datadir_url = vreg.config.https_datadir_url
         else:
             self.uiprops = vreg.config.uiprops
+        if https and vreg.config.https_datadir_url is not None:
+            self.datadir_url = vreg.config.https_datadir_url
+        else:
             self.datadir_url = vreg.config.datadir_url
         #: raw html headers that can be added from any view
         self.html_headers = HTMLHead(self)
