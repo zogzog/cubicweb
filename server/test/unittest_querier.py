@@ -1517,5 +1517,28 @@ class NonRegressionTC(CubicWebTC):
             res = self.execute('Any X WHERE X has_text %(text)s', {'text': 'aff2'})
             self.assertEqual(res.rows, [[aff2.eid]])
 
+    def test_set_relations_eid(self):
+        req = self.request()
+        # create 3 email addresses
+        a1 = req.create_entity('EmailAddress', address=u'a1')
+        a2 = req.create_entity('EmailAddress', address=u'a2')
+        a3 = req.create_entity('EmailAddress', address=u'a3')
+        # SET relations using '>=' operator on eids
+        req.execute('SET U use_email A WHERE U login "admin", A eid >= %s' % a2.eid)
+        self.assertEqual(
+            [[a2.eid], [a3.eid]],
+            req.execute('Any A ORDERBY A WHERE U use_email A, U login "admin"').rows)
+        # DELETE
+        req.execute('DELETE U use_email A WHERE U login "admin", A eid > %s' % a2.eid)
+        self.assertEqual(
+            [[a2.eid]],
+            req.execute('Any A ORDERBY A WHERE U use_email A, U login "admin"').rows)
+        req.execute('DELETE U use_email A WHERE U login "admin"')
+        # SET relations using '<' operator on eids
+        req.execute('SET U use_email A WHERE U login "admin", A eid < %s' % a2.eid)
+        self.assertEqual(
+            [[a1.eid]],
+            req.execute('Any A ORDERBY A WHERE U use_email A, U login "admin"').rows)
+
 if __name__ == '__main__':
     unittest_main()

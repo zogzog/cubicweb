@@ -68,6 +68,12 @@ cubicweb (3.15.0-1) unstable; urgency=low
 
  -- Sylvain Thénault <sylvain.thenault@logilab.fr>  Thu, 12 Apr 2012 13:52:05 +0200
 
+cubicweb (3.14.10-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Pierre-Yves David <pierre-yves.david@logilab.fr>  Mon, 08 Apr 2013 12:18:20 +0200
+
 cubicweb (3.14.9-1) unstable; urgency=low
 
   * new upstream release
