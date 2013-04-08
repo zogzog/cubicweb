@@ -66,7 +66,7 @@ from rql import nodes, utils
 
 from cubicweb import Unauthorized, typed_eid
 from cubicweb.schema import display_name
-from cubicweb.uilib import css_em_num_value
+from cubicweb.uilib import css_em_num_value, domid
 from cubicweb.utils import make_uid
 from cubicweb.predicates import match_context_prop, partial_relation_possible
 from cubicweb.appobject import AppObject
@@ -1450,7 +1450,7 @@ class FacetVocabularyWidget(htmlwidgets.HTMLWidget):
     def _render(self):
         w = self.w
         title = xml_escape(self.facet.title)
-        facetid = make_uid(self.facet.__regid__)
+        facetid = domid(make_uid(self.facet.__regid__))
         w(u'<div id="%s" class="facet">\n' % facetid)
         cssclass = 'facetTitle'
         if self.facet.allow_hide:
