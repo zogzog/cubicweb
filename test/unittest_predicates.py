@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -26,6 +26,7 @@ from cubicweb.predicates import (is_instance, adaptable, match_kwargs, match_use
                                 multi_lines_rset, score_entity, is_in_state,
                                 rql_condition, relation_possible)
 from cubicweb.selectors import on_transition # XXX on_transition is deprecated
+from cubicweb.view import EntityAdapter
 from cubicweb.web import action
 
 
@@ -335,6 +336,22 @@ class ScoreEntitySelectorTC(CubicWebTC):
         self.assertEqual(selector(None, req), 1)
         selector = rql_condition('U login "toto"', user_condition=True)
         self.assertEqual(selector(None, req), 0)
+
+
+class AdaptablePredicateTC(CubicWebTC):
+
+    def test_multiple_entity_types_rset(self):
+        class CWUserIWhatever(EntityAdapter):
+            __regid__ = 'IWhatever'
+            __select__ = is_instance('CWUser')
+        class CWGroupIWhatever(EntityAdapter):
+            __regid__ = 'IWhatever'
+            __select__ = is_instance('CWGroup')
+        with self.temporary_appobjects(CWUserIWhatever, CWGroupIWhatever):
+            req = self.request()
+            selector = adaptable('IWhatever')
+            rset = req.execute('Any X WHERE X is IN(CWGroup, CWUser)')
+            self.assertTrue(selector(None, req, rset=rset))
 
 if __name__ == '__main__':
     unittest_main()

@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -479,11 +479,8 @@ class appobject_selectable(Predicate):
 
     def __call__(self, cls, req, **kwargs):
         for regid in self.regids:
-            try:
-                req.vreg[self.registry].select(regid, req, **kwargs)
+            if req.vreg[self.registry].select_or_none(regid, req, **kwargs) is not None:
                 return self.selectable_score
-            except NoSelectableObject:
-                continue
         return 0
 
 
@@ -501,11 +498,30 @@ class adaptable(appobject_selectable):
 
     def __call__(self, cls, req, **kwargs):
         kwargs.setdefault('accept_none', False)
-        # being adaptable to an interface should takes precedence other is_instance('Any'),
-        # but not other explicit is_instance('SomeEntityType'), and:
+        score = super(adaptable, self).__call__(cls, req, **kwargs)
+        if score == 0 and kwargs.get('rset') and len(kwargs['rset']) > 1 and not 'row' in kwargs:
+            # on rset containing several entity types, each row may be
+            # individually adaptable, while the whole rset won't be if the
+            # same adapter can't be used for each type
+            for row in xrange(len(kwargs['rset'])):
+                kwargs.setdefault('col', 0)
+                _score = super(adaptable, self).__call__(cls, req, row=row, **kwargs)
+                if not _score:
+                    return 0
+                # adjust score per row as expected by default adjust_score
+                # implementation
+                score += self.adjust_score(_score)
+        else:
+            score = self.adjust_score(score)
+        return score
+
+    @staticmethod
+    def adjust_score(score):
+        # being adaptable to an interface should takes precedence other
+        # is_instance('Any'), but not other explicit
+        # is_instance('SomeEntityType'), and, for **a single entity**:
         # * is_instance('Any') score is 1
         # * is_instance('SomeEntityType') score is at least 2
-        score = super(adaptable, self).__call__(cls, req, **kwargs)
         if score >= 2:
             return score - 0.5
         if score == 1:

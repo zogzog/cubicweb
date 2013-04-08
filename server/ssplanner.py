@@ -76,7 +76,12 @@ def _extract_eid_consts(plan, rqlst):
     checkread = session.read_security
     eschema = session.vreg.schema.eschema
     for rel in rqlst.where.get_nodes(Relation):
-        if rel.r_type == 'eid' and not rel.neged(strict=True):
+        # only care for 'eid' relations ...
+        if (rel.r_type == 'eid'
+            # ... that are not part of a NOT clause ...
+            and not rel.neged(strict=True)
+            # ... and where eid is specified by '=' operator.
+            and rel.children[1].operator == '='):
             lhs, rhs = rel.get_variable_parts()
             if isinstance(rhs, Constant):
                 eid = int(rhs.eval(plan.args))
