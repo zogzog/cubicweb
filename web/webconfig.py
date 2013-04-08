@@ -236,6 +236,13 @@ have the python imaging library installed to use captcha)',
           }),
         ))
 
+    def __init__(self, *args, **kwargs):
+        super(WebConfiguration, self).__init__(*args, **kwargs)
+        self.uiprops = None
+        self.https_uiprops = None
+        self.datadir_url = None
+        self.https_datadir_url = None
+
     def fckeditor_installed(self):
         return exists(self.uiprops['FCKEDITOR_PATH'])
 
