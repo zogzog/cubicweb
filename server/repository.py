@@ -898,8 +898,12 @@ class Repository(object):
             self.threaded_task(task)
         else:
             self.info('calling service %s synchronously', regid)
-            service = session.vreg['services'].select(regid, session, **kwargs)
-            return service.call(**kwargs)
+            session.set_cnxset()
+            try:
+                service = session.vreg['services'].select(regid, session, **kwargs)
+                return service.call(**kwargs)
+            finally:
+                session.free_cnxset()
 
     def user_info(self, sessionid, props=None):
         """this method should be used by client to:
