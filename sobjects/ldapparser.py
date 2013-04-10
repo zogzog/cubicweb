@@ -176,7 +176,7 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
             return self._cw.execute('Any X WHERE X is CWGroup, X name %(name)s',
                                     {'name': name}).get_entity(0, 0)
         except IndexError:
-            self.error('group %r referenced by source configuration %r does not exist'
-                       % (name, self.source.uri))
+            self.error('group %r referenced by source configuration %r does not exist',
+                       name, self.source.uri)
             return None
 
