@@ -290,17 +290,20 @@ class TableLayout(component.Component):
         return attrs
 
     def render_actions(self, w, actions):
-        w(u'<div class="tableactions">')
+        box = MenuWidget('', '', _class='tableActionsBox', islist=False)
+        label = tags.span(self._cw._('action menu'))
+        menu = PopupBoxMenu(label, isitem=False, link_class='actionsBox',
+                            ident='%sActions' % self.view.domid)
+        box.append(menu)
         for action in actions:
-            w(u'<span>')
-            action.render(w)
-            w(u'</span>')
-        w(u'</div>')
+            menu.append(action)
+        box.render(w=w)
+        w(u'<div class="clear"></div>')
 
     def show_hide_filter_actions(self, currentlydisplayed=False):
         divid = self.view.domid
         showhide = u';'.join(toggle_action('%s%s' % (divid, what))[11:]
-                             for what in ('Form', 'Actions'))
+                             for what in ('Form', 'Show', 'Hide', 'Actions'))
         showhide = 'javascript:' + showhide
         self._cw.add_onload(u'''\
 $(document).ready(function() {
@@ -310,8 +313,10 @@ $(document).ready(function() {
     $('#%(id)sShow').attr('class', 'hidden');
   }
 });''' % {'id': divid})
-        showlabel = self._cw._('toggle filter')
-        return [component.Link(showhide, showlabel, id='%sToggle' % divid)]
+        showlabel = self._cw._('show filter form')
+        hidelabel = self._cw._('hide filter form')
+        return [component.Link(showhide, showlabel, id='%sShow' % divid),
+                component.Link(showhide, hidelabel, id='%sHide' % divid)]
 
 
 class AbstractColumnRenderer(object):

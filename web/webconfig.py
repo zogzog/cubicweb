@@ -81,7 +81,6 @@ class WebConfiguration(CubicWebConfiguration):
     """
     cubicweb_appobject_path = CubicWebConfiguration.cubicweb_appobject_path | set([join('web', 'views')])
     cube_appobject_path = CubicWebConfiguration.cube_appobject_path | set(['views'])
-    uiprops = {'FCKEDITOR_PATH': ''}
 
     options = merge_options(CubicWebConfiguration.options + (
         ('repository-uri',
@@ -244,8 +243,17 @@ have the python imaging library installed to use captcha)',
           }),
         ))
 
+    def __init__(self, *args, **kwargs):
+        super(WebConfiguration, self).__init__(*args, **kwargs)
+        self.uiprops = None
+        self.https_uiprops = None
+        self.datadir_url = None
+        self.https_datadir_url = None
+
     def fckeditor_installed(self):
-        return exists(self.uiprops['FCKEDITOR_PATH'])
+        if self.uiprops is None:
+            return False
+        return exists(self.uiprops.get('FCKEDITOR_PATH', ''))
 
     def cwproperty_definitions(self):
         for key, pdef in super(WebConfiguration, self).cwproperty_definitions():

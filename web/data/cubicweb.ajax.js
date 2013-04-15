@@ -80,7 +80,8 @@ jQuery.extend(Deferred.prototype, {
             var callback = this._onFailure[i][0];
             var args = [error, this._req];
             jQuery.merge(args, this._onFailure[i][1]);
-            callback.apply(null, args);
+            if (callback !== undefined)
+                callback.apply(null, args);
         }
     }
 

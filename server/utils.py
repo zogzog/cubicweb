@@ -219,9 +219,6 @@ class TasksManager(object):
 
     def add_looping_task(self, interval, func, *args):
         """register a function to be called every `interval` seconds.
-
-        looping tasks can only be registered during repository initialization,
-        once done this method will fail.
         """
         task = LoopTask(self, interval, func, args)
         if self.running:

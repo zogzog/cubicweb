@@ -86,6 +86,7 @@ clean_up() {
             error "problem while cleaning up temporary directory"
             exit 5
         fi
+        XVFB_RUN_TMPDIR=
     fi
     if [ -n "$XVFBPID" ]; then
         kill "$XVFBPID"

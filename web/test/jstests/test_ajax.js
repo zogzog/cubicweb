@@ -28,9 +28,12 @@ $(document).ready(function() {
         stop();
         jQuery('#main').loadxhtml('/../ajax_url0.html', {
             callback: function() {
-                equals(jQuery('#main').children().length, 1);
-                equals(jQuery('#main h1').html(), 'Hello');
-                start();
+                try {
+                    equals(jQuery('#main').children().length, 1);
+                    equals(jQuery('#main h1').html(), 'Hello');
+                } finally {
+                    start();
+                };
             }
         });
     });
@@ -42,16 +45,19 @@ $(document).ready(function() {
         stop();
         jQuery('#main').loadxhtml('/../ajax_url1.html', {
             callback: function() {
-                var origLength = scriptsIncluded.length;
-                scriptsIncluded = jsSources();
-                // check that foo.js has been *appended* to <head>
-                equals(scriptsIncluded.length, origLength + 1);
-                equals(scriptsIncluded[origLength].indexOf('http://foo.js'), 0);
-                // check that <div class="ajaxHtmlHead"> has been removed
-                equals(jQuery('#main').children().length, 1);
-                equals(jQuery('div.ajaxHtmlHead').length, 0);
-                equals(jQuery('#main h1').html(), 'Hello');
-                start();
+                try {
+                    var origLength = scriptsIncluded.length;
+                    scriptsIncluded = jsSources();
+                    // check that foo.js has been *appended* to <head>
+                    equals(scriptsIncluded.length, origLength + 1);
+                    equals(scriptsIncluded[origLength].indexOf('http://foo.js'), 0);
+                    // check that <div class="ajaxHtmlHead"> has been removed
+                    equals(jQuery('#main').children().length, 1);
+                    equals(jQuery('div.ajaxHtmlHead').length, 0);
+                    equals(jQuery('#main h1').html(), 'Hello');
+                } finally {
+                    start();
+                };
             }
         });
     });
@@ -62,9 +68,12 @@ $(document).ready(function() {
         stop();
         var d = jQuery('#main').loadxhtml('/../ajax_url0.html');
         d.addCallback(function() {
-            equals(jQuery('#main').children().length, 1);
-            equals(jQuery('#main h1').html(), 'Hello');
-            start();
+            try {
+                equals(jQuery('#main').children().length, 1);
+                equals(jQuery('#main h1').html(), 'Hello');
+            } finally {
+                start();
+            };
         });
     });
 
@@ -83,9 +92,12 @@ $(document).ready(function() {
         });
         stop();
         deferred.addCallback(function() {
-            // add an assertion to ensure the callback is executed
-            ok(true, "callback is executed");
-            start();
+            try {
+                // add an assertion to ensure the callback is executed
+                ok(true, "callback is executed");
+            } finally {
+                start();
+            };
         });
     });
 
@@ -95,15 +107,39 @@ $(document).ready(function() {
         stop();
         var d = jQuery('#main').loadxhtml('/../ajax_url0.html');
         d.addCallback(function(data, req, arg1, arg2) {
-            equals(arg1, 'Hello');
-            equals(arg2, 'world');
-            start();
+            try {
+                equals(arg1, 'Hello');
+                equals(arg2, 'world');
+            } finally {
+                start();
+            };
         },
         'Hello', 'world');
     });
 
     test('test callback after synchronous request with parameters', function() {
+        expect(2);
         var deferred = new Deferred();
+        deferred.addCallback(function(data, req, arg1, arg2) {
+            // add an assertion to ensure the callback is executed
+            try {
+                ok(true, "callback is executed");
+                equals(arg1, 'Hello');
+                equals(arg2, 'world');
+            } finally {
+                start();
+            };
+        },
+        'Hello', 'world');
+        deferred.addErrback(function() {
+            // throw an exception to start errback chain
+            try {
+                throw this._error;
+            } finally {
+                start();
+            };
+        });
+        stop();
         var result = jQuery.ajax({
             url: '/../ajax_url0.html',
             async: false,
@@ -114,13 +150,6 @@ $(document).ready(function() {
                 deferred.success(data);
             }
         });
-        deferred.addCallback(function(data, req, arg1, arg2) {
-            // add an assertion to ensure the callback is executed
-            ok(true, "callback is executed");
-            equals(arg1, 'Hello');
-            equals(arg2, 'world');
-        },
-        'Hello', 'world');
     });
 
   test('test addErrback', function() {
@@ -129,11 +158,18 @@ $(document).ready(function() {
         var d = jQuery('#main').loadxhtml('/../ajax_url0.html');
         d.addCallback(function() {
             // throw an exception to start errback chain
-            throw new Error();
+            try {
+                throw new Error();
+            } finally {
+                start();
+            };
         });
         d.addErrback(function() {
-            ok(true, "errback is executed");
-            start();
+            try {
+                ok(true, "errback is executed");
+            } finally {
+                start();
+            };
         });
     });
 
@@ -143,8 +179,11 @@ $(document).ready(function() {
         stop();
         var d = jQuery('#main').loadxhtml('/../ajax_url0.html', {
             callback: function() {
-                equals(++counter, 1); // should be executed first
-                start();
+                try {
+                    equals(++counter, 1); // should be executed first
+                } finally {
+                    start();
+                };
             }
         });
         d.addCallback(function() {
@@ -213,8 +252,11 @@ $(document).ready(function() {
         });
         jQuery('#main').loadxhtml('/../ajax_url0.html', {
             callback: function() {
-                equals(events, 'CubicWeb');
-                start();
+                try {
+                    equals(events, 'CubicWeb');
+                } finally {
+                    start();
+                };
             }
         });
     });
@@ -231,12 +273,15 @@ $(document).ready(function() {
         });
         jQuery('#main').loadxhtml('/../ajax_url0.html', {
             callback: function() {
-                equals(nodes.length, 2);
-                // check that server-response event on CubicWeb is triggered
-                // only once and event server-response on node is triggered
-                equals(nodes[0], 'CubicWeb');
-                equals(nodes[1], 'node');
-                start();
+                try {
+                    equals(nodes.length, 2);
+                    // check that server-response event on CubicWeb is triggered
+                    // only once and event server-response on node is triggered
+                    equals(nodes[0], 'CubicWeb');
+                    equals(nodes[1], 'node');
+                } finally {
+                    start();
+                };
             }
         });
     });

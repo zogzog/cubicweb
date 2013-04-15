@@ -70,7 +70,8 @@ class FirefoxHelper(object):
         stderr = TemporaryFile()
         self.firefox_cmd = ['firefox', '-no-remote']
         if os.name == 'posix':
-            self.firefox_cmd = [osp.join(osp.dirname(__file__), 'data', 'xvfb-run.sh'), '-a'] + self.firefox_cmd
+            self.firefox_cmd = [osp.join(osp.dirname(__file__), 'data', 'xvfb-run.sh'),
+                                '-a', '-s', '-noreset -screen 0 640x480x8'] + self.firefox_cmd
         try:
             home = osp.expanduser('~')
             user = getlogin()
