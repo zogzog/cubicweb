@@ -1635,7 +1635,21 @@ class Repository(object):
         # into the pyro name server
         if self._use_pyrons():
             self.looping_task(60*10, self._ensure_pyro_ns)
+        # install hacky function to free cnxset
+        self.looping_task(60, self._cleanup_pyro)
         return daemon
+
+    def _cleanup_pyro(self):
+        """Very hacky function to cleanup session left by dead Pyro thread.
+
+        There is no clean pyro callback to detect this.
+        """
+        for session in self._sessions.values():
+            for thread, cnxset in session._threads_in_transaction.copy():
+                if not thread.isAlive():
+                    self.warning('Freeing cnxset used by dead pyro threads: %',
+                                 thread)
+                    session._free_thread_cnxset(thread, cnxset)
 
     def _ensure_pyro_ns(self):
         if not self._use_pyrons():
