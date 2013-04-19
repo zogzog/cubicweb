@@ -1506,7 +1506,8 @@ class SQLGenerator(object):
         value = constant.value
         if constant.type == 'etype':
             return value
-        if constant.type == 'Int': # XXX Float?
+        # don't substitute int, causes pb when used as sorting column number
+        if constant.type == 'Int':
             return str(value)
         if constant.type in ('Date', 'Datetime'):
             rel = constant.relation()
