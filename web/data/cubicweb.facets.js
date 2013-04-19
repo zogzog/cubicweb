@@ -195,38 +195,13 @@ function initFacetBoxEvents(root) {
                             }
                             this.setAttribute('alt', (_("not selected")));
                         });
-                        var index = parseInt($this.attr('cubicweb:idx'));
-                        // we dont need to move the element when cubicweb:idx == 0
-                        if (index > 0) {
-                            var shift = $.grep(facet.find('.facetValueSelected'), function(n) {
-                                var nindex = parseInt(n.getAttribute('cubicweb:idx'));
-                                return nindex > index;
-                            }).length;
-                            index += shift;
-                            var parent = this.parentNode;
-                            var $insertAfter = $(parent).find('.facetCheckBox:nth(' + index + ')');
-                            if (! ($insertAfter.length == 1 && shift == 0)) {
-                                // only rearrange element if necessary
-                                $insertAfter.after(this);
-                            }
-                        }
                     } else {
-                        var lastSelected = facet.find('.facetValueSelected:last');
-                        if (lastSelected.length) {
-                            lastSelected.after(this);
-                        } else {
-                            var parent = this.parentNode;
-                            $(parent).prepend(this);
-                        }
                         $(this).addClass('facetValueSelected');
                         var $img = $(this).find('img');
                         $img.attr('src', SELECTED_IMG).attr('alt', (_("selected")));
                     }
+                    facetCheckBoxReorder(facet);
                     buildRQL.apply(null, jsfacetargs);
-                    facet.find('.facetBody').animate({
-                        scrollTop: 0
-                    },
-                    '');
                 });
                 facet.find('select.facetOperator').change(function() {
                     var nbselected = facet.find('div.facetValueSelected').length;
@@ -244,6 +219,29 @@ function initFacetBoxEvents(root) {
     });
 }
 
+// facetCheckBoxReorder: reorder all items according to cubicweb:idx attribute
+function facetCheckBoxReorder($facet) {
+    var sortfunc = function (a, b) {
+        // convert from string to integer
+        a = +a.getAttribute("cubicweb:idx");
+        b = +b.getAttribute("cubicweb:idx");
+        // compare
+        if (a > b) {
+            return 1;
+        } else if (a < b) {
+            return -1;
+        } else {
+            return 0;
+        }
+    };
+    var $items = $facet.find('.facetValue.facetValueSelected')
+    $items.sort(sortfunc);
+    $facet.find('.facetBody').append($items);
+    var $items = $facet.find('.facetValue:not(.facetValueSelected)')
+    $items.sort(sortfunc);
+    $facet.find('.facetBody').append($items);
+    $facet.find('.facetBody').animate({scrollTop: 0}, '');
+}
 
 // trigger this function on document ready event if you provide some kind of
 // persistent search (eg crih)
