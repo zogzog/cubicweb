@@ -106,12 +106,12 @@ FROM cw_Personne AS _P'''),
     ("Personne P WHERE P test TRUE",
      '''SELECT _P.cw_eid
 FROM cw_Personne AS _P
-WHERE _P.cw_test=TRUE'''),
+WHERE _P.cw_test=True'''),
 
     ("Personne P WHERE P test false",
      '''SELECT _P.cw_eid
 FROM cw_Personne AS _P
-WHERE _P.cw_test=FALSE'''),
+WHERE _P.cw_test=False'''),
 
     ("Personne P WHERE P eid -1",
      '''SELECT -1'''),
@@ -532,7 +532,7 @@ HAVING COUNT(rel_owned_by0.eid_from)>10'''),
     ("Any X WHERE X eid 0, X test TRUE",
      '''SELECT _X.cw_eid
 FROM cw_Personne AS _X
-WHERE _X.cw_eid=0 AND _X.cw_test=TRUE'''),
+WHERE _X.cw_eid=0 AND _X.cw_test=True'''),
 
     ('Any 1 WHERE X in_group G, X is CWUser',
      '''SELECT 1
@@ -1756,7 +1756,7 @@ ORDER BY 1'''),
 class SqlServer2005SQLGeneratorTC(PostgresSQLGeneratorTC):
     backend = 'sqlserver2005'
     def _norm_sql(self, sql):
-        return sql.strip().replace(' SUBSTR', ' SUBSTRING').replace(' || ', ' + ').replace(' ILIKE ', ' LIKE ').replace('TRUE', '1').replace('FALSE', '0')
+        return sql.strip().replace(' SUBSTR', ' SUBSTRING').replace(' || ', ' + ').replace(' ILIKE ', ' LIKE ')
 
     def test_has_text(self):
         for t in self._parse(HAS_TEXT_LG_INDEXER):
@@ -1941,7 +1941,7 @@ class SqliteSQLGeneratorTC(PostgresSQLGeneratorTC):
     backend = 'sqlite'
 
     def _norm_sql(self, sql):
-        return sql.strip().replace(' ILIKE ', ' LIKE ').replace('TRUE', '1').replace('FALSE', '0')
+        return sql.strip().replace(' ILIKE ', ' LIKE ')
 
     def test_date_extraction(self):
         self._check("Any MONTH(D) WHERE P is Personne, P creation_date D",
@@ -2108,7 +2108,7 @@ class MySQLGenerator(PostgresSQLGeneratorTC):
     backend = 'mysql'
 
     def _norm_sql(self, sql):
-        sql = sql.strip().replace(' ILIKE ', ' LIKE ').replace('TRUE', '1').replace('FALSE', '0')
+        sql = sql.strip().replace(' ILIKE ', ' LIKE ')
         newsql = []
         latest = None
         for line in sql.splitlines(False):
