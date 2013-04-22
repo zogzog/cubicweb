@@ -195,12 +195,3 @@ url: %(url)s
         entity = self.cw_rset.get_entity(self.cw_row or 0, self.cw_col or 0)
         return  u'%s #%s (%s)' % (self._cw.__('Updated %s' % entity.e_schema),
                                   entity.eid, self.user_data['login'])
-
-
-from cubicweb.hooks.notification import RenderAndSendNotificationView
-from cubicweb.mail import parse_message_id
-
-NormalizedTextView = class_renamed('NormalizedTextView', ContentAddedView)
-RenderAndSendNotificationView = class_moved(RenderAndSendNotificationView)
-parse_message_id = deprecated('parse_message_id is now defined in cubicweb.mail')(parse_message_id)
-
