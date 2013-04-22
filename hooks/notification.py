@@ -27,7 +27,7 @@ from cubicweb.server import hook
 from cubicweb.sobjects.supervising import SupervisionMailOp
 
 class RenderAndSendNotificationView(hook.Operation):
-    """delay rendering of notification view until precommit"""
+    """delay rendering of notification view until postcommit"""
     view = None # make pylint happy
 
     def postcommit_event(self):
@@ -110,8 +110,10 @@ class EntityChangeHook(NotificationHook):
 
 
 class EntityUpdatedNotificationOp(hook.SingleLastOperation):
+    """scrap all changed entity to prepare a Notification Operation for them"""
 
     def precommit_event(self):
+        # precommit event that creates postcommit operation
         session = self.session
         for eid in session.transaction_data['changes']:
             view = session.vreg['views'].select('notif_entity_updated', session,
