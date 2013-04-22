@@ -554,7 +554,10 @@ class Entity(AppObject):
         return '<Entity %s %s %s at %s>' % (
             self.e_schema, self.eid, list(self.cw_attr_cache), id(self))
 
-    def __cmp__(self, other):
+    def __lt__(self, other):
+        raise NotImplementedError('comparison not implemented for %s' % self.__class__)
+
+    def __eq__(self, other):
         raise NotImplementedError('comparison not implemented for %s' % self.__class__)
 
     def _cw_update_attr_cache(self, attrcache):
