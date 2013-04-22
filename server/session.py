@@ -903,6 +903,7 @@ class Session(RequestSessionBase):
         return transaction(self, free_cnxset)
 
 
+    @deprecated('[3.17] do not use hijack_user. create new Session object')
     def hijack_user(self, user):
         """return a fake request/session using specified user"""
         session = Session(user, self.repo)

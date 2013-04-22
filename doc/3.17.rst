@@ -42,6 +42,8 @@ Deprecation
 * ``ldapuser`` have been deprecated. It'll be fully dropped in the next
   version. If you are still using ldapuser switch to ``ldapfeed`` **NOW**!
 
+* ``hijack_user`` have been deprecated. It will be dropped soon.
+
 Deprecated Code Drops
 ----------------------
 
