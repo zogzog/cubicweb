@@ -18,6 +18,7 @@
 """cubicweb.server.sources.ldapusers unit and functional tests"""
 
 import os
+import sys
 import shutil
 import time
 from os.path import join, exists
@@ -50,8 +51,15 @@ def create_slapd_configuration(cls):
     # fill ldap server with some data
     ldiffile = join(config.apphome, "ldap_test.ldif")
     config.info('Initing ldap database')
-    cmdline = "/usr/sbin/slapadd -f %s -l %s -c" % (slapdconf, ldiffile)
-    subprocess.call(cmdline, shell=True)
+    cmdline = ['/usr/sbin/slapadd', '-f', slapdconf, '-l', ldiffile, '-c']
+    PIPE = subprocess.PIPE
+    slapproc = subprocess.Popen(cmdline, stdout=PIPE, stderr=PIPE)
+    stdout, stderr = slapproc.communicate()
+    if slapproc.returncode:
+        print >> sys.stderr, ('slapadd returned with status: %s'
+                              % slapproc.returncode)
+        sys.stdout.write(stdout)
+        sys.stderr.write(stderr)
 
     #ldapuri = 'ldapi://' + join(basedir, "ldapi").replace('/', '%2f')
     port = get_available_port(xrange(9000, 9100))
@@ -59,7 +67,8 @@ def create_slapd_configuration(cls):
     ldapuri = 'ldap://%s' % host
     cmdline = ["/usr/sbin/slapd", "-f",  slapdconf,  "-h",  ldapuri, "-d", "0"]
     config.info('Starting slapd:', ' '.join(cmdline))
-    cls.slapd_process = subprocess.Popen(cmdline)
+    PIPE = subprocess.PIPE
+    cls.slapd_process = subprocess.Popen(cmdline, stdout=PIPE, stderr=PIPE)
     time.sleep(0.2)
     if cls.slapd_process.poll() is None:
         config.info('slapd started with pid %s', cls.slapd_process.pid)
@@ -78,7 +87,12 @@ def terminate_slapd(cls):
         else:
             import os, signal
             os.kill(cls.slapd_process.pid, signal.SIGTERM)
-        cls.slapd_process.wait()
+        stdout, stderr = cls.slapd_process.communicate()
+        if cls.slapd_process.returncode:
+            print >> sys.stderr, ('slapd returned with status: %s'
+                                  % cls.slapd_process.returncode)
+            sys.stdout.write(stdout)
+            sys.stderr.write(stderr)
         config.info('DONE')
 
 class LDAPTestBase(CubicWebTC):
