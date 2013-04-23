@@ -29,6 +29,11 @@ API changes
   moved to the `massmailing` cube.
 
 
+Deprecation
+---------------------
+
+* ``ldapuser`` have been deprecated. It'll be fully dropped in the next
+  version. If you are still using ldapuser switch to ``ldapfeed`` **NOW**!
 
 Deprecated Code Drops
 ----------------------

@@ -27,6 +27,7 @@ from ldap.filter import escape_filter_chars
 
 from rql.nodes import Relation, VariableRef, Constant, Function
 
+import warnings
 from cubicweb import UnknownEid, RepositoryError
 from cubicweb.server import ldaputils
 from cubicweb.server.utils import cartesian_product
@@ -43,6 +44,11 @@ PROTO_PORT = {'ldap': 389,
               'ldaps': 636,
               'ldapi': None,
               }
+
+
+# module is lazily imported
+warnings.warn('Imminent drop of ldapuser. Switch to ldapfeed now!',
+              DeprecationWarning)
 
 
 class LDAPUserSource(ldaputils.LDAPSourceMixIn, AbstractSource):
