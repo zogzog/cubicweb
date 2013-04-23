@@ -12,11 +12,10 @@ structuralObjectClass: organizationalUnit
 
 dn: uid=syt,ou=People,dc=cubicweb,dc=test
 loginShell: /bin/bash
-objectClass: inetOrgPerson
+objectClass: OpenLDAPperson
 objectClass: posixAccount
 objectClass: top
 objectClass: shadowAccount
-structuralObjectClass: inetOrgPerson
 cn: Sylvain Thenault
 sn: Thenault
 shadowMax: 99999
@@ -35,7 +34,7 @@ userPassword: syt
 
 dn: uid=adim,ou=People,dc=cubicweb,dc=test
 loginShell: /bin/bash
-objectClass: inetOrgPerson
+objectClass: OpenLDAPperson
 objectClass: posixAccount
 objectClass: top
 objectClass: shadowAccount
@@ -46,7 +45,6 @@ gidNumber: 1006
 uid: adim
 homeDirectory: /home/adim
 uidNumber: 1006
-structuralObjectClass: inetOrgPerson
 givenName: Adrien
 telephoneNumber: 109
 displayName: adimascio
