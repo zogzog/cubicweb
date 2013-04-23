@@ -297,12 +297,16 @@ class SQLAdapterMixIn(object):
         """
         attrs = {}
         eschema = entity.e_schema
+        converters = getattr(self.dbhelper, 'TYPE_CONVERTERS', {})
         for attr, value in entity.cw_edited.iteritems():
             if value is not None and eschema.subjrels[attr].final:
                 atype = str(entity.e_schema.destination(attr))
-                if atype == 'Boolean':
-                    value = self.dbhelper.boolean_value(value)
-                elif atype == 'Password':
+                if atype in converters:
+                    # It is easier to modify preprocess_entity rather
+                    # than add_entity (native) as this behavior
+                    # may also be used for update.
+                    value = converters[atype](value)
+                elif atype == 'Password': # XXX could be done using a TYPE_CONVERTERS callback
                     # if value is a Binary instance, this mean we got it
                     # from a query result and so it is already encrypted
                     if isinstance(value, Binary):
@@ -310,16 +314,6 @@ class SQLAdapterMixIn(object):
                     else:
                         value = crypt_password(value)
                     value = self._binary(value)
-                # XXX needed for sqlite but I don't think it is for other backends
-                # Note: use is __class__ since issubclass(datetime, date)
-                elif atype in ('Datetime', 'TZDatetime') and type(value) is date:
-                    value = todatetime(value)
-                elif atype == 'Date' and isinstance(value, datetime):
-                    value = todate(value)
-                elif atype == 'TZDatetime' and getattr(value, 'tzinfo', None):
-                    value = utcdatetime(value)
-                elif atype == 'TZTime' and getattr(value, 'tzinfo', None):
-                    value = utctime(value)
                 elif isinstance(value, Binary):
                     value = self._binary(value.getvalue())
             attrs[SQL_PREFIX+str(attr)] = value
