@@ -239,7 +239,7 @@ class BytesFileSystemStorage(Storage):
         sysource = entity._cw.cnxset.source('system')
         cu = sysource.doexec(entity._cw,
                              'SELECT cw_%s FROM cw_%s WHERE cw_eid=%s' % (
-                             attr, entity.__regid__, entity.eid))
+                             attr, entity.cw_etype, entity.eid))
         rawvalue = cu.fetchone()[0]
         if rawvalue is None: # no previous value
             return None
@@ -253,7 +253,7 @@ class BytesFileSystemStorage(Storage):
         session = entity._cw
         source = session.repo.system_source
         attrs = source.preprocess_entity(entity)
-        sql = source.sqlgen.update('cw_' + entity.__regid__, attrs,
+        sql = source.sqlgen.update('cw_' + entity.cw_etype, attrs,
                                    ['cw_eid'])
         source.doexec(session, sql, attrs)
         entity.cw_edited = None

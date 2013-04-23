@@ -363,7 +363,7 @@ class ResultSetTC(CubicWebTC):
                     ('CWGroup', 'users'))
         for entity in rset.entities(): # test get_entity for each row actually
             etype, n = expected[entity.cw_row]
-            self.assertEqual(entity.__regid__, etype)
+            self.assertEqual(entity.cw_etype, etype)
             attr = etype == 'Bookmark' and 'title' or 'name'
             self.assertEqual(entity.cw_attr_cache[attr], n)
 
@@ -385,7 +385,7 @@ class ResultSetTC(CubicWebTC):
         self.assertEqual(rtype, 'title')
         self.assertEqual(entity.title, 'aaaa')
         entity, rtype = rset.related_entity(1, 1)
-        self.assertEqual(entity.__regid__, 'CWGroup')
+        self.assertEqual(entity.cw_etype, 'CWGroup')
         self.assertEqual(rtype, 'name')
         self.assertEqual(entity.name, 'guests')
 

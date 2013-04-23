@@ -236,7 +236,7 @@ class TreeViewMixIn(object):
         self.close_item(entity)
 
     def open_item(self, entity):
-        self.w(u'<li class="%s">\n' % entity.__regid__.lower())
+        self.w(u'<li class="%s">\n' % entity.cw_etype.lower())
     def close_item(self, entity):
         self.w(u'</li>\n')
 

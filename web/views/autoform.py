@@ -272,7 +272,7 @@ class InlineEntityEditionFormView(f.FormViewMixIn, EntityView):
                          **kwargs)
 
     def form_title(self, entity, i18nctx):
-        return self._cw.pgettext(i18nctx, entity.__regid__)
+        return self._cw.pgettext(i18nctx, entity.cw_etype)
 
     def add_hiddens(self, form, entity):
         """to ease overriding (see cubes.vcsfile.views.forms for instance)"""
@@ -498,7 +498,7 @@ class GenericRelationsWidget(fw.FieldWidget):
         for rschema, role, related in field.relations_table(form):
             # already linked entities
             if related:
-                label = rschema.display_name(req, role, context=form.edited_entity.__regid__)
+                label = rschema.display_name(req, role, context=form.edited_entity.cw_etype)
                 w(u'<tr><th class="labelCol">%s</th>' % label)
                 w(u'<td>')
                 w(u'<ul>')
@@ -608,11 +608,11 @@ class GenericRelationsField(ff.Field):
             pendingid = 'id' + pendingid
             if int(eidfrom) == entity.eid: # subject
                 label = display_name(form._cw, rtype, 'subject',
-                                     entity.__regid__)
+                                     entity.cw_etype)
                 reid = eidto
             else:
                 label = display_name(form._cw, rtype, 'object',
-                                     entity.__regid__)
+                                     entity.cw_etype)
                 reid = eidfrom
             jscall = "javascript: cancelPendingInsert('%s', 'tr', null, %s);" \
                      % (pendingid, entity.eid)
@@ -852,7 +852,7 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
         for rschema, _, role in self._relations_by_section('relations',
                                                            strict=True):
             result.append( (rschema.display_name(self.edited_entity._cw, role,
-                                                 self.edited_entity.__regid__),
+                                                 self.edited_entity.cw_etype),
                             rschema, role) )
         return sorted(result)
 

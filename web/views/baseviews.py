@@ -593,7 +593,7 @@ class ArchiveView(GroupByView):
         year, month = key
         label = u'%s %s [%s]' % (self._cw._(calendar.MONTHNAMES[int(month)-1]),
                                  year, len(items))
-        etypes = set(entity.__regid__ for entity in items)
+        etypes = set(entity.cw_etype for entity in items)
         vtitle = '%s %s' % (', '.join(display_name(self._cw, etype, 'plural')
                                       for etype in etypes),
                             label)
@@ -620,7 +620,7 @@ class AuthorView(GroupByView):
         if key[0] is None:
             return
         label = u'%s [%s]' % (key[0], len(items))
-        etypes = set(entity.__regid__ for entity in items)
+        etypes = set(entity.cw_etype for entity in items)
         vtitle = self._cw._('%(etype)s by %(author)s') % {
             'etype': ', '.join(display_name(self._cw, etype, 'plural')
                                for etype in etypes),

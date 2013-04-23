@@ -197,7 +197,7 @@ def _undo_rel_info(session, subj, rtype, obj):
     sentity, oentity = entities
     try:
         rschema = session.vreg.schema.rschema(rtype)
-        rdef = rschema.rdefs[(sentity.__regid__, oentity.__regid__)]
+        rdef = rschema.rdefs[(sentity.cw_etype, oentity.cw_etype)]
     except KeyError:
         raise _UndoException(session._(
             "Can't restore relation %(rtype)s between %(subj)s and "
@@ -630,38 +630,38 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         """add a new entity to the source"""
         with self._storage_handler(entity, 'added'):
             attrs = self.preprocess_entity(entity)
-            sql = self.sqlgen.insert(SQL_PREFIX + entity.__regid__, attrs)
+            sql = self.sqlgen.insert(SQL_PREFIX + entity.cw_etype, attrs)
             self.doexec(session, sql, attrs)
-            if session.ertype_supports_undo(entity.__regid__):
+            if session.ertype_supports_undo(entity.cw_etype):
                 self._record_tx_action(session, 'tx_entity_actions', 'C',
-                                       etype=entity.__regid__, eid=entity.eid)
+                                       etype=entity.cw_etype, eid=entity.eid)
 
     def update_entity(self, session, entity):
         """replace an entity in the source"""
         with self._storage_handler(entity, 'updated'):
             attrs = self.preprocess_entity(entity)
-            if session.ertype_supports_undo(entity.__regid__):
+            if session.ertype_supports_undo(entity.cw_etype):
                 changes = self._save_attrs(session, entity, attrs)
                 self._record_tx_action(session, 'tx_entity_actions', 'U',
-                                       etype=entity.__regid__, eid=entity.eid,
+                                       etype=entity.cw_etype, eid=entity.eid,
                                        changes=self._binary(dumps(changes)))
-            sql = self.sqlgen.update(SQL_PREFIX + entity.__regid__, attrs,
+            sql = self.sqlgen.update(SQL_PREFIX + entity.cw_etype, attrs,
                                      ['cw_eid'])
             self.doexec(session, sql, attrs)
 
     def delete_entity(self, session, entity):
         """delete an entity from the source"""
         with self._storage_handler(entity, 'deleted'):
-            if session.ertype_supports_undo(entity.__regid__):
+            if session.ertype_supports_undo(entity.cw_etype):
                 attrs = [SQL_PREFIX + r.type
                          for r in entity.e_schema.subject_relations()
                          if (r.final or r.inlined) and not r in VIRTUAL_RTYPES]
                 changes = self._save_attrs(session, entity, attrs)
                 self._record_tx_action(session, 'tx_entity_actions', 'D',
-                                       etype=entity.__regid__, eid=entity.eid,
+                                       etype=entity.cw_etype, eid=entity.eid,
                                        changes=self._binary(dumps(changes)))
             attrs = {'cw_eid': entity.eid}
-            sql = self.sqlgen.delete(SQL_PREFIX + entity.__regid__, attrs)
+            sql = self.sqlgen.delete(SQL_PREFIX + entity.cw_etype, attrs)
             self.doexec(session, sql, attrs)
 
     def add_relation(self, session, subject, rtype, object, inlined=False):
@@ -978,7 +978,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             assert isinstance(extid, str)
             extid = b64encode(extid)
         uri = 'system' if source.copy_based_source else source.uri
-        attrs = {'type': entity.__regid__, 'eid': entity.eid, 'extid': extid,
+        attrs = {'type': entity.cw_etype, 'eid': entity.eid, 'extid': extid,
                  'source': uri, 'asource': source.uri, 'mtime': datetime.utcnow()}
         self._handle_insert_entity_sql(session, self.sqlgen.insert('entities', attrs), attrs)
         # insert core relations: is, is_instance_of and cw_source
@@ -997,7 +997,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             self._handle_is_relation_sql(session, 'INSERT INTO cw_source_relation(eid_from,eid_to) VALUES (%s,%s)',
                                          (entity.eid, source.eid))
         # now we can update the full text index
-        if self.do_fti and self.need_fti_indexation(entity.__regid__):
+        if self.do_fti and self.need_fti_indexation(entity.cw_etype):
             if complete:
                 entity.complete(entity.e_schema.indexable_attributes())
             self.index_entity(session, entity=entity)
@@ -1009,7 +1009,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             # one indexable attribute
             self.index_entity(session, entity=entity)
         # update entities.mtime.
-        # XXX Only if entity.__regid__ in self.multisources_etypes?
+        # XXX Only if entity.cw_etype in self.multisources_etypes?
         attrs = {'eid': entity.eid, 'mtime': datetime.utcnow()}
         self.doexec(session, self.sqlgen.update('entities', attrs, ['eid']), attrs)
 
@@ -1191,7 +1191,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         attributes of the entity
         """
         restr = {'cw_eid': entity.eid}
-        sql = self.sqlgen.select(SQL_PREFIX + entity.__regid__, restr, attrs)
+        sql = self.sqlgen.select(SQL_PREFIX + entity.cw_etype, restr, attrs)
         cu = self.doexec(session, sql, restr)
         values = dict(zip(attrs, cu.fetchone()))
         # ensure backend specific binary are converted back to string
@@ -1302,7 +1302,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         # restore record in entities (will update fti if needed)
         self.add_info(session, entity, self, None, True)
         # remove record from deleted_entities if entity's type is multi-sources
-        if entity.__regid__ in self.multisources_etypes:
+        if entity.cw_etype in self.multisources_etypes:
             self.doexec(session,
                         'DELETE FROM deleted_entities WHERE eid=%s' % eid)
         self.repo.hm.call_hooks('after_add_entity', session, entity=entity)
@@ -1365,7 +1365,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         # XXX check removal of inlined relation?
         # delete the entity
         attrs = {'cw_eid': eid}
-        sql = self.sqlgen.delete(SQL_PREFIX + entity.__regid__, attrs)
+        sql = self.sqlgen.delete(SQL_PREFIX + entity.cw_etype, attrs)
         self.doexec(session, sql, attrs)
         # remove record from entities (will update fti if needed)
         self.delete_info_multi(session, [entity], self.uri)
@@ -1385,7 +1385,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         self._reedit_entity(entity, action.changes, err)
         entity.cw_edited.check()
         self.repo.hm.call_hooks('before_update_entity', session, entity=entity)
-        sql = self.sqlgen.update(SQL_PREFIX + entity.__regid__, action.changes,
+        sql = self.sqlgen.update(SQL_PREFIX + entity.cw_etype, action.changes,
                                  ['cw_eid'])
         self.doexec(session, sql, action.changes)
         self.repo.hm.call_hooks('after_update_entity', session, entity=entity)
@@ -1403,7 +1403,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             rschema = rdef.rtype
             if rschema.inlined:
                 sql = 'SELECT 1 FROM cw_%s WHERE cw_eid=%s and cw_%s=%s'\
-                      % (sentity.__regid__, subj, rtype, obj)
+                      % (sentity.cw_etype, subj, rtype, obj)
             else:
                 sql = 'SELECT 1 FROM %s_relation WHERE eid_from=%s and eid_to=%s'\
                       % (rtype, subj, obj)

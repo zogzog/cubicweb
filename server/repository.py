@@ -1336,7 +1336,7 @@ class Repository(object):
                 suri = 'system'
             extid = source.get_extid(entity)
             self._extid_cache[(str(extid), suri)] = entity.eid
-        self._type_source_cache[entity.eid] = (entity.__regid__, suri, extid,
+        self._type_source_cache[entity.eid] = (entity.cw_etype, suri, extid,
                                                source.uri)
         return extid
 
@@ -1350,13 +1350,13 @@ class Repository(object):
         entity._cw_is_saved = False # entity has an eid but is not yet saved
         # init edited_attributes before calling before_add_entity hooks
         entity.cw_edited = edited
-        source = self.locate_etype_source(entity.__regid__)
+        source = self.locate_etype_source(entity.cw_etype)
         # allocate an eid to the entity before calling hooks
         entity.eid = self.system_source.create_eid(session)
         # set caches asap
         extid = self.init_entity_caches(session, entity, source)
         if server.DEBUG & server.DBG_REPO:
-            print 'ADD entity', self, entity.__regid__, entity.eid, edited
+            print 'ADD entity', self, entity.cw_etype, entity.eid, edited
         prefill_entity_caches(entity)
         if source.should_call_hooks:
             self.hm.call_hooks('before_add_entity', session, entity=entity)
@@ -1389,7 +1389,7 @@ class Repository(object):
         """
         entity = edited.entity
         if server.DEBUG & server.DBG_REPO:
-            print 'UPDATE entity', entity.__regid__, entity.eid, \
+            print 'UPDATE entity', entity.cw_etype, entity.eid, \
                   entity.cw_attr_cache, edited
         hm = self.hm
         eschema = entity.e_schema

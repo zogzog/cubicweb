@@ -218,7 +218,7 @@ class CWEntityXMLParser(datafeed.DataFeedXMLParser):
         return entity
 
     def process_relations(self, entity, rels):
-        etype = entity.__regid__
+        etype = entity.cw_etype
         for (rtype, role, action), rules in self.source.mapping.get(etype, {}).iteritems():
             try:
                 related_items = rels[role][rtype]

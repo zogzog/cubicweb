@@ -114,7 +114,7 @@ class JsonEntityView(JsonMixIn, EntityView):
             entity.complete() # fetch all attributes
             # hack to add extra metadata
             entity.cw_attr_cache.update({
-                    '__cwetype__': entity.__regid__,
+                    '__cwetype__': entity.cw_etype,
                     })
             entities.append(entity)
         self.wdata(entities)

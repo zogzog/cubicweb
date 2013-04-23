@@ -792,7 +792,7 @@ class Entity(AppObject):
         for rtype in self.skip_copy_for:
             skip_copy_for['subject'].add(rtype)
             warn('[3.14] skip_copy_for on entity classes (%s) is deprecated, '
-                 'use cw_skip_for instead with list of couples (rtype, role)' % self.__regid__,
+                 'use cw_skip_for instead with list of couples (rtype, role)' % self.cw_etype,
                  DeprecationWarning)
         for rtype, role in self.cw_skip_copy_for:
             assert role in ('subject', 'object'), role
@@ -844,7 +844,7 @@ class Entity(AppObject):
     def as_rset(self): # XXX .cw_as_rset
         """returns a resultset containing `self` information"""
         rset = ResultSet([(self.eid,)], 'Any X WHERE X eid %(x)s',
-                         {'x': self.eid}, [(self.__regid__,)])
+                         {'x': self.eid}, [(self.cw_etype,)])
         rset.req = self._cw
         return rset
 

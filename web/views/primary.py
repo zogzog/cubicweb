@@ -362,7 +362,7 @@ class PrimaryView(EntityView):
                 label = self._cw._(dispctrl['label'])
             else:
                 label = display_name(self._cw, rschema.type, role,
-                                     context=entity.__regid__)
+                                     context=entity.cw_etype)
             return label
         return u''
 

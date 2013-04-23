@@ -174,7 +174,7 @@ class EditRelationBoxTemplate(EditRelationMixIn, EntityBoxTemplate):
         self._cw.add_js('cubicweb.ajax.js')
         entity = self.cw_rset.get_entity(row, col)
         title = display_name(self._cw, self.rtype, get_role(self),
-                             context=entity.__regid__)
+                             context=entity.cw_etype)
         box = SideBoxWidget(title, self.__regid__)
         related = self.related_boxitems(entity)
         unrelated = self.unrelated_boxitems(entity)

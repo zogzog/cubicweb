@@ -233,5 +233,5 @@ class EntityDeleteHook(SomethingChangedHook):
             # missing required relation
             title = '#%s' % self.entity.eid
         self._cw.transaction_data.setdefault('pendingchanges', []).append(
-            ('delete_entity', (self.entity.eid, self.entity.__regid__, title)))
+            ('delete_entity', (self.entity.eid, self.entity.cw_etype, title)))
         return True

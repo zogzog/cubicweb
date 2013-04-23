@@ -39,7 +39,7 @@ todelete = defaultdict(list)
 extids = set()
 duplicates = []
 for entity in rql('Any X WHERE X cw_source S, S eid %(s)s', {'s': source.eid}).entities():
-    etype = entity.__regid__
+    etype = entity.cw_etype
     if not source.support_entity(etype):
         print "source doesn't support %s, delete %s" % (etype, entity.eid)
         todelete[etype].append(entity)

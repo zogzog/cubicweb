@@ -358,7 +358,7 @@ class EntityFieldsForm(FieldsForm):
             'autoform_field', self._cw, entity=self.edited_entity)
         self.uicfg_affk = self._cw.vreg['uicfg'].select(
             'autoform_field_kwargs', self._cw, entity=self.edited_entity)
-        self.add_hidden('__type', self.edited_entity.__regid__, eidparam=True)
+        self.add_hidden('__type', self.edited_entity.cw_etype, eidparam=True)
         self.add_hidden('eid', self.edited_entity.eid)
         # mainform default to true in parent, hence default to True
         if kwargs.get('mainform', True) or kwargs.get('mainentity', False):

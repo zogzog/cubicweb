@@ -772,7 +772,7 @@ class NoHookRQLObjectStore(RQLObjectStore):
         self.source.add_info(session, entity, self.source, None, complete=False)
         kwargs = dict()
         if inspect.getargspec(self.add_relation).keywords:
-            kwargs['subjtype'] = entity.__regid__
+            kwargs['subjtype'] = entity.cw_etype
         for rtype, targeteids in rels.iteritems():
             # targeteids may be a single eid or a list of eids
             inlined = self.rschema(rtype).inlined
@@ -1069,13 +1069,13 @@ class SQLGenSourceWrapper(object):
     def add_entity(self, session, entity):
         with self._storage_handler(entity, 'added'):
             attrs = self.preprocess_entity(entity)
-            rtypes = self._inlined_rtypes_cache.get(entity.__regid__, ())
+            rtypes = self._inlined_rtypes_cache.get(entity.cw_etype, ())
             if isinstance(rtypes, str):
                 rtypes = (rtypes,)
             for rtype in rtypes:
                 if rtype not in attrs:
                     attrs[rtype] = None
-            sql = self.sqlgen.insert(SQL_PREFIX + entity.__regid__, attrs)
+            sql = self.sqlgen.insert(SQL_PREFIX + entity.cw_etype, attrs)
             self._sql.eid_insertdicts[entity.eid] = attrs
             self._append_to_entities(sql, attrs)
 
@@ -1108,7 +1108,7 @@ class SQLGenSourceWrapper(object):
             assert isinstance(extid, str)
             extid = b64encode(extid)
         uri = 'system' if source.copy_based_source else source.uri
-        attrs = {'type': entity.__regid__, 'eid': entity.eid, 'extid': extid,
+        attrs = {'type': entity.cw_etype, 'eid': entity.eid, 'extid': extid,
                  'source': uri, 'asource': source.uri, 'mtime': datetime.utcnow()}
         self._handle_insert_entity_sql(session, self.sqlgen.insert('entities', attrs), attrs)
         # insert core relations: is, is_instance_of and cw_source
@@ -1127,7 +1127,7 @@ class SQLGenSourceWrapper(object):
             self._handle_is_relation_sql(session, 'INSERT INTO cw_source_relation(eid_from,eid_to) VALUES (%s,%s)',
                                          (entity.eid, source.eid))
         # now we can update the full text index
-        if self.do_fti and self.need_fti_indexation(entity.__regid__):
+        if self.do_fti and self.need_fti_indexation(entity.cw_etype):
             if complete:
                 entity.complete(entity.e_schema.indexable_attributes())
             self.index_entity(session, entity=entity)

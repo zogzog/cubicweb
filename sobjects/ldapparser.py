@@ -85,7 +85,7 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
         # disable read security to allow password selection
         with entity._cw.security_enabled(read=False):
             entity.complete(tuple(attrs))
-        if entity.__regid__ == 'CWUser':
+        if entity.cw_etype == 'CWUser':
             wf = entity.cw_adapt_to('IWorkflowable')
             if wf.state == 'deactivated':
                 wf.fire_transition('activate')
@@ -112,7 +112,7 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
         return tdict
 
     def before_entity_copy(self, entity, sourceparams):
-        if entity.__regid__ == 'EmailAddress':
+        if entity.cw_etype == 'EmailAddress':
             entity.cw_edited['address'] = sourceparams['address']
         else:
             self.ldap2cwattrs(sourceparams, entity.cw_edited)
@@ -126,7 +126,7 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
 
     def after_entity_copy(self, entity, sourceparams):
         super(DataFeedLDAPAdapter, self).after_entity_copy(entity, sourceparams)
-        if entity.__regid__ == 'EmailAddress':
+        if entity.cw_etype == 'EmailAddress':
             return
         groups = filter(None, [self._get_group(name)
                                for name in self.source.user_default_groups])

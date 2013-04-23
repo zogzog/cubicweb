@@ -330,7 +330,7 @@ class ITreeAdapter(view.EntityAdapter):
             _done = set()
         for child in self.children():
             if child.eid in _done:
-                self.error('loop in %s tree: %s', child.__regid__.lower(), child)
+                self.error('loop in %s tree: %s', child.cw_etype.lower(), child)
                 continue
             yield child
             _done.add(child.eid)
@@ -357,7 +357,7 @@ class ITreeAdapter(view.EntityAdapter):
         entity = adapter.entity
         while entity is not None:
             if entity.eid in path:
-                self.error('loop in %s tree: %s', entity.__regid__.lower(), entity)
+                self.error('loop in %s tree: %s', entity.cw_etype.lower(), entity)
                 break
             path.append(entity.eid)
             try:

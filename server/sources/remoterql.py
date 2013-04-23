@@ -415,7 +415,7 @@ repository (default to 5 minutes).',
             self._query_cache.clear()
             return
         cu = session.cnxset[self.uri]
-        cu.execute('DELETE %s X WHERE X eid %%(x)s' % entity.__regid__,
+        cu.execute('DELETE %s X WHERE X eid %%(x)s' % entity.cw_etype,
                    {'x': self.repo.eid2extid(self, entity.eid, session)})
         self._query_cache.clear()
 
