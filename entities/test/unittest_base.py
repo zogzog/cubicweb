@@ -48,7 +48,12 @@ class MetadataTC(BaseEntityTC):
         self.assertEqual(entity.dc_creator(), u'member')
 
     def test_type(self):
+        #dc_type may be translated
         self.assertEqual(self.member.dc_type(), 'CWUser')
+
+    def test_cw_etype(self):
+        #cw_etype is never translated
+        self.assertEqual(self.member.cw_etype, 'CWUser')
 
     def test_entity_meta_attributes(self):
         # XXX move to yams
@@ -172,7 +177,7 @@ class SpecializedEntityClassesTC(CubicWebTC):
                 self.assertEqual(eclass.__bases__[0].__bases__, (Foo,))
         # check Division eclass is still selected for plain Division entities
         eclass = self.select_eclass('Division')
-        self.assertEqual(eclass.__regid__, 'Division')
+        self.assertEqual(eclass.cw_etype, 'Division')
 
 if __name__ == '__main__':
     unittest_main()
