@@ -328,7 +328,6 @@ You can set multiple groups by separating them by a comma.',
             else:
                 itemdict = self._process_ldap_item(rec_dn, items)
                 result.append(itemdict)
-        #print '--->', result
         self.debug('ldap built results %s', len(result))
         return result
 
