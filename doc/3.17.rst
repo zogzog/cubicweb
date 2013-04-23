@@ -28,6 +28,10 @@ API changes
 * The email sending views and controllers have been removed from CubicWeb and
   moved to the `massmailing` cube.
 
+* ``RenderAndSendNotificationView`` is deprecated in favor of
+  ``ActualNotificationOp`` the new operation use the more efficient *data*
+  idiom.
+
 
 Deprecation
 ---------------------
