@@ -42,11 +42,13 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
     @cachedproperty
     def source_entities_by_extid(self):
         source = self.source
-        return dict((userdict['dn'], userdict)
-                    for userdict in source._search(self._cw,
-                                                   source.user_base_dn,
-                                                   source.user_base_scope,
-                                                   self.searchfilterstr))
+        if source.user_base_dn.strip():
+            return dict((userdict['dn'], userdict)
+                        for userdict in source._search(self._cw,
+                                                       source.user_base_dn,
+                                                       source.user_base_scope,
+                                                       self.searchfilterstr))
+        return {}
 
     def process(self, url, raise_on_error=False):
         """IDataFeedParser main entry point"""
