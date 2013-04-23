@@ -700,10 +700,15 @@ class RQLExpression(object):
     def __repr__(self):
         return '%s(%s)' % (self.__class__.__name__, self.full_rql)
 
-    def __cmp__(self, other):
+    def __lt__(self, other):
         if hasattr(other, 'expression'):
-            return cmp(other.expression, self.expression)
-        return -1
+            return self.expression < other.expression
+        return True
+
+    def __eq__(self, other):
+        if hasattr(other, 'expression'):
+            return self.expression == other.expression
+        return False
 
     def __deepcopy__(self, memo):
         return self.__class__(self.expression, self.mainvars)

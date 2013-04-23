@@ -48,9 +48,12 @@ class EditedEntity(dict):
         # dict|set keyable
         return hash(id(self))
 
-    def __cmp__(self, other):
+    def __lt__(self, other):
         # we don't want comparison by value inherited from dict
-        return cmp(id(self), id(other))
+        return id(self) < id(other)
+
+    def __eq__(self, other):
+        return id(self) == id(other)
 
     def __setitem__(self, attr, value):
         assert attr != 'eid'

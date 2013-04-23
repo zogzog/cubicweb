@@ -140,17 +140,20 @@ class AbstractSource(object):
         return '<%s %s source %s @%#x>' % (self.uri, self.__class__.__name__,
                                            self.eid, id(self))
 
-    def __cmp__(self, other):
+    def __lt__(self, other):
         """simple comparison function to get predictable source order, with the
         system source at last
         """
         if self.uri == other.uri:
-            return 0
+            return False
         if self.uri == 'system':
-            return 1
+            return False
         if other.uri == 'system':
-            return -1
-        return cmp(self.uri, other.uri)
+            return True
+        return self.uri < other.uri
+
+    def __eq__(self, other):
+        return self.uri == other.uri
 
     def backup(self, backupfile, confirm, format='native'):
         """method called to create a backup of source's data"""
