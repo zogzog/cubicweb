@@ -145,8 +145,8 @@ def func_name(func):
 class LoopTask(object):
     """threaded task restarting itself once executed"""
     def __init__(self, tasks_manager, interval, func, args):
-        if interval <= 0:
-            raise ValueError('Loop task interval must be > 0 '
+        if interval < 0:
+            raise ValueError('Loop task interval must be >= 0 '
                              '(current value: %f for %s)' % \
                              (interval, func_name(func)))
         self._tasks_manager = tasks_manager

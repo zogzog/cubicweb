@@ -32,6 +32,8 @@ API changes
   ``ActualNotificationOp`` the new operation use the more efficient *data*
   idiom.
 
+* Looping task can now have a ``0`` interval.
+
 
 Deprecation
 ---------------------
