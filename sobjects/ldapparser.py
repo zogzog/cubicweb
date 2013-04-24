@@ -32,7 +32,7 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
     __regid__ = 'ldapfeed'
     # attributes that may appears in source user_attrs dict which are not
     # attributes of the cw user
-    non_attribute_keys = set(('email',))
+    non_attribute_keys = set(('email', 'eid'))
 
     @cachedproperty
     def searchfilterstr(self):
@@ -43,11 +43,13 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
     def source_entities_by_extid(self):
         source = self.source
         if source.user_base_dn.strip():
+            attrs = map(str, source.user_attrs.keys())
             return dict((userdict['dn'], userdict)
                         for userdict in source._search(self._cw,
                                                        source.user_base_dn,
                                                        source.user_base_scope,
-                                                       self.searchfilterstr))
+                                                       self.searchfilterstr,
+                                                       attrs))
         return {}
 
     def process(self, url, raise_on_error=False):

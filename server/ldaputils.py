@@ -160,10 +160,9 @@ You can set multiple groups by separating them by a comma.',
         self.user_base_scope = globals()[typedconfig['user-scope']]
         self.user_login_attr = typedconfig['user-login-attr']
         self.user_default_groups = typedconfig['user-default-group']
-        self.user_attrs = typedconfig['user-attrs-map']
-        self.user_rev_attrs = {'eid': 'dn'}
-        for ldapattr, cwattr in self.user_attrs.items():
-            self.user_rev_attrs[cwattr] = ldapattr
+        self.user_attrs = {'dn': 'eid'}
+        self.user_attrs.update(typedconfig['user-attrs-map'])
+        self.user_rev_attrs = dict((v, k) for k, v in self.user_attrs.iteritems())
         self.base_filters = [filter_format('(%s=%s)', ('objectClass', o))
                              for o in typedconfig['user-classes']]
         if typedconfig['user-filter']:
