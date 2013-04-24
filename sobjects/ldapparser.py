@@ -32,7 +32,7 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
     __regid__ = 'ldapfeed'
     # attributes that may appears in source user_attrs dict which are not
     # attributes of the cw user
-    non_attribute_keys = set(('email', 'eid'))
+    non_attribute_keys = set(('email', 'eid', 'member', 'modification_date'))
 
     @cachedproperty
     def searchfilterstr(self):

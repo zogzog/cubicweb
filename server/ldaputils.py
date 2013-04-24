@@ -32,6 +32,8 @@ FOR A PARTICULAR PURPOSE.
 
 from __future__ import division # XXX why?
 
+from datetime import datetime
+
 import ldap
 from ldap.ldapobject import ReconnectLDAPObject
 from ldap.filter import filter_format
@@ -160,7 +162,7 @@ You can set multiple groups by separating them by a comma.',
         self.user_base_scope = globals()[typedconfig['user-scope']]
         self.user_login_attr = typedconfig['user-login-attr']
         self.user_default_groups = typedconfig['user-default-group']
-        self.user_attrs = {'dn': 'eid'}
+        self.user_attrs = {'dn': 'eid', 'modifyTimestamp': 'modification_date'}
         self.user_attrs.update(typedconfig['user-attrs-map'])
         self.user_rev_attrs = dict((v, k) for k, v in self.user_attrs.iteritems())
         self.base_filters = [filter_format('(%s=%s)', ('objectClass', o))
@@ -340,6 +342,8 @@ You can set multiple groups by separating them by a comma.',
                 if not value.startswith('{SSHA}'):
                     value = utils.crypt_password(value)
                 itemdict[key] = Binary(value)
+            elif self.user_attrs.get(key) == 'modification_date':
+                itemdict[key] = datetime.strptime(value[0], '%Y%m%d%H%M%SZ')
             else:
                 value = [unicode(val, 'utf-8', 'replace') for val in value]
                 if len(value) == 1:
