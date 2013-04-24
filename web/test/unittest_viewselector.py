@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -46,11 +46,6 @@ MANAGEACTIONS = [actions.SiteConfigurationAction,
                  cwuser.ManageUsersAction,
                  cwsources.ManageSourcesAction,
                  debug.SiteInfoAction]
-
-if hasattr(rdf, 'RDFView') is not None: # not available if rdf lib not installed
-    RDFVIEWS = [('rdf', rdf.RDFView)]
-
-assert RDFVIEWS
 
 if hasattr(rdf, 'RDFView'): # not available if rdflib not installed
     RDFVIEWS = [('rdf', rdf.RDFView)]
