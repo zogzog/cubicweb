@@ -219,7 +219,13 @@ class TasksManager(object):
 
     def add_looping_task(self, interval, func, *args):
         """register a function to be called every `interval` seconds.
+
+        If interval is negative, no looping task is registered.
         """
+        if interval < 0:
+            self.debug('looping task %s ignored due to interval %f < 0',
+                       func_name(func), interval)
+            return
         task = LoopTask(self, interval, func, args)
         if self.running:
             self._start_task(task)
