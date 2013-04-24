@@ -192,9 +192,12 @@ class Repository(object):
         self._type_source_cache = {}
         # cache (extid, source uri) -> eid
         self._extid_cache = {}
-        # open some connections set
+        # open some connection sets
         if config.init_cnxset_pool:
             self.init_cnxset_pool()
+        # the hooks manager
+        self.hm = hook.HooksManager(self.vreg)
+        # registry hook to fix user class on registry reload
         @onevent('after-registry-reload', self)
         def fix_user_classes(self):
             # After registery reload the 'CWUser' class used for CWEtype
@@ -206,11 +209,12 @@ class Repository(object):
                     session.user.__class__ = usercls
 
     def init_cnxset_pool(self):
+        """should be called bootstrap_repository, as this is what it does"""
         config = self.config
         self._cnxsets_pool = Queue.Queue()
         self._cnxsets_pool.put_nowait(pool.ConnectionsSet(self.sources))
         if config.quick_start:
-            # quick start, usually only to get a minimal repository to get cubes
+            # quick start: only to get a minimal repository to get cubes
             # information (eg dump/restore/...)
             config._cubes = ()
             # only load hooks and entity classes in the registry
@@ -241,14 +245,12 @@ class Repository(object):
         # close initialization connetions set and reopen fresh ones for proper
         # initialization now that we know cubes
         self._get_cnxset().close(True)
-        # list of available_cnxsets (we can't iterate on Queue instance)
-        self.cnxsets = []
+        self.cnxsets = [] # list of available cnxsets (can't iterate on a Queue)
         for i in xrange(config['connections-pool-size']):
             self.cnxsets.append(pool.ConnectionsSet(self.sources))
             self._cnxsets_pool.put_nowait(self.cnxsets[-1])
         if config.quick_start:
             config.init_cubes(self.get_cubes())
-        self.hm = hook.HooksManager(self.vreg)
 
     # internals ###############################################################
 
