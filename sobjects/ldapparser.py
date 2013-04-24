@@ -40,7 +40,7 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
         return '(&%s)' % ''.join(self.source.base_filters)
 
     @cachedproperty
-    def source_entities_by_extid(self):
+    def user_source_entities_by_extid(self):
         source = self.source
         if source.user_base_dn.strip():
             attrs = map(str, source.user_attrs.keys())
@@ -52,19 +52,24 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
                                                        attrs))
         return {}
 
+    def _process(self, etype, sdict):
+        self.warning('fetched %s %s', etype, sdict)
+        extid = sdict['dn']
+        entity = self.extid2entity(extid, etype, **sdict)
+        if entity is not None and not self.created_during_pull(entity):
+            self.notify_updated(entity)
+            attrs = self.ldap2cwattrs(sdict, etype)
+            self.update_if_necessary(entity, attrs)
+            if etype == 'CWUser':
+                self._process_email(entity, sdict)
+            if etype == 'CWGroup':
+                self._process_membership(entity, sdict)
+
     def process(self, url, raise_on_error=False):
         """IDataFeedParser main entry point"""
         self.debug('processing ldapfeed source %s %s', self.source, self.searchfilterstr)
-        for userdict in self.source_entities_by_extid.itervalues():
-            self.warning('fetched user %s', userdict)
-            extid = userdict['dn']
-            entity = self.extid2entity(extid, 'CWUser', **userdict)
-            if entity is not None and not self.created_during_pull(entity):
-                self.notify_updated(entity)
-                attrs = self.ldap2cwattrs(userdict)
-                self.update_if_necessary(entity, attrs)
-                self._process_email(entity, userdict)
-
+        for userdict in self.user_source_entities_by_extid.itervalues():
+            self._process('CWUser', userdict)
 
     def handle_deletion(self, config, session, myuris):
         if config['delete-entities']:
@@ -102,41 +107,52 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
                 entity.cw_set(**attrs)
                 self.notify_updated(entity)
 
-    def ldap2cwattrs(self, sdict, tdict=None):
+    def ldap2cwattrs(self, sdict, etype, tdict=None):
+        """ Transform dictionary of LDAP attributes to CW
+        etype must be CWUser or CWGroup """
         if tdict is None:
             tdict = {}
-        for sattr, tattr in self.source.user_attrs.iteritems():
+        if etype == 'CWUser':
+            items = self.source.user_attrs.iteritems()
+        for sattr, tattr in items:
             if tattr not in self.non_attribute_keys:
                 try:
                     tdict[tattr] = sdict[sattr]
                 except KeyError:
                     raise ConfigurationError('source attribute %s is not present '
                                              'in the source, please check the '
-                                             'user-attrs-map field' % sattr)
+                                             '%s-attrs-map field' %
+                                             (sattr, etype[2:].lower()))
         return tdict
 
     def before_entity_copy(self, entity, sourceparams):
-        if entity.cw_etype == 'EmailAddress':
+        etype = entity.cw_etype
+        if etype == 'EmailAddress':
             entity.cw_edited['address'] = sourceparams['address']
         else:
-            self.ldap2cwattrs(sourceparams, entity.cw_edited)
-            pwd = entity.cw_edited.get('upassword')
-            if not pwd:
-                # generate a dumb password if not fetched from ldap (see
-                # userPassword)
-                pwd = crypt_password(generate_password())
-                entity.cw_edited['upassword'] = Binary(pwd)
+            self.ldap2cwattrs(sourceparams, etype, tdict=entity.cw_edited)
+            if etype == 'CWUser':
+                pwd = entity.cw_edited.get('upassword')
+                if not pwd:
+                    # generate a dumb password if not fetched from ldap (see
+                    # userPassword)
+                    pwd = crypt_password(generate_password())
+                    entity.cw_edited['upassword'] = Binary(pwd)
         return entity
 
     def after_entity_copy(self, entity, sourceparams):
         super(DataFeedLDAPAdapter, self).after_entity_copy(entity, sourceparams)
-        if entity.cw_etype == 'EmailAddress':
+        etype = entity.cw_etype
+        if etype == 'EmailAddress':
             return
-        groups = filter(None, [self._get_group(name)
-                               for name in self.source.user_default_groups])
-        if groups:
-            entity.cw_set(in_group=groups)
-        self._process_email(entity, sourceparams)
+        # all CWUsers must be treated before CWGroups to have to in_group relation
+        # set correctly in _associate_ldapusers
+        elif etype == 'CWUser':
+            groups = filter(None, [self._get_group(name)
+                                   for name in self.source.user_default_groups])
+            if groups:
+                entity.cw_set(in_group=groups)
+            self._process_email(entity, sourceparams)
 
     def is_deleted(self, extidplus, etype, eid):
         try:
@@ -145,7 +161,7 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
             # for some reason extids here tend to come in both forms, e.g:
             # dn, dn@@Babar
             extid = extidplus
-        return extid not in self.source_entities_by_extid
+        return extid not in self.user_source_entities_by_extid
 
     def _process_email(self, entity, userdict):
         try:
