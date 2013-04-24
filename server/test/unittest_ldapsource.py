@@ -226,7 +226,7 @@ class LDAPFeedUserTC(LDAPFeedTestBase):
         self.assertMetadata(e)
         self.assertEqual(e.firstname, None)
         self.assertEqual(e.surname, None)
-        self.assertEqual(e.in_group[0].name, 'users')
+        self.assertTrue('users' in [g.name for g in e.in_group])
         self.assertEqual(e.owned_by[0].login, 'syt')
         self.assertEqual(e.created_by, ())
         addresses = [pe.address for pe in e.use_email]
@@ -240,6 +240,7 @@ class LDAPFeedUserTC(LDAPFeedTestBase):
         self.assertEqual(rset.rows, [[e.eid]])
 
     def test_copy_to_system_source(self):
+        "make sure we can 'convert' an LDAP user into a system one"
         source = self.repo.sources_by_uri['ldap']
         eid = self.sexecute('CWUser X WHERE X login %(login)s', {'login': 'syt'})[0][0]
         self.sexecute('SET X cw_source S WHERE X eid %(x)s, S name "system"', {'x': eid})
@@ -262,6 +263,19 @@ class LDAPFeedUserTC(LDAPFeedTestBase):
         self.assertEqual(len(rset), 1)
         self.assertTrue(self.repo.system_source.authenticate(
                 self.session, 'syt', password='syt'))
+        # make sure the pull from ldap have not "reverted" user as a ldap-feed user
+        self.assertEqual(e.cw_metainformation(), {'source': {'type': u'native',
+                                                             'uri': u'system',
+                                                             'use-cwuri-as-url': False},
+                                                  'type': 'CWUser',
+                                                  'extid': None})
+        # and that the password stored in the system source is not empty or so
+        user = self.execute('CWUser U WHERE U login "syt"').get_entity(0, 0)
+        user.cw_clear_all_caches()
+        pwd = self.session.system_sql("SELECT cw_upassword FROM cw_cwuser WHERE cw_login='syt';").fetchall()[0][0]
+        self.assertIsNotNone(pwd)
+        self.assertTrue(str(pwd))
+
 
 
 class LDAPFeedUserDeletionTC(LDAPFeedTestBase):
