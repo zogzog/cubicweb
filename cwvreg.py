@@ -297,6 +297,10 @@ class ETypeRegistry(CWRegistry):
         super(ETypeRegistry, self).initialization_completed()
         # clear etype cache if you don't want to run into deep weirdness
         self.clear_caches()
+        # rebuild all classes to avoid potential memory fragmentation
+        # (see #2719113)
+        for eschema in self.vreg.schema.entities():
+            self.etype_class(eschema)
 
     def register(self, obj, **kwargs):
         obj = related_appobject(obj)
