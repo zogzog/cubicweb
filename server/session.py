@@ -88,8 +88,13 @@ class transaction(object):
             self.session.commit(free_cnxset=self.free_cnxset)
 
 @deprecated('[3.17] use <object>.allow/deny_all_hooks_but instead')
-def hooks_control(obj, *args, **kwargs):
-    return obj.hooks_control(*args, **kwargs)
+def hooks_control(obj, mode, *categories):
+    assert mode in  (HOOKS_ALLOW_ALL, HOOKS_DENY_ALL)
+    if mode == HOOKS_ALLOW_ALL:
+        return obj.allow_all_hooks_but(*categories)
+    elif mode == HOOKS_DENY_ALL:
+        return obj.deny_all_hooks_but(*categories)
+
 
 class _hooks_control(object):
     """context manager to control activated hooks categories.
