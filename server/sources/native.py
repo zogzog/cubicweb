@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -1715,7 +1715,7 @@ class DatabaseIndependentBackupRestore(object):
         return self._source.get_connection()
 
     def backup(self, backupfile):
-        archive=zipfile.ZipFile(backupfile, 'w', allowZip64=True)
+        archive = zipfile.ZipFile(backupfile, 'w', allowZip64=True)
         self.cnx = self.get_connection()
         try:
             self.cursor = self.cnx.cursor()
@@ -1750,7 +1750,7 @@ class DatabaseIndependentBackupRestore(object):
             etype_tables.append('%s%s'%(prefix, etype))
         for rtype in self.schema.relations():
             rschema = self.schema.rschema(rtype)
-            if rschema.final or rschema.inlined:
+            if rschema.final or rschema.inlined or rschema in VIRTUAL_RTYPES:
                 continue
             relation_tables.append('%s_relation' % rtype)
         return non_entity_tables + etype_tables + relation_tables
