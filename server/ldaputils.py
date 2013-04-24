@@ -342,10 +342,11 @@ You can set multiple groups by separating them by a comma.',
                     value = utils.crypt_password(value)
                 itemdict[key] = Binary(value)
             else:
-                for i, val in enumerate(value):
-                    value[i] = unicode(val, 'utf-8', 'replace')
-                if isinstance(value, list) and len(value) == 1:
+                value = [unicode(val, 'utf-8', 'replace') for val in value]
+                if len(value) == 1:
                     itemdict[key] = value = value[0]
+                else:
+                    itemdict[key] = value
         return itemdict
 
     def _process_no_such_object(self, session, dn):

@@ -161,10 +161,7 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
                 emailextid = userdict['dn'] + '@@' + emailaddr
                 email = self.extid2entity(emailextid, 'EmailAddress',
                                           address=emailaddr)
-                if entity.primary_email:
-                    entity.cw_set(use_email=email)
-                else:
-                    entity.cw_set(primary_email=email)
+                entity.cw_set(use_email=email)
             elif self.sourceuris:
                 # pop from sourceuris anyway, else email may be removed by the
                 # source once import is finished
