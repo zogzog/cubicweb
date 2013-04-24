@@ -40,6 +40,11 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
         return '(&%s)' % ''.join(self.source.base_filters)
 
     @cachedproperty
+    def searchgroupfilterstr(self):
+        """ ldap search string, including user-filter """
+        return '(&%s)' % ''.join(self.source.group_base_filters)
+
+    @cachedproperty
     def user_source_entities_by_extid(self):
         source = self.source
         if source.user_base_dn.strip():
@@ -50,6 +55,19 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
                                                        source.user_base_scope,
                                                        self.searchfilterstr,
                                                        attrs))
+        return {}
+
+    @cachedproperty
+    def group_source_entities_by_extid(self):
+        source = self.source
+        if source.group_base_dn.strip():
+            attrs = map(str, ['modifyTimestamp'] + source.group_attrs.keys())
+            return dict((groupdict['dn'], groupdict)
+                        for groupdict in source._search(self._cw,
+                                                        source.group_base_dn,
+                                                        source.group_base_scope,
+                                                        self.searchgroupfilterstr,
+                                                        attrs))
         return {}
 
     def _process(self, etype, sdict):
@@ -70,6 +88,9 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
         self.debug('processing ldapfeed source %s %s', self.source, self.searchfilterstr)
         for userdict in self.user_source_entities_by_extid.itervalues():
             self._process('CWUser', userdict)
+        self.debug('processing ldapfeed source %s %s', self.source, self.searchgroupfilterstr)
+        for groupdict in self.group_source_entities_by_extid.itervalues():
+            self._process('CWGroup', groupdict)
 
     def handle_deletion(self, config, session, myuris):
         if config['delete-entities']:
@@ -114,6 +135,8 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
             tdict = {}
         if etype == 'CWUser':
             items = self.source.user_attrs.iteritems()
+        elif etype == 'CWGroup':
+            items = self.source.group_attrs.iteritems()
         for sattr, tattr in items:
             if tattr not in self.non_attribute_keys:
                 try:
@@ -153,6 +176,8 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
             if groups:
                 entity.cw_set(in_group=groups)
             self._process_email(entity, sourceparams)
+        elif etype == 'CWGroup':
+            self._process_membership(entity, sourceparams)
 
     def is_deleted(self, extidplus, etype, eid):
         try:
@@ -186,6 +211,19 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
                 uri = userdict['dn'] + '@@' + emailaddr.encode('utf-8')
                 self.sourceuris.pop(uri, None)
             # XXX else check use_email relation?
+
+    def _process_membership(self, entity, sourceparams):
+        """ Find existing CWUsers with the same login as the memberUids in the
+        CWGroup entity and create the in_group relationship """
+        mdate = sourceparams.get('modification_date')
+        if (not mdate or mdate > entity.modification_date):
+            self._cw.execute('DELETE U in_group G WHERE G eid %(g)s',
+                             {'g':entity.eid})
+            members = sourceparams.get(self.source.group_rev_attrs['member'])
+            if members:
+                members = ["'%s'" % e for e in members]
+                rql = 'SET U in_group G WHERE G eid %%(g)s, U login IN (%s)' % ','.join(members)
+                self._cw.execute(rql, {'g':entity.eid,  })
 
     @cached
     def _get_group(self, name):

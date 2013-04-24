@@ -10,6 +10,25 @@ objectClass: organizationalUnit
 ou: People
 structuralObjectClass: organizationalUnit
 
+dn: ou=Group,dc=cubicweb,dc=test
+objectClass: organizationalUnit
+ou: Group
+
+dn: cn=logilab,ou=Group,dc=cubicweb,dc=test
+gidNumber: 2000
+objectClass: posixGroup
+objectClass: top
+cn: logilab
+memberUid: adim
+
+dn: cn=dir,ou=Group,dc=cubicweb,dc=test
+gidNumber: 2002
+objectClass: posixGroup
+objectClass: top
+cn: dir
+memberUid: adim
+memberUid: syt
+
 dn: uid=syt,ou=People,dc=cubicweb,dc=test
 loginShell: /bin/bash
 objectClass: OpenLDAPperson
