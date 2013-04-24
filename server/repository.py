@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -313,9 +313,7 @@ class Repository(object):
         source_config['type'] = type
         return sources.get_source(type, source_config, self, eid)
 
-    def set_schema(self, schema, resetvreg=True, rebuildinfered=True):
-        if rebuildinfered:
-            schema.rebuild_infered_relations()
+    def set_schema(self, schema, resetvreg=True):
         self.info('set schema %s %#x', schema.name, id(schema))
         if resetvreg:
             if self.config._cubes is None:
