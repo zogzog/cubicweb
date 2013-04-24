@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -17,7 +17,6 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unit tests for module cubicweb.server.migractions"""
 
-from copy import deepcopy
 from datetime import date
 from os.path import join
 
@@ -53,7 +52,6 @@ class MigrationCommandsTC(CubicWebTC):
         config = cls.config
         config._cubes = None
         cls.repo.fill_schema()
-        cls.origschema = deepcopy(cls.repo.schema)
         # hack to read the schema from data/migrschema
         config.appid = join('data', 'migratedapp')
         config._apphome = cls.datapath('migratedapp')
