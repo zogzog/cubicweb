@@ -65,12 +65,10 @@ class SkipEmail(Exception):
     """raise this if you decide to skip an email during its generation"""
 
 
-class BaseNotificationView(EntityView):
+class NotificationView(EntityView):
     """abstract view implementing the "email" API (eg to simplify sending
     notification)
     """
-    __abstract__ = True
-
     # XXX refactor this class to work with len(rset) > 1
 
     msgid_timestamp = True
@@ -162,9 +160,8 @@ class BaseNotificationView(EntityView):
         self._cw.vreg.config.sendmails([(msg, recipients)])
 
     def send_on_commit(self, recipients, msg):
-        raise NotImplementedError
-
-    send = send_now
+        SendMailOp(self._cw, recipients=recipients, msg=msg)
+    send = send_on_commit
 
     # email generation helpers #################################################
 
@@ -198,15 +195,6 @@ class BaseNotificationView(EntityView):
                        'url': entity.absolute_url(),
                        'title': entity.dc_long_title(),})
         return kwargs
-
-
-class NotificationView(BaseNotificationView):
-    """overriden to delay actual sending of mails to a commit operation by
-    default
-    """
-    def send_on_commit(self, recipients, msg):
-        SendMailOp(self._cw, recipients=recipients, msg=msg)
-    send = send_on_commit
 
 
 class StatusChangeMixIn(object):
