@@ -302,16 +302,16 @@ Each such store provides three methods for data import:
    ``subjtype`` and holds the type of the subject entity. For the example considered here,
    this comes to having [#]_::
 
-        store.relate(person.eid(), 'lives_in', location.eid(), subjtype=person.dc_type())
+        store.relate(person.eid(), 'lives_in', location.eid(), subjtype=person.cw_etype)
 
    If ``subjtype`` is not specified, then the store tries to infer the type of the subject.
    However, this doesn't always work, e.g. when there are several possible subject types
    for a given relation type. 
 
-.. [#] The ``dc_type`` method of an entity defined via ``create_entity`` returns
+.. [#] The ``cw_etype`` attribute of an entity defined via ``create_entity`` holds
        the type of the entity just created. This only works for entities defined via
        the stores in the CubicWeb's ``dataimport`` module. In the example considered
-       here, ``person.dc_type()`` returns ``'Person'``.
+       here, ``person.cw_etype`` holds ``'Person'``.
     
    All the other stores but ``SQLGenObjectStore`` ignore the ``kwargs`` parameters.
 
@@ -509,7 +509,7 @@ We define an import function, ``diseasome_import``, which does basically four th
      #. first, a table is created for each relation type, as in::
             
             ...
-            store.init_rtype_table(ent.dc_type(), rtype, extu.dc_type())
+            store.init_rtype_table(ent.cw_etype, rtype, extu.cw_etype)
             
         which comes down to lines such as::
             
