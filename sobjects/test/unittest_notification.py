@@ -85,7 +85,8 @@ class StatusChangeViewsTC(CubicWebTC):
     def test_status_change_view(self):
         req = self.request()
         u = self.create_user(req, 'toto')
-        u.cw_adapt_to('IWorkflowable').fire_transition('deactivate', comment=u'yeah')
+        iwfable = u.cw_adapt_to('IWorkflowable')
+        iwfable.fire_transition('deactivate', comment=u'yeah')
         self.assertFalse(MAILBOX)
         self.commit()
         self.assertEqual(len(MAILBOX), 1)
@@ -99,7 +100,8 @@ yeah
 
 url: http://testing.fr/cubicweb/cwuser/toto
 ''')
-        self.assertEqual(email.subject, 'status changed CWUser #%s (admin)' % u.eid)
+        self.assertEqual(email.subject,
+                         'status changed CWUser #%s (admin)' % u.eid)
 
 if __name__ == '__main__':
     unittest_main()
