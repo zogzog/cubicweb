@@ -22,7 +22,7 @@ import sys
 
 from lxml import etree
 
-from logilab.common.deprecation import class_deprecated
+from logilab.common.deprecation import class_deprecated, class_renamed
 
 from cubicweb.view import STRICT_DOCTYPE, TRANSITIONAL_DOCTYPE
 
@@ -79,11 +79,17 @@ class DTDValidator(Validator):
             STRICT_DOCTYPE, data)
 
 
-class SaxOnlyValidator(Validator):
+class XMLValidator(Validator):
+    """ A fully compliant XML parser """
 
     def __init__(self):
         Validator.__init__(self)
         self.parser = etree.XMLParser()
+
+SaxOnlyValidator = class_renamed('SaxOnlyValidator',
+                                 XMLValidator,
+                                 '[3.17] you should use the '
+                                 'XMLValidator class instead')
 
 
 class XMLDemotingValidator(SaxOnlyValidator):
