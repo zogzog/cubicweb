@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -28,16 +28,26 @@ from cubicweb.server import hook
 from cubicweb.sobjects.supervising import SupervisionMailOp
 
 
-@deprecated('[3.17] use ActualNotificationOp instead (using the 3.10 data API)')
+@deprecated('[3.17] use notify_on_commit instead')
 def RenderAndSendNotificationView(session, view, viewargs=None):
+    notify_on_commit(session, view, viewargs)
+
+
+def notify_on_commit(session, view, viewargs=None):
+    """register a notification view (see
+    :class:`~cubicweb.sobjects.notification.NotificationView`) to be sent at
+    post-commit time, ie only if the transaction has succeeded.
+
+    `viewargs` is an optional dictionary containing extra argument to be given
+    to :meth:`~cubicweb.sobjects.notification.NotificationView.render_and_send`
+    """
     if viewargs is None:
         viewargs = {}
-    notif_op = ActualNotificationOp.get_instance(session)
+    notif_op = __RenderAndSendNotificationOp.get_instance(session)
     notif_op.add_data((view, viewargs))
-    return ActualNotificationOp
 
 
-class ActualNotificationOp(hook.DataOperationMixIn, hook.Operation):
+class _RenderAndSendNotificationOp(hook.DataOperationMixIn, hook.Operation):
     """End of the notification chain. Do render and send views after commit
 
     All others Operations end up adding data to this Operation.
@@ -101,7 +111,7 @@ class StatusChangeHook(NotificationHook):
         # #103822)
         if comment and entity.comment_format != 'text/rest':
             comment = normalize_text(comment, 80)
-        notif_op = ActualNotificationOp.get_instance(self._cw)
+        notif_op = _RenderAndSendNotificationOp.get_instance(self._cw)
         viewargs = {'comment': comment,
                     'previous_state': entity.previous_state.name,
                     'current_state': entity.new_state.name}
@@ -121,7 +131,7 @@ class RelationChangeHook(NotificationHook):
                                 rset=rset, row=0)
         if view is None:
             return
-        notif_op = ActualNotificationOp.get_instance(self._cw)
+        notif_op = _RenderAndSendNotificationOp.get_instance(self._cw)
         notif_op.add_data((view, {}))
 
 
@@ -137,7 +147,7 @@ class EntityChangeHook(NotificationHook):
         view = self.select_view('notif_%s' % self.event, rset=rset, row=0)
         if view is None:
             return
-        notif_op = ActualNotificationOp.get_instance(self._cw)
+        notif_op = _RenderAndSendNotificationOp.get_instance(self._cw)
         notif_op.add_data((view, {}))
 
 
@@ -151,7 +161,7 @@ class EntityUpdatedNotificationOp(hook.SingleLastOperation):
             view = session.vreg['views'].select('notif_entity_updated', session,
                                                 rset=session.eid_rset(eid),
                                                 row=0)
-            notif_op = ActualNotificationOp.get_instance(self._cw)
+            notif_op = _RenderAndSendNotificationOp.get_instance(self._cw)
             notif_op.add_data((view, {}))
 
 
