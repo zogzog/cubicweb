@@ -488,7 +488,7 @@ class InOutWidget(Select):
   </tr>
 </table>
 """
-    add_button = ('<input type="button" id="cwinoutadd" class="wdgButton cwinoutadd" '
+    add_button = ('<input type="button" class="wdgButton cwinoutadd" '
                   'value="&gt;&gt;" size="10" />')
     remove_button = ('<input type="button" class="wdgButton cwinoutremove" '
                      'value="&lt;&lt;" size="10" />')
