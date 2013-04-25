@@ -44,7 +44,10 @@ but you'll use this one rarely.
 
 __docformat__ = "restructuredtext en"
 
+
 from warnings import warn
+
+import time
 
 from logilab.common import dictattr, tempattr
 from logilab.common.decorators import iclassmethod, cached
@@ -349,7 +352,9 @@ class EntityFieldsForm(FieldsForm):
         self.uicfg_affk = self._cw.vreg['uicfg'].select(
             'autoform_field_kwargs', self._cw, entity=self.edited_entity)
         self.add_hidden('__type', self.edited_entity.cw_etype, eidparam=True)
+
         self.add_hidden('eid', self.edited_entity.eid)
+        self.add_generation_time()
         # mainform default to true in parent, hence default to True
         if kwargs.get('mainform', True) or kwargs.get('mainentity', False):
             self.add_hidden(u'__maineid', self.edited_entity.eid)
@@ -362,6 +367,11 @@ class EntityFieldsForm(FieldsForm):
         if msg:
             msgid = self._cw.set_redirect_message(msg)
             self.add_hidden('_cwmsgid', msgid)
+
+    def add_generation_time(self):
+        # NB repr is critical to avoid truncation of the timestamp
+        self.add_hidden('__form_generation_time', repr(time.time()),
+                        eidparam=True)
 
     def add_linkto_hidden(self):
         """add the __linkto hidden field used to directly attach the new object

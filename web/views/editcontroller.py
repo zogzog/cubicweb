@@ -22,6 +22,8 @@ __docformat__ = "restructuredtext en"
 from warnings import warn
 from collections import defaultdict
 
+from datetime import datetime
+
 from logilab.common.deprecation import deprecated
 from logilab.common.graph import ordered_nodes
 
@@ -266,6 +268,7 @@ class EditController(basecontrollers.ViewController):
         if eid is None: # creation or copy
             entity.eid = eid = self._insert_entity(etype, formparams['eid'], rqlquery)
         elif rqlquery.edited: # edition of an existant entity
+            self.check_concurrent_edition(formparams, eid)
             self._update_entity(eid, rqlquery)
         if is_main_entity:
             self.notify_edited(entity)
@@ -361,6 +364,23 @@ class EditController(basecontrollers.ViewController):
             self._cw.set_message(self._cw._('entities deleted'))
         else:
             self._cw.set_message(self._cw._('entity deleted'))
+
+
+    def check_concurrent_edition(self, formparams, eid):
+        req = self._cw
+        try:
+            form_ts = datetime.fromtimestamp(float(formparams['__form_generation_time']))
+        except KeyError:
+            # Backward and tests compatibility : if no timestamp consider edition OK
+            return
+        if req.execute("Any X WHERE X modification_date > %(fts)s, X eid %(eid)s",
+                       {'eid': eid, 'fts': form_ts}):
+            # We only mark the message for translation but the actual
+            # translation will be handled by the Validation mechanism...
+            msg = _("Entity %(eid)s has changed since you started to edit it."
+                    " Reload the page and reapply your changes.")
+            # ... this is why we pass the formats' dict as a third argument.
+            raise ValidationError(eid, {None: msg}, {'eid' : eid})
 
     def _action_apply(self):
         self._default_publish()

@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: cubicweb 2.46.0\n"
-"PO-Revision-Date: 2012-02-15 16:08+0100\n"
+"PO-Revision-Date: 2014-06-24 13:29+0200\n"
 "Last-Translator: Logilab Team <contact@logilab.fr>\n"
 "Language-Team: fr <contact@logilab.fr>\n"
 "Language: \n"
@@ -485,6 +485,12 @@ msgstr "Adresses électroniques"
 
 msgid "Entities"
 msgstr "entités"
+
+#, python-format
+msgid ""
+"Entity %(eid)s has changed since you started to edit it. Reload the page and "
+"reapply your changes."
+msgstr "L'entité %(eid)s a été modifiée depuis votre demande d'édition. Veuillez recharger cette page et réappliquer vos changements."
 
 msgid "Entity and relation supported by this source"
 msgstr "Entités et relations supportés par cette source"

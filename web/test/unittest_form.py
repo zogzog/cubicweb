@@ -16,7 +16,10 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 
+import time
+
 from xml.etree.ElementTree import fromstring
+from lxml import html
 
 from logilab.common.testlib import unittest_main, mock_object
 
@@ -124,6 +127,24 @@ class EntityFieldsFormTC(CubicWebTC):
                                              rset=rset, row=0, rtype='content')
             data = form.render(row=0, rtype='content', formid='base', action='edit_rtype')
             self.assertIn('content_format', data)
+
+
+    def test_form_generation_time(self):
+        with self.admin_access.web_request() as req:
+            e = req.create_entity('BlogEntry', title=u'cubicweb.org', content=u"hop")
+            expected_field_name = '__form_generation_time:%d' % e.eid
+
+            ts_before = time.time()
+            form = self.vreg['forms'].select('edition', req, entity=e)
+            ts_after = time.time()
+
+            data = []
+            form.render(action='edit', w=data.append)
+            html_form = html.fromstring(''.join(data)).forms[0]
+            fields = dict(html_form.form_values())
+            self.assertIn(expected_field_name, fields)
+            ts = float(fields[expected_field_name])
+            self.assertTrue(ts_before < ts  < ts_after)
 
 
     # form tests ##############################################################
