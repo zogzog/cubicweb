@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -93,6 +93,7 @@ class XMLDemotingValidator(SaxOnlyValidator):
     which do not produce valid xhtml (google maps, ...)
     """
     __metaclass__ = class_deprecated
+    __deprecation_warning__ = '[3.10] this is now handled in testlib.py'
 
     def preprocess_data(self, data):
         if data.startswith('<?xml'):
