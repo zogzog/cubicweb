@@ -30,6 +30,7 @@ from cubicweb.entity import Entity
 from cubicweb.view import Component, EntityView
 from cubicweb.server.hook import SendMailOp
 from cubicweb.mail import construct_message_id, format_mail
+from cubicweb.server.session import Session
 
 
 class RecipientsFinder(Component):
@@ -118,7 +119,7 @@ class NotificationView(EntityView):
         for something in recipients:
             if isinstance(something, Entity):
                 # hi-jack self._cw to get a session for the returned user
-                self._cw = self._cw.hijack_user(something)
+                self._cw = Session(self._cw.repo, something)
                 emailaddr = something.cw_adapt_to('IEmailable').get_email()
             else:
                 emailaddr, lang = something
