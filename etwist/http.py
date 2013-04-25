@@ -8,8 +8,6 @@
 
 __docformat__ = "restructuredtext en"
 
-from cubicweb.web.http_headers import Headers
-
 class HTTPResponse(object):
     """An object representing an HTTP Response to be sent to the client.
     """

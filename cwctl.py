@@ -836,7 +836,6 @@ class ListVersionsInstanceCommand(InstanceCommand):
     name = 'versions'
 
     def versions_instance(self, appid):
-        from logilab.common.changelog import Version
         config = cwcfg.config_for(appid)
         # should not raise error if db versions don't match fs versions
         config.repairing = True

@@ -28,15 +28,14 @@ import glob
 import warnings
 from hashlib import sha1 # pylint: disable=E0611
 from datetime import timedelta
-from os.path import (abspath, join, exists, basename, dirname, normpath, split,
-                     isfile, isabs, splitext, isdir, expanduser)
+from os.path import (abspath, join, exists, split, isabs, isdir)
 from functools import partial
 
 from logilab.common.date import strptime
 from logilab.common.decorators import cached, clear_cache
 
-from cubicweb import ConfigurationError, ExecutionError, BadConnectionId
-from cubicweb import CW_SOFTWARE_ROOT, schema, cwconfig
+from cubicweb import ExecutionError, BadConnectionId
+from cubicweb import schema, cwconfig
 from cubicweb.server.serverconfig import ServerConfiguration
 from cubicweb.etwist.twconfig import TwistedConfiguration
 

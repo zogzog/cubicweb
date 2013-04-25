@@ -20,7 +20,7 @@
 import httplib
 
 from logilab.common.testlib import Tags
-from cubicweb.devtools.httptest import CubicWebServerTC, CubicWebServerConfig
+from cubicweb.devtools.httptest import CubicWebServerTC
 
 
 class TwistedCWAnonTC(CubicWebServerTC):

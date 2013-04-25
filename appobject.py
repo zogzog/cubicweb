@@ -34,7 +34,6 @@ __docformat__ = "restructuredtext en"
 from logging import getLogger
 
 from logilab.common.deprecation import deprecated, class_renamed
-from logilab.common.decorators import classproperty
 from logilab.common.logging_ext import set_log_methods
 
 # first line imports for bw compat

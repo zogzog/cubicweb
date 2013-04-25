@@ -23,8 +23,6 @@ __docformat__ = "restructuredtext en"
 from urlparse import urlsplit, urlunsplit
 from datetime import datetime
 
-from logilab.common.deprecation import deprecated
-
 from cubicweb import UnknownProperty
 from cubicweb.entity import _marker
 from cubicweb.entities import AnyEntity, fetch_config

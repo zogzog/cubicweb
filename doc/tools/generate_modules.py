@@ -19,8 +19,6 @@
 
 """
 
-import sys
-
 EXCLUDE_DIRS = ('test', 'tests', 'examples', 'data', 'doc', 'dist',
                 '.hg', 'migration')
 if __name__ == '__main__':

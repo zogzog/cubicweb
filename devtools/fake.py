@@ -25,7 +25,6 @@ from logilab.database import get_db_helper
 from cubicweb.req import RequestSessionBase
 from cubicweb.cwvreg import CWRegistryStore
 from cubicweb.web.request import CubicWebRequestBase
-from cubicweb.web.http_headers import Headers
 
 from cubicweb.devtools import BASE_URL, BaseApptestConfiguration
 

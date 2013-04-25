@@ -26,12 +26,11 @@ from warnings import warn
 
 from logilab.mtconverter import TransformError
 from logilab.common.decorators import cached
-from logilab.common.deprecation import class_deprecated
 
 from cubicweb import ValidationError, view
 from cubicweb.predicates import (implements, is_instance, relation_possible,
                                 match_exception)
-from cubicweb.interfaces import IDownloadable, ITree, IProgress, IMileStone
+from cubicweb.interfaces import IDownloadable, ITree
 
 
 class IEmailableAdapter(view.EntityAdapter):

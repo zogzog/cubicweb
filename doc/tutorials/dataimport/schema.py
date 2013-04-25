@@ -18,7 +18,6 @@
 """cubicweb-diseasome schema"""
 
 from yams.buildobjs import EntityType, SubjectRelation, String, Int
-from cubicweb.schemas.base import ExternalUri
 
 
 class Disease(EntityType):

@@ -24,7 +24,6 @@
 
 __docformat__ = "restructuredtext en"
 
-from warnings import warn
 
 from logilab.common.decorators import cached, clear_cache
 from logilab.common.deprecation import deprecated

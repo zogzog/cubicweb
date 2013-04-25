@@ -18,12 +18,10 @@
 """unit tests for cubicweb.devtools.fill module
 
 """
+import re
 
 from logilab.common.testlib import TestCase, unittest_main
 
-from cubicweb.schema import Schema, EntitySchema
-
-import re
 from cubicweb.devtools.fill import ValueGenerator, _ValueGenerator
 
 ISODATE_SRE = re.compile('(?P<year>\d{4})-(?P<month>\d{2})-(?P<day>\d{2})$')

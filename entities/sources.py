@@ -27,7 +27,6 @@ from logilab.common.textutils import text_to_dict
 from logilab.common.configuration import OptionError
 from logilab.mtconverter import xml_escape
 
-from cubicweb import ValidationError
 from cubicweb.entities import AnyEntity, fetch_config
 
 class _CWSourceCfgMixIn(object):

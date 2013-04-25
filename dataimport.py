@@ -75,7 +75,6 @@ import cPickle
 import os.path as osp
 import inspect
 from collections import defaultdict
-from contextlib import contextmanager
 from copy import copy
 from datetime import date, datetime
 from time import asctime

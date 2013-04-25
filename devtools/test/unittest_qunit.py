@@ -1,5 +1,5 @@
 from logilab.common.testlib import unittest_main
-from cubicweb.devtools.qunit import make_qunit_html, QUnitTestCase
+from cubicweb.devtools.qunit import QUnitTestCase
 
 from os import path as osp
 

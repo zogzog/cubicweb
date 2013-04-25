@@ -26,7 +26,7 @@ from logilab.common import interface
 from logilab.common.decorators import cached
 from logilab.common.deprecation import deprecated
 from logilab.common.registry import yes
-from logilab.mtconverter import TransformData, TransformError, xml_escape
+from logilab.mtconverter import TransformData, xml_escape
 
 from rql.utils import rqlvar_maker
 from rql.stmts import Select

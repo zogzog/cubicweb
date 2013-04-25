@@ -19,10 +19,8 @@
 
 __docformat__ = "restructuredtext en"
 
-from warnings import warn
 
-from logilab.common.deprecation import deprecated
-from logilab.common.decorators import cached, classproperty
+from logilab.common.decorators import classproperty
 
 from cubicweb import Unauthorized
 from cubicweb.entity import Entity

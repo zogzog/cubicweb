@@ -18,7 +18,6 @@
 """this module contains base classes and utilities for cubicweb tests"""
 __docformat__ = "restructuredtext en"
 
-import os
 import sys
 import re
 import urlparse
@@ -40,15 +39,14 @@ from logilab.common.decorators import cached, classproperty, clear_cache, iclass
 from logilab.common.deprecation import deprecated, class_deprecated
 from logilab.common.shellutils import getlogin
 
-from cubicweb import ValidationError, NoSelectableObject, AuthenticationError
+from cubicweb import ValidationError, NoSelectableObject
 from cubicweb import cwconfig, dbapi, devtools, web, server
 from cubicweb.utils import json
 from cubicweb.sobjects import notification
 from cubicweb.web import Redirect, application
-from cubicweb.server.session import Session
 from cubicweb.server.hook import SendMailOp
 from cubicweb.devtools import SYSTEM_ENTITIES, SYSTEM_RELATIONS, VIEW_VALIDATORS
-from cubicweb.devtools import BASE_URL, fake, htmlparser, DEFAULT_EMPTY_DB_ID
+from cubicweb.devtools import fake, htmlparser, DEFAULT_EMPTY_DB_ID
 from cubicweb.utils import json
 
 # low-level utilities ##########################################################

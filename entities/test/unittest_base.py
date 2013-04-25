@@ -25,7 +25,6 @@ from logilab.common.interface import implements
 
 from cubicweb.devtools.testlib import CubicWebTC
 
-from cubicweb import ValidationError
 from cubicweb.interfaces import IMileStone, ICalendarable
 from cubicweb.entities import AnyEntity
 

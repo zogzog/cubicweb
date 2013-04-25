@@ -19,14 +19,8 @@
 
 __docformat__ = "restructuredtext en"
 
-from datetime import datetime
 
-from twisted.web import http
-
-from cubicweb.web import DirectResponse
 from cubicweb.web.request import CubicWebRequestBase
-from cubicweb.web.httpcache import GMTOFFSET
-from cubicweb.web.http_headers import Headers
 
 
 class CubicWebTwistedRequestAdapter(CubicWebRequestBase):
