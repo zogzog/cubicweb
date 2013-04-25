@@ -174,48 +174,60 @@ function initFacetBoxEvents(root) {
                 $($('#'+divid).get(0).parentNode).append($loadingDiv);
             }
             form.find('div.facet').each(function() {
-                var facet = $(this);
-                facet.find('div.facetCheckBox').each(function(i) {
+                var $facet = $(this);
+                $facet.find('div.facetCheckBox').each(function(i) {
                     this.setAttribute('cubicweb:idx', i);
                 });
-                facet.find('div.facetCheckBox').click(function() {
+                $facet.find('div.facetCheckBox').click(function() {
                     var $this = $(this);
                     // NOTE : add test on the facet operator (i.e. OR, AND)
                     // if ($this.hasClass('facetValueDisabled')){
                     //          return
                     // }
                     if ($this.hasClass('facetValueSelected')) {
-                        $this.removeClass('facetValueSelected');
-                        $this.find('img').each(function(i) {
-                            if (this.getAttribute('cubicweb:unselimg')) {
-                                this.setAttribute('src', UNSELECTED_BORDER_IMG);
-                            }
-                            else {
-                                this.setAttribute('src', UNSELECTED_IMG);
-                            }
-                            this.setAttribute('alt', (_("not selected")));
-                        });
+                        facetCheckBoxUnselect($this);
                     } else {
-                        $(this).addClass('facetValueSelected');
-                        var $img = $(this).find('img');
-                        $img.attr('src', SELECTED_IMG).attr('alt', (_("selected")));
+                        facetCheckBoxSelect($this);
                     }
-                    facetCheckBoxReorder(facet);
+                    facetCheckBoxReorder($facet);
                     buildRQL.apply(null, jsfacetargs);
                 });
-                facet.find('select.facetOperator').change(function() {
-                    var nbselected = facet.find('div.facetValueSelected').length;
+                $facet.find('select.facetOperator').change(function() {
+                    var nbselected = $facet.find('div.facetValueSelected').length;
                     if (nbselected >= 2) {
                         buildRQL.apply(null, jsfacetargs);
                     }
                 });
-                facet.find('div.facetTitle.hideFacetBody').click(function() {
-                    facet.find('div.facetBody').toggleClass('hidden').toggleClass('opened');
+                $facet.find('div.facetTitle.hideFacetBody').click(function() {
+                    $facet.find('div.facetBody').toggleClass('hidden').toggleClass('opened');
                     $(this).toggleClass('opened');
+
                 });
 
             });
         }
+    });
+}
+
+// facetCheckBoxSelect: select the given facet checkbox item (.facetValue
+// class)
+function facetCheckBoxSelect($item) {
+    $item.addClass('facetValueSelected');
+    $item.find('img').attr('src', SELECTED_IMG).attr('alt', (_("selected")));
+}
+
+// facetCheckBoxUnselect: unselect the given facet checkbox item (.facetValue
+// class)
+function facetCheckBoxUnselect($item) {
+    $item.removeClass('facetValueSelected');
+    $item.find('img').each(function(i) {
+        if (this.getAttribute('cubicweb:unselimg')) {
+            this.setAttribute('src', UNSELECTED_BORDER_IMG);
+        }
+        else {
+            this.setAttribute('src', UNSELECTED_IMG);
+        }
+        this.setAttribute('alt', (_("not selected")));
     });
 }
 
