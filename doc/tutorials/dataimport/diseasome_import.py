@@ -86,7 +86,7 @@ def diseasome_import(session, file_name, store):
         ent = store.create_entity(etype, **entity)
         if not _is_of_class(store, 'MassiveObjectStore'):
             uri_to_eid[uri] = ent.eid
-            uri_to_etype[uri] = ent.dc_type()
+            uri_to_etype[uri] = ent.cw_etype
         else:
             uri_to_eid[uri] = uri
             uri_to_etype[uri] = etype
