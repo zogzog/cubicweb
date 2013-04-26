@@ -212,45 +212,52 @@ class Repository(object):
         """should be called bootstrap_repository, as this is what it does"""
         config = self.config
         self._cnxsets_pool = Queue.Queue()
+        # 0. init a cnxset that will be used to fetch bootstrap information from
+        #    the database
         self._cnxsets_pool.put_nowait(pool.ConnectionsSet(self.sources))
+        # 1. set used cubes
+        if config.creating or not config.read_instance_schema:
+            config.bootstrap_cubes()
+        else:
+            self.set_schema(self.config.load_bootstrap_schema(), resetvreg=False)
+            config.init_cubes(self.get_cubes())
+        # 2. load schema
         if config.quick_start:
             # quick start: only to get a minimal repository to get cubes
             # information (eg dump/restore/...)
-            config._cubes = ()
-            # only load hooks and entity classes in the registry
+            #
+            # restrict appobject_path to only load hooks and entity classes in
+            # the registry
             config.cube_appobject_path = set(('hooks', 'entities'))
             config.cubicweb_appobject_path = set(('hooks', 'entities'))
-            self.set_schema(config.load_schema())
+            # limit connections pool to 1
             config['connections-pool-size'] = 1
-            # will be reinitialized later from cubes found in the database
-            config._cubes = None
-        elif config.creating or not config.read_instance_schema:
+        if config.quick_start or config.creating or not config.read_instance_schema:
+            # load schema from the file system
             if not config.creating:
-                # test start: use the file system schema (quicker)
                 self.warning("set fs instance'schema")
-            config.bootstrap_cubes()
             self.set_schema(config.load_schema())
         else:
             # normal start: load the instance schema from the database
-            self.fill_schema()
-        if not config.creating:
-            self.init_sources_from_database()
-            if 'CWProperty' in self.schema:
-                self.vreg.init_properties(self.properties())
-        else:
+            self.info('loading schema from the repository')
+            self.set_schema(self.deserialize_schema())
+        # 3. initialize data sources
+        if config.creating:
             # call init_creating so that for instance native source can
             # configurate tsearch according to postgres version
             for source in self.sources:
                 source.init_creating()
-        # close initialization connetions set and reopen fresh ones for proper
-        # initialization now that we know cubes
+        else:
+            self.init_sources_from_database()
+            if 'CWProperty' in self.schema:
+                self.vreg.init_properties(self.properties())
+        # 4. close initialization connection set and reopen fresh ones for
+        #    proper initialization
         self._get_cnxset().close(True)
         self.cnxsets = [] # list of available cnxsets (can't iterate on a Queue)
         for i in xrange(config['connections-pool-size']):
             self.cnxsets.append(pool.ConnectionsSet(self.sources))
             self._cnxsets_pool.put_nowait(self.cnxsets[-1])
-        if config.quick_start:
-            config.init_cubes(self.get_cubes())
 
     # internals ###############################################################
 
@@ -318,8 +325,6 @@ class Repository(object):
     def set_schema(self, schema, resetvreg=True):
         self.info('set schema %s %#x', schema.name, id(schema))
         if resetvreg:
-            if self.config._cubes is None:
-                self.config.init_cubes(self.get_cubes())
             # trigger full reload of all appobjects
             self.vreg.set_schema(schema)
         else:
@@ -331,12 +336,10 @@ class Repository(object):
             source.set_schema(schema)
         self.schema = schema
 
-    def fill_schema(self):
-        """load schema from the repository"""
+    def deserialize_schema(self):
+        """load schema from the database"""
         from cubicweb.server.schemaserial import deserialize_schema
-        self.info('loading schema from the repository')
         appschema = schema.CubicWebSchema(self.config.appid)
-        self.set_schema(self.config.load_bootstrap_schema(), resetvreg=False)
         self.debug('deserializing db schema into %s %#x', appschema.name, id(appschema))
         with self.internal_session() as session:
             try:
@@ -349,8 +352,7 @@ class Repository(object):
                 raise Exception('Is the database initialised ? (cause: %s)' %
                                 (ex.args and ex.args[0].strip() or 'unknown')), \
                                 None, sys.exc_info()[-1]
-        self.set_schema(appschema)
-
+        return appschema
 
     def _prepare_startup(self):
         """Prepare "Repository as a server" for startup.

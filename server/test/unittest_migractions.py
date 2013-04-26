@@ -49,10 +49,9 @@ class MigrationCommandsTC(CubicWebTC):
     def _init_repo(cls):
         super(MigrationCommandsTC, cls)._init_repo()
         # we have to read schema from the database to get eid for schema entities
-        config = cls.config
-        config._cubes = None
-        cls.repo.fill_schema()
+        cls.repo.set_schema(cls.repo.deserialize_schema(), resetvreg=False)
         # hack to read the schema from data/migrschema
+        config = cls.config
         config.appid = join('data', 'migratedapp')
         config._apphome = cls.datapath('migratedapp')
         global migrschema

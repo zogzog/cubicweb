@@ -370,8 +370,12 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
     def backup(self, backupfile, confirm, format='native'):
         """method called to create a backup of the source's data"""
         if format == 'portable':
-            self.repo.fill_schema()
-            self.set_schema(self.repo.schema)
+            # ensure the schema is the one stored in the database: if repository
+            # started in quick_start mode, the file system's one has been loaded
+            # so force reload
+            if self.repo.config.quick_start:
+                self.repo.set_schema(self.repo.deserialize_schema(),
+                                     resetvreg=False)
             helper = DatabaseIndependentBackupRestore(self)
             self.close_source_connections()
             try:

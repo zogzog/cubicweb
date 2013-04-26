@@ -571,13 +571,17 @@ class SchemaDeserialTC(CubicWebTC):
         helper.TYPE_CONVERTERS.pop('BabarTestType', None)
         super(SchemaDeserialTC, cls).tearDownClass()
 
-    def test_fill_schema(self):
+    def test_deserialization_base(self):
+        """Check the following deserialization
+
+        * all CWEtype has name
+        * Final type
+        * CWUniqueTogetherConstraint
+        * _unique_together__ content"""
         origshema = self.repo.schema
         try:
-            self.repo.schema = CubicWebSchema(self.repo.config.appid)
-            self.repo.config._cubes = None # avoid assertion error
             self.repo.config.repairing = True # avoid versions checking
-            self.repo.fill_schema()
+            self.repo.set_schema(self.repo.deserialize_schema())
             table = SQL_PREFIX + 'CWEType'
             namecol = SQL_PREFIX + 'name'
             finalcol = SQL_PREFIX + 'final'
@@ -617,10 +621,8 @@ class SchemaDeserialTC(CubicWebTC):
     def test_custom_attribute_param(self):
         origshema = self.repo.schema
         try:
-            self.repo.schema = CubicWebSchema(self.repo.config.appid)
-            self.repo.config._cubes = None # avoid assertion error
             self.repo.config.repairing = True # avoid versions checking
-            self.repo.fill_schema()
+            self.repo.set_schema(self.repo.deserialize_schema())
             pes = self.repo.schema['Personne']
             attr = pes.rdef('custom_field_of_jungle')
             self.assertIn('jungle_speed', vars(attr))
