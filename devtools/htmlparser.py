@@ -35,8 +35,7 @@ class Validator(object):
 
     def parse_string(self, data, sysid=None):
         try:
-            data = self.preprocess_data(data)
-            return PageInfo(data, etree.fromstring(data, self.parser))
+            return PageInfo(self, data)
         except etree.XMLSyntaxError as exc:
             def save_in(fname=''):
                 file(fname, 'w').write(data)
@@ -119,8 +118,9 @@ class HTMLValidator(Validator):
 
 class PageInfo(object):
     """holds various informations on the view's output"""
-    def __init__(self, source, root):
+    def __init__(self, validator, source):
         self.source = source
+        root = etree.fromstring(validator.preprocess_data(source), validator.parser)
         self.etree = root
         self.source = source
         self.raw_text = u''.join(root.xpath('//text()'))
