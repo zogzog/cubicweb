@@ -13,6 +13,9 @@ New functionalities
 * Add directive bookmark to ReST rendering
   (see `#2545595 <http://www.cubicweb.org/ticket/2545595>`_)
 
+* Allow user defined final type
+  (see `#124342 <https://www.logilab.org/ticket/124342>`_)
+
 
 API changes
 -----------
@@ -34,6 +37,9 @@ API changes
 
 * Looping task can now have a interval <= ``0``. Negative interval disable the
   looping task entirely.
+
+* We now serve html instead of xhtml.
+  (see `#2065651 <http://www.cubicweb.org/ticket/2065651>`_)
 
 
 Deprecation
