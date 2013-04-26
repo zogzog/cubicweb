@@ -170,13 +170,6 @@ class WebConfiguration(CubicWebConfiguration):
           'transparent to the user. Default to 5min.',
           'group': 'web', 'level': 3,
           }),
-        ('force-html-content-type',
-         {'type' : 'yn',
-          'default': False,
-          'help': 'force text/html content type for your html pages instead of cubicweb user-agent based'\
-          'deduction of an appropriate content type',
-          'group': 'web', 'level': 3,
-          }),
         ('embed-allowed',
          {'type' : 'regexp',
           'default': None,

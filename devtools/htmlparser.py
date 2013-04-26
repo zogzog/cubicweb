@@ -39,7 +39,7 @@ class Validator(object):
         except etree.XMLSyntaxError as exc:
             def save_in(fname=''):
                 file(fname, 'w').write(data)
-            new_exc = AssertionError(u'invalid xml %s' % exc)
+            new_exc = AssertionError(u'invalid document: %s' % exc)
             new_exc.position = exc.position
             raise new_exc
 

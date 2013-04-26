@@ -543,7 +543,8 @@ function postForm(bname, bvalue, formid) {
  *
  * .. note::
  *
- *    this is a hack to make the XHTML compliant.
+ *    This was a hack to make form loop handling XHTML compliant.
+ *    Since we do not care about xhtml any longer, this may go away.
  *
  * .. note::
  *
@@ -551,8 +552,10 @@ function postForm(bname, bvalue, formid) {
  *
  * .. note::
  *
- *    there is a XHTML module allowing iframe elements but there
- *    is still the problem of the form's `target` attribute
+ *    The form's `target` attribute should probably become a simple data-target
+ *    immediately generated server-side.
+ *    Since we don't do xhtml any longer, the iframe should probably be either
+ *    reconsidered or at least emitted server-side.
  */
 function setFormsTarget(node) {
     var $node = jQuery(node || document.body);

@@ -566,11 +566,6 @@ class AjaxControllerTC(CubicWebTC):
         rset = self.john.as_rset()
         rset.req = req
         source = ctrl.publish()
-        self.assertTrue(source.startswith('<?xml version="1.0"?>\n' + STRICT_DOCTYPE +
-                                          u'<div xmlns="http://www.w3.org/1999/xhtml" xmlns:cubicweb="http://www.logilab.org/2008/cubicweb">')
-                        )
-        req.xhtml_browser = lambda: False
-        source = ctrl.publish()
         self.assertTrue(source.startswith('<div>'))
 
 #     def test_json_exec(self):
@@ -744,9 +739,7 @@ class JSonControllerTC(AjaxControllerTC):
         def js_foo(self):
             return u'hello'
         res, req = self.remote_call('foo')
-        self.assertEqual(res,
-                         '<?xml version="1.0"?>\n' + STRICT_DOCTYPE +
-                         u'<div xmlns="http://www.w3.org/1999/xhtml" xmlns:cubicweb="http://www.logilab.org/2008/cubicweb">hello</div>')
+        self.assertEqual(u'<div>hello</div>', res)
 
     def test_monkeypatch_jsoncontroller_jsonize(self):
         self.assertRaises(RemoteCallFailed, self.remote_call, 'foo')

@@ -146,7 +146,7 @@ class IDownloadableTC(CubicWebTC):
         finally:
             self.app.error_handler = errhdlr
         get = req.headers_out.getRawHeaders
-        self.assertEqual(['application/xhtml+xml'],
+        self.assertEqual(['text/html;charset=UTF-8'],
                          get('content-type'))
         self.assertEqual(None,
                          get('content-disposition'))

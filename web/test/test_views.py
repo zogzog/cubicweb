@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """automatic tests"""
-
+from cubicweb.devtools import htmlparser
 from cubicweb.devtools.testlib import CubicWebTC, AutoPopulateTest, AutomaticWebTest
 from cubicweb.view import AnyRsetView
 
@@ -51,7 +51,7 @@ class ManualCubicWebTCs(AutoPopulateTest):
         self.assertFalse('jquery.tablesorter.js' in self.view('oneline', rset))
         # but should be included by the tableview
         rset = self.execute('Any P,F,S LIMIT 1 WHERE P is CWUser, P firstname F, P surname S')
-        self.assertTrue('jquery.tablesorter.js' in self.view('table', rset))
+        self.assertIn('jquery.tablesorter.js', self.view('table', rset).source)
 
     def test_js_added_only_once(self):
         self.vreg._loadedmods[__name__] = {}
