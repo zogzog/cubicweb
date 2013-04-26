@@ -25,16 +25,31 @@ from logilab.common.testlib import TestCase, unittest_main
 from cubicweb.schema import CubicWebSchemaLoader
 from cubicweb.devtools import TestServerConfiguration
 
+from logilab.database import get_db_helper
+from yams import register_base_type, unregister_base_type
+
 def setUpModule(*args):
+    register_base_type('BabarTestType', ('jungle_speed',))
+    helper = get_db_helper('sqlite')
+    helper.TYPE_MAPPING['BabarTestType'] = 'TEXT'
+    helper.TYPE_CONVERTERS['BabarTestType'] = lambda x: '"%s"' % x
+
     global schema, config
     loader = CubicWebSchemaLoader()
-    config = TestServerConfiguration('data', apphome=Schema2RQLTC.datadir)
+    apphome = Schema2RQLTC.datadir + '-schemaserial'
+    config = TestServerConfiguration('data', apphome=apphome)
     config.bootstrap_cubes()
     schema = loader.load(config)
+
 
 def tearDownModule(*args):
     global schema, config
     del schema, config
+
+    unregister_base_type('BabarTestType')
+    helper = get_db_helper('sqlite')
+    helper.TYPE_MAPPING.pop('BabarTestType', None)
+    helper.TYPE_CONVERTERS.pop('BabarTestType', None)
 
 from cubicweb.server.schemaserial import *
 from cubicweb.server.schemaserial import _erperms2rql as erperms2rql
@@ -71,6 +86,13 @@ class Schema2RQLTC(TestCase):
                                 {'et': None, 'x': None}),
                                ('SET X specializes ET WHERE X eid %(x)s, ET eid %(et)s',
                                 {'et': None, 'x': None})])
+
+    def test_esche2rql_custom_type(self):
+        expected = [('INSERT CWEType X: X description %(description)s,X final %(final)s,X name %(name)s',
+                     {'description': u'',
+                     'name': u'BabarTestType', 'final': True},)]
+        got = list(eschema2rql(schema.eschema('BabarTestType')))
+        self.assertListEqual(expected, got)
 
     def test_rschema2rql1(self):
         self.assertListEqual(list(rschema2rql(schema.rschema('relation_type'), cstrtypemap)),
@@ -135,6 +157,42 @@ class Schema2RQLTC(TestCase):
             ('INSERT CWConstraint X: X value %(value)s, X cstrtype CT, EDEF constrained_by X WHERE CT eid %(ct)s, EDEF eid %(x)s',
              {'x': None, 'ct': u'StaticVocabularyConstraint_eid', 'value': u"u'?*', u'1*', u'+*', u'**', u'?+', u'1+', u'++', u'*+', u'?1', u'11', u'+1', u'*1', u'??', u'1?', u'+?', u'*?'"}),
             ])
+
+    def test_rschema2rql_custom_type(self):
+        expected = [('INSERT CWRType X: X description %(description)s,X final %(final)s,'
+                     'X fulltext_container %(fulltext_container)s,X inlined %(inlined)s,'
+                     'X name %(name)s,X symmetric %(symmetric)s',
+                     {'description': u'',
+                      'final': True,
+                      'fulltext_container': None,
+                      'inlined': False,
+                      'name': u'custom_field_of_jungle',
+                      'symmetric': False}),
+                     ('INSERT CWAttribute X: X cardinality %(cardinality)s,'
+                      'X defaultval %(defaultval)s,X description %(description)s,'
+                      'X extra_props %(extra_props)s,X indexed %(indexed)s,'
+                      'X ordernum %(ordernum)s,X relation_type ER,X from_entity SE,'
+                      'X to_entity OE WHERE SE eid %(se)s,ER eid %(rt)s,OE eid %(oe)s',
+                      {'cardinality': u'?1',
+                       'defaultval': None,
+                       'description': u'',
+                       'extra_props': '{"jungle_speed": 42}',
+                       'indexed': False,
+                       'oe': None,
+                       'ordernum': 19,
+                       'rt': None,
+                       'se': None})]
+
+        got = list(rschema2rql(schema.rschema('custom_field_of_jungle'), cstrtypemap))
+        self.assertEqual(2, len(got))
+        # this is a custom type attribute with an extra parameter
+        self.assertIn('extra_props', got[1][1])
+        # this extr
+        extra_props = got[1][1]['extra_props']
+        from cubicweb import Binary
+        self.assertIsInstance(extra_props, Binary)
+        got[1][1]['extra_props'] = got[1][1]['extra_props'].getvalue()
+        self.assertListEqual(expected, got)
 
     def test_rdef2rql(self):
         self.assertListEqual(list(rdef2rql(schema['description_format'].rdefs[('CWRType', 'String')], cstrtypemap)),

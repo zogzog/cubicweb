@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -186,7 +186,7 @@ class SchemaReaderClassTest(TestCase):
                               'data', 'data_encoding', 'data_format', 'data_name', 'default_workflow', 'defaultval', 'delete_permission',
                               'description', 'description_format', 'destination_state', 'dirige',
 
-                              'ecrit_par', 'eid', 'end_timestamp', 'evaluee', 'expression', 'exprtype',
+                              'ecrit_par', 'eid', 'end_timestamp', 'evaluee', 'expression', 'exprtype', 'extra_props',
 
                               'fabrique_par', 'final', 'firstname', 'for_user', 'fournit',
                               'from_entity', 'from_state', 'fulltext_container', 'fulltextindexed',

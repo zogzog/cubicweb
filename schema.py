@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -90,11 +90,9 @@ INTERNAL_TYPES = set(('CWProperty', 'CWCache', 'ExternalUri',
 
 _LOGGER = getLogger('cubicweb.schemaloader')
 
-# schema entities created from serialized schema have an eid rproperty
+# entity and relation schema created from serialized schema have an eid
 ybo.ETYPE_PROPERTIES += ('eid',)
 ybo.RTYPE_PROPERTIES += ('eid',)
-ybo.RDEF_PROPERTIES += ('eid',)
-
 
 PUB_SYSTEM_ENTITY_PERMS = {
     'read':   ('managers', 'users', 'guests',),
@@ -296,6 +294,9 @@ PermissionMixIn.check_perm = check_perm
 
 
 RelationDefinitionSchema._RPROPERTIES['eid'] = None
+# remember rproperties defined at this point. Others will have to be serialized in
+# CWAttribute.extra_props
+KNOWN_RPROPERTIES = RelationDefinitionSchema.ALL_PROPERTIES()
 
 def rql_expression(self, expression, mainvars=None, eid=None):
     """rql expression factory"""
