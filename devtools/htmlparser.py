@@ -108,12 +108,50 @@ class XMLDemotingValidator(SaxOnlyValidator):
         return data
 
 
+REM_SCRIPT_RGX = re.compile(r"<script[^>]*>.*?</script>", re.U|re.M|re.I|re.S)
+
 class HTMLValidator(Validator):
 
     def __init__(self):
         Validator.__init__(self)
-        self.parser = etree.HTMLParser()
+        self.parser = etree.HTMLParser(recover=False)
 
+    def preprocess_data(self, data):
+        """ Here we essentially wipe the javascript tags to help the HTMLParser
+        do its job. Without that, it chokes on tags embedded in JS strings.
+        """
+        # Notice we may want to use lxml cleaner, but it's far too intrusive:
+        #
+        # cleaner = Cleaner(scripts=True,
+        #                   javascript=False,
+        #                   comments=False,
+        #                   style=False,
+        #                   links=False,
+        #                   meta=False,
+        #                   page_structure=False,
+        #                   processing_instructions=False,
+        #                   embedded=False,
+        #                   frames=False,
+        #                   forms=False,
+        #                   annoying_tags=False,
+        #                   remove_tags=(),
+        #                   remove_unknown_tags=False,
+        #                   safe_attrs_only=False,
+        #                   add_nofollow=False)
+        # >>> cleaner.clean_html('<body></body>')
+        # '<span></span>'
+        # >>> cleaner.clean_html('<!DOCTYPE html><body></body>')
+        # '<html><body></body></html>'
+        # >>> cleaner.clean_html('<body><div/></body>')
+        # '<div></div>'
+        # >>> cleaner.clean_html('<html><body><div/><br></body><html>')
+        # '<html><body><div></div><br></body></html>'
+        # >>> cleaner.clean_html('<html><body><div/><br><span></body><html>')
+        # '<html><body><div></div><br><span></span></body></html>'
+        #
+        # using that, we'll miss most actual validation error we want to
+        # catch. For now, use dumb regexp
+        return REM_SCRIPT_RGX.sub('', data)
 
 
 class PageInfo(object):
