@@ -60,9 +60,9 @@ class MessageIdTC(TestCase):
             msgid1 = construct_message_id('testapp', eid, 12)
             self.assertNotEqual(msgid1, '<@testapp.%s>' % gethostname())
 
+class NotificationTC(CubicWebTC):
 
-class RecipientsFinderTC(CubicWebTC):
-    def test(self):
+    def test_recipients_finder(self):
         urset = self.execute('CWUser X WHERE X login "admin"')
         self.execute('INSERT EmailAddress X: X address "admin@logilab.fr", U primary_email X '
                      'WHERE U eid %(x)s', {'x': urset[0][0]})
@@ -78,9 +78,6 @@ class RecipientsFinderTC(CubicWebTC):
         self.set_option('default-recipients-mode', 'default-dest-addrs')
         self.set_option('default-dest-addrs', 'abcd@logilab.fr, efgh@logilab.fr')
         self.assertEqual(finder.recipients(), [('abcd@logilab.fr', 'en'), ('efgh@logilab.fr', 'en')])
-
-
-class StatusChangeViewsTC(CubicWebTC):
 
     def test_status_change_view(self):
         req = self.request()
