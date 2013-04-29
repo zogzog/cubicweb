@@ -90,8 +90,7 @@ SaxOnlyValidator = class_renamed('SaxOnlyValidator',
                                  '[3.17] you should use the '
                                  'XMLValidator class instead')
 
-
-class XMLDemotingValidator(SaxOnlyValidator):
+class XMLDemotingValidator(XMLValidator):
     """ some views produce html instead of xhtml, using demote_to_html
 
     this is typically related to the use of external dependencies
