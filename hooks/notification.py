@@ -43,7 +43,7 @@ def notify_on_commit(session, view, viewargs=None):
     """
     if viewargs is None:
         viewargs = {}
-    notif_op = __RenderAndSendNotificationOp.get_instance(session)
+    notif_op = _RenderAndSendNotificationOp.get_instance(session)
     notif_op.add_data((view, viewargs))
 
 
