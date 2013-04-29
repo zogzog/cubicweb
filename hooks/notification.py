@@ -111,11 +111,10 @@ class StatusChangeHook(NotificationHook):
         # #103822)
         if comment and entity.comment_format != 'text/rest':
             comment = normalize_text(comment, 80)
-        notif_op = _RenderAndSendNotificationOp.get_instance(self._cw)
         viewargs = {'comment': comment,
                     'previous_state': entity.previous_state.name,
                     'current_state': entity.new_state.name}
-        notif_op.add_data((view, viewargs))
+        notify_on_commit(self._cw, view, viewargs=viewargs)
 
 class RelationChangeHook(NotificationHook):
     __regid__ = 'notifyrelationchange'
@@ -131,8 +130,7 @@ class RelationChangeHook(NotificationHook):
                                 rset=rset, row=0)
         if view is None:
             return
-        notif_op = _RenderAndSendNotificationOp.get_instance(self._cw)
-        notif_op.add_data((view, {}))
+        notify_on_commit(self._cw, view)
 
 
 class EntityChangeHook(NotificationHook):
@@ -147,8 +145,7 @@ class EntityChangeHook(NotificationHook):
         view = self.select_view('notif_%s' % self.event, rset=rset, row=0)
         if view is None:
             return
-        notif_op = _RenderAndSendNotificationOp.get_instance(self._cw)
-        notif_op.add_data((view, {}))
+        notify_on_commit(self._cw, view)
 
 
 class EntityUpdatedNotificationOp(hook.SingleLastOperation):
@@ -161,8 +158,7 @@ class EntityUpdatedNotificationOp(hook.SingleLastOperation):
             view = session.vreg['views'].select('notif_entity_updated', session,
                                                 rset=session.eid_rset(eid),
                                                 row=0)
-            notif_op = _RenderAndSendNotificationOp.get_instance(self._cw)
-            notif_op.add_data((view, {}))
+            notify_on_commit(self._cw, view)
 
 
 class EntityUpdateHook(NotificationHook):
