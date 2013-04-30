@@ -399,8 +399,8 @@ class LDAPFeedGroupTC(LDAPFeedTestBase):
             rset = self.sexecute('Any L WHERE U in_group G, G name %(name)s, U login L',
                                  {'name': 'logilab'})
             self.assertEqual(len(rset), 2)
-            self.assertEqual(rset[0][0], 'adim')
-            self.assertEqual(rset[1][0], 'syt')
+            members = set([u[0] for u in rset])
+            self.assertEqual(set(['adim', 'syt']), members)
 
         finally:
             # back to normal ldap setup
