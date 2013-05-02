@@ -27,6 +27,14 @@ class AutomaticWebTest(AutomaticWebTest):
         'Any COUNT(X) WHERE X is CWUser',
         ]
 
+    def to_test_etypes(self):
+        # We do not really want to test cube views here. So we can drop testing 
+        # some EntityType. The two Blog types below require the sioc cube that 
+        # we do not want to add as a dependency.
+        etypes = super(AutomaticWebTest, self).to_test_etypes()
+        etypes -= set(('Blog', 'BlogEntry'))
+        return etypes
+
 
 class SomeView(AnyRsetView):
     __regid__ = 'someview'
