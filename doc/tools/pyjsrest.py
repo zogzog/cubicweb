@@ -137,7 +137,6 @@ INDEX_IN_ORDER = [
     'cubicweb.edition',
     'cubicweb.reledit',
     'cubicweb.rhythm',
-    'cubicweb.gmap',
     'cubicweb.timeline-ext',
 ]
 
