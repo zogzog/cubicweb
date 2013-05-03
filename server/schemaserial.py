@@ -202,6 +202,8 @@ def deserialize_schema(schema, session):
         extra_props = dict(session.execute('Any X, XTP WHERE X is CWAttribute, '
                                            'X extra_props XTP'))
     except Exception:
+        session.critical('Previous CRITICAL notification about extra_props is not '
+                         'a problem if you are migrating to cubicweb 3.17')
         extra_props = {} # not yet in the schema (introduced by 3.17 migration)
     for values in session.execute(
         'Any X,SE,RT,OE,CARD,ORD,DESC,IDX,FTIDX,I18N,DFLT WHERE X is CWAttribute,'
