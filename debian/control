@@ -156,7 +156,7 @@ Depends:
  gettext,
  python-logilab-mtconverter (>= 0.8.0),
  python-logilab-common (>= 0.59.0),
- python-yams (>= 0.36.0),
+ python-yams (>= 0.37.0),
  python-rql (>= 0.31.2),
  python-lxml
 Recommends:
