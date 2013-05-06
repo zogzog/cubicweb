@@ -268,7 +268,7 @@ def _ajaxfunc_factory(implementation, selector=yes(), _output_type=None,
                 return content
             elif self.output_type == 'xhtml':
                 self._cw.set_content_type(self._cw.html_content_type())
-                return ''.join((self._cw.document_surrounding_div(),
+                return ''.join((u'<div>',
                                 content.strip(), u'</div>'))
             elif self.output_type == 'json':
                 self._cw.set_content_type('application/json')

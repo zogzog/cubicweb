@@ -975,9 +975,6 @@ class CubicWebRequestBase(DBAPIRequest):
     def html_content_type(self):
         return 'text/html'
 
-    def document_surrounding_div(self):
-        return u'<div>'
-
     @deprecated('[3.9] use req.uiprops[rid]')
     def external_resource(self, rid, default=_MARKER):
         """return a path to an external resource, using its identifier

@@ -54,7 +54,7 @@ def xhtmlize(func):
     def wrapper(self, *args, **kwargs):
         self._cw.set_content_type(self._cw.html_content_type())
         result = func(self, *args, **kwargs)
-        return ''.join((self._cw.document_surrounding_div(), result.strip(),
+        return ''.join((u'<div>', result.strip(),
                         u'</div>'))
     wrapper.__name__ = func.__name__
     return wrapper
