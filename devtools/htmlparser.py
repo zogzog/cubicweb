@@ -32,19 +32,24 @@ TRANSITIONAL_DOCTYPE = str(TRANSITIONAL_DOCTYPE)
 ERR_COUNT = 0
 
 class Validator(object):
+    parser = None
 
-    def parse_string(self, data, sysid=None):
+    def parse_string(self, source):
+        etree = self._parse(self.preprocess_data(source))
+        return PageInfo(source, etree)
+
+    def preprocess_data(self, data):
+        return data
+
+    def _parse(self, pdata):
         try:
-            return PageInfo(self, data)
+            return etree.fromstring(pdata, self.parser)
         except etree.XMLSyntaxError as exc:
             def save_in(fname=''):
                 file(fname, 'w').write(data)
             new_exc = AssertionError(u'invalid document: %s' % exc)
             new_exc.position = exc.position
             raise new_exc
-
-    def preprocess_data(self, data):
-        return data
 
 
 class DTDValidator(Validator):
@@ -155,11 +160,9 @@ class HTMLValidator(Validator):
 
 class PageInfo(object):
     """holds various informations on the view's output"""
-    def __init__(self, validator, source):
+    def __init__(self, source, root):
         self.source = source
-        root = etree.fromstring(validator.preprocess_data(source), validator.parser)
         self.etree = root
-        self.source = source
         self.raw_text = u''.join(root.xpath('//text()'))
         self.namespace = self.etree.nsmap
         self.default_ns = self.namespace.get(None)
