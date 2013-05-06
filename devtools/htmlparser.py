@@ -278,4 +278,8 @@ class PageInfo(object):
                     continue
         return False
 
-VALMAP = {None: None, 'dtd': DTDValidator, 'xml': SaxOnlyValidator}
+VALMAP = {None: None,
+          'dtd': DTDValidator,
+          'xml': XMLValidator,
+          'html': HTMLValidator,
+          }
