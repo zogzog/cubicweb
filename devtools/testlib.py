@@ -810,8 +810,8 @@ class CubicWebTC(TestCase):
         # snippets
         #'text/html': DTDValidator,
         #'application/xhtml+xml': DTDValidator,
-        'application/xml': htmlparser.SaxOnlyValidator,
-        'text/xml': htmlparser.SaxOnlyValidator,
+        'application/xml': htmlparser.XMLValidator,
+        'text/xml': htmlparser.XMLValidator,
         'application/json': JsonValidator,
         'text/plain': None,
         'text/comma-separated-values': None,
