@@ -938,6 +938,7 @@ class CubicWebTC(TestCase):
                     # define filter
                     if isinstance(content, str):
                         content = unicode(content, sys.getdefaultencoding(), 'replace')
+                    content = validator.preprocess_data(content)
                     content = content.splitlines()
                     width = int(log(len(content), 10)) + 1
                     line_template = " %" + ("%i" % width) + "i: %s"
