@@ -158,7 +158,7 @@ class EntityUpdatedNotificationOp(hook.SingleLastOperation):
             view = session.vreg['views'].select('notif_entity_updated', session,
                                                 rset=session.eid_rset(eid),
                                                 row=0)
-            notify_on_commit(self._cw, view)
+            notify_on_commit(self.session, view)
 
 
 class EntityUpdateHook(NotificationHook):
