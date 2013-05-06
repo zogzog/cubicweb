@@ -15,7 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""inline help system, using ReST file in products `wdoc` directory
+"""inline help system, rendering ReST files in the `wdoc` subdirectory of
+CubicWeb and cubes
 
 """
 __docformat__ = "restructuredtext en"
