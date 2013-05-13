@@ -1486,3 +1486,4 @@ class InternalManager(object):
 from logging import getLogger
 from cubicweb import set_log_methods
 set_log_methods(Session, getLogger('cubicweb.session'))
+set_log_methods(Connection, getLogger('cubicweb.session'))
