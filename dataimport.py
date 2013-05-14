@@ -396,7 +396,7 @@ def _execmany_thread(sql_connect, statements, dump_output_dir=None,
                     columns = list(data[0])
                 execmany_func(cu, statement, data, table, columns, encoding)
             except Exception:
-                print 'unable to copy data into table %s', table
+                print 'unable to copy data into table %s' % table
                 # Error in import statement, save data in dump_output_dir
                 if dump_output_dir is not None:
                     pdata = {'data': data, 'statement': statement,
