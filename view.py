@@ -471,7 +471,7 @@ class MainTemplate(View):
     one to display error if the first one failed
     """
 
-    doctype = STRICT_DOCTYPE
+    doctype = '<!DOCTYPE html>'
 
     def set_stream(self, w=None):
         if self.w is not None:
