@@ -107,7 +107,7 @@ class DTDValidator(Validator):
             return data
         # parse using transitional DTD
         data = data.replace(STRICT_DOCTYPE, TRANSITIONAL_DOCTYPE)
-        tree = etree.fromstring(data, self.parser)
+        tree = self._parse(data)
         namespace = tree.nsmap.get(None)
         # this is the list of authorized child tags for <blockquote> nodes
         expected = 'p h1 h2 h3 h4 h5 h6 div ul ol dl pre hr blockquote address ' \
