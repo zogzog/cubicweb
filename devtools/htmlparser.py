@@ -19,6 +19,8 @@
 
 import re
 import sys
+from xml import sax
+from cStringIO import StringIO
 
 from lxml import etree
 
@@ -31,7 +33,48 @@ TRANSITIONAL_DOCTYPE = str(TRANSITIONAL_DOCTYPE)
 
 ERR_COUNT = 0
 
+_REM_SCRIPT_RGX = re.compile(r"<script[^>]*>.*?</script>", re.U|re.M|re.I|re.S)
+def _remove_script_tags(data):
+    """Remove the script (usually javascript) tags to help the lxml
+    XMLParser / HTMLParser do their job. Without that, they choke on
+    tags embedded in JS strings.
+    """
+    # Notice we may want to use lxml cleaner, but it's far too intrusive:
+    #
+    # cleaner = Cleaner(scripts=True,
+    #                   javascript=False,
+    #                   comments=False,
+    #                   style=False,
+    #                   links=False,
+    #                   meta=False,
+    #                   page_structure=False,
+    #                   processing_instructions=False,
+    #                   embedded=False,
+    #                   frames=False,
+    #                   forms=False,
+    #                   annoying_tags=False,
+    #                   remove_tags=(),
+    #                   remove_unknown_tags=False,
+    #                   safe_attrs_only=False,
+    #                   add_nofollow=False)
+    # >>> cleaner.clean_html('<body></body>')
+    # '<span></span>'
+    # >>> cleaner.clean_html('<!DOCTYPE html><body></body>')
+    # '<html><body></body></html>'
+    # >>> cleaner.clean_html('<body><div/></body>')
+    # '<div></div>'
+    # >>> cleaner.clean_html('<html><body><div/><br></body><html>')
+    # '<html><body><div></div><br></body></html>'
+    # >>> cleaner.clean_html('<html><body><div/><br><span></body><html>')
+    # '<html><body><div></div><br><span></span></body></html>'
+    #
+    # using that, we'll miss most actual validation error we want to
+    # catch. For now, use dumb regexp
+    return _REM_SCRIPT_RGX.sub('', data)
+
+
 class Validator(object):
+    """ base validator API """
     parser = None
 
     def parse_string(self, source):
@@ -84,7 +127,7 @@ class DTDValidator(Validator):
 
 
 class XMLValidator(Validator):
-    """ A fully compliant XML parser """
+    """XML validator, checks that XML is well-formed and used XMLNS are defined"""
 
     def __init__(self):
         Validator.__init__(self)
@@ -94,6 +137,44 @@ SaxOnlyValidator = class_renamed('SaxOnlyValidator',
                                  XMLValidator,
                                  '[3.17] you should use the '
                                  'XMLValidator class instead')
+
+
+class XMLSyntaxValidator(Validator):
+    """XML syntax validator, check XML is well-formed"""
+
+    class MySaxErrorHandler(sax.ErrorHandler):
+        """override default handler to avoid choking because of unknown entity"""
+        def fatalError(self, exception):
+            # XXX check entity in htmlentitydefs
+            if not str(exception).endswith('undefined entity'):
+                raise exception
+    _parser = sax.make_parser()
+    _parser.setContentHandler(sax.handler.ContentHandler())
+    _parser.setErrorHandler(MySaxErrorHandler())
+
+    def __init__(self):
+        super(XMLSyntaxValidator, self).__init__()
+        # XMLParser() wants xml namespaces defined
+        # XMLParser(recover=True) will accept almost anything
+        #
+        # -> use the later but preprocess will check xml well-formness using a
+        #    dumb SAX parser
+        self.parser = etree.XMLParser(recover=True)
+
+    def preprocess_data(self, data):
+        return _remove_script_tags(data)
+
+    def _parse(self, data):
+        inpsrc = sax.InputSource()
+        inpsrc.setByteStream(StringIO(data))
+        try:
+            self._parser.parse(inpsrc)
+        except sax.SAXParseException, exc:
+            new_exc = AssertionError(u'invalid document: %s' % exc)
+            new_exc.position = (exc._linenum, exc._colnum)
+            raise new_exc
+        return super(XMLSyntaxValidator, self)._parse(data)
+
 
 class XMLDemotingValidator(XMLValidator):
     """ some views produce html instead of xhtml, using demote_to_html
@@ -112,8 +193,6 @@ class XMLDemotingValidator(XMLValidator):
         return data
 
 
-REM_SCRIPT_RGX = re.compile(r"<script[^>]*>.*?</script>", re.U|re.M|re.I|re.S)
-
 class HTMLValidator(Validator):
 
     def __init__(self):
@@ -121,41 +200,7 @@ class HTMLValidator(Validator):
         self.parser = etree.HTMLParser(recover=False)
 
     def preprocess_data(self, data):
-        """ Here we essentially wipe the javascript tags to help the HTMLParser
-        do its job. Without that, it chokes on tags embedded in JS strings.
-        """
-        # Notice we may want to use lxml cleaner, but it's far too intrusive:
-        #
-        # cleaner = Cleaner(scripts=True,
-        #                   javascript=False,
-        #                   comments=False,
-        #                   style=False,
-        #                   links=False,
-        #                   meta=False,
-        #                   page_structure=False,
-        #                   processing_instructions=False,
-        #                   embedded=False,
-        #                   frames=False,
-        #                   forms=False,
-        #                   annoying_tags=False,
-        #                   remove_tags=(),
-        #                   remove_unknown_tags=False,
-        #                   safe_attrs_only=False,
-        #                   add_nofollow=False)
-        # >>> cleaner.clean_html('<body></body>')
-        # '<span></span>'
-        # >>> cleaner.clean_html('<!DOCTYPE html><body></body>')
-        # '<html><body></body></html>'
-        # >>> cleaner.clean_html('<body><div/></body>')
-        # '<div></div>'
-        # >>> cleaner.clean_html('<html><body><div/><br></body><html>')
-        # '<html><body><div></div><br></body></html>'
-        # >>> cleaner.clean_html('<html><body><div/><br><span></body><html>')
-        # '<html><body><div></div><br><span></span></body></html>'
-        #
-        # using that, we'll miss most actual validation error we want to
-        # catch. For now, use dumb regexp
-        return REM_SCRIPT_RGX.sub('', data)
+        return _remove_script_tags(data)
 
 
 class PageInfo(object):
