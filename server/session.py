@@ -431,6 +431,10 @@ class Connection(RequestSessionBase):
         # other session utility
         self.user = session.user # XXX migrate to self._set_user when
         self.lang = session.lang # Connection gain execute
+        self.execute = session.execute # temporary hack until all necessary
+                                       # function have been migrated. Most of
+                                       # those function requires an execute
+                                       # method and execute requires them too.
 
         #: connection handling mode
         self.mode = session.default_mode
