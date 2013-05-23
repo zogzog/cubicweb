@@ -865,6 +865,8 @@ class Session(RequestSessionBase):
         Transaction is created if necessary"""
         with self._lock: # no transaction exist with the same id
             try:
+                if self.closed:
+                    raise SessionClosedError('try to access connections set on a closed session %s' % self.id)
                 tx = self._txs[txid]
             except KeyError:
                 rewriter = RQLRewriter(self)
