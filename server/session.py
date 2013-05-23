@@ -686,7 +686,8 @@ class Connection(RequestSessionBase):
     def transaction_uuid(self, set=True):
         uuid = self.transaction_data.get('tx_uuid')
         if set and uuid is None:
-            raise KeyError
+            self.transaction_data['tx_uuid'] = uuid = uuid4().hex
+            self.repo.system_source.start_undoable_transaction(self, uuid)
         return uuid
 
     def transaction_inc_action_counter(self):
@@ -1432,14 +1433,7 @@ class Session(RequestSessionBase):
 
     ertype_supports_undo = cnx_meth('ertype_supports_undo')
     transaction_inc_action_counter = cnx_meth('transaction_inc_action_counter')
-
-    def transaction_uuid(self, set=True):
-        try:
-            return self._cnx.transaction_uuid(set=set)
-        except KeyError:
-            self._cnx.transaction_data['tx_uuid'] = uuid = uuid4().hex
-            self.repo.system_source.start_undoable_transaction(self, uuid)
-            return uuid
+    transaction_uuid = cnx_meth('transaction_uuid')
 
     # querier helpers #########################################################
 
