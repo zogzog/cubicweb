@@ -27,7 +27,7 @@ import logilab.common.configuration as lgconfig
 from logilab.common.decorators import wproperty, cached
 
 from cubicweb.toolsutils import read_config, restrict_perms_to_user
-from cubicweb.cwconfig import CONFIGURATIONS, CubicWebConfiguration, merge_options
+from cubicweb.cwconfig import CONFIGURATIONS, CubicWebConfiguration
 from cubicweb.server import SOURCE_TYPES
 
 
@@ -96,7 +96,7 @@ class ServerConfiguration(CubicWebConfiguration):
     cubicweb_appobject_path = CubicWebConfiguration.cubicweb_appobject_path | set(['sobjects', 'hooks'])
     cube_appobject_path = CubicWebConfiguration.cube_appobject_path | set(['sobjects', 'hooks'])
 
-    options = merge_options((
+    options = lgconfig.merge_options((
         # ctl configuration
         ('host',
          {'type' : 'string',

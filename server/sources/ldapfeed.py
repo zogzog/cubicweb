@@ -20,7 +20,8 @@
 import ldap
 from ldap.filter import filter_format
 
-from cubicweb.cwconfig import merge_options
+from logilab.common.configuration import merge_options
+
 from cubicweb.server.sources import datafeed
 from cubicweb.server import ldaputils, utils
 from cubicweb import Binary

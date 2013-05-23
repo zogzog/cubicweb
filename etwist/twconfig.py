@@ -28,10 +28,10 @@ __docformat__ = "restructuredtext en"
 
 from os.path import join
 
-from logilab.common.configuration import Method
+from logilab.common.configuration import Method, merge_options
 
 from cubicweb.cwconfig import CONFIGURATIONS
-from cubicweb.web.webconfig import WebConfiguration, merge_options
+from cubicweb.web.webconfig import WebConfiguration
 
 
 class TwistedConfiguration(WebConfiguration):

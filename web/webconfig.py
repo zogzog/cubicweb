@@ -28,10 +28,11 @@ from warnings import warn
 
 from logilab.common.decorators import cached, cachedproperty
 from logilab.common.deprecation import deprecated
+from logilab.common.configuration import merge_options
 
 from cubicweb import ConfigurationError
 from cubicweb.toolsutils import read_config
-from cubicweb.cwconfig import CubicWebConfiguration, register_persistent_options, merge_options
+from cubicweb.cwconfig import CubicWebConfiguration, register_persistent_options
 
 
 register_persistent_options( (
