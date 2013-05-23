@@ -33,16 +33,18 @@ class ZMQStartHook(hook.Hook):
     def __call__(self):
         config = self.repo.config
         address_pub = config.get('zmq-address-pub')
-        if not address_pub:
+        address_sub = config.get('zmq-address-sub')
+        if not address_pub and not address_sub:
             return
         from cubicweb.server import cwzmq
         self.repo.app_instances_bus = cwzmq.ZMQComm()
-        self.repo.app_instances_bus.add_publisher(address_pub)
+        if address_pub:
+            self.repo.app_instances_bus.add_publisher(address_pub)
         def clear_cache_callback(msg):
             self.debug('clear_caches: %s', ' '.join(msg))
             self.repo.clear_caches(msg[1:])
         self.repo.app_instances_bus.add_subscription('delete', clear_cache_callback)
-        for address in config.get('zmq-address-sub'):
+        for address in address_sub:
             self.repo.app_instances_bus.add_subscriber(address)
         self.repo.app_instances_bus.start()
 
