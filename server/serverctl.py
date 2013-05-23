@@ -1066,10 +1066,12 @@ class SynchronizeSourceCommand(Command):
                 print key, ':', val
 
 class SchemaDiffCommand(Command):
-    """ generate a diff between schema and fsschema description
+    """Generate a diff between schema and fsschema description.
+
     <instance>
-      the name of a diff tool to compare the two generated file
+      the identifier of the instance
     <diff-tool>
+      the name of the diff tool to compare the two generated files.
     """
     name = 'schema-diff'
     arguments = '<instance> <diff-tool>'
