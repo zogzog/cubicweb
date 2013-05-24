@@ -29,6 +29,7 @@ class ZMQStopHook(hook.Hook):
 class ZMQStartHook(hook.Hook):
     __regid__ = 'zmqstart'
     events = ('server_startup',)
+    order = -1
 
     def __call__(self):
         config = self.repo.config
