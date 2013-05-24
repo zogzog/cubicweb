@@ -333,7 +333,7 @@ registered.',
             sconfig = sourcescfg[section]
             if isinstance(sconfig, dict):
                 # get a Configuration object
-                assert section == 'system'
+                assert section == 'system', '%r is not system' % section
                 _sconfig = SourceConfiguration(
                     self, options=SOURCE_TYPES['native'].options)
                 for attr, val in sconfig.items():
@@ -342,7 +342,7 @@ registered.',
                     except lgconfig.OptionError:
                         # skip adapter, may be present on pre 3.10 instances
                         if attr != 'adapter':
-                            self.error('skip unknown option %s in sources file')
+                            self.error('skip unknown option %s in sources file' % attr)
                 sconfig = _sconfig
             stream.write('[%s]\n%s\n' % (section, generate_source_config(sconfig)))
         restrict_perms_to_user(sourcesfile)
