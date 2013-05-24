@@ -28,12 +28,12 @@ import logging
 import subprocess
 
 from logilab.common import nullobject
-from logilab.common.configuration import Configuration
+from logilab.common.configuration import Configuration, merge_options
 from logilab.common.shellutils import ASK, generate_password
 
 from cubicweb import AuthenticationError, ExecutionError, ConfigurationError
 from cubicweb.toolsutils import Command, CommandHandler, underline_title
-from cubicweb.cwctl import CWCTL, check_options_consistency
+from cubicweb.cwctl import CWCTL, check_options_consistency, ConfigureInstanceCommand
 from cubicweb.server import SOURCE_TYPES
 from cubicweb.server.repository import Repository
 from cubicweb.server.serverconfig import (
@@ -1096,3 +1096,34 @@ for cmdclass in (CreateInstanceDBCommand, InitInstanceCommand,
                  SynchronizeInstanceSchemaCommand, SynchronizeSourceCommand, SchemaDiffCommand,
                  ):
     CWCTL.register(cmdclass)
+
+# extend configure command to set options in sources config file ###############
+
+db_options = (
+    ('db',
+     {'short': 'd', 'type' : 'named', 'metavar' : 'key1:value1,key2:value2',
+      'default': None,
+      'help': 'set <key> to <value> in "source" configuration file.',
+      }),
+    )
+
+ConfigureInstanceCommand.options = merge_options(
+        ConfigureInstanceCommand.options + db_options)
+
+configure_instance = ConfigureInstanceCommand.configure_instance
+def configure_instance2(self, appid):
+    configure_instance(self, appid)
+    if self.config.db is not None:
+        appcfg = ServerConfiguration.config_for(appid)
+        srccfg = appcfg.read_sources_file()
+        for key, value in self.config.db.iteritems():
+            try:
+                srccfg['system'][key] = value
+            except KeyError:
+                raise ConfigurationError('unknown configuration key "%s" for source' % key)
+        admcfg = Configuration(options=USER_OPTIONS)
+        admcfg['login'] = srccfg['admin']['login']
+        admcfg['password'] = srccfg['admin']['password']
+        srccfg['admin'] = admcfg
+        appcfg.write_sources_file(srccfg)
+ConfigureInstanceCommand.configure_instance = configure_instance2

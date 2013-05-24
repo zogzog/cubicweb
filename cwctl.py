@@ -38,10 +38,9 @@ except ImportError:
     def getpgid():
         """win32 getpgid implementation"""
 
-
-
 from logilab.common.clcommands import CommandLine
 from logilab.common.shellutils import ASK
+from logilab.common.configuration import merge_options
 
 from cubicweb import ConfigurationError, ExecutionError, BadCommandUsage
 from cubicweb.utils import support_args
@@ -846,7 +845,6 @@ class ListVersionsInstanceCommand(InstanceCommand):
         for key in sorted(vcconf):
             print key+': %s.%s.%s' % vcconf[key]
 
-
 class ShellCommand(Command):
     """Run an interactive migration shell on an instance. This is a python shell
     with enhanced migration commands predefined in the namespace. An additional
@@ -1013,6 +1011,33 @@ class ListCubesCommand(Command):
         for cube in cwcfg.available_cubes():
             print cube
 
+class ConfigureInstanceCommand(InstanceCommand):
+    """Configure instance.
+
+    <instance>...
+      identifier of the instance to configure.
+    """
+    name = 'configure'
+    actionverb = 'configured'
+
+    options = merge_options(InstanceCommand.options +
+                            (('param',
+                              {'short': 'p', 'type' : 'named', 'metavar' : 'key1:value1,key2:value2',
+                               'default': None,
+                               'help': 'set <key> to <value> in configuration file.',
+                               }),
+                             ))
+
+    def configure_instance(self, appid):
+        if self.config.param is not None:
+            appcfg = cwcfg.config_for(appid)
+            for key, value in self.config.param.iteritems():
+                try:
+                    appcfg.global_set_option(key, value)
+                except KeyError:
+                    raise ConfigurationError('unknown configuration key "%s" for mode %s' % (key, appcfg.name))
+            appcfg.save()
+
 for cmdcls in (ListCommand,
                CreateInstanceCommand, DeleteInstanceCommand,
                StartInstanceCommand, StopInstanceCommand, RestartInstanceCommand,
@@ -1022,9 +1047,9 @@ for cmdcls in (ListCommand,
                ShellCommand,
                RecompileInstanceCatalogsCommand,
                ListInstancesCommand, ListCubesCommand,
+               ConfigureInstanceCommand,
                ):
     CWCTL.register(cmdcls)
-
 
 def run(args):
     """command line tool"""
