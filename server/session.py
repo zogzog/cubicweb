@@ -410,7 +410,7 @@ class Connection(object):
         self.is_internal_session = session.is_internal_session
 
         #: dict containing arbitrary data cleared at the end of the transaction
-        self.data = {}
+        self.transaction_data = {}
         #: ordered list of operations to be processed on commit/rollback
         self.pending_operations = []
         #: (None, 'precommit', 'postcommit', 'uncommitable')
@@ -437,14 +437,9 @@ class Connection(object):
         # RQLRewriter are not thread safe
         self._rewriter = rewriter
 
-    @property
-    def transaction_data(self):
-        return self.data
-
-
     def clear(self):
         """reset internal data"""
-        self.data = {}
+        self.transaction_data = {}
         #: ordered list of operations to be processed on commit/rollback
         self.pending_operations = []
         #: (None, 'precommit', 'postcommit', 'uncommitable')
@@ -501,7 +496,7 @@ class Connection(object):
 
     # Entity cache management #################################################
     #
-    # The connection entity cache as held in cnx.data it is removed at end the
+    # The connection entity cache as held in cnx.transaction_data it is removed at end the
     # end of the connection (commit and rollback)
     #
     # XXX connection level caching may be a pb with multiple repository
@@ -511,25 +506,25 @@ class Connection(object):
 
     def set_entity_cache(self, entity):
         """Add `entity` to the connection entity cache"""
-        ecache = self.data.setdefault('ecache', {})
+        ecache = self.transaction_data.setdefault('ecache', {})
         ecache.setdefault(entity.eid, entity)
 
     def entity_cache(self, eid):
         """get cache entity for `eid`"""
-        return self.data['ecache'][eid]
+        return self.transaction_data['ecache'][eid]
 
     def cached_entities(self):
         """return the whole entity cache"""
-        return self.data.get('ecache', {}).values()
+        return self.transaction_data.get('ecache', {}).values()
 
     def drop_entity_cache(self, eid=None):
         """drop entity from the cache
 
         If eid is None, the whole cache is dropped"""
         if eid is None:
-            self.data.pop('ecache', None)
+            self.transaction_data.pop('ecache', None)
         else:
-            del self.data['ecache'][eid]
+            del self.transaction_data['ecache'][eid]
 
     # Tracking of entity added of removed in the transaction ##################
     #
@@ -539,13 +534,13 @@ class Connection(object):
         """return True if the entity of the given eid is being deleted in the
         current transaction
         """
-        return eid in self.data.get('pendingeids', ())
+        return eid in self.transaction_data.get('pendingeids', ())
 
     def added_in_transaction(self, eid):
         """return True if the entity of the given eid is being created in the
         current transaction
         """
-        return eid in self.data.get('neweids', ())
+        return eid in self.transaction_data.get('neweids', ())
 
     # Operation management ####################################################
 
@@ -645,14 +640,14 @@ class Connection(object):
         return self.undo_actions and ertype not in NO_UNDO_TYPES
 
     def transaction_uuid(self, set=True):
-        uuid = self.data.get('tx_uuid')
+        uuid = self.transaction_data.get('tx_uuid')
         if set and uuid is None:
             raise KeyError
         return uuid
 
     def transaction_inc_action_counter(self):
-        num = self.data.setdefault('tx_action_count', 0) + 1
-        self.data['tx_action_count'] = num
+        num = self.transaction_data.setdefault('tx_action_count', 0) + 1
+        self.transaction_data['tx_action_count'] = num
         return num
     # db-api like interface ###################################################
 
@@ -1118,7 +1113,7 @@ class Session(RequestSessionBase):
     def get_shared_data(self, key, default=None, pop=False, txdata=False):
         """return value associated to `key` in session data"""
         if txdata:
-            data = self._cnx.data
+            data = self._cnx.transaction_data
         else:
             data = self.data
         if pop:
@@ -1129,7 +1124,7 @@ class Session(RequestSessionBase):
     def set_shared_data(self, key, value, txdata=False):
         """set value associated to `key` in session data"""
         if txdata:
-            self._cnx.data[key] = value
+            self._cnx.transaction_data[key] = value
         else:
             self.data[key] = value
 
@@ -1358,7 +1353,7 @@ class Session(RequestSessionBase):
 
     # transaction data/operations management ##################################
 
-    transaction_data = cnx_attr('data')
+    transaction_data = cnx_attr('transaction_data')
     pending_operations = cnx_attr('pending_operations')
     pruned_hooks_cache = cnx_attr('pruned_hooks_cache')
     add_operation      = cnx_meth('add_operation')
@@ -1372,7 +1367,7 @@ class Session(RequestSessionBase):
         try:
             return self._cnx.transaction_uuid(set=set)
         except KeyError:
-            self._cnx.data['tx_uuid'] = uuid = uuid4().hex
+            self._cnx.transaction_data['tx_uuid'] = uuid = uuid4().hex
             self.repo.system_source.start_undoable_transaction(self, uuid)
             return uuid
 
