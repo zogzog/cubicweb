@@ -149,7 +149,7 @@ class _hooks_control(object):
 class _session_hooks_control(_hooks_control):
     """hook control context manager for session
 
-    Necessary To handle some unholy transaction scope logic."""
+    Necessary to handle some unholy transaction scope logic."""
 
 
     def __init__(self, session, mode, *categories):
@@ -174,9 +174,8 @@ class _security_enabled(object):
     By default security is disabled on queries executed on the repository
     side.
     """
-    def __init__(self, session, read=None, write=None):
-        self.session = session
-        self.cnx = session._cnx
+    def __init__(self, cnx, read=None, write=None):
+        self.cnx = cnx
         self.read = read
         self.write = write
         self.oldread = None
@@ -197,13 +196,28 @@ class _security_enabled(object):
 
     def __exit__(self, exctype, exc, traceback):
         self.cnx.ctx_count -= 1
+        if self.oldread is not None:
+            self.cnx.read_security = self.oldread
+        if self.oldwrite is not None:
+            self.cnx.write_security = self.oldwrite
+
+class _session_security_enabled(_security_enabled):
+    """hook security context manager for session
+
+    Necessary To handle some unholy transaction scope logic."""
+
+
+    def __init__(self, session, read=None, write=None):
+        self.session = session
+        super_init = super(_session_security_enabled, self).__init__
+        return super_init(session._cnx, read=read, write=write)
+
+    def __exit__(self, exctype, exc, traceback):
+        super_exit = super(_session_security_enabled, self).__exit__
+        ret = super_exit(exctype, exc, traceback)
         if self.cnx.ctx_count == 0:
             self.session._clear_thread_storage(self.cnx)
-        else:
-            if self.oldread is not None:
-                self.cnx.read_security = self.oldread
-            if self.oldwrite is not None:
-                self.cnx.write_security = self.oldwrite
+        return ret
 
 HOOKS_ALLOW_ALL = object()
 HOOKS_DENY_ALL = object()
@@ -626,6 +640,10 @@ class Connection(object):
         return self.is_hook_category_activated(hook.category)
 
     # Security management #####################################################
+
+    def security_enabled(self, read=None, write=None):
+        return _security_enabled(self, read=read, write=write)
+
     @property
     def read_security(self):
         return self._read_security
@@ -1058,7 +1076,7 @@ class Session(RequestSessionBase):
 
 
     def security_enabled(self, read=None, write=None):
-        return _security_enabled(self, read=read, write=write)
+        return _session_security_enabled(self, read=read, write=write)
 
     read_security = cnx_attr('read_security', writable=True)
     write_security = cnx_attr('write_security', writable=True)
