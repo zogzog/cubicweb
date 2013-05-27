@@ -406,6 +406,8 @@ class Connection(object):
         self._cnxset_tracker = session._cnxset_tracker
         #: is this connection from a client or internal to the repo
         self.running_dbapi_query = True
+        # internal (root) session
+        self.is_internal_session = session.is_internal_session
 
         #: dict containing arbitrary data cleared at the end of the transaction
         self.data = {}
