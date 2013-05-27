@@ -1110,7 +1110,7 @@ class Session(RequestSessionBase):
         """connections set, set according to transaction mode for each query"""
         if self._closed:
             self.free_cnxset(True)
-            raise Exception('try to access connections set on a closed session %s' % self.id)
+            raise SessionClosedError('try to access connections set on a closed session %s' % self.id)
         return self._tx.cnxset
 
     def set_cnxset(self):
@@ -1118,7 +1118,7 @@ class Session(RequestSessionBase):
         with self._lock: # can probably be removed
             if self._closed:
                 self.free_cnxset(True)
-                raise Exception('try to set connections set on a closed session %s' % self.id)
+                raise SessionClosedError('try to set connections set on a closed session %s' % self.id)
             return self._tx.set_cnxset()
     free_cnxset = tx_meth('free_cnxset')
 

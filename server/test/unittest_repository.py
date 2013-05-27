@@ -44,6 +44,7 @@ from cubicweb.server import repository, hook
 from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.server.hook import Hook
 from cubicweb.server.sources import native
+from cubicweb.server.session import SessionClosedError
 
 
 class RepositoryTC(CubicWebTC):
@@ -262,7 +263,7 @@ class RepositoryTC(CubicWebTC):
             repo.execute(cnxid, 'DELETE CWUser X WHERE X login "toto"')
             repo.commit(cnxid)
         try:
-            with self.assertRaises(Exception) as cm:
+            with self.assertRaises(SessionClosedError) as cm:
                 run_transaction()
             self.assertEqual(str(cm.exception), 'try to access connections set on a closed session %s' % cnxid)
         finally:
