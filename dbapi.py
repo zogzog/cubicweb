@@ -213,9 +213,13 @@ def connect(database, login=None,
         elif cnxprops and cnxprops.cnxtype == 'inmemory':
             database = 'inmemory://' + database
         else:
-            database = 'pyro://%s/%s.%s' % (kwargs.pop('host', ''),
-                                            kwargs.pop('group', 'cubicweb'),
-                                            database)
+            host = kwargs.pop('host', None)
+            if host is None:
+                host = ''
+            group = kwargs.pop('group', None)
+            if group is None:
+                group = 'cubicweb'
+            database = 'pyro://%s/%s.%s' % (host, group, database)
     puri = urlparse(database)
     method = puri.scheme.lower()
     if method == 'inmemory':

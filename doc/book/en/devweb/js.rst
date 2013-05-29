@@ -191,7 +191,7 @@ About the `callback` option:
 * it is called with two parameters: the current node, and a list
   containing the loaded (and post-processed node)
 
-* whenever is returns another function, this function is called in
+* whenever it returns another function, this function is called in
   turn with the same parameters as above
 
 This mechanism allows callback chaining.
@@ -209,7 +209,7 @@ server-side using an entity eid provided by the client side.
     from cubicweb.web.views.ajaxcontroller import ajaxfunc
 
     @ajaxfunc(output_type='xhtml')
-    def js_frob_status(self, eid, frobname):
+    def frob_status(self, eid, frobname):
         entity = self._cw.entity_from_eid(eid)
         return entity.view('frob', name=frobname)
 

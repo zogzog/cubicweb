@@ -78,7 +78,8 @@ class ZMQComm(object):
         self._subscribers.append(subscriber)
 
     def publish(self, msg):
-        assert self.publisher is not None, "can't publish without a publisher"
+        if self.publisher is None:
+            return
         self.publisher.send(msg)
 
     def start(self):
