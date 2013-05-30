@@ -273,6 +273,10 @@ class CookieSessionHandler(object):
 class CubicWebPublisher(object):
     """the publisher is a singleton hold by the web frontend, and is responsible
     to publish HTTP request.
+
+    The http server will call its main entry point ``application.handle_request``.
+
+    .. automethod:: cubicweb.web.application.CubicWebPublisher.main_handle_request
     """
 
     def __init__(self, config,
@@ -339,6 +343,15 @@ class CubicWebPublisher(object):
 
 
     def main_handle_request(self, req, path):
+        """Process and http request
+
+        Arguments are:
+        - a Request object
+        - path of the request object
+
+        It return the content of the http response. HTTP header and status are
+        are set on the Request Object.
+        """
         if not isinstance(req, CubicWebRequestBase):
             warn('[3.15] Application entry poin arguments are now (req, path) '
                  'not (path, req)', DeprecationWarning, 2)
