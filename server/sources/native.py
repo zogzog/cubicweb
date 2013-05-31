@@ -410,14 +410,14 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
 
 
     def init(self, activated, source_entity):
-        super(NativeSQLSource, self).init(activated, source_entity)
-        self.init_creating(source_entity._cw.cnxset)
         try:
             # test if 'asource' column exists
             query = self.dbhelper.sql_add_limit_offset('SELECT asource FROM entities', 1)
             source_entity._cw.system_sql(query)
         except Exception as ex:
             self.eid_type_source = self.eid_type_source_pre_131
+        super(NativeSQLSource, self).init(activated, source_entity)
+        self.init_creating(source_entity._cw.cnxset)
 
     def shutdown(self):
         if self._eid_creation_cnx:
