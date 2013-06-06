@@ -157,7 +157,7 @@ class FinalView(AnyRsetView):
 class InContextView(EntityView):
     """:__regid__: *incontext*
 
-    This view is used whenthe entity should be considered as displayed in its
+    This view is used when the entity should be considered as displayed in its
     context. By default it produces the result of ``entity.dc_title()`` wrapped in a
     link leading to the primary view of the entity.
     """
