@@ -167,6 +167,9 @@ class Repository(object):
 
         self.pyro_registered = False
         self.pyro_uri = None
+        # every pyro client is handled in its own thread; map these threads to
+        # the session we opened for them so we can clean up when they go away
+        self._pyro_sessions = {}
         self.app_instances_bus = NullEventBus()
         self.info('starting repository from %s', self.config.apphome)
         # dictionary of opened sessions
@@ -756,6 +759,12 @@ class Repository(object):
             # try to get a user object
             user = self.authenticate_user(session, login, **kwargs)
         session = Session(user, self, cnxprops)
+        if threading.currentThread() in self._pyro_sessions:
+            # assume no pyro client does one get_repository followed by
+            # multiple repo.connect
+            assert self._pyro_sessions[threading.currentThread()] == None
+            self.debug('record session %s', session)
+            self._pyro_sessions[threading.currentThread()] = session
         user._cw = user.cw_rset.req = session
         user.cw_clear_relation_cache()
         self._sessions[session.id] = session
@@ -1637,21 +1646,25 @@ class Repository(object):
         # into the pyro name server
         if self._use_pyrons():
             self.looping_task(60*10, self._ensure_pyro_ns)
+        pyro_sessions = self._pyro_sessions
         # install hacky function to free cnxset
-        self.looping_task(60, self._cleanup_pyro)
+        def handleConnection(conn, tcpserver, sessions=pyro_sessions):
+            sessions[threading.currentThread()] = None
+            return tcpserver.getAdapter().__class__.handleConnection(tcpserver.getAdapter(), conn, tcpserver)
+        daemon.getAdapter().handleConnection = handleConnection
+        def removeConnection(conn, sessions=pyro_sessions):
+            daemon.__class__.removeConnection(daemon, conn)
+            try:
+                session = sessions[threading.currentThread()]
+            except KeyError:
+                return
+            if session is None:
+                # client was not yet connected to the repo
+                return
+            if not session.closed:
+                session.close()
+        daemon.removeConnection = removeConnection
         return daemon
-
-    def _cleanup_pyro(self):
-        """Very hacky function to cleanup session left by dead Pyro thread.
-
-        There is no clean pyro callback to detect this.
-        """
-        for session in self._sessions.values():
-            for thread, cnxset in session._threads_in_transaction.copy():
-                if not thread.isAlive():
-                    self.warning('Freeing cnxset used by dead pyro threads: %',
-                                 thread)
-                    session._free_thread_cnxset(thread, cnxset)
 
     def _ensure_pyro_ns(self):
         if not self._use_pyrons():
