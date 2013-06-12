@@ -227,10 +227,10 @@ class CnxSetTracker(object):
         self._record = {}
 
     def __enter__(self):
-        self._condition.__enter__()
+        return self._condition.__enter__()
 
     def __exit__(self, *args):
-        self._condition.__exit__(*args)
+        return self._condition.__exit__(*args)
 
     def record(self, txid, cnxset):
         """Inform the tracker that a txid have acquired a cnxset
