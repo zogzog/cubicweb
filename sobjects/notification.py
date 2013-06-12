@@ -119,7 +119,7 @@ class NotificationView(EntityView):
         for something in recipients:
             if isinstance(something, Entity):
                 # hi-jack self._cw to get a session for the returned user
-                self._cw = Session(self._cw.repo, something)
+                self._cw = Session(something, self._cw.repo)
                 emailaddr = something.cw_adapt_to('IEmailable').get_email()
             else:
                 emailaddr, lang = something
