@@ -267,9 +267,9 @@ class ApplicationTC(CubicWebTC):
 
     def _test_cleaned(self, kwargs, injected, cleaned):
         req = self.request(**kwargs)
-        page = self.app.handle_request(req, 'view')
-        self.assertFalse(injected in page, (kwargs, injected))
-        self.assertTrue(cleaned in page, (kwargs, cleaned))
+        page = self.app_handle_request(req, 'view')
+        self.assertNotIn(injected, page)
+        self.assertIn(cleaned, page)
 
     def test_nonregr_script_kiddies(self):
         """test against current script injection"""
@@ -319,8 +319,9 @@ class ApplicationTC(CubicWebTC):
     def test_http_auth_no_anon(self):
         req, origsession = self.init_authentication('http')
         self.assertAuthFailure(req)
-        self.assertRaises(AuthenticationError, self.app_handle_request, req, 'login')
-        self.assertEqual(req.cnx, None)
+        self.app.handle_request(req, 'login')
+        self.assertEqual(401, req.status_out)
+        clear_cache(req, 'get_authorization')
         authstr = base64.encodestring('%s:%s' % (self.admlogin, self.admpassword))
         req.set_request_header('Authorization', 'basic %s' % authstr)
         self.assertAuthSuccess(req, origsession)
@@ -331,9 +332,10 @@ class ApplicationTC(CubicWebTC):
         req, origsession = self.init_authentication('cookie')
         self.assertAuthFailure(req)
         try:
-            form = self.app_handle_request(req, 'login')
+            form = self.app.handle_request(req, 'login')
         except Redirect as redir:
             self.fail('anonymous user should get login form')
+        clear_cache(req, 'get_authorization')
         self.assertTrue('__login' in form)
         self.assertTrue('__password' in form)
         self.assertEqual(req.cnx, None)

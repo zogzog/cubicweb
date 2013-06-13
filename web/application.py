@@ -212,44 +212,17 @@ class CookieSessionHandler(object):
         sessioncookie = self.session_cookie(req)
         try:
             sessionid = str(cookie[sessioncookie].value)
-        except KeyError: # no session cookie
-            session = self.open_session(req)
-        else:
-            try:
-                session = self.get_session(req, sessionid)
-            except InvalidSession:
-                # try to open a new session, so we get an anonymous session if
-                # allowed
-                session = self.open_session(req)
-            else:
-                if not session.cnx:
-                    # session exists but is not bound to a connection. We should
-                    # try to authenticate
-                    loginsucceed = False
-                    try:
-                        if self.open_session(req, allow_no_cnx=False):
-                            loginsucceed = True
-                    except Redirect:
-                        # may be raised in open_session (by postlogin mechanism)
-                        # on successful connection
-                        loginsucceed = True
-                        raise
-                    except AuthenticationError:
-                        # authentication failed, continue to use this session
-                        req.set_session(session)
-                    finally:
-                        if loginsucceed:
-                            # session should be replaced by new session created
-                            # in open_session
-                            self.session_manager.close_session(session)
+            self.get_session(req, sessionid)
+        except (KeyError, InvalidSession): # no valid session cookie
+            self.open_session(req)
 
     def get_session(self, req, sessionid):
         session = self.session_manager.get_session(req, sessionid)
         session.mtime = time()
         return session
 
-    def open_session(self, req, allow_no_cnx=True):
-        session = self.session_manager.open_session(req, allow_no_cnx=allow_no_cnx)
+    def open_session(self, req):
+        session = self.session_manager.open_session(req)
         sessioncookie = self.session_cookie(req)
         secure = req.https and req.base_url().startswith('https://')
         req.set_cookie(sessioncookie, session.sessionid,
@@ -362,7 +335,13 @@ class CubicWebPublisher(object):
             req.set_header('WWW-Authenticate', [('Basic', {'realm' : realm })], raw=False)
         content = ''
         try:
-            self.connect(req)
+            try:
+                self.connect(req)
+            except AuthenticationError:
+                # XXX We want to clean up this approach in the future. But
+                # several cubes like registration or forgotten password rely on
+                # this principle.
+                req.set_session(DBAPISession(None))
             # DENY https acces for anonymous_user
             if (req.https
                 and req.session.anonymous_session

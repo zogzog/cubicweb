@@ -39,7 +39,7 @@ from logilab.common.decorators import cached, classproperty, clear_cache, iclass
 from logilab.common.deprecation import deprecated, class_deprecated
 from logilab.common.shellutils import getlogin
 
-from cubicweb import ValidationError, NoSelectableObject
+from cubicweb import ValidationError, NoSelectableObject, AuthenticationError
 from cubicweb import cwconfig, dbapi, devtools, web, server
 from cubicweb.utils import json
 from cubicweb.sobjects import notification
@@ -787,12 +787,10 @@ class CubicWebTC(TestCase):
         self.assertEqual(session.anonymous_session, False)
 
     def assertAuthFailure(self, req, nbsessions=0):
-        self.app.connect(req)
-        self.assertIsInstance(req.session, dbapi.DBAPISession)
-        self.assertEqual(req.session.cnx, None)
-        self.assertIsInstance(req.cnx, (dbapi._NeedAuthAccessMock, NoneType))
-        # + 1 since we should still have session without connection set
-        self.assertEqual(len(self.open_sessions), nbsessions + 1)
+        with self.assertRaises(AuthenticationError):
+            self.app.connect(req)
+        # +0 since we do not track the opened session
+        self.assertEqual(len(self.open_sessions), nbsessions)
         clear_cache(req, 'get_authorization')
 
     # content validation #######################################################

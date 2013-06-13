@@ -64,22 +64,15 @@ class InMemoryRepositorySessionManager(AbstractSessionManager):
             req.set_session(session, user)
         return session
 
-    def open_session(self, req, allow_no_cnx=True):
+    def open_session(self, req):
         """open and return a new session for the given request. The session is
         also bound to the request.
 
         raise :exc:`cubicweb.AuthenticationError` if authentication failed
         (no authentication info found or wrong user/password)
         """
-        try:
-            cnx, login = self.authmanager.authenticate(req)
-        except AuthenticationError:
-            if allow_no_cnx:
-                session = DBAPISession(None)
-            else:
-                raise
-        else:
-            session = DBAPISession(cnx, login)
+        cnx, login = self.authmanager.authenticate(req)
+        session = DBAPISession(cnx, login)
         self._sessions[session.sessionid] = session
         # associate the connection to the current request
         req.set_session(session)
