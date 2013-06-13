@@ -33,7 +33,7 @@ class SessionTC(CubicWebTC):
         self.assertEqual(HOOKS_ALLOW_ALL, session.hooks_mode)
         self.assertEqual(set(), session.disabled_hook_categories)
         self.assertEqual(set(), session.enabled_hook_categories)
-        self.assertEqual(1, len(session._txs))
+        self.assertEqual(1, len(session._cnxs))
         with session.deny_all_hooks_but('metadata'):
             self.assertEqual(HOOKS_DENY_ALL, session.hooks_mode)
             self.assertEqual(set(), session.disabled_hook_categories)
@@ -55,7 +55,7 @@ class SessionTC(CubicWebTC):
             self.assertEqual(set(('metadata',)), session.enabled_hook_categories)
         # leaving context manager with no transaction running should reset the
         # transaction local storage (and associated cnxset)
-        self.assertEqual({}, session._txs)
+        self.assertEqual({}, session._cnxs)
         self.assertEqual(None, session.cnxset)
         self.assertEqual(HOOKS_ALLOW_ALL, session.hooks_mode, session.HOOKS_ALLOW_ALL)
         self.assertEqual(set(), session.disabled_hook_categories)

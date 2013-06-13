@@ -33,7 +33,7 @@ from cubicweb.utils import json_dumps
 from cubicweb.uilib import rql_for_eid
 from cubicweb.web import INTERNAL_FIELD_VALUE, Redirect, RequestError, RemoteCallFailed
 import cubicweb.server.session
-from cubicweb.server.session import Transaction as OldTransaction
+from cubicweb.server.session import Connection as OldConnection
 from cubicweb.entities.authobjs import CWUser
 from cubicweb.web.views.autoform import get_pending_inserts, get_pending_deletes
 from cubicweb.web.views.basecontrollers import JSonController, xhtmlize, jsonize
@@ -762,15 +762,15 @@ class JSonControllerTC(AjaxControllerTC):
 class UndoControllerTC(CubicWebTC):
 
     def setUp(self):
-        class Transaction(OldTransaction):
+        class Connection(OldConnection):
             """Force undo feature to be turned on in all case"""
             undo_actions = property(lambda tx: True, lambda x, y:None)
-        cubicweb.server.session.Transaction = Transaction
+        cubicweb.server.session.Connection = Connection
         super(UndoControllerTC, self).setUp()
 
     def tearDown(self):
         super(UndoControllerTC, self).tearDown()
-        cubicweb.server.session.Transaction = OldTransaction
+        cubicweb.server.session.Connection = OldConnection
 
 
     def setup_database(self):

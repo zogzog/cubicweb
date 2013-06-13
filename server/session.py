@@ -121,34 +121,34 @@ class _hooks_control(object):
     def __init__(self, session, mode, *categories):
         assert mode in (HOOKS_ALLOW_ALL, HOOKS_DENY_ALL)
         self.session = session
-        self.tx = session._tx
+        self.cnx = session._cnx
         self.mode = mode
         self.categories = categories
         self.oldmode = None
         self.changes = ()
 
     def __enter__(self):
-        self.oldmode = self.tx.hooks_mode
-        self.tx.hooks_mode = self.mode
+        self.oldmode = self.cnx.hooks_mode
+        self.cnx.hooks_mode = self.mode
         if self.mode is HOOKS_DENY_ALL:
-            self.changes = self.tx.enable_hook_categories(*self.categories)
+            self.changes = self.cnx.enable_hook_categories(*self.categories)
         else:
-            self.changes = self.tx.disable_hook_categories(*self.categories)
-        self.tx.ctx_count += 1
+            self.changes = self.cnx.disable_hook_categories(*self.categories)
+        self.cnx.ctx_count += 1
 
     def __exit__(self, exctype, exc, traceback):
-        self.tx.ctx_count -= 1
-        if self.tx.ctx_count == 0:
-            self.session._clear_thread_storage(self.tx)
+        self.cnx.ctx_count -= 1
+        if self.cnx.ctx_count == 0:
+            self.session._clear_thread_storage(self.cnx)
         else:
             try:
                 if self.categories:
                     if self.mode is HOOKS_DENY_ALL:
-                        self.tx.disable_hook_categories(*self.categories)
+                        self.cnx.disable_hook_categories(*self.categories)
                     else:
-                        self.tx.enable_hook_categories(*self.categories)
+                        self.cnx.enable_hook_categories(*self.categories)
             finally:
-                self.tx.hooks_mode = self.oldmode
+                self.cnx.hooks_mode = self.oldmode
 
 @deprecated('[3.17] use <object>.security_enabled instead')
 def security_enabled(obj, *args, **kwargs):
@@ -162,7 +162,7 @@ class _security_enabled(object):
     """
     def __init__(self, session, read=None, write=None):
         self.session = session
-        self.tx = session._tx
+        self.cnx = session._cnx
         self.read = read
         self.write = write
         self.oldread = None
@@ -172,24 +172,24 @@ class _security_enabled(object):
         if self.read is None:
             self.oldread = None
         else:
-            self.oldread = self.tx.read_security
-            self.tx.read_security = self.read
+            self.oldread = self.cnx.read_security
+            self.cnx.read_security = self.read
         if self.write is None:
             self.oldwrite = None
         else:
-            self.oldwrite = self.tx.write_security
-            self.tx.write_security = self.write
-        self.tx.ctx_count += 1
+            self.oldwrite = self.cnx.write_security
+            self.cnx.write_security = self.write
+        self.cnx.ctx_count += 1
 
     def __exit__(self, exctype, exc, traceback):
-        self.tx.ctx_count -= 1
-        if self.tx.ctx_count == 0:
-            self.session._clear_thread_storage(self.tx)
+        self.cnx.ctx_count -= 1
+        if self.cnx.ctx_count == 0:
+            self.session._clear_thread_storage(self.cnx)
         else:
             if self.oldread is not None:
-                self.tx.read_security = self.oldread
+                self.cnx.read_security = self.oldread
             if self.oldwrite is not None:
-                self.tx.write_security = self.oldwrite
+                self.cnx.write_security = self.oldwrite
 
 HOOKS_ALLOW_ALL = object()
 HOOKS_DENY_ALL = object()
@@ -199,14 +199,14 @@ class SessionClosedError(RuntimeError):
     pass
 
 class CnxSetTracker(object):
-    """Keep track of which transaction use which cnxset.
+    """Keep track of which connection use which cnxset.
 
     There should be one of this object per session plus one another for
     internal session.
 
     Session object are responsible of creating their CnxSetTracker object.
 
-    Transaction should use the :meth:`record` and :meth:`forget` to inform the
+    Connection should use the :meth:`record` and :meth:`forget` to inform the
     tracker of cnxset they have acquired.
 
     .. automethod:: cubicweb.server.session.CnxSetTracker.record
@@ -232,13 +232,13 @@ class CnxSetTracker(object):
     def __exit__(self, *args):
         self._condition.__exit__(*args)
 
-    def record(self, txid, cnxset):
-        """Inform the tracker that a txid have acquired a cnxset
+    def record(self, cnxid, cnxset):
+        """Inform the tracker that a cnxid have acquired a cnxset
 
-        This methode is to be used by Transaction object.
+        This methode is to be used by Connection object.
 
         This method fails when:
-        - The txid already have a recorded cnxset.
+        - The cnxid already have a recorded cnxset.
         - The tracker is not active anymore.
 
         Notes about the caller:
@@ -265,19 +265,19 @@ class CnxSetTracker(object):
         with self._condition:
             if not self._active:
                 raise SessionClosedError('Closed')
-            old = self._record.get(txid)
+            old = self._record.get(cnxid)
             if old is not None:
                 raise ValueError('"%s" already have a cnx_set (%r)'
-                                 % (txid, old))
-            self._record[txid] = cnxset
+                                 % (cnxid, old))
+            self._record[cnxid] = cnxset
 
-    def forget(self, txid, cnxset):
-        """Inform the tracker that a txid have release a cnxset
+    def forget(self, cnxid, cnxset):
+        """Inform the tracker that a cnxid have release a cnxset
 
-        This methode is to be used by Transaction object.
+        This methode is to be used by Connection object.
 
         This method fails when:
-        - The cnxset for the txid does not match the recorded one.
+        - The cnxset for the cnxid does not match the recorded one.
 
         Notes about the caller:
         (1) It is responsible for releasing the cnxset.
@@ -297,11 +297,11 @@ class CnxSetTracker(object):
             cnxset = repo._free_cnxset(cnxset) # (1)
         """
         with self._condition:
-            old = self._record.get(txid, None)
+            old = self._record.get(cnxid, None)
             if old is not cnxset:
                 raise ValueError('recorded cnxset for "%s" mismatch: %r != %r'
-                                 % (txid, old, cnxset))
-            self._record.pop(txid)
+                                 % (cnxid, old, cnxset))
+            self._record.pop(cnxid)
             self._condition.notify_all()
 
     def close(self):
@@ -319,7 +319,7 @@ class CnxSetTracker(object):
 
         This methode is to be used by Session object.
 
-        returns a tuple of transaction id that remains open.
+        returns a tuple of connection id that remains open.
         """
         with self._condition:
             if  self._active:
@@ -331,10 +331,10 @@ class CnxSetTracker(object):
                 timeout -= time() - start
             return tuple(self._record)
 
-class Transaction(object):
-    """Repository Transaction
+class Connection(object):
+    """Repository Connection
 
-    Holds all transaction related data
+    Holds all connection related data
 
     Database connections resource:
 
@@ -343,11 +343,11 @@ class Transaction(object):
 
       :attr:`cnxset`, the connections set to use to execute queries on sources.
       If the transaction is read only, the connection set may be freed between
-      actual query. This allows multiple transaction with a reasonable low
+      actual query. This allows multiple connection with a reasonable low
       connection set pool size. control mechanism is detailed below
 
-    .. automethod:: cubicweb.server.session.Transaction.set_cnxset
-    .. automethod:: cubicweb.server.session.Transaction.free_cnxset
+    .. automethod:: cubicweb.server.session.Connection.set_cnxset
+    .. automethod:: cubicweb.server.session.Connection.free_cnxset
 
       :attr:`mode`, string telling the connections set handling mode, may be one
       of 'read' (connections set may be freed), 'write' (some write was done in
@@ -388,9 +388,9 @@ class Transaction(object):
 
     """
 
-    def __init__(self, txid, session, rewriter):
-        #: transaction unique id
-        self.transactionid = txid
+    def __init__(self, cnxid, session, rewriter):
+        #: connection unique id
+        self.connectionid = cnxid
         #: reentrance handling
         self.ctx_count = 0
 
@@ -404,7 +404,7 @@ class Transaction(object):
         self._cnxset = None
         #: CnxSetTracker used to report cnxset usage
         self._cnxset_tracker = session._cnxset_tracker
-        #: is this transaction from a client or internal to the repo
+        #: is this connection from a client or internal to the repo
         self.running_dbapi_query = True
 
         #: dict containing arbitrary data cleared at the end of the transaction
@@ -462,14 +462,14 @@ class Transaction(object):
             if old_cnxset is not None:
                 self._cnxset = None
                 self.ctx_count -= 1
-                self._cnxset_tracker.forget(self.transactionid, old_cnxset)
+                self._cnxset_tracker.forget(self.connectionid, old_cnxset)
             if new_cnxset is not None:
-                self._cnxset_tracker.record(self.transactionid, new_cnxset)
+                self._cnxset_tracker.record(self.connectionid, new_cnxset)
                 self._cnxset = new_cnxset
                 self.ctx_count += 1
 
     def set_cnxset(self):
-        """the transaction need a connections set to execute some queries"""
+        """the connection need a connections set to execute some queries"""
         if self.cnxset is None:
             cnxset = self.repo._get_cnxset()
             try:
@@ -485,7 +485,7 @@ class Transaction(object):
         return self.cnxset
 
     def free_cnxset(self, ignoremode=False):
-        """the transaction is no longer using its connections set, at least for some time"""
+        """the connection is no longer using its connections set, at least for some time"""
         # cnxset may be none if no operation has been done since last commit
         # or rollback
         cnxset = self.cnxset
@@ -499,16 +499,16 @@ class Transaction(object):
 
     # Entity cache management #################################################
     #
-    # The transaction entity cache as held in tx.data it is removed at end the
-    # end of the transaction (commit and rollback)
+    # The connection entity cache as held in cnx.data it is removed at end the
+    # end of the connection (commit and rollback)
     #
-    # XXX transaction level caching may be a pb with multiple repository
+    # XXX connection level caching may be a pb with multiple repository
     # instances, but 1. this is probably not the only one :$ and 2. it may be
     # an acceptable risk. Anyway we could activate it or not according to a
     # configuration option
 
     def set_entity_cache(self, entity):
-        """Add `entity` to the transaction entity cache"""
+        """Add `entity` to the connection entity cache"""
         ecache = self.data.setdefault('ecache', {})
         ecache.setdefault(entity.eid, entity)
 
@@ -694,27 +694,27 @@ class Transaction(object):
         return self.vreg.schema.rschema(rtype).rdefs[(subjtype, objtype)]
 
 
-def tx_attr(attr_name, writable=False):
-    """return a property to forward attribute access to transaction.
+def cnx_attr(attr_name, writable=False):
+    """return a property to forward attribute access to connection.
 
     This is to be used by session"""
     args = {}
-    def attr_from_tx(session):
-        return getattr(session._tx, attr_name)
-    args['fget'] = attr_from_tx
+    def attr_from_cnx(session):
+        return getattr(session._cnx, attr_name)
+    args['fget'] = attr_from_cnx
     if writable:
         def write_attr(session, value):
-            return setattr(session._tx, attr_name, value)
+            return setattr(session._cnx, attr_name, value)
         args['fset'] = write_attr
     return property(**args)
 
-def tx_meth(meth_name):
-    """return a function forwarding calls to transaction.
+def cnx_meth(meth_name):
+    """return a function forwarding calls to connection.
 
     This is to be used by session"""
-    def meth_from_tx(session, *args, **kwargs):
-        return getattr(session._tx, meth_name)(*args, **kwargs)
-    return meth_from_tx
+    def meth_from_cnx(session, *args, **kwargs):
+        return getattr(session._cnx, meth_name)(*args, **kwargs)
+    return meth_from_cnx
 
 
 class Session(RequestSessionBase):
@@ -736,23 +736,23 @@ class Session(RequestSessionBase):
       :attr:`data` is a dictionary containing shared data, used to communicate
       extra information between the client and the repository
 
-      :attr:`_txs` is a dictionary of :class:`TransactionData` instance, one
-      for each running transaction. The key is the transaction id. By default
-      the transaction id is the thread name but it can be otherwise (per dbapi
+      :attr:`_cnxs` is a dictionary of :class:`Connection` instance, one
+      for each running connection. The key is the connection id. By default
+      the connection id is the thread name but it can be otherwise (per dbapi
       cursor for instance, or per thread name *from another process*).
 
-      :attr:`__threaddata` is a thread local storage whose `tx` attribute
-      refers to the proper instance of :class:`Transaction` according to the
-      transaction.
+      :attr:`__threaddata` is a thread local storage whose `cnx` attribute
+      refers to the proper instance of :class:`Connection` according to the
+      connection.
 
-    You should not have to use neither :attr:`_tx` nor :attr:`__threaddata`,
-    simply access transaction data transparently through the :attr:`_tx`
+    You should not have to use neither :attr:`_cnx` nor :attr:`__threaddata`,
+    simply access connection data transparently through the :attr:`_cnx`
     property. Also, you usually don't have to access it directly since current
-    transaction's data may be accessed/modified through properties / methods:
+    connection's data may be accessed/modified through properties / methods:
 
-      :attr:`transaction_data`, similarly to :attr:`data`, is a dictionary
+      :attr:`connection_data`, similarly to :attr:`data`, is a dictionary
       containing some shared data that should be cleared at the end of the
-      transaction. Hooks and operations may put arbitrary data in there, and
+      connection. Hooks and operations may put arbitrary data in there, and
       this may also be used as a communication channel between the client and
       the repository.
 
@@ -761,7 +761,7 @@ class Session(RequestSessionBase):
     .. automethod:: cubicweb.server.session.Session.added_in_transaction
     .. automethod:: cubicweb.server.session.Session.deleted_in_transaction
 
-    Transaction state information:
+    Connection state information:
 
       :attr:`running_dbapi_query`, boolean flag telling if the executing query
       is coming from a dbapi connection or is a query from within the repository
@@ -847,8 +847,8 @@ class Session(RequestSessionBase):
         # i18n initialization
         self.set_language(user.prefered_language())
         ### internals
-        # Transaction of this section
-        self._txs = {}
+        # Connection of this section
+        self._cnxs = {}
         # Data local to the thread
         self.__threaddata = threading.local()
         self._cnxset_tracker = CnxSetTracker()
@@ -859,37 +859,37 @@ class Session(RequestSessionBase):
         return '<session %s (%s 0x%x)>' % (
             unicode(self.user.login), self.id, id(self))
 
-    def get_tx(self, txid):
-        """return the <txid> transaction attached to this session
+    def get_cnx(self, cnxid):
+        """return the <cnxid> connection attached to this session
 
-        Transaction is created if necessary"""
-        with self._lock: # no transaction exist with the same id
+        Connection is created if necessary"""
+        with self._lock: # no connection exist with the same id
             try:
                 if self.closed:
                     raise SessionClosedError('try to access connections set on a closed session %s' % self.id)
-                tx = self._txs[txid]
+                cnx = self._cnxs[cnxid]
             except KeyError:
                 rewriter = RQLRewriter(self)
-                tx = Transaction(txid, self, rewriter)
-                self._txs[txid] = tx
-        return tx
+                cnx = Connection(cnxid, self, rewriter)
+                self._cnxs[cnxid] = cnx
+        return cnx
 
-    def set_tx(self, txid=None):
-        """set the default transaction of the current thread to <txid>
+    def set_cnx(self, cnxid=None):
+        """set the default connection of the current thread to <cnxid>
 
-        Transaction is created if necessary"""
-        if txid is None:
-            txid = threading.currentThread().getName()
-        self.__threaddata.tx = self.get_tx(txid)
+        Connection is created if necessary"""
+        if cnxid is None:
+            cnxid = threading.currentThread().getName()
+        self.__threaddata.cnx = self.get_cnx(cnxid)
 
     @property
-    def _tx(self):
-        """default transaction for current session in current thread"""
+    def _cnx(self):
+        """default connection for current session in current thread"""
         try:
-            return self.__threaddata.tx
+            return self.__threaddata.cnx
         except AttributeError:
-            self.set_tx()
-            return self.__threaddata.tx
+            self.set_cnx()
+            return self.__threaddata.cnx
 
     def get_option_value(self, option, foreid=None):
         return self.repo.get_option_value(option, foreid)
@@ -1032,10 +1032,10 @@ class Session(RequestSessionBase):
 
     # resource accessors ######################################################
 
-    system_sql = tx_meth('system_sql')
-    deleted_in_transaction = tx_meth('deleted_in_transaction')
-    added_in_transaction = tx_meth('added_in_transaction')
-    rtype_eids_rdef = tx_meth('rtype_eids_rdef')
+    system_sql = cnx_meth('system_sql')
+    deleted_in_transaction = cnx_meth('deleted_in_transaction')
+    added_in_transaction = cnx_meth('added_in_transaction')
+    rtype_eids_rdef = cnx_meth('rtype_eids_rdef')
 
     # security control #########################################################
 
@@ -1043,9 +1043,9 @@ class Session(RequestSessionBase):
     def security_enabled(self, read=None, write=None):
         return _security_enabled(self, read=read, write=write)
 
-    read_security = tx_attr('read_security', writable=True)
-    write_security = tx_attr('write_security', writable=True)
-    running_dbapi_query = tx_attr('running_dbapi_query')
+    read_security = cnx_attr('read_security', writable=True)
+    write_security = cnx_attr('write_security', writable=True)
+    running_dbapi_query = cnx_attr('running_dbapi_query')
 
     # hooks activation control #################################################
     # all hooks should be activated during normal execution
@@ -1055,14 +1055,14 @@ class Session(RequestSessionBase):
     def deny_all_hooks_but(self, *categories):
         return _hooks_control(self, HOOKS_DENY_ALL, *categories)
 
-    hooks_mode = tx_attr('hooks_mode')
+    hooks_mode = cnx_attr('hooks_mode')
 
-    disabled_hook_categories = tx_attr('disabled_hook_cats')
-    enabled_hook_categories = tx_attr('enabled_hook_cats')
-    disable_hook_categories = tx_meth('disable_hook_categories')
-    enable_hook_categories = tx_meth('enable_hook_categories')
-    is_hook_category_activated = tx_meth('is_hook_category_activated')
-    is_hook_activated = tx_meth('is_hook_activated')
+    disabled_hook_categories = cnx_attr('disabled_hook_cats')
+    enabled_hook_categories = cnx_attr('enabled_hook_cats')
+    disable_hook_categories = cnx_meth('disable_hook_categories')
+    enable_hook_categories = cnx_meth('enable_hook_categories')
+    is_hook_category_activated = cnx_meth('is_hook_category_activated')
+    is_hook_activated = cnx_meth('is_hook_activated')
 
     # connection management ###################################################
 
@@ -1086,8 +1086,8 @@ class Session(RequestSessionBase):
         else: # mode == 'write'
             self.default_mode = 'read'
 
-    mode = tx_attr('mode', writable=True)
-    commit_state = tx_attr('commit_state', writable=True)
+    mode = cnx_attr('mode', writable=True)
+    commit_state = cnx_attr('commit_state', writable=True)
 
     @property
     def cnxset(self):
@@ -1095,7 +1095,7 @@ class Session(RequestSessionBase):
         if self._closed:
             self.free_cnxset(True)
             raise SessionClosedError('try to access connections set on a closed session %s' % self.id)
-        return self._tx.cnxset
+        return self._cnx.cnxset
 
     def set_cnxset(self):
         """the session need a connections set to execute some queries"""
@@ -1103,20 +1103,20 @@ class Session(RequestSessionBase):
             if self._closed:
                 self.free_cnxset(True)
                 raise SessionClosedError('try to set connections set on a closed session %s' % self.id)
-            return self._tx.set_cnxset()
-    free_cnxset = tx_meth('free_cnxset')
+            return self._cnx.set_cnxset()
+    free_cnxset = cnx_meth('free_cnxset')
 
     def _touch(self):
         """update latest session usage timestamp and reset mode to read"""
         self.timestamp = time()
-        self.local_perm_cache.clear() # XXX simply move in tx.data, no?
+        self.local_perm_cache.clear() # XXX simply move in cnx.data, no?
 
     # shared data handling ###################################################
 
     def get_shared_data(self, key, default=None, pop=False, txdata=False):
         """return value associated to `key` in session data"""
         if txdata:
-            data = self._tx.data
+            data = self._cnx.data
         else:
             data = self.data
         if pop:
@@ -1127,7 +1127,7 @@ class Session(RequestSessionBase):
     def set_shared_data(self, key, value, txdata=False):
         """set value associated to `key` in session data"""
         if txdata:
-            self._tx.data[key] = value
+            self._cnx.data[key] = value
         else:
             self.data[key] = value
 
@@ -1145,10 +1145,10 @@ class Session(RequestSessionBase):
         """return a rql cursor"""
         return self
 
-    set_entity_cache  = tx_meth('set_entity_cache')
-    entity_cache      = tx_meth('entity_cache')
-    cache_entities    = tx_meth('cached_entities')
-    drop_entity_cache = tx_meth('drop_entity_cache')
+    set_entity_cache  = cnx_meth('set_entity_cache')
+    entity_cache      = cnx_meth('entity_cache')
+    cache_entities    = cnx_meth('cached_entities')
+    drop_entity_cache = cnx_meth('drop_entity_cache')
 
     def from_controller(self):
         """return the id (string) of the controller issuing the request (no
@@ -1156,9 +1156,9 @@ class Session(RequestSessionBase):
         """
         return 'view'
 
-    source_defs = tx_meth('source_defs')
-    describe = tx_meth('describe')
-    source_from_eid = tx_meth('source_from_eid')
+    source_defs = cnx_meth('source_defs')
+    describe = cnx_meth('describe')
+    source_from_eid = cnx_meth('source_from_eid')
 
 
     def execute(self, rql, kwargs=None, eid_key=None, build_descr=True):
@@ -1180,29 +1180,29 @@ class Session(RequestSessionBase):
         by _touch
         """
         try:
-            tx = self.__threaddata.tx
+            cnx = self.__threaddata.cnx
         except AttributeError:
             pass
         else:
             if free_cnxset:
                 self.free_cnxset()
-                if tx.ctx_count == 0:
-                    self._clear_thread_storage(tx)
+                if cnx.ctx_count == 0:
+                    self._clear_thread_storage(cnx)
                 else:
-                    self._clear_tx_storage(tx)
+                    self._clear_cnx_storage(cnx)
             else:
-                self._clear_tx_storage(tx)
+                self._clear_cnx_storage(cnx)
 
-    def _clear_thread_storage(self, tx):
-        self._txs.pop(tx.transactionid, None)
+    def _clear_thread_storage(self, cnx):
+        self._cnxs.pop(cnx.connectionid, None)
         try:
-            del self.__threaddata.tx
+            del self.__threaddata.cnx
         except AttributeError:
             pass
 
-    def _clear_tx_storage(self, tx):
-        tx.clear()
-        tx._rewriter = RQLRewriter(self)
+    def _clear_cnx_storage(self, cnx):
+        cnx.clear()
+        cnx._rewriter = RQLRewriter(self)
 
     def commit(self, free_cnxset=True, reset_pool=None):
         """commit the current session's transaction"""
@@ -1299,7 +1299,7 @@ class Session(RequestSessionBase):
                  DeprecationWarning, stacklevel=2)
             free_cnxset = reset_pool
         # don't use self.cnxset, rollback may be called with _closed == True
-        cnxset = self._tx.cnxset
+        cnxset = self._cnx.cnxset
         if cnxset is None:
             self._clear_thread_data()
             self._touch()
@@ -1330,59 +1330,59 @@ class Session(RequestSessionBase):
             self._closed = True
         tracker.close()
         self.rollback()
-        self.info('waiting for open transaction of session: %s', self)
+        self.info('waiting for open connection of session: %s', self)
         timeout = 10
         pendings = tracker.wait(timeout)
         if pendings:
-            self.error('%i transaction still alive after 10 seconds, will close '
+            self.error('%i connection still alive after 10 seconds, will close '
                        'session anyway', len(pendings))
-            for txid in pendings:
-                tx = self._txs.get(txid)
-                if tx is not None:
-                    # drop tx.cnxset
+            for cnxid in pendings:
+                cnx = self._cnxs.get(cnxid)
+                if cnx is not None:
+                    # drop cnx.cnxset
                     with tracker:
                         try:
-                            cnxset = tx.cnxset
+                            cnxset = cnx.cnxset
                             if cnxset is None:
                                 continue
-                            tx.cnxset = None
+                            cnx.cnxset = None
                         except RuntimeError:
                             msg = 'issue while force free of cnxset in %s'
-                            self.error(msg, tx)
+                            self.error(msg, cnx)
                     # cnxset.reconnect() do an hard reset of the cnxset
                     # it force it to be freed
                     cnxset.reconnect()
                     self.repo._free_cnxset(cnxset)
         del self.__threaddata
-        del self._txs
+        del self._cnxs
 
     @property
     def closed(self):
-        return not hasattr(self, '_txs')
+        return not hasattr(self, '_cnxs')
 
     # transaction data/operations management ##################################
 
-    transaction_data = tx_attr('data')
-    pending_operations = tx_attr('pending_operations')
-    pruned_hooks_cache = tx_attr('pruned_hooks_cache')
-    add_operation      = tx_meth('add_operation')
+    transaction_data = cnx_attr('data')
+    pending_operations = cnx_attr('pending_operations')
+    pruned_hooks_cache = cnx_attr('pruned_hooks_cache')
+    add_operation      = cnx_meth('add_operation')
 
     # undo support ############################################################
 
-    ertype_supports_undo = tx_meth('ertype_supports_undo')
-    transaction_inc_action_counter = tx_meth('transaction_inc_action_counter')
+    ertype_supports_undo = cnx_meth('ertype_supports_undo')
+    transaction_inc_action_counter = cnx_meth('transaction_inc_action_counter')
 
     def transaction_uuid(self, set=True):
         try:
-            return self._tx.transaction_uuid(set=set)
+            return self._cnx.transaction_uuid(set=set)
         except KeyError:
-            self._tx.data['tx_uuid'] = uuid = uuid4().hex
+            self._cnx.data['tx_uuid'] = uuid = uuid4().hex
             self.repo.system_source.start_undoable_transaction(self, uuid)
             return uuid
 
     # querier helpers #########################################################
 
-    rql_rewriter = tx_attr('_rewriter')
+    rql_rewriter = cnx_attr('_rewriter')
 
     # deprecated ###############################################################
 
@@ -1437,7 +1437,7 @@ class InternalSession(Session):
         if self.repo.shutting_down:
             self.free_cnxset(True)
             raise ShuttingDown('repository is shutting down')
-        return self._tx.cnxset
+        return self._cnx.cnxset
 
 
 class InternalManager(object):

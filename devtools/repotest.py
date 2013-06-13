@@ -262,8 +262,8 @@ class BaseQuerierTC(TestCase):
         u = self.repo._build_user(self.session, self.session.user.eid)
         u._groups = set(groups)
         s = Session(u, self.repo)
-        s._tx.cnxset = self.cnxset
-        s._tx.ctx_count = 1
+        s._cnx.cnxset = self.cnxset
+        s._cnx.ctx_count = 1
         # register session to ensure it gets closed
         self._dumb_sessions.append(s)
         return s
@@ -311,8 +311,8 @@ class BasePlannerTC(BaseQuerierTC):
             del self.repo.sources_by_uri[source.uri]
         undo_monkey_patch()
         for session in self._dumb_sessions:
-            if session._tx.cnxset is not None:
-                session._tx.cnxset = None
+            if session._cnx.cnxset is not None:
+                session._cnx.cnxset = None
             session.close()
 
     def _prepare_plan(self, rql, kwargs=None):
