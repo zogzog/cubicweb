@@ -1,6 +1,14 @@
 What's new in CubicWeb 4.0?
 ============================
 
+API changes
+-----------
+
+* ``RepositorySessionManager.postlogin`` is now called with two arguments,
+  request and session. And this now happens before the session is linked to the
+  request.
+
+
 Deprecated Code Drops
 ----------------------
 

@@ -228,7 +228,7 @@ class CookieSessionHandler(object):
         req.set_cookie(sessioncookie, session.sessionid,
                        maxage=None, secure=secure)
         if not session.anonymous_session:
-            self.session_manager.postlogin(req)
+            self.session_manager.postlogin(req, session)
         return session
 
     def logout(self, req, goto_url):

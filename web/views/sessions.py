@@ -78,29 +78,33 @@ class InMemoryRepositorySessionManager(AbstractSessionManager):
         req.set_session(session)
         return session
 
-    def postlogin(self, req):
-        """postlogin: the user has been authenticated, redirect to the original
-        page (index by default) with a welcome message
+    def postlogin(self, req, session):
+        """postlogin: the user have been related to a session
+
+        Both req and session are passed to this function because actually
+        linking the request to the session is not yet done and not the
+        responsability of this object.
         """
         # Update last connection date
         # XXX: this should be in a post login hook in the repository, but there
         #      we can't differentiate actual login of automatic session
         #      reopening. Is it actually a problem?
         if 'last_login_time' in req.vreg.schema:
-            self._update_last_login_time(req)
-        req.set_message(req._('welcome %s !') % req.user.login)
+            self._update_last_login_time(session)
+        req.set_message(req._('welcome %s !') % session.cnx.user().login)
 
-    def _update_last_login_time(self, req):
+    def _update_last_login_time(self, session):
         # XXX should properly detect missing permission / non writeable source
         # and avoid "except (RepositoryError, Unauthorized)" below
         try:
-            req.execute('SET X last_login_time NOW WHERE X eid %(x)s',
-                        {'x' : req.user.eid})
-            req.cnx.commit()
+            cu = session.cnx.cursor()
+            cu.execute('SET X last_login_time NOW WHERE X eid %(x)s',
+                       {'x' : session.cnx.user().eid})
+            session.cnx.commit()
         except (RepositoryError, Unauthorized):
-            req.cnx.rollback()
+            session.cnx.rollback()
         except Exception:
-            req.cnx.rollback()
+            session.cnx.rollback()
             raise
 
     def close_session(self, session):
