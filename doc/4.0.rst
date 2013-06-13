@@ -6,3 +6,5 @@ Deprecated Code Drops
 
 * The ldapuser source has been dropped. ldapfeed is the only official source
   remaining for ldap.
+
+* session.hijack_user mechanism has been dropped.

@@ -415,13 +415,6 @@ class DBAPIRequest(RequestSessionBase):
         """return the definition of sources used by the repository."""
         return self.cnx.source_defs()
 
-    @deprecated('[3.17] do not use hijack_user. create new Session object')
-    def hijack_user(self, user):
-        """return a fake request/session using specified user"""
-        req = DBAPIRequest(self.vreg)
-        req.set_session(self.session, user)
-        return req
-
     @deprecated('[3.8] use direct access to req.session.data dictionary')
     def session_data(self):
         """return a dictionary containing session data"""

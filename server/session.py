@@ -904,22 +904,6 @@ class Session(RequestSessionBase):
         """
         return transaction(self, free_cnxset)
 
-
-    @deprecated('[3.17] do not use hijack_user. create new Session object')
-    def hijack_user(self, user):
-        """return a fake request/session using specified user"""
-        session = Session(user, self.repo)
-        tx = session._tx
-        tx.cnxset = self.cnxset
-        # share pending_operations, else operation added in the hi-jacked
-        # session such as SendMailOp won't ever be processed
-        tx.pending_operations = self.pending_operations
-        # everything in tx.data should be copied back but the entity
-        # type cache we don't want to avoid security pb
-        tx.data = self._tx.data.copy()
-        tx.data.pop('ecache', None)
-        return session
-
     def add_relation(self, fromeid, rtype, toeid):
         """provide direct access to the repository method to add a relation.
 
