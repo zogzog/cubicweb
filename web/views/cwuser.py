@@ -189,8 +189,8 @@ class CWUserManagementView(StartupView):
     __select__ = StartupView.__select__ & match_user_groups('managers')
     cache_max_age = 0 # disable caching
     # XXX one could wish to display for instance only user's firstname/surname
-    # for non managers but filtering out NULL cause crash with an ldapuser
-    # source.
+    # for non managers but filtering out NULL caused crash with an ldapuser
+    # source. The ldapuser source has been dropped and this code can be updated.
     rql = ('Any U,US,F,S,U,UAA,UDS, L,UAA,USN,UDSN ORDERBY L WHERE U is CWUser, '
            'U login L, U firstname F, U surname S, '
            'U in_state US, US name USN, '

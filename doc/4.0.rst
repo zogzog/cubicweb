@@ -1,0 +1,8 @@
+What's new in CubicWeb 4.0?
+============================
+
+Deprecated Code Drops
+----------------------
+
+* The ldapuser source has been dropped. ldapfeed is the only official source
+  remaining for ldap.
