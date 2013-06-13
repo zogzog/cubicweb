@@ -120,6 +120,7 @@ class NotificationView(EntityView):
             if isinstance(something, Entity):
                 # hi-jack self._cw to get a session for the returned user
                 self._cw = Session(something, self._cw.repo)
+                self._cw.set_cnxset()
                 emailaddr = something.cw_adapt_to('IEmailable').get_email()
             else:
                 emailaddr, lang = something
@@ -143,6 +144,10 @@ class NotificationView(EntityView):
             msg = format_mail(self.user_data, [emailaddr], content, subject,
                               config=self._cw.vreg.config, msgid=msgid, references=refs)
             yield [emailaddr], msg
+            if isinstance(something, Entity):
+                self._cw.commit()
+                self._cw.close()
+                self._cw = req
         # restore language
         req.set_language(origlang)
 
