@@ -292,9 +292,8 @@ Properties have been updated by %(user)s:
 url: %(url)s
 """
 
-    def context(self, **kwargs):
+    def context(self, changes=(), **kwargs):
         context = super(EntityUpdatedNotificationView, self).context(**kwargs)
-        changes = self._cw.transaction_data['changes'][self.cw_rset[0][0]]
         _ = self._cw._
         formatted_changes = []
         entity = self.cw_rset.get_entity(self.cw_row or 0, self.cw_col or 0)
