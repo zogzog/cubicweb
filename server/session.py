@@ -1150,12 +1150,6 @@ class Session(RequestSessionBase):
     cache_entities    = cnx_meth('cached_entities')
     drop_entity_cache = cnx_meth('drop_entity_cache')
 
-    def from_controller(self):
-        """return the id (string) of the controller issuing the request (no
-        sense here, always return 'view')
-        """
-        return 'view'
-
     source_defs = cnx_meth('source_defs')
     describe = cnx_meth('describe')
     source_from_eid = cnx_meth('source_from_eid')

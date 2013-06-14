@@ -331,9 +331,6 @@ class DBAPIRequest(RequestSessionBase):
             self.cnx = self.user = _NeedAuthAccessMock()
         self.set_default_language(vreg)
 
-    def from_controller(self):
-        return 'view'
-
     def get_option_value(self, option, foreid=None):
         return self.cnx.get_option_value(option, foreid)
 

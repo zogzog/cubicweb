@@ -731,6 +731,12 @@ class CubicWebRequestBase(DBAPIRequest):
         if '__message' in kwargs:
             msg = kwargs.pop('__message')
             kwargs['_cwmsgid'] = self.set_redirect_message(msg)
+        if not args:
+            method = 'view'
+            if (self.from_controller() == 'view'
+                and not '_restpath' in kwargs):
+                method = self.relative_path(includeparams=False) or 'view'
+            args = (method,)
         return super(CubicWebRequestBase, self).build_url(*args, **kwargs)
 
     def url(self, includeparams=True):

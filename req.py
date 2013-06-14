@@ -221,24 +221,20 @@ class RequestSessionBase(object):
         """
         # use *args since we don't want first argument to be "anonymous" to
         # avoid potential clash with kwargs
+        method = None
         if args:
             assert len(args) == 1, 'only 0 or 1 non-named-argument expected'
             method = args[0]
-        else:
-            method = None
+        if method is None:
+            method = 'view'
         # XXX I (adim) think that if method is passed explicitly, we should
         #     not try to process it and directly call req.build_url()
-        if method is None:
-            if self.from_controller() == 'view' and not '_restpath' in kwargs:
-                method = self.relative_path(includeparams=False) or 'view'
-            else:
-                method = 'view'
         base_url = kwargs.pop('base_url', None)
         if base_url is None:
             secure = kwargs.pop('__secure__', None)
             base_url = self.base_url(secure=secure)
         if '_restpath' in kwargs:
-            assert method == 'view', method
+            assert method == 'view', repr(method)
             path = kwargs.pop('_restpath')
         else:
             path = method
