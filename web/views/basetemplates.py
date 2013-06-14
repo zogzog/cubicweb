@@ -108,7 +108,7 @@ class NonTemplatableViewTemplate(MainTemplate):
         if (('__notemplate' in self._cw.form)
             and view.templatable
             and view.content_type == self._cw.html_content_type()):
-            view.w(self._cw.document_surrounding_div())
+            view.w(u'<div>')
             view.render()
             view.w(u'</div>')
         else:

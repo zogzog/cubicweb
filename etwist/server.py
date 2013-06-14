@@ -19,35 +19,25 @@
 __docformat__ = "restructuredtext en"
 
 import sys
-import os
-import os.path as osp
 import select
 import traceback
 import threading
-import re
-from hashlib import md5 # pylint: disable=E0611
-from os.path import join
-from time import mktime
-from datetime import date, timedelta
 from urlparse import urlsplit, urlunsplit
 from cgi import FieldStorage, parse_header
 
 from twisted.internet import reactor, task, threads
-from twisted.internet.defer import maybeDeferred
 from twisted.web import http, server
-from twisted.web import static, resource
+from twisted.web import resource
 from twisted.web.server import NOT_DONE_YET
 
 
 from logilab.mtconverter import xml_escape
 from logilab.common.decorators import monkeypatch
 
-from cubicweb import (AuthenticationError, ConfigurationError,
-                      CW_EVENT_MANAGER, CubicWebException)
+from cubicweb import ConfigurationError, CW_EVENT_MANAGER
 from cubicweb.utils import json_dumps
 from cubicweb.web import DirectResponse
 from cubicweb.web.application import CubicWebPublisher
-from cubicweb.web.http_headers import generateDateTime
 from cubicweb.etwist.request import CubicWebTwistedRequestAdapter
 from cubicweb.etwist.http import HTTPResponse
 

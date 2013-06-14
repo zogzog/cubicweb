@@ -32,7 +32,7 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
     __regid__ = 'ldapfeed'
     # attributes that may appears in source user_attrs dict which are not
     # attributes of the cw user
-    non_attribute_keys = set(('email',))
+    non_attribute_keys = set(('email', 'eid', 'member', 'modification_date'))
 
     @cachedproperty
     def searchfilterstr(self):
@@ -40,27 +40,57 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
         return '(&%s)' % ''.join(self.source.base_filters)
 
     @cachedproperty
-    def source_entities_by_extid(self):
+    def searchgroupfilterstr(self):
+        """ ldap search string, including user-filter """
+        return '(&%s)' % ''.join(self.source.group_base_filters)
+
+    @cachedproperty
+    def user_source_entities_by_extid(self):
         source = self.source
-        return dict((userdict['dn'], userdict)
-                    for userdict in source._search(self._cw,
-                                                   source.user_base_dn,
-                                                   source.user_base_scope,
-                                                   self.searchfilterstr))
+        if source.user_base_dn.strip():
+            attrs = map(str, source.user_attrs.keys())
+            return dict((userdict['dn'], userdict)
+                        for userdict in source._search(self._cw,
+                                                       source.user_base_dn,
+                                                       source.user_base_scope,
+                                                       self.searchfilterstr,
+                                                       attrs))
+        return {}
+
+    @cachedproperty
+    def group_source_entities_by_extid(self):
+        source = self.source
+        if source.group_base_dn.strip():
+            attrs = map(str, ['modifyTimestamp'] + source.group_attrs.keys())
+            return dict((groupdict['dn'], groupdict)
+                        for groupdict in source._search(self._cw,
+                                                        source.group_base_dn,
+                                                        source.group_base_scope,
+                                                        self.searchgroupfilterstr,
+                                                        attrs))
+        return {}
+
+    def _process(self, etype, sdict):
+        self.warning('fetched %s %s', etype, sdict)
+        extid = sdict['dn']
+        entity = self.extid2entity(extid, etype, **sdict)
+        if entity is not None and not self.created_during_pull(entity):
+            self.notify_updated(entity)
+            attrs = self.ldap2cwattrs(sdict, etype)
+            self.update_if_necessary(entity, attrs)
+            if etype == 'CWUser':
+                self._process_email(entity, sdict)
+            if etype == 'CWGroup':
+                self._process_membership(entity, sdict)
 
     def process(self, url, raise_on_error=False):
         """IDataFeedParser main entry point"""
         self.debug('processing ldapfeed source %s %s', self.source, self.searchfilterstr)
-        for userdict in self.source_entities_by_extid.itervalues():
-            self.warning('fetched user %s', userdict)
-            extid = userdict['dn']
-            entity = self.extid2entity(extid, 'CWUser', **userdict)
-            if entity is not None and not self.created_during_pull(entity):
-                self.notify_updated(entity)
-                attrs = self.ldap2cwattrs(userdict)
-                self.update_if_necessary(entity, attrs)
-                self._process_email(entity, userdict)
-
+        for userdict in self.user_source_entities_by_extid.itervalues():
+            self._process('CWUser', userdict)
+        self.debug('processing ldapfeed source %s %s', self.source, self.searchgroupfilterstr)
+        for groupdict in self.group_source_entities_by_extid.itervalues():
+            self._process('CWGroup', groupdict)
 
     def handle_deletion(self, config, session, myuris):
         if config['delete-entities']:
@@ -85,7 +115,7 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
         # disable read security to allow password selection
         with entity._cw.security_enabled(read=False):
             entity.complete(tuple(attrs))
-        if entity.__regid__ == 'CWUser':
+        if entity.cw_etype == 'CWUser':
             wf = entity.cw_adapt_to('IWorkflowable')
             if wf.state == 'deactivated':
                 wf.fire_transition('activate')
@@ -98,41 +128,56 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
                 entity.cw_set(**attrs)
                 self.notify_updated(entity)
 
-    def ldap2cwattrs(self, sdict, tdict=None):
+    def ldap2cwattrs(self, sdict, etype, tdict=None):
+        """ Transform dictionary of LDAP attributes to CW
+        etype must be CWUser or CWGroup """
         if tdict is None:
             tdict = {}
-        for sattr, tattr in self.source.user_attrs.iteritems():
+        if etype == 'CWUser':
+            items = self.source.user_attrs.iteritems()
+        elif etype == 'CWGroup':
+            items = self.source.group_attrs.iteritems()
+        for sattr, tattr in items:
             if tattr not in self.non_attribute_keys:
                 try:
                     tdict[tattr] = sdict[sattr]
                 except KeyError:
                     raise ConfigurationError('source attribute %s is not present '
                                              'in the source, please check the '
-                                             'user-attrs-map field' % sattr)
+                                             '%s-attrs-map field' %
+                                             (sattr, etype[2:].lower()))
         return tdict
 
     def before_entity_copy(self, entity, sourceparams):
-        if entity.__regid__ == 'EmailAddress':
+        etype = entity.cw_etype
+        if etype == 'EmailAddress':
             entity.cw_edited['address'] = sourceparams['address']
         else:
-            self.ldap2cwattrs(sourceparams, entity.cw_edited)
-            pwd = entity.cw_edited.get('upassword')
-            if not pwd:
-                # generate a dumb password if not fetched from ldap (see
-                # userPassword)
-                pwd = crypt_password(generate_password())
-                entity.cw_edited['upassword'] = Binary(pwd)
+            self.ldap2cwattrs(sourceparams, etype, tdict=entity.cw_edited)
+            if etype == 'CWUser':
+                pwd = entity.cw_edited.get('upassword')
+                if not pwd:
+                    # generate a dumb password if not fetched from ldap (see
+                    # userPassword)
+                    pwd = crypt_password(generate_password())
+                    entity.cw_edited['upassword'] = Binary(pwd)
         return entity
 
     def after_entity_copy(self, entity, sourceparams):
         super(DataFeedLDAPAdapter, self).after_entity_copy(entity, sourceparams)
-        if entity.__regid__ == 'EmailAddress':
+        etype = entity.cw_etype
+        if etype == 'EmailAddress':
             return
-        groups = filter(None, [self._get_group(name)
-                               for name in self.source.user_default_groups])
-        if groups:
-            entity.cw_set(in_group=groups)
-        self._process_email(entity, sourceparams)
+        # all CWUsers must be treated before CWGroups to have to in_group relation
+        # set correctly in _associate_ldapusers
+        elif etype == 'CWUser':
+            groups = filter(None, [self._get_group(name)
+                                   for name in self.source.user_default_groups])
+            if groups:
+                entity.cw_set(in_group=groups)
+            self._process_email(entity, sourceparams)
+        elif etype == 'CWGroup':
+            self._process_membership(entity, sourceparams)
 
     def is_deleted(self, extidplus, etype, eid):
         try:
@@ -141,7 +186,7 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
             # for some reason extids here tend to come in both forms, e.g:
             # dn, dn@@Babar
             extid = extidplus
-        return extid not in self.source_entities_by_extid
+        return extid not in self.user_source_entities_by_extid
 
     def _process_email(self, entity, userdict):
         try:
@@ -159,10 +204,7 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
                 emailextid = userdict['dn'] + '@@' + emailaddr
                 email = self.extid2entity(emailextid, 'EmailAddress',
                                           address=emailaddr)
-                if entity.primary_email:
-                    entity.cw_set(use_email=email)
-                else:
-                    entity.cw_set(primary_email=email)
+                entity.cw_set(use_email=email)
             elif self.sourceuris:
                 # pop from sourceuris anyway, else email may be removed by the
                 # source once import is finished
@@ -170,13 +212,26 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
                 self.sourceuris.pop(uri, None)
             # XXX else check use_email relation?
 
+    def _process_membership(self, entity, sourceparams):
+        """ Find existing CWUsers with the same login as the memberUids in the
+        CWGroup entity and create the in_group relationship """
+        mdate = sourceparams.get('modification_date')
+        if (not mdate or mdate > entity.modification_date):
+            self._cw.execute('DELETE U in_group G WHERE G eid %(g)s',
+                             {'g':entity.eid})
+            members = sourceparams.get(self.source.group_rev_attrs['member'])
+            if members:
+                members = ["'%s'" % e for e in members]
+                rql = 'SET U in_group G WHERE G eid %%(g)s, U login IN (%s)' % ','.join(members)
+                self._cw.execute(rql, {'g':entity.eid,  })
+
     @cached
     def _get_group(self, name):
         try:
             return self._cw.execute('Any X WHERE X is CWGroup, X name %(name)s',
                                     {'name': name}).get_entity(0, 0)
         except IndexError:
-            self.error('group %r referenced by source configuration %r does not exist'
-                       % (name, self.source.uri))
+            self.error('group %r referenced by source configuration %r does not exist',
+                       name, self.source.uri)
             return None
 

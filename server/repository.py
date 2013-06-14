@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -50,7 +50,7 @@ from cubicweb import (CW_SOFTWARE_ROOT, CW_MIGRATION_MAP, QueryError,
                       UnknownEid, AuthenticationError, ExecutionError,
                       ETypeNotSupportedBySources, MultiSourcesError,
                       BadConnectionId, Unauthorized, ValidationError,
-                      RepositoryError, UniqueTogetherError, typed_eid, onevent)
+                      RepositoryError, UniqueTogetherError, onevent)
 from cubicweb import cwvreg, schema, server
 from cubicweb.server import ShuttingDown, utils, hook, pool, querier, sources
 from cubicweb.server.session import Session, InternalSession, InternalManager
@@ -167,6 +167,9 @@ class Repository(object):
 
         self.pyro_registered = False
         self.pyro_uri = None
+        # every pyro client is handled in its own thread; map these threads to
+        # the session we opened for them so we can clean up when they go away
+        self._pyro_sessions = {}
         self.app_instances_bus = NullEventBus()
         self.info('starting repository from %s', self.config.apphome)
         # dictionary of opened sessions
@@ -192,9 +195,12 @@ class Repository(object):
         self._type_source_cache = {}
         # cache (extid, source uri) -> eid
         self._extid_cache = {}
-        # open some connections set
+        # open some connection sets
         if config.init_cnxset_pool:
             self.init_cnxset_pool()
+        # the hooks manager
+        self.hm = hook.HooksManager(self.vreg)
+        # registry hook to fix user class on registry reload
         @onevent('after-registry-reload', self)
         def fix_user_classes(self):
             # After registery reload the 'CWUser' class used for CWEtype
@@ -206,49 +212,55 @@ class Repository(object):
                     session.user.__class__ = usercls
 
     def init_cnxset_pool(self):
+        """should be called bootstrap_repository, as this is what it does"""
         config = self.config
         self._cnxsets_pool = Queue.Queue()
+        # 0. init a cnxset that will be used to fetch bootstrap information from
+        #    the database
         self._cnxsets_pool.put_nowait(pool.ConnectionsSet(self.sources))
+        # 1. set used cubes
+        if config.creating or not config.read_instance_schema:
+            config.bootstrap_cubes()
+        else:
+            self.set_schema(self.config.load_bootstrap_schema(), resetvreg=False)
+            config.init_cubes(self.get_cubes())
+        # 2. load schema
         if config.quick_start:
-            # quick start, usually only to get a minimal repository to get cubes
+            # quick start: only to get a minimal repository to get cubes
             # information (eg dump/restore/...)
-            config._cubes = ()
-            # only load hooks and entity classes in the registry
+            #
+            # restrict appobject_path to only load hooks and entity classes in
+            # the registry
             config.cube_appobject_path = set(('hooks', 'entities'))
             config.cubicweb_appobject_path = set(('hooks', 'entities'))
-            self.set_schema(config.load_schema())
+            # limit connections pool to 1
             config['connections-pool-size'] = 1
-            # will be reinitialized later from cubes found in the database
-            config._cubes = None
-        elif config.creating or not config.read_instance_schema:
+        if config.quick_start or config.creating or not config.read_instance_schema:
+            # load schema from the file system
             if not config.creating:
-                # test start: use the file system schema (quicker)
                 self.warning("set fs instance'schema")
-            config.bootstrap_cubes()
             self.set_schema(config.load_schema())
         else:
             # normal start: load the instance schema from the database
-            self.fill_schema()
-        if not config.creating:
-            self.init_sources_from_database()
-            if 'CWProperty' in self.schema:
-                self.vreg.init_properties(self.properties())
-        else:
+            self.info('loading schema from the repository')
+            self.set_schema(self.deserialize_schema())
+        # 3. initialize data sources
+        if config.creating:
             # call init_creating so that for instance native source can
             # configurate tsearch according to postgres version
             for source in self.sources:
                 source.init_creating()
-        # close initialization connetions set and reopen fresh ones for proper
-        # initialization now that we know cubes
+        else:
+            self.init_sources_from_database()
+            if 'CWProperty' in self.schema:
+                self.vreg.init_properties(self.properties())
+        # 4. close initialization connection set and reopen fresh ones for
+        #    proper initialization
         self._get_cnxset().close(True)
-        # list of available_cnxsets (we can't iterate on Queue instance)
-        self.cnxsets = []
+        self.cnxsets = [] # list of available cnxsets (can't iterate on a Queue)
         for i in xrange(config['connections-pool-size']):
             self.cnxsets.append(pool.ConnectionsSet(self.sources))
             self._cnxsets_pool.put_nowait(self.cnxsets[-1])
-        if config.quick_start:
-            config.init_cubes(self.get_cubes())
-        self.hm = hook.HooksManager(self.vreg)
 
     # internals ###############################################################
 
@@ -313,13 +325,9 @@ class Repository(object):
         source_config['type'] = type
         return sources.get_source(type, source_config, self, eid)
 
-    def set_schema(self, schema, resetvreg=True, rebuildinfered=True):
-        if rebuildinfered:
-            schema.rebuild_infered_relations()
+    def set_schema(self, schema, resetvreg=True):
         self.info('set schema %s %#x', schema.name, id(schema))
         if resetvreg:
-            if self.config._cubes is None:
-                self.config.init_cubes(self.get_cubes())
             # trigger full reload of all appobjects
             self.vreg.set_schema(schema)
         else:
@@ -331,12 +339,10 @@ class Repository(object):
             source.set_schema(schema)
         self.schema = schema
 
-    def fill_schema(self):
-        """load schema from the repository"""
+    def deserialize_schema(self):
+        """load schema from the database"""
         from cubicweb.server.schemaserial import deserialize_schema
-        self.info('loading schema from the repository')
         appschema = schema.CubicWebSchema(self.config.appid)
-        self.set_schema(self.config.load_bootstrap_schema(), resetvreg=False)
         self.debug('deserializing db schema into %s %#x', appschema.name, id(appschema))
         with self.internal_session() as session:
             try:
@@ -349,8 +355,7 @@ class Repository(object):
                 raise Exception('Is the database initialised ? (cause: %s)' %
                                 (ex.args and ex.args[0].strip() or 'unknown')), \
                                 None, sys.exc_info()[-1]
-        self.set_schema(appschema)
-
+        return appschema
 
     def _prepare_startup(self):
         """Prepare "Repository as a server" for startup.
@@ -754,6 +759,12 @@ class Repository(object):
             # try to get a user object
             user = self.authenticate_user(session, login, **kwargs)
         session = Session(user, self, cnxprops)
+        if threading.currentThread() in self._pyro_sessions:
+            # assume no pyro client does one get_repository followed by
+            # multiple repo.connect
+            assert self._pyro_sessions[threading.currentThread()] == None
+            self.debug('record session %s', session)
+            self._pyro_sessions[threading.currentThread()] = session
         user._cw = user.cw_rset.req = session
         user.cw_clear_relation_cache()
         self._sessions[session.id] = session
@@ -844,7 +855,7 @@ class Repository(object):
         self.debug('begin commit for session %s', sessionid)
         try:
             session = self._get_session(sessionid)
-            session.set_tx_data(txid)
+            session.set_tx(txid)
             return session.commit()
         except (ValidationError, Unauthorized):
             raise
@@ -857,7 +868,7 @@ class Repository(object):
         self.debug('begin rollback for session %s', sessionid)
         try:
             session = self._get_session(sessionid)
-            session.set_tx_data(txid)
+            session.set_tx(txid)
             session.rollback()
         except Exception:
             self.exception('unexpected error')
@@ -874,6 +885,8 @@ class Repository(object):
         # during `session_close` hooks
         session.commit()
         session.close()
+        if threading.currentThread() in self._pyro_sessions:
+            self._pyro_sessions[threading.currentThread()] = None
         del self._sessions[sessionid]
         self.info('closed session %s for user %s', sessionid, session.user.login)
 
@@ -1014,7 +1027,7 @@ class Repository(object):
         except KeyError:
             raise BadConnectionId('No such session %s' % sessionid)
         if setcnxset:
-            session.set_tx_data(txid) # must be done before set_cnxset
+            session.set_tx(txid) # must be done before set_cnxset
             session.set_cnxset()
         return session
 
@@ -1027,7 +1040,7 @@ class Repository(object):
         uri)` for the entity of the given `eid`
         """
         try:
-            eid = typed_eid(eid)
+            eid = int(eid)
         except ValueError:
             raise UnknownEid(eid)
         try:
@@ -1055,7 +1068,7 @@ class Repository(object):
         rqlcache = self.querier._rql_cache
         for eid in eids:
             try:
-                etype, uri, extid, auri = etcache.pop(typed_eid(eid)) # may be a string in some cases
+                etype, uri, extid, auri = etcache.pop(int(eid)) # may be a string in some cases
                 rqlcache.pop( ('%s X WHERE X eid %s' % (etype, eid),), None)
                 extidcache.pop((extid, uri), None)
             except KeyError:
@@ -1084,7 +1097,7 @@ class Repository(object):
                     key, args[key]))
             cachekey.append(etype)
             # ensure eid is correctly typed in args
-            args[key] = typed_eid(args[key])
+            args[key] = int(args[key])
         return tuple(cachekey)
 
     def eid2extid(self, source, eid, session=None):
@@ -1177,7 +1190,7 @@ class Repository(object):
                     hook.CleanupDeletedEidsCacheOp.get_instance(session).add_data(entity.eid)
                     self.system_source.delete_info_multi(session, [entity], uri)
                     if source.should_call_hooks:
-                        session._threaddata.pending_operations = pending_operations
+                        session._tx.pending_operations = pending_operations
             raise
 
     def add_info(self, session, entity, source, extid=None, complete=True):
@@ -1336,7 +1349,7 @@ class Repository(object):
                 suri = 'system'
             extid = source.get_extid(entity)
             self._extid_cache[(str(extid), suri)] = entity.eid
-        self._type_source_cache[entity.eid] = (entity.__regid__, suri, extid,
+        self._type_source_cache[entity.eid] = (entity.cw_etype, suri, extid,
                                                source.uri)
         return extid
 
@@ -1350,13 +1363,13 @@ class Repository(object):
         entity._cw_is_saved = False # entity has an eid but is not yet saved
         # init edited_attributes before calling before_add_entity hooks
         entity.cw_edited = edited
-        source = self.locate_etype_source(entity.__regid__)
+        source = self.locate_etype_source(entity.cw_etype)
         # allocate an eid to the entity before calling hooks
         entity.eid = self.system_source.create_eid(session)
         # set caches asap
         extid = self.init_entity_caches(session, entity, source)
         if server.DEBUG & server.DBG_REPO:
-            print 'ADD entity', self, entity.__regid__, entity.eid, edited
+            print 'ADD entity', self, entity.cw_etype, entity.eid, edited
         prefill_entity_caches(entity)
         if source.should_call_hooks:
             self.hm.call_hooks('before_add_entity', session, entity=entity)
@@ -1389,7 +1402,7 @@ class Repository(object):
         """
         entity = edited.entity
         if server.DEBUG & server.DBG_REPO:
-            print 'UPDATE entity', entity.__regid__, entity.eid, \
+            print 'UPDATE entity', entity.cw_etype, entity.eid, \
                   entity.cw_attr_cache, edited
         hm = self.hm
         eschema = entity.e_schema
@@ -1635,21 +1648,22 @@ class Repository(object):
         # into the pyro name server
         if self._use_pyrons():
             self.looping_task(60*10, self._ensure_pyro_ns)
+        pyro_sessions = self._pyro_sessions
         # install hacky function to free cnxset
-        self.looping_task(60, self._cleanup_pyro)
+        def handleConnection(conn, tcpserver, sessions=pyro_sessions):
+            sessions[threading.currentThread()] = None
+            return tcpserver.getAdapter().__class__.handleConnection(tcpserver.getAdapter(), conn, tcpserver)
+        daemon.getAdapter().handleConnection = handleConnection
+        def removeConnection(conn, sessions=pyro_sessions):
+            daemon.__class__.removeConnection(daemon, conn)
+            session = sessions.pop(threading.currentThread(), None)
+            if session is None:
+                # client was not yet connected to the repo
+                return
+            if not session.closed:
+                session.close()
+        daemon.removeConnection = removeConnection
         return daemon
-
-    def _cleanup_pyro(self):
-        """Very hacky function to cleanup session left by dead Pyro thread.
-
-        There is no clean pyro callback to detect this.
-        """
-        for session in self._sessions.values():
-            for thread, cnxset in session._threads_in_transaction.copy():
-                if not thread.isAlive():
-                    self.warning('Freeing cnxset used by dead pyro threads: %',
-                                 thread)
-                    session._free_thread_cnxset(thread, cnxset)
 
     def _ensure_pyro_ns(self):
         if not self._use_pyrons():

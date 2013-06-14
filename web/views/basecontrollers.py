@@ -27,7 +27,7 @@ from warnings import warn
 from logilab.common.deprecation import deprecated
 
 from cubicweb import (NoSelectableObject, ObjectNotFound, ValidationError,
-                      AuthenticationError, typed_eid, UndoTransactionException,
+                      AuthenticationError, UndoTransactionException,
                       Forbidden)
 from cubicweb.utils import json_dumps
 from cubicweb.predicates import (authenticated_user, anonymous_user,
@@ -54,7 +54,7 @@ def xhtmlize(func):
     def wrapper(self, *args, **kwargs):
         self._cw.set_content_type(self._cw.html_content_type())
         result = func(self, *args, **kwargs)
-        return ''.join((self._cw.document_surrounding_div(), result.strip(),
+        return ''.join((u'<div>', result.strip(),
                         u'</div>'))
     wrapper.__name__ = func.__name__
     return wrapper
@@ -176,7 +176,7 @@ class ViewController(Controller):
         if not '__linkto' in req.form:
             return
         if eid is None:
-            eid = typed_eid(req.form['eid'])
+            eid = int(req.form['eid'])
         for linkto in req.list_form_param('__linkto', pop=True):
             rtype, eids, target = linkto.split(':')
             assert target in ('subject', 'object')
@@ -186,7 +186,7 @@ class ViewController(Controller):
             else:
                 rql = 'SET Y %s X WHERE X eid %%(x)s, Y eid %%(y)s' % rtype
             for teid in eids:
-                req.execute(rql, {'x': eid, 'y': typed_eid(teid)})
+                req.execute(rql, {'x': eid, 'y': int(teid)})
 
 
 def _validation_error(req, ex):
@@ -271,7 +271,6 @@ class JSonController(Controller):
         return ajax_controller.publish(rset)
 
 
-# XXX move to massmailing
 class MailBugReportController(Controller):
     __regid__ = 'reportbug'
     __select__ = match_form_params('description')

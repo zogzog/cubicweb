@@ -59,7 +59,7 @@ __docformat__ = "restructuredtext en"
 
 from rql import TypeResolverException
 
-from cubicweb import RegistryException, typed_eid
+from cubicweb import RegistryException
 from cubicweb.web import NotFound, Redirect, component
 
 
@@ -165,7 +165,7 @@ class EidPathEvaluator(URLPathEvaluator):
         if len(parts) != 1:
             raise PathDontMatch()
         try:
-            rset = req.execute('Any X WHERE X eid %(x)s', {'x': typed_eid(parts[0])})
+            rset = req.execute('Any X WHERE X eid %(x)s', {'x': int(parts[0])})
         except ValueError:
             raise PathDontMatch()
         if rset.rowcount == 0:
@@ -222,7 +222,7 @@ class RestPathEvaluator(URLPathEvaluator):
                                     'x', 'Substitute')
         if attrname == 'eid':
             try:
-                rset = req.execute(st.as_string(), {'x': typed_eid(value)})
+                rset = req.execute(st.as_string(), {'x': int(value)})
             except (ValueError, TypeResolverException):
                 # conflicting eid/type
                 raise PathDontMatch()

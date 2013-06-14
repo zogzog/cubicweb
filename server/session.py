@@ -48,28 +48,28 @@ NO_UNDO_TYPES.add('cw_source')
 
 @objectify_predicate
 def is_user_session(cls, req, **kwargs):
-    """repository side only predicate returning 1 if the session is a regular
-    user session and not an internal session
-    """
+    """return 1 when session is not internal.
+
+    This predicate can only be used repository side only. """
     return not req.is_internal_session
 
 @objectify_predicate
 def is_internal_session(cls, req, **kwargs):
-    """repository side only predicate returning 1 if the session is not a regular
-    user session but an internal session
-    """
+    """return 1 when session is not internal.
+
+    This predicate can only be used repository side only. """
     return req.is_internal_session
 
 @objectify_predicate
 def repairing(cls, req, **kwargs):
-    """repository side only predicate returning 1 if the session is not a regular
-    user session but an internal session
-    """
+    """return 1 when repository is running in repair mode"""
     return req.vreg.config.repairing
 
 
 class transaction(object):
-    """context manager to enter a transaction for a session: when exiting the
+    """Ensure that the transaction is either commited or rollbacked at exit
+
+    Context manager to enter a transaction for a session: when exiting the
     `with` block on exception, call `session.rollback()`, else call
     `session.commit()` on normal exit
     """
@@ -87,8 +87,16 @@ class transaction(object):
         else:
             self.session.commit(free_cnxset=self.free_cnxset)
 
+@deprecated('[3.17] use <object>.allow/deny_all_hooks_but instead')
+def hooks_control(obj, mode, *categories):
+    assert mode in  (HOOKS_ALLOW_ALL, HOOKS_DENY_ALL)
+    if mode == HOOKS_ALLOW_ALL:
+        return obj.allow_all_hooks_but(*categories)
+    elif mode == HOOKS_DENY_ALL:
+        return obj.deny_all_hooks_but(*categories)
 
-class hooks_control(object):
+
+class _hooks_control(object):
     """context manager to control activated hooks categories.
 
     If mode is session.`HOOKS_DENY_ALL`, given hooks categories will
@@ -99,10 +107,10 @@ class hooks_control(object):
 
     .. sourcecode:: python
 
-       with hooks_control(self.session, self.session.HOOKS_ALLOW_ALL, 'integrity'):
+       with _hooks_control(self.session, self.session.HOOKS_ALLOW_ALL, 'integrity'):
            # ... do stuff with all but 'integrity' hooks activated
 
-       with hooks_control(self.session, self.session.HOOKS_DENY_ALL, 'integrity'):
+       with _hooks_control(self.session, self.session.HOOKS_DENY_ALL, 'integrity'):
            # ... do stuff with none but 'integrity' hooks activated
 
     This is an internal api, you should rather use
@@ -111,45 +119,612 @@ class hooks_control(object):
     methods.
     """
     def __init__(self, session, mode, *categories):
+        assert mode in (HOOKS_ALLOW_ALL, HOOKS_DENY_ALL)
         self.session = session
+        self.tx = session._tx
         self.mode = mode
         self.categories = categories
+        self.oldmode = None
+        self.changes = ()
 
     def __enter__(self):
-        self.oldmode, self.changes = self.session.init_hooks_mode_categories(
-            self.mode, self.categories)
+        self.oldmode = self.tx.hooks_mode
+        self.tx.hooks_mode = self.mode
+        if self.mode is HOOKS_DENY_ALL:
+            self.changes = self.tx.enable_hook_categories(*self.categories)
+        else:
+            self.changes = self.tx.disable_hook_categories(*self.categories)
+        self.tx.ctx_count += 1
 
     def __exit__(self, exctype, exc, traceback):
-        self.session.reset_hooks_mode_categories(self.oldmode, self.mode, self.changes)
+        self.tx.ctx_count -= 1
+        if self.tx.ctx_count == 0:
+            self.session._clear_thread_storage(self.tx)
+        else:
+            try:
+                if self.categories:
+                    if self.mode is HOOKS_DENY_ALL:
+                        self.tx.disable_hook_categories(*self.categories)
+                    else:
+                        self.tx.enable_hook_categories(*self.categories)
+            finally:
+                self.tx.hooks_mode = self.oldmode
 
+@deprecated('[3.17] use <object>.security_enabled instead')
+def security_enabled(obj, *args, **kwargs):
+    return obj.security_enabled(*args, **kwargs)
 
-class security_enabled(object):
-    """context manager to control security w/ session.execute, since by
-    default security is disabled on queries executed on the repository
+class _security_enabled(object):
+    """context manager to control security w/ session.execute,
+
+    By default security is disabled on queries executed on the repository
     side.
     """
     def __init__(self, session, read=None, write=None):
         self.session = session
+        self.tx = session._tx
         self.read = read
         self.write = write
+        self.oldread = None
+        self.oldwrite = None
 
     def __enter__(self):
-        self.oldread, self.oldwrite = self.session.init_security(
-            self.read, self.write)
+        if self.read is None:
+            self.oldread = None
+        else:
+            self.oldread = self.tx.read_security
+            self.tx.read_security = self.read
+        if self.write is None:
+            self.oldwrite = None
+        else:
+            self.oldwrite = self.tx.write_security
+            self.tx.write_security = self.write
+        self.tx.ctx_count += 1
 
     def __exit__(self, exctype, exc, traceback):
-        self.session.reset_security(self.oldread, self.oldwrite)
+        self.tx.ctx_count -= 1
+        if self.tx.ctx_count == 0:
+            self.session._clear_thread_storage(self.tx)
+        else:
+            if self.oldread is not None:
+                self.tx.read_security = self.oldread
+            if self.oldwrite is not None:
+                self.tx.write_security = self.oldwrite
 
+HOOKS_ALLOW_ALL = object()
+HOOKS_DENY_ALL = object()
+DEFAULT_SECURITY = object() # evaluated to true by design
 
-class TransactionData(object):
-    def __init__(self, txid):
+class SessionClosedError(RuntimeError):
+    pass
+
+class CnxSetTracker(object):
+    """Keep track of which transaction use which cnxset.
+
+    There should be one of this object per session plus one another for
+    internal session.
+
+    Session object are responsible of creating their CnxSetTracker object.
+
+    Transaction should use the :meth:`record` and :meth:`forget` to inform the
+    tracker of cnxset they have acquired.
+
+    .. automethod:: cubicweb.server.session.CnxSetTracker.record
+    .. automethod:: cubicweb.server.session.CnxSetTracker.forget
+
+    Session use the :meth:`close` and :meth:`wait` method when closing.
+
+    .. automethod:: cubicweb.server.session.CnxSetTracker.close
+    .. automethod:: cubicweb.server.session.CnxSetTracker.wait
+
+    This object itself is threadsafe. It also requires caller to acquired its
+    lock in some situation.
+    """
+
+    def __init__(self):
+        self._active = True
+        self._condition = threading.Condition()
+        self._record = {}
+
+    def __enter__(self):
+        self._condition.__enter__()
+
+    def __exit__(self, *args):
+        self._condition.__exit__(*args)
+
+    def record(self, txid, cnxset):
+        """Inform the tracker that a txid have acquired a cnxset
+
+        This methode is to be used by Transaction object.
+
+        This method fails when:
+        - The txid already have a recorded cnxset.
+        - The tracker is not active anymore.
+
+        Notes about the caller:
+        (1) It is responsible for retrieving a cnxset.
+        (2) It must be prepared to release the cnxset if the
+            `cnxsettracker.forget` call fails.
+        (3) It should acquire the tracker lock until the very end of the operation.
+        (4) However It take care to lock the CnxSetTracker object after having
+            retrieved the cnxset to prevent deadlock.
+
+        A typical usage look like::
+
+        cnxset = repo._get_cnxset() # (1)
+        try:
+            with cnxset_tracker: # (3) and (4)
+                cnxset_tracker.record(caller.id, cnxset)
+                # (3') operation ends when caller is in expected state only
+                caller.cnxset = cnxset
+        except Exception:
+            repo._free_cnxset(cnxset) # (2)
+            raise
+        """
+        # dubious since the caller is suppose to have acquired it anyway.
+        with self._condition:
+            if not self._active:
+                raise SessionClosedError('Closed')
+            old = self._record.get(txid)
+            if old is not None:
+                raise ValueError('"%s" already have a cnx_set (%r)'
+                                 % (txid, old))
+            self._record[txid] = cnxset
+
+    def forget(self, txid, cnxset):
+        """Inform the tracker that a txid have release a cnxset
+
+        This methode is to be used by Transaction object.
+
+        This method fails when:
+        - The cnxset for the txid does not match the recorded one.
+
+        Notes about the caller:
+        (1) It is responsible for releasing the cnxset.
+        (2) It should acquire the tracker lock during the operation to ensure
+            the internal tracker state is always accurate regarding its own state.
+
+        A typical usage look like::
+
+        cnxset = caller.cnxset
+        try:
+            with cnxset_tracker:
+                # (2) you can not have caller.cnxset out of sync with
+                #     cnxset_tracker state while unlocked
+                caller.cnxset = None
+                cnxset_tracker.forget(caller.id, cnxset)
+        finally:
+            cnxset = repo._free_cnxset(cnxset) # (1)
+        """
+        with self._condition:
+            old = self._record.get(txid, None)
+            if old is not cnxset:
+                raise ValueError('recorded cnxset for "%s" mismatch: %r != %r'
+                                 % (txid, old, cnxset))
+            self._record.pop(txid)
+            self._condition.notify_all()
+
+    def close(self):
+        """Marks the tracker as inactive.
+
+        This methode is to be used by Session object.
+
+        Inactive tracker does not accept new record anymore.
+        """
+        with self._condition:
+            self._active = False
+
+    def wait(self, timeout=10):
+        """Wait for all recorded cnxset to be released
+
+        This methode is to be used by Session object.
+
+        returns a tuple of transaction id that remains open.
+        """
+        with self._condition:
+            if  self._active:
+                raise RuntimeError('Cannot wait on active tracker.'
+                                   ' Call tracker.close() first')
+            while self._record and timeout > 0:
+                start = time()
+                self._condition.wait(timeout)
+                timeout -= time() - start
+            return tuple(self._record)
+
+class Transaction(object):
+    """Repository Transaction
+
+    Holds all transaction related data
+
+    Database connections resource:
+
+      :attr:`running_dbapi_query`, boolean flag telling if the executing query
+      is coming from a dbapi connection or is a query from within the repository
+
+      :attr:`cnxset`, the connections set to use to execute queries on sources.
+      If the transaction is read only, the connection set may be freed between
+      actual query. This allows multiple transaction with a reasonable low
+      connection set pool size. control mechanism is detailed below
+
+    .. automethod:: cubicweb.server.session.Transaction.set_cnxset
+    .. automethod:: cubicweb.server.session.Transaction.free_cnxset
+
+      :attr:`mode`, string telling the connections set handling mode, may be one
+      of 'read' (connections set may be freed), 'write' (some write was done in
+      the connections set, it can't be freed before end of the transaction),
+      'transaction' (we want to keep the connections set during all the
+      transaction, with or without writing)
+
+    Internal transaction data:
+
+      :attr:`data`,is a dictionary containing some shared data
+      cleared at the end of the transaction. Hooks and operations may put
+      arbitrary data in there, and this may also be used as a communication
+      channel between the client and the repository.
+
+      :attr:`pending_operations`, ordered list of operations to be processed on
+      commit/rollback
+
+      :attr:`commit_state`, describing the transaction commit state, may be one
+      of None (not yet committing), 'precommit' (calling precommit event on
+      operations), 'postcommit' (calling postcommit event on operations),
+      'uncommitable' (some :exc:`ValidationError` or :exc:`Unauthorized` error
+      has been raised during the transaction and so it must be rollbacked).
+
+    Hooks controls:
+
+      :attr:`hooks_mode`, may be either `HOOKS_ALLOW_ALL` or `HOOKS_DENY_ALL`.
+
+      :attr:`enabled_hook_cats`, when :attr:`hooks_mode` is
+      `HOOKS_DENY_ALL`, this set contains hooks categories that are enabled.
+
+      :attr:`disabled_hook_cats`, when :attr:`hooks_mode` is
+      `HOOKS_ALLOW_ALL`, this set contains hooks categories that are disabled.
+
+    Security level Management:
+
+      :attr:`read_security` and :attr:`write_security`, boolean flags telling if
+      read/write security is currently activated.
+
+    """
+
+    def __init__(self, txid, session, rewriter):
+        #: transaction unique id
         self.transactionid = txid
+        #: reentrance handling
         self.ctx_count = 0
+
+        #: server.Repository object
+        self.repo = session.repo
+        self.vreg = self.repo.vreg
+
+        #: connection handling mode
+        self.mode = session.default_mode
+        #: connection set used to execute queries on sources
+        self._cnxset = None
+        #: CnxSetTracker used to report cnxset usage
+        self._cnxset_tracker = session._cnxset_tracker
+        #: is this transaction from a client or internal to the repo
+        self.running_dbapi_query = True
+
+        #: dict containing arbitrary data cleared at the end of the transaction
+        self.data = {}
+        #: ordered list of operations to be processed on commit/rollback
+        self.pending_operations = []
+        #: (None, 'precommit', 'postcommit', 'uncommitable')
+        self.commit_state = None
+
+        ### hook control attribute
+        self.hooks_mode = HOOKS_ALLOW_ALL
+        self.disabled_hook_cats = set()
+        self.enabled_hook_cats = set()
+        self.pruned_hooks_cache = {}
+
+
+        ### security control attributes
+        self._read_security = DEFAULT_SECURITY # handled by a property
+        self.write_security = DEFAULT_SECURITY
+
+        # undo control
+        config = session.repo.config
+        if config.creating or config.repairing or session.is_internal_session:
+            self.undo_actions = False
+        else:
+            self.undo_actions = config['undo-enabled']
+
+        # RQLRewriter are not thread safe
+        self._rewriter = rewriter
+
+    @property
+    def transaction_data(self):
+        return self.data
+
+
+    def clear(self):
+        """reset internal data"""
+        self.data = {}
+        #: ordered list of operations to be processed on commit/rollback
+        self.pending_operations = []
+        #: (None, 'precommit', 'postcommit', 'uncommitable')
+        self.commit_state = None
+        self.pruned_hooks_cache = {}
+    # Connection Set Management ###############################################
+    @property
+    def cnxset(self):
+        return self._cnxset
+
+    @cnxset.setter
+    def cnxset(self, new_cnxset):
+        with self._cnxset_tracker:
+            old_cnxset = self._cnxset
+            if new_cnxset is old_cnxset:
+                return #nothing to do
+            if old_cnxset is not None:
+                self._cnxset = None
+                self.ctx_count -= 1
+                self._cnxset_tracker.forget(self.transactionid, old_cnxset)
+            if new_cnxset is not None:
+                self._cnxset_tracker.record(self.transactionid, new_cnxset)
+                self._cnxset = new_cnxset
+                self.ctx_count += 1
+
+    def set_cnxset(self):
+        """the transaction need a connections set to execute some queries"""
+        if self.cnxset is None:
+            cnxset = self.repo._get_cnxset()
+            try:
+                self.cnxset = cnxset
+                try:
+                    cnxset.cnxset_set()
+                except:
+                    self.cnxset = None
+                    raise
+            except:
+                self.repo._free_cnxset(cnxset)
+                raise
+        return self.cnxset
+
+    def free_cnxset(self, ignoremode=False):
+        """the transaction is no longer using its connections set, at least for some time"""
+        # cnxset may be none if no operation has been done since last commit
+        # or rollback
+        cnxset = self.cnxset
+        if cnxset is not None and (ignoremode or self.mode == 'read'):
+            try:
+                self.cnxset = None
+            finally:
+                cnxset.cnxset_freed()
+                self.repo._free_cnxset(cnxset)
+
+
+    # Entity cache management #################################################
+    #
+    # The transaction entity cache as held in tx.data it is removed at end the
+    # end of the transaction (commit and rollback)
+    #
+    # XXX transaction level caching may be a pb with multiple repository
+    # instances, but 1. this is probably not the only one :$ and 2. it may be
+    # an acceptable risk. Anyway we could activate it or not according to a
+    # configuration option
+
+    def set_entity_cache(self, entity):
+        """Add `entity` to the transaction entity cache"""
+        ecache = self.data.setdefault('ecache', {})
+        ecache.setdefault(entity.eid, entity)
+
+    def entity_cache(self, eid):
+        """get cache entity for `eid`"""
+        return self.data['ecache'][eid]
+
+    def cached_entities(self):
+        """return the whole entity cache"""
+        return self.data.get('ecache', {}).values()
+
+    def drop_entity_cache(self, eid=None):
+        """drop entity from the cache
+
+        If eid is None, the whole cache is dropped"""
+        if eid is None:
+            self.data.pop('ecache', None)
+        else:
+            del self.data['ecache'][eid]
+
+    # Tracking of entity added of removed in the transaction ##################
+    #
+    # Those are function to  allows cheap call from client in other process.
+
+    def deleted_in_transaction(self, eid):
+        """return True if the entity of the given eid is being deleted in the
+        current transaction
+        """
+        return eid in self.data.get('pendingeids', ())
+
+    def added_in_transaction(self, eid):
+        """return True if the entity of the given eid is being created in the
+        current transaction
+        """
+        return eid in self.data.get('neweids', ())
+
+    # Operation management ####################################################
+
+    def add_operation(self, operation, index=None):
+        """add an operation to be executed at the end of the transaction"""
+        if index is None:
+            self.pending_operations.append(operation)
+        else:
+            self.pending_operations.insert(index, operation)
+
+    # Hooks control ###########################################################
+
+    def disable_hook_categories(self, *categories):
+        """disable the given hook categories:
+
+        - on HOOKS_DENY_ALL mode, ensure those categories are not enabled
+        - on HOOKS_ALLOW_ALL mode, ensure those categories are disabled
+        """
+        changes = set()
+        self.pruned_hooks_cache.clear()
+        categories = set(categories)
+        if self.hooks_mode is HOOKS_DENY_ALL:
+            enabledcats = self.enabled_hook_cats
+            changes = enabledcats & categories
+            enabledcats -= changes # changes is small hence faster
+        else:
+            disabledcats = self.disabled_hook_cats
+            changes = categories - disabledcats
+            disabledcats |= changes # changes is small hence faster
+        return tuple(changes)
+
+    def enable_hook_categories(self, *categories):
+        """enable the given hook categories:
+
+        - on HOOKS_DENY_ALL mode, ensure those categories are enabled
+        - on HOOKS_ALLOW_ALL mode, ensure those categories are not disabled
+        """
+        changes = set()
+        self.pruned_hooks_cache.clear()
+        categories = set(categories)
+        if self.hooks_mode is HOOKS_DENY_ALL:
+            enabledcats = self.enabled_hook_cats
+            changes = categories - enabledcats
+            enabledcats |= changes # changes is small hence faster
+        else:
+            disabledcats = self.disabled_hook_cats
+            changes = disabledcats & categories
+            disabledcats -= changes # changes is small hence faster
+        return tuple(changes)
+
+    def is_hook_category_activated(self, category):
+        """return a boolean telling if the given category is currently activated
+        or not
+        """
+        if self.hooks_mode is HOOKS_DENY_ALL:
+            return category in self.enabled_hook_cats
+        return category not in self.disabled_hook_cats
+
+    def is_hook_activated(self, hook):
+        """return a boolean telling if the given hook class is currently
+        activated or not
+        """
+        return self.is_hook_category_activated(hook.category)
+
+    # Security management #####################################################
+    @property
+    def read_security(self):
+        return self._read_security
+
+    @read_security.setter
+    def read_security(self, activated):
+        oldmode = self._read_security
+        self._read_security = activated
+        # running_dbapi_query used to detect hooks triggered by a 'dbapi' query
+        # (eg not issued on the session). This is tricky since we the execution
+        # model of a (write) user query is:
+        #
+        # repository.execute (security enabled)
+        #  \-> querier.execute
+        #       \-> repo.glob_xxx (add/update/delete entity/relation)
+        #            \-> deactivate security before calling hooks
+        #                 \-> WE WANT TO CHECK QUERY NATURE HERE
+        #                      \-> potentially, other calls to querier.execute
+        #
+        # so we can't rely on simply checking session.read_security, but
+        # recalling the first transition from DEFAULT_SECURITY to something
+        # else (False actually) is not perfect but should be enough
+        #
+        # also reset running_dbapi_query to true when we go back to
+        # DEFAULT_SECURITY
+        self.running_dbapi_query = (oldmode is DEFAULT_SECURITY
+                                    or activated is DEFAULT_SECURITY)
+
+    # undo support ############################################################
+
+    def ertype_supports_undo(self, ertype):
+        return self.undo_actions and ertype not in NO_UNDO_TYPES
+
+    def transaction_uuid(self, set=True):
+        uuid = self.data.get('tx_uuid')
+        if set and uuid is None:
+            raise KeyError
+        return uuid
+
+    def transaction_inc_action_counter(self):
+        num = self.data.setdefault('tx_action_count', 0) + 1
+        self.data['tx_action_count'] = num
+        return num
+    # db-api like interface ###################################################
+
+    def source_defs(self):
+        return self.repo.source_defs()
+
+    def describe(self, eid, asdict=False):
+        """return a tuple (type, sourceuri, extid) for the entity with id <eid>"""
+        metas = self.repo.type_and_source_from_eid(eid, self)
+        if asdict:
+            return dict(zip(('type', 'source', 'extid', 'asource'), metas))
+       # XXX :-1 for cw compat, use asdict=True for full information
+        return metas[:-1]
+
+
+    def source_from_eid(self, eid):
+        """return the source where the entity with id <eid> is located"""
+        return self.repo.source_from_eid(eid, self)
+
+    # resource accessors ######################################################
+
+    def system_sql(self, sql, args=None, rollback_on_failure=True):
+        """return a sql cursor on the system database"""
+        if sql.split(None, 1)[0].upper() != 'SELECT':
+            self.mode = 'write'
+        source = self.cnxset.source('system')
+        try:
+            return source.doexec(self, sql, args, rollback=rollback_on_failure)
+        except (source.OperationalError, source.InterfaceError):
+            if not rollback_on_failure:
+                raise
+            source.warning("trying to reconnect")
+            self.cnxset.reconnect(source)
+            return source.doexec(self, sql, args, rollback=rollback_on_failure)
+
+    def rtype_eids_rdef(self, rtype, eidfrom, eidto):
+        # use type_and_source_from_eid instead of type_from_eid for optimization
+        # (avoid two extra methods call)
+        subjtype = self.repo.type_and_source_from_eid(eidfrom, self)[0]
+        objtype = self.repo.type_and_source_from_eid(eidto, self)[0]
+        return self.vreg.schema.rschema(rtype).rdefs[(subjtype, objtype)]
+
+
+def tx_attr(attr_name, writable=False):
+    """return a property to forward attribute access to transaction.
+
+    This is to be used by session"""
+    args = {}
+    def attr_from_tx(session):
+        return getattr(session._tx, attr_name)
+    args['fget'] = attr_from_tx
+    if writable:
+        def write_attr(session, value):
+            return setattr(session._tx, attr_name, value)
+        args['fset'] = write_attr
+    return property(**args)
+
+def tx_meth(meth_name):
+    """return a function forwarding calls to transaction.
+
+    This is to be used by session"""
+    def meth_from_tx(session, *args, **kwargs):
+        return getattr(session._tx, meth_name)(*args, **kwargs)
+    return meth_from_tx
 
 
 class Session(RequestSessionBase):
-    """Repository usersession, tie a session id, user, connections set and
-    other session data all together.
+    """Repository user session
+
+    This tie all together:
+     * session id,
+     * user,
+     * connections set,
+     * other session data.
 
     About session storage / transactions
     ------------------------------------
@@ -161,20 +736,17 @@ class Session(RequestSessionBase):
       :attr:`data` is a dictionary containing shared data, used to communicate
       extra information between the client and the repository
 
-      :attr:`_tx_data` is a dictionary of :class:`TransactionData` instance, one
+      :attr:`_txs` is a dictionary of :class:`TransactionData` instance, one
       for each running transaction. The key is the transaction id. By default
       the transaction id is the thread name but it can be otherwise (per dbapi
       cursor for instance, or per thread name *from another process*).
 
-      :attr:`__threaddata` is a thread local storage whose `txdata` attribute
-      refers to the proper instance of :class:`TransactionData` according to the
+      :attr:`__threaddata` is a thread local storage whose `tx` attribute
+      refers to the proper instance of :class:`Transaction` according to the
       transaction.
 
-      :attr:`_threads_in_transaction` is a set of (thread, connections set)
-      referencing threads that currently hold a connections set for the session.
-
-    You should not have to use neither :attr:`_txdata` nor :attr:`__threaddata`,
-    simply access transaction data transparently through the :attr:`_threaddata`
+    You should not have to use neither :attr:`_tx` nor :attr:`__threaddata`,
+    simply access transaction data transparently through the :attr:`_tx`
     property. Also, you usually don't have to access it directly since current
     transaction's data may be accessed/modified through properties / methods:
 
@@ -184,10 +756,23 @@ class Session(RequestSessionBase):
       this may also be used as a communication channel between the client and
       the repository.
 
+    .. automethod:: cubicweb.server.session.Session.get_shared_data
+    .. automethod:: cubicweb.server.session.Session.set_shared_data
+    .. automethod:: cubicweb.server.session.Session.added_in_transaction
+    .. automethod:: cubicweb.server.session.Session.deleted_in_transaction
+
+    Transaction state information:
+
+      :attr:`running_dbapi_query`, boolean flag telling if the executing query
+      is coming from a dbapi connection or is a query from within the repository
+
       :attr:`cnxset`, the connections set to use to execute queries on sources.
       During a transaction, the connection set may be freed so that is may be
       used by another session as long as no writing is done. This means we can
       have multiple sessions with a reasonably low connections set pool size.
+
+    .. automethod:: cubicweb.server.session.set_cnxset
+    .. automethod:: cubicweb.server.session.free_cnxset
 
       :attr:`mode`, string telling the connections set handling mode, may be one
       of 'read' (connections set may be freed), 'write' (some write was done in
@@ -204,8 +789,19 @@ class Session(RequestSessionBase):
       'uncommitable' (some :exc:`ValidationError` or :exc:`Unauthorized` error
       has been raised during the transaction and so it must be rollbacked).
 
+    .. automethod:: cubicweb.server.session.Session.commit
+    .. automethod:: cubicweb.server.session.Session.rollback
+    .. automethod:: cubicweb.server.session.Session.close
+    .. automethod:: cubicweb.server.session.Session.closed
+
+    Security level Management:
+
       :attr:`read_security` and :attr:`write_security`, boolean flags telling if
       read/write security is currently activated.
+
+    .. automethod:: cubicweb.server.session.Session.security_enabled
+
+    Hooks Management:
 
       :attr:`hooks_mode`, may be either `HOOKS_ALLOW_ALL` or `HOOKS_DENY_ALL`.
 
@@ -215,12 +811,23 @@ class Session(RequestSessionBase):
       :attr:`disabled_hook_categories`, when :attr:`hooks_mode` is
       `HOOKS_ALLOW_ALL`, this set contains hooks categories that are disabled.
 
+    .. automethod:: cubicweb.server.session.Session.deny_all_hooks_but
+    .. automethod:: cubicweb.server.session.Session.allow_all_hooks_but
+    .. automethod:: cubicweb.server.session.Session.is_hook_category_activated
+    .. automethod:: cubicweb.server.session.Session.is_hook_activated
 
-      :attr:`running_dbapi_query`, boolean flag telling if the executing query
-      is coming from a dbapi connection or is a query from within the repository
+    Data manipulation:
 
-    .. automethod:: cubicweb.server.session.deny_all_hooks_but
-    .. automethod:: cubicweb.server.session.all_all_hooks_but
+    .. automethod:: cubicweb.server.session.Session.add_relation
+    .. automethod:: cubicweb.server.session.Session.add_relations
+    .. automethod:: cubicweb.server.session.Session.delete_relation
+
+    Other:
+
+    .. automethod:: cubicweb.server.session.Session.call_service
+
+
+
     """
     is_request = False
     is_internal_session = False
@@ -232,11 +839,6 @@ class Session(RequestSessionBase):
         self.repo = repo
         self.timestamp = time()
         self.default_mode = 'read'
-        # undo support
-        if repo.config.creating or repo.config.repairing or self.is_internal_session:
-            self.undo_actions = False
-        else:
-            self.undo_actions = repo.config['undo-enabled']
         # short cut to querier .execute method
         self._execute = repo.querier.execute
         # shared data, used to communicate extra information between the client
@@ -244,16 +846,53 @@ class Session(RequestSessionBase):
         self.data = {}
         # i18n initialization
         self.set_language(user.prefered_language())
-        # internals
-        self._tx_data = {}
+        ### internals
+        # Transaction of this section
+        self._txs = {}
+        # Data local to the thread
         self.__threaddata = threading.local()
-        self._threads_in_transaction = set()
+        self._cnxset_tracker = CnxSetTracker()
         self._closed = False
-        self._closed_lock = threading.Lock()
+        self._lock = threading.RLock()
 
     def __unicode__(self):
         return '<session %s (%s 0x%x)>' % (
             unicode(self.user.login), self.id, id(self))
+
+    def get_tx(self, txid):
+        """return the <txid> transaction attached to this session
+
+        Transaction is created if necessary"""
+        with self._lock: # no transaction exist with the same id
+            try:
+                if self.closed:
+                    raise SessionClosedError('try to access connections set on a closed session %s' % self.id)
+                tx = self._txs[txid]
+            except KeyError:
+                rewriter = RQLRewriter(self)
+                tx = Transaction(txid, self, rewriter)
+                self._txs[txid] = tx
+        return tx
+
+    def set_tx(self, txid=None):
+        """set the default transaction of the current thread to <txid>
+
+        Transaction is created if necessary"""
+        if txid is None:
+            txid = threading.currentThread().getName()
+        self.__threaddata.tx = self.get_tx(txid)
+
+    @property
+    def _tx(self):
+        """default transaction for current session in current thread"""
+        try:
+            return self.__threaddata.tx
+        except AttributeError:
+            self.set_tx()
+            return self.__threaddata.tx
+
+    def get_option_value(self, option, foreid=None):
+        return self.repo.get_option_value(option, foreid)
 
     def transaction(self, free_cnxset=True):
         """return context manager to enter a transaction for the session: when
@@ -265,40 +904,20 @@ class Session(RequestSessionBase):
         """
         return transaction(self, free_cnxset)
 
-    def set_tx_data(self, txid=None):
-        if txid is None:
-            txid = threading.currentThread().getName()
-        try:
-            self.__threaddata.txdata = self._tx_data[txid]
-        except KeyError:
-            self.__threaddata.txdata = self._tx_data[txid] = TransactionData(txid)
 
-    @property
-    def _threaddata(self):
-        try:
-            return self.__threaddata.txdata
-        except AttributeError:
-            self.set_tx_data()
-            return self.__threaddata.txdata
-
-    def get_option_value(self, option, foreid=None):
-        return self.repo.get_option_value(option, foreid)
-
+    @deprecated('[3.17] do not use hijack_user. create new Session object')
     def hijack_user(self, user):
         """return a fake request/session using specified user"""
         session = Session(user, self.repo)
-        threaddata = session._threaddata
-        threaddata.cnxset = self.cnxset
-        # we attributed a connections set, need to update ctx_count else it will be freed
-        # while undesired
-        threaddata.ctx_count = 1
+        tx = session._tx
+        tx.cnxset = self.cnxset
         # share pending_operations, else operation added in the hi-jacked
         # session such as SendMailOp won't ever be processed
-        threaddata.pending_operations = self.pending_operations
-        # everything in transaction_data should be copied back but the entity
+        tx.pending_operations = self.pending_operations
+        # everything in tx.data should be copied back but the entity
         # type cache we don't want to avoid security pb
-        threaddata.transaction_data = self.transaction_data.copy()
-        threaddata.transaction_data.pop('ecache', None)
+        tx.data = self._tx.data.copy()
+        tx.data.pop('ecache', None)
         return session
 
     def add_relation(self, fromeid, rtype, toeid):
@@ -323,7 +942,7 @@ class Session(RequestSessionBase):
         '''
         edited_entities = {}
         relations_dict = {}
-        with security_enabled(self, False, False):
+        with self.security_enabled(False, False):
             for rtype, eids in relations:
                 if self.vreg.schema[rtype].inlined:
                     for fromeid, toeid in eids:
@@ -352,7 +971,7 @@ class Session(RequestSessionBase):
         You may use this in hooks when you know both eids of the relation you
         want to delete.
         """
-        with security_enabled(self, False, False):
+        with self.security_enabled(False, False):
             if self.vreg.schema[rtype].inlined:
                 entity = self.entity_from_eid(fromeid)
                 entity.cw_attr_cache[rtype] = None
@@ -429,266 +1048,37 @@ class Session(RequestSessionBase):
 
     # resource accessors ######################################################
 
-    def system_sql(self, sql, args=None, rollback_on_failure=True):
-        """return a sql cursor on the system database"""
-        if sql.split(None, 1)[0].upper() != 'SELECT':
-            self.mode = 'write'
-        source = self.cnxset.source('system')
-        try:
-            return source.doexec(self, sql, args, rollback=rollback_on_failure)
-        except (source.OperationalError, source.InterfaceError):
-            if not rollback_on_failure:
-                raise
-            source.warning("trying to reconnect")
-            self.cnxset.reconnect(source)
-            return source.doexec(self, sql, args, rollback=rollback_on_failure)
-
-    def deleted_in_transaction(self, eid):
-        """return True if the entity of the given eid is being deleted in the
-        current transaction
-        """
-        return eid in self.transaction_data.get('pendingeids', ())
-
-    def added_in_transaction(self, eid):
-        """return True if the entity of the given eid is being created in the
-        current transaction
-        """
-        return eid in self.transaction_data.get('neweids', ())
-
-    def rtype_eids_rdef(self, rtype, eidfrom, eidto):
-        # use type_and_source_from_eid instead of type_from_eid for optimization
-        # (avoid two extra methods call)
-        subjtype = self.repo.type_and_source_from_eid(eidfrom, self)[0]
-        objtype = self.repo.type_and_source_from_eid(eidto, self)[0]
-        return self.vreg.schema.rschema(rtype).rdefs[(subjtype, objtype)]
+    system_sql = tx_meth('system_sql')
+    deleted_in_transaction = tx_meth('deleted_in_transaction')
+    added_in_transaction = tx_meth('added_in_transaction')
+    rtype_eids_rdef = tx_meth('rtype_eids_rdef')
 
     # security control #########################################################
 
-    DEFAULT_SECURITY = object() # evaluated to true by design
 
     def security_enabled(self, read=None, write=None):
-        return security_enabled(self, read=read, write=write)
+        return _security_enabled(self, read=read, write=write)
 
-    def init_security(self, read, write):
-        if read is None:
-            oldread = None
-        else:
-            oldread = self.set_read_security(read)
-        if write is None:
-            oldwrite = None
-        else:
-            oldwrite = self.set_write_security(write)
-        self._threaddata.ctx_count += 1
-        return oldread, oldwrite
-
-    def reset_security(self, read, write):
-        txstore = self._threaddata
-        txstore.ctx_count -= 1
-        if txstore.ctx_count == 0:
-            self._clear_thread_storage(txstore)
-        else:
-            if read is not None:
-                self.set_read_security(read)
-            if write is not None:
-                self.set_write_security(write)
-
-    @property
-    def read_security(self):
-        """return a boolean telling if read security is activated or not"""
-        txstore = self._threaddata
-        if txstore is None:
-            return self.DEFAULT_SECURITY
-        try:
-            return txstore.read_security
-        except AttributeError:
-            txstore.read_security = self.DEFAULT_SECURITY
-            return txstore.read_security
-
-    def set_read_security(self, activated):
-        """[de]activate read security, returning the previous value set for
-        later restoration.
-
-        you should usually use the `security_enabled` context manager instead
-        of this to change security settings.
-        """
-        txstore = self._threaddata
-        if txstore is None:
-            return self.DEFAULT_SECURITY
-        oldmode = getattr(txstore, 'read_security', self.DEFAULT_SECURITY)
-        txstore.read_security = activated
-        # dbapi_query used to detect hooks triggered by a 'dbapi' query (eg not
-        # issued on the session). This is tricky since we the execution model of
-        # a (write) user query is:
-        #
-        # repository.execute (security enabled)
-        #  \-> querier.execute
-        #       \-> repo.glob_xxx (add/update/delete entity/relation)
-        #            \-> deactivate security before calling hooks
-        #                 \-> WE WANT TO CHECK QUERY NATURE HERE
-        #                      \-> potentially, other calls to querier.execute
-        #
-        # so we can't rely on simply checking session.read_security, but
-        # recalling the first transition from DEFAULT_SECURITY to something
-        # else (False actually) is not perfect but should be enough
-        #
-        # also reset dbapi_query to true when we go back to DEFAULT_SECURITY
-        txstore.dbapi_query = (oldmode is self.DEFAULT_SECURITY
-                               or activated is self.DEFAULT_SECURITY)
-        return oldmode
-
-    @property
-    def write_security(self):
-        """return a boolean telling if write security is activated or not"""
-        txstore = self._threaddata
-        if txstore is None:
-            return self.DEFAULT_SECURITY
-        try:
-            return txstore.write_security
-        except AttributeError:
-            txstore.write_security = self.DEFAULT_SECURITY
-            return txstore.write_security
-
-    def set_write_security(self, activated):
-        """[de]activate write security, returning the previous value set for
-        later restoration.
-
-        you should usually use the `security_enabled` context manager instead
-        of this to change security settings.
-        """
-        txstore = self._threaddata
-        if txstore is None:
-            return self.DEFAULT_SECURITY
-        oldmode = getattr(txstore, 'write_security', self.DEFAULT_SECURITY)
-        txstore.write_security = activated
-        return oldmode
-
-    @property
-    def running_dbapi_query(self):
-        """return a boolean telling if it's triggered by a db-api query or by
-        a session query.
-
-        To be used in hooks, else may have a wrong value.
-        """
-        return getattr(self._threaddata, 'dbapi_query', True)
+    read_security = tx_attr('read_security', writable=True)
+    write_security = tx_attr('write_security', writable=True)
+    running_dbapi_query = tx_attr('running_dbapi_query')
 
     # hooks activation control #################################################
     # all hooks should be activated during normal execution
 
-    HOOKS_ALLOW_ALL = object()
-    HOOKS_DENY_ALL = object()
-
     def allow_all_hooks_but(self, *categories):
-        return hooks_control(self, self.HOOKS_ALLOW_ALL, *categories)
+        return _hooks_control(self, HOOKS_ALLOW_ALL, *categories)
     def deny_all_hooks_but(self, *categories):
-        return hooks_control(self, self.HOOKS_DENY_ALL, *categories)
+        return _hooks_control(self, HOOKS_DENY_ALL, *categories)
 
-    @property
-    def hooks_mode(self):
-        return getattr(self._threaddata, 'hooks_mode', self.HOOKS_ALLOW_ALL)
+    hooks_mode = tx_attr('hooks_mode')
 
-    def set_hooks_mode(self, mode):
-        assert mode is self.HOOKS_ALLOW_ALL or mode is self.HOOKS_DENY_ALL
-        oldmode = getattr(self._threaddata, 'hooks_mode', self.HOOKS_ALLOW_ALL)
-        self._threaddata.hooks_mode = mode
-        return oldmode
-
-    def init_hooks_mode_categories(self, mode, categories):
-        oldmode = self.set_hooks_mode(mode)
-        if mode is self.HOOKS_DENY_ALL:
-            changes = self.enable_hook_categories(*categories)
-        else:
-            changes = self.disable_hook_categories(*categories)
-        self._threaddata.ctx_count += 1
-        return oldmode, changes
-
-    def reset_hooks_mode_categories(self, oldmode, mode, categories):
-        txstore = self._threaddata
-        txstore.ctx_count -= 1
-        if txstore.ctx_count == 0:
-            self._clear_thread_storage(txstore)
-        else:
-            try:
-                if categories:
-                    if mode is self.HOOKS_DENY_ALL:
-                        return self.disable_hook_categories(*categories)
-                    else:
-                        return self.enable_hook_categories(*categories)
-            finally:
-                self.set_hooks_mode(oldmode)
-
-    @property
-    def disabled_hook_categories(self):
-        try:
-            return getattr(self._threaddata, 'disabled_hook_cats')
-        except AttributeError:
-            cats = self._threaddata.disabled_hook_cats = set()
-            return cats
-
-    @property
-    def enabled_hook_categories(self):
-        try:
-            return getattr(self._threaddata, 'enabled_hook_cats')
-        except AttributeError:
-            cats = self._threaddata.enabled_hook_cats = set()
-            return cats
-
-    def disable_hook_categories(self, *categories):
-        """disable the given hook categories:
-
-        - on HOOKS_DENY_ALL mode, ensure those categories are not enabled
-        - on HOOKS_ALLOW_ALL mode, ensure those categories are disabled
-        """
-        changes = set()
-        self.pruned_hooks_cache.clear()
-        if self.hooks_mode is self.HOOKS_DENY_ALL:
-            enabledcats = self.enabled_hook_categories
-            for category in categories:
-                if category in enabledcats:
-                    enabledcats.remove(category)
-                    changes.add(category)
-        else:
-            disabledcats = self.disabled_hook_categories
-            for category in categories:
-                if category not in disabledcats:
-                    disabledcats.add(category)
-                    changes.add(category)
-        return tuple(changes)
-
-    def enable_hook_categories(self, *categories):
-        """enable the given hook categories:
-
-        - on HOOKS_DENY_ALL mode, ensure those categories are enabled
-        - on HOOKS_ALLOW_ALL mode, ensure those categories are not disabled
-        """
-        changes = set()
-        self.pruned_hooks_cache.clear()
-        if self.hooks_mode is self.HOOKS_DENY_ALL:
-            enabledcats = self.enabled_hook_categories
-            for category in categories:
-                if category not in enabledcats:
-                    enabledcats.add(category)
-                    changes.add(category)
-        else:
-            disabledcats = self.disabled_hook_categories
-            for category in categories:
-                if category in disabledcats:
-                    disabledcats.remove(category)
-                    changes.add(category)
-        return tuple(changes)
-
-    def is_hook_category_activated(self, category):
-        """return a boolean telling if the given category is currently activated
-        or not
-        """
-        if self.hooks_mode is self.HOOKS_DENY_ALL:
-            return category in self.enabled_hook_categories
-        return category not in self.disabled_hook_categories
-
-    def is_hook_activated(self, hook):
-        """return a boolean telling if the given hook class is currently
-        activated or not
-        """
-        return self.is_hook_category_activated(hook.category)
+    disabled_hook_categories = tx_attr('disabled_hook_cats')
+    enabled_hook_categories = tx_attr('enabled_hook_cats')
+    disable_hook_categories = tx_meth('disable_hook_categories')
+    enable_hook_categories = tx_meth('enable_hook_categories')
+    is_hook_category_activated = tx_meth('is_hook_category_activated')
+    is_hook_activated = tx_meth('is_hook_activated')
 
     # connection management ###################################################
 
@@ -712,85 +1102,37 @@ class Session(RequestSessionBase):
         else: # mode == 'write'
             self.default_mode = 'read'
 
-    def get_mode(self):
-        return getattr(self._threaddata, 'mode', self.default_mode)
-    def set_mode(self, value):
-        self._threaddata.mode = value
-    mode = property(get_mode, set_mode,
-                    doc='transaction mode (read/write/transaction), resetted to'
-                    ' default_mode on commit / rollback')
-
-    def get_commit_state(self):
-        return getattr(self._threaddata, 'commit_state', None)
-    def set_commit_state(self, value):
-        self._threaddata.commit_state = value
-    commit_state = property(get_commit_state, set_commit_state)
+    mode = tx_attr('mode', writable=True)
+    commit_state = tx_attr('commit_state', writable=True)
 
     @property
     def cnxset(self):
         """connections set, set according to transaction mode for each query"""
         if self._closed:
             self.free_cnxset(True)
-            raise Exception('try to access connections set on a closed session %s' % self.id)
-        return getattr(self._threaddata, 'cnxset', None)
+            raise SessionClosedError('try to access connections set on a closed session %s' % self.id)
+        return self._tx.cnxset
 
     def set_cnxset(self):
         """the session need a connections set to execute some queries"""
-        with self._closed_lock:
+        with self._lock: # can probably be removed
             if self._closed:
                 self.free_cnxset(True)
-                raise Exception('try to set connections set on a closed session %s' % self.id)
-            if self.cnxset is None:
-                # get connections set first to avoid race-condition
-                self._threaddata.cnxset = cnxset = self.repo._get_cnxset()
-                self._threaddata.ctx_count += 1
-                try:
-                    cnxset.cnxset_set()
-                except Exception:
-                    self._threaddata.cnxset = None
-                    self.repo._free_cnxset(cnxset)
-                    raise
-                self._threads_in_transaction.add(
-                    (threading.currentThread(), cnxset) )
-            return self._threaddata.cnxset
-
-    def _free_thread_cnxset(self, thread, cnxset, force_close=False):
-        try:
-            self._threads_in_transaction.remove( (thread, cnxset) )
-        except KeyError:
-            # race condition on cnxset freeing (freed by commit or rollback vs
-            # close)
-            pass
-        else:
-            if force_close:
-                cnxset.reconnect()
-            else:
-                cnxset.cnxset_freed()
-            # free cnxset once everything is done to avoid race-condition
-            self.repo._free_cnxset(cnxset)
-
-    def free_cnxset(self, ignoremode=False):
-        """the session is no longer using its connections set, at least for some time"""
-        # cnxset may be none if no operation has been done since last commit
-        # or rollback
-        cnxset = getattr(self._threaddata, 'cnxset', None)
-        if cnxset is not None and (ignoremode or self.mode == 'read'):
-            # even in read mode, we must release the current transaction
-            self._free_thread_cnxset(threading.currentThread(), cnxset)
-            del self._threaddata.cnxset
-            self._threaddata.ctx_count -= 1
+                raise SessionClosedError('try to set connections set on a closed session %s' % self.id)
+            return self._tx.set_cnxset()
+    free_cnxset = tx_meth('free_cnxset')
 
     def _touch(self):
         """update latest session usage timestamp and reset mode to read"""
         self.timestamp = time()
-        self.local_perm_cache.clear() # XXX simply move in transaction_data, no?
+        self.local_perm_cache.clear() # XXX simply move in tx.data, no?
 
     # shared data handling ###################################################
 
     def get_shared_data(self, key, default=None, pop=False, txdata=False):
         """return value associated to `key` in session data"""
         if txdata:
-            data = self.transaction_data
+            data = self._tx.data
         else:
             data = self.data
         if pop:
@@ -801,7 +1143,7 @@ class Session(RequestSessionBase):
     def set_shared_data(self, key, value, txdata=False):
         """set value associated to `key` in session data"""
         if txdata:
-            self.transaction_data[key] = value
+            self._tx.data[key] = value
         else:
             self.data[key] = value
 
@@ -819,28 +1161,10 @@ class Session(RequestSessionBase):
         """return a rql cursor"""
         return self
 
-    def set_entity_cache(self, entity):
-        # XXX session level caching may be a pb with multiple repository
-        #     instances, but 1. this is probably not the only one :$ and 2. it
-        #     may be an acceptable risk. Anyway we could activate it or not
-        #     according to a configuration option
-        try:
-            self.transaction_data['ecache'].setdefault(entity.eid, entity)
-        except KeyError:
-            self.transaction_data['ecache'] = ecache = {}
-            ecache[entity.eid] = entity
-
-    def entity_cache(self, eid):
-        return self.transaction_data['ecache'][eid]
-
-    def cached_entities(self):
-        return self.transaction_data.get('ecache', {}).values()
-
-    def drop_entity_cache(self, eid=None):
-        if eid is None:
-            self.transaction_data.pop('ecache', None)
-        else:
-            del self.transaction_data['ecache'][eid]
+    set_entity_cache  = tx_meth('set_entity_cache')
+    entity_cache      = tx_meth('entity_cache')
+    cache_entities    = tx_meth('cached_entities')
+    drop_entity_cache = tx_meth('drop_entity_cache')
 
     def from_controller(self):
         """return the id (string) of the controller issuing the request (no
@@ -848,22 +1172,10 @@ class Session(RequestSessionBase):
         """
         return 'view'
 
-    def source_defs(self):
-        return self.repo.source_defs()
+    source_defs = tx_meth('source_defs')
+    describe = tx_meth('describe')
+    source_from_eid = tx_meth('source_from_eid')
 
-    def describe(self, eid, asdict=False):
-        """return a tuple (type, sourceuri, extid) for the entity with id <eid>"""
-        metas = self.repo.type_and_source_from_eid(eid, self)
-        if asdict:
-            return dict(zip(('type', 'source', 'extid', 'asource'), metas))
-       # XXX :-1 for cw compat, use asdict=True for full information
-        return metas[:-1]
-
-    # db-api like interface ###################################################
-
-    def source_from_eid(self, eid):
-        """return the source where the entity with id <eid> is located"""
-        return self.repo.source_from_eid(eid, self)
 
     def execute(self, rql, kwargs=None, eid_key=None, build_descr=True):
         """db-api like method directly linked to the querier execute method.
@@ -884,34 +1196,29 @@ class Session(RequestSessionBase):
         by _touch
         """
         try:
-            txstore = self.__threaddata.txdata
+            tx = self.__threaddata.tx
         except AttributeError:
             pass
         else:
             if free_cnxset:
                 self.free_cnxset()
-                if txstore.ctx_count == 0:
-                    self._clear_thread_storage(txstore)
+                if tx.ctx_count == 0:
+                    self._clear_thread_storage(tx)
                 else:
-                    self._clear_tx_storage(txstore)
+                    self._clear_tx_storage(tx)
             else:
-                self._clear_tx_storage(txstore)
+                self._clear_tx_storage(tx)
 
-    def _clear_thread_storage(self, txstore):
-        self._tx_data.pop(txstore.transactionid, None)
+    def _clear_thread_storage(self, tx):
+        self._txs.pop(tx.transactionid, None)
         try:
-            del self.__threaddata.txdata
+            del self.__threaddata.tx
         except AttributeError:
             pass
 
-    def _clear_tx_storage(self, txstore):
-        for name in ('commit_state', 'transaction_data',
-                     'pending_operations', '_rewriter',
-                     'pruned_hooks_cache'):
-            try:
-                delattr(txstore, name)
-            except AttributeError:
-                continue
+    def _clear_tx_storage(self, tx):
+        tx.clear()
+        tx._rewriter = RQLRewriter(self)
 
     def commit(self, free_cnxset=True, reset_pool=None):
         """commit the current session's transaction"""
@@ -937,7 +1244,7 @@ class Session(RequestSessionBase):
         debug = server.DEBUG & server.DBG_OPS
         try:
             # by default, operations are executed with security turned off
-            with security_enabled(self, False, False):
+            with self.security_enabled(False, False):
                 processed = []
                 self.commit_state = 'precommit'
                 if debug:
@@ -1008,7 +1315,7 @@ class Session(RequestSessionBase):
                  DeprecationWarning, stacklevel=2)
             free_cnxset = reset_pool
         # don't use self.cnxset, rollback may be called with _closed == True
-        cnxset = getattr(self._threaddata, 'cnxset', None)
+        cnxset = self._tx.cnxset
         if cnxset is None:
             self._clear_thread_data()
             self._touch()
@@ -1016,7 +1323,7 @@ class Session(RequestSessionBase):
             return
         try:
             # by default, operations are executed with security turned off
-            with security_enabled(self, False, False):
+            with self.security_enabled(False, False):
                 while self.pending_operations:
                     try:
                         operation = self.pending_operations.pop(0)
@@ -1033,97 +1340,65 @@ class Session(RequestSessionBase):
             self._clear_thread_data(free_cnxset)
 
     def close(self):
-        """do not close connections set on session close, since they are shared now"""
-        with self._closed_lock:
+        # do not close connections set on session close, since they are shared now
+        tracker = self._cnxset_tracker
+        with self._lock:
             self._closed = True
-        # copy since _threads_in_transaction maybe modified while waiting
-        for thread, cnxset in self._threads_in_transaction.copy():
-            if thread is threading.currentThread():
-                continue
-            self.info('waiting for thread %s', thread)
-            # do this loop/break instead of a simple join(10) in case thread is
-            # the main thread (in which case it will be removed from
-            # self._threads_in_transaction but still be alive...)
-            for i in xrange(10):
-                thread.join(1)
-                if not (thread.isAlive() and
-                        (thread, cnxset) in self._threads_in_transaction):
-                    break
-            else:
-                self.error('thread %s still alive after 10 seconds, will close '
-                           'session anyway', thread)
-                self._free_thread_cnxset(thread, cnxset, force_close=True)
+        tracker.close()
         self.rollback()
+        self.info('waiting for open transaction of session: %s', self)
+        timeout = 10
+        pendings = tracker.wait(timeout)
+        if pendings:
+            self.error('%i transaction still alive after 10 seconds, will close '
+                       'session anyway', len(pendings))
+            for txid in pendings:
+                tx = self._txs.get(txid)
+                if tx is not None:
+                    # drop tx.cnxset
+                    with tracker:
+                        try:
+                            cnxset = tx.cnxset
+                            if cnxset is None:
+                                continue
+                            tx.cnxset = None
+                        except RuntimeError:
+                            msg = 'issue while force free of cnxset in %s'
+                            self.error(msg, tx)
+                    # cnxset.reconnect() do an hard reset of the cnxset
+                    # it force it to be freed
+                    cnxset.reconnect()
+                    self.repo._free_cnxset(cnxset)
         del self.__threaddata
-        del self._tx_data
+        del self._txs
 
     @property
     def closed(self):
-        return not hasattr(self, '_tx_data')
+        return not hasattr(self, '_txs')
 
     # transaction data/operations management ##################################
 
-    @property
-    def transaction_data(self):
-        try:
-            return self._threaddata.transaction_data
-        except AttributeError:
-            self._threaddata.transaction_data = {}
-            return self._threaddata.transaction_data
-
-    @property
-    def pending_operations(self):
-        try:
-            return self._threaddata.pending_operations
-        except AttributeError:
-            self._threaddata.pending_operations = []
-            return self._threaddata.pending_operations
-
-    @property
-    def pruned_hooks_cache(self):
-        try:
-            return self._threaddata.pruned_hooks_cache
-        except AttributeError:
-            self._threaddata.pruned_hooks_cache = {}
-            return self._threaddata.pruned_hooks_cache
-
-    def add_operation(self, operation, index=None):
-        """add an operation"""
-        if index is None:
-            self.pending_operations.append(operation)
-        else:
-            self.pending_operations.insert(index, operation)
+    transaction_data = tx_attr('data')
+    pending_operations = tx_attr('pending_operations')
+    pruned_hooks_cache = tx_attr('pruned_hooks_cache')
+    add_operation      = tx_meth('add_operation')
 
     # undo support ############################################################
 
-    def ertype_supports_undo(self, ertype):
-        return self.undo_actions  and ertype not in NO_UNDO_TYPES
+    ertype_supports_undo = tx_meth('ertype_supports_undo')
+    transaction_inc_action_counter = tx_meth('transaction_inc_action_counter')
 
     def transaction_uuid(self, set=True):
         try:
-            return self.transaction_data['tx_uuid']
+            return self._tx.transaction_uuid(set=set)
         except KeyError:
-            if not set:
-                return
-            self.transaction_data['tx_uuid'] = uuid = uuid4().hex
+            self._tx.data['tx_uuid'] = uuid = uuid4().hex
             self.repo.system_source.start_undoable_transaction(self, uuid)
             return uuid
 
-    def transaction_inc_action_counter(self):
-        num = self.transaction_data.setdefault('tx_action_count', 0) + 1
-        self.transaction_data['tx_action_count'] = num
-        return num
-
     # querier helpers #########################################################
 
-    @property
-    def rql_rewriter(self):
-        # in thread local storage since the rewriter isn't thread safe
-        try:
-            return self._threaddata._rewriter
-        except AttributeError:
-            self._threaddata._rewriter = RQLRewriter(self)
-            return self._threaddata._rewriter
+    rql_rewriter = tx_attr('_rewriter')
 
     # deprecated ###############################################################
 
@@ -1144,31 +1419,14 @@ class Session(RequestSessionBase):
     def reset_pool(self):
         return self.free_cnxset()
 
-    @deprecated("[3.7] execute is now unsafe by default in hooks/operation. You"
-                " can also control security with the security_enabled context "
-                "manager")
-    def unsafe_execute(self, rql, kwargs=None, eid_key=None, build_descr=True,
-                       propagate=False):
-        """like .execute but with security checking disabled (this method is
-        internal to the server, it's not part of the db-api)
-        """
-        with security_enabled(self, read=False, write=False):
-            return self.execute(rql, kwargs, eid_key, build_descr)
-
-    @property
-    @deprecated("[3.7] is_super_session is deprecated, test "
-                "session.read_security and or session.write_security")
-    def is_super_session(self):
-        return not self.read_security or not self.write_security
-
-    @deprecated("[3.7] session is actual session")
-    def actual_session(self):
-        """return the original parent session if any, else self"""
-        return self
-
     # these are overridden by set_log_methods below
     # only defining here to prevent pylint from complaining
     info = warning = error = critical = exception = debug = lambda msg,*a,**kw: None
+
+Session.HOOKS_ALLOW_ALL = HOOKS_ALLOW_ALL
+Session.HOOKS_DENY_ALL = HOOKS_DENY_ALL
+Session.DEFAULT_SECURITY = DEFAULT_SECURITY
+
 
 
 class InternalSession(Session):
@@ -1195,7 +1453,7 @@ class InternalSession(Session):
         if self.repo.shutting_down:
             self.free_cnxset(True)
             raise ShuttingDown('repository is shutting down')
-        return getattr(self._threaddata, 'cnxset', None)
+        return self._tx.cnxset
 
 
 class InternalManager(object):

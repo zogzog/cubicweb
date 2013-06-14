@@ -26,12 +26,11 @@ from warnings import warn
 
 from logilab.mtconverter import TransformError
 from logilab.common.decorators import cached
-from logilab.common.deprecation import class_deprecated
 
 from cubicweb import ValidationError, view
 from cubicweb.predicates import (implements, is_instance, relation_possible,
                                 match_exception)
-from cubicweb.interfaces import IDownloadable, ITree, IProgress, IMileStone
+from cubicweb.interfaces import IDownloadable, ITree
 
 
 class IEmailableAdapter(view.EntityAdapter):
@@ -330,7 +329,7 @@ class ITreeAdapter(view.EntityAdapter):
             _done = set()
         for child in self.children():
             if child.eid in _done:
-                self.error('loop in %s tree: %s', child.__regid__.lower(), child)
+                self.error('loop in %s tree: %s', child.cw_etype.lower(), child)
                 continue
             yield child
             _done.add(child.eid)
@@ -357,7 +356,7 @@ class ITreeAdapter(view.EntityAdapter):
         entity = adapter.entity
         while entity is not None:
             if entity.eid in path:
-                self.error('loop in %s tree: %s', entity.__regid__.lower(), entity)
+                self.error('loop in %s tree: %s', entity.cw_etype.lower(), entity)
                 break
             path.append(entity.eid)
             try:
@@ -404,117 +403,3 @@ class adapter_deprecated(view.auto_unwrap_bw_compat):
                       "%(cls)s is deprecated") % {'cls': cls.__name__}
         warn(msg, DeprecationWarning, stacklevel=2)
         return type.__call__(cls, *args, **kwargs)
-
-
-class IProgressAdapter(view.EntityAdapter):
-    """something that has a cost, a state and a progression.
-
-    You should at least override progress_info an in_progress methods on
-    concrete implementations.
-    """
-    __metaclass__ = adapter_deprecated
-    __deprecation_warning__ = '[3.14] IProgressAdapter has been moved to iprogress cube'
-    __needs_bw_compat__ = True
-    __regid__ = 'IProgress'
-    __select__ = implements(IProgress, warn=False) # XXX for bw compat, should be abstract
-
-    @property
-    @view.implements_adapter_compat('IProgress')
-    def cost(self):
-        """the total cost"""
-        return self.progress_info()['estimated']
-
-    @property
-    @view.implements_adapter_compat('IProgress')
-    def revised_cost(self):
-        return self.progress_info().get('estimatedcorrected', self.cost)
-
-    @property
-    @view.implements_adapter_compat('IProgress')
-    def done(self):
-        """what is already done"""
-        return self.progress_info()['done']
-
-    @property
-    @view.implements_adapter_compat('IProgress')
-    def todo(self):
-        """what remains to be done"""
-        return self.progress_info()['todo']
-
-    @view.implements_adapter_compat('IProgress')
-    def progress_info(self):
-        """returns a dictionary describing progress/estimated cost of the
-        version.
-
-        - mandatory keys are (''estimated', 'done', 'todo')
-
-        - optional keys are ('notestimated', 'notestimatedcorrected',
-          'estimatedcorrected')
-
-        'noestimated' and 'notestimatedcorrected' should default to 0
-        'estimatedcorrected' should default to 'estimated'
-        """
-        raise NotImplementedError
-
-    @view.implements_adapter_compat('IProgress')
-    def finished(self):
-        """returns True if status is finished"""
-        return not self.in_progress()
-
-    @view.implements_adapter_compat('IProgress')
-    def in_progress(self):
-        """returns True if status is not finished"""
-        raise NotImplementedError
-
-    @view.implements_adapter_compat('IProgress')
-    def progress(self):
-        """returns the % progress of the task item"""
-        try:
-            return 100. * self.done / self.revised_cost
-        except ZeroDivisionError:
-            # total cost is 0 : if everything was estimated, task is completed
-            if self.progress_info().get('notestimated'):
-                return 0.
-            return 100
-
-    @view.implements_adapter_compat('IProgress')
-    def progress_class(self):
-        return ''
-
-
-class IMileStoneAdapter(IProgressAdapter):
-    __metaclass__ = adapter_deprecated
-    __deprecation_warning__ = '[3.14] IMileStoneAdapter has been moved to iprogress cube'
-    __needs_bw_compat__ = True
-    __regid__ = 'IMileStone'
-    __select__ = implements(IMileStone, warn=False) # XXX for bw compat, should be abstract
-
-    parent_type = None # specify main task's type
-
-    @view.implements_adapter_compat('IMileStone')
-    def get_main_task(self):
-        """returns the main ITask entity"""
-        raise NotImplementedError
-
-    @view.implements_adapter_compat('IMileStone')
-    def initial_prevision_date(self):
-        """returns the initial expected end of the milestone"""
-        raise NotImplementedError
-
-    @view.implements_adapter_compat('IMileStone')
-    def eta_date(self):
-        """returns expected date of completion based on what remains
-        to be done
-        """
-        raise NotImplementedError
-
-    @view.implements_adapter_compat('IMileStone')
-    def completion_date(self):
-        """returns date on which the subtask has been completed"""
-        raise NotImplementedError
-
-    @view.implements_adapter_compat('IMileStone')
-    def contractors(self):
-        """returns the list of persons supposed to work on this task"""
-        raise NotImplementedError
-

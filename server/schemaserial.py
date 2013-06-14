@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -21,15 +21,17 @@ __docformat__ = "restructuredtext en"
 
 import os
 from itertools import chain
+import json
 
 from logilab.common.shellutils import ProgressBar
 
 from yams import BadSchemaDefinition, schema as schemamod, buildobjs as ybo
 
-from cubicweb import CW_SOFTWARE_ROOT, typed_eid
-from cubicweb.schema import (CONSTRAINTS, ETYPE_NAME_MAP,
+from cubicweb import CW_SOFTWARE_ROOT, Binary
+from cubicweb.schema import (KNOWN_RPROPERTIES, CONSTRAINTS, ETYPE_NAME_MAP,
                              VIRTUAL_RTYPES, PURE_VIRTUAL_RTYPES)
 from cubicweb.server import sqlutils
+
 
 def group_mapping(cursor, interactive=True):
     """create a group mapping from an rql cursor
@@ -58,7 +60,7 @@ def group_mapping(cursor, interactive=True):
                 if not value:
                     continue
                 try:
-                    eid = typed_eid(value)
+                    eid = int(value)
                 except ValueError:
                     print 'eid should be an integer'
                     continue
@@ -195,7 +197,14 @@ def deserialize_schema(schema, session):
             if rdefs is not None:
                 ertidx[rdefeid] = rdefs
                 set_perms(rdefs, permsidx)
-
+    # Get the type parameters for additional base types.
+    try:
+        extra_props = dict(session.execute('Any X, XTP WHERE X is CWAttribute, '
+                                           'X extra_props XTP'))
+    except Exception:
+        session.critical('Previous CRITICAL notification about extra_props is not '
+                         'a problem if you are migrating to cubicweb 3.17')
+        extra_props = {} # not yet in the schema (introduced by 3.17 migration)
     for values in session.execute(
         'Any X,SE,RT,OE,CARD,ORD,DESC,IDX,FTIDX,I18N,DFLT WHERE X is CWAttribute,'
         'X relation_type RT, X cardinality CARD, X ordernum ORD, X indexed IDX,'
@@ -203,10 +212,12 @@ def deserialize_schema(schema, session):
         'X fulltextindexed FTIDX, X from_entity SE, X to_entity OE',
         build_descr=False):
         rdefeid, seid, reid, oeid, card, ord, desc, idx, ftidx, i18n, default = values
+        typeparams = extra_props.get(rdefeid)
+        typeparams = json.load(typeparams) if typeparams else {}
         _add_rdef(rdefeid, seid, reid, oeid,
                   cardinality=card, description=desc, order=ord,
                   indexed=idx, fulltextindexed=ftidx, internationalizable=i18n,
-                  default=default)
+                  default=default, **typeparams)
     for values in session.execute(
         'Any X,SE,RT,OE,CARD,ORD,DESC,C WHERE X is CWRelation, X relation_type RT,'
         'X cardinality CARD, X ordernum ORD, X description DESC, '
@@ -509,10 +520,14 @@ def rdef2rql(rdef, cstrtypemap, groupmap=None):
 def _rdef_values(rdef):
     amap = {'order': 'ordernum', 'default': 'defaultval'}
     values = {}
-    for prop, default in rdef.rproperty_defs(rdef.object).iteritems():
+    extra = {}
+    for prop in rdef.rproperty_defs(rdef.object):
         if prop in ('eid', 'constraints', 'uid', 'infered', 'permissions'):
             continue
         value = getattr(rdef, prop)
+        if prop not in KNOWN_RPROPERTIES:
+            extra[prop] = value
+            continue
         # XXX type cast really necessary?
         if prop in ('indexed', 'fulltextindexed', 'internationalizable'):
             value = bool(value)
@@ -526,6 +541,8 @@ def _rdef_values(rdef):
             if not isinstance(value, unicode):
                 value = unicode(value)
         values[amap.get(prop, prop)] = value
+    if extra:
+        values['extra_props'] = Binary(json.dumps(extra))
     relations = ['X %s %%(%s)s' % (attr, attr) for attr in sorted(values)]
     return relations, values
 

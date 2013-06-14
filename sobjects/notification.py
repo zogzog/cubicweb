@@ -26,9 +26,11 @@ from logilab.common.textutils import normalize_text
 from logilab.common.deprecation import class_renamed, class_moved, deprecated
 from logilab.common.registry import yes
 
-from cubicweb.view import Component
-from cubicweb.mail import NotificationView as BaseNotificationView, SkipEmail
+from cubicweb.entity import Entity
+from cubicweb.view import Component, EntityView
 from cubicweb.server.hook import SendMailOp
+from cubicweb.mail import construct_message_id, format_mail
+from cubicweb.server.session import Session
 
 
 class RecipientsFinder(Component):
@@ -59,13 +61,146 @@ class RecipientsFinder(Component):
 
 # abstract or deactivated notification views and mixin ########################
 
-class NotificationView(BaseNotificationView):
-    """overriden to delay actual sending of mails to a commit operation by
-    default
+
+class SkipEmail(Exception):
+    """raise this if you decide to skip an email during its generation"""
+
+
+class NotificationView(EntityView):
+    """abstract view implementing the "email" API (eg to simplify sending
+    notification)
     """
+    # XXX refactor this class to work with len(rset) > 1
+
+    msgid_timestamp = True
+
+    # to be defined on concrete sub-classes
+    content = None # body of the mail
+    message = None # action verb of the subject
+
+    # this is usually the method to call
+    def render_and_send(self, **kwargs):
+        """generate and send an email message for this view"""
+        delayed = kwargs.pop('delay_to_commit', None)
+        for recipients, msg in self.render_emails(**kwargs):
+            if delayed is None:
+                self.send(recipients, msg)
+            elif delayed:
+                self.send_on_commit(recipients, msg)
+            else:
+                self.send_now(recipients, msg)
+
+    def cell_call(self, row, col=0, **kwargs):
+        self.w(self._cw._(self.content) % self.context(**kwargs))
+
+    def render_emails(self, **kwargs):
+        """generate and send emails for this view (one per recipient)"""
+        self._kwargs = kwargs
+        recipients = self.recipients()
+        if not recipients:
+            self.info('skipping %s notification, no recipients', self.__regid__)
+            return
+        if self.cw_rset is not None:
+            entity = self.cw_rset.get_entity(self.cw_row or 0, self.cw_col or 0)
+            # if the view is using timestamp in message ids, no way to reference
+            # previous email
+            if not self.msgid_timestamp:
+                refs = [self.construct_message_id(eid)
+                        for eid in entity.cw_adapt_to('INotifiable').notification_references(self)]
+            else:
+                refs = ()
+            msgid = self.construct_message_id(entity.eid)
+        else:
+            refs = ()
+            msgid = None
+        req = self._cw
+        self.user_data = req.user_data()
+        origlang = req.lang
+        for something in recipients:
+            if isinstance(something, Entity):
+                # hi-jack self._cw to get a session for the returned user
+                self._cw = Session(something, self._cw.repo)
+                self._cw.set_cnxset()
+                emailaddr = something.cw_adapt_to('IEmailable').get_email()
+            else:
+                emailaddr, lang = something
+                self._cw.set_language(lang)
+            # since the same view (eg self) may be called multiple time and we
+            # need a fresh stream at each iteration, reset it explicitly
+            self.w = None
+            # XXX call render before subject to set .row/.col attributes on the
+            #     view
+            try:
+                content = self.render(row=0, col=0, **kwargs)
+                subject = self.subject()
+            except SkipEmail:
+                continue
+            except Exception as ex:
+                # shouldn't make the whole transaction fail because of rendering
+                # error (unauthorized or such) XXX check it doesn't actually
+                # occurs due to rollback on such error
+                self.exception(str(ex))
+                continue
+            msg = format_mail(self.user_data, [emailaddr], content, subject,
+                              config=self._cw.vreg.config, msgid=msgid, references=refs)
+            yield [emailaddr], msg
+            if isinstance(something, Entity):
+                self._cw.commit()
+                self._cw.close()
+                self._cw = req
+        # restore language
+        req.set_language(origlang)
+
+    # recipients / email sending ###############################################
+
+    def recipients(self):
+        """return a list of either 2-uple (email, language) or user entity to
+        who this email should be sent
+        """
+        finder = self._cw.vreg['components'].select(
+            'recipients_finder', self._cw, rset=self.cw_rset,
+            row=self.cw_row or 0, col=self.cw_col or 0)
+        return finder.recipients()
+
+    def send_now(self, recipients, msg):
+        self._cw.vreg.config.sendmails([(msg, recipients)])
+
     def send_on_commit(self, recipients, msg):
         SendMailOp(self._cw, recipients=recipients, msg=msg)
     send = send_on_commit
+
+    # email generation helpers #################################################
+
+    def construct_message_id(self, eid):
+        return construct_message_id(self._cw.vreg.config.appid, eid,
+                                    self.msgid_timestamp)
+
+    def format_field(self, attr, value):
+        return ':%(attr)s: %(value)s' % {'attr': attr, 'value': value}
+
+    def format_section(self, attr, value):
+        return '%(attr)s\n%(ul)s\n%(value)s\n' % {
+            'attr': attr, 'ul': '-'*len(attr), 'value': value}
+
+    def subject(self):
+        entity = self.cw_rset.get_entity(self.cw_row or 0, self.cw_col or 0)
+        subject = self._cw._(self.message)
+        etype = entity.dc_type()
+        eid = entity.eid
+        login = self.user_data['login']
+        return self._cw._('%(subject)s %(etype)s #%(eid)s (%(login)s)') % locals()
+
+    def context(self, **kwargs):
+        entity = self.cw_rset.get_entity(self.cw_row or 0, self.cw_col or 0)
+        for key, val in kwargs.iteritems():
+            if val and isinstance(val, unicode) and val.strip():
+               kwargs[key] = self._cw._(val)
+        kwargs.update({'user': self.user_data['login'],
+                       'eid': entity.eid,
+                       'etype': entity.dc_type(),
+                       'url': entity.absolute_url(),
+                       'title': entity.dc_long_title(),})
+        return kwargs
 
 
 class StatusChangeMixIn(object):
@@ -157,9 +292,8 @@ Properties have been updated by %(user)s:
 url: %(url)s
 """
 
-    def context(self, **kwargs):
+    def context(self, changes=(), **kwargs):
         context = super(EntityUpdatedNotificationView, self).context(**kwargs)
-        changes = self._cw.transaction_data['changes'][self.cw_rset[0][0]]
         _ = self._cw._
         formatted_changes = []
         entity = self.cw_rset.get_entity(self.cw_row or 0, self.cw_col or 0)
@@ -195,12 +329,3 @@ url: %(url)s
         entity = self.cw_rset.get_entity(self.cw_row or 0, self.cw_col or 0)
         return  u'%s #%s (%s)' % (self._cw.__('Updated %s' % entity.e_schema),
                                   entity.eid, self.user_data['login'])
-
-
-from cubicweb.hooks.notification import RenderAndSendNotificationView
-from cubicweb.mail import parse_message_id
-
-NormalizedTextView = class_renamed('NormalizedTextView', ContentAddedView)
-RenderAndSendNotificationView = class_moved(RenderAndSendNotificationView)
-parse_message_id = deprecated('parse_message_id is now defined in cubicweb.mail')(parse_message_id)
-

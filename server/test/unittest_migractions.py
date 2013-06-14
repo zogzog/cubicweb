@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -17,7 +17,6 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unit tests for module cubicweb.server.migractions"""
 
-from copy import deepcopy
 from datetime import date
 from os.path import join
 
@@ -31,6 +30,8 @@ from cubicweb.schema import CubicWebSchemaLoader
 from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.server.migractions import *
 
+import cubicweb.devtools
+
 migrschema = None
 def tearDownModule(*args):
     global migrschema
@@ -40,17 +41,17 @@ def tearDownModule(*args):
 
 class MigrationCommandsTC(CubicWebTC):
 
+    configcls = cubicweb.devtools.TestServerConfiguration
+
     tags = CubicWebTC.tags | Tags(('server', 'migration', 'migractions'))
 
     @classmethod
     def _init_repo(cls):
         super(MigrationCommandsTC, cls)._init_repo()
         # we have to read schema from the database to get eid for schema entities
-        config = cls.config
-        config._cubes = None
-        cls.repo.fill_schema()
-        cls.origschema = deepcopy(cls.repo.schema)
+        cls.repo.set_schema(cls.repo.deserialize_schema(), resetvreg=False)
         # hack to read the schema from data/migrschema
+        config = cls.config
         config.appid = join('data', 'migratedapp')
         config._apphome = cls.datapath('migratedapp')
         global migrschema
@@ -73,8 +74,8 @@ class MigrationCommandsTC(CubicWebTC):
 
     def test_add_attribute_int(self):
         self.assertFalse('whatever' in self.schema)
-        self.request().create_entity('Note')
-        self.commit()
+        self.session.create_entity('Note')
+        self.session.commit(free_cnxset=False)
         orderdict = dict(self.mh.rqlexec('Any RTN, O WHERE X name "Note", RDEF from_entity X, '
                                          'RDEF relation_type RT, RDEF ordernum O, RT name RTN'))
         self.mh.cmd_add_attribute('Note', 'whatever')
@@ -83,10 +84,10 @@ class MigrationCommandsTC(CubicWebTC):
         self.assertEqual(self.schema['whatever'].objects(), ('Int',))
         self.assertEqual(self.schema['Note'].default('whatever'), 2)
         # test default value set on existing entities
-        note = self.execute('Note X').get_entity(0, 0)
+        note = self.session.execute('Note X').get_entity(0, 0)
         self.assertEqual(note.whatever, 2)
         # test default value set for next entities
-        self.assertEqual(self.request().create_entity('Note').whatever, 2)
+        self.assertEqual(self.session.create_entity('Note').whatever, 2)
         # test attribute order
         orderdict2 = dict(self.mh.rqlexec('Any RTN, O WHERE X name "Note", RDEF from_entity X, '
                                           'RDEF relation_type RT, RDEF ordernum O, RT name RTN'))
@@ -107,8 +108,8 @@ class MigrationCommandsTC(CubicWebTC):
 
     def test_add_attribute_varchar(self):
         self.assertFalse('whatever' in self.schema)
-        self.request().create_entity('Note')
-        self.commit()
+        self.session.create_entity('Note')
+        self.session.commit(free_cnxset=False)
         self.assertFalse('shortpara' in self.schema)
         self.mh.cmd_add_attribute('Note', 'shortpara')
         self.assertTrue('shortpara' in self.schema)
@@ -118,11 +119,10 @@ class MigrationCommandsTC(CubicWebTC):
         notesql = self.mh.sqlexec("SELECT sql FROM sqlite_master WHERE type='table' and name='%sNote'" % SQL_PREFIX)[0][0]
         fields = dict(x.strip().split()[:2] for x in notesql.split('(', 1)[1].rsplit(')', 1)[0].split(','))
         self.assertEqual(fields['%sshortpara' % SQL_PREFIX], 'varchar(64)')
-        req = self.request()
         # test default value set on existing entities
-        self.assertEqual(req.execute('Note X').get_entity(0, 0).shortpara, 'hop')
+        self.assertEqual(self.session.execute('Note X').get_entity(0, 0).shortpara, 'hop')
         # test default value set for next entities
-        self.assertEqual(req.create_entity('Note').shortpara, 'hop')
+        self.assertEqual(self.session.create_entity('Note').shortpara, 'hop')
         self.mh.rollback()
 
     def test_add_datetime_with_default_value_attribute(self):
@@ -195,9 +195,9 @@ class MigrationCommandsTC(CubicWebTC):
         self.mh.cmd_add_entity_type('Folder2')
         self.assertTrue('Folder2' in self.schema)
         self.assertTrue('Old' in self.schema)
-        self.assertTrue(self.execute('CWEType X WHERE X name "Folder2"'))
+        self.assertTrue(self.session.execute('CWEType X WHERE X name "Folder2"'))
         self.assertTrue('filed_under2' in self.schema)
-        self.assertTrue(self.execute('CWRType X WHERE X name "filed_under2"'))
+        self.assertTrue(self.session.execute('CWRType X WHERE X name "filed_under2"'))
         self.schema.rebuild_infered_relations()
         self.assertEqual(sorted(str(rs) for rs in self.schema['Folder2'].subject_relations()),
                           ['created_by', 'creation_date', 'cw_source', 'cwuri',
@@ -225,15 +225,15 @@ class MigrationCommandsTC(CubicWebTC):
         done = wf.add_state(u'done')
         wf.add_transition(u'redoit', done, todo)
         wf.add_transition(u'markasdone', todo, done)
-        self.commit()
+        self.session.commit(free_cnxset=False)
         eschema = self.schema.eschema('Folder2')
         self.mh.cmd_drop_entity_type('Folder2')
         self.assertFalse('Folder2' in self.schema)
-        self.assertFalse(self.execute('CWEType X WHERE X name "Folder2"'))
+        self.assertFalse(self.session.execute('CWEType X WHERE X name "Folder2"'))
         # test automatic workflow deletion
-        self.assertFalse(self.execute('Workflow X WHERE NOT X workflow_of ET'))
-        self.assertFalse(self.execute('State X WHERE NOT X state_of WF'))
-        self.assertFalse(self.execute('Transition X WHERE NOT X transition_of WF'))
+        self.assertFalse(self.session.execute('Workflow X WHERE NOT X workflow_of ET'))
+        self.assertFalse(self.session.execute('State X WHERE NOT X state_of WF'))
+        self.assertFalse(self.session.execute('Transition X WHERE NOT X transition_of WF'))
 
     def test_rename_entity_type(self):
         entity = self.mh.create_entity('Old', name=u'old')
@@ -268,7 +268,7 @@ class MigrationCommandsTC(CubicWebTC):
         self.mh.create_entity('Personne', nom=u'tot')
         self.mh.create_entity('Affaire')
         self.mh.rqlexec('SET X concerne2 Y WHERE X is Personne, Y is Affaire')
-        self.commit()
+        self.session.commit(free_cnxset=False)
         self.mh.cmd_drop_relation_definition('Personne', 'concerne2', 'Affaire')
         self.assertTrue('concerne2' in self.schema)
         self.mh.cmd_drop_relation_definition('Personne', 'concerne2', 'Note')
@@ -290,7 +290,7 @@ class MigrationCommandsTC(CubicWebTC):
         self.assertEqual(sorted(str(e) for e in self.schema['concerne'].objects()),
                           ['Affaire', 'Division', 'Note', 'Societe', 'SubDivision'])
         # trick: overwrite self.maxeid to avoid deletion of just reintroduced types
-        self.maxeid = self.execute('Any MAX(X)')[0][0]
+        self.maxeid = self.session.execute('Any MAX(X)')[0][0]
 
     def test_drop_relation_definition_with_specialization(self):
         self.assertEqual(sorted(str(e) for e in self.schema['concerne'].subjects()),
@@ -314,7 +314,7 @@ class MigrationCommandsTC(CubicWebTC):
         self.assertEqual(sorted(str(e) for e in self.schema['concerne'].objects()),
                           ['Affaire', 'Division', 'Note', 'Societe', 'SubDivision'])
         # trick: overwrite self.maxeid to avoid deletion of just reintroduced types
-        self.maxeid = self.execute('Any MAX(X)')[0][0]
+        self.maxeid = self.session.execute('Any MAX(X)')[0][0]
 
     def test_rename_relation(self):
         self.skipTest('implement me')
@@ -495,8 +495,8 @@ class MigrationCommandsTC(CubicWebTC):
                                           ('Note', 'Bookmark')]))
                 self.assertEqual(sorted(schema['see_also'].subjects()), ['Bookmark', 'Folder', 'Note'])
                 self.assertEqual(sorted(schema['see_also'].objects()), ['Bookmark', 'Folder', 'Note'])
-                self.assertEqual(self.execute('Any X WHERE X pkey "system.version.email"').rowcount, 0)
-                self.assertEqual(self.execute('Any X WHERE X pkey "system.version.file"').rowcount, 0)
+                self.assertEqual(self.session.execute('Any X WHERE X pkey "system.version.email"').rowcount, 0)
+                self.assertEqual(self.session.execute('Any X WHERE X pkey "system.version.file"').rowcount, 0)
             except :
                 import traceback
                 traceback.print_exc()
@@ -520,16 +520,16 @@ class MigrationCommandsTC(CubicWebTC):
             self.assertEqual(sorted(schema['see_also'].objects()), ['Bookmark', 'EmailThread', 'Folder', 'Note'])
             from cubes.email.__pkginfo__ import version as email_version
             from cubes.file.__pkginfo__ import version as file_version
-            self.assertEqual(self.execute('Any V WHERE X value V, X pkey "system.version.email"')[0][0],
+            self.assertEqual(self.session.execute('Any V WHERE X value V, X pkey "system.version.email"')[0][0],
                               email_version)
-            self.assertEqual(self.execute('Any V WHERE X value V, X pkey "system.version.file"')[0][0],
+            self.assertEqual(self.session.execute('Any V WHERE X value V, X pkey "system.version.file"')[0][0],
                               file_version)
             # trick: overwrite self.maxeid to avoid deletion of just reintroduced
             #        types (and their associated tables!)
-            self.maxeid = self.execute('Any MAX(X)')[0][0]
+            self.maxeid = self.session.execute('Any MAX(X)')[0][0]
             # why this commit is necessary is unclear to me (though without it
             # next test may fail complaining of missing tables
-            self.commit()
+            self.session.commit(free_cnxset=False)
 
 
     @tag('longrun')
@@ -554,10 +554,10 @@ class MigrationCommandsTC(CubicWebTC):
             self.assertTrue('email' in self.config.cubes())
             # trick: overwrite self.maxeid to avoid deletion of just reintroduced
             #        types (and their associated tables!)
-            self.maxeid = self.execute('Any MAX(X)')[0][0]
+            self.maxeid = self.session.execute('Any MAX(X)')[0][0]
             # why this commit is necessary is unclear to me (though without it
             # next test may fail complaining of missing tables
-            self.commit()
+            self.session.commit(free_cnxset=False)
 
     def test_remove_dep_cube(self):
         with self.assertRaises(ConfigurationError) as cm:
@@ -577,16 +577,16 @@ class MigrationCommandsTC(CubicWebTC):
                           ['Note', 'Text'])
         self.assertEqual(self.schema['Text'].specializes().type, 'Para')
         # test columns have been actually added
-        text = self.execute('INSERT Text X: X para "hip", X summary "hop", X newattr "momo"').get_entity(0, 0)
-        note = self.execute('INSERT Note X: X para "hip", X shortpara "hop", X newattr "momo", X unique_id "x"').get_entity(0, 0)
-        aff = self.execute('INSERT Affaire X').get_entity(0, 0)
-        self.assertTrue(self.execute('SET X newnotinlined Y WHERE X eid %(x)s, Y eid %(y)s',
+        text = self.session.execute('INSERT Text X: X para "hip", X summary "hop", X newattr "momo"').get_entity(0, 0)
+        note = self.session.execute('INSERT Note X: X para "hip", X shortpara "hop", X newattr "momo", X unique_id "x"').get_entity(0, 0)
+        aff = self.session.execute('INSERT Affaire X').get_entity(0, 0)
+        self.assertTrue(self.session.execute('SET X newnotinlined Y WHERE X eid %(x)s, Y eid %(y)s',
                                      {'x': text.eid, 'y': aff.eid}))
-        self.assertTrue(self.execute('SET X newnotinlined Y WHERE X eid %(x)s, Y eid %(y)s',
+        self.assertTrue(self.session.execute('SET X newnotinlined Y WHERE X eid %(x)s, Y eid %(y)s',
                                      {'x': note.eid, 'y': aff.eid}))
-        self.assertTrue(self.execute('SET X newinlined Y WHERE X eid %(x)s, Y eid %(y)s',
+        self.assertTrue(self.session.execute('SET X newinlined Y WHERE X eid %(x)s, Y eid %(y)s',
                                      {'x': text.eid, 'y': aff.eid}))
-        self.assertTrue(self.execute('SET X newinlined Y WHERE X eid %(x)s, Y eid %(y)s',
+        self.assertTrue(self.session.execute('SET X newinlined Y WHERE X eid %(x)s, Y eid %(y)s',
                                      {'x': note.eid, 'y': aff.eid}))
         # XXX remove specializes by ourselves, else tearDown fails when removing
         # Para because of Note inheritance. This could be fixed by putting the
@@ -598,8 +598,8 @@ class MigrationCommandsTC(CubicWebTC):
         # specialization relationship...
         self.session.data['rebuild-infered'] = True
         try:
-            self.execute('DELETE X specializes Y WHERE Y name "Para"')
-            self.commit()
+            self.session.execute('DELETE X specializes Y WHERE Y name "Para"')
+            self.session.commit(free_cnxset=False)
         finally:
             self.session.data['rebuild-infered'] = False
         self.assertEqual(sorted(et.type for et in self.schema['Para'].specialized_by()),

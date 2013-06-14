@@ -18,7 +18,6 @@
 """this module contains base classes and utilities for cubicweb tests"""
 __docformat__ = "restructuredtext en"
 
-import os
 import sys
 import re
 import urlparse
@@ -40,15 +39,14 @@ from logilab.common.decorators import cached, classproperty, clear_cache, iclass
 from logilab.common.deprecation import deprecated, class_deprecated
 from logilab.common.shellutils import getlogin
 
-from cubicweb import ValidationError, NoSelectableObject, AuthenticationError
+from cubicweb import ValidationError, NoSelectableObject
 from cubicweb import cwconfig, dbapi, devtools, web, server
 from cubicweb.utils import json
 from cubicweb.sobjects import notification
 from cubicweb.web import Redirect, application
-from cubicweb.server.session import Session
 from cubicweb.server.hook import SendMailOp
 from cubicweb.devtools import SYSTEM_ENTITIES, SYSTEM_RELATIONS, VIEW_VALIDATORS
-from cubicweb.devtools import BASE_URL, fake, htmlparser, DEFAULT_EMPTY_DB_ID
+from cubicweb.devtools import fake, htmlparser, DEFAULT_EMPTY_DB_ID
 from cubicweb.utils import json
 
 # low-level utilities ##########################################################
@@ -812,8 +810,8 @@ class CubicWebTC(TestCase):
         # snippets
         #'text/html': DTDValidator,
         #'application/xhtml+xml': DTDValidator,
-        'application/xml': htmlparser.SaxOnlyValidator,
-        'text/xml': htmlparser.SaxOnlyValidator,
+        'application/xml': htmlparser.XMLValidator,
+        'text/xml': htmlparser.XMLValidator,
         'application/json': JsonValidator,
         'text/plain': None,
         'text/comma-separated-values': None,
@@ -891,8 +889,12 @@ class CubicWebTC(TestCase):
                     content_type = view.content_type
         if content_type is None:
             content_type = 'text/html'
-        if content_type in ('text/html', 'application/xhtml+xml'):
-            if output and output.startswith('<?xml'):
+        if content_type in ('text/html', 'application/xhtml+xml') and output:
+            if output.startswith('<!DOCTYPE html>'):
+                # only check XML well-formness since HTMLValidator isn't html5
+                # compatible and won't like various other extensions
+                default_validator = htmlparser.XMLSyntaxValidator
+            elif output.startswith('<?xml'):
                 default_validator = htmlparser.DTDValidator
             else:
                 default_validator = htmlparser.HTMLValidator
@@ -940,6 +942,7 @@ class CubicWebTC(TestCase):
                     # define filter
                     if isinstance(content, str):
                         content = unicode(content, sys.getdefaultencoding(), 'replace')
+                    content = validator.preprocess_data(content)
                     content = content.splitlines()
                     width = int(log(len(content), 10)) + 1
                     line_template = " %" + ("%i" % width) + "i: %s"

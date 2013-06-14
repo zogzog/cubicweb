@@ -38,13 +38,14 @@ from cubicweb.web.http_headers import Headers
 
 
 class CubicWebWsgiRequest(CubicWebRequestBase):
-    """most of this code COMES FROM DJANO
+    """most of this code COMES FROM DJANGO
     """
 
     def __init__(self, environ, vreg):
         self.environ = environ
         self.path = environ['PATH_INFO']
         self.method = environ['REQUEST_METHOD'].upper()
+        self.content = environ['wsgi.input']
 
         headers_in = dict((normalize_header(k[5:]), v) for k, v in self.environ.items()
                           if k.startswith('HTTP_'))

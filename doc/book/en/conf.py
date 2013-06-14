@@ -31,7 +31,6 @@
 # All configuration values have a default value; values that are commented out
 # serve to show the default value.
 
-import sys, os
 from os import path as osp
 
 path = __file__

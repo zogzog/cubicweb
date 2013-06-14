@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -19,172 +19,20 @@
 functionality.
 """
 
-__docformat__ = "restructuredtext en"
-_ = unicode
+from logilab.common.deprecation import class_moved, moved
 
-import re
-from urlparse import urljoin
-from urllib2 import urlopen, Request, HTTPError
-from urllib import quote as urlquote # XXX should use view.url_quote method
+try:
+    from cubes.embed.views import *
 
-from logilab.mtconverter import guess_encoding
-
-from cubicweb.predicates import (one_line_rset, score_entity, implements,
-                                adaptable, match_search_state)
-from cubicweb.interfaces import IEmbedable
-from cubicweb.view import NOINDEX, NOFOLLOW, EntityAdapter, implements_adapter_compat
-from cubicweb.uilib import soup2xhtml
-from cubicweb.web.controller import Controller
-from cubicweb.web.action import Action
-from cubicweb.web.views import basetemplates
-
-
-class IEmbedableAdapter(EntityAdapter):
-    """interface for embedable entities"""
-    __needs_bw_compat__ = True
-    __regid__ = 'IEmbedable'
-    __select__ = implements(IEmbedable, warn=False) # XXX for bw compat, should be abstract
-
-    @implements_adapter_compat('IEmbedable')
-    def embeded_url(self):
-        """embed action interface"""
-        raise NotImplementedError
-
-
-class ExternalTemplate(basetemplates.TheMainTemplate):
-    """template embeding an external web pages into CubicWeb web interface
-    """
-    __regid__ = 'external'
-
-    def call(self, body):
-        # XXX fallback to HTML 4 mode when embeding ?
-        self.set_request_content_type()
-        self._cw.search_state = ('normal',)
-        self.template_header(self.content_type, None, self._cw._('external page'),
-                             [NOINDEX, NOFOLLOW])
-        self.content_header()
-        self.w(body)
-        self.content_footer()
-        self.template_footer()
-
-
-class EmbedController(Controller):
-    __regid__ = 'embed'
-    template = 'external'
-
-    def publish(self, rset=None):
-        req = self._cw
-        if 'custom_css' in req.form:
-            req.add_css(req.form['custom_css'])
-        embedded_url = req.form['url']
-        allowed = self._cw.vreg.config['embed-allowed']
-        _ = req._
-        if allowed is None or not allowed.match(embedded_url):
-            body = '<h2>%s</h2><h3>%s</h3>' % (
-                _('error while embedding page'),
-                _('embedding this url is forbidden'))
-        else:
-            prefix = req.build_url(self.__regid__, url='')
-            authorization = req.get_header('Authorization')
-            if authorization:
-                headers = {'Authorization' : authorization}
-            else:
-                headers = {}
-            try:
-                body = embed_external_page(embedded_url, prefix,
-                                           headers, req.form.get('custom_css'))
-                body = soup2xhtml(body, self._cw.encoding)
-            except HTTPError as err:
-                body = '<h2>%s</h2><h3>%s</h3>' % (
-                    _('error while embedding page'), err)
-        rset = self.process_rql()
-        return self._cw.vreg['views'].main_template(req, self.template,
-                                                    rset=rset, body=body)
-
-
-def entity_has_embedable_url(entity):
-    """return 1 if the entity provides an allowed embedable url"""
-    url = entity.cw_adapt_to('IEmbedable').embeded_url()
-    if not url or not url.strip():
-        return 0
-    allowed = entity._cw.vreg.config['embed-allowed']
-    if allowed is None or not allowed.match(url):
-        return 0
-    return 1
-
-
-class EmbedAction(Action):
-    """display an 'embed' link on entity implementing `embeded_url` method
-    if the returned url match embeding configuration
-    """
-    __regid__ = 'embed'
-    __select__ = (one_line_rset() & match_search_state('normal')
-                  & adaptable('IEmbedable')
-                  & score_entity(entity_has_embedable_url))
-
-    title = _('embed')
-
-    def url(self, row=0):
-        entity = self.cw_rset.get_entity(row, 0)
-        url = urljoin(self._cw.base_url(), entity.cw_adapt_to('IEmbedable').embeded_url())
-        if 'rql' in self._cw.form:
-            return self._cw.build_url('embed', url=url, rql=self._cw.form['rql'])
-        return self._cw.build_url('embed', url=url)
-
-
-
-# functions doing necessary substitutions to embed an external html page ######
-
-
-BODY_RGX = re.compile('<body.*?>(.*?)</body>', re.I | re.S | re.U)
-HREF_RGX = re.compile('<a\s+href="([^"]*)"', re.I | re.S | re.U)
-SRC_RGX = re.compile('<img\s+src="([^"]*)"', re.I | re.S | re.U)
-
-
-class replace_href:
-    def __init__(self, prefix, custom_css=None):
-        self.prefix = prefix
-        self.custom_css = custom_css
-
-    def __call__(self, match):
-        original_url = match.group(1)
-        url = self.prefix + urlquote(original_url, safe='')
-        if self.custom_css is not None:
-            if '?' in url:
-                url = '%s&amp;custom_css=%s' % (url, self.custom_css)
-            else:
-                url = '%s?custom_css=%s' % (url, self.custom_css)
-        return '<a href="%s"' % url
-
-
-class absolutize_links:
-    def __init__(self, embedded_url, tag, custom_css=None):
-        self.embedded_url = embedded_url
-        self.tag = tag
-        self.custom_css = custom_css
-
-    def __call__(self, match):
-        original_url = match.group(1)
-        if '://' in original_url:
-            return match.group(0) # leave it unchanged
-        return '%s="%s"' % (self.tag, urljoin(self.embedded_url, original_url))
-
-
-def prefix_links(body, prefix, embedded_url, custom_css=None):
-    filters = ((HREF_RGX, absolutize_links(embedded_url, '<a href', custom_css)),
-               (SRC_RGX, absolutize_links(embedded_url, '<img src')),
-               (HREF_RGX, replace_href(prefix, custom_css)))
-    for rgx, repl in filters:
-        body = rgx.sub(repl, body)
-    return body
-
-
-def embed_external_page(url, prefix, headers=None, custom_css=None):
-    req = Request(url, headers=(headers or {}))
-    content = urlopen(req).read()
-    page_source = unicode(content, guess_encoding(content), 'replace')
-    page_source = page_source
-    match = BODY_RGX.search(page_source)
-    if match is None:
-        return page_source
-    return prefix_links(match.group(1), prefix, url, custom_css)
+    IEmbedableAdapter = class_moved(IEmbedableAdapter, message='[3.17] IEmbedableAdapter moved to cubes.embed.views')
+    ExternalTemplate = class_moved(ExternalTemplate, message='[3.17] IEmbedableAdapter moved to cubes.embed.views')
+    EmbedController = class_moved(EmbedController, message='[3.17] IEmbedableAdapter moved to cubes.embed.views')
+    entity_has_embedable_url = moved('cubes.embed.views', 'entity_has_embedable_url')
+    EmbedAction = class_moved(EmbedAction, message='[3.17] EmbedAction moved to cubes.embed.views')
+    replace_href = class_moved(replace_href, message='[3.17] replace_href moved to cubes.embed.views')
+    embed_external_page = moved('cubes.embed.views', 'embed_external_page')
+    absolutize_links = class_moved(absolutize_links, message='[3.17] absolutize_links moved to cubes.embed.views')
+    prefix_links = moved('cubes.embed.views', 'prefix_links')
+except ImportError:
+    from cubicweb.web import LOGGER
+    LOGGER.warning('[3.17] embedding extracted to cube embed that was not found. try installing it.')

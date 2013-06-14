@@ -197,14 +197,14 @@ import sys
 from os.path import join, dirname, realpath
 from warnings import warn
 from datetime import datetime, date, time, timedelta
-from functools import partial, reduce
+from functools import reduce
 
 from logilab.common.decorators import cached, clear_cache
 from logilab.common.deprecation import deprecated, class_deprecated
 from logilab.common.modutils import cleanup_sys_modules
 from logilab.common.registry import (
     RegistryStore, Registry, obj_registries,
-    ObjectNotFound, NoSelectableObject, RegistryNotFound)
+    ObjectNotFound, RegistryNotFound)
 
 from rql import RQLHelper
 from yams.constraints import BASE_CONVERTERS

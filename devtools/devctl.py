@@ -122,7 +122,6 @@ def generate_schema_pot(w, cubedir=None):
 
 
 def _generate_schema_pot(w, vreg, schema, libconfig=None):
-    from copy import deepcopy
     from cubicweb.i18n import add_msg
     from cubicweb.schema import NO_I18NCONTEXT, CONSTRAINTS
     w('# schema pot file, generated on %s\n'

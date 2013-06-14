@@ -70,10 +70,11 @@ import csv
 import sys
 import threading
 import traceback
+import warnings
 import cPickle
 import os.path as osp
+import inspect
 from collections import defaultdict
-from contextlib import contextmanager
 from copy import copy
 from datetime import date, datetime
 from time import asctime
@@ -323,7 +324,6 @@ def check_doubles_not_none(buckets):
     return [(k, len(v)) for k, v in buckets.items()
             if k is not None and len(v) > 1]
 
-
 # sql generator utility functions #############################################
 
 
@@ -396,7 +396,7 @@ def _execmany_thread(sql_connect, statements, dump_output_dir=None,
                     columns = list(data[0])
                 execmany_func(cu, statement, data, table, columns, encoding)
             except Exception:
-                print 'unable to copy data into table %s', table
+                print 'unable to copy data into table %s' % table
                 # Error in import statement, save data in dump_output_dir
                 if dump_output_dir is not None:
                     pdata = {'data': data, 'statement': statement,
@@ -431,7 +431,16 @@ def _create_copyfrom_buffer(data, columns, encoding='utf-8', replace_sep=None):
         # If an error is raised, do not continue.
         formatted_row = []
         for col in columns:
-            value = row[col]
+            try:
+                value = row[col]
+            except KeyError:
+                warnings.warn(u"Column %s is not accessible in row %s" 
+                              % (col, row), RuntimeWarning)
+                # XXX 'value' set to None so that the import does not end in 
+                # error. 
+                # Instead, the extra keys are set to NULL from the 
+                # database point of view.
+                value = None
             if value is None:
                 value = 'NULL'
             elif isinstance(value, (long, int, float)):
@@ -506,7 +515,7 @@ class ObjectStore(object):
         item['eid'] = data['eid']
         return item
 
-    def relate(self, eid_from, rtype, eid_to, inlined=False):
+    def relate(self, eid_from, rtype, eid_to, **kwargs):
         """Add new relation"""
         relation = eid_from, rtype, eid_to
         self.relations.add(relation)
@@ -523,6 +532,18 @@ class ObjectStore(object):
         """
         pass
 
+    def flush(self):
+        """The method is provided so that all stores share a common API.
+        It just tries to call the commit method.
+        """
+        print 'starting flush'
+        try:
+            self.commit()
+        except:
+            print 'failed to flush'
+        else:
+            print 'flush done'
+
     def rql(self, *args):
         if self._rql is not None:
             return self._rql(*args)
@@ -537,76 +558,6 @@ class ObjectStore(object):
     @property
     def nb_inserted_relations(self):
         return len(self.relations)
-
-    @deprecated("[3.7] index support will disappear")
-    def build_index(self, name, type, func=None, can_be_empty=False):
-        """build internal index for further search"""
-        index = {}
-        if func is None or not callable(func):
-            func = lambda x: x['eid']
-        for eid in self.types[type]:
-            index.setdefault(func(self.eids[eid]), []).append(eid)
-        if not can_be_empty:
-            assert index, "new index '%s' cannot be empty" % name
-        self.indexes[name] = index
-
-    @deprecated("[3.7] index support will disappear")
-    def build_rqlindex(self, name, type, key, rql, rql_params=False,
-                       func=None, can_be_empty=False):
-        """build an index by rql query
-
-        rql should return eid in first column
-        ctl.store.build_index('index_name', 'users', 'login', 'Any U WHERE U is CWUser')
-        """
-        self.types[type] = []
-        rset = self.rql(rql, rql_params or {})
-        if not can_be_empty:
-            assert rset, "new index type '%s' cannot be empty (0 record found)" % type
-        for entity in rset.entities():
-            getattr(entity, key) # autopopulate entity with key attribute
-            self.eids[entity.eid] = dict(entity)
-            if entity.eid not in self.types[type]:
-                self.types[type].append(entity.eid)
-
-        # Build index with specified key
-        func = lambda x: x[key]
-        self.build_index(name, type, func, can_be_empty=can_be_empty)
-
-    @deprecated("[3.7] index support will disappear")
-    def fetch(self, name, key, unique=False, decorator=None):
-        """index fetcher method
-
-        decorator is a callable method or an iterator of callable methods (usually a lambda function)
-        decorator=lambda x: x[:1] (first value is returned)
-        decorator=lambda x: x.lower (lowercased value is returned)
-
-        decorator is handy when you want to improve index keys but without
-        changing the original field
-
-        Same check functions can be reused here.
-        """
-        eids = self.indexes[name].get(key, [])
-        if decorator is not None:
-            if not hasattr(decorator, '__iter__'):
-                decorator = (decorator,)
-            for f in decorator:
-                eids = f(eids)
-        if unique:
-            assert len(eids) == 1, u'expected a single one value for key "%s" in index "%s". Got %i' % (key, name, len(eids))
-            eids = eids[0]
-        return eids
-
-    @deprecated("[3.7] index support will disappear")
-    def find(self, type, key, value):
-        for idx in self.types[type]:
-            item = self.items[idx]
-            if item[key] == value:
-                yield item
-
-    @deprecated("[3.7] checkpoint() deprecated. use commit() instead")
-    def checkpoint(self):
-        self.commit()
-
 
 class RQLObjectStore(ObjectStore):
     """ObjectStore that works with an actual RQL repository (production mode)"""
@@ -629,10 +580,6 @@ class RQLObjectStore(ObjectStore):
             session.set_cnxset()
         self.session = session
         self._commit = commit or session.commit
-
-    @deprecated("[3.7] checkpoint() deprecated. use commit() instead")
-    def checkpoint(self):
-        self.commit()
 
     def commit(self):
         txuuid = self._commit()
@@ -657,9 +604,9 @@ class RQLObjectStore(ObjectStore):
                                       for k in item)
         return self.rql(query, item)[0][0]
 
-    def relate(self, eid_from, rtype, eid_to, inlined=False):
+    def relate(self, eid_from, rtype, eid_to, **kwargs):
         eid_from, rtype, eid_to = super(RQLObjectStore, self).relate(
-            eid_from, rtype, eid_to)
+            eid_from, rtype, eid_to, **kwargs)
         self.rql('SET X %s Y WHERE X eid %%(x)s, Y eid %%(y)s' % rtype,
                  {'x': int(eid_from), 'y': int(eid_to)})
 
@@ -809,8 +756,8 @@ class NoHookRQLObjectStore(RQLObjectStore):
         self._nb_inserted_relations = 0
         self.rql = session.execute
         # deactivate security
-        session.set_read_security(False)
-        session.set_write_security(False)
+        session.read_security = False
+        session.write_security = False
 
     def create_entity(self, etype, **kwargs):
         for k, v in kwargs.iteritems():
@@ -825,20 +772,23 @@ class NoHookRQLObjectStore(RQLObjectStore):
         session = self.session
         self.source.add_entity(session, entity)
         self.source.add_info(session, entity, self.source, None, complete=False)
+        kwargs = dict()
+        if inspect.getargspec(self.add_relation).keywords:
+            kwargs['subjtype'] = entity.cw_etype
         for rtype, targeteids in rels.iteritems():
             # targeteids may be a single eid or a list of eids
             inlined = self.rschema(rtype).inlined
             try:
                 for targeteid in targeteids:
                     self.add_relation(session, entity.eid, rtype, targeteid,
-                                      inlined)
+                                      inlined, **kwargs)
             except TypeError:
                 self.add_relation(session, entity.eid, rtype, targeteids,
-                                  inlined)
+                                  inlined, **kwargs)
         self._nb_inserted_entities += 1
         return entity
 
-    def relate(self, eid_from, rtype, eid_to):
+    def relate(self, eid_from, rtype, eid_to, **kwargs):
         assert not rtype.startswith('reverse_')
         self.add_relation(self.session, eid_from, rtype, eid_to,
                           self.rschema(rtype).inlined)
@@ -962,12 +912,12 @@ class SQLGenObjectStore(NoHookRQLObjectStore):
         """Flush data to the database"""
         self.source.flush()
 
-    def relate(self, subj_eid, rtype, obj_eid, subjtype=None):
+    def relate(self, subj_eid, rtype, obj_eid, **kwargs):
         if subj_eid is None or obj_eid is None:
             return
         # XXX Could subjtype be inferred ?
         self.source.add_relation(self.session, subj_eid, rtype, obj_eid,
-                                 self.rschema(rtype).inlined, subjtype)
+                                 self.rschema(rtype).inlined, **kwargs)
 
     def drop_indexes(self, etype):
         """Drop indexes for a given entity type"""
@@ -1081,18 +1031,20 @@ class SQLGenSourceWrapper(object):
                                encoding=self.dbencoding)
         except:
             print 'failed to flush'
+        else:
+            print 'flush done'
         finally:
             _entities_sql.clear()
             _relations_sql.clear()
             _insertdicts.clear()
             _inlined_relations_sql.clear()
-            print 'flush done'
 
     def add_relation(self, session, subject, rtype, object,
-                     inlined=False, subjtype=None):
+                     inlined=False, **kwargs):
         if inlined:
             _sql = self._sql.inlined_relations
             data = {'cw_eid': subject, SQL_PREFIX + rtype: object}
+            subjtype = kwargs.get('subjtype')
             if subjtype is None:
                 # Try to infer it
                 targets = [t.type for t in
@@ -1102,7 +1054,9 @@ class SQLGenSourceWrapper(object):
                 else:
                     raise ValueError('You should give the subject etype for '
                                      'inlined relation %s'
-                                     ', as it cannot be inferred' % rtype)
+                                     ', as it cannot be inferred: '
+                                     'this type is given as keyword argument '
+                                     '``subjtype``'% rtype)
             statement = self.sqlgen.update(SQL_PREFIX + subjtype,
                                            data, ['cw_eid'])
         else:
@@ -1117,13 +1071,13 @@ class SQLGenSourceWrapper(object):
     def add_entity(self, session, entity):
         with self._storage_handler(entity, 'added'):
             attrs = self.preprocess_entity(entity)
-            rtypes = self._inlined_rtypes_cache.get(entity.__regid__, ())
+            rtypes = self._inlined_rtypes_cache.get(entity.cw_etype, ())
             if isinstance(rtypes, str):
                 rtypes = (rtypes,)
             for rtype in rtypes:
                 if rtype not in attrs:
                     attrs[rtype] = None
-            sql = self.sqlgen.insert(SQL_PREFIX + entity.__regid__, attrs)
+            sql = self.sqlgen.insert(SQL_PREFIX + entity.cw_etype, attrs)
             self._sql.eid_insertdicts[entity.eid] = attrs
             self._append_to_entities(sql, attrs)
 
@@ -1156,7 +1110,7 @@ class SQLGenSourceWrapper(object):
             assert isinstance(extid, str)
             extid = b64encode(extid)
         uri = 'system' if source.copy_based_source else source.uri
-        attrs = {'type': entity.__regid__, 'eid': entity.eid, 'extid': extid,
+        attrs = {'type': entity.cw_etype, 'eid': entity.eid, 'extid': extid,
                  'source': uri, 'asource': source.uri, 'mtime': datetime.utcnow()}
         self._handle_insert_entity_sql(session, self.sqlgen.insert('entities', attrs), attrs)
         # insert core relations: is, is_instance_of and cw_source
@@ -1175,7 +1129,7 @@ class SQLGenSourceWrapper(object):
             self._handle_is_relation_sql(session, 'INSERT INTO cw_source_relation(eid_from,eid_to) VALUES (%s,%s)',
                                          (entity.eid, source.eid))
         # now we can update the full text index
-        if self.do_fti and self.need_fti_indexation(entity.__regid__):
+        if self.do_fti and self.need_fti_indexation(entity.cw_etype):
             if complete:
                 entity.complete(entity.e_schema.indexable_attributes())
             self.index_entity(session, entity=entity)

@@ -127,7 +127,7 @@ from logilab.mtconverter import xml_escape
 from logilab.common.decorators import iclassmethod, cached
 from logilab.common.deprecation import deprecated
 
-from cubicweb import typed_eid, neg_role, uilib
+from cubicweb import neg_role, uilib
 from cubicweb.schema import display_name
 from cubicweb.view import EntityView
 from cubicweb.predicates import (
@@ -272,7 +272,7 @@ class InlineEntityEditionFormView(f.FormViewMixIn, EntityView):
                          **kwargs)
 
     def form_title(self, entity, i18nctx):
-        return self._cw.pgettext(i18nctx, entity.__regid__)
+        return self._cw.pgettext(i18nctx, entity.cw_etype)
 
     def add_hiddens(self, form, entity):
         """to ease overriding (see cubes.vcsfile.views.forms for instance)"""
@@ -415,7 +415,7 @@ def parse_relations_descr(rdescr):
         subjs, rtype, objs = rstr.split(':')
         for subj in subjs.split('_'):
             for obj in objs.split('_'):
-                yield typed_eid(subj), rtype, typed_eid(obj)
+                yield int(subj), rtype, int(obj)
 
 def delete_relations(req, rdefs):
     """delete relations from the repository"""
@@ -460,12 +460,12 @@ def cancel_edition(self, errorurl):
 def _add_pending(req, eidfrom, rel, eidto, kind):
     key = 'pending_%s' % kind
     pendings = req.session.data.setdefault(key, set())
-    pendings.add( (typed_eid(eidfrom), rel, typed_eid(eidto)) )
+    pendings.add( (int(eidfrom), rel, int(eidto)) )
 
 def _remove_pending(req, eidfrom, rel, eidto, kind):
     key = 'pending_%s' % kind
     pendings = req.session.data[key]
-    pendings.remove( (typed_eid(eidfrom), rel, typed_eid(eidto)) )
+    pendings.remove( (int(eidfrom), rel, int(eidto)) )
 
 @ajaxfunc(output_type='json')
 def remove_pending_insert(self, (eidfrom, rel, eidto)):
@@ -498,7 +498,7 @@ class GenericRelationsWidget(fw.FieldWidget):
         for rschema, role, related in field.relations_table(form):
             # already linked entities
             if related:
-                label = rschema.display_name(req, role, context=form.edited_entity.__regid__)
+                label = rschema.display_name(req, role, context=form.edited_entity.cw_etype)
                 w(u'<tr><th class="labelCol">%s</th>' % label)
                 w(u'<td>')
                 w(u'<ul>')
@@ -606,13 +606,13 @@ class GenericRelationsField(ff.Field):
         for pendingid in pending_inserts:
             eidfrom, rtype, eidto = pendingid.split(':')
             pendingid = 'id' + pendingid
-            if typed_eid(eidfrom) == entity.eid: # subject
+            if int(eidfrom) == entity.eid: # subject
                 label = display_name(form._cw, rtype, 'subject',
-                                     entity.__regid__)
+                                     entity.cw_etype)
                 reid = eidto
             else:
                 label = display_name(form._cw, rtype, 'object',
-                                     entity.__regid__)
+                                     entity.cw_etype)
                 reid = eidfrom
             jscall = "javascript: cancelPendingInsert('%s', 'tr', null, %s);" \
                      % (pendingid, entity.eid)
@@ -852,7 +852,7 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
         for rschema, _, role in self._relations_by_section('relations',
                                                            strict=True):
             result.append( (rschema.display_name(self.edited_entity._cw, role,
-                                                 self.edited_entity.__regid__),
+                                                 self.edited_entity.cw_etype),
                             rschema, role) )
         return sorted(result)
 

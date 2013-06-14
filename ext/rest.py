@@ -36,6 +36,7 @@ from cStringIO import StringIO
 from itertools import chain
 from logging import getLogger
 from os.path import join
+from urlparse import urlsplit
 
 from docutils import statemachine, nodes, utils, io
 from docutils.core import Publisher
@@ -125,6 +126,63 @@ def rql_role(role, rawtext, text, lineno, inliner, options={}, content=[]):
         content = view.render()
     except Exception as exc:
         content = 'an error occured while interpreting this rql directive: %r' % exc
+    set_classes(options)
+    return [nodes.raw('', content, format='html')], []
+
+def bookmark_role(role, rawtext, text, lineno, inliner, options={}, content=[]):
+    """:bookmark:`<bookmark-eid>` or :bookmark:`<eid>:<vid>`
+
+    Example: :bookmark:`1234:table`
+
+    Replace the directive with the output of applying the view to the resultset
+    returned by the query stored in the bookmark. By default, the view is the one
+    stored in the bookmark, but it can be overridden by the directive as in the
+    example above.
+
+    "X eid %(userid)s" can be used in the RQL query stored in the Bookmark, for
+    this query will be executed with the argument {'userid': _cw.user.eid}.
+    """
+    _cw = inliner.document.settings.context._cw
+    text = text.strip()
+    try:
+        if ':' in text:
+            eid, vid = text.rsplit(u':', 1)
+            eid = int(eid)
+        else:
+            eid, vid = int(text), None
+    except ValueError:
+        msg = inliner.reporter.error(
+            'EID number must be a positive number; "%s" is invalid.'
+            % text, line=lineno)
+        prb = inliner.problematic(rawtext, rawtext, msg)
+        return [prb], [msg]
+    try:
+        bookmark = _cw.entity_from_eid(eid)
+    except UnknownEid:
+        msg = inliner.reporter.error('Unknown EID %s.' % text, line=lineno)
+        prb = inliner.problematic(rawtext, rawtext, msg)
+        return [prb], [msg]
+    try:
+        params = dict(_cw.url_parse_qsl(urlsplit(bookmark.path).query))
+        rql = params['rql']
+        if vid is None:
+            vid = params.get('vid')
+    except (ValueError, KeyError), exc:
+        msg = inliner.reporter.error('Could not parse bookmark path %s [%s].'
+                                     % (bookmark.path, exc), line=lineno)
+        prb = inliner.problematic(rawtext, rawtext, msg)
+        return [prb], [msg]
+    try:
+        rset = _cw.execute(rql, {'userid': _cw.user.eid})
+        if rset:
+            if vid is None:
+                vid = vid_from_rset(_cw, rset, _cw.vreg.schema)
+        else:
+            vid = 'noresult'
+        view = _cw.vreg['views'].select(vid, _cw, rset=rset)
+        content = view.render()
+    except Exception, exc:
+        content = 'An error occured while interpreting directive bookmark: %r' % exc
     set_classes(options)
     return [nodes.raw('', content, format='html')], []
 
@@ -323,6 +381,7 @@ def cw_rest_init():
     _INITIALIZED = True
     register_canonical_role('eid', eid_reference_role)
     register_canonical_role('rql', rql_role)
+    register_canonical_role('bookmark', bookmark_role)
     directives.register_directive('winclude', winclude_directive)
     if pygments_directive is not None:
         directives.register_directive('sourcecode', pygments_directive)

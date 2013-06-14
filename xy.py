@@ -23,7 +23,6 @@ xy.register_prefix('rdf', 'http://www.w3.org/1999/02/22-rdf-syntax-ns#')
 xy.register_prefix('dc', 'http://purl.org/dc/elements/1.1/')
 xy.register_prefix('foaf', 'http://xmlns.com/foaf/0.1/')
 xy.register_prefix('doap', 'http://usefulinc.com/ns/doap#')
-xy.register_prefix('sioc', 'http://rdfs.org/sioc/ns#')
 xy.register_prefix('owl', 'http://www.w3.org/2002/07/owl#')
 xy.register_prefix('dcterms', 'http://purl.org/dc/terms/')
 

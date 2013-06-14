@@ -1,0 +1,60 @@
+What's new in CubicWeb 3.17?
+============================
+
+New functionalities
+--------------------
+
+* add a command to compare db schema and file system schema
+  (see `#464991 <http://www.cubicweb.org/464991>`_)
+
+* Add CubicWebRequestBase.content with the content of the HTTP request (see #2742453)
+  (see `#2742453 <http://www.cubicweb.org/2742453>`_)
+
+* Add directive bookmark to ReST rendering
+  (see `#2545595 <http://www.cubicweb.org/ticket/2545595>`_)
+
+* Allow user defined final type
+  (see `#124342 <https://www.logilab.org/ticket/124342>`_)
+
+
+API changes
+-----------
+
+* drop typed_eid() in favour of int() (see `#2742462 <http://www.cubicweb.org/2742462>`_)
+
+* The SIOC views and adapters have been removed from CubicWeb and moved to the
+  `sioc` cube.
+
+* The web page embedding views and adapters have been removed from CubicWeb and
+  moved to the `embed` cube.
+
+* The email sending views and controllers have been removed from CubicWeb and
+  moved to the `massmailing` cube.
+
+* ``RenderAndSendNotificationView`` is deprecated in favor of
+  ``ActualNotificationOp`` the new operation use the more efficient *data*
+  idiom.
+
+* Looping task can now have a interval <= ``0``. Negative interval disable the
+  looping task entirely.
+
+* We now serve html instead of xhtml.
+  (see `#2065651 <http://www.cubicweb.org/ticket/2065651>`_)
+
+
+Deprecation
+---------------------
+
+* ``ldapuser`` have been deprecated. It'll be fully dropped in the next
+  version. If you are still using ldapuser switch to ``ldapfeed`` **NOW**!
+
+* ``hijack_user`` have been deprecated. It will be dropped soon.
+
+Deprecated Code Drops
+----------------------
+
+* The progress views and adapters have been removed from CubicWeb. These
+  classes were deprecated since 3.14.0. They are still available in the
+  `iprogress` cube.
+
+* API deprecated since 3.7 have been dropped.

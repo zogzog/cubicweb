@@ -28,10 +28,11 @@ from warnings import warn
 
 from logilab.common.decorators import cached, cachedproperty
 from logilab.common.deprecation import deprecated
+from logilab.common.configuration import merge_options
 
 from cubicweb import ConfigurationError
 from cubicweb.toolsutils import read_config
-from cubicweb.cwconfig import CubicWebConfiguration, register_persistent_options, merge_options
+from cubicweb.cwconfig import CubicWebConfiguration, register_persistent_options
 
 
 register_persistent_options( (
@@ -110,6 +111,14 @@ class WebConfiguration(CubicWebConfiguration):
           'group': 'web', 'level': 3,
           }),
         # web configuration
+        ('ui-cube',
+         {'type' : 'string',
+          'default': None,
+          'help': 'the name of the UI cube that will be loaded before all other '\
+          'cubes. Setting this value to None will instruct cubicweb not to load '\
+          'any extra cube.',
+          'group': 'web', 'level': 3,
+          }),
         ('https-url',
          {'type' : 'string',
           'default': None,
@@ -160,13 +169,6 @@ class WebConfiguration(CubicWebConfiguration):
           'help': 'Same as cleanup-session-time but specific to anonymous '
           'sessions. You can have a much smaller timeout here since it will be '
           'transparent to the user. Default to 5min.',
-          'group': 'web', 'level': 3,
-          }),
-        ('force-html-content-type',
-         {'type' : 'yn',
-          'default': False,
-          'help': 'force text/html content type for your html pages instead of cubicweb user-agent based'\
-          'deduction of an appropriate content type',
           'group': 'web', 'level': 3,
           }),
         ('embed-allowed',

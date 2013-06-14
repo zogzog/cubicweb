@@ -38,9 +38,9 @@ CW_SOFTWARE_ROOT = __path__[0]
 import sys, os, logging
 from StringIO import StringIO
 
+from logilab.common.deprecation import deprecated
 from logilab.common.logging_ext import set_log_methods
 from yams.constraints import BASE_CONVERTERS
-
 
 if os.environ.get('APYCOT_ROOT'):
     logging.basicConfig(level=logging.CRITICAL)
@@ -57,8 +57,9 @@ from cubicweb._exceptions import *
 from logilab.common.registry import ObjectNotFound, NoSelectableObject, RegistryNotFound
 
 # convert eid to the right type, raise ValueError if it's not a valid eid
-typed_eid = int
-
+@deprecated('[3.17] typed_eid() was removed. replace it with int() when needed.')
+def typed_eid(eid):
+    return int(eid)
 
 #def log_thread(f, w, a):
 #    print f.f_code.co_filename, f.f_code.co_name

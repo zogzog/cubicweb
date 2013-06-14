@@ -462,7 +462,7 @@ class EntityCtxComponent(CtxComponent):
             eid = entity.eid
         else:
             eid = None
-            form['etype'] = entity.__regid__
+            form['etype'] = entity.cw_etype
             form['tempEid'] = entity.eid
         args = [json_dumps(x) for x in (registry, oid, eid, params)]
         return self._cw.ajax_replace_url(
@@ -546,7 +546,7 @@ class EditRelationMixIn(ReloadableMixIn):
         for _, eid in field.vocabulary(form):
             if eid not in skip:
                 entity = self._cw.entity_from_eid(eid)
-                if filteretype is None or entity.__regid__ == filteretype:
+                if filteretype is None or entity.cw_etype == filteretype:
                     entities.append(entity)
         return entities
 
@@ -562,7 +562,7 @@ class EditRelationCtxComponent(EditRelationMixIn, EntityCtxComponent):
 
     def render_title(self, w):
         w(display_name(self._cw, self.rtype, role(self),
-                       context=self.entity.__regid__))
+                       context=self.entity.cw_etype))
 
     def render_body(self, w):
         self._cw.add_js('cubicweb.ajax.js')
@@ -614,7 +614,7 @@ class AjaxEditRelationCtxComponent(EntityCtxComponent):
 
     def render_title(self, w):
         w(self.rdef.rtype.display_name(self._cw, self.role,
-                                       context=self.entity.__regid__))
+                                       context=self.entity.cw_etype))
 
     def render_body(self, w):
         req = self._cw

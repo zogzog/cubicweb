@@ -97,7 +97,9 @@ HTML_NON_STRICT = u"""<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "
 class HTMLPageInfoTC(TestCase):
     """test cases for PageInfo"""
     def setUp(self):
-        parser = htmlparser.DTDValidator()
+        parser = htmlparser.HTMLValidator()
+        # disable cleanup that would remove doctype
+        parser.preprocess_data = lambda data: data
         self.page_info = parser.parse_string(HTML_PAGE2)
 
     def test_source1(self):

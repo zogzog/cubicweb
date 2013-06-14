@@ -29,7 +29,7 @@ from logilab.common.decorators import cached
 from logilab.common.deprecation import deprecated
 from logilab.common.date import ustrftime, strptime, todate, todatetime
 
-from cubicweb import Unauthorized, NoSelectableObject, typed_eid, uilib
+from cubicweb import Unauthorized, NoSelectableObject, uilib
 from cubicweb.rset import ResultSet
 
 ONESECOND = timedelta(0, 1, 0)
@@ -37,12 +37,6 @@ CACHE_REGISTRY = {}
 
 class FindEntityError(Exception):
     """raised when find_one_entity() can not return one and only one entity"""
-
-def _check_cw_unsafe(kwargs):
-    if kwargs.pop('_cw_unsafe', False):
-        warn('[3.7] _cw_unsafe argument is deprecated, now unsafe by '
-             'default, control it using cw_[read|write]_security.',
-             DeprecationWarning, stacklevel=3)
 
 class Cache(dict):
     def __init__(self):
@@ -74,6 +68,7 @@ class RequestSessionBase(object):
         # cache result of execution for (rql expr / eids),
         # should be emptied on commit/rollback of the server session / web
         # connection
+        self.user = None
         self.local_perm_cache = {}
         self._ = unicode
 
@@ -114,7 +109,7 @@ class RequestSessionBase(object):
         (we have the eid, we can suppose it exists and user has access to the
         entity)
         """
-        eid = typed_eid(eid)
+        eid = int(eid)
         if etype is None:
             etype = self.describe(eid)[0]
         rset = ResultSet([(eid,)], 'Any X WHERE X eid %(x)s', {'x': eid},
@@ -154,7 +149,6 @@ class RequestSessionBase(object):
         ...               works_for=c)
 
         """
-        _check_cw_unsafe(kwargs)
         cls = self.vreg['etypes'].etype_class(etype)
         return cls.cw_instantiate(self.execute, **kwargs)
 

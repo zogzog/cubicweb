@@ -27,7 +27,6 @@ from logilab.common.textutils import text_to_dict
 from logilab.common.configuration import OptionError
 from logilab.mtconverter import xml_escape
 
-from cubicweb import ValidationError
 from cubicweb.entities import AnyEntity, fetch_config
 
 class _CWSourceCfgMixIn(object):
@@ -124,7 +123,7 @@ class CWSourceSchemaConfig(AnyEntity):
     fetch_attrs, cw_fetch_order = fetch_config(['cw_for_source', 'cw_schema', 'options'])
 
     def dc_title(self):
-        return self._cw._(self.__regid__) + ' #%s' % self.eid
+        return self._cw._(self.cw_etype) + ' #%s' % self.eid
 
     @property
     def schema(self):

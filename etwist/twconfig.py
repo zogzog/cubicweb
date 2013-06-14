@@ -28,10 +28,10 @@ __docformat__ = "restructuredtext en"
 
 from os.path import join
 
-from logilab.common.configuration import Method
+from logilab.common.configuration import Method, merge_options
 
 from cubicweb.cwconfig import CONFIGURATIONS
-from cubicweb.web.webconfig import WebConfiguration, merge_options
+from cubicweb.web.webconfig import WebConfiguration
 
 
 class TwistedConfiguration(WebConfiguration):
@@ -103,8 +103,8 @@ much greater than connection-poolsize",
         return join(self.apphome, '%s-%s.py' % (self.appid, self.name))
 
     def default_base_url(self):
-        from socket import gethostname
-        return 'http://%s:%s/' % (self['host'] or gethostname(), self['port'] or 8080)
+        from socket import getfqdn
+        return 'http://%s:%s/' % (self['host'] or getfqdn(), self['port'] or 8080)
 
 
 CONFIGURATIONS.append(TwistedConfiguration)

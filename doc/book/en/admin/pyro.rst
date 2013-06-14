@@ -53,7 +53,7 @@ as in the following example code:
     cnx.commit()
 
 Calling :meth:`cubicweb.dbapi.load_appobjects`, will populate the
-cubicweb registrires (see :ref:`VRegistryIntro`) with the application
+cubicweb registries (see :ref:`VRegistryIntro`) with the application
 objects installed on the host where the script runs. You'll then be
 allowed to use the ORM goodies and custom entity methods and views. Of
 course this is optional, without it you can still get the repository

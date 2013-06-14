@@ -1,5 +1,5 @@
 # -*- coding: iso-8859-1 -*-
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -29,6 +29,9 @@ from datetime import datetime
 from logilab.common.testlib import TestCase, unittest_main
 
 from yams.constraints import UniqueConstraint
+from yams import register_base_type, unregister_base_type
+
+from logilab.database import get_db_helper
 
 from cubicweb import (BadConnectionId, RepositoryError, ValidationError,
                       UnknownEid, AuthenticationError, Unauthorized, QueryError)
@@ -41,6 +44,7 @@ from cubicweb.server import repository, hook
 from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.server.hook import Hook
 from cubicweb.server.sources import native
+from cubicweb.server.session import SessionClosedError
 
 
 class RepositoryTC(CubicWebTC):
@@ -56,44 +60,6 @@ class RepositoryTC(CubicWebTC):
                           'cp': u'violates unique_together constraints (cp, nom, type)',
                           'type': u'violates unique_together constraints (cp, nom, type)'},
                      wraperr.exception.args[1])
-
-    def test_fill_schema(self):
-        origshema = self.repo.schema
-        try:
-            self.repo.schema = CubicWebSchema(self.repo.config.appid)
-            self.repo.config._cubes = None # avoid assertion error
-            self.repo.config.repairing = True # avoid versions checking
-            self.repo.fill_schema()
-            table = SQL_PREFIX + 'CWEType'
-            namecol = SQL_PREFIX + 'name'
-            finalcol = SQL_PREFIX + 'final'
-            self.session.set_cnxset()
-            cu = self.session.system_sql('SELECT %s FROM %s WHERE %s is NULL' % (
-                namecol, table, finalcol))
-            self.assertEqual(cu.fetchall(), [])
-            cu = self.session.system_sql('SELECT %s FROM %s WHERE %s=%%(final)s ORDER BY %s'
-                                         % (namecol, table, finalcol, namecol), {'final': True})
-            self.assertEqual(cu.fetchall(), [(u'BigInt',), (u'Boolean',), (u'Bytes',),
-                                             (u'Date',), (u'Datetime',),
-                                             (u'Decimal',),(u'Float',),
-                                             (u'Int',),
-                                             (u'Interval',), (u'Password',),
-                                             (u'String',),
-                                             (u'TZDatetime',), (u'TZTime',), (u'Time',)])
-            sql = ("SELECT etype.cw_eid, etype.cw_name, cstr.cw_eid, rel.eid_to "
-                   "FROM cw_CWUniqueTogetherConstraint as cstr, "
-                   "     relations_relation as rel, "
-                   "     cw_CWEType as etype "
-                   "WHERE cstr.cw_eid = rel.eid_from "
-                   "  AND cstr.cw_constraint_of = etype.cw_eid "
-                   "  AND etype.cw_name = 'Personne' "
-                   ";")
-            cu = self.session.system_sql(sql)
-            rows = cu.fetchall()
-            self.assertEqual(len(rows), 3)
-            self.test_unique_together()
-        finally:
-            self.repo.set_schema(origshema)
 
     def test_unique_together(self):
         person = self.repo.schema.eschema('Personne')
@@ -297,7 +263,7 @@ class RepositoryTC(CubicWebTC):
             repo.execute(cnxid, 'DELETE CWUser X WHERE X login "toto"')
             repo.commit(cnxid)
         try:
-            with self.assertRaises(Exception) as cm:
+            with self.assertRaises(SessionClosedError) as cm:
                 run_transaction()
             self.assertEqual(str(cm.exception), 'try to access connections set on a closed session %s' % cnxid)
         finally:
@@ -317,7 +283,8 @@ class RepositoryTC(CubicWebTC):
                                'constrained_by',
                                'cardinality', 'ordernum',
                                'indexed', 'fulltextindexed', 'internationalizable',
-                               'defaultval', 'description', 'description_format'])
+                               'defaultval', 'extra_props',
+                               'description', 'description_format'])
 
         self.assertEqual(schema.eschema('CWEType').main_attribute(), 'name')
         self.assertEqual(schema.eschema('State').main_attribute(), 'name')
@@ -382,7 +349,10 @@ class RepositoryTC(CubicWebTC):
             self.assertTrue(user._cw.vreg)
             from cubicweb.entities import authobjs
             self.assertIsInstance(user._cw.user, authobjs.CWUser)
+            # make sure the tcp connection is closed properly; yes, it's disgusting.
+            adapter = cnx._repo.adapter
             cnx.close()
+            adapter.release()
             done.append(True)
         finally:
             # connect monkey patch some method by default, remove them
@@ -583,6 +553,87 @@ class RepositoryTC(CubicWebTC):
             req.create_entity('Affaire', ref=u'AFF01')
             req.create_entity('Affaire', ref=u'AFF02')
             req.execute('SET A duration 10 WHERE A is Affaire')
+
+class SchemaDeserialTC(CubicWebTC):
+
+    appid = 'data-schemaserial'
+
+    @classmethod
+    def setUpClass(cls):
+        register_base_type('BabarTestType', ('jungle_speed',))
+        helper = get_db_helper('sqlite')
+        helper.TYPE_MAPPING['BabarTestType'] = 'TEXT'
+        helper.TYPE_CONVERTERS['BabarTestType'] = lambda x: '"%s"' % x
+        super(SchemaDeserialTC, cls).setUpClass()
+
+
+    @classmethod
+    def tearDownClass(cls):
+        unregister_base_type('BabarTestType')
+        helper = get_db_helper('sqlite')
+        helper.TYPE_MAPPING.pop('BabarTestType', None)
+        helper.TYPE_CONVERTERS.pop('BabarTestType', None)
+        super(SchemaDeserialTC, cls).tearDownClass()
+
+    def test_deserialization_base(self):
+        """Check the following deserialization
+
+        * all CWEtype has name
+        * Final type
+        * CWUniqueTogetherConstraint
+        * _unique_together__ content"""
+        origshema = self.repo.schema
+        try:
+            self.repo.config.repairing = True # avoid versions checking
+            self.repo.set_schema(self.repo.deserialize_schema())
+            table = SQL_PREFIX + 'CWEType'
+            namecol = SQL_PREFIX + 'name'
+            finalcol = SQL_PREFIX + 'final'
+            self.session.set_cnxset()
+            cu = self.session.system_sql('SELECT %s FROM %s WHERE %s is NULL' % (
+                namecol, table, finalcol))
+            self.assertEqual(cu.fetchall(), [])
+            cu = self.session.system_sql('SELECT %s FROM %s WHERE %s=%%(final)s ORDER BY %s'
+                                         % (namecol, table, finalcol, namecol), {'final': True})
+            self.assertEqual(cu.fetchall(), [(u'BabarTestType',),
+                                             (u'BigInt',), (u'Boolean',), (u'Bytes',),
+                                             (u'Date',), (u'Datetime',),
+                                             (u'Decimal',),(u'Float',),
+                                             (u'Int',),
+                                             (u'Interval',), (u'Password',),
+                                             (u'String',),
+                                             (u'TZDatetime',), (u'TZTime',), (u'Time',)])
+            sql = ("SELECT etype.cw_eid, etype.cw_name, cstr.cw_eid, rel.eid_to "
+                   "FROM cw_CWUniqueTogetherConstraint as cstr, "
+                   "     relations_relation as rel, "
+                   "     cw_CWEType as etype "
+                   "WHERE cstr.cw_eid = rel.eid_from "
+                   "  AND cstr.cw_constraint_of = etype.cw_eid "
+                   "  AND etype.cw_name = 'Personne' "
+                   ";")
+            cu = self.session.system_sql(sql)
+            rows = cu.fetchall()
+            self.assertEqual(len(rows), 3)
+            person = self.repo.schema.eschema('Personne')
+            self.assertEqual(len(person._unique_together), 1)
+            self.assertItemsEqual(person._unique_together[0],
+                                  ('nom', 'prenom', 'inline2'))
+
+        finally:
+            self.repo.set_schema(origshema)
+
+    def test_custom_attribute_param(self):
+        origshema = self.repo.schema
+        try:
+            self.repo.config.repairing = True # avoid versions checking
+            self.repo.set_schema(self.repo.deserialize_schema())
+            pes = self.repo.schema['Personne']
+            attr = pes.rdef('custom_field_of_jungle')
+            self.assertIn('jungle_speed', vars(attr))
+            self.assertEqual(42, attr.jungle_speed)
+        finally:
+            self.repo.set_schema(origshema)
+
 
 
 class DataHelpersTC(CubicWebTC):

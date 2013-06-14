@@ -247,7 +247,7 @@ repository.',
         entity is deleted.
         """
         attrs = {'cw_eid': entity.eid}
-        sql = self.sqladapter.sqlgen.delete(SQL_PREFIX + entity.__regid__, attrs)
+        sql = self.sqladapter.sqlgen.delete(SQL_PREFIX + entity.cw_etype, attrs)
         self.doexec(session, sql, attrs)
 
     def local_add_relation(self, session, subject, rtype, object):

@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -34,7 +34,7 @@ class SchemaModificationHooksTC(CubicWebTC):
 
     def setUp(self):
         super(SchemaModificationHooksTC, self).setUp()
-        self.repo.fill_schema()
+        self.repo.set_schema(self.repo.deserialize_schema(), resetvreg=False)
         self.__class__.schema_eids = schema_eids_idx(self.repo.schema)
 
     def index_exists(self, etype, attr, unique=False):

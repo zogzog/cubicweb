@@ -1,2 +1,1 @@
-drop_attribute('CWEType', 'meta')
-drop_attribute('CWRType', 'meta')
+raise NotImplementedError("Cannot migrate such an old version. Use intermediate Cubiweb version (try 3.16.x)")

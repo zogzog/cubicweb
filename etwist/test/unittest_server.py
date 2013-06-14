@@ -19,6 +19,7 @@
 import os, os.path as osp, glob
 
 from cubicweb.devtools.testlib import CubicWebTC
+from cubicweb.devtools.httptest import CubicWebServerTC
 from cubicweb.etwist.server import host_prefixed_baseurl
 
 
@@ -52,6 +53,13 @@ class HostPrefixedBaseURLTC(CubicWebTC):
     def test6(self):
         self._check('http://localhost:8080/hg/', 'code.cubicweb.org',
                     'http://localhost:8080/hg/')
+
+
+class ETwistHTTPTC(CubicWebServerTC):
+    def test_put_content(self):
+        body = 'hop'
+        response = self.web_request('?vid=put', method='PUT', body=body)
+        self.assertEqual(body, response.body)
 
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main

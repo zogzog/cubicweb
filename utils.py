@@ -229,11 +229,8 @@ class HTMLHead(UStringIO):
     jQuery(window).unload(unloadPageData);
     pageDataUnloaded = true;
 }'''
-    # Making <script> tag content work properly with all possible
-    # content-types (xml/html) and all possible browsers is very
-    # tricky, see http://www.hixie.ch/advocacy/xhtml for an in-depth discussion
-    xhtml_safe_script_opening = u'<script type="text/javascript"><!--//--><![CDATA[//><!--\n'
-    xhtml_safe_script_closing = u'\n//--><!]]></script>'
+    script_opening = u'<script type="text/javascript">\n'
+    script_closing = u'\n</script>'
 
     def __init__(self, req):
         super(HTMLHead, self).__init__()
@@ -263,10 +260,7 @@ class HTMLHead(UStringIO):
     def add_post_inline_script(self, content):
         self.post_inlined_scripts.append(content)
 
-    def add_onload(self, jscode, jsoncall=_MARKER):
-        if jsoncall is not _MARKER:
-            warn('[3.7] specifying jsoncall is not needed anymore',
-                 DeprecationWarning, stacklevel=2)
+    def add_onload(self, jscode):
         self.add_post_inline_script(u"""$(cw).one('server-response', function(event) {
 %s});""" % jscode)
 
@@ -347,14 +341,14 @@ class HTMLHead(UStringIO):
         w = self.write
         # 1/ variable declaration if any
         if self.jsvars:
-            w(self.xhtml_safe_script_opening)
+            w(self.script_opening)
             for var, value, override in self.jsvars:
                 vardecl = u'%s = %s;' % (var, json.dumps(value))
                 if not override:
                     vardecl = (u'if (typeof %s == "undefined") {%s}' %
                                (var, vardecl))
                 w(vardecl + u'\n')
-            w(self.xhtml_safe_script_closing)
+            w(self.script_closing)
         # 2/ css files
         ie_cssfiles = ((x, (y, z)) for x, y, z in self.ie_cssfiles)
         if self.datadir_url and self._cw.vreg.config['concat-resources']:
@@ -400,9 +394,9 @@ class HTMLHead(UStringIO):
                     w(xml_escape(script))
                     w(u'</pre>')
             else:
-                w(self.xhtml_safe_script_opening)
+                w(self.script_opening)
                 w(u'\n\n'.join(self.post_inlined_scripts))
-                w(self.xhtml_safe_script_closing)
+                w(self.script_closing)
         header = super(HTMLHead, self).getvalue()
         if skiphead:
             return header
@@ -425,20 +419,17 @@ class HTMLStream(object):
         # main stream
         self.body = UStringIO()
         self.doctype = u''
-        # xmldecl and html opening tag
-        self.xmldecl = u'<?xml version="1.0" encoding="%s"?>\n' % req.encoding
-        self._namespaces = [('xmlns', 'http://www.w3.org/1999/xhtml'),
-                            ('xmlns:cubicweb','http://www.logilab.org/2008/cubicweb')]
-        self._htmlattrs = [('xml:lang', req.lang),
-                           ('lang', req.lang)]
+        self._htmlattrs = [('lang', req.lang)]
         # keep main_stream's reference on req for easier text/html demoting
         req.main_stream = self
 
+    @deprecated('[3.17] there are no namespaces in html, xhtml is not served any longer')
     def add_namespace(self, prefix, uri):
-        self._namespaces.append( (prefix, uri) )
+        pass
 
+    @deprecated('[3.17] there are no namespaces in html, xhtml is not served any longer')
     def set_namespaces(self, namespaces):
-        self._namespaces = namespaces
+        pass
 
     def add_htmlattr(self, attrname, attrvalue):
         self._htmlattrs.append( (attrname, attrvalue) )
@@ -446,10 +437,11 @@ class HTMLStream(object):
     def set_htmlattrs(self, attrs):
         self._htmlattrs = attrs
 
-    def set_doctype(self, doctype, reset_xmldecl=True):
+    def set_doctype(self, doctype, reset_xmldecl=None):
         self.doctype = doctype
-        if reset_xmldecl:
-            self.xmldecl = u''
+        if reset_xmldecl is not None:
+            warn('[3.17] xhtml is no more supported',
+                 DeprecationWarning, stacklevel=2)
 
     def write(self, data):
         """StringIO interface: this method will be assigned to self.w
@@ -459,17 +451,17 @@ class HTMLStream(object):
     @property
     def htmltag(self):
         attrs = ' '.join('%s="%s"' % (attr, xml_escape(value))
-                         for attr, value in (self._namespaces + self._htmlattrs))
+                         for attr, value in self._htmlattrs)
         if attrs:
             return '<html %s>' % attrs
         return '<html>'
 
     def getvalue(self):
         """writes HTML headers, closes </head> tag and writes HTML body"""
-        return u'%s\n%s\n%s\n%s\n%s\n</html>' % (self.xmldecl, self.doctype,
-                                                 self.htmltag,
-                                                 self.head.getvalue(),
-                                                 self.body.getvalue())
+        return u'%s\n%s\n%s\n%s\n</html>' % (self.doctype,
+                                             self.htmltag,
+                                             self.head.getvalue(),
+                                             self.body.getvalue())
 
 try:
     # may not be there if cubicweb-web not installed
@@ -565,14 +557,6 @@ def js_href(javascript_code):
     'javascript: alert("%251337%");'
     """
     return 'javascript: ' + PERCENT_IN_URLQUOTE_RE.sub(r'%25', javascript_code)
-
-
-@deprecated('[3.7] merge_dicts is deprecated')
-def merge_dicts(dict1, dict2):
-    """update a copy of `dict1` with `dict2`"""
-    dict1 = dict(dict1)
-    dict1.update(dict2)
-    return dict1
 
 
 def parse_repo_uri(uri):

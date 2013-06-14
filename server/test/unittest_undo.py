@@ -19,6 +19,8 @@
 
 from cubicweb import ValidationError
 from cubicweb.devtools.testlib import CubicWebTC
+import cubicweb.server.session
+from cubicweb.server.session import Transaction as OldTransaction
 from cubicweb.transaction import *
 
 from cubicweb.server.sources.native import UndoTransactionException, _UndoException
@@ -28,12 +30,19 @@ class UndoableTransactionTC(CubicWebTC):
 
     def setup_database(self):
         req = self.request()
-        self.session.undo_actions = True
         self.toto = self.create_user(req, 'toto', password='toto', groups=('users',),
                                      commit=False)
         self.txuuid = self.commit()
 
+    def setUp(self):
+        class Transaction(OldTransaction):
+            """Force undo feature to be turned on in all case"""
+            undo_actions = property(lambda tx: True, lambda x, y:None)
+        cubicweb.server.session.Transaction = Transaction
+        super(UndoableTransactionTC, self).setUp()
+
     def tearDown(self):
+        cubicweb.server.session.Transaction = OldTransaction
         self.restore_connection()
         self.session.undo_support = set()
         super(UndoableTransactionTC, self).tearDown()

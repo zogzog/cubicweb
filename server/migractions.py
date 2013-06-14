@@ -300,8 +300,8 @@ class ServerMigrationHelper(MigrationHelper):
         if self.config is not None:
             session = self.repo._get_session(self.cnx.sessionid)
             if session.cnxset is None:
-                session.set_read_security(False)
-                session.set_write_security(False)
+                session.read_security = False
+                session.write_security = False
             session.set_cnxset()
             return session
         # no access to session on remote instance
@@ -1514,14 +1514,6 @@ class ServerMigrationHelper(MigrationHelper):
                 self.sqlexec(sql)
         if commit:
             self.commit()
-
-    @deprecated("[3.7] use session.disable_hook_categories('integrity')")
-    def cmd_deactivate_verification_hooks(self):
-        self.session.disable_hook_categories('integrity')
-
-    @deprecated("[3.7] use session.enable_hook_categories('integrity')")
-    def cmd_reactivate_verification_hooks(self):
-        self.session.enable_hook_categories('integrity')
 
     @deprecated("[3.15] use rename_relation_type(oldname, newname)")
     def cmd_rename_relation(self, oldname, newname, commit=True):

@@ -1489,6 +1489,15 @@ class match_form_params(ExpectedValuePredicate):
         return frozenset(req.form)
 
 
+class match_http_method(ExpectedValuePredicate):
+    """Return non-zero score if one of the HTTP methods specified as
+    initializer arguments is the HTTP method of the request (GET, POST, ...).
+    """
+
+    def __call__(self, cls, req, **kwargs):
+        return int(req.http_method() in self.expected)
+
+
 class match_edited_type(ExpectedValuePredicate):
     """return non-zero if main edited entity type is the one specified as
     initializer argument, or is among initializer arguments if `mode` == 'any'.

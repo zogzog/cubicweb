@@ -29,7 +29,6 @@ from logilab.common.testlib import unittest_main, with_tempdir, InnerTest, Tags
 from logilab.common.shellutils import getlogin
 
 import cubicweb
-from cubicweb.view import StartupView
 from cubicweb.web.controller import Controller
 from cubicweb.devtools.httptest import CubicWebServerTC
 

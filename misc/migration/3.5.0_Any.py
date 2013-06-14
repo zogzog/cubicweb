@@ -1,10 +1,1 @@
-add_relation_type('prefered_form')
-
-rql('SET X prefered_form Y WHERE Y canonical TRUE, X identical_to Y')
-commit()
-
-drop_attribute('EmailAddress', 'canonical')
-drop_relation_definition('EmailAddress', 'identical_to', 'EmailAddress')
-
-if 'see_also' in schema:
-    sync_schema_props_perms('see_also', syncprops=False, syncrdefs=False)
+raise NotImplementedError("Cannot migrate such an old version. Use intermediate Cubiweb version (try 3.16.x)")

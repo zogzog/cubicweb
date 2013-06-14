@@ -26,18 +26,17 @@ from logilab.common import interface
 from logilab.common.decorators import cached
 from logilab.common.deprecation import deprecated
 from logilab.common.registry import yes
-from logilab.mtconverter import TransformData, TransformError, xml_escape
+from logilab.mtconverter import TransformData, xml_escape
 
 from rql.utils import rqlvar_maker
 from rql.stmts import Select
 from rql.nodes import (Not, VariableRef, Constant, make_relation,
                        Relation as RqlRelation)
 
-from cubicweb import Unauthorized, typed_eid, neg_role
+from cubicweb import Unauthorized, neg_role
 from cubicweb.utils import support_args
 from cubicweb.rset import ResultSet
 from cubicweb.appobject import AppObject
-from cubicweb.req import _check_cw_unsafe
 from cubicweb.schema import (RQLVocabularyConstraint, RQLConstraint,
                              GeneratedConstraint)
 from cubicweb.rqlrewrite import RQLRewriter
@@ -555,7 +554,10 @@ class Entity(AppObject):
         return '<Entity %s %s %s at %s>' % (
             self.e_schema, self.eid, list(self.cw_attr_cache), id(self))
 
-    def __cmp__(self, other):
+    def __lt__(self, other):
+        raise NotImplementedError('comparison not implemented for %s' % self.__class__)
+
+    def __eq__(self, other):
         raise NotImplementedError('comparison not implemented for %s' % self.__class__)
 
     def _cw_update_attr_cache(self, attrcache):
@@ -627,7 +629,7 @@ class Entity(AppObject):
         meaning that the entity has to be created
         """
         try:
-            typed_eid(self.eid)
+            int(self.eid)
             return True
         except (ValueError, TypeError):
             return False
@@ -793,7 +795,7 @@ class Entity(AppObject):
         for rtype in self.skip_copy_for:
             skip_copy_for['subject'].add(rtype)
             warn('[3.14] skip_copy_for on entity classes (%s) is deprecated, '
-                 'use cw_skip_for instead with list of couples (rtype, role)' % self.__regid__,
+                 'use cw_skip_for instead with list of couples (rtype, role)' % self.cw_etype,
                  DeprecationWarning)
         for rtype, role in self.cw_skip_copy_for:
             assert role in ('subject', 'object'), role
@@ -845,7 +847,7 @@ class Entity(AppObject):
     def as_rset(self): # XXX .cw_as_rset
         """returns a resultset containing `self` information"""
         rset = ResultSet([(self.eid,)], 'Any X WHERE X eid %(x)s',
-                         {'x': self.eid}, [(self.__regid__,)])
+                         {'x': self.eid}, [(self.cw_etype,)])
         rset.req = self._cw
         return rset
 
@@ -1287,7 +1289,6 @@ class Entity(AppObject):
         an entity or eid, a list of entities or eids, or None (meaning that all
         relations of the given type from or to this object should be deleted).
         """
-        _check_cw_unsafe(kwargs)
         assert kwargs
         assert self.cw_is_saved(), "should not call set_attributes while entity "\
                "hasn't been saved yet"
@@ -1397,10 +1398,6 @@ class Entity(AppObject):
 
     @deprecated('[3.10] use entity.cw_attr_cache[attr]')
     def __getitem__(self, key):
-        if key == 'eid':
-            warn('[3.7] entity["eid"] is deprecated, use entity.eid instead',
-                 DeprecationWarning, stacklevel=2)
-            return self.eid
         return self.cw_attr_cache[key]
 
     @deprecated('[3.10] use entity.cw_attr_cache.get(attr[, default])')
@@ -1424,15 +1421,10 @@ class Entity(AppObject):
         the attribute to skip_security since we don't want to check security
         for such attributes set by hooks.
         """
-        if attr == 'eid':
-            warn('[3.7] entity["eid"] = value is deprecated, use entity.eid = value instead',
-                 DeprecationWarning, stacklevel=2)
-            self.eid = value
-        else:
-            try:
-                self.cw_edited[attr] = value
-            except AttributeError:
-                self.cw_attr_cache[attr] = value
+        try:
+            self.cw_edited[attr] = value
+        except AttributeError:
+            self.cw_attr_cache[attr] = value
 
     @deprecated('[3.10] use del entity.cw_edited[attr]')
     def __delitem__(self, attr):

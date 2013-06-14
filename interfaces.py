@@ -148,34 +148,6 @@ class IGeocodable(Interface):
     def marker_icon(self):
         """returns the icon that should be used as the marker"""
 
-# XXX deprecates in favor of ISIOCItemAdapter
-class ISiocItem(Interface):
-    """interface for entities which may be represented as an ISIOC item"""
-
-    def isioc_content(self):
-        """return item's content"""
-
-    def isioc_container(self):
-        """return container entity"""
-
-    def isioc_type(self):
-        """return container type (post, BlogPost, MailMessage)"""
-
-    def isioc_replies(self):
-        """return replies items"""
-
-    def isioc_topics(self):
-        """return topics items"""
-
-# XXX deprecates in favor of ISIOCContainerAdapter
-class ISiocContainer(Interface):
-    """interface for entities which may be represented as an ISIOC container"""
-
-    def isioc_type(self):
-        """return container type (forum, Weblog, MailingList)"""
-
-    def isioc_items(self):
-        """return contained items"""
 
 # XXX deprecates in favor of IEmailableAdapter
 class IFeed(Interface):

@@ -3,7 +3,7 @@
 What's next?
 ------------
 
-In this tutorial, we have seen have you can, right after the installation of
+In this tutorial, we have seen that you can, right after the installation of
 |cubicweb|, build a web application in a few minutes by defining a data model as
 assembling cubes. You get a working application that you can then customize there
 and there while keeping something that works. This is important in agile

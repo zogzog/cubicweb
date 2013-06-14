@@ -18,3 +18,4 @@ migration scripts.
    base/index
    advanced/index
    tools/windmill.rst
+   textreports/index

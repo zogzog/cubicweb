@@ -42,50 +42,11 @@ from cubicweb.schema import display_name
 NOINDEX = u'<meta name="ROBOTS" content="NOINDEX" />'
 NOFOLLOW = u'<meta name="ROBOTS" content="NOFOLLOW" />'
 
-CW_XHTML_EXTENSIONS = '''[
-  <!ATTLIST html xmlns:cubicweb CDATA  #FIXED \'http://www.logilab.org/2008/cubicweb\'  >
-
-<!ENTITY % coreattrs
- "id          ID            #IMPLIED
-  class       CDATA         #IMPLIED
-  style       CDATA         #IMPLIED
-  title       CDATA         #IMPLIED
-
- cubicweb:accesskey         CDATA   #IMPLIED
- cubicweb:actualrql         CDATA   #IMPLIED
- cubicweb:dataurl           CDATA   #IMPLIED
- cubicweb:facetName         CDATA   #IMPLIED
- cubicweb:facetargs         CDATA   #IMPLIED
- cubicweb:fallbackvid       CDATA   #IMPLIED
- cubicweb:fname             CDATA   #IMPLIED
- cubicweb:initfunc          CDATA   #IMPLIED
- cubicweb:inputid           CDATA   #IMPLIED
- cubicweb:inputname         CDATA   #IMPLIED
- cubicweb:limit             CDATA   #IMPLIED
- cubicweb:loadtype          CDATA   #IMPLIED
- cubicweb:loadurl           CDATA   #IMPLIED
- cubicweb:maxlength         CDATA   #IMPLIED
- cubicweb:required          CDATA   #IMPLIED
- cubicweb:rooteid           CDATA   #IMPLIED
- cubicweb:rql               CDATA   #IMPLIED
- cubicweb:size              CDATA   #IMPLIED
- cubicweb:sortvalue         CDATA   #IMPLIED
- cubicweb:target            CDATA   #IMPLIED
- cubicweb:tindex            CDATA   #IMPLIED
- cubicweb:tlunit            CDATA   #IMPLIED
- cubicweb:type              CDATA   #IMPLIED
- cubicweb:unselimg          CDATA   #IMPLIED
- cubicweb:uselabel          CDATA   #IMPLIED
- cubicweb:value             CDATA   #IMPLIED
- cubicweb:variables         CDATA   #IMPLIED
- cubicweb:vid               CDATA   #IMPLIED
- cubicweb:wdgtype           CDATA   #IMPLIED
-  "> ] '''
-
-TRANSITIONAL_DOCTYPE = u'<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd" %s>\n' % CW_XHTML_EXTENSIONS
 TRANSITIONAL_DOCTYPE_NOEXT = u'<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">\n'
-STRICT_DOCTYPE = u'<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd" %s>\n' % CW_XHTML_EXTENSIONS
+TRANSITIONAL_DOCTYPE = TRANSITIONAL_DOCTYPE_NOEXT # bw compat
+
 STRICT_DOCTYPE_NOEXT = u'<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">\n'
+STRICT_DOCTYPE = STRICT_DOCTYPE_NOEXT # bw compat
 
 # base view object ############################################################
 
@@ -510,11 +471,7 @@ class MainTemplate(View):
     one to display error if the first one failed
     """
 
-    @property
-    def doctype(self):
-        if self._cw.xhtml_browser():
-            return STRICT_DOCTYPE
-        return STRICT_DOCTYPE_NOEXT
+    doctype = '<!DOCTYPE html>'
 
     def set_stream(self, w=None):
         if self.w is not None:

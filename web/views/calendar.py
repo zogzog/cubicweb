@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -188,7 +188,6 @@ class CalendarView(EntityView):
         }
 
     def call(self):
-        self._cw.demote_to_html()
         self._cw.add_css(('fullcalendar.css', 'cubicweb.calendar.css'))
         self._cw.add_js(('jquery.ui.js', 'fullcalendar.min.js', 'jquery.qtip.min.js', 'fullcalendar.locale.js'))
         self.calendar_id = 'cal' + make_uid('uid')

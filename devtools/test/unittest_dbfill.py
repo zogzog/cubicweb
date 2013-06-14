@@ -24,7 +24,6 @@ import datetime
 
 from logilab.common.testlib import TestCase, unittest_main
 
-from cubicweb.schema import Schema, EntitySchema
 from cubicweb.devtools.fill import ValueGenerator, make_tel
 from cubicweb.devtools import ApptestConfiguration
 

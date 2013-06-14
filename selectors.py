@@ -35,8 +35,6 @@ ExpectedValueSelector = class_renamed('ExpectedValueSelector',
 EClassSelector = class_renamed('EClassSelector', EClassPredicate)
 EntitySelector = class_renamed('EntitySelector', EntityPredicate)
 
-# XXX pre 3.7? bw compat
-
 
 class on_transition(is_in_state):
     """Return 1 if entity is in one of the transitions given as argument list

@@ -47,7 +47,7 @@ from cubicweb.server import debugged
 todelete = {}
 host = source.config['base-url'].split('://')[1]
 for entity in rql('Any X WHERE X cw_source S, S eid %(s)s', {'s': source.eid}).entities():
-        etype = entity.__regid__
+        etype = entity.cw_etype
         if not source.support_entity(etype):
             print "source doesn't support %s, delete %s" % (etype, entity.eid)
         elif etype in DONT_GET_BACK_ETYPES:
@@ -84,8 +84,8 @@ mapping = []
 for mappart in rql('Any X,SCH WHERE X cw_schema SCH, X cw_for_source S, S eid %(s)s',
                    {'s': source.eid}).entities():
     schemaent = mappart.cw_schema[0]
-    if schemaent.__regid__ != 'CWEType':
-        assert schemaent.__regid__ == 'CWRType'
+    if schemaent.cw_etype != 'CWEType':
+        assert schemaent.cw_etype == 'CWRType'
         sch = schema._eid_index[schemaent.eid]
         for rdef in sch.rdefs.itervalues():
             if not source.support_entity(rdef.subject) \

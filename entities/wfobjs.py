@@ -24,7 +24,6 @@
 
 __docformat__ = "restructuredtext en"
 
-from warnings import warn
 
 from logilab.common.decorators import cached, clear_cache
 from logilab.common.deprecation import deprecated
@@ -186,7 +185,7 @@ class BaseTransition(AnyEntity):
     fetch_attrs, cw_fetch_order = fetch_config(['name', 'type'])
 
     def __init__(self, *args, **kwargs):
-        if self.__regid__ == 'BaseTransition':
+        if self.cw_etype == 'BaseTransition':
             raise WorkflowException('should not be instantiated')
         super(BaseTransition, self).__init__(*args, **kwargs)
 
@@ -449,10 +448,10 @@ class IWorkflowableAdapter(WorkflowableMixIn, EntityAdapter):
         """return the default workflow for entities of this type"""
         # XXX CWEType method
         wfrset = self._cw.execute('Any WF WHERE ET default_workflow WF, '
-                                  'ET name %(et)s', {'et': self.entity.__regid__})
+                                  'ET name %(et)s', {'et': self.entity.cw_etype})
         if wfrset:
             return wfrset.get_entity(0, 0)
-        self.warning("can't find any workflow for %s", self.entity.__regid__)
+        self.warning("can't find any workflow for %s", self.entity.cw_etype)
         return None
 
     @property

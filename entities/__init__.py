@@ -19,12 +19,10 @@
 
 __docformat__ = "restructuredtext en"
 
-from warnings import warn
 
-from logilab.common.deprecation import deprecated
-from logilab.common.decorators import cached
+from logilab.common.decorators import classproperty
 
-from cubicweb import Unauthorized, typed_eid
+from cubicweb import Unauthorized
 from cubicweb.entity import Entity
 
 
@@ -59,6 +57,11 @@ class AnyEntity(Entity):
                                      ', '.join(restrictions))]
 
     # meta data api ###########################################################
+
+    @classproperty
+    def cw_etype(self):
+        """entity Etype as a string"""
+        return self.__regid__
 
     def dc_title(self):
         """return a suitable *unicode* title for this entity"""

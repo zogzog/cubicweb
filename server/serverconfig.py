@@ -27,7 +27,7 @@ import logilab.common.configuration as lgconfig
 from logilab.common.decorators import wproperty, cached
 
 from cubicweb.toolsutils import read_config, restrict_perms_to_user
-from cubicweb.cwconfig import CONFIGURATIONS, CubicWebConfiguration, merge_options
+from cubicweb.cwconfig import CONFIGURATIONS, CubicWebConfiguration
 from cubicweb.server import SOURCE_TYPES
 
 
@@ -96,7 +96,7 @@ class ServerConfiguration(CubicWebConfiguration):
     cubicweb_appobject_path = CubicWebConfiguration.cubicweb_appobject_path | set(['sobjects', 'hooks'])
     cube_appobject_path = CubicWebConfiguration.cube_appobject_path | set(['sobjects', 'hooks'])
 
-    options = merge_options((
+    options = lgconfig.merge_options((
         # ctl configuration
         ('host',
          {'type' : 'string',
@@ -333,7 +333,7 @@ registered.',
             sconfig = sourcescfg[section]
             if isinstance(sconfig, dict):
                 # get a Configuration object
-                assert section == 'system'
+                assert section == 'system', '%r is not system' % section
                 _sconfig = SourceConfiguration(
                     self, options=SOURCE_TYPES['native'].options)
                 for attr, val in sconfig.items():
@@ -342,7 +342,7 @@ registered.',
                     except lgconfig.OptionError:
                         # skip adapter, may be present on pre 3.10 instances
                         if attr != 'adapter':
-                            self.error('skip unknown option %s in sources file')
+                            self.error('skip unknown option %s in sources file' % attr)
                 sconfig = _sconfig
             stream.write('[%s]\n%s\n' % (section, generate_source_config(sconfig)))
         restrict_perms_to_user(sourcesfile)

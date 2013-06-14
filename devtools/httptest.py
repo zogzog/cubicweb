@@ -78,10 +78,6 @@ class CubicWebServerConfig(ApptestConfiguration):
     def pyro_enabled(self):
         return False
 
-    def load_configuration(self):
-        super(CubicWebServerConfig, self).load_configuration()
-        self.global_set_option('force-html-content-type', True)
-
 
 class CubicWebServerTC(CubicWebTC):
     """Class for running test web server. See :class:`CubicWebServerConfig`.

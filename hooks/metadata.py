@@ -158,7 +158,7 @@ class ChangeEntityUpdateCaches(hook.Operation):
         entity = self.entity
         extid = entity.cw_metainformation()['extid']
         repo._type_source_cache[entity.eid] = (
-            entity.__regid__, self.newsource.uri, None, self.newsource.uri)
+            entity.cw_etype, self.newsource.uri, None, self.newsource.uri)
         if self.oldsource.copy_based_source:
             uri = 'system'
         else:
@@ -216,7 +216,7 @@ class ChangeEntitySourceAddHook(MetaDataHook):
             # but has been moved, ignore it'.
             self._cw.system_sql('UPDATE entities SET eid=-eid WHERE eid=%(eid)s',
                                 {'eid': self.eidfrom})
-            attrs = {'type': entity.__regid__, 'eid': entity.eid, 'extid': None,
+            attrs = {'type': entity.cw_etype, 'eid': entity.eid, 'extid': None,
                      'source': 'system', 'asource': 'system',
                      'mtime': datetime.now()}
             self._cw.system_sql(syssource.sqlgen.insert('entities', attrs), attrs)

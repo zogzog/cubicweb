@@ -29,8 +29,7 @@ and available under a free software license.
 
 .. note::
 
- The command :command:`cubicweb-ctl list` displays the list of cubes
- installed on your system.
+ The command :command:`cubicweb-ctl list` displays the list of available cubes.
 
 .. _`CubicWeb.org Forge`: http://www.cubicweb.org/project/
 .. _`cubicweb-blog`: http://www.cubicweb.org/project/cubicweb-blog
@@ -89,7 +88,7 @@ etc. This is used for example to send email notifications when the
 state of an object changes. See :ref:`HookIntro` below.
 
 .. [1] not to be confused with a Mercurial repository or a Debian repository.
-.. _`Python Remote Objects`: http://pyro.sourceforge.net/
+.. _`Python Remote Objects`: http://pythonhosted.org/Pyro4/
 
 .. _WebEngineIntro:
 

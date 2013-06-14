@@ -23,6 +23,7 @@ import time
 import random
 import base64
 import urllib
+from StringIO import StringIO
 from hashlib import sha1 # pylint: disable=E0611
 from Cookie import SimpleCookie
 from calendar import timegm
@@ -41,7 +42,7 @@ from logilab.mtconverter import xml_escape
 from cubicweb.dbapi import DBAPIRequest
 from cubicweb.uilib import remove_html_tags, js
 from cubicweb.utils import SizeConstrainedList, HTMLHead, make_uid
-from cubicweb.view import STRICT_DOCTYPE, TRANSITIONAL_DOCTYPE_NOEXT
+from cubicweb.view import TRANSITIONAL_DOCTYPE_NOEXT
 from cubicweb.web import (INTERNAL_FIELD_VALUE, LOGGER, NothingToEdit,
                           RequestError, StatusResponse)
 from cubicweb.web.httpcache import GMTOFFSET, get_validators
@@ -116,6 +117,8 @@ class CubicWebRequestBase(DBAPIRequest):
             self._headers_in.addRawHeader(k, v)
         #: form parameters
         self.setup_params(form)
+        #: received body
+        self.content = StringIO()
         #: dictionary that may be used to store request data that has to be
         #: shared among various components used to publish the request (views,
         #: controller, application...)
@@ -899,29 +902,26 @@ class CubicWebRequestBase(DBAPIRequest):
         values = _parse_accept_header(accepteds, value_parser, value_sort_key)
         return (raw_value for (raw_value, parsed_value, score) in values)
 
+    @deprecated('[3.17] demote_to_html is deprecated as we always serve html')
     def demote_to_html(self):
         """helper method to dynamically set request content type to text/html
 
         The global doctype and xmldec must also be changed otherwise the browser
         will display '<[' at the beginning of the page
         """
-        if not self.vreg.config['force-html-content-type']:
-            if not hasattr(self, 'main_stream'):
-                raise Exception("Can't demote to html from an ajax context. You "
-                                "should change force-html-content-type to yes "
-                                "in the instance configuration file.")
-            self.set_content_type('text/html')
-            self.main_stream.set_doctype(TRANSITIONAL_DOCTYPE_NOEXT)
+        pass
+
 
     # xml doctype #############################################################
 
-    def set_doctype(self, doctype, reset_xmldecl=True):
+    def set_doctype(self, doctype, reset_xmldecl=None):
         """helper method to dynamically change page doctype
 
         :param doctype: the new doctype, e.g. '<!DOCTYPE html>'
-        :param reset_xmldecl: if True, remove the '<?xml version="1.0"?>'
-                              declaration from the page
         """
+        if reset_xmldecl is not None:
+            warn('[3.17] reset_xmldecl is deprecated as we only serve html',
+                 DeprecationWarning, stacklevel=2)
         self.main_stream.set_doctype(doctype, reset_xmldecl)
 
     # page data management ####################################################
@@ -962,6 +962,7 @@ class CubicWebRequestBase(DBAPIRequest):
         useragent = self.useragent()
         return useragent and 'MSIE' in useragent
 
+    @deprecated('[3.17] xhtml_browser is deprecated (xhtml is no longer served)')
     def xhtml_browser(self):
         """return True if the browser is considered as xhtml compatible.
 
@@ -969,27 +970,10 @@ class CubicWebRequestBase(DBAPIRequest):
         application/xhtml+xml, this method will always return False, even though
         this is semantically different
         """
-        if self.vreg.config['force-html-content-type']:
-            return False
-        useragent = self.useragent()
-        # * MSIE/Konqueror does not support xml content-type
-        # * Opera supports xhtml and handles namespaces properly but it breaks
-        #   jQuery.attr()
-        if useragent and ('MSIE' in useragent or 'KHTML' in useragent
-                          or 'Opera' in useragent):
-            return False
-        return True
+        return False
 
     def html_content_type(self):
-        if self.xhtml_browser():
-            return 'application/xhtml+xml'
         return 'text/html'
-
-    def document_surrounding_div(self):
-        if self.xhtml_browser():
-            return (u'<?xml version="1.0"?>\n' + STRICT_DOCTYPE + # XXX encoding ?
-                    u'<div xmlns="http://www.w3.org/1999/xhtml" xmlns:cubicweb="http://www.logilab.org/2008/cubicweb">')
-        return u'<div>'
 
     @deprecated('[3.9] use req.uiprops[rid]')
     def external_resource(self, rid, default=_MARKER):

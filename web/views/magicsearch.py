@@ -29,7 +29,7 @@ from rql import RQLSyntaxError, BadRQLQuery, parse
 from rql.utils import rqlvar_maker
 from rql.nodes import Relation
 
-from cubicweb import Unauthorized, typed_eid
+from cubicweb import Unauthorized
 from cubicweb.view import Component
 from cubicweb.web.views.ajaxcontroller import ajaxfunc
 
@@ -254,7 +254,7 @@ class QSPreProcessor(BaseQueryProcessor):
         """
         # if this is an integer, then directly go to eid
         try:
-            eid = typed_eid(word)
+            eid = int(word)
             return 'Any X WHERE X eid %(x)s', {'x': eid}, 'x'
         except ValueError:
             etype = self._get_entity_type(word)

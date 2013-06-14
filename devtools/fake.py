@@ -25,7 +25,6 @@ from logilab.database import get_db_helper
 from cubicweb.req import RequestSessionBase
 from cubicweb.cwvreg import CWRegistryStore
 from cubicweb.web.request import CubicWebRequestBase
-from cubicweb.web.http_headers import Headers
 
 from cubicweb.devtools import BASE_URL, BaseApptestConfiguration
 
@@ -163,10 +162,6 @@ class FakeSession(RequestSessionBase):
 
     # for use with enabled_security context manager
     read_security = write_security = True
-    def init_security(self, *args):
-        return None, None
-    def reset_security(self, *args):
-        return
 
 class FakeRepo(object):
     querier = None

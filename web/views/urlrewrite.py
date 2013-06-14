@@ -19,7 +19,6 @@
 
 import re
 
-from cubicweb import typed_eid
 from cubicweb.uilib import domid
 from cubicweb.appobject import AppObject
 
@@ -186,7 +185,7 @@ def rgx_action(rql=None, args=None, cachekey=None, argsgroups=(), setuser=False,
                     except KeyError:
                         kwargs[key] = value
                     if cachekey is not None and key in cachekey:
-                        kwargs[key] = typed_eid(value)
+                        kwargs[key] = int(value)
             if setuser:
                 kwargs['u'] = req.user.eid
             for param in rqlformparams:

@@ -17,6 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 
 from cubicweb.devtools.testlib import CubicWebTC
+from cubicweb.server.session import HOOKS_ALLOW_ALL, HOOKS_DENY_ALL
 
 class InternalSessionTC(CubicWebTC):
     def test_dbapi_query(self):
@@ -29,36 +30,36 @@ class SessionTC(CubicWebTC):
 
     def test_hooks_control(self):
         session = self.session
-        self.assertEqual(session.hooks_mode, session.HOOKS_ALLOW_ALL)
-        self.assertEqual(session.disabled_hook_categories, set())
-        self.assertEqual(session.enabled_hook_categories, set())
-        self.assertEqual(len(session._tx_data), 1)
+        self.assertEqual(HOOKS_ALLOW_ALL, session.hooks_mode)
+        self.assertEqual(set(), session.disabled_hook_categories)
+        self.assertEqual(set(), session.enabled_hook_categories)
+        self.assertEqual(1, len(session._txs))
         with session.deny_all_hooks_but('metadata'):
-            self.assertEqual(session.hooks_mode, session.HOOKS_DENY_ALL)
-            self.assertEqual(session.disabled_hook_categories, set())
-            self.assertEqual(session.enabled_hook_categories, set(('metadata',)))
+            self.assertEqual(HOOKS_DENY_ALL, session.hooks_mode)
+            self.assertEqual(set(), session.disabled_hook_categories)
+            self.assertEqual(set(('metadata',)), session.enabled_hook_categories)
             session.commit()
-            self.assertEqual(session.hooks_mode, session.HOOKS_DENY_ALL)
-            self.assertEqual(session.disabled_hook_categories, set())
-            self.assertEqual(session.enabled_hook_categories, set(('metadata',)))
+            self.assertEqual(HOOKS_DENY_ALL, session.hooks_mode)
+            self.assertEqual(set(), session.disabled_hook_categories)
+            self.assertEqual(set(('metadata',)), session.enabled_hook_categories)
             session.rollback()
-            self.assertEqual(session.hooks_mode, session.HOOKS_DENY_ALL)
-            self.assertEqual(session.disabled_hook_categories, set())
-            self.assertEqual(session.enabled_hook_categories, set(('metadata',)))
+            self.assertEqual(HOOKS_DENY_ALL, session.hooks_mode)
+            self.assertEqual(set(), session.disabled_hook_categories)
+            self.assertEqual(set(('metadata',)), session.enabled_hook_categories)
             with session.allow_all_hooks_but('integrity'):
-                self.assertEqual(session.hooks_mode, session.HOOKS_ALLOW_ALL)
-                self.assertEqual(session.disabled_hook_categories, set(('integrity',)))
-                self.assertEqual(session.enabled_hook_categories, set(('metadata',))) # not changed in such case
-            self.assertEqual(session.hooks_mode, session.HOOKS_DENY_ALL)
-            self.assertEqual(session.disabled_hook_categories, set())
-            self.assertEqual(session.enabled_hook_categories, set(('metadata',)))
+                self.assertEqual(HOOKS_ALLOW_ALL, session.hooks_mode)
+                self.assertEqual(set(('integrity',)), session.disabled_hook_categories)
+                self.assertEqual(set(('metadata',)), session.enabled_hook_categories) # not changed in such case
+            self.assertEqual(HOOKS_DENY_ALL, session.hooks_mode)
+            self.assertEqual(set(), session.disabled_hook_categories)
+            self.assertEqual(set(('metadata',)), session.enabled_hook_categories)
         # leaving context manager with no transaction running should reset the
         # transaction local storage (and associated cnxset)
-        self.assertEqual(session._tx_data, {})
-        self.assertEqual(session.cnxset, None)
-        self.assertEqual(session.hooks_mode, session.HOOKS_ALLOW_ALL)
-        self.assertEqual(session.disabled_hook_categories, set())
-        self.assertEqual(session.enabled_hook_categories, set())
+        self.assertEqual({}, session._txs)
+        self.assertEqual(None, session.cnxset)
+        self.assertEqual(HOOKS_ALLOW_ALL, session.hooks_mode, session.HOOKS_ALLOW_ALL)
+        self.assertEqual(set(), session.disabled_hook_categories)
+        self.assertEqual(set(), session.enabled_hook_categories)
 
 
 if __name__ == '__main__':

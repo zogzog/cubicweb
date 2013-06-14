@@ -10,13 +10,31 @@ objectClass: organizationalUnit
 ou: People
 structuralObjectClass: organizationalUnit
 
+dn: ou=Group,dc=cubicweb,dc=test
+objectClass: organizationalUnit
+ou: Group
+
+dn: cn=logilab,ou=Group,dc=cubicweb,dc=test
+gidNumber: 2000
+objectClass: posixGroup
+objectClass: top
+cn: logilab
+memberUid: adim
+
+dn: cn=dir,ou=Group,dc=cubicweb,dc=test
+gidNumber: 2002
+objectClass: posixGroup
+objectClass: top
+cn: dir
+memberUid: adim
+memberUid: syt
+
 dn: uid=syt,ou=People,dc=cubicweb,dc=test
 loginShell: /bin/bash
-objectClass: inetOrgPerson
+objectClass: OpenLDAPperson
 objectClass: posixAccount
 objectClass: top
 objectClass: shadowAccount
-structuralObjectClass: inetOrgPerson
 cn: Sylvain Thenault
 sn: Thenault
 shadowMax: 99999
@@ -35,7 +53,7 @@ userPassword: syt
 
 dn: uid=adim,ou=People,dc=cubicweb,dc=test
 loginShell: /bin/bash
-objectClass: inetOrgPerson
+objectClass: OpenLDAPperson
 objectClass: posixAccount
 objectClass: top
 objectClass: shadowAccount
@@ -46,7 +64,6 @@ gidNumber: 1006
 uid: adim
 homeDirectory: /home/adim
 uidNumber: 1006
-structuralObjectClass: inetOrgPerson
 givenName: Adrien
 telephoneNumber: 109
 displayName: adimascio

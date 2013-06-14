@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -216,7 +216,10 @@ class MemSchemaNotifyChanges(hook.SingleLastOperation):
         # commit event should not raise error, while set_schema has chances to
         # do so because it triggers full vreg reloading
         try:
-            repo.set_schema(repo.schema, rebuildinfered=rebuildinfered)
+            if rebuildinfered:
+                repo.schema.rebuild_infered_relations()
+            # trigger vreg reload
+            repo.set_schema(repo.schema)
             # CWUser class might have changed, update current session users
             cwuser_cls = self.session.vreg['etypes'].etype_class('CWUser')
             for session in repo._sessions.itervalues():

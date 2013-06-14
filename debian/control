@@ -16,7 +16,7 @@ Build-Depends:
  python-unittest2,
  python-logilab-mtconverter,
  python-rql,
- python-yams,
+ python-yams (>= 0.37),
  python-lxml,
 Standards-Version: 3.9.1
 Homepage: http://www.cubicweb.org
@@ -25,8 +25,15 @@ XS-Python-Version: >= 2.6
 Package: cubicweb
 Architecture: all
 XB-Python-Version: ${python:Versions}
-Depends: ${misc:Depends}, ${python:Depends}, cubicweb-server (= ${source:Version}), cubicweb-twisted (= ${source:Version})
-Recommends: postgresql | mysql | sqlite3
+Depends:
+ ${misc:Depends},
+ ${python:Depends},
+ cubicweb-server (= ${source:Version}),
+ cubicweb-twisted (= ${source:Version})
+Recommends:
+ postgresql
+ | mysql
+ | sqlite3
 Description: the complete CubicWeb framework
  CubicWeb is a semantic web application framework.
  .
@@ -42,9 +49,21 @@ XB-Python-Version: ${python:Versions}
 Conflicts: cubicweb-multisources
 Replaces: cubicweb-multisources
 Provides: cubicweb-multisources
-Depends: ${misc:Depends}, ${python:Depends}, cubicweb-common (= ${source:Version}), cubicweb-ctl (= ${source:Version}), python-logilab-database (>= 1.8.2), cubicweb-postgresql-support | cubicweb-mysql-support | python-pysqlite2, python-passlib
-Recommends: pyro (<< 4.0.0), cubicweb-documentation (= ${source:Version})
-Suggests: python-zmq
+Depends:
+ ${misc:Depends},
+ ${python:Depends},
+ cubicweb-common (= ${source:Version}),
+ cubicweb-ctl (= ${source:Version}),
+ python-logilab-database (>= 1.10.0),
+ cubicweb-postgresql-support
+ | cubicweb-mysql-support
+ | python-pysqlite2,
+ python-passlib
+Recommends:
+ pyro (<< 4.0.0),
+ cubicweb-documentation (= ${source:Version})
+Suggests:
+ python-zmq
 Description: server part of the CubicWeb framework
  CubicWeb is a semantic web application framework.
  .
@@ -56,7 +75,10 @@ Description: server part of the CubicWeb framework
 Package: cubicweb-postgresql-support
 Architecture: all
 # postgresql-client packages for backup/restore of non local database
-Depends: ${misc:Depends}, python-psycopg2, postgresql-client
+Depends:
+ ${misc:Depends},
+ python-psycopg2,
+ postgresql-client
 Description: postgres support for the CubicWeb framework
  CubicWeb is a semantic web application framework.
  .
@@ -66,7 +88,10 @@ Description: postgres support for the CubicWeb framework
 Package: cubicweb-mysql-support
 Architecture: all
 # mysql-client packages for backup/restore of non local database
-Depends: ${misc:Depends}, python-mysqldb, mysql-client
+Depends:
+ ${misc:Depends},
+ python-mysqldb,
+ mysql-client
 Description: mysql support for the CubicWeb framework
  CubicWeb is a semantic web application framework.
  .
@@ -78,8 +103,15 @@ Package: cubicweb-twisted
 Architecture: all
 XB-Python-Version: ${python:Versions}
 Provides: cubicweb-web-frontend
-Depends: ${misc:Depends}, ${python:Depends}, cubicweb-web (= ${source:Version}), cubicweb-ctl (= ${source:Version}), python-twisted-web
-Recommends: pyro (<< 4.0.0), cubicweb-documentation (= ${source:Version})
+Depends:
+ ${misc:Depends},
+ ${python:Depends},
+ cubicweb-web (= ${source:Version}),
+ cubicweb-ctl (= ${source:Version}),
+ python-twisted-web
+Recommends:
+ pyro (<< 4.0.0),
+ cubicweb-documentation (= ${source:Version})
 Description: twisted-based web interface for the CubicWeb framework
  CubicWeb is a semantic web application framework.
  .
@@ -92,8 +124,18 @@ Description: twisted-based web interface for the CubicWeb framework
 Package: cubicweb-web
 Architecture: all
 XB-Python-Version: ${python:Versions}
-Depends: ${misc:Depends}, ${python:Depends}, cubicweb-common (= ${source:Version}), python-simplejson (>= 2.0.9)
-Recommends: python-docutils (>= 0.6), python-vobject, fckeditor, python-fyzz, python-imaging, python-rdflib
+Depends:
+ ${misc:Depends},
+ ${python:Depends},
+ cubicweb-common (= ${source:Version}),
+ python-simplejson (>= 2.0.9)
+Recommends:
+ python-docutils (>= 0.6),
+ python-vobject,
+ fckeditor,
+ python-fyzz,
+ python-imaging,
+ python-rdflib
 Description: web interface library for the CubicWeb framework
  CubicWeb is a semantic web application framework.
  .
@@ -107,8 +149,19 @@ Description: web interface library for the CubicWeb framework
 Package: cubicweb-common
 Architecture: all
 XB-Python-Version: ${python:Versions}
-Depends: ${misc:Depends}, ${python:Depends}, graphviz, gettext, python-logilab-mtconverter (>= 0.8.0), python-logilab-common (>= 0.59.0), python-yams (>= 0.36.0), python-rql (>= 0.31.2), python-lxml
-Recommends: python-simpletal (>= 4.0), python-crypto
+Depends:
+ ${misc:Depends},
+ ${python:Depends},
+ graphviz,
+ gettext,
+ python-logilab-mtconverter (>= 0.8.0),
+ python-logilab-common (>= 0.59.0),
+ python-yams (>= 0.37.0),
+ python-rql (>= 0.31.2),
+ python-lxml
+Recommends:
+ python-simpletal (>= 4.0),
+ python-crypto
 Conflicts: cubicweb-core
 Replaces: cubicweb-core
 Description: common library for the CubicWeb framework
@@ -121,7 +174,10 @@ Description: common library for the CubicWeb framework
 Package: cubicweb-ctl
 Architecture: all
 XB-Python-Version: ${python:Versions}
-Depends: ${misc:Depends}, ${python:Depends}, cubicweb-common (= ${source:Version})
+Depends:
+ ${misc:Depends},
+ ${python:Depends},
+ cubicweb-common (= ${source:Version})
 Description: tool to manage the CubicWeb framework
  CubicWeb is a semantic web application framework.
  .
@@ -133,8 +189,15 @@ Description: tool to manage the CubicWeb framework
 Package: cubicweb-dev
 Architecture: all
 XB-Python-Version: ${python:Versions}
-Depends: ${misc:Depends}, ${python:Depends}, cubicweb-server (= ${source:Version}), cubicweb-web (= ${source:Version}), python-pysqlite2
-Suggests: w3c-dtd-xhtml, xvfb
+Depends:
+ ${misc:Depends},
+ ${python:Depends},
+ cubicweb-server (= ${source:Version}),
+ cubicweb-web (= ${source:Version}),
+ python-pysqlite2
+Suggests:
+ w3c-dtd-xhtml,
+ xvfb
 Description: tests suite and development tools for the CubicWeb framework
  CubicWeb is a semantic web application framework.
  .
@@ -144,7 +207,8 @@ Description: tests suite and development tools for the CubicWeb framework
 
 Package: cubicweb-documentation
 Architecture: all
-Recommends: doc-base
+Recommends:
+ doc-base
 Description: documentation for the CubicWeb framework
  CubicWeb is a semantic web application framework.
  .

@@ -23,7 +23,6 @@ _ = unicode
 from logilab.common.decorators import cached
 from logilab.mtconverter import xml_escape
 
-from cubicweb import typed_eid
 from cubicweb.view import EntityView, StartupView
 from cubicweb.predicates import (one_line_rset, non_final_entity,
                                  match_search_state)
@@ -53,7 +52,7 @@ class SearchForAssociationView(EntityView):
     def filter_box_context_info(self):
         entity = self.cw_rset.get_entity(0, 0)
         role, eid, rtype, etype = self._cw.search_state[1]
-        assert entity.eid == typed_eid(eid)
+        assert entity.eid == int(eid)
         # the default behaviour is to fetch all unrelated entities and display
         # them. Use fetch_order and not fetch_unrelated_order as sort method
         # since the latter is mainly there to select relevant items in the combo

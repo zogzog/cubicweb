@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -20,23 +20,61 @@
 __docformat__ = "restructuredtext en"
 
 from logilab.common.textutils import normalize_text
+from logilab.common.deprecation import deprecated
 
 from cubicweb import RegistryNotFound
 from cubicweb.predicates import is_instance
 from cubicweb.server import hook
 from cubicweb.sobjects.supervising import SupervisionMailOp
 
-class RenderAndSendNotificationView(hook.Operation):
-    """delay rendering of notification view until precommit"""
-    view = None # make pylint happy
+
+@deprecated('[3.17] use notify_on_commit instead')
+def RenderAndSendNotificationView(session, view, viewargs=None):
+    notify_on_commit(session, view, viewargs)
+
+
+def notify_on_commit(session, view, viewargs=None):
+    """register a notification view (see
+    :class:`~cubicweb.sobjects.notification.NotificationView`) to be sent at
+    post-commit time, ie only if the transaction has succeeded.
+
+    `viewargs` is an optional dictionary containing extra argument to be given
+    to :meth:`~cubicweb.sobjects.notification.NotificationView.render_and_send`
+    """
+    if viewargs is None:
+        viewargs = {}
+    notif_op = _RenderAndSendNotificationOp.get_instance(session)
+    notif_op.add_data((view, viewargs))
+
+
+class _RenderAndSendNotificationOp(hook.DataOperationMixIn, hook.Operation):
+    """End of the notification chain. Do render and send views after commit
+
+    All others Operations end up adding data to this Operation.
+    The notification are done on ``postcommit_event`` to make sure to prevent
+    sending notification about rollbacked data.
+    """
+
+    containercls = list
 
     def postcommit_event(self):
-        view = self.view
-        if view.cw_rset is not None and not view.cw_rset:
-            return # entity added and deleted in the same transaction (cache effect)
-        if view.cw_rset and self.session.deleted_in_transaction(view.cw_rset[view.cw_row or 0][view.cw_col or 0]):
-            return # entity added and deleted in the same transaction
-        self.view.render_and_send(**getattr(self, 'viewargs', {}))
+        deleted = self.session.deleted_in_transaction
+        for view, viewargs in self.get_data():
+            if view.cw_rset is not None:
+                if not view.cw_rset:
+                    # entity added and deleted in the same transaction
+                    # (cache effect)
+                    continue
+                elif deleted(view.cw_rset[view.cw_row or 0][view.cw_col or 0]):
+                    # entity added and deleted in the same transaction
+                    continue
+            try:
+                view.render_and_send(**viewargs)
+            except Exception:
+                # error in post commit are not propagated
+                # We keep this logic here to prevent a small notification error
+                # to prevent them all.
+                self.exception('Notification failed')
 
 
 class NotificationHook(hook.Hook):
@@ -73,9 +111,10 @@ class StatusChangeHook(NotificationHook):
         # #103822)
         if comment and entity.comment_format != 'text/rest':
             comment = normalize_text(comment, 80)
-        RenderAndSendNotificationView(self._cw, view=view, viewargs={
-            'comment': comment, 'previous_state': entity.previous_state.name,
-            'current_state': entity.new_state.name})
+        viewargs = {'comment': comment,
+                    'previous_state': entity.previous_state.name,
+                    'current_state': entity.new_state.name}
+        notify_on_commit(self._cw, view, viewargs=viewargs)
 
 class RelationChangeHook(NotificationHook):
     __regid__ = 'notifyrelationchange'
@@ -91,7 +130,7 @@ class RelationChangeHook(NotificationHook):
                                 rset=rset, row=0)
         if view is None:
             return
-        RenderAndSendNotificationView(self._cw, view=view)
+        notify_on_commit(self._cw, view)
 
 
 class EntityChangeHook(NotificationHook):
@@ -106,18 +145,21 @@ class EntityChangeHook(NotificationHook):
         view = self.select_view('notif_%s' % self.event, rset=rset, row=0)
         if view is None:
             return
-        RenderAndSendNotificationView(self._cw, view=view)
+        notify_on_commit(self._cw, view)
 
 
 class EntityUpdatedNotificationOp(hook.SingleLastOperation):
+    """scrap all changed entity to prepare a Notification Operation for them"""
 
     def precommit_event(self):
+        # precommit event that creates postcommit operation
         session = self.session
         for eid in session.transaction_data['changes']:
             view = session.vreg['views'].select('notif_entity_updated', session,
                                                 rset=session.eid_rset(eid),
                                                 row=0)
-            RenderAndSendNotificationView(session, view=view)
+            notify_on_commit(self.session, view,
+                    viewargs={'changes': session.transaction_data['changes'][eid]})
 
 
 class EntityUpdateHook(NotificationHook):
@@ -198,5 +240,5 @@ class EntityDeleteHook(SomethingChangedHook):
             # missing required relation
             title = '#%s' % self.entity.eid
         self._cw.transaction_data.setdefault('pendingchanges', []).append(
-            ('delete_entity', (self.entity.eid, self.entity.__regid__, title)))
+            ('delete_entity', (self.entity.eid, self.entity.cw_etype, title)))
         return True

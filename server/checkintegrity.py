@@ -329,7 +329,7 @@ def check_mandatory_relations(schema, session, eids, fix=1):
                 else:
                     rql = 'Any X WHERE NOT Y %s X, X is %s' % (rschema, etype)
                 for entity in session.execute(rql).entities():
-                    sys.stderr.write(msg % (entity.__regid__, entity.eid, role, rschema))
+                    sys.stderr.write(msg % (entity.cw_etype, entity.eid, role, rschema))
                     if fix:
                         #if entity.cw_describe()['source']['uri'] == 'system': XXX
                         entity.cw_delete() # XXX this is BRUTAL!
@@ -350,7 +350,7 @@ def check_mandatory_attributes(schema, session, eids, fix=1):
                 rql = 'Any X WHERE X %s NULL, X is %s, X cw_source S, S name "system"' % (
                     rschema, rdef.subject)
                 for entity in session.execute(rql).entities():
-                    sys.stderr.write(msg % (entity.__regid__, entity.eid, rschema))
+                    sys.stderr.write(msg % (entity.cw_etype, entity.eid, rschema))
                     if fix:
                         entity.cw_delete()
                     notify_fixed(fix)

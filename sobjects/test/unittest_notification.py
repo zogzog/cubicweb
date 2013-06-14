@@ -60,9 +60,9 @@ class MessageIdTC(TestCase):
             msgid1 = construct_message_id('testapp', eid, 12)
             self.assertNotEqual(msgid1, '<@testapp.%s>' % gethostname())
 
+class NotificationTC(CubicWebTC):
 
-class RecipientsFinderTC(CubicWebTC):
-    def test(self):
+    def test_recipients_finder(self):
         urset = self.execute('CWUser X WHERE X login "admin"')
         self.execute('INSERT EmailAddress X: X address "admin@logilab.fr", U primary_email X '
                      'WHERE U eid %(x)s', {'x': urset[0][0]})
@@ -79,13 +79,11 @@ class RecipientsFinderTC(CubicWebTC):
         self.set_option('default-dest-addrs', 'abcd@logilab.fr, efgh@logilab.fr')
         self.assertEqual(finder.recipients(), [('abcd@logilab.fr', 'en'), ('efgh@logilab.fr', 'en')])
 
-
-class StatusChangeViewsTC(CubicWebTC):
-
     def test_status_change_view(self):
         req = self.request()
         u = self.create_user(req, 'toto')
-        u.cw_adapt_to('IWorkflowable').fire_transition('deactivate', comment=u'yeah')
+        iwfable = u.cw_adapt_to('IWorkflowable')
+        iwfable.fire_transition('deactivate', comment=u'yeah')
         self.assertFalse(MAILBOX)
         self.commit()
         self.assertEqual(len(MAILBOX), 1)
@@ -99,7 +97,8 @@ yeah
 
 url: http://testing.fr/cubicweb/cwuser/toto
 ''')
-        self.assertEqual(email.subject, 'status changed CWUser #%s (admin)' % u.eid)
+        self.assertEqual(email.subject,
+                         'status changed CWUser #%s (admin)' % u.eid)
 
 if __name__ == '__main__':
     unittest_main()

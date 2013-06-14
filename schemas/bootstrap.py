@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -21,7 +21,7 @@
 __docformat__ = "restructuredtext en"
 _ = unicode
 
-from yams.buildobjs import (EntityType, RelationType, RelationDefinition,
+from yams.buildobjs import (EntityType, RelationType, RelationDefinition, Bytes,
                             SubjectRelation, RichString, String, Boolean, Int)
 from cubicweb.schema import (
     RQLConstraint,
@@ -84,6 +84,7 @@ class CWAttribute(EntityType):
     fulltextindexed = Boolean(description=_('index this attribute\'s value in the plain text index'))
     internationalizable = Boolean(description=_('is this attribute\'s value translatable'))
     defaultval = String(maxsize=256)
+    extra_props = Bytes(description=_('additional type specific properties'))
 
     description = RichString(internationalizable=True,
                              description=_('semantic description of this attribute'))

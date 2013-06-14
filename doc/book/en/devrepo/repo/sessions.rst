@@ -199,3 +199,8 @@ preauthenticated or not.
      if hasattr(req.cnx, 'foo_user') and req.foo_user:
          return 1
      return 0
+
+Full API Session
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: cubicweb.server.session.Session

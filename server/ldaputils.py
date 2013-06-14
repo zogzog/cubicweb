@@ -32,6 +32,8 @@ FOR A PARTICULAR PURPOSE.
 
 from __future__ import division # XXX why?
 
+from datetime import datetime
+
 import ldap
 from ldap.ldapobject import ReconnectLDAPObject
 from ldap.filter import filter_format
@@ -88,8 +90,8 @@ to respond to rql queries). Leave empty for anonymous bind',
 
         ('user-base-dn',
          {'type' : 'string',
-          'default': 'ou=People,dc=logilab,dc=fr',
-          'help': 'base DN to lookup for users',
+          'default': '',
+          'help': 'base DN to lookup for users; disable user importation mechanism if unset',
           'group': 'ldap-source', 'level': 1,
           }),
         ('user-scope',
@@ -160,10 +162,9 @@ You can set multiple groups by separating them by a comma.',
         self.user_base_scope = globals()[typedconfig['user-scope']]
         self.user_login_attr = typedconfig['user-login-attr']
         self.user_default_groups = typedconfig['user-default-group']
-        self.user_attrs = typedconfig['user-attrs-map']
-        self.user_rev_attrs = {'eid': 'dn'}
-        for ldapattr, cwattr in self.user_attrs.items():
-            self.user_rev_attrs[cwattr] = ldapattr
+        self.user_attrs = {'dn': 'eid', 'modifyTimestamp': 'modification_date'}
+        self.user_attrs.update(typedconfig['user-attrs-map'])
+        self.user_rev_attrs = dict((v, k) for k, v in self.user_attrs.iteritems())
         self.base_filters = [filter_format('(%s=%s)', ('objectClass', o))
                              for o in typedconfig['user-classes']]
         if typedconfig['user-filter']:
@@ -328,7 +329,6 @@ You can set multiple groups by separating them by a comma.',
             else:
                 itemdict = self._process_ldap_item(rec_dn, items)
                 result.append(itemdict)
-        #print '--->', result
         self.debug('ldap built results %s', len(result))
         return result
 
@@ -342,11 +342,14 @@ You can set multiple groups by separating them by a comma.',
                 if not value.startswith('{SSHA}'):
                     value = utils.crypt_password(value)
                 itemdict[key] = Binary(value)
+            elif self.user_attrs.get(key) == 'modification_date':
+                itemdict[key] = datetime.strptime(value[0], '%Y%m%d%H%M%SZ')
             else:
-                for i, val in enumerate(value):
-                    value[i] = unicode(val, 'utf-8', 'replace')
-                if isinstance(value, list) and len(value) == 1:
+                value = [unicode(val, 'utf-8', 'replace') for val in value]
+                if len(value) == 1:
                     itemdict[key] = value = value[0]
+                else:
+                    itemdict[key] = value
         return itemdict
 
     def _process_no_such_object(self, session, dn):
