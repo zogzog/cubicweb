@@ -349,7 +349,10 @@ class RepositoryTC(CubicWebTC):
             self.assertTrue(user._cw.vreg)
             from cubicweb.entities import authobjs
             self.assertIsInstance(user._cw.user, authobjs.CWUser)
+            # make sure the tcp connection is closed properly; yes, it's disgusting.
+            adapter = cnx._repo.adapter
             cnx.close()
+            adapter.release()
             done.append(True)
         finally:
             # connect monkey patch some method by default, remove them

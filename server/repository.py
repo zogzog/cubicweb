@@ -885,6 +885,8 @@ class Repository(object):
         # during `session_close` hooks
         session.commit()
         session.close()
+        if threading.currentThread() in self._pyro_sessions:
+            self._pyro_sessions[threading.currentThread()] = None
         del self._sessions[sessionid]
         self.info('closed session %s for user %s', sessionid, session.user.login)
 
@@ -1654,10 +1656,7 @@ class Repository(object):
         daemon.getAdapter().handleConnection = handleConnection
         def removeConnection(conn, sessions=pyro_sessions):
             daemon.__class__.removeConnection(daemon, conn)
-            try:
-                session = sessions[threading.currentThread()]
-            except KeyError:
-                return
+            session = sessions.pop(threading.currentThread(), None)
             if session is None:
                 # client was not yet connected to the repo
                 return
