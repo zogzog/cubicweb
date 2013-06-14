@@ -439,7 +439,7 @@ class CreateInstanceCommand(Command):
             chown(config.appdatahome, config['uid'])
         print '\n-> creation done for %s\n' % repr(config.apphome)[1:-1]
         if not self.config.no_db_create:
-            helper.postcreate(self.config.automatic)
+            helper.postcreate(self.config.automatic, self.config.config_level)
 
     def _handle_win32(self, config, appid):
         if sys.platform != 'win32':
