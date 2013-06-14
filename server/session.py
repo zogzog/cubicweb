@@ -99,18 +99,18 @@ def hooks_control(obj, mode, *categories):
 class _hooks_control(object):
     """context manager to control activated hooks categories.
 
-    If mode is session.`HOOKS_DENY_ALL`, given hooks categories will
+    If mode is`HOOKS_DENY_ALL`, given hooks categories will
     be enabled.
 
-    If mode is session.`HOOKS_ALLOW_ALL`, given hooks categories will
+    If mode is `HOOKS_ALLOW_ALL`, given hooks categories will
     be disabled.
 
     .. sourcecode:: python
 
-       with _hooks_control(self.session, self.session.HOOKS_ALLOW_ALL, 'integrity'):
+       with _hooks_control(cnx, HOOKS_ALLOW_ALL, 'integrity'):
            # ... do stuff with all but 'integrity' hooks activated
 
-       with _hooks_control(self.session, self.session.HOOKS_DENY_ALL, 'integrity'):
+       with _hooks_control(cnx, HOOKS_DENY_ALL, 'integrity'):
            # ... do stuff with none but 'integrity' hooks activated
 
     This is an internal api, you should rather use
