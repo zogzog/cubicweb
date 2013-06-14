@@ -111,8 +111,7 @@ class AbstractSessionManager(component.Component):
         raise NotImplementedError()
 
     def open_session(self, req):
-        """open and return a new session for the given request. The session is
-        also bound to the request.
+        """open and return a new session for the given request.
 
         raise :exc:`cubicweb.AuthenticationError` if authentication failed
         (no authentication info found or wrong user/password)
@@ -196,27 +195,28 @@ class CookieSessionHandler(object):
             return '__%s_https_session' % self.vreg.config.appid
         return '__%s_session' % self.vreg.config.appid
 
-    def set_session(self, req):
-        """associate a session to the request
+    def get_session(self, req):
+        """Return a session object corresponding to credentials held by the req
 
         Session id is searched from :
         - # form variable
         - cookie
 
-        if no session id is found, open a new session for the connected user
-        or request authentification as needed
+        If no session id is found, try opening a new session with credentials
+        found in the request.
 
-        :raise Redirect: if authentication has occurred and succeed
+        Raises AuthenticationError if no session can be found or created.
         """
         cookie = req.get_cookie()
         sessioncookie = self.session_cookie(req)
         try:
             sessionid = str(cookie[sessioncookie].value)
-            self.get_session(req, sessionid)
+            session = self.get_session_by_id(req, sessionid)
         except (KeyError, InvalidSession): # no valid session cookie
-            self.open_session(req)
+            session = self.open_session(req)
+        return session
 
-    def get_session(self, req, sessionid):
+    def get_session_by_id(self, req, sessionid):
         session = self.session_manager.get_session(req, sessionid)
         session.mtime = time()
         return session
@@ -283,12 +283,12 @@ class CubicWebPublisher(object):
         self.url_resolver = self.vreg['components'].select('urlpublisher',
                                                            vreg=self.vreg)
 
-    def connect(self, req):
-        """return a connection for a logged user object according to existing
-        sessions (i.e. a new connection may be created or an already existing
-        one may be reused
+    def get_session(self, req):
+        """Return a session object corresponding to credentials held by the req
+
+        May raise AuthenticationError.
         """
-        self.session_handler.set_session(req)
+        return self.session_handler.get_session(req)
 
     # publish methods #########################################################
 
@@ -336,7 +336,8 @@ class CubicWebPublisher(object):
         content = ''
         try:
             try:
-                self.connect(req)
+                session = self.get_session(req)
+                req.set_session(session)
             except AuthenticationError:
                 # XXX We want to clean up this approach in the future. But
                 # several cubes like registration or forgotten password rely on

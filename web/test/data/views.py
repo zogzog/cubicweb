@@ -34,7 +34,8 @@ def auto_login_handle_request(self, req, path):
             req.cnx.close()
         req.cnx = None
         try:
-            self.session_handler.set_session(req)
+            session = self.session_handler.get_session(req)
+            req.set_session(session)
         except Redirect:
             pass
         assert req.user.login == login

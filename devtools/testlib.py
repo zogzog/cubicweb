@@ -780,15 +780,15 @@ class CubicWebTC(TestCase):
 
     def assertAuthSuccess(self, req, origsession, nbsessions=1):
         sh = self.app.session_handler
-        self.app.connect(req)
-        session = req.session
+        session = self.app.get_session(req)
+        req.set_session(session)
         self.assertEqual(len(self.open_sessions), nbsessions, self.open_sessions)
         self.assertEqual(session.login, origsession.login)
         self.assertEqual(session.anonymous_session, False)
 
     def assertAuthFailure(self, req, nbsessions=0):
         with self.assertRaises(AuthenticationError):
-            self.app.connect(req)
+            self.app.get_session(req)
         # +0 since we do not track the opened session
         self.assertEqual(len(self.open_sessions), nbsessions)
         clear_cache(req, 'get_authorization')

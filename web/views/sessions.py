@@ -60,8 +60,6 @@ class InMemoryRepositorySessionManager(AbstractSessionManager):
                 # invalid session
                 self.close_session(session)
                 raise
-            # associate the connection to the current request
-            req.set_session(session, user)
         return session
 
     def open_session(self, req):
@@ -74,8 +72,6 @@ class InMemoryRepositorySessionManager(AbstractSessionManager):
         cnx, login = self.authmanager.authenticate(req)
         session = DBAPISession(cnx, login)
         self._sessions[session.sessionid] = session
-        # associate the connection to the current request
-        req.set_session(session)
         return session
 
     def postlogin(self, req, session):

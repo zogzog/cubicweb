@@ -378,8 +378,8 @@ class ApplicationTC(CubicWebTC):
         req.session = req.cnx = None
 
     def _test_auth_anon(self, req):
-        self.app.connect(req)
-        asession = req.session
+        asession = self.app.get_session(req)
+        req.set_session(asession)
         self.assertEqual(len(self.open_sessions), 1)
         self.assertEqual(asession.login, 'anon')
         self.assertTrue(asession.anonymous_session)
@@ -387,7 +387,8 @@ class ApplicationTC(CubicWebTC):
 
     def _test_anon_auth_fail(self, req):
         self.assertEqual(len(self.open_sessions), 1)
-        self.app.connect(req)
+        session = self.app.get_session(req)
+        req.set_session(session)
         self.assertEqual(req.message, 'authentication failure')
         self.assertEqual(req.session.anonymous_session, True)
         self.assertEqual(len(self.open_sessions), 1)
