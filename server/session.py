@@ -114,14 +114,13 @@ class _hooks_control(object):
            # ... do stuff with none but 'integrity' hooks activated
 
     This is an internal api, you should rather use
-    :meth:`~cubicweb.server.session.Session.deny_all_hooks_but` or
-    :meth:`~cubicweb.server.session.Session.allow_all_hooks_but` session
-    methods.
+    :meth:`~cubicweb.server.session.Connection.deny_all_hooks_but` or
+    :meth:`~cubicweb.server.session.Connection.allow_all_hooks_but`
+    Transaction methods.
     """
-    def __init__(self, session, mode, *categories):
+    def __init__(self, cnx, mode, *categories):
         assert mode in (HOOKS_ALLOW_ALL, HOOKS_DENY_ALL)
-        self.session = session
-        self.cnx = session._cnx
+        self.cnx = cnx
         self.mode = mode
         self.categories = categories
         self.oldmode = None
@@ -138,17 +137,32 @@ class _hooks_control(object):
 
     def __exit__(self, exctype, exc, traceback):
         self.cnx.ctx_count -= 1
+        try:
+            if self.categories:
+                if self.mode is HOOKS_DENY_ALL:
+                    self.cnx.disable_hook_categories(*self.categories)
+                else:
+                    self.cnx.enable_hook_categories(*self.categories)
+        finally:
+            self.cnx.hooks_mode = self.oldmode
+
+class _session_hooks_control(_hooks_control):
+    """hook control context manager for session
+
+    Necessary To handle some unholy transaction scope logic."""
+
+
+    def __init__(self, session, mode, *categories):
+        self.session = session
+        super_init = super(_session_hooks_control, self).__init__
+        return super_init(session._cnx, mode, *categories)
+
+    def __exit__(self, exctype, exc, traceback):
+        super_exit = super(_session_hooks_control, self).__exit__
+        ret = super_exit(exctype, exc, traceback)
         if self.cnx.ctx_count == 0:
             self.session._clear_thread_storage(self.cnx)
-        else:
-            try:
-                if self.categories:
-                    if self.mode is HOOKS_DENY_ALL:
-                        self.cnx.disable_hook_categories(*self.categories)
-                    else:
-                        self.cnx.enable_hook_categories(*self.categories)
-            finally:
-                self.cnx.hooks_mode = self.oldmode
+        return ret
 
 @deprecated('[3.17] use <object>.security_enabled instead')
 def security_enabled(obj, *args, **kwargs):
@@ -552,6 +566,12 @@ class Connection(object):
             self.pending_operations.insert(index, operation)
 
     # Hooks control ###########################################################
+
+    def allow_all_hooks_but(self, *categories):
+        return _hooks_control(self, HOOKS_ALLOW_ALL, *categories)
+
+    def deny_all_hooks_but(self, *categories):
+        return _hooks_control(self, HOOKS_DENY_ALL, *categories)
 
     def disable_hook_categories(self, *categories):
         """disable the given hook categories:
@@ -1048,9 +1068,9 @@ class Session(RequestSessionBase):
     # all hooks should be activated during normal execution
 
     def allow_all_hooks_but(self, *categories):
-        return _hooks_control(self, HOOKS_ALLOW_ALL, *categories)
+        return _session_hooks_control(self, HOOKS_ALLOW_ALL, *categories)
     def deny_all_hooks_but(self, *categories):
-        return _hooks_control(self, HOOKS_DENY_ALL, *categories)
+        return _session_hooks_control(self, HOOKS_DENY_ALL, *categories)
 
     hooks_mode = cnx_attr('hooks_mode')
 
