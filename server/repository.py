@@ -883,25 +883,6 @@ class Repository(object):
         finally:
             session.free_cnxset()
 
-    # public (inter-repository) interface #####################################
-
-    def entities_modified_since(self, etypes, mtime):
-        """function designed to be called from an external repository which
-        is using this one as a rql source for synchronization, and return a
-        3-uple containing :
-        * the local date
-        * list of (etype, eid) of entities of the given types which have been
-          modified since the given timestamp (actually entities whose full text
-          index content has changed)
-        * list of (etype, eid) of entities of the given types which have been
-          deleted since the given timestamp
-        """
-        with self.internal_session() as session:
-            updatetime = datetime.utcnow()
-            modentities, delentities = self.system_source.modified_entities(
-                session, etypes, mtime)
-            return updatetime, modentities, delentities
-
     # session handling ########################################################
 
     def close_sessions(self):

@@ -709,38 +709,6 @@ class DataHelpersTC(CubicWebTC):
 
 class FTITC(CubicWebTC):
 
-    def test_reindex_and_modified_since(self):
-        self.repo.system_source.multisources_etypes.add('Personne')
-        eidp = self.execute('INSERT Personne X: X nom "toto", X prenom "tutu"')[0][0]
-        self.commit()
-        ts = datetime.now()
-        self.assertEqual(len(self.execute('Personne X WHERE X has_text "tutu"')), 1)
-        self.session.set_cnxset()
-        cu = self.session.system_sql('SELECT mtime, eid FROM entities WHERE eid = %s' % eidp)
-        omtime = cu.fetchone()[0]
-        # our sqlite datetime adapter is ignore seconds fraction, so we have to
-        # ensure update is done the next seconds
-        time.sleep(1 - (ts.second - int(ts.second)))
-        self.execute('SET X nom "tata" WHERE X eid %(x)s', {'x': eidp})
-        self.commit()
-        self.assertEqual(len(self.execute('Personne X WHERE X has_text "tutu"')), 1)
-        self.session.set_cnxset()
-        cu = self.session.system_sql('SELECT mtime FROM entities WHERE eid = %s' % eidp)
-        mtime = cu.fetchone()[0]
-        self.assertTrue(omtime < mtime)
-        self.commit()
-        date, modified, deleted = self.repo.entities_modified_since(('Personne',), omtime)
-        self.assertEqual(modified, [('Personne', eidp)])
-        self.assertEqual(deleted, [])
-        date, modified, deleted = self.repo.entities_modified_since(('Personne',), mtime)
-        self.assertEqual(modified, [])
-        self.assertEqual(deleted, [])
-        self.execute('DELETE Personne X WHERE X eid %(x)s', {'x': eidp})
-        self.commit()
-        date, modified, deleted = self.repo.entities_modified_since(('Personne',), omtime)
-        self.assertEqual(modified, [])
-        self.assertEqual(deleted, [('Personne', eidp)])
-
     def test_fulltext_container_entity(self):
         assert self.schema.rschema('use_email').fulltext_container == 'subject'
         req = self.request()

@@ -470,16 +470,6 @@ class AbstractSource(object):
         """
         raise NotImplementedError(self)
 
-    def modified_entities(self, session, etypes, mtime):
-        """return a 2-uple:
-        * list of (etype, eid) of entities of the given types which have been
-          modified since the given timestamp (actually entities whose full text
-          index content has changed)
-        * list of (etype, eid) of entities of the given types which have been
-          deleted since the given timestamp
-        """
-        raise NotImplementedError(self)
-
     def index_entity(self, session, entity):
         """create an operation to [re]index textual content of the given entity
         on commit
