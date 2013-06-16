@@ -985,7 +985,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             # one indexable attribute
             self.index_entity(session, entity=entity)
 
-    def delete_info_multi(self, session, entities, uri):
+    def delete_info_multi(self, session, entities):
         """delete system information on deletion of a list of entities with the
         same etype and belinging to the same source
 
@@ -1305,7 +1305,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         sql = self.sqlgen.delete(SQL_PREFIX + entity.cw_etype, attrs)
         self.doexec(session, sql, attrs)
         # remove record from entities (will update fti if needed)
-        self.delete_info_multi(session, [entity], self.uri)
+        self.delete_info_multi(session, [entity])
         self.repo.hm.call_hooks('after_delete_entity', session, entity=entity)
         return ()
 

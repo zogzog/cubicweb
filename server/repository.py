@@ -1111,7 +1111,7 @@ class Repository(object):
                 self._type_source_cache.pop(eid, None)
                 if 'entity' in locals():
                     hook.CleanupDeletedEidsCacheOp.get_instance(session).add_data(entity.eid)
-                    self.system_source.delete_info_multi(session, [entity], uri)
+                    self.system_source.delete_info_multi(session, [entity])
                     if source.should_call_hooks:
                         session._tx.pending_operations = pending_operations
             raise
@@ -1181,9 +1181,9 @@ class Repository(object):
                         raise
                     self.exception('error while cascading delete for entity %s '
                                    'from %s. RQL: %s', entity, sourceuri, rql)
-        self.system_source.delete_info_multi(session, [entity], sourceuri)
+        self.system_source.delete_info_multi(session, [entity])
 
-    def _delete_info_multi(self, session, entities, sourceuri, scleanup=None):
+    def _delete_info_multi(self, session, entities, scleanup=None):
         """same as _delete_info but accepts a list of entities with
         the same etype and belinging to the same source.
         """
@@ -1219,16 +1219,16 @@ class Repository(object):
                 except ValidationError:
                     raise
                 except Unauthorized:
-                    self.exception('Unauthorized exception while cascading delete for entity %s '
-                                   'from %s. RQL: %s.\nThis should not happen since security is disabled here.',
-                                   entities, sourceuri, rql)
+                    self.exception('Unauthorized exception while cascading delete for entity %s. '
+                                   'RQL: %s.\nThis should not happen since security is disabled here.',
+                                   entities, rql)
                     raise
                 except Exception:
                     if self.config.mode == 'test':
                         raise
-                    self.exception('error while cascading delete for entity %s '
-                                   'from %s. RQL: %s', entities, sourceuri, rql)
-        self.system_source.delete_info_multi(session, entities, sourceuri)
+                    self.exception('error while cascading delete for entity %s. RQL: %s',
+                                   entities, rql)
+        self.system_source.delete_info_multi(session, entities)
 
     def locate_relation_source(self, session, subject, rtype, object):
         subjsource = self.source_from_eid(subject, session)
@@ -1431,9 +1431,9 @@ class Repository(object):
                 self.hm.call_hooks('before_delete_entity', session, entities=entities)
             if session.deleted_in_transaction(source.eid):
                 # source is being deleted, think to give scleanup argument
-                self._delete_info_multi(session, entities, sourceuri, scleanup=source.eid)
+                self._delete_info_multi(session, entities, scleanup=source.eid)
             else:
-                self._delete_info_multi(session, entities, sourceuri)
+                self._delete_info_multi(session, entities)
             source.delete_entities(session, entities)
             if source.should_call_hooks:
                 self.hm.call_hooks('after_delete_entity', session, entities=entities)

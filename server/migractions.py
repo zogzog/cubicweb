@@ -999,7 +999,7 @@ class ServerMigrationHelper(MigrationHelper):
                 hook.CleanupDeletedEidsCacheOp.get_instance(session).union(thispending)
                 # and don't forget to remove record from system tables
                 entities = [session.entity_from_eid(eid, rdeftype) for eid in thispending]
-                self.repo.system_source.delete_info_multi(session, entities, 'system')
+                self.repo.system_source.delete_info_multi(session, entities)
                 self.sqlexec('DELETE FROM cw_%s WHERE cw_from_entity=%%(eid)s OR '
                              'cw_to_entity=%%(eid)s' % rdeftype,
                              {'eid': oldeid}, ask_confirm=False)

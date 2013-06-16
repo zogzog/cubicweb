@@ -464,12 +464,6 @@ class AbstractSource(object):
         """mark entity as being modified, fulltext reindex if needed"""
         raise NotImplementedError(self)
 
-    def delete_info_multi(self, session, entities, uri):
-        """delete system information on deletion of a list of entities with the
-        same etype and belinging to the same source
-        """
-        raise NotImplementedError(self)
-
     def index_entity(self, session, entity):
         """create an operation to [re]index textual content of the given entity
         on commit
