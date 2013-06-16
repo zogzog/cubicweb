@@ -532,19 +532,6 @@ class AbstractSource(object):
 
 
 
-class ConnectionWrapper(object):
-    def __init__(self, cnx=None):
-        self.cnx = cnx
-    def commit(self):
-        pass
-    def rollback(self):
-        pass
-    def cursor(self):
-        return None # no actual cursor support
-    def close(self):
-        if hasattr(self.cnx, 'close'):
-            self.cnx.close()
-
 from cubicweb.server import SOURCE_TYPES
 
 def source_adapter(source_type):

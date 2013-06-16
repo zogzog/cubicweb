@@ -41,7 +41,6 @@ from ldapurl import LDAPUrl
 
 from cubicweb import ValidationError, AuthenticationError, Binary
 from cubicweb.server import utils
-from cubicweb.server.sources import ConnectionWrapper
 
 _ = unicode
 
@@ -55,6 +54,20 @@ PROTO_PORT = {'ldap': 389,
               'ldaps': 636,
               'ldapi': None,
               }
+
+
+class ConnectionWrapper(object):
+    def __init__(self, cnx=None):
+        self.cnx = cnx
+    def commit(self):
+        pass
+    def rollback(self):
+        pass
+    def cursor(self):
+        return None # no actual cursor support
+    def close(self):
+        if hasattr(self.cnx, 'close'):
+            self.cnx.close()
 
 
 class LDAPSourceMixIn(object):
