@@ -37,10 +37,10 @@ from logilab.common.logging_ext import set_log_methods
 from logilab.common.decorators import monkeypatch, cachedproperty
 from logilab.common.deprecation import deprecated
 
-from cubicweb import ETYPE_NAME_MAP, ConnectionError, AuthenticationError,\
+from cubicweb import ETYPE_NAME_MAP, AuthenticationError,\
      cwvreg, cwconfig
+from cubicweb.repoapi import get_repository
 from cubicweb.req import RequestSessionBase
-from cubicweb.utils import parse_repo_uri
 
 
 _MARKER = object()
@@ -91,51 +91,7 @@ class ConnectionProperties(object):
         self.close_on_del = close
 
 
-def _get_inmemory_repo(config, vreg=None):
-    from cubicweb.server.repository import Repository
-    from cubicweb.server.utils import TasksManager
-    return Repository(config, TasksManager(), vreg=vreg)
 
-def get_repository(uri=None, config=None, vreg=None):
-    """get a repository for the given URI or config/vregistry (in case we're
-    loading the repository for a client, eg web server, configuration).
-
-    The returned repository may be an in-memory repository or a proxy object
-    using a specific RPC method, depending on the given URI (pyro or zmq).
-    """
-    if uri is None:
-        return _get_inmemory_repo(config, vreg)
-
-    protocol, hostport, appid = parse_repo_uri(uri)
-
-    if protocol == 'inmemory':
-        # me may have been called with a dummy 'inmemory://' uri ...
-        return _get_inmemory_repo(config, vreg)
-
-    if protocol == 'pyroloc': # direct connection to the instance
-        from logilab.common.pyro_ext import get_proxy
-        uri = uri.replace('pyroloc', 'PYRO')
-        return get_proxy(uri)
-
-    if protocol == 'pyro': # connection mediated through the pyro ns
-        from logilab.common.pyro_ext import ns_get_proxy
-        path = appid.strip('/')
-        if not path:
-            raise ConnectionError(
-                "can't find instance name in %s (expected to be the path component)"
-                % uri)
-        if '.' in path:
-            nsgroup, nsid = path.rsplit('.', 1)
-        else:
-            nsgroup = 'cubicweb'
-            nsid = path
-        return ns_get_proxy(nsid, defaultnsgroup=nsgroup, nshost=hostport)
-
-    if protocol.startswith('zmqpickle-'):
-        from cubicweb.zmqclient import ZMQRepositoryClient
-        return ZMQRepositoryClient(uri)
-    else:
-        raise ConnectionError('unknown protocol: `%s`' % protocol)
 
 
 def _repo_connect(repo, login, **kwargs):
