@@ -1416,6 +1416,13 @@ class Session(RequestSessionBase):
 
     # deprecated ###############################################################
 
+    @property
+    def anonymous_session(self):
+        # XXX for now, anonymous-user is a web side option.
+        # It will only be present inside all-in-one instance.
+        # there is plan to move it down to global config.
+        return self.user.login == self.repo.config.get('anonymous-user')
+
     @deprecated('[3.13] use getattr(session.rtype_eids_rdef(rtype, eidfrom, eidto), prop)')
     def schema_rproperty(self, rtype, eidfrom, eidto, rprop):
         return getattr(self.rtype_eids_rdef(rtype, eidfrom, eidto), rprop)
