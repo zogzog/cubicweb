@@ -57,12 +57,11 @@ def host_prefixed_baseurl(baseurl, host):
 
 
 class CubicWebRootResource(resource.Resource):
-    def __init__(self, config):
+    def __init__(self, config, repo):
         resource.Resource.__init__(self)
         self.config = config
         # instantiate publisher here and not in init_publisher to get some
         # checks done before daemonization (eg versions consistency)
-        repo = config.repository()
         self.appli = CubicWebPublisher(repo, config)
         self.base_url = config['base-url']
         self.https_url = config['https-url']
@@ -271,12 +270,20 @@ from cubicweb import set_log_methods
 LOGGER = getLogger('cubicweb.twisted')
 set_log_methods(CubicWebRootResource, LOGGER)
 
-def run(config, debug=None):
+def run(config, debug=None, repo=None):
+    # repo may by passed during test.
+    #
+    # Test has already created a repo object so we should not create a new one.
+    # Explicitly passing the repo object avoid relying on the fragile
+    # config.repository() cache. We could imagine making repo a mandatory
+    # argument and receives it from the starting command directly.
     if debug is not None:
         config.debugmode = debug
     config.check_writeable_uid_directory(config.appdatahome)
     # create the site
-    root_resource = CubicWebRootResource(config)
+    if repo is None:
+        repo = config.repository()
+    root_resource = CubicWebRootResource(config, repo)
     website = server.Site(root_resource)
     # serve it via standard HTTP on port set in the configuration
     port = config['port'] or 8080
