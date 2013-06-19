@@ -119,6 +119,19 @@ class CubicWebRequestBase(DBAPIRequest):
         self.setup_params(form)
         #: received body
         self.content = StringIO()
+        # use header to set default language (may ne overwriten by user one later)
+        if vreg.config.get('language-negociation', False):
+            # http negociated language
+            accepted_languages = self.header_accept_language()
+        else:
+            accepted_languages = ()
+        for lang in accepted_languages:
+            if lang in self.translations:
+                self.set_language(lang)
+                break
+        else:
+            self.set_default_language(vreg)
+        # 3. default language
         #: dictionary that may be used to store request data that has to be
         #: shared among various components used to publish the request (views,
         #: controller, application...)
@@ -222,14 +235,6 @@ class CubicWebRequestBase(DBAPIRequest):
                 return
             except KeyError:
                 pass
-        if vreg.config['language-negociation']:
-            # 2. http negociated language
-            for lang in self.header_accept_language():
-                if lang in self.translations:
-                    self.set_language(lang)
-                    return
-        # 3. default language
-        self.set_default_language(vreg)
 
     # input form parameters management ########################################
 
