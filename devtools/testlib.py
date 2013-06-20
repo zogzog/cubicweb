@@ -186,6 +186,8 @@ class CubicWebTC(TestCase):
         self.websession = None
         super(CubicWebTC, self).__init__(*args, **kwargs)
 
+    # repository connection handling ###########################################
+
     # Too much complicated stuff. the class doesn't need to bear the repo anymore
     def set_cnx(self, cnx):
         self._cnxs.add(cnx)
@@ -194,6 +196,121 @@ class CubicWebTC(TestCase):
     @property
     def cnx(self):
         return self._cnx
+
+    def _close_cnx(self):
+        for cnx in list(self._cnxs):
+            if not cnx._closed:
+                cnx.rollback()
+                cnx.close()
+            self._cnxs.remove(cnx)
+
+    @property
+    def session(self):
+        """return current server side session (using default manager account)"""
+        session = self.repo._sessions[self.cnx.sessionid]
+        session.set_cnxset()
+        return session
+
+    def login(self, login, **kwargs):
+        """return a connection for the given login/password"""
+        if login == self.admlogin:
+            self.restore_connection()
+            # definitly don't want autoclose when used as a context manager
+            return self.cnx
+        autoclose = kwargs.pop('autoclose', True)
+        if not kwargs:
+            kwargs['password'] = str(login)
+        self.set_cnx(dbapi._repo_connect(self.repo, unicode(login), **kwargs))
+        self.websession = dbapi.DBAPISession(self.cnx)
+        if autoclose:
+            return TestCaseConnectionProxy(self, self.cnx)
+        return self.cnx
+
+    def restore_connection(self):
+        if not self.cnx is self._orig_cnx[0]:
+            if not self.cnx._closed:
+                self.cnx.close()
+        cnx, self.websession = self._orig_cnx
+        self.set_cnx(cnx)
+
+    #XXX this doesn't need to a be classmethod anymore
+    def _init_repo(self):
+        """init the repository and connection to it.
+        """
+        # setup configuration for test
+        self.init_config(self.config)
+        # get or restore and working db.
+        db_handler = devtools.get_test_db_handler(self.config)
+        db_handler.build_db_cache(self.test_db_id, self.pre_setup_database)
+
+        self.repo, cnx = db_handler.get_repo_and_cnx(self.test_db_id)
+        # no direct assignation to cls.cnx anymore.
+        # cnx is now an instance property that use a class protected attributes.
+        self.set_cnx(cnx)
+        self.websession = dbapi.DBAPISession(cnx, self.admlogin)
+        self._orig_cnx = (cnx, self.websession)
+        self.config.repository = lambda x=None: self.repo
+
+    # db api ##################################################################
+
+    @nocoverage
+    def cursor(self, req=None):
+        return self.cnx.cursor(req or self.request())
+
+    @nocoverage
+    def execute(self, rql, args=None, eidkey=None, req=None):
+        """executes <rql>, builds a resultset, and returns a couple (rset, req)
+        where req is a FakeRequest
+        """
+        if eidkey is not None:
+            warn('[3.8] eidkey is deprecated, you can safely remove this argument',
+                 DeprecationWarning, stacklevel=2)
+        req = req or self.request(rql=rql)
+        return req.execute(unicode(rql), args)
+
+    @nocoverage
+    def commit(self):
+        try:
+            return self.cnx.commit()
+        finally:
+            self.session.set_cnxset() # ensure cnxset still set after commit
+
+    @nocoverage
+    def rollback(self):
+        try:
+            self.cnx.rollback()
+        except dbapi.ProgrammingError:
+            pass # connection closed
+        finally:
+            self.session.set_cnxset() # ensure cnxset still set after commit
+
+    requestcls = fake.FakeRequest
+    def request(self, rollbackfirst=False, url=None, headers={}, **kwargs):
+        """return a web ui request"""
+        req = self.requestcls(self.vreg, url=url, headers=headers, form=kwargs)
+        if rollbackfirst:
+            self.websession.cnx.rollback()
+        req.set_session(self.websession)
+        return req
+
+    @property
+    def adminsession(self):
+        """return current server side session (using default manager account)"""
+        return self.repo._sessions[self._orig_cnx[0].sessionid]
+
+
+
+    # server side db api #######################################################
+
+    def sexecute(self, rql, args=None, eid_key=None):
+        if eid_key is not None:
+            warn('[3.8] eid_key is deprecated, you can safely remove this argument',
+                 DeprecationWarning, stacklevel=2)
+        self.session.set_cnxset()
+        return self.session.execute(rql, args)
+
+
+    # config management ########################################################
 
     @classproperty
     def config(cls):
@@ -241,34 +358,10 @@ class CubicWebTC(TestCase):
         except Exception: # not in server only configuration
             pass
 
-    #XXX this doesn't need to a be classmethod anymore
-    def _init_repo(self):
-        """init the repository and connection to it.
-        """
-        # setup configuration for test
-        self.init_config(self.config)
-        # get or restore and working db.
-        db_handler = devtools.get_test_db_handler(self.config)
-        db_handler.build_db_cache(self.test_db_id, self.pre_setup_database)
-
-        self.repo, cnx = db_handler.get_repo_and_cnx(self.test_db_id)
-        # no direct assignation to cls.cnx anymore.
-        # cnx is now an instance property that use a class protected attributes.
-        self.set_cnx(cnx)
-        self.websession = dbapi.DBAPISession(cnx, self.admlogin)
-        self._orig_cnx = (cnx, self.websession)
-        self.config.repository = lambda x=None: self.repo
-
     @property
     def vreg(self):
         return self.repo.vreg
 
-    def _close_cnx(self):
-        for cnx in list(self._cnxs):
-            if not cnx._closed:
-                cnx.rollback()
-                cnx.close()
-            self._cnxs.remove(cnx)
 
     # global resources accessors ###############################################
 
@@ -276,18 +369,6 @@ class CubicWebTC(TestCase):
     def schema(self):
         """return the application schema"""
         return self.vreg.schema
-
-    @property
-    def session(self):
-        """return current server side session (using default manager account)"""
-        session = self.repo._sessions[self.cnx.sessionid]
-        session.set_cnxset()
-        return session
-
-    @property
-    def adminsession(self):
-        """return current server side session (using default manager account)"""
-        return self.repo._sessions[self._orig_cnx[0].sessionid]
 
     def shell(self):
         """return a shell session object"""
@@ -394,69 +475,6 @@ class CubicWebTC(TestCase):
                 req.cnx.commit()
         return user
 
-    def login(self, login, **kwargs):
-        """return a connection for the given login/password"""
-        if login == self.admlogin:
-            self.restore_connection()
-            # definitly don't want autoclose when used as a context manager
-            return self.cnx
-        autoclose = kwargs.pop('autoclose', True)
-        if not kwargs:
-            kwargs['password'] = str(login)
-        self.set_cnx(dbapi._repo_connect(self.repo, unicode(login), **kwargs))
-        self.websession = dbapi.DBAPISession(self.cnx)
-        if autoclose:
-            return TestCaseConnectionProxy(self, self.cnx)
-        return self.cnx
-
-    def restore_connection(self):
-        if not self.cnx is self._orig_cnx[0]:
-            if not self.cnx._closed:
-                self.cnx.close()
-        cnx, self.websession = self._orig_cnx
-        self.set_cnx(cnx)
-
-    # db api ##################################################################
-
-    @nocoverage
-    def cursor(self, req=None):
-        return self.cnx.cursor(req or self.request())
-
-    @nocoverage
-    def execute(self, rql, args=None, eidkey=None, req=None):
-        """executes <rql>, builds a resultset, and returns a couple (rset, req)
-        where req is a FakeRequest
-        """
-        if eidkey is not None:
-            warn('[3.8] eidkey is deprecated, you can safely remove this argument',
-                 DeprecationWarning, stacklevel=2)
-        req = req or self.request(rql=rql)
-        return req.execute(unicode(rql), args)
-
-    @nocoverage
-    def commit(self):
-        try:
-            return self.cnx.commit()
-        finally:
-            self.session.set_cnxset() # ensure cnxset still set after commit
-
-    @nocoverage
-    def rollback(self):
-        try:
-            self.cnx.rollback()
-        except dbapi.ProgrammingError:
-            pass # connection closed
-        finally:
-            self.session.set_cnxset() # ensure cnxset still set after commit
-
-    # server side db api #######################################################
-
-    def sexecute(self, rql, args=None, eid_key=None):
-        if eid_key is not None:
-            warn('[3.8] eid_key is deprecated, you can safely remove this argument',
-                 DeprecationWarning, stacklevel=2)
-        self.session.set_cnxset()
-        return self.session.execute(rql, args)
 
     # other utilities #########################################################
 
@@ -640,15 +658,6 @@ class CubicWebTC(TestCase):
             raise
         publisher.error_handler = raise_error_handler
         return publisher
-
-    requestcls = fake.FakeRequest
-    def request(self, rollbackfirst=False, url=None, headers={}, **kwargs):
-        """return a web ui request"""
-        req = self.requestcls(self.vreg, url=url, headers=headers, form=kwargs)
-        if rollbackfirst:
-            self.websession.cnx.rollback()
-        req.set_session(self.websession)
-        return req
 
     def remote_call(self, fname, *args):
         """remote json call simulation"""
