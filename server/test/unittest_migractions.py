@@ -45,19 +45,18 @@ class MigrationCommandsTC(CubicWebTC):
 
     tags = CubicWebTC.tags | Tags(('server', 'migration', 'migractions'))
 
-    @classmethod
-    def _init_repo(cls):
-        super(MigrationCommandsTC, cls)._init_repo()
+    def _init_repo(self):
+        super(MigrationCommandsTC, self)._init_repo()
         # we have to read schema from the database to get eid for schema entities
-        cls.repo.set_schema(cls.repo.deserialize_schema(), resetvreg=False)
+        self.repo.set_schema(self.repo.deserialize_schema(), resetvreg=False)
         # hack to read the schema from data/migrschema
-        config = cls.config
+        config = self.config
         config.appid = join('data', 'migratedapp')
-        config._apphome = cls.datapath('migratedapp')
+        config._apphome = self.datapath('migratedapp')
         global migrschema
         migrschema = config.load_schema()
         config.appid = 'data'
-        config._apphome = cls.datadir
+        config._apphome = self.datadir
         assert 'Folder' in migrschema
 
     def setUp(self):

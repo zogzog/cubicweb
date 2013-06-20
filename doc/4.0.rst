@@ -31,6 +31,10 @@ API changes
 
 * ``request.set_session`` no longer takes an optional ``user`` argument.
 
+* CubicwebTC does not have repo and cnx as class attributes anymore. They are
+  standard instance attributes. ``set_cnx`` and ``_init_repo`` class methods
+  become instance methods.
+
 
 Deprecated Code Drops
 ----------------------

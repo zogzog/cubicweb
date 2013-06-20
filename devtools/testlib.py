@@ -178,17 +178,22 @@ class CubicWebTC(TestCase):
     tags = TestCase.tags | Tags('cubicweb', 'cw_repo')
     test_db_id = DEFAULT_EMPTY_DB_ID
     _cnxs = set() # establised connection
-    _cnx  = None  # current connection
+                  # stay on connection for leak detection purpose
+
+    def __init__(self, *args, **kwargs):
+        self._cnx = None  # current connection
+        self.repo = None
+        self.websession = None
+        super(CubicWebTC, self).__init__(*args, **kwargs)
 
     # Too much complicated stuff. the class doesn't need to bear the repo anymore
-    @classmethod
-    def set_cnx(cls, cnx):
-        cls._cnxs.add(cnx)
-        cls._cnx = cnx
+    def set_cnx(self, cnx):
+        self._cnxs.add(cnx)
+        self._cnx = cnx
 
     @property
     def cnx(self):
-        return self.__class__._cnx
+        return self._cnx
 
     @classproperty
     def config(cls):
@@ -237,27 +242,26 @@ class CubicWebTC(TestCase):
             pass
 
     #XXX this doesn't need to a be classmethod anymore
-    @classmethod
-    def _init_repo(cls):
+    def _init_repo(self):
         """init the repository and connection to it.
         """
         # setup configuration for test
-        cls.init_config(cls.config)
+        self.init_config(self.config)
         # get or restore and working db.
-        db_handler = devtools.get_test_db_handler(cls.config)
-        db_handler.build_db_cache(cls.test_db_id, cls.pre_setup_database)
+        db_handler = devtools.get_test_db_handler(self.config)
+        db_handler.build_db_cache(self.test_db_id, self.pre_setup_database)
 
-        cls.repo, cnx = db_handler.get_repo_and_cnx(cls.test_db_id)
+        self.repo, cnx = db_handler.get_repo_and_cnx(self.test_db_id)
         # no direct assignation to cls.cnx anymore.
         # cnx is now an instance property that use a class protected attributes.
-        cls.set_cnx(cnx)
-        cls.websession = dbapi.DBAPISession(cnx, cls.admlogin)
-        cls._orig_cnx = (cnx, cls.websession)
-        cls.config.repository = lambda x=None: cls.repo
+        self.set_cnx(cnx)
+        self.websession = dbapi.DBAPISession(cnx, self.admlogin)
+        self._orig_cnx = (cnx, self.websession)
+        self.config.repository = lambda x=None: self.repo
 
-    @classproperty
-    def vreg(cls):
-        return cls.repo.vreg
+    @property
+    def vreg(self):
+        return self.repo.vreg
 
     def _close_cnx(self):
         for cnx in list(self._cnxs):

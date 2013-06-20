@@ -70,40 +70,29 @@ class TwoSourcesTC(CubicWebTC):
     test_db_id= 'cw-server-multisources'
     tags = CubicWebTC.tags | Tags(('multisources'))
 
-    @classmethod
-    def setUpClass(cls):
-        cls._cfg2 = ExternalSource1Configuration('data', apphome=TwoSourcesTC.datadir)
-        cls._cfg3 = ExternalSource2Configuration('data', apphome=TwoSourcesTC.datadir)
+
+    def _init_repo(self):
+        repo2_handler = get_test_db_handler(self._cfg2)
+        repo2_handler.build_db_cache('4cards-1affaire',pre_setup_func=pre_setup_database_extern)
+        self.repo2, self.cnx2 = repo2_handler.get_repo_and_cnx('4cards-1affaire')
+
+        repo3_handler = get_test_db_handler(self._cfg3)
+        repo3_handler.build_db_cache('multisource',pre_setup_func=pre_setup_database_multi)
+        self.repo3, self.cnx3 = repo3_handler.get_repo_and_cnx('multisource')
+
+
+        super(TwoSourcesTC, self)._init_repo()
+
+    def setUp(self):
+        self._cfg2 = ExternalSource1Configuration('data', apphome=TwoSourcesTC.datadir)
+        self._cfg3 = ExternalSource2Configuration('data', apphome=TwoSourcesTC.datadir)
         TestServerConfiguration.no_sqlite_wrap = True
         # hi-jack PyroRQLSource.get_connection to access existing connection (no
         # pyro connection)
-        PyroRQLSource.get_connection = lambda x: x.uri == 'extern-multi' and cls.cnx3 or cls.cnx2
+        PyroRQLSource.get_connection = lambda x: x.uri == 'extern-multi' and self.cnx3 or self.cnx2
         # also necessary since the repository is closing its initial connections
         # pool though we want to keep cnx2 valid
         Connection.close = lambda x: None
-
-    @classmethod
-    def tearDowncls(cls):
-        PyroRQLSource.get_connection = PyroRQLSource_get_connection
-        Connection.close = Connection_close
-        cls.cnx2.close()
-        cls.cnx3.close()
-        TestServerConfiguration.no_sqlite_wrap = False
-
-    @classmethod
-    def _init_repo(cls):
-        repo2_handler = get_test_db_handler(cls._cfg2)
-        repo2_handler.build_db_cache('4cards-1affaire',pre_setup_func=pre_setup_database_extern)
-        cls.repo2, cls.cnx2 = repo2_handler.get_repo_and_cnx('4cards-1affaire')
-
-        repo3_handler = get_test_db_handler(cls._cfg3)
-        repo3_handler.build_db_cache('multisource',pre_setup_func=pre_setup_database_multi)
-        cls.repo3, cls.cnx3 = repo3_handler.get_repo_and_cnx('multisource')
-
-
-        super(TwoSourcesTC, cls)._init_repo()
-
-    def setUp(self):
         CubicWebTC.setUp(self)
         self.addCleanup(self.cnx2.close)
         self.addCleanup(self.cnx3.close)
@@ -112,9 +101,10 @@ class TwoSourcesTC(CubicWebTC):
     def tearDown(self):
         for source in self.repo.sources[1:]:
             self.repo.remove_source(source.uri)
-        CubicWebTC.tearDown(self)
-        self.cnx2.close()
-        self.cnx3.close()
+        super(TwoSourcesTC, self).tearDown()
+        PyroRQLSource.get_connection = PyroRQLSource_get_connection
+        Connection.close = Connection_close
+        TestServerConfiguration.no_sqlite_wrap = False
         undo_monkey_patch()
 
     @staticmethod
