@@ -543,31 +543,17 @@ class Repository(object):
         return cubes
 
     def get_option_value(self, option, foreid=None):
-        """Return the value for `option` in the configuration. If `foreid` is
-        specified, the actual repository to which this entity belongs is
-        derefenced and the option value retrieved from it.
+        """Return the value for `option` in the configuration.
 
         This is a public method, not requiring a session id.
+
+        `foreid` argument is deprecated and now useless (as of 3.19).
         """
+        if foreid is not None:
+            warn('[3.19] foreid argument is deprecated', DeprecationWarning,
+                 stacklevel=2)
         # XXX we may want to check we don't give sensible information
-        # XXX the only cube using 'foreid', apycot, stop used this, we probably
-        # want to drop this argument
-        if foreid is None:
-            return self.config[option]
-        _, sourceuri, extid, _ = self.type_and_source_from_eid(foreid)
-        if sourceuri == 'system':
-            return self.config[option]
-        cnxset = self._get_cnxset()
-        try:
-            cnx = cnxset.connection(sourceuri)
-            # needed to check connection is valid and usable by the current
-            # thread
-            newcnx = self.sources_by_uri[sourceuri].check_connection(cnx)
-            if newcnx is not None:
-                cnx = newcnx
-            return cnx.get_option_value(option, extid)
-        finally:
-            self._free_cnxset(cnxset)
+        return self.config[option]
 
     @cached
     def get_versions(self, checkversions=False):

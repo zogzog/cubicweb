@@ -288,7 +288,10 @@ class DBAPIRequest(RequestSessionBase):
         self.set_default_language(vreg)
 
     def get_option_value(self, option, foreid=None):
-        return self.cnx.get_option_value(option, foreid)
+        if foreid is not None:
+            warn('[3.19] foreid argument is deprecated', DeprecationWarning,
+                 stacklevel=2)
+        return self.cnx.get_option_value(option)
 
     def set_session(self, session):
         """method called by the session handler when the user is authenticated
@@ -659,11 +662,14 @@ class Connection(object):
 
     @check_not_closed
     def get_option_value(self, option, foreid=None):
-        """Return the value for `option` in the configuration. If `foreid` is
-        specified, the actual repository to which this entity belongs is
-        dereferenced and the option value retrieved from it.
+        """Return the value for `option` in the configuration.
+
+        `foreid` argument is deprecated and now useless (as of 3.19).
         """
-        return self._repo.get_option_value(option, foreid)
+        if foreid is not None:
+            warn('[3.19] foreid argument is deprecated', DeprecationWarning,
+                 stacklevel=2)
+        return self._repo.get_option_value(option)
 
     @check_not_closed
     def describe(self, eid, asdict=False):

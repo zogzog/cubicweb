@@ -1438,7 +1438,10 @@ class Session(RequestSessionBase): # XXX repoapi: stop being a
 
     @deprecated('[3.19] use a Connection object instead')
     def get_option_value(self, option, foreid=None):
-        return self.repo.get_option_value(option, foreid)
+        if foreid is not None:
+            warn('[3.19] foreid argument is deprecated', DeprecationWarning,
+                 stacklevel=2)
+        return self.repo.get_option_value(option)
 
     @deprecated('[3.19] use a Connection object instead')
     def transaction(self, free_cnxset=True):
