@@ -295,3 +295,8 @@ class ClientConnection(RequestSessionBase):
     def cursor(self):
         # XXX This is DBAPI compatibility method. Deprecate it ASAP.
         return self
+
+    @ property
+    def sessionid(self):
+        # XXX This is DBAPI compatibility property. Deprecate it ASAP.
+        return self._session.id
