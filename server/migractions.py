@@ -217,8 +217,7 @@ class ServerMigrationHelper(MigrationHelper):
         finally:
             shutil.rmtree(tmpdir)
 
-    def restore_database(self, backupfile, drop=True, systemonly=True,
-                         askconfirm=True, format='native'):
+    def restore_database(self, backupfile, drop=True, askconfirm=True, format='native'):
         # check
         if not osp.exists(backupfile):
             raise ExecutionError("Backup file %s doesn't exist" % backupfile)

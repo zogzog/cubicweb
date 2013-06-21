@@ -734,12 +734,12 @@ def _local_dump(appid, output, format='native'):
     mih.backup_database(output, askconfirm=False, format=format)
     mih.shutdown()
 
-def _local_restore(appid, backupfile, drop, systemonly=True, format='native'):
+def _local_restore(appid, backupfile, drop, format='native'):
     config = ServerConfiguration.config_for(appid)
     config.verbosity = 1 # else we won't be asked for confirmation on problems
     config.quick_start = True
     mih = config.migration_handler(connect=False, verbosity=1)
-    mih.restore_database(backupfile, drop, systemonly, askconfirm=False, format=format)
+    mih.restore_database(backupfile, drop, askconfirm=False, format=format)
     repo = mih.repo_connect()
     # version of the database
     dbversions = repo.get_versions()
@@ -848,13 +848,6 @@ class DBRestoreCommand(Command):
           'help': 'for some reason the database doesn\'t exist and so '
           'should not be dropped.'}
          ),
-        ('restore-all',
-         {'short': 'r', 'action' : 'store_true', 'default' : False,
-          'help': 'restore everything, eg not only the system source database '
-          'but also data for all sources supporting backup/restore and custom '
-          'instance data. In that case, <backupfile> is expected to be the '
-          'timestamp of the backup to restore, not a file'}
-         ),
         ('format',
          {'short': 'f', 'default': 'native', 'type': 'choice',
           'choices': ('native', 'portable'),
@@ -874,7 +867,6 @@ class DBRestoreCommand(Command):
                         raise
         _local_restore(appid, backupfile,
                        drop=not self.config.no_drop,
-                       systemonly=not self.config.restore_all,
                        format=self.config.format)
         if self.config.format == 'portable':
             try:
