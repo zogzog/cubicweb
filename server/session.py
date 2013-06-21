@@ -1225,7 +1225,8 @@ class Session(RequestSessionBase):
     def _clear_thread_storage(self, cnx):
         self._cnxs.pop(cnx.connectionid, None)
         try:
-            del self.__threaddata.cnx
+            if self.__threaddata.cnx is cnx:
+                del self.__threaddata.cnx
         except AttributeError:
             pass
 
