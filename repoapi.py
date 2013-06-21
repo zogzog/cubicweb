@@ -291,3 +291,7 @@ class ClientConnection(RequestSessionBase):
     def request(self):
         # XXX This is DBAPI compatibility method. Deprecate it ASAP.
         return self
+
+    def cursor(self):
+        # XXX This is DBAPI compatibility method. Deprecate it ASAP.
+        return self
