@@ -300,3 +300,8 @@ class ClientConnection(RequestSessionBase):
     def sessionid(self):
         # XXX This is DBAPI compatibility property. Deprecate it ASAP.
         return self._session.id
+
+    @property
+    def connection(self):
+        # XXX This is DBAPI compatibility property. Deprecate it ASAP.
+        return self
