@@ -287,3 +287,7 @@ class ClientConnection(RequestSessionBase):
         # Connection object
         with self._srv_cnx as cnx:
             return cnx.repo.system_source.undo_transaction(cnx, txuuid)
+
+    def request(self):
+        # XXX This is DBAPI compatibility method. Deprecate it ASAP.
+        return self
