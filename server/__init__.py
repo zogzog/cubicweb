@@ -284,7 +284,6 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     config._cubes = None # avoid assertion error
     repo, cnx = in_memory_repo_cnx(config, login, password=pwd)
     repo.system_source.eid = ssource.eid # redo this manually
-    assert len(repo.sources) == 1, repo.sources
     handler = config.migration_handler(schema, interactive=False,
                                        cnx=cnx, repo=repo)
     # install additional driver specific sql files

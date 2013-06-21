@@ -173,7 +173,6 @@ class FakeRepo(object):
         self.config = config or FakeConfig()
         self.vreg = vreg or CWRegistryStore(self.config, initlog=False)
         self.vreg.schema = schema
-        self.sources = []
 
     def internal_session(self):
         return FakeSession(self)

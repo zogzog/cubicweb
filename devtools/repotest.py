@@ -277,35 +277,19 @@ class BaseQuerierTC(TestCase):
 
 
 class BasePlannerTC(BaseQuerierTC):
-    newsources = ()
 
     def setup(self):
-        clear_cache(self.repo, 'is_multi_sources_relation')
         # XXX source_defs
         self.o = self.repo.querier
         self.session = self.repo._sessions.values()[0]
         self.cnxset = self.session.set_cnxset()
         self.schema = self.o.schema
-        self.sources = self.o._repo.sources
-        self.system = self.sources[-1]
+        self.system = self.repo.system_source
         do_monkey_patch()
         self._dumb_sessions = [] # by hi-jacked parent setup
         self.repo.vreg.rqlhelper.backend = 'postgres' # so FTIRANK is considered
-        self.newsources = []
-
-    def add_source(self, sourcecls, uri):
-        source = sourcecls(self.repo, {'uri': uri, 'type': 'whatever'})
-        if not source.copy_based_source:
-            self.sources.append(source)
-        self.newsources.append(source)
-        self.repo.sources_by_uri[uri] = source
-        setattr(self, uri, source)
 
     def tearDown(self):
-        for source in self.newsources:
-            if not source.copy_based_source:
-                self.sources.remove(source)
-            del self.repo.sources_by_uri[source.uri]
         undo_monkey_patch()
         for session in self._dumb_sessions:
             if session._cnx.cnxset is not None:

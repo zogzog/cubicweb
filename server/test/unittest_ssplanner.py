@@ -51,8 +51,7 @@ class SSPlannerTC(BasePlannerTC):
                                        [{'X': 'Basket', 'XN': 'String'},
                                         {'X': 'State', 'XN': 'String'},
                                         {'X': 'Folder', 'XN': 'String'}])],
-                     None, None,
-                     [self.system], None, [])])
+                     None, [])])
 
     def test_groupeded_ambigous_sol(self):
         self._test('Any XN,COUNT(X) GROUPBY XN WHERE X name XN, X is IN (Basket, State, Folder)',
@@ -60,8 +59,7 @@ class SSPlannerTC(BasePlannerTC):
                                        [{'X': 'Basket', 'XN': 'String'},
                                         {'X': 'State', 'XN': 'String'},
                                         {'X': 'Folder', 'XN': 'String'}])],
-                     None, None,
-                     [self.system], None, [])])
+                     None, [])])
 
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main

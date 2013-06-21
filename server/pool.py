@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -29,17 +29,17 @@ class ConnectionsSet(object):
     :class:`Session`
     """
 
-    def __init__(self, sources):
+    # since 3.19, we only have to manage the system source connection
+    def __init__(self, system_source):
         # dictionary of (source, connection), indexed by sources'uri
         self.source_cnxs = {}
-        for source in sources:
-            self.add_source(source)
-        if not 'system' in self.source_cnxs:
-            self.source_cnxs['system'] = self.source_cnxs[sources[0].uri]
+        self.source_cnxs['system'] = (system_source,
+                                      system_source.get_connection())
         self._cursors = {}
 
     def __getitem__(self, uri):
         """subscription notation provide access to sources'cursors"""
+        assert uri == 'system'
         try:
             cursor = self._cursors[uri]
         except KeyError:
@@ -48,15 +48,6 @@ class ConnectionsSet(object):
                 # None possible on sources without cursor support such as ldap
                 self._cursors[uri] = cursor
         return cursor
-
-    def add_source(self, source):
-        assert not source.uri in self.source_cnxs
-        self.source_cnxs[source.uri] = (source, source.get_connection())
-
-    def remove_source(self, source):
-        source, cnx = self.source_cnxs.pop(source.uri)
-        cnx.close()
-        self._cursors.pop(source.uri, None)
 
     def commit(self):
         """commit the current transaction for this user"""
@@ -110,11 +101,6 @@ class ConnectionsSet(object):
         # implementation details of flying insert requires the system source
         # first
         yield self.source_cnxs['system'][0]
-        for uri, (source, cnx) in self.source_cnxs.items():
-            if uri == 'system':
-                continue
-            yield source
-        #return [source_cnx[0] for source_cnx in self.source_cnxs.itervalues()]
 
     def source(self, uid):
         """return the source object with the given uri"""

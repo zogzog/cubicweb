@@ -187,18 +187,18 @@ class ServerMigrationHelper(MigrationHelper):
         open(backupfile,'w').close() # kinda lock
         os.chmod(backupfile, 0600)
         # backup
+        source = repo.system_source
         tmpdir = tempfile.mkdtemp()
         try:
             failed = False
-            for source in repo.sources:
-                try:
-                    source.backup(osp.join(tmpdir, source.uri), self.confirm, format=format)
-                except Exception as ex:
-                    print '-> error trying to backup %s [%s]' % (source.uri, ex)
-                    if not self.confirm('Continue anyway?', default='n'):
-                        raise SystemExit(1)
-                    else:
-                        failed = True
+            try:
+                source.backup(osp.join(tmpdir, source.uri), self.confirm, format=format)
+            except Exception as ex:
+                print '-> error trying to backup %s [%s]' % (source.uri, ex)
+                if not self.confirm('Continue anyway?', default='n'):
+                    raise SystemExit(1)
+                else:
+                    failed = True
             with open(osp.join(tmpdir, 'format.txt'), 'w') as format_file:
                 format_file.write('%s\n' % format)
             with open(osp.join(tmpdir, 'versions.txt'), 'w') as version_file:
@@ -247,15 +247,13 @@ class ServerMigrationHelper(MigrationHelper):
                     format = written_format
         self.config.init_cnxset_pool = False
         repo = self.repo_connect()
-        for source in repo.sources:
-            if systemonly and source.uri != 'system':
-                continue
-            try:
-                source.restore(osp.join(tmpdir, source.uri), self.confirm, drop, format)
-            except Exception as exc:
-                print '-> error trying to restore %s [%s]' % (source.uri, exc)
-                if not self.confirm('Continue anyway?', default='n'):
-                    raise SystemExit(1)
+        source = repo.system_source
+        try:
+            source.restore(osp.join(tmpdir, source.uri), self.confirm, drop, format)
+        except Exception as exc:
+            print '-> error trying to restore %s [%s]' % (source.uri, exc)
+            if not self.confirm('Continue anyway?', default='n'):
+                raise SystemExit(1)
         shutil.rmtree(tmpdir)
         # call hooks
         repo.init_cnxset_pool()

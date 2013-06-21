@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -145,7 +145,7 @@ class SSPlanner(object):
         the rqlst should not be tagged at this point.
         """
         plan.preprocess(rqlst)
-        return (OneFetchStep(plan, rqlst, plan.session.repo.sources),)
+        return (OneFetchStep(plan, rqlst),)
 
     def build_insert_plan(self, plan, rqlst):
         """get an execution plan from an INSERT RQL query"""
@@ -311,24 +311,6 @@ def varmap_test_repr(varmap, tablesinorder):
         maprepr[var] = '%s.%s' % (tablesinorder[table], col)
     return maprepr
 
-def offset_result(offset, result):
-    offset -= len(result)
-    if offset < 0:
-        result = result[offset:]
-        offset = None
-    elif offset == 0:
-        offset = None
-        result = ()
-    return offset, result
-
-
-class LimitOffsetMixIn(object):
-    limit = offset = None
-    def set_limit_offset(self, limit, offset):
-        self.limit = limit
-        self.offset = offset or None
-
-
 class Step(object):
     """base abstract class for execution step"""
     def __init__(self, plan):
@@ -357,22 +339,14 @@ class Step(object):
             [step.test_repr() for step in self.children],)
 
 
-class OneFetchStep(LimitOffsetMixIn, Step):
+class OneFetchStep(Step):
     """step consisting in fetching data from sources and directly returning
     results
     """
-    def __init__(self, plan, union, sources, inputmap=None):
+    def __init__(self, plan, union, inputmap=None):
         Step.__init__(self, plan)
         self.union = union
-        self.sources = sources
         self.inputmap = inputmap
-        self.set_limit_offset(union.children[-1].limit, union.children[-1].offset)
-
-    def set_limit_offset(self, limit, offset):
-        LimitOffsetMixIn.set_limit_offset(self, limit, offset)
-        for select in self.union.children:
-            select.limit = limit
-            select.offset = offset
 
     def execute(self):
         """call .syntax_tree_search with the given syntax tree on each
@@ -395,31 +369,9 @@ class OneFetchStep(LimitOffsetMixIn, Step):
             cachekey = tuple(cachekey)
         else:
             cachekey = union.as_string()
-        result = []
-        # limit / offset processing
-        limit = self.limit
-        offset = self.offset
-        if offset is not None:
-            if len(self.sources) > 1:
-                # we'll have to deal with limit/offset by ourself
-                if union.children[-1].limit:
-                    union.children[-1].limit = limit + offset
-                union.children[-1].offset = None
-            else:
-                offset, limit = None, None
-        for source in self.sources:
-            if offset is None and limit is not None:
-                # modifying the sample rqlst is enough since sql generation
-                # will pick it here as well
-                union.children[-1].limit = limit - len(result)
-            result_ = source.syntax_tree_search(session, union, args, cachekey,
-                                                inputmap)
-            if offset is not None:
-                offset, result_ = offset_result(offset, result_)
-            result += result_
-            if limit is not None:
-                if len(result) >= limit:
-                    return result[:limit]
+        # get results for query
+        source = session.repo.system_source
+        result = source.syntax_tree_search(session, union, args, cachekey, inputmap)
         #print 'ONEFETCH RESULT %s' % (result)
         return result
 
@@ -432,8 +384,7 @@ class OneFetchStep(LimitOffsetMixIn, Step):
         return (self.__class__.__name__,
                 sorted((r.as_string(kwargs=self.plan.args), r.solutions)
                        for r in self.union.children),
-                self.limit, self.offset,
-                sorted(self.sources), inputmap)
+                inputmap)
 
 
 # UPDATE/INSERT/DELETE steps ##################################################

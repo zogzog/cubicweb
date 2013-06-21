@@ -190,7 +190,6 @@ class Repository(object):
         # sources (additional sources info in the system database)
         self.system_source = self.get_source('native', 'system',
                                              config.sources()['system'].copy())
-        self.sources = [self.system_source]
         self.sources_by_uri = {'system': self.system_source}
         # querier helper, need to be created after sources initialization
         self.querier = querier.QuerierHelper(self, self.schema)
@@ -220,7 +219,7 @@ class Repository(object):
         self._cnxsets_pool = Queue.Queue()
         # 0. init a cnxset that will be used to fetch bootstrap information from
         #    the database
-        self._cnxsets_pool.put_nowait(pool.ConnectionsSet(self.sources))
+        self._cnxsets_pool.put_nowait(pool.ConnectionsSet(self.system_source))
         # 1. set used cubes
         if config.creating or not config.read_instance_schema:
             config.bootstrap_cubes()
@@ -251,8 +250,7 @@ class Repository(object):
         if config.creating:
             # call init_creating so that for instance native source can
             # configurate tsearch according to postgres version
-            for source in self.sources:
-                source.init_creating()
+            self.system_source.init_creating()
         else:
             self.init_sources_from_database()
             if 'CWProperty' in self.schema:
@@ -262,7 +260,7 @@ class Repository(object):
         self._get_cnxset().close(True)
         self.cnxsets = [] # list of available cnxsets (can't iterate on a Queue)
         for i in xrange(config['connections-pool-size']):
-            self.cnxsets.append(pool.ConnectionsSet(self.sources))
+            self.cnxsets.append(pool.ConnectionsSet(self.system_source))
             self._cnxsets_pool.put_nowait(self.cnxsets[-1])
 
     # internals ###############################################################
@@ -286,8 +284,7 @@ class Repository(object):
                 self.add_source(sourceent)
 
     def _clear_planning_caches(self):
-        for cache in ('source_defs', 'is_multi_sources_relation'):
-            clear_cache(self, cache)
+        clear_cache(self, 'source_defs')
 
     def add_source(self, sourceent):
         source = self.get_source(sourceent.type, sourceent.name,
@@ -324,8 +321,6 @@ class Repository(object):
         else:
             self.vreg._set_schema(schema)
         self.querier.set_schema(schema)
-        # don't use self.sources, we may want to give schema even to disabled
-        # sources
         for source in self.sources_by_uri.itervalues():
             source.set_schema(schema)
         self.schema = schema
@@ -996,8 +991,7 @@ class Repository(object):
             except KeyError:
                 etype = None
             rqlcache.pop( ('Any X WHERE X eid %s' % eid,), None)
-            for source in self.sources:
-                source.clear_eid_cache(eid, etype)
+            self.system_source.clear_eid_cache(eid, etype)
 
     def type_from_eid(self, eid, session=None):
         """return the type of the entity with id <eid>"""
@@ -1504,15 +1498,6 @@ class Repository(object):
         self.info('repository re-registered as a pyro object %s',
                   self.pyro_appid)
 
-    # multi-sources planner helpers ###########################################
-
-    @cached
-    def is_multi_sources_relation(self, rtype):
-        warn('[3.18] old multi-source system will go away in the next version',
-             DeprecationWarning)
-        return any(source for source in self.sources
-                   if not source is self.system_source
-                   and source.support_relation(rtype))
 
     # these are overridden by set_log_methods below
     # only defining here to prevent pylint from complaining

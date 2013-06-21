@@ -31,7 +31,6 @@ class DataFeedTC(CubicWebTC):
     def test(self):
         self.assertIn('myfeed', self.repo.sources_by_uri)
         dfsource = self.repo.sources_by_uri['myfeed']
-        self.assertNotIn(dfsource, self.repo.sources)
         self.assertEqual(dfsource.latest_retrieval, None)
         self.assertEqual(dfsource.synchro_interval, timedelta(seconds=60))
         self.assertFalse(dfsource.fresh())
