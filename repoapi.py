@@ -173,6 +173,10 @@ class ClientConnection(RequestSessionBase):
         with self._srv_cnx as cnx:
             rset = cnx.execute(*args, **kwargs)
         rset.req = self
+        # XXX keep the same behavior as the old dbapi
+        # otherwise multiple tests break.
+        # The little internet kitten is very sad about this situation.
+        rset._rqlst = None
         return rset
 
     commit = _srv_cnx_func('commit')
