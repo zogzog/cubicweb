@@ -340,10 +340,14 @@ class CubicWebPublisher(object):
                 session = self.get_session(req)
                 req.set_session(session)
             except AuthenticationError:
+                # Keep the dummy session set at initialisation.
+                # such session with work to an some extend but raise an
+                # AuthenticationError on any database access.
+                pass
                 # XXX We want to clean up this approach in the future. But
                 # several cubes like registration or forgotten password rely on
                 # this principle.
-                req.set_session(DBAPISession(None))
+            assert req.session is not None
             # DENY https acces for anonymous_user
             if (req.https
                 and req.session.anonymous_session

@@ -327,7 +327,7 @@ class DBAPIRequest(RequestSessionBase):
         else:
             # these args are initialized after a connection is
             # established
-            self.session = None
+            self.session = DBAPISession(None)
             self.cnx = self.user = _NeedAuthAccessMock()
         self.set_default_language(vreg)
 
