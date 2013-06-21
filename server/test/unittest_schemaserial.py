@@ -82,10 +82,6 @@ class Schema2RQLTC(TestCase):
         self.assertListEqual([('SET X specializes ET WHERE X eid %(x)s, ET eid %(et)s',
                                {'et': None, 'x': None}),
                               ('SET X specializes ET WHERE X eid %(x)s, ET eid %(et)s',
-                               {'et': None, 'x': None}),
-                              ('SET X specializes ET WHERE X eid %(x)s, ET eid %(et)s',
-                               {'et': None, 'x': None}),
-                              ('SET X specializes ET WHERE X eid %(x)s, ET eid %(et)s',
                                {'et': None, 'x': None})],
                              sorted(specialize2rql(schema)))
 
@@ -184,7 +180,7 @@ class Schema2RQLTC(TestCase):
                        'extra_props': '{"jungle_speed": 42}',
                        'indexed': False,
                        'oe': None,
-                       'ordernum': 19,
+                       'ordernum': 4,
                        'rt': None,
                        'se': None})]
 
