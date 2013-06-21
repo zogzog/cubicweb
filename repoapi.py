@@ -305,3 +305,8 @@ class ClientConnection(RequestSessionBase):
     def connection(self):
         # XXX This is DBAPI compatibility property. Deprecate it ASAP.
         return self
+
+    @property
+    def _repo(self):
+        # XXX This is DBAPI compatibility property. Deprecate it ASAP.
+        return self._session.repo
