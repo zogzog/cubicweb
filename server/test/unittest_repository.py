@@ -697,7 +697,7 @@ class DataHelpersTC(CubicWebTC):
         data = cu.fetchall()
         self.assertEqual(tuplify(data), [(-1, 'Personne', 'system', 'system',
                                           None)])
-        self.repo.delete_info(self.session, entity, 'system', None)
+        self.repo.delete_info(self.session, entity, 'system')
         #self.repo.commit()
         cu = self.session.system_sql('SELECT * FROM entities WHERE eid = -1')
         data = cu.fetchall()
