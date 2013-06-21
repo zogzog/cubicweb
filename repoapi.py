@@ -74,6 +74,19 @@ def get_repository(uri=None, config=None, vreg=None):
     else:
         raise ConnectionError('unknown protocol: `%s`' % protocol)
 
+def connect(repo, login, **kwargs):
+    """Take credential and return associated ClientConnection.
+
+    The ClientConnection is associated to a new Session object that will be
+    closed when the ClientConnection is closed.
+
+    raise AuthenticationError if the credential are invalid."""
+    sessionid = repo.connect(login, **kwargs)
+    session = repo._get_session(sessionid)
+    # XXX the autoclose_session should probably be handle on the session directly
+    # this is something to consider once we have proper server side Connection.
+    return ClientConnection(session, autoclose_session=True)
+
 def _srv_cnx_func(name):
     """Decorate ClientConnection method blindly forward to Connection
     THIS TRANSITIONAL PURPOSE

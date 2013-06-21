@@ -21,7 +21,7 @@
 from cubicweb.devtools.testlib import CubicWebTC
 
 from cubicweb import ProgrammingError
-from cubicweb.repoapi import ClientConnection
+from cubicweb.repoapi import ClientConnection, connect
 
 
 class REPOAPITC(CubicWebTC):
@@ -65,6 +65,15 @@ class REPOAPITC(CubicWebTC):
         # connection closed
         with self.assertRaises(ProgrammingError):
             cltcnx.execute('Any X WHERE X is CWUser')
+
+    def test_connect(self):
+        """check that repoapi.connect works and return a usable connection"""
+        clt_cnx = connect(self.repo, login='admin', password='gingkow')
+        self.assertEqual('admin', clt_cnx.user.login)
+        with clt_cnx:
+            rset = clt_cnx.execute('Any X WHERE X is CWUser')
+            self.assertTrue(rset)
+
 
 
 
