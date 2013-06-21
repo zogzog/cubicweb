@@ -894,6 +894,10 @@ class Session(RequestSessionBase):
         return '<session %s (%s 0x%x)>' % (
             unicode(self.user.login), self.id, id(self))
 
+    @property
+    def sessionid(self):
+        return self.id
+
     def get_cnx(self, cnxid):
         """return the <cnxid> connection attached to this session
 
