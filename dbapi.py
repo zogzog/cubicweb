@@ -34,7 +34,7 @@ from uuid import uuid4
 from urlparse import  urlparse
 
 from logilab.common.logging_ext import set_log_methods
-from logilab.common.decorators import monkeypatch
+from logilab.common.decorators import monkeypatch, cachedproperty
 from logilab.common.deprecation import deprecated
 
 from cubicweb import ETYPE_NAME_MAP, ConnectionError, AuthenticationError,\
@@ -541,7 +541,6 @@ class Connection(object):
     # make exceptions available through the connection object
     ProgrammingError = ProgrammingError
     # attributes that may be overriden per connection instance
-    anonymous_connection = False
     cursor_class = Cursor
     vreg = None
     _closed = None
@@ -566,6 +565,13 @@ class Connection(object):
             # code not available, no way
             return False
         return isinstance(self._repo, Repository)
+
+    @property # could be a cached property but we want to prevent assigment to
+              # catch potential programming error.
+    def anonymous_connection(self):
+        login = self._repo.user_info(self.sessionid)[1]
+        anon_login = self.vreg.config.get('anonymous-user')
+        return login == anon_login
 
     def __repr__(self):
         if self.anonymous_connection:

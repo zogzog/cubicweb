@@ -1,6 +1,14 @@
 What's new in CubicWeb 4.0?
 ============================
 
+Behavior Changes
+----------------
+
+* The anonymous property of Session and Connection are now computed from the
+  related user login. If it match the ``anonymous-user`` in the config the
+  connection is anonymous. Beware that the ``anonymous-user`` config is web
+  specific. Therefore, no session may be anonymous in repository only setup.
+
 API changes
 -----------
 

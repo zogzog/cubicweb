@@ -163,7 +163,6 @@ class RepositoryAuthenticationManager(AbstractAuthenticationManager):
         login, authinfo = self.anoninfo
         if login:
             cnx = self._authenticate(login, authinfo)
-            cnx.anonymous_connection = True
             return cnx, login
         raise AuthenticationError()
 
