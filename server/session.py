@@ -898,6 +898,11 @@ class Session(RequestSessionBase):
     def sessionid(self):
         return self.id
 
+    @property
+    def login(self):
+        # XXX backward compat with dbapi. deprecate me ASAP.
+        return self.user.login
+
     def get_cnx(self, cnxid):
         """return the <cnxid> connection attached to this session
 
