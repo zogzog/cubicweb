@@ -11,6 +11,10 @@ API changes
 * ``SessionManager`` and ``AuthenticationManager`` now take a repo object at
   initialization time instead of a vreg.
 
+* The ``async`` argument of ``_cw.call_service`` have been dropped. All call are
+  now  synchronous. The zmq notification bus looks like a good replacement for
+  most async usecase.
+
 
 Deprecated Code Drops
 ----------------------

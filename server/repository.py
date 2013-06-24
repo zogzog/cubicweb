@@ -890,33 +890,22 @@ class Repository(object):
         del self._sessions[sessionid]
         self.info('closed session %s for user %s', sessionid, session.user.login)
 
-    def call_service(self, sessionid, regid, async, **kwargs):
+    def call_service(self, sessionid, regid, **kwargs):
         """
         See :class:`cubicweb.dbapi.Connection.call_service`
         and :class:`cubicweb.server.Service`
         """
         session = self._get_session(sessionid)
-        return self._call_service_with_session(session, regid, async, **kwargs)
+        return self._call_service_with_session(session, regid, **kwargs)
 
-    def _call_service_with_session(self, session, regid, async, **kwargs):
-        if async:
-            self.info('calling service %s asynchronously', regid)
-            def task():
-                session.set_cnxset()
-                try:
-                    service = session.vreg['services'].select(regid, session, **kwargs)
-                    return service.call(**kwargs)
-                finally:
-                    session.rollback() # free cnxset
-            self.threaded_task(task)
-        else:
-            self.info('calling service %s synchronously', regid)
-            session.set_cnxset()
-            try:
-                service = session.vreg['services'].select(regid, session, **kwargs)
-                return service.call(**kwargs)
-            finally:
-                session.free_cnxset()
+    def _call_service_with_session(self, session, regid, **kwargs):
+        self.info('calling service %s synchronously', regid)
+        session.set_cnxset()
+        try:
+            service = session.vreg['services'].select(regid, session, **kwargs)
+            return service.call(**kwargs)
+        finally:
+            session.free_cnxset()
 
     def user_info(self, sessionid, props=None):
         """this method should be used by client to:

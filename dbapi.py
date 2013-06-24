@@ -368,8 +368,8 @@ class DBAPIRequest(RequestSessionBase):
 
     # server-side service call #################################################
 
-    def call_service(self, regid, async=False, **kwargs):
-        return self.cnx.call_service(regid, async, **kwargs)
+    def call_service(self, regid, **kwargs):
+        return self.cnx.call_service(regid, **kwargs)
 
     # entities cache management ###############################################
 
@@ -596,8 +596,8 @@ class Connection(object):
     # server-side service call #################################################
 
     @check_not_closed
-    def call_service(self, regid, async=False, **kwargs):
-        return self._repo.call_service(self.sessionid, regid, async, **kwargs)
+    def call_service(self, regid, **kwargs):
+        return self._repo.call_service(self.sessionid, regid, **kwargs)
 
     # connection initialization methods ########################################
 
