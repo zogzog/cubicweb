@@ -18,6 +18,9 @@ API changes
 * ``repo.stats()`` is now deprecated. The same information are available through
   a service (``_cw.call_service('repo_stats')``)
 
+* ``repo.gc_stats()`` is now deprecated. The same information are available through
+  a service (``_cw.call_service('repo_gc_stats')``)
+
 
 Deprecated Code Drops
 ----------------------

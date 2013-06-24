@@ -524,6 +524,7 @@ class Repository(object):
         with self.internal_session() as session:
             return session.call_service('repo_stats')
 
+    @deprecated("[4.0] use _cw.call_service('repo_gc_stats'")
     def gc_stats(self, nmax=20):
         """Return a dictionary containing some statistics about the repository
         memory usage.
@@ -533,33 +534,8 @@ class Repository(object):
         nmax is the max number of (most) referenced object returned as
         the 'referenced' result
         """
-
-        from cubicweb._gcdebug import gc_info
-        from cubicweb.appobject import AppObject
-        from cubicweb.rset import ResultSet
-        from cubicweb.dbapi import Connection, Cursor
-        from cubicweb.web.request import CubicWebRequestBase
-        from rql.stmts import Union
-
-        lookupclasses = (AppObject,
-                         Union, ResultSet,
-                         Connection, Cursor,
-                         CubicWebRequestBase)
-        try:
-            from cubicweb.server.session import Session, InternalSession
-            lookupclasses += (InternalSession, Session)
-        except ImportError:
-            pass # no server part installed
-
-        results = {}
-        counters, ocounters, garbage = gc_info(lookupclasses,
-                                               viewreferrersclasses=())
-        values = sorted(counters.iteritems(), key=lambda x: x[1], reverse=True)
-        results['lookupclasses'] = values
-        values = sorted(ocounters.iteritems(), key=lambda x: x[1], reverse=True)[:nmax]
-        results['referenced'] = values
-        results['unreachable'] = len(garbage)
-        return results
+        with self.internal_session() as session:
+            return session.call_service('repo_gc_stats', nmax=nmax)
 
     def get_schema(self):
         """Return the instance schema.
