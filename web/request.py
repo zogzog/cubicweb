@@ -219,11 +219,11 @@ class CubicWebRequestBase(DBAPIRequest):
             self.set_page_data('rql_varmaker', varmaker)
         return varmaker
 
-    def set_session(self, session, user=None):
+    def set_session(self, session):
         """method called by the session handler when the user is authenticated
         or an anonymous connection is open
         """
-        super(CubicWebRequestBase, self).set_session(session, user)
+        super(CubicWebRequestBase, self).set_session(session)
         # set request language
         vreg = self.vreg
         if self.user:

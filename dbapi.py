@@ -334,7 +334,7 @@ class DBAPIRequest(RequestSessionBase):
     def get_option_value(self, option, foreid=None):
         return self.cnx.get_option_value(option, foreid)
 
-    def set_session(self, session, user=None):
+    def set_session(self, session):
         """method called by the session handler when the user is authenticated
         or an anonymous connection is open
         """
@@ -342,11 +342,8 @@ class DBAPIRequest(RequestSessionBase):
         if session.cnx:
             self.cnx = session.cnx
             self.execute = session.cnx.cursor(self).execute
-            if user is None:
-                user = self.cnx.user(self)
-        if user is not None:
-            self.user = user
-            self.set_entity_cache(user)
+            self.user = self.cnx.user(self)
+            self.set_entity_cache(self.user)
 
     def execute(self, *args, **kwargs): # pylint: disable=E0202
         """overriden when session is set. By default raise authentication error
@@ -657,8 +654,8 @@ class Connection(object):
             from cubicweb.web.request import CubicWebRequestBase
             req = CubicWebRequestBase(self.vreg, False)
             req.get_header = lambda x, default=None: default
-            req.set_session = lambda session, user=None: DBAPIRequest.set_session(
-                req, session, user)
+            req.set_session = lambda session: DBAPIRequest.set_session(
+                req, session)
             req.relative_path = lambda includeparams=True: ''
         else:
             req = DBAPIRequest(self.vreg)

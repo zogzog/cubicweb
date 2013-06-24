@@ -21,6 +21,8 @@ API changes
 * ``repo.gc_stats()`` is now deprecated. The same information are available through
   a service (``_cw.call_service('repo_gc_stats')``)
 
+* ``request.set_session`` no longer takes an optional ``user`` argument.
+
 
 Deprecated Code Drops
 ----------------------
