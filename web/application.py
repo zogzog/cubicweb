@@ -61,9 +61,10 @@ class AbstractSessionManager(component.Component):
     """manage session data associated to a session identifier"""
     __regid__ = 'sessionmanager'
 
-    def __init__(self, vreg):
+    def __init__(self, repo):
+        vreg = repo.vreg
         self.session_time = vreg.config['http-session-time'] or None
-        self.authmanager = vreg['components'].select('authmanager', vreg=vreg)
+        self.authmanager = vreg['components'].select('authmanager', repo=repo)
         interval = (self.session_time or 0) / 2.
         if vreg.config.anonymous_user() is not None:
             self.cleanup_anon_session_time = vreg.config['cleanup-anonymous-session-time'] or 5 * 60
@@ -129,8 +130,8 @@ class AbstractAuthenticationManager(component.Component):
     """authenticate user associated to a request and check session validity"""
     __regid__ = 'authmanager'
 
-    def __init__(self, vreg):
-        self.vreg = vreg
+    def __init__(self, repo):
+        self.vreg = repo.vreg
 
     def validate_session(self, req, session):
         """check session validity, reconnecting it to the repository if the
@@ -158,9 +159,10 @@ class CookieSessionHandler(object):
     """a session handler using a cookie to store the session identifier"""
 
     def __init__(self, appli):
+        self.repo = appli.repo
         self.vreg = appli.vreg
         self.session_manager = self.vreg['components'].select('sessionmanager',
-                                                              vreg=self.vreg)
+                                                              repo=self.repo)
         global SESSION_MANAGER
         SESSION_MANAGER = self.session_manager
         if self.vreg.config.mode != 'test':
@@ -172,7 +174,7 @@ class CookieSessionHandler(object):
     def reset_session_manager(self):
         data = self.session_manager.dump_data()
         self.session_manager = self.vreg['components'].select('sessionmanager',
-                                                              vreg=self.vreg)
+                                                              repo=self.repo)
         self.session_manager.restore_data(data)
         global SESSION_MANAGER
         SESSION_MANAGER = self.session_manager

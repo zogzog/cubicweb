@@ -8,6 +8,9 @@ API changes
   request and session. And this now happens before the session is linked to the
   request.
 
+* ``SessionManager`` and ``AuthenticationManager`` now take a repo object at
+  initialization time instead of a vreg.
+
 
 Deprecated Code Drops
 ----------------------

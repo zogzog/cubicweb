@@ -93,9 +93,10 @@ class LoginPasswordRetreiver(WebAuthInfoRetreiver):
 class RepositoryAuthenticationManager(AbstractAuthenticationManager):
     """authenticate user associated to a request and check session validity"""
 
-    def __init__(self, vreg):
-        super(RepositoryAuthenticationManager, self).__init__(vreg)
-        self.repo = vreg.config.repository(vreg)
+    def __init__(self, repo):
+        super(RepositoryAuthenticationManager, self).__init__(repo)
+        self.repo = repo
+        vreg = repo.vreg
         self.log_queries = vreg.config['query-log-file']
         self.authinforetrievers = sorted(vreg['webauth'].possible_objects(vreg),
                                          key=lambda x: x.order)
