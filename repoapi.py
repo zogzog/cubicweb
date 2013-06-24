@@ -94,6 +94,10 @@ class ClientConnection(RequestSessionBase):
     This object is aimed to be used client side (so potential communication
     with the repo through RTC) and aims to offer some compatibility with the
     cubicweb.dbapi.Connection interface.
+
+    The autoclose_session paramenter informs the connection that this session
+    have been open explictly and only for this client connection. The
+    connection will close the session of exit.
     """
     # make exceptions available through the connection object
     ProgrammingError = ProgrammingError
@@ -101,13 +105,14 @@ class ClientConnection(RequestSessionBase):
     anonymous_connection = False # XXX really needed ?
     is_repo_in_memory = True # BC, always true
 
-    def __init__(self, session):
+    def __init__(self, session, autoclose_session=False):
         self._session = session
         self._cnxid = None
         self._open = None
         self._web_request = False
         self.vreg = session.vreg
         self._set_user(session.user)
+        self._autoclose_session = autoclose_session
 
     def __enter__(self):
         assert self._open is None
@@ -122,6 +127,10 @@ class ClientConnection(RequestSessionBase):
         self._cnxid = None
         self._session._cnx.ctx_count -= 1
         self._session.close_cnx(cnxid)
+        if self._autoclose_session:
+            # we have to call repo.close to unsure the repo properly forget the
+            # session calling session.close() is not enought :-(
+            self._session.repo.close(self._session.id)
 
 
     # begin silly BC
