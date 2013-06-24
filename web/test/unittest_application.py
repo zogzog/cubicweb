@@ -175,15 +175,6 @@ class ApplicationTC(CubicWebTC):
         self.execute('DELETE X in_group G WHERE X eid %s, G name "guests"' % user.eid)
         self.commit()
 
-    def test_nonregr_publish1(self):
-        req = self.request(u'CWEType X WHERE X final FALSE, X meta FALSE')
-        self.app.handle_request(req, 'view')
-
-    def test_nonregr_publish2(self):
-        req = self.request(u'Any count(N) WHERE N todo_by U, N is Note, U eid %s'
-                           % self.user().eid)
-        self.app.handle_request(req, 'view')
-
     def test_publish_validation_error(self):
         req = self.request()
         user = self.user()
