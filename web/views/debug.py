@@ -97,7 +97,7 @@ class ProcessInformationView(StartupView):
         w(u'<h2>%s</h2>' % _('Repository'))
         w(u'<h3>%s</h3>' % _('resources usage'))
         w(u'<table>')
-        stats = repo.stats()
+        stats = self._cw.call_service('repo_stats')
         for element in sorted(stats):
             w(u'<tr><th align="left">%s</th><td>%s %s</td></tr>'
                    % (element, xml_escape(unicode(stats[element])),

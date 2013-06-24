@@ -15,6 +15,9 @@ API changes
   now  synchronous. The zmq notification bus looks like a good replacement for
   most async usecase.
 
+* ``repo.stats()`` is now deprecated. The same information are available through
+  a service (``_cw.call_service('repo_stats')``)
+
 
 Deprecated Code Drops
 ----------------------

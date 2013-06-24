@@ -38,6 +38,7 @@ from datetime import datetime
 from time import time, localtime, strftime
 
 from logilab.common.decorators import cached, clear_cache
+from logilab.common.deprecation import deprecated
 from logilab.common.compat import any
 from logilab.common import flatten
 
@@ -511,35 +512,17 @@ class Repository(object):
 
     # public (dbapi) interface ################################################
 
+    @deprecated("[4.0] use _cw.call_service('repo_stats'")
     def stats(self): # XXX restrict to managers session?
         """Return a dictionary containing some statistics about the repository
         resources usage.
 
         This is a public method, not requiring a session id.
+
+        This method is deprecated in favor of using _cw.call_service('repo_stats')
         """
-        results = {}
-        querier = self.querier
-        source = self.system_source
-        for size, maxsize, hits, misses, title in (
-            (len(querier._rql_cache), self.config['rql-cache-size'],
-            querier.cache_hit, querier.cache_miss, 'rqlt_st'),
-            (len(source._cache), self.config['rql-cache-size'],
-            source.cache_hit, source.cache_miss, 'sql'),
-            ):
-            results['%s_cache_size' % title] =  '%s / %s' % (size, maxsize)
-            results['%s_cache_hit' % title] =  hits
-            results['%s_cache_miss' % title] = misses
-            results['%s_cache_hit_percent' % title] = (hits * 100) / (hits + misses)
-        results['type_source_cache_size'] = len(self._type_source_cache)
-        results['extid_cache_size'] = len(self._extid_cache)
-        results['sql_no_cache'] = self.system_source.no_cache
-        results['nb_open_sessions'] = len(self._sessions)
-        results['nb_active_threads'] = threading.activeCount()
-        looping_tasks = self._tasks_manager._looping_tasks
-        results['looping_tasks'] = ', '.join(str(t) for t in looping_tasks)
-        results['available_cnxsets'] = self._cnxsets_pool.qsize()
-        results['threads'] = ', '.join(sorted(str(t) for t in threading.enumerate()))
-        return results
+        with self.internal_session() as session:
+            return session.call_service('repo_stats')
 
     def gc_stats(self, nmax=20):
         """Return a dictionary containing some statistics about the repository

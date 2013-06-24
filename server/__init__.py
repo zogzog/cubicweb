@@ -30,8 +30,6 @@ from glob import glob
 from logilab.common.modutils import LazyObject
 from logilab.common.textutils import splitstrip
 from logilab.common.registry import yes
-from logilab import database
-
 from yams import BASE_GROUPS
 
 from cubicweb import CW_SOFTWARE_ROOT
