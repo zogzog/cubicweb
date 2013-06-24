@@ -35,7 +35,7 @@ from cubicweb import (
     ValidationError, Unauthorized, Forbidden,
     AuthenticationError, NoSelectableObject,
     BadConnectionId, CW_EVENT_MANAGER)
-from cubicweb.dbapi import DBAPISession, anonymous_session
+from cubicweb.dbapi import anonymous_session
 from cubicweb.web import LOGGER, component
 from cubicweb.web import (
     StatusResponse, DirectResponse, Redirect, NotFound, LogOut,
