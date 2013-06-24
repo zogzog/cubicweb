@@ -768,17 +768,14 @@ class CubicWebTC(TestCase):
 
     def init_authentication(self, authmode, anonuser=None):
         self.set_auth_mode(authmode, anonuser)
-        req = self.request(url='login')
-        origsession = req.session
-        req.session = req.cnx = None
-        del req.execute # get back to class implementation
+        req = self.requestcls(self.vreg, url='login')
         sh = self.app.session_handler
         authm = sh.session_manager.authmanager
         authm.anoninfo = self.vreg.config.anonymous_user()
         authm.anoninfo = authm.anoninfo[0], {'password': authm.anoninfo[1]}
         # not properly cleaned between tests
         self.open_sessions = sh.session_manager._sessions = {}
-        return req, origsession
+        return req, self.websession
 
     def assertAuthSuccess(self, req, origsession, nbsessions=1):
         sh = self.app.session_handler

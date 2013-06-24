@@ -338,7 +338,7 @@ class ApplicationTC(CubicWebTC):
         clear_cache(req, 'get_authorization')
         self.assertTrue('__login' in form)
         self.assertTrue('__password' in form)
-        self.assertEqual(req.cnx, None)
+        self.assertFalse(req.cnx) # Mock cnx are False
         req.form['__login'] = self.admlogin
         req.form['__password'] = self.admpassword
         self.assertAuthSuccess(req, origsession)
