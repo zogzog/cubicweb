@@ -244,7 +244,6 @@ def requestReceived(self, command, path, version):
             self._do_process_multipart = True
     self.process()
 
-
 @monkeypatch(http.Request)
 def process_multipart(self):
     if not self._do_process_multipart:
@@ -254,16 +253,17 @@ def process_multipart(self):
                         keep_blank_values=1,
                         strict_parsing=1)
     for key in form:
-        value = form[key]
-        if isinstance(value, list):
-            self.args[key] = [v.value for v in value]
-        elif value.filename:
-            if value.done != -1: # -1 is transfer has been interrupted
-                self.files[key] = (value.filename, value.file)
+        values = form[key]
+        if not isinstance(values, list):
+            values = [values]
+        for value in values:
+            if value.filename:
+                if value.done != -1: # -1 is transfer has been interrupted
+                    self.files.setdefault(key, []).append((value.filename, value.file))
+                else:
+                    self.files.setdefault(key, []).append((None, None))
             else:
-                self.files[key] = (None, None)
-        else:
-            self.args[key] = value.value
+                self.args.setdefault(key, []).append(value.value)
 
 from logging import getLogger
 from cubicweb import set_log_methods

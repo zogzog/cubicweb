@@ -755,8 +755,13 @@ class FileField(StringField):
             # raise UnmodifiedField instead of returning None, since the later
             # will try to remove already attached file if any
             raise UnmodifiedField()
-        # value is a 2-uple (filename, stream)
+        # value is a 2-uple (filename, stream) or a list of such
+        # tuples (multiple files)
         try:
+            if isinstance(value, list):
+                value = value[0]
+                form.warning('mutiple files provided, however '
+                             'only the first will be picked')
             filename, stream = value
         except ValueError:
             raise UnmodifiedField()
