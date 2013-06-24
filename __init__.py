@@ -221,3 +221,15 @@ def validation_error(entity, errors, substitutions=None, i18nvalues=None):
             errors[rname(*key)] = errors.pop(key)
     return ValidationError(getattr(entity, 'eid', entity), errors,
                            substitutions, i18nvalues)
+
+
+# exceptions ##################################################################
+
+class ProgrammingError(Exception): #DatabaseError):
+    """Exception raised for errors that are related to the database's operation
+    and not necessarily under the control of the programmer, e.g. an unexpected
+    disconnect occurs, the data source name is not found, a transaction could
+    not be processed, a memory allocation error occurred during processing,
+    etc.
+    """
+

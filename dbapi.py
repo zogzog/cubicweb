@@ -37,8 +37,8 @@ from logilab.common.logging_ext import set_log_methods
 from logilab.common.decorators import monkeypatch, cachedproperty
 from logilab.common.deprecation import deprecated
 
-from cubicweb import ETYPE_NAME_MAP, AuthenticationError,\
-     cwvreg, cwconfig
+from cubicweb import (ETYPE_NAME_MAP, AuthenticationError, ProgrammingError,
+                      cwvreg, cwconfig)
 from cubicweb.repoapi import get_repository
 from cubicweb.req import RequestSessionBase
 
@@ -390,16 +390,6 @@ class DBAPIRequest(RequestSessionBase):
 
 set_log_methods(DBAPIRequest, getLogger('cubicweb.dbapi'))
 
-
-# exceptions ##################################################################
-
-class ProgrammingError(Exception): #DatabaseError):
-    """Exception raised for errors that are related to the database's operation
-    and not necessarily under the control of the programmer, e.g. an unexpected
-    disconnect occurs, the data source name is not found, a transaction could
-    not be processed, a memory allocation error occurred during processing,
-    etc.
-    """
 
 
 # cursor / connection objects ##################################################
