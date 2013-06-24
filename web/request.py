@@ -225,16 +225,10 @@ class CubicWebRequestBase(DBAPIRequest):
         """
         super(CubicWebRequestBase, self).set_session(session)
         # set request language
-        vreg = self.vreg
-        if self.user:
-            try:
-                # 1. user specified language
-                lang = vreg.typed_value('ui.language',
-                                        self.user.properties['ui.language'])
-                self.set_language(lang)
-                return
-            except KeyError:
-                pass
+        user_lang = self.user.properties.get('ui.language')
+        if user_lang is not None:
+            lang = self.vreg.typed_value('ui.language', user_lang)
+            self.set_language(lang)
 
     # input form parameters management ########################################
 
