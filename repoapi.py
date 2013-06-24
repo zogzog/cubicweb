@@ -18,7 +18,7 @@
 """Official API to access the content of a repository
 """
 from cubicweb.utils import parse_repo_uri
-from cubicweb import ConnectionError, ProgrammingError
+from cubicweb import ConnectionError, ProgrammingError, AuthenticationError
 from uuid import uuid4
 from contextlib import contextmanager
 from cubicweb.req import RequestSessionBase
@@ -86,6 +86,21 @@ def connect(repo, login, **kwargs):
     # XXX the autoclose_session should probably be handle on the session directly
     # this is something to consider once we have proper server side Connection.
     return ClientConnection(session, autoclose_session=True)
+
+def anonymous_cnx(repo):
+    """return a ClientConnection for Anonymous user.
+
+    The ClientConnection is associated to a new Session object that will be
+    closed when the ClientConnection is closed.
+
+    raises an AuthenticationError if anonymous usage is not allowed
+    """
+    anoninfo = getattr(repo.config, 'anonymous_user', lambda: None)()
+    if anoninfo is None: # no anonymous user
+        raise AuthenticationError('anonymous access is not authorized')
+    anon_login, anon_password = anoninfo
+    # use vreg's repository cache
+    return connect(repo, anon_login, password=anon_password)
 
 def _srv_cnx_func(name):
     """Decorate ClientConnection method blindly forward to Connection

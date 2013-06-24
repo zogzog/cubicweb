@@ -21,7 +21,7 @@
 from cubicweb.devtools.testlib import CubicWebTC
 
 from cubicweb import ProgrammingError
-from cubicweb.repoapi import ClientConnection, connect
+from cubicweb.repoapi import ClientConnection, connect, anonymous_cnx
 
 
 class REPOAPITC(CubicWebTC):
@@ -70,6 +70,15 @@ class REPOAPITC(CubicWebTC):
         """check that repoapi.connect works and return a usable connection"""
         clt_cnx = connect(self.repo, login='admin', password='gingkow')
         self.assertEqual('admin', clt_cnx.user.login)
+        with clt_cnx:
+            rset = clt_cnx.execute('Any X WHERE X is CWUser')
+            self.assertTrue(rset)
+
+    def test_anonymous_connect(self):
+        """check that you can get anonymous connection when the data exist"""
+
+        clt_cnx = anonymous_cnx(self.repo)
+        self.assertEqual('anon', clt_cnx.user.login)
         with clt_cnx:
             rset = clt_cnx.execute('Any X WHERE X is CWUser')
             self.assertTrue(rset)
