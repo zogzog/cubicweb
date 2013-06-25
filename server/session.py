@@ -431,11 +431,6 @@ class Connection(RequestSessionBase):
         self.vreg = self.repo.vreg
         self._execute = self.repo.querier.execute
 
-        # other session utility
-        self.user = session.user # XXX migrate to self._set_user when
-        self.lang = session.lang # Connection gain execute
-
-
         #: connection handling mode
         self.mode = session.default_mode
         #: connection set used to execute queries on sources
@@ -476,6 +471,11 @@ class Connection(RequestSessionBase):
         # RQLRewriter are not thread safe
         self._rewriter = rewriter
 
+        # other session utility
+        if session.user.login == '__internal_manager__':
+            self.user = session.user
+        else:
+            self._set_user(session.user)
 
     # shared data handling ###################################################
 
