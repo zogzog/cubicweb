@@ -428,6 +428,10 @@ class Connection(RequestSessionBase):
         self.repo = session.repo
         self.vreg = self.repo.vreg
 
+        # other session utility
+        self.user = session.user # XXX migrate to self._set_user when
+        self.lang = session.lang # Connection gain execute
+
         #: connection handling mode
         self.mode = session.default_mode
         #: connection set used to execute queries on sources
