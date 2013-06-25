@@ -134,8 +134,11 @@ class ClientConnection(RequestSessionBase):
     is_repo_in_memory = True # BC, always true
 
     def __init__(self, session, autoclose_session=False):
-        self._session = session
+        self._session = session # XXX there is no real reason to keep the
+                                # session around function still using it should
+                                # be rewritten and migrated.
         self._cnxid = None
+        self._cnx = None
         self._open = None
         self._web_request = False
         self.vreg = session.vreg
@@ -146,15 +149,16 @@ class ClientConnection(RequestSessionBase):
         assert self._open is None
         self._open = True
         self._cnxid = '%s-%s' % (self._session.id, uuid4().hex)
-        self._session.set_cnx(self._cnxid)
-        self._session._cnx.ctx_count += 1
+        self._cnx = self._session.get_cnx(self._cnxid)
+        self._cnx.ctx_count += 1
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._open = False
         cnxid = self._cnxid
         self._cnxid = None
-        self._session._cnx.ctx_count -= 1
+        self._cnx.ctx_count -= 1
         self._session.close_cnx(cnxid)
+        self._cnx = None
         if self._autoclose_session:
             # we have to call repo.close to unsure the repo properly forget the
             # session calling session.close() is not enought :-(
@@ -185,18 +189,11 @@ class ClientConnection(RequestSessionBase):
         session object"""
         if not self._open:
             raise ProgrammingError('Closed connection %s' % self._cnxid)
-        session = self._session
-        old_cnx = session._current_cnx_id
+        self._cnx.set_cnxset()
         try:
-            session.set_cnx(self._cnxid)
-            session.set_cnxset()
-            try:
-                yield session
-            finally:
-                session.free_cnxset()
+            yield self._cnx
         finally:
-            if old_cnx is not None:
-                session.set_cnx(old_cnx)
+            self._cnx.free_cnxset()
 
     # Main Connection purpose in life #########################################
 
