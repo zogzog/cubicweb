@@ -935,6 +935,14 @@ class Session(RequestSessionBase):
             self.set_cnx()
             return self.__threaddata.cnx
 
+    @property
+    def _current_cnx_id(self):
+        """TRANSITIONAL PURPOSE"""
+        try:
+            return self.__threaddata.cnx.transactionid
+        except AttributeError:
+            return None
+
     def get_option_value(self, option, foreid=None):
         return self.repo.get_option_value(option, foreid)
 
@@ -1211,6 +1219,14 @@ class Session(RequestSessionBase):
         rset = self._execute(self, rql, kwargs, build_descr)
         rset.req = self
         return rset
+
+    def close_cnx(self, cnxid):
+        cnx = self._cnxs.get(cnxid, None)
+        if cnx is not None:
+            cnx.free_cnxset(ignoremode=True)
+            self._clear_thread_storage(cnx)
+            self._clear_cnx_storage(cnx)
+
 
     def _clear_thread_data(self, free_cnxset=True):
         """remove everything from the thread local storage, except connections set

@@ -53,7 +53,17 @@ class Transaction(object):
         self.datetime = time
         self.user_eid = ueid
         # should be set by the dbapi connection
-        self.req = None
+        self.req = None  # old style
+        self.cnx = None  # new style
+
+    def _execute(self, *args, **kwargs):
+        """execute a query using either the req or the cnx"""
+        if self.req is None:
+            execute = self.cnx.execute
+        else:
+            execute = self.req
+        return execute(*args, **kwargs)
+
 
     def __repr__(self):
         return '<Transaction %s by %s on %s>' % (
@@ -63,8 +73,8 @@ class Transaction(object):
         """return the user entity which has done the transaction,
         none if not found.
         """
-        return self.req.execute('Any X WHERE X eid %(x)s',
-                                {'x': self.user_eid}).get_entity(0, 0)
+        return self._execute('Any X WHERE X eid %(x)s',
+                             {'x': self.user_eid}).get_entity(0, 0)
 
     def actions_list(self, public=True):
         """return an ordered list of action effectued during that transaction
@@ -72,7 +82,11 @@ class Transaction(object):
         if public is true, return only 'public' action, eg not ones triggered
         under the cover by hooks.
         """
-        return self.req.cnx.transaction_actions(self.uuid, public)
+        if self.req is not None:
+            cnx = self.req.cnx
+        else:
+            cnx = self.cnx
+        return cnx.transaction_actions(self.uuid, public)
 
 
 class AbstractAction(object):
