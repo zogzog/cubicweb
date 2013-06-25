@@ -44,6 +44,15 @@ from rql import parse, nodes, RQLSyntaxError, TypeResolverException
 import cubicweb
 from cubicweb import ETYPE_NAME_MAP, ValidationError, Unauthorized
 
+try:
+    from cubicweb import server
+except ImportError:
+    # We need to lookup DEBUG from there,
+    # however a pure dbapi client may not have it.
+    class server(object): pass
+    server.DEBUG = False
+
+
 PURE_VIRTUAL_RTYPES = set(('identity', 'has_text',))
 VIRTUAL_RTYPES = set(('eid', 'identity', 'has_text',))
 
@@ -268,13 +277,25 @@ def has_perm(self, _cw, action, **kwargs):
         return False
 PermissionMixIn.has_perm = has_perm
 
+
 def check_perm(self, _cw, action, **kwargs):
     # NB: _cw may be a server transaction or a request object.
     #
     # check user is in an allowed group, if so that's enough internal
     # transactions should always stop there
+    DBG = False
+    if server.DEBUG & server.DBG_SEC:
+        if action in server._SECURITY_CAPS:
+            _self_str = str(self)
+            if server._SECURITY_ITEMS:
+                if any(item in _self_str for item in server._SECURITY_ITEMS):
+                    DBG = True
+            else:
+                DBG = True
     groups = self.get_groups(action)
     if _cw.user.matching_groups(groups):
+        if DBG:
+            print 'check_perm: %r %r: user matches %s' % (action, _self_str, groups)
         return
     # if 'owners' in allowed groups, check if the user actually owns this
     # object, if so that's enough
@@ -284,8 +305,15 @@ def check_perm(self, _cw, action, **kwargs):
     if 'owners' in groups and (
           kwargs.get('creating')
           or ('eid' in kwargs and _cw.user.owns(kwargs['eid']))):
+        if DBG:
+            print ('check_perm: %r %r: user is owner or creation time' %
+                   (action, _self_str))
         return
     # else if there is some rql expressions, check them
+    if DBG:
+        print ('check_perm: %r %r %s' %
+               (action, _self_str, [(rqlexpr, kwargs, rqlexpr.check(_cw, **kwargs))
+                                    for rqlexpr in self.get_rqlexprs(action)]))
     if any(rqlexpr.check(_cw, **kwargs)
            for rqlexpr in self.get_rqlexprs(action)):
         return
