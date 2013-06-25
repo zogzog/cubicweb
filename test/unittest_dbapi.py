@@ -22,41 +22,40 @@ from copy import copy
 from logilab.common import tempattr
 
 from cubicweb import ConnectionError, cwconfig, NoSelectableObject
-from cubicweb.dbapi import ProgrammingError
+from cubicweb.dbapi import ProgrammingError, _repo_connect
 from cubicweb.devtools.testlib import CubicWebTC
 
 
 class DBAPITC(CubicWebTC):
 
     def test_public_repo_api(self):
-        cnx = self.login('anon')
+        cnx = _repo_connect(self.repo, login='anon', password='anon')
         self.assertEqual(cnx.get_schema(), self.repo.schema)
         self.assertEqual(cnx.source_defs(), {'system': {'type': 'native', 'uri': 'system',
                                                         'use-cwuri-as-url': False}})
-        self.restore_connection() # proper way to close cnx
+        cnx.close()
         self.assertRaises(ProgrammingError, cnx.get_schema)
         self.assertRaises(ProgrammingError, cnx.source_defs)
 
     def test_db_api(self):
-        cnx = self.login('anon')
+        cnx = _repo_connect(self.repo, login='anon', password='anon')
         self.assertEqual(cnx.rollback(), None)
         self.assertEqual(cnx.commit(), None)
-        self.restore_connection() # proper way to close cnx
-        #self.assertEqual(cnx.close(), None)
+        cnx.close()
         self.assertRaises(ProgrammingError, cnx.rollback)
         self.assertRaises(ProgrammingError, cnx.commit)
         self.assertRaises(ProgrammingError, cnx.close)
 
     def test_api(self):
-        cnx = self.login('anon')
+        cnx = _repo_connect(self.repo, login='anon', password='anon')
         self.assertEqual(cnx.user(None).login, 'anon')
         self.assertEqual(cnx.describe(1), (u'CWSource', u'system', None))
-        self.restore_connection() # proper way to close cnx
+        cnx.close()
         self.assertRaises(ProgrammingError, cnx.user, None)
         self.assertRaises(ProgrammingError, cnx.describe, 1)
 
     def test_shared_data_api(self):
-        cnx = self.login('anon')
+        cnx = _repo_connect(self.repo, login='anon', password='anon')
         self.assertEqual(cnx.get_shared_data('data'), None)
         cnx.set_shared_data('data', 4)
         self.assertEqual(cnx.get_shared_data('data'), 4)
@@ -65,16 +64,17 @@ class DBAPITC(CubicWebTC):
         self.assertEqual(cnx.get_shared_data('data'), None)
         cnx.set_shared_data('data', 4)
         self.assertEqual(cnx.get_shared_data('data'), 4)
-        self.restore_connection() # proper way to close cnx
+        cnx.close()
         self.assertRaises(ProgrammingError, cnx.check)
         self.assertRaises(ProgrammingError, cnx.set_shared_data, 'data', 0)
         self.assertRaises(ProgrammingError, cnx.get_shared_data, 'data')
 
     def test_web_compatible_request(self):
         config = cwconfig.CubicWebNoAppConfiguration()
-        with tempattr(self.cnx.vreg, 'config', config):
-            self.cnx.use_web_compatible_requests('http://perdu.com')
-            req = self.cnx.request()
+        cnx = _repo_connect(self.repo, login='admin', password='gingkow')
+        with tempattr(cnx.vreg, 'config', config):
+            cnx.use_web_compatible_requests('http://perdu.com')
+            req = cnx.request()
             self.assertEqual(req.base_url(), 'http://perdu.com')
             self.assertEqual(req.from_controller(), 'view')
             self.assertEqual(req.relative_path(), '')
