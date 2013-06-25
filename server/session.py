@@ -416,6 +416,8 @@ class Connection(RequestSessionBase):
 
     """
 
+    is_request = False
+
     def __init__(self, cnxid, session, rewriter):
         # using super(Connection, self) confuse some test hack
         RequestSessionBase.__init__(self, session.vreg)
