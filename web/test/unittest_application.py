@@ -293,19 +293,6 @@ class ApplicationTC(CubicWebTC):
         self.commit()
         self.assertEqual(vreg.property_value('ui.language'), 'en')
 
-    def test_fb_login_concept(self):
-        """see data/views.py"""
-        self.set_auth_mode('cookie', 'anon')
-        self.login('anon')
-        req = self.request()
-        origcnx = req.cnx
-        req.form['__fblogin'] = u'turlututu'
-        page = self.app.handle_request(req, '')
-        self.assertFalse(req.cnx is origcnx)
-        self.assertEqual(req.user.login, 'turlututu')
-        self.assertTrue('turlututu' in page, page)
-        req.cnx.close() # avoid warning
-
     # authentication tests ####################################################
 
     def test_http_auth_no_anon(self):
