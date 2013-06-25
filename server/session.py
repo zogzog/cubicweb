@@ -483,6 +483,10 @@ class Connection(RequestSessionBase):
     def data(self):
         return self._session_data
 
+    @property
+    def rql_rewriter(self):
+        return self._rewriter
+
     def get_shared_data(self, key, default=None, pop=False, txdata=False):
         """return value associated to `key` in session data"""
         if txdata:
