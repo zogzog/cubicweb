@@ -603,8 +603,8 @@ class Connection(object):
 
     def request(self):
         if self._web_request:
-            from cubicweb.web.request import CubicWebRequestBase
-            req = CubicWebRequestBase(self.vreg, False)
+            from cubicweb.web.request import DBAPICubicWebRequestBase
+            req = DBAPICubicWebRequestBase(self.vreg, False)
             req.get_header = lambda x, default=None: default
             req.set_session = lambda session: DBAPIRequest.set_session(
                 req, session)
