@@ -72,6 +72,23 @@ class RequestSessionBase(object):
         self.local_perm_cache = {}
         self._ = unicode
 
+    def _set_user(self, orig_user):
+        """set the user for this req_session_base
+
+        A special method is needed to ensure the linked user is linked to the
+        connection too.
+        """
+        # cnx validity is checked by the call to .user_info
+        rset = self.eid_rset(orig_user.eid, 'CWUser')
+        user_cls = self.vreg['etypes'].etype_class('CWUser')
+        user = user_cls(self, rset, row=0, groups=orig_user.groups,
+                        properties=orig_user.properties)
+        user.cw_attr_cache['login'] = orig_user.login # cache login
+        self.user = user
+        self.set_entity_cache(user)
+        self.set_language(user.prefered_language())
+
+
     def set_language(self, lang):
         """install i18n configuration for `lang` translation.
 
