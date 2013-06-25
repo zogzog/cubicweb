@@ -919,7 +919,10 @@ def cnx_meth(meth_name):
 
     This is to be used by session"""
     def meth_from_cnx(session, *args, **kwargs):
-        return getattr(session._cnx, meth_name)(*args, **kwargs)
+        result = getattr(session._cnx, meth_name)(*args, **kwargs)
+        if getattr(result, '_cw', None) is not None:
+            result._cw = session
+        return result
     return meth_from_cnx
 
 class Timestamp(object):
