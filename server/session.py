@@ -1591,6 +1591,7 @@ class InternalManager(object):
         self.eid = -1
         self.login = u'__internal_manager__'
         self.properties = {}
+        self.groups = set(['managers'])
 
     def matching_groups(self, groups):
         return 1
