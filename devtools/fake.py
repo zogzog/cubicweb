@@ -24,7 +24,7 @@ from logilab.database import get_db_helper
 
 from cubicweb.req import RequestSessionBase
 from cubicweb.cwvreg import CWRegistryStore
-from cubicweb.web.request import CubicWebRequestBase
+from cubicweb.web.request import ConnectionCubicWebRequestBase
 
 from cubicweb.devtools import BASE_URL, BaseApptestConfiguration
 
@@ -53,7 +53,7 @@ class FakeConfig(dict, BaseApptestConfiguration):
         return {'system': {'db-driver': 'sqlite'}}
 
 
-class FakeRequest(CubicWebRequestBase):
+class FakeRequest(ConnectionCubicWebRequestBase):
     """test implementation of an cubicweb request object"""
 
     def __init__(self, *args, **kwargs):

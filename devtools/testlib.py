@@ -40,7 +40,7 @@ from logilab.common.deprecation import deprecated, class_deprecated
 from logilab.common.shellutils import getlogin
 
 from cubicweb import ValidationError, NoSelectableObject, AuthenticationError
-from cubicweb import cwconfig, dbapi, devtools, web, server
+from cubicweb import cwconfig, dbapi, devtools, web, server, repoapi
 from cubicweb.utils import json
 from cubicweb.sobjects import notification
 from cubicweb.web import Redirect, application
@@ -146,13 +146,13 @@ class TestCaseConnectionProxy(object):
         return getattr(self.cnx, attrname)
 
     def __enter__(self):
-        return self.cnx.__enter__()
+        # already open
+        return self.cnx
 
     def __exit__(self, exctype, exc, tb):
         try:
             return self.cnx.__exit__(exctype, exc, tb)
         finally:
-            self.cnx.close()
             self.testcase.restore_connection()
 
 # base class for cubicweb tests requiring a full cw environments ###############
@@ -181,57 +181,87 @@ class CubicWebTC(TestCase):
                   # stay on connection for leak detection purpose
 
     def __init__(self, *args, **kwargs):
-        self._cnx = None  # current connection
+        self._admin_session = None
+        self._admin_clt_cnx = None
+        self._current_session = None
+        self._current_clt_cnx = None
         self.repo = None
-        self.websession = None
         super(CubicWebTC, self).__init__(*args, **kwargs)
 
     # repository connection handling ###########################################
 
-    # Too much complicated stuff. the class doesn't need to bear the repo anymore
     def set_cnx(self, cnx):
-        self._cnxs.add(cnx)
-        self._cnx = cnx
+        # XXX we want to deprecate this
+        assert getattr(cnx, '_session', None) is not None
+        if cnx is self._admin_clt_cnx:
+            self._pop_custom_cnx()
+        else:
+            self._cnxs.add(cnx) # register the cns to make sure it is removed
+            self._current_session = cnx._session
+            self._current_clt_cnx = cnx
 
     @property
     def cnx(self):
-        return self._cnx
+        # XXX we want to deprecate this
+        clt_cnx = self._current_clt_cnx
+        if clt_cnx is None:
+            clt_cnx = self._admin_clt_cnx
+        return clt_cnx
 
     def _close_cnx(self):
+        """ensure that all cnx used by a test have been closed"""
         for cnx in list(self._cnxs):
-            if not cnx._closed:
+            if cnx._open and not cnx._session.closed:
                 cnx.rollback()
                 cnx.close()
             self._cnxs.remove(cnx)
 
     @property
     def session(self):
-        """return current server side session (using default manager account)"""
-        session = self.repo._sessions[self.cnx.sessionid]
+        """return current server side session"""
+        # XXX We want to use a srv_connection instead and deprecate this
+        # property
+        session = self._current_session
+        if session is None:
+            session = self._admin_session
+            session.set_cnx(self._admin_clt_cnx._cnxid)
         session.set_cnxset()
         return session
 
+    @property
+    def websession(self):
+        return self.session
+
+    @property
+    def adminsession(self):
+        """return current server side session (using default manager account)"""
+        return self._admin_session
+
     def login(self, login, **kwargs):
         """return a connection for the given login/password"""
+        __ = kwargs.pop('autoclose', True) # not used anymore
         if login == self.admlogin:
-            self.restore_connection()
             # definitly don't want autoclose when used as a context manager
-            return self.cnx
-        autoclose = kwargs.pop('autoclose', True)
-        if not kwargs:
-            kwargs['password'] = str(login)
-        self.set_cnx(dbapi._repo_connect(self.repo, unicode(login), **kwargs))
-        self.websession = dbapi.DBAPISession(self.cnx)
-        if autoclose:
-            return TestCaseConnectionProxy(self, self.cnx)
-        return self.cnx
+            clt_cnx = repoapi.ClientConnection(self._admin_session)
+        else:
+            if not kwargs:
+                kwargs['password'] = str(login)
+            clt_cnx = repoapi.connect(self.repo, login, **kwargs)
+        self.set_cnx(clt_cnx)
+        clt_cnx.__enter__()
+        return TestCaseConnectionProxy(self, clt_cnx)
 
     def restore_connection(self):
-        if not self.cnx is self._orig_cnx[0]:
-            if not self.cnx._closed:
-                self.cnx.close()
-        cnx, self.websession = self._orig_cnx
-        self.set_cnx(cnx)
+        self._pop_custom_cnx()
+
+    def _pop_custom_cnx(self):
+        if self._current_clt_cnx is not None:
+            if self._current_clt_cnx._open:
+                self._current_clt_cnx.close()
+            if not  self._current_session.closed:
+                self.repo.close(self._current_session.id)
+            self._current_clt_cnx = None
+            self._current_session = None
 
     #XXX this doesn't need to a be classmethod anymore
     def _init_repo(self):
@@ -243,19 +273,36 @@ class CubicWebTC(TestCase):
         db_handler = devtools.get_test_db_handler(self.config)
         db_handler.build_db_cache(self.test_db_id, self.pre_setup_database)
 
-        self.repo, cnx = db_handler.get_repo_and_cnx(self.test_db_id)
+        db_handler.restore_database(self.test_db_id)
+        self.repo = db_handler.get_repo(startup=True)
+        # get an admin session (without actual login)
+        sources = db_handler.config.sources()
+        login = unicode(sources['admin']['login'])
+        with self.repo.internal_session() as session:
+            rset = session.execute('CWUser U WHERE U login %(u)s', {'u': login})
+            user = rset.get_entity(0, 0)
+            user.groups
+            user.properties
+            from cubicweb.server.session import Session
+            self._admin_session = Session(user, self.repo)
+            self.repo._sessions[self._admin_session.id] =  self._admin_session
+            self._admin_session.user._cw = self._admin_session
+        self._admin_clt_cnx = repoapi.ClientConnection(self._admin_session)
+
         # no direct assignation to cls.cnx anymore.
         # cnx is now an instance property that use a class protected attributes.
-        self.set_cnx(cnx)
-        self.websession = dbapi.DBAPISession(cnx, self.admlogin)
-        self._orig_cnx = (cnx, self.websession)
+        self._cnxs.add(self._admin_clt_cnx)
+        self._admin_clt_cnx.__enter__()
         self.config.repository = lambda x=None: self.repo
 
     # db api ##################################################################
 
     @nocoverage
     def cursor(self, req=None):
-        return self.cnx.cursor(req or self.request())
+        if req is not None:
+            return req.cnx
+        else:
+            return self.cnx
 
     @nocoverage
     def execute(self, rql, args=None, eidkey=None, req=None):
@@ -287,18 +334,11 @@ class CubicWebTC(TestCase):
     requestcls = fake.FakeRequest
     def request(self, rollbackfirst=False, url=None, headers={}, **kwargs):
         """return a web ui request"""
-        req = self.requestcls(self.vreg, url=url, headers=headers, form=kwargs)
         if rollbackfirst:
-            self.websession.cnx.rollback()
-        req.set_session(self.websession)
+            self.cnx.rollback()
+        req = self.requestcls(self.vreg, url=url, headers=headers, form=kwargs)
+        req.set_cnx(self.cnx)
         return req
-
-    @property
-    def adminsession(self):
-        """return current server side session (using default manager account)"""
-        return self.repo._sessions[self._orig_cnx[0].sessionid]
-
-
 
     # server side db api #######################################################
 
@@ -409,6 +449,14 @@ class CubicWebTC(TestCase):
 
     def tearDown(self):
         # XXX hack until logilab.common.testlib is fixed
+        if self._admin_clt_cnx is not None:
+            if self._admin_clt_cnx._open:
+                self._admin_clt_cnx.close()
+            self._admin_clt_cnx = None
+        if self._admin_session is not None:
+            if not self._admin_session.closed:
+                self.repo.close(self._admin_session.id)
+            self._admin_session = None
         while self._cleanups:
             cleanup, args, kwargs = self._cleanups.pop(-1)
             cleanup(*args, **kwargs)
@@ -437,8 +485,7 @@ class CubicWebTC(TestCase):
     def user(self, req=None):
         """return the application schema"""
         if req is None:
-            req = self.request()
-            return self.cnx.user(req)
+            return self.request().user
         else:
             return req.user
 

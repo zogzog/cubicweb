@@ -30,6 +30,12 @@ class SessionTC(CubicWebTC):
 
     def test_hooks_control(self):
         session = self.session
+        # this test check the "old" behavior of session with automatic connection management
+        # close the default cnx, we do nto want it to interfer with the test
+        self.cnx.close()
+        # open a dedicated one
+        session.set_cnx('Some-random-cnx-unrelated-to-the-default-one')
+        # go test go
         self.assertEqual(HOOKS_ALLOW_ALL, session.hooks_mode)
         self.assertEqual(set(), session.disabled_hook_categories)
         self.assertEqual(set(), session.enabled_hook_categories)
