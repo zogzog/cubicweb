@@ -854,17 +854,9 @@ class Repository(object):
         See :class:`cubicweb.dbapi.Connection.call_service`
         and :class:`cubicweb.server.Service`
         """
+        # XXX lack a txid
         session = self._get_session(sessionid)
-        return self._call_service_with_session(session, regid, **kwargs)
-
-    def _call_service_with_session(self, session, regid, **kwargs):
-        self.info('calling service %s synchronously', regid)
-        session.set_cnxset()
-        try:
-            service = session.vreg['services'].select(regid, session, **kwargs)
-            return service.call(**kwargs)
-        finally:
-            session.free_cnxset()
+        return session._cnx.call_service(regid, **kwargs)
 
     def user_info(self, sessionid, props=None):
         """this method should be used by client to:

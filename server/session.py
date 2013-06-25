@@ -1017,6 +1017,15 @@ class Connection(RequestSessionBase):
 
     # resource accessors ######################################################
 
+    def call_service(self, regid, **kwargs):
+        self.info('calling service %s', regid)
+        self.set_cnxset()
+        try:
+            service = self.vreg['services'].select(regid, self, **kwargs)
+            return service.call(**kwargs)
+        finally:
+            self.free_cnxset()
+
     def system_sql(self, sql, args=None, rollback_on_failure=True):
         """return a sql cursor on the system database"""
         if sql.split(None, 1)[0].upper() != 'SELECT':
@@ -1400,9 +1409,7 @@ class Session(RequestSessionBase):
 
     # server-side service call #################################################
 
-    def call_service(self, regid, **kwargs):
-        return self.repo._call_service_with_session(self, regid,
-                                                    **kwargs)
+    call_service = cnx_meth('call_service')
 
     # request interface #######################################################
 
