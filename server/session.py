@@ -419,7 +419,7 @@ class Connection(RequestSessionBase):
 
     is_request = False
 
-    def __init__(self, cnxid, session):
+    def __init__(self, session, cnxid):
         # using super(Connection, self) confuse some test hack
         RequestSessionBase.__init__(self, session.vreg)
         #: connection unique id
@@ -1259,7 +1259,7 @@ class Session(RequestSessionBase):
                     raise SessionClosedError('try to access connections set on a closed session %s' % self.id)
                 cnx = self._cnxs[cnxid]
             except KeyError:
-                cnx = Connection(cnxid, self)
+                cnx = Connection(self, cnxid=cnxid)
                 self._cnxs[cnxid] = cnx
         return cnx
 
