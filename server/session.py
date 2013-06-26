@@ -431,11 +431,15 @@ class Connection(RequestSessionBase):
 
     is_request = False
 
-    def __init__(self, session, cnxid):
+    def __init__(self, session, cnxid, session_handled=False):
         # using super(Connection, self) confuse some test hack
         RequestSessionBase.__init__(self, session.vreg)
         #: connection unique id
         self.connectionid = cnxid
+        #: self._session_handled
+        #: are the life cycle of this Connection automatically controlled by the
+        #: Session This is the old backward compatibility mode
+        self._session_handled = session_handled
         #: reentrance handling
         self.ctx_count = 0
         #: count the number of entry in a context needing a cnxset
@@ -1300,13 +1304,15 @@ class Session(RequestSessionBase):
                     raise SessionClosedError('try to access connections set on'
                                              ' a closed session %s' % self.id)
                 cnx = self._cnxs[cnxid]
+                assert cnx._session_handled
             except KeyError:
-                cnx = Connection(self, cnxid=cnxid)
+                cnx = Connection(self, cnxid=cnxid, session_handled=True)
                 self._cnxs[cnxid] = cnx
         return cnx
 
     def close_cnx(self, cnx):
         """Close a Connection related to a session"""
+        assert cnx._session_handled
         cnx.free_cnxset(ignoremode=True)
         self._cnxs.pop(cnx.connectionid, None)
         try:
@@ -1322,7 +1328,10 @@ class Session(RequestSessionBase):
         Connection is created if necessary"""
         if cnxid is None:
             cnxid = threading.currentThread().getName()
-        self.__threaddata.cnx = self.get_cnx(cnxid)
+        cnx = self.get_cnx(cnxid)
+        # New style session should not be accesed through the session.
+        assert cnx._session_handled
+        self.__threaddata.cnx = cnx
 
     @property
     def _cnx(self):
