@@ -17,7 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 
 from cubicweb.devtools.testlib import CubicWebTC
-from cubicweb.server.session import HOOKS_ALLOW_ALL, HOOKS_DENY_ALL
+from cubicweb.server.session import HOOKS_ALLOW_ALL, HOOKS_DENY_ALL, Connection
 
 class InternalSessionTC(CubicWebTC):
     def test_dbapi_query(self):
@@ -66,6 +66,17 @@ class SessionTC(CubicWebTC):
         self.assertEqual(HOOKS_ALLOW_ALL, session.hooks_mode, session.HOOKS_ALLOW_ALL)
         self.assertEqual(set(), session.disabled_hook_categories)
         self.assertEqual(set(), session.enabled_hook_categories)
+
+    def test_explicite_connection(self):
+        with Connection(self.session) as cnx:
+            rset = cnx.execute('Any X LIMIT 1 WHERE X is CWUser')
+            self.assertEqual(1, len(rset))
+            user = rset.get_entity(0, 0)
+            user.cw_delete()
+            cnx.rollback()
+            new_user = cnx.entity_from_eid(user.eid)
+            self.assertIsNotNone(new_user.login)
+
 
 
 if __name__ == '__main__':
