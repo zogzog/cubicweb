@@ -149,7 +149,6 @@ class ClientConnection(RequestSessionBase):
         self._session = session # XXX there is no real reason to keep the
                                 # session around function still using it should
                                 # be rewritten and migrated.
-        self._cnxid = None
         self._cnx = None
         self._open = None
         self._web_request = False
@@ -160,15 +159,14 @@ class ClientConnection(RequestSessionBase):
     def __enter__(self):
         assert self._open is None
         self._open = True
-        self._cnxid = '%s-%s' % (self._session.id, uuid4().hex)
-        self._cnx = self._session.get_cnx(self._cnxid)
+        self._cnx = self._session.new_cnx()
+        self._cnx.__enter__()
         self._cnx.ctx_count += 1
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._open = False
-        self._cnxid = None
         self._cnx.ctx_count -= 1
-        self._session.close_cnx(self._cnx)
+        self._cnx.__exit__(exc_type, exc_val, exc_tb)
         self._cnx = None
         if self._autoclose_session:
             # we have to call repo.close to unsure the repo properly forget the

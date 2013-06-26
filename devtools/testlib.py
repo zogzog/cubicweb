@@ -224,7 +224,10 @@ class CubicWebTC(TestCase):
         session = self._current_session
         if session is None:
             session = self._admin_session
-            session.set_cnx(self._admin_clt_cnx._cnxid)
+            # bypassing all sanity to use the same repo cnx in the session we
+            # can't call set_cnx as the Connection is not managed by the
+            # session.
+            session._Session__threaddata.cnx = self._admin_clt_cnx._cnx
         session.set_cnxset()
         return session
 
