@@ -977,34 +977,35 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
 
     def add_info(self, session, entity, source, extid, complete):
         """add type and source info for an eid into the system table"""
-        # begin by inserting eid/type/source/extid into the entities table
-        if extid is not None:
-            assert isinstance(extid, str)
-            extid = b64encode(extid)
-        uri = 'system' if source.copy_based_source else source.uri
-        attrs = {'type': entity.cw_etype, 'eid': entity.eid, 'extid': extid,
-                 'source': uri, 'asource': source.uri, 'mtime': datetime.utcnow()}
-        self._handle_insert_entity_sql(session, self.sqlgen.insert('entities', attrs), attrs)
-        # insert core relations: is, is_instance_of and cw_source
-        try:
-            self._handle_is_relation_sql(session, 'INSERT INTO is_relation(eid_from,eid_to) VALUES (%s,%s)',
-                                         (entity.eid, eschema_eid(session, entity.e_schema)))
-        except IndexError:
-            # during schema serialization, skip
-            pass
-        else:
-            for eschema in entity.e_schema.ancestors() + [entity.e_schema]:
-                self._handle_is_relation_sql(session,
-                                             'INSERT INTO is_instance_of_relation(eid_from,eid_to) VALUES (%s,%s)',
-                                             (entity.eid, eschema_eid(session, eschema)))
-        if 'CWSource' in self.schema and source.eid is not None: # else, cw < 3.10
-            self._handle_is_relation_sql(session, 'INSERT INTO cw_source_relation(eid_from,eid_to) VALUES (%s,%s)',
-                                         (entity.eid, source.eid))
-        # now we can update the full text index
-        if self.do_fti and self.need_fti_indexation(entity.cw_etype):
-            if complete:
-                entity.complete(entity.e_schema.indexable_attributes())
-            self.index_entity(session, entity=entity)
+        with session.ensure_cnx_set:
+            # begin by inserting eid/type/source/extid into the entities table
+            if extid is not None:
+                assert isinstance(extid, str)
+                extid = b64encode(extid)
+            uri = 'system' if source.copy_based_source else source.uri
+            attrs = {'type': entity.cw_etype, 'eid': entity.eid, 'extid': extid,
+                     'source': uri, 'asource': source.uri, 'mtime': datetime.utcnow()}
+            self._handle_insert_entity_sql(session, self.sqlgen.insert('entities', attrs), attrs)
+            # insert core relations: is, is_instance_of and cw_source
+            try:
+                self._handle_is_relation_sql(session, 'INSERT INTO is_relation(eid_from,eid_to) VALUES (%s,%s)',
+                                             (entity.eid, eschema_eid(session, entity.e_schema)))
+            except IndexError:
+                # during schema serialization, skip
+                pass
+            else:
+                for eschema in entity.e_schema.ancestors() + [entity.e_schema]:
+                    self._handle_is_relation_sql(session,
+                                                 'INSERT INTO is_instance_of_relation(eid_from,eid_to) VALUES (%s,%s)',
+                                                 (entity.eid, eschema_eid(session, eschema)))
+            if 'CWSource' in self.schema and source.eid is not None: # else, cw < 3.10
+                self._handle_is_relation_sql(session, 'INSERT INTO cw_source_relation(eid_from,eid_to) VALUES (%s,%s)',
+                                             (entity.eid, source.eid))
+            # now we can update the full text index
+            if self.do_fti and self.need_fti_indexation(entity.cw_etype):
+                if complete:
+                    entity.complete(entity.e_schema.indexable_attributes())
+                self.index_entity(session, entity=entity)
 
     def update_info(self, session, entity, need_fti_update):
         """mark entity as being modified, fulltext reindex if needed"""
@@ -1227,17 +1228,19 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         raise `NoSuchTransaction` if there is no such transaction of if the
         session's user isn't allowed to see it.
         """
-        restr = {'tx_uuid': txuuid}
-        sql = self.sqlgen.select('transactions', restr, ('tx_time', 'tx_user'))
-        cu = self.doexec(session, sql, restr)
-        try:
-            time, ueid = cu.fetchone()
-        except TypeError:
-            raise tx.NoSuchTransaction(txuuid)
-        if not (session.user.is_in_group('managers')
-                or session.user.eid == ueid):
-            raise tx.NoSuchTransaction(txuuid)
-        return time, ueid
+        with session.ensure_cnx_set:
+            restr = {'tx_uuid': txuuid}
+            sql = self.sqlgen.select('transactions', restr,
+                                     ('tx_time', 'tx_user'))
+            cu = self.doexec(session, sql, restr)
+            try:
+                time, ueid = cu.fetchone()
+            except TypeError:
+                raise tx.NoSuchTransaction(txuuid)
+            if not (session.user.is_in_group('managers')
+                    or session.user.eid == ueid):
+                raise tx.NoSuchTransaction(txuuid)
+            return time, ueid
 
     def _reedit_entity(self, entity, changes, err):
         session = entity._cw

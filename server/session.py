@@ -24,6 +24,8 @@ from time import time
 from uuid import uuid4
 from warnings import warn
 import json
+import functools
+from contextlib import contextmanager
 
 from logilab.common.deprecation import deprecated
 from logilab.common.textutils import unormalize
@@ -360,6 +362,16 @@ class CnxSetTracker(object):
                 timeout -= time() - start
             return tuple(self._record)
 
+
+def _with_cnx_set(func):
+    """decorator for Connection method that ensure they run with a cnxset """
+    @functools.wraps(func)
+    def wrapper(cnx, *args, **kwargs):
+        with cnx.ensure_cnx_set:
+            return func(cnx, *args, **kwargs)
+    return wrapper
+
+
 class Connection(RequestSessionBase):
     """Repository Connection
 
@@ -426,6 +438,12 @@ class Connection(RequestSessionBase):
         self.connectionid = cnxid
         #: reentrance handling
         self.ctx_count = 0
+        #: count the number of entry in a context needing a cnxset
+        self._cnxset_count = 0
+        #: Boolean for compat with the older explicite set_cnxset/free_cnx API
+        #: When a call set_cnxset is done, no automatic freeing will be done
+        #: until free_cnx is called.
+        self._auto_free_cnx_set = True
 
         #: server.Repository object
         self.repo = session.repo
@@ -541,7 +559,7 @@ class Connection(RequestSessionBase):
                 self._cnxset = new_cnxset
                 self.ctx_count += 1
 
-    def set_cnxset(self):
+    def _set_cnxset(self):
         """the connection need a connections set to execute some queries"""
         if self.cnxset is None:
             cnxset = self.repo._get_cnxset()
@@ -557,7 +575,7 @@ class Connection(RequestSessionBase):
                 raise
         return self.cnxset
 
-    def free_cnxset(self, ignoremode=False):
+    def _free_cnxset(self, ignoremode=False):
         """the connection is no longer using its connections set, at least for some time"""
         # cnxset may be none if no operation has been done since last commit
         # or rollback
@@ -568,6 +586,29 @@ class Connection(RequestSessionBase):
             finally:
                 cnxset.cnxset_freed()
                 self.repo._free_cnxset(cnxset)
+
+    def set_cnxset(self):
+        self._auto_free_cnx_set = False
+        return self._set_cnxset()
+
+    def free_cnxset(self, ignoremode=False):
+        self._auto_free_cnx_set = True
+        return self._free_cnxset(ignoremode=ignoremode)
+
+
+    @property
+    @contextmanager
+    def ensure_cnx_set(self):
+        assert self._cnxset_count >= 0
+        if self._cnxset_count == 0:
+            self._set_cnxset()
+        try:
+            self._cnxset_count += 1
+            yield
+        finally:
+            self._cnxset_count = max(self._cnxset_count - 1, 0)
+            if self._cnxset_count == 0 and self._auto_free_cnx_set:
+                self._free_cnxset()
 
 
     # Entity cache management #################################################
@@ -869,6 +910,7 @@ class Connection(RequestSessionBase):
     def source_defs(self):
         return self.repo.source_defs()
 
+    @_with_cnx_set
     def describe(self, eid, asdict=False):
         """return a tuple (type, sourceuri, extid) for the entity with id <eid>"""
         metas = self.repo.type_and_source_from_eid(eid, self)
@@ -877,13 +919,14 @@ class Connection(RequestSessionBase):
        # XXX :-1 for cw compat, use asdict=True for full information
         return metas[:-1]
 
-
+    @_with_cnx_set
     def source_from_eid(self, eid):
         """return the source where the entity with id <eid> is located"""
         return self.repo.source_from_eid(eid, self)
 
     # core method #############################################################
 
+    @_with_cnx_set
     def execute(self, rql, kwargs=None, eid_key=None, build_descr=True):
         """db-api like method directly linked to the querier execute method.
 
@@ -1018,24 +1061,22 @@ class Connection(RequestSessionBase):
 
     # resource accessors ######################################################
 
+    @_with_cnx_set
     def call_service(self, regid, **kwargs):
         json.dumps(kwargs) # This line ensure that people use serialisable
                            # argument for call service. this is very important
                            # to enforce that from start to make sure RPC
                            # version is available.
         self.info('calling service %s', regid)
-        self.set_cnxset()
-        try:
-            service = self.vreg['services'].select(regid, self, **kwargs)
-            result = service.call(**kwargs)
-            json.dumps(result) # This line ensure that service have serialisable
-                               # output. this is very important to enforce that
-                               # from start to make sure RPC version is
-                               # available.
-            return result
-        finally:
-            self.free_cnxset()
+        service = self.vreg['services'].select(regid, self, **kwargs)
+        result = service.call(**kwargs)
+        json.dumps(result) # This line ensure that service have serialisable
+                           # output. this is very important to enforce that
+                           # from start to make sure RPC version is
+                           # available.
+        return result
 
+    @_with_cnx_set
     def system_sql(self, sql, args=None, rollback_on_failure=True):
         """return a sql cursor on the system database"""
         if sql.split(None, 1)[0].upper() != 'SELECT':
@@ -1385,6 +1426,7 @@ class Session(RequestSessionBase):
                 raise SessionClosedError('try to set connections set on a closed session %s' % self.id)
             return self._cnx.set_cnxset()
     free_cnxset = cnx_meth('free_cnxset')
+    ensure_cnx_set = cnx_attr('ensure_cnx_set')
 
     def _touch(self):
         """update latest session usage timestamp and reset mode to read"""

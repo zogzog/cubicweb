@@ -189,11 +189,7 @@ class ClientConnection(RequestSessionBase):
         session object"""
         if not self._open:
             raise ProgrammingError('Closed connection %s' % self._cnxid)
-        self._cnx.set_cnxset()
-        try:
-            yield self._cnx
-        finally:
-            self._cnx.free_cnxset()
+        yield self._cnx
 
     # Main Connection purpose in life #########################################
 

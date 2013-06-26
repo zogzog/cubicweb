@@ -324,7 +324,8 @@ class BasePlannerTC(BaseQuerierTC):
                 select.solutions.sort()
         else:
             rqlst.solutions.sort()
-        return self.o.plan_factory(rqlst, kwargs, self.session)
+        with self.session.ensure_cnx_set:
+            return self.o.plan_factory(rqlst, kwargs, self.session)
 
 
 # monkey patch some methods to get predicatable results #######################
