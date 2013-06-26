@@ -68,7 +68,7 @@ class SessionTC(CubicWebTC):
         self.assertEqual(set(), session.enabled_hook_categories)
 
     def test_explicite_connection(self):
-        with Connection(self.session) as cnx:
+        with self.session.new_cnx() as cnx:
             rset = cnx.execute('Any X LIMIT 1 WHERE X is CWUser')
             self.assertEqual(1, len(rset))
             user = rset.get_entity(0, 0)

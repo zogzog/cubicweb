@@ -1315,6 +1315,13 @@ class Session(RequestSessionBase):
         # XXX backward compat with dbapi. deprecate me ASAP.
         return self.user.login
 
+    def new_cnx(self):
+        """Return a new Connection object linked to the session
+
+        The returned Connection will *not* be managed by the Session.
+        """
+        return Connection(self)
+
     def get_cnx(self, cnxid):
         """return the <cnxid> connection attached to this session
 
