@@ -435,6 +435,7 @@ class Connection(RequestSessionBase):
         # using super(Connection, self) confuse some test hack
         RequestSessionBase.__init__(self, session.vreg)
         #: connection unique id
+        self._open = None
         self.connectionid = cnxid
         #: self._session_handled
         #: are the life cycle of this Connection automatically controlled by the
@@ -502,6 +503,21 @@ class Connection(RequestSessionBase):
             self.user = session.user
         else:
             self._set_user(session.user)
+
+
+    # live cycle handling ####################################################
+
+    def __enter__(self):
+        assert self._open is None # first opening
+        self._open = True
+        return self
+
+    def __exit__(self, exctype=None, excvalue=None, tb=None):
+        assert self._open # actually already open
+        self.free_cnxset(ignoremode=True)
+        self.clear()
+        self._open = False
+
 
 
     # shared data handling ###################################################
@@ -1308,19 +1324,19 @@ class Session(RequestSessionBase):
             except KeyError:
                 cnx = Connection(self, cnxid=cnxid, session_handled=True)
                 self._cnxs[cnxid] = cnx
+                cnx.__enter__()
         return cnx
 
     def close_cnx(self, cnx):
         """Close a Connection related to a session"""
         assert cnx._session_handled
-        cnx.free_cnxset(ignoremode=True)
+        cnx.__exit__()
         self._cnxs.pop(cnx.connectionid, None)
         try:
             if self.__threaddata.cnx is cnx:
                 del self.__threaddata.cnx
         except AttributeError:
             pass
-        cnx.clear()
 
     def set_cnx(self, cnxid=None):
         """set the default connection of the current thread to <cnxid>
