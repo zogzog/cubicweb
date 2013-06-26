@@ -497,18 +497,19 @@ class Repository(object):
 
     def _build_user(self, session, eid):
         """return a CWUser entity for user with the given eid"""
-        cls = self.vreg['etypes'].etype_class('CWUser')
-        st = cls.fetch_rqlst(session.user, ordermethod=None)
-        st.add_eid_restriction(st.get_variable('X'), 'x', 'Substitute')
-        rset = session.execute(st.as_string(), {'x': eid})
-        assert len(rset) == 1, rset
-        cwuser = rset.get_entity(0, 0)
-        # pylint: disable=W0104
-        # prefetch / cache cwuser's groups and properties. This is especially
-        # useful for internal sessions to avoid security insertions
-        cwuser.groups
-        cwuser.properties
-        return cwuser
+        with session.ensure_cnx_set:
+            cls = self.vreg['etypes'].etype_class('CWUser')
+            st = cls.fetch_rqlst(session.user, ordermethod=None)
+            st.add_eid_restriction(st.get_variable('X'), 'x', 'Substitute')
+            rset = session.execute(st.as_string(), {'x': eid})
+            assert len(rset) == 1, rset
+            cwuser = rset.get_entity(0, 0)
+            # pylint: disable=W0104
+            # prefetch / cache cwuser's groups and properties. This is especially
+            # useful for internal sessions to avoid security insertions
+            cwuser.groups
+            cwuser.properties
+            return cwuser
 
     # public (dbapi) interface ################################################
 

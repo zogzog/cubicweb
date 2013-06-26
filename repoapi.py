@@ -166,10 +166,9 @@ class ClientConnection(RequestSessionBase):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._open = False
-        cnxid = self._cnxid
         self._cnxid = None
         self._cnx.ctx_count -= 1
-        self._session.close_cnx(cnxid)
+        self._session.close_cnx(self._cnx)
         self._cnx = None
         if self._autoclose_session:
             # we have to call repo.close to unsure the repo properly forget the

@@ -1305,13 +1305,11 @@ class Session(RequestSessionBase):
                 self._cnxs[cnxid] = cnx
         return cnx
 
-    def close_cnx(self, cnxid):
+    def close_cnx(self, cnx):
         """Close a Connection related to a session"""
-        cnx = self._cnxs.get(cnxid, None)
-        if cnx is not None:
-            cnx.free_cnxset(ignoremode=True)
-            self._clear_thread_storage(cnx)
-            cnx.clear()
+        cnx.free_cnxset(ignoremode=True)
+        self._clear_thread_storage(cnx)
+        cnx.clear()
 
     def set_cnx(self, cnxid=None):
         """set the default connection of the current thread to <cnxid>
