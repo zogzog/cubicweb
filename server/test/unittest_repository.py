@@ -272,19 +272,21 @@ class RepositoryTC(CubicWebTC):
     def test_initial_schema(self):
         schema = self.repo.schema
         # check order of attributes is respected
-        self.assertListEqual([r.type for r in schema.eschema('CWAttribute').ordered_relations()
-                               if not r.type in ('eid', 'is', 'is_instance_of', 'identity',
-                                                 'creation_date', 'modification_date', 'cwuri',
-                                                 'owned_by', 'created_by', 'cw_source',
-                                                 'update_permission', 'read_permission',
-                                                 'in_basket')],
-                              ['relation_type',
-                               'from_entity', 'to_entity',
-                               'constrained_by',
-                               'cardinality', 'ordernum',
-                               'indexed', 'fulltextindexed', 'internationalizable',
-                               'defaultval', 'extra_props',
-                               'description', 'description_format'])
+        notin = set(('eid', 'is', 'is_instance_of', 'identity',
+                     'creation_date', 'modification_date', 'cwuri',
+                     'owned_by', 'created_by', 'cw_source',
+                     'update_permission', 'read_permission',
+                     'in_basket'))
+        self.assertListEqual(['relation_type',
+                              'from_entity', 'to_entity',
+                              'constrained_by',
+                              'cardinality', 'ordernum',
+                              'indexed', 'fulltextindexed', 'internationalizable',
+                              'defaultval', 'extra_props',
+                              'description', 'description_format'],
+                             [r.type
+                              for r in schema.eschema('CWAttribute').ordered_relations()
+                              if r.type not in notin])
 
         self.assertEqual(schema.eschema('CWEType').main_attribute(), 'name')
         self.assertEqual(schema.eschema('State').main_attribute(), 'name')
