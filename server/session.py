@@ -1304,6 +1304,14 @@ class Session(RequestSessionBase):
                 self._cnxs[cnxid] = cnx
         return cnx
 
+    def close_cnx(self, cnxid):
+        """Close a Connection related to a session"""
+        cnx = self._cnxs.get(cnxid, None)
+        if cnx is not None:
+            cnx.free_cnxset(ignoremode=True)
+            self._clear_thread_storage(cnx)
+            self._clear_cnx_storage(cnx)
+
     def set_cnx(self, cnxid=None):
         """set the default connection of the current thread to <cnxid>
 
@@ -1488,14 +1496,6 @@ class Session(RequestSessionBase):
         rset = self._cnx.execute(*args, **kwargs)
         rset.req = self
         return rset
-
-    def close_cnx(self, cnxid):
-        cnx = self._cnxs.get(cnxid, None)
-        if cnx is not None:
-            cnx.free_cnxset(ignoremode=True)
-            self._clear_thread_storage(cnx)
-            self._clear_cnx_storage(cnx)
-
 
     def _clear_thread_data(self, free_cnxset=True):
         """remove everything from the thread local storage, except connections set
