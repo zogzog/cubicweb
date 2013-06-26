@@ -164,7 +164,7 @@ class _session_hooks_control(_hooks_control):
         super_exit = super(_session_hooks_control, self).__exit__
         ret = super_exit(exctype, exc, traceback)
         if self.cnx.ctx_count == 0:
-            self.session._clear_thread_storage(self.cnx)
+            self.session.close_cnx(self.cnx)
         return ret
 
 @deprecated('[3.17] use <object>.security_enabled instead')
@@ -219,7 +219,7 @@ class _session_security_enabled(_security_enabled):
         super_exit = super(_session_security_enabled, self).__exit__
         ret = super_exit(exctype, exc, traceback)
         if self.cnx.ctx_count == 0:
-            self.session._clear_thread_storage(self.cnx)
+            self.session.close_cnx(self.cnx)
         return ret
 
 HOOKS_ALLOW_ALL = object()
@@ -1308,7 +1308,12 @@ class Session(RequestSessionBase):
     def close_cnx(self, cnx):
         """Close a Connection related to a session"""
         cnx.free_cnxset(ignoremode=True)
-        self._clear_thread_storage(cnx)
+        self._cnxs.pop(cnx.connectionid, None)
+        try:
+            if self.__threaddata.cnx is cnx:
+                del self.__threaddata.cnx
+        except AttributeError:
+            pass
         cnx.clear()
 
     def set_cnx(self, cnxid=None):
@@ -1509,20 +1514,11 @@ class Session(RequestSessionBase):
             if free_cnxset:
                 self.free_cnxset()
                 if cnx.ctx_count == 0:
-                    self._clear_thread_storage(cnx)
+                    self.close_cnx(cnx)
                 else:
                     cnx.clear()
             else:
                 cnx.clear()
-
-    def _clear_thread_storage(self, cnx):
-        self._cnxs.pop(cnx.connectionid, None)
-        try:
-            if self.__threaddata.cnx is cnx:
-                del self.__threaddata.cnx
-        except AttributeError:
-            pass
-
 
     def commit(self, free_cnxset=True, reset_pool=None):
         """commit the current session's transaction"""
