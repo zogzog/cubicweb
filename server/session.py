@@ -23,6 +23,7 @@ import threading
 from time import time
 from uuid import uuid4
 from warnings import warn
+import json
 
 from logilab.common.deprecation import deprecated
 from logilab.common.textutils import unormalize
@@ -1018,11 +1019,20 @@ class Connection(RequestSessionBase):
     # resource accessors ######################################################
 
     def call_service(self, regid, **kwargs):
+        json.dumps(kwargs) # This line ensure that people use serialisable
+                           # argument for call service. this is very important
+                           # to enforce that from start to make sure RPC
+                           # version is available.
         self.info('calling service %s', regid)
         self.set_cnxset()
         try:
             service = self.vreg['services'].select(regid, self, **kwargs)
-            return service.call(**kwargs)
+            result = service.call(**kwargs)
+            json.dumps(result) # This line ensure that service have serialisable
+                               # output. this is very important to enforce that
+                               # from start to make sure RPC version is
+                               # available.
+            return result
         finally:
             self.free_cnxset()
 
