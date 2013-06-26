@@ -1297,7 +1297,8 @@ class Session(RequestSessionBase):
         with self._lock: # no connection exist with the same id
             try:
                 if self.closed:
-                    raise SessionClosedError('try to access connections set on a closed session %s' % self.id)
+                    raise SessionClosedError('try to access connections set on'
+                                             ' a closed session %s' % self.id)
                 cnx = self._cnxs[cnxid]
             except KeyError:
                 cnx = Connection(self, cnxid=cnxid)
