@@ -1661,7 +1661,7 @@ class Repository(object):
                 # client was not yet connected to the repo
                 return
             if not session.closed:
-                session.close()
+                self.close(session.id)
         daemon.removeConnection = removeConnection
         return daemon
 
