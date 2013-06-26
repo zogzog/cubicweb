@@ -1311,7 +1311,7 @@ class Session(RequestSessionBase):
         if cnx is not None:
             cnx.free_cnxset(ignoremode=True)
             self._clear_thread_storage(cnx)
-            self._clear_cnx_storage(cnx)
+            cnx.clear()
 
     def set_cnx(self, cnxid=None):
         """set the default connection of the current thread to <cnxid>
@@ -1513,9 +1513,9 @@ class Session(RequestSessionBase):
                 if cnx.ctx_count == 0:
                     self._clear_thread_storage(cnx)
                 else:
-                    self._clear_cnx_storage(cnx)
+                    cnx.clear()
             else:
-                self._clear_cnx_storage(cnx)
+                cnx.clear()
 
     def _clear_thread_storage(self, cnx):
         self._cnxs.pop(cnx.connectionid, None)
@@ -1525,8 +1525,6 @@ class Session(RequestSessionBase):
         except AttributeError:
             pass
 
-    def _clear_cnx_storage(self, cnx):
-        cnx.clear()
 
     def commit(self, free_cnxset=True, reset_pool=None):
         """commit the current session's transaction"""
