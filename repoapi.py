@@ -17,6 +17,9 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Official API to access the content of a repository
 """
+
+from logilab.common.deprecation import deprecated
+
 from cubicweb.utils import parse_repo_uri
 from cubicweb import ConnectionError, ProgrammingError, AuthenticationError
 from uuid import uuid4
@@ -330,25 +333,25 @@ class ClientConnection(RequestSessionBase):
         # Connection object
         return self._cnx.repo.system_source.undo_transaction(self._cnx, txuuid)
 
+    @deprecated('[4.0] This is a repoapi.ClientConnection object not a dbapi one')
     def request(self):
-        # XXX This is DBAPI compatibility method. Deprecate it ASAP.
         return self
 
+    @deprecated('[4.0] This is a repoapi.ClientConnection object not a dbapi one')
     def cursor(self):
-        # XXX This is DBAPI compatibility method. Deprecate it ASAP.
         return self
 
     @ property
+    @deprecated('[4.0] This is a repoapi.ClientConnection object not a dbapi one')
     def sessionid(self):
-        # XXX This is DBAPI compatibility property. Deprecate it ASAP.
         return self._session.id
 
     @property
+    @deprecated('[4.0] This is a repoapi.ClientConnection object not a dbapi one')
     def connection(self):
-        # XXX This is DBAPI compatibility property. Deprecate it ASAP.
         return self
 
     @property
+    @deprecated('[4.0] This is a repoapi.ClientConnection object not a dbapi one')
     def _repo(self):
-        # XXX This is DBAPI compatibility property. Deprecate it ASAP.
         return self._session.repo
