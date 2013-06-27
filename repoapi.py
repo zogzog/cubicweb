@@ -162,6 +162,7 @@ class ClientConnection(RequestSessionBase):
         self._cnx = self._session.new_cnx()
         self._cnx.__enter__()
         self._cnx.ctx_count += 1
+        return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._open = False
