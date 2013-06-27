@@ -93,7 +93,7 @@ class ConnectionProperties(object):
 
 
 
-
+@deprecated('[4.0] the dbapi is deprecated. Have a look at the new repoapi.')
 def _repo_connect(repo, login, **kwargs):
     """Constructor to create a new connection to the given CubicWeb repository.
 
