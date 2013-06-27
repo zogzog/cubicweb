@@ -509,6 +509,7 @@ class Connection(RequestSessionBase):
         #: (None, 'precommit', 'postcommit', 'uncommitable')
         self.commit_state = None
         self.pruned_hooks_cache = {}
+        self.local_perm_cache.clear()
 
     # Connection Set Management ###############################################
     @property
@@ -1224,7 +1225,13 @@ class Session(RequestSessionBase):
     def _touch(self):
         """update latest session usage timestamp and reset mode to read"""
         self._timestamp.touch()
-        self.local_perm_cache.clear() # XXX simply move in cnx.transaction_data, no?
+
+    local_perm_cache = cnx_attr('local_perm_cache')
+    @local_perm_cache.setter
+    def local_perm_cache(self, value):
+        #base class assign an empty dict:-(
+        assert value == {}
+        pass
 
     # shared data handling ###################################################
 
