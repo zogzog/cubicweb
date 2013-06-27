@@ -59,7 +59,7 @@ from cubicweb.schema import VIRTUAL_RTYPES
 from cubicweb.cwconfig import CubicWebNoAppConfiguration
 from cubicweb.server import hook
 from cubicweb.server.utils import crypt_password, eschema_eid, verify_and_update
-from cubicweb.server.sqlutils import SQL_PREFIX, SQLAdapterMixIn
+from cubicweb.server.sqlutils import SQL_PREFIX, SQLAdapterMixIn, SqliteCnxLoggingWrapper
 from cubicweb.server.rqlannotation import set_qdata
 from cubicweb.server.hook import CleanupDeletedEidsCacheOp
 from cubicweb.server.edition import EditedEntity
@@ -305,9 +305,8 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         # running unittest_multisources with the wrapping below
         if self.dbdriver == 'sqlite' and \
                not getattr(repo.config, 'no_sqlite_wrap', False):
-            from cubicweb.server.sources.extlite import ConnectionWrapper
             self.dbhelper.dbname = abspath(self.dbhelper.dbname)
-            self.get_connection = lambda: ConnectionWrapper(self)
+            self.get_connection = lambda: SqliteCnxLoggingWrapper(self)
             self.check_connection = lambda cnx: cnx
             def cnxset_freed(cnx):
                 cnx.close()
@@ -316,14 +315,6 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             self._create_eid = None
             self.create_eid = self._create_eid_sqlite
         self.binary_to_str = self.dbhelper.dbapi_module.binary_to_str
-
-
-    @property
-    def _sqlcnx(self):
-        # XXX: sqlite connections can only be used in the same thread, so
-        #      create a new one each time necessary. If it appears to be time
-        #      consuming, find another way
-        return SQLAdapterMixIn.get_connection(self)
 
     def check_config(self, source_entity):
         """check configuration of source entity"""
@@ -735,7 +726,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         cursor = session.cnxset[self.uri]
         if server.DEBUG & server.DBG_SQL:
             cnx = session.cnxset.connection(self.uri)
-            # getattr to get the actual connection if cnx is a ConnectionWrapper
+            # getattr to get the actual connection if cnx is a CnxLoggingWrapper
             # instance
             print 'exec', query, args, getattr(cnx, '_cnx', cnx)
         try:

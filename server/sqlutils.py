@@ -30,7 +30,7 @@ from logilab.common.shellutils import ProgressBar
 from logilab.common.date import todate, todatetime, utcdatetime, utctime
 from logilab.database.sqlgen import SQLGenerator
 
-from cubicweb import Binary, ConfigurationError
+from cubicweb import Binary, ConfigurationError, server
 from cubicweb.uilib import remove_html_tags
 from cubicweb.schema import PURE_VIRTUAL_RTYPES
 from cubicweb.server import SQL_CONNECT_HOOKS
@@ -177,6 +177,7 @@ def sql_drop_all_user_tables(driver_or_helper, sqlcursor):
              for name in ifilter(_SQL_DROP_ALL_USER_TABLES_FILTER_FUNCTION, dbhelper.list_tables(sqlcursor))]
     return '\n'.join(cmds)
 
+
 class SQLAdapterMixIn(object):
     """Mixin for SQL data sources, getting a connection from a configuration
     dictionary and handling connection locking
@@ -322,6 +323,43 @@ class SQLAdapterMixIn(object):
 from logging import getLogger
 from cubicweb import set_log_methods
 set_log_methods(SQLAdapterMixIn, getLogger('cubicweb.sqladapter'))
+
+
+class SqliteCnxLoggingWrapper(object):
+    def __init__(self, source=None):
+        self.source = source
+        self._cnx = None
+
+    def cursor(self):
+        # sqlite connections can only be used in the same thread, so
+        # create a new one each time necessary. If it appears to be time
+        # consuming, find another way
+        if self._cnx is None:
+            # direct access to SQLAdapterMixIn to get an unwrapped connection
+            self._cnx = SQLAdapterMixIn.get_connection(self.source)
+            if server.DEBUG & server.DBG_SQL:
+                print 'sql cnx OPEN', self._cnx
+        return self._cnx.cursor()
+
+    def commit(self):
+        if self._cnx is not None:
+            if server.DEBUG & (server.DBG_SQL | server.DBG_RQL):
+                print 'sql cnx COMMIT', self._cnx
+            self._cnx.commit()
+
+    def rollback(self):
+        if self._cnx is not None:
+            if server.DEBUG & (server.DBG_SQL | server.DBG_RQL):
+                print 'sql cnx ROLLBACK', self._cnx
+            self._cnx.rollback()
+
+    def close(self):
+        if self._cnx is not None:
+            if server.DEBUG & server.DBG_SQL:
+                print 'sql cnx CLOSE', self._cnx
+            self._cnx.close()
+            self._cnx = None
+
 
 def init_sqlite_connexion(cnx):
 
