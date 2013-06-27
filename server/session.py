@@ -164,7 +164,7 @@ class _session_hooks_control(_hooks_control):
         super_exit = super(_session_hooks_control, self).__exit__
         ret = super_exit(exctype, exc, traceback)
         if self.cnx.ctx_count == 0:
-            self.session.close_cnx(self.cnx)
+            self.session._close_cnx(self.cnx)
         return ret
 
 @deprecated('[3.17] use <object>.security_enabled instead')
@@ -219,7 +219,7 @@ class _session_security_enabled(_security_enabled):
         super_exit = super(_session_security_enabled, self).__exit__
         ret = super_exit(exctype, exc, traceback)
         if self.cnx.ctx_count == 0:
-            self.session.close_cnx(self.cnx)
+            self.session._close_cnx(self.cnx)
         return ret
 
 HOOKS_ALLOW_ALL = object()
@@ -1377,7 +1377,7 @@ class Session(RequestSessionBase):
         """
         return Connection(self)
 
-    def get_cnx(self, cnxid):
+    def _get_cnx(self, cnxid):
         """return the <cnxid> connection attached to this session
 
         Connection is created if necessary"""
@@ -1394,7 +1394,7 @@ class Session(RequestSessionBase):
                 cnx.__enter__()
         return cnx
 
-    def close_cnx(self, cnx):
+    def _close_cnx(self, cnx):
         """Close a Connection related to a session"""
         assert cnx._session_handled
         cnx.__exit__()
@@ -1411,7 +1411,7 @@ class Session(RequestSessionBase):
         Connection is created if necessary"""
         if cnxid is None:
             cnxid = threading.currentThread().getName()
-        cnx = self.get_cnx(cnxid)
+        cnx = self._get_cnx(cnxid)
         # New style session should not be accesed through the session.
         assert cnx._session_handled
         self.__threaddata.cnx = cnx
@@ -1606,7 +1606,7 @@ class Session(RequestSessionBase):
             if free_cnxset:
                 self.free_cnxset()
                 if cnx.ctx_count == 0:
-                    self.close_cnx(cnx)
+                    self._close_cnx(cnx)
                 else:
                     cnx.clear()
             else:
