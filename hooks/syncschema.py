@@ -211,7 +211,7 @@ class MemSchemaNotifyChanges(hook.SingleLastOperation):
                 clear_cache(eschema, 'ordered_relations')
 
     def postcommit_event(self):
-        rebuildinfered = self.session.data.get('rebuild-infered', True)
+        rebuildinfered = self.session.get_shared_data('rebuild-infered', True)
         repo = self.session.repo
         # commit event should not raise error, while set_schema has chances to
         # do so because it triggers full vreg reloading

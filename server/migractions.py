@@ -102,7 +102,7 @@ class ServerMigrationHelper(MigrationHelper):
         # no config on shell to a remote instance
         if config is not None and (cnx or connect):
             repo = self.repo
-            self.session.data['rebuild-infered'] = False
+            self.session.set_shared_data('rebuild-infered', False)
             # register a hook to clear our group_mapping cache and the
             # self._synchronized set when some group is added or updated
             ClearGroupMap.mih = self
@@ -292,7 +292,7 @@ class ServerMigrationHelper(MigrationHelper):
                     print 'aborting...'
                     sys.exit(0)
             self.session.keep_cnxset_mode('transaction')
-            self.session.data['rebuild-infered'] = False
+            self.session.set_shared_data('rebuild-infered', False)
             return self._cnx
 
     @property

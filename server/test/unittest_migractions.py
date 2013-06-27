@@ -595,12 +595,12 @@ class MigrationCommandsTC(CubicWebTC):
         #
         # also we need more tests about introducing/removing base classes or
         # specialization relationship...
-        self.session.data['rebuild-infered'] = True
+        self.session.set_shared_data('rebuild-infered', True)
         try:
             self.session.execute('DELETE X specializes Y WHERE Y name "Para"')
             self.session.commit(free_cnxset=False)
         finally:
-            self.session.data['rebuild-infered'] = False
+            self.session.set_shared_data('rebuild-infered', False)
         self.assertEqual(sorted(et.type for et in self.schema['Para'].specialized_by()),
                           [])
         self.assertEqual(self.schema['Note'].specializes(), None)
