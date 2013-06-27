@@ -22,6 +22,7 @@ from cubicweb import ConnectionError, ProgrammingError, AuthenticationError
 from uuid import uuid4
 from contextlib import contextmanager
 from cubicweb.req import RequestSessionBase
+from functools import wraps
 
 ### private function for specific method ############################
 
@@ -112,9 +113,21 @@ def _srv_cnx_func(name):
         # Connection yet so we use this trick to unsure the session have the
         # proper cnx loaded. This can be simplified one we have Standalone
         # Connection object
+        if not clt_cnx._open:
+            raise ProgrammingError('Closed client connection')
         with clt_cnx._srv_cnx as cnx:
             return getattr(cnx, name)(*args, **kwargs)
     return proxy
+
+def _open_only(func):
+    """decorator for ClientConnection method that check it is open"""
+    @wraps(func)
+    def check_open(clt_cnx, *args, **kwargs):
+        if not clt_cnx._open:
+            raise ProgrammingError('Closed client connection')
+        return func(clt_cnx, *args, **kwargs)
+    return check_open
+
 
 class ClientConnection(RequestSessionBase):
     """A Connection object to be used Client side.
@@ -201,6 +214,7 @@ class ClientConnection(RequestSessionBase):
 
     call_service = _srv_cnx_func('call_service')
 
+    @_open_only
     def execute(self, *args, **kwargs):
         # the ``with`` dance is transitional. We do not have Standalone
         # Connection yet so we use this trick to unsure the session have the
@@ -225,14 +239,17 @@ class ClientConnection(RequestSessionBase):
 
     # meta-data accessors ######################################################
 
+    @_open_only
     def source_defs(self):
         """Return the definition of sources used by the repository."""
         return self._session.repo.source_defs()
 
+    @_open_only
     def get_schema(self):
         """Return the schema currently used by the repository."""
         return self._session.repo.source_defs()
 
+    @_open_only
     def get_option_value(self, option, foreid=None):
         """Return the value for `option` in the configuration. If `foreid` is
         specified, the actual repository to which this entity belongs is
@@ -244,6 +261,7 @@ class ClientConnection(RequestSessionBase):
 
     # undo support ############################################################
 
+    @_open_only
     def undoable_transactions(self, ueid=None, req=None, **actionfilters):
         """Return a list of undoable transaction objects by the connection's
         user, ordered by descendant transaction time.
@@ -278,6 +296,7 @@ class ClientConnection(RequestSessionBase):
             txinfo.req = req or self  # XXX mostly wrong
         return txinfos
 
+    @_open_only
     def transaction_info(self, txuuid, req=None):
         """Return transaction object for the given uid.
 
@@ -297,6 +316,7 @@ class ClientConnection(RequestSessionBase):
             txinfo.cnx = self
         return txinfo
 
+    @_open_only
     def transaction_actions(self, txuuid, public=True):
         """Return an ordered list of action effectued during that transaction.
 
@@ -314,6 +334,7 @@ class ClientConnection(RequestSessionBase):
         with self._srv_cnx as cnx:
             return cnx.repo.system_source.tx_actions(cnx, txuuid, public)
 
+    @_open_only
     def undo_transaction(self, txuuid):
         """Undo the given transaction. Return potential restoration errors.
 
