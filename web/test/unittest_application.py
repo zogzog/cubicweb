@@ -31,6 +31,7 @@ from cubicweb.web import LogOut, Redirect, INTERNAL_FIELD_VALUE
 from cubicweb.web.views.basecontrollers import ViewController
 from cubicweb.web.application import anonymized_request
 from cubicweb.dbapi import DBAPISession, _NeedAuthAccessMock
+from cubicweb import repoapi
 
 class FakeMapping:
     """emulates a mapping module"""
@@ -336,7 +337,7 @@ class ApplicationTC(CubicWebTC):
         # req.form['__password'] = self.admpassword
         # self.assertAuthFailure(req)
         # option allow-email-login set
-        origsession.login = address
+        #origsession.login = address
         self.set_option('allow-email-login', True)
         req.form['__login'] = address
         req.form['__password'] = self.admpassword
@@ -360,19 +361,21 @@ class ApplicationTC(CubicWebTC):
 
     def _test_auth_anon(self, req):
         asession = self.app.get_session(req)
-        req.set_session(asession)
+        # important otherwise _reset_cookie will not use the right session
+        req.set_cnx(repoapi.ClientConnection(asession))
         self.assertEqual(len(self.open_sessions), 1)
         self.assertEqual(asession.login, 'anon')
         self.assertTrue(asession.anonymous_session)
         self._reset_cookie(req)
 
     def _test_anon_auth_fail(self, req):
-        self.assertEqual(len(self.open_sessions), 1)
+        self.assertEqual(1, len(self.open_sessions))
         session = self.app.get_session(req)
-        req.set_session(session)
+        # important otherwise _reset_cookie will not use the right session
+        req.set_cnx(repoapi.ClientConnection(session))
         self.assertEqual(req.message, 'authentication failure')
         self.assertEqual(req.session.anonymous_session, True)
-        self.assertEqual(len(self.open_sessions), 1)
+        self.assertEqual(1, len(self.open_sessions))
         self._reset_cookie(req)
 
     def test_http_auth_anon_allowed(self):
@@ -397,19 +400,19 @@ class ApplicationTC(CubicWebTC):
         req.form['__password'] = self.admpassword
         self.assertAuthSuccess(req, origsession)
         self.assertRaises(LogOut, self.app_handle_request, req, 'logout')
-        self.assertEqual(len(self.open_sessions), 0)
+        self.assertEqual(0, len(self.open_sessions))
 
     def test_anonymized_request(self):
         req = self.request()
-        self.assertEqual(req.session.login, self.admlogin)
+        self.assertEqual(self.admlogin, req.session.user.login)
         # admin should see anon + admin
-        self.assertEqual(len(list(req.find_entities('CWUser'))), 2)
+        self.assertEqual(2, len(list(req.find_entities('CWUser'))))
         with anonymized_request(req):
-            self.assertEqual(req.session.login, 'anon')
+            self.assertEqual('anon', req.session.login, 'anon')
             # anon should only see anon user
-            self.assertEqual(len(list(req.find_entities('CWUser'))), 1)
-        self.assertEqual(req.session.login, self.admlogin)
-        self.assertEqual(len(list(req.find_entities('CWUser'))), 2)
+            self.assertEqual(1, len(list(req.find_entities('CWUser'))))
+        self.assertEqual(self.admlogin, req.session.login)
+        self.assertEqual(2, len(list(req.find_entities('CWUser'))))
 
     def test_non_regr_optional_first_var(self):
         req = self.request()

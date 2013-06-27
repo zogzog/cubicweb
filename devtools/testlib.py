@@ -838,7 +838,8 @@ class CubicWebTC(TestCase):
     def assertAuthSuccess(self, req, origsession, nbsessions=1):
         sh = self.app.session_handler
         session = self.app.get_session(req)
-        req.set_session(session)
+        clt_cnx = repoapi.ClientConnection(session)
+        req.set_cnx(clt_cnx)
         self.assertEqual(len(self.open_sessions), nbsessions, self.open_sessions)
         self.assertEqual(session.login, origsession.login)
         self.assertEqual(session.anonymous_session, False)

@@ -127,13 +127,6 @@ class RepositoryAuthenticationManager(AbstractAuthenticationManager):
         # actual user login
         if login and session.login != login:
             raise InvalidSession('login mismatch')
-        try:
-            # calling cnx.user() check connection validity, raise
-            # BadConnectionId on failure
-            user = session.cnx.user(req)
-        except BadConnectionId:
-            raise InvalidSession('bad connection id')
-        return user
 
     def authenticate(self, req):
         """authenticate user using connection information found in the request,
@@ -149,27 +142,24 @@ class RepositoryAuthenticationManager(AbstractAuthenticationManager):
             except NoAuthInfo:
                 continue
             try:
-                cnx = self._authenticate(login, authinfo)
+                session = self._authenticate(login, authinfo)
             except AuthenticationError:
                 retriever.cleanup_authentication_information(req)
                 continue # the next one may succeed
             for retriever_ in self.authinforetrievers:
-                retriever_.authenticated(retriever, req, cnx, login, authinfo)
-            return cnx, login
+                retriever_.authenticated(retriever, req, session, login, authinfo)
+            return session, login
         # false if no authentication info found, eg this is not an
         # authentication failure
         if 'login' in locals():
             req.set_message(req._('authentication failure'))
         login, authinfo = self.anoninfo
         if login:
-            cnx = self._authenticate(login, authinfo)
-            return cnx, login
+            session = self._authenticate(login, authinfo)
+            return session, login
         raise AuthenticationError()
 
     def _authenticate(self, login, authinfo):
-        cnxprops = ConnectionProperties(close=False, log=self.log_queries)
-        cnx = _repo_connect(self.repo, login, cnxprops=cnxprops, **authinfo)
-        # decorate connection
-        cnx.vreg = self.vreg
-        return cnx
+        sessionid = self.repo.connect(login, **authinfo)
+        return self.repo._sessions[sessionid]
 

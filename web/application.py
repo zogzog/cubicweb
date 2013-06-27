@@ -35,7 +35,7 @@ from cubicweb import (
     ValidationError, Unauthorized, Forbidden,
     AuthenticationError, NoSelectableObject,
     BadConnectionId, CW_EVENT_MANAGER)
-from cubicweb.dbapi import anonymous_session
+from cubicweb.repoapi import anonymous_cnx
 from cubicweb.web import LOGGER, component
 from cubicweb.web import (
     StatusResponse, DirectResponse, Redirect, NotFound, LogOut,
@@ -50,12 +50,14 @@ SESSION_MANAGER = None
 
 @contextmanager
 def anonymized_request(req):
-    orig_session = req.session
-    req.set_session(anonymous_session(req.vreg))
+    orig_cnx = req.cnx
+    anon_clt_cnx = anonymous_cnx(orig_cnx._session.repo)
+    req.set_cnx(anon_clt_cnx)
     try:
-        yield req
+        with anon_clt_cnx:
+            yield req
     finally:
-        req.set_session(orig_session)
+        req.set_cnx(orig_cnx)
 
 class AbstractSessionManager(component.Component):
     """manage session data associated to a session identifier"""
@@ -338,16 +340,22 @@ class CubicWebPublisher(object):
         try:
             try:
                 session = self.get_session(req)
-                req.set_session(session)
+                from  cubicweb import repoapi
+                cnx = repoapi.ClientConnection(session)
+                req.set_cnx(cnx)
             except AuthenticationError:
                 # Keep the dummy session set at initialisation.
                 # such session with work to an some extend but raise an
                 # AuthenticationError on any database access.
-                pass
+                import contextlib
+                @contextlib.contextmanager
+                def dummy():
+                    yield
+                cnx = dummy()
                 # XXX We want to clean up this approach in the future. But
                 # several cubes like registration or forgotten password rely on
                 # this principle.
-            assert req.session is not None
+
             # DENY https acces for anonymous_user
             if (req.https
                 and req.session.anonymous_session
@@ -358,7 +366,8 @@ class CubicWebPublisher(object):
             # handler
             try:
                 ### Try to generate the actual request content
-                content = self.core_handle(req, path)
+                with cnx:
+                    content = self.core_handle(req, path)
             # Handle user log-out
             except LogOut as ex:
                 # When authentification is handled by cookie the code that

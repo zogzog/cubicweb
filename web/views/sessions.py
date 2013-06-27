@@ -26,6 +26,7 @@ from cubicweb import (RepositoryError, Unauthorized, AuthenticationError,
 from cubicweb.web import InvalidSession, Redirect
 from cubicweb.web.application import AbstractSessionManager
 from cubicweb.dbapi import ProgrammingError, DBAPISession
+from cubicweb import repoapi
 
 
 class InMemoryRepositorySessionManager(AbstractSessionManager):
@@ -53,13 +54,14 @@ class InMemoryRepositorySessionManager(AbstractSessionManager):
         if sessionid not in self._sessions:
             raise InvalidSession()
         session = self._sessions[sessionid]
-        if session.cnx:
-            try:
-                user = self.authmanager.validate_session(req, session)
-            except InvalidSession:
-                # invalid session
-                self.close_session(session)
-                raise
+        try:
+            user = self.authmanager.validate_session(req, session)
+        except InvalidSession:
+            self.close_session(session)
+            raise
+        if session.closed:
+            self.close_session(session)
+            raise InvalidSession()
         return session
 
     def open_session(self, req):
@@ -69,8 +71,7 @@ class InMemoryRepositorySessionManager(AbstractSessionManager):
         raise :exc:`cubicweb.AuthenticationError` if authentication failed
         (no authentication info found or wrong user/password)
         """
-        cnx, login = self.authmanager.authenticate(req)
-        session = DBAPISession(cnx, login)
+        session, login = self.authmanager.authenticate(req)
         self._sessions[session.sessionid] = session
         return session
 
@@ -87,31 +88,25 @@ class InMemoryRepositorySessionManager(AbstractSessionManager):
         #      reopening. Is it actually a problem?
         if 'last_login_time' in req.vreg.schema:
             self._update_last_login_time(session)
-        req.set_message(req._('welcome %s !') % session.cnx.user().login)
+        req.set_message(req._('welcome %s !') % session.user.login)
 
     def _update_last_login_time(self, session):
         # XXX should properly detect missing permission / non writeable source
         # and avoid "except (RepositoryError, Unauthorized)" below
         try:
-            cu = session.cnx.cursor()
-            cu.execute('SET X last_login_time NOW WHERE X eid %(x)s',
-                       {'x' : session.cnx.user().eid})
-            session.cnx.commit()
+            cnx = repoapi.ClientConnection(session)
+            with cnx:
+                cnx.execute('SET X last_login_time NOW WHERE X eid %(x)s',
+                           {'x' : session.user.eid})
+                cnx.commit()
         except (RepositoryError, Unauthorized):
-            session.cnx.rollback()
-        except Exception:
-            session.cnx.rollback()
-            raise
+            pass
 
     def close_session(self, session):
         """close session on logout or on invalid session detected (expired out,
         corrupted...)
         """
         self.info('closing http session %s' % session.sessionid)
-        del self._sessions[session.sessionid]
-        if session.cnx:
-            try:
-                session.cnx.close()
-            except (ProgrammingError, BadConnectionId): # expired on the repository side
-                pass
-            session.cnx = None
+        self._sessions.pop(session.sessionid, None)
+        if not session.closed:
+            session.repo.close(session.id)

@@ -1082,7 +1082,7 @@ class ConnectionCubicWebRequestBase(_CubicWebRequestBase):
 
 
 
-CubicWebRequestBase = DBAPICubicWebRequestBase
+CubicWebRequestBase = ConnectionCubicWebRequestBase
 
 
 ## HTTP-accept parsers / utilies ##############################################
