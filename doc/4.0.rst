@@ -39,6 +39,38 @@ default. Integrity hooks are enabled except stated otherwise.
 Backward compact is preserved on Session. They can still be used to access the
 database for the next few version.
 
+dbapi vs repoapi
+~~~~~~~~~~~~~~~~
+
+A new API have been introduced to replace the dbapi. It is called "repoapi".
+
+there is three relevant function for now:
+
+``repoapi.get_repository(config)`` takes a config object and return credential
+
+``repoapi.connect(repo, **credential)`` return a ClientConnection associated to
+the user identified by the credential. The ClientConnection is associated to its
+own Session that is closed when the ClientConnection is closed. A
+ClientConnection is a Connection-like object to be used client side.
+
+``repoapi.anonymous_cnx(repo)`` return a ClientConnection associated to the
+anonymous user if describe in the Config.
+
+repoapi.ClientConnection replace dbapi.Connection and company
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+On the client/web side, the Request is now using a ``repoapi.ClientConnection``
+instead of a ``dbapi.connection``. The ``ClientConnection`` have multiple backward
+compat method to looks like a ``dbapi.Cursor`` and ``dbapi.Connection``. It will
+remain that way for a few version.
+
+Session used on the Web side are now the same than the one used Server side.
+Some backward compat method have been installed on the server side Session to
+ease the transition.
+
+The authentification stack have been altered to use the ``repoapi`` instead of
+the ``dbapi``. Cubes adding new element in this stack are likely to break.
+
 
 API changes
 -----------
