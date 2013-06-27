@@ -920,7 +920,95 @@ class Connection(RequestSessionBase):
                         self.critical('rollback error', exc_info=sys.exc_info())
                         continue
                 cnxset.rollback()
-                self.debug('rollback for connectionid %s done', self.connectionid)
+                self.debug('rollback for transaction %s done', self.connectionid)
+        finally:
+            self._session_timestamp.touch()
+            if free_cnxset:
+                self.free_cnxset(ignoremode=True)
+            self.clear()
+
+    def commit(self, free_cnxset=True, reset_pool=None):
+        """commit the current session's transaction"""
+        if reset_pool is not None:
+            warn('[3.13] use free_cnxset argument instead for reset_pool',
+                 DeprecationWarning, stacklevel=2)
+            free_cnxset = reset_pool
+        if self.cnxset is None:
+            assert not self.pending_operations
+            self.clear()
+            self._session_timestamp.touch()
+            self.debug('commit transaction %s done (no db activity)', self.connectionid)
+            return
+        cstate = self.commit_state
+        if cstate == 'uncommitable':
+            raise QueryError('transaction must be rollbacked')
+        if cstate is not None:
+            return
+        # on rollback, an operation should have the following state
+        # information:
+        # - processed by the precommit/commit event or not
+        # - if processed, is it the failed operation
+        debug = server.DEBUG & server.DBG_OPS
+        try:
+            # by default, operations are executed with security turned off
+            with self.security_enabled(False, False):
+                processed = []
+                self.commit_state = 'precommit'
+                if debug:
+                    print self.commit_state, '*' * 20
+                try:
+                    while self.pending_operations:
+                        operation = self.pending_operations.pop(0)
+                        operation.processed = 'precommit'
+                        processed.append(operation)
+                        if debug:
+                            print operation
+                        operation.handle_event('precommit_event')
+                    self.pending_operations[:] = processed
+                    self.debug('precommit transaction %s done', self.connectionid)
+                except BaseException:
+                    # if error on [pre]commit:
+                    #
+                    # * set .failed = True on the operation causing the failure
+                    # * call revert<event>_event on processed operations
+                    # * call rollback_event on *all* operations
+                    #
+                    # that seems more natural than not calling rollback_event
+                    # for processed operations, and allow generic rollback
+                    # instead of having to implements rollback, revertprecommit
+                    # and revertcommit, that will be enough in mont case.
+                    operation.failed = True
+                    if debug:
+                        print self.commit_state, '*' * 20
+                    for operation in reversed(processed):
+                        if debug:
+                            print operation
+                        try:
+                            operation.handle_event('revertprecommit_event')
+                        except BaseException:
+                            self.critical('error while reverting precommit',
+                                          exc_info=True)
+                    # XXX use slice notation since self.pending_operations is a
+                    # read-only property.
+                    self.pending_operations[:] = processed + self.pending_operations
+                    self.rollback(free_cnxset)
+                    raise
+                self.cnxset.commit()
+                self.commit_state = 'postcommit'
+                if debug:
+                    print self.commit_state, '*' * 20
+                while self.pending_operations:
+                    operation = self.pending_operations.pop(0)
+                    if debug:
+                        print operation
+                    operation.processed = 'postcommit'
+                    try:
+                        operation.handle_event('postcommit_event')
+                    except BaseException:
+                        self.critical('error while postcommit',
+                                      exc_info=sys.exc_info())
+                self.debug('postcommit transaction %s done', self.connectionid)
+                return self.transaction_uuid(set=False)
         finally:
             self._session_timestamp.touch()
             if free_cnxset:
@@ -1382,90 +1470,12 @@ class Session(RequestSessionBase):
 
     def commit(self, free_cnxset=True, reset_pool=None):
         """commit the current session's transaction"""
-        if reset_pool is not None:
-            warn('[3.13] use free_cnxset argument instead for reset_pool',
-                 DeprecationWarning, stacklevel=2)
-            free_cnxset = reset_pool
-        if self.cnxset is None:
-            assert not self.pending_operations
-            self._clear_thread_data()
-            self._touch()
-            self.debug('commit session %s done (no db activity)', self.id)
-            return
-        cstate = self.commit_state
+        cstate = self._cnx.commit_state
         if cstate == 'uncommitable':
             raise QueryError('transaction must be rollbacked')
-        if cstate is not None:
-            return
-        # on rollback, an operation should have the following state
-        # information:
-        # - processed by the precommit/commit event or not
-        # - if processed, is it the failed operation
-        debug = server.DEBUG & server.DBG_OPS
         try:
-            # by default, operations are executed with security turned off
-            with self.security_enabled(False, False):
-                processed = []
-                self.commit_state = 'precommit'
-                if debug:
-                    print self.commit_state, '*' * 20
-                try:
-                    while self.pending_operations:
-                        operation = self.pending_operations.pop(0)
-                        operation.processed = 'precommit'
-                        processed.append(operation)
-                        if debug:
-                            print operation
-                        operation.handle_event('precommit_event')
-                    self.pending_operations[:] = processed
-                    self.debug('precommit session %s done', self.id)
-                except BaseException:
-                    # if error on [pre]commit:
-                    #
-                    # * set .failed = True on the operation causing the failure
-                    # * call revert<event>_event on processed operations
-                    # * call rollback_event on *all* operations
-                    #
-                    # that seems more natural than not calling rollback_event
-                    # for processed operations, and allow generic rollback
-                    # instead of having to implements rollback, revertprecommit
-                    # and revertcommit, that will be enough in mont case.
-                    operation.failed = True
-                    if debug:
-                        print self.commit_state, '*' * 20
-                    for operation in reversed(processed):
-                        if debug:
-                            print operation
-                        try:
-                            operation.handle_event('revertprecommit_event')
-                        except BaseException:
-                            self.critical('error while reverting precommit',
-                                          exc_info=True)
-                    # XXX use slice notation since self.pending_operations is a
-                    # read-only property.
-                    self.pending_operations[:] = processed + self.pending_operations
-                    self.rollback(free_cnxset)
-                    raise
-                self.cnxset.commit()
-                self.commit_state = 'postcommit'
-                if debug:
-                    print self.commit_state, '*' * 20
-                while self.pending_operations:
-                    operation = self.pending_operations.pop(0)
-                    if debug:
-                        print operation
-                    operation.processed = 'postcommit'
-                    try:
-                        operation.handle_event('postcommit_event')
-                    except BaseException:
-                        self.critical('error while postcommit',
-                                      exc_info=sys.exc_info())
-                self.debug('postcommit session %s done', self.id)
-                return self.transaction_uuid(set=False)
+            return self._cnx.commit(free_cnxset, reset_pool)
         finally:
-            self._touch()
-            if free_cnxset:
-                self.free_cnxset(ignoremode=True)
             self._clear_thread_data(free_cnxset)
 
     def rollback(self, free_cnxset=True, **kwargs):
