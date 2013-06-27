@@ -249,14 +249,6 @@ class AbstractSource(object):
             cnxset.cnx = self.get_connection()
             cnxset.cu = cnxset.cnx.cursor()
 
-    def cnxset_freed(self, cnx):
-        """the connections set holding the given connection is being reseted
-        from its current attached session.
-
-        do nothing by default
-        """
-        pass
-
     # cache handling ###########################################################
 
     def reset_caches(self):

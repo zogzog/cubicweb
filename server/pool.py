@@ -77,7 +77,7 @@ class ConnectionsSet(object):
 
     def cnxset_freed(self):
         """connections set is being freed from a session"""
-        self._source.cnxset_freed(self.cnx)
+        pass # do nothing by default
 
     def reconnect(self):
         """reopen a connection for this source or all sources if none specified

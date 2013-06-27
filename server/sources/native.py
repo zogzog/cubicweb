@@ -291,12 +291,13 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         # running unittest_multisources with the wrapping below
         if self.dbdriver == 'sqlite' and \
                not getattr(repo.config, 'no_sqlite_wrap', False):
+            from cubicweb.server.pool import ConnectionsSet
             self.dbhelper.dbname = abspath(self.dbhelper.dbname)
             self.get_connection = lambda: SqliteCnxLoggingWrapper(self)
             self.check_connection = lambda cnx: cnx
-            def cnxset_freed(cnx):
-                cnx.close()
-            self.cnxset_freed = cnxset_freed
+            def cnxset_freed(self):
+                self.cnx.close()
+            ConnectionsSet.cnxset_freed = cnxset_freed
         if self.dbdriver == 'sqlite':
             self._create_eid = None
             self.create_eid = self._create_eid_sqlite
