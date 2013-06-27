@@ -629,10 +629,14 @@ class Connection(RequestSessionBase):
                 cnxset.cnxset_freed()
                 self.repo._free_cnxset(cnxset)
 
+    @deprecated('[4.0] cnxset are automatically managed now.'
+                ' stop using explicit set and free.')
     def set_cnxset(self):
         self._auto_free_cnx_set = False
         return self._set_cnxset()
 
+    @deprecated('[4.0] cnxset are automatically managed now.'
+                ' stop using explicit set and free.')
     def free_cnxset(self, ignoremode=False):
         self._auto_free_cnx_set = True
         return self._free_cnxset(ignoremode=ignoremode)

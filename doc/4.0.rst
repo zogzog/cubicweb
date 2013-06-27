@@ -129,6 +129,9 @@ API changes
   standard instance attributes. ``set_cnx`` and ``_init_repo`` class methods
   become instance methods.
 
+* ``set_cnxset`` and ``free_cnxset`` are deprecated. cnxset are now
+  automatically managed.
+
 
 Deprecated Code Drops
 ----------------------
