@@ -897,6 +897,36 @@ class Connection(RequestSessionBase):
         self._session_timestamp.touch()
         return rset
 
+    def rollback(self, free_cnxset=True, reset_pool=None):
+        """rollback the current transaction"""
+        if reset_pool is not None:
+            warn('[3.13] use free_cnxset argument instead for reset_pool',
+                 DeprecationWarning, stacklevel=2)
+            free_cnxset = reset_pool
+        cnxset = self.cnxset
+        if cnxset is None:
+            self.clear()
+            self._session_timestamp.touch()
+            self.debug('rollback transaction %s done (no db activity)', self.connectionid)
+            return
+        try:
+            # by default, operations are executed with security turned off
+            with self.security_enabled(False, False):
+                while self.pending_operations:
+                    try:
+                        operation = self.pending_operations.pop(0)
+                        operation.handle_event('rollback_event')
+                    except BaseException:
+                        self.critical('rollback error', exc_info=sys.exc_info())
+                        continue
+                cnxset.rollback()
+                self.debug('rollback for connectionid %s done', self.connectionid)
+        finally:
+            self._session_timestamp.touch()
+            if free_cnxset:
+                self.free_cnxset(ignoremode=True)
+            self.clear()
+
     # resource accessors ######################################################
 
     def system_sql(self, sql, args=None, rollback_on_failure=True):
@@ -1438,35 +1468,11 @@ class Session(RequestSessionBase):
                 self.free_cnxset(ignoremode=True)
             self._clear_thread_data(free_cnxset)
 
-    def rollback(self, free_cnxset=True, reset_pool=None):
+    def rollback(self, free_cnxset=True, **kwargs):
         """rollback the current session's transaction"""
-        if reset_pool is not None:
-            warn('[3.13] use free_cnxset argument instead for reset_pool',
-                 DeprecationWarning, stacklevel=2)
-            free_cnxset = reset_pool
-        # don't use self.cnxset, rollback may be called with _closed == True
-        cnxset = self._cnx.cnxset
-        if cnxset is None:
-            self._clear_thread_data()
-            self._touch()
-            self.debug('rollback session %s done (no db activity)', self.id)
-            return
         try:
-            # by default, operations are executed with security turned off
-            with self.security_enabled(False, False):
-                while self.pending_operations:
-                    try:
-                        operation = self.pending_operations.pop(0)
-                        operation.handle_event('rollback_event')
-                    except BaseException:
-                        self.critical('rollback error', exc_info=sys.exc_info())
-                        continue
-                cnxset.rollback()
-                self.debug('rollback for session %s done', self.id)
+            return self._cnx.rollback(free_cnxset, **kwargs)
         finally:
-            self._touch()
-            if free_cnxset:
-                self.free_cnxset(ignoremode=True)
             self._clear_thread_data(free_cnxset)
 
     def close(self):
