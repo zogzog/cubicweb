@@ -99,7 +99,8 @@ def hooks_control(obj, mode, *categories):
         return obj.deny_all_hooks_but(*categories)
 
 
-class _hooks_control(object):
+class _hooks_control(object): # XXX repoapi: remove me when
+                              # session stop being connection
     """context manager to control activated hooks categories.
 
     If mode is`HOOKS_DENY_ALL`, given hooks categories will
@@ -149,7 +150,8 @@ class _hooks_control(object):
         finally:
             self.cnx.hooks_mode = self.oldmode
 
-class _session_hooks_control(_hooks_control):
+class _session_hooks_control(_hooks_control): # XXX repoapi: remove me when
+                                              # session stop being connection
     """hook control context manager for session
 
     Necessary to handle some unholy transaction scope logic."""
@@ -1184,10 +1186,12 @@ def cnx_attr(attr_name, writable=False):
 
     This is to be used by session"""
     args = {}
+    @deprecated('[4.0] use a Connection object instead')
     def attr_from_cnx(session):
         return getattr(session._cnx, attr_name)
     args['fget'] = attr_from_cnx
     if writable:
+        @deprecated('[4.0] use a Connection object instead')
         def write_attr(session, value):
             return setattr(session._cnx, attr_name, value)
         args['fset'] = write_attr
@@ -1197,6 +1201,7 @@ def cnx_meth(meth_name):
     """return a function forwarding calls to connection.
 
     This is to be used by session"""
+    @deprecated('[4.0] use a Connection object instead')
     def meth_from_cnx(session, *args, **kwargs):
         result = getattr(session._cnx, meth_name)(*args, **kwargs)
         if getattr(result, '_cw', None) is not None:
@@ -1216,7 +1221,8 @@ class Timestamp(object):
         return float(self.value)
 
 
-class Session(RequestSessionBase):
+class Session(RequestSessionBase): # XXX repoapi: stop being a
+                                   # RequestSessionBase at some point
     """Repository user session
 
     This tie all together:
@@ -1333,8 +1339,8 @@ class Session(RequestSessionBase):
 
     def __init__(self, user, repo, cnxprops=None, _id=None):
         super(Session, self).__init__(repo.vreg)
-        self.id = _id or make_uid(unormalize(user.login).encode('UTF8'))
-        self.user = user
+        self.sessionid = _id or make_uid(unormalize(user.login).encode('UTF8'))
+        self.user = user # XXX repoapi: deprecated and store only a login.
         self.repo = repo
         self._timestamp = Timestamp()
         self.default_mode = 'read'
@@ -1347,9 +1353,11 @@ class Session(RequestSessionBase):
         self.set_language(user.prefered_language())
         ### internals
         # Connection of this section
-        self._cnxs = {}
+        self._cnxs = {} # XXX repoapi: remove this when nobody use the session
+                        # as a Connection
         # Data local to the thread
-        self.__threaddata = threading.local()
+        self.__threaddata = threading.local() # XXX repoapi: remove this when
+                                              # nobody use the session as a Connection
         self._cnxset_tracker = CnxSetTracker()
         self._closed = False
         self._lock = threading.RLock()
@@ -1362,12 +1370,12 @@ class Session(RequestSessionBase):
         return float(self._timestamp)
 
     @property
-    def sessionid(self):
-        return self.id
+    @deprecated('[4.0] session.id is deprecated. use session.sessionid')
+    def id(self):
+        return self.sessionid
 
     @property
     def login(self):
-        # XXX backward compat with dbapi. deprecate me ASAP.
         return self.user.login
 
     def new_cnx(self):
@@ -1406,6 +1414,7 @@ class Session(RequestSessionBase):
             pass
 
     def set_cnx(self, cnxid=None):
+        # XXX repoapi: remove this when nobody use the session as a Connection
         """set the default connection of the current thread to <cnxid>
 
         Connection is created if necessary"""
@@ -1425,9 +1434,11 @@ class Session(RequestSessionBase):
             self.set_cnx()
             return self.__threaddata.cnx
 
+    @deprecated('[4.0] use a Connection object instead')
     def get_option_value(self, option, foreid=None):
         return self.repo.get_option_value(option, foreid)
 
+    @deprecated('[4.0] use a Connection object instead')
     def transaction(self, free_cnxset=True):
         """return context manager to enter a transaction for the session: when
         exiting the `with` block on exception, call `session.rollback()`, else
@@ -1456,7 +1467,7 @@ class Session(RequestSessionBase):
 
     # security control #########################################################
 
-
+    @deprecated('[4.0] use a Connection object instead')
     def security_enabled(self, read=None, write=None):
         return _session_security_enabled(self, read=read, write=write)
 
@@ -1467,8 +1478,11 @@ class Session(RequestSessionBase):
     # hooks activation control #################################################
     # all hooks should be activated during normal execution
 
+
+    @deprecated('[4.0] use a Connection object instead')
     def allow_all_hooks_but(self, *categories):
         return _session_hooks_control(self, HOOKS_ALLOW_ALL, *categories)
+    @deprecated('[4.0] use a Connection object instead')
     def deny_all_hooks_but(self, *categories):
         return _session_hooks_control(self, HOOKS_DENY_ALL, *categories)
 
@@ -1483,6 +1497,7 @@ class Session(RequestSessionBase):
 
     # connection management ###################################################
 
+    @deprecated('[4.0] use a Connection object instead')
     def keep_cnxset_mode(self, mode):
         """set `mode`, e.g. how the session will keep its connections set:
 
@@ -1507,6 +1522,7 @@ class Session(RequestSessionBase):
     commit_state = cnx_attr('commit_state', writable=True)
 
     @property
+    @deprecated('[4.0] use a Connection object instead')
     def cnxset(self):
         """connections set, set according to transaction mode for each query"""
         if self._closed:
@@ -1562,6 +1578,7 @@ class Session(RequestSessionBase):
     # request interface #######################################################
 
     @property
+    @deprecated('[4.0] use a Connection object instead')
     def cursor(self):
         """return a rql cursor"""
         return self
@@ -1576,6 +1593,7 @@ class Session(RequestSessionBase):
     source_from_eid = cnx_meth('source_from_eid')
 
 
+    @deprecated('[4.0] use a Connection object instead')
     def execute(self, *args, **kwargs):
         """db-api like method directly linked to the querier execute method.
 
@@ -1604,6 +1622,7 @@ class Session(RequestSessionBase):
             else:
                 cnx.clear()
 
+    @deprecated('[4.0] use a Connection object instead')
     def commit(self, free_cnxset=True, reset_pool=None):
         """commit the current session's transaction"""
         cstate = self._cnx.commit_state
@@ -1614,6 +1633,7 @@ class Session(RequestSessionBase):
         finally:
             self._clear_thread_data(free_cnxset)
 
+    @deprecated('[4.0] use a Connection object instead')
     def rollback(self, free_cnxset=True, **kwargs):
         """rollback the current session's transaction"""
         try:
@@ -1678,6 +1698,7 @@ class Session(RequestSessionBase):
     # deprecated ###############################################################
 
     @property
+    @deprecated('[4.0] use a Connection object instead')
     def anonymous_session(self):
         # XXX for now, anonymous-user is a web side option.
         # It will only be present inside all-in-one instance.
