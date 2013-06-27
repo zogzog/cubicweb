@@ -449,6 +449,7 @@ class Connection(RequestSessionBase):
 
         #: dict containing arbitrary data cleared at the end of the transaction
         self.transaction_data = {}
+        self._session_data = session.data
         #: ordered list of operations to be processed on commit/rollback
         self.pending_operations = []
         #: (None, 'precommit', 'postcommit', 'uncommitable')
@@ -475,6 +476,31 @@ class Connection(RequestSessionBase):
         # RQLRewriter are not thread safe
         self._rewriter = rewriter
 
+
+    # shared data handling ###################################################
+
+    @property
+    def data(self):
+        return self._session_data
+
+    def get_shared_data(self, key, default=None, pop=False, txdata=False):
+        """return value associated to `key` in session data"""
+        if txdata:
+            data = self.transaction_data
+        else:
+            data = self._session_data
+        if pop:
+            return data.pop(key, default)
+        else:
+            return data.get(key, default)
+
+    def set_shared_data(self, key, value, txdata=False):
+        """set value associated to `key` in session data"""
+        if txdata:
+            self.transaction_data[key] = value
+        else:
+            self._session_data[key] = value
+
     def clear(self):
         """reset internal data"""
         self.transaction_data = {}
@@ -483,6 +509,7 @@ class Connection(RequestSessionBase):
         #: (None, 'precommit', 'postcommit', 'uncommitable')
         self.commit_state = None
         self.pruned_hooks_cache = {}
+
     # Connection Set Management ###############################################
     @property
     def cnxset(self):
@@ -1184,7 +1211,7 @@ class Session(RequestSessionBase):
     def get_shared_data(self, key, default=None, pop=False, txdata=False):
         """return value associated to `key` in session data"""
         if txdata:
-            data = self._cnx.transaction_data
+            return self._cnx.get_shared_data(key, default, pop, txdata=True)
         else:
             data = self.data
         if pop:
@@ -1195,7 +1222,7 @@ class Session(RequestSessionBase):
     def set_shared_data(self, key, value, txdata=False):
         """set value associated to `key` in session data"""
         if txdata:
-            self._cnx.transaction_data[key] = value
+            return self._cnx.set_shared_data(key, value, txdata=True)
         else:
             self.data[key] = value
 
