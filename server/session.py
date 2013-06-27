@@ -429,14 +429,12 @@ class Connection(RequestSessionBase):
         #: server.Repository object
         self.repo = session.repo
         self.vreg = self.repo.vreg
+        self._execute = self.repo.querier.execute
 
         # other session utility
         self.user = session.user # XXX migrate to self._set_user when
         self.lang = session.lang # Connection gain execute
-        self.execute = session.execute # temporary hack until all necessary
-                                       # function have been migrated. Most of
-                                       # those function requires an execute
-                                       # method and execute requires them too.
+
 
         #: connection handling mode
         self.mode = session.default_mode
@@ -878,6 +876,20 @@ class Connection(RequestSessionBase):
         """return the source where the entity with id <eid> is located"""
         return self.repo.source_from_eid(eid, self)
 
+    # core method #############################################################
+
+    def execute(self, rql, kwargs=None, eid_key=None, build_descr=True):
+        """db-api like method directly linked to the querier execute method.
+
+        See :meth:`cubicweb.dbapi.Cursor.execute` documentation.
+        """
+        if eid_key is not None:
+            warn('[3.8] eid_key is deprecated, you can safely remove this argument',
+                 DeprecationWarning, stacklevel=2)
+        rset = self._execute(self, rql, kwargs, build_descr)
+        rset.req = self
+        return rset
+
     # resource accessors ######################################################
 
     def system_sql(self, sql, args=None, rollback_on_failure=True):
@@ -1285,16 +1297,13 @@ class Session(RequestSessionBase):
     source_from_eid = cnx_meth('source_from_eid')
 
 
-    def execute(self, rql, kwargs=None, eid_key=None, build_descr=True):
+    def execute(self, *args, **kwargs):
         """db-api like method directly linked to the querier execute method.
 
         See :meth:`cubicweb.dbapi.Cursor.execute` documentation.
         """
-        if eid_key is not None:
-            warn('[3.8] eid_key is deprecated, you can safely remove this argument',
-                 DeprecationWarning, stacklevel=2)
         self._timestamp.touch() # update timestamp
-        rset = self._execute(self, rql, kwargs, build_descr)
+        rset = self._cnx.execute(*args, **kwargs)
         rset.req = self
         return rset
 
