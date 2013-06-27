@@ -564,6 +564,73 @@ class Connection(RequestSessionBase):
         else:
             del self.transaction_data['ecache'][eid]
 
+    # relations cache handling #################################################
+
+    def update_rel_cache_add(self, subject, rtype, object, symmetric=False):
+        self._update_entity_rel_cache_add(subject, rtype, 'subject', object)
+        if symmetric:
+            self._update_entity_rel_cache_add(object, rtype, 'subject', subject)
+        else:
+            self._update_entity_rel_cache_add(object, rtype, 'object', subject)
+
+    def update_rel_cache_del(self, subject, rtype, object, symmetric=False):
+        self._update_entity_rel_cache_del(subject, rtype, 'subject', object)
+        if symmetric:
+            self._update_entity_rel_cache_del(object, rtype, 'object', object)
+        else:
+            self._update_entity_rel_cache_del(object, rtype, 'object', subject)
+
+    def _update_entity_rel_cache_add(self, eid, rtype, role, targeteid):
+        try:
+            entity = self.entity_cache(eid)
+        except KeyError:
+            return
+        rcache = entity.cw_relation_cached(rtype, role)
+        if rcache is not None:
+            rset, entities = rcache
+            rset = rset.copy()
+            entities = list(entities)
+            rset.rows.append([targeteid])
+            if not isinstance(rset.description, list): # else description not set
+                rset.description = list(rset.description)
+            rset.description.append([self.describe(targeteid)[0]])
+            targetentity = self.entity_from_eid(targeteid)
+            if targetentity.cw_rset is None:
+                targetentity.cw_rset = rset
+                targetentity.cw_row = rset.rowcount
+                targetentity.cw_col = 0
+            rset.rowcount += 1
+            entities.append(targetentity)
+            entity._cw_related_cache['%s_%s' % (rtype, role)] = (
+                rset, tuple(entities))
+
+    def _update_entity_rel_cache_del(self, eid, rtype, role, targeteid):
+        try:
+            entity = self.entity_cache(eid)
+        except KeyError:
+            return
+        rcache = entity.cw_relation_cached(rtype, role)
+        if rcache is not None:
+            rset, entities = rcache
+            for idx, row in enumerate(rset.rows):
+                if row[0] == targeteid:
+                    break
+            else:
+                # this may occurs if the cache has been filed by a hook
+                # after the database update
+                self.debug('cache inconsistency for %s %s %s %s', eid, rtype,
+                           role, targeteid)
+                return
+            rset = rset.copy()
+            entities = list(entities)
+            del rset.rows[idx]
+            if isinstance(rset.description, list): # else description not set
+                del rset.description[idx]
+            del entities[idx]
+            rset.rowcount -= 1
+            entity._cw_related_cache['%s_%s' % (rtype, role)] = (
+                rset, tuple(entities))
+
     # Tracking of entity added of removed in the transaction ##################
     #
     # Those are function to  allows cheap call from client in other process.
@@ -1028,70 +1095,8 @@ class Session(RequestSessionBase):
 
     # relations cache handling #################################################
 
-    def update_rel_cache_add(self, subject, rtype, object, symmetric=False):
-        self._update_entity_rel_cache_add(subject, rtype, 'subject', object)
-        if symmetric:
-            self._update_entity_rel_cache_add(object, rtype, 'subject', subject)
-        else:
-            self._update_entity_rel_cache_add(object, rtype, 'object', subject)
-
-    def update_rel_cache_del(self, subject, rtype, object, symmetric=False):
-        self._update_entity_rel_cache_del(subject, rtype, 'subject', object)
-        if symmetric:
-            self._update_entity_rel_cache_del(object, rtype, 'object', object)
-        else:
-            self._update_entity_rel_cache_del(object, rtype, 'object', subject)
-
-    def _update_entity_rel_cache_add(self, eid, rtype, role, targeteid):
-        try:
-            entity = self.entity_cache(eid)
-        except KeyError:
-            return
-        rcache = entity.cw_relation_cached(rtype, role)
-        if rcache is not None:
-            rset, entities = rcache
-            rset = rset.copy()
-            entities = list(entities)
-            rset.rows.append([targeteid])
-            if not isinstance(rset.description, list): # else description not set
-                rset.description = list(rset.description)
-            rset.description.append([self.describe(targeteid)[0]])
-            targetentity = self.entity_from_eid(targeteid)
-            if targetentity.cw_rset is None:
-                targetentity.cw_rset = rset
-                targetentity.cw_row = rset.rowcount
-                targetentity.cw_col = 0
-            rset.rowcount += 1
-            entities.append(targetentity)
-            entity._cw_related_cache['%s_%s' % (rtype, role)] = (
-                rset, tuple(entities))
-
-    def _update_entity_rel_cache_del(self, eid, rtype, role, targeteid):
-        try:
-            entity = self.entity_cache(eid)
-        except KeyError:
-            return
-        rcache = entity.cw_relation_cached(rtype, role)
-        if rcache is not None:
-            rset, entities = rcache
-            for idx, row in enumerate(rset.rows):
-                if row[0] == targeteid:
-                    break
-            else:
-                # this may occurs if the cache has been filed by a hook
-                # after the database update
-                self.debug('cache inconsistency for %s %s %s %s', eid, rtype,
-                           role, targeteid)
-                return
-            rset = rset.copy()
-            entities = list(entities)
-            del rset.rows[idx]
-            if isinstance(rset.description, list): # else description not set
-                del rset.description[idx]
-            del entities[idx]
-            rset.rowcount -= 1
-            entity._cw_related_cache['%s_%s' % (rtype, role)] = (
-                rset, tuple(entities))
+    update_rel_cache_add = cnx_meth('update_rel_cache_add')
+    update_rel_cache_del = cnx_meth('update_rel_cache_del')
 
     # resource accessors ######################################################
 
