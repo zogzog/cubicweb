@@ -917,6 +917,17 @@ def cnx_meth(meth_name):
         return getattr(session._cnx, meth_name)(*args, **kwargs)
     return meth_from_cnx
 
+class Timestamp(object):
+
+    def __init__(self):
+        self.value = time()
+
+    def touch(self):
+        self.value = time()
+
+    def __float__(self):
+        return float(self.value)
+
 
 class Session(RequestSessionBase):
     """Repository user session
@@ -1038,7 +1049,7 @@ class Session(RequestSessionBase):
         self.id = _id or make_uid(unormalize(user.login).encode('UTF8'))
         self.user = user
         self.repo = repo
-        self.timestamp = time()
+        self._timestamp = Timestamp()
         self.default_mode = 'read'
         # short cut to querier .execute method
         self._execute = repo.querier.execute
@@ -1059,6 +1070,9 @@ class Session(RequestSessionBase):
     def __unicode__(self):
         return '<session %s (%s 0x%x)>' % (
             unicode(self.user.login), self.id, id(self))
+    @property
+    def timestamp(self):
+        return float(self._timestamp)
 
     @property
     def sessionid(self):
@@ -1209,8 +1223,8 @@ class Session(RequestSessionBase):
 
     def _touch(self):
         """update latest session usage timestamp and reset mode to read"""
-        self.timestamp = time()
-        self.local_perm_cache.clear() # XXX simply move in cnx.data, no?
+        self._timestamp.touch()
+        self.local_perm_cache.clear() # XXX simply move in cnx.transaction_data, no?
 
     # shared data handling ###################################################
 
@@ -1238,7 +1252,6 @@ class Session(RequestSessionBase):
         return self.repo._call_service_with_session(self, regid,
                                                     **kwargs)
 
-
     # request interface #######################################################
 
     @property
@@ -1264,7 +1277,7 @@ class Session(RequestSessionBase):
         if eid_key is not None:
             warn('[3.8] eid_key is deprecated, you can safely remove this argument',
                  DeprecationWarning, stacklevel=2)
-        self.timestamp = time() # update timestamp
+        self._timestamp.touch() # update timestamp
         rset = self._execute(self, rql, kwargs, build_descr)
         rset.req = self
         return rset
