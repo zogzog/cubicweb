@@ -431,6 +431,9 @@ class Connection(RequestSessionBase):
         self.vreg = self.repo.vreg
         self._execute = self.repo.querier.execute
 
+        # other session utility
+        self._session_timestamp = session._timestamp
+
         #: connection handling mode
         self.mode = session.default_mode
         #: connection set used to execute queries on sources
@@ -476,6 +479,7 @@ class Connection(RequestSessionBase):
             self.user = session.user
         else:
             self._set_user(session.user)
+
 
     # shared data handling ###################################################
 
@@ -883,11 +887,13 @@ class Connection(RequestSessionBase):
 
         See :meth:`cubicweb.dbapi.Cursor.execute` documentation.
         """
+        self._session_timestamp.touch()
         if eid_key is not None:
             warn('[3.8] eid_key is deprecated, you can safely remove this argument',
                  DeprecationWarning, stacklevel=2)
         rset = self._execute(self, rql, kwargs, build_descr)
         rset.req = self
+        self._session_timestamp.touch()
         return rset
 
     # resource accessors ######################################################
@@ -1302,7 +1308,6 @@ class Session(RequestSessionBase):
 
         See :meth:`cubicweb.dbapi.Cursor.execute` documentation.
         """
-        self._timestamp.touch() # update timestamp
         rset = self._cnx.execute(*args, **kwargs)
         rset.req = self
         return rset
