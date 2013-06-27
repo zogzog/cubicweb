@@ -281,8 +281,8 @@ class CubicWebTC(TestCase):
         # get an admin session (without actual login)
         sources = db_handler.config.sources()
         login = unicode(sources['admin']['login'])
-        with self.repo.internal_session() as session:
-            rset = session.execute('CWUser U WHERE U login %(u)s', {'u': login})
+        with self.repo.internal_cnx() as cnx:
+            rset = cnx.execute('CWUser U WHERE U login %(u)s', {'u': login})
             user = rset.get_entity(0, 0)
             user.groups
             user.properties
