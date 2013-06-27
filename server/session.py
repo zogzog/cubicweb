@@ -418,7 +418,7 @@ class Connection(RequestSessionBase):
 
     is_request = False
 
-    def __init__(self, cnxid, session, rewriter):
+    def __init__(self, cnxid, session):
         # using super(Connection, self) confuse some test hack
         RequestSessionBase.__init__(self, session.vreg)
         #: connection unique id
@@ -472,7 +472,7 @@ class Connection(RequestSessionBase):
             self.undo_actions = config['undo-enabled']
 
         # RQLRewriter are not thread safe
-        self._rewriter = rewriter
+        self._rewriter = RQLRewriter(self)
 
         # other session utility
         if session.user.login == '__internal_manager__':
@@ -518,6 +518,7 @@ class Connection(RequestSessionBase):
         self.commit_state = None
         self.pruned_hooks_cache = {}
         self.local_perm_cache.clear()
+        self.rewriter = RQLRewriter(self)
 
     # Connection Set Management ###############################################
     @property
@@ -1121,8 +1122,7 @@ class Session(RequestSessionBase):
                     raise SessionClosedError('try to access connections set on a closed session %s' % self.id)
                 cnx = self._cnxs[cnxid]
             except KeyError:
-                rewriter = RQLRewriter(self)
-                cnx = Connection(cnxid, self, rewriter)
+                cnx = Connection(cnxid, self)
                 self._cnxs[cnxid] = cnx
         return cnx
 
@@ -1349,7 +1349,6 @@ class Session(RequestSessionBase):
 
     def _clear_cnx_storage(self, cnx):
         cnx.clear()
-        cnx._rewriter = RQLRewriter(self)
 
     def commit(self, free_cnxset=True, reset_pool=None):
         """commit the current session's transaction"""
