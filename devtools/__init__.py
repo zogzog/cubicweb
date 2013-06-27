@@ -267,7 +267,6 @@ class RealDatabaseConfiguration(ApptestConfiguration):
     skip_db_create_and_restore = True
     read_instance_schema = True # read schema from database
 
-
 # test database handling #######################################################
 
 DEFAULT_EMPTY_DB_ID = '__default_empty_db__'

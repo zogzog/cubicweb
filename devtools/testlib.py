@@ -45,6 +45,7 @@ from cubicweb.utils import json
 from cubicweb.sobjects import notification
 from cubicweb.web import Redirect, application
 from cubicweb.server.hook import SendMailOp
+from cubicweb.server.session import Session
 from cubicweb.devtools import SYSTEM_ENTITIES, SYSTEM_RELATIONS, VIEW_VALIDATORS
 from cubicweb.devtools import fake, htmlparser, DEFAULT_EMPTY_DB_ID
 from cubicweb.utils import json
@@ -155,6 +156,76 @@ class TestCaseConnectionProxy(object):
         finally:
             self.testcase.restore_connection()
 
+# Repoaccess utility ###############################################3###########
+
+class RepoAccess(object):
+    """An helper to easily create object to access the repo as a specific user
+
+    Each RepoAccess have it own session.
+
+    A repo access can create three type of object:
+
+    .. automethod:: cubicweb.testlib.RepoAccess.repo_cnx
+    .. automethod:: cubicweb.testlib.RepoAccess.client_cnx
+    .. automethod:: cubicweb.testlib.RepoAccess.web_request
+
+    The RepoAccess need to be closed to destroy the associated Session.
+    TestCase usually take care of this aspect for the user.
+
+    .. automethod:: cubicweb.testlib.RepoAccess.close
+    """
+
+    def __init__(self, repo, login, requestcls):
+        self._repo = repo
+        self._login = login
+        self.requestcls = requestcls
+        # opening session
+        #
+        # XXX this very hackish code should be cleaned and move on repo.
+        with repo.internal_cnx() as cnx:
+            rset = cnx.execute('CWUser U WHERE U login %(u)s', {'u': login})
+            user = rset.get_entity(0, 0)
+            user.groups
+            user.properties
+            self._session = Session(user, repo)
+            repo._sessions[self._session.id] = self._session
+            self._session.user._cw = self._session
+
+    @ contextmanager
+    def repo_cnx(self):
+        """Context manager returning a server side connection for the user"""
+        with self._session.new_cnx() as cnx:
+            yield cnx
+
+    @ contextmanager
+    def client_cnx(self):
+        """Context manager returning a client side connection for the user"""
+        with repoapi.ClientConnection(self._session) as cnx:
+            yield cnx
+
+    @ contextmanager
+    def web_request(self, url=None, headers={}, **kwargs):
+        """Context manager returning a web request pre-linked to a client cnx
+
+        To commit and rollback use::
+
+            req.cnx.commit()
+            req.cnx.rolback()
+        """
+        req = self.requestcls(self._repo.vreg, url=url, headers=headers, form=kwargs)
+        clt_cnx = repoapi.ClientConnection(self._session)
+        req.set_cnx(clt_cnx)
+        with clt_cnx:
+            yield req
+
+    def close(self):
+        """Close the session associated to the RepoAccess"""
+        if self._session is not None:
+            self._repo.close(self._session.id)
+        self._session = None
+
+
+
 # base class for cubicweb tests requiring a full cw environments ###############
 
 class CubicWebTC(TestCase):
@@ -186,9 +257,21 @@ class CubicWebTC(TestCase):
         self._current_session = None
         self._current_clt_cnx = None
         self.repo = None
+        self._open_access = set()
         super(CubicWebTC, self).__init__(*args, **kwargs)
 
     # repository connection handling ###########################################
+    def new_access(self, login):
+        """provide a new RepoAccess object for a given user
+
+        The access is automatically closed at the end of the test."""
+        access = RepoAccess(self.repo, login, self.requestcls)
+        self._open_access.add(access)
+        return access
+
+    def _close_access(self):
+        while self._open_access:
+            self._open_access.pop().close()
 
     def set_cnx(self, cnx):
         # XXX we want to deprecate this

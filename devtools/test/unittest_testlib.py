@@ -172,5 +172,31 @@ class CWUtilitiesTC(CubicWebTC):
             self.assertTrue(rdef.permissions['add'])
         self.assertTrue(rdef.permissions['read'], ())
 
+class RepoAccessTC(CubicWebTC):
+
+    def test_repo_connection(self):
+        acc = self.new_access('admin')
+        with  acc.repo_cnx() as cnx:
+            rset = cnx.execute('Any X WHERE X is CWUser')
+            self.assertTrue(rset)
+
+    def test_client_connection(self):
+        acc = self.new_access('admin')
+        with  acc.client_cnx() as cnx:
+            rset = cnx.execute('Any X WHERE X is CWUser')
+            self.assertTrue(rset)
+
+    def test_web_request(self):
+        acc = self.new_access('admin')
+        with  acc.web_request(elephant='babar') as req:
+            rset = req.execute('Any X WHERE X is CWUser')
+            self.assertTrue(rset)
+            self.assertEqual('babar', req.form['elephant'])
+
+    def test_close(self):
+        acc = self.new_access('admin')
+        acc.close()
+
+
 if __name__ == '__main__':
     unittest_main()
