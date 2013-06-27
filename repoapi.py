@@ -175,9 +175,15 @@ class ClientConnection(RequestSessionBase):
             self.__exit__(None, None, None)
 
     def __repr__(self):
-        if self.anonymous_connection:
+        # XXX we probably want to reference the user of the session here
+        if self._open is None:
+            return '<ClientConnection (not open yet)>'
+        elif not self._open:
+            return '<ClientConnection (closed)>'
+        elif self.anonymous_connection:
             return '<ClientConnection %s (anonymous)>' % self._cnx.connectionid
-        return '<ClientConnection %s>' % self._cnx.connectionid
+        else:
+            return '<ClientConnection %s>' % self._cnx.connectionid
     # end silly BC
 
     @property
@@ -188,7 +194,7 @@ class ClientConnection(RequestSessionBase):
         TRANSITIONAL PURPOSE, This will be dropped once we use standalone
         session object"""
         if not self._open:
-            raise ProgrammingError('Closed connection %s' % self._cnxid)
+            raise ProgrammingError('Closed connection')
         yield self._cnx
 
     # Main Connection purpose in life #########################################
