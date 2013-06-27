@@ -115,8 +115,7 @@ def _srv_cnx_func(name):
         # Connection object
         if not clt_cnx._open:
             raise ProgrammingError('Closed client connection')
-        with clt_cnx._srv_cnx as cnx:
-            return getattr(cnx, name)(*args, **kwargs)
+        return getattr(clt_cnx._cnx, name)(*args, **kwargs)
     return proxy
 
 def _open_only(func):
@@ -199,17 +198,6 @@ class ClientConnection(RequestSessionBase):
             return '<ClientConnection %s>' % self._cnx.connectionid
     # end silly BC
 
-    @property
-    @contextmanager
-    def _srv_cnx(self):
-        """ensure that the session is locked to the right transaction
-
-        TRANSITIONAL PURPOSE, This will be dropped once we use standalone
-        session object"""
-        if not self._open:
-            raise ProgrammingError('Closed connection')
-        yield self._cnx
-
     # Main Connection purpose in life #########################################
 
     call_service = _srv_cnx_func('call_service')
@@ -220,8 +208,7 @@ class ClientConnection(RequestSessionBase):
         # Connection yet so we use this trick to unsure the session have the
         # proper cnx loaded. This can be simplified one we have Standalone
         # Connection object
-        with self._srv_cnx as cnx:
-            rset = cnx.execute(*args, **kwargs)
+        rset = self._cnx.execute(*args, **kwargs)
         rset.req = self
         # XXX keep the same behavior as the old dbapi
         # otherwise multiple tests break.
@@ -289,9 +276,8 @@ class ClientConnection(RequestSessionBase):
         # Connection yet so we use this trick to unsure the session have the
         # proper cnx loaded. This can be simplified one we have Standalone
         # Connection object
-        with self._srv_cnx as cnx:
-            source = cnx.repo.system_source
-            txinfos = source.undoable_transactions(cnx, ueid, **actionfilters)
+        source = self._cnx.repo.system_source
+        txinfos = source.undoable_transactions(self._cnx, ueid, **actionfilters)
         for txinfo in txinfos:
             txinfo.req = req or self  # XXX mostly wrong
         return txinfos
@@ -308,8 +294,7 @@ class ClientConnection(RequestSessionBase):
         # Connection yet so we use this trick to unsure the session have the
         # proper cnx loaded. This can be simplified one we have Standalone
         # Connection object
-        with self._srv_cnx as cnx:
-            txinfo = cnx.repo.system_source.tx_info(cnx, txuuid)
+        txinfo = self._cnx.repo.system_source.tx_info(self._cnx, txuuid)
         if req:
             txinfo.req = req
         else:
@@ -331,8 +316,7 @@ class ClientConnection(RequestSessionBase):
         # Connection yet so we use this trick to unsure the session have the
         # proper cnx loaded. This can be simplified one we have Standalone
         # Connection object
-        with self._srv_cnx as cnx:
-            return cnx.repo.system_source.tx_actions(cnx, txuuid, public)
+        return self._cnx.repo.system_source.tx_actions(self._cnx, txuuid, public)
 
     @_open_only
     def undo_transaction(self, txuuid):
@@ -346,8 +330,7 @@ class ClientConnection(RequestSessionBase):
         # Connection yet so we use this trick to unsure the session have the
         # proper cnx loaded. This can be simplified one we have Standalone
         # Connection object
-        with self._srv_cnx as cnx:
-            return cnx.repo.system_source.undo_transaction(cnx, txuuid)
+        return self._cnx.repo.system_source.undo_transaction(self._cnx, txuuid)
 
     def request(self):
         # XXX This is DBAPI compatibility method. Deprecate it ASAP.
