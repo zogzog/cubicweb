@@ -176,8 +176,8 @@ class ClientConnection(RequestSessionBase):
 
     def __repr__(self):
         if self.anonymous_connection:
-            return '<Connection %s (anonymous)>' % self._cnxid
-        return '<Connection %s>' % self._cnxid
+            return '<ClientConnection %s (anonymous)>' % self._cnx.connectionid
+        return '<ClientConnection %s>' % self._cnx.connectionid
     # end silly BC
 
     @property
