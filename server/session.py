@@ -31,7 +31,7 @@ from logilab.common.deprecation import deprecated
 from logilab.common.textutils import unormalize
 from logilab.common.registry import objectify_predicate
 
-from cubicweb import UnknownEid, QueryError, schema, server
+from cubicweb import UnknownEid, QueryError, schema, server, ProgrammingError
 from cubicweb.req import RequestSessionBase
 from cubicweb.utils import make_uid
 from cubicweb.rqlrewrite import RQLRewriter
@@ -371,6 +371,15 @@ def _with_cnx_set(func):
             return func(cnx, *args, **kwargs)
     return wrapper
 
+def _open_only(func):
+    """decorator for Connection method that check it is open"""
+    @functools.wraps(func)
+    def check_open(cnx, *args, **kwargs):
+        if not cnx._open:
+            raise ProgrammingError('Closed Connection: %s'
+                                    % cnx.connectionid)
+        return func(cnx, *args, **kwargs)
+    return check_open
 
 class Connection(RequestSessionBase):
     """Repository Connection
@@ -535,6 +544,7 @@ class Connection(RequestSessionBase):
     def rql_rewriter(self):
         return self._rewriter
 
+    @_open_only
     def get_shared_data(self, key, default=None, pop=False, txdata=False):
         """return value associated to `key` in session data"""
         if txdata:
@@ -546,6 +556,7 @@ class Connection(RequestSessionBase):
         else:
             return data.get(key, default)
 
+    @_open_only
     def set_shared_data(self, key, value, txdata=False):
         """set value associated to `key` in session data"""
         if txdata:
@@ -566,10 +577,12 @@ class Connection(RequestSessionBase):
 
     # Connection Set Management ###############################################
     @property
+    @_open_only
     def cnxset(self):
         return self._cnxset
 
     @cnxset.setter
+    @_open_only
     def cnxset(self, new_cnxset):
         with self._cnxset_tracker:
             old_cnxset = self._cnxset
@@ -584,6 +597,7 @@ class Connection(RequestSessionBase):
                 self._cnxset = new_cnxset
                 self.ctx_count += 1
 
+    @_open_only
     def _set_cnxset(self):
         """the connection need a connections set to execute some queries"""
         if self.cnxset is None:
@@ -600,6 +614,7 @@ class Connection(RequestSessionBase):
                 raise
         return self.cnxset
 
+    @_open_only
     def _free_cnxset(self, ignoremode=False):
         """the connection is no longer using its connections set, at least for some time"""
         # cnxset may be none if no operation has been done since last commit
@@ -623,6 +638,7 @@ class Connection(RequestSessionBase):
 
     @property
     @contextmanager
+    @_open_only
     def ensure_cnx_set(self):
         assert self._cnxset_count >= 0
         if self._cnxset_count == 0:
@@ -648,17 +664,25 @@ class Connection(RequestSessionBase):
 
     def set_entity_cache(self, entity):
         """Add `entity` to the connection entity cache"""
+        #XXX not using _open_only because before at creation time. _set_user
+        # call this function to cache the Connection user.
+        if entity.cw_etype != 'CWUser' and not self._open:
+            raise ProgrammingError('Closed Connection: %s'
+                                    % self.connectionid)
         ecache = self.transaction_data.setdefault('ecache', {})
         ecache.setdefault(entity.eid, entity)
 
+    @_open_only
     def entity_cache(self, eid):
         """get cache entity for `eid`"""
         return self.transaction_data['ecache'][eid]
 
+    @_open_only
     def cached_entities(self):
         """return the whole entity cache"""
         return self.transaction_data.get('ecache', {}).values()
 
+    @_open_only
     def drop_entity_cache(self, eid=None):
         """drop entity from the cache
 
@@ -670,6 +694,7 @@ class Connection(RequestSessionBase):
 
     # relations handling #######################################################
 
+    @_open_only
     def add_relation(self, fromeid, rtype, toeid):
         """provide direct access to the repository method to add a relation.
 
@@ -683,6 +708,7 @@ class Connection(RequestSessionBase):
         """
         self.add_relations([(rtype, [(fromeid,  toeid)])])
 
+    @_open_only
     def add_relations(self, relations):
         '''set many relation using a shortcut similar to the one in add_relation
 
@@ -710,6 +736,7 @@ class Connection(RequestSessionBase):
                 self.repo.glob_update_entity(self, edited)
 
 
+    @_open_only
     def delete_relation(self, fromeid, rtype, toeid):
         """provide direct access to the repository method to delete a relation.
 
@@ -731,6 +758,7 @@ class Connection(RequestSessionBase):
 
     # relations cache handling #################################################
 
+    @_open_only
     def update_rel_cache_add(self, subject, rtype, object, symmetric=False):
         self._update_entity_rel_cache_add(subject, rtype, 'subject', object)
         if symmetric:
@@ -738,6 +766,7 @@ class Connection(RequestSessionBase):
         else:
             self._update_entity_rel_cache_add(object, rtype, 'object', subject)
 
+    @_open_only
     def update_rel_cache_del(self, subject, rtype, object, symmetric=False):
         self._update_entity_rel_cache_del(subject, rtype, 'subject', object)
         if symmetric:
@@ -745,6 +774,7 @@ class Connection(RequestSessionBase):
         else:
             self._update_entity_rel_cache_del(object, rtype, 'object', subject)
 
+    @_open_only
     def _update_entity_rel_cache_add(self, eid, rtype, role, targeteid):
         try:
             entity = self.entity_cache(eid)
@@ -769,6 +799,7 @@ class Connection(RequestSessionBase):
             entity._cw_related_cache['%s_%s' % (rtype, role)] = (
                 rset, tuple(entities))
 
+    @_open_only
     def _update_entity_rel_cache_del(self, eid, rtype, role, targeteid):
         try:
             entity = self.entity_cache(eid)
@@ -800,12 +831,14 @@ class Connection(RequestSessionBase):
     #
     # Those are function to  allows cheap call from client in other process.
 
+    @_open_only
     def deleted_in_transaction(self, eid):
         """return True if the entity of the given eid is being deleted in the
         current transaction
         """
         return eid in self.transaction_data.get('pendingeids', ())
 
+    @_open_only
     def added_in_transaction(self, eid):
         """return True if the entity of the given eid is being created in the
         current transaction
@@ -814,6 +847,7 @@ class Connection(RequestSessionBase):
 
     # Operation management ####################################################
 
+    @_open_only
     def add_operation(self, operation, index=None):
         """add an operation to be executed at the end of the transaction"""
         if index is None:
@@ -823,12 +857,15 @@ class Connection(RequestSessionBase):
 
     # Hooks control ###########################################################
 
+    @_open_only
     def allow_all_hooks_but(self, *categories):
         return _hooks_control(self, HOOKS_ALLOW_ALL, *categories)
 
+    @_open_only
     def deny_all_hooks_but(self, *categories):
         return _hooks_control(self, HOOKS_DENY_ALL, *categories)
 
+    @_open_only
     def disable_hook_categories(self, *categories):
         """disable the given hook categories:
 
@@ -848,6 +885,7 @@ class Connection(RequestSessionBase):
             disabledcats |= changes # changes is small hence faster
         return tuple(changes)
 
+    @_open_only
     def enable_hook_categories(self, *categories):
         """enable the given hook categories:
 
@@ -867,6 +905,7 @@ class Connection(RequestSessionBase):
             disabledcats -= changes # changes is small hence faster
         return tuple(changes)
 
+    @_open_only
     def is_hook_category_activated(self, category):
         """return a boolean telling if the given category is currently activated
         or not
@@ -875,6 +914,7 @@ class Connection(RequestSessionBase):
             return category in self.enabled_hook_cats
         return category not in self.disabled_hook_cats
 
+    @_open_only
     def is_hook_activated(self, hook):
         """return a boolean telling if the given hook class is currently
         activated or not
@@ -883,14 +923,17 @@ class Connection(RequestSessionBase):
 
     # Security management #####################################################
 
+    @_open_only
     def security_enabled(self, read=None, write=None):
         return _security_enabled(self, read=read, write=write)
 
     @property
+    @_open_only
     def read_security(self):
         return self._read_security
 
     @read_security.setter
+    @_open_only
     def read_security(self, activated):
         oldmode = self._read_security
         self._read_security = activated
@@ -916,9 +959,11 @@ class Connection(RequestSessionBase):
 
     # undo support ############################################################
 
+    @_open_only
     def ertype_supports_undo(self, ertype):
         return self.undo_actions and ertype not in NO_UNDO_TYPES
 
+    @_open_only
     def transaction_uuid(self, set=True):
         uuid = self.transaction_data.get('tx_uuid')
         if set and uuid is None:
@@ -926,16 +971,19 @@ class Connection(RequestSessionBase):
             self.repo.system_source.start_undoable_transaction(self, uuid)
         return uuid
 
+    @_open_only
     def transaction_inc_action_counter(self):
         num = self.transaction_data.setdefault('tx_action_count', 0) + 1
         self.transaction_data['tx_action_count'] = num
         return num
     # db-api like interface ###################################################
 
+    @_open_only
     def source_defs(self):
         return self.repo.source_defs()
 
     @_with_cnx_set
+    @_open_only
     def describe(self, eid, asdict=False):
         """return a tuple (type, sourceuri, extid) for the entity with id <eid>"""
         metas = self.repo.type_and_source_from_eid(eid, self)
@@ -945,6 +993,7 @@ class Connection(RequestSessionBase):
         return metas[:-1]
 
     @_with_cnx_set
+    @_open_only
     def source_from_eid(self, eid):
         """return the source where the entity with id <eid> is located"""
         return self.repo.source_from_eid(eid, self)
@@ -952,6 +1001,7 @@ class Connection(RequestSessionBase):
     # core method #############################################################
 
     @_with_cnx_set
+    @_open_only
     def execute(self, rql, kwargs=None, eid_key=None, build_descr=True):
         """db-api like method directly linked to the querier execute method.
 
@@ -966,6 +1016,7 @@ class Connection(RequestSessionBase):
         self._session_timestamp.touch()
         return rset
 
+    @_open_only
     def rollback(self, free_cnxset=True, reset_pool=None):
         """rollback the current transaction"""
         if reset_pool is not None:
@@ -996,6 +1047,7 @@ class Connection(RequestSessionBase):
                 self.free_cnxset(ignoremode=True)
             self.clear()
 
+    @_open_only
     def commit(self, free_cnxset=True, reset_pool=None):
         """commit the current session's transaction"""
         if reset_pool is not None:
@@ -1087,6 +1139,7 @@ class Connection(RequestSessionBase):
     # resource accessors ######################################################
 
     @_with_cnx_set
+    @_open_only
     def call_service(self, regid, **kwargs):
         json.dumps(kwargs) # This line ensure that people use serialisable
                            # argument for call service. this is very important
@@ -1102,6 +1155,7 @@ class Connection(RequestSessionBase):
         return result
 
     @_with_cnx_set
+    @_open_only
     def system_sql(self, sql, args=None, rollback_on_failure=True):
         """return a sql cursor on the system database"""
         if sql.split(None, 1)[0].upper() != 'SELECT':
@@ -1116,6 +1170,7 @@ class Connection(RequestSessionBase):
             self.cnxset.reconnect(source)
             return source.doexec(self, sql, args, rollback=rollback_on_failure)
 
+    @_open_only
     def rtype_eids_rdef(self, rtype, eidfrom, eidto):
         # use type_and_source_from_eid instead of type_from_eid for optimization
         # (avoid two extra methods call)
