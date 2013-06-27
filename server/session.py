@@ -1425,14 +1425,6 @@ class Session(RequestSessionBase):
             self.set_cnx()
             return self.__threaddata.cnx
 
-    @property
-    def _current_cnx_id(self):
-        """TRANSITIONAL PURPOSE"""
-        try:
-            return self.__threaddata.cnx.transactionid
-        except AttributeError:
-            return None
-
     def get_option_value(self, option, foreid=None):
         return self.repo.get_option_value(option, foreid)
 
