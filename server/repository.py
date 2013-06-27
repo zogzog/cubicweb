@@ -36,6 +36,7 @@ from itertools import chain
 from os.path import join
 from datetime import datetime
 from time import time, localtime, strftime
+from contextlib import contextmanager
 
 from logilab.common.decorators import cached, clear_cache
 from logilab.common.deprecation import deprecated
@@ -945,6 +946,8 @@ class Repository(object):
                 nbclosed += 1
         return nbclosed
 
+    @deprecated("[4.0] use internal_cnx now\n"
+                "(Beware that integrity hook are now enabled by default)")
     def internal_session(self, cnxprops=None, safe=False):
         """return a dbapi like connection/cursor using internal user which have
         every rights on the repository. The `safe` argument is a boolean flag
@@ -957,6 +960,22 @@ class Repository(object):
         session = InternalSession(self, cnxprops, safe)
         session.set_cnxset()
         return session
+
+    @contextmanager
+    def internal_cnx(self, safe=True):
+        """return a Connection using internal user which have
+        every rights on the repository. The `safe` argument is a boolean flag
+        telling if integrity hooks should be activated or not.
+
+        /!\ IN OPPOSITE OF THE OLDER INTERNAL_SESSION, INTERNAL CONNECTION ARE SAFE
+        /!\ BY DEFAULT.
+
+        This is to be used a context manager.
+        """
+        with InternalSession(self, safe) as session:
+            with session.new_cnx() as cnx:
+                yield cnx
+
 
     def _get_session(self, sessionid, setcnxset=False, txid=None,
                      checkshuttingdown=True):

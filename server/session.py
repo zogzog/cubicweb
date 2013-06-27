@@ -664,7 +664,7 @@ class Connection(RequestSessionBase):
 
     def set_entity_cache(self, entity):
         """Add `entity` to the connection entity cache"""
-        #XXX not using _open_only because before at creation time. _set_user
+        # XXX not using _open_only because before at creation time. _set_user
         # call this function to cache the Connection user.
         if entity.cw_etype != 'CWUser' and not self._open:
             raise ProgrammingError('Closed Connection: %s'

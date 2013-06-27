@@ -76,6 +76,18 @@ class SessionTC(CubicWebTC):
             cnx.rollback()
             new_user = cnx.entity_from_eid(user.eid)
             self.assertIsNotNone(new_user.login)
+        self.assertFalse(cnx._open)
+
+    def test_internal_cnx(self):
+        with self.repo.internal_cnx() as cnx:
+            rset = cnx.execute('Any X LIMIT 1 WHERE X is CWUser')
+            self.assertEqual(1, len(rset))
+            user = rset.get_entity(0, 0)
+            user.cw_delete()
+            cnx.rollback()
+            new_user = cnx.entity_from_eid(user.eid)
+            self.assertIsNotNone(new_user.login)
+        self.assertFalse(cnx._open)
 
 
 

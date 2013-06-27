@@ -9,6 +9,37 @@ Behavior Changes
   connection is anonymous. Beware that the ``anonymous-user`` config is web
   specific. Therefore, no session may be anonymous in repository only setup.
 
+New Repository Access API
+-------------------------
+
+Connection replace Session
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A new explicite Connection object replace Session as the main repository entry
+point. Connection hold all the necessary methods to be used Server side
+(``execute``, ``commit``, ``rollback``, ``call_service``, ``entity_from_eid``,
+etc…). You obtains a new Connection object using ``session.new_cnx()``.
+Connection object need have an explicite begin and end. Use them as a context
+manager::
+
+    with session.new_cnx() as cnx:
+        self.execute('INSERT Elephant E, E name "Cabar"')
+        self.commit()
+        self.execute('INSERT Elephant E, E name "Celeste"')
+        self.commit()
+    # Once you get out of the "with" clause, the connection is closed.
+
+Using the same Connection object in multiple threads will give you access to the
+same Transaction. However, Connection object are not thread safe.
+
+``repository.internal_session`` is deprecated in favor of
+``repository.internal_cnx``. Note that internal connection are now safe by
+default. Integrity hooks are enabled except stated otherwise.
+
+Backward compact is preserved on Session. They can still be used to access the
+database for the next few version.
+
+
 API changes
 -----------
 
