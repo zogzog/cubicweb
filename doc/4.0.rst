@@ -71,6 +71,37 @@ ease the transition.
 The authentification stack have been altered to use the ``repoapi`` instead of
 the ``dbapi``. Cubes adding new element in this stack are likely to break.
 
+New API in test
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+All current methods and attributes used to access the repo on ``CubicwebTC`` are
+deprecated. You can now use a ``RepoAccess`` object. A ``RepoAccess`` object is
+linked to a new ``Session`` for a specified user. It is able to create
+``Connection``, ``ClientConnection`` and web side request linked to this
+session::
+
+    access =self.new_access("babar") # create a new RepoAccess for user babar
+    with access.repo_cnx() as cnx:
+        # some work with server side cnx
+        cnx.execute(…)
+        cnx.commit()
+        cnx.execute(…)
+        cnx.commit()
+
+    with access.client_cnx() as cnx:
+        # some work with client side cnx
+        cnx.execute(…)
+        cnx.commit()
+
+    with access.web_request(elephant="babar") as req:
+        # some work with client side cnx
+        elephant_name = req.form["elephant"]
+        req.execute(…)
+        req.cnx.commit()
+
+By default ``testcase.admin_access`` contains a ``RepoAccess`` object for the
+default admin session.
+
 
 API changes
 -----------
