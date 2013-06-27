@@ -49,20 +49,6 @@ PROTO_PORT = {'ldap': 389,
               }
 
 
-class ConnectionWrapper(object):
-    def __init__(self, cnx=None):
-        self.cnx = cnx
-    def commit(self):
-        pass
-    def rollback(self):
-        pass
-    def cursor(self):
-        return None # no actual cursor support
-    def close(self):
-        if hasattr(self.cnx, 'close'):
-            self.cnx.close()
-
-
 class LDAPFeedSource(datafeed.DataFeedSource):
     """LDAP feed source: unlike ldapuser source, this source is copy based and
     will import ldap content (beside passwords for authentication) into the
@@ -233,15 +219,6 @@ You can set multiple groups by separating them by a comma.',
             hostport = '%s:%s' % (hostport, PROTO_PORT[protocol])
         return protocol, hostport
 
-    def get_connection(self):
-        """open and return a connection to the source"""
-        if self._conn is None:
-            try:
-                self._connect()
-            except Exception:
-                self.exception('unable to connect to ldap')
-        return ConnectionWrapper(self._conn)
-
     def authenticate(self, session, login, password=None, **kwargs):
         """return CWUser eid for the given login/password if this account is
         defined in this source, else raise `AuthenticationError`
@@ -305,9 +282,6 @@ You can set multiple groups by separating them by a comma.',
         #conn.timeout = op_timeout
         # Now bind with the credentials given. Let exceptions propagate out.
         if user is None:
-            # no user specified, we want to initialize the 'data' connection,
-            assert self._conn is None
-            self._conn = conn
             # XXX always use simple bind for data connection
             if not self.cnx_dn:
                 conn.simple_bind_s(self.cnx_dn, self.cnx_pwd)
@@ -345,14 +319,9 @@ You can set multiple groups by separating them by a comma.',
         """make an ldap query"""
         self.debug('ldap search %s %s %s %s %s', self.uri, base, scope,
                    searchstr, list(attrs))
-        # XXX for now, we do not have connections set support for LDAP, so
-        # this is always self._conn
-        cnx = self.get_connection().cnx #session.cnxset.connection(self.uri).cnx
-        if cnx is None:
-            # cant connect to server
-            msg = session._("can't connect to source %s, some data may be missing")
-            session.set_shared_data('sources_error', msg % self.uri, txdata=True)
-            return []
+        if self._conn is None:
+            self._conn = self._connect()
+        cnx = self._conn
         try:
             res = cnx.search_s(base, scope, searchstr, attrs)
         except ldap.PARTIAL_RESULTS:
