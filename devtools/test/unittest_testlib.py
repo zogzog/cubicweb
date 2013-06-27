@@ -197,6 +197,10 @@ class RepoAccessTC(CubicWebTC):
         acc = self.new_access('admin')
         acc.close()
 
+    def test_admin_access(self):
+        with self.admin_access.client_cnx() as cnx:
+            self.assertEqual('admin', cnx.user.login)
+
 
 if __name__ == '__main__':
     unittest_main()

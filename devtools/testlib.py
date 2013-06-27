@@ -364,19 +364,9 @@ class CubicWebTC(TestCase):
         # get an admin session (without actual login)
         sources = db_handler.config.sources()
         login = unicode(sources['admin']['login'])
-        with self.repo.internal_cnx() as cnx:
-            rset = cnx.execute('CWUser U WHERE U login %(u)s', {'u': login})
-            user = rset.get_entity(0, 0)
-            user.groups
-            user.properties
-            from cubicweb.server.session import Session
-            self._admin_session = Session(user, self.repo)
-            self.repo._sessions[self._admin_session.id] =  self._admin_session
-            self._admin_session.user._cw = self._admin_session
+        self.admin_access = self.new_access(login)
+        self._admin_session = self.admin_access._session
         self._admin_clt_cnx = repoapi.ClientConnection(self._admin_session)
-
-        # no direct assignation to cls.cnx anymore.
-        # cnx is now an instance property that use a class protected attributes.
         self._cnxs.add(self._admin_clt_cnx)
         self._admin_clt_cnx.__enter__()
         self.config.repository = lambda x=None: self.repo
