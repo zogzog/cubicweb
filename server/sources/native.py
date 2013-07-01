@@ -95,23 +95,6 @@ class LogCursor(object):
         return self.cu.fetchone()
 
 
-def make_schema(selected, solution, table, typemap):
-    """return a sql schema to store RQL query result"""
-    sql = []
-    varmap = {}
-    for i, term in enumerate(selected):
-        name = 'C%s' % i
-        key = term.as_string()
-        varmap[key] = '%s.%s' % (table, name)
-        ttype = term.get_type(solution)
-        try:
-            sql.append('%s %s' % (name, typemap[ttype]))
-        except KeyError:
-            # assert not schema(ttype).final
-            sql.append('%s %s' % (name, typemap['Int']))
-    return ','.join(sql), varmap
-
-
 def sql_or_clauses(sql, clauses):
     select, restr = sql.split(' WHERE ', 1)
     restrclauses = restr.split(' AND ')
@@ -280,7 +263,6 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         self.do_fti = not repo.config['delay-full-text-indexation']
         # sql queries cache
         self._cache = QueryCache(repo.config['rql-cache-size'])
-        self._temp_table_data = {}
         # we need a lock to protect eid attribution function (XXX, really?
         # explain)
         self._eid_cnx_lock = Lock()
@@ -515,52 +497,6 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         results = self.process_result(cursor, cbs, session=session)
         assert dbg_results(results)
         return results
-
-    def flying_insert(self, table, session, union, args=None, varmap=None):
-        """similar as .syntax_tree_search, but inserts data in the
-        temporary table (on-the-fly if possible, eg for the system
-        source whose the given cursor come from). If not possible,
-        inserts all data by calling .executemany().
-        """
-        assert dbg_st_search(
-            self.uri, union, varmap, args,
-            prefix='ON THE FLY temp data insertion into %s from' % table)
-        # generate sql queries if we are able to do so
-        sql, qargs, cbs = self._rql_sqlgen.generate(union, args, varmap)
-        query = 'INSERT INTO %s %s' % (table, sql.encode(self._dbencoding))
-        self.doexec(session, query, self.merge_args(args, qargs))
-
-    def manual_insert(self, results, table, session):
-        """insert given result into a temporary table on the system source"""
-        if server.DEBUG & server.DBG_RQL:
-            print '  manual insertion of', len(results), 'results into', table
-        if not results:
-            return
-        query_args = ['%%(%s)s' % i for i in xrange(len(results[0]))]
-        query = 'INSERT INTO %s VALUES(%s)' % (table, ','.join(query_args))
-        kwargs_list = []
-        for row in results:
-            kwargs = {}
-            row = tuple(row)
-            for index, cell in enumerate(row):
-                if isinstance(cell, Binary):
-                    cell = self._binary(cell.getvalue())
-                kwargs[str(index)] = cell
-            kwargs_list.append(kwargs)
-        self.doexecmany(session, query, kwargs_list)
-
-    def clean_temp_data(self, session, temptables):
-        """remove temporary data, usually associated to temporary tables"""
-        if temptables:
-            for table in temptables:
-                try:
-                    self.doexec(session,'DROP TABLE %s' % table)
-                except Exception:
-                    pass
-                try:
-                    del self._temp_table_data[table]
-                except KeyError:
-                    continue
 
     @contextmanager
     def _storage_handler(self, entity, event):
@@ -865,25 +801,11 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             pass
         return None
 
-    def make_temp_table_name(self, table):
-        return self.dbhelper.temporary_table_name(table)
-
-    def temp_table_def(self, selected, sol, table):
-        return make_schema(selected, sol, table, self.dbhelper.TYPE_MAPPING)
-
-    def create_temp_table(self, session, table, schema):
-        # we don't want on commit drop, this may cause problem when
-        # running with an ldap source, and table will be deleted manually any way
-        # on commit
-        sql = self.dbhelper.sql_temporary_table(table, schema, False)
-        self.doexec(session, sql)
-
     def _create_eid_sqlite(self, session):
         with self._eid_cnx_lock:
             for sql in self.dbhelper.sqls_increment_sequence('entities_id_seq'):
                 cursor = self.doexec(session, sql)
             return cursor.fetchone()[0]
-
 
     def create_eid(self, session): # pylint: disable=E0202
         # lock needed to prevent 'Connection is busy with results for another

@@ -72,24 +72,6 @@ def crypt_password(passwd, salt=None):
     # wrong password
     return ''
 
-def cartesian_product(seqin):
-    """returns a generator which returns the cartesian product of `seqin`
-
-    for more details, see :
-    http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/302478
-    """
-    def rloop(seqin, comb):
-        """recursive looping function"""
-        if seqin:                   # any more sequences to process?
-            for item in seqin[0]:
-                newcomb = comb + [item] # add next item to current combination
-                # call rloop w/ remaining seqs, newcomb
-                for item in rloop(seqin[1:], newcomb):
-                    yield item          # seqs and newcomb
-        else:                           # processing last sequence
-            yield comb                  # comb finished, add to list
-    return rloop(seqin, [])
-
 
 def eschema_eid(session, eschema):
     """get eid of the CWEType entity for the given yams type. You should use

@@ -332,7 +332,6 @@ def _build_variantes(self, newsolutions):
 
 from cubicweb.server.querier import ExecutionPlan
 _orig_check_permissions = ExecutionPlan._check_permissions
-_orig_init_temp_table = ExecutionPlan.init_temp_table
 
 def _check_permissions(*args, **kwargs):
     res, restricted = _orig_check_permissions(*args, **kwargs)
@@ -341,15 +340,6 @@ def _check_permissions(*args, **kwargs):
 
 def _dummy_check_permissions(self, rqlst):
     return {(): rqlst.solutions}, set()
-
-def _init_temp_table(self, table, selection, solution):
-    if self.tablesinorder is None:
-        tablesinorder = self.tablesinorder = {}
-    else:
-        tablesinorder = self.tablesinorder
-    if not table in tablesinorder:
-        tablesinorder[table] = 'table%s' % len(tablesinorder)
-    return _orig_init_temp_table(self, table, selection, solution)
 
 from cubicweb.server import rqlannotation
 _orig_select_principal = rqlannotation._select_principal
@@ -391,11 +381,9 @@ def do_monkey_patch():
     rqlrewrite.RQLRewriter.build_variantes = _build_variantes
     ExecutionPlan._check_permissions = _check_permissions
     ExecutionPlan.tablesinorder = None
-    ExecutionPlan.init_temp_table = _init_temp_table
 
 def undo_monkey_patch():
     rqlrewrite.iter_relations = _orig_iter_relations
     rqlrewrite.RQLRewriter.insert_snippets = _orig_insert_snippets
     rqlrewrite.RQLRewriter.build_variantes = _orig_build_variantes
     ExecutionPlan._check_permissions = _orig_check_permissions
-    ExecutionPlan.init_temp_table = _orig_init_temp_table

@@ -51,7 +51,6 @@ from rql.utils import rqlvar_maker
 
 from cubicweb import (CW_SOFTWARE_ROOT, CW_MIGRATION_MAP, QueryError,
                       UnknownEid, AuthenticationError, ExecutionError,
-                      ETypeNotSupportedBySources, MultiSourcesError,
                       BadConnectionId, Unauthorized, ValidationError,
                       RepositoryError, UniqueTogetherError, onevent)
 from cubicweb import cwvreg, schema, server

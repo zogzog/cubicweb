@@ -154,8 +154,6 @@ class ExecutionPlan(object):
         self.syssource = session.repo.system_source
         # execution steps
         self.steps = []
-        # index of temporary tables created during execution
-        self.temp_tables = {}
         # various resource accesors
         self.querier = querier
         self.schema = querier.schema
@@ -170,49 +168,15 @@ class ExecutionPlan(object):
         """add a step to the plan"""
         self.steps.append(step)
 
-    def clean(self):
-        """remove temporary tables"""
-        self.syssource.clean_temp_data(self.session, self.temp_tables)
-
     def sqlexec(self, sql, args=None):
         return self.syssource.sqlexec(self.session, sql, args)
 
     def execute(self):
         """execute a plan and return resulting rows"""
-        try:
-            for step in self.steps:
-                result = step.execute()
-            # the latest executed step contains the full query result
-            return result
-        finally:
-            self.clean()
-
-    def make_temp_table_name(self, table):
-        """
-        return a temp table name according to db backend
-        """
-        return self.syssource.make_temp_table_name(table)
-
-
-    def init_temp_table(self, table, selected, sol):
-        """initialize sql schema and variable map for a temporary table which
-        will be used to store result for the given rqlst
-        """
-        try:
-            outputmap, sqlschema, _ = self.temp_tables[table]
-            update_varmap(outputmap, selected, table)
-        except KeyError:
-            sqlschema, outputmap = self.syssource.temp_table_def(selected, sol,
-                                                                 table)
-            self.temp_tables[table] = [outputmap, sqlschema, False]
-        return outputmap
-
-    def create_temp_table(self, table):
-        """create a temporary table to store result for the given rqlst"""
-        if not self.temp_tables[table][-1]:
-            sqlschema = self.temp_tables[table][1]
-            self.syssource.create_temp_table(self.session, table, sqlschema)
-            self.temp_tables[table][-1] = True
+        for step in self.steps:
+            result = step.execute()
+        # the latest executed step contains the full query result
+        return result
 
     def preprocess(self, union, security=True):
         """insert security when necessary then annotate rql st for sql generation

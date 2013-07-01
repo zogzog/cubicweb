@@ -27,7 +27,6 @@ from rql import BadRQLQuery, RQLSyntaxError
 from cubicweb import QueryError, Unauthorized, Binary
 from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.server.utils import crypt_password
-from cubicweb.server.sources.native import make_schema
 from cubicweb.server.querier import manual_build_descr, _make_description
 from cubicweb.devtools import get_test_db_handler, TestServerConfiguration
 from cubicweb.devtools.testlib import CubicWebTC
@@ -58,17 +57,6 @@ def init_sqlite_connexion(cnx):
         return {"managers": "3", "users": "2", "guests":  "1", "owners": "0"}[text]
     cnx.create_function("GROUP_SORT_VALUE", 1, group_sort_value)
 SQL_CONNECT_HOOKS['sqlite'].append(init_sqlite_connexion)
-
-
-from logilab.database import _GenericAdvFuncHelper
-TYPEMAP = _GenericAdvFuncHelper.TYPE_MAPPING
-
-class MakeSchemaTC(TestCase):
-    def test_known_values(self):
-        solution = {'A': 'String', 'B': 'CWUser'}
-        self.assertEqual(make_schema((Variable('A'), Variable('B')), solution,
-                                      'table0', TYPEMAP),
-                          ('C0 text,C1 integer', {'A': 'table0.C0', 'B': 'table0.C1'}))
 
 
 def setUpClass(cls, *args):

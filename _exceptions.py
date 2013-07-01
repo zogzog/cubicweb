@@ -76,13 +76,6 @@ class UnknownEid(RepositoryError):
     """the eid is not defined in the system tables"""
     msg = 'No entity with eid %s in the repository'
 
-class ETypeNotSupportedBySources(RepositoryError, InternalError):
-    """no source support an entity type"""
-    msg = 'No source supports %r entity\'s type'
-
-class MultiSourcesError(RepositoryError, InternalError):
-    """usually due to bad multisources configuration or rql query"""
-
 class UniqueTogetherError(RepositoryError):
     """raised when a unique_together constraint caused an IntegrityError"""
     def __init__(self, session, **kwargs):

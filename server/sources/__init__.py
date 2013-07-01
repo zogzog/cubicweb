@@ -365,15 +365,6 @@ class AbstractSource(object):
         """
         raise NotImplementedError(self)
 
-    def flying_insert(self, table, session, union, args=None, varmap=None):
-        """similar as .syntax_tree_search, but inserts data in the temporary
-        table (on-the-fly if possible, eg for the system source whose the given
-        cursor come from). If not possible, inserts all data by calling
-        .executemany().
-        """
-        res = self.syntax_tree_search(session, union, args, varmap=varmap)
-        session.repo.system_source.manual_insert(res, table, session)
-
     # write modification api ###################################################
     # read-only sources don't have to implement methods below
 
@@ -452,21 +443,11 @@ class AbstractSource(object):
         """execute the query and return its result"""
         raise NotImplementedError(self)
 
-    def temp_table_def(self, selection, solution, table, basemap):
-        raise NotImplementedError(self)
-
     def create_index(self, session, table, column, unique=False):
         raise NotImplementedError(self)
 
     def drop_index(self, session, table, column, unique=False):
         raise NotImplementedError(self)
-
-    def create_temp_table(self, session, table, schema):
-        raise NotImplementedError(self)
-
-    def clean_temp_data(self, session, temptables):
-        """remove temporary data, usually associated to temporary tables"""
-        pass
 
 
     @deprecated('[3.13] use repo.eid2extid(source, eid, session)')
