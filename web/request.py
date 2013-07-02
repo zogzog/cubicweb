@@ -922,7 +922,7 @@ class CubicWebRequestBase(DBAPIRequest):
         if reset_xmldecl is not None:
             warn('[3.17] reset_xmldecl is deprecated as we only serve html',
                  DeprecationWarning, stacklevel=2)
-        self.main_stream.set_doctype(doctype, reset_xmldecl)
+        self.main_stream.set_doctype(doctype)
 
     # page data management ####################################################
 
