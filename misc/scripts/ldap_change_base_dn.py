@@ -6,7 +6,7 @@ except ValueError:
     print
     print 'you should not have updated your sources file yet'
 
-olddn = repo.config.sources()[uri]['user-base-dn']
+olddn = repo.sources_by_uri[uri].config['user-base-dn']
 
 assert olddn != newdn
 

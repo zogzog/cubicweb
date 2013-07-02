@@ -136,8 +136,8 @@ def repo_cnx(config):
     from cubicweb.dbapi import in_memory_repo_cnx
     from cubicweb.server.utils import manager_userpasswd
     try:
-        login = config.sources()['admin']['login']
-        pwd = config.sources()['admin']['password']
+        login = config.default_admin_config['login']
+        pwd = config.default_admin_config['password']
     except KeyError:
         login, pwd = manager_userpasswd()
     while True:
@@ -221,7 +221,7 @@ class RepositoryDeleteHandler(CommandHandler):
     def cleanup(self):
         """remove instance's configuration and database"""
         from logilab.database import get_db_helper
-        source = self.config.sources()['system']
+        source = self.config.system_source_config
         dbname = source['db-name']
         helper = get_db_helper(source['db-driver'])
         if ASK.confirm('Delete database %s ?' % dbname):
@@ -334,7 +334,7 @@ class CreateInstanceDBCommand(Command):
         automatic = self.get('automatic')
         appid = args.pop()
         config = ServerConfiguration.config_for(appid)
-        source = config.sources()['system']
+        source = config.system_source_config
         dbname = source['db-name']
         driver = source['db-driver']
         helper = get_db_helper(driver)
@@ -441,7 +441,7 @@ class InitInstanceCommand(Command):
         appid = args[0]
         config = ServerConfiguration.config_for(appid)
         try:
-            system = config.sources()['system']
+            system = config.system_source_config
             extra_args = system.get('db-extra-arguments')
             extra = extra_args and {'extra_args': extra_args} or {}
             get_connection(
@@ -544,7 +544,7 @@ class GrantUserOnInstanceCommand(Command):
         from cubicweb.server.sqlutils import sqlexec, sqlgrants
         appid, user = args
         config = ServerConfiguration.config_for(appid)
-        source = config.sources()['system']
+        source = config.system_source_config
         set_owner = self.config.set_owner
         cnx = system_source_cnx(source, special_privs='GRANT')
         cursor = cnx.cursor()

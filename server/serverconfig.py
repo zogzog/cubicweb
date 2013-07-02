@@ -297,13 +297,16 @@ registered.',
     # configuration file (#16102)
     @cached
     def read_sources_file(self):
+        """return a dictionary of values found in the sources file"""
         return read_config(self.sources_file(), raise_if_unreadable=True)
 
-    def sources(self):
-        """return a dictionnaries containing sources definitions indexed by
-        sources'uri
-        """
-        return self.read_sources_file()
+    @property
+    def system_source_config(self):
+        return self.read_sources_file()['system']
+
+    @property
+    def default_admin_config(self):
+        return self.read_sources_file()['admin']
 
     def source_enabled(self, source):
         if self.sources_mode is not None:

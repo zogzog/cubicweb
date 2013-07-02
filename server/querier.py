@@ -516,7 +516,7 @@ class QuerierHelper(object):
         self.solutions = repo.vreg.solutions
         rqlhelper = repo.vreg.rqlhelper
         # set backend on the rql helper, will be used for function checking
-        rqlhelper.backend = repo.config.sources()['system']['db-driver']
+        rqlhelper.backend = repo.config.system_source_config['db-driver']
         self._parse = rqlhelper.parse
         self._annotate = rqlhelper.annotate
         # rql planner

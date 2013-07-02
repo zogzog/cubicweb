@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -99,7 +99,7 @@ class BaseCreationTC(TestCase):
     def test_db_creation(self):
         """make sure database can be created"""
         config = ApptestConfiguration('data', apphome=self.datadir)
-        source = config.sources()['system']
+        source = config.system_source_config
         self.assertEqual(source['db-driver'], 'sqlite')
         handler = get_test_db_handler(config)
         handler.init_test_database()

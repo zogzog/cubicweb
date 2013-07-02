@@ -265,10 +265,9 @@ class ServerMigrationHelper(MigrationHelper):
         try:
             return self._cnx
         except AttributeError:
-            sourcescfg = self.repo.config.sources()
             try:
-                login = sourcescfg['admin']['login']
-                pwd = sourcescfg['admin']['password']
+                login = self.repo.config.default_admin_config['login']
+                pwd = self.repo.config.default_admin_config['password']
             except KeyError:
                 login, pwd = manager_userpasswd()
             while True:

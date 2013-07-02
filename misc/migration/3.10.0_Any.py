@@ -1,6 +1,6 @@
 from cubicweb.server.session import hooks_control
 
-for uri, cfg in config.sources().items():
+for uri, cfg in config.read_sources_file().items():
     if uri in ('system', 'admin'):
         continue
     repo.sources_by_uri[uri] = repo.get_source(cfg['adapter'], uri, cfg.copy())
@@ -18,7 +18,7 @@ sql('INSERT INTO cw_source_relation(eid_from,eid_to) '
     'WHERE s.cw_name=e.type')
 commit()
 
-for uri, cfg in config.sources().items():
+for uri, cfg in config.read_sources_file().items():
     if uri in ('system', 'admin'):
         continue
     repo.sources_by_uri.pop(uri)

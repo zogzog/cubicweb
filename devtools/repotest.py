@@ -141,7 +141,7 @@ from logilab.database import get_db_helper
 
 from rql import RQLHelper
 
-from cubicweb.devtools.fake import FakeRepo, FakeSession
+from cubicweb.devtools.fake import FakeRepo, FakeConfig, FakeSession
 from cubicweb.server import set_debug, debugged
 from cubicweb.server.querier import QuerierHelper
 from cubicweb.server.session import Session
@@ -159,7 +159,7 @@ class RQLGeneratorTC(TestCase):
                 raise SkipTest(str(ex))
 
     def setUp(self):
-        self.repo = FakeRepo(self.schema)
+        self.repo = FakeRepo(self.schema, config=FakeConfig(apphome=self.datadir))
         self.repo.system_source = mock_object(dbdriver=self.backend)
         self.rqlhelper = RQLHelper(self.schema, special_relations={'eid': 'uid',
                                                                    'has_text': 'fti'},

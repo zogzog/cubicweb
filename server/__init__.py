@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -216,7 +216,7 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     # only enable the system source at initialization time
     repo = Repository(config, vreg=vreg)
     schema = repo.schema
-    sourcescfg = config.sources()
+    sourcescfg = config.read_sources_file()
     source = sourcescfg['system']
     driver = source['db-driver']
     sqlcnx = repo.system_source.get_connection()

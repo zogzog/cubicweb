@@ -1,7 +1,7 @@
 import base64
 from cubicweb.server.utils import crypt_password
 
-dbdriver  = config.sources()['system']['db-driver']
+dbdriver  = config.system_source_config['db-driver']
 from logilab.database import get_db_helper
 dbhelper = get_db_helper(driver)
 

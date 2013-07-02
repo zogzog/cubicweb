@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -190,14 +190,14 @@ class TestServerConfiguration(ServerConfiguration):
             sourcefile = super(TestServerConfiguration, self).sources_file()
         return sourcefile
 
-    def sources(self):
+    def read_sources_file(self):
         """By default, we run tests with the sqlite DB backend.  One may use its
         own configuration by just creating a 'sources' file in the test
         directory from wich tests are launched or by specifying an alternative
         sources file using self.sourcefile.
         """
         try:
-            sources = super(TestServerConfiguration, self).sources()
+            sources = super(TestServerConfiguration, self).read_sources_file()
         except ExecutionError:
             sources = {}
         if not sources:
@@ -388,7 +388,7 @@ class TestDataBaseHandler(object):
         """return Connection object on the current repository"""
         from cubicweb.dbapi import _repo_connect
         repo = self.get_repo()
-        sources = self.config.sources()
+        sources = self.config.read_sources_file()
         login  = unicode(sources['admin']['login'])
         password = sources['admin']['password'] or 'xxx'
         cnx = _repo_connect(repo, login, password=password)
@@ -409,8 +409,7 @@ class TestDataBaseHandler(object):
 
     @property
     def system_source(self):
-        sources = self.config.sources()
-        return sources['system']
+        return self.config.system_source_config
 
     @property
     def dbname(self):
@@ -691,8 +690,8 @@ class SQLiteTestDataBaseHandler(TestDataBaseHandler):
     def absolute_dbfile(self):
         """absolute path of current database file"""
         dbfile = join(self._ensure_test_backup_db_dir(),
-                      self.config.sources()['system']['db-name'])
-        self.config.sources()['system']['db-name'] = dbfile
+                      self.system_source['db-name'])
+        self.system_source['db-name'] = dbfile
         return dbfile
 
     def process_cache_entry(self, directory, dbname, db_id, entry):
@@ -822,8 +821,7 @@ def get_test_db_handler(config):
     handler = HCACHE.get(config)
     if handler is not None:
         return handler
-    sources = config.sources()
-    driver = sources['system']['db-driver']
+    driver = config.system_source_config['db-driver']
     key = (driver, config)
     handlerkls = HANDLERS.get(driver, None)
     if handlerkls is not None:

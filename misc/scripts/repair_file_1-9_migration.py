@@ -15,11 +15,11 @@ except ValueError:
 from cubicweb import cwconfig, dbapi
 from cubicweb.server.session import hooks_control
 
-sourcescfg = repo.config.sources()
+defaultadmin = repo.config.default_admin_config
 backupcfg = cwconfig.instance_configuration(backupinstance)
 backupcfg.repairing = True
-backuprepo, backupcnx = dbapi.in_memory_repo_cnx(backupcfg, sourcescfg['admin']['login'],
-                                                 password=sourcescfg['admin']['password'],
+backuprepo, backupcnx = dbapi.in_memory_repo_cnx(backupcfg, defaultadmin['login'],
+                                                 password=defaultadmin['password'],
                                                  host='localhost')
 backupcu = backupcnx.cursor()
 

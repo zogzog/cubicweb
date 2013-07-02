@@ -1,4 +1,4 @@
-driver = config.sources()['system']['db-driver']
+driver = config.system_source_config['db-driver']
 if not (driver == 'postgres' or driver.startswith('sqlserver')):
     import sys
     print >>sys.stderr, 'This migration is not supported for backends other than sqlserver or postgres (yet).'

@@ -276,7 +276,7 @@ class CubicWebTC(TestCase):
 
     @deprecated('[3.19] explicitly use RepoAccess object in test instead')
     def set_cnx(self, cnx):
-        """"""
+        """ """
         # XXX we want to deprecate this
         assert getattr(cnx, '_session', None) is not None
         if cnx is self._admin_clt_cnx:
@@ -371,8 +371,7 @@ class CubicWebTC(TestCase):
         db_handler.restore_database(self.test_db_id)
         self.repo = db_handler.get_repo(startup=True)
         # get an admin session (without actual login)
-        sources = db_handler.config.sources()
-        login = unicode(sources['admin']['login'])
+        login = unicode(db_handler.config.default_admin_config['login'])
         self.admin_access = self.new_access(login)
         self._admin_session = self.admin_access._session
         self._admin_clt_cnx = repoapi.ClientConnection(self._admin_session)
@@ -460,7 +459,7 @@ class CubicWebTC(TestCase):
 
         Otherwise, consider to use a different :class:`ApptestConfiguration`
         defined in the `configcls` class attribute"""
-        source = config.sources()['system']
+        source = config.system_source_config
         cls.admlogin = unicode(source['db-user'])
         cls.admpassword = source['db-password']
         # uncomment the line below if you want rql queries to be logged

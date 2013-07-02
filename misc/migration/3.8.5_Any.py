@@ -1,5 +1,5 @@
 def migrate_varchar_to_nvarchar():
-    dbdriver  = config.sources()['system']['db-driver']
+    dbdriver  = config.system_source_config['db-driver']
     if dbdriver != "sqlserver2005":
         return
 
