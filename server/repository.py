@@ -953,6 +953,8 @@ class Repository(object):
         every rights on the repository. The `safe` argument is a boolean flag
         telling if integrity hooks should be activated or not.
 
+        /!\ the safe argument is False by default.
+
         *YOU HAVE TO* commit/rollback or close (rollback implicitly) the
         session once the job's done, else you'll leak connections set up to the
         time where no one is available, causing irremediable freeze...
@@ -962,17 +964,17 @@ class Repository(object):
         return session
 
     @contextmanager
-    def internal_cnx(self, safe=True):
+    def internal_cnx(self):
         """return a Connection using internal user which have
-        every rights on the repository. The `safe` argument is a boolean flag
-        telling if integrity hooks should be activated or not.
+        every rights on the repository. The `safe` argument is dropped. all
+        hook are enabled by default.
 
-        /!\ IN OPPOSITE OF THE OLDER INTERNAL_SESSION, INTERNAL CONNECTION ARE SAFE
-        /!\ BY DEFAULT.
+        /!\ IN OPPOSITE OF THE OLDER INTERNAL_SESSION,
+        /!\ INTERNAL CONNECTION HAVE ALL HOOKS ENABLED.
 
         This is to be used a context manager.
         """
-        with InternalSession(self, safe) as session:
+        with InternalSession(self) as session:
             with session.new_cnx() as cnx:
                 yield cnx
 
