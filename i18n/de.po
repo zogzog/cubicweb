@@ -114,6 +114,10 @@ msgid "%s error report"
 msgstr "%s Fehlerbericht"
 
 #, python-format
+msgid "%s is part of violated unicity constraint"
+msgstr ""
+
+#, python-format
 msgid "%s not estimated"
 msgstr "%s unbekannt(e)"
 
@@ -144,6 +148,9 @@ msgstr ""
 
 msgid "(UNEXISTANT EID)"
 msgstr "(EID nicht gefunden)"
+
+msgid "(not all shown here) "
+msgstr ""
 
 #, python-format
 msgid "(suppressed) entity #%d"
@@ -3860,6 +3867,10 @@ msgid "some later transaction(s) touch entity, undo them first"
 msgstr ""
 "Eine oder mehrere frühere Transaktion(en) betreffen die Tntität. Machen Sie "
 "sie zuerst rückgängig."
+
+#, python-format
+msgid "some relations %sviolate a unicity constraint"
+msgstr ""
 
 msgid "sorry, the server is unable to handle this query"
 msgstr "Der Server kann diese Anfrage leider nicht bearbeiten."

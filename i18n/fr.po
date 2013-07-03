@@ -115,6 +115,10 @@ msgid "%s error report"
 msgstr "%s rapport d'erreur"
 
 #, python-format
+msgid "%s is part of violated unicity constraint"
+msgstr "%s appartient à une contrainte d'unicité transgressée"
+
+#, python-format
 msgid "%s not estimated"
 msgstr "%s non estimé(s)"
 
@@ -147,6 +151,9 @@ msgstr "l'action '%s' nécessite une option 'linkattr'"
 
 msgid "(UNEXISTANT EID)"
 msgstr "(EID INTROUVABLE)"
+
+msgid "(not all shown here) "
+msgstr "(toutes ne sont pas montrées)"
 
 #, python-format
 msgid "(suppressed) entity #%d"
@@ -3921,6 +3928,10 @@ msgstr "une propriété spécifique au site ne peut être propre à un utilisate
 msgid "some later transaction(s) touch entity, undo them first"
 msgstr ""
 "des transactions plus récentes modifient cette entité, annulez les d'abord"
+
+#, python-format
+msgid "some relations %sviolate a unicity constraint"
+msgstr "certaines relations %stransgressent une contrainte d'unicité"
 
 msgid "sorry, the server is unable to handle this query"
 msgstr "désolé, le serveur ne peut traiter cette requête"

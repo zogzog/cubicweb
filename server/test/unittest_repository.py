@@ -52,16 +52,18 @@ class RepositoryTC(CubicWebTC):
     and relation
     """
 
-    def test_uniquetogether(self):
+    def test_unique_together_constraint(self):
         self.execute('INSERT Societe S: S nom "Logilab", S type "SSLL", S cp "75013"')
         with self.assertRaises(ValidationError) as wraperr:
             self.execute('INSERT Societe S: S nom "Logilab", S type "SSLL", S cp "75013"')
-        self.assertEqual({'nom': u'violates unique_together constraints (cp, nom, type)',
-                          'cp': u'violates unique_together constraints (cp, nom, type)',
-                          'type': u'violates unique_together constraints (cp, nom, type)'},
-                     wraperr.exception.args[1])
+        self.assertEqual(
+            {'cp': u'cp is part of violated unicity constraint',
+             'nom': u'nom is part of violated unicity constraint',
+             'type': u'type is part of violated unicity constraint',
+             'unicity constraint': u'some relations violate a unicity constraint'},
+            wraperr.exception.args[1])
 
-    def test_unique_together(self):
+    def test_unique_together_schema(self):
         person = self.repo.schema.eschema('Personne')
         self.assertEqual(len(person._unique_together), 1)
         self.assertItemsEqual(person._unique_together[0],

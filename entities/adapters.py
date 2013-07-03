@@ -379,6 +379,7 @@ from cubicweb import UniqueTogetherError
 class IUserFriendlyError(view.EntityAdapter):
     __regid__ = 'IUserFriendlyError'
     __abstract__ = True
+
     def __init__(self, *args, **kwargs):
         self.exc = kwargs.pop('exc')
         super(IUserFriendlyError, self).__init__(*args, **kwargs)
@@ -386,11 +387,27 @@ class IUserFriendlyError(view.EntityAdapter):
 
 class IUserFriendlyUniqueTogether(IUserFriendlyError):
     __select__ = match_exception(UniqueTogetherError)
+
     def raise_user_exception(self):
         etype, rtypes = self.exc.args
-        msg = self._cw._('violates unique_together constraints (%s)') % (
-            ', '.join([self._cw._(rtype) for rtype in rtypes]))
-        raise ValidationError(self.entity.eid, dict((col, msg) for col in rtypes))
+        # Because of index name size limits (e.g: postgres around 64,
+        # sqlserver around 128), we cannot be sure of what we got,
+        # especially for the rtypes part.
+        # Hence we will try to validate them, and handle invalid ones
+        # in the most user-friendly manner ...
+        _ = self._cw._
+        schema = self.entity._cw.vreg.schema
+        rtypes_msg = {}
+        for rtype in rtypes:
+            if rtype in schema:
+                rtypes_msg[rtype] = _('%s is part of violated unicity constraint') % rtype
+        globalmsg = _('some relations %sviolate a unicity constraint')
+        if len(rtypes) != len(rtypes_msg): # we got mangled/missing rtypes
+            globalmsg = globalmsg % _('(not all shown here) ')
+        else:
+            globalmsg = globalmsg % ''
+        rtypes_msg['unicity constraint'] = globalmsg
+        raise ValidationError(self.entity.eid, rtypes_msg)
 
 # deprecated ###################################################################
 
