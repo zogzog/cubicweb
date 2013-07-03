@@ -74,10 +74,11 @@ from cubicweb.web import RequestError, htmlwidgets
 
 
 def rtype_facet_title(facet):
-    ptypes = facet.cw_rset.column_types(0)
-    if len(ptypes) == 1:
-        return display_name(facet._cw, facet.rtype, form=facet.role,
-                            context=iter(ptypes).next())
+    if facet.cw_rset:
+        ptypes = facet.cw_rset.column_types(0)
+        if len(ptypes) == 1:
+            return display_name(facet._cw, facet.rtype, form=facet.role,
+                                context=iter(ptypes).next())
     return display_name(facet._cw, facet.rtype, form=facet.role)
 
 def get_facet(req, facetid, select, filtered_variable):
