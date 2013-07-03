@@ -1016,6 +1016,8 @@ class Button(Input):
     time, you should not give an already translated string.
     """
     type = 'button'
+    css_class = 'validateButton'
+
     def __init__(self, label=stdmsgs.BUTTON_OK, attrs=None,
                  setdomid=None, settabindex=None,
                  name='', value='', onclick=None, cwaction=None):
@@ -1030,7 +1032,7 @@ class Button(Input):
         self.value = ''
         self.onclick = onclick
         self.cwaction = cwaction
-        self.attrs.setdefault('class', 'validateButton')
+        self.attrs.setdefault('class', self.css_class)
 
     def render(self, form, field=None, renderer=None):
         label = form._cw._(self.label)
