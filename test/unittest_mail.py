@@ -31,7 +31,7 @@ from cubicweb.mail import format_mail
 
 
 def getlogin():
-    """avoid usinng os.getlogin() because of strange tty / stdin problems
+    """avoid using os.getlogin() because of strange tty / stdin problems
     (man 3 getlogin)
     Another solution would be to use $LOGNAME, $USER or $USERNAME
     """
