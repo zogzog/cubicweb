@@ -28,6 +28,7 @@ from cubicweb.devtools import TestServerConfiguration
 from logilab.database import get_db_helper
 from yams import register_base_type, unregister_base_type
 
+schema = config = None
 def setUpModule(*args):
     register_base_type('BabarTestType', ('jungle_speed',))
     helper = get_db_helper('sqlite')
@@ -44,7 +45,7 @@ def setUpModule(*args):
 
 def tearDownModule(*args):
     global schema, config
-    del schema, config
+    schema = config = None
 
     unregister_base_type('BabarTestType')
     helper = get_db_helper('sqlite')
