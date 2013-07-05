@@ -265,7 +265,6 @@ class Perms2RQLTC(TestCase):
         self.assertListEqual([('SET X read_permission Y WHERE Y eid %(g)s, X eid %(x)s', {'g': 0}),
                               ('SET X read_permission Y WHERE Y eid %(g)s, X eid %(x)s', {'g': 1}),
                               ('SET X read_permission Y WHERE Y eid %(g)s, X eid %(x)s', {'g': 2}),
-                              ('SET X add_permission Y WHERE Y eid %(g)s, X eid %(x)s', {'g': 0}),
                               ('SET X update_permission Y WHERE Y eid %(g)s, X eid %(x)s', {'g': 0})],
                              [(rql, kwargs)
                               for rql, kwargs in erperms2rql(schema.rschema('name').rdef('CWEType', 'String'),
