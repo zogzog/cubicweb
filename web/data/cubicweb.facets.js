@@ -30,7 +30,7 @@ function facetFormContent($form) {
         });
         // FacetStringWidget (e.g. has-text)
         $(this).find('input:text').each(function(){
-            names.push(facetName);
+            names.push(this.name);
             values.push(this.value);
         });
     });
