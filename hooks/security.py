@@ -23,10 +23,13 @@ __docformat__ = "restructuredtext en"
 
 from logilab.common.registry import objectify_predicate
 
+from yams import buildobjs
+
 from cubicweb import Unauthorized
 from cubicweb.server import BEFORE_ADD_RELATIONS, ON_COMMIT_ADD_RELATIONS, hook
 
 
+_DEFAULT_UPDATE_ATTRPERM = buildobjs.DEFAULT_ATTRPERMS['update']
 def check_entity_attributes(session, entity, editedattrs=None, creation=False):
     eid = entity.eid
     eschema = entity.e_schema
@@ -39,9 +42,26 @@ def check_entity_attributes(session, entity, editedattrs=None, creation=False):
         if attr in dontcheck:
             continue
         rdef = eschema.rdef(attr)
-        if rdef.final: # non final relation are checked by other hooks
-            # add/delete should be equivalent (XXX: unify them into 'update' ?)
-            if creation and not rdef.permissions.get('update'):
+        if rdef.final: # non final relation are checked by standard hooks
+            # attributes only have a specific 'update' permission
+            updateperm = rdef.permissions.get('update')
+            # comparison below works because the default update perm is:
+            #
+            #  ('managers', ERQLExpression(Any X WHERE U has_update_permission X, X eid %(x)s, U eid %(u)s))
+            #
+            # is deserialized in this order (groups first), and ERQLExpression
+            # implements comparison by expression.
+            if updateperm == _DEFAULT_UPDATE_ATTRPERM:
+                # The default update permission is to delegate to the entity
+                # update permission. This is an historical artefact but it is
+                # costly (in general). Hence we take this permission object as a
+                # marker saying "no specific" update permissions for this
+                # attribute. Thus we just do nothing.
+                continue
+            if creation and updateperm == ():
+                # That actually means an immutable attribute.  We make an
+                # _exception_ to the `check attr update perms at entity create &
+                # update time` rule for this case.
                 continue
             rdef.check_perm(session, 'update', eid=eid)
 

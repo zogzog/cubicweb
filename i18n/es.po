@@ -115,6 +115,10 @@ msgid "%s error report"
 msgstr "%s reporte de errores"
 
 #, python-format
+msgid "%s is part of violated unicity constraint"
+msgstr ""
+
+#, python-format
 msgid "%s not estimated"
 msgstr "%s no estimado(s)"
 
@@ -145,6 +149,9 @@ msgstr "la acción '%s' requiere una opción 'linkattr'"
 
 msgid "(UNEXISTANT EID)"
 msgstr "(EID INEXISTENTE"
+
+msgid "(not all shown here) "
+msgstr ""
 
 #, python-format
 msgid "(suppressed) entity #%d"
@@ -3908,6 +3915,10 @@ msgstr "Una propiedad específica al Sistema no puede ser propia al usuario"
 msgid "some later transaction(s) touch entity, undo them first"
 msgstr ""
 "Las transacciones más recientes modificaron esta entidad, anúlelas primero"
+
+#, python-format
+msgid "some relations %sviolate a unicity constraint"
+msgstr ""
 
 msgid "sorry, the server is unable to handle this query"
 msgstr "Lo sentimos, el servidor no puede manejar esta consulta"

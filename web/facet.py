@@ -74,10 +74,11 @@ from cubicweb.web import RequestError, htmlwidgets
 
 
 def rtype_facet_title(facet):
-    ptypes = facet.cw_rset.column_types(0)
-    if len(ptypes) == 1:
-        return display_name(facet._cw, facet.rtype, form=facet.role,
-                            context=iter(ptypes).next())
+    if facet.cw_rset:
+        ptypes = facet.cw_rset.column_types(0)
+        if len(ptypes) == 1:
+            return display_name(facet._cw, facet.rtype, form=facet.role,
+                                context=iter(ptypes).next())
     return display_name(facet._cw, facet.rtype, form=facet.role)
 
 def get_facet(req, facetid, select, filtered_variable):
@@ -1516,7 +1517,8 @@ class FacetStringWidget(htmlwidgets.HTMLWidget):
             cssclass += ' hideFacetBody'
         w(u'<div class="%s" cubicweb:facetName="%s">%s</div>\n' %
                (cssclass, xml_escape(self.facet.__regid__), title))
-        w(u'<input name="%s" type="text" value="%s" />\n' % (facetid, self.value or u''))
+        w(u'<input name="%s" type="text" value="%s" />\n' % (
+                xml_escape(self.facet.__regid__), self.value or u''))
         w(u'</div>\n')
 
 

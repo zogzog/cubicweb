@@ -142,15 +142,25 @@ class LDAPFeedTestBase(CubicWebTC):
         return self._pull(self.session)
 
     def setup_database(self):
-        if self.test_db_id == 'ldap-feed':
-            with self.session.repo.internal_session(safe=True) as session:
-                session.execute('DELETE Any E WHERE E cw_source S, S name "ldap"')
-                session.commit()
-        if self.test_db_id == 'ldap-feed':
-            src = self.sexecute('CWSource S WHERE S name "ldap"').get_entity(0,0)
-            src.cw_set(config=CONFIG_LDAPFEED)
-        self.session.commit()
+        with self.session.repo.internal_session(safe=True) as session:
+            session.execute('DELETE Any E WHERE E cw_source S, S name "ldap"')
+            session.execute('SET S config %(conf)s, S url %(url)s '
+                            'WHERE S is CWSource, S name "ldap"',
+                            {"conf": CONFIG_LDAPFEED, 'url': URL} )
+            session.commit()
         self.pull()
+
+    def add_ldap_entry(self, dn, mods):
+        """
+        add an LDAP entity
+        """
+        modcmd = ['dn: %s'%dn, 'changetype: add']
+        for key, values in mods.iteritems():
+            if isinstance(values, basestring):
+                values = [values]
+            for value in values:
+                modcmd.append('%s: %s'%(key, value))
+        self._ldapmodify(modcmd)
 
     def delete_ldap_entry(self, dn):
         """
@@ -328,9 +338,23 @@ class LDAPFeedUserDeletionTC(LDAPFeedTestBase):
                          'deactivated')
         # check that it doesn't choke
         self.pull()
-        # reset the ldap database
-        self.tearDownClass()
-        self.setUpClass()
+        # reinsert syt
+        self.add_ldap_entry('uid=syt,ou=People,dc=cubicweb,dc=test',
+                            { 'objectClass': ['OpenLDAPperson','posixAccount','top','shadowAccount'],
+                              'cn': 'Sylvain Thenault',
+                              'sn': 'Thenault',
+                              'gidNumber': '1004',
+                              'uid': 'syt',
+                              'homeDirectory': '/home/syt',
+                              'shadowFlag': '134538764',
+                              'uidNumber': '1004',
+                              'givenName': 'Sylvain',
+                              'telephoneNumber': '106',
+                              'displayName': 'sthenault',
+                              'gecos': 'Sylvain Thenault',
+                              'mail': ['sylvain.thenault@logilab.fr','syt@logilab.fr'],
+                              'userPassword': 'syt',
+                             })
         self.pull()
         self.assertEqual(self.execute('Any N WHERE U login "syt", '
                                       'U in_state S, S name N').rows[0][0],
@@ -426,9 +450,6 @@ class LDAPFeedGroupTC(LDAPFeedTestBase):
             # back to normal ldap setup
             self.tearDownClass()
             self.setUpClass()
-
-
-
 
 
 

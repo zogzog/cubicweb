@@ -106,6 +106,10 @@ msgid "%s error report"
 msgstr ""
 
 #, python-format
+msgid "%s is part of violated unicity constraint"
+msgstr ""
+
+#, python-format
 msgid "%s not estimated"
 msgstr ""
 
@@ -135,6 +139,9 @@ msgid "'%s' action requires 'linkattr' option"
 msgstr ""
 
 msgid "(UNEXISTANT EID)"
+msgstr ""
+
+msgid "(not all shown here) "
 msgstr ""
 
 #, python-format
@@ -3764,6 +3771,10 @@ msgid "site-wide property can't be set for user"
 msgstr ""
 
 msgid "some later transaction(s) touch entity, undo them first"
+msgstr ""
+
+#, python-format
+msgid "some relations %sviolate a unicity constraint"
 msgstr ""
 
 msgid "sorry, the server is unable to handle this query"

@@ -720,14 +720,13 @@ def tx_meth(meth_name):
 class Session(RequestSessionBase):
     """Repository user session
 
-    This tie all together:
+    This ties all together:
      * session id,
      * user,
      * connections set,
      * other session data.
 
-    About session storage / transactions
-    ------------------------------------
+    **About session storage / transactions**
 
     Here is a description of internal session attributes. Besides :attr:`data`
     and :attr:`transaction_data`, you should not have to use attributes

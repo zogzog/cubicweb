@@ -20,6 +20,7 @@ http server
 """
 __docformat__ = "restructuredtext en"
 
+import random
 import threading
 import socket
 import httplib
@@ -46,6 +47,8 @@ def get_available_port(ports_scan):
 
     .. see:: :func:`test.test_support.bind_port`
     """
+    ports_scan = list(ports_scan)
+    random.shuffle(ports_scan)  # lower the chance of race condition
     for port in ports_scan:
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

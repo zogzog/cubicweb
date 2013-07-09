@@ -52,16 +52,18 @@ class RepositoryTC(CubicWebTC):
     and relation
     """
 
-    def test_uniquetogether(self):
+    def test_unique_together_constraint(self):
         self.execute('INSERT Societe S: S nom "Logilab", S type "SSLL", S cp "75013"')
         with self.assertRaises(ValidationError) as wraperr:
             self.execute('INSERT Societe S: S nom "Logilab", S type "SSLL", S cp "75013"')
-        self.assertEqual({'nom': u'violates unique_together constraints (cp, nom, type)',
-                          'cp': u'violates unique_together constraints (cp, nom, type)',
-                          'type': u'violates unique_together constraints (cp, nom, type)'},
-                     wraperr.exception.args[1])
+        self.assertEqual(
+            {'cp': u'cp is part of violated unicity constraint',
+             'nom': u'nom is part of violated unicity constraint',
+             'type': u'type is part of violated unicity constraint',
+             'unicity constraint': u'some relations violate a unicity constraint'},
+            wraperr.exception.args[1])
 
-    def test_unique_together(self):
+    def test_unique_together_schema(self):
         person = self.repo.schema.eschema('Personne')
         self.assertEqual(len(person._unique_together), 1)
         self.assertItemsEqual(person._unique_together[0],
@@ -272,19 +274,21 @@ class RepositoryTC(CubicWebTC):
     def test_initial_schema(self):
         schema = self.repo.schema
         # check order of attributes is respected
-        self.assertListEqual([r.type for r in schema.eschema('CWAttribute').ordered_relations()
-                               if not r.type in ('eid', 'is', 'is_instance_of', 'identity',
-                                                 'creation_date', 'modification_date', 'cwuri',
-                                                 'owned_by', 'created_by', 'cw_source',
-                                                 'update_permission', 'read_permission',
-                                                 'in_basket')],
-                              ['relation_type',
-                               'from_entity', 'to_entity',
-                               'constrained_by',
-                               'cardinality', 'ordernum',
-                               'indexed', 'fulltextindexed', 'internationalizable',
-                               'defaultval', 'extra_props',
-                               'description', 'description_format'])
+        notin = set(('eid', 'is', 'is_instance_of', 'identity',
+                     'creation_date', 'modification_date', 'cwuri',
+                     'owned_by', 'created_by', 'cw_source',
+                     'update_permission', 'read_permission',
+                     'in_basket'))
+        self.assertListEqual(['relation_type',
+                              'from_entity', 'to_entity',
+                              'constrained_by',
+                              'cardinality', 'ordernum',
+                              'indexed', 'fulltextindexed', 'internationalizable',
+                              'defaultval', 'extra_props',
+                              'description', 'description_format'],
+                             [r.type
+                              for r in schema.eschema('CWAttribute').ordered_relations()
+                              if r.type not in notin])
 
         self.assertEqual(schema.eschema('CWEType').main_attribute(), 'name')
         self.assertEqual(schema.eschema('State').main_attribute(), 'name')

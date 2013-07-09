@@ -410,14 +410,14 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
 
 
     def init(self, activated, source_entity):
-        super(NativeSQLSource, self).init(activated, source_entity)
-        self.init_creating(source_entity._cw.cnxset)
         try:
             # test if 'asource' column exists
             query = self.dbhelper.sql_add_limit_offset('SELECT asource FROM entities', 1)
             source_entity._cw.system_sql(query)
         except Exception as ex:
             self.eid_type_source = self.eid_type_source_pre_131
+        super(NativeSQLSource, self).init(activated, source_entity)
+        self.init_creating(source_entity._cw.cnxset)
 
     def shutdown(self):
         if self._eid_creation_cnx:
@@ -757,15 +757,15 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             if ex.__class__.__name__ == 'IntegrityError':
                 # need string comparison because of various backends
                 for arg in ex.args:
-                    mo = re.search('unique_cw_[^ ]+_idx', arg)
+                    # postgres and sqlserver
+                    mo = re.search('"unique_cw_[^ ]+"', arg)
                     if mo is not None:
-                        index_name = mo.group(0)
-                        # right-chop '_idx' postfix
-                        # (garanteed to be there, see regexp above)
-                        elements = index_name[:-4].split('_cw_')[1:]
+                        index_name = mo.group(0)[1:-1] # eat the surrounding " pair
+                        elements = index_name.split('_cw_')[1:]
                         etype = elements[0]
                         rtypes = elements[1:]
                         raise UniqueTogetherError(etype, rtypes)
+                    # sqlite
                     mo = re.search('columns (.*) are not unique', arg)
                     if mo is not None: # sqlite in use
                         # we left chop the 'cw_' prefix of attribute names
