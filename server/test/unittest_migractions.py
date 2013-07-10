@@ -370,14 +370,14 @@ class MigrationCommandsTC(CubicWebTC):
                                          'X description D')[0][0],
                           'title for this person')
         rinorder = [n for n, in cursor.execute(
-            'Any N ORDERBY O WHERE X is CWAttribute, X relation_type RT, RT name N,'
+            'Any N ORDERBY O,N WHERE X is CWAttribute, X relation_type RT, RT name N,'
             'X from_entity FE, FE name "Personne",'
             'X ordernum O')]
         expected = [u'nom', u'prenom', u'sexe', u'promo', u'ass', u'adel', u'titre',
-                    u'web', u'tel', u'fax', u'datenaiss', u'tzdatenaiss', u'test',
+                    u'web', u'tel', u'fax', u'datenaiss', u'test', u'tzdatenaiss',
                     u'description', u'firstname',
                     u'creation_date', u'cwuri', u'modification_date']
-        self.assertEqual(rinorder, expected)
+        self.assertEqual(expected, rinorder)
 
         # test permissions synchronization ####################################
         # new rql expr to add note entity
