@@ -1,4 +1,4 @@
-# copyright 2011-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2011-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -66,8 +66,8 @@ backward_compat_funcs = (('append_to_addmenu', uicfg.actionbox_appearsin_addmenu
 
 for funcname, tag in backward_compat_funcs:
     msg = ('[3.16] uihelper.%(name)s is deprecated, please use '
-           'web.uicfg.%(classname)s.%(name)s' % dict(
-               name=funcname, classname=tag.__class__.__name__))
+           'web.views.uicfg.%(rtagid)s.%(name)s' % dict(
+               name=funcname, rtagid=tag.__regid__))
     globals()[funcname] = deprecated(msg)(getattr(tag, funcname))
 
 
