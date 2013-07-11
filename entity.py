@@ -969,7 +969,7 @@ class Entity(AppObject):
             return value
 
     def related(self, rtype, role='subject', limit=None, entities=False, # XXX .cw_related
-                safe=False):
+                safe=False, targettypes=None):
         """returns a resultset of related entities
 
         :param rtype:
@@ -983,10 +983,13 @@ class Entity(AppObject):
         :param safe:
           if True, an empty rset/list of entities will be returned in case of
           :exc:`Unauthorized`, else (the default), the exception is propagated
+        :param targettypes:
+          a tuple of target entity types to restrict the query
         """
         rtype = str(rtype)
-        if limit is None:
-            # we cannot do much wrt cache on limited queries
+        # Caching restricted/limited results is best avoided.
+        cacheable = limit is None and targettypes is None
+        if cacheable:
             cache_key = '%s_%s' % (rtype, role)
             if cache_key in self._cw_related_cache:
                 return self._cw_related_cache[cache_key][entities]
@@ -994,7 +997,7 @@ class Entity(AppObject):
             if entities:
                 return []
             return self._cw.empty_rset()
-        rql = self.cw_related_rql(rtype, role, limit=limit)
+        rql = self.cw_related_rql(rtype, role, limit=limit, targettypes=targettypes)
         try:
             rset = self._cw.execute(rql, {'x': self.eid})
         except Unauthorized:
@@ -1002,9 +1005,9 @@ class Entity(AppObject):
                 raise
             rset = self._cw.empty_rset()
         if entities:
-            if limit is None:
+            if cacheable:
                 self.cw_set_relation_cache(rtype, role, rset)
-                return self.related(rtype, role, limit, entities)
+                return self.related(rtype, role, entities=entities)
             return list(rset.entities())
         else:
             return rset

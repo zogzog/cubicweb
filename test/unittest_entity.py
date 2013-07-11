@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -132,6 +132,12 @@ class EntityTC(CubicWebTC):
         self.assertEqual(sorted(user._cw_related_cache), ['in_group_subject', 'primary_email_subject'])
         for group in groups:
             self.assertFalse('in_group_subject' in group._cw_related_cache, list(group._cw_related_cache))
+        user.cw_clear_all_caches()
+        user.related('in_group', entities=True)
+        self.assertIn('in_group_subject', user._cw_related_cache)
+        user.cw_clear_all_caches()
+        user.related('in_group', targettypes=('CWGroup',), entities=True)
+        self.assertNotIn('in_group_subject', user._cw_related_cache)
 
     def test_related_limit(self):
         req = self.request()
@@ -144,6 +150,18 @@ class EntityTC(CubicWebTC):
         p.cw_clear_all_caches()
         self.assertEqual(len(p.related('tags', 'object', entities=True, limit=2)), 2)
         self.assertEqual(len(p.related('tags', 'object', entities=True)), 4)
+
+    def test_related_targettypes(self):
+        req = self.request()
+        p = req.create_entity('Personne', nom=u'Loxodonta', prenom=u'Babar')
+        n = req.create_entity('Note', type=u'scratch', ecrit_par=p)
+        t = req.create_entity('Tag', name=u'a tag', tags=(p, n))
+        self.commit()
+        req = self.request()
+        t = req.entity_from_eid(t.eid)
+        self.assertEqual(2, t.related('tags').rowcount)
+        self.assertEqual(1, t.related('tags', targettypes=('Personne',)).rowcount)
+        self.assertEqual(1, t.related('tags', targettypes=('Note',)).rowcount)
 
     def test_cw_instantiate_relation(self):
         req = self.request()
