@@ -27,6 +27,7 @@ import os
 import os.path as osp
 import hashlib
 import mimetypes
+import threading
 from time import mktime
 from datetime import datetime, timedelta
 from logging import getLogger
@@ -105,6 +106,7 @@ class ConcatFilesHandler(object):
         self._resources = {}
         self.config = config
         self.logger = getLogger('cubicweb.web')
+        self.lock = threading.Lock()
 
     def _resource(self, path):
         """get the resouce"""
@@ -143,21 +145,32 @@ class ConcatFilesHandler(object):
     def concat_cached_filepath(self, paths):
         filepath = self.build_filepath(paths)
         if not self._up_to_date(filepath, paths):
-            with open(filepath, 'wb') as f:
-                for path in paths:
-                    dirpath, rid = self._resource(path)
-                    if rid is None:
-                        # In production mode log an error, do not return a 404
-                        # XXX the erroneous content is cached anyway
-                        self.logger.error('concatenated data url error: %r file '
-                                          'does not exist', path)
-                        if self.config.debugmode:
-                            raise NotFound(path)
-                    else:
-                        with open(osp.join(dirpath, rid), 'rb') as source:
-                            for line in source:
-                                f.write(line)
-                        f.write('\n')
+            tmpfile = filepath + '.tmp'
+            try:
+                with self.lock:
+                    if self._up_to_date(filepath, paths):
+                        # first check could have raced with some other thread
+                        # updating the file
+                        return filepath
+                    with open(tmpfile, 'wb') as f:
+                        for path in paths:
+                            dirpath, rid = self._resource(path)
+                            if rid is None:
+                                # In production mode log an error, do not return a 404
+                                # XXX the erroneous content is cached anyway
+                                self.logger.error('concatenated data url error: %r file '
+                                                  'does not exist', path)
+                                if self.config.debugmode:
+                                    raise NotFound(path)
+                            else:
+                                with open(osp.join(dirpath, rid), 'rb') as source:
+                                    for line in source:
+                                        f.write(line)
+                                f.write('\n')
+                    os.rename(tmpfile, filepath)
+            except:
+                os.remove(tmpfile)
+                raise
         return filepath
 
 
