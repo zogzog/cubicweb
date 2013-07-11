@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -20,6 +20,7 @@
 it should only include low level schema changes
 """
 
+from cubicweb import ConfigurationError
 from cubicweb.server.session import hooks_control
 from cubicweb.server import schemaserial as ss
 
@@ -37,19 +38,19 @@ def _add_relation_definition_no_perms(subjtype, rtype, objtype):
 if applcubicwebversion < (3, 17, 0) and cubicwebversion >= (3, 17, 0):
     try:
         add_cube('sioc', update_database=False)
-    except ImportError:
+    except ConfigurationError:
         if not confirm('In cubicweb 3.17 sioc views have been moved to the sioc '
                        'cube, which is not installed.  Continue anyway?'):
             raise
     try:
         add_cube('embed', update_database=False)
-    except ImportError:
+    except ConfigurationError:
         if not confirm('In cubicweb 3.17 embedding views have been moved to the embed '
                        'cube, which is not installed.  Continue anyway?'):
             raise
     try:
         add_cube('geocoding', update_database=False)
-    except ImportError:
+    except ConfigurationError:
         if not confirm('In cubicweb 3.17 geocoding views have been moved to the geocoding '
                        'cube, which is not installed.  Continue anyway?'):
             raise
@@ -72,7 +73,7 @@ if applcubicwebversion <= (3, 14, 0) and cubicwebversion >= (3, 14, 0):
         from cubicweb import ExecutionError
         try:
             add_cube('localperms', update_database=False)
-        except ImportError:
+        except ConfigurationError:
             raise ExecutionError('In cubicweb 3.14, CWPermission and related stuff '
                                  'has been moved to cube localperms. Install it first.')
 
