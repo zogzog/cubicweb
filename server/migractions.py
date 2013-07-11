@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -929,6 +929,10 @@ class ServerMigrationHelper(MigrationHelper):
         `newname` is a string giving the name of the renamed entity type
         """
         schema = self.repo.schema
+        if oldname not in schema:
+            print 'warning: entity type %s is unknown, skip renaming' % oldname
+            return
+        # if merging two existing entity types
         if newname in schema:
             assert oldname in ETYPE_NAME_MAP, \
                    '%s should be mapped to %s in ETYPE_NAME_MAP' % (oldname,
@@ -1003,6 +1007,7 @@ class ServerMigrationHelper(MigrationHelper):
             # remove the old type: use rql to propagate deletion
             self.rqlexec('DELETE CWEType ET WHERE ET name %(on)s', {'on': oldname},
                          ask_confirm=False)
+        # elif simply renaming an entity type
         else:
             self.rqlexec('SET ET name %(newname)s WHERE ET is CWEType, ET name %(on)s',
                          {'newname' : unicode(newname), 'on' : oldname},
