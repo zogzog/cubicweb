@@ -361,7 +361,7 @@ registered.',
             self.init_cubes(self.expand_cubes(origcubes))
         schema = CubicWebSchemaLoader().load(self, **kwargs)
         if expand_cubes:
-            # restaure original value
+            # restore original value
             self._cubes = origcubes
         return schema
 

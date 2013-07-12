@@ -239,7 +239,7 @@ class Repository(object):
             # load schema from the file system
             if not config.creating:
                 self.warning("set fs instance'schema")
-            self.set_schema(config.load_schema())
+            self.set_schema(config.load_schema(expand_cubes=True))
         else:
             # normal start: load the instance schema from the database
             self.info('loading schema from the repository')
