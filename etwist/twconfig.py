@@ -36,7 +36,6 @@ from cubicweb.web.webconfig import WebConfiguration
 
 class TwistedConfiguration(WebConfiguration):
     """web instance (in a twisted web server) client of a RQL server"""
-    name = 'twisted'
 
     options = merge_options((
         # ctl configuration
@@ -106,8 +105,6 @@ much greater than connection-poolsize",
         from socket import getfqdn
         return 'http://%s:%s/' % (self['host'] or getfqdn(), self['port'] or 8080)
 
-
-CONFIGURATIONS.append(TwistedConfiguration)
 
 try:
     from cubicweb.server.serverconfig import ServerConfiguration

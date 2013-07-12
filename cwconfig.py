@@ -206,7 +206,7 @@ def possible_configurations(directory):
     """return a list of installed configurations in a directory
     according to \*-ctl files
     """
-    return [name for name in ('repository', 'twisted', 'all-in-one')
+    return [name for name in ('repository', 'all-in-one')
             if exists(join(directory, '%s.conf' % name))]
 
 def guess_configuration(directory):
@@ -940,10 +940,9 @@ the repository',
                                      ' "cubicweb-ctl list")' % appid)
         return home
 
-    MODES = ('common', 'repository', 'Any', 'web')
+    MODES = ('common', 'repository', 'Any')
     MCOMPAT = {'all-in-one': MODES,
-               'repository': ('common', 'repository', 'Any'),
-               'twisted'   : ('common', 'web'),}
+               'repository': ('common', 'repository', 'Any')}
     @classmethod
     def accept_mode(cls, mode):
         #assert mode in cls.MODES, mode
