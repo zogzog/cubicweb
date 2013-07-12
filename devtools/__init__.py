@@ -37,7 +37,7 @@ from logilab.common.decorators import cached, clear_cache
 from cubicweb import ExecutionError, BadConnectionId
 from cubicweb import schema, cwconfig
 from cubicweb.server.serverconfig import ServerConfiguration
-from cubicweb.etwist.twconfig import TwistedConfiguration
+from cubicweb.etwist.twconfig import WebConfigurationBase
 
 cwconfig.CubicWebConfiguration.cls_adjust_sys_path()
 
@@ -213,12 +213,12 @@ class TestServerConfiguration(ServerConfiguration):
         return BASE_URL
 
 
-class BaseApptestConfiguration(TestServerConfiguration, TwistedConfiguration):
+class BaseApptestConfiguration(TestServerConfiguration, WebConfigurationBase):
     name = 'all-in-one' # so it search for all-in-one.conf, not repository.conf
     options = cwconfig.merge_options(TestServerConfiguration.options
-                                     + TwistedConfiguration.options)
-    cubicweb_appobject_path = TestServerConfiguration.cubicweb_appobject_path | TwistedConfiguration.cubicweb_appobject_path
-    cube_appobject_path = TestServerConfiguration.cube_appobject_path | TwistedConfiguration.cube_appobject_path
+                                     + WebConfigurationBase.options)
+    cubicweb_appobject_path = TestServerConfiguration.cubicweb_appobject_path | WebConfigurationBase.cubicweb_appobject_path
+    cube_appobject_path = TestServerConfiguration.cube_appobject_path | WebConfigurationBase.cube_appobject_path
 
     def available_languages(self, *args):
         return self.cw_languages()
