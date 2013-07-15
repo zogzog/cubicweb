@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -89,13 +89,6 @@ def cartesian_product(seqin):
         else:                           # processing last sequence
             yield comb                  # comb finished, add to list
     return rloop(seqin, [])
-
-
-def cleanup_solutions(rqlst, solutions):
-    for sol in solutions:
-        for vname in list(sol):
-            if not (vname in rqlst.defined_vars or vname in rqlst.aliases):
-                del sol[vname]
 
 
 def eschema_eid(session, eschema):
