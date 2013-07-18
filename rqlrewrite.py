@@ -162,6 +162,17 @@ def _expand_selection(terms, selected, aliases, select, newselect):
                 aliases.append(n.VariableRef(colalias))
                 selected.add(vref.name)
 
+def _has_multiple_cardinality(etypes, rdef, ttypes_func, cardindex):
+    """return True if relation definitions from entity types (`etypes`) to
+    target types returned by the `ttypes_func` function all have single (1 or ?)
+    cardinality.
+    """
+    for etype in etypes:
+        for ttype in ttypes_func(etype):
+            if rdef(etype, ttype).cardinality[cardindex] in '+*':
+                return True
+    return False
+
 
 def iter_relations(stinfo):
     # this is a function so that test may return relation in a predictable order
@@ -661,21 +672,22 @@ class RQLRewriter(object):
                     rdef = lambda x, y: rschema.rdef(y, x)
             except KeyError:
                 # may be raised by vi['xhs_rels'][sniprel.r_type]
-                return None
+                continue
             # don't share if relation's statement is not the current statement
             if orel.stmt is not stmt:
                 return None
             # can't share neged relation or relations with different outer join
             if (orel.neged(strict=True) or sniprel.neged(strict=True)
                 or (orel.optional and orel.optional != sniprel.optional)):
-                return None
+                continue
             # if cardinality is in '?1', we can ignore the snippet relation and use
             # variable from the original query
-            for etype in vi['stinfo']['possibletypes']:
-                for ttype in ttypes_func(etype):
-                    if rdef(etype, ttype).cardinality[cardindex] in '+*':
-                        return None
+            if _has_multiple_cardinality(vi['stinfo']['possibletypes'], rdef,
+                                         ttypes_func, cardindex):
+                continue
             break
+        else:
+            return None
         return orel
 
     def _use_orig_term(self, snippet_varname, term):
