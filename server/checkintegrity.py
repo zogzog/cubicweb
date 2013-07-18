@@ -57,6 +57,9 @@ def has_eid(session, sqlcursor, eid, eids):
             pass
         eids[eid] = False
         return False
+    if etype not in session.vreg.schema:
+        eids[eid] = False
+        return False
     sqlcursor.execute('SELECT * FROM %s%s WHERE %seid=%s' % (SQL_PREFIX, etype,
                                                              SQL_PREFIX, eid))
     result = sqlcursor.fetchall()
@@ -179,12 +182,12 @@ def check_entities(schema, session, eids, fix=1):
     """check all entities registered in the repo system table"""
     print 'Checking entities system table'
     # system table but no source
-    msg = '  Entity with eid %s exists in the system table but in no source (autofix will delete the entity)'
-    cursor = session.system_sql('SELECT eid FROM entities;')
+    msg = '  Entity %s with eid %s exists in the system table but in no source (autofix will delete the entity)'
+    cursor = session.system_sql('SELECT eid,type FROM entities;')
     for row in cursor.fetchall():
-        eid = row[0]
+        eid, etype = row
         if not has_eid(session, cursor, eid, eids):
-            sys.stderr.write(msg % eid)
+            sys.stderr.write(msg % (etype, eid))
             if fix:
                 session.system_sql('DELETE FROM entities WHERE eid=%s;' % eid)
             notify_fixed(fix)
@@ -258,6 +261,12 @@ def bad_related_msg(rtype, target, eid, fix):
     sys.stderr.write(msg % (rtype, target, eid))
     notify_fixed(fix)
 
+def bad_inlined_msg(rtype, parent_eid, eid, fix):
+    msg = ('  An inlined relation %s from %s to %s exists but the latter '
+           'entity does not exist')
+    sys.stderr.write(msg % (rtype, parent_eid, eid))
+    notify_fixed(fix)
+
 
 def check_relations(schema, session, eids, fix=1):
     """check that eids referenced by relations are registered in the repo system
@@ -271,13 +280,13 @@ def check_relations(schema, session, eids, fix=1):
             for subjtype in rschema.subjects():
                 table = SQL_PREFIX + str(subjtype)
                 column = SQL_PREFIX +  str(rschema)
-                sql = 'SELECT %s FROM %s WHERE %s IS NOT NULL;' % (
+                sql = 'SELECT cw_eid,%s FROM %s WHERE %s IS NOT NULL;' % (
                     column, table, column)
                 cursor = session.system_sql(sql)
                 for row in cursor.fetchall():
-                    eid = row[0]
+                    parent_eid, eid = row
                     if not has_eid(session, cursor, eid, eids):
-                        bad_related_msg(rschema, 'object', eid, fix)
+                        bad_inlined_msg(rschema, parent_eid, eid, fix)
                         if fix:
                             sql = 'UPDATE %s SET %s=NULL WHERE %s=%s;' % (
                                 table, column, column, eid)
@@ -366,6 +375,13 @@ def check_metadata(schema, session, eids, fix=1):
     eidcolumn = SQL_PREFIX + 'eid'
     msg = '  %s with eid %s has no %s (autofix will set it to now)'
     for etype, in cursor.fetchall():
+        if etype not in session.vreg.schema:
+            sys.stderr.write('entities table references unknown type %s\n' %
+                             etype)
+            if fix:
+                session.system_sql("DELETE FROM entities WHERE type = %(type)s",
+                                   {'type': etype})
+            continue
         table = SQL_PREFIX + etype
         for rel, default in ( ('creation_date', datetime.now()),
                               ('modification_date', datetime.now()), ):
