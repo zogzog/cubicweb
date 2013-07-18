@@ -520,6 +520,18 @@ class RewriteFullTC(CubicWebTC):
                              'EXISTS(X owned_by %(A)s), X is IN(Division, Note, Societe))',
                              union.as_string())
 
+    def test_ambiguous_optional_diff_exprs(self):
+        """See #3013554"""
+        self.skipTest('bad request generated (may generate duplicated results)')
+        edef1 = self.schema['Societe']
+        edef2 = self.schema['Division']
+        edef3 = self.schema['Note']
+        with self.temporary_permissions((edef1, {'read': (ERQLExpression('X created_by U'),)}),
+                                        (edef2, {'read': ('users',)}),
+                                        (edef3, {'read': (ERQLExpression('X owned_by U'),)})):
+            union = self.process('Any A,AR,X,CD WHERE A concerne X?, A ref AR, X creation_date CD')
+            self.assertEqual(union.as_string(), 'not generated today')
+
 
     def test_xxxx(self):
         edef1 = self.schema['Societe']
