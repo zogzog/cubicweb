@@ -52,7 +52,6 @@ __depends__ = {
     # XXX graphviz
     # server dependencies
     'logilab-database': '>= 1.10',
-    'pysqlite': '>= 2.5.5', # XXX install pysqlite2
     'passlib': '',
     }
 
