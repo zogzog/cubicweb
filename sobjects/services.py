@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -19,8 +19,10 @@
 
 import threading
 
+from yams.schema import role_name
+from cubicweb import ValidationError
 from cubicweb.server import Service
-from cubicweb.predicates import match_user_groups
+from cubicweb.predicates import match_user_groups, match_kwargs
 
 class StatsService(Service):
     """Return a dictionary containing some statistics about the repository
@@ -100,3 +102,50 @@ class GcStatsService(Service):
         results['referenced'] = values
         results['unreachable'] = len(garbage)
         return results
+
+
+class RegisterUserService(Service):
+    """check if a user with the given login exists, if not create it with the
+    given password. This service is designed to be used for anonymous
+    registration on public web sites.
+
+    To use it, do:
+     with self.appli.repo.internal_cnx() as cnx:
+        cnx.call_service('register_user',
+                         login=login,
+                         password=password,
+                         **kwargs)
+    """
+    __regid__ = 'register_user'
+    __select__ = Service.__select__ & match_kwargs('login', 'password')
+
+    def call(self, login, password, email=None, **kwargs):
+        cnx = self._cw
+        errmsg = cnx._('the value "%s" is already used, use another one')
+
+        if (cnx.execute('CWUser X WHERE X login %(login)s', {'login': login},
+                        build_descr=False)
+            or cnx.execute('CWUser X WHERE X use_email C, C address %(login)s',
+                           {'login': login}, build_descr=False)):
+            qname = role_name('login', 'subject')
+            raise ValidationError(None, {qname: errmsg % login})
+
+        if isinstance(password, unicode):
+            # password should *always* be utf8 encoded
+            password = password.encode('UTF8')
+        kwargs['login'] = login
+        kwargs['upassword'] = password
+        # we have to create the user
+        user = cnx.create_entity('CWUser', **kwargs)
+        cnx.execute('SET X in_group G WHERE X eid %(x)s, G name "users"',
+                    {'x': user.eid})
+
+        if email or '@' in login:
+            d = {'login': login, 'email': email or login}
+            if cnx.execute('EmailAddress X WHERE X address %(email)s', d,
+                           build_descr=False):
+                qname = role_name('address', 'subject')
+                raise ValidationError(None, {qname: errmsg % d['email']})
+            cnx.execute('INSERT EmailAddress X: X address %(email)s, '
+                        'U primary_email X, U use_email X '
+                        'WHERE U login %(login)s', d, build_descr=False)

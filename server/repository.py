@@ -41,7 +41,6 @@ from logilab.common.decorators import cached, clear_cache
 from logilab.common.deprecation import deprecated
 
 from yams import BadSchemaDefinition
-from yams.schema import role_name
 from rql import RQLSyntaxError
 from rql.utils import rqlvar_maker
 
@@ -611,43 +610,16 @@ class Repository(object):
                                         'P pkey K, P value V, NOT P for_user U',
                                         build_descr=False)
 
-    # XXX protect this method: anonymous should be allowed and registration
-    # plugged
+    @deprecated("[3.19] Use session.call_service('register_user') instead'")
     def register_user(self, login, password, email=None, **kwargs):
         """check a user with the given login exists, if not create it with the
         given password. This method is designed to be used for anonymous
         registration on public web site.
         """
         with self.internal_cnx() as cnx:
-            # for consistency, keep same error as unique check hook (although not required)
-            errmsg = cnx._('the value "%s" is already used, use another one')
-            if (cnx.execute('CWUser X WHERE X login %(login)s', {'login': login},
-                            build_descr=False)
-                or cnx.execute('CWUser X WHERE X use_email C, C address %(login)s',
-                               {'login': login}, build_descr=False)):
-                qname = role_name('login', 'subject')
-                raise ValidationError(None, {qname: errmsg % login})
-            # we have to create the user
-            user = self.vreg['etypes'].etype_class('CWUser')(cnx)
-            if isinstance(password, unicode):
-                # password should *always* be utf8 encoded
-                password = password.encode('UTF8')
-            kwargs['login'] = login
-            kwargs['upassword'] = password
-            self.glob_add_entity(cnx, EditedEntity(user, **kwargs))
-            cnx.execute('SET X in_group G WHERE X eid %(x)s, G name "users"',
-                        {'x': user.eid})
-            if email or '@' in login:
-                d = {'login': login, 'email': email or login}
-                if cnx.execute('EmailAddress X WHERE X address %(email)s', d,
-                               build_descr=False):
-                    qname = role_name('address', 'subject')
-                    raise ValidationError(None, {qname: errmsg % d['email']})
-                cnx.execute('INSERT EmailAddress X: X address %(email)s, '
-                            'U primary_email X, U use_email X '
-                            'WHERE U login %(login)s', d, build_descr=False)
+            cnx.call_service('register_user', login=login, password=password,
+                             email=email, **kwargs)
             cnx.commit()
-        return True
 
     def find_users(self, fetch_attrs, **query_attrs):
         """yield user attributes for cwusers matching the given query_attrs

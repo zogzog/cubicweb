@@ -136,6 +136,9 @@ API changes
 * ``repo.gc_stats()`` is now deprecated. The same information is available through
   a service (``_cw.call_service('repo_gc_stats')``).
 
+* ``repo.register_user()`` is now deprecated.  The functionality is now
+  available through a service (``_cw.call_service('register_user')``).
+
 * ``request.set_session`` no longer takes an optional ``user`` argument.
 
 * CubicwebTC does not have repo and cnx as class attributes anymore. They are
