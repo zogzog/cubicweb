@@ -83,8 +83,8 @@ class ClearGroupMap(hook.Hook):
             repo.vreg.register(ClearGroupMap)
 
 class ServerMigrationHelper(MigrationHelper):
-    """specific migration helper for server side  migration scripts,
-    providind actions related to schema/data migration
+    """specific migration helper for server side migration scripts,
+    providing actions related to schema/data migration
     """
 
     def __init__(self, config, schema, interactive=True,

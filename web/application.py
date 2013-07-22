@@ -343,17 +343,17 @@ class CubicWebPublisher(object):
 
 
     def main_handle_request(self, req, path):
-        """Process and http request
+        """Process an http request
 
         Arguments are:
         - a Request object
         - path of the request object
 
-        It return the content of the http response. HTTP header and status are
-        are set on the Request Object.
+        It returns the content of the http response. HTTP header and status are
+        set on the Request object.
         """
         if not isinstance(req, CubicWebRequestBase):
-            warn('[3.15] Application entry poin arguments are now (req, path) '
+            warn('[3.15] Application entry point arguments are now (req, path) '
                  'not (path, req)', DeprecationWarning, 2)
             req, path = path, req
         if req.authmode == 'http':
@@ -399,7 +399,7 @@ class CubicWebPublisher(object):
         # Wrong, absent or Reseted credential
         except AuthenticationError:
             # If there is an https url configured and
-            # the request do not used https, redirect to login form
+            # the request does not use https, redirect to login form
             https_url = self.vreg.config['https-url']
             if https_url and req.base_url() != https_url:
                 req.status_out = httplib.SEE_OTHER

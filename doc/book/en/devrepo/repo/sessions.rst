@@ -59,7 +59,7 @@ The authentication process is a ballet involving a few dancers:
       other credentials elements (calling `authentication_information`),
       giving the request object each time
 
-      * the default retriever (oddly named `LoginPasswordRetreiver`)
+      * the default retriever (named `LoginPasswordRetriever`)
         will in turn defer login and password fetching to the request
         object (which, depending on the authentication mode (`cookie`
         or `http`), will do the appropriate things and return a login

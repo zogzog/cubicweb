@@ -61,7 +61,7 @@ class ConnectionError(RepositoryError):
     """
 
 class AuthenticationError(ConnectionError):
-    """raised when when an attempt to establish a connection failed do to wrong
+    """raised when an attempt to establish a connection failed due to wrong
     connection information (login / password or other authentication token)
     """
 
