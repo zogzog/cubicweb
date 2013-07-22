@@ -688,7 +688,10 @@ class ServerMigrationHelper(MigrationHelper):
         for rschema in newcubes_schema.relations():
             existingschema = self.repo.schema.rschema(rschema.type)
             for (fromtype, totype) in rschema.rdefs:
-                if (fromtype, totype) in existingschema.rdefs:
+                # if rdef already exists or is infered from inheritance,
+                # don't add it
+                if (fromtype, totype) in existingschema.rdefs \
+                        or rschema.rdefs[(fromtype, totype)].infered:
                     continue
                 # check we should actually add the relation definition
                 if not (fromtype in new or totype in new or rschema in new):
