@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -176,10 +176,11 @@ class EditController(basecontrollers.ViewController):
 
     def edit_entity(self, formparams, multiple=False):
         """edit / create / copy an entity and return its eid"""
+        req = self._cw
         etype = formparams['__type']
-        entity = self._cw.vreg['etypes'].etype_class(etype)(self._cw)
+        entity = req.vreg['etypes'].etype_class(etype)(req)
         entity.eid = valerror_eid(formparams['eid'])
-        is_main_entity = self._cw.form.get('__maineid') == formparams['eid']
+        is_main_entity = req.form.get('__maineid') == formparams['eid']
         # let a chance to do some entity specific stuff
         entity.cw_adapt_to('IEditControl').pre_web_edit()
         # create a rql query from parameters
@@ -188,12 +189,12 @@ class EditController(basecontrollers.ViewController):
         # this will generate less rql queries and might be useful in
         # a few dark corners
         if is_main_entity:
-            formid = self._cw.form.get('__form_id', 'edition')
+            formid = req.form.get('__form_id', 'edition')
         else:
             # XXX inlined forms formid should be saved in a different formparams entry
             # inbetween, use cubicweb standard formid for inlined forms
             formid = 'edition'
-        form = self._cw.vreg['forms'].select(formid, self._cw, entity=entity)
+        form = req.vreg['forms'].select(formid, req, entity=entity)
         eid = form.actual_eid(entity.eid)
         try:
             editedfields = formparams['_cw_entity_fields']
@@ -203,7 +204,7 @@ class EditController(basecontrollers.ViewController):
                 warn('[3.13] _cw_edited_fields has been renamed _cw_entity_fields',
                      DeprecationWarning)
             except KeyError:
-                raise RequestError(self._cw._('no edited fields specified for entity %s' % entity.eid))
+                raise RequestError(req._('no edited fields specified for entity %s' % entity.eid))
         form.formvalues = {} # init fields value cache
         for field in form.iter_modified_fields(editedfields, entity):
             self.handle_formfield(form, field, rqlquery)
@@ -218,8 +219,8 @@ class EditController(basecontrollers.ViewController):
             self.notify_edited(entity)
         if '__delete' in formparams:
             # XXX deprecate?
-            todelete = self._cw.list_form_param('__delete', formparams, pop=True)
-            autoform.delete_relations(self._cw, todelete)
+            todelete = req.list_form_param('__delete', formparams, pop=True)
+            autoform.delete_relations(req, todelete)
         if '__cloned_eid' in formparams:
             entity.copy_relations(int(formparams['__cloned_eid']))
         if is_main_entity: # only execute linkto for the main entity
@@ -259,8 +260,8 @@ class EditController(basecontrollers.ViewController):
     def handle_inlined_relation(self, form, field, values, origvalues, rqlquery):
         """handle edition for the (rschema, x) relation of the given entity
         """
-        attr = field.name
         if values:
+            attr = field.name
             rqlquery.kwargs[attr] = iter(values).next()
             rqlquery.edited.append('X %s %s' % (attr, attr.upper()))
             rqlquery.restrictions.append('%s eid %%(%s)s' % (attr.upper(), attr))
