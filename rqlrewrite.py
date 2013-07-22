@@ -673,9 +673,9 @@ class RQLRewriter(object):
             except KeyError:
                 # may be raised by vi['xhs_rels'][sniprel.r_type]
                 continue
-            # don't share if relation's statement is not the current statement
-            if orel.stmt is not stmt:
-                return None
+            # don't share if relation's scope is not the current statement
+            if orel.scope is not stmt:
+                continue
             # can't share neged relation or relations with different outer join
             if (orel.neged(strict=True) or sniprel.neged(strict=True)
                 or (orel.optional and orel.optional != sniprel.optional)):

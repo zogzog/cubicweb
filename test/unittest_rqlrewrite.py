@@ -331,6 +331,21 @@ class RQLRewriteTC(TestCase):
                          "EXISTS(A subworkflow_exit EXIT, A name 'hop', A is WorkflowTransition), "
                          "C is WorkflowTransition")
 
+    def test_relation_non_optimization_2(self):
+        """See #3024730"""
+        # 'X inlined_note N' must not be shared with 'C inlined_note N'
+        # previously inserted, else this may introduce duplicated results, as N
+        # will then be shared by multiple EXISTS and so at SQL generation time,
+        # the table will be in the FROM clause of the outermost query
+        rqlst = parse('Any A,C WHERE A inlined_card C')
+        rewrite(rqlst, {('A', 'X'): ('X inlined_card C, C inlined_note N, N owned_by U',),
+                        ('C', 'X'): ('X inlined_note N, N owned_by U',)}, {})
+        self.assertEqual(rqlst.as_string(),
+                         'Any A,C WHERE A inlined_card C, D eid %(E)s, '
+                         'EXISTS(C inlined_note B, B owned_by D, B is Note), '
+                         'EXISTS(C inlined_note F, F owned_by D, F is Note), '
+                         'A is Affaire, C is Card')
+
     def test_unsupported_constraint_1(self):
         # CWUser doesn't have require_permission
         trinfo_constraint = ('X wf_info_for Y, Y require_permission P, P name "read"')
