@@ -21,6 +21,7 @@ __docformat__ = "restructuredtext en"
 
 import itertools
 from os.path import join, splitext
+from time import time
 from datetime import datetime, timedelta
 from logging import getLogger
 
@@ -37,7 +38,9 @@ from cubicweb.server.edition import EditedEntity
 
 def dbg_st_search(uri, union, varmap, args, cachekey=None, prefix='rql for'):
     if server.DEBUG & server.DBG_RQL:
+        global t
         print '  %s %s source: %s' % (prefix, uri, repr(union.as_string()))
+        t = time()
         if varmap:
             print '    using varmap', varmap
         if server.DEBUG & server.DBG_MORE:
@@ -51,9 +54,10 @@ def dbg_st_search(uri, union, varmap, args, cachekey=None, prefix='rql for'):
 def dbg_results(results):
     if server.DEBUG & server.DBG_RQL:
         if len(results) > 10:
-            print '  -->', results[:10], '...', len(results)
+            print '  -->', results[:10], '...', len(results),
         else:
-            print '  -->', results
+            print '  -->', results,
+        print 'time: ', time() - t
     # return true so it can be used as assertion (and so be killed by python -O)
     return True
 
