@@ -711,6 +711,9 @@ class RQLExpression(object):
             return self.expression == other.expression
         return False
 
+    def __hash__(self):
+        return hash(self.expression)
+
     def __deepcopy__(self, memo):
         return self.__class__(self.expression, self.mainvars)
     def __getstate__(self):
