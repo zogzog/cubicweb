@@ -101,6 +101,15 @@ class RqlQuery(object):
         self.kwargs[var] = eid
         return rql
 
+    def set_attribute(self, attr, value):
+        self.kwargs[attr] = value
+        self.edited.append('X %s %%(%s)s' % (attr, attr))
+
+    def set_inlined(self, relation, value):
+        self.kwargs[relation] = value
+        self.edited.append('X %s %s' % (relation, relation.upper()))
+        self.restrictions.append('%s eid %%(%s)s' % (relation.upper(), relation))
+
 
 class EditController(basecontrollers.ViewController):
     __regid__ = 'edit'
@@ -238,8 +247,7 @@ class EditController(basecontrollers.ViewController):
                     continue
                 rschema = self._cw.vreg.schema.rschema(field.name)
                 if rschema.final:
-                    rqlquery.kwargs[field.name] = value
-                    rqlquery.edited.append('X %s %%(%s)s' % (rschema, rschema))
+                    rqlquery.set_attribute(field.name, value)
                 else:
                     if form.edited_entity.has_eid():
                         origvalues = set(entity.eid for entity in form.edited_entity.related(field.name, field.role, entities=True))
@@ -261,10 +269,7 @@ class EditController(basecontrollers.ViewController):
         """handle edition for the (rschema, x) relation of the given entity
         """
         if values:
-            attr = field.name
-            rqlquery.kwargs[attr] = iter(values).next()
-            rqlquery.edited.append('X %s %s' % (attr, attr.upper()))
-            rqlquery.restrictions.append('%s eid %%(%s)s' % (attr.upper(), attr))
+            rqlquery.set_inlined(field.name, iter(values).next())
         elif form.edited_entity.has_eid():
             self.handle_relation(form, field, values, origvalues)
 
