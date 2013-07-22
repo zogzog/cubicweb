@@ -28,6 +28,12 @@ cubicweb (3.17.0-1) unstable; urgency=low
 
  -- Pierre-Yves David <pierre-yves.david@logilab.fr>  Mon, 29 Apr 2013 11:20:56 +0200
 
+cubicweb (3.16.6-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Florent Cayré <florent.cayre@logilab.fr>  Sat, 13 Jul 2013 05:10:23 +0200
+
 cubicweb (3.16.5-1) unstable; urgency=low
 
   * new upstream release

@@ -130,22 +130,20 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None):
     w('# singular and plural forms for each entity type\n')
     w('\n')
     vregdone = set()
+    afss = vreg['uicfg']['autoform_section']
+    appearsin_addmenus = vreg['uicfg']['actionbox_appearsin_addmenu']
     if libconfig is not None:
         from cubicweb.cwvreg import CWRegistryStore
         libschema = libconfig.load_schema(remove_unused_rtypes=False)
-        afs = vreg['uicfg'].select('autoform_section')
-        appearsin_addmenu = vreg['uicfg'].select('actionbox_appearsin_addmenu')
         cleanup_sys_modules(libconfig)
         libvreg = CWRegistryStore(libconfig)
         libvreg.set_schema(libschema) # trigger objects registration
-        libafs = libvreg['uicfg'].select('autoform_section')
-        libappearsin_addmenu = libvreg['uicfg'].select('actionbox_appearsin_addmenu')
+        libafss = libvreg['uicfg']['autoform_section']
+        libappearsin_addmenus = libvreg['uicfg']['actionbox_appearsin_addmenu']
         # prefill vregdone set
         list(_iter_vreg_objids(libvreg, vregdone))
     else:
         libschema = {}
-        afs = vreg['uicfg'].select('autoform_section')
-        appearsin_addmenu = vreg['uicfg'].select('actionbox_appearsin_addmenu')
         for cstrtype in CONSTRAINTS:
             add_msg(w, cstrtype)
     done = set()
@@ -169,32 +167,42 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None):
             if rschema.final:
                 continue
             for tschema in targetschemas:
-                fsections = afs.etype_get(eschema, rschema, role, tschema)
-                if 'main_inlined' in fsections and \
-                       (libconfig is None or not
-                        'main_inlined' in libafs.etype_get(
-                            eschema, rschema, role, tschema)):
-                    add_msg(w, 'add a %s' % tschema,
-                            'inlined:%s.%s.%s' % (etype, rschema, role))
-                    add_msg(w, str(tschema),
-                            'inlined:%s.%s.%s' % (etype, rschema, role))
-                if appearsin_addmenu.etype_get(eschema, rschema, role, tschema):
-                    if libconfig is not None and libappearsin_addmenu.etype_get(
-                        eschema, rschema, role, tschema):
-                        if eschema in libschema and tschema in libschema:
-                            continue
-                    if role == 'subject':
-                        label = 'add %s %s %s %s' % (eschema, rschema,
-                                                     tschema, role)
-                        label2 = "creating %s (%s %%(linkto)s %s %s)" % (
-                            tschema, eschema, rschema, tschema)
-                    else:
-                        label = 'add %s %s %s %s' % (tschema, rschema,
-                                                     eschema, role)
-                        label2 = "creating %s (%s %s %s %%(linkto)s)" % (
-                            tschema, tschema, rschema, eschema)
-                    add_msg(w, label)
-                    add_msg(w, label2)
+                for afs in afss:
+                    fsections = afs.etype_get(eschema, rschema, role, tschema)
+                    for libafs in libafss:
+                        if 'main_inlined' in fsections and \
+                               (libconfig is None or not
+                                'main_inlined' in libafs.etype_get(
+                                    eschema, rschema, role, tschema)):
+                            add_msg(w, 'add a %s' % tschema,
+                                    'inlined:%s.%s.%s' % (etype, rschema, role))
+                            add_msg(w, str(tschema),
+                                    'inlined:%s.%s.%s' % (etype, rschema, role))
+
+                def isinlib(eschema, rschema, role, tschema):
+                    if libconfig is not None:
+                        for libappearsin_addmenu in libappearsin_addmenus:
+                            if (libappearsin_addmenu.etype_get(
+                                    eschema, rschema, role, tschema)):
+                                if eschema in libschema and tschema in libschema:
+                                    return True
+                    return False
+
+                for appearsin_addmenu in appearsin_addmenus:
+                    if appearsin_addmenu.etype_get(eschema, rschema, role, tschema):
+                        if not isinlib(eschema, rschema, role, tschema):
+                            if role == 'subject':
+                                label = 'add %s %s %s %s' % (eschema, rschema,
+                                                             tschema, role)
+                                label2 = "creating %s (%s %%(linkto)s %s %s)" % (
+                                    tschema, eschema, rschema, tschema)
+                            else:
+                                label = 'add %s %s %s %s' % (tschema, rschema,
+                                                             eschema, role)
+                                label2 = "creating %s (%s %s %s %%(linkto)s)" % (
+                                    tschema, tschema, rschema, eschema)
+                            add_msg(w, label)
+                            add_msg(w, label2)
             # XXX also generate "creating ...' messages for actions in the
             # addrelated submenu
     w('# subject and object forms for each relation type\n')
