@@ -685,10 +685,8 @@ class RQLRewriter(object):
             if _has_multiple_cardinality(vi['stinfo']['possibletypes'], rdef,
                                          ttypes_func, cardindex):
                 continue
-            break
-        else:
-            return None
-        return orel
+            return orel
+        return None
 
     def _use_orig_term(self, snippet_varname, term):
         key = (self.current_expr, self.varmap, snippet_varname)
