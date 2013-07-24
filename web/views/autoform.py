@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -145,8 +145,11 @@ from cubicweb.web.views.ajaxcontroller import ajaxfunc
 class InlinedFormField(ff.Field):
     def __init__(self, view=None, **kwargs):
         kwargs.setdefault('label', None)
+        # don't add eidparam=True since this field doesn't actually hold the
+        # relation value (the subform does) hence should not be listed in
+        # _cw_entity_fields
         super(InlinedFormField, self).__init__(name=view.rtype, role=view.role,
-                                               eidparam=True, **kwargs)
+                                               **kwargs)
         self.view = view
 
     def render(self, form, renderer):

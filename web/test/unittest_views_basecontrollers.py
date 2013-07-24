@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -170,6 +170,30 @@ class EditControllerTC(CubicWebTC):
         self.assertEqual(e.surname, 'Di Mascio')
         email = e.use_email[0]
         self.assertEqual(email.address, 'dima@logilab.fr')
+
+    def test_create_mandatory_inlined(self):
+        req = self.request()
+        req.form = {'eid': ['X', 'Y'], '__maineid' : 'X',
+
+                    '__type:X': 'Salesterm',
+                    '_cw_entity_fields:X': '',
+
+                    '__type:Y': 'File',
+                    '_cw_entity_fields:Y': 'data-subject,described_by_test-object',
+                    'data-subject:Y': (u'coucou.txt', Binary('coucou')),
+                    'described_by_test-object:Y': 'X',
+                    }
+        path, params = self.expect_redirect_handle_request(req, 'edit')
+        self.assertTrue(path.startswith('salesterm/'), path)
+        eid = path.split('/')[1]
+        salesterm = req.entity_from_eid(eid)
+        # The NOT NULL constraint of mandatory relation implies that the File
+        # must be created before the Salesterm, otherwise Salesterm insertion
+        # will fail.
+        # NOTE: sqlite does have NOT NULL constraint, unlike Postgres so the
+        # insertion does not fail and we have to check dumbly that File is
+        # created before.
+        self.assertGreater(salesterm.eid, salesterm.described_by_test[0].eid)
 
     def test_edit_multiple_linked(self):
         req = self.request()
