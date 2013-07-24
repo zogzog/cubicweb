@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -1181,8 +1181,7 @@ class Entity(AppObject):
                               if v in select.defined_vars and v in cstr.mainvars)
                 # rewrite constraint by constraint since we want a AND between
                 # expressions.
-                rewriter.rewrite(select, [(varmap, (cstr,))], select.solutions,
-                                 args, existant)
+                rewriter.rewrite(select, [(varmap, (cstr,))], args, existant)
         # insert security RQL expressions granting the permission to 'add' the
         # relation into the rql syntax tree, if necessary
         rqlexprs = rdef.get_rqlexprs('add')
@@ -1194,8 +1193,7 @@ class Entity(AppObject):
             varmap = dict((v, v) for v in (searchedvar.name, evar.name)
                           if v in select.defined_vars)
             # rewrite all expressions at once since we want a OR between them.
-            rewriter.rewrite(select, [(varmap, rqlexprs)], select.solutions,
-                             args, existant)
+            rewriter.rewrite(select, [(varmap, rqlexprs)], args, existant)
         # ensure we have an order defined
         if not select.orderby:
             select.add_sort_var(select.defined_vars[searchedvar.name])

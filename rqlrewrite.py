@@ -303,7 +303,7 @@ class RQLRewriter(object):
             myunion.append(myrqlst)
             # in-place rewrite + annotation / simplification
             lcheckdef = [({var: 'X'}, rqlexprs) for var, rqlexprs in lcheckdef]
-            self.rewrite(myrqlst, lcheckdef, lchecksolutions, kwargs)
+            self.rewrite(myrqlst, lcheckdef, kwargs)
             _add_noinvariant(noinvariant, restricted, myrqlst, nbtrees)
         if () in localchecks:
             select.set_possible_types(localchecks[()])
@@ -311,13 +311,14 @@ class RQLRewriter(object):
             _add_noinvariant(noinvariant, restricted, select, nbtrees)
         self.annotate(union)
 
-    def rewrite(self, select, snippets, solutions, kwargs, existingvars=None):
+    def rewrite(self, select, snippets, kwargs, existingvars=None):
         """
         snippets: (varmap, list of rql expression)
                   with varmap a *tuple* (select var, snippet var)
         """
         self.select = select
-        self.solutions = solutions
+        # remove_solutions used below require a copy
+        self.solutions = solutions = select.solutions[:]
         self.kwargs = kwargs
         self.u_varname = None
         self.removing_ambiguity = False
@@ -342,6 +343,7 @@ class RQLRewriter(object):
             select, solutions, newsolutions))
         if len(newsolutions) > len(solutions):
             newsolutions = self.remove_ambiguities(snippets, newsolutions)
+            assert newsolutions
         select.solutions = newsolutions
         add_types_restriction(self.schema, select)
 
@@ -611,7 +613,6 @@ class RQLRewriter(object):
                 exists = var.references()[0].scope
                 exists.add_constant_restriction(var, 'is', etype, 'etype')
         # recompute solutions
-        #select.annotated = False # avoid assertion error
         self.compute_solutions()
         # clean solutions according to initial solutions
         return remove_solutions(self.solutions, self.select.solutions,

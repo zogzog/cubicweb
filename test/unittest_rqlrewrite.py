@@ -73,9 +73,7 @@ def rewrite(rqlst, snippets_map, kwargs, existingvars=None):
                     for snippet in exprs]
         snippets.append((dict([v]), rqlexprs))
     rqlhelper.compute_solutions(rqlst.children[0], {'eid': eid_func_map}, kwargs=kwargs)
-    solutions = rqlst.children[0].solutions
-    rewriter.rewrite(rqlst.children[0], snippets, solutions, kwargs,
-                     existingvars)
+    rewriter.rewrite(rqlst.children[0], snippets, kwargs, existingvars)
     test_vrefs(rqlst.children[0])
     return rewriter.rewritten
 
