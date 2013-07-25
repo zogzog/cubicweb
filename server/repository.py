@@ -793,16 +793,7 @@ class Repository(object):
                 #       Zeroed to avoid useless overhead with pyro
                 rset._rqlst = None
                 return rset
-            except (Unauthorized, RQLSyntaxError):
-                raise
-            except ValidationError as ex:
-                # need ValidationError normalization here so error may pass
-                # through pyro
-                if hasattr(ex.entity, 'eid'):
-                    ex.entity = ex.entity.eid # error raised by yams
-                    args = list(ex.args)
-                    args[0] = ex.entity
-                    ex.args = tuple(args)
+            except (ValidationError, Unauthorized, RQLSyntaxError):
                 raise
             except Exception:
                 # FIXME: check error to catch internal errors

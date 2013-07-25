@@ -39,6 +39,8 @@ from cubicweb.web.views.autoform import get_pending_inserts, get_pending_deletes
 from cubicweb.web.views.basecontrollers import JSonController, xhtmlize, jsonize
 from cubicweb.web.views.ajaxcontroller import ajaxfunc, AjaxFunction
 import cubicweb.transaction as tx
+from cubicweb.server.hook import Hook, Operation
+from cubicweb.predicates import is_instance
 
 u = unicode
 
@@ -287,6 +289,7 @@ class EditControllerTC(CubicWebTC):
             self.ctrl_publish(req)
         cm.exception.translate(unicode)
         self.assertEqual(cm.exception.errors, {'amount-subject': 'value 110 must be <= 100'})
+
         req = self.request(rollbackfirst=True)
         req.form = {'eid': ['X'],
                     '__type:X': 'Salesterm',
@@ -300,6 +303,67 @@ class EditControllerTC(CubicWebTC):
         e = self.execute('Salesterm X').get_entity(0, 0)
         self.assertEqual(e.amount, 10)
 
+    def test_interval_bound_constraint_validateform(self):
+        """Test the FormValidatorController controller on entity with
+        constrained attributes"""
+        feid = self.execute('INSERT File X: X data_name "toto.txt", X data %(data)s',
+                            {'data': Binary('yo')})[0][0]
+        seid = self.request().create_entity('Salesterm', amount=0, described_by_test=feid).eid
+        self.commit()
+
+        # ensure a value that violate a constraint is properly detected
+        req = self.request(rollbackfirst=True)
+        req.form = {'eid': [unicode(seid)],
+                    '__type:%s'%seid: 'Salesterm',
+                    '_cw_entity_fields:%s'%seid: 'amount-subject',
+                    'amount-subject:%s'%seid: u'-10',
+                }
+        self.assertEqual('''<script type="text/javascript">
+ window.parent.handleFormValidationResponse('entityForm', null, null, [false, [%s, {"amount-subject": "value -10 must be >= 0"}], null], null);
+</script>'''%seid, self.ctrl_publish(req, 'validateform'))
+
+        # ensure a value that comply a constraint is properly processed
+        req = self.request(rollbackfirst=True)
+        req.form = {'eid': [unicode(seid)],
+                    '__type:%s'%seid: 'Salesterm',
+                    '_cw_entity_fields:%s'%seid: 'amount-subject',
+                    'amount-subject:%s'%seid: u'20',
+                }
+        self.assertEqual('''<script type="text/javascript">
+ window.parent.handleFormValidationResponse('entityForm', null, null, [true, "http://testing.fr/cubicweb/view", null], null);
+</script>''', self.ctrl_publish(req, 'validateform'))
+        self.assertEqual(20, self.execute('Any V WHERE X amount V, X eid %(eid)s', {'eid': seid})[0][0])
+
+        req = self.request(rollbackfirst=True)
+        req.form = {'eid': ['X'],
+                    '__type:X': 'Salesterm',
+                    '_cw_entity_fields:X': 'amount-subject,described_by_test-subject',
+                    'amount-subject:X': u'0',
+                    'described_by_test-subject:X': u(feid),
+                }
+
+        # ensure a value that is modified in an operation on a modify
+        # hook works as it should (see
+        # https://www.cubicweb.org/ticket/2509729 )
+        class MyOperation(Operation):
+            def precommit_event(self):
+                self.entity.cw_set(amount=-10)
+        class ValidationErrorInOpAfterHook(Hook):
+            __regid__ = 'valerror-op-after-hook'
+            __select__ = Hook.__select__ & is_instance('Salesterm')
+            events = ('after_add_entity',)
+            def __call__(self):
+                MyOperation(self._cw, entity=self.entity)
+
+        with self.temporary_appobjects(ValidationErrorInOpAfterHook):
+            self.assertEqual('''<script type="text/javascript">
+ window.parent.handleFormValidationResponse('entityForm', null, null, [false, ["X", {"amount-subject": "value -10 must be >= 0"}], null], null);
+</script>''', self.ctrl_publish(req, 'validateform'))
+
+        self.assertEqual('''<script type="text/javascript">
+ window.parent.handleFormValidationResponse('entityForm', null, null, [true, "http://testing.fr/cubicweb/view", null], null);
+</script>''', self.ctrl_publish(req, 'validateform'))
+
     def test_req_pending_insert(self):
         """make sure req's pending insertions are taken into account"""
         tmpgroup = self.request().create_entity('CWGroup', name=u"test")
@@ -311,7 +375,6 @@ class EditControllerTC(CubicWebTC):
                       self.execute('Any N WHERE G name N, U in_group G, U eid %(u)s', {'u': user.eid})]
         self.assertItemsEqual(usergroups, ['managers', 'test'])
         self.assertEqual(get_pending_inserts(req), [])
-
 
     def test_req_pending_delete(self):
         """make sure req's pending deletions are taken into account"""
