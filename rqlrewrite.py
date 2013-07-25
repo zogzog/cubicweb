@@ -173,6 +173,29 @@ def _has_multiple_cardinality(etypes, rdef, ttypes_func, cardindex):
                 return True
     return False
 
+def _compatible_relation(relations, stmt, sniprel):
+    """Search among given rql relation nodes if there is one 'compatible' with the
+    snippet relation, and return it if any, else None.
+
+    A relation is compatible if it:
+    * belongs to the currently processed statement,
+    * isn't negged (i.e. direct parent is a NOT node)
+    * isn't optional (outer join) or similarly as the snippet relation
+    """
+    for rel in relations:
+        # don't share if relation's scope is not the current statement
+        if rel.scope is not stmt:
+            continue
+        # don't share neged relation
+        if rel.neged(strict=True):
+            continue
+        # don't share optional relation, unless the snippet relation is
+        # similarly optional
+        if rel.optional and rel.optional != sniprel.optional:
+            continue
+        return rel
+    return None
+
 
 def iter_relations(stinfo):
     # this is a function so that test may return relation in a predictable order
@@ -384,9 +407,14 @@ class RQLRewriter(object):
                                                       subselect.solutions, self.kwargs)
                     return
                 if varexistsmap is None:
-                    vi['rhs_rels'] = dict( (r.r_type, r) for r in sti['rhsrelations'])
-                    vi['lhs_rels'] = dict( (r.r_type, r) for r in sti['relations']
-                                           if not r in sti['rhsrelations'])
+                    # build an index for quick access to relations
+                    vi['rhs_rels'] = {}
+                    for rel in sti['rhsrelations']:
+                        vi['rhs_rels'].setdefault(rel.r_type, []).append(rel)
+                    vi['lhs_rels'] = {}
+                    for rel in sti['relations']:
+                        if not rel in sti['rhsrelations']:
+                            vi['lhs_rels'].setdefault(rel.r_type, []).append(rel)
                 else:
                     vi['rhs_rels'] = vi['lhs_rels'] = {}
         previous = None
@@ -657,36 +685,33 @@ class RQLRewriter(object):
         """if the snippet relation can be skipped to use a relation from the
         original query, return that relation node
         """
+        if sniprel.neged(strict=True):
+            return None # no way
         rschema = self.schema.rschema(sniprel.r_type)
         stmt = self.current_statement()
         for vi in self.varinfos:
             try:
                 if target == 'object':
-                    orel = vi['lhs_rels'][sniprel.r_type]
+                    orels = vi['lhs_rels'][sniprel.r_type]
                     cardindex = 0
                     ttypes_func = rschema.objects
                     rdef = rschema.rdef
                 else: # target == 'subject':
-                    orel = vi['rhs_rels'][sniprel.r_type]
+                    orels = vi['rhs_rels'][sniprel.r_type]
                     cardindex = 1
                     ttypes_func = rschema.subjects
                     rdef = lambda x, y: rschema.rdef(y, x)
             except KeyError:
                 # may be raised by vi['xhs_rels'][sniprel.r_type]
                 continue
-            # don't share if relation's scope is not the current statement
-            if orel.scope is not stmt:
-                continue
-            # can't share neged relation or relations with different outer join
-            if (orel.neged(strict=True) or sniprel.neged(strict=True)
-                or (orel.optional and orel.optional != sniprel.optional)):
-                continue
-            # if cardinality is in '?1', we can ignore the snippet relation and use
-            # variable from the original query
+            # if cardinality isn't in '?1', we can't ignore the snippet relation
+            # and use variable from the original query
             if _has_multiple_cardinality(vi['stinfo']['possibletypes'], rdef,
                                          ttypes_func, cardindex):
                 continue
-            return orel
+            orel = _compatible_relation(orels, stmt, sniprel)
+            if orel is not None:
+                return orel
         return None
 
     def _use_orig_term(self, snippet_varname, term):

@@ -515,8 +515,26 @@ class RewriteFullTC(CubicWebTC):
                                         (edef2, {'read': (ERQLExpression('X owned_by U'),)}),
                                         (edef3, {'read': (ERQLExpression('X owned_by U'),)})):
             union = self.process('Any A,AR,X,CD WHERE A concerne X?, A ref AR, X creation_date CD')
-            self.assertEqual(union.as_string(), 'Any A,AR,X,CD WHERE A concerne X?, A ref AR, A is Affaire WITH X,CD BEING (Any X,CD WHERE X creation_date CD, EXISTS(X owned_by %(A)s), X is IN(Division, Note, Societe))')
+            self.assertEqual('Any A,AR,X,CD WHERE A concerne X?, A ref AR, A is Affaire '
+                             'WITH X,CD BEING (Any X,CD WHERE X creation_date CD, '
+                             'EXISTS(X owned_by %(A)s), X is IN(Division, Note, Societe))',
+                             union.as_string())
 
+
+    def test_xxxx(self):
+        edef1 = self.schema['Societe']
+        edef2 = self.schema['Division']
+        read_expr = ERQLExpression('X responsable E, U has_read_permission E')
+        with self.temporary_permissions((edef1, {'read': (read_expr,)}),
+                                        (edef2, {'read': (read_expr,)})):
+            union = self.process('Any X,AA,AC,AD ORDERBY AD DESC '
+                                 'WHERE X responsable E, X nom AA, '
+                                 'X responsable AC?, AC modification_date AD')
+            self.assertEqual('Any X,AA,AC,AD ORDERBY AD DESC '
+                             'WHERE X responsable E, X nom AA, '
+                             'X responsable AC?, AC modification_date AD, '
+                             'AC is CWUser, E is CWUser, X is IN(Division, Societe)',
+                             union.as_string())
 
 if __name__ == '__main__':
     unittest_main()
