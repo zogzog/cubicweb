@@ -575,10 +575,24 @@ class ServerMigrationHelper(MigrationHelper):
                              '      E eid %%(x)s,'
                              '      %s' % ', '.join(restrictions),
                              substs)
+            def possible_unique_constraint(ut):
+                for name in ut:
+                    rschema = repoeschema.subjrels.get(name)
+                    if rschema is None:
+                        print 'dont add %s unique constraint on %s, missing %s' % (
+                            ','.join(ut), eschema, name)
+                        return False
+                    if not (rschema.final or rschema.final.inlined):
+                        (eschema, name)
+                        print 'dont add %s unique constraint on %s, %s is neither final nor inlined' % (
+                            ','.join(ut), eschema, name)
+                        return False
+                return True
             for ut in unique_together - repo_unique_together:
-                rql, substs = ss.uniquetogether2rql(eschema, ut)
-                substs['x'] = repoeschema.eid
-                self.rqlexec(rql, substs)
+                if possible_unique_constraint(ut):
+                    rql, substs = ss.uniquetogether2rql(eschema, ut)
+                    substs['x'] = repoeschema.eid
+                    self.rqlexec(rql, substs)
 
     def _synchronize_rdef_schema(self, subjtype, rtype, objtype,
                                  syncperms=True, syncprops=True):
