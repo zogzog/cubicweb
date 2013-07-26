@@ -1,3 +1,9 @@
+cubicweb (3.17.4-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- David Douard <david.douard@logilab.fr>  Fri, 26 Jul 2013 09:44:19 +0200
+
 cubicweb (3.17.3-1) unstable; urgency=low
 
   * new upstream release
