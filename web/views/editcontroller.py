@@ -166,7 +166,10 @@ class EditController(basecontrollers.ViewController):
                             if target_eid in values_by_eid:
                                 # add dependency from the target entity to the
                                 # current one
-                                graph.setdefault(target_eid, set()).add(eid)
+                                if role == 'object':
+                                    graph.setdefault(target_eid, set()).add(eid)
+                                else:
+                                    graph.setdefault(eid, set()).add(target_eid)
                                 break
         for eid in reversed(ordered_nodes(graph)):
             yield values_by_eid[eid]

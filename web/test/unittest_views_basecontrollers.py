@@ -197,6 +197,30 @@ class EditControllerTC(CubicWebTC):
         # created before.
         self.assertGreater(salesterm.eid, salesterm.described_by_test[0].eid)
 
+    def test_create_mandatory_inlined2(self):
+        req = self.request()
+        req.form = {'eid': ['X', 'Y'], '__maineid' : 'X',
+
+                    '__type:X': 'Salesterm',
+                    '_cw_entity_fields:X': 'described_by_test-subject',
+                    'described_by_test-subject:X': 'Y',
+
+                    '__type:Y': 'File',
+                    '_cw_entity_fields:Y': 'data-subject',
+                    'data-subject:Y': (u'coucou.txt', Binary('coucou')),
+                    }
+        path, params = self.expect_redirect_handle_request(req, 'edit')
+        self.assertTrue(path.startswith('salesterm/'), path)
+        eid = path.split('/')[1]
+        salesterm = req.entity_from_eid(eid)
+        # The NOT NULL constraint of mandatory relation implies that the File
+        # must be created before the Salesterm, otherwise Salesterm insertion
+        # will fail.
+        # NOTE: sqlite does have NOT NULL constraint, unlike Postgres so the
+        # insertion does not fail and we have to check dumbly that File is
+        # created before.
+        self.assertGreater(salesterm.eid, salesterm.described_by_test[0].eid)
+
     def test_edit_multiple_linked(self):
         req = self.request()
         peid = u(self.create_user(req, 'adim').eid)
