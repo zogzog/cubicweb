@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -15,16 +15,14 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""
 
-"""
 from logilab.common.testlib import unittest_main
 
 from cubicweb.devtools.testlib import CubicWebTC
 
 class ActionsTC(CubicWebTC):
     def test_view_action(self):
-        req = self.request(__message='bla bla bla', vid='rss', rql='CWUser X')
+        req = self.request(vid='rss', rql='CWUser X')
         rset = self.execute('CWUser X')
         actions = self.vreg['actions'].poss_visible_objects(req, rset=rset)
         vaction = [action for action in actions if action.__regid__ == 'view'][0]
