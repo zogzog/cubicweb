@@ -50,8 +50,9 @@ class has_editable_relation(EntityPredicate):
                                                entity=entity, mainform=False)
         for dummy in form.editable_relations():
             return 1
-        editableattrs = form.editable_attributes(strict=True)
-        for rschema, role in editableattrs:
+        for dummy in form.inlined_relations():
+            return 1
+        for dummy in form.editable_attributes(strict=True):
             return 1
         return 0
 

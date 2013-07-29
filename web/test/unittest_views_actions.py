@@ -19,6 +19,7 @@
 from logilab.common.testlib import unittest_main
 
 from cubicweb.devtools.testlib import CubicWebTC
+from cubicweb.web.views import actions, uicfg
 
 class ActionsTC(CubicWebTC):
     def test_view_action(self):
@@ -28,6 +29,18 @@ class ActionsTC(CubicWebTC):
         vaction = [action for action in actions if action.__regid__ == 'view'][0]
         self.assertEqual(vaction.url(), 'http://testing.fr/cubicweb/view?rql=CWUser%20X')
 
+    def test_has_editable_relations(self):
+        """ensure has_editable_relation predicate used by ModifyAction
+        return positive score if there is only some inlined forms
+        """
+        use_email = self.schema['use_email'].rdefs['CWUser', 'EmailAddress']
+        with self.temporary_permissions((use_email, {'add': ('guests',)}),
+                                        ):
+            with self.login('anon'):
+                req = self.request()
+                predicate = actions.has_editable_relation()
+                self.assertEqual(predicate(None, req, rset=req.user.as_rset()),
+                                 1)
 
 if __name__ == '__main__':
     unittest_main()
