@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -131,21 +131,30 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None):
     w('\n')
     vregdone = set()
     afss = vreg['uicfg']['autoform_section']
-    appearsin_addmenus = vreg['uicfg']['actionbox_appearsin_addmenu']
+    aiams = vreg['uicfg']['actionbox_appearsin_addmenu']
     if libconfig is not None:
+        # processing a cube, libconfig being a config with all its dependencies
+        # (cubicweb incl.)
         from cubicweb.cwvreg import CWRegistryStore
         libschema = libconfig.load_schema(remove_unused_rtypes=False)
         cleanup_sys_modules(libconfig)
         libvreg = CWRegistryStore(libconfig)
         libvreg.set_schema(libschema) # trigger objects registration
         libafss = libvreg['uicfg']['autoform_section']
-        libappearsin_addmenus = libvreg['uicfg']['actionbox_appearsin_addmenu']
+        libaiams = libvreg['uicfg']['actionbox_appearsin_addmenu']
         # prefill vregdone set
         list(_iter_vreg_objids(libvreg, vregdone))
+
+        def is_in_lib(rtags, eschema, rschema, role, tschema, predicate=bool):
+            return any(predicate(rtag.etype_get(eschema, rschema, role, tschema))
+                       for rtag in rtags)
     else:
+        # processing cubicweb itself
         libschema = {}
         for cstrtype in CONSTRAINTS:
             add_msg(w, cstrtype)
+
+        isinlib = lambda: False
     done = set()
     for eschema in sorted(schema.entities()):
         if eschema.type in libschema:
@@ -167,42 +176,42 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None):
             if rschema.final:
                 continue
             for tschema in targetschemas:
-                for afs in afss:
-                    fsections = afs.etype_get(eschema, rschema, role, tschema)
-                    for libafs in libafss:
-                        if 'main_inlined' in fsections and \
-                               (libconfig is None or not
-                                'main_inlined' in libafs.etype_get(
-                                    eschema, rschema, role, tschema)):
-                            add_msg(w, 'add a %s' % tschema,
-                                    'inlined:%s.%s.%s' % (etype, rschema, role))
-                            add_msg(w, str(tschema),
-                                    'inlined:%s.%s.%s' % (etype, rschema, role))
 
                 def isinlib(eschema, rschema, role, tschema):
                     if libconfig is not None:
-                        for libappearsin_addmenu in libappearsin_addmenus:
-                            if (libappearsin_addmenu.etype_get(
-                                    eschema, rschema, role, tschema)):
-                                if eschema in libschema and tschema in libschema:
-                                    return True
+                        for libafs in libafss:
+                            if 'main_inlined' in libafs.etype_get(
+                                eschema, rschema, role, tschema):
+                                return True
                     return False
 
-                for appearsin_addmenu in appearsin_addmenus:
-                    if appearsin_addmenu.etype_get(eschema, rschema, role, tschema):
-                        if not isinlib(eschema, rschema, role, tschema):
-                            if role == 'subject':
-                                label = 'add %s %s %s %s' % (eschema, rschema,
-                                                             tschema, role)
-                                label2 = "creating %s (%s %%(linkto)s %s %s)" % (
-                                    tschema, eschema, rschema, tschema)
-                            else:
-                                label = 'add %s %s %s %s' % (tschema, rschema,
-                                                             eschema, role)
-                                label2 = "creating %s (%s %s %s %%(linkto)s)" % (
-                                    tschema, tschema, rschema, eschema)
-                            add_msg(w, label)
-                            add_msg(w, label2)
+                for afs in afss:
+                    fsections = afs.etype_get(eschema, rschema, role, tschema)
+                    if 'main_inlined' in fsections and not \
+                            is_in_lib(libafss, eschema, rschema, role, tschema,
+                                      lambda x: 'main_inlined' in x):
+                        add_msg(w, 'add a %s' % tschema,
+                                'inlined:%s.%s.%s' % (etype, rschema, role))
+                        add_msg(w, str(tschema),
+                                'inlined:%s.%s.%s' % (etype, rschema, role))
+                        break
+
+                for aiam in aiams:
+                    if aiam.etype_get(eschema, rschema, role, tschema) and not \
+                            is_in_lib(libaiams, eschema, rschema, role, tschema):
+                        if role == 'subject':
+                            label = 'add %s %s %s %s' % (eschema, rschema,
+                                                         tschema, role)
+                            label2 = "creating %s (%s %%(linkto)s %s %s)" % (
+                                tschema, eschema, rschema, tschema)
+                        else:
+                            label = 'add %s %s %s %s' % (tschema, rschema,
+                                                         eschema, role)
+                            label2 = "creating %s (%s %s %s %%(linkto)s)" % (
+                                tschema, tschema, rschema, eschema)
+                        add_msg(w, label)
+                        add_msg(w, label2)
+                        break
             # XXX also generate "creating ...' messages for actions in the
             # addrelated submenu
     w('# subject and object forms for each relation type\n')

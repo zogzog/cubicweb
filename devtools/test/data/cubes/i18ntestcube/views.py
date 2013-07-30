@@ -26,11 +26,9 @@ class MyAFS(uicfg.AutoformSectionRelationTags):
 
 _myafs = MyAFS()
 _myafs.__module__ = "cubes.i18ntestcube.views"
-
 _myafs.tag_object_of(('*', 'in_forum', 'Forum'), 'main', 'inlined')
 
-wireit_uicfg.wireit_pvs.tag_object_of(('RunChain', 'wiring', 'Wiring'), 'attributes')
-wireit_uicfg.wireit_afs.tag_object_of(('RunChain', 'wiring', 'Wiring'), 'main', 'hidden')
+afs.tag_object_of(('*', 'in_forum', 'Forum'), 'main', 'inlined')
 
 
 class ForumSameETypeListView(baseviews.SameETypeListView):
