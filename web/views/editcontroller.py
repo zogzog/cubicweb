@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -20,8 +20,10 @@
 __docformat__ = "restructuredtext en"
 
 from warnings import warn
+from collections import defaultdict
 
 from logilab.common.deprecation import deprecated
+from logilab.common.graph import ordered_nodes
 
 from rql.utils import rqlvar_maker
 
@@ -101,6 +103,15 @@ class RqlQuery(object):
         self.kwargs[var] = eid
         return rql
 
+    def set_attribute(self, attr, value):
+        self.kwargs[attr] = value
+        self.edited.append('X %s %%(%s)s' % (attr, attr))
+
+    def set_inlined(self, relation, value):
+        self.kwargs[relation] = value
+        self.edited.append('X %s %s' % (relation, relation.upper()))
+        self.restrictions.append('%s eid %%(%s)s' % (relation.upper(), relation))
+
 
 class EditController(basecontrollers.ViewController):
     __regid__ = 'edit'
@@ -120,6 +131,49 @@ class EditController(basecontrollers.ViewController):
         self._default_publish()
         self.reset()
 
+    def _ordered_formparams(self):
+        """ Return form parameters dictionaries for each edited entity.
+
+        We ensure that entities can be created in this order accounting for
+        mandatory inlined relations.
+        """
+        req = self._cw
+        graph = {}
+        get_rschema = self._cw.vreg.schema.rschema
+        # minparams = 2, because at least __type and eid are needed
+        values_by_eid = dict((eid, req.extract_entity_params(eid, minparams=2))
+                             for eid in req.edited_eids())
+        # iterate over all the edited entities
+        for eid, values in values_by_eid.iteritems():
+            # add eid to the dependency graph
+            graph.setdefault(eid, set())
+            # search entity's edited fields for mandatory inlined relation
+            for param in values['_cw_entity_fields'].split(','):
+                try:
+                    rtype, role = param.split('-')
+                except ValueError:
+                    # e.g. param='__type'
+                    continue
+                rschema = get_rschema(rtype)
+                if rschema.inlined:
+                    for target in rschema.targets(values['__type'], role):
+                        rdef = rschema.role_rdef(values['__type'], target, role)
+                        # if cardinality is 1 and if the target entity is being
+                        # simultaneously edited, the current entity must be
+                        # created before the target one
+                        if rdef.cardinality[0] == '1':
+                            target_eid = values[param]
+                            if target_eid in values_by_eid:
+                                # add dependency from the target entity to the
+                                # current one
+                                if role == 'object':
+                                    graph.setdefault(target_eid, set()).add(eid)
+                                else:
+                                    graph.setdefault(eid, set()).add(target_eid)
+                                break
+        for eid in reversed(ordered_nodes(graph)):
+            yield values_by_eid[eid]
+
     def _default_publish(self):
         req = self._cw
         self.errors = []
@@ -130,22 +184,27 @@ class EditController(basecontrollers.ViewController):
             req.set_shared_data('__maineid', form['__maineid'], txdata=True)
         # no specific action, generic edition
         self._to_create = req.data['eidmap'] = {}
-        self._pending_fields = req.data['pendingfields'] = set()
+        # those two data variables are used to handle relation from/to entities
+        # which doesn't exist at time where the entity is edited and that
+        # deserves special treatment
+        req.data['pending_inlined'] = defaultdict(set)
+        req.data['pending_others'] = set()
         try:
-            for eid in req.edited_eids():
-                # __type and eid
-                formparams = req.extract_entity_params(eid, minparams=2)
+            for formparams in self._ordered_formparams():
                 eid = self.edit_entity(formparams)
         except (RequestError, NothingToEdit) as ex:
             if '__linkto' in req.form and 'eid' in req.form:
                 self.execute_linkto()
             elif not ('__delete' in req.form or '__insert' in req.form):
                 raise ValidationError(None, {None: unicode(ex)})
-        # handle relations in newly created entities
-        if self._pending_fields:
-            for form, field in self._pending_fields:
-                self.handle_formfield(form, field)
-        # execute rql to set all relations
+        # all pending inlined relations to newly created entities have been
+        # treated now (pop to ensure there are no attempt to add new ones)
+        pending_inlined = req.data.pop('pending_inlined')
+        assert not pending_inlined, pending_inlined
+        # handle all other remaining relations now
+        for form_, field in req.data.pop('pending_others'):
+            self.handle_formfield(form_, field)
+        # then execute rql to set all relations
         for querydef in self.relations_rql:
             self._cw.execute(*querydef)
         # XXX this processes *all* pending operations of *all* entities
@@ -176,10 +235,11 @@ class EditController(basecontrollers.ViewController):
 
     def edit_entity(self, formparams, multiple=False):
         """edit / create / copy an entity and return its eid"""
+        req = self._cw
         etype = formparams['__type']
-        entity = self._cw.vreg['etypes'].etype_class(etype)(self._cw)
+        entity = req.vreg['etypes'].etype_class(etype)(req)
         entity.eid = valerror_eid(formparams['eid'])
-        is_main_entity = self._cw.form.get('__maineid') == formparams['eid']
+        is_main_entity = req.form.get('__maineid') == formparams['eid']
         # let a chance to do some entity specific stuff
         entity.cw_adapt_to('IEditControl').pre_web_edit()
         # create a rql query from parameters
@@ -188,12 +248,12 @@ class EditController(basecontrollers.ViewController):
         # this will generate less rql queries and might be useful in
         # a few dark corners
         if is_main_entity:
-            formid = self._cw.form.get('__form_id', 'edition')
+            formid = req.form.get('__form_id', 'edition')
         else:
             # XXX inlined forms formid should be saved in a different formparams entry
             # inbetween, use cubicweb standard formid for inlined forms
             formid = 'edition'
-        form = self._cw.vreg['forms'].select(formid, self._cw, entity=entity)
+        form = req.vreg['forms'].select(formid, req, entity=entity)
         eid = form.actual_eid(entity.eid)
         try:
             editedfields = formparams['_cw_entity_fields']
@@ -203,10 +263,14 @@ class EditController(basecontrollers.ViewController):
                 warn('[3.13] _cw_edited_fields has been renamed _cw_entity_fields',
                      DeprecationWarning)
             except KeyError:
-                raise RequestError(self._cw._('no edited fields specified for entity %s' % entity.eid))
+                raise RequestError(req._('no edited fields specified for entity %s' % entity.eid))
         form.formvalues = {} # init fields value cache
         for field in form.iter_modified_fields(editedfields, entity):
             self.handle_formfield(form, field, rqlquery)
+        # if there are some inlined field which were waiting for this entity's
+        # creation, add relevant data to the rqlquery
+        for form_, field in req.data['pending_inlined'].pop(entity.eid, ()):
+            rqlquery.set_inlined(field.name, form_.edited_entity.eid)
         if self.errors:
             errors = dict((f.role_name(), unicode(ex)) for f, ex in self.errors)
             raise ValidationError(valerror_eid(entity.eid), errors)
@@ -218,8 +282,8 @@ class EditController(basecontrollers.ViewController):
             self.notify_edited(entity)
         if '__delete' in formparams:
             # XXX deprecate?
-            todelete = self._cw.list_form_param('__delete', formparams, pop=True)
-            autoform.delete_relations(self._cw, todelete)
+            todelete = req.list_form_param('__delete', formparams, pop=True)
+            autoform.delete_relations(req, todelete)
         if '__cloned_eid' in formparams:
             entity.copy_relations(int(formparams['__cloned_eid']))
         if is_main_entity: # only execute linkto for the main entity
@@ -237,8 +301,7 @@ class EditController(basecontrollers.ViewController):
                     continue
                 rschema = self._cw.vreg.schema.rschema(field.name)
                 if rschema.final:
-                    rqlquery.kwargs[field.name] = value
-                    rqlquery.edited.append('X %s %%(%s)s' % (rschema, rschema))
+                    rqlquery.set_attribute(field.name, value)
                 else:
                     if form.edited_entity.has_eid():
                         origvalues = set(entity.eid for entity in form.edited_entity.related(field.name, field.role, entities=True))
@@ -251,19 +314,15 @@ class EditController(basecontrollers.ViewController):
                     elif form.edited_entity.has_eid():
                         self.handle_relation(form, field, value, origvalues)
                     else:
-                        self._pending_fields.add( (form, field) )
-
+                        form._cw.data['pending_others'].add( (form, field) )
         except ProcessFormError as exc:
             self.errors.append((field, exc))
 
     def handle_inlined_relation(self, form, field, values, origvalues, rqlquery):
         """handle edition for the (rschema, x) relation of the given entity
         """
-        attr = field.name
         if values:
-            rqlquery.kwargs[attr] = iter(values).next()
-            rqlquery.edited.append('X %s %s' % (attr, attr.upper()))
-            rqlquery.restrictions.append('%s eid %%(%s)s' % (attr.upper(), attr))
+            rqlquery.set_inlined(field.name, iter(values).next())
         elif form.edited_entity.has_eid():
             self.handle_relation(form, field, values, origvalues)
 

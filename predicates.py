@@ -994,7 +994,11 @@ class relation_possible(EntityPredicate):
             return 0 # relation not supported
         if self.action:
             if self.target_etype is not None:
-                rschema = rschema.role_rdef(entity.e_schema, self.target_etype, self.role)
+                try:
+                    rschema = rschema.role_rdef(entity.e_schema,
+                                                self.target_etype, self.role)
+                except KeyError:
+                    return 0
             if self.role == 'subject':
                 if not rschema.has_perm(entity._cw, self.action, fromeid=entity.eid):
                     return 0

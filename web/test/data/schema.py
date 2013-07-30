@@ -24,7 +24,8 @@ from yams.buildobjs import (EntityType, RelationDefinition, SubjectRelation,
 from yams.constraints import IntervalBoundConstraint
 
 class Salesterm(EntityType):
-    described_by_test = SubjectRelation('File', cardinality='1*', composite='subject')
+    described_by_test = SubjectRelation('File', cardinality='1*',
+                                        composite='subject', inlined=True)
     amount = Int(constraints=[IntervalBoundConstraint(0, 100)])
     reason = String(maxsize=20, vocabulary=[u'canceled', u'sold'])
 

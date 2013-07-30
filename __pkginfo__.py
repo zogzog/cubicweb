@@ -22,7 +22,7 @@ software
 
 modname = distname = "cubicweb"
 
-numversion = (3, 17, 3)
+numversion = (3, 17, 4)
 version = '.'.join(str(num) for num in numversion)
 
 description = "a repository of entities / relations for knowledge management"
@@ -52,7 +52,6 @@ __depends__ = {
     # XXX graphviz
     # server dependencies
     'logilab-database': '>= 1.10',
-    'pysqlite': '>= 2.5.5', # XXX install pysqlite2
     'passlib': '',
     }
 

@@ -1259,6 +1259,9 @@ class Session(RequestSessionBase):
                     self.pending_operations[:] = processed
                     self.debug('precommit session %s done', self.id)
                 except BaseException:
+                    # save exception context, it may be clutered below by
+                    # exception in revert_* event
+                    exc_info = sys.exc_info()
                     # if error on [pre]commit:
                     #
                     # * set .failed = True on the operation causing the failure
@@ -1284,7 +1287,7 @@ class Session(RequestSessionBase):
                     # read-only property.
                     self.pending_operations[:] = processed + self.pending_operations
                     self.rollback(free_cnxset)
-                    raise
+                    raise exc_info[0], exc_info[1], exc_info[2]
                 self.cnxset.commit()
                 self.commit_state = 'postcommit'
                 if debug:

@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -1153,12 +1153,19 @@ class RelationField(Field):
         elif not isinstance(values, list):
             values = (values,)
         eids = set()
+        rschema = form._cw.vreg.schema.rschema(self.name)
         for eid in values:
             if not eid or eid == INTERNAL_FIELD_VALUE:
                 continue
             typed_eid = form.actual_eid(eid)
+            # if entity doesn't exist yet
             if typed_eid is None:
-                form._cw.data['pendingfields'].add( (form, self) )
+                # inlined relations of to-be-created **subject entities** have
+                # to be handled separatly
+                if self.role == 'object' and rschema.inlined:
+                    form._cw.data['pending_inlined'][eid].add( (form, self) )
+                else:
+                    form._cw.data['pending_others'].add( (form, self) )
                 return None
             eids.add(typed_eid)
         return eids

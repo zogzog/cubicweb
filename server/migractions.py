@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -83,8 +83,8 @@ class ClearGroupMap(hook.Hook):
             repo.vreg.register(ClearGroupMap)
 
 class ServerMigrationHelper(MigrationHelper):
-    """specific migration helper for server side  migration scripts,
-    providind actions related to schema/data migration
+    """specific migration helper for server side migration scripts,
+    providing actions related to schema/data migration
     """
 
     def __init__(self, config, schema, interactive=True,
@@ -575,10 +575,24 @@ class ServerMigrationHelper(MigrationHelper):
                              '      E eid %%(x)s,'
                              '      %s' % ', '.join(restrictions),
                              substs)
+            def possible_unique_constraint(ut):
+                for name in ut:
+                    rschema = repoeschema.subjrels.get(name)
+                    if rschema is None:
+                        print 'dont add %s unique constraint on %s, missing %s' % (
+                            ','.join(ut), eschema, name)
+                        return False
+                    if not (rschema.final or rschema.final.inlined):
+                        (eschema, name)
+                        print 'dont add %s unique constraint on %s, %s is neither final nor inlined' % (
+                            ','.join(ut), eschema, name)
+                        return False
+                return True
             for ut in unique_together - repo_unique_together:
-                rql, substs = ss.uniquetogether2rql(eschema, ut)
-                substs['x'] = repoeschema.eid
-                self.rqlexec(rql, substs)
+                if possible_unique_constraint(ut):
+                    rql, substs = ss.uniquetogether2rql(eschema, ut)
+                    substs['x'] = repoeschema.eid
+                    self.rqlexec(rql, substs)
 
     def _synchronize_rdef_schema(self, subjtype, rtype, objtype,
                                  syncperms=True, syncprops=True):
@@ -688,7 +702,10 @@ class ServerMigrationHelper(MigrationHelper):
         for rschema in newcubes_schema.relations():
             existingschema = self.repo.schema.rschema(rschema.type)
             for (fromtype, totype) in rschema.rdefs:
-                if (fromtype, totype) in existingschema.rdefs:
+                # if rdef already exists or is infered from inheritance,
+                # don't add it
+                if (fromtype, totype) in existingschema.rdefs \
+                        or rschema.rdefs[(fromtype, totype)].infered:
                     continue
                 # check we should actually add the relation definition
                 if not (fromtype in new or totype in new or rschema in new):
@@ -929,6 +946,10 @@ class ServerMigrationHelper(MigrationHelper):
         `newname` is a string giving the name of the renamed entity type
         """
         schema = self.repo.schema
+        if oldname not in schema:
+            print 'warning: entity type %s is unknown, skip renaming' % oldname
+            return
+        # if merging two existing entity types
         if newname in schema:
             assert oldname in ETYPE_NAME_MAP, \
                    '%s should be mapped to %s in ETYPE_NAME_MAP' % (oldname,
@@ -1003,6 +1024,7 @@ class ServerMigrationHelper(MigrationHelper):
             # remove the old type: use rql to propagate deletion
             self.rqlexec('DELETE CWEType ET WHERE ET name %(on)s', {'on': oldname},
                          ask_confirm=False)
+        # elif simply renaming an entity type
         else:
             self.rqlexec('SET ET name %(newname)s WHERE ET is CWEType, ET name %(on)s',
                          {'newname' : unicode(newname), 'on' : oldname},

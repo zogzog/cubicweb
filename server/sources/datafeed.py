@@ -78,6 +78,12 @@ class DataFeedSource(AbstractSource):
           'help': ('Time before logs from datafeed imports are deleted.'),
           'group': 'datafeed-source', 'level': 2,
           }),
+        ('http-timeout',
+         {'type': 'time',
+          'default': '1min',
+          'help': ('Timeout of HTTP GET requests, when synchronizing a source.'),
+          'group': 'datafeed-source', 'level': 2,
+          }),
         )
 
     def check_config(self, source_entity):
@@ -101,6 +107,7 @@ class DataFeedSource(AbstractSource):
         super(DataFeedSource, self).update_config(source_entity, typed_config)
         self.synchro_interval = timedelta(seconds=typed_config['synchronization-interval'])
         self.max_lock_lifetime = timedelta(seconds=typed_config['max-lock-lifetime'])
+        self.http_timeout = typed_config['http-timeout']
 
     def init(self, activated, source_entity):
         super(DataFeedSource, self).init(activated, source_entity)
@@ -438,7 +445,7 @@ class DataFeedXMLParser(DataFeedParser):
         if url.startswith('http'):
             url = self.normalize_url(url)
             self.source.info('GET %s', url)
-            stream = _OPENER.open(url)
+            stream = _OPENER.open(url, timeout=self.http_timeout)
         elif url.startswith('file://'):
             stream = open(url[7:])
         else:
@@ -454,7 +461,8 @@ class DataFeedXMLParser(DataFeedParser):
     def is_deleted(self, extid, etype, eid):
         if extid.startswith('http'):
             try:
-                _OPENER.open(self.normalize_url(extid)) # XXX HTTP HEAD request
+                _OPENER.open(self.normalize_url(extid), # XXX HTTP HEAD request
+                             timeout=self.http_timeout)
             except urllib2.HTTPError as ex:
                 if ex.code == 404:
                     return True

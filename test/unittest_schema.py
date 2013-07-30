@@ -216,6 +216,8 @@ class SchemaReaderClassTest(TestCase):
                               'value',
 
                               'wf_info_for', 'wikiid', 'workflow_of', 'tr_count']
+        if config.cube_version('file') >= (1, 14, 0):
+            expected_relations.append('data_sha1hex')
 
         self.assertListEqual(sorted(expected_relations), relations)
 

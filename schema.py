@@ -93,7 +93,7 @@ WORKFLOW_TYPES = set(('Transition', 'State', 'TrInfo', 'Workflow',
                       'WorkflowTransition', 'BaseTransition',
                       'SubWorkflowExitPoint'))
 
-INTERNAL_TYPES = set(('CWProperty', 'CWCache', 'ExternalUri',
+INTERNAL_TYPES = set(('CWProperty', 'CWCache', 'ExternalUri', 'CWDataImport',
                       'CWSource', 'CWSourceHostConfig', 'CWSourceSchemaConfig'))
 
 
@@ -738,6 +738,9 @@ class RQLExpression(object):
         if hasattr(other, 'expression'):
             return self.expression == other.expression
         return False
+
+    def __hash__(self):
+        return hash(self.expression)
 
     def __deepcopy__(self, memo):
         return self.__class__(self.expression, self.mainvars)

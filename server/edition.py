@@ -145,7 +145,7 @@ class EditedEntity(dict):
             entity.e_schema.check(dict_protocol_catcher(entity),
                                   creation=creation, relations=relations)
         except ValidationError as ex:
-            ex.entity = self.entity
+            ex.entity = self.entity.eid
             raise
 
     def clone(self):

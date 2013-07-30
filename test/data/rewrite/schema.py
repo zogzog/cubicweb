@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -38,6 +38,7 @@ class Societe(EntityType):
         'delete': ('managers', 'owners', ERQLExpression('U login L, X nom L')),
         'add': ('managers', 'users',)
         }
+    nom = String()
 
 
 class Division(Societe):
@@ -75,3 +76,9 @@ class inlined_affaire(RelationDefinition):
     object = 'Affaire'
     inlined = True
     cardinality = '?*'
+
+class responsable(RelationDefinition):
+    subject = 'Societe'
+    object = 'CWUser'
+    inlined = True
+    cardinality = '1*'

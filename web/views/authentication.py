@@ -22,6 +22,7 @@ __docformat__ = "restructuredtext en"
 from threading import Lock
 
 from logilab.common.decorators import clear_cache
+from logilab.common.deprecation import class_renamed
 
 from cubicweb import AuthenticationError, BadConnectionId
 from cubicweb.view import Component
@@ -32,18 +33,18 @@ from cubicweb.web.application import AbstractAuthenticationManager
 class NoAuthInfo(Exception): pass
 
 
-class WebAuthInfoRetreiver(Component):
+class WebAuthInfoRetriever(Component):
     __registry__ = 'webauth'
     order = None
     __abstract__ = True
 
     def authentication_information(self, req):
-        """retreive authentication information from the given request, raise
+        """retrieve authentication information from the given request, raise
         NoAuthInfo if expected information is not found.
         """
         raise NotImplementedError()
 
-    def authenticated(self, retreiver, req, cnx, login, authinfo):
+    def authenticated(self, retriever, req, cnx, login, authinfo):
         """callback when return authentication information have opened a
         repository connection successfully. Take care req has no session
         attached yet, hence req.execute isn't available.
@@ -66,12 +67,14 @@ class WebAuthInfoRetreiver(Component):
     def cleanup_authentication_information(self, req):
         """called when the retriever has returned some authentication
         information but we get an authentication error when using them, so it
-        get a chance to cleanup things (e.g. remove cookie)
+        get a chance to clean things up (e.g. remove cookie)
         """
         pass
 
+WebAuthInfoRetreiver = class_renamed('WebAuthInfoRetreiver', WebAuthInfoRetriever)
 
-class LoginPasswordRetreiver(WebAuthInfoRetreiver):
+
+class LoginPasswordRetriever(WebAuthInfoRetriever):
     __regid__ = 'loginpwdauth'
     order = 10
 
@@ -89,6 +92,9 @@ class LoginPasswordRetreiver(WebAuthInfoRetreiver):
 
     def revalidate_login(self, req):
         return req.get_authorization()[0]
+
+LoginPasswordRetreiver = class_renamed('LoginPasswordRetreiver', LoginPasswordRetriever)
+
 
 class RepositoryAuthenticationManager(AbstractAuthenticationManager):
     """authenticate user associated to a request and check session validity"""

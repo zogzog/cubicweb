@@ -643,8 +643,10 @@ du :eid:`1:*ReST*`'''
         e.cw_attr_cache['data_format'] = 'text/html'
         e.cw_attr_cache['data_encoding'] = 'ascii'
         e._cw.transaction_data = {} # XXX req should be a session
-        self.assertEqual(e.cw_adapt_to('IFTIndexable').get_words(),
-                          {'C': ['an', 'html', 'file', 'du', 'html', 'some', 'data']})
+        words = e.cw_adapt_to('IFTIndexable').get_words()
+        words['C'].sort()
+        self.assertEqual({'C': sorted(['an', 'html', 'file', 'du', 'html', 'some', 'data'])},
+                         words)
 
 
     def test_nonregr_relation_cache(self):

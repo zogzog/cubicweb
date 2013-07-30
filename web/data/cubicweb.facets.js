@@ -1,14 +1,13 @@
 /** filter form, aka facets, javascript functions
  *
  *  :organization: Logilab
- *  :copyright: 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+ *  :copyright: 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
  *  :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
  */
 
-var SELECTED_IMG = baseuri() + "data/black-check.png";
-var UNSELECTED_IMG = baseuri() + "data/no-check-no-border.png";
-var UNSELECTED_BORDER_IMG = baseuri() + "data/black-uncheck.png";
-
+var SELECTED_IMG = DATA_URL + 'black-check.png';
+var UNSELECTED_IMG = DATA_URL + 'no-check-no-border.png';
+var UNSELECTED_BORDER_IMG = DATA_URL + 'black-uncheck.png';
 
 function copyParam(origparams, newparams, param) {
     var index = $.inArray(param, origparams[0]);

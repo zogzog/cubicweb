@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -62,8 +62,8 @@ from rql.nodes import (SortTerm, VariableRef, Constant, Function, Variable, Or,
                        Not, Comparison, ColumnAlias, Relation, SubQuery, Exists)
 
 from cubicweb import QueryError
+from cubicweb.rqlrewrite import cleanup_solutions
 from cubicweb.server.sqlutils import SQL_PREFIX
-from cubicweb.server.utils import cleanup_solutions
 
 ColumnAlias._q_invariant = False # avoid to check for ColumnAlias / Variable
 

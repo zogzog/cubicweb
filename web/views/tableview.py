@@ -201,10 +201,11 @@ class TableLayout(component.Component):
             facetsform.render(w, vid=self.view.__regid__, cssclass=cssclass,
                               divid=self.view.domid)
         actions = []
-        if self.add_view_actions:
-            actions = self.view.table_actions()
-        if self.display_filter and self.hide_filter and (facetsform or not generate_form):
-            actions += self.show_hide_filter_actions(not generate_form)
+        if self.display_actions:
+            if self.add_view_actions:
+                actions = self.view.table_actions()
+            if self.display_filter and self.hide_filter and (facetsform or not generate_form):
+                actions += self.show_hide_filter_actions(not generate_form)
         self.render_table(w, actions, self.view.paginable)
         if facetsform and self.display_filter == 'bottom':
             cssclass = u'hidden' if self.hide_filter else u''

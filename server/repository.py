@@ -239,7 +239,7 @@ class Repository(object):
             # load schema from the file system
             if not config.creating:
                 self.warning("set fs instance'schema")
-            self.set_schema(config.load_schema())
+            self.set_schema(config.load_schema(expand_cubes=True))
         else:
             # normal start: load the instance schema from the database
             self.info('loading schema from the repository')
@@ -352,9 +352,8 @@ class Repository(object):
             except Exception as ex:
                 import traceback
                 traceback.print_exc()
-                raise Exception('Is the database initialised ? (cause: %s)' %
-                                (ex.args and ex.args[0].strip() or 'unknown')), \
-                                None, sys.exc_info()[-1]
+                raise (Exception('Is the database initialised ? (cause: %s)' % ex),
+                       None, sys.exc_info()[-1])
         return appschema
 
     def _prepare_startup(self):
@@ -794,16 +793,7 @@ class Repository(object):
                 #       Zeroed to avoid useless overhead with pyro
                 rset._rqlst = None
                 return rset
-            except (Unauthorized, RQLSyntaxError):
-                raise
-            except ValidationError as ex:
-                # need ValidationError normalization here so error may pass
-                # through pyro
-                if hasattr(ex.entity, 'eid'):
-                    ex.entity = ex.entity.eid # error raised by yams
-                    args = list(ex.args)
-                    args[0] = ex.entity
-                    ex.args = tuple(args)
+            except (ValidationError, Unauthorized, RQLSyntaxError):
                 raise
             except Exception:
                 # FIXME: check error to catch internal errors

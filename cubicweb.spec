@@ -7,7 +7,7 @@
 %endif
 
 Name:           cubicweb
-Version:        3.17.3
+Version:        3.17.4
 Release:        logilab.1%{?dist}
 Summary:        CubicWeb is a semantic web application framework
 Source0:        http://download.logilab.org/pub/cubicweb/cubicweb-%{version}.tar.gz
@@ -46,11 +46,13 @@ find . -name '*.py' -type f -print0 |  xargs -0 sed -i '1,3s;^#!.*python.*$;#! /
 
 %install
 NO_SETUPTOOLS=1 %{__python} setup.py --quiet install --no-compile --prefix=%{_prefix} --root="$RPM_BUILD_ROOT"
+mkdir -p $RPM_BUILD_ROOT/var/log/cubicweb
 
 %clean
 rm -rf $RPM_BUILD_ROOT
 
 %files 
 %defattr(-, root, root)
+%dir /var/log/cubicweb
 /*
 

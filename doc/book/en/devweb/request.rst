@@ -30,11 +30,7 @@ request objects (grouped by category):
 
 * `Session data handling`
 
-  * `session_data()`, returns a dictionary containing all the session data
-  * `get_session_data(key, default=None)`, returns a value associated to the given
-    key or the value `default` if the key is not defined
-  * `set_session_data(key, value)`, assign a value to a key
-  * `del_session_data(key)`,  suppress the value associated to a key
+  * `session.data` is the dictionnary of the session data; it can be manipulated like an ordinary Python dictionnary
 
 * `Edition` (utilities for edition control):
 
