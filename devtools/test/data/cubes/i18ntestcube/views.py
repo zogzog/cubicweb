@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # copyright 2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr -- mailto:contact@logilab.fr
 #
@@ -17,10 +16,21 @@
 
 """cubicweb-forum views/forms/actions/components for web ui"""
 
-from cubicweb.predicates import is_instance
-
 from cubicweb import view
-from cubicweb.web.views import primary, baseviews
+from cubicweb.predicates import is_instance
+from cubicweb.web.views import primary, baseviews, uicfg
+from cubicweb.web.views.uicfg import autoform_section as afs
+
+class MyAFS(uicfg.AutoformSectionRelationTags):
+    __select__ = is_instance('ForumThread')
+
+_myafs = MyAFS()
+_myafs.__module__ = "cubes.i18ntestcube.views"
+
+_myafs.tag_object_of(('*', 'in_forum', 'Forum'), 'main', 'inlined')
+
+wireit_uicfg.wireit_pvs.tag_object_of(('RunChain', 'wiring', 'Wiring'), 'attributes')
+wireit_uicfg.wireit_afs.tag_object_of(('RunChain', 'wiring', 'Wiring'), 'main', 'hidden')
 
 
 class ForumSameETypeListView(baseviews.SameETypeListView):
