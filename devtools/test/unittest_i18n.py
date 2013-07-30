@@ -71,4 +71,9 @@ class cubePotGeneratorTC(TestCase):
         self.assertEqual(msgs, newmsgs)
 
 if __name__ == '__main__':
+    # XXX dirty hack to make this test runnable using python (works
+    # fine with pytest, but not with python directly if this hack is
+    # not present)
+    # XXX to remove ASA logilab.common is fixed
+    sys.path.append('')
     unittest_main()
