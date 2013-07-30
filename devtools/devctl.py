@@ -154,7 +154,7 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None):
         for cstrtype in CONSTRAINTS:
             add_msg(w, cstrtype)
 
-        isinlib = lambda: False
+        is_in_lib = lambda: False
     done = set()
     for eschema in sorted(schema.entities()):
         if eschema.type in libschema:
@@ -176,14 +176,6 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None):
             if rschema.final:
                 continue
             for tschema in targetschemas:
-
-                def isinlib(eschema, rschema, role, tschema):
-                    if libconfig is not None:
-                        for libafs in libafss:
-                            if 'main_inlined' in libafs.etype_get(
-                                eschema, rschema, role, tschema):
-                                return True
-                    return False
 
                 for afs in afss:
                     fsections = afs.etype_get(eschema, rschema, role, tschema)
