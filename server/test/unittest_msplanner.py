@@ -1772,7 +1772,12 @@ class MSPlannerTC(BaseMSPlannerTC):
         repo._type_source_cache[999998] = ('State', 'system', None, 'system')
         self._test('INSERT Note X: X in_state S, X type "bla", X migrated_from N WHERE S eid %(s)s, N eid %(n)s',
                    [('InsertStep',
-                      [('InsertRelationsStep', [])]
+                      [('InsertRelationsStep',
+                        [('OneFetchStep',
+                          [('Any 999999', [{}])],
+                          None, None,
+                          [self.system], {},
+                          [])])]
                      )],
                    {'n': 999999, 's': 999998})
 
