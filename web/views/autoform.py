@@ -892,23 +892,14 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
                 formviews += self.inline_creation_form_view(rschema, ttype, role)
             # we can create more than one related entity, we thus display a link
             # to add new related entities
-            if self.should_display_add_new_relation_link(rschema, formviews, card):
-                rdef = entity.e_schema.rdef(rschema, role, ttype)
-                if entity.has_eid():
-                    if role == 'subject':
-                        rdefkwargs = {'fromeid': entity.eid}
-                    else:
-                        rdefkwargs = {'toeid': entity.eid}
-                else:
-                    rdefkwargs = {}
-                if (tschema.has_perm(self._cw, 'add')
-                    and rdef.has_perm(self._cw, 'add', **rdefkwargs)):
-                    addnewlink = self._cw.vreg['views'].select(
-                        'inline-addnew-link', self._cw,
-                        etype=ttype, rtype=rschema, role=role, card=card,
-                        peid=self.edited_entity.eid,
-                        petype=self.edited_entity.e_schema, pform=self)
-                    formviews.append(addnewlink)
+            if self.must_display_add_new_relation_link(rschema, role, tschema,
+                                                       ttype, formviews, card):
+                addnewlink = self._cw.vreg['views'].select(
+                    'inline-addnew-link', self._cw,
+                    etype=ttype, rtype=rschema, role=role, card=card,
+                    peid=self.edited_entity.eid,
+                    petype=self.edited_entity.e_schema, pform=self)
+                formviews.append(addnewlink)
             allformviews += formviews
         return allformviews
 
@@ -927,6 +918,36 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
         multiple cardinality
         """
         return not existant or card in '+*'
+
+    def must_display_add_new_relation_link(self, rschema, role, tschema,
+                                           ttype, existant, card):
+        """return true if we must add a link to add a new creation form
+        (through ajax call)
+
+        by default true if there is no related entity or if the relation has
+        multiple cardinality and it is permitted to add the inlined object and
+        relation.
+        """
+        return (self.should_display_add_new_relation_link(
+                    rschema, existant, card) and
+                self.check_inlined_rdef_permissions(
+                    rschema, role, tschema, ttype))
+
+    def check_inlined_rdef_permissions(self, rschema, role, tschema, ttype):
+        """return true if permissions are granted on the inlined object and
+        relation"""
+        entity = self.edited_entity
+        rdef = entity.e_schema.rdef(rschema, role, ttype)
+        if entity.has_eid():
+            if role == 'subject':
+                rdefkwargs = {'fromeid': entity.eid}
+            else:
+                rdefkwargs = {'toeid': entity.eid}
+        else:
+            rdefkwargs = {}
+        return (tschema.has_perm(self._cw, 'add')
+                and rdef.has_perm(self._cw, 'add', **rdefkwargs))
+
 
     def should_hide_add_new_relation_link(self, rschema, card):
         """return true if once an inlined creation form is added, the 'add new'
