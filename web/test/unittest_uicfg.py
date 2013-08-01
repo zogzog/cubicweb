@@ -85,15 +85,15 @@ class DefinitionOrderTC(CubicWebTC):
     def test_uihelper_hide_fields(self):
         # original conf : in_group is edited in 'attributes' section everywhere
         section_conf = uicfg.autoform_section.get('CWUser', 'in_group', '*', 'subject')
-        self.assertItemsEqual(section_conf, ['main_attributes', 'muledit_attributes'])
+        self.assertCountEqual(section_conf, ['main_attributes', 'muledit_attributes'])
         # hide field in main form
         uihelper.hide_fields('CWUser', ('login', 'in_group'))
         section_conf = uicfg.autoform_section.get('CWUser', 'in_group', '*', 'subject')
-        self.assertItemsEqual(section_conf, ['main_hidden', 'muledit_attributes'])
+        self.assertCountEqual(section_conf, ['main_hidden', 'muledit_attributes'])
         # hide field in muledit form
         uihelper.hide_fields('CWUser', ('login', 'in_group'), formtype='muledit')
         section_conf = uicfg.autoform_section.get('CWUser', 'in_group', '*', 'subject')
-        self.assertItemsEqual(section_conf, ['main_hidden', 'muledit_hidden'])
+        self.assertCountEqual(section_conf, ['main_hidden', 'muledit_hidden'])
 
     @tag('uihelper', 'hidden', 'formconfig')
     def test_uihelper_formconfig(self):
@@ -103,7 +103,7 @@ class DefinitionOrderTC(CubicWebTC):
             hidden = ('in_group',)
             fields_order = ('login', 'firstname')
         section_conf = uicfg.autoform_section.get('CWUser', 'in_group', '*', 'subject')
-        self.assertItemsEqual(section_conf, ['main_hidden', 'muledit_attributes'])
+        self.assertCountEqual(section_conf, ['main_hidden', 'muledit_attributes'])
         self.assertEqual(afk_get('CWUser', 'firstname', 'String', 'subject'), {'order': 1})
 
 

@@ -397,7 +397,7 @@ class EditControllerTC(CubicWebTC):
         path, params = self.expect_redirect_handle_request(req, 'edit')
         usergroups = [gname for gname, in
                       self.execute('Any N WHERE G name N, U in_group G, U eid %(u)s', {'u': user.eid})]
-        self.assertItemsEqual(usergroups, ['managers', 'test'])
+        self.assertCountEqual(usergroups, ['managers', 'test'])
         self.assertEqual(get_pending_inserts(req), [])
 
     def test_req_pending_delete(self):
@@ -408,14 +408,14 @@ class EditControllerTC(CubicWebTC):
         usergroups = [gname for gname, in
                       self.execute('Any N WHERE G name N, U in_group G, U eid %(u)s', {'u': user.eid})]
         # just make sure everything was set correctly
-        self.assertItemsEqual(usergroups, ['managers', 'test'])
+        self.assertCountEqual(usergroups, ['managers', 'test'])
         # now try to delete the relation
         req = self.request(**req_form(user))
         req.session.data['pending_delete'] = set([(user.eid, 'in_group', groupeid)])
         path, params = self.expect_redirect_handle_request(req, 'edit')
         usergroups = [gname for gname, in
                       self.execute('Any N WHERE G name N, U in_group G, U eid %(u)s', {'u': user.eid})]
-        self.assertItemsEqual(usergroups, ['managers'])
+        self.assertCountEqual(usergroups, ['managers'])
         self.assertEqual(get_pending_deletes(req), [])
 
     def test_redirect_apply_button(self):
@@ -715,7 +715,7 @@ class AjaxControllerTC(CubicWebTC):
 
     def test_remote_add_existing_tag(self):
         self.remote_call('tag_entity', self.john.eid, ['python'])
-        self.assertItemsEqual(
+        self.assertCountEqual(
             [tname for tname, in self.execute('Any N WHERE T is Tag, T name N')],
             ['python', 'cubicweb'])
         self.assertEqual(
@@ -724,7 +724,7 @@ class AjaxControllerTC(CubicWebTC):
 
     def test_remote_add_new_tag(self):
         self.remote_call('tag_entity', self.john.eid, ['javascript'])
-        self.assertItemsEqual(
+        self.assertCountEqual(
             [tname for tname, in self.execute('Any N WHERE T is Tag, T name N')],
             ['python', 'cubicweb', 'javascript'])
         self.assertEqual(

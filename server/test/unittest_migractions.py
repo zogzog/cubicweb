@@ -434,12 +434,12 @@ class MigrationCommandsTC(CubicWebTC):
         self.mh.commit()
         # unique_together test
         self.assertEqual(len(self.schema.eschema('Personne')._unique_together), 1)
-        self.assertItemsEqual(self.schema.eschema('Personne')._unique_together[0],
+        self.assertCountEqual(self.schema.eschema('Personne')._unique_together[0],
                                            ('nom', 'prenom', 'datenaiss'))
         rset = cursor.execute('Any C WHERE C is CWUniqueTogetherConstraint, C constraint_of ET, ET name "Personne"')
         self.assertEqual(len(rset), 1)
         relations = [r.name for r in rset.get_entity(0, 0).relations]
-        self.assertItemsEqual(relations, ('nom', 'prenom', 'datenaiss'))
+        self.assertCountEqual(relations, ('nom', 'prenom', 'datenaiss'))
 
     def _erqlexpr_rset(self, action, ertype):
         rql = 'RQLExpression X WHERE ET is CWEType, ET %s_permission X, ET name %%(name)s' % action
