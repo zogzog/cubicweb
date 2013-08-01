@@ -645,6 +645,34 @@ class EditControllerTC(CubicWebTC):
         finally:
             p.__class__.skip_copy_for = old_skips
 
+    def test_regr_inlined_forms(self):
+        self.schema['described_by_test'].inlined = False
+        try:
+            req = self.request()
+            req.data['eidmap'] = {}
+            req.data['pending_others'] = set()
+            req.data['pending_inlined'] = {}
+            req.form = {'eid': ['X', 'Y'], '__maineid' : 'X',
+
+                        '__type:X': 'Salesterm',
+                        '_cw_entity_fields:X': 'described_by_test-subject',
+                        'described_by_test-subject:X': 'Y',
+
+                        '__type:Y': 'File',
+                        '_cw_entity_fields:Y': 'data-subject',
+                        'data-subject:Y': (u'coucou.txt', Binary('coucou')),
+                        }
+            values_by_eid = dict((eid, req.extract_entity_params(eid, minparams=2))
+                                 for eid in req.edited_eids())
+            editctrl = self.vreg['controllers'].select('edit', req)
+            # don't call publish to enforce select order
+            editctrl.errors = []
+            editctrl._to_create = {}
+            editctrl.edit_entity(values_by_eid['X']) # #3064653 raise ValidationError
+            editctrl.edit_entity(values_by_eid['Y'])
+        finally:
+            self.schema['described_by_test'].inlined = False
+
 
 class ReportBugControllerTC(CubicWebTC):
 
