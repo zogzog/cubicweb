@@ -44,6 +44,10 @@ class Personne(EntityType):
     associe = SubjectRelation('Personne', cardinality='1*',
                               constraints=[RQLConstraint('S actionnaire SOC, O actionnaire SOC')])
 
+class Ami(EntityType):
+    """A Person, for which surname is not required"""
+    prenom = String()
+    nom = String()
 
 class Societe(EntityType):
     nom = String()
