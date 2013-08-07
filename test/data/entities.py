@@ -28,6 +28,9 @@ class Personne(Societe):
     fetch_attrs, cw_fetch_order = fetch_config(['nom', 'prenom'])
     rest_attr = 'nom'
 
+class Ami(Societe):
+    __regid__ = 'Ami'
+    rest_attr = 'nom'
 
 class Note(AnyEntity):
     __regid__ = 'Note'

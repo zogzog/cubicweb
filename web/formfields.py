@@ -506,7 +506,7 @@ class Field(object):
             if field is self:
                 try:
                     value = field.process_form_value(form)
-                    if value is None and field.required:
+                    if field.no_value(value) and field.required:
                         raise ProcessFormError(form._cw._("required field"))
                     yield field, value
                 except UnmodifiedField:
@@ -516,6 +516,11 @@ class Field(object):
                 # of compound fields (of compound fields of ...)
                 for field, value in field.process_posted(form):
                     yield field, value
+
+    @staticmethod
+    def no_value(value):
+        """return True if the value can be considered as no value for the field"""
+        return value is None
 
 
 class StringField(Field):
@@ -1169,6 +1174,12 @@ class RelationField(Field):
                 return None
             eids.add(typed_eid)
         return eids
+
+    @staticmethod
+    def no_value(value):
+        """return True if the value can be considered as no value for the field"""
+        # value is None is the 'not yet ready value, consider the empty set
+        return value is not None and not value
 
 
 _AFF_KWARGS = uicfg.autoform_field_kwargs

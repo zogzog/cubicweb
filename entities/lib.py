@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -15,13 +15,14 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""entity classes for optional library entities
+"""entity classes for optional library entities"""
 
-"""
 __docformat__ = "restructuredtext en"
 
 from urlparse import urlsplit, urlunsplit
 from datetime import datetime
+
+from logilab.mtconverter import xml_escape
 
 from cubicweb import UnknownProperty
 from cubicweb.entity import _marker
@@ -81,7 +82,10 @@ class EmailAddress(AnyEntity):
                         format='text/html'):
         """overriden to return displayable address when necessary"""
         if attr == 'address':
-            return self.display_address()
+            address = self.display_address()
+            if format == 'text/html':
+                address = xml_escape(address)
+            return address
         return super(EmailAddress, self).printable_value(attr, value, attrtype, format)
 
 

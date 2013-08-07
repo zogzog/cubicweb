@@ -82,12 +82,19 @@ class EmailAddressTC(BaseEntityTC):
         self.assertEqual(email.display_address(), 'maarten.ter.huurne@philips.com')
         self.assertEqual(email.printable_value('address'), 'maarten.ter.huurne@philips.com')
         self.vreg.config.global_set_option('mangle-emails', True)
-        self.assertEqual(email.display_address(), 'maarten.ter.huurne at philips dot com')
-        self.assertEqual(email.printable_value('address'), 'maarten.ter.huurne at philips dot com')
-        email = self.execute('INSERT EmailAddress X: X address "syt"').get_entity(0, 0)
-        self.assertEqual(email.display_address(), 'syt')
-        self.assertEqual(email.printable_value('address'), 'syt')
+        try:
+            self.assertEqual(email.display_address(), 'maarten.ter.huurne at philips dot com')
+            self.assertEqual(email.printable_value('address'), 'maarten.ter.huurne at philips dot com')
+            email = self.execute('INSERT EmailAddress X: X address "syt"').get_entity(0, 0)
+            self.assertEqual(email.display_address(), 'syt')
+            self.assertEqual(email.printable_value('address'), 'syt')
+        finally:
+            self.vreg.config.global_set_option('mangle-emails', False)
 
+    def test_printable_value_escape(self):
+        email = self.execute('INSERT EmailAddress X: X address "maarten&ter@philips.com"').get_entity(0, 0)
+        self.assertEqual(email.printable_value('address'), 'maarten&amp;ter@philips.com')
+        self.assertEqual(email.printable_value('address', format='text/plain'), 'maarten&ter@philips.com')
 
 class CWUserTC(BaseEntityTC):
 

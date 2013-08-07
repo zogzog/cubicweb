@@ -1,5 +1,5 @@
 # -*- coding: iso-8859-1 -*-
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -1268,11 +1268,20 @@ Any P1,B,E WHERE P1 identity P2 WITH
         newname = self.execute('Any XN WHERE X eid %(x)s, X title XN', {'x': beid})[0][0]
         self.assertEqual(newname, 'toto-moved')
 
+    def test_update_not_exists(self):
+        rset = self.execute("INSERT Personne X, Societe Y: X nom 'bidule', Y nom 'toto'")
+        eid1, eid2 = rset[0][0], rset[0][1]
+        rset = self.execute("SET X travaille Y WHERE X eid %(x)s, Y eid %(y)s, "
+                            "NOT EXISTS(Z ecrit_par X)",
+                            {'x': unicode(eid1), 'y': unicode(eid2)})
+        self.assertEqual(tuplify(rset.rows), [(eid1, eid2)])
+
     def test_update_query_error(self):
         self.execute("INSERT Personne Y: Y nom 'toto'")
         self.assertRaises(Exception, self.execute, "SET X nom 'toto', X is Personne")
         self.assertRaises(QueryError, self.execute, "SET X nom 'toto', X has_text 'tutu' WHERE X is Personne")
         self.assertRaises(QueryError, self.execute, "SET X login 'tutu', X eid %s" % cnx.user(self.session).eid)
+
 
     # HAVING on write queries test #############################################
 

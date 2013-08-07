@@ -157,7 +157,7 @@ class SchemaReaderClassTest(TestCase):
         self.assert_(isinstance(schema, CubicWebSchema))
         self.assertEqual(schema.name, 'data')
         entities = sorted([str(e) for e in schema.entities()])
-        expected_entities = ['BaseTransition', 'BigInt', 'Bookmark', 'Boolean', 'Bytes', 'Card',
+        expected_entities = ['Ami', 'BaseTransition', 'BigInt', 'Bookmark', 'Boolean', 'Bytes', 'Card',
                              'Date', 'Datetime', 'Decimal',
                              'CWCache', 'CWConstraint', 'CWConstraintType', 'CWDataImport',
                              'CWEType', 'CWAttribute', 'CWGroup', 'EmailAddress', 'CWRelation',

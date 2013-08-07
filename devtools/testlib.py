@@ -461,6 +461,10 @@ class CubicWebTC(TestCase):
         self.vreg._loadedmods.setdefault(self.__module__, {})
         for obj in appobjects:
             self.vreg.register(obj)
+            registered = getattr(obj, '__registered__', None)
+            if registered:
+                for registry in obj.__registries__:
+                    registered(self.vreg[registry])
         try:
             yield
         finally:

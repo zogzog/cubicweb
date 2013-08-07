@@ -101,23 +101,16 @@ def _build_substep_query(select, origrqlst):
 
     Return None when no query actually needed, else the given select node that
     will be used as substep query.
-
-    When select has nothing selected, search in origrqlst for restriction that
-    should be considered.
     """
     if origrqlst.where is not None and not select.selection:
         # no selection, append one randomly by searching for a relation which is
-        # neither a type restriction (is) nor an eid specification (not neged
-        # eid with constant node)
+        # not neged neither a type restriction (is/is_instance_of)
         for rel in origrqlst.where.iget_nodes(Relation):
-            if rel.neged(strict=True) or not (
-                rel.is_types_restriction() or
-                (rel.r_type == 'eid'
-                 and isinstance(rel.get_variable_parts()[1], Constant))):
+            if not (rel.neged(traverse_scope=True) or rel.is_types_restriction()):
                 select.append_selected(rel.children[0].copy(select))
                 break
         else:
-            return
+            return None
     if select.selection:
         if origrqlst.where is not None:
             select.set_where(origrqlst.where.copy(select))

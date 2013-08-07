@@ -1,10 +1,10 @@
-debian/tmp/usr/lib/PY_VERSION/site-packages/cubicweb/devtools/ usr/lib/PY_VERSION/site-packages/cubicweb/
-debian/tmp/usr/lib/PY_VERSION/site-packages/cubicweb/skeleton/ usr/lib/PY_VERSION/site-packages/cubicweb/
-debian/tmp/usr/lib/PY_VERSION/site-packages/cubicweb/test usr/lib/PY_VERSION/site-packages/cubicweb/
-debian/tmp/usr/lib/PY_VERSION/site-packages/cubicweb/entities/test usr/lib/PY_VERSION/site-packages/cubicweb/entities/
-debian/tmp/usr/lib/PY_VERSION/site-packages/cubicweb/ext/test usr/lib/PY_VERSION/site-packages/cubicweb/ext/
-debian/tmp/usr/lib/PY_VERSION/site-packages/cubicweb/server/test usr/lib/PY_VERSION/site-packages/cubicweb/server/
-debian/tmp/usr/lib/PY_VERSION/site-packages/cubicweb/sobjects/test usr/lib/PY_VERSION/site-packages/cubicweb/sobjects/
-debian/tmp/usr/lib/PY_VERSION/site-packages/cubicweb/hooks/test usr/lib/PY_VERSION/site-packages/cubicweb/sobjects/
-debian/tmp/usr/lib/PY_VERSION/site-packages/cubicweb/web/test usr/lib/PY_VERSION/site-packages/cubicweb/web/
-debian/tmp/usr/lib/PY_VERSION/site-packages/cubicweb/etwist/test usr/lib/PY_VERSION/site-packages/cubicweb/etwist/
+usr/lib/PY_VERSION/*-packages/cubicweb/devtools/
+usr/lib/PY_VERSION/*-packages/cubicweb/skeleton/
+usr/lib/PY_VERSION/*-packages/cubicweb/test
+usr/lib/PY_VERSION/*-packages/cubicweb/entities/test
+usr/lib/PY_VERSION/*-packages/cubicweb/ext/test
+usr/lib/PY_VERSION/*-packages/cubicweb/server/test
+usr/lib/PY_VERSION/*-packages/cubicweb/sobjects/test
+usr/lib/PY_VERSION/*-packages/cubicweb/hooks/test
+usr/lib/PY_VERSION/*-packages/cubicweb/web/test
+usr/lib/PY_VERSION/*-packages/cubicweb/etwist/test
