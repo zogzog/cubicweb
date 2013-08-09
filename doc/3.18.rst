@@ -1,0 +1,26 @@
+What's new in CubicWeb 3.18?
+============================
+
+New functionalities
+--------------------
+
+* add a security debugging tool
+  (see `#2920304 <http://www.cubicweb.org/2920304>`_)
+
+
+API changes
+-----------
+
+
+
+Deprecation
+---------------------
+
+
+
+Deprecated Code Drops
+----------------------
+
+* ``ldapuser`` have been dropped; use ``ldapfeed`` now
+  (see `#2936496 <http://www.cubicweb.org/2936496>`_)
+
