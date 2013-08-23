@@ -72,6 +72,22 @@ class MigrationCommandsTC(CubicWebTC):
         CubicWebTC.tearDown(self)
         self.repo.vreg['etypes'].clear_caches()
 
+    def test_add_attribute_bool(self):
+        self.assertFalse('yesno' in self.schema)
+        self.session.create_entity('Note')
+        self.commit()
+        self.mh.cmd_add_attribute('Note', 'yesno')
+        self.assertTrue('yesno' in self.schema)
+        self.assertEqual(self.schema['yesno'].subjects(), ('Note',))
+        self.assertEqual(self.schema['yesno'].objects(), ('Boolean',))
+        self.assertEqual(self.schema['Note'].default('yesno'), False)
+        # test default value set on existing entities
+        note = self.session.execute('Note X').get_entity(0, 0)
+        self.assertEqual(note.yesno, False)
+        # test default value set for next entities
+        self.assertEqual(self.session.create_entity('Note').yesno, False)
+        self.mh.rollback()
+
     def test_add_attribute_int(self):
         self.assertFalse('whatever' in self.schema)
         self.session.create_entity('Note')
@@ -82,12 +98,13 @@ class MigrationCommandsTC(CubicWebTC):
         self.assertTrue('whatever' in self.schema)
         self.assertEqual(self.schema['whatever'].subjects(), ('Note',))
         self.assertEqual(self.schema['whatever'].objects(), ('Int',))
-        self.assertEqual(self.schema['Note'].default('whatever'), 2)
+        self.assertEqual(self.schema['Note'].default('whatever'), 0)
         # test default value set on existing entities
         note = self.session.execute('Note X').get_entity(0, 0)
-        self.assertEqual(note.whatever, 2)
+        self.assertIsInstance(note.whatever, int)
+        self.assertEqual(note.whatever, 0)
         # test default value set for next entities
-        self.assertEqual(self.session.create_entity('Note').whatever, 2)
+        self.assertEqual(self.session.create_entity('Note').whatever, 0)
         # test attribute order
         orderdict2 = dict(self.mh.rqlexec('Any RTN, O WHERE X name "Note", RDEF from_entity X, '
                                           'RDEF relation_type RT, RDEF ordernum O, RT name RTN'))
@@ -127,9 +144,14 @@ class MigrationCommandsTC(CubicWebTC):
 
     def test_add_datetime_with_default_value_attribute(self):
         self.assertFalse('mydate' in self.schema)
-        self.assertFalse('shortpara' in self.schema)
+        self.assertFalse('oldstyledefaultdate' in self.schema)
+        self.assertFalse('newstyledefaultdate' in self.schema)
         self.mh.cmd_add_attribute('Note', 'mydate')
+        self.mh.cmd_add_attribute('Note', 'oldstyledefaultdate')
+        self.mh.cmd_add_attribute('Note', 'newstyledefaultdate')
         self.assertTrue('mydate' in self.schema)
+        self.assertTrue('oldstyledefaultdate' in self.schema)
+        self.assertTrue('newstyledefaultdate' in self.schema)
         self.assertEqual(self.schema['mydate'].subjects(), ('Note', ))
         self.assertEqual(self.schema['mydate'].objects(), ('Date', ))
         testdate = date(2005, 12, 13)
@@ -137,8 +159,13 @@ class MigrationCommandsTC(CubicWebTC):
         eid2 = self.mh.rqlexec('INSERT Note N: N mydate %(mydate)s', {'mydate' : testdate})[0][0]
         d1 = self.mh.rqlexec('Any D WHERE X eid %(x)s, X mydate D', {'x': eid1})[0][0]
         d2 = self.mh.rqlexec('Any D WHERE X eid %(x)s, X mydate D', {'x': eid2})[0][0]
+        d3 = self.mh.rqlexec('Any D WHERE X eid %(x)s, X oldstyledefaultdate D', {'x': eid1})[0][0]
+        d4 = self.mh.rqlexec('Any D WHERE X eid %(x)s, X newstyledefaultdate D', {'x': eid1})[0][0]
         self.assertEqual(d1, date.today())
         self.assertEqual(d2, testdate)
+        myfavoritedate = date(2013, 1, 1)
+        self.assertEqual(d3, myfavoritedate)
+        self.assertEqual(d4, myfavoritedate)
         self.mh.rollback()
 
     def test_drop_chosen_constraints_ctxmanager(self):

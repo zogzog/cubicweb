@@ -28,7 +28,7 @@ _ = unicode
 
 from copy import copy
 from yams.schema import BASE_TYPES, RelationSchema, RelationDefinitionSchema
-from yams import buildobjs as ybo, schema2sql as y2sql
+from yams import buildobjs as ybo, schema2sql as y2sql, convert_default_value
 
 from logilab.common.decorators import clear_cache
 
@@ -38,21 +38,6 @@ from cubicweb.schema import (SCHEMA_TYPES, META_RTYPES, VIRTUAL_RTYPES,
                              CONSTRAINTS, ETYPE_NAME_MAP, display_name)
 from cubicweb.server import hook, schemaserial as ss
 from cubicweb.server.sqlutils import SQL_PREFIX
-
-
-TYPE_CONVERTER = { # XXX
-    'Boolean': bool,
-    'Int': int,
-    'BigInt': int,
-    'Float': float,
-    'Password': str,
-    'String': unicode,
-    'Date' : unicode,
-    'Datetime' : unicode,
-    'Time' : unicode,
-    'TZDatetime' : unicode,
-    'TZTime' : unicode,
-    }
 
 # core entity and relation types which can't be removed
 CORE_TYPES = BASE_TYPES | SCHEMA_TYPES | META_RTYPES | set(
@@ -437,11 +422,11 @@ class CWAttributeAddOp(MemSchemaOperation):
     def precommit_event(self):
         session = self.session
         entity = self.entity
-        # entity.defaultval is a string or None, but we need a correctly typed
+        # entity.defaultval is a Binary or None, but we need a correctly typed
         # value
         default = entity.defaultval
         if default is not None:
-            default = TYPE_CONVERTER[entity.otype.name](default)
+            default = default.unzpickle()
         props = {'default': default,
                  'indexed': entity.indexed,
                  'fulltextindexed': entity.fulltextindexed,
@@ -493,20 +478,11 @@ class CWAttributeAddOp(MemSchemaOperation):
         # attribute is still set to False, so we've to ensure it's False
         rschema.final = True
         insert_rdef_on_subclasses(session, eschema, rschema, rdefdef, props)
-        # set default value, using sql for performance and to avoid
-        # modification_date update
-        if default:
-            if rdefdef.object in ('Date', 'Datetime', 'TZDatetime'):
-                # XXX may may want to use creation_date
-                if default == 'TODAY':
-                    default = syssource.dbhelper.sql_current_date()
-                elif default == 'NOW':
-                    default = syssource.dbhelper.sql_current_timestamp()
-                session.system_sql('UPDATE %s SET %s=%s'
-                                   % (table, column, default))
-            else:
-                session.system_sql('UPDATE %s SET %s=%%(default)s' % (table, column),
-                                   {'default': default})
+        # update existing entities with the default value of newly added attribute
+        if default is not None:
+            default = convert_default_value(self.rdefdef, default)
+            session.system_sql('UPDATE %s SET %s=%%(default)s' % (table, column),
+                               {'default': default})
 
     def revertprecommit_event(self):
         # revert changes on in memory schema

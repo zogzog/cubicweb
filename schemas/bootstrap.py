@@ -83,7 +83,7 @@ class CWAttribute(EntityType):
     indexed = Boolean(description=_('create an index for quick search on this attribute'))
     fulltextindexed = Boolean(description=_('index this attribute\'s value in the plain text index'))
     internationalizable = Boolean(description=_('is this attribute\'s value translatable'))
-    defaultval = String(maxsize=256)
+    defaultval = Bytes(description=_('default value as gziped pickled python object'))
     extra_props = Bytes(description=_('additional type specific properties'))
 
     description = RichString(internationalizable=True,

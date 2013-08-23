@@ -22,6 +22,7 @@ from cStringIO import StringIO
 
 from logilab.common.testlib import TestCase, unittest_main
 
+from cubicweb import Binary
 from cubicweb.schema import CubicWebSchemaLoader
 from cubicweb.devtools import TestServerConfiguration
 
@@ -188,7 +189,6 @@ class Schema2RQLTC(TestCase):
         self.assertIn('extra_props', got[1][1])
         # this extr
         extra_props = got[1][1]['extra_props']
-        from cubicweb import Binary
         self.assertIsInstance(extra_props, Binary)
         got[1][1]['extra_props'] = got[1][1]['extra_props'].getvalue()
         self.assertListEqual(expected, got)
@@ -197,7 +197,8 @@ class Schema2RQLTC(TestCase):
         self.assertListEqual([
             ('INSERT CWAttribute X: X cardinality %(cardinality)s,X defaultval %(defaultval)s,X description %(description)s,X fulltextindexed %(fulltextindexed)s,X indexed %(indexed)s,X internationalizable %(internationalizable)s,X ordernum %(ordernum)s,X relation_type ER,X from_entity SE,X to_entity OE WHERE SE eid %(se)s,ER eid %(rt)s,OE eid %(oe)s',
              {'se': None, 'rt': None, 'oe': None,
-              'description': u'', 'internationalizable': True, 'fulltextindexed': False, 'ordernum': 3, 'defaultval': u'text/plain', 'indexed': False, 'cardinality': u'?1'}),
+              'description': u'', 'internationalizable': True, 'fulltextindexed': False,
+              'ordernum': 3, 'defaultval': Binary('text/plain'), 'indexed': False, 'cardinality': u'?1'}),
             ('INSERT CWConstraint X: X value %(value)s, X cstrtype CT, EDEF constrained_by X WHERE CT eid %(ct)s, EDEF eid %(x)s',
              {'x': None, 'value': u'None', 'ct': 'FormatConstraint_eid'}),
             ('INSERT CWConstraint X: X value %(value)s, X cstrtype CT, EDEF constrained_by X WHERE CT eid %(ct)s, EDEF eid %(x)s',

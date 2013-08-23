@@ -225,6 +225,7 @@ class CWETypeDescriptionTab(tabs.PrimaryTab):
             {'x': entity.eid})
         self.wview('table', rset, 'null',
                    cellvids={0: 'rdef-name-cell',
+                             2: 'etype-attr-defaultval-cell',
                              3: 'etype-attr-cardinality-cell',
                              4: 'rdef-constraints-cell',
                              6: 'rdef-options-cell'},
@@ -270,6 +271,14 @@ class CWETypeAttributeCardinalityCell(baseviews.FinalView):
         else:
             self.w(self._cw._(u'no'))
 
+
+class CWETypeAttributeDefaultValCell(baseviews.FinalView):
+    __regid__ = 'etype-attr-defaultval-cell'
+
+    def cell_call(self, row, col):
+        defaultval = self.cw_rset.rows[row][col]
+        if defaultval is not None:
+            self.w(unicode(self.cw_rset.rows[row][col].unzpickle()))
 
 class CWETypeRelationCardinalityCell(baseviews.FinalView):
     __regid__ = 'etype-rel-cardinality-cell'

@@ -27,7 +27,7 @@ from logilab.common.shellutils import ProgressBar
 
 from yams import BadSchemaDefinition, schema as schemamod, buildobjs as ybo
 
-from cubicweb import CW_SOFTWARE_ROOT, Binary
+from cubicweb import CW_SOFTWARE_ROOT, Binary, typed_eid
 from cubicweb.schema import (KNOWN_RPROPERTIES, CONSTRAINTS, ETYPE_NAME_MAP,
                              VIRTUAL_RTYPES, PURE_VIRTUAL_RTYPES)
 from cubicweb.server import sqlutils
@@ -212,6 +212,11 @@ def deserialize_schema(schema, session):
         rdefeid, seid, reid, oeid, card, ord, desc, idx, ftidx, i18n, default = values
         typeparams = extra_props.get(rdefeid)
         typeparams = json.load(typeparams) if typeparams else {}
+        if default is not None:
+            if isinstance(default, Binary):
+                # while migrating from 3.17 to 3.18, we still have to
+                # handle String defaults
+                default = default.unzpickle()
         _add_rdef(rdefeid, seid, reid, oeid,
                   cardinality=card, description=desc, order=ord,
                   indexed=idx, fulltextindexed=ftidx, internationalizable=i18n,
@@ -527,10 +532,7 @@ def _rdef_values(rdef):
         elif isinstance(value, str):
             value = unicode(value)
         if value is not None and prop == 'default':
-            if value is False:
-                value = u''
-            if not isinstance(value, unicode):
-                value = unicode(value)
+            value = Binary.zpickle(value)
         values[amap.get(prop, prop)] = value
     if extra:
         values['extra_props'] = Binary(json.dumps(extra))

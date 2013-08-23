@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """cw.server.migraction test"""
+import datetime as dt
 from yams.buildobjs import (EntityType, RelationType, RelationDefinition,
                             SubjectRelation, Bytes,
                             RichString, String, Int, Boolean, Datetime, Date)
@@ -62,11 +63,14 @@ class Note(Para):
                                              'PE require_permission P, P name "add_note", '
                                              'P require_group G'),)}
 
-    whatever = Int(default=2)  # keep it before `date` for unittest_migraction.test_add_attribute_int
+    whatever = Int(default=0)  # keep it before `date` for unittest_migraction.test_add_attribute_int
+    yesno = Boolean(default=False)
     date = Datetime()
     type = String(maxsize=1)
     unique_id = String(maxsize=1, required=True, unique=True)
     mydate = Date(default='TODAY')
+    oldstyledefaultdate = Date(default='2013/01/01')
+    newstyledefaultdate = Date(default=dt.date(2013, 1, 1))
     shortpara = String(maxsize=64, default='hop')
     ecrit_par = SubjectRelation('Personne', constraints=[RQLConstraint('S concerne A, O concerne A')])
     attachment = SubjectRelation('File')
