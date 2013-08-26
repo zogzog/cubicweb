@@ -78,10 +78,10 @@ function asURL(props) {
         // generate a list of couple key=value if key is multivalued
         if (cw.utils.isArrayLike(value)) {
             for (var i = 0; i < value.length; i++) {
-                chunks.push(key + '=' + urlEncode(value[i]));
+                chunks.push(key + '=' + cw.urlEncode(value[i]));
             }
         } else {
-            chunks.push(key + '=' + urlEncode(value));
+            chunks.push(key + '=' + cw.urlEncode(value));
         }
     }
     return chunks.join('&');

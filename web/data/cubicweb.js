@@ -105,15 +105,6 @@ jQuery.extend(cw.utils, {
         };
     },
 
-    movedToNamespace: function (funcnames, namespace) {
-        for (var i = 0; i < funcnames.length; i++) {
-            var funcname = funcnames[i];
-            var msg = ('[3.9] ' + funcname + ' is deprecated, use ' +
-		       namespace.__name__ + '.' + funcname + ' instead');
-            window[funcname] = cw.utils.deprecatedFunction(msg, namespace[funcname]);
-        }
-    },
-
     createDomFunction: function (tag) {
         function builddom(params, children) {
             var node = document.createElement(tag);
@@ -388,14 +379,6 @@ jQuery.extend(cw.utils, {
 
 });
 
-String.prototype.startsWith = cw.utils.deprecatedFunction('[3.9] str.startsWith() is deprecated, use str.startswith() instead', function (prefix) {
-    return this.startswith(prefix);
-});
-
-String.prototype.endsWith = cw.utils.deprecatedFunction('[3.9] str.endsWith() is deprecated, use str.endswith() instead', function (suffix) {
-    return this.endswith(prefix);
-});
-
 /** DOM factories ************************************************************/
 A = cw.utils.createDomFunction('a');
 BUTTON = cw.utils.createDomFunction('button');
@@ -472,7 +455,8 @@ function IFRAME(params) {
     return node;
 }
 
-// XXX avoid crashes / backward compat
+// cubes: tag, keyword and apycot seem to use this, including require/provide
+// backward compat
 CubicWeb = cw;
 
 jQuery.extend(cw, {

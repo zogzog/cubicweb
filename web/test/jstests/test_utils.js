@@ -47,11 +47,11 @@ $(document).ready(function() {
   module("sliceList");
   test("test slicelist", function() {
       var list = ['a', 'b', 'c', 'd', 'e', 'f'];
-      same(sliceList(list, 2),  ['c', 'd', 'e', 'f']);
-      same(sliceList(list, 2, -2), ['c', 'd']);
-      same(sliceList(list, -3), ['d', 'e', 'f']);
-      same(sliceList(list, 0, -2), ['a', 'b', 'c', 'd']);
-      same(sliceList(list),  list);
+      same(cw.utils.sliceList(list, 2),  ['c', 'd', 'e', 'f']);
+      same(cw.utils.sliceList(list, 2, -2), ['c', 'd']);
+      same(cw.utils.sliceList(list, -3), ['d', 'e', 'f']);
+      same(cw.utils.sliceList(list, 0, -2), ['a', 'b', 'c', 'd']);
+      same(cw.utils.sliceList(list),  list);
   });
 
   module("formContents", {
@@ -83,7 +83,7 @@ $(document).ready(function() {
 			     'value="one" />');
       $('#test-form').append('<input name="unchecked-choice" type="radio" ' +
 			     'value="two"/>');
-      same(formContents($('#test-form')[0]), [
+      same(cw.utils.formContents($('#test-form')[0]), [
 	['input-text', 'mytextarea', 'choice', 'check', 'theselect'],
 	['toto', 'Hello World!', 'no', 'no', 'foo']
       ]);
