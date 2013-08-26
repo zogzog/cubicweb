@@ -24,7 +24,6 @@ from warnings import warn
 
 from logilab.mtconverter import xml_escape
 
-#from cubicweb.interfaces import IBreadCrumbs
 from cubicweb import tags, uilib
 from cubicweb.entity import Entity
 from cubicweb.predicates import (is_instance, one_line_rset, adaptable,
@@ -35,15 +34,6 @@ from cubicweb.web.views import basecomponents
 # don't use AnyEntity since this may cause bug with isinstance() due to reloading
 
 
-# ease bw compat
-def ibreadcrumb_adapter(entity):
-    if hasattr(entity, 'breadcrumbs'):
-        warn('[3.9] breadcrumbs() method is deprecated, define a custom '
-             'IBreadCrumbsAdapter for %s instead' % entity.__class__,
-             DeprecationWarning)
-        return entity
-    return entity.cw_adapt_to('IBreadCrumbs')
-
 
 class IBreadCrumbsAdapter(EntityAdapter):
     """adapters for entities which can be"located" on some path to display in
@@ -53,11 +43,6 @@ class IBreadCrumbsAdapter(EntityAdapter):
     __select__ = is_instance('Any', accept_none=False)
 
     def parent_entity(self):
-        if hasattr(self.entity, 'parent') and callable(self.entity.parent):
-            warn('[3.9] parent() method is deprecated, define a '
-                 'custom IBreadCrumbsAdapter/ITreeAdapter for %s instead'
-                 % self.entity.__class__, DeprecationWarning)
-            return self.entity.parent()
         itree = self.entity.cw_adapt_to('ITree')
         if itree is not None:
             return itree.parent()
@@ -94,7 +79,7 @@ class IBreadCrumbsAdapter(EntityAdapter):
                 self.error('cycle in breadcrumbs for entity %s' % self.entity)
                 return []
             _recurs.add(parent.eid)
-            adapter = ibreadcrumb_adapter(parent)
+            adapter = parent.cw_adapt_to('IBreadCrumbs')
             path = adapter.breadcrumbs(view, _recurs) + [self.entity]
         else:
             path = [self.entity]
@@ -125,7 +110,7 @@ class BreadCrumbEntityVComponent(basecomponents.HeaderComponent):
             entity = self.cw_extra_kwargs['entity']
         except KeyError:
             entity = self.cw_rset.get_entity(0, 0)
-        adapter = ibreadcrumb_adapter(entity)
+        adapter = entity.cw_adapt_to('IBreadCrumbs')
         view = self.cw_extra_kwargs.get('view')
         path = adapter.breadcrumbs(view)
         if path:

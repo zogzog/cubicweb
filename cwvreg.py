@@ -211,8 +211,7 @@ from yams.constraints import BASE_CONVERTERS
 
 from cubicweb import (CW_SOFTWARE_ROOT, ETYPE_NAME_MAP, CW_EVENT_MANAGER,
                       onevent, Binary, UnknownProperty, UnknownEid)
-from cubicweb.predicates import (implements, appobject_selectable,
-                                 _reset_is_instance_cache)
+from cubicweb.predicates import appobject_selectable, _reset_is_instance_cache
 
 
 @onevent('before-registry-reload')
@@ -229,15 +228,6 @@ def cleanup_uicfg_compat():
             del sys.modules['cubicweb.web'].uihelper
     sys.modules.pop('cubicweb.web.uicfg', None)
     sys.modules.pop('cubicweb.web.uihelper', None)
-
-def use_interfaces(obj):
-    """return interfaces required by the given object by searching for
-    `implements` predicate
-    """
-    impl = obj.__select__.search_selector(implements)
-    if impl:
-        return sorted(impl.expected_ifaces)
-    return ()
 
 def require_appobject(obj):
     """return appobjects required by the given object by searching for
@@ -568,7 +558,6 @@ class CWRegistryStore(RegistryStore):
     def reset(self):
         CW_EVENT_MANAGER.emit('before-registry-reset', self)
         super(CWRegistryStore, self).reset()
-        self._needs_iface = {}
         self._needs_appobject = {}
         # two special registries, propertydefs which care all the property
         # definitions, and propertyvals which contains values for those
@@ -641,20 +630,6 @@ class CWRegistryStore(RegistryStore):
                 for obj in objects:
                     obj.schema = schema
 
-    @deprecated('[3.9] use .register instead')
-    def register_if_interface_found(self, obj, ifaces, **kwargs):
-        """register `obj` but remove it if no entity class implements one of
-        the given `ifaces` interfaces at the end of the registration process.
-
-        Extra keyword arguments are given to the
-        :meth:`~cubicweb.cwvreg.CWRegistryStore.register` function.
-        """
-        self.register(obj, **kwargs)
-        if not isinstance(ifaces,  (tuple, list)):
-            self._needs_iface[obj] = (ifaces,)
-        else:
-            self._needs_iface[obj] = ifaces
-
     def register(self, obj, *args, **kwargs):
         """register `obj` application object into `registryname` or
         `obj.__registry__` if not specified, with identifier `oid` or
@@ -665,15 +640,6 @@ class CWRegistryStore(RegistryStore):
         """
         obj = related_appobject(obj)
         super(CWRegistryStore, self).register(obj, *args, **kwargs)
-        # XXX bw compat
-        ifaces = use_interfaces(obj)
-        if ifaces:
-            if not obj.__name__.endswith('Adapter') and \
-                   any(iface for iface in ifaces if not isinstance(iface, basestring)):
-                warn('[3.9] %s: interfaces in implements selector are '
-                     'deprecated in favor of adapters / adaptable '
-                     'selector' % obj.__name__, DeprecationWarning)
-            self._needs_iface[obj] = ifaces
         depends_on = require_appobject(obj)
         if depends_on is not None:
             self._needs_appobject[obj] = depends_on
@@ -694,34 +660,7 @@ class CWRegistryStore(RegistryStore):
         # we may want to keep interface dependent objects (e.g.for i18n
         # catalog generation)
         if self.config.cleanup_interface_sobjects:
-            # XXX deprecated with cw 3.9: remove appobjects that don't support
-            # any available interface
-            implemented_interfaces = set()
-            if 'Any' in self.get('etypes', ()):
-                for etype in self.schema.entities():
-                    if etype.final:
-                        continue
-                    cls = self['etypes'].etype_class(etype)
-                    if cls.__implements__:
-                        warn('[3.9] %s: using __implements__/interfaces are '
-                             'deprecated in favor of adapters' % cls.__name__,
-                             DeprecationWarning)
-                    for iface in cls.__implements__:
-                        implemented_interfaces.update(iface.__mro__)
-                    implemented_interfaces.update(cls.__mro__)
-            for obj, ifaces in self._needs_iface.items():
-                ifaces = frozenset(isinstance(iface, basestring)
-                                   and iface in self.schema
-                                   and self['etypes'].etype_class(iface)
-                                   or iface
-                                   for iface in ifaces)
-                if not ('Any' in ifaces or ifaces & implemented_interfaces):
-                    reg = self[obj_registries(obj)[0]]
-                    self.debug('unregister %s (no implemented '
-                               'interface among %s)', reg.objid(obj), ifaces)
-                    self.unregister(obj)
-            # since 3.9: remove appobjects which depending on other, unexistant
-            # appobjects
+            # remove appobjects which depend on other, unexistant appobjects
             for obj, (regname, regids) in self._needs_appobject.items():
                 try:
                     registry = self[regname]

@@ -42,7 +42,6 @@ from cubicweb.schema import (RQLVocabularyConstraint, RQLConstraint,
 from cubicweb.rqlrewrite import RQLRewriter
 
 from cubicweb.uilib import soup2xhtml
-from cubicweb.mixins import MI_REL_TRIGGERS
 from cubicweb.mttransforms import ENGINE
 
 _marker = object()
@@ -194,31 +193,11 @@ class Entity(AppObject):
             setattr(cls, rschema.type, Attribute(rschema.type))
         mixins = []
         for rschema, _, role in eschema.relation_definitions():
-            if (rschema, role) in MI_REL_TRIGGERS:
-                mixin = MI_REL_TRIGGERS[(rschema, role)]
-                if not (issubclass(cls, mixin) or mixin in mixins): # already mixed ?
-                    mixins.append(mixin)
-                for iface in getattr(mixin, '__implements__', ()):
-                    if not interface.implements(cls, iface):
-                        interface.extend(cls, iface)
             if role == 'subject':
                 attr = rschema.type
             else:
                 attr = 'reverse_%s' % rschema.type
             setattr(cls, attr, Relation(rschema, role))
-        if mixins:
-            # see etype class instantation in cwvreg.ETypeRegistry.etype_class method:
-            # due to class dumping, cls is the generated top level class with actual
-            # user class as (only) parent. Since we want to be able to override mixins
-            # method from this user class, we have to take care to insert mixins after that
-            # class
-            #
-            # note that we don't plug mixins as user class parent since it causes pb
-            # with some cases of entity classes inheritance.
-            mixins.insert(0, cls.__bases__[0])
-            mixins += cls.__bases__[1:]
-            cls.__bases__ = tuple(mixins)
-            cls.info('plugged %s mixins on %s', mixins, cls)
 
     fetch_attrs = ('modification_date',)
 
@@ -1337,34 +1316,6 @@ class Entity(AppObject):
     @deprecated('[3.13] use entity.cw_clear_all_caches()')
     def clear_all_caches(self):
         return self.cw_clear_all_caches()
-
-    @deprecated('[3.9] use entity.cw_attr_value(attr)')
-    def get_value(self, name):
-        return self.cw_attr_value(name)
-
-    @deprecated('[3.9] use entity.cw_delete()')
-    def delete(self, **kwargs):
-        return self.cw_delete(**kwargs)
-
-    @deprecated('[3.9] use entity.cw_attr_metadata(attr, metadata)')
-    def attr_metadata(self, attr, metadata):
-        return self.cw_attr_metadata(attr, metadata)
-
-    @deprecated('[3.9] use entity.cw_has_perm(action)')
-    def has_perm(self, action):
-        return self.cw_has_perm(action)
-
-    @deprecated('[3.9] use entity.cw_set_relation_cache(rtype, role, rset)')
-    def set_related_cache(self, rtype, role, rset):
-        self.cw_set_relation_cache(rtype, role, rset)
-
-    @deprecated('[3.9] use entity.cw_clear_relation_cache(rtype, role)')
-    def clear_related_cache(self, rtype=None, role=None):
-        self.cw_clear_relation_cache(rtype, role)
-
-    @deprecated('[3.9] use entity.cw_related_rql(rtype, [role, [targettypes]])')
-    def related_rql(self, rtype, role='subject', targettypes=None):
-        return self.cw_related_rql(rtype, role, targettypes)
 
     @property
     @deprecated('[3.10] use entity.cw_edited')

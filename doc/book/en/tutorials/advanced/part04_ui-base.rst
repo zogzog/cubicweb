@@ -194,8 +194,6 @@ query that correctly order files by their `data_name` attribute.
 
 .. Note::
 
-    * Adapters have been introduced in CubicWeb 3.9 / cubicweb-folder 1.8.
-
     * As seen earlier, we want to **replace** the folder's `ITree` adapter by our
       implementation, hence the custom `registration_callback` method.
 
@@ -240,12 +238,6 @@ previous / next entity or `None`. We make an RQL query to get files in the same
 folder, ordered similarly (eg by their `data_name` attribute). We set
 ascendant/descendant ordering and a strict comparison with current file's name
 (the "X" variable representing the current file).
-
-.. Note::
-
-    * Former `implements` selector should be replaced by one of `is_instance` /
-      `adaptable` selector with CubicWeb >= 3.9. In our case, `is_instance` to
-      tell our adapter is able to adapt `File` entities.
 
 Notice that this query supposes we wont have two files of the same name in the
 same folder, else things may go wrong. Fixing this is out of the scope of this
@@ -358,7 +350,7 @@ machine (using `scp` for instance) to restore it and start migration: ::
 You'll have to answer some questions, as we've seen in `an earlier post`_.
 
 Now that everything is tested, I can transfer the new code to the production
-server, `apt-get upgrade` cubicweb 3.9 and its dependencies, and eventually
+server, `apt-get upgrade` cubicweb and its dependencies, and eventually
 upgrade the production instance.
 
 

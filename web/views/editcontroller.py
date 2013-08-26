@@ -28,7 +28,7 @@ from logilab.common.graph import ordered_nodes
 from rql.utils import rqlvar_maker
 
 from cubicweb import Binary, ValidationError
-from cubicweb.view import EntityAdapter, implements_adapter_compat
+from cubicweb.view import EntityAdapter
 from cubicweb.predicates import is_instance
 from cubicweb.web import (INTERNAL_FIELD_VALUE, RequestError, NothingToEdit,
                           ProcessFormError)
@@ -36,7 +36,6 @@ from cubicweb.web.views import basecontrollers, autoform
 
 
 class IEditControlAdapter(EntityAdapter):
-    __needs_bw_compat__ = True
     __regid__ = 'IEditControl'
     __select__ = is_instance('Any')
 
@@ -47,7 +46,6 @@ class IEditControlAdapter(EntityAdapter):
                  DeprecationWarning)
         super(IEditControlAdapter, self).__init__(_cw, **kwargs)
 
-    @implements_adapter_compat('IEditControl')
     def after_deletion_path(self):
         """return (path, parameters) which should be used as redirect
         information when this entity is being deleted
@@ -57,7 +55,6 @@ class IEditControlAdapter(EntityAdapter):
             return parent.rest_path(), {}
         return str(self.entity.e_schema).lower(), {}
 
-    @implements_adapter_compat('IEditControl')
     def pre_web_edit(self):
         """callback called by the web editcontroller when an entity will be
         created/modified, to let a chance to do some entity specific stuff.
