@@ -53,8 +53,7 @@ Within virtual environment
 
 If you are not administrator of you machine or if you need to play with some
 specific version of |cubicweb| you can use `virtualenv`_ a tool to create
-isolated Python environments.  Since version 3.9 |cubicweb| is **`virtualenv`
-friendly** and won't write any file outside the virtualenv directory.
+isolated Python environments.
 
 - instances are stored in :file:`<VIRTUAL_ENV>/etc/cubicweb.d`
 - temporary files (such as pid file) in :file:`<VIRTUAL_ENV>/var/run/cubicweb`

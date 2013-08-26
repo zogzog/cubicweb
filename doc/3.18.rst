@@ -29,5 +29,4 @@ Deprecated Code Drops
 
 * all 3.8 backward compat is gone
 
-* all 3.9 backward compat for the interface -> adapter transition is
-  gone
+* all 3.9 backward compat (except javascript side) is gone

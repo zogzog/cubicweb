@@ -213,16 +213,8 @@ class PrimaryView(EntityView):
         if display_attributes:
             self.w(u'<table>')
             for rschema, role, dispctrl, value in display_attributes:
-                # pylint: disable=E1101
-                if not hasattr(self, '_render_attribute'):
-                    label = self._rel_label(entity, rschema, role, dispctrl)
-                    self.render_attribute(label, value, table=True)
-                else:
-                    warn('[3.9] _render_attribute prototype has changed and '
-                         'renamed to render_attribute, please update %s'
-                         % self.__class__, DeprecationWarning)
-                    self._render_attribute(dispctrl, rschema, value, role=role,
-                                           table=True)
+                label = self._rel_label(entity, rschema, role, dispctrl)
+                self.render_attribute(label, value, table=True)
             self.w(u'</table>')
 
     def render_attribute(self, label, value, table=False):
@@ -248,13 +240,6 @@ class PrimaryView(EntityView):
                 limit = defaultlimit if vid == 'autolimited' else None
                 rset = self._relation_rset(entity, rschema, role, dispctrl, limit=limit)
                 if not rset:
-                    continue
-                if hasattr(self, '_render_relation'):
-                    # pylint: disable=E1101
-                    self._render_relation(dispctrl, rset, 'autolimited')
-                    warn('[3.9] _render_relation prototype has changed and has '
-                         'been renamed to render_relation, please update %s'
-                         % self.__class__, DeprecationWarning)
                     continue
                 try:
                     rview = self._cw.vreg['views'].select(

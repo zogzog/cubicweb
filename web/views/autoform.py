@@ -726,16 +726,17 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
     # action on the form tag
     _default_form_action_path = 'validateform'
 
-    # pre 3.8.3 compat
+    @deprecated('[3.18] you should override form_action()')
     def set_action(self, action):
         self._action = action
+
+    @deprecated('[3.18] use form_action()')
     def get_action(self):
         try:
             return self._action
         except AttributeError:
             return self._cw.build_url(self._default_form_action_path)
-    action = property(deprecated('[3.9] use form.form_action()')(get_action),
-                      set_action)
+
 
     @iclassmethod
     def field_by_name(cls_or_self, name, role=None, eschema=None):

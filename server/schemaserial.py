@@ -232,28 +232,24 @@ def deserialize_schema(schema, session):
         if rdefs is not None:
             set_perms(rdefs, permsidx)
     unique_togethers = {}
-    try:
-        rset = session.execute(
-        'Any X,E,R WHERE '
-        'X is CWUniqueTogetherConstraint, '
-        'X constraint_of E, X relations R', build_descr=False)
-    except Exception:
-        session.rollback() # first migration introducing CWUniqueTogetherConstraint cw 3.9.6
-    else:
-        for values in rset:
-            uniquecstreid, eeid, releid = values
-            eschema = schema.schema_by_eid(eeid)
-            relations = unique_togethers.setdefault(uniquecstreid, (eschema, []))
-            rel = ertidx[releid]
-            if isinstance(rel, schemamod.RelationDefinitionSchema):
-                # not yet migrated 3.9 database ('relations' target type changed
-                # to CWRType in 3.10)
-                rtype = rel.rtype.type
-            else:
-                rtype = str(rel)
-            relations[1].append(rtype)
-        for eschema, unique_together in unique_togethers.itervalues():
-            eschema._unique_together.append(tuple(sorted(unique_together)))
+    rset = session.execute(
+    'Any X,E,R WHERE '
+    'X is CWUniqueTogetherConstraint, '
+    'X constraint_of E, X relations R', build_descr=False)
+    for values in rset:
+        uniquecstreid, eeid, releid = values
+        eschema = schema.schema_by_eid(eeid)
+        relations = unique_togethers.setdefault(uniquecstreid, (eschema, []))
+        rel = ertidx[releid]
+        if isinstance(rel, schemamod.RelationDefinitionSchema):
+            # not yet migrated 3.9 database ('relations' target type changed
+            # to CWRType in 3.10)
+            rtype = rel.rtype.type
+        else:
+            rtype = str(rel)
+        relations[1].append(rtype)
+    for eschema, unique_together in unique_togethers.itervalues():
+        eschema._unique_together.append(tuple(sorted(unique_together)))
     schema.infer_specialization_rules()
     session.commit()
     schema.reading_from_database = False

@@ -684,12 +684,6 @@ class CubicWebRequestBase(DBAPIRequest):
                 cssfile = self.data_url(cssfile)
             add_css(cssfile, media, *extraargs)
 
-    @deprecated('[3.9] use ajax_replace_url() instead, naming rql and vid arguments')
-    def build_ajax_replace_url(self, nodeid, rql, vid, replacemode='replace',
-                               **extraparams):
-        return self.ajax_replace_url(nodeid, replacemode, rql=rql, vid=vid,
-                                     **extraparams)
-
     def ajax_replace_url(self, nodeid, replacemode='replace', **extraparams):
         """builds an ajax url that will replace nodeid's content
 
@@ -991,20 +985,6 @@ class CubicWebRequestBase(DBAPIRequest):
 
     def html_content_type(self):
         return 'text/html'
-
-    @deprecated('[3.9] use req.uiprops[rid]')
-    def external_resource(self, rid, default=_MARKER):
-        """return a path to an external resource, using its identifier
-
-        raise `KeyError` if the resource is not defined
-        """
-        try:
-            return self.uiprops[rid]
-        except KeyError:
-            if default is _MARKER:
-                raise
-            return default
-
 
 
 ## HTTP-accept parsers / utilies ##############################################

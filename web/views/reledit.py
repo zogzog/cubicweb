@@ -91,9 +91,6 @@ class AutoClickAndEditFormView(EntityView):
         rschema = self._cw.vreg.schema[rtype]
         rctrl = self._cw.vreg['uicfg'].select('reledit', self._cw, entity=entity)
         self._rules = rctrl.etype_get(self.entity.e_schema.type, rschema.type, role, '*')
-        if rvid is not None or default_value is not None:
-            warn('[3.9] specifying rvid/default_value on select is deprecated, '
-                 'reledit_ctrl rtag to control this' % self, DeprecationWarning)
         reload = self._compute_reload(rschema, role, reload)
         divid = self._build_divid(rtype, role, self.entity.eid)
         if rschema.final:
@@ -322,18 +319,10 @@ class AutoClickAndEditFormView(EntityView):
         rdef = entity.e_schema.rdef(rschema)
         return rdef.has_perm(self._cw, 'update', eid=entity.eid)
 
-    should_edit_attributes = deprecated('[3.9] should_edit_attributes is deprecated,'
-                                        ' use _should_edit_attribute instead',
-                                        _should_edit_attribute)
-
     def _should_edit_relation(self, rschema, role):
         eeid = self.entity.eid
         perm_args = {'fromeid': eeid} if role == 'subject' else {'toeid': eeid}
         return rschema.has_perm(self._cw, 'add', **perm_args)
-
-    should_edit_relations = deprecated('[3.9] should_edit_relations is deprecated,'
-                                       ' use _should_edit_relation instead',
-                                       _should_edit_relation)
 
     def _open_form_wrapper(self, divid, value, form, renderer,
                            _edit_related, _add_related, _delete_related):

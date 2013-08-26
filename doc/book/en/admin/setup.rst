@@ -121,10 +121,10 @@ environment or if you are having problems with `easy_install`, read on to
 `Virtualenv` install
 --------------------
 
-Since version 3.9, |cubicweb| can be safely installed, used and contained inside
-a `virtualenv`_. You can use either :ref:`pip <PipInstallation>` or
-:ref:`easy_install <EasyInstallInstallation>` to install |cubicweb| inside an
-activated virtual environment.
+|cubicweb| can be safely installed, used and contained inside a
+`virtualenv`_. You can use either :ref:`pip <PipInstallation>` or
+:ref:`easy_install <EasyInstallInstallation>` to install |cubicweb|
+inside an activated virtual environment.
 
 .. _PipInstallation:
 
