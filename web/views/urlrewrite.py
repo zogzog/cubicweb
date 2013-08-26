@@ -140,7 +140,7 @@ class SimpleReqRewriter(URLRewriter):
         return None, None
 
 
-def build_rset(rql, rgxgroups=None, cachekey=None, setuser=False,
+def build_rset(rql, rgxgroups=None, setuser=False,
                vid=None, vtitle=None, form={}, **kwargs):
 
     def do_build_rset(inputurl, uri, req, schema, kwargs=kwargs):
@@ -156,7 +156,7 @@ def build_rset(rql, rgxgroups=None, cachekey=None, setuser=False,
             req.form['vid'] = vid
         if vtitle:
             req.form['vtitle'] = req._(vtitle) % kwargs
-        return None, req.execute(rql, kwargs, cachekey)
+        return None, req.execute(rql, kwargs)
     return do_build_rset
 
 def update_form(**kwargs):

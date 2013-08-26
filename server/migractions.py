@@ -1461,12 +1461,9 @@ class ServerMigrationHelper(MigrationHelper):
                 # no result to fetch
                 return
 
-    def rqlexec(self, rql, kwargs=None, cachekey=None, build_descr=True,
+    def rqlexec(self, rql, kwargs=None, build_descr=True,
                 ask_confirm=False):
         """rql action"""
-        if cachekey is not None:
-            warn('[3.8] cachekey is deprecated, you can safely remove this argument',
-                 DeprecationWarning, stacklevel=2)
         if not isinstance(rql, (tuple, list)):
             rql = ( (rql, kwargs), )
         res = None

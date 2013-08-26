@@ -499,21 +499,11 @@ this option is set to yes",
             try:
                 gendeps = getattr(pkginfo, key.replace('_cubes', ''))
             except AttributeError:
-                # bw compat
-                if hasattr(pkginfo, oldkey):
-                    warn('[3.8] cube %s: %s is deprecated, use %s dict'
-                         % (cube, oldkey, key), DeprecationWarning)
-                    deps = getattr(pkginfo, oldkey)
-                else:
-                    deps = {}
+                deps = {}
             else:
                 deps = dict( (x[len('cubicweb-'):], v)
                              for x, v in gendeps.iteritems()
                              if x.startswith('cubicweb-'))
-        if not isinstance(deps, dict):
-            deps = dict((key, None) for key in deps)
-            warn('[3.8] cube %s should define %s as a dict' % (cube, key),
-                 DeprecationWarning)
         for depcube in deps:
             try:
                 newname = CW_MIGRATION_MAP[depcube]

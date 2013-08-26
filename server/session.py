@@ -1176,14 +1176,11 @@ class Session(RequestSessionBase):
     source_from_eid = tx_meth('source_from_eid')
 
 
-    def execute(self, rql, kwargs=None, eid_key=None, build_descr=True):
+    def execute(self, rql, kwargs=None, build_descr=True):
         """db-api like method directly linked to the querier execute method.
 
         See :meth:`cubicweb.dbapi.Cursor.execute` documentation.
         """
-        if eid_key is not None:
-            warn('[3.8] eid_key is deprecated, you can safely remove this argument',
-                 DeprecationWarning, stacklevel=2)
         self.timestamp = time() # update timestamp
         rset = self._execute(self, rql, kwargs, build_descr)
         rset.req = self

@@ -226,13 +226,13 @@ General Constraints
 * `SizeConstraint`: allows to specify a minimum and/or maximum size on
   string (generic case of `maxsize`)
 
-* `BoundConstraint`: allows to specify a minimum and/or maximum value
+* `BoundaryConstraint`: allows to specify a minimum and/or maximum value
   on numeric types and date
 
 .. sourcecode:: python
 
-   from yams.constraints import BoundConstraint, TODAY
-   BoundConstraint('<=', TODAY())
+   from yams.constraints import BoundaryConstraint, TODAY
+   BoundaryConstraint('<=', TODAY())
 
 * `IntervalBoundConstraint`: allows to specify an interval with
   included values

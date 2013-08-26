@@ -77,8 +77,6 @@ def group_mapping(cursor, interactive=True):
 def cstrtype_mapping(cursor):
     """cached constraint types mapping"""
     map = dict(cursor.execute('Any T, X WHERE X is CWConstraintType, X name T'))
-    if not 'BoundConstraint' in map:
-        map['BoundConstraint'] = map['BoundaryConstraint']
     return map
 
 # schema / perms deserialization ##############################################
@@ -344,13 +342,10 @@ def serialize_schema(cursor, schema):
     cstrtypemap = {}
     rql = 'INSERT CWConstraintType X: X name %(ct)s'
     for cstrtype in CONSTRAINTS:
-        if cstrtype == 'BoundConstraint':
-            continue # XXX deprecated in yams 0.29 / cw 3.8.1
         cstrtypemap[cstrtype] = execute(rql, {'ct': unicode(cstrtype)},
                                         build_descr=False)[0][0]
         if pb is not None:
             pb.update()
-    cstrtypemap['BoundConstraint'] = cstrtypemap['BoundaryConstraint']
     # serialize relations
     for rschema in schema.relations():
         # skip virtual relations such as eid, has_text and identity

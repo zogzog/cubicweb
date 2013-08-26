@@ -27,3 +27,4 @@ Deprecated Code Drops
 * ``ldapuser`` have been dropped; use ``ldapfeed`` now
   (see `#2936496 <http://www.cubicweb.org/2936496>`_)
 
+* all 3.8 backward compat is gone

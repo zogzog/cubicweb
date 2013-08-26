@@ -189,10 +189,6 @@ class PrimaryView(EntityView):
     def render_entity_toolbox(self, entity):
         self.content_navigation_components('ctxtoolbar')
 
-    @deprecated('[3.8] render_entity_metadata method is deprecated')
-    def render_entity_metadata(self, entity):
-        entity.view('metadata', w=self.w)
-
     def summary(self, entity):
         """default implementation return an empty string"""
         return u''

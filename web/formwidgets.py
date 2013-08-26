@@ -588,13 +588,7 @@ class CheckBox(Input):
     def _render(self, form, field, renderer):
         curvalues, attrs = self.values_and_attributes(form, field)
         domid = attrs.pop('id', None)
-        # XXX turn this as initializer argument
-        try:
-            sep = attrs.pop('separator')
-            warn('[3.8] separator should be specified using initializer argument',
-                 DeprecationWarning)
-        except KeyError:
-            sep = self.separator
+        sep = self.separator
         options = []
         for i, option in enumerate(field.vocabulary(form)):
             try:

@@ -266,12 +266,7 @@ class ListCommand(Command):
                         if tinfo:
                             descr = getattr(tinfo, 'description', '')
                             if not descr:
-                                descr = getattr(tinfo, 'short_desc', '')
-                                if descr:
-                                    warn('[3.8] short_desc is deprecated, update %s'
-                                         ' pkginfo' % cube, DeprecationWarning)
-                                else:
-                                    descr = tinfo.__doc__
+                                descr = tinfo.__doc__
                             if descr:
                                 print '    '+ '    \n'.join(descr.splitlines())
                         modes = detect_available_modes(cwcfg.cube_dir(cube))
