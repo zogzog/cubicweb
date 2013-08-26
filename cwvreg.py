@@ -653,13 +653,13 @@ class CWRegistryStore(RegistryStore):
     def initialization_completed(self):
         """cw specific code once vreg initialization is completed:
 
-        * remove objects requiring a missing interface, unless
-          config.cleanup_interface_sobjects is false
+        * remove objects requiring a missing appobject, unless
+          config.cleanup_unused_appobjects is false
         * init rtags
         """
         # we may want to keep interface dependent objects (e.g.for i18n
         # catalog generation)
-        if self.config.cleanup_interface_sobjects:
+        if self.config.cleanup_unused_appobjects:
             # remove appobjects which depend on other, unexistant appobjects
             for obj, (regname, regids) in self._needs_appobject.items():
                 try:
@@ -679,8 +679,8 @@ class CWRegistryStore(RegistryStore):
         if 'uicfg' in self: # 'uicfg' is not loaded in a pure repository mode
             for rtags in self['uicfg'].itervalues():
                 for rtag in rtags:
-                    # don't check rtags if we don't want to cleanup_interface_sobjects
-                    rtag.init(self.schema, check=self.config.cleanup_interface_sobjects)
+                    # don't check rtags if we don't want to cleanup_unused_appobjects
+                    rtag.init(self.schema, check=self.config.cleanup_unused_appobjects)
 
     # rql parsing utilities ####################################################
 

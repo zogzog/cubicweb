@@ -327,7 +327,7 @@ class CubicWebNoAppConfiguration(ConfigurationMixIn):
     # the format below can be useful to debug multi thread issues:
     # log_format = '%(asctime)s - [%(threadName)s] (%(name)s) %(levelname)s: %(message)s'
     # nor remove appobjects based on unused interface [???]
-    cleanup_interface_sobjects = True
+    cleanup_unused_appobjects = True
 
     if (CWDEV and _forced_mode != 'system'):
         mode = 'user'

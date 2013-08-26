@@ -46,7 +46,7 @@ class DevConfiguration(ServerConfiguration, WebConfiguration):
     a cube or for cubicweb (without a home)
     """
     creating = True
-    cleanup_interface_sobjects = False
+    cleanup_unused_appobjects = False
 
     cubicweb_appobject_path = (ServerConfiguration.cubicweb_appobject_path
                                | WebConfiguration.cubicweb_appobject_path)
