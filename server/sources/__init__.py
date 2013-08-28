@@ -183,7 +183,7 @@ class AbstractSource(object):
             elif value is not None:
                 # type check
                 try:
-                    value = configuration.convert(value, optdict, optname)
+                    value = configuration._validate(value, optdict, optname)
                 except Exception as ex:
                     msg = unicode(ex) # XXX internationalization
                     raise ValidationError(eid, {role_name('config', 'subject'): msg})
