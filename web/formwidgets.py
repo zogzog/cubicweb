@@ -692,16 +692,17 @@ class JQueryDatePicker(FieldWidget):
                        '{buttonImage: "%s", dateFormat: "%s", firstDay: 1,'
                        ' showOn: "button", buttonImageOnly: true})' % (
                            domid, req.uiprops['CALENDAR_ICON'], fmt))
-        return self._render_input(form, field, domid)
+        return self._render_input(form, field)
 
-    def _render_input(self, form, field, domid):
+    def _render_input(self, form, field):
         if self.value is None:
             value = self.values(form, field)[0]
         else:
             value = self.value
         attrs = self.attributes(form, field)
         attrs.setdefault('size', unicode(self.default_size))
-        return tags.input(name=domid, value=value, type='text', **attrs)
+        return tags.input(name=field.input_name(form, self.suffix),
+                          value=value, type='text', **attrs)
 
 
 class JQueryTimePicker(JQueryDatePicker):
@@ -721,7 +722,7 @@ class JQueryTimePicker(JQueryDatePicker):
         domid = field.dom_id(form, self.suffix)
         form._cw.add_onload(u'$("#%s").timePicker({step: %s, separator: "%s"})' % (
                 domid, self.timesteps, self.separator))
-        return self._render_input(form, field, domid)
+        return self._render_input(form, field)
 
 
 class JQueryDateTimePicker(FieldWidget):
