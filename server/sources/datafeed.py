@@ -445,7 +445,7 @@ class DataFeedXMLParser(DataFeedParser):
         if url.startswith('http'):
             url = self.normalize_url(url)
             self.source.info('GET %s', url)
-            stream = _OPENER.open(url, timeout=self.http_timeout)
+            stream = _OPENER.open(url, timeout=self.source.http_timeout)
         elif url.startswith('file://'):
             stream = open(url[7:])
         else:
@@ -462,7 +462,7 @@ class DataFeedXMLParser(DataFeedParser):
         if extid.startswith('http'):
             try:
                 _OPENER.open(self.normalize_url(extid), # XXX HTTP HEAD request
-                             timeout=self.http_timeout)
+                             timeout=self.source.http_timeout)
             except urllib2.HTTPError as ex:
                 if ex.code == 404:
                     return True
