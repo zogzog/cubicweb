@@ -139,7 +139,7 @@ published on the `The Python Package Index`_.
 .. _`virtualenv`: http://virtualenv.openplans.org/
 
 A working compilation chain is needed to build the modules that include C
-extensions. If you definitively wont, installing `Lxml <http://lxml.de/>`_,
+extensions. If you really do not want to compile anything, installing `Lxml <http://lxml.de/>`_,
 `Twisted Web <http://twistedmatrix.com/trac/wiki/Downloads/>`_ and `libgecode
 <http://www.gecode.org/>`_ will help.
 
@@ -164,8 +164,7 @@ Finally, install |cubicweb| and its dependencies, by running::
 
   pip install cubicweb
 
-There is also a wide variety of :ref:`cubes <AvailableCubes>`. You can access a
-list of available cubes on
+Many other :ref:`cubes <AvailableCubes>` are available. A list is available at
 `PyPI <http://pypi.python.org/pypi?%3Aaction=search&term=cubicweb&submit=search>`_
 or at the `CubicWeb.org forge`_.
 
