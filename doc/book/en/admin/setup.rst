@@ -131,12 +131,11 @@ activated virtual environment.
 `pip` install
 -------------
 
-pip_ is a python utility that helps downloading, building, installing, and
-managing python packages and their dependencies. It is fully compatible with
-`virtualenv`_ and installs the packages from sources published on the
-`The Python Package Index`_.
+`pip <http://pip.openplans.org/>`_ is a python tool that helps downloading,
+building, installing, and managing Python packages and their dependencies. It
+is fully compatible with `virtualenv`_ and installs the packages from sources
+published on the `The Python Package Index`_.
 
-.. _`pip`: http://pip.openplans.org/
 .. _`virtualenv`: http://virtualenv.openplans.org/
 
 A working compilation chain is needed to build the modules that include C
@@ -144,7 +143,24 @@ extensions. If you definitively wont, installing `Lxml <http://lxml.de/>`_,
 `Twisted Web <http://twistedmatrix.com/trac/wiki/Downloads/>`_ and `libgecode
 <http://www.gecode.org/>`_ will help.
 
-To install |cubicweb| and its dependencies, just run::
+For Debian, these minimal dependencies can be obtained by doing::
+
+  apt-get install gcc python-pip python-dev python-lxml
+
+or, if you prefer to get as much as possible from pip::
+
+  apt-get install gcc python-pip python-dev libxslt1-dev libxml2-dev
+
+For Windows, you can install pre-built packages (possible `source
+<http://www.lfd.uci.edu/~gohlke/pythonlibs/>`_). For a minimal setup, install
+`pip <http://www.lfd.uci.edu/~gohlke/pythonlibs/#pip>`_, `setuptools
+<http://www.lfd.uci.edu/~gohlke/pythonlibs/#setuptools>`_, `libxml-python
+<http://www.lfd.uci.edu/~gohlke/pythonlibs/#libxml-python>`_, `lxml
+<http://www.lfd.uci.edu/~gohlke/pythonlibs/#lxml>`_ and `twisted
+<http://www.lfd.uci.edu/~gohlke/pythonlibs/#twisted>`_ from this source making
+sure to choose the correct architecture and version of Python.
+
+Finally, install |cubicweb| and its dependencies, by running::
 
   pip install cubicweb
 
