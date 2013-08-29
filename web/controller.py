@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -21,6 +21,7 @@ __docformat__ = "restructuredtext en"
 
 from logilab.mtconverter import xml_escape
 from logilab.common.registry import yes
+from logilab.common.deprecation import deprecated
 
 from cubicweb.appobject import AppObject
 from cubicweb.mail import format_mail
@@ -103,6 +104,8 @@ class Controller(AppObject):
         if not self._edited_entity:
             self._edited_entity = entity
 
+    @deprecated('[3.18] call view.set_http_cache_headers then '
+                '.is_client_cache_valid() method and return instead')
     def validate_cache(self, view):
         view.set_http_cache_headers()
         self._cw.validate_cache()

@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -128,7 +128,9 @@ class ViewController(Controller):
         """publish a request, returning an encoded string"""
         view, rset = self._select_view_and_rset(rset)
         self.add_to_breadcrumbs(view)
-        self.validate_cache(view)
+        view.set_http_cache_headers()
+        if self._cw.is_client_cache_valid():
+            return ''
         template = self.appli.main_template_id(self._cw)
         return self._cw.vreg['views'].main_template(self._cw, template,
                                                     rset=rset, view=view)

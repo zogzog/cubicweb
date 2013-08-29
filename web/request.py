@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -765,11 +765,13 @@ class CubicWebRequestBase(DBAPIRequest):
             return controller
         return 'view'
 
-    def validate_cache(self):
-        """raise a `StatusResponse` exception if a cached page along the way
-        exists and is still usable.
+    def is_client_cache_valid(self):
+        """check if a client cached page exists (as specified in request
+        headers) and is still usable.
 
-        calls the client-dependant implementation of `_validate_cache`
+        Return False if the page has to be calculated, else True.
+
+        Some response cache headers may be set by this method.
         """
         modified = True
         if self.get_header('Cache-Control') not in ('max-age=0', 'no-cache'):
@@ -784,15 +786,30 @@ class CubicWebRequestBase(DBAPIRequest):
                 # Expires header seems to be required by IE7 -- Are you sure ?
                 self.add_header('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT')
             if self.http_method() == 'HEAD':
-                raise StatusResponse(200, '')
-            # /!\ no raise, the function returns and we keep processing the request)
+                self.status_out = 200
+                # XXX replace by True once validate_cache bw compat method is dropped
+                return 200
+            # /!\ no raise, the function returns and we keep processing the request
         else:
             # overwrite headers_out to forge a brand new not-modified response
             self.headers_out = self._forge_cached_headers()
             if self.http_method() in ('HEAD', 'GET'):
-                raise StatusResponse(httplib.NOT_MODIFIED)
+                self.status_out = httplib.NOT_MODIFIED
             else:
-                raise StatusResponse(httplib.PRECONDITION_FAILED)
+                self.status_out = httplib.PRECONDITION_FAILED
+            # XXX replace by True once validate_cache bw compat method is dropped
+            return self.status_out
+        # XXX replace by False once validate_cache bw compat method is dropped
+        return None
+
+    @deprecated('[3.18] use .is_client_cache_valid() method instead')
+    def validate_cache(self):
+        """raise a `StatusResponse` exception if a cached page along the way
+        exists and is still usable.
+        """
+        status_code = self.is_client_cache_valid()
+        if status_code is not None:
+            raise StatusResponse(status_code)
 
     # abstract methods to override according to the web front-end #############
 

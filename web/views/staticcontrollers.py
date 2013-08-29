@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -20,7 +20,6 @@
 - /data/...
 - /static/...
 - /fckeditor/...
-
 """
 
 import os
@@ -78,7 +77,8 @@ class StaticFileController(Controller):
         #
         # Real production environment should use dedicated static file serving.
         self._cw.set_header('last-modified', generateDateTime(os.stat(path).st_mtime))
-        self._cw.validate_cache()
+        if self._cw.is_client_cache_valid():
+            return ''
         # XXX elif uri.startswith('/https/'): uri = uri[6:]
         mimetype, encoding = mimetypes.guess_type(path)
         if mimetype is None:
