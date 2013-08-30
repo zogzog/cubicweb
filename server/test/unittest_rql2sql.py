@@ -1541,6 +1541,16 @@ WHERE _A.cw_ordernum=_T0.C0'''),
 FROM (SELECT MAX(_A.cw_ordernum) AS C0
 FROM cw_CWAttribute AS _A) AS _T0 LEFT OUTER JOIN (SELECT MAX(_A.cw_ordernum) AS C0
 FROM cw_CWRelation AS _A) AS _T1 ON (_T0.C0=_T1.C0)'''),
+
+            ('''Any TT1,STD,STDD WHERE TT2 identity TT1?
+ WITH TT1,STDD BEING (Any T,SUM(TD) GROUPBY T WHERE T is Affaire, T duration TD, TAG? tags T, TAG name "t"),
+      TT2,STD BEING (Any T,SUM(TD) GROUPBY T WHERE T is Affaire, T duration TD)''',
+             '''SELECT _T0.C0, _T1.C1, _T0.C1
+FROM (SELECT _T.cw_eid AS C0, SUM(_T.cw_duration) AS C1
+FROM cw_Affaire AS _T
+GROUP BY _T.cw_eid) AS _T1 LEFT OUTER JOIN (SELECT _T.cw_eid AS C0, SUM(_T.cw_duration) AS C1
+FROM cw_Affaire AS _T LEFT OUTER JOIN tags_relation AS rel_tags0 ON (rel_tags0.eid_to=_T.cw_eid) LEFT OUTER JOIN cw_Tag AS _TAG ON (rel_tags0.eid_from=_TAG.cw_eid AND _TAG.cw_name=t)
+GROUP BY _T.cw_eid) AS _T0 ON (_T1.C0=_T0.C0)'''),
             )):
             yield t
 
