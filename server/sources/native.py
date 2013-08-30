@@ -751,7 +751,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                 try:
                     session.cnxset.connection(self.uri).rollback()
                     if self.repo.config.mode != 'test':
-                        self.critical('transaction has been rollbacked')
+                        self.critical('transaction has been rolled back')
                 except Exception as ex:
                     pass
             if ex.__class__.__name__ == 'IntegrityError':
@@ -795,7 +795,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             try:
                 session.cnxset.connection(self.uri).rollback()
                 if self.repo.config.mode != 'test':
-                    self.critical('transaction has been rollbacked')
+                    self.critical('transaction has been rolled back')
             except Exception:
                 pass
             raise

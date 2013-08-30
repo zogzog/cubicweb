@@ -407,7 +407,7 @@ class Repository(object):
             return self._cnxsets_pool.get(True, timeout=5)
         except Queue.Empty:
             raise Exception('no connections set available after 5 secs, probably either a '
-                            'bug in code (too many uncommited/rollbacked '
+                            'bug in code (too many uncommited/rolled back '
                             'connections) or too much load on the server (in '
                             'which case you can try to set a bigger '
                             'connections pool size)')
@@ -868,7 +868,7 @@ class Repository(object):
         """close the session with the given id"""
         session = self._get_session(sessionid, setcnxset=True, txid=txid,
                                     checkshuttingdown=checkshuttingdown)
-        # operation uncommited before close are rollbacked before hook is called
+        # operation uncommited before close are rolled back before hook is called
         session.rollback(free_cnxset=False)
         self.hm.call_hooks('session_close', session)
         # commit session at this point in case write operation has been done

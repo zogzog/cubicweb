@@ -67,7 +67,7 @@ def repairing(cls, req, **kwargs):
 
 
 class transaction(object):
-    """Ensure that the transaction is either commited or rollbacked at exit
+    """Ensure that the transaction is either commited or rolled back at exit
 
     Context manager to enter a transaction for a session: when exiting the
     `with` block on exception, call `session.rollback()`, else call
@@ -369,7 +369,7 @@ class Transaction(object):
       of None (not yet committing), 'precommit' (calling precommit event on
       operations), 'postcommit' (calling postcommit event on operations),
       'uncommitable' (some :exc:`ValidationError` or :exc:`Unauthorized` error
-      has been raised during the transaction and so it must be rollbacked).
+      has been raised during the transaction and so it must be rolled back).
 
     Hooks controls:
 
@@ -786,7 +786,7 @@ class Session(RequestSessionBase):
       of None (not yet committing), 'precommit' (calling precommit event on
       operations), 'postcommit' (calling postcommit event on operations),
       'uncommitable' (some :exc:`ValidationError` or :exc:`Unauthorized` error
-      has been raised during the transaction and so it must be rollbacked).
+      has been raised during the transaction and so it must be rolled back).
 
     .. automethod:: cubicweb.server.session.Session.commit
     .. automethod:: cubicweb.server.session.Session.rollback
@@ -1233,7 +1233,7 @@ class Session(RequestSessionBase):
             return
         cstate = self.commit_state
         if cstate == 'uncommitable':
-            raise QueryError('transaction must be rollbacked')
+            raise QueryError('transaction must be rolled back')
         if cstate is not None:
             return
         # on rollback, an operation should have the following state

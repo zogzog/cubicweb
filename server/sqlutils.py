@@ -378,7 +378,7 @@ sqlite_hooks.append(init_sqlite_connexion)
 def init_postgres_connexion(cnx):
     cnx.cursor().execute('SET TIME ZONE UTC')
     # commit is needed, else setting are lost if the connection is first
-    # rollbacked
+    # rolled back
     cnx.commit()
 
 postgres_hooks = SQL_CONNECT_HOOKS.setdefault('postgres', [])
