@@ -288,8 +288,11 @@ class TestDataBaseHandler(object):
 
         The function create it if necessary"""
         backupdir = join(self.config.apphome, 'database')
-        if not isdir(backupdir):
+        try:
             os.makedirs(backupdir)
+        except:
+            if not isdir(backupdir):
+                raise
         return backupdir
 
     def config_path(self, db_id):
