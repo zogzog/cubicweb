@@ -41,9 +41,6 @@ class CoreHooksTC(CubicWebTC):
         self.execute('SET X in_group Y WHERE X login "toto", Y name "guests"')
         self.commit()
 
-    def test_delete_required_relations_object(self):
-        self.skipTest('no sample in the schema ! YAGNI ? Kermaat ?')
-
     def test_static_vocabulary_check(self):
         self.assertRaises(ValidationError,
                           self.execute,
