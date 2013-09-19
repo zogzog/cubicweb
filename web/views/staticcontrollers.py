@@ -199,7 +199,12 @@ class DataController(StaticFileController):
             filepath = self.concat_files_registry.concat_cached_filepath(paths)
         else:
             # skip leading '/data/' and url params
-            relpath = relpath[len(self.base_datapath):].split('?', 1)[0]
+            if relpath.startswith(self.base_datapath):
+                prefix = self.base_datapath
+            else:
+                prefix = 'data/'
+            relpath = relpath[len(prefix):]
+            relpath = relpath.split('?', 1)[0]
             dirpath, rid = config.locate_resource(relpath)
             if dirpath is None:
                 raise NotFound()
