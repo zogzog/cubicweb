@@ -110,10 +110,6 @@ msgid "%s is part of violated unicity constraint"
 msgstr ""
 
 #, python-format
-msgid "%s not estimated"
-msgstr ""
-
-#, python-format
 msgid "%s relation should not be in mapped"
 msgstr ""
 
@@ -503,9 +499,6 @@ msgstr "Floats"
 msgid "FormatConstraint"
 msgstr "format constraint"
 
-msgid "From:"
-msgstr ""
-
 msgid "Garbage collection information"
 msgstr ""
 
@@ -678,9 +671,6 @@ msgstr "RQL unique constraint"
 msgid "RQLVocabularyConstraint"
 msgstr "RQL vocabulary constraint"
 
-msgid "Recipients:"
-msgstr ""
-
 msgid "RegexpConstraint"
 msgstr "regular expression constrainte"
 
@@ -741,9 +731,6 @@ msgstr "Subworkflow exit-point"
 
 msgid "SubWorkflowExitPoint_plural"
 msgstr "subworkflow exit-points"
-
-msgid "Subject:"
-msgstr ""
 
 msgid "Submit bug report"
 msgstr ""
@@ -912,9 +899,6 @@ msgstr ""
 msgid "Web server"
 msgstr ""
 
-msgid "What's new?"
-msgstr ""
-
 msgid "Workflow"
 msgstr "Workflow"
 
@@ -939,9 +923,6 @@ msgstr ""
 msgid ""
 "You can either submit a new file using the browse button above, or edit file "
 "content online with the widget below."
-msgstr ""
-
-msgid "You can use any of the following substitutions in your text"
 msgstr ""
 
 msgid "You can't change this relation"
@@ -990,6 +971,9 @@ msgid ""
 msgstr ""
 
 msgid "abstract base class for transitions"
+msgstr ""
+
+msgid "action menu"
 msgstr ""
 
 msgid "action(s) on this selection"
@@ -1150,6 +1134,9 @@ msgstr ""
 msgid ""
 "added relation %(rtype)s from %(frometype)s #%(eidfrom)s to %(toetype)s #"
 "%(eidto)s"
+msgstr ""
+
+msgid "additional type specific properties"
 msgstr ""
 
 msgid "addrelated"
@@ -1632,9 +1619,6 @@ msgstr ""
 
 msgid ""
 "core relation indicating the types (including specialized types) of an entity"
-msgstr ""
-
-msgid "cost"
 msgstr ""
 
 msgid "could not connect to the SMTP server"
@@ -2329,16 +2313,7 @@ msgstr ""
 msgid "eid"
 msgstr ""
 
-msgid "emails successfully sent"
-msgstr ""
-
-msgid "embed"
-msgstr ""
-
 msgid "embedded html"
-msgstr ""
-
-msgid "embedding this url is forbidden"
 msgstr ""
 
 msgid "end_timestamp"
@@ -2393,18 +2368,12 @@ msgstr "entity views"
 msgid "error"
 msgstr ""
 
-msgid "error while embedding page"
-msgstr ""
-
 msgid "error while publishing ReST text"
 msgstr ""
 
 #, python-format
 msgid "error while querying source %s, some data may be missing"
 msgstr ""
-
-msgid "eta_date"
-msgstr "ETA date"
 
 msgid "exit state must be a subworkflow state"
 msgstr ""
@@ -2417,9 +2386,6 @@ msgstr "exit point of"
 
 #, python-format
 msgid "exiting from subworkflow %s"
-msgstr ""
-
-msgid "expected:"
 msgstr ""
 
 msgid "expression"
@@ -2436,7 +2402,11 @@ msgctxt "RQLExpression"
 msgid "exprtype"
 msgstr "expression type"
 
-msgid "external page"
+msgid "extra_props"
+msgstr ""
+
+msgctxt "CWAttribute"
+msgid "extra_props"
 msgstr ""
 
 msgid "facet-loading-msg"
@@ -2835,10 +2805,6 @@ msgstr "indifferent"
 msgid "info"
 msgstr ""
 
-#, python-format
-msgid "initial estimation %s"
-msgstr ""
-
 msgid "initial state for this workflow"
 msgstr ""
 
@@ -3105,9 +3071,6 @@ msgstr ""
 msgid "message"
 msgstr ""
 
-msgid "milestone"
-msgstr ""
-
 #, python-format
 msgid "missing parameters for entity %s"
 msgstr ""
@@ -3250,9 +3213,6 @@ msgid "no log to display"
 msgstr ""
 
 msgid "no related entity"
-msgstr ""
-
-msgid "no related project"
 msgstr ""
 
 msgid "no repository sessions found"
@@ -3451,15 +3411,6 @@ msgid "primary_email_object"
 msgstr "primary email of"
 
 msgid "profile"
-msgstr ""
-
-msgid "progress"
-msgstr ""
-
-msgid "progress bar"
-msgstr ""
-
-msgid "project"
 msgstr ""
 
 msgid "rdef-description"
@@ -3727,9 +3678,6 @@ msgstr ""
 msgid "semantic description of this workflow"
 msgstr ""
 
-msgid "send email"
-msgstr ""
-
 msgid "september"
 msgstr ""
 
@@ -3753,9 +3701,6 @@ msgid "show advanced fields"
 msgstr ""
 
 msgid "show filter form"
-msgstr ""
-
-msgid "sioc"
 msgstr ""
 
 msgid "site configuration"
@@ -3968,9 +3913,6 @@ msgstr ""
 msgid "tablefilter"
 msgstr "table filter"
 
-msgid "task progression"
-msgstr ""
-
 msgid "text"
 msgstr ""
 
@@ -4092,13 +4034,7 @@ msgctxt "State"
 msgid "to_state_object"
 msgstr "transitions to this state"
 
-msgid "todo_by"
-msgstr "to do by"
-
 msgid "toggle check boxes"
-msgstr ""
-
-msgid "toggle filter"
 msgstr ""
 
 msgid "tr_count"
@@ -4382,6 +4318,14 @@ msgstr ""
 msgid "value %(KEY-value)s must be %(KEY-op)s %(KEY-boundary)s"
 msgstr ""
 
+#, python-format
+msgid "value %(KEY-value)s must be <= %(KEY-boundary)s"
+msgstr ""
+
+#, python-format
+msgid "value %(KEY-value)s must be >= %(KEY-boundary)s"
+msgstr ""
+
 msgid "value associated to this key is not editable manually"
 msgstr ""
 
@@ -4432,6 +4376,9 @@ msgstr ""
 msgid "we are not yet ready to handle this query"
 msgstr ""
 
+msgid "web sessions without CNX"
+msgstr ""
+
 msgid "wednesday"
 msgstr ""
 
@@ -4460,10 +4407,10 @@ msgstr ""
 msgid "workflow"
 msgstr ""
 
-msgid "workflow already have a state of that name"
+msgid "workflow already has a state of that name"
 msgstr ""
 
-msgid "workflow already have a transition of that name"
+msgid "workflow already has a transition of that name"
 msgstr ""
 
 #, python-format
@@ -4528,3 +4475,12 @@ msgstr ""
 #, python-format
 msgid "you should un-inline relation %s which is supported and may be crossed "
 msgstr ""
+
+#~ msgid "eta_date"
+#~ msgstr "ETA date"
+
+#~ msgid "todo_by"
+#~ msgstr "to do by"
+
+#~ msgid "violates unique_together constraints (%s)"
+#~ msgstr "violates unique_together constraints (%s)"
