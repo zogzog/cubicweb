@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -41,6 +41,7 @@ Actually there exists a third form class:
 
 but you'll use this one rarely.
 """
+
 __docformat__ = "restructuredtext en"
 
 from warnings import warn
@@ -51,7 +52,7 @@ from logilab.common.compat import any
 from logilab.common.textutils import splitstrip
 from logilab.common.deprecation import deprecated
 
-from cubicweb import ValidationError
+from cubicweb import ValidationError, neg_role
 from cubicweb.utils import support_args
 from cubicweb.predicates import non_final_entity, match_kwargs, one_line_rset
 from cubicweb.web import RequestError, ProcessFormError
@@ -400,12 +401,21 @@ class EntityFieldsForm(FieldsForm):
     @property
     @cached
     def linked_to(self):
-        # if current form is not the main form, exit immediately
+        linked_to = {}
+        # case where this is an embeded creation form
+        try:
+            eid = int(self.cw_extra_kwargs['peid'])
+        except KeyError:
+            pass
+        else:
+            ltrtype = self.cw_extra_kwargs['rtype']
+            ltrole = neg_role(self.cw_extra_kwargs['role'])
+            linked_to[(ltrtype, ltrole)] = [eid]
+        # now consider __linkto if the current form is the main form
         try:
             self.field_by_name('__maineid')
         except form.FieldNotFound:
-            return {}
-        linked_to = {}
+            return linked_to
         for linkto in self._cw.list_form_param('__linkto'):
             ltrtype, eid, ltrole = linkto.split(':')
             linked_to.setdefault((ltrtype, ltrole), []).append(int(eid))
