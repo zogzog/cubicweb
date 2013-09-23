@@ -4582,10 +4582,6 @@ msgstr "Ver Workflow"
 msgid "view_index"
 msgstr "Inicio"
 
-#, python-format
-msgid "violates unique_together constraints (%s)"
-msgstr "viola el principio (o restricción) de singularidad (%s)"
-
 msgid "visible"
 msgstr "Visible"
 

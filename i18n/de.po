@@ -4534,10 +4534,6 @@ msgstr "mögliche Zustände ansehen"
 msgid "view_index"
 msgstr "Index-Seite"
 
-#, python-format
-msgid "violates unique_together constraints (%s)"
-msgstr "Verletzung der unique_together-Einschränkung (%s)"
-
 msgid "visible"
 msgstr "sichtbar"
 

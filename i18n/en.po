@@ -4423,10 +4423,6 @@ msgstr ""
 msgid "view_index"
 msgstr "index"
 
-#, python-format
-msgid "violates unique_together constraints (%s)"
-msgstr "violates unique_together constraints (%s)"
-
 msgid "visible"
 msgstr ""
 

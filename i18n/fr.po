@@ -4599,10 +4599,6 @@ msgstr "voir les états possibles"
 msgid "view_index"
 msgstr "accueil"
 
-#, python-format
-msgid "violates unique_together constraints (%s)"
-msgstr "violation de contrainte unique_together (%s)"
-
 msgid "visible"
 msgstr "visible"
 
