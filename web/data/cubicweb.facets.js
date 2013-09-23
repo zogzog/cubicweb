@@ -109,7 +109,7 @@ function buildRQL(divid, vid, paginate, vidargs) {
                 $node.loadxhtml(AJAX_BASE_URL, ajaxFuncArgs('render', {
                     'rql': rql
                 },
-                'ctxcomponents', 'edit_box'));
+                'ctxcomponents', 'edit_box'), 'GET', 'swap');
             }
             $node = $('#breadcrumbs');
             if ($node.length) {
