@@ -1442,6 +1442,7 @@ class InternalSession(Session):
         self.user._cw = self # XXX remove when "vreg = user._cw.vreg" hack in entity.py is gone
         if not safe:
             self.disable_hook_categories('integrity')
+            self._tx.ctx_count += 1
 
     def __enter__(self):
         return self
