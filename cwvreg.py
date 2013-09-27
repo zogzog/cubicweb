@@ -615,6 +615,15 @@ class CWRegistryStore(RegistryStore):
         self.register_objects(path)
         CW_EVENT_MANAGER.emit('after-registry-reload')
 
+    def load_file(self, filepath, modname):
+        # override to allow some instrumentation (eg localperms)
+        modpath = modname.split('.')
+        try:
+            self.currently_loading_cube = modpath[modpath.index('cubes') + 1]
+        except ValueError:
+            self.currently_loading_cube = 'cubicweb'
+        return super(CWRegistryStore, self).load_file(filepath, modname)
+
     def _set_schema(self, schema):
         """set instance'schema"""
         self.schema = schema
