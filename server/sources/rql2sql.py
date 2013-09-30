@@ -1248,6 +1248,8 @@ class SQLGenerator(object):
         except KeyError:
             if lhsalias is None:
                 lhssql = lhsconst.accept(self)
+            elif attr == 'eid':
+                lhssql = lhsvar.accept(self)
             else:
                 lhssql = '%s.%s%s' % (lhsalias, SQL_PREFIX, attr)
         condition = '%s=%s' % (lhssql, (rhsconst or rhsvar).accept(self))

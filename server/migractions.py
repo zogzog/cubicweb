@@ -582,7 +582,7 @@ class ServerMigrationHelper(MigrationHelper):
                         print 'dont add %s unique constraint on %s, missing %s' % (
                             ','.join(ut), eschema, name)
                         return False
-                    if not (rschema.final or rschema.final.inlined):
+                    if not (rschema.final or rschema.inlined):
                         (eschema, name)
                         print 'dont add %s unique constraint on %s, %s is neither final nor inlined' % (
                             ','.join(ut), eschema, name)

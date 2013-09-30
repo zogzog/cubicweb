@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -542,6 +542,7 @@ class InOutWidget(Select):
                  'removeinput': self.remove_button % jsnodes
                  })
 
+
 class BitSelect(Select):
     """Select widget for IntField using a vocabulary with bit masks as values.
 
@@ -687,20 +688,21 @@ class JQueryDatePicker(FieldWidget):
         # XXX find a way to understand every format
         fmt = req.property_value('ui.date-format')
         fmt = fmt.replace('%Y', 'yy').replace('%m', 'mm').replace('%d', 'dd')
-        req.add_onload(u'cw.jqNode("%s").datepicker('
+        req.add_onload(u'$("#%s").datepicker('
                        '{buttonImage: "%s", dateFormat: "%s", firstDay: 1,'
                        ' showOn: "button", buttonImageOnly: true})' % (
                            domid, req.uiprops['CALENDAR_ICON'], fmt))
-        return self._render_input(form, field, domid)
+        return self._render_input(form, field)
 
-    def _render_input(self, form, field, domid):
+    def _render_input(self, form, field):
         if self.value is None:
             value = self.values(form, field)[0]
         else:
             value = self.value
         attrs = self.attributes(form, field)
         attrs.setdefault('size', unicode(self.default_size))
-        return tags.input(name=domid, value=value, type='text', **attrs)
+        return tags.input(name=field.input_name(form, self.suffix),
+                          value=value, type='text', **attrs)
 
 
 class JQueryTimePicker(JQueryDatePicker):
@@ -718,9 +720,9 @@ class JQueryTimePicker(JQueryDatePicker):
 
     def _render(self, form, field, renderer):
         domid = field.dom_id(form, self.suffix)
-        form._cw.add_onload(u'cw.jqNode("%s").timePicker({step: %s, separator: "%s"})' % (
+        form._cw.add_onload(u'$("#%s").timePicker({step: %s, separator: "%s"})' % (
                 domid, self.timesteps, self.separator))
-        return self._render_input(form, field, domid)
+        return self._render_input(form, field)
 
 
 class JQueryDateTimePicker(FieldWidget):

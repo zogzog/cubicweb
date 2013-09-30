@@ -227,10 +227,10 @@ class CnxSetTracker(object):
         self._record = {}
 
     def __enter__(self):
-        self._condition.__enter__()
+        return self._condition.__enter__()
 
     def __exit__(self, *args):
-        self._condition.__exit__(*args)
+        return self._condition.__exit__(*args)
 
     def record(self, txid, cnxset):
         """Inform the tracker that a txid have acquired a cnxset
@@ -1442,6 +1442,7 @@ class InternalSession(Session):
         self.user._cw = self # XXX remove when "vreg = user._cw.vreg" hack in entity.py is gone
         if not safe:
             self.disable_hook_categories('integrity')
+            self._tx.ctx_count += 1
 
     def __enter__(self):
         return self

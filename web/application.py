@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -455,8 +455,8 @@ class CubicWebPublisher(object):
                 req.update_search_state()
                 result = controller.publish(rset=rset)
             except StatusResponse as ex:
-                warn('StatusResponse is deprecated use req.status_out',
-                     DeprecationWarning)
+                warn('[3.16] StatusResponse is deprecated use req.status_out',
+                     DeprecationWarning, stacklevel=2)
                 result = ex.content
                 req.status_out = ex.status
             except Redirect as ex:

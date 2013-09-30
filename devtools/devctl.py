@@ -153,8 +153,8 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None):
         libschema = {}
         for cstrtype in CONSTRAINTS:
             add_msg(w, cstrtype)
-
-        is_in_lib = lambda: False
+        libafss = libaiams = None
+        is_in_lib = lambda *args: False
     done = set()
     for eschema in sorted(schema.entities()):
         if eschema.type in libschema:

@@ -1436,11 +1436,9 @@ class Repository(object):
                 source.update_entity(session, entity)
                 edited.saved = True
             except UniqueTogetherError as exc:
-                etype, rtypes = exc.args
-                problems = {}
-                for col in rtypes:
-                    problems[col] = session._('violates unique_together constraints (%s)') % (','.join(rtypes))
-                raise ValidationError(entity.eid, problems)
+                userhdlr = session.vreg['adapters'].select(
+                    'IUserFriendlyError', session, entity=entity, exc=exc)
+                userhdlr.raise_user_exception()
             self.system_source.update_info(session, entity, need_fti_update)
             if source.should_call_hooks:
                 if not only_inline_rels:

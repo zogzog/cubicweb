@@ -7,7 +7,7 @@
 %endif
 
 Name:           cubicweb
-Version:        3.17.6
+Version:        3.17.7
 Release:        logilab.1%{?dist}
 Summary:        CubicWeb is a semantic web application framework
 Source0:        http://download.logilab.org/pub/cubicweb/cubicweb-%{version}.tar.gz
