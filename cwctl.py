@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -1033,9 +1033,38 @@ class ConfigureInstanceCommand(InstanceCommand):
                     raise ConfigurationError('unknown configuration key "%s" for mode %s' % (key, appcfg.name))
             appcfg.save()
 
+
+# WSGI #########
+
+class WSGIDebugStartHandler(InstanceCommand):
+    """Start an interactive wsgi server """
+    name = 'wsgi'
+    actionverb = 'started'
+    arguments = '<instance>'
+    options = (
+        ('loglevel',
+         {'short': 'l',
+          'type' : 'choice',
+          'metavar': '<log level>',
+          'default': 'debug',
+          'choices': ('debug', 'info', 'warning', 'error'),
+          'help': 'debug if -D is set, error otherwise',
+          }),
+        )
+
+    def wsgi_instance(self, appid):
+        config = cwcfg.config_for(appid, debugmode=1)
+        init_cmdline_log_threshold(config, self['loglevel'])
+        assert config.name == 'all-in-one'
+        from cubicweb.wsgi import server
+        return server.run(config)
+
+
+
 for cmdcls in (ListCommand,
                CreateInstanceCommand, DeleteInstanceCommand,
                StartInstanceCommand, StopInstanceCommand, RestartInstanceCommand,
+               WSGIDebugStartHandler,
                ReloadConfigurationCommand, StatusCommand,
                UpgradeInstanceCommand,
                ListVersionsInstanceCommand,
@@ -1045,6 +1074,8 @@ for cmdcls in (ListCommand,
                ConfigureInstanceCommand,
                ):
     CWCTL.register(cmdcls)
+
+
 
 def run(args):
     """command line tool"""

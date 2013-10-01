@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -97,17 +97,12 @@ class CubicWebWSGIApplication(object):
     """This is the wsgi application which will be called by the
     wsgi server with the WSGI ``environ`` and ``start_response``
     parameters.
-
-    XXX: missing looping tasks and proper repository shutdown when
-    the application is stopped.
-    NOTE: no pyro
     """
 
-    def __init__(self, config, vreg=None):
-        self.appli = CubicWebPublisher(config, vreg=vreg)
+    def __init__(self, config):
+        self.appli = CubicWebPublisher(config)
         self.config = config
         self.base_url = self.config['base-url']
-        self.https_url = self.config['https-url']
         self.url_rewriter = self.appli.vreg['components'].select_or_none('urlrewriter')
 
     def _render(self, req):
