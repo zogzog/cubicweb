@@ -688,7 +688,7 @@ class JQueryDatePicker(FieldWidget):
         # XXX find a way to understand every format
         fmt = req.property_value('ui.date-format')
         fmt = fmt.replace('%Y', 'yy').replace('%m', 'mm').replace('%d', 'dd')
-        req.add_onload(u'$("#%s").datepicker('
+        req.add_onload(u'cw.jqNode("%s").datepicker('
                        '{buttonImage: "%s", dateFormat: "%s", firstDay: 1,'
                        ' showOn: "button", buttonImageOnly: true})' % (
                            domid, req.uiprops['CALENDAR_ICON'], fmt))
@@ -720,7 +720,7 @@ class JQueryTimePicker(JQueryDatePicker):
 
     def _render(self, form, field, renderer):
         domid = field.dom_id(form, self.suffix)
-        form._cw.add_onload(u'$("#%s").timePicker({step: %s, separator: "%s"})' % (
+        form._cw.add_onload(u'cw.jqNode("%s").timePicker({step: %s, separator: "%s"})' % (
                 domid, self.timesteps, self.separator))
         return self._render_input(form, field)
 
