@@ -71,7 +71,10 @@ class WebAuthInfoRetriever(Component):
         """
         pass
 
-WebAuthInfoRetreiver = class_renamed('WebAuthInfoRetreiver', WebAuthInfoRetriever)
+WebAuthInfoRetreiver = class_renamed(
+    'WebAuthInfoRetreiver', WebAuthInfoRetriever,
+    '[3.17] WebAuthInfoRetreiver had been renamed into WebAuthInfoRetriever '
+    '("ie" instead of "ei")')
 
 
 class LoginPasswordRetriever(WebAuthInfoRetriever):
@@ -93,7 +96,10 @@ class LoginPasswordRetriever(WebAuthInfoRetriever):
     def revalidate_login(self, req):
         return req.get_authorization()[0]
 
-LoginPasswordRetreiver = class_renamed('LoginPasswordRetreiver', LoginPasswordRetriever)
+LoginPasswordRetreiver = class_renamed(
+    'LoginPasswordRetreiver', LoginPasswordRetriever,
+    '[3.17] LoginPasswordRetreiver had been renamed into LoginPasswordRetriever '
+    '("ie" instead of "ei")')
 
 
 class RepositoryAuthenticationManager(AbstractAuthenticationManager):

@@ -697,10 +697,11 @@ class RQLExpression(object):
     info = warning = error = critical = exception = debug = lambda msg,*a,**kw: None
     # to be defined in concrete classes
     full_rql = None
+    predefined_variables = None
 
     def __init__(self, expression, mainvars, eid):
         """
-        :type mainvars: sequence of RQL variables' names. Can be provided as a 
+        :type mainvars: sequence of RQL variables' names. Can be provided as a
                         comma separated string.
         :param mainvars: names of the variables being selected.
 
@@ -718,7 +719,13 @@ class RQLExpression(object):
         except RQLSyntaxError:
             raise RQLSyntaxError(expression)
         for mainvar in mainvars:
-            if len(self.rqlst.defined_vars[mainvar].references()) <= 2:
+            # if variable is predefined, an extra reference is inserted
+            # automatically (`VAR eid %(v)s`)
+            if mainvar in self.predefined_variables:
+                min_refs = 3
+            else:
+                min_refs = 2
+            if len(self.rqlst.defined_vars[mainvar].references()) < min_refs:
                 _LOGGER.warn('You did not use the %s variable in your RQL '
                              'expression %s', mainvar, self)
         # syntax tree used by read security (inserted in queries when necessary)
@@ -867,6 +874,8 @@ class RQLExpression(object):
 # rql expressions for use in permission definition #############################
 
 class ERQLExpression(RQLExpression):
+    predefined_variables = 'UX'
+
     def __init__(self, expression, mainvars=None, eid=None):
         RQLExpression.__init__(self, expression, mainvars or 'X', eid)
 
@@ -922,6 +931,8 @@ class GeneratedConstraint(object):
 
 
 class RRQLExpression(RQLExpression):
+    predefined_variables = 'USO'
+
     def __init__(self, expression, mainvars=None, eid=None):
         if mainvars is None:
             mainvars = guess_rrqlexpr_mainvars(expression)
@@ -1102,7 +1113,7 @@ class RQLUniqueConstraint(RepoEnforcedRQLConstraintMixIn, BaseRQLConstraint):
     """
     # XXX turns mainvars into a required argument in __init__
     distinct_query = True
- 
+
     def match_condition(self, session, eidfrom, eidto):
         return len(self.exec_query(session, eidfrom, eidto)) <= 1
 

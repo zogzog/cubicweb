@@ -558,6 +558,30 @@ class RepositoryTC(CubicWebTC):
             req.create_entity('Affaire', ref=u'AFF02')
             req.execute('SET A duration 10 WHERE A is Affaire')
 
+
+    def test_user_friendly_error(self):
+        from cubicweb.entities.adapters import IUserFriendlyUniqueTogether
+        class MyIUserFriendlyUniqueTogether(IUserFriendlyUniqueTogether):
+            __select__ = IUserFriendlyUniqueTogether.__select__ & is_instance('Societe')
+            def raise_user_exception(self):
+                raise ValidationError(self.entity.eid, {'hip': 'hop'})
+
+        with self.temporary_appobjects(MyIUserFriendlyUniqueTogether):
+            req = self.request()
+            s = req.create_entity('Societe', nom=u'Logilab', type=u'ssll', cp=u'75013')
+            self.commit()
+            with self.assertRaises(ValidationError) as cm:
+                req.create_entity('Societe', nom=u'Logilab', type=u'ssll', cp=u'75013')
+            self.assertEqual(cm.exception.errors, {'hip': 'hop'})
+            self.rollback()
+            req.create_entity('Societe', nom=u'Logilab', type=u'ssll', cp=u'31400')
+            with self.assertRaises(ValidationError) as cm:
+                s.cw_set(cp=u'31400')
+            self.assertEqual(cm.exception.entity, s.eid)
+            self.assertEqual(cm.exception.errors, {'hip': 'hop'})
+            self.rollback()
+
+
 class SchemaDeserialTC(CubicWebTC):
 
     appid = 'data-schemaserial'

@@ -75,7 +75,7 @@ class WorkflowBuildingTC(CubicWebTC):
         wf.add_transition(u'baz', (bar,), foo)
         with self.assertRaises(ValidationError) as cm:
             self.commit()
-        self.assertEqual(cm.exception.errors, {'name-subject': 'workflow already have a transition of that name'})
+        self.assertEqual(cm.exception.errors, {'name-subject': 'workflow already has a transition of that name'})
         # no pb if not in the same workflow
         wf2 = add_wf(self, 'Company')
         foo = wf.add_state(u'foo', initial=True)
@@ -88,7 +88,7 @@ class WorkflowBuildingTC(CubicWebTC):
         biz.cw_set(name=u'baz')
         with self.assertRaises(ValidationError) as cm:
             self.commit()
-        self.assertEqual(cm.exception.errors, {'name-subject': 'workflow already have a transition of that name'})
+        self.assertEqual(cm.exception.errors, {'name-subject': 'workflow already has a transition of that name'})
 
 
 class WorkflowTC(CubicWebTC):

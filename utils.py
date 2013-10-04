@@ -49,10 +49,10 @@ def make_uid(key=None):
     """Return a unique identifier string.
 
     if specified, `key` is used to prefix the generated uid so it can be used
-    for instance as a DOM id or as sql table names.
+    for instance as a DOM id or as sql table name.
 
     See uuid.uuid4 documentation for the shape of the generated identifier, but
-    this is basicallly a 32 bits hexadecimal string.
+    this is basically a 32 bits hexadecimal string.
     """
     if key is None:
         return uuid4().hex

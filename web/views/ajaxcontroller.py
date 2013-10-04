@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -371,7 +371,8 @@ def view(self):
         vid = req.form.get('fallbackvid', 'noresult')
         viewobj = self._cw.vreg['views'].select(vid, req, rset=rset)
     viewobj.set_http_cache_headers()
-    req.validate_cache()
+    if req.is_client_cache_valid():
+        return ''
     return self._call_view(viewobj, paginate=req.form.pop('paginate', False))
 
 

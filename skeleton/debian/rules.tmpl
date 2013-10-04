@@ -15,10 +15,9 @@ build-stamp:
 
 clean:
 	dh_testdir
-	dh_testroot
 	rm -f build-stamp configure-stamp
 	rm -rf build
-	find . -name "*.pyc" | xargs rm -f
+	find . -name "*.pyc" -delete
 	dh_clean
 
 install: build

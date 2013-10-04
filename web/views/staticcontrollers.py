@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -20,7 +20,6 @@
 - /data/...
 - /static/...
 - /fckeditor/...
-
 """
 
 import os
@@ -32,7 +31,7 @@ from time import mktime
 from datetime import datetime, timedelta
 from logging import getLogger
 
-from cubicweb import Unauthorized
+from cubicweb import Forbidden
 from cubicweb.web import NotFound
 from cubicweb.web.http_headers import generateDateTime
 from cubicweb.web.controller import Controller
@@ -60,7 +59,7 @@ class StaticFileController(Controller):
         if osp.isdir(path):
             if self.directory_listing_allowed:
                 return u''
-            raise Unauthorized(path)
+            raise Forbidden(path)
         if not osp.isfile(path):
             raise NotFound()
         if not debugmode:
@@ -78,7 +77,8 @@ class StaticFileController(Controller):
         #
         # Real production environment should use dedicated static file serving.
         self._cw.set_header('last-modified', generateDateTime(os.stat(path).st_mtime))
-        self._cw.validate_cache()
+        if self._cw.is_client_cache_valid():
+            return ''
         # XXX elif uri.startswith('/https/'): uri = uri[6:]
         mimetype, encoding = mimetypes.guess_type(path)
         if mimetype is None:
@@ -199,7 +199,12 @@ class DataController(StaticFileController):
             filepath = self.concat_files_registry.concat_cached_filepath(paths)
         else:
             # skip leading '/data/' and url params
-            relpath = relpath[len(self.base_datapath):].split('?', 1)[0]
+            if relpath.startswith(self.base_datapath):
+                prefix = self.base_datapath
+            else:
+                prefix = 'data/'
+            relpath = relpath[len(prefix):]
+            relpath = relpath.split('?', 1)[0]
             dirpath, rid = config.locate_resource(relpath)
             if dirpath is None:
                 raise NotFound()

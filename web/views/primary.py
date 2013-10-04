@@ -109,7 +109,7 @@ class PrimaryView(EntityView):
         """
         return []
 
-    def entity_call(self, entity):
+    def entity_call(self, entity, **kwargs):
         entity.complete()
         uicfg_reg = self._cw.vreg['uicfg']
         if self.rsection is None:
