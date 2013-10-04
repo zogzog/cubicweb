@@ -111,17 +111,11 @@ class AfterUpdateEntitySecurityHook(SecurityHook):
     events = ('after_update_entity',)
 
     def __call__(self):
-        try:
-            # check user has permission right now, if not retry at commit time
-            self.entity.cw_check_perm('update')
-            check_entity_attributes(self._cw, self.entity)
-        except Unauthorized:
-            self.entity._cw_clear_local_perm_cache('update')
-            # save back editedattrs in case the entity is reedited later in the
-            # same transaction, which will lead to cw_edited being
-            # overwritten
-            CheckEntityPermissionOp.get_instance(self._cw).add_data(
-                (self.entity.eid, 'update', self.entity.cw_edited) )
+        # save back editedattrs in case the entity is reedited later in the
+        # same transaction, which will lead to cw_edited being
+        # overwritten
+        CheckEntityPermissionOp.get_instance(self._cw).add_data(
+            (self.entity.eid, 'update', self.entity.cw_edited) )
 
 
 class BeforeDelEntitySecurityHook(SecurityHook):

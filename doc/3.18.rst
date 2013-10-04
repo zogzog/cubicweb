@@ -11,6 +11,9 @@ New functionalities
 API changes
 -----------
 
+* not really an API change, but the entity permission checks are now
+  systematically deferred to an operation, instead of a) trying in a
+  hook and b) if it failed, retrying later in an operation
 
 
 Deprecation
