@@ -982,14 +982,11 @@ class BaseRQLConstraint(RRQLExpression, BaseConstraint):
     distinct_query = None
 
     def serialize(self):
-        # start with a comma for bw compat,see below
+        # start with a semicolon for bw compat, see below
         return ';' + ','.join(sorted(self.mainvars)) + ';' + self.expression
 
     @classmethod
     def deserialize(cls, value):
-        # XXX < 3.5.10 bw compat
-        if not value.startswith(';'):
-            return cls(value)
         _, mainvars, expression = value.split(';', 2)
         return cls(expression, mainvars)
 
@@ -1044,9 +1041,6 @@ class RepoEnforcedRQLConstraintMixIn(object):
                                self.msg or '')
 
     def deserialize(cls, value):
-        # XXX < 3.5.10 bw compat
-        if not value.startswith(';'):
-            return cls(value)
         value, msg = value.split('\n', 1)
         _, mainvars, expression = value.split(';', 2)
         return cls(expression, mainvars, msg)
