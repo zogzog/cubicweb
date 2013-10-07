@@ -163,6 +163,7 @@ Replaces: cubicweb-core
 Breaks:
  cubicweb-comment (<< 1.9.1),
  cubicweb-person (<< 1.8.0),
+ cubicweb-geocoding (<< 0.2.0),
 Description: common library for the CubicWeb framework
  CubicWeb is a semantic web application framework.
  .
