@@ -476,13 +476,8 @@ by rql expressions may changes, hence the permission being granted or not.
 
 Here are the current rules:
 
-1. permission to add/update entity and its attributes are checked:
-
-   - on commit if the entity has been added
-
-   - in an 'after_update_entity' hook if the entity has been updated. If it fails
-     at this time, it will be retried on commit (hence you get the permission if
-     you have it just after the modification or *at* commit time)
+1. permission to add/update entity and its attributes are checked on
+   commit
 
 2. permission to delete an entity is checked in 'before_delete_entity' hook
 
