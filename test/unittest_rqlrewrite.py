@@ -438,30 +438,30 @@ class RQLRewriteTC(TestCase):
                          u"Any C WHERE C is Card, EXISTS(C owned_by A, A is CWUser)")
 
     def test_rqlexpr_not_relation_1_1(self):
-        constraint = RRQLExpression('X owned_by Z, Z login "hop"', 'X')
+        constraint = ERQLExpression('X owned_by Z, Z login "hop"', 'X')
         rqlst = parse('Affaire A WHERE NOT EXISTS(A documented_by C)')
         rewrite(rqlst, {('C', 'X'): (constraint,)}, {}, 'X')
         self.assertEqual(rqlst.as_string(),
                          u'Any A WHERE NOT EXISTS(A documented_by C, EXISTS(C owned_by B, B login "hop", B is CWUser), C is Card), A is Affaire')
 
     def test_rqlexpr_not_relation_1_2(self):
-        constraint = RRQLExpression('X owned_by Z, Z login "hop"', 'X')
+        constraint = ERQLExpression('X owned_by Z, Z login "hop"', 'X')
         rqlst = parse('Affaire A WHERE NOT EXISTS(A documented_by C)')
         rewrite(rqlst, {('A', 'X'): (constraint,)}, {}, 'X')
         self.assertEqual(rqlst.as_string(),
                          u'Any A WHERE NOT EXISTS(A documented_by C, C is Card), A is Affaire, EXISTS(A owned_by B, B login "hop", B is CWUser)')
 
     def test_rqlexpr_not_relation_2(self):
-        constraint = RRQLExpression('X owned_by Z, Z login "hop"', 'X')
+        constraint = ERQLExpression('X owned_by Z, Z login "hop"', 'X')
         rqlst = rqlhelper.parse('Affaire A WHERE NOT A documented_by C', annotate=False)
         rewrite(rqlst, {('C', 'X'): (constraint,)}, {}, 'X')
         self.assertEqual(rqlst.as_string(),
                          u'Any A WHERE NOT EXISTS(A documented_by C, EXISTS(C owned_by B, B login "hop", B is CWUser), C is Card), A is Affaire')
 
     def test_rqlexpr_multiexpr_outerjoin(self):
-        c1 = RRQLExpression('X owned_by Z, Z login "hop"', 'X')
-        c2 = RRQLExpression('X owned_by Z, Z login "hip"', 'X')
-        c3 = RRQLExpression('X owned_by Z, Z login "momo"', 'X')
+        c1 = ERQLExpression('X owned_by Z, Z login "hop"', 'X')
+        c2 = ERQLExpression('X owned_by Z, Z login "hip"', 'X')
+        c3 = ERQLExpression('X owned_by Z, Z login "momo"', 'X')
         rqlst = rqlhelper.parse('Any A WHERE A documented_by C?', annotate=False)
         rewrite(rqlst, {('C', 'X'): (c1, c2, c3)}, {}, 'X')
         self.assertEqual(rqlst.as_string(),

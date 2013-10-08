@@ -702,6 +702,8 @@ class RQLExpression(object):
                              'expression %s', mainvar, self)
         # syntax tree used by read security (inserted in queries when necessary)
         self.snippet_rqlst = parse(self.minimal_rql, print_errors=False).children[0]
+        # graph of links between variables, used by rql rewriter
+        self.vargraph = vargraph(self.rqlst)
 
     def __str__(self):
         return self.full_rql
@@ -909,8 +911,6 @@ class RRQLExpression(RQLExpression):
         if mainvars is None:
             mainvars = guess_rrqlexpr_mainvars(expression)
         RQLExpression.__init__(self, expression, mainvars, eid)
-        # graph of links between variable, used by rql rewriter
-        self.vargraph = vargraph(self.rqlst)
 
     @property
     def full_rql(self):
