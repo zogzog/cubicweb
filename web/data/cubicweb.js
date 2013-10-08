@@ -45,6 +45,15 @@ jQuery.extend(cw, {
         return null;
     },
 
+    // escapes string selectors (e.g. "foo.[subject]:42" -> "foo\.\[subject\]\:42"
+    escape: function(selector) {
+        if (typeof(selector) == 'string') {
+            return  selector.replace( /(:|\.|\[|\])/g, "\\$1" );
+        }
+        // cw.log('non string selector', selector);
+        return '';
+    },
+
     getNode: function (node) {
         if (typeof(node) == 'string') {
             return document.getElementById(node);
