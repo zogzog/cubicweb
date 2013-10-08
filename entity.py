@@ -537,7 +537,14 @@ class Entity(AppObject):
         raise NotImplementedError('comparison not implemented for %s' % self.__class__)
 
     def __eq__(self, other):
-        raise NotImplementedError('comparison not implemented for %s' % self.__class__)
+        if isinstance(self.eid, (int, long)):
+            return self.eid == other.eid
+        return self is other
+
+    def __hash__(self):
+        if isinstance(self.eid, (int, long)):
+            return self.eid
+        return super(Entity, self).__hash__()
 
     def _cw_update_attr_cache(self, attrcache):
         # if context is a repository session, don't consider dont-cache-attrs as

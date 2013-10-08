@@ -742,7 +742,7 @@ du :eid:`1:*ReST*`'''
         self.assertEqual(card.absolute_url(),
                           'http://testing.fr/cubicweb/%s' % card.eid)
 
-    def test_create_entity(self):
+    def test_create_and_compare_entity(self):
         req = self.request()
         p1 = req.create_entity('Personne', nom=u'fayolle', prenom=u'alexandre')
         p2 = req.create_entity('Personne', nom=u'campeas', prenom=u'aurelien')
@@ -756,6 +756,15 @@ du :eid:`1:*ReST*`'''
         self.assertEqual(sorted([c.nom for c in p.evaluee]), ['campeas', 'fayolle'])
         self.assertEqual([c.type for c in p.reverse_ecrit_par], ['z'])
 
+        req = self.request()
+        auc = req.execute('Personne P WHERE P prenom "aurelien"').get_entity(0,0)
+        persons = set()
+        persons.add(p1)
+        persons.add(p2)
+        persons.add(auc)
+        self.assertEqual(2, len(persons))
+        self.assertNotEqual(p1, p2)
+        self.assertEqual(p2, auc)
 
 
 if __name__ == '__main__':
