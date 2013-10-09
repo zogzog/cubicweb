@@ -1345,7 +1345,7 @@ class Session(RequestSessionBase):
             self._closed = True
         tracker.close()
         self.rollback()
-        self.info('waiting for open transaction of session: %s', self)
+        self.debug('waiting for open transaction of session: %s', self)
         timeout = 10
         pendings = tracker.wait(timeout)
         if pendings:
