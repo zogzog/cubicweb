@@ -132,6 +132,8 @@ class CubicWebSchemaTC(TestCase):
         self.assertRaises(RQLSyntaxError, ERQLExpression, '1')
         expr = ERQLExpression('X travaille S, S owned_by U')
         self.assertEqual(str(expr), 'Any X WHERE X travaille S, S owned_by U, X eid %(x)s, U eid %(u)s')
+        expr = ERQLExpression('X foo S, S bar U, X baz XE, S quux SE HAVING XE > SE')
+        self.assertEqual(str(expr), 'Any X WHERE X foo S, S bar U, X baz XE, S quux SE, X eid %(x)s, U eid %(u)s HAVING XE > SE')
 
     def test_rrqlexpression(self):
         self.assertRaises(Exception, RRQLExpression, '1')
