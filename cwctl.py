@@ -751,6 +751,7 @@ given, appropriate sources for migration will be automatically selected \
         print '\n' + underline_title('Upgrading the instance %s' % appid)
         from logilab.common.changelog import Version
         config = cwcfg.config_for(appid)
+        instance_running = exists(config['pid-file'])
         config.repairing = True # notice we're not starting the server
         config.verbosity = self.config.verbosity
         set_sources_mode = getattr(config, 'set_sources_mode', None)
@@ -782,7 +783,7 @@ given, appropriate sources for migration will be automatically selected \
         if cubicwebversion > applcubicwebversion:
             toupgrade.append(('cubicweb', applcubicwebversion, cubicwebversion))
         # only stop once we're sure we have something to do
-        if not (CWDEV or self.config.nostartstop):
+        if instance_running and not (CWDEV or self.config.nostartstop):
             StopInstanceCommand(self.logger).stop_instance(appid)
         # run cubicweb/componants migration scripts
         if self.config.fs_only or toupgrade:
@@ -799,7 +800,7 @@ given, appropriate sources for migration will be automatically selected \
             return
         print
         print '-> instance migrated.'
-        if not (CWDEV or self.config.nostartstop):
+        if instance_running and not (CWDEV or self.config.nostartstop):
             # restart instance through fork to get a proper environment, avoid
             # uicfg pb (and probably gettext catalogs, to check...)
             forkcmd = '%s start %s' % (sys.argv[0], appid)
