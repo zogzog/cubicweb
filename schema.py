@@ -25,7 +25,7 @@ from os.path import join
 from logging import getLogger
 from warnings import warn
 
-from logilab.common.decorators import cached, clear_cache, monkeypatch
+from logilab.common.decorators import cached, clear_cache, monkeypatch, cachedproperty
 from logilab.common.logging_ext import set_log_methods
 from logilab.common.deprecation import deprecated, class_moved, moved
 from logilab.common.textutils import splitstrip
@@ -696,7 +696,7 @@ class RQLExpression(object):
     # only defining here to prevent pylint from complaining
     info = warning = error = critical = exception = debug = lambda msg,*a,**kw: None
     # to be defined in concrete classes
-    full_rql = None
+    rqlst = None
     predefined_variables = None
 
     def __init__(self, expression, mainvars, eid):
@@ -715,7 +715,7 @@ class RQLExpression(object):
         self.mainvars = mainvars
         self.expression = normalize_expression(expression)
         try:
-            self.rqlst = parse(self.full_rql, print_errors=False).children[0]
+            self.full_rql = self.rqlst.as_string()
         except RQLSyntaxError:
             raise RQLSyntaxError(expression)
         for mainvar in mainvars:
@@ -730,6 +730,8 @@ class RQLExpression(object):
                              'expression %s', mainvar, self)
         # syntax tree used by read security (inserted in queries when necessary)
         self.snippet_rqlst = parse(self.minimal_rql, print_errors=False).children[0]
+        # graph of links between variables, used by rql rewriter
+        self.vargraph = vargraph(self.rqlst)
 
     def __str__(self):
         return self.full_rql
@@ -755,6 +757,15 @@ class RQLExpression(object):
         return (self.expression, self.mainvars)
     def __setstate__(self, state):
         self.__init__(*state)
+
+    @cachedproperty
+    def rqlst(self):
+        select = parse(self.minimal_rql, print_errors=False).children[0]
+        defined = set(split_expression(self.expression))
+        for varname in self.predefined_variables:
+            if varname in defined:
+                select.add_eid_restriction(select.get_variable(varname), varname.lower(), 'Substitute')
+        return select
 
     # permission rql expression specific stuff #################################
 
@@ -874,24 +885,10 @@ class RQLExpression(object):
 # rql expressions for use in permission definition #############################
 
 class ERQLExpression(RQLExpression):
-    predefined_variables = 'UX'
+    predefined_variables = 'XU'
 
     def __init__(self, expression, mainvars=None, eid=None):
         RQLExpression.__init__(self, expression, mainvars or 'X', eid)
-
-    @property
-    def full_rql(self):
-        rql = self.minimal_rql
-        rqlst = getattr(self, 'rqlst', None) # may be not set yet
-        if rqlst is not None:
-            defined = rqlst.defined_vars
-        else:
-            defined = set(split_expression(self.expression))
-        if 'X' in defined:
-            rql += ', X eid %(x)s'
-        if 'U' in defined:
-            rql += ', U eid %(u)s'
-        return rql
 
     def check(self, _cw, eid=None, creating=False, **kwargs):
         if 'X' in self.rqlst.defined_vars:
@@ -931,30 +928,12 @@ class GeneratedConstraint(object):
 
 
 class RRQLExpression(RQLExpression):
-    predefined_variables = 'USO'
+    predefined_variables = 'SOU'
 
     def __init__(self, expression, mainvars=None, eid=None):
         if mainvars is None:
             mainvars = guess_rrqlexpr_mainvars(expression)
         RQLExpression.__init__(self, expression, mainvars, eid)
-        # graph of links between variable, used by rql rewriter
-        self.vargraph = vargraph(self.rqlst)
-
-    @property
-    def full_rql(self):
-        rql = self.minimal_rql
-        rqlst = getattr(self, 'rqlst', None) # may be not set yet
-        if rqlst is not None:
-            defined = rqlst.defined_vars
-        else:
-            defined = set(split_expression(self.expression))
-        if 'S' in defined:
-            rql += ', S eid %(s)s'
-        if 'O' in defined:
-            rql += ', O eid %(o)s'
-        if 'U' in defined:
-            rql += ', U eid %(u)s'
-        return rql
 
     def check(self, _cw, fromeid=None, toeid=None):
         kwargs = {}

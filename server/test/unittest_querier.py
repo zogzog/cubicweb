@@ -702,7 +702,7 @@ class QuerierTC(BaseQuerierTC):
         rset = self.execute('Any X WHERE X is CWGroup', build_descr=0)
         rset.rows.sort()
         self.assertEqual(tuplify(rset.rows), [(2,), (3,), (4,), (5,)])
-        self.assertEqual(rset.description, ())
+        self.assertEqual(rset.description, [])
 
     def test_select_limit_offset(self):
         rset = self.execute('CWGroup X ORDERBY N LIMIT 2 WHERE X name N')

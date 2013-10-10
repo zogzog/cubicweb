@@ -41,7 +41,7 @@ as server startup or shutdown).  In a typical application, most of the hooks are
 defined over data events.
 
 Also, some :class:`~cubicweb.server.hook.Operation` may be registered by hooks,
-which will be fired when the transaction is commited or rollbacked.
+which will be fired when the transaction is commited or rolled back.
 
 The purpose of data event hooks is usually to complement the data model as
 defined in the schema, which is static by nature and only provide a restricted
@@ -705,10 +705,10 @@ class Operation(object):
 
     * `rollback`:
 
-      the transaction has been either rollbacked either:
+      the transaction has been either rolled back either:
 
        * intentionaly
-       * a 'precommit' event failed, in which case all operations are rollbacked
+       * a 'precommit' event failed, in which case all operations are rolled back
          once 'revertprecommit'' has been called
 
     * `postcommit`:
@@ -770,7 +770,7 @@ class Operation(object):
         """
 
     def rollback_event(self):
-        """the observed connections set has been rollbacked
+        """the observed connections set has been rolled back
 
         do nothing by default
         """
@@ -1034,7 +1034,7 @@ class CleanupNewEidsCacheOp(DataOperationMixIn, SingleLastOperation):
     type/source cache eids of entities added in that transaction.
 
     NOTE: querier's rqlst/solutions cache may have been polluted too with
-    queries such as Any X WHERE X eid 32 if 32 has been rollbacked however
+    queries such as Any X WHERE X eid 32 if 32 has been rolled back however
     generated queries are unpredictable and analysing all the cache probably
     too expensive. Notice that there is no pb when using args to specify eids
     instead of giving them into the rql string.
@@ -1042,7 +1042,7 @@ class CleanupNewEidsCacheOp(DataOperationMixIn, SingleLastOperation):
     data_key = 'neweids'
 
     def rollback_event(self):
-        """the observed connections set has been rollbacked,
+        """the observed connections set has been rolled back,
         remove inserted eid from repository type/source cache
         """
         try:
@@ -1056,7 +1056,7 @@ class CleanupDeletedEidsCacheOp(DataOperationMixIn, SingleLastOperation):
     """
     data_key = 'pendingeids'
     def postcommit_event(self):
-        """the observed connections set has been rollbacked,
+        """the observed connections set has been rolled back,
         remove inserted eid from repository type/source cache
         """
         try:

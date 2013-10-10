@@ -553,7 +553,7 @@ class StringField(Field):
             widget.attrs.setdefault('maxlength', self.max_length)
 
     def init_text_area(self, widget):
-        if self.max_length < 513:
+        if self.max_length and self.max_length < 513:
             widget.attrs.setdefault('cols', 60)
             widget.attrs.setdefault('rows', 5)
 

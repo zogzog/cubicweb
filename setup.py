@@ -63,7 +63,7 @@ subpackage_of = getattr(__pkginfo__, 'subpackage_of', None)
 ext_modules = getattr(__pkginfo__, 'ext_modules', None)
 package_data = getattr(__pkginfo__, 'package_data', {})
 
-BASE_BLACKLIST = ('CVS', 'debian', 'dist', 'build', '__buildlog')
+BASE_BLACKLIST = ('CVS', 'dist', 'build', '__buildlog')
 IGNORED_EXTENSIONS = ('.pyc', '.pyo', '.elc')
 
 

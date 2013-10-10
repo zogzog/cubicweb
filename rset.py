@@ -45,7 +45,7 @@ class ResultSet(object):
     :param rql: the original RQL query string
     """
 
-    def __init__(self, results, rql, args=None, description=(), rqlst=None):
+    def __init__(self, results, rql, args=None, description=None, rqlst=None):
         self.rows = results
         self.rowcount = results and len(results) or 0
         # original query and arguments
@@ -53,7 +53,7 @@ class ResultSet(object):
         self.args = args
         # entity types for each cell (same shape as rows)
         # maybe discarded if specified when the query has been executed
-        self.description = description
+        self.description = description or []
         # parsed syntax tree
         if rqlst is not None:
             rqlst.schema = None # reset schema in case of pyro transfert

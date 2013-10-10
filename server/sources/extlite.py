@@ -295,7 +295,7 @@ repository.',
                           query, args, ex.args[0])
             try:
                 session.cnxset.connection(self.uri).rollback()
-                self.critical('transaction has been rollbacked')
+                self.critical('transaction has been rolled back')
             except Exception:
                 pass
             raise

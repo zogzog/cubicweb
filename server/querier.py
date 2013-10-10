@@ -632,7 +632,7 @@ class QuerierHelper(object):
             results = plan.execute()
         except (Unauthorized, ValidationError):
             # getting an Unauthorized/ValidationError exception means the
-            # transaction must been rollbacked
+            # transaction must be rolled back
             #
             # notes:
             # * we should not reset the connections set here, since we don't want the

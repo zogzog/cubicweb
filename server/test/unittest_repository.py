@@ -137,7 +137,7 @@ class RepositoryTC(CubicWebTC):
             self.assertTrue(self.execute('Any X WHERE X is CWGroup, X name "toto"'))
             with self.assertRaises(QueryError) as cm:
                 self.commit()
-            self.assertEqual(str(cm.exception), 'transaction must be rollbacked')
+            self.assertEqual(str(cm.exception), 'transaction must be rolled back')
             self.rollback()
             self.assertFalse(self.execute('Any X WHERE X is CWGroup, X name "toto"'))
 
@@ -154,7 +154,7 @@ class RepositoryTC(CubicWebTC):
             self.assertTrue(self.execute('Any X WHERE X is CWGroup, X name "toto"'))
             with self.assertRaises(QueryError) as cm:
                 self.commit()
-            self.assertEqual(str(cm.exception), 'transaction must be rollbacked')
+            self.assertEqual(str(cm.exception), 'transaction must be rolled back')
             self.rollback()
             self.assertFalse(self.execute('Any X WHERE X is CWGroup, X name "toto"'))
 

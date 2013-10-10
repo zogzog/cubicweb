@@ -1307,7 +1307,8 @@ class Entity(AppObject):
 
     @deprecated('[3.16] use cw_set() instead of set_attributes()')
     def set_attributes(self, **kwargs): # XXX cw_set_attributes
-        self.cw_set(**kwargs)
+        if kwargs:
+            self.cw_set(**kwargs)
 
     @deprecated('[3.16] use cw_set() instead of set_relations()')
     def set_relations(self, **kwargs): # XXX cw_set_relations
@@ -1318,7 +1319,8 @@ class Entity(AppObject):
         (meaning that all relations of the given type from or to this object
         should be deleted).
         """
-        self.cw_set(**kwargs)
+        if kwargs:
+            self.cw_set(**kwargs)
 
     @deprecated('[3.13] use entity.cw_clear_all_caches()')
     def clear_all_caches(self):
