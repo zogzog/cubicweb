@@ -803,8 +803,8 @@ class RQL2LDAPFilterTC(RQLGeneratorTC):
 
     def setUp(self):
         self.handler = get_test_db_handler(LDAPUserSourceTC.config)
-        self.handler.build_db_cache('ldap-rqlgenerator', LDAPUserSourceTC.pre_setup_database)
-        self.handler.restore_database('ldap-rqlgenerator')
+        self.handler.build_db_cache('ldap-user', LDAPUserSourceTC.pre_setup_database)
+        self.handler.restore_database('ldap-user')
         self._repo = repo = self.handler.get_repo()
         self._schema = repo.schema
         super(RQL2LDAPFilterTC, self).setUp()
