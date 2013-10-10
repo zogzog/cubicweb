@@ -201,18 +201,17 @@ class SessionClosedError(RuntimeError):
 class CnxSetTracker(object):
     """Keep track of which transaction use which cnxset.
 
-    There should be one of this object per session plus one another for
-    internal session.
+    There should be one of these object per session (including internal sessions).
 
-    Session object are responsible of creating their CnxSetTracker object.
+    Session objects are responsible of creating their CnxSetTracker object.
 
-    Transaction should use the :meth:`record` and :meth:`forget` to inform the
-    tracker of cnxset they have acquired.
+    Transactions should use the :meth:`record` and :meth:`forget` to inform the
+    tracker of cnxsets they have acquired.
 
     .. automethod:: cubicweb.server.session.CnxSetTracker.record
     .. automethod:: cubicweb.server.session.CnxSetTracker.forget
 
-    Session use the :meth:`close` and :meth:`wait` method when closing.
+    Sessions use the :meth:`close` and :meth:`wait` methods when closing.
 
     .. automethod:: cubicweb.server.session.CnxSetTracker.close
     .. automethod:: cubicweb.server.session.CnxSetTracker.wait
@@ -233,12 +232,12 @@ class CnxSetTracker(object):
         return self._condition.__exit__(*args)
 
     def record(self, txid, cnxset):
-        """Inform the tracker that a txid have acquired a cnxset
+        """Inform the tracker that a txid has acquired a cnxset
 
-        This methode is to be used by Transaction object.
+        This method is to be used by Transaction objects.
 
         This method fails when:
-        - The txid already have a recorded cnxset.
+        - The txid already has a recorded cnxset.
         - The tracker is not active anymore.
 
         Notes about the caller:
@@ -246,7 +245,7 @@ class CnxSetTracker(object):
         (2) It must be prepared to release the cnxset if the
             `cnxsettracker.forget` call fails.
         (3) It should acquire the tracker lock until the very end of the operation.
-        (4) However It take care to lock the CnxSetTracker object after having
+        (4) However it must only lock the CnxSetTracker object after having
             retrieved the cnxset to prevent deadlock.
 
         A typical usage look like::
@@ -261,13 +260,13 @@ class CnxSetTracker(object):
             repo._free_cnxset(cnxset) # (2)
             raise
         """
-        # dubious since the caller is suppose to have acquired it anyway.
+        # dubious since the caller is supposed to have acquired it anyway.
         with self._condition:
             if not self._active:
                 raise SessionClosedError('Closed')
             old = self._record.get(txid)
             if old is not None:
-                raise ValueError('"%s" already have a cnx_set (%r)'
+                raise ValueError('transaction "%s" already has a cnx_set (%r)'
                                  % (txid, old))
             self._record[txid] = cnxset
 
@@ -307,19 +306,19 @@ class CnxSetTracker(object):
     def close(self):
         """Marks the tracker as inactive.
 
-        This methode is to be used by Session object.
+        This method is to be used by Session objects.
 
-        Inactive tracker does not accept new record anymore.
+        An inactive tracker does not accept new records anymore.
         """
         with self._condition:
             self._active = False
 
     def wait(self, timeout=10):
-        """Wait for all recorded cnxset to be released
+        """Wait for all recorded cnxsets to be released
 
-        This methode is to be used by Session object.
+        This method is to be used by Session objects.
 
-        returns a tuple of transaction id that remains open.
+        Returns a tuple of transaction ids that remain open.
         """
         with self._condition:
             if  self._active:
@@ -336,15 +335,15 @@ class Transaction(object):
 
     Holds all transaction related data
 
-    Database connections resource:
+    Database connection resources:
 
       :attr:`running_dbapi_query`, boolean flag telling if the executing query
       is coming from a dbapi connection or is a query from within the repository
 
       :attr:`cnxset`, the connections set to use to execute queries on sources.
       If the transaction is read only, the connection set may be freed between
-      actual query. This allows multiple transaction with a reasonable low
-      connection set pool size. control mechanism is detailed below
+      actual queries. This allows multiple transactions with a reasonably low
+      connection set pool size.  Control mechanism is detailed below.
 
     .. automethod:: cubicweb.server.session.Transaction.set_cnxset
     .. automethod:: cubicweb.server.session.Transaction.free_cnxset
@@ -357,7 +356,7 @@ class Transaction(object):
 
     Internal transaction data:
 
-      :attr:`data`,is a dictionary containing some shared data
+      :attr:`data` is a dictionary containing some shared data
       cleared at the end of the transaction. Hooks and operations may put
       arbitrary data in there, and this may also be used as a communication
       channel between the client and the repository.
@@ -439,7 +438,6 @@ class Transaction(object):
     def transaction_data(self):
         return self.data
 
-
     def clear(self):
         """reset internal data"""
         self.data = {}
@@ -448,6 +446,7 @@ class Transaction(object):
         #: (None, 'precommit', 'postcommit', 'uncommitable')
         self.commit_state = None
         self.pruned_hooks_cache = {}
+
     # Connection Set Management ###############################################
     @property
     def cnxset(self):
@@ -499,7 +498,7 @@ class Transaction(object):
 
     # Entity cache management #################################################
     #
-    # The transaction entity cache as held in tx.data it is removed at end the
+    # The transaction entity cache as held in tx.data is removed at the
     # end of the transaction (commit and rollback)
     #
     # XXX transaction level caching may be a pb with multiple repository
@@ -529,9 +528,7 @@ class Transaction(object):
         else:
             del self.data['ecache'][eid]
 
-    # Tracking of entity added of removed in the transaction ##################
-    #
-    # Those are function to  allows cheap call from client in other process.
+    # Tracking of entities added of removed in the transaction ##################
 
     def deleted_in_transaction(self, eid):
         """return True if the entity of the given eid is being deleted in the
@@ -652,6 +649,7 @@ class Transaction(object):
         num = self.data.setdefault('tx_action_count', 0) + 1
         self.data['tx_action_count'] = num
         return num
+
     # db-api like interface ###################################################
 
     def source_defs(self):
@@ -662,9 +660,8 @@ class Transaction(object):
         metas = self.repo.type_and_source_from_eid(eid, self)
         if asdict:
             return dict(zip(('type', 'source', 'extid', 'asource'), metas))
-       # XXX :-1 for cw compat, use asdict=True for full information
+        # XXX :-1 for cw compat, use asdict=True for full information
         return metas[:-1]
-
 
     def source_from_eid(self, eid):
         """return the source where the entity with id <eid> is located"""
@@ -899,7 +896,7 @@ class Session(RequestSessionBase):
         call `session.commit()` on normal exit.
 
         The `free_cnxset` will be given to rollback/commit methods to indicate
-        wether the connections set should be freed or not.
+        whether the connections set should be freed or not.
         """
         return transaction(self, free_cnxset)
 

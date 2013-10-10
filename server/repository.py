@@ -1009,7 +1009,7 @@ class Repository(object):
 
     def _get_session(self, sessionid, setcnxset=False, txid=None,
                      checkshuttingdown=True):
-        """return the user associated to the given session identifier"""
+        """return the session associated with the given session identifier"""
         if checkshuttingdown and self.shutting_down:
             raise ShuttingDown('Repository is shutting down')
         try:
