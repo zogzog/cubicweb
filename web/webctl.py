@@ -87,10 +87,10 @@ class GenStaticDataDir(Command):
                 resources.update(osp.join(rel_dirpath, f) for f in filenames)
         # locate resources and copy them to destination
         for resource in resources:
-            dirname = osp.dirname(resource)
-            dest_resource = osp.join(dest, dirname)
-            if not osp.isdir(dest_resource):
-                os.makedirs(dest_resource)
+            dest_resource = osp.join(dest, resource)
+            dirname = osp.dirname(dest_resource)
+            if not osp.isdir(dirname):
+                os.makedirs(dirname)
             resource_dir, resource_path = config.locate_resource(resource)
             copy(osp.join(resource_dir, resource_path), dest_resource)
         # handle md5 version subdirectory
