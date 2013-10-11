@@ -1036,12 +1036,26 @@ class ConfigureInstanceCommand(InstanceCommand):
 
 # WSGI #########
 
+def wsgichoices():
+    try:
+        from werkzeug import serving
+    except ImportError:
+        return ('stdlib',)
+    return ('stdlib', 'werkzeug')
+
 class WSGIDebugStartHandler(InstanceCommand):
     """Start an interactive wsgi server """
     name = 'wsgi'
     actionverb = 'started'
     arguments = '<instance>'
     options = (
+        ('method',
+         {'short': 'm',
+          'type': 'choice',
+          'metavar': '<method>',
+          'default': 'stdlib',
+          'choices': wsgichoices(),
+          'help': 'wsgi utility/method'}),
         ('loglevel',
          {'short': 'l',
           'type' : 'choice',
@@ -1056,7 +1070,11 @@ class WSGIDebugStartHandler(InstanceCommand):
         config = cwcfg.config_for(appid, debugmode=1)
         init_cmdline_log_threshold(config, self['loglevel'])
         assert config.name == 'all-in-one'
-        from cubicweb.wsgi import server
+        meth = self['method']
+        if meth == 'stdlib':
+            from cubicweb.wsgi import server
+        else:
+            from cubicweb.wsgi import wz as server
         return server.run(config)
 
 
