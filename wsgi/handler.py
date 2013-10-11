@@ -17,8 +17,6 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """WSGI request handler for cubicweb"""
 
-
-
 __docformat__ = "restructuredtext en"
 
 from itertools import chain, repeat, izip
@@ -92,7 +90,6 @@ class WSGIResponse(object):
         return iter(self.body)
 
 
-
 class CubicWebWSGIApplication(object):
     """This is the wsgi application which will be called by the
     wsgi server with the WSGI ``environ`` and ``start_response``
@@ -108,8 +105,6 @@ class CubicWebWSGIApplication(object):
     def _render(self, req):
         """this function performs the actual rendering
         """
-        if self.base_url is None:
-            self.base_url = self.config._base_url = req.base_url()
         try:
             path = req.path
             result = self.appli.handle_request(req, path)
