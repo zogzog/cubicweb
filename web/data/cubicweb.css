@@ -17,9 +17,6 @@ body {
 }
 h1, h2, h3 { margin-top:0; margin-bottom:0; }
 
-/* got rhythm ? beat of 12*1.25 = 15 px */
-.rhythm_bg { background: url("%(baseRhythmBg)s") repeat ! important; }
-
 h1,
 .vtitle {
   font-size: %(h1FontSize)s;
@@ -297,7 +294,6 @@ table#mainLayout td#navColumnRight {
 
 div#pageContent {
   clear: both;
-  /* margin-top:-1px; *//* enable when testing rhythm */
   background: %(pageContentBgColor)s;
   border: 1px solid %(pageContentBorderColor)s;
   padding: 0 %(pageContentPadding)s %(pageContentPadding)s;

@@ -27,6 +27,10 @@ Deprecated Code Drops
 * ``ldapuser`` have been dropped; use ``ldapfeed`` now
   (see `#2936496 <http://www.cubicweb.org/2936496>`_)
 
+* action ``GotRhythm`` was removed, make sure you do not
+  import it in your cubes (even to unregister it)
+  (see `#3093362 <http://www.cubicweb.org/3093362>`_)
+
 * all 3.8 backward compat is gone
 
 * all 3.9 backward compat (including the javascript side) is gone

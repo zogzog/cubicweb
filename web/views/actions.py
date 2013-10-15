@@ -419,22 +419,6 @@ class PoweredByAction(action.Action):
     def url(self):
         return 'http://www.cubicweb.org'
 
-class GotRhythmAction(action.Action):
-    __regid__ = 'rhythm'
-    __select__ = debug_mode()
-
-    category = 'footer'
-    order = 3
-    title = _('Got rhythm?')
-
-    def url(self):
-        return xml_escape(self._cw.url()+'#')
-
-    def html_class(self):
-        self._cw.add_js('cubicweb.rhythm.js')
-        return 'rhythm'
-
-
 ## default actions ui configuration ###########################################
 
 addmenu = uicfg.actionbox_appearsin_addmenu

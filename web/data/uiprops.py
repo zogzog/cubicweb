@@ -66,7 +66,6 @@ defaultFontFamily = "'Bitstream Vera Sans','Lucida Grande','Lucida Sans Unicode'
 defaultSize = '12px'
 defaultLineHeight = '1.5'
 defaultLineHeightEm = lazystr('%(defaultLineHeight)sem')
-baseRhythmBg = 'rhythm18.png'
 
 inputHeight = '1.3em'
 inputPadding = 'O.2em'
