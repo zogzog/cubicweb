@@ -41,11 +41,6 @@ lgc.USE_MX_DATETIME = False
 SQL_PREFIX = 'cw_'
 
 def _run_command(cmd):
-    """backup/restore command are string w/ lgc < 0.47, lists with earlier versions
-    """
-    if isinstance(cmd, basestring):
-        print '->', cmd
-        return subprocess.call(cmd, shell=True)
     print ' '.join(cmd)
     return subprocess.call(cmd)
 
