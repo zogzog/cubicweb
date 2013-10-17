@@ -223,7 +223,7 @@ def connect(database, login=None,
     puri = urlparse(database)
     method = puri.scheme.lower()
     if method == 'inmemory':
-        config = cwconfig.instance_configuration(puri.path)
+        config = cwconfig.instance_configuration(puri.netloc)
     else:
         config = cwconfig.CubicWebNoAppConfiguration()
     repo = get_repository(database, config=config)
