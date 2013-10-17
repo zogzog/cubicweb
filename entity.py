@@ -1279,8 +1279,8 @@ class Entity(AppObject):
 
         >>> c = rql('Any X WHERE X is Company').get_entity(0, 0)
         >>> p = rql('Any X WHERE X is Person').get_entity(0, 0)
-        >>> c.set(name=u'Logilab')
-        >>> p.set(firstname=u'John', lastname=u'Doe', works_for=c)
+        >>> c.cw_set(name=u'Logilab')
+        >>> p.cw_set(firstname=u'John', lastname=u'Doe', works_for=c)
 
         You can also set relations where the entity has 'object' role by
         prefixing the relation name by 'reverse_'.  Also, relation values may be
