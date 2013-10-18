@@ -15,6 +15,10 @@ API changes
   systematically deferred to an operation, instead of a) trying in a
   hook and b) if it failed, retrying later in an operation
 
+* The default value storage for attributes is no longer String, but
+  Bytes.  This opens the road to storing arbitrary python objects, e.g.
+  numpy arrays, and fixes a bug where default values whose truth value
+  was False were not properly migrated.
 
 Deprecation
 ---------------------
