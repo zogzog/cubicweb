@@ -23,6 +23,7 @@ API changes
 Deprecation
 ---------------------
 
+* the old multi-source system
 
 
 Deprecated Code Drops
