@@ -73,6 +73,14 @@ class DefinitionOrderTC(CubicWebTC):
         uihelper.set_fields_order('CWUser', ('login', 'firstname', 'surname'))
         self.assertEqual(afk_get('CWUser', 'firstname', 'String', 'subject'), {'order': 1})
 
+    @tag('uicfg', 'order', 'func')
+    def test_uicfg_primaryview_set_fields_order(self):
+        pvdc = uicfg.primaryview_display_ctrl
+        pvdc.set_fields_order('CWUser', ('login', 'firstname', 'surname'))
+        self.assertEqual(pvdc.get('CWUser', 'login', 'String', 'subject'), {'order': 0})
+        self.assertEqual(pvdc.get('CWUser', 'firstname', 'String', 'subject'), {'order': 1})
+        self.assertEqual(pvdc.get('CWUser', 'surname', 'String', 'subject'), {'order': 2})
+
     @tag('uihelper', 'kwargs', 'func')
     def test_uihelper_set_field_kwargs(self):
         afk_get = uicfg.autoform_field_kwargs.get

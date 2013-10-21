@@ -7,6 +7,9 @@ New functionalities
 * add a security debugging tool
   (see `#2920304 <http://www.cubicweb.org/2920304>`_)
 
+* the primary view display controller (uicfg) now has a
+  `set_fields_order` method similar to the one available for forms
+
 
 API changes
 -----------
