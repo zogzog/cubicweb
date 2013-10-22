@@ -46,7 +46,7 @@ in which :
 Again in the directory `migration`, the file `depends.map` allows to indicate
 that for the migration to a particular model version, you always have to first
 migrate to a particular *CubicWeb* version. This file can contain comments (lines
-starting by `#`) and a dependency is listed as follows: ::
+starting with `#`) and a dependency is listed as follows: ::
 
   <model version n° X.Y.Z> : <cubicweb version n° X.Y.Z>
 
