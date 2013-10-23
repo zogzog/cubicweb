@@ -128,26 +128,34 @@ class NotificationView(EntityView):
             # since the same view (eg self) may be called multiple time and we
             # need a fresh stream at each iteration, reset it explicitly
             self.w = None
-            # XXX call render before subject to set .row/.col attributes on the
-            #     view
             try:
-                content = self.render(row=0, col=0, **kwargs)
-                subject = self.subject()
-            except SkipEmail:
-                continue
-            except Exception as ex:
-                # shouldn't make the whole transaction fail because of rendering
-                # error (unauthorized or such) XXX check it doesn't actually
-                # occurs due to rollback on such error
-                self.exception(str(ex))
-                continue
-            msg = format_mail(self.user_data, [emailaddr], content, subject,
-                              config=self._cw.vreg.config, msgid=msgid, references=refs)
-            yield [emailaddr], msg
-            if isinstance(something, Entity):
-                self._cw.commit()
-                self._cw.close()
-                self._cw = req
+                # XXX call render before subject to set .row/.col attributes on the
+                #     view
+                try:
+                    content = self.render(row=0, col=0, **kwargs)
+                    subject = self.subject()
+                except SkipEmail:
+                    continue
+                except Exception as ex:
+                    # shouldn't make the whole transaction fail because of rendering
+                    # error (unauthorized or such) XXX check it doesn't actually
+                    # occurs due to rollback on such error
+                    self.exception(str(ex))
+                    continue
+                msg = format_mail(self.user_data, [emailaddr], content, subject,
+                                  config=self._cw.vreg.config, msgid=msgid, references=refs)
+                yield [emailaddr], msg
+            except:
+                if isinstance(something, Entity):
+                    self._cw.rollback()
+                raise
+            else:
+                if isinstance(something, Entity):
+                    self._cw.commit()
+            finally:
+                if isinstance(something, Entity):
+                    self._cw.close()
+                    self._cw = req
         # restore language
         req.set_language(origlang)
 
