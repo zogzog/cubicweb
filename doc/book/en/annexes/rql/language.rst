@@ -81,7 +81,7 @@ Bases types supported by RQL are those supported by yams schema. Literal values
 are expressed as explained below:
 
 * string should be between double or single quotes. If the value contains a
-  quote, it should be preceded by a backslash '\'
+  quote, it should be preceded by a backslash '\\'
 
 * floats separator is dot '.'
 
