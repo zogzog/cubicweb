@@ -757,8 +757,10 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             if ex.__class__.__name__ == 'IntegrityError':
                 # need string comparison because of various backends
                 for arg in ex.args:
-                    # postgres and sqlserver
-                    mo = re.search('"unique_cw_[^ ]+"', arg)
+                    if 'SQL Server' in arg:
+                        mo = re.search("'unique_cw_[^ ]+'", arg)
+                    else: # postgres
+                        mo = re.search('"unique_cw_[^ ]+"', arg)
                     if mo is not None:
                         index_name = mo.group(0)[1:-1] # eat the surrounding " pair
                         elements = index_name.split('_cw_')[1:]
