@@ -205,7 +205,11 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     schemasql = sqlschema(schema, driver)
     #skip_entities=[str(e) for e in schema.entities()
     #               if not repo.system_source.support_entity(str(e))])
-    sqlexec(schemasql, execute, pbtitle=_title, delimiter=';;')
+    failed = sqlexec(schemasql, execute, pbtitle=_title, delimiter=';;')
+    if failed:
+        print 'The following SQL statements failed. You should check your schema.'
+        print failed
+        raise Exception('execution of the sql schema failed, you should check your schema')
     sqlcursor.close()
     sqlcnx.commit()
     sqlcnx.close()
