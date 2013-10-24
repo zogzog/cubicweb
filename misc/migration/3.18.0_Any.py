@@ -118,3 +118,12 @@ for eschema in sorted(schema.entities()):
             args['x'] = eschema.eid
             session.execute(rql, args)
         commit()
+
+
+add_relation_definition('CWAttribute', 'add_permission', 'CWGroup')
+add_relation_definition('CWAttribute', 'add_permission', 'RQLExpression')
+
+# all attributes perms have to be refreshed ...
+for rschema in schema.relations():
+    if relation.final:
+        sync_schema_props_perms(rschema.type, syncprops=False)

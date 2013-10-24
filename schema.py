@@ -330,6 +330,8 @@ class RQLExpression(object):
         return 'Any %s WHERE %s' % (','.join(sorted(self.mainvars)),
                                     self.expression)
 
+
+
 # rql expressions for use in permission definition #############################
 
 class ERQLExpression(RQLExpression):
@@ -395,6 +397,16 @@ class RRQLExpression(RQLExpression):
             kwargs['o'] = toeid
         return self._check(_cw, **kwargs)
 
+
+# In yams, default 'update' perm for attributes granted to managers and owners.
+# Within cw, we want to default to users who may edit the entity holding the
+# attribute.
+# These default permissions won't be checked by the security hooks:
+# since they delegate checking to the entity, we can skip actual checks.
+ybo.DEFAULT_ATTRPERMS['update'] = ('managers', ERQLExpression('U has_update_permission X'))
+ybo.DEFAULT_ATTRPERMS['add'] = ('managers', ERQLExpression('U has_add_permission X'))
+
+
 PUB_SYSTEM_ENTITY_PERMS = {
     'read':   ('managers', 'users', 'guests',),
     'add':    ('managers',),
@@ -408,6 +420,7 @@ PUB_SYSTEM_REL_PERMS = {
     }
 PUB_SYSTEM_ATTR_PERMS = {
     'read':   ('managers', 'users', 'guests',),
+    'add': ('managers',),
     'update': ('managers',),
     }
 RO_REL_PERMS = {
@@ -417,6 +430,7 @@ RO_REL_PERMS = {
     }
 RO_ATTR_PERMS = {
     'read':   ('managers', 'users', 'guests',),
+    'add': ybo.DEFAULT_ATTRPERMS['add'],
     'update': (),
     }
 
@@ -950,12 +964,6 @@ class CubicWebSchema(Schema):
     def schema_by_eid(self, eid):
         return self._eid_index[eid]
 
-
-# in yams, default 'update' perm for attributes granted to managers and owners.
-# Within cw, we want to default to users who may edit the entity holding the
-# attribute.
-ybo.DEFAULT_ATTRPERMS['update'] = (
-    'managers', ERQLExpression('U has_update_permission X'))
 
 # additional cw specific constraints ###########################################
 

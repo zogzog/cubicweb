@@ -304,9 +304,6 @@ def set_perms(erschema, permsidx):
     except KeyError:
         return
     for action, somethings in thispermsdict.iteritems():
-        # XXX cw < 3.6.1 bw compat
-        if isinstance(erschema, schemamod.RelationDefinitionSchema) and erschema.final and action == 'add':
-            action = 'update'
         erschema.permissions[action] = tuple(
             isinstance(p, tuple) and erschema.rql_expression(*p) or p
             for p in somethings)

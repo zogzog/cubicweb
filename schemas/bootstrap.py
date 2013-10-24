@@ -236,7 +236,7 @@ class add_permission_cwgroup(RelationDefinition):
     """groups allowed to add entities/relations of this type"""
     __permissions__ = PUB_SYSTEM_REL_PERMS
     name = 'add_permission'
-    subject = ('CWEType', 'CWRelation')
+    subject = ('CWEType', 'CWRelation', 'CWAttribute')
     object = 'CWGroup'
     cardinality = '**'
 
@@ -269,7 +269,7 @@ class add_permission_rqlexpr(RelationDefinition):
     """rql expression allowing to add entities/relations of this type"""
     __permissions__ = PUB_SYSTEM_REL_PERMS
     name = 'add_permission'
-    subject = ('CWEType', 'CWRelation')
+    subject = ('CWEType', 'CWRelation', 'CWAttribute')
     object = 'RQLExpression'
     cardinality = '*?'
     composite = 'subject'

@@ -133,7 +133,12 @@ class Schema2RQLTC(TestCase):
               'description': u'groups allowed to add entities/relations of this type', 'composite': None, 'ordernum': 9999, 'cardinality': u'**'}),
             ('INSERT CWRelation X: X cardinality %(cardinality)s,X composite %(composite)s,X description %(description)s,X ordernum %(ordernum)s,X relation_type ER,X from_entity SE,X to_entity OE WHERE SE eid %(se)s,ER eid %(rt)s,OE eid %(oe)s',
              {'se': None, 'rt': None, 'oe': None,
-              'description': u'rql expression allowing to add entities/relations of this type', 'composite': 'subject', 'ordernum': 9999, 'cardinality': u'*?'})],
+              'description': u'rql expression allowing to add entities/relations of this type', 'composite': 'subject', 'ordernum': 9999, 'cardinality': u'*?'}),
+            ('INSERT CWRelation X: X cardinality %(cardinality)s,X composite %(composite)s,X description %(description)s,X ordernum %(ordernum)s,X relation_type ER,X from_entity SE,X to_entity OE WHERE SE eid %(se)s,ER eid %(rt)s,OE eid %(oe)s',
+            {'cardinality': u'**', 'composite': None, 'description': u'groups allowed to add entities/relations of this type',
+             'oe': None, 'ordernum': 9999, 'rt': None, 'se': None}),
+            ('INSERT CWRelation X: X cardinality %(cardinality)s,X composite %(composite)s,X description %(description)s,X ordernum %(ordernum)s,X relation_type ER,X from_entity SE,X to_entity OE WHERE SE eid %(se)s,ER eid %(rt)s,OE eid %(oe)s',
+             {'cardinality': u'*?', 'composite': u'subject', 'description': u'rql expression allowing to add entities/relations of this type', 'oe': None, 'ordernum': 9999, 'rt': None, 'se': None})],
                              list(rschema2rql(schema.rschema('add_permission'), cstrtypemap)))
 
     def test_rschema2rql3(self):
@@ -266,6 +271,7 @@ class Perms2RQLTC(TestCase):
         self.assertListEqual([('SET X read_permission Y WHERE Y eid %(g)s, X eid %(x)s', {'g': 0}),
                               ('SET X read_permission Y WHERE Y eid %(g)s, X eid %(x)s', {'g': 1}),
                               ('SET X read_permission Y WHERE Y eid %(g)s, X eid %(x)s', {'g': 2}),
+                              ('SET X add_permission Y WHERE Y eid %(g)s, X eid %(x)s', {'g': 0}),
                               ('SET X update_permission Y WHERE Y eid %(g)s, X eid %(x)s', {'g': 0})],
                              [(rql, kwargs)
                               for rql, kwargs in erperms2rql(schema.rschema('name').rdef('CWEType', 'String'),

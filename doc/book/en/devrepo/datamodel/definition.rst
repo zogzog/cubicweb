@@ -330,7 +330,8 @@ For an entity type, the possible actions are `read`, `add`, `update` and
 
 For a relation, the possible actions are `read`, `add`, and `delete`.
 
-For an attribute, the possible actions are `read`, and `update`.
+For an attribute, the possible actions are `read`, `add` and `update`,
+and they are a refinement of an entity type permission.
 
 For each access type, a tuple indicates the name of the authorized groups and/or
 one or multiple RQL expressions to satisfy to grant access. The access is
@@ -364,7 +365,8 @@ The default permissions for attributes are:
 .. sourcecode:: python
 
    __permissions__ = {'read': ('managers', 'users', 'guests',),
-                     'update': ('managers', ERQLExpression('U has_update_permission X')),}
+                      'add': ('managers', ERQLExpression('U has_add_permission X'),
+                      'update': ('managers', ERQLExpression('U has_update_permission X')),}
 
 The standard user groups
 ````````````````````````

@@ -278,7 +278,7 @@ class RepositoryTC(CubicWebTC):
                      'creation_date', 'modification_date', 'cwuri',
                      'owned_by', 'created_by', 'cw_source',
                      'update_permission', 'read_permission',
-                     'in_basket'))
+                     'add_permission', 'in_basket'))
         self.assertListEqual(['relation_type',
                               'from_entity', 'to_entity',
                               'constrained_by',

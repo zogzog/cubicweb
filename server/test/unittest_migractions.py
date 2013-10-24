@@ -416,8 +416,8 @@ class MigrationCommandsTC(CubicWebTC):
         self.assertEqual(eexpr.reverse_read_permission, ())
         self.assertEqual(eexpr.reverse_delete_permission, ())
         self.assertEqual(eexpr.reverse_update_permission, ())
-        # no more rqlexpr to delete and add para attribute
-        self.assertFalse(self._rrqlexpr_rset('add', 'para'))
+        self.assertTrue(self._rrqlexpr_rset('add', 'para'))
+        # no rqlexpr to delete para attribute
         self.assertFalse(self._rrqlexpr_rset('delete', 'para'))
         # new rql expr to add ecrit_par relation
         rexpr = self._rrqlexpr_entity('add', 'ecrit_par')
@@ -445,19 +445,24 @@ class MigrationCommandsTC(CubicWebTC):
         self.assertEqual(len(self._rrqlexpr_rset('delete', 'concerne')), len(delete_concerne_rqlexpr))
         self.assertEqual(len(self._rrqlexpr_rset('add', 'concerne')), len(add_concerne_rqlexpr))
         # * migrschema involve:
-        #   * 7 rqlexprs deletion (2 in (Affaire read + Societe + travaille) + 1
-        #     in para attribute)
+        #   * 7 erqlexprs deletions (2 in (Affaire + Societe + Note.para) + 1 Note.something
+        #   * 2 rrqlexprs deletions (travaille)
         #   * 1 update (Affaire update)
         #   * 2 new (Note add, ecrit_par add)
-        #   * 2 implicit new for attributes update_permission (Note.para, Personne.test)
+        #   * 2 implicit new for attributes (Note.para, Person.test)
         # remaining orphan rql expr which should be deleted at commit (composite relation)
-        self.assertEqual(cursor.execute('Any COUNT(X) WHERE X is RQLExpression, '
-                                         'NOT ET1 read_permission X, NOT ET2 add_permission X, '
-                                         'NOT ET3 delete_permission X, NOT ET4 update_permission X')[0][0],
-                          7+1)
+        # unattached expressions -> pending deletion on commit
+        self.assertEqual(cursor.execute('Any COUNT(X) WHERE X is RQLExpression, X exprtype "ERQLExpression",'
+                                        'NOT ET1 read_permission X, NOT ET2 add_permission X, '
+                                        'NOT ET3 delete_permission X, NOT ET4 update_permission X')[0][0],
+                          7)
+        self.assertEqual(cursor.execute('Any COUNT(X) WHERE X is RQLExpression, X exprtype "RRQLExpression",'
+                                        'NOT ET1 read_permission X, NOT ET2 add_permission X, '
+                                        'NOT ET3 delete_permission X, NOT ET4 update_permission X')[0][0],
+                          2)
         # finally
         self.assertEqual(cursor.execute('Any COUNT(X) WHERE X is RQLExpression')[0][0],
-                          nbrqlexpr_start + 1 + 2 + 2)
+                         nbrqlexpr_start + 1 + 2 + 2 + 2)
         self.mh.commit()
         # unique_together test
         self.assertEqual(len(self.schema.eschema('Personne')._unique_together), 1)

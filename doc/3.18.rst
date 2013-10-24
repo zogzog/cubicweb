@@ -10,6 +10,12 @@ New functionalities
 * add a security debugging tool
   (see `#2920304 <http://www.cubicweb.org/2920304>`_)
 
+* introduce an `add` permission on attributes, to be interpreted at
+  entity creation time only and allow the implementation of complex
+  `update` rules that don't block entity creation (before that the
+  `update` attribute permission was interpreted at entity creation and
+  update time)
+
 * the primary view display controller (uicfg) now has a
   `set_fields_order` method similar to the one available for forms
 
