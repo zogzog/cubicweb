@@ -1,7 +1,7 @@
 """https://pastebin.logilab.fr/show/860/"""
 
-from logilab.astng import MANAGER, nodes, scoped_nodes
-from logilab.astng.builder import ASTNGBuilder
+from astroid import MANAGER, InferenceError, nodes, scoped_nodes
+from astroid.builder import AstroidBuilder
 
 def turn_function_to_class(node):
     """turn a Function node into a Class node (in-place)"""
@@ -21,13 +21,16 @@ def cubicweb_transform(module):
         for node in assnodes:
             if isinstance(node, scoped_nodes.Function) and node.decorators:
                 for decorator in node.decorators.nodes:
-                    for infered in decorator.infer():
-                        if infered.name in ('objectify_predicate', 'objectify_selector'):
-                            turn_function_to_class(node)
-                            break
-                    else:
+                    try:
+                        for infered in decorator.infer():
+                            if infered.name in ('objectify_predicate', 'objectify_selector'):
+                                turn_function_to_class(node)
+                                break
+                        else:
+                            continue
+                        break
+                    except InferenceError:
                         continue
-                    break
     # add yams base types into 'yams.buildobjs', astng doesn't grasp globals()
     # magic in there
     if module.name == 'yams.buildobjs':
@@ -36,7 +39,7 @@ def cubicweb_transform(module):
             module.locals[etype] = [scoped_nodes.Class(etype, None)]
     # add data() to uiprops module
     if module.name.split('.')[-1] == 'uiprops':
-        fake = ASTNGBuilder(MANAGER).string_build('''
+        fake = AstroidBuilder(MANAGER).string_build('''
 def data(string):
   return u''
 ''')
@@ -44,5 +47,5 @@ def data(string):
 
 def register(linter):
     """called when loaded by pylint --load-plugins, nothing to do here"""
-    MANAGER.register_transformer(cubicweb_transform)
+    MANAGER.register_transform(nodes.Module, cubicweb_transform)
 
