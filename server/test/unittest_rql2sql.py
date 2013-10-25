@@ -1478,6 +1478,20 @@ ORDER BY 1)'''),
     def test_subquery(self):
         for t in self._parse((
 
+            ('Any X,N '
+             'WHERE NOT EXISTS(X owned_by U) '
+             'WITH X,N BEING '
+             '((Any X,N WHERE X name N, X is State)'
+             ' UNION '
+             '(Any XX,NN WHERE XX name NN, XX is Transition))',
+             '''SELECT _T0.C0, _T0.C1
+FROM ((SELECT _X.cw_eid AS C0, _X.cw_name AS C1
+FROM cw_State AS _X)
+UNION ALL
+(SELECT _XX.cw_eid AS C0, _XX.cw_name AS C1
+FROM cw_Transition AS _XX)) AS _T0
+WHERE NOT (EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_by0 WHERE rel_owned_by0.eid_from=_T0.C0))'''),
+
             ('Any N ORDERBY 1 WITH N BEING '
              '((Any N WHERE X name N, X is State)'
              ' UNION '
@@ -1551,7 +1565,8 @@ FROM cw_Affaire AS _T
 GROUP BY _T.cw_eid) AS _T1 LEFT OUTER JOIN (SELECT _T.cw_eid AS C0, SUM(_T.cw_duration) AS C1
 FROM cw_Affaire AS _T LEFT OUTER JOIN tags_relation AS rel_tags0 ON (rel_tags0.eid_to=_T.cw_eid) LEFT OUTER JOIN cw_Tag AS _TAG ON (rel_tags0.eid_from=_TAG.cw_eid AND _TAG.cw_name=t)
 GROUP BY _T.cw_eid) AS _T0 ON (_T1.C0=_T0.C0)'''),
-            )):
+
+                             )):
             yield t
 
 
