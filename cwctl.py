@@ -1055,13 +1055,8 @@ for cmdcls in (ListCommand,
 def run(args):
     """command line tool"""
     import os
-    import codecs
-    encoding = sys.stdout.encoding
     sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
-    sys.stdout = codecs.getwriter(encoding)(sys.stdout)
-    encoding = sys.stderr.encoding
     sys.stderr = os.fdopen(sys.stderr.fileno(), 'w', 0)
-    sys.stderr = codecs.getwriter(encoding)(sys.stderr)
     cwcfg.load_cwctl_plugins()
     try:
         CWCTL.run(args)
