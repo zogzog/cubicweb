@@ -318,6 +318,7 @@ class _CubicWebRequestBase(RequestSessionBase):
 
     def set_message(self, msg):
         assert isinstance(msg, unicode)
+        self.reset_message()
         self._msg = msg
 
     def set_message_id(self, msgid):
@@ -348,6 +349,7 @@ class _CubicWebRequestBase(RequestSessionBase):
         if hasattr(self, '_msg'):
             del self._msg
         if hasattr(self, '_msgid'):
+            self.session.data.pop(self._msgid, u'')
             del self._msgid
 
     def update_search_state(self):
