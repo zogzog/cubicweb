@@ -86,6 +86,11 @@ class LoggedOutTemplate(StartupView):
 
 
 @objectify_predicate
+def modal_view(cls, req, rset, *args, **kwargs):
+    if req.form.get('__modal', None):
+        return 1
+
+@objectify_predicate
 def templatable_view(cls, req, rset, *args, **kwargs):
     view = kwargs.pop('view', None)
     if view is None:
@@ -116,6 +121,17 @@ class NonTemplatableViewTemplate(MainTemplate):
         # have to replace our stream by view's stream (which may be a binary
         # stream)
         self._stream = view._stream
+
+
+class ModalMainTemplate(MainTemplate):
+    """ a no-decoration main template for standard views
+    that typically live in a modal context """
+    __regid__ = 'main-template'
+    __select__ = templatable_view() & modal_view()
+
+    def call(self, view):
+        view.set_request_content_type()
+        view.render(w=self.w)
 
 
 class TheMainTemplate(MainTemplate):
