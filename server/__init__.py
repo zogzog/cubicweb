@@ -105,13 +105,13 @@ class debugged(object):
 
     It can be used either as a context manager:
 
-    >>> with debugged(server.DBG_RQL | server.DBG_REPO):
+    >>> with debugged('DBG_RQL | DBG_REPO'):
     ...     # some code in which you want to debug repository activity,
     ...     # seing information about RQL being executed an repository events.
 
     or as a function decorator:
 
-    >>> @debugged(server.DBG_RQL | server.DBG_REPO)
+    >>> @debugged('DBG_RQL | DBG_REPO')
     ... def some_function():
     ...     # some code in which you want to debug repository activity,
     ...     # seing information about RQL being executed an repository events
