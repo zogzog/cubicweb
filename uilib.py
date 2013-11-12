@@ -453,7 +453,7 @@ def exc_message(ex, encoding):
 
 
 def rest_traceback(info, exception):
-    """return a ReST formated traceback"""
+    """return a unicode ReST formated traceback"""
     res = [u'Traceback\n---------\n::\n']
     for stackentry in traceback.extract_tb(info[2]):
         res.append(u'\tFile %s, line %s, function %s' % tuple(stackentry[:3]))
