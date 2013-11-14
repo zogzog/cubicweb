@@ -1070,68 +1070,6 @@ FUNCS = [
 FROM cw_Personne AS _P'''),
     ]
 
-SYMMETRIC = [
-    ('Any P WHERE X eid 0, X connait P',
-     '''SELECT DISTINCT _P.cw_eid
-FROM connait_relation AS rel_connait0, cw_Personne AS _P
-WHERE (rel_connait0.eid_from=0 AND rel_connait0.eid_to=_P.cw_eid OR rel_connait0.eid_to=0 AND rel_connait0.eid_from=_P.cw_eid)'''
-     ),
-
-    ('Any P WHERE X connait P',
-    '''SELECT DISTINCT _P.cw_eid
-FROM connait_relation AS rel_connait0, cw_Personne AS _P
-WHERE (rel_connait0.eid_to=_P.cw_eid OR rel_connait0.eid_from=_P.cw_eid)'''
-    ),
-
-    ('Any X WHERE X connait P',
-    '''SELECT DISTINCT _X.cw_eid
-FROM connait_relation AS rel_connait0, cw_Personne AS _X
-WHERE (rel_connait0.eid_from=_X.cw_eid OR rel_connait0.eid_to=_X.cw_eid)'''
-     ),
-
-    ('Any P WHERE X eid 0, NOT X connait P',
-     '''SELECT _P.cw_eid
-FROM cw_Personne AS _P
-WHERE NOT (EXISTS(SELECT 1 FROM connait_relation AS rel_connait0 WHERE (rel_connait0.eid_from=0 AND rel_connait0.eid_to=_P.cw_eid OR rel_connait0.eid_to=0 AND rel_connait0.eid_from=_P.cw_eid)))'''),
-
-    ('Any P WHERE NOT X connait P',
-    '''SELECT _P.cw_eid
-FROM cw_Personne AS _P
-WHERE NOT (EXISTS(SELECT 1 FROM connait_relation AS rel_connait0 WHERE (rel_connait0.eid_to=_P.cw_eid OR rel_connait0.eid_from=_P.cw_eid)))'''),
-
-    ('Any X WHERE NOT X connait P',
-    '''SELECT _X.cw_eid
-FROM cw_Personne AS _X
-WHERE NOT (EXISTS(SELECT 1 FROM connait_relation AS rel_connait0 WHERE (rel_connait0.eid_from=_X.cw_eid OR rel_connait0.eid_to=_X.cw_eid)))'''),
-
-    ('Any P WHERE X connait P, P nom "nom"',
-     '''SELECT DISTINCT _P.cw_eid
-FROM connait_relation AS rel_connait0, cw_Personne AS _P
-WHERE (rel_connait0.eid_to=_P.cw_eid OR rel_connait0.eid_from=_P.cw_eid) AND _P.cw_nom=nom'''),
-
-    ('Any X WHERE X connait P, P nom "nom"',
-     '''SELECT DISTINCT _X.cw_eid
-FROM connait_relation AS rel_connait0, cw_Personne AS _P, cw_Personne AS _X
-WHERE (rel_connait0.eid_from=_X.cw_eid AND rel_connait0.eid_to=_P.cw_eid OR rel_connait0.eid_to=_X.cw_eid AND rel_connait0.eid_from=_P.cw_eid) AND _P.cw_nom=nom'''
-    ),
-
-    ('DISTINCT Any P WHERE P connait S OR S connait P, S nom "chouette"',
-     '''SELECT DISTINCT _P.cw_eid
-FROM connait_relation AS rel_connait0, cw_Personne AS _P, cw_Personne AS _S
-WHERE (rel_connait0.eid_from=_P.cw_eid AND rel_connait0.eid_to=_S.cw_eid OR rel_connait0.eid_to=_P.cw_eid AND rel_connait0.eid_from=_S.cw_eid) AND _S.cw_nom=chouette'''
-     )
-    ]
-
-SYMMETRIC_WITH_LIMIT = [
-        ('Any X ORDERBY X DESC LIMIT 9 WHERE E eid 0, E connait X',
-    '''SELECT DISTINCT _X.cw_eid
-FROM connait_relation AS rel_connait0, cw_Personne AS _X
-WHERE (rel_connait0.eid_from=0 AND rel_connait0.eid_to=_X.cw_eid OR rel_connait0.eid_to=0 AND rel_connait0.eid_from=_X.cw_eid)
-ORDER BY 1 DESC
-LIMIT 9'''
-     ),
-]
-
 INLINE = [
 
     ('Any P WHERE N eid 1, N ecrit_par P, NOT P owned_by P2',
@@ -1578,10 +1516,6 @@ GROUP BY _T.cw_eid) AS _T0 ON (_T1.C0=_T0.C0)'''),
         rqlst = self._prepare(rql)
         self.assertRaises(BadRQLQuery, self.o.generate, rqlst)
 
-    def test_symmetric(self):
-        for t in self._parse(SYMMETRIC + SYMMETRIC_WITH_LIMIT):
-            yield t
-
     def test_inline(self):
         for t in self._parse(INLINE):
             yield t
@@ -1805,10 +1739,6 @@ FROM cw_Personne AS _P''')
         self._check("Any WEEKDAY(D) WHERE P is Personne, P creation_date D",
                     '''SELECT DATEPART(WEEKDAY, _P.cw_creation_date)
 FROM cw_Personne AS _P''')
-
-    def test_symmetric(self):
-        for t in self._parse(SYMMETRIC):
-            yield t
 
     def test_basic_parse(self):
         for t in self._parse(BASIC):# + BASIC_WITH_LIMIT):

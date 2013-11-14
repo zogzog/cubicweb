@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -38,6 +38,37 @@ class CoreHooksTC(CubicWebTC):
         self.execute('SET X sender Y WHERE X is Email, Y is EmailAddress')
         rset = self.execute('Any S WHERE X sender S, X eid %s' % eeid)
         self.assertEqual(len(rset), 1)
+
+    def test_symmetric(self):
+        req = self.request()
+        u1 = self.create_user(req, u'1')
+        u2 = self.create_user(req, u'2')
+        u3 = self.create_user(req, u'3')
+        ga = req.create_entity('CWGroup', name=u'A')
+        gb = req.create_entity('CWGroup', name=u'B')
+        u1.cw_set(friend=u2)
+        u2.cw_set(friend=u3)
+        ga.cw_set(friend=gb)
+        ga.cw_set(friend=u1)
+        self.commit()
+        req = self.request()
+        for l1, l2 in ((u'1', u'2'),
+                       (u'2', u'3')):
+            self.assertTrue(req.execute('Any U1,U2 WHERE U1 friend U2, U1 login %(l1)s, U2 login %(l2)s',
+                                        {'l1': l1, 'l2': l2}))
+            self.assertTrue(req.execute('Any U1,U2 WHERE U2 friend U1, U1 login %(l1)s, U2 login %(l2)s',
+                                        {'l1': l1, 'l2': l2}))
+        self.assertTrue(req.execute('Any GA,GB WHERE GA friend GB, GA name "A", GB name "B"'))
+        self.assertTrue(req.execute('Any GA,GB WHERE GB friend GA, GA name "A", GB name "B"'))
+        self.assertTrue(req.execute('Any GA,U1 WHERE GA friend U1, GA name "A", U1 login "1"'))
+        self.assertTrue(req.execute('Any GA,U1 WHERE U1 friend GA, GA name "A", U1 login "1"'))
+        self.assertFalse(req.execute('Any GA,U WHERE GA friend U, GA name "A", U login "2"'))
+        for l1, l2 in ((u'1', u'3'),
+                       (u'3', u'1')):
+            self.assertFalse(req.execute('Any U1,U2 WHERE U1 friend U2, U1 login %(l1)s, U2 login %(l2)s',
+                                         {'l1': l1, 'l2': l2}))
+            self.assertFalse(req.execute('Any U1,U2 WHERE U2 friend U1, U1 login %(l1)s, U2 login %(l2)s',
+                                         {'l1': l1, 'l2': l2}))
 
     def test_html_tidy_hook(self):
         req = self.request()

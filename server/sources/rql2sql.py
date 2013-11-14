@@ -242,12 +242,6 @@ def relation_info(relation):
         rhsconst = None # ColumnAlias
     return lhs, lhsconst, rhs, rhsconst
 
-def switch_relation_field(sql, table=''):
-    switchedsql = sql.replace(table + '.eid_from', '__eid_from__')
-    switchedsql = switchedsql.replace(table + '.eid_to',
-                                      table + '.eid_from')
-    return switchedsql.replace('__eid_from__', table + '.eid_to')
-
 def sort_term_selection(sorts, rqlst, groups):
     # XXX beurk
     if isinstance(rqlst, list):
@@ -1132,8 +1126,6 @@ class SQLGenerator(object):
         sqls += self._process_relation_term(relation, rid, lhsvar, lhsconst, 'eid_from')
         sqls += self._process_relation_term(relation, rid, rhsvar, rhsconst, 'eid_to')
         sql = ' AND '.join(sqls)
-        if rschema.symmetric:
-            sql = '(%s OR %s)' % (sql, switch_relation_field(sql))
         return sql
 
     def _visit_outer_join_relation(self, relation, rschema):

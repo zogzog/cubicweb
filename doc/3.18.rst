@@ -23,6 +23,12 @@ API changes
   numpy arrays, and fixes a bug where default values whose truth value
   was False were not properly migrated.
 
+* `symmetric` relations are no more handled by an rql rewrite but are
+  now handled with hooks (from the `activeintegrity` category); this
+  may have some consequences for applications that do low-level database
+  manipulations or at times disable (some) hooks.
+
+
 Deprecation
 ---------------------
 
