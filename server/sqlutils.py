@@ -327,10 +327,10 @@ def init_sqlite_connexion(cnx):
 
     class group_concat(object):
         def __init__(self):
-            self.values = []
+            self.values = set()
         def step(self, value):
             if value is not None:
-                self.values.append(value)
+                self.values.add(value)
         def finalize(self):
             return ', '.join(unicode(v) for v in self.values)
 
