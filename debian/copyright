@@ -8,7 +8,7 @@ Upstream Author:
 
 Copyright:
 
-    Copyright (c) 2003-2011 LOGILAB S.A. (Paris, FRANCE).
+    Copyright (c) 2003-2013 LOGILAB S.A. (Paris, FRANCE).
     http://www.logilab.fr/ -- mailto:contact@logilab.fr
 
 License:
@@ -29,3 +29,18 @@ License:
 
 On Debian systems, the complete text of the GNU Lesser General Public License
 may be found in '/usr/share/common-licenses/LGPL-2.1'.
+
+Entypo pictograms:
+
+Author:
+
+    Daniel Bruce <info@entypo.com> (www.entypo.com)
+
+Licence:
+
+    Entypo pictograms are licensed under CC BY-SA 3.0 and the font
+    under SIL Open Font License.
+
+    The rights to each pictogram in the social extention are either
+    trademarked or copyrighted by the respective company.
+
