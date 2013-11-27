@@ -446,6 +446,7 @@ class TableMixIn(component.LayoutableMixIn):
     handle_pagination = True
 
     def call(self, **kwargs):
+        self._cw.add_js('cubicweb.ajax.js') # for pagination
         self.layout_render(self.w)
 
     def column_renderer(self, colid, *args, **kwargs):
@@ -621,7 +622,7 @@ class RsetTableView(TableMixIn, AnyRsetView):
             else:
                 msg = '[3.14] %s argument is deprecated' % ', '.join(kwargs)
             warn(msg, DeprecationWarning, stacklevel=2)
-        self.layout_render(self.w)
+        super(RsetTableView, self).call(**kwargs)
 
     def main_var_index(self):
         """returns the index of the first non-attribute variable among the RQL
