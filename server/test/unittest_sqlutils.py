@@ -24,6 +24,8 @@ from logilab.common.testlib import TestCase, unittest_main
 
 from cubicweb.server.sqlutils import *
 
+from cubicweb.devtools.testlib import CubicWebTC
+
 BASE_CONFIG = {
     'db-driver' : 'Postgres',
     'db-host'   : 'crater',
@@ -43,6 +45,18 @@ class SQLAdapterMixInTC(TestCase):
         config['db-encoding'] = 'ISO-8859-1'
         o = SQLAdapterMixIn(config)
         self.assertEqual(o.dbhelper.dbencoding, 'ISO-8859-1')
+
+
+class SQLUtilsTC(CubicWebTC):
+
+    def test_group_concat(self):
+        req = self.request()
+        u = req.create_entity('CWUser', login=u'toto', upassword=u'',
+                              in_group=req.execute('CWGroup G WHERE G name "managers"').rows[0][0])
+        rset = self.execute('Any L,GROUP_CONCAT(G) GROUPBY L WHERE X login L,'
+                            'X in_group G, G name GN, NOT G name "users"')
+        self.assertEqual([[u'admin', u'3'], [u'anon', u'2'], [u'toto', u'3']],
+                         rset.rows)
 
 if __name__ == '__main__':
     unittest_main()
