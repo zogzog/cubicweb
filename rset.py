@@ -53,7 +53,10 @@ class ResultSet(object):
         self.args = args
         # entity types for each cell (same shape as rows)
         # maybe discarded if specified when the query has been executed
-        self.description = description or []
+        if description is None:
+            self.description = []
+        else:
+            self.description = description
         # parsed syntax tree
         if rqlst is not None:
             rqlst.schema = None # reset schema in case of pyro transfert

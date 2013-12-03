@@ -181,6 +181,7 @@ class ResultSetTC(CubicWebTC):
         rs2 = rs.filtered_rset(test_filter)
         self.assertEqual(len(rs2), 2)
         self.assertEqual([login for _, login in rs2], ['adim', 'syt'])
+        self.assertEqual(rs2.description, rs.description[1:])
 
     def test_transform(self):
         rs = ResultSet([[12, 'adim'], [13, 'syt'], [14, 'nico']],
