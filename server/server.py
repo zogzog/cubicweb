@@ -109,7 +109,8 @@ class RepositoryServer(object):
                 self.daemon.handleRequests(req_timeout)
             except select.error:
                 continue
-            self.trigger_events()
+            finally:
+                self.trigger_events()
 
     def quit(self):
         """stop the server"""
