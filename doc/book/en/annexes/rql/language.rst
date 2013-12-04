@@ -747,7 +747,7 @@ Caution, if a restriction is specified, the insertion is done for
 
   .. sourcecode:: sql
 
-        INSERT Person X: X name 'foo', X friend  Y WHERE name 'nice'
+        INSERT Person X: X name 'foo', X friend  Y WHERE Y name 'nice'
 
 .. _RQLSetQuery:
 
