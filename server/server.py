@@ -48,7 +48,7 @@ class TimeEvent:
     def is_ready(self):
         """return  true if the event is ready to be fired"""
         now = self.timefunc()
-        if self.absolute < now:
+        if self.absolute <= now:
             return True
         return False
 
