@@ -356,9 +356,9 @@ class AbstractColumnRenderer(object):
         self.colid = None
 
     def __str__(self):
-        return '<%s.%s (column %s)>' % (self.view.__class__.__name__,
+        return '<%s.%s (column %s) at 0x%x>' % (self.view.__class__.__name__,
                                         self.__class__.__name__,
-                                        self.colid)
+                                        self.colid, id(self))
 
     def bind(self, view, colid):
         """Bind the column renderer to its view. This is where `_cw`, `view`,
