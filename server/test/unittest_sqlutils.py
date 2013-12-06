@@ -1,4 +1,5 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# -*- coding: utf-8 -*-
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -51,11 +52,16 @@ class SQLUtilsTC(CubicWebTC):
 
     def test_group_concat(self):
         req = self.request()
+        g = req.create_entity('CWGroup', name=u'héhé')
         u = req.create_entity('CWUser', login=u'toto', upassword=u'',
-                              in_group=req.execute('CWGroup G WHERE G name "managers"').rows[0][0])
-        rset = self.execute('Any L,GROUP_CONCAT(G) GROUPBY L WHERE X login L,'
+                              in_group=g.eid)
+        rset = self.execute(u'Any L,GROUP_CONCAT(G) GROUPBY L WHERE X login L,'
+                            u'X in_group G, G name GN, NOT G name IN ("users", "héhé")')
+        self.assertEqual([[u'admin', u'3'], [u'anon', u'2']],
+                         rset.rows)
+        rset = self.execute('Any L,GROUP_CONCAT(GN) GROUPBY L WHERE X login L,'
                             'X in_group G, G name GN, NOT G name "users"')
-        self.assertEqual([[u'admin', u'3'], [u'anon', u'2'], [u'toto', u'3']],
+        self.assertEqual([[u'admin', u'managers'], [u'anon', u'guests'], [u'toto', u'héhé']],
                          rset.rows)
 
 if __name__ == '__main__':
