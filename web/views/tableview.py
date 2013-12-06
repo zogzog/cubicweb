@@ -451,7 +451,7 @@ class TableMixIn(component.LayoutableMixIn):
     def column_renderer(self, colid, *args, **kwargs):
         """Return a column renderer for column of the given id."""
         try:
-            crenderer = self.column_renderers[colid]
+            crenderer = self.column_renderers[colid].copy()
         except KeyError:
             crenderer = self.default_column_renderer_class(*args, **kwargs)
         crenderer.bind(self, colid)
