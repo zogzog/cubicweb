@@ -356,9 +356,9 @@ class AbstractColumnRenderer(object):
         self.colid = None
 
     def __str__(self):
-        return '<%s.%s (column %s)>' % (self.view.__class__.__name__,
+        return '<%s.%s (column %s) at 0x%x>' % (self.view.__class__.__name__,
                                         self.__class__.__name__,
-                                        self.colid)
+                                        self.colid, id(self))
 
     def bind(self, view, colid):
         """Bind the column renderer to its view. This is where `_cw`, `view`,
@@ -446,12 +446,13 @@ class TableMixIn(component.LayoutableMixIn):
     handle_pagination = True
 
     def call(self, **kwargs):
+        self._cw.add_js('cubicweb.ajax.js') # for pagination
         self.layout_render(self.w)
 
     def column_renderer(self, colid, *args, **kwargs):
         """Return a column renderer for column of the given id."""
         try:
-            crenderer = self.column_renderers[colid]
+            crenderer = self.column_renderers[colid].copy()
         except KeyError:
             crenderer = self.default_column_renderer_class(*args, **kwargs)
         crenderer.bind(self, colid)
@@ -621,7 +622,7 @@ class RsetTableView(TableMixIn, AnyRsetView):
             else:
                 msg = '[3.14] %s argument is deprecated' % ', '.join(kwargs)
             warn(msg, DeprecationWarning, stacklevel=2)
-        self.layout_render(self.w)
+        super(RsetTableView, self).call(**kwargs)
 
     def main_var_index(self):
         """returns the index of the first non-attribute variable among the RQL

@@ -26,6 +26,7 @@ from logilab.common.decorators import clear_cache
 from cubicweb import Binary, Unauthorized
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.mttransforms import HAS_TAL
+from cubicweb.entity import can_use_rest_path
 from cubicweb.entities import fetch_config
 from cubicweb.uilib import soup2xhtml
 from cubicweb.schema import RQLVocabularyConstraint, RRQLExpression
@@ -713,14 +714,13 @@ du :eid:`1:*ReST*`'''
         # unique attr with None value (nom in this case)
         friend = req.create_entity('Ami', prenom=u'bob')
         self.assertEqual(friend.rest_path(), unicode(friend.eid))
-        # don't use rest if we have /, ? or & in the path (breaks mod_proxy)
-        person3 = req.create_entity('Personne', nom=u'zo/bi')
-        self.assertEqual(person3.rest_path(), unicode(person3.eid))
-        person4 = req.create_entity('Personne', nom=u'zo&bi')
-        self.assertEqual(person4.rest_path(), unicode(person4.eid))
-        person5 = req.create_entity('Personne', nom=u'zo?bi')
-        self.assertEqual(person5.rest_path(), unicode(person5.eid))
 
+    def test_can_use_rest_path(self):
+        self.assertTrue(can_use_rest_path(u'zobi'))
+        # don't use rest if we have /, ? or & in the path (breaks mod_proxy)
+        self.assertFalse(can_use_rest_path(u'zo/bi'))
+        self.assertFalse(can_use_rest_path(u'zo&bi'))
+        self.assertFalse(can_use_rest_path(u'zo?bi'))
 
     def test_cw_set_attributes(self):
         req = self.request()

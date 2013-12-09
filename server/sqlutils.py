@@ -332,7 +332,8 @@ def init_sqlite_connexion(cnx):
             if value is not None:
                 self.values.append(value)
         def finalize(self):
-            return ', '.join(self.values)
+            return ', '.join(unicode(v) for v in self.values)
+
     cnx.create_aggregate("GROUP_CONCAT", 1, group_concat)
 
     def _limit_size(text, maxsize, format='text/plain'):

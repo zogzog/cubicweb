@@ -149,13 +149,13 @@ class debugged(object):
 
     It can be used either as a context manager:
 
-    >>> with debugged(server.DBG_RQL | server.DBG_REPO):
+    >>> with debugged('DBG_RQL | DBG_REPO'):
     ...     # some code in which you want to debug repository activity,
     ...     # seing information about RQL being executed an repository events.
 
     or as a function decorator:
 
-    >>> @debugged(server.DBG_RQL | server.DBG_REPO)
+    >>> @debugged('DBG_RQL | DBG_REPO')
     ... def some_function():
     ...     # some code in which you want to debug repository activity,
     ...     # seing information about RQL being executed an repository events
@@ -249,7 +249,11 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     schemasql = sqlschema(schema, driver)
     #skip_entities=[str(e) for e in schema.entities()
     #               if not repo.system_source.support_entity(str(e))])
-    sqlexec(schemasql, execute, pbtitle=_title, delimiter=';;')
+    failed = sqlexec(schemasql, execute, pbtitle=_title, delimiter=';;')
+    if failed:
+        print 'The following SQL statements failed. You should check your schema.'
+        print failed
+        raise Exception('execution of the sql schema failed, you should check your schema')
     sqlcursor.close()
     sqlcnx.commit()
     sqlcnx.close()

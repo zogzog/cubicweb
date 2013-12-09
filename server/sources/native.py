@@ -1536,6 +1536,7 @@ CREATE TABLE transactions (
   tx_time %s NOT NULL
 );;
 CREATE INDEX transactions_tx_user_idx ON transactions(tx_user);;
+CREATE INDEX transactions_tx_time_idx ON transactions(tx_time);;
 
 CREATE TABLE tx_entity_actions (
   tx_uuid CHAR(32) REFERENCES transactions(tx_uuid) ON DELETE CASCADE,
@@ -1550,6 +1551,7 @@ CREATE INDEX tx_entity_actions_txa_action_idx ON tx_entity_actions(txa_action);;
 CREATE INDEX tx_entity_actions_txa_public_idx ON tx_entity_actions(txa_public);;
 CREATE INDEX tx_entity_actions_eid_idx ON tx_entity_actions(eid);;
 CREATE INDEX tx_entity_actions_etype_idx ON tx_entity_actions(etype);;
+CREATE INDEX tx_entity_actions_tx_uuid_idx ON tx_entity_actions(tx_uuid);;
 
 CREATE TABLE tx_relation_actions (
   tx_uuid CHAR(32) REFERENCES transactions(tx_uuid) ON DELETE CASCADE,
@@ -1564,6 +1566,7 @@ CREATE INDEX tx_relation_actions_txa_action_idx ON tx_relation_actions(txa_actio
 CREATE INDEX tx_relation_actions_txa_public_idx ON tx_relation_actions(txa_public);;
 CREATE INDEX tx_relation_actions_eid_from_idx ON tx_relation_actions(eid_from);;
 CREATE INDEX tx_relation_actions_eid_to_idx ON tx_relation_actions(eid_to);;
+CREATE INDEX tx_relation_actions_tx_uuid_idx ON tx_relation_actions(tx_uuid);;
 """ % (helper.sql_create_sequence('entities_id_seq').replace(';', ';;'),
        typemap['Datetime'], typemap['Datetime'], typemap['Datetime'],
        typemap['Boolean'], typemap['Bytes'], typemap['Boolean'])

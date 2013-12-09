@@ -169,7 +169,10 @@ type and the eid of the object entity.
 
 * `after_add_relation`, `after_delete_relation`
 
-Take note that relations can be added or deleted, but not updated.
+Specific selectors are shipped for these kinds of events, see in particular
+:class:`~cubicweb.server.hook.match_rtype`.
+
+Also note that relations can be added or deleted, but not updated.
 
 Non data events
 ~~~~~~~~~~~~~~~
@@ -439,11 +442,13 @@ class rechain(object):
 
 
 class match_rtype(ExpectedValuePredicate):
-    """accept if parameters specified as initializer arguments are specified
-    in named arguments given to the predicate
+    """accept if the relation type is found in expected ones. Optional
+    named parameters `frometypes` and `toetypes` can be used to restrict
+    target subject and/or object entity types of the relation.
 
-    :param \*expected: parameters (eg `basestring`) which are expected to be
-                       found in named arguments (kwargs)
+    :param \*expected: possible relation types
+    :param frometypes: candidate entity types as subject of relation
+    :param toetypes: candidate entity types as object of relation
     """
     def __init__(self, *expected, **more):
         self.expected = expected

@@ -383,9 +383,9 @@ class QuerierTC(BaseQuerierTC):
         self.execute("INSERT Personne X: X nom 'bidule'")[0]
         rset = self.execute('Any Y where X name TMP, Y nom in (TMP, "bidule")')
         #self.assertEqual(rset.description, [('Personne',), ('Personne',)])
-        self.assert_(('Personne',) in rset.description)
+        self.assertIn(('Personne',), rset.description)
         rset = self.execute('DISTINCT Any Y where X name TMP, Y nom in (TMP, "bidule")')
-        self.assert_(('Personne',) in rset.description)
+        self.assertIn(('Personne',), rset.description)
 
     def test_select_not_attr(self):
         peid = self.execute("INSERT Personne X: X nom 'bidule'")[0][0]
@@ -466,8 +466,8 @@ class QuerierTC(BaseQuerierTC):
         self.execute("SET X tags Y WHERE X eid %(t)s, Y eid %(g)s",
                      {'g': geid, 't': teid})
         rset = self.execute("Any GN,TN ORDERBY GN WHERE T? tags G, T name TN, G name GN")
-        self.assertTrue(['users', 'tag'] in rset.rows)
-        self.assertTrue(['activated', None] in rset.rows)
+        self.assertIn(['users', 'tag'], rset.rows)
+        self.assertIn(['activated', None], rset.rows)
         rset = self.execute("Any GN,TN ORDERBY GN WHERE T tags G?, T name TN, G name GN")
         self.assertEqual(rset.rows, [[None, 'tagbis'], ['users', 'tag']])
 
@@ -702,7 +702,7 @@ class QuerierTC(BaseQuerierTC):
         rset = self.execute('Any X WHERE X is CWGroup', build_descr=0)
         rset.rows.sort()
         self.assertEqual(tuplify(rset.rows), [(2,), (3,), (4,), (5,)])
-        self.assertEqual(rset.description, [])
+        self.assertEqual(rset.description, ())
 
     def test_select_limit_offset(self):
         rset = self.execute('CWGroup X ORDERBY N LIMIT 2 WHERE X name N')
@@ -818,11 +818,11 @@ class QuerierTC(BaseQuerierTC):
         self.execute("INSERT Tag X: X name 'bidule', X creation_date NOW")
         self.execute("INSERT Tag Y: Y name 'toto'")
         rset = self.execute("Any D WHERE X name in ('bidule', 'toto') , X creation_date D")
-        self.assert_(isinstance(rset.rows[0][0], datetime), rset.rows)
+        self.assertIsInstance(rset.rows[0][0], datetime)
         rset = self.execute('Tag X WHERE X creation_date TODAY')
         self.assertEqual(len(rset.rows), 2)
         rset = self.execute('Any MAX(D) WHERE X is Tag, X creation_date D')
-        self.assertTrue(isinstance(rset[0][0], datetime), (rset[0][0], type(rset[0][0])))
+        self.assertIsInstance(rset[0][0], datetime)
 
     def test_today(self):
         self.execute("INSERT Tag X: X name 'bidule', X creation_date TODAY")

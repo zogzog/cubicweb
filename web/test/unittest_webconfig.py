@@ -1,4 +1,5 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# -*- coding: utf-8 -*-
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -15,13 +16,11 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""
+"""cubicweb.web.webconfig unit tests"""
 
-"""
 import os
 
 from logilab.common.testlib import TestCase, unittest_main
-
 from cubicweb.devtools import ApptestConfiguration, fake
 
 class WebconfigTC(TestCase):
@@ -44,6 +43,10 @@ class WebconfigTC(TestCase):
         self.assertTrue('file' in self.config.locate_resource(rname)[0].split(os.sep))
         cubicwebcsspath = self.config.locate_resource('cubicweb.css')[0].split(os.sep)
         self.assertTrue('web' in cubicwebcsspath or 'shared' in cubicwebcsspath) # 'shared' if tests under apycot
+
+    def test_sign_text(self):
+        signature = self.config.sign_text(u'hôp')
+        self.assertTrue(self.config.check_text_sign(u'hôp', signature))
 
 if __name__ == '__main__':
     unittest_main()

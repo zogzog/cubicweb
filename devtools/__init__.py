@@ -26,6 +26,7 @@ import shutil
 import pickle
 import glob
 import warnings
+import tempfile
 from hashlib import sha1 # pylint: disable=E0611
 from datetime import timedelta
 from os.path import (abspath, join, exists, split, isabs, isdir)
@@ -328,8 +329,9 @@ class TestDataBaseHandler(object):
         # XXX we dump a dict of the config
         # This is an experimental to help config dependant setup (like BFSS) to
         # be propertly restored
-        with open(config_path, 'wb') as conf_file:
+        with tempfile.NamedTemporaryFile(dir=os.path.dirname(config_path), delete=False) as conf_file:
             conf_file.write(pickle.dumps(dict(self.config)))
+        os.rename(conf_file.name, config_path)
         self.db_cache[self.db_cache_key(db_id)] = (backup_data, config_path)
 
     def _backup_database(self, db_id):

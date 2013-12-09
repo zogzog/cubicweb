@@ -81,7 +81,7 @@ Bases types supported by RQL are those supported by yams schema. Literal values
 are expressed as explained below:
 
 * string should be between double or single quotes. If the value contains a
-  quote, it should be preceded by a backslash '\'
+  quote, it should be preceded by a backslash '\\'
 
 * floats separator is dot '.'
 
@@ -747,7 +747,7 @@ Caution, if a restriction is specified, the insertion is done for
 
   .. sourcecode:: sql
 
-        INSERT Person X: X name 'foo', X friend  Y WHERE name 'nice'
+        INSERT Person X: X name 'foo', X friend  Y WHERE Y name 'nice'
 
 .. _RQLSetQuery:
 

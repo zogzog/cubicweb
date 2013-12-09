@@ -486,13 +486,10 @@ class StateInfo(object):
             return relation._q_sqltable
         rid = 'rel_%s%s' % (relation.r_type, self.count)
         # relation's table is belonging to the root scope if it is the principal
-        # table of one of it's variable and if that variable belong's to parent
+        # table of one of its variable and that variable belong's to parent
         # scope
         for varref in relation.iget_nodes(VariableRef):
             var = varref.variable
-            if isinstance(var, ColumnAlias):
-                scope = 0
-                break
             # XXX may have a principal without being invariant for this generation,
             #     not sure this is a pb or not
             if var.stinfo.get('principal') is relation and var.scope is var.stmt:
