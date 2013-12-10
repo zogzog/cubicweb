@@ -1214,12 +1214,9 @@ class is_in_state(score_entity):
                            ','.join(str(s) for s in self.expected))
 
 
-def on_fire_transition(etype, tr_name, from_state_name=None):
+def on_fire_transition(etype, tr_names, from_state_name=None):
     """Return 1 when entity of the type `etype` is going through transition of
-    the name `tr_name`.
-
-    If `from_state_name` is specified, this predicate will also check the
-    incoming state.
+    a name included in `tr_names`.
 
     You should use this predicate on 'after_add_entity' hook, since it's actually
     looking for addition of `TrInfo` entities. Hence in the hook, `self.entity`
@@ -1229,9 +1226,13 @@ def on_fire_transition(etype, tr_name, from_state_name=None):
 
     See :class:`cubicweb.entities.wfobjs.TrInfo` for more information.
     """
+    if from_state_name is not None:
+        warn("on_fire_transition's from_state_name argument is unused", DeprecationWarning)
+    if isinstance(tr_names, basestring):
+        tr_names = set((tr_names,))
     def match_etype_and_transition(trinfo):
         # take care trinfo.transition is None when calling change_state
-        return (trinfo.transition and trinfo.transition.name == tr_name
+        return (trinfo.transition and trinfo.transition.name in tr_names
                 # is_instance() first two arguments are 'cls' (unused, so giving
                 # None is fine) and the request/session
                 and is_instance(etype)(None, trinfo._cw, entity=trinfo.for_entity))
