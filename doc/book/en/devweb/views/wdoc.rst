@@ -8,10 +8,8 @@ Online documentation system
 Help views
 ----------
 .. autoclass:: cubicweb.web.views.wdoc.InlineHelpView
-.. autoclass:: cubicweb.web.views.wdoc.ChangeLogView
 
 Actions
 -------
 .. autoclass:: cubicweb.web.views.wdoc.HelpAction
-.. autoclass:: cubicweb.web.views.wdoc.ChangeLogAction
 .. autoclass:: cubicweb.web.views.wdoc.AboutAction
