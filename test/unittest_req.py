@@ -18,7 +18,7 @@
 
 from logilab.common.testlib import TestCase, unittest_main
 from cubicweb import ObjectNotFound
-from cubicweb.req import RequestSessionBase
+from cubicweb.req import RequestSessionBase, FindEntityError
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb import Unauthorized
 
@@ -58,6 +58,82 @@ class RequestCWTC(CubicWebTC):
         rset = self.execute('CWUser X WHERE X login "hop"')
         self.assertEqual(req.view('oneline', rset, 'null'), '')
         self.assertRaises(ObjectNotFound, req.view, 'onelinee', rset, 'null')
+
+    def test_find_one_entity(self):
+        self.request().create_entity(
+            'CWUser', login=u'cdevienne', upassword=u'cdevienne',
+            surname=u'de Vienne', firstname=u'Christophe',
+            in_group=self.request().find('CWGroup', name=u'users').one())
+
+        self.request().create_entity(
+            'CWUser', login=u'adim', upassword='adim', surname=u'di mascio',
+            firstname=u'adrien',
+            in_group=self.request().find('CWGroup', name=u'users').one())
+
+        u = self.request().find_one_entity('CWUser', login=u'cdevienne')
+        self.assertEqual(u.firstname, u"Christophe")
+
+        with self.assertRaises(FindEntityError):
+            self.request().find_one_entity('CWUser', login=u'patanok')
+
+        with self.assertRaises(FindEntityError):
+            self.request().find_one_entity('CWUser')
+
+    def test_find_entities(self):
+        self.request().create_entity(
+            'CWUser', login=u'cdevienne', upassword=u'cdevienne',
+            surname=u'de Vienne', firstname=u'Christophe',
+            in_group=self.request().find('CWGroup', name=u'users').one())
+
+        self.request().create_entity(
+            'CWUser', login=u'adim', upassword='adim', surname=u'di mascio',
+            firstname=u'adrien',
+            in_group=self.request().find('CWGroup', name=u'users').one())
+
+        l = list(self.request().find_entities('CWUser', login=u'cdevienne'))
+        self.assertEqual(1, len(l))
+        self.assertEqual(l[0].firstname, u"Christophe")
+
+        l = list(self.request().find_entities('CWUser', login=u'patanok'))
+        self.assertEqual(0, len(l))
+
+        l = list(self.request().find_entities('CWUser'))
+        self.assertEqual(4, len(l))
+
+    def test_find(self):
+        self.request().create_entity(
+            'CWUser', login=u'cdevienne', upassword=u'cdevienne',
+            surname=u'de Vienne', firstname=u'Christophe',
+            in_group=self.request().find('CWGroup', name=u'users').one())
+
+        self.request().create_entity(
+            'CWUser', login=u'adim', upassword='adim', surname=u'di mascio',
+            firstname=u'adrien',
+            in_group=self.request().find('CWGroup', name=u'users').one())
+
+        u = self.request().find('CWUser', login=u'cdevienne').one()
+        self.assertEqual(u.firstname, u"Christophe")
+
+        users = list(self.request().find('CWUser').entities())
+        self.assertEqual(len(users), 4)
+
+        groups = list(
+            self.request().find('CWGroup', reverse_in_group=u).entities())
+        self.assertEqual(len(groups), 1)
+        self.assertEqual(groups[0].name, u'users')
+
+        users = self.request().find('CWUser', in_group=groups[0]).entities()
+        users = list(users)
+        self.assertEqual(len(users), 2)
+
+        with self.assertRaises(AssertionError):
+            self.request().find('CWUser', chapeau=u"melon")
+
+        with self.assertRaises(AssertionError):
+            self.request().find('CWUser', reverse_buddy=users[0])
+
+        with self.assertRaises(NotImplementedError):
+            self.request().find('CWUser', in_group=[1, 2])
 
 if __name__ == '__main__':
     unittest_main()
