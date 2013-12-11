@@ -23,7 +23,7 @@ from logilab.common.decorators import cached, clear_cache, copy_cache
 
 from rql import nodes, stmts
 
-from cubicweb import NotAnEntity
+from cubicweb import NotAnEntity, NoResultError, MultipleResultsError
 
 
 class ResultSet(object):
@@ -436,6 +436,25 @@ class ResultSet(object):
         except KeyError:
             raise NotAnEntity(etype)
         return self._build_entity(row, col)
+
+    def one(self, col=0):
+        """Retrieve exactly one entity from the query.
+
+        If the result set is empty, raises :exc:`NoResultError`.
+        If the result set has more than one row, raises
+        :exc:`MultipleResultsError`.
+
+        :type col: int
+        :param col: The column localising the entity in the unique row
+
+        :return: the partially initialized `Entity` instance
+        """
+        if len(self) == 1:
+            return self.get_entity(0, col)
+        elif len(self) == 0:
+            raise NoResultError("No row was found for one()")
+        else:
+            raise MultipleResultsError("Multiple rows were found for one()")
 
     def _build_entity(self, row, col):
         """internal method to get a single entity, returns a partially

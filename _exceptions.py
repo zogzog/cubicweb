@@ -134,6 +134,15 @@ class NotAnEntity(CubicWebRuntimeError):
     a non final entity
     """
 
+class MultipleResultsError(CubicWebRuntimeError):
+    """raised when ResultSet.one() is called on a resultset with multiple rows
+    of multiple columns.
+    """
+
+class NoResultError(CubicWebRuntimeError):
+    """raised when no result is found but at least one is expected.
+    """
+
 class UndoTransactionException(QueryError):
     """Raised when undoing a transaction could not be performed completely.
 
