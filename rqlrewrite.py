@@ -92,6 +92,7 @@ def add_types_restriction(schema, rqlst, newroot=None, solutions=None):
                     for etype in possibletypes:
                         node.append(n.Constant(etype, 'etype'))
                 else:
+                    etype = iter(possibletypes).next()
                     node = n.Constant(etype, 'etype')
                 comp = mytyperel.children[1]
                 comp.replace(comp.children[0], node)

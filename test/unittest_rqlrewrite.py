@@ -486,6 +486,13 @@ class RQLRewriteTC(TestCase):
         rqlst = parse('Any A, R WHERE A ref R, S is Affaire')
         rewrite(rqlst, {('A', 'X'): (c_ok, c_bad)}, {})
 
+    def test_nonregr_is_instance_of(self):
+        user_expr = ERQLExpression('NOT X in_group AF, AF name "guests"')
+        rqlst = parse('Any O WHERE S use_email O, S is CWUser, O is_instance_of EmailAddress')
+        rewrite(rqlst, {('S', 'X'): (user_expr,)}, {})
+        self.assertEqual(rqlst.as_string(),
+                         'Any O WHERE S use_email O, S is CWUser, O is EmailAddress, '
+                         'EXISTS(NOT S in_group A, A name "guests", A is CWGroup)')
 
 from cubicweb.devtools.testlib import CubicWebTC
 from logilab.common.decorators import classproperty
