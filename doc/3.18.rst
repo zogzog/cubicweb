@@ -13,6 +13,12 @@ New functionalities
 * the primary view display controller (uicfg) now has a
   `set_fields_order` method similar to the one available for forms
 
+* new method `ResultSet.one(col=0)` to retrive a single entity and enforce the
+  result has only one row (see `#3352314 https://www.cubicweb.org/ticket/3352314`_)
+
+* new method `RequestSessionBase.find` to look for entities
+  (see `#3361290 https://www.cubicweb.org/ticket/3361290`_)
+
 
 API changes
 -----------
@@ -44,6 +50,9 @@ Deprecation
   **NOW**!
 
 * the old multi-source system
+
+* `find_one_entity` and `find_entities` in favor of `find`
+  (see `#3361290 https://www.cubicweb.org/ticket/3361290`_)
 
 
 Deprecated Code Drops
