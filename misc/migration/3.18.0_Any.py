@@ -8,7 +8,8 @@ def convert_defaultval(cwattr, default):
         return
     atype = cwattr.to_entity[0].name
     if atype == 'Boolean':
-        assert default in ('True', 'False'), default
+        # boolean attributes with default=False were stored as ''
+        assert default in ('True', 'False', ''), repr(default)
         default = default == 'True'
     elif atype in ('Int', 'BigInt'):
         default = int(default)
