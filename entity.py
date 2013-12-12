@@ -287,7 +287,10 @@ class Entity(AppObject):
         select._varmaker = rqlvar_maker(defined=select.defined_vars,
                                         aliases=select.aliases, index=26)
         if settype:
-            select.add_type_restriction(mainvar, cls.__regid__)
+            rel = select.add_type_restriction(mainvar, cls.__regid__)
+            # should use 'is_instance_of' instead of 'is' so we retrieve
+            # subclasses instances as well
+            rel.r_type = 'is_instance_of'
         if fetchattrs is None:
             fetchattrs = cls.fetch_attrs
         cls._fetch_restrictions(mainvar, select, fetchattrs, user, ordermethod)

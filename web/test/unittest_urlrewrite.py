@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -15,7 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-from logilab.common.testlib import TestCase, unittest_main
+
+from logilab.common import tempattr
 
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.devtools.fake import FakeRequest
@@ -96,6 +97,24 @@ class UrlRewriteTC(CubicWebTC):
         rewriter.rewrite(req, '/add/Task/')
         self.assertEqual(req.form, {'vid' : "creation", 'etype' : "Task"})
 
+    def test_inheritance(self):
+        BaseTransition = self.vreg['etypes'].etype_class('BaseTransition')
+        req = self.request()
+        x = req.create_entity('WorkflowTransition', name=u'test')
+        ctrlid, rset = self.app.url_resolver.process(req, 'basetransition/%s' % x.eid)
+        self.assertEqual(ctrlid, 'view')
+        self.assertEqual(x.eid, rset[0][0])
+        # cw_rest_attr_info is cached but clear_cache doesn't like cached class
+        # method
+        del BaseTransition._cw_rest_attr_info_cache_
+        try:
+            with tempattr(BaseTransition, 'rest_attr', 'name'):
+
+                ctrlid, rset = self.app.url_resolver.process(req, 'basetransition/%s' % x.name)
+                self.assertEqual(ctrlid, 'view')
+                self.assertEqual(x.eid, rset[0][0])
+        finally:
+            del BaseTransition._cw_rest_attr_info_cache_
 
 
 
@@ -192,4 +211,5 @@ class RgxActionRewriteTC(CubicWebTC):
 
 
 if __name__ == '__main__':
+    from logilab.common.testlib import unittest_main
     unittest_main()
