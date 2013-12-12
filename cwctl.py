@@ -752,6 +752,7 @@ given, appropriate sources for migration will be automatically selected \
         mih = config.migration_handler()
         repo = mih.repo_connect()
         vcconf = repo.get_versions()
+        helper = self.config_helper(config, required=False)
         if self.config.force_cube_version:
             for cube, version in self.config.force_cube_version.iteritems():
                 vcconf[cube] = Version(version)
@@ -790,6 +791,8 @@ given, appropriate sources for migration will be automatically selected \
         if not self.i18nupgrade(config):
             return
         print
+        if helper:
+            helper.postupgrade(repo)
         print '-> instance migrated.'
         if instance_running and not (CWDEV or self.config.nostartstop):
             # restart instance through fork to get a proper environment, avoid

@@ -235,6 +235,18 @@ have the python imaging library installed to use captcha)',
           'help': 'anonymize the connection before executing any jsonp query.',
           'group': 'web', 'level': 1
           }),
+        ('generate-staticdir',
+         {'type': 'yn',
+          'default': True,
+          'help': 'Generate the static data resource directory on upgrade.',
+          'group': 'web', 'level': 2,
+          }),
+        ('staticdir-path',
+         {'type': 'string',
+          'default': None,
+          'help': 'The static data resource directory path.',
+          'group': 'web', 'level': 2,
+          }),
         ))
 
     def __init__(self, *args, **kwargs):

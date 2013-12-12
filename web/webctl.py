@@ -22,7 +22,7 @@ web configuration
 __docformat__ = "restructuredtext en"
 
 import os, os.path as osp
-from shutil import copy
+from shutil import copy, rmtree
 
 from logilab.common.shellutils import ASK
 
@@ -58,30 +58,24 @@ class WebCreateHandler(CommandHandler):
         """hooks called once instance's initialization has been completed"""
 
 
-class GenStaticDataDir(Command):
+class GenStaticDataDirMixIn(object):
     """Create a directory merging all data directory content from cubes and CW.
     """
-    name = 'gen-static-datadir'
-    arguments = '<instance> [dirpath]'
-    min_args = 1
-    max_args = 2
-
-    options = ()
-
-    def run(self, args):
-        appid = args.pop(0)
-        config = cwcfg.config_for(appid)
-        if args:
-            dest = args[0]
-        else:
+    def generate_static_dir(self, config, dest=None, ask_clean=False, repo=None):
+        if not dest:
+            dest = config['staticdir-path']
+        if not dest:
             dest = osp.join(config.appdatahome, 'data')
         if osp.exists(dest):
-            raise ExecutionError('Directory %s already exists. '
-                                 'Remove it first.' % dest)
+            if (not ask_clean or
+                not ASK.confirm('Remove existing data directory %s?' % dest)):
+                raise ExecutionError('Directory %s already exists. '
+                                     'Remove it first.' % dest)
+            rmtree(dest)
         config.quick_start = True # notify this is not a regular start
         # list all resources (no matter their order)
         resources = set()
-        for datadir in self._datadirs(config):
+        for datadir in self._datadirs(config, repo=repo):
             for dirpath, dirnames, filenames in os.walk(datadir):
                 rel_dirpath = dirpath[len(datadir)+1:]
                 resources.update(osp.join(rel_dirpath, f) for f in filenames)
@@ -98,8 +92,9 @@ class GenStaticDataDir(Command):
         print ('You can use apache rewrite rule below :\n'
                'RewriteRule ^/data/(.*) %s/$1 [L]' % dest)
 
-    def _datadirs(self, config):
-        repo = config.repository()
+    def _datadirs(self, config, repo=None):
+        if repo is None:
+            repo = config.repository()
         if config._cubes is None:
             # web only config
             config.init_cubes(repo.get_cubes())
@@ -108,5 +103,35 @@ class GenStaticDataDir(Command):
             if osp.isdir(cube_datadir):
                 yield cube_datadir
         yield osp.join(config.shared_dir(), 'data')
+
+
+class WebUpgradeHandler(CommandHandler, GenStaticDataDirMixIn):
+    cmdname = 'upgrade'
+
+    def postupgrade(self, repo):
+        config = self.config
+        if not config['generate-staticdir']:
+            return
+        self.generate_static_dir(config, ask_clean=True, repo=repo)
+
+
+class GenStaticDataDir(Command, GenStaticDataDirMixIn):
+    """Create a directory merging all data directory content from cubes and CW.
+    """
+    name = 'gen-static-datadir'
+    arguments = '<instance> [dirpath]'
+    min_args = 1
+    max_args = 2
+
+    options = ()
+
+    def run(self, args):
+        appid = args.pop(0)
+        config = cwcfg.config_for(appid)
+        dest = None
+        if args:
+            dest = args[0]
+        self.generate_static_dir(config, dest)
+
 
 CWCTL.register(GenStaticDataDir)
