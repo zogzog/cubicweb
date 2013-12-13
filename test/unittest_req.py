@@ -53,6 +53,16 @@ class RequestTC(TestCase):
 
 
 class RequestCWTC(CubicWebTC):
+
+    def test_base_url(self):
+        base_url = self.config['base-url']
+        self.assertEqual(self.session.base_url(), base_url)
+        assert 'https-url' not in self.config
+        self.assertEqual(self.session.base_url(secure=True), base_url)
+        secure_base_url = base_url.replace('http', 'https')
+        self.config.global_set_option('https-url', secure_base_url)
+        self.assertEqual(self.session.base_url(secure=True), secure_base_url)
+
     def test_view_catch_ex(self):
         req = self.request()
         rset = self.execute('CWUser X WHERE X login "hop"')

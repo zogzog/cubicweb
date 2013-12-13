@@ -456,7 +456,7 @@ class RequestSessionBase(object):
         """return the root url of the instance
         """
         if secure:
-            return self.vreg.config.get('https-url', self.vreg.config['base-url'])
+            return self.vreg.config.get('https-url') or self.vreg.config['base-url']
         return self.vreg.config['base-url']
 
     # abstract methods to override according to the web front-end #############
