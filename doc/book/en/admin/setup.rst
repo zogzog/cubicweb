@@ -51,9 +51,9 @@ dependencies (like databases) are automatically installed.
 Depending on the distribution you are using, add the appropriate line to your
 `list of sources` (for example by editing ``/etc/apt/sources.list``).
 
-For Debian 6.0 Squeeze (stable)::
+For Debian 7.0 Wheezy (stable)::
 
-  deb http://download.logilab.org/production/ squeeze/
+  deb http://download.logilab.org/production/ wheezy/
 
 For Debian Sid (unstable)::
 
