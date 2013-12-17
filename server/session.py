@@ -1770,11 +1770,12 @@ class InternalManager(object):
     bootstrapping the repository or creating regular users according to
     repository content
     """
-    def __init__(self):
+    def __init__(self, lang='en'):
         self.eid = -1
         self.login = u'__internal_manager__'
         self.properties = {}
         self.groups = set(['managers'])
+        self.lang = lang
 
     def matching_groups(self, groups):
         return 1
@@ -1787,7 +1788,7 @@ class InternalManager(object):
 
     def property_value(self, key):
         if key == 'ui.language':
-            return 'en'
+            return self.lang
         return None
 
     def prefered_language(self, language=None):
