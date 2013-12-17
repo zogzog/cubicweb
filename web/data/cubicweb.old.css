@@ -411,7 +411,6 @@ div.boxContent {
 
 div.shadow{
   height: 14px;
-  background: url("shadow.gif") no-repeat top right;
 }
 
 div.sideBoxTitle {
@@ -527,7 +526,14 @@ hr.boxSeparator {
 
 #navColumnLeft div.boxFooter, #navColumnRight div.boxFooter{
   height: 14px;
-  background: url("shadow.gif") no-repeat top right;
+}
+
+.navboxes {
+  padding: 2px;
+}
+
+.boxBody, .boxTitle, #pageContent, #appMsg {
+    box-shadow: 1px 1px 3px Gray;
 }
 
 /* boxes lists and menus */
