@@ -31,8 +31,7 @@ Example of mapping for CWEntityXMLParser::
 
 """
 
-from datetime import datetime, timedelta, time
-from urllib import urlencode
+from datetime import datetime, time
 from cgi import parse_qs # in urlparse with python >= 2.6
 
 from logilab.common.date import todate, totime
@@ -57,7 +56,7 @@ def convert_date(ustr):
 DEFAULT_CONVERTERS['Date'] = convert_date
 def convert_datetime(ustr):
     if '.' in ustr: # assume %Y-%m-%d %H:%M:%S.mmmmmm
-        ustr = ustr.split('.',1)[0]
+        ustr = ustr.split('.', 1)[0]
     return datetime.strptime(ustr, '%Y-%m-%d %H:%M:%S')
 DEFAULT_CONVERTERS['Datetime'] = convert_datetime
 # XXX handle timezone, though this will be enough as TZDatetime are
@@ -169,7 +168,7 @@ class CWEntityXMLParser(datafeed.DataFeedXMLParser):
                 ttype = schemacfg.schema.stype.name
             etyperules = self.source.mapping.setdefault(etype, {})
             etyperules.setdefault((rtype, role, action), []).append(
-                (ttype, options) )
+                (ttype, options))
             self.source.mapping_idx[schemacfg.eid] = (
                 etype, rtype, role, action, ttype)
 
@@ -204,7 +203,7 @@ class CWEntityXMLParser(datafeed.DataFeedXMLParser):
         * `rels` is for relations and structured as
            {role: {relation: [(related item, related rels)...]}
         """
-        entity = self.extid2entity(str(item['cwuri']),  item['cwtype'],
+        entity = self.extid2entity(str(item['cwuri']), item['cwtype'],
                                    cwsource=item['cwsource'], item=item)
         if entity is None:
             return None
@@ -432,7 +431,7 @@ class CWEntityXMLActionLink(CWEntityXMLActionCopy):
             self._related_link(ttype, others, searchattrs)
 
     def _related_link(self, ttype, others, searchattrs):
-        def issubset(x,y):
+        def issubset(x, y):
             return all(z in y for z in x)
         eids = [] # local eids
         log = self.parser.import_log
