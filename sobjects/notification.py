@@ -30,7 +30,7 @@ from cubicweb.entity import Entity
 from cubicweb.view import Component, EntityView
 from cubicweb.server.hook import SendMailOp
 from cubicweb.mail import construct_message_id, format_mail
-from cubicweb.server.session import Session
+from cubicweb.server.session import Session, InternalManager
 
 
 class RecipientsFinder(Component):
@@ -115,20 +115,20 @@ class NotificationView(EntityView):
             msgid = None
         req = self._cw
         self.user_data = req.user_data()
-        origlang = req.lang
         for something in recipients:
-            if isinstance(something, Entity):
-                # hi-jack self._cw to get a session for the returned user
-                self._cw = Session(something, self._cw.repo)
-                self._cw.set_cnxset()
-                emailaddr = something.cw_adapt_to('IEmailable').get_email()
-            else:
+            if isinstance(something, tuple):
                 emailaddr, lang = something
-                self._cw.set_language(lang)
-            # since the same view (eg self) may be called multiple time and we
-            # need a fresh stream at each iteration, reset it explicitly
-            self.w = None
+                user = InternalManager(lang=lang)
+            else:
+                emailaddr = something.cw_adapt_to('IEmailable').get_email()
+                user = something
+            # hi-jack self._cw to get a session for the returned user
+            self._cw = Session(user, self._cw.repo)
             try:
+                self._cw.set_cnxset()
+                # since the same view (eg self) may be called multiple time and we
+                # need a fresh stream at each iteration, reset it explicitly
+                self.w = None
                 # XXX call render before subject to set .row/.col attributes on the
                 #     view
                 try:
@@ -145,25 +145,16 @@ class NotificationView(EntityView):
                 msg = format_mail(self.user_data, [emailaddr], content, subject,
                                   config=self._cw.vreg.config, msgid=msgid, references=refs)
                 yield [emailaddr], msg
-            except:
-                if isinstance(something, Entity):
-                    self._cw.rollback()
-                raise
-            else:
-                if isinstance(something, Entity):
-                    self._cw.commit()
             finally:
-                if isinstance(something, Entity):
-                    self._cw.close()
-                    self._cw = req
-        # restore language
-        req.set_language(origlang)
+                self._cw.commit()
+                self._cw.close()
+                self._cw = req
 
     # recipients / email sending ###############################################
 
     def recipients(self):
         """return a list of either 2-uple (email, language) or user entity to
-        who this email should be sent
+        whom this email should be sent
         """
         finder = self._cw.vreg['components'].select(
             'recipients_finder', self._cw, rset=self.cw_rset,
