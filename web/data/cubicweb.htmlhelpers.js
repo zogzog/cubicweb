@@ -195,19 +195,4 @@ function autogrow(area) {
         }
     }
 }
-//============= page loading events ==========================================//
-cw.rounded = [['div.sideBoxBody', 'bottom 6px'],
-              ['div.boxTitle, div.sideBoxTitle, th.month', 'top 6px']];
 
-function roundedCorners(node) {
-    if (jQuery.fn.corner !== undefined) {
-        node = jQuery(node);
-        for (var r = 0; r < cw.rounded.length; r++) {
-            node.find(cw.rounded[r][0]).corner(cw.rounded[r][1]);
-        }
-    }
-}
-
-jQuery(document).ready(function() {
-    roundedCorners(this.body);
-});

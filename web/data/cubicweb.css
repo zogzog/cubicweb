@@ -361,10 +361,14 @@ div.sideBoxTitle {
   background: %(incontextBoxBodyBg)s;
   display: block;
   font-weight: bold;
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
 }
 
 div.sideBox {
   margin-bottom: 1em;
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
 }
 
 ul.sideBox,
@@ -399,6 +403,8 @@ div.sideBox table td {
 div.boxTitle {
   overflow: hidden;
   font-weight: bold;
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
 }
 
 div.boxTitle span {

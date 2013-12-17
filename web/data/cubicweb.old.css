@@ -418,6 +418,8 @@ div.sideBoxTitle {
   background: #cfceb7;
   display: block;
   font: bold 100% Georgia;
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
 }
 
 div.sideBox {
@@ -434,6 +436,8 @@ ul.sideBox li {
 div.sideBoxBody {
   padding: 0.2em 5px;
   background: #eeedd9;
+  border-bottom-left-radius: 6px;
+  border-bottom-right-radius: 6px;
 }
 
 div.sideBoxBody a {
@@ -457,6 +461,8 @@ div.navboxes {
 div.boxTitle {
   overflow: hidden;
   font-weight: bold;
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
 }
 
 div.boxTitle span {

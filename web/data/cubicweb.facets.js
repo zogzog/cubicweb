@@ -169,7 +169,6 @@ function initFacetBoxEvents(root) {
             if ($('#'+divid).length) {
                 var $loadingDiv = $(DIV({id:'facetLoading'},
                                         facetLoadingMsg));
-                $loadingDiv.corner();
                 $($('#'+divid).get(0).parentNode).append($loadingDiv);
             }
             form.find('div.facet').each(function() {
@@ -327,7 +326,6 @@ $(document).ready(function () {
     if ($('div.facetBody').length) {
         var $loadingDiv = $(DIV({id:'facetLoading'},
                                 facetLoadingMsg));
-        $loadingDiv.corner();
         $('body').append($loadingDiv);
     }
 });
