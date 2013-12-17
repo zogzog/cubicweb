@@ -111,7 +111,9 @@ class RequestSessionBase(object):
         user specific value if any, else using site value
         """
         if self.user:
-            return self.user.property_value(key)
+            val = self.user.property_value(key)
+            if val is not None:
+                return val
         return self.vreg.property_value(key)
 
     def etype_rset(self, etype, size=1):
