@@ -86,6 +86,17 @@ commit()
 
 for rschema in schema.relations():
     if rschema.symmetric:
+        subjects = set(repr(e.type) for e in rschema.subjects())
+        objects = set(repr(e.type) for e in rschema.objects())
+        assert subjects == objects
+        martians = set(str(eid) for eid, in sql('SELECT eid_to FROM %s_relation, entities WHERE eid_to = eid AND type NOT IN (%s)' %
+                                           (rschema.type, ','.join(subjects))))
+        martians |= set(str(eid) for eid, in sql('SELECT eid_from FROM %s_relation, entities WHERE eid_from = eid AND type NOT IN (%s)' %
+                                            (rschema.type, ','.join(subjects))))
+        if martians:
+            martians = ','.join(martians)
+            print 'deleting broken relations %s for eids %s' % (rschema.type, martians)
+            sql('DELETE FROM %s_relation WHERE eid_from IN (%s) OR eid_to IN (%s)' % (rschema.type, martians, martians))
         with session.deny_all_hooks_but():
             rql('SET X %(r)s Y WHERE Y %(r)s X, NOT X %(r)s Y' % {'r': rschema.type})
     commit()
