@@ -86,6 +86,6 @@ commit()
 
 for rschema in schema.relations():
     if rschema.symmetric:
-        with session.allow_all_hooks_but('activeintegrity'):
+        with session.deny_all_hooks_but():
             rql('SET X %(r)s Y WHERE Y %(r)s X, NOT X %(r)s Y' % {'r': rschema.type})
     commit()
