@@ -1081,7 +1081,7 @@ class Session(RequestSessionBase):
     def keep_cnxset_mode(self, mode):
         """set `mode`, e.g. how the session will keep its connections set:
 
-        * if mode == 'write', the connections set is freed after each ready
+        * if mode == 'write', the connections set is freed after each read
           query, but kept until the transaction's end (eg commit or rollback)
           when a write query is detected (eg INSERT/SET/DELETE queries)
 
