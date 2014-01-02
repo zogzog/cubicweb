@@ -442,6 +442,13 @@ class TmpPngView(TmpFileViewMixin, EntityView):
     binary = True
 
     def cell_call(self, row=0, col=0):
-        tmpfile = self._cw.session.data[self._cw.form['tmpfile']]
+        key = self._cw.form['tmpfile']
+        if key not in self._cw.session.data:
+            # the temp file is gone and there's nothing
+            # we can do about it
+            # we should probably write it to some well
+            # behaved place and serve it
+            return
+        tmpfile = self._cw.session.data.pop(key)
         self.w(open(tmpfile, 'rb').read())
         os.unlink(tmpfile)
