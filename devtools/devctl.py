@@ -776,13 +776,19 @@ class GenerateSchema(Command):
           'short': "i", 'metavar': "<types>",
           'help':'coma separated list of entity types to include in view',
           }),
+        ('show-etype',
+         {'type':'string', 'default':'',
+          'metavar': '<etype>',
+          'help':'show graph of this etype and its neighbours'
+          }),
         ]
 
     def run(self, args):
         from subprocess import Popen
         from tempfile import NamedTemporaryFile
         from logilab.common.textutils import splitstrip
-        from yams import schema2dot, BASE_TYPES
+        from logilab.common.graph import GraphGenerator, DotBackend
+        from yams import schema2dot as s2d, BASE_TYPES
         from cubicweb.schema import (META_RTYPES, SCHEMA_TYPES, SYSTEM_RTYPES,
                                      WORKFLOW_TYPES, INTERNAL_TYPES)
         cubes = splitstrip(args[0])
@@ -801,7 +807,22 @@ class GenerateSchema(Command):
             skiptypes |= set(('CWUser', 'CWGroup', 'EmailAddress'))
         skiptypes |= set(self['exclude-type'].split(','))
         skiptypes -= set(self['include-type'].split(','))
-        schema2dot.schema2dot(schema, out, skiptypes=skiptypes)
+
+        if not self['show-etype']:
+            s2d.schema2dot(schema, out, skiptypes=skiptypes)
+        else:
+            etype = self['show-etype']
+            visitor = s2d.OneHopESchemaVisitor(schema[etype], skiptypes=skiptypes)
+            propshdlr = s2d.SchemaDotPropsHandler(visitor)
+            backend = DotBackend('schema', 'BT',
+                                 ratio='compress',size=None,
+                                 renderer='dot',
+                                 additionnal_param={'overlap' : 'false',
+                                                    'splines' : 'true',
+                                                    'sep' : '0.2'})
+            generator = s2d.GraphGenerator(backend)
+            generator.generate(visitor, propshdlr, out)
+
         if viewer:
             p = Popen((viewer, out))
             p.wait()
