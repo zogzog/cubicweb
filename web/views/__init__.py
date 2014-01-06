@@ -25,6 +25,7 @@ import tempfile
 
 from rql import nodes
 from logilab.mtconverter import xml_escape
+from logilab.common.deprecation import class_deprecated
 
 
 def need_table_view(rset, schema):
@@ -125,7 +126,10 @@ def add_etype_button(req, etype, csscls='addButton right', **urlkwargs):
     return u''
 
 
+
 class TmpFileViewMixin(object):
+    __metaclass__ = class_deprecated
+    __deprecation_warning__ = '[3.18] %(cls)s is deprecated'
     binary = True
     content_type = 'application/octet-stream'
     cache_max_age = 60*60*2 # stay in http cache for 2 hours by default
