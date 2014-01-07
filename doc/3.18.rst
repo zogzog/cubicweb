@@ -32,6 +32,10 @@ API changes
 Deprecation
 ---------------------
 
+* ``pyrorql`` sources have been deprecated. Multisource will be fully dropped
+  in the next version. If you are still using pyrorql, switch to ``datafeed``
+  **NOW**!
+
 * the old multi-source system
 
 

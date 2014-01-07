@@ -20,6 +20,11 @@
 __docformat__ = "restructuredtext en"
 _ = unicode
 
+# module is lazily imported
+import warnings
+warnings.warn('Imminent drop of pyrorql source. Switch to datafeed now!',
+              DeprecationWarning)
+
 import threading
 from Pyro.errors import PyroError, ConnectionClosedError
 
