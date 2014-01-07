@@ -21,10 +21,11 @@ __docformat__ = "restructuredtext en"
 _ = unicode
 
 import re
-from os.path import join
+from os.path import join, basename
 from logging import getLogger
 from warnings import warn
 
+from logilab.common import tempattr
 from logilab.common.decorators import cached, clear_cache, monkeypatch, cachedproperty
 from logilab.common.logging_ext import set_log_methods
 from logilab.common.deprecation import deprecated, class_moved, moved
@@ -732,6 +733,8 @@ class RQLExpression(object):
         self.snippet_rqlst = parse(self.minimal_rql, print_errors=False).children[0]
         # graph of links between variables, used by rql rewriter
         self.vargraph = vargraph(self.rqlst)
+        # useful for some instrumentation, e.g. localperms permcheck command
+        self.package = ybo.PACKAGE
 
     def __str__(self):
         return self.full_rql
@@ -1163,7 +1166,8 @@ class BootstrapSchemaLoader(SchemaLoader):
         # bootstraping, ignore cubes
         filepath = join(cubicweb.CW_SOFTWARE_ROOT, 'schemas', 'bootstrap.py')
         self.info('loading %s', filepath)
-        self.handle_file(filepath)
+        with tempattr(ybo, 'PACKAGE', 'cubicweb'): # though we don't care here
+            self.handle_file(filepath)
 
     def unhandled_file(self, filepath):
         """called when a file without handler associated has been found"""
@@ -1203,11 +1207,12 @@ class CubicWebSchemaLoader(BootstrapSchemaLoader):
                          join(cubicweb.CW_SOFTWARE_ROOT, 'schemas', 'workflow.py'),
                          join(cubicweb.CW_SOFTWARE_ROOT, 'schemas', 'Bookmark.py')):
             self.info('loading %s', filepath)
-            self.handle_file(filepath)
+            with tempattr(ybo, 'PACKAGE', 'cubicweb'):
+                self.handle_file(filepath)
         for cube in cubes:
             for filepath in self.get_schema_files(cube):
-                self.info('loading %s', filepath)
-                self.handle_file(filepath)
+                with tempattr(ybo, 'PACKAGE', basename(cube)):
+                    self.handle_file(filepath)
 
     # these are overridden by set_log_methods below
     # only defining here to prevent pylint from complaining
