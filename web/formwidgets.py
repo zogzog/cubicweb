@@ -210,6 +210,8 @@ class FieldWidget(object):
             attrs['id'] = field.dom_id(form, self.suffix)
         if self.settabindex and not 'tabindex' in attrs:
             attrs['tabindex'] = form._cw.next_tabindex()
+        if 'placeholder' in attrs:
+            attrs['placeholder'] = form._cw._(attrs['placeholder'])
         return attrs
 
     def values(self, form, field):

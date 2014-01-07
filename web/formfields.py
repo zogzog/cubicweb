@@ -529,6 +529,7 @@ class StringField(Field):
     """
     widget = fw.TextArea
     size = 45
+    placeholder = None
 
     def __init__(self, name=None, max_length=None, **kwargs):
         self.max_length = max_length # must be set before super call
@@ -547,6 +548,9 @@ class StringField(Field):
         elif isinstance(self.widget, fw.TextInput):
             self.init_text_input(self.widget)
 
+        if self.placeholder:
+            self.widget.attrs.setdefault('placeholder', self.placeholder)
+
     def init_text_input(self, widget):
         if self.max_length:
             widget.attrs.setdefault('size', min(self.size, self.max_length))
@@ -556,6 +560,11 @@ class StringField(Field):
         if self.max_length and self.max_length < 513:
             widget.attrs.setdefault('cols', 60)
             widget.attrs.setdefault('rows', 5)
+
+    def set_placeholder(self, placeholder):
+        self.placeholder = placeholder
+        if self.widget and self.placeholder:
+            self.widget.attrs.setdefault('placeholder', self.placeholder)
 
 
 class PasswordField(StringField):
