@@ -89,7 +89,7 @@ class JsonValidator(object):
 
 MAILBOX = []
 
-class Email:
+class Email(object):
     """you'll get instances of Email into MAILBOX during tests that trigger
     some notification.
 
@@ -98,7 +98,8 @@ class Email:
     * `recipients` is a list of email address which are the recipients of this
       message
     """
-    def __init__(self, recipients, msg):
+    def __init__(self, fromaddr, recipients, msg):
+        self.fromaddr = fromaddr
         self.recipients = recipients
         self.msg = msg
 
@@ -125,8 +126,8 @@ class MockSMTP:
         pass
     def close(self):
         pass
-    def sendmail(self, helo_addr, recipients, msg):
-        MAILBOX.append(Email(recipients, msg))
+    def sendmail(self, fromaddr, recipients, msg):
+        MAILBOX.append(Email(fromaddr, recipients, msg))
 
 cwconfig.SMTP = MockSMTP
 

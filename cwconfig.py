@@ -1177,11 +1177,13 @@ the repository',
         sourcedirs.append(self.i18n_lib_dir())
         return i18n.compile_i18n_catalogs(sourcedirs, i18ndir, langs)
 
-    def sendmails(self, msgs):
+    def sendmails(self, msgs, fromaddr=None):
         """msgs: list of 2-uple (message object, recipients). Return False
         if connection to the smtp server failed, else True.
         """
         server, port = self['smtp-host'], self['smtp-port']
+        if fromaddr is None:
+            fromaddr = '%s <%s>' % (self['sender-name'], self['sender-addr'])
         SMTP_LOCK.acquire()
         try:
             try:
@@ -1190,10 +1192,9 @@ the repository',
                 self.exception("can't connect to smtp server %s:%s (%s)",
                                server, port, ex)
                 return False
-            heloaddr = '%s <%s>' % (self['sender-name'], self['sender-addr'])
             for msg, recipients in msgs:
                 try:
-                    smtp.sendmail(heloaddr, recipients, msg.as_string())
+                    smtp.sendmail(fromaddr, recipients, msg.as_string())
                 except Exception as ex:
                     self.exception("error sending mail to %s (%s)",
                                    recipients, ex)
