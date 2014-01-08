@@ -757,24 +757,17 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             if ex.__class__.__name__ == 'IntegrityError':
                 # need string comparison because of various backends
                 for arg in ex.args:
-                    if 'SQL Server' in arg:
-                        mo = re.search("'unique_cw_[^ ]+'", arg)
-                    else: # postgres
-                        mo = re.search('"unique_cw_[^ ]+"', arg)
+                    # postgres, sqlserver
+                    mo = re.search("unique_[a-z0-9]{32}", arg)
                     if mo is not None:
-                        index_name = mo.group(0)[1:-1] # eat the surrounding " pair
-                        elements = index_name.split('_cw_')[1:]
-                        etype = elements[0]
-                        rtypes = elements[1:]
-                        raise UniqueTogetherError(etype, rtypes)
+                        raise UniqueTogetherError(session, cstrname=mo.group(0))
                     # sqlite
                     mo = re.search('columns (.*) are not unique', arg)
                     if mo is not None: # sqlite in use
                         # we left chop the 'cw_' prefix of attribute names
                         rtypes = [c.strip()[3:]
                                   for c in mo.group(1).split(',')]
-                        etype = '???'
-                        raise UniqueTogetherError(etype, rtypes)
+                        raise UniqueTogetherError(session, rtypes=rtypes)
             raise
         return cursor
 

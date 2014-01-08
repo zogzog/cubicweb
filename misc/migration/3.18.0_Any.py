@@ -1,3 +1,9 @@
+driver = config.sources()['system']['db-driver']
+if not (driver == 'postgres' or driver.startswith('sqlserver')):
+    import sys
+    print >>sys.stderr, 'This migration is not supported for backends other than sqlserver or postgres (yet).'
+    sys.exit(1)
+
 sync_schema_props_perms('defaultval')
 
 def convert_defaultval(cwattr, default):
@@ -31,47 +37,23 @@ def convert_defaultval(cwattr, default):
     return Binary.zpickle(default)
 
 dbh = repo.system_source.dbhelper
-driver = config.sources()['system']['db-driver']
 
-if driver == 'postgres' or driver.startswith('sqlserver'):
 
-    sql('ALTER TABLE cw_cwattribute ADD new_defaultval %s' % dbh.TYPE_MAPPING['Bytes'])
+sql('ALTER TABLE cw_cwattribute ADD new_defaultval %s' % dbh.TYPE_MAPPING['Bytes'])
 
-    for cwattr in rql('CWAttribute X').entities():
-        olddefault = cwattr.defaultval
-        if olddefault is not None:
-            req = "UPDATE cw_cwattribute SET new_defaultval = %(val)s WHERE cw_eid = %(eid)s"
-            args = {'val': dbh.binary_value(convert_defaultval(cwattr, olddefault).getvalue()), 'eid': cwattr.eid}
-            sql(req, args, ask_confirm=False)
-
-    sql('ALTER TABLE cw_cwattribute DROP COLUMN cw_defaultval')
-    if config.sources()['system']['db-driver'] == 'postgres':
-        sql('ALTER TABLE cw_cwattribute RENAME COLUMN new_defaultval TO cw_defaultval')
-    else:
-        sql("sp_rename 'cw_cwattribute.new_defaultval', 'cw_defaultval', 'COLUMN'")
-
-elif driver == 'sqlite':
-
-    import re
-    create = sql("SELECT sql FROM sqlite_master WHERE name = 'cw_CWAttribute'")[0][0]
-    create = re.sub('cw_defaultval varchar[^,]*,', 'cw_defaultval bytea,', create, re.I)
-    create = re.sub('cw_CWAttribute', 'tmp_cw_CWAttribute', create, re.I)
-    sql(create)
-    sql("INSERT INTO tmp_cw_CWAttribute SELECT * FROM cw_CWAttribute")
-    for cwattr in rql('CWAttribute X').entities():
-        olddefault = cwattr.defaultval
-        if olddefault is None:
-            continue
-        req = "UPDATE tmp_cw_CWAttribute SET cw_defaultval = %(val)s WHERE cw_eid = %(eid)s"
-        args = {'val': dbh.binary_value(convert_defaultval(cwattr, olddefault).getvalue()),
-                'eid': cwattr.eid}
+for cwattr in rql('CWAttribute X').entities():
+    olddefault = cwattr.defaultval
+    if olddefault is not None:
+        req = "UPDATE cw_cwattribute SET new_defaultval = %(val)s WHERE cw_eid = %(eid)s"
+        args = {'val': dbh.binary_value(convert_defaultval(cwattr, olddefault).getvalue()), 'eid': cwattr.eid}
         sql(req, args, ask_confirm=False)
 
-    sql('DROP TABLE cw_CWAttribute')
-    sql('ALTER TABLE tmp_cw_CWAttribute RENAME TO cw_CWAttribute')
+sql('ALTER TABLE cw_cwattribute DROP COLUMN cw_defaultval')
+if driver == 'postgres':
+    sql('ALTER TABLE cw_cwattribute RENAME COLUMN new_defaultval TO cw_defaultval')
+else: # sqlserver
+    sql("sp_rename 'cw_cwattribute.new_defaultval', 'cw_defaultval', 'COLUMN'")
 
-else:
-    assert False, 'upgrade not supported on this database backend'
 
 # Set object type to "Bytes" for CWAttribute's "defaultval" attribute
 rql('SET X to_entity B WHERE X is CWAttribute, X from_entity Y, Y name "CWAttribute", '
@@ -82,7 +64,6 @@ schema.add_relation_def(ybo.RelationDefinition('CWAttribute', 'defaultval', 'Byt
 schema.del_relation_def('CWAttribute', 'defaultval', 'String')
 
 commit()
-
 
 for rschema in schema.relations():
     if rschema.symmetric:
@@ -100,3 +81,40 @@ for rschema in schema.relations():
         with session.deny_all_hooks_but():
             rql('SET X %(r)s Y WHERE Y %(r)s X, NOT X %(r)s Y' % {'r': rschema.type})
     commit()
+
+
+# multi columns unique constraints regeneration
+from cubicweb.server import schemaserial
+
+# syncschema hooks would try to remove indices but
+# 1) we already do that below
+# 2) the hook expects the CWUniqueTogetherConstraint.name attribute that hasn't
+#    yet been added
+with session.allow_all_hooks_but('syncschema'):
+    rql('DELETE CWUniqueTogetherConstraint C')
+commit()
+
+add_attribute('CWUniqueTogetherConstraint', 'name')
+
+# low-level wipe code for postgres & sqlserver, plain sql ...
+if driver == 'postgres':
+    for indexname, in sql('select indexname from pg_indexes'):
+        if indexname.startswith('unique_'):
+            print 'dropping index', indexname
+            sql('DROP INDEX %s' % indexname)
+    commit()
+elif driver.startswith('sqlserver'):
+    for viewname, in sql('select name from sys.views'):
+        if viewname.startswith('utv_'):
+            print 'dropping view (index should be cascade-deleted)', viewname
+            sql('DROP VIEW %s' % viewname)
+    commit()
+
+# recreate the constraints, hook will lead to low-level recreation
+for eschema in sorted(schema.entities()):
+    if eschema._unique_together:
+        rql_args = schemaserial.uniquetogether2rqls(eschema)
+        for rql, args in rql_args:
+            args['x'] = eschema.eid
+            session.execute(rql, args)
+        commit()

@@ -1,4 +1,4 @@
-# copyright 2010-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2010-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -362,23 +362,12 @@ class IUserFriendlyUniqueTogether(IUserFriendlyError):
     __select__ = match_exception(UniqueTogetherError)
 
     def raise_user_exception(self):
-        etype, rtypes = self.exc.args
-        # Because of index name size limits (e.g: postgres around 64,
-        # sqlserver around 128), we cannot be sure of what we got,
-        # especially for the rtypes part.
-        # Hence we will try to validate them, and handle invalid ones
-        # in the most user-friendly manner ...
         _ = self._cw._
-        schema = self.entity._cw.vreg.schema
+        rtypes = self.exc.rtypes
         rtypes_msg = {}
         for rtype in rtypes:
-            if rtype in schema:
-                rtypes_msg[rtype] = _('%s is part of violated unicity constraint') % rtype
-        globalmsg = _('some relations %sviolate a unicity constraint')
-        if len(rtypes) != len(rtypes_msg): # we got mangled/missing rtypes
-            globalmsg = globalmsg % _('(not all shown here) ')
-        else:
-            globalmsg = globalmsg % ''
+            rtypes_msg[rtype] = _('%s is part of violated unicity constraint') % rtype
+        globalmsg = _('some relations violate a unicity constraint')
         rtypes_msg['unicity constraint'] = globalmsg
         raise ValidationError(self.entity.eid, rtypes_msg)
 

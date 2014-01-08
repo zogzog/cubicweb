@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -18,6 +18,10 @@
 """Exceptions shared by different cubicweb packages."""
 
 __docformat__ = "restructuredtext en"
+
+from warnings import warn
+
+from logilab.common.decorators import cachedproperty
 
 from yams import ValidationError as ValidationError
 
@@ -81,6 +85,26 @@ class MultiSourcesError(RepositoryError, InternalError):
 
 class UniqueTogetherError(RepositoryError):
     """raised when a unique_together constraint caused an IntegrityError"""
+    def __init__(self, session, **kwargs):
+        self.session = session
+        assert 'rtypes' in kwargs or 'cstrname' in kwargs
+        self.kwargs = kwargs
+
+    @cachedproperty
+    def rtypes(self):
+        if 'rtypes' in self.kwargs:
+            return self.kwargs['rtypes']
+        cstrname = unicode(self.kwargs['cstrname'])
+        cstr = self.session.find('CWUniqueTogetherConstraint', name=cstrname).one()
+        return sorted(rtype.name for rtype in cstr.relations)
+
+    @cachedproperty
+    def args(self):
+        warn('[3.18] UniqueTogetherError.args is deprecated, just use '
+             'the .rtypes accessor.',
+             DeprecationWarning)
+        # the first argument, etype, is never used and was never garanteed anyway
+        return None, self.rtypes
 
 
 # security exceptions #########################################################

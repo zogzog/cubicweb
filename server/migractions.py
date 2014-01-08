@@ -44,7 +44,7 @@ from logilab.common.deprecation import deprecated
 from logilab.common.decorators import cached, clear_cache
 
 from yams.constraints import SizeConstraint
-from yams.schema2sql import eschema2sql, rschema2sql
+from yams.schema2sql import eschema2sql, rschema2sql, unique_index_name
 from yams.schema import RelationDefinitionSchema
 
 from cubicweb import CW_SOFTWARE_ROOT, AuthenticationError, ExecutionError
@@ -559,39 +559,41 @@ class ServerMigrationHelper(MigrationHelper):
                         self._synchronize_rdef_schema(subj, rschema, obj,
                                                       syncprops=syncprops, syncperms=syncperms)
         if syncprops: # need to process __unique_together__ after rdefs were processed
-            repo_unique_together = set([frozenset(ut)
-                                        for ut in repoeschema._unique_together])
-            unique_together = set([frozenset(ut)
-                                   for ut in eschema._unique_together])
-            for ut in repo_unique_together - unique_together:
-                restrictions = []
-                substs = {'x': repoeschema.eid}
-                for i, col in enumerate(ut):
-                    restrictions.append('C relations T%(i)d, '
-                                       'T%(i)d name %%(T%(i)d)s' % {'i': i})
-                    substs['T%d'%i] = col
-                self.rqlexec('DELETE CWUniqueTogetherConstraint C '
-                             'WHERE C constraint_of E, '
-                             '      E eid %%(x)s,'
-                             '      %s' % ', '.join(restrictions),
-                             substs)
-            def possible_unique_constraint(ut):
-                for name in ut:
+            # mappings from constraint name to columns
+            # filesystem (fs) and repository (repo) wise
+            fs = {}
+            repo = {}
+            for cols in eschema._unique_together or ():
+                fs[unique_index_name(repoeschema, cols)] = sorted(cols)
+            schemaentity = self.session.entity_from_eid(repoeschema.eid)
+            for entity in schemaentity.related('constraint_of', 'object',
+                                               targettypes=('CWUniqueTogetherConstraint',)).entities():
+                repo[entity.name] = sorted(rel.name for rel in entity.relations)
+            added = set(fs) - set(repo)
+            removed = set(repo) - set(fs)
+
+            for name in removed:
+                self.rqlexec('DELETE CWUniqueTogetherConstraint C WHERE C name %(name)s',
+                             {'name': name})
+
+            def possible_unique_constraint(cols):
+                for name in cols:
                     rschema = repoeschema.subjrels.get(name)
                     if rschema is None:
                         print 'dont add %s unique constraint on %s, missing %s' % (
-                            ','.join(ut), eschema, name)
+                            ','.join(cols), eschema, name)
                         return False
                     if not (rschema.final or rschema.inlined):
-                        (eschema, name)
                         print 'dont add %s unique constraint on %s, %s is neither final nor inlined' % (
-                            ','.join(ut), eschema, name)
+                            ','.join(cols), eschema, name)
                         return False
                 return True
-            for ut in unique_together - repo_unique_together:
-                if possible_unique_constraint(ut):
-                    rql, substs = ss.uniquetogether2rql(eschema, ut)
+
+            for name in added:
+                if possible_unique_constraint(fs[name]):
+                    rql, substs = ss._uniquetogether2rql(eschema, fs[name])
                     substs['x'] = repoeschema.eid
+                    substs['name'] = name
                     self.rqlexec(rql, substs)
 
     def _synchronize_rdef_schema(self, subjtype, rtype, objtype,

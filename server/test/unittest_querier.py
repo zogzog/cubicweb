@@ -576,7 +576,7 @@ class QuerierTC(BaseQuerierTC):
         self.assertListEqual(rset.rows,
                               [[u'description_format', 12],
                                [u'description', 13],
-                               [u'name', 16],
+                               [u'name', 17],
                                [u'created_by', 43],
                                [u'creation_date', 43],
                                [u'cw_source', 43],

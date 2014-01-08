@@ -25,7 +25,8 @@ import json
 
 from logilab.common.shellutils import ProgressBar
 
-from yams import BadSchemaDefinition, schema as schemamod, buildobjs as ybo
+from yams import (BadSchemaDefinition, schema as schemamod, buildobjs as ybo,
+                  schema2sql as y2sql)
 
 from cubicweb import CW_SOFTWARE_ROOT, Binary, typed_eid
 from cubicweb.schema import (KNOWN_RPROPERTIES, CONSTRAINTS, ETYPE_NAME_MAP,
@@ -367,8 +368,8 @@ def serialize_schema(cursor, schema):
             pb.update()
     # serialize unique_together constraints
     for eschema in eschemas:
-        for unique_together in eschema._unique_together:
-            execschemarql(execute, eschema, [uniquetogether2rql(eschema, unique_together)])
+        if eschema._unique_together:
+            execschemarql(execute, eschema, uniquetogether2rqls(eschema))
     # serialize yams inheritance relationships
     for rql, kwargs in specialize2rql(schema):
         execute(rql, kwargs, build_descr=False)
@@ -427,7 +428,15 @@ def eschemaspecialize2rql(eschema):
         values = {'x': eschema.eid, 'et': specialized_type.eid}
         yield 'SET X specializes ET WHERE X eid %(x)s, ET eid %(et)s', values
 
-def uniquetogether2rql(eschema, unique_together):
+def uniquetogether2rqls(eschema):
+    rql_args = []
+    for columns in eschema._unique_together:
+        rql, args = _uniquetogether2rql(eschema, columns)
+        args['name'] = y2sql.unique_index_name(eschema, columns)
+        rql_args.append((rql, args))
+    return rql_args
+
+def _uniquetogether2rql(eschema, unique_together):
     relations = []
     restrictions = []
     substs = {}
@@ -439,10 +448,8 @@ def uniquetogether2rql(eschema, unique_together):
         restrictions.append('%(rtype)s name %%(%(rtype)s)s' % {'rtype': rtype})
     relations = ', '.join(relations)
     restrictions = ', '.join(restrictions)
-    rql = ('INSERT CWUniqueTogetherConstraint C: '
-           '    C constraint_of X, %s  '
-           'WHERE '
-           '    X eid %%(x)s, %s')
+    rql = ('INSERT CWUniqueTogetherConstraint C: C name %%(name)s, C constraint_of X, %s '
+           'WHERE X eid %%(x)s, %s')
     return rql % (relations, restrictions), substs
 
 

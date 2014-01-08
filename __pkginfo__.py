@@ -51,7 +51,7 @@ __depends__ = {
     'Twisted': '',
     # XXX graphviz
     # server dependencies
-    'logilab-database': '>= 1.10',
+    'logilab-database': '>= 1.11',
     'passlib': '',
     }
 

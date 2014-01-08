@@ -714,44 +714,38 @@ class CWConstraintAddOp(CWConstraintDelOp):
 
 class CWUniqueTogetherConstraintAddOp(MemSchemaOperation):
     entity = None # make pylint happy
+
     def precommit_event(self):
         session = self.session
         prefix = SQL_PREFIX
-        table = '%s%s' % (prefix, self.entity.constraint_of[0].name)
-        cols = ['%s%s' % (prefix, r.name) for r in self.entity.relations]
-        dbhelper= session.cnxset.source('system').dbhelper
-        sqls = dbhelper.sqls_create_multicol_unique_index(table, cols)
+        entity = self.entity
+        table = '%s%s' % (prefix, entity.constraint_of[0].name)
+        cols = ['%s%s' % (prefix, r.name) for r in entity.relations]
+        dbhelper = session.cnxset.source('system').dbhelper
+        sqls = dbhelper.sqls_create_multicol_unique_index(table, cols, entity.name)
         for sql in sqls:
             session.system_sql(sql)
 
-    # XXX revertprecommit_event
-
     def postcommit_event(self):
-        eschema = self.session.vreg.schema.schema_by_eid(self.entity.constraint_of[0].eid)
-        attrs = [r.name for r in self.entity.relations]
+        entity = self.entity
+        eschema = self.session.vreg.schema.schema_by_eid(entity.constraint_of[0].eid)
+        attrs = [r.name for r in entity.relations]
         eschema._unique_together.append(attrs)
 
 
 class CWUniqueTogetherConstraintDelOp(MemSchemaOperation):
-    entity = oldcstr = None # for pylint
-    cols = [] # for pylint
+    entity = cstrname = None # for pylint
+    cols = () # for pylint
+
     def precommit_event(self):
         session = self.session
         prefix = SQL_PREFIX
         table = '%s%s' % (prefix, self.entity.type)
-        dbhelper= session.cnxset.source('system').dbhelper
+        dbhelper = session.cnxset.source('system').dbhelper
         cols = ['%s%s' % (prefix, c) for c in self.cols]
-        sqls = dbhelper.sqls_drop_multicol_unique_index(table, cols)
+        sqls = dbhelper.sqls_drop_multicol_unique_index(table, cols, self.cstrname)
         for sql in sqls:
-            try:
-                session.system_sql(sql)
-            except Exception as exc: # should be ProgrammingError
-                if sql.startswith('DROP'):
-                    self.error('execute of `%s` failed (cause: %s)', sql, exc)
-                    continue
-                raise
-
-    # XXX revertprecommit_event
+            session.system_sql(sql)
 
     def postcommit_event(self):
         eschema = self.session.vreg.schema.schema_by_eid(self.entity.eid)
@@ -1171,9 +1165,9 @@ class BeforeDeleteConstraintOfHook(SyncSchemaHook):
         schema = self._cw.vreg.schema
         cstr = self._cw.entity_from_eid(self.eidfrom)
         entity = schema.schema_by_eid(self.eidto)
-        cols = [r.name for r in cstr.relations]
+        cols = tuple(r.name for r in cstr.relations)
         CWUniqueTogetherConstraintDelOp(self._cw, entity=entity,
-                                        oldcstr=cstr, cols=cols)
+                                        cstrname=cstr.name, cols=cols)
 
 
 # permissions synchronization hooks ############################################

@@ -1,6 +1,9 @@
 What's new in CubicWeb 3.18?
 ============================
 
+The migration script does not handle sqlite nor mysql instances.
+
+
 New functionalities
 --------------------
 
@@ -27,6 +30,10 @@ API changes
   now handled with hooks (from the `activeintegrity` category); this
   may have some consequences for applications that do low-level database
   manipulations or at times disable (some) hooks.
+
+* `unique together` constraints (multi-columns unicity constraints)
+  get a `name` attribute that maps the CubicWeb contraint entities to
+  corresponding backend index.
 
 
 Deprecation

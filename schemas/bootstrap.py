@@ -158,6 +158,7 @@ class CWConstraint(EntityType):
 class CWUniqueTogetherConstraint(EntityType):
     """defines a sql-level multicolumn unique index"""
     __permissions__ = PUB_SYSTEM_ENTITY_PERMS
+    name = String(required=True, unique=True, maxsize=64)
     constraint_of = SubjectRelation('CWEType', cardinality='1*', composite='object',
                                     inlined=True)
     relations = SubjectRelation('CWRType', cardinality='+*',
