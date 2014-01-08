@@ -515,7 +515,8 @@ class InOutWidget(Select):
                                              name=field.dom_id(form),
                                              type="hidden"))
             else:
-                options.append(tags.option(label, value=value))
+                if value not in values:
+                    options.append(tags.option(label, value=value))
         if 'size' not in attrs:
             attrs['size'] = self.default_size
         if 'id' in attrs :

@@ -94,8 +94,7 @@ class EntityFieldsFormTC(CubicWebTC):
         form.build_context({})
         self.assertEqual(field.widget.values(form, field), (u'toto',))
 
-
-    def test_linkto_field_duplication(self):
+    def test_linkto_field_duplication_inout(self):
         e = self.vreg['etypes'].etype_class('CWUser')(self.request())
         e.eid = 'A'
         e._cw = self.req
@@ -111,7 +110,6 @@ class EntityFieldsFormTC(CubicWebTC):
                 self.assertEqual(optionnode.get('value'), str(geid))
                 self.assertEqual(ok, False)
                 ok = True
-        self.assertEqual(ok, True, 'expected option not found')
         inputs = pageinfo.find_tag('input', False)
         self.assertFalse(list(pageinfo.matching_nodes('input', name='__linkto')))
 
