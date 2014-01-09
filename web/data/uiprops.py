@@ -9,6 +9,7 @@ STYLESHEETS_PRINT = [data('cubicweb.print.css')]
 
 # Javascripts files to include systematically in HTML headers
 JAVASCRIPTS = [data('jquery.js'),
+               data('jquery-migrate.js'),
                data('jquery.json.js'),
                data('cubicweb.js'),
                data('cubicweb.compat.js'),

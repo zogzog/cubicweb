@@ -19,6 +19,8 @@ New functionalities
 * new method `RequestSessionBase.find` to look for entities
   (see `#3361290 https://www.cubicweb.org/ticket/3361290`_)
 
+* the embedded jQuery copy has been updated to version 1.10.2, and jQuery UI to
+  version 1.10.3.
 
 API changes
 -----------

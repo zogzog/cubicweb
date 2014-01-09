@@ -92,7 +92,8 @@ function getJSON(url, data, callback) {
                 if (($(instanceData.userInput).attr('cubicweb:initialvalue') !== undefined) && !instanceData.hiddenInput){
                     hiHandlers.initializeHiddenInput(instanceData);
                 }
-                $.ui.autocomplete.prototype._search = methods.search;
+                $.ui.autocomplete.prototype._value = methods._value;
+                $.data(this, 'settings', settings);
                 if (settings.multiple) {
                     $.ui.autocomplete.filter = methods.multiple.makeFilter(this);
                     $(this).bind({
@@ -125,6 +126,20 @@ function getJSON(url, data, callback) {
             });
         },
 
+        _value: function() {
+            /* We extend the widget with the ability to lookup and
+               handle several terms at once ('multiple' option). E.g.:
+               toto, titi, tu....  The autocompletion must be
+               performed only on the last of such a list of terms.
+              */
+            var settings = $(this.element).data('settings');
+            var value = this.valueMethod.apply( this.element, arguments );
+            if (settings.multiple & arguments.length === 0) {
+                return extractLast(value);
+            }
+            return value
+        },
+
         multiple: {
             focus: function() {
                 // prevent value inserted on focus
@@ -140,7 +155,7 @@ function getJSON(url, data, callback) {
                 return false;
             },
             keydown: function(evt) {
-                if ($(this).data('autocomplete').menu.active && evt.keyCode == $.ui.keyCode.TAB) {
+                if (evt.keyCode == $.ui.keyCode.TAB) {
                     evt.preventDefault();
                 }
             },
@@ -161,13 +176,7 @@ function getJSON(url, data, callback) {
                 methods.resetValues(instanceData);
             }
         },
-        search: function(value) {
-            this.element.addClass("ui-autocomplete-loading");
-            if (this.options.multiple) {
-                value = extractLast(value);
-            }
-            this.source({term: value}, this.response);
-        },
+
         ensureExactMatch: function(evt) {
             var instanceData = $(this).data('cwautocomplete');
             if (evt.keyCode == $.ui.keyCode.ENTER || evt.keyCode == $.ui.keyCode.TAB) {
@@ -179,6 +188,7 @@ function getJSON(url, data, callback) {
                 }
             }
         },
+
         resetValues: function(instanceData){
             $(instanceData.userInput).val('');
             $(instanceData.hiddenInput).val('');
