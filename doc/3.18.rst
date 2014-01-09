@@ -22,6 +22,15 @@ New functionalities
 * the embedded jQuery copy has been updated to version 1.10.2, and jQuery UI to
   version 1.10.3.
 
+* initial support for wsgi for the debug mode, available through the new
+  ``wsgi`` cubicweb-ctl command, which can use either python's builtin
+  wsgi server or the werkzeug module if present.
+
+* a ``rql-table`` directive is now available in ReST fields
+
+* cubicweb-ctl upgrade can now generate the static data resource directory
+  directly, without a manual call to gen-static-datadir.
+
 API changes
 -----------
 
@@ -46,6 +55,13 @@ API changes
 * BreadCrumbEntityVComponent's open_breadcrumbs method now includes
   the first breadcrumbs separator
 
+* entities can be compared for equality and hashed
+
+* the ``on_fire_transition`` predicate accepts a sequence of possible
+  transition names
+
+* the GROUP_CONCAT rql aggregate function no longer repeats duplicate
+  values, on the sqlite and postgresql backends
 
 Deprecation
 ---------------------
@@ -59,6 +75,8 @@ Deprecation
 * `find_one_entity` and `find_entities` in favor of `find`
   (see `#3361290 https://www.cubicweb.org/ticket/3361290`_)
 
+* the `TmpFileViewMixin` and `TmpPngView` classes (see `#3400448
+  https://www.cubicweb.org/ticket/3400448`_)
 
 Deprecated Code Drops
 ----------------------
@@ -73,3 +91,5 @@ Deprecated Code Drops
 * all 3.8 backward compat is gone
 
 * all 3.9 backward compat (including the javascript side) is gone
+
+* the ``twisted`` (web-only) instance type has been removed
