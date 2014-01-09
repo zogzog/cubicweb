@@ -115,13 +115,13 @@ class BreadCrumbEntityVComponent(basecomponents.HeaderComponent):
         path = adapter.breadcrumbs(view)
         if path:
             self.open_breadcrumbs(w)
-            if self.first_separator:
-                w(self.separator)
             self.render_breadcrumbs(w, entity, path)
             self.close_breadcrumbs(w)
 
     def open_breadcrumbs(self, w):
         w(u'<span id="breadcrumbs" class="pathbar">')
+        if self.first_separator:
+            w(self.separator)
 
     def close_breadcrumbs(self, w):
         w(u'</span>')
@@ -172,11 +172,9 @@ class BreadCrumbAnyRSetVComponent(BreadCrumbEntityVComponent):
     # XXX support kwargs for compat with other components which gets the view as
     # argument
     def render(self, w, **kwargs):
-        w(u'<span id="breadcrumbs" class="pathbar">')
-        if self.first_separator:
-            w(self.separator)
+        self.open_breadcrumbs(w)
         w(self._cw._('search'))
-        w(u'</span>')
+        self.close_breadcrumbs(w)
 
 
 class BreadCrumbLinkToVComponent(BreadCrumbEntityVComponent):

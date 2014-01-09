@@ -41,6 +41,9 @@ API changes
   get a `name` attribute that maps the CubicWeb contraint entities to
   corresponding backend index.
 
+* BreadCrumbEntityVComponent's open_breadcrumbs method now includes
+  the first breadcrumbs separator
+
 
 Deprecation
 ---------------------
