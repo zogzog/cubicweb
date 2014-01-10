@@ -104,6 +104,297 @@ _LOGGER = getLogger('cubicweb.schemaloader')
 ybo.ETYPE_PROPERTIES += ('eid',)
 ybo.RTYPE_PROPERTIES += ('eid',)
 
+# Bases for manipulating RQL in schema #########################################
+
+def guess_rrqlexpr_mainvars(expression):
+    defined = set(split_expression(expression))
+    mainvars = set()
+    if 'S' in defined:
+        mainvars.add('S')
+    if 'O' in defined:
+        mainvars.add('O')
+    if 'U' in defined:
+        mainvars.add('U')
+    if not mainvars:
+        raise Exception('unable to guess selection variables')
+    return mainvars
+
+def split_expression(rqlstring):
+    for expr in rqlstring.split(','):
+        for noparen1 in expr.split('('):
+            for noparen2 in noparen1.split(')'):
+                for word in noparen2.split():
+                    yield word
+
+def normalize_expression(rqlstring):
+    """normalize an rql expression to ease schema synchronization (avoid
+    suppressing and reinserting an expression if only a space has been
+    added/removed for instance)
+    """
+    return u', '.join(' '.join(expr.split()) for expr in rqlstring.split(','))
+
+
+class RQLExpression(object):
+    """Base class for RQL expression used in schema (constraints and
+    permissions)
+    """
+    # these are overridden by set_log_methods below
+    # only defining here to prevent pylint from complaining
+    info = warning = error = critical = exception = debug = lambda msg,*a,**kw: None
+    # to be defined in concrete classes
+    rqlst = None
+    predefined_variables = None
+
+    def __init__(self, expression, mainvars, eid):
+        """
+        :type mainvars: sequence of RQL variables' names. Can be provided as a
+                        comma separated string.
+        :param mainvars: names of the variables being selected.
+
+        """
+        self.eid = eid # eid of the entity representing this rql expression
+        assert mainvars, 'bad mainvars %s' % mainvars
+        if isinstance(mainvars, basestring):
+            mainvars = set(splitstrip(mainvars))
+        elif not isinstance(mainvars, set):
+            mainvars = set(mainvars)
+        self.mainvars = mainvars
+        self.expression = normalize_expression(expression)
+        try:
+            self.full_rql = self.rqlst.as_string()
+        except RQLSyntaxError:
+            raise RQLSyntaxError(expression)
+        for mainvar in mainvars:
+            # if variable is predefined, an extra reference is inserted
+            # automatically (`VAR eid %(v)s`)
+            if mainvar in self.predefined_variables:
+                min_refs = 3
+            else:
+                min_refs = 2
+            if len(self.rqlst.defined_vars[mainvar].references()) < min_refs:
+                _LOGGER.warn('You did not use the %s variable in your RQL '
+                             'expression %s', mainvar, self)
+        # syntax tree used by read security (inserted in queries when necessary)
+        self.snippet_rqlst = parse(self.minimal_rql, print_errors=False).children[0]
+        # graph of links between variables, used by rql rewriter
+        self.vargraph = vargraph(self.rqlst)
+        # useful for some instrumentation, e.g. localperms permcheck command
+        self.package = ybo.PACKAGE
+
+    def __str__(self):
+        return self.full_rql
+    def __repr__(self):
+        return '%s(%s)' % (self.__class__.__name__, self.full_rql)
+
+    def __lt__(self, other):
+        if hasattr(other, 'expression'):
+            return self.expression < other.expression
+        return True
+
+    def __eq__(self, other):
+        if hasattr(other, 'expression'):
+            return self.expression == other.expression
+        return False
+
+    def __hash__(self):
+        return hash(self.expression)
+
+    def __deepcopy__(self, memo):
+        return self.__class__(self.expression, self.mainvars)
+    def __getstate__(self):
+        return (self.expression, self.mainvars)
+    def __setstate__(self, state):
+        self.__init__(*state)
+
+    @cachedproperty
+    def rqlst(self):
+        select = parse(self.minimal_rql, print_errors=False).children[0]
+        defined = set(split_expression(self.expression))
+        for varname in self.predefined_variables:
+            if varname in defined:
+                select.add_eid_restriction(select.get_variable(varname), varname.lower(), 'Substitute')
+        return select
+
+    # permission rql expression specific stuff #################################
+
+    @cached
+    def transform_has_permission(self):
+        found = None
+        rqlst = self.rqlst
+        for var in rqlst.defined_vars.itervalues():
+            for varref in var.references():
+                rel = varref.relation()
+                if rel is None:
+                    continue
+                try:
+                    prefix, action, suffix = rel.r_type.split('_')
+                except ValueError:
+                    continue
+                if prefix != 'has' or suffix != 'permission' or \
+                       not action in ('add', 'delete', 'update', 'read'):
+                    continue
+                if found is None:
+                    found = []
+                    rqlst.save_state()
+                assert rel.children[0].name == 'U'
+                objvar = rel.children[1].children[0].variable
+                rqlst.remove_node(rel)
+                selected = [v.name for v in rqlst.get_selected_variables()]
+                if objvar.name not in selected:
+                    colindex = len(selected)
+                    rqlst.add_selected(objvar)
+                else:
+                    colindex = selected.index(objvar.name)
+                found.append((action, colindex))
+                # remove U eid %(u)s if U is not used in any other relation
+                uvrefs = rqlst.defined_vars['U'].references()
+                if len(uvrefs) == 1:
+                    rqlst.remove_node(uvrefs[0].relation())
+        if found is not None:
+            rql = rqlst.as_string()
+            if len(rqlst.selection) == 1 and isinstance(rqlst.where, nodes.Relation):
+                # only "Any X WHERE X eid %(x)s" remaining, no need to execute the rql
+                keyarg = rqlst.selection[0].name.lower()
+            else:
+                keyarg = None
+            rqlst.recover()
+            return rql, found, keyarg
+        return rqlst.as_string(), None, None
+
+    def _check(self, _cw, **kwargs):
+        """return True if the rql expression is matching the given relation
+        between fromeid and toeid
+
+        _cw may be a request or a server side transaction
+        """
+        creating = kwargs.get('creating')
+        if not creating and self.eid is not None:
+            key = (self.eid, tuple(sorted(kwargs.iteritems())))
+            try:
+                return _cw.local_perm_cache[key]
+            except KeyError:
+                pass
+        rql, has_perm_defs, keyarg = self.transform_has_permission()
+        # when creating an entity, expression related to X satisfied
+        if creating and 'X' in self.rqlst.defined_vars:
+            return True
+        if keyarg is None:
+            kwargs.setdefault('u', _cw.user.eid)
+            try:
+                rset = _cw.execute(rql, kwargs, build_descr=True)
+            except NotImplementedError:
+                self.critical('cant check rql expression, unsupported rql %s', rql)
+                if self.eid is not None:
+                    _cw.local_perm_cache[key] = False
+                return False
+            except TypeResolverException as ex:
+                # some expression may not be resolvable with current kwargs
+                # (type conflict)
+                self.warning('%s: %s', rql, str(ex))
+                if self.eid is not None:
+                    _cw.local_perm_cache[key] = False
+                return False
+            except Unauthorized as ex:
+                self.debug('unauthorized %s: %s', rql, str(ex))
+                if self.eid is not None:
+                    _cw.local_perm_cache[key] = False
+                return False
+        else:
+            rset = _cw.eid_rset(kwargs[keyarg])
+        # if no special has_*_permission relation in the rql expression, just
+        # check the result set contains something
+        if has_perm_defs is None:
+            if rset:
+                if self.eid is not None:
+                    _cw.local_perm_cache[key] = True
+                return True
+        elif rset:
+            # check every special has_*_permission relation is satisfied
+            get_eschema = _cw.vreg.schema.eschema
+            try:
+                for eaction, col in has_perm_defs:
+                    for i in xrange(len(rset)):
+                        eschema = get_eschema(rset.description[i][col])
+                        eschema.check_perm(_cw, eaction, eid=rset[i][col])
+                if self.eid is not None:
+                    _cw.local_perm_cache[key] = True
+                return True
+            except Unauthorized:
+                pass
+        if self.eid is not None:
+            _cw.local_perm_cache[key] = False
+        return False
+
+    @property
+    def minimal_rql(self):
+        return 'Any %s WHERE %s' % (','.join(sorted(self.mainvars)),
+                                    self.expression)
+
+# rql expressions for use in permission definition #############################
+
+class ERQLExpression(RQLExpression):
+    predefined_variables = 'XU'
+
+    def __init__(self, expression, mainvars=None, eid=None):
+        RQLExpression.__init__(self, expression, mainvars or 'X', eid)
+
+    def check(self, _cw, eid=None, creating=False, **kwargs):
+        if 'X' in self.rqlst.defined_vars:
+            if eid is None:
+                if creating:
+                    return self._check(_cw, creating=True, **kwargs)
+                return False
+            assert creating == False
+            return self._check(_cw, x=eid, **kwargs)
+        return self._check(_cw, **kwargs)
+
+
+def vargraph(rqlst):
+    """ builds an adjacency graph of variables from the rql syntax tree, e.g:
+    Any O,S WHERE T subworkflow_exit S, T subworkflow WF, O state_of WF
+    => {'WF': ['O', 'T'], 'S': ['T'], 'T': ['WF', 'S'], 'O': ['WF']}
+    """
+    vargraph = {}
+    for relation in rqlst.get_nodes(nodes.Relation):
+        try:
+            rhsvarname = relation.children[1].children[0].variable.name
+            lhsvarname = relation.children[0].name
+        except AttributeError:
+            pass
+        else:
+            vargraph.setdefault(lhsvarname, []).append(rhsvarname)
+            vargraph.setdefault(rhsvarname, []).append(lhsvarname)
+            #vargraph[(lhsvarname, rhsvarname)] = relation.r_type
+    return vargraph
+
+
+class GeneratedConstraint(object):
+    def __init__(self, rqlst, mainvars):
+        self.snippet_rqlst = rqlst
+        self.mainvars = mainvars
+        self.vargraph = vargraph(rqlst)
+
+
+class RRQLExpression(RQLExpression):
+    predefined_variables = 'SOU'
+
+    def __init__(self, expression, mainvars=None, eid=None):
+        if mainvars is None:
+            mainvars = guess_rrqlexpr_mainvars(expression)
+        RQLExpression.__init__(self, expression, mainvars, eid)
+
+    def check(self, _cw, fromeid=None, toeid=None):
+        kwargs = {}
+        if 'S' in self.rqlst.defined_vars:
+            if fromeid is None:
+                return False
+            kwargs['s'] = fromeid
+        if 'O' in self.rqlst.defined_vars:
+            if toeid is None:
+                return False
+            kwargs['o'] = toeid
+        return self._check(_cw, **kwargs)
+
 PUB_SYSTEM_ENTITY_PERMS = {
     'read':   ('managers', 'users', 'guests',),
     'add':    ('managers',),
@@ -658,297 +949,6 @@ class CubicWebSchema(Schema):
 
     def schema_by_eid(self, eid):
         return self._eid_index[eid]
-
-# Bases for manipulating RQL in schema #########################################
-
-def guess_rrqlexpr_mainvars(expression):
-    defined = set(split_expression(expression))
-    mainvars = set()
-    if 'S' in defined:
-        mainvars.add('S')
-    if 'O' in defined:
-        mainvars.add('O')
-    if 'U' in defined:
-        mainvars.add('U')
-    if not mainvars:
-        raise Exception('unable to guess selection variables')
-    return mainvars
-
-def split_expression(rqlstring):
-    for expr in rqlstring.split(','):
-        for noparen1 in expr.split('('):
-            for noparen2 in noparen1.split(')'):
-                for word in noparen2.split():
-                    yield word
-
-def normalize_expression(rqlstring):
-    """normalize an rql expression to ease schema synchronization (avoid
-    suppressing and reinserting an expression if only a space has been
-    added/removed for instance)
-    """
-    return u', '.join(' '.join(expr.split()) for expr in rqlstring.split(','))
-
-
-class RQLExpression(object):
-    """Base class for RQL expression used in schema (constraints and
-    permissions)
-    """
-    # these are overridden by set_log_methods below
-    # only defining here to prevent pylint from complaining
-    info = warning = error = critical = exception = debug = lambda msg,*a,**kw: None
-    # to be defined in concrete classes
-    rqlst = None
-    predefined_variables = None
-
-    def __init__(self, expression, mainvars, eid):
-        """
-        :type mainvars: sequence of RQL variables' names. Can be provided as a
-                        comma separated string.
-        :param mainvars: names of the variables being selected.
-
-        """
-        self.eid = eid # eid of the entity representing this rql expression
-        assert mainvars, 'bad mainvars %s' % mainvars
-        if isinstance(mainvars, basestring):
-            mainvars = set(splitstrip(mainvars))
-        elif not isinstance(mainvars, set):
-            mainvars = set(mainvars)
-        self.mainvars = mainvars
-        self.expression = normalize_expression(expression)
-        try:
-            self.full_rql = self.rqlst.as_string()
-        except RQLSyntaxError:
-            raise RQLSyntaxError(expression)
-        for mainvar in mainvars:
-            # if variable is predefined, an extra reference is inserted
-            # automatically (`VAR eid %(v)s`)
-            if mainvar in self.predefined_variables:
-                min_refs = 3
-            else:
-                min_refs = 2
-            if len(self.rqlst.defined_vars[mainvar].references()) < min_refs:
-                _LOGGER.warn('You did not use the %s variable in your RQL '
-                             'expression %s', mainvar, self)
-        # syntax tree used by read security (inserted in queries when necessary)
-        self.snippet_rqlst = parse(self.minimal_rql, print_errors=False).children[0]
-        # graph of links between variables, used by rql rewriter
-        self.vargraph = vargraph(self.rqlst)
-        # useful for some instrumentation, e.g. localperms permcheck command
-        self.package = ybo.PACKAGE
-
-    def __str__(self):
-        return self.full_rql
-    def __repr__(self):
-        return '%s(%s)' % (self.__class__.__name__, self.full_rql)
-
-    def __lt__(self, other):
-        if hasattr(other, 'expression'):
-            return self.expression < other.expression
-        return True
-
-    def __eq__(self, other):
-        if hasattr(other, 'expression'):
-            return self.expression == other.expression
-        return False
-
-    def __hash__(self):
-        return hash(self.expression)
-
-    def __deepcopy__(self, memo):
-        return self.__class__(self.expression, self.mainvars)
-    def __getstate__(self):
-        return (self.expression, self.mainvars)
-    def __setstate__(self, state):
-        self.__init__(*state)
-
-    @cachedproperty
-    def rqlst(self):
-        select = parse(self.minimal_rql, print_errors=False).children[0]
-        defined = set(split_expression(self.expression))
-        for varname in self.predefined_variables:
-            if varname in defined:
-                select.add_eid_restriction(select.get_variable(varname), varname.lower(), 'Substitute')
-        return select
-
-    # permission rql expression specific stuff #################################
-
-    @cached
-    def transform_has_permission(self):
-        found = None
-        rqlst = self.rqlst
-        for var in rqlst.defined_vars.itervalues():
-            for varref in var.references():
-                rel = varref.relation()
-                if rel is None:
-                    continue
-                try:
-                    prefix, action, suffix = rel.r_type.split('_')
-                except ValueError:
-                    continue
-                if prefix != 'has' or suffix != 'permission' or \
-                       not action in ('add', 'delete', 'update', 'read'):
-                    continue
-                if found is None:
-                    found = []
-                    rqlst.save_state()
-                assert rel.children[0].name == 'U'
-                objvar = rel.children[1].children[0].variable
-                rqlst.remove_node(rel)
-                selected = [v.name for v in rqlst.get_selected_variables()]
-                if objvar.name not in selected:
-                    colindex = len(selected)
-                    rqlst.add_selected(objvar)
-                else:
-                    colindex = selected.index(objvar.name)
-                found.append((action, colindex))
-                # remove U eid %(u)s if U is not used in any other relation
-                uvrefs = rqlst.defined_vars['U'].references()
-                if len(uvrefs) == 1:
-                    rqlst.remove_node(uvrefs[0].relation())
-        if found is not None:
-            rql = rqlst.as_string()
-            if len(rqlst.selection) == 1 and isinstance(rqlst.where, nodes.Relation):
-                # only "Any X WHERE X eid %(x)s" remaining, no need to execute the rql
-                keyarg = rqlst.selection[0].name.lower()
-            else:
-                keyarg = None
-            rqlst.recover()
-            return rql, found, keyarg
-        return rqlst.as_string(), None, None
-
-    def _check(self, _cw, **kwargs):
-        """return True if the rql expression is matching the given relation
-        between fromeid and toeid
-
-        _cw may be a request or a server side transaction
-        """
-        creating = kwargs.get('creating')
-        if not creating and self.eid is not None:
-            key = (self.eid, tuple(sorted(kwargs.iteritems())))
-            try:
-                return _cw.local_perm_cache[key]
-            except KeyError:
-                pass
-        rql, has_perm_defs, keyarg = self.transform_has_permission()
-        # when creating an entity, expression related to X satisfied
-        if creating and 'X' in self.rqlst.defined_vars:
-            return True
-        if keyarg is None:
-            kwargs.setdefault('u', _cw.user.eid)
-            try:
-                rset = _cw.execute(rql, kwargs, build_descr=True)
-            except NotImplementedError:
-                self.critical('cant check rql expression, unsupported rql %s', rql)
-                if self.eid is not None:
-                    _cw.local_perm_cache[key] = False
-                return False
-            except TypeResolverException as ex:
-                # some expression may not be resolvable with current kwargs
-                # (type conflict)
-                self.warning('%s: %s', rql, str(ex))
-                if self.eid is not None:
-                    _cw.local_perm_cache[key] = False
-                return False
-            except Unauthorized as ex:
-                self.debug('unauthorized %s: %s', rql, str(ex))
-                if self.eid is not None:
-                    _cw.local_perm_cache[key] = False
-                return False
-        else:
-            rset = _cw.eid_rset(kwargs[keyarg])
-        # if no special has_*_permission relation in the rql expression, just
-        # check the result set contains something
-        if has_perm_defs is None:
-            if rset:
-                if self.eid is not None:
-                    _cw.local_perm_cache[key] = True
-                return True
-        elif rset:
-            # check every special has_*_permission relation is satisfied
-            get_eschema = _cw.vreg.schema.eschema
-            try:
-                for eaction, col in has_perm_defs:
-                    for i in xrange(len(rset)):
-                        eschema = get_eschema(rset.description[i][col])
-                        eschema.check_perm(_cw, eaction, eid=rset[i][col])
-                if self.eid is not None:
-                    _cw.local_perm_cache[key] = True
-                return True
-            except Unauthorized:
-                pass
-        if self.eid is not None:
-            _cw.local_perm_cache[key] = False
-        return False
-
-    @property
-    def minimal_rql(self):
-        return 'Any %s WHERE %s' % (','.join(sorted(self.mainvars)),
-                                    self.expression)
-
-# rql expressions for use in permission definition #############################
-
-class ERQLExpression(RQLExpression):
-    predefined_variables = 'XU'
-
-    def __init__(self, expression, mainvars=None, eid=None):
-        RQLExpression.__init__(self, expression, mainvars or 'X', eid)
-
-    def check(self, _cw, eid=None, creating=False, **kwargs):
-        if 'X' in self.rqlst.defined_vars:
-            if eid is None:
-                if creating:
-                    return self._check(_cw, creating=True, **kwargs)
-                return False
-            assert creating == False
-            return self._check(_cw, x=eid, **kwargs)
-        return self._check(_cw, **kwargs)
-
-
-def vargraph(rqlst):
-    """ builds an adjacency graph of variables from the rql syntax tree, e.g:
-    Any O,S WHERE T subworkflow_exit S, T subworkflow WF, O state_of WF
-    => {'WF': ['O', 'T'], 'S': ['T'], 'T': ['WF', 'S'], 'O': ['WF']}
-    """
-    vargraph = {}
-    for relation in rqlst.get_nodes(nodes.Relation):
-        try:
-            rhsvarname = relation.children[1].children[0].variable.name
-            lhsvarname = relation.children[0].name
-        except AttributeError:
-            pass
-        else:
-            vargraph.setdefault(lhsvarname, []).append(rhsvarname)
-            vargraph.setdefault(rhsvarname, []).append(lhsvarname)
-            #vargraph[(lhsvarname, rhsvarname)] = relation.r_type
-    return vargraph
-
-
-class GeneratedConstraint(object):
-    def __init__(self, rqlst, mainvars):
-        self.snippet_rqlst = rqlst
-        self.mainvars = mainvars
-        self.vargraph = vargraph(rqlst)
-
-
-class RRQLExpression(RQLExpression):
-    predefined_variables = 'SOU'
-
-    def __init__(self, expression, mainvars=None, eid=None):
-        if mainvars is None:
-            mainvars = guess_rrqlexpr_mainvars(expression)
-        RQLExpression.__init__(self, expression, mainvars, eid)
-
-    def check(self, _cw, fromeid=None, toeid=None):
-        kwargs = {}
-        if 'S' in self.rqlst.defined_vars:
-            if fromeid is None:
-                return False
-            kwargs['s'] = fromeid
-        if 'O' in self.rqlst.defined_vars:
-            if toeid is None:
-                return False
-            kwargs['o'] = toeid
-        return self._check(_cw, **kwargs)
 
 
 # in yams, default 'update' perm for attributes granted to managers and owners.
