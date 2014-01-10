@@ -985,7 +985,7 @@ msgid "add Bookmark bookmarked_by CWUser object"
 msgstr "bookmark"
 
 msgid "add CWAttribute add_permission RQLExpression subject"
-msgstr ""
+msgstr "rql expression for add permission"
 
 msgid "add CWAttribute constrained_by CWConstraint subject"
 msgstr "constraint"
@@ -1097,7 +1097,7 @@ msgstr "can be added by"
 
 msgctxt "CWAttribute"
 msgid "add_permission"
-msgstr ""
+msgstr "add permission"
 
 # subject and object forms for each relation type
 # (no object form for final relation types)
@@ -1671,7 +1671,7 @@ msgstr "creating email address for user %(linkto)s"
 
 msgid ""
 "creating RQLExpression (CWAttribute %(linkto)s add_permission RQLExpression)"
-msgstr ""
+msgstr "RQL expression granting add permission on %(linkto)s"
 
 msgid ""
 "creating RQLExpression (CWAttribute %(linkto)s read_permission RQLExpression)"
