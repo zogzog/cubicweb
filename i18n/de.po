@@ -145,9 +145,6 @@ msgstr ""
 msgid "(UNEXISTANT EID)"
 msgstr "(EID nicht gefunden)"
 
-msgid "(not all shown here) "
-msgstr ""
-
 #, python-format
 msgid "(suppressed) entity #%d"
 msgstr ""
@@ -442,10 +439,6 @@ msgstr ""
 msgid "DEBUG"
 msgstr ""
 
-#, python-format
-msgid "Data connection graph for %s"
-msgstr "Graf der Datenverbindungen für %s"
-
 msgid "Date"
 msgstr "Datum"
 
@@ -523,9 +516,6 @@ msgstr "Format-Einschränkung"
 
 msgid "Garbage collection information"
 msgstr "Information zur Speicherbereinigung"
-
-msgid "Got rhythm?"
-msgstr "Hast Du Rhythmus ?"
 
 msgid "Help"
 msgstr "Hilfe"
@@ -1032,6 +1022,9 @@ msgstr "hinzufügen"
 msgid "add Bookmark bookmarked_by CWUser object"
 msgstr "Lesezeichen"
 
+msgid "add CWAttribute add_permission RQLExpression subject"
+msgstr ""
+
 msgid "add CWAttribute constrained_by CWConstraint subject"
 msgstr "Einschränkung"
 
@@ -1139,6 +1132,10 @@ msgstr "Email-Adresse hinzufügen"
 # (no object form for final relation types)
 msgid "add_permission"
 msgstr "kann hinzugefügt werden durch"
+
+msgctxt "CWAttribute"
+msgid "add_permission"
+msgstr ""
 
 # subject and object forms for each relation type
 # (no object form for final relation types)
@@ -1718,6 +1715,10 @@ msgid "creating EmailAddress (CWUser %(linkto)s use_email EmailAddress)"
 msgstr "Erstelle E-Mail-Adresse für Nutzer %(linkto)s"
 
 msgid ""
+"creating RQLExpression (CWAttribute %(linkto)s add_permission RQLExpression)"
+msgstr ""
+
+msgid ""
 "creating RQLExpression (CWAttribute %(linkto)s read_permission RQLExpression)"
 msgstr "RQL-Ausdruck für Leseberechtigung für %(linkto)s"
 
@@ -2089,6 +2090,9 @@ msgstr "Standard-Workflow für Nutzer"
 
 msgid "default value"
 msgstr "Standardwert"
+
+msgid "default value as gziped pickled python object"
+msgstr ""
 
 msgid "default workflow for an entity type"
 msgstr "Standard-Workflow eines Entitätstyps"
@@ -3212,6 +3216,10 @@ msgctxt "CWSource"
 msgid "name"
 msgstr ""
 
+msgctxt "CWUniqueTogetherConstraint"
+msgid "name"
+msgstr ""
+
 msgctxt "State"
 msgid "name"
 msgstr "Name"
@@ -3813,8 +3821,7 @@ msgstr ""
 "Eine oder mehrere frühere Transaktion(en) betreffen die Tntität. Machen Sie "
 "sie zuerst rückgängig."
 
-#, python-format
-msgid "some relations %sviolate a unicity constraint"
+msgid "some relations violate a unicity constraint"
 msgstr ""
 
 msgid "sorry, the server is unable to handle this query"
@@ -4605,8 +4612,14 @@ msgstr ""
 #~ "Kann die Relation %(rtype)s der Entität %(eid)s nicht wieder herstellen, "
 #~ "diese Relation existiert nicht mehr in dem Schema."
 
+#~ msgid "Data connection graph for %s"
+#~ msgstr "Graf der Datenverbindungen für %s"
+
 #~ msgid "From:"
 #~ msgstr "Von:"
+
+#~ msgid "Got rhythm?"
+#~ msgstr "Hast Du Rhythmus ?"
 
 #~ msgid "Recipients:"
 #~ msgstr "Adressaten:"

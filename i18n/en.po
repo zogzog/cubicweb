@@ -137,9 +137,6 @@ msgstr ""
 msgid "(UNEXISTANT EID)"
 msgstr ""
 
-msgid "(not all shown here) "
-msgstr ""
-
 #, python-format
 msgid "(suppressed) entity #%d"
 msgstr ""
@@ -420,10 +417,6 @@ msgstr ""
 msgid "DEBUG"
 msgstr ""
 
-#, python-format
-msgid "Data connection graph for %s"
-msgstr ""
-
 msgid "Date"
 msgstr "Date"
 
@@ -500,9 +493,6 @@ msgid "FormatConstraint"
 msgstr "format constraint"
 
 msgid "Garbage collection information"
-msgstr ""
-
-msgid "Got rhythm?"
 msgstr ""
 
 msgid "Help"
@@ -994,6 +984,9 @@ msgstr ""
 msgid "add Bookmark bookmarked_by CWUser object"
 msgstr "bookmark"
 
+msgid "add CWAttribute add_permission RQLExpression subject"
+msgstr ""
+
 msgid "add CWAttribute constrained_by CWConstraint subject"
 msgstr "constraint"
 
@@ -1101,6 +1094,10 @@ msgstr "add an email address"
 # (no object form for final relation types)
 msgid "add_permission"
 msgstr "can be added by"
+
+msgctxt "CWAttribute"
+msgid "add_permission"
+msgstr ""
 
 # subject and object forms for each relation type
 # (no object form for final relation types)
@@ -1673,6 +1670,10 @@ msgid "creating EmailAddress (CWUser %(linkto)s use_email EmailAddress)"
 msgstr "creating email address for user %(linkto)s"
 
 msgid ""
+"creating RQLExpression (CWAttribute %(linkto)s add_permission RQLExpression)"
+msgstr ""
+
+msgid ""
 "creating RQLExpression (CWAttribute %(linkto)s read_permission RQLExpression)"
 msgstr "RQL expression granting read permission on %(linkto)s"
 
@@ -2045,6 +2046,9 @@ msgid "default user workflow"
 msgstr ""
 
 msgid "default value"
+msgstr ""
+
+msgid "default value as gziped pickled python object"
 msgstr ""
 
 msgid "default workflow for an entity type"
@@ -3130,6 +3134,10 @@ msgctxt "CWSource"
 msgid "name"
 msgstr "name"
 
+msgctxt "CWUniqueTogetherConstraint"
+msgid "name"
+msgstr ""
+
 msgctxt "State"
 msgid "name"
 msgstr "name"
@@ -3718,8 +3726,7 @@ msgstr ""
 msgid "some later transaction(s) touch entity, undo them first"
 msgstr ""
 
-#, python-format
-msgid "some relations %sviolate a unicity constraint"
+msgid "some relations violate a unicity constraint"
 msgstr ""
 
 msgid "sorry, the server is unable to handle this query"

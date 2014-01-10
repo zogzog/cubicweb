@@ -148,9 +148,6 @@ msgstr "l'action '%s' nécessite une option 'linkattr'"
 msgid "(UNEXISTANT EID)"
 msgstr "(EID INTROUVABLE)"
 
-msgid "(not all shown here) "
-msgstr "(toutes ne sont pas montrées)"
-
 #, python-format
 msgid "(suppressed) entity #%d"
 msgstr "entité #%d (supprimée)"
@@ -445,10 +442,6 @@ msgstr "Entité %(etype)s crée : %(entity)s"
 msgid "DEBUG"
 msgstr "DEBUG"
 
-#, python-format
-msgid "Data connection graph for %s"
-msgstr "Graphique de connection des données pour %s"
-
 msgid "Date"
 msgstr "Date"
 
@@ -526,9 +519,6 @@ msgstr "contrainte de format"
 
 msgid "Garbage collection information"
 msgstr "Information sur le ramasse-miette"
-
-msgid "Got rhythm?"
-msgstr "T'as le rythme ?"
 
 msgid "Help"
 msgstr "Aide"
@@ -1045,6 +1035,9 @@ msgstr "ajouter"
 msgid "add Bookmark bookmarked_by CWUser object"
 msgstr "signet"
 
+msgid "add CWAttribute add_permission RQLExpression subject"
+msgstr ""
+
 msgid "add CWAttribute constrained_by CWConstraint subject"
 msgstr "contrainte"
 
@@ -1152,6 +1145,10 @@ msgstr "ajouter une adresse électronique"
 # (no object form for final relation types)
 msgid "add_permission"
 msgstr "peut ajouter"
+
+msgctxt "CWAttribute"
+msgid "add_permission"
+msgstr ""
 
 # subject and object forms for each relation type
 # (no object form for final relation types)
@@ -1750,6 +1747,10 @@ msgid "creating EmailAddress (CWUser %(linkto)s use_email EmailAddress)"
 msgstr "création d'une adresse électronique pour l'utilisateur %(linkto)s"
 
 msgid ""
+"creating RQLExpression (CWAttribute %(linkto)s add_permission RQLExpression)"
+msgstr ""
+
+msgid ""
 "creating RQLExpression (CWAttribute %(linkto)s read_permission RQLExpression)"
 msgstr "création d'une expression rql pour le droit de lecture de %(linkto)s"
 
@@ -2133,6 +2134,9 @@ msgstr "workflow par défaut des utilisateurs"
 
 msgid "default value"
 msgstr "valeur par défaut"
+
+msgid "default value as gziped pickled python object"
+msgstr ""
 
 msgid "default workflow for an entity type"
 msgstr "workflow par défaut pour un type d'entité"
@@ -3264,6 +3268,10 @@ msgctxt "CWSource"
 msgid "name"
 msgstr "nom"
 
+msgctxt "CWUniqueTogetherConstraint"
+msgid "name"
+msgstr ""
+
 msgctxt "State"
 msgid "name"
 msgstr "nom"
@@ -3874,9 +3882,8 @@ msgid "some later transaction(s) touch entity, undo them first"
 msgstr ""
 "des transactions plus récentes modifient cette entité, annulez les d'abord"
 
-#, python-format
-msgid "some relations %sviolate a unicity constraint"
-msgstr "certaines relations %stransgressent une contrainte d'unicité"
+msgid "some relations violate a unicity constraint"
+msgstr ""
 
 msgid "sorry, the server is unable to handle this query"
 msgstr "désolé, le serveur ne peut traiter cette requête"
@@ -4663,11 +4670,20 @@ msgstr ""
 #~ msgid "%s not estimated"
 #~ msgstr "%s non estimé(s)"
 
+#~ msgid "(not all shown here) "
+#~ msgstr "(toutes ne sont pas montrées)"
+
 #~ msgid "Action"
 #~ msgstr "Action"
 
+#~ msgid "Data connection graph for %s"
+#~ msgstr "Graphique de connection des données pour %s"
+
 #~ msgid "From:"
 #~ msgstr "De :"
+
+#~ msgid "Got rhythm?"
+#~ msgstr "T'as le rythme ?"
 
 #~ msgid "Recipients:"
 #~ msgstr "Destinataires :"
@@ -4742,6 +4758,9 @@ msgstr ""
 
 #~ msgid "sioc"
 #~ msgstr "sioc"
+
+#~ msgid "some relations %sviolate a unicity constraint"
+#~ msgstr "certaines relations %stransgressent une contrainte d'unicité"
 
 #~ msgid "task progression"
 #~ msgstr "avancement de la tâche"
