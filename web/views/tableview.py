@@ -867,7 +867,7 @@ class RelationColRenderer(EntityTableColRenderer):
 class EntityTableView(TableMixIn, EntityView):
     """This abstract table view is designed to be used with an
     :class:`is_instance()` or :class:`adaptable` predicate, hence doesn't depend
-    the result set shape as the :class:`TableView` does.
+    the result set shape as the :class:`RsetTableView` does.
 
     It will display columns that should be defined using the `columns` class
     attribute containing a list of column ids. By default, each column is

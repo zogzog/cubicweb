@@ -270,7 +270,7 @@ def anonymous_session(vreg):
     raises an AuthenticationError if anonymous usage is not allowed
     """
     anoninfo = vreg.config.anonymous_user()
-    if anoninfo is None: # no anonymous user
+    if anoninfo[0] is None: # no anonymous user
         raise AuthenticationError('anonymous access is not authorized')
     anon_login, anon_password = anoninfo
     # use vreg's repository cache

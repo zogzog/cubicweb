@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -33,6 +33,11 @@ class AnyEntity(Entity):
     __regid__ = 'Any'
     __implements__ = ()
 
+    @classproperty
+    def cw_etype(cls):
+        """entity type as a string"""
+        return cls.__regid__
+
     @classmethod
     def cw_create_url(cls, req, **kwargs):
         """ return the url of the entity creation form for this entity type"""
@@ -57,11 +62,6 @@ class AnyEntity(Entity):
                                      ', '.join(restrictions))]
 
     # meta data api ###########################################################
-
-    @classproperty
-    def cw_etype(self):
-        """entity Etype as a string"""
-        return self.__regid__
 
     def dc_title(self):
         """return a suitable *unicode* title for this entity"""

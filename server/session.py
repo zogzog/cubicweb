@@ -711,6 +711,7 @@ def tx_meth(meth_name):
     This is to be used by session"""
     def meth_from_tx(session, *args, **kwargs):
         return getattr(session._tx, meth_name)(*args, **kwargs)
+    meth_from_tx.__doc__ = getattr(Transaction, meth_name).__doc__
     return meth_from_tx
 
 
@@ -767,8 +768,8 @@ class Session(RequestSessionBase):
       used by another session as long as no writing is done. This means we can
       have multiple sessions with a reasonably low connections set pool size.
 
-    .. automethod:: cubicweb.server.session.set_cnxset
-    .. automethod:: cubicweb.server.session.free_cnxset
+      .. automethod:: cubicweb.server.session.Session.set_cnxset
+      .. automethod:: cubicweb.server.session.Session.free_cnxset
 
       :attr:`mode`, string telling the connections set handling mode, may be one
       of 'read' (connections set may be freed), 'write' (some write was done in
