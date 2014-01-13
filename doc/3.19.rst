@@ -1,26 +1,27 @@
-What's new in CubicWeb 4.0?
+What's new in CubicWeb 3.19?
 ============================
 
-Behavior Changes
-----------------
+Behaviour Changes
+-----------------
 
 * The anonymous property of Session and Connection are now computed from the
-  related user login. If it match the ``anonymous-user`` in the config the
+  related user login. If it matches the ``anonymous-user`` in the config the
   connection is anonymous. Beware that the ``anonymous-user`` config is web
-  specific. Therefore, no session may be anonymous in repository only setup.
+  specific. Therefore, no session may be anonymous in a repository only setup.
+
 
 New Repository Access API
 -------------------------
 
-Connection replace Session
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+Connection replaces Session
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A new explicite Connection object replace Session as the main repository entry
-point. Connection hold all the necessary methods to be used Server side
+A new explicit Connection object replaces Session as the main repository entry
+point. Connection holds all the necessary methods to be used server-side
 (``execute``, ``commit``, ``rollback``, ``call_service``, ``entity_from_eid``,
-etc…). You obtains a new Connection object using ``session.new_cnx()``.
-Connection object need have an explicite begin and end. Use them as a context
-manager::
+etc...). One obtains a new Connection object using ``session.new_cnx()``.
+Connection objects need to have an explicit begin and end. Use them as a context
+manager to never miss an end::
 
     with session.new_cnx() as cnx:
         self.execute('INSERT Elephant E, E name "Cabar"')
@@ -30,73 +31,76 @@ manager::
     # Once you get out of the "with" clause, the connection is closed.
 
 Using the same Connection object in multiple threads will give you access to the
-same Transaction. However, Connection object are not thread safe.
+same Transaction. However, Connection objects are not thread safe (hence at your
+own risks).
 
 ``repository.internal_session`` is deprecated in favor of
-``repository.internal_cnx``. Note that internal connection are now safe.
-Integrity hooks are enabled.
+``repository.internal_cnx``. Note that internal connections are now `safe` by default,
+i.e. the integrity hooks are enabled.
 
-Backward compact is preserved on Session. They can still be used to access the
-database for the next few version.
+Backward compatibility is preserved on Session.
+
 
 dbapi vs repoapi
 ~~~~~~~~~~~~~~~~
 
-A new API have been introduced to replace the dbapi. It is called "repoapi".
+A new API has been introduced to replace the dbapi. It is called `repoapi`.
 
-there is three relevant function for now:
+There are three relevant functions for now:
 
-``repoapi.get_repository(config)`` takes a config object and return credential
+* ``repoapi.get_repository(config)`` takes a config object and return credential
 
-``repoapi.connect(repo, **credential)`` return a ClientConnection associated to
-the user identified by the credential. The ClientConnection is associated to its
-own Session that is closed when the ClientConnection is closed. A
-ClientConnection is a Connection-like object to be used client side.
+* ``repoapi.connect(repo, **credentials)`` returns a ClientConnection
+  associated with the user identified by the credentials. The
+  ClientConnection is associated with its own Session that is closed
+  when the ClientConnection is closed. A ClientConnection is a
+  Connection-like object to be used client side.
 
-``repoapi.anonymous_cnx(repo)`` return a ClientConnection associated to the
-anonymous user if describe in the Config.
+* ``repoapi.anonymous_cnx(repo)`` returns a ClientConnection associated
+  with the anonymous user if describe in the Config.
+
 
 repoapi.ClientConnection replace dbapi.Connection and company
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 On the client/web side, the Request is now using a ``repoapi.ClientConnection``
-instead of a ``dbapi.connection``. The ``ClientConnection`` have multiple backward
-compat method to looks like a ``dbapi.Cursor`` and ``dbapi.Connection``. It will
-remain that way for a few version.
+instead of a ``dbapi.connection``. The ``ClientConnection`` has multiple backward
+compatible methods to make it look like a ``dbapi.Cursor`` and ``dbapi.Connection``.
 
 Session used on the Web side are now the same than the one used Server side.
-Some backward compat method have been installed on the server side Session to
-ease the transition.
+Some backward compatibility methods have been installed on the server side Session
+to ease the transition.
 
-The authentification stack have been altered to use the ``repoapi`` instead of
-the ``dbapi``. Cubes adding new element in this stack are likely to break.
+The authentication stack has been altered to use the ``repoapi`` instead of
+the ``dbapi``. Cubes adding new element to this stack are likely to break.
 
-New API in test
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-All current methods and attributes used to access the repo on ``CubicwebTC`` are
-deprecated. You can now use a ``RepoAccess`` object. A ``RepoAccess`` object is
+New API in tests
+~~~~~~~~~~~~~~~~
+
+All current methods and attributes used to access the repo on ``CubicWebTC`` are
+deprecated. You may now use a ``RepoAccess`` object. A ``RepoAccess`` object is
 linked to a new ``Session`` for a specified user. It is able to create
-``Connection``, ``ClientConnection`` and web side request linked to this
+``Connection``, ``ClientConnection`` and web side requests linked to this
 session::
 
-    access =self.new_access("babar") # create a new RepoAccess for user babar
+    access = self.new_access('babar') # create a new RepoAccess for user babar
     with access.repo_cnx() as cnx:
         # some work with server side cnx
-        cnx.execute(…)
+        cnx.execute(...)
         cnx.commit()
-        cnx.execute(…)
+        cnx.execute(...)
         cnx.commit()
 
     with access.client_cnx() as cnx:
         # some work with client side cnx
-        cnx.execute(…)
+        cnx.execute(...)
         cnx.commit()
 
-    with access.web_request(elephant="babar") as req:
+    with access.web_request(elephant='babar') as req:
         # some work with client side cnx
-        elephant_name = req.form["elephant"]
-        req.execute(…)
+        elephant_name = req.form['elephant']
+        req.execute(...)
         req.cnx.commit()
 
 By default ``testcase.admin_access`` contains a ``RepoAccess`` object for the
@@ -113,15 +117,15 @@ API changes
 * ``SessionManager`` and ``AuthenticationManager`` now take a repo object at
   initialization time instead of a vreg.
 
-* The ``async`` argument of ``_cw.call_service`` have been dropped. All call are
+* The ``async`` argument of ``_cw.call_service`` has been dropped. All calls are
   now  synchronous. The zmq notification bus looks like a good replacement for
-  most async usecase.
+  most async use cases.
 
-* ``repo.stats()`` is now deprecated. The same information are available through
-  a service (``_cw.call_service('repo_stats')``)
+* ``repo.stats()`` is now deprecated. The same information is available through
+  a service (``_cw.call_service('repo_stats')``).
 
-* ``repo.gc_stats()`` is now deprecated. The same information are available through
-  a service (``_cw.call_service('repo_gc_stats')``)
+* ``repo.gc_stats()`` is now deprecated. The same information is available through
+  a service (``_cw.call_service('repo_gc_stats')``).
 
 * ``request.set_session`` no longer takes an optional ``user`` argument.
 
@@ -135,8 +139,5 @@ API changes
 
 Deprecated Code Drops
 ----------------------
-
-* The ldapuser source has been dropped. ldapfeed is the only official source
-  remaining for ldap.
 
 * session.hijack_user mechanism has been dropped.
