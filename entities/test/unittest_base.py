@@ -134,6 +134,27 @@ class CWUserTC(BaseEntityTC):
         self.request().create_entity('CWGroup', name=u'logilab', reverse_in_group=e)
 
 
+class HTMLtransformTC(BaseEntityTC):
+
+    def test_sanitized_html(self):
+        r = self.request()
+        c = r.create_entity('Company', name=u'Babar',
+                            description=u"""
+Title
+=====
+
+Elephant management best practices.
+
+.. raw:: html
+
+   <script>alert("coucou")</script>
+""", description_format=u'text/rest')
+        self.commit()
+        c.cw_clear_all_caches()
+        self.assertIn('alert', c.printable_value('description', format='text/plain'))
+        self.assertNotIn('alert', c.printable_value('description', format='text/html'))
+
+
 class InterfaceTC(CubicWebTC):
 
     def test_nonregr_subclasses_and_mixins_interfaces(self):

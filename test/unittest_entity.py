@@ -533,7 +533,7 @@ class EntityTC(CubicWebTC):
         e = self.request().create_entity('Card', title=u'rest test', content=u'du :eid:`1:*ReST*`',
                                          content_format=u'text/rest')
         self.assertEqual(e.printable_value('content'),
-                         '<p>du <a class="reference" href="http://testing.fr/cubicweb/cwsource/system">*ReST*</a></p>\n')
+                         '<p>du <a class="reference" href="http://testing.fr/cubicweb/cwsource/system">*ReST*</a></p>')
         e.cw_attr_cache['content'] = 'du <em>html</em> <ref rql="CWUser X">users</ref>'
         e.cw_attr_cache['content_format'] = 'text/html'
         self.assertEqual(e.printable_value('content'),
@@ -541,7 +541,7 @@ class EntityTC(CubicWebTC):
         e.cw_attr_cache['content'] = 'du *texte*'
         e.cw_attr_cache['content_format'] = 'text/plain'
         self.assertEqual(e.printable_value('content'),
-                          '<p>\ndu *texte*<br/>\n</p>')
+                          '<p>\ndu *texte*<br/></p>')
         e.cw_attr_cache['title'] = 'zou'
         e.cw_attr_cache['content'] = '''\
 a title
@@ -572,24 +572,21 @@ du :eid:`1:*ReST*`'''
             if tuple(int(i) for i in pygments.__version__.split('.')[:2]) >= (1, 3):
                 self.assertEqual(e.printable_value('data'),
                                   '''<div class="highlight"><pre><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="mi">1</span>
-</pre></div>
-''')
+</pre></div>''')
             else:
                 self.assertEqual(e.printable_value('data'),
                                   '''<div class="highlight"><pre><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="mf">1</span>
-</pre></div>
-''')
+</pre></div>''')
         else:
             self.assertEqual(e.printable_value('data'),
                               '''<pre class="python">
 <span style="color: #C00000;">lambda</span> <span style="color: #000000;">x</span><span style="color: #0000C0;">:</span> <span style="color: #0080C0;">1</span>
-</pre>
-''')
+</pre>''')
 
         e = req.create_entity('File', data=Binary('*héhéhé*'), data_format=u'text/rest',
                             data_encoding=u'utf-8', data_name=u'toto.txt')
         self.assertEqual(e.printable_value('data'),
-                          u'<p><em>héhéhé</em></p>\n')
+                          u'<p><em>héhéhé</em></p>')
 
     def test_printable_value_bad_html(self):
         """make sure we don't crash if we try to render invalid XHTML strings"""
