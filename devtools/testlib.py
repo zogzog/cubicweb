@@ -274,7 +274,7 @@ class CubicWebTC(TestCase):
         while self._open_access:
             self._open_access.pop().close()
 
-    @deprecated('[4.0] explicitly use RepoAccess object in test instead')
+    @deprecated('[3.19] explicitly use RepoAccess object in test instead')
     def set_cnx(self, cnx):
         """"""
         # XXX we want to deprecate this
@@ -287,7 +287,7 @@ class CubicWebTC(TestCase):
             self._current_clt_cnx = cnx
 
     @property
-    @deprecated('[4.0] explicitly use RepoAccess object in test instead')
+    @deprecated('[3.19] explicitly use RepoAccess object in test instead')
     def cnx(self):
         # XXX we want to deprecate this
         clt_cnx = self._current_clt_cnx
@@ -304,7 +304,7 @@ class CubicWebTC(TestCase):
             self._cnxs.remove(cnx)
 
     @property
-    @deprecated('[4.0] explicitly use RepoAccess object in test instead')
+    @deprecated('[3.19] explicitly use RepoAccess object in test instead')
     def session(self):
         """return current server side session"""
         # XXX We want to use a srv_connection instead and deprecate this
@@ -320,17 +320,17 @@ class CubicWebTC(TestCase):
         return session
 
     @property
-    @deprecated('[4.0] explicitly use RepoAccess object in test instead')
+    @deprecated('[3.19] explicitly use RepoAccess object in test instead')
     def websession(self):
         return self.session
 
     @property
-    @deprecated('[4.0] explicitly use RepoAccess object in test instead')
+    @deprecated('[3.19] explicitly use RepoAccess object in test instead')
     def adminsession(self):
         """return current server side session (using default manager account)"""
         return self._admin_session
 
-    @deprecated('[4.0] explicitly use RepoAccess object in test instead')
+    @deprecated('[3.19] explicitly use RepoAccess object in test instead')
     def login(self, login, **kwargs):
         """return a connection for the given login/password"""
         __ = kwargs.pop('autoclose', True) # not used anymore
@@ -345,7 +345,7 @@ class CubicWebTC(TestCase):
         clt_cnx.__enter__()
         return TestCaseConnectionProxy(self, clt_cnx)
 
-    @deprecated('[4.0] explicitly use RepoAccess object in test instead')
+    @deprecated('[3.19] explicitly use RepoAccess object in test instead')
     def restore_connection(self):
         self._pop_custom_cnx()
 
@@ -383,7 +383,7 @@ class CubicWebTC(TestCase):
     # db api ##################################################################
 
     @nocoverage
-    @deprecated('[4.0] explicitly use RepoAccess object in test instead')
+    @deprecated('[3.19] explicitly use RepoAccess object in test instead')
     def cursor(self, req=None):
         if req is not None:
             return req.cnx
@@ -391,7 +391,7 @@ class CubicWebTC(TestCase):
             return self.cnx
 
     @nocoverage
-    @deprecated('[4.0] explicitly use RepoAccess object in test instead')
+    @deprecated('[3.19] explicitly use RepoAccess object in test instead')
     def execute(self, rql, args=None, req=None):
         """executes <rql>, builds a resultset, and returns a couple (rset, req)
         where req is a FakeRequest
@@ -400,7 +400,7 @@ class CubicWebTC(TestCase):
         return req.execute(unicode(rql), args)
 
     @nocoverage
-    @deprecated('[4.0] explicitly use RepoAccess object in test instead')
+    @deprecated('[3.19] explicitly use RepoAccess object in test instead')
     def commit(self):
         try:
             return self.cnx.commit()
@@ -408,7 +408,7 @@ class CubicWebTC(TestCase):
             self.session.set_cnxset() # ensure cnxset still set after commit
 
     @nocoverage
-    @deprecated('[4.0] explicitly use RepoAccess object in test instead')
+    @deprecated('[3.19] explicitly use RepoAccess object in test instead')
     def rollback(self):
         try:
             self.cnx.rollback()
@@ -418,7 +418,7 @@ class CubicWebTC(TestCase):
             self.session.set_cnxset() # ensure cnxset still set after commit
 
     requestcls = fake.FakeRequest
-    @deprecated('[4.0] explicitly use RepoAccess object in test instead')
+    @deprecated('[3.19] explicitly use RepoAccess object in test instead')
     def request(self, rollbackfirst=False, url=None, headers={}, **kwargs):
         """return a web ui request"""
         if rollbackfirst:
@@ -429,7 +429,7 @@ class CubicWebTC(TestCase):
 
     # server side db api #######################################################
 
-    @deprecated('[4.0] explicitly use RepoAccess object in test instead')
+    @deprecated('[3.19] explicitly use RepoAccess object in test instead')
     def sexecute(self, rql, args=None):
         self.session.set_cnxset()
         return self.session.execute(rql, args)

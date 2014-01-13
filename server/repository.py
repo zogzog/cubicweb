@@ -516,7 +516,7 @@ class Repository(object):
 
     # public (dbapi) interface ################################################
 
-    @deprecated("[4.0] use _cw.call_service('repo_stats'")
+    @deprecated("[3.19] use _cw.call_service('repo_stats'")
     def stats(self): # XXX restrict to managers session?
         """Return a dictionary containing some statistics about the repository
         resources usage.
@@ -528,7 +528,7 @@ class Repository(object):
         with self.internal_session() as session:
             return session.call_service('repo_stats')
 
-    @deprecated("[4.0] use _cw.call_service('repo_gc_stats'")
+    @deprecated("[3.19] use _cw.call_service('repo_gc_stats'")
     def gc_stats(self, nmax=20):
         """Return a dictionary containing some statistics about the repository
         memory usage.
@@ -939,7 +939,7 @@ class Repository(object):
                 nbclosed += 1
         return nbclosed
 
-    @deprecated("[4.0] use internal_cnx now\n"
+    @deprecated("[3.19] use internal_cnx now\n"
                 "(Beware that integrity hook are now enabled by default)")
     def internal_session(self, cnxprops=None, safe=False):
         """return a dbapi like connection/cursor using internal user which have

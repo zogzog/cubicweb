@@ -333,25 +333,25 @@ class ClientConnection(RequestSessionBase):
         # Connection object
         return self._cnx.repo.system_source.undo_transaction(self._cnx, txuuid)
 
-    @deprecated('[4.0] This is a repoapi.ClientConnection object not a dbapi one')
+    @deprecated('[3.19] This is a repoapi.ClientConnection object not a dbapi one')
     def request(self):
         return self
 
-    @deprecated('[4.0] This is a repoapi.ClientConnection object not a dbapi one')
+    @deprecated('[3.19] This is a repoapi.ClientConnection object not a dbapi one')
     def cursor(self):
         return self
 
     @ property
-    @deprecated('[4.0] This is a repoapi.ClientConnection object not a dbapi one')
+    @deprecated('[3.19] This is a repoapi.ClientConnection object not a dbapi one')
     def sessionid(self):
         return self._session.id
 
     @property
-    @deprecated('[4.0] This is a repoapi.ClientConnection object not a dbapi one')
+    @deprecated('[3.19] This is a repoapi.ClientConnection object not a dbapi one')
     def connection(self):
         return self
 
     @property
-    @deprecated('[4.0] This is a repoapi.ClientConnection object not a dbapi one')
+    @deprecated('[3.19] This is a repoapi.ClientConnection object not a dbapi one')
     def _repo(self):
         return self._session.repo
