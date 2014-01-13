@@ -8,7 +8,10 @@ XS-Python-Version: >= 2.6
 
 Package: %(distname)s
 Architecture: all
-Depends: cubicweb-common (>= %(version)s), ${python:Depends}
+Depends:
+ cubicweb-common (>= %(version)s),
+ ${python:Depends},
+ ${misc:Depends},
 Description: %(shortdesc)s
  CubicWeb is a semantic web application framework.
  .

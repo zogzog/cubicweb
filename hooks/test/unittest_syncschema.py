@@ -19,7 +19,7 @@
 
 from logilab.common.testlib import TestCase, unittest_main
 
-from cubicweb import ValidationError
+from cubicweb import ValidationError, Binary
 from cubicweb.schema import META_RTYPES
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.server.sqlutils import SQL_PREFIX
@@ -73,9 +73,10 @@ class SchemaModificationHooksTC(CubicWebTC):
         self.commit()
         self.assertTrue(schema.has_entity('Societe2'))
         self.assertTrue(schema.has_relation('concerne2'))
-        attreid = self.execute('INSERT CWAttribute X: X cardinality "11", X defaultval "noname", '
+        attreid = self.execute('INSERT CWAttribute X: X cardinality "11", X defaultval %(default)s, '
                                '   X indexed TRUE, X relation_type RT, X from_entity E, X to_entity F '
-                               'WHERE RT name "name", E name "Societe2", F name "String"')[0][0]
+                               'WHERE RT name "name", E name "Societe2", F name "String"',
+                               {'default': Binary.zpickle('noname')})[0][0]
         self._set_attr_perms(attreid)
         concerne2_rdef_eid = self.execute(
             'INSERT CWRelation X: X cardinality "**", X relation_type RT, X from_entity E, X to_entity E '
@@ -289,8 +290,10 @@ class SchemaModificationHooksTC(CubicWebTC):
 
 
     def test_add_attribute_to_base_class(self):
-        attreid = self.execute('INSERT CWAttribute X: X cardinality "11", X defaultval "noname", X indexed TRUE, X relation_type RT, X from_entity E, X to_entity F '
-                               'WHERE RT name "messageid", E name "BaseTransition", F name "String"')[0][0]
+        attreid = self.execute('INSERT CWAttribute X: X cardinality "11", X defaultval %(default)s, '
+                               'X indexed TRUE, X relation_type RT, X from_entity E, X to_entity F '
+                               'WHERE RT name "messageid", E name "BaseTransition", F name "String"',
+                               {'default': Binary.zpickle('noname')})[0][0]
         assert self.execute('SET X read_permission Y WHERE X eid %(x)s, Y name "managers"',
                      {'x': attreid})
         self.commit()

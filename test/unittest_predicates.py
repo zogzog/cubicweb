@@ -203,6 +203,17 @@ class RelationPossibleTC(CubicWebTC):
                          select=select, filtered_variable=select.defined_vars['X'])
         self.assertEqual(score, 1)
 
+    def test_ambiguous(self):
+        # Ambiguous relations are :
+        # (Service, fabrique_par, Personne) and (Produit, fabrique_par, Usine)
+        # There used to be a crash here with a bad rdef choice in the strict
+        # checking case.
+        selector = relation_possible('fabrique_par', role='object',
+                                     target_etype='Personne', strict=True)
+        req = self.request()
+        usine = req.create_entity('Usine', lieu=u'here')
+        score = selector(None, req, rset=usine.as_rset())
+        self.assertEqual(0, score)
 
 class MatchUserGroupsTC(CubicWebTC):
     def test_owners_group(self):

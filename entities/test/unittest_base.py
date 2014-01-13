@@ -25,7 +25,6 @@ from logilab.common.interface import implements
 
 from cubicweb.devtools.testlib import CubicWebTC
 
-from cubicweb.interfaces import IMileStone, ICalendarable
 from cubicweb.entities import AnyEntity
 
 
@@ -82,12 +81,19 @@ class EmailAddressTC(BaseEntityTC):
         self.assertEqual(email.display_address(), 'maarten.ter.huurne@philips.com')
         self.assertEqual(email.printable_value('address'), 'maarten.ter.huurne@philips.com')
         self.vreg.config.global_set_option('mangle-emails', True)
-        self.assertEqual(email.display_address(), 'maarten.ter.huurne at philips dot com')
-        self.assertEqual(email.printable_value('address'), 'maarten.ter.huurne at philips dot com')
-        email = self.execute('INSERT EmailAddress X: X address "syt"').get_entity(0, 0)
-        self.assertEqual(email.display_address(), 'syt')
-        self.assertEqual(email.printable_value('address'), 'syt')
+        try:
+            self.assertEqual(email.display_address(), 'maarten.ter.huurne at philips dot com')
+            self.assertEqual(email.printable_value('address'), 'maarten.ter.huurne at philips dot com')
+            email = self.execute('INSERT EmailAddress X: X address "syt"').get_entity(0, 0)
+            self.assertEqual(email.display_address(), 'syt')
+            self.assertEqual(email.printable_value('address'), 'syt')
+        finally:
+            self.vreg.config.global_set_option('mangle-emails', False)
 
+    def test_printable_value_escape(self):
+        email = self.execute('INSERT EmailAddress X: X address "maarten&ter@philips.com"').get_entity(0, 0)
+        self.assertEqual(email.printable_value('address'), 'maarten&amp;ter@philips.com')
+        self.assertEqual(email.printable_value('address', format='text/plain'), 'maarten&ter@philips.com')
 
 class CWUserTC(BaseEntityTC):
 
@@ -125,27 +131,6 @@ class CWUserTC(BaseEntityTC):
         """ a weird non regression test """
         e = self.execute('CWUser U WHERE U login "member"').get_entity(0, 0)
         self.request().create_entity('CWGroup', name=u'logilab', reverse_in_group=e)
-
-
-class InterfaceTC(CubicWebTC):
-
-    def test_nonregr_subclasses_and_mixins_interfaces(self):
-        from cubicweb.entities.wfobjs import WorkflowableMixIn
-        WorkflowableMixIn.__implements__ = (ICalendarable,)
-        CWUser = self.vreg['etypes'].etype_class('CWUser')
-        class MyUser(CWUser):
-            __implements__ = (IMileStone,)
-        self.vreg._loadedmods[__name__] = {}
-        self.vreg.register(MyUser)
-        self.vreg['etypes'].initialization_completed()
-        MyUser_ = self.vreg['etypes'].etype_class('CWUser')
-        # a copy is done systematically
-        self.assertTrue(issubclass(MyUser_, MyUser))
-        self.assertTrue(implements(MyUser_, IMileStone))
-        self.assertTrue(implements(MyUser_, ICalendarable))
-        # original class should not have beed modified, only the copy
-        self.assertTrue(implements(MyUser, IMileStone))
-        self.assertFalse(implements(MyUser, ICalendarable))
 
 
 class SpecializedEntityClassesTC(CubicWebTC):

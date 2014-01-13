@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -68,7 +68,7 @@ class AbstractSessionManager(component.Component):
         self.session_time = vreg.config['http-session-time'] or None
         self.authmanager = vreg['components'].select('authmanager', repo=repo)
         interval = (self.session_time or 0) / 2.
-        if vreg.config.anonymous_user() is not None:
+        if vreg.config.anonymous_user()[0] is not None:
             self.cleanup_anon_session_time = vreg.config['cleanup-anonymous-session-time'] or 5 * 60
             assert self.cleanup_anon_session_time > 0
             if self.session_time is not None:
@@ -319,17 +319,17 @@ class CubicWebPublisher(object):
 
 
     def main_handle_request(self, req, path):
-        """Process and http request
+        """Process an http request
 
         Arguments are:
         - a Request object
         - path of the request object
 
-        It return the content of the http response. HTTP header and status are
-        are set on the Request Object.
+        It returns the content of the http response. HTTP header and status are
+        set on the Request object.
         """
         if not isinstance(req, CubicWebRequestBase):
-            warn('[3.15] Application entry poin arguments are now (req, path) '
+            warn('[3.15] Application entry point arguments are now (req, path) '
                  'not (path, req)', DeprecationWarning, 2)
             req, path = path, req
         if req.authmode == 'http':
@@ -393,7 +393,7 @@ class CubicWebPublisher(object):
         # Wrong, absent or Reseted credential
         except AuthenticationError:
             # If there is an https url configured and
-            # the request do not used https, redirect to login form
+            # the request does not use https, redirect to login form
             https_url = self.vreg.config['https-url']
             if https_url and req.base_url() != https_url:
                 req.status_out = httplib.SEE_OTHER
@@ -449,8 +449,8 @@ class CubicWebPublisher(object):
                 req.update_search_state()
                 result = controller.publish(rset=rset)
             except StatusResponse as ex:
-                warn('StatusResponse is deprecated use req.status_out',
-                     DeprecationWarning)
+                warn('[3.16] StatusResponse is deprecated use req.status_out',
+                     DeprecationWarning, stacklevel=2)
                 result = ex.content
                 req.status_out = ex.status
             except Redirect as ex:

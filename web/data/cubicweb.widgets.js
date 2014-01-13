@@ -92,7 +92,8 @@ function getJSON(url, data, callback) {
                 if (($(instanceData.userInput).attr('cubicweb:initialvalue') !== undefined) && !instanceData.hiddenInput){
                     hiHandlers.initializeHiddenInput(instanceData);
                 }
-                $.ui.autocomplete.prototype._search = methods.search;
+                $.ui.autocomplete.prototype._value = methods._value;
+                $.data(this, 'settings', settings);
                 if (settings.multiple) {
                     $.ui.autocomplete.filter = methods.multiple.makeFilter(this);
                     $(this).bind({
@@ -125,6 +126,20 @@ function getJSON(url, data, callback) {
             });
         },
 
+        _value: function() {
+            /* We extend the widget with the ability to lookup and
+               handle several terms at once ('multiple' option). E.g.:
+               toto, titi, tu....  The autocompletion must be
+               performed only on the last of such a list of terms.
+              */
+            var settings = $(this.element).data('settings');
+            var value = this.valueMethod.apply( this.element, arguments );
+            if (settings.multiple & arguments.length === 0) {
+                return extractLast(value);
+            }
+            return value
+        },
+
         multiple: {
             focus: function() {
                 // prevent value inserted on focus
@@ -140,7 +155,7 @@ function getJSON(url, data, callback) {
                 return false;
             },
             keydown: function(evt) {
-                if ($(this).data('autocomplete').menu.active && evt.keyCode == $.ui.keyCode.TAB) {
+                if (evt.keyCode == $.ui.keyCode.TAB) {
                     evt.preventDefault();
                 }
             },
@@ -161,13 +176,7 @@ function getJSON(url, data, callback) {
                 methods.resetValues(instanceData);
             }
         },
-        search: function(value) {
-            this.element.addClass("ui-autocomplete-loading");
-            if (this.options.multiple) {
-                value = extractLast(value);
-            }
-            this.source({term: value}, this.response);
-        },
+
         ensureExactMatch: function(evt) {
             var instanceData = $(this).data('cwautocomplete');
             if (evt.keyCode == $.ui.keyCode.ENTER || evt.keyCode == $.ui.keyCode.TAB) {
@@ -179,6 +188,7 @@ function getJSON(url, data, callback) {
                 }
             }
         },
+
         resetValues: function(instanceData){
             $(instanceData.userInput).val('');
             $(instanceData.hiddenInput).val('');
@@ -544,105 +554,77 @@ cw.widgets = {
 // IE things can not handle hide/show options on select, this cloned list solition (should propably have 2 widgets)
 
 (function ($) {
-    var defaultSettings = {
-        bindDblClick: true
-    };
+
     var methods = {
-        __init__: function(fromSelect, toSelect, options) {
-            var settings = $.extend({}, defaultSettings, options);
-            var bindDblClick = settings['bindDblClick'];
-            var $fromNode = $(cw.jqNode(fromSelect));
-            var clonedSelect = $fromNode.clone();
-            var $toNode = $(cw.jqNode(toSelect));
-            var $addButton = $(this.find('.cwinoutadd')[0]);
-            var $removeButton = $(this.find('.cwinoutremove')[0]);
-            // bind buttons
-            var name = this.attr('id');
-            var instanceData = {'fromNode':fromSelect,
-                                'toNode':toSelect,
-                                'cloned':clonedSelect,
-                                'bindDblClick':bindDblClick,
-                                'name': name};
-            $addButton.bind('click', {'instanceData':instanceData}, methods.inOutWidgetAddValues);
-            $removeButton.bind('click', {'instanceData':instanceData}, methods.inOutWidgetRemoveValues);
-            if(bindDblClick){
-                $toNode.bind('dblclick', {'instanceData': instanceData}, methods.inOutWidgetRemoveValues);
-            }
-            methods.inOutWidgetRemplaceSelect($fromNode, $toNode, clonedSelect, bindDblClick, name);
-        },
+        __init__: function(fromSelect, toSelect) {
+            // closed over state
+            var state = {'$fromNode' : $(cw.escape('#' + fromSelect)),
+                         '$toNode'   : $(cw.escape('#' + toSelect)),
+                         'name'      : this.attr('id')};
 
-        inOutWidgetRemplaceSelect: function($fromNode, $toNode, clonedSelect, bindDblClick, name){
-             var $newSelect = clonedSelect.clone();
-             $toNode.find('option').each(function() {
-                 $newSelect.find('$(this)[value='+$(this).val()+']').remove();
-              });
-             var fromparent = $fromNode.parent();
-             if (bindDblClick) {
-                 //XXX jQuery live binding does not seem to work here
-                 $newSelect.bind('dblclick', {'instanceData': {'fromNode':$fromNode.attr('id'),
-                                     'toNode': $toNode.attr('id'),
-                                     'cloned':clonedSelect,
-                                     'bindDblClick':bindDblClick,
-                                     'name': name}},
-                                 methods.inOutWidgetAddValues);
-             }
-             $fromNode.remove();
-             fromparent.append($newSelect);
-        },
-
-        inOutWidgetAddValues: function(event){
-            var $fromNode = $(cw.jqNode(event.data.instanceData.fromNode));
-            var $toNode = $(cw.jqNode(event.data.instanceData.toNode));
-            $fromNode.find('option:selected').each(function() {
-                var option = $(this);
-                var newoption = OPTION({'value':option.val()},
-	 			 value=option.text());
-                $toNode.append(newoption);
-                var hiddenInput = INPUT({
-                    type: "hidden", name: event.data.instanceData.name,
-                    value:option.val()
+            function sortoptions($optionlist) {
+                var $sorted = $optionlist.find('option').sort(function(opt1, opt2) {
+                    return $(opt1).text() > $(opt2).text() ? 1 : -1;
                 });
-                $toNode.parent().append(hiddenInput);
-            });
-            methods.inOutWidgetRemplaceSelect($fromNode, $toNode, event.data.instanceData.cloned,
-                                              event.data.instanceData.bindDblClick,
-                                              event.data.instanceData.name);
-            // for ie 7 : ie does not resize correctly the select
-            if($.browser.msie && $.browser.version.substr(0,1) < 8){
-                var p = $toNode.parent();
-                var newtoNode = $toNode.clone();
-                if (event.data.instanceData.bindDblClick) {
-                    newtoNode.bind('dblclick', {'fromNode': $fromNode.attr('id'),
-                                                'toNode': $toNode.attr('id'),
-                                                'cloned': event.data.instanceData.cloned,
-                                                'bindDblClick': true,
-                                                'name': event.data.instanceData.name},
-                                   methods.inOutWidgetRemoveValues);
-                }
-                $toNode.remove();
-                p.append(newtoNode);
-            }
-        },
+                // this somehow translates to an inplace sort
+                $optionlist.append($sorted);
+            };
+            sortoptions(state.$fromNode);
+            sortoptions(state.$toNode);
 
-        inOutWidgetRemoveValues: function(event){
-            var $fromNode = $(cw.jqNode(event.data.instanceData.toNode));
-            var $toNode = $(cw.jqNode(event.data.instanceData.fromNode));
-            var name = event.data.instanceData.name.replace(':', '\\:');
-            $fromNode.find('option:selected').each(function(){
-                var option = $(this);
-                var newoption = OPTION({'value':option.val()},
-	 			 value=option.text());
-                option.remove();
-                $fromNode.parent().find('input[name]='+ name).each(function() {
-                    $(this).val()==option.val()?$(this).remove():null;
-               });
-            });
-            methods.inOutWidgetRemplaceSelect($toNode, $fromNode,  event.data.instanceData.cloned,
-                                              event.data.instanceData.bindDblClick,
-                                              event.data.instanceData.name);
+            // will move selected options from one list to the other
+            // and call an option handler on each option
+            function moveoptions ($fromlist, $tolist, opthandler) {
+                $fromlist.find('option:selected').each(function(index, option) {
+                    var $option = $(option);
+                    // add a new option to the target list
+                    $tolist.append(OPTION({'value' : $option.val()},
+	 			          $option.text()));
+                    // process callback on the option
+                    opthandler.call(null, $option);
+                    // remove option from the source list
+                    $option.remove();
+                });
+                // re-sort both lists
+                sortoptions($fromlist);
+                sortoptions($tolist);
+            };
+
+            function addvalues () {
+                moveoptions(state.$fromNode, state.$toNode, function ($option) {
+                    // add an hidden input for the edit controller
+                    var hiddenInput = INPUT({
+                        type: 'hidden', name: state.name,
+                        value : $option.val()
+                    });
+                    state.$toNode.parent().append(hiddenInput);
+                });
+            };
+
+            function removevalues () {
+                moveoptions(state.$toNode, state.$fromNode, function($option) {
+                    // remove hidden inputs for the edit controller
+                    var selector = 'input[name=' + cw.escape(state.name) + ']'
+                    state.$toNode.parent().find(selector).each(function(index, input) {
+                        if ($(input).val() == $option.val()) {
+                            $(input).remove();
+                        }
+                    });
+                });
+            };
+
+            var $this = $(this);
+            $this.find('.cwinoutadd').bind( // 'add >>>' symbol
+                'click', {'state' : state}, addvalues);
+            $this.find('.cwinoutremove').bind( // 'remove <<<' symbol
+                'click', {'state' : state}, removevalues);
+
+            state.$fromNode.bind('dblclick', {'state': state}, addvalues);
+            state.$toNode.bind('dblclick', {'state': state}, removevalues);
+
         }
     };
-    $.fn.cwinoutwidget = function(fromSelect, toSelect, options){
-        return methods.__init__.apply(this, [fromSelect, toSelect, options]);
+    $.fn.cwinoutwidget = function(fromSelect, toSelect) {
+        return methods.__init__.apply(this, [fromSelect, toSelect]);
     };
 })(jQuery);

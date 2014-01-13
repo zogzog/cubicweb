@@ -26,6 +26,7 @@ import shutil
 import pickle
 import glob
 import warnings
+import tempfile
 from hashlib import sha1 # pylint: disable=E0611
 from datetime import timedelta
 from os.path import (abspath, join, exists, split, isabs, isdir)
@@ -37,7 +38,7 @@ from logilab.common.decorators import cached, clear_cache
 from cubicweb import ExecutionError, BadConnectionId
 from cubicweb import schema, cwconfig
 from cubicweb.server.serverconfig import ServerConfiguration
-from cubicweb.etwist.twconfig import TwistedConfiguration
+from cubicweb.etwist.twconfig import WebConfigurationBase
 
 cwconfig.CubicWebConfiguration.cls_adjust_sys_path()
 
@@ -213,12 +214,12 @@ class TestServerConfiguration(ServerConfiguration):
         return BASE_URL
 
 
-class BaseApptestConfiguration(TestServerConfiguration, TwistedConfiguration):
+class BaseApptestConfiguration(TestServerConfiguration, WebConfigurationBase):
     name = 'all-in-one' # so it search for all-in-one.conf, not repository.conf
     options = cwconfig.merge_options(TestServerConfiguration.options
-                                     + TwistedConfiguration.options)
-    cubicweb_appobject_path = TestServerConfiguration.cubicweb_appobject_path | TwistedConfiguration.cubicweb_appobject_path
-    cube_appobject_path = TestServerConfiguration.cube_appobject_path | TwistedConfiguration.cube_appobject_path
+                                     + WebConfigurationBase.options)
+    cubicweb_appobject_path = TestServerConfiguration.cubicweb_appobject_path | WebConfigurationBase.cubicweb_appobject_path
+    cube_appobject_path = TestServerConfiguration.cube_appobject_path | WebConfigurationBase.cube_appobject_path
 
     def available_languages(self, *args):
         return self.cw_languages()
@@ -287,8 +288,11 @@ class TestDataBaseHandler(object):
 
         The function create it if necessary"""
         backupdir = join(self.config.apphome, 'database')
-        if not isdir(backupdir):
+        try:
             os.makedirs(backupdir)
+        except:
+            if not isdir(backupdir):
+                raise
         return backupdir
 
     def config_path(self, db_id):
@@ -324,8 +328,9 @@ class TestDataBaseHandler(object):
         # XXX we dump a dict of the config
         # This is an experimental to help config dependant setup (like BFSS) to
         # be propertly restored
-        with open(config_path, 'wb') as conf_file:
+        with tempfile.NamedTemporaryFile(dir=os.path.dirname(config_path), delete=False) as conf_file:
             conf_file.write(pickle.dumps(dict(self.config)))
+        os.rename(conf_file.name, config_path)
         self.db_cache[self.db_cache_key(db_id)] = (backup_data, config_path)
 
     def _backup_database(self, db_id):

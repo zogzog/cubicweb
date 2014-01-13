@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -15,16 +15,14 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""
-
-"""
 
 from yams.buildobjs import (EntityType, RelationDefinition, SubjectRelation,
                             String, Int, Datetime, Boolean, Float)
 from yams.constraints import IntervalBoundConstraint
 
 class Salesterm(EntityType):
-    described_by_test = SubjectRelation('File', cardinality='1*', composite='subject')
+    described_by_test = SubjectRelation('File', cardinality='1*',
+                                        composite='subject', inlined=True)
     amount = Int(constraints=[IntervalBoundConstraint(0, 100)])
     reason = String(maxsize=20, vocabulary=[u'canceled', u'sold'])
 

@@ -50,8 +50,9 @@ class has_editable_relation(EntityPredicate):
                                                entity=entity, mainform=False)
         for dummy in form.editable_relations():
             return 1
-        editableattrs = form.editable_attributes(strict=True)
-        for rschema, role in editableattrs:
+        for dummy in form.inlined_relations():
+            return 1
+        for dummy in form.editable_attributes(strict=True):
             return 1
         return 0
 
@@ -417,22 +418,6 @@ class PoweredByAction(action.Action):
 
     def url(self):
         return 'http://www.cubicweb.org'
-
-class GotRhythmAction(action.Action):
-    __regid__ = 'rhythm'
-    __select__ = debug_mode()
-
-    category = 'footer'
-    order = 3
-    title = _('Got rhythm?')
-
-    def url(self):
-        return xml_escape(self._cw.url()+'#')
-
-    def html_class(self):
-        self._cw.add_js('cubicweb.rhythm.js')
-        return 'rhythm'
-
 
 ## default actions ui configuration ###########################################
 

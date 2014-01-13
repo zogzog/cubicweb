@@ -424,11 +424,7 @@ class CSVView(SimpleListView):
     redirect_vid = 'incontext'
 
     def call(self, subvid=None, **kwargs):
-        if subvid is None and 'vid' in kwargs:
-            warn("[3.9] should give a 'subvid' argument instead of 'vid'",
-                 DeprecationWarning, stacklevel=2)
-        else:
-            kwargs['vid'] = subvid
+        kwargs['vid'] = subvid
         rset = self.cw_rset
         for i in xrange(len(rset)):
             self.cell_call(i, 0, **kwargs)
@@ -643,14 +639,3 @@ XmlRsetView = class_moved(xmlrss.XMLRsetView)
 RssView = class_moved(xmlrss.RSSView)
 RssItemView = class_moved(xmlrss.RSSItemView)
 TableView = class_moved(tableview.TableView)
-
-
-class SecondaryView(EntityView):
-    __metaclass__ = class_deprecated
-    __deprecation_warning__ = '[3.9] the secondary view is deprecated, use one of oneline/incontext/outofcontext'
-    __regid__ = 'secondary'
-
-    def cell_call(self, row, col, **kwargs):
-        entity = self.cw_rset.get_entity(row, col)
-        self.w(u'&#160;')
-        self.wview('oneline', self.cw_rset, row=row, col=col)

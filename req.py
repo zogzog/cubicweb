@@ -29,7 +29,10 @@ from logilab.common.decorators import cached
 from logilab.common.deprecation import deprecated
 from logilab.common.date import ustrftime, strptime, todate, todatetime
 
-from cubicweb import Unauthorized, NoSelectableObject, uilib
+from rql.utils import rqlvar_maker
+
+from cubicweb import (Unauthorized, NoSelectableObject, NoResultError,
+                      MultipleResultsError, uilib)
 from cubicweb.rset import ResultSet
 
 ONESECOND = timedelta(0, 1, 0)
@@ -169,16 +172,16 @@ class RequestSessionBase(object):
         cls = self.vreg['etypes'].etype_class(etype)
         return cls.cw_instantiate(self.execute, **kwargs)
 
+    @deprecated('[3.18] use find(etype, **kwargs).entities()')
     def find_entities(self, etype, **kwargs):
         """find entities of the given type and attribute values.
 
         >>> users = find_entities('CWGroup', name=u'users')
         >>> groups = find_entities('CWGroup')
         """
-        parts = ['Any X WHERE X is %s' % etype]
-        parts.extend('X %(attr)s %%(%(attr)s)s' % {'attr': attr} for attr in kwargs)
-        return self.execute(', '.join(parts), kwargs).entities()
+        return self.find(etype, **kwargs).entities()
 
+    @deprecated('[3.18] use find(etype, **kwargs).one()')
     def find_one_entity(self, etype, **kwargs):
         """find one entity of the given type and attribute values.
         raise :exc:`FindEntityError` if can not return one and only one entity.
@@ -187,14 +190,43 @@ class RequestSessionBase(object):
         >>> groups = find_one_entity('CWGroup')
         Exception()
         """
+        try:
+            return self.find(etype, **kwargs).one()
+        except (NoResultError, MultipleResultsError) as e:
+            raise FindEntityError("%s: (%s, %s)" % (str(e), etype, kwargs))
+
+    def find(self, etype, **kwargs):
+        """find entities of the given type and attribute values.
+
+        :returns: A :class:`ResultSet`
+
+        >>> users = find('CWGroup', name=u"users").one()
+        >>> groups = find('CWGroup').entities()
+        """
         parts = ['Any X WHERE X is %s' % etype]
-        parts.extend('X %(attr)s %%(%(attr)s)s' % {'attr': attr} for attr in kwargs)
+        varmaker = rqlvar_maker(defined='X')
+        eschema = self.vreg.schema[etype]
+        for attr, value in kwargs.items():
+            if isinstance(value, list) or isinstance(value, tuple):
+                raise NotImplementedError("List of values are not supported")
+            if hasattr(value, 'eid'):
+                kwargs[attr] = value.eid
+            if attr.startswith('reverse_'):
+                attr = attr[8:]
+                assert attr in eschema.objrels, \
+                    '%s not in %s object relations' % (attr, eschema)
+                parts.append(
+                    '%(varname)s %(attr)s X, '
+                    '%(varname)s eid %%(reverse_%(attr)s)s'
+                    % {'attr': attr, 'varname': varmaker.next()})
+            else:
+                assert attr in eschema.subjrels, \
+                    '%s not in %s subject relations' % (attr, eschema)
+                parts.append('X %(attr)s %%(%(attr)s)s' % {'attr': attr})
+
         rql = ', '.join(parts)
-        rset = self.execute(rql, kwargs)
-        if len(rset) != 1:
-            raise FindEntityError('Found %i entitie(s) when 1 was expected (rql=%s ; %s)'
-                                  % (len(rset), rql, repr(kwargs)))
-        return rset.get_entity(0,0)
+
+        return self.execute(rql, kwargs)
 
     def ensure_ro_rql(self, rql):
         """raise an exception if the given rql is not a select query"""
@@ -437,7 +469,7 @@ class RequestSessionBase(object):
         """return the root url of the instance
         """
         if secure:
-            return self.vreg.config.get('https-url', self.vreg.config['base-url'])
+            return self.vreg.config.get('https-url') or self.vreg.config['base-url']
         return self.vreg.config['base-url']
 
     # abstract methods to override according to the web front-end #############

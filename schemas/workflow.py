@@ -89,14 +89,14 @@ class BaseTransition(EntityType):
     name = String(required=True, indexed=True, internationalizable=True,
                   maxsize=256,
                   constraints=[RQLUniqueConstraint('S name N, S transition_of WF, Y transition_of WF, Y name N', 'Y',
-                                                   _('workflow already have a transition of that name'))])
+                                                   _('workflow already has a transition of that name'))])
     type = String(vocabulary=(_('normal'), _('auto')), default='normal')
     description = RichString(description=_('semantic description of this transition'))
 
     transition_of = SubjectRelation('Workflow', cardinality='1*', composite='object',
                                     description=_('workflow to which this transition belongs'),
                                     constraints=[RQLUniqueConstraint('S name N, Y transition_of O, Y name N', 'Y',
-                                                                     _('workflow already have a transition of that name'))])
+                                                                     _('workflow already has a transition of that name'))])
 
 
 class require_group(RelationDefinition):

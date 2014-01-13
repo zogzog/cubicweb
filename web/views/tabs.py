@@ -172,9 +172,9 @@ class TabsMixin(LazyViewMixin):
         if self.lazy:
             self._cw.add_onload(u"""
   jQuery('#entity-tabs-%(uid)s').tabs(
-    { selected: %(tabindex)s,
-      select: function(event, ui) {
-        setTab(ui.panel.id, '%(cookiename)s');
+    { active: %(tabindex)s,
+      activate: function(event, ui) {
+        setTab(ui.newPanel.attr('id'), '%(cookiename)s');
       }
     });
   setTab('%(domid)s', '%(cookiename)s');
@@ -184,7 +184,7 @@ class TabsMixin(LazyViewMixin):
        'cookiename' : self.cookie_name})
         else:
             self._cw.add_onload(
-                u"jQuery('#entity-tabs-%(uid)s').tabs({selected: %(tabindex)s});"
+                u"jQuery('#entity-tabs-%(uid)s').tabs({active: %(tabindex)s});"
                 % {'tabindex': active_tab_idx, 'uid': uid})
 
 

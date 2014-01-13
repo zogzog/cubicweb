@@ -52,7 +52,7 @@ class _RenderAndSendNotificationOp(hook.DataOperationMixIn, hook.Operation):
 
     All others Operations end up adding data to this Operation.
     The notification are done on ``postcommit_event`` to make sure to prevent
-    sending notification about rollbacked data.
+    sending notification about rolled back data.
     """
 
     containercls = list

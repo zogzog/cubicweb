@@ -204,27 +204,6 @@ from cubicweb.schema import split_expression
 # remember, these imports are there for bw compat only
 __BACKWARD_COMPAT_IMPORTS = (yes,)
 
-def score_interface(etypesreg, eclass, iface):
-    """Return XXX if the give object (maybe an instance or class) implements
-    the interface.
-    """
-    if getattr(iface, '__registry__', None) == 'etypes':
-        # adjust score if the interface is an entity class
-        parents, any = etypesreg.parent_classes(eclass.__regid__)
-        if iface is eclass:
-            return len(parents) + 4
-        if iface is any: # Any
-            return 1
-        for index, basecls in enumerate(reversed(parents)):
-            if iface is basecls:
-                return index + 3
-        return 0
-    # XXX iface in implements deprecated in 3.9
-    if implements_iface(eclass, iface):
-        # implementing an interface takes precedence other special Any interface
-        return 2
-    return 0
-
 
 # abstract predicates / mixin helpers ###########################################
 
@@ -745,53 +724,6 @@ class non_final_entity(EClassPredicate):
         return 1 # necessarily true if we're there
 
 
-class implements(EClassPredicate):
-    """Return non-zero score for entity that are of the given type(s) or
-    implements at least one of the given interface(s). If multiple arguments are
-    given, matching one of them is enough.
-
-    Entity types should be given as string, the corresponding class will be
-    fetched from the entity types registry at selection time.
-
-    See :class:`~cubicweb.predicates.EClassPredicate` documentation for entity
-    class lookup / score rules according to the input context.
-
-    .. note::
-
-       when interface is an entity class, the score will reflect class
-       proximity so the most specific object will be selected.
-
-    .. note::
-
-       deprecated in cubicweb >= 3.9, use either
-       :class:`~cubicweb.predicates.is_instance` or
-       :class:`~cubicweb.predicates.adaptable`.
-    """
-
-    def __init__(self, *expected_ifaces, **kwargs):
-        emit_warn = kwargs.pop('warn', True)
-        super(implements, self).__init__(**kwargs)
-        self.expected_ifaces = expected_ifaces
-        if emit_warn:
-            warn('[3.9] implements predicate is deprecated, use either '
-                 'is_instance or adaptable', DeprecationWarning, stacklevel=2)
-
-    def __str__(self):
-        return '%s(%s)' % (self.__class__.__name__,
-                           ','.join(str(s) for s in self.expected_ifaces))
-
-    def score_class(self, eclass, req):
-        score = 0
-        etypesreg = req.vreg['etypes']
-        for iface in self.expected_ifaces:
-            if isinstance(iface, basestring):
-                # entity type
-                try:
-                    iface = etypesreg.etype_class(iface)
-                except KeyError:
-                    continue # entity type not in the schema
-            score += score_interface(etypesreg, eclass, iface)
-        return score
 
 def _reset_is_instance_cache(vreg):
     vreg._is_instance_predicate_cache = {}
@@ -994,7 +926,11 @@ class relation_possible(EntityPredicate):
             return 0 # relation not supported
         if self.action:
             if self.target_etype is not None:
-                rschema = rschema.role_rdef(entity.e_schema, self.target_etype, self.role)
+                try:
+                    rschema = rschema.role_rdef(entity.e_schema,
+                                                self.target_etype, self.role)
+                except KeyError:
+                    return 0
             if self.role == 'subject':
                 if not rschema.has_perm(entity._cw, self.action, fromeid=entity.eid):
                     return 0
@@ -1278,12 +1214,9 @@ class is_in_state(score_entity):
                            ','.join(str(s) for s in self.expected))
 
 
-def on_fire_transition(etype, tr_name, from_state_name=None):
+def on_fire_transition(etype, tr_names, from_state_name=None):
     """Return 1 when entity of the type `etype` is going through transition of
-    the name `tr_name`.
-
-    If `from_state_name` is specified, this predicate will also check the
-    incoming state.
+    a name included in `tr_names`.
 
     You should use this predicate on 'after_add_entity' hook, since it's actually
     looking for addition of `TrInfo` entities. Hence in the hook, `self.entity`
@@ -1293,9 +1226,13 @@ def on_fire_transition(etype, tr_name, from_state_name=None):
 
     See :class:`cubicweb.entities.wfobjs.TrInfo` for more information.
     """
+    if from_state_name is not None:
+        warn("on_fire_transition's from_state_name argument is unused", DeprecationWarning)
+    if isinstance(tr_names, basestring):
+        tr_names = set((tr_names,))
     def match_etype_and_transition(trinfo):
         # take care trinfo.transition is None when calling change_state
-        return (trinfo.transition and trinfo.transition.name == tr_name
+        return (trinfo.transition and trinfo.transition.name in tr_names
                 # is_instance() first two arguments are 'cls' (unused, so giving
                 # None is fine) and the request/session
                 and is_instance(etype)(None, trinfo._cw, entity=trinfo.for_entity))

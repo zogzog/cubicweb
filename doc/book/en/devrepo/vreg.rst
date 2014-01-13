@@ -81,7 +81,6 @@ match or not according to entity's (instance or class) properties.
 .. autoclass:: cubicweb.predicates.has_mimetype
 .. autoclass:: cubicweb.predicates.is_in_state
 .. autofunction:: cubicweb.predicates.on_fire_transition
-.. autoclass:: cubicweb.predicates.implements
 
 
 Logged user predicates

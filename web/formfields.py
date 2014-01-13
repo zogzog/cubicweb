@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -404,17 +404,6 @@ class Field(object):
                      for label, value in vocab]
         if self.sort:
             vocab = vocab_sort(vocab)
-        # XXX pre 3.9 bw compat
-        for i, option in enumerate(vocab):
-            # option may be a 2 or 3-uple (see Select widget _render method for
-            # explanation)
-            value = option[1]
-            if value is not None and not isinstance(value, basestring):
-                warn('[3.9] %s: vocabulary value should be an unicode string'
-                     % self, DeprecationWarning)
-                option = list(option)
-                option[1] = unicode(value)
-                vocab[i] = option
         return vocab
 
     # support field as argument to avoid warning when used as format field value
@@ -506,7 +495,7 @@ class Field(object):
             if field is self:
                 try:
                     value = field.process_form_value(form)
-                    if value is None and field.required:
+                    if field.no_value(value) and field.required:
                         raise ProcessFormError(form._cw._("required field"))
                     yield field, value
                 except UnmodifiedField:
@@ -516,6 +505,11 @@ class Field(object):
                 # of compound fields (of compound fields of ...)
                 for field, value in field.process_posted(form):
                     yield field, value
+
+    @staticmethod
+    def no_value(value):
+        """return True if the value can be considered as no value for the field"""
+        return value is None
 
 
 class StringField(Field):
@@ -559,7 +553,7 @@ class StringField(Field):
             widget.attrs.setdefault('maxlength', self.max_length)
 
     def init_text_area(self, widget):
-        if self.max_length < 513:
+        if self.max_length and self.max_length < 513:
             widget.attrs.setdefault('cols', 60)
             widget.attrs.setdefault('rows', 5)
 
@@ -755,8 +749,13 @@ class FileField(StringField):
             # raise UnmodifiedField instead of returning None, since the later
             # will try to remove already attached file if any
             raise UnmodifiedField()
-        # value is a 2-uple (filename, stream)
+        # value is a 2-uple (filename, stream) or a list of such
+        # tuples (multiple files)
         try:
+            if isinstance(value, list):
+                value = value[0]
+                form.warning('mutiple files provided, however '
+                             'only the first will be picked')
             filename, stream = value
         except ValueError:
             raise UnmodifiedField()
@@ -1148,15 +1147,28 @@ class RelationField(Field):
         elif not isinstance(values, list):
             values = (values,)
         eids = set()
+        rschema = form._cw.vreg.schema.rschema(self.name)
         for eid in values:
             if not eid or eid == INTERNAL_FIELD_VALUE:
                 continue
             typed_eid = form.actual_eid(eid)
+            # if entity doesn't exist yet
             if typed_eid is None:
-                form._cw.data['pendingfields'].add( (form, self) )
+                # inlined relations of to-be-created **subject entities** have
+                # to be handled separatly
+                if self.role == 'object' and rschema.inlined:
+                    form._cw.data['pending_inlined'][eid].add( (form, self) )
+                else:
+                    form._cw.data['pending_others'].add( (form, self) )
                 return None
             eids.add(typed_eid)
         return eids
+
+    @staticmethod
+    def no_value(value):
+        """return True if the value can be considered as no value for the field"""
+        # value is None is the 'not yet ready value, consider the empty set
+        return value is not None and not value
 
 
 _AFF_KWARGS = uicfg.autoform_field_kwargs

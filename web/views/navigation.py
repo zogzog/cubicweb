@@ -55,10 +55,9 @@ from rql.nodes import VariableRef, Constant
 from logilab.mtconverter import xml_escape
 from logilab.common.deprecation import deprecated
 
-from cubicweb.predicates import (paginated_rset, sorted_rset,
-                                adaptable, implements)
+from cubicweb.predicates import paginated_rset, sorted_rset, adaptable
 from cubicweb.uilib import cut
-from cubicweb.view import EntityAdapter, implements_adapter_compat
+from cubicweb.view import EntityAdapter
 from cubicweb.web.component import EmptyComponent, EntityCtxComponent, NavigationComponent
 
 
@@ -324,7 +323,6 @@ View.paginate = paginate
 View.handle_pagination = False
 
 
-from cubicweb.interfaces import IPrevNext
 
 class IPrevNextAdapter(EntityAdapter):
     """Interface for entities which can be linked to a previous and/or next
@@ -335,14 +333,12 @@ class IPrevNextAdapter(EntityAdapter):
     """
     __needs_bw_compat__ = True
     __regid__ = 'IPrevNext'
-    __select__ = implements(IPrevNext, warn=False) # XXX for bw compat, else should be abstract
+    __abstract__ = True
 
-    @implements_adapter_compat('IPrevNext')
     def next_entity(self):
         """return the 'next' entity"""
         raise NotImplementedError
 
-    @implements_adapter_compat('IPrevNext')
     def previous_entity(self):
         """return the 'previous' entity"""
         raise NotImplementedError
@@ -398,7 +394,7 @@ class NextPrevNavigationComponent(EntityCtxComponent):
             title = self._cw._('i18nprevnext_previous')
             icon = self.prev_icon
             cssclass = u'previousEntity left'
-            content = icon + content
+            content = icon + '&#160;&#160;' + content
         else:
             title = self._cw._('i18nprevnext_next')
             icon = self.next_icon

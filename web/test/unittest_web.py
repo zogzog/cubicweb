@@ -16,7 +16,17 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 
+from json import loads
+from os.path import join
+
+try:
+    import requests
+    assert [int(n) for n in requests.__version__.split('.', 2)][:2] >= [1, 2]
+except (ImportError, AssertionError):
+    requests = None
+
 from logilab.common.testlib import TestCase, unittest_main
+from cubicweb.devtools.httptest import CubicWebServerTC
 from cubicweb.devtools.fake import FakeRequest
 
 class AjaxReplaceUrlTC(TestCase):
@@ -42,6 +52,46 @@ class AjaxReplaceUrlTC(TestCase):
             '{"pageid": "%s"},"get","replace"); }' %
             (cbname, qs, req.pageid),
             req.html_headers.post_inlined_scripts[0])
+
+
+class FileUploadTC(CubicWebServerTC):
+
+    def setUp(self):
+        "Skip whole test class if a suitable requests module is not available"
+        if requests is None:
+            self.skipTest('Python ``requests`` module is not available')
+        super(FileUploadTC, self).setUp()
+
+    @property
+    def _post_url(self):
+        return self.request().build_url('ajax', fname='fileupload')
+
+    def _fobject(self, fname):
+        return open(join(self.datadir, fname), 'rb')
+
+    def _fcontent(self, fname):
+        return self._fobject(fname).read()
+
+    def test_single_file_upload(self):
+        files = {'file': ('schema.py', self._fobject('schema.py'))}
+        webreq = requests.post(self._post_url, files=files)
+        # check backward compat : a single uploaded file leads to a single
+        # 2-uple in the request form
+        expect = {'fname': u'fileupload',
+                  'file': ['schema.py', self._fcontent('schema.py')]}
+        self.assertEqual(webreq.status_code, 200)
+        self.assertDictEqual(expect, loads(webreq.content))
+
+    def test_multiple_file_upload(self):
+        files = [('files', ('schema.py', self._fobject('schema.py'))),
+                 ('files', ('views.py',  self._fobject('views.py')))]
+        webreq = requests.post(self._post_url, files=files,)
+        expect = {'fname': u'fileupload',
+                  'files': [['schema.py', self._fcontent('schema.py')],
+                            ['views.py', self._fcontent('views.py')]],}
+        self.assertEqual(webreq.status_code, 200)
+        self.assertDictEqual(expect, loads(webreq.content))
+
 
 if __name__ == '__main__':
     unittest_main()

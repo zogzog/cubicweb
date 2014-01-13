@@ -2,7 +2,7 @@ How to use entities objects and adapters
 ----------------------------------------
 
 The previous chapters detailed the classes and methods available to
-the developper at the so-called `ORM`_ level. However they say little
+the developer at the so-called `ORM`_ level. However they say little
 about the common patterns of usage of these objects.
 
 .. _`ORM`: http://en.wikipedia.org/wiki/Object-relational_mapping
@@ -13,22 +13,22 @@ manipulate them in Hooks and Operations.
 
 Hooks and Operations provide support for the implementation of rules
 such as computed attributes, coherency invariants, etc (they play the
-same role as database triggers, but in a way that is independant of
+same role as database triggers, but in a way that is independent of
 the actual data sources).
 
 So a lot of an application's business rules will be written in Hooks
 (or Operations).
 
 On the web side, views also typically operate using entity
-objects. Obvious entity methods for use in views are the dublin code
-method like dc_title, etc. For separation of concerns reasons, one
+objects. Obvious entity methods for use in views are the Dublin Core
+methods like ``dc_title``. For separation of concerns reasons, one
 should ensure no ui logic pervades the entities level, and also no
 business logic should creep into the views.
 
 In the duration of a transaction, entities objects can be instantiated
 many times, in views and hooks, even for the same database entity. For
 instance, in a classic CubicWeb deployment setup, the repository and
-the web frontend are separated process communicating over the
+the web front-end are separated process communicating over the
 wire. There is no way state can be shared between these processes
 (there is a specific API for that). Hence, it is not possible to use
 entity objects as messengers between these components of an
@@ -38,24 +38,24 @@ life span, limited to the hook, operation or view within which the
 object was built.
 
 Setting an attribute or relation value can be done in the context of a
-Hook/Operation, using the obj.cw_set(x=42) notation or a plain
-RQL SET expression.
+Hook/Operation, using the ``obj.cw_set(x=42)`` notation or a plain
+RQL ``SET`` expression.
 
 In views, it would be preferable to encapsulate the necessary logic in
 a method of an adapter for the concerned entity class(es). But of
-course, this advice is also reasonnable for Hooks/Operations, though
+course, this advice is also reasonable for Hooks/Operations, though
 the separation of concerns here is less stringent than in the case of
 views.
 
 This leads to the practical role of objects adapters: it's where an
-important part of the application logic lie (the other part being
+important part of the application logic lies (the other part being
 located in the Hook/Operations).
 
 Anatomy of an entity class
 --------------------------
 
 We can look now at a real life example coming from the `tracker`_
-cube. Let us begin to study the entities/project.py content.
+cube. Let us begin to study the ``entities/project.py`` content.
 
 .. sourcecode:: python
 
@@ -77,10 +77,10 @@ cube. Let us begin to study the entities/project.py content.
 
 The fact that the `Project` entity type implements an ``ITree``
 interface is materialized by the ``ProjectAdapter`` class (inheriting
-the pre-defined ``ITreeAdapter`` whose __regid__ is of course
+the pre-defined ``ITreeAdapter`` whose ``__regid__`` is of course
 ``ITree``), which will be selected on `Project` entity types because
 of its selector. On this adapter, we redefine the ``tree_relation``
-attribute of the ITreeAdapter class.
+attribute of the ``ITreeAdapter`` class.
 
 This is typically used in views concerned with the representation of
 tree-like structures (CubicWeb provides several such views).
@@ -95,16 +95,16 @@ fully and portably expressed at the level of database entities (think
 about the transitive closure of the child relation). This is a further
 argument to implement it at entity class level.
 
-`fetch_attrs` configures which attributes should be prefetched when using ORM
-methods retrieving entity of this type. In a same manner, the `cw_fetch_order` is
+``fetch_attrs`` configures which attributes should be pre-fetched when using ORM
+methods retrieving entity of this type. In a same manner, the ``cw_fetch_order`` is
 a class method allowing to control sort order. More on this in :ref:`FetchAttrs`.
 
-We can observe the big TICKET_DEFAULT_STATE_RESTR is a pure
+We can observe the big ``TICKET_DEFAULT_STATE_RESTR`` is a pure
 application domain piece of data. There is, of course, no limitation
 to the amount of class attributes of this kind.
 
 The ``dc_title`` method provides a (unicode string) value likely to be
-consummed by views, but note that here we do not care about output
+consumed by views, but note that here we do not care about output
 encodings. We care about providing data in the most universal format
 possible, because the data could be used by a web view (which would be
 responsible of ensuring XHTML compliance), or a console or file
@@ -113,8 +113,8 @@ needed byte stream encoding).
 
 .. note::
 
-  The dublin code `dc_xxx` methods are not moved to an adapter as they
-  are extremely prevalent in cubicweb and assorted cubes and should be
+  The Dublin Core `dc_xxx` methods are not moved to an adapter as they
+  are extremely prevalent in CubicWeb and assorted cubes and should be
   available for all entity types.
 
 Let us now dig into more substantial pieces of code, continuing the
@@ -159,8 +159,8 @@ These few lines exhibit the important properties we want to outline:
 
 * entity code is concerned with the application domain
 
-* it is NOT concerned with database coherency (this is the realm of
-  Hooks/Operations); in other words, it assumes a coherent world
+* it is NOT concerned with database consistency (this is the realm of
+  Hooks/Operations); in other words, it assumes a consistent world
 
 * it is NOT (directly) concerned with end-user interfaces
 

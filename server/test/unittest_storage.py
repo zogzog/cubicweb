@@ -237,7 +237,7 @@ class StorageTC(CubicWebTC):
         self.assertEqual(osp.splitext(new_path)[1], '.jpg')
 
     @tag('update', 'extension', 'rollback')
-    def test_bfss_update_with_different_extension_rollbacked(self):
+    def test_bfss_update_with_different_extension_rolled_back(self):
         # use self.session to use server-side cache
         f1 = self.session.create_entity('File', data=Binary('some data'),
                                         data_format=u'text/plain', data_name=u'foo.txt')

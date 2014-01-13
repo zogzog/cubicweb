@@ -201,10 +201,11 @@ class TableLayout(component.Component):
             facetsform.render(w, vid=self.view.__regid__, cssclass=cssclass,
                               divid=self.view.domid)
         actions = []
-        if self.add_view_actions:
-            actions = self.view.table_actions()
-        if self.display_filter and self.hide_filter and (facetsform or not generate_form):
-            actions += self.show_hide_filter_actions(not generate_form)
+        if self.display_actions:
+            if self.add_view_actions:
+                actions = self.view.table_actions()
+            if self.display_filter and self.hide_filter and (facetsform or not generate_form):
+                actions += self.show_hide_filter_actions(not generate_form)
         self.render_table(w, actions, self.view.paginable)
         if facetsform and self.display_filter == 'bottom':
             cssclass = u'hidden' if self.hide_filter else u''
@@ -355,9 +356,9 @@ class AbstractColumnRenderer(object):
         self.colid = None
 
     def __str__(self):
-        return '<%s.%s (column %s)>' % (self.view.__class__.__name__,
+        return '<%s.%s (column %s) at 0x%x>' % (self.view.__class__.__name__,
                                         self.__class__.__name__,
-                                        self.colid)
+                                        self.colid, id(self))
 
     def bind(self, view, colid):
         """Bind the column renderer to its view. This is where `_cw`, `view`,
@@ -445,12 +446,13 @@ class TableMixIn(component.LayoutableMixIn):
     handle_pagination = True
 
     def call(self, **kwargs):
+        self._cw.add_js('cubicweb.ajax.js') # for pagination
         self.layout_render(self.w)
 
     def column_renderer(self, colid, *args, **kwargs):
         """Return a column renderer for column of the given id."""
         try:
-            crenderer = self.column_renderers[colid]
+            crenderer = self.column_renderers[colid].copy()
         except KeyError:
             crenderer = self.default_column_renderer_class(*args, **kwargs)
         crenderer.bind(self, colid)
@@ -620,7 +622,7 @@ class RsetTableView(TableMixIn, AnyRsetView):
             else:
                 msg = '[3.14] %s argument is deprecated' % ', '.join(kwargs)
             warn(msg, DeprecationWarning, stacklevel=2)
-        self.layout_render(self.w)
+        super(RsetTableView, self).call(**kwargs)
 
     def main_var_index(self):
         """returns the index of the first non-attribute variable among the RQL
@@ -865,7 +867,7 @@ class RelationColRenderer(EntityTableColRenderer):
 class EntityTableView(TableMixIn, EntityView):
     """This abstract table view is designed to be used with an
     :class:`is_instance()` or :class:`adaptable` predicate, hence doesn't depend
-    the result set shape as the :class:`TableView` does.
+    the result set shape as the :class:`RsetTableView` does.
 
     It will display columns that should be defined using the `columns` class
     attribute containing a list of column ids. By default, each column is

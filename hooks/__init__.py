@@ -59,7 +59,9 @@ class UpdateFeedsStartupHook(hook.Hook):
         def update_feeds(repo):
             # don't iter on repo.sources which doesn't include copy based
             # sources (the one we're looking for)
-            for source in repo.sources_by_eid.itervalues():
+            # take a list to avoid iterating on a dictionary which size may
+            # change
+            for source in list(repo.sources_by_eid.values()):
                 if (not source.copy_based_source
                     or not repo.config.source_enabled(source)
                     or not source.config['synchronize']):

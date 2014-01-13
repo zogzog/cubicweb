@@ -17,9 +17,6 @@ body {
 }
 h1, h2, h3 { margin-top:0; margin-bottom:0; }
 
-/* got rhythm ? beat of 12*1.25 = 15 px */
-.rhythm_bg { background: url("%(baseRhythmBg)s") repeat ! important; }
-
 h1,
 .vtitle {
   font-size: %(h1FontSize)s;
@@ -297,7 +294,6 @@ table#mainLayout td#navColumnRight {
 
 div#pageContent {
   clear: both;
-  /* margin-top:-1px; *//* enable when testing rhythm */
   background: %(pageContentBgColor)s;
   border: 1px solid %(pageContentBorderColor)s;
   padding: 0 %(pageContentPadding)s %(pageContentPadding)s;
@@ -358,17 +354,20 @@ div.boxContent {
 
 div.shadow{
   height: 14px;
-  background: url("shadow.gif") no-repeat top right;
 }
 
 div.sideBoxTitle {
   background: %(incontextBoxBodyBg)s;
   display: block;
   font-weight: bold;
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
 }
 
 div.sideBox {
   margin-bottom: 1em;
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
 }
 
 ul.sideBox,
@@ -403,6 +402,8 @@ div.sideBox table td {
 div.boxTitle {
   overflow: hidden;
   font-weight: bold;
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
 }
 
 div.boxTitle span {
@@ -467,7 +468,10 @@ hr.boxSeparator {
 
 #navColumnLeft div.boxFooter, #navColumnRight div.boxFooter{
   height: 14px;
-  background: url("shadow.gif") no-repeat top right;
+}
+
+.boxBody, .boxTitle, #pageContent, #appMsg {
+    box-shadow: 1px 1px 3px Gray;
 }
 
 /* boxes lists and menus */

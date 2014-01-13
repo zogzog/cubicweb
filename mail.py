@@ -90,7 +90,7 @@ def format_mail(uinfo, to_addrs, content, subject="",
         email = u''
     if uinfo.get('name'):
         name = uinfo['name']
-    elif config and config['sender-addr']:
+    elif config and config['sender-name']:
         name = unicode(config['sender-name'])
     else:
         name = u''

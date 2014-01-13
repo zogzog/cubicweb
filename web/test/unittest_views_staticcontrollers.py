@@ -1,3 +1,4 @@
+from logilab.common import tempattr
 from logilab.common.testlib import tag, Tags
 from cubicweb.devtools.testlib import CubicWebTC
 
@@ -27,6 +28,46 @@ class StaticControllerCacheTC(CubicWebTC):
         }
         _, req = self._publish_static_files('data/cubicweb.css', next_headers)
         self.assertEqual(304, req.status_out)
+
+
+
+class DataControllerTC(CubicWebTC):
+
+    tags = CubicWebTC.tags | Tags('static_controller', 'data', 'http')
+
+    def _publish_static_files(self, url, header={}):
+        req = self.request(headers=header)
+        req._url = url
+        return self.app_handle_request(req, url), req
+
+    def _check_datafile_ok(self, fname):
+        _, req = self._publish_static_files(fname)
+        self.assertEqual(200, req.status_out)
+        self.assertIn('last-modified', req.headers_out)
+        next_headers = {
+            'if-modified-since': req.get_response_header('last-modified', raw=True),
+        }
+        _, req = self._publish_static_files(fname, next_headers)
+        self.assertEqual(304, req.status_out)
+
+    def _check_no_datafile(self, fname):
+        _, req = self._publish_static_files(fname)
+        self.assertEqual(404, req.status_out)
+
+    def test_static_data_mode(self):
+        hash = self.vreg.config.instance_md5_version()
+        self.assertEqual(32, len(hash))
+
+        with tempattr(self.vreg.config, 'mode', 'test'):
+            self._check_datafile_ok('data/cubicweb.css')
+            self._check_no_datafile('data/does/not/exist')
+            self._check_no_datafile('data/%s/cubicweb.css' % ('0'*len(hash)))
+
+        with tempattr(self.vreg.config, 'mode', 'notest'):
+            self._check_datafile_ok('data/cubicweb.css')
+            self._check_datafile_ok('data/%s/cubicweb.css' % hash)
+            self._check_no_datafile('data/does/not/exist')
+            self._check_no_datafile('data/%s/cubicweb.css' % ('0'*len(hash)))
 
 
 class ConcatFilesTC(CubicWebTC):

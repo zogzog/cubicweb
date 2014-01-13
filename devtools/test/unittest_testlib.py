@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -20,7 +20,9 @@
 from cStringIO import StringIO
 
 from unittest import TextTestRunner
+
 from logilab.common.testlib import TestSuite, TestCase, unittest_main
+from logilab.common.registry import yes
 
 from cubicweb.devtools import htmlparser
 from cubicweb.devtools.testlib import CubicWebTC
@@ -172,8 +174,23 @@ class CWUtilitiesTC(CubicWebTC):
             self.assertTrue(rdef.permissions['add'])
         self.assertTrue(rdef.permissions['read'], ())
 
-class RepoAccessTC(CubicWebTC):
+    def test_temporary_appobjects_registered(self):
+        class AnAppobject(object):
+            __registries__ = ('hip',)
+            __regid__ = 'hop'
+            __select__ = yes()
+            registered = None
+            @classmethod
+            def __registered__(cls, reg):
+                cls.registered = reg
 
+        with self.temporary_appobjects(AnAppobject):
+            self.assertEqual(self.vreg['hip'], AnAppobject.registered)
+            self.assertIn(AnAppobject, self.vreg['hip']['hop'])
+        self.assertNotIn(AnAppobject, self.vreg['hip']['hop'])
+
+
+class RepoAccessTC(CubicWebTC):
     def test_repo_connection(self):
         acc = self.new_access('admin')
         with  acc.repo_cnx() as cnx:

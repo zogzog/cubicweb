@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -23,7 +23,7 @@ from rql import parse, nodes, RQLHelper
 
 from cubicweb import Unauthorized, rqlrewrite
 from cubicweb.schema import RRQLExpression, ERQLExpression
-from cubicweb.devtools import repotest, TestServerConfiguration
+from cubicweb.devtools import repotest, TestServerConfiguration, BaseApptestConfiguration
 
 
 def setUpModule(*args):
@@ -46,7 +46,8 @@ def tearDownModule(*args):
 
 def eid_func_map(eid):
     return {1: 'CWUser',
-            2: 'Card'}[eid]
+            2: 'Card',
+            3: 'Affaire'}[eid]
 
 def rewrite(rqlst, snippets_map, kwargs, existingvars=None):
     class FakeVReg:
@@ -72,9 +73,7 @@ def rewrite(rqlst, snippets_map, kwargs, existingvars=None):
                     for snippet in exprs]
         snippets.append((dict([v]), rqlexprs))
     rqlhelper.compute_solutions(rqlst.children[0], {'eid': eid_func_map}, kwargs=kwargs)
-    solutions = rqlst.children[0].solutions
-    rewriter.rewrite(rqlst.children[0], snippets, solutions, kwargs,
-                     existingvars)
+    rewriter.rewrite(rqlst.children[0], snippets, kwargs, existingvars)
     test_vrefs(rqlst.children[0])
     return rewriter.rewritten
 
@@ -202,6 +201,17 @@ class RQLRewriteTC(TestCase):
                              'WITH LA BEING (Any LA WHERE (EXISTS(A created_by B, LA documented_by A)) OR (EXISTS(E created_by B, LA concerne E)), '
                              'B eid %(D)s, LA is Affaire)')
 
+
+    def test_ambiguous_optional_same_exprs(self):
+        """See #3013535"""
+        # see test of the same name in RewriteFullTC: original problem is
+        # unreproducible here because it actually lies in
+        # RQLRewriter.insert_local_checks
+        rqlst = parse('Any A,AR,X,CD WHERE A concerne X?, A ref AR, A eid %(a)s, X creation_date CD')
+        rewrite(rqlst, {('X', 'X'): ('X created_by U',),}, {'a': 3})
+        self.assertEqual(rqlst.as_string(),
+                         u'Any A,AR,X,CD WHERE A concerne X?, A ref AR, A eid %(a)s WITH X,CD BEING (Any X,CD WHERE X creation_date CD, EXISTS(X created_by B), B eid %(A)s, X is IN(Division, Note, Societe))')
+
     def test_optional_var_inlined(self):
         c1 = ('X require_permission P')
         c2 = ('X inlined_card O, O require_permission P')
@@ -292,6 +302,7 @@ class RQLRewriteTC(TestCase):
         self.assertEqual(rqlst.as_string(),
                          "Any C WHERE C in_state STATE, C is Card, "
                          "EXISTS(STATE name 'hop'), STATE is State")
+
     def test_relation_optimization_3_rhs(self):
         snippet = ('TW? subworkflow_exit X, TW name "hop"')
         rqlst = parse('WorkflowTransition C WHERE C subworkflow_exit EXIT')
@@ -308,6 +319,7 @@ class RQLRewriteTC(TestCase):
         self.assertEqual(rqlst.as_string(),
                          "Any C WHERE C in_state STATE?, C is Card, "
                          "EXISTS(C in_state A, A name 'hop', A is State), STATE is State")
+
     def test_relation_non_optimization_1_rhs(self):
         snippet = ('TW subworkflow_exit X, TW name "hop"')
         rqlst = parse('SubWorkflowExitPoint EXIT WHERE C? subworkflow_exit EXIT')
@@ -316,6 +328,21 @@ class RQLRewriteTC(TestCase):
                          "Any EXIT WHERE C? subworkflow_exit EXIT, EXIT is SubWorkflowExitPoint, "
                          "EXISTS(A subworkflow_exit EXIT, A name 'hop', A is WorkflowTransition), "
                          "C is WorkflowTransition")
+
+    def test_relation_non_optimization_2(self):
+        """See #3024730"""
+        # 'X inlined_note N' must not be shared with 'C inlined_note N'
+        # previously inserted, else this may introduce duplicated results, as N
+        # will then be shared by multiple EXISTS and so at SQL generation time,
+        # the table will be in the FROM clause of the outermost query
+        rqlst = parse('Any A,C WHERE A inlined_card C')
+        rewrite(rqlst, {('A', 'X'): ('X inlined_card C, C inlined_note N, N owned_by U',),
+                        ('C', 'X'): ('X inlined_note N, N owned_by U',)}, {})
+        self.assertEqual(rqlst.as_string(),
+                         'Any A,C WHERE A inlined_card C, D eid %(E)s, '
+                         'EXISTS(C inlined_note B, B owned_by D, B is Note), '
+                         'EXISTS(C inlined_note F, F owned_by D, F is Note), '
+                         'A is Affaire, C is Card')
 
     def test_unsupported_constraint_1(self):
         # CWUser doesn't have require_permission
@@ -411,30 +438,30 @@ class RQLRewriteTC(TestCase):
                          u"Any C WHERE C is Card, EXISTS(C owned_by A, A is CWUser)")
 
     def test_rqlexpr_not_relation_1_1(self):
-        constraint = RRQLExpression('X owned_by Z, Z login "hop"', 'X')
+        constraint = ERQLExpression('X owned_by Z, Z login "hop"', 'X')
         rqlst = parse('Affaire A WHERE NOT EXISTS(A documented_by C)')
         rewrite(rqlst, {('C', 'X'): (constraint,)}, {}, 'X')
         self.assertEqual(rqlst.as_string(),
                          u'Any A WHERE NOT EXISTS(A documented_by C, EXISTS(C owned_by B, B login "hop", B is CWUser), C is Card), A is Affaire')
 
     def test_rqlexpr_not_relation_1_2(self):
-        constraint = RRQLExpression('X owned_by Z, Z login "hop"', 'X')
+        constraint = ERQLExpression('X owned_by Z, Z login "hop"', 'X')
         rqlst = parse('Affaire A WHERE NOT EXISTS(A documented_by C)')
         rewrite(rqlst, {('A', 'X'): (constraint,)}, {}, 'X')
         self.assertEqual(rqlst.as_string(),
                          u'Any A WHERE NOT EXISTS(A documented_by C, C is Card), A is Affaire, EXISTS(A owned_by B, B login "hop", B is CWUser)')
 
     def test_rqlexpr_not_relation_2(self):
-        constraint = RRQLExpression('X owned_by Z, Z login "hop"', 'X')
+        constraint = ERQLExpression('X owned_by Z, Z login "hop"', 'X')
         rqlst = rqlhelper.parse('Affaire A WHERE NOT A documented_by C', annotate=False)
         rewrite(rqlst, {('C', 'X'): (constraint,)}, {}, 'X')
         self.assertEqual(rqlst.as_string(),
                          u'Any A WHERE NOT EXISTS(A documented_by C, EXISTS(C owned_by B, B login "hop", B is CWUser), C is Card), A is Affaire')
 
     def test_rqlexpr_multiexpr_outerjoin(self):
-        c1 = RRQLExpression('X owned_by Z, Z login "hop"', 'X')
-        c2 = RRQLExpression('X owned_by Z, Z login "hip"', 'X')
-        c3 = RRQLExpression('X owned_by Z, Z login "momo"', 'X')
+        c1 = ERQLExpression('X owned_by Z, Z login "hop"', 'X')
+        c2 = ERQLExpression('X owned_by Z, Z login "hip"', 'X')
+        c3 = ERQLExpression('X owned_by Z, Z login "momo"', 'X')
         rqlst = rqlhelper.parse('Any A WHERE A documented_by C?', annotate=False)
         rewrite(rqlst, {('C', 'X'): (c1, c2, c3)}, {}, 'X')
         self.assertEqual(rqlst.as_string(),
@@ -458,6 +485,75 @@ class RQLRewriteTC(TestCase):
 
         rqlst = parse('Any A, R WHERE A ref R, S is Affaire')
         rewrite(rqlst, {('A', 'X'): (c_ok, c_bad)}, {})
+
+    def test_nonregr_is_instance_of(self):
+        user_expr = ERQLExpression('NOT X in_group AF, AF name "guests"')
+        rqlst = parse('Any O WHERE S use_email O, S is CWUser, O is_instance_of EmailAddress')
+        rewrite(rqlst, {('S', 'X'): (user_expr,)}, {})
+        self.assertEqual(rqlst.as_string(),
+                         'Any O WHERE S use_email O, S is CWUser, O is EmailAddress, '
+                         'EXISTS(NOT S in_group A, A name "guests", A is CWGroup)')
+
+from cubicweb.devtools.testlib import CubicWebTC
+from logilab.common.decorators import classproperty
+
+class RewriteFullTC(CubicWebTC):
+    @classproperty
+    def config(cls):
+        return BaseApptestConfiguration(apphome=cls.datapath('rewrite'))
+
+    def process(self, rql, args=None):
+        if args is None:
+            args = {}
+        querier = self.repo.querier
+        union = querier.parse(rql)
+        querier.solutions(self.session, union, args)
+        querier._annotate(union)
+        plan = querier.plan_factory(union, args, self.session)
+        plan.preprocess(union)
+        return union
+
+    def test_ambiguous_optional_same_exprs(self):
+        """See #3013535"""
+        edef1 = self.schema['Societe']
+        edef2 = self.schema['Division']
+        edef3 = self.schema['Note']
+        with self.temporary_permissions((edef1, {'read': (ERQLExpression('X owned_by U'),)}),
+                                        (edef2, {'read': (ERQLExpression('X owned_by U'),)}),
+                                        (edef3, {'read': (ERQLExpression('X owned_by U'),)})):
+            union = self.process('Any A,AR,X,CD WHERE A concerne X?, A ref AR, X creation_date CD')
+            self.assertEqual('Any A,AR,X,CD WHERE A concerne X?, A ref AR, A is Affaire '
+                             'WITH X,CD BEING (Any X,CD WHERE X creation_date CD, '
+                             'EXISTS(X owned_by %(A)s), X is IN(Division, Note, Societe))',
+                             union.as_string())
+
+    def test_ambiguous_optional_diff_exprs(self):
+        """See #3013554"""
+        self.skipTest('bad request generated (may generate duplicated results)')
+        edef1 = self.schema['Societe']
+        edef2 = self.schema['Division']
+        edef3 = self.schema['Note']
+        with self.temporary_permissions((edef1, {'read': (ERQLExpression('X created_by U'),)}),
+                                        (edef2, {'read': ('users',)}),
+                                        (edef3, {'read': (ERQLExpression('X owned_by U'),)})):
+            union = self.process('Any A,AR,X,CD WHERE A concerne X?, A ref AR, X creation_date CD')
+            self.assertEqual(union.as_string(), 'not generated today')
+
+
+    def test_xxxx(self):
+        edef1 = self.schema['Societe']
+        edef2 = self.schema['Division']
+        read_expr = ERQLExpression('X responsable E, U has_read_permission E')
+        with self.temporary_permissions((edef1, {'read': (read_expr,)}),
+                                        (edef2, {'read': (read_expr,)})):
+            union = self.process('Any X,AA,AC,AD ORDERBY AD DESC '
+                                 'WHERE X responsable E, X nom AA, '
+                                 'X responsable AC?, AC modification_date AD')
+            self.assertEqual('Any X,AA,AC,AD ORDERBY AD DESC '
+                             'WHERE X responsable E, X nom AA, '
+                             'X responsable AC?, AC modification_date AD, '
+                             'AC is CWUser, E is CWUser, X is IN(Division, Societe)',
+                             union.as_string())
 
 if __name__ == '__main__':
     unittest_main()

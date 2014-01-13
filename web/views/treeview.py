@@ -29,12 +29,25 @@ from logilab.mtconverter import xml_escape
 from cubicweb.utils import make_uid, json
 from cubicweb.predicates import adaptable
 from cubicweb.view import EntityView
-from cubicweb.mixins import _done_init
 from cubicweb.web.views import baseviews
 from cubicweb.web.views.ajaxcontroller import ajaxfunc
 
 def treecookiename(treeid):
     return str('%s-treestate' % treeid)
+
+def _done_init(done, view, row, col):
+    """handle an infinite recursion safety belt"""
+    if done is None:
+        done = set()
+    entity = view.cw_rset.get_entity(row, col)
+    if entity.eid in done:
+        msg = entity._cw._('loop in %(rel)s relation (%(eid)s)') % {
+            'rel': entity.cw_adapt_to('ITree').tree_relation,
+            'eid': entity.eid
+            }
+        return None, msg
+    done.add(entity.eid)
+    return done, entity
 
 
 class BaseTreeView(baseviews.ListView):

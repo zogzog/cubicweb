@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -62,8 +62,8 @@ from rql.nodes import (SortTerm, VariableRef, Constant, Function, Variable, Or,
                        Not, Comparison, ColumnAlias, Relation, SubQuery, Exists)
 
 from cubicweb import QueryError
+from cubicweb.rqlrewrite import cleanup_solutions
 from cubicweb.server.sqlutils import SQL_PREFIX
-from cubicweb.server.utils import cleanup_solutions
 
 ColumnAlias._q_invariant = False # avoid to check for ColumnAlias / Variable
 
@@ -241,12 +241,6 @@ def relation_info(relation):
     except KeyError:
         rhsconst = None # ColumnAlias
     return lhs, lhsconst, rhs, rhsconst
-
-def switch_relation_field(sql, table=''):
-    switchedsql = sql.replace(table + '.eid_from', '__eid_from__')
-    switchedsql = switchedsql.replace(table + '.eid_to',
-                                      table + '.eid_from')
-    return switchedsql.replace('__eid_from__', table + '.eid_to')
 
 def sort_term_selection(sorts, rqlst, groups):
     # XXX beurk
@@ -486,13 +480,10 @@ class StateInfo(object):
             return relation._q_sqltable
         rid = 'rel_%s%s' % (relation.r_type, self.count)
         # relation's table is belonging to the root scope if it is the principal
-        # table of one of it's variable and if that variable belong's to parent
+        # table of one of its variable and that variable belong's to parent
         # scope
         for varref in relation.iget_nodes(VariableRef):
             var = varref.variable
-            if isinstance(var, ColumnAlias):
-                scope = 0
-                break
             # XXX may have a principal without being invariant for this generation,
             #     not sure this is a pb or not
             if var.stinfo.get('principal') is relation and var.scope is var.stmt:
@@ -1135,8 +1126,6 @@ class SQLGenerator(object):
         sqls += self._process_relation_term(relation, rid, lhsvar, lhsconst, 'eid_from')
         sqls += self._process_relation_term(relation, rid, rhsvar, rhsconst, 'eid_to')
         sql = ' AND '.join(sqls)
-        if rschema.symmetric:
-            sql = '(%s OR %s)' % (sql, switch_relation_field(sql))
         return sql
 
     def _visit_outer_join_relation(self, relation, rschema):
@@ -1248,6 +1237,8 @@ class SQLGenerator(object):
         except KeyError:
             if lhsalias is None:
                 lhssql = lhsconst.accept(self)
+            elif attr == 'eid':
+                lhssql = lhsvar.accept(self)
             else:
                 lhssql = '%s.%s%s' % (lhsalias, SQL_PREFIX, attr)
         condition = '%s=%s' % (lhssql, (rhsconst or rhsvar).accept(self))

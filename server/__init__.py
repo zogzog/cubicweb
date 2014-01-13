@@ -26,6 +26,7 @@ __docformat__ = "restructuredtext en"
 import sys
 from os.path import join, exists
 from glob import glob
+from contextlib import contextmanager
 
 from logilab.common.modutils import LazyObject
 from logilab.common.textutils import splitstrip
@@ -78,13 +79,56 @@ DBG_MS   = 8
 DBG_HOOKS = 16
 #: operations
 DBG_OPS = 32
+#: security
+DBG_SEC = 64
 #: more verbosity
-DBG_MORE = 64
+DBG_MORE = 128
 #: all level enabled
-DBG_ALL  = DBG_RQL + DBG_SQL + DBG_REPO + DBG_MS + DBG_HOOKS + DBG_OPS + DBG_MORE
+DBG_ALL  = DBG_RQL + DBG_SQL + DBG_REPO + DBG_MS + DBG_HOOKS + DBG_OPS + DBG_SEC + DBG_MORE
+
+_SECURITY_ITEMS = []
+_SECURITY_CAPS = ['read', 'add', 'update', 'delete']
 
 #: current debug mode
 DEBUG = 0
+
+@contextmanager
+def tunesecurity(items=(), capabilities=()):
+    """Context manager to use in conjunction with DBG_SEC.
+
+    This allows some tuning of:
+    * the monitored capabilities ('read', 'add', ....)
+    * the object being checked by the security checkers
+
+    When no item is given, all of them will be watched.
+    By default all capabilities are monitored, unless specified.
+
+    Example use::
+
+      from cubicweb.server import debugged, DBG_SEC, tunesecurity
+      with debugged(DBG_SEC):
+          with tunesecurity(items=('Elephant', 'trumps'),
+                            capabilities=('update', 'delete')):
+              babar.cw_set(trumps=celeste)
+              flore.cw_delete()
+
+      ==>
+
+      check_perm: 'update' 'relation Elephant.trumps.Elephant'
+       [(ERQLExpression(Any X WHERE U has_update_permission X, X eid %(x)s, U eid %(u)s),
+       {'eid': 2167}, True)]
+      check_perm: 'delete' 'Elephant'
+       [(ERQLExpression(Any X WHERE U has_delete_permission X, X eid %(x)s, U eid %(u)s),
+       {'eid': 2168}, True)]
+
+    """
+    olditems = _SECURITY_ITEMS[:]
+    _SECURITY_ITEMS.extend(list(items))
+    oldactions = _SECURITY_CAPS[:]
+    _SECURITY_CAPS[:] = capabilities
+    yield
+    _SECURITY_ITEMS[:] = olditems
+    _SECURITY_CAPS[:] = oldactions
 
 def set_debug(debugmode):
     """change the repository debugging mode"""
@@ -103,13 +147,13 @@ class debugged(object):
 
     It can be used either as a context manager:
 
-    >>> with debugged(server.DBG_RQL | server.DBG_REPO):
+    >>> with debugged('DBG_RQL | DBG_REPO'):
     ...     # some code in which you want to debug repository activity,
     ...     # seing information about RQL being executed an repository events.
 
     or as a function decorator:
 
-    >>> @debugged(server.DBG_RQL | server.DBG_REPO)
+    >>> @debugged('DBG_RQL | DBG_REPO')
     ... def some_function():
     ...     # some code in which you want to debug repository activity,
     ...     # seing information about RQL being executed an repository events
@@ -203,7 +247,11 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     schemasql = sqlschema(schema, driver)
     #skip_entities=[str(e) for e in schema.entities()
     #               if not repo.system_source.support_entity(str(e))])
-    sqlexec(schemasql, execute, pbtitle=_title, delimiter=';;')
+    failed = sqlexec(schemasql, execute, pbtitle=_title, delimiter=';;')
+    if failed:
+        print 'The following SQL statements failed. You should check your schema.'
+        print failed
+        raise Exception('execution of the sql schema failed, you should check your schema')
     sqlcursor.close()
     sqlcnx.commit()
     sqlcnx.close()

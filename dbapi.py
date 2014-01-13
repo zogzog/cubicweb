@@ -179,7 +179,7 @@ def connect(database, login=None,
     puri = urlparse(database)
     method = puri.scheme.lower()
     if method == 'inmemory':
-        config = cwconfig.instance_configuration(puri.path)
+        config = cwconfig.instance_configuration(puri.netloc)
     else:
         config = cwconfig.CubicWebNoAppConfiguration()
     repo = get_repository(database, config=config)
@@ -226,7 +226,7 @@ def anonymous_session(vreg):
     raises an AuthenticationError if anonymous usage is not allowed
     """
     anoninfo = vreg.config.anonymous_user()
-    if anoninfo is None: # no anonymous user
+    if anoninfo[0] is None: # no anonymous user
         raise AuthenticationError('anonymous access is not authorized')
     anon_login, anon_password = anoninfo
     # use vreg's repository cache
@@ -365,25 +365,6 @@ class DBAPIRequest(RequestSessionBase):
         """return the definition of sources used by the repository."""
         return self.cnx.source_defs()
 
-    @deprecated('[3.8] use direct access to req.session.data dictionary')
-    def session_data(self):
-        """return a dictionary containing session data"""
-        return self.session.data
-
-    @deprecated('[3.8] use direct access to req.session.data dictionary')
-    def get_session_data(self, key, default=None, pop=False):
-        if pop:
-            return self.session.data.pop(key, default)
-        return self.session.data.get(key, default)
-
-    @deprecated('[3.8] use direct access to req.session.data dictionary')
-    def set_session_data(self, key, value):
-        self.session.data[key] = value
-
-    @deprecated('[3.8] use direct access to req.session.data dictionary')
-    def del_session_data(self, key):
-        self.session.data.pop(key, None)
-
     # these are overridden by set_log_methods below
     # only defining here to prevent pylint from complaining
     info = warning = error = critical = exception = debug = lambda msg,*a,**kw: None
@@ -419,7 +400,7 @@ class Cursor(object):
     def _txid(self):
         return self.connection._txid(self)
 
-    def execute(self, rql, args=None, eid_key=None, build_descr=True):
+    def execute(self, rql, args=None, build_descr=True):
         """execute a rql query, return resulting rows and their description in
         a :class:`~cubicweb.rset.ResultSet` object
 
@@ -450,10 +431,6 @@ class Cursor(object):
 
             execute('Any X WHERE X eid %(x)s', {'x': 123})
         """
-        if eid_key is not None:
-            warn('[3.8] eid_key is deprecated, you can safely remove this argument',
-                 DeprecationWarning, stacklevel=2)
-        # XXX use named argument for build_descr in case repo is < 3.8
         rset = self._repo.execute(self._sessid, rql, args,
                                   build_descr=build_descr, **self._txid())
         rset.req = self.req

@@ -115,8 +115,8 @@ msgid "%s error report"
 msgstr "%s reporte de errores"
 
 #, python-format
-msgid "%s not estimated"
-msgstr "%s no estimado(s)"
+msgid "%s is part of violated unicity constraint"
+msgstr ""
 
 #, python-format
 msgid "%s relation should not be in mapped"
@@ -439,10 +439,6 @@ msgstr ""
 msgid "DEBUG"
 msgstr ""
 
-#, python-format
-msgid "Data connection graph for %s"
-msgstr "Gráfica de conexión de datos para %s"
-
 msgid "Date"
 msgstr "Fecha"
 
@@ -518,14 +514,8 @@ msgstr "Números flotantes"
 msgid "FormatConstraint"
 msgstr "Restricción de Formato"
 
-msgid "From:"
-msgstr "De: "
-
 msgid "Garbage collection information"
 msgstr "Recolector de basura en memoria"
-
-msgid "Got rhythm?"
-msgstr "Tenemos Ritmo?"
 
 msgid "Help"
 msgstr "Ayuda"
@@ -693,9 +683,6 @@ msgstr "Restricción RQL de Unicidad"
 msgid "RQLVocabularyConstraint"
 msgstr "Restricción RQL de Vocabulario"
 
-msgid "Recipients:"
-msgstr "Destinatarios :"
-
 msgid "RegexpConstraint"
 msgstr "restricción expresión regular"
 
@@ -759,9 +746,6 @@ msgstr "Salida de sub-workflow"
 
 msgid "SubWorkflowExitPoint_plural"
 msgstr "Salidas de sub-workflow"
-
-msgid "Subject:"
-msgstr "Sujeto:"
 
 msgid "Submit bug report"
 msgstr "Enviar un reporte de error (bug)"
@@ -932,9 +916,6 @@ msgstr ""
 msgid "Web server"
 msgstr "Servidor web"
 
-msgid "What's new?"
-msgstr "Lo más reciente"
-
 msgid "Workflow"
 msgstr "Workflow"
 
@@ -967,11 +948,6 @@ msgstr ""
 "Puede proponer un nuevo archivo utilizando el botón buscar \n"
 "\"buscar\" en la parte superior, o editar el contenido del archivo en línea\n"
 "en el campo siguiente."
-
-msgid "You can use any of the following substitutions in your text"
-msgstr ""
-"Puede realizar cualquiera de las siguientes sustituciones en el contenido de "
-"su email."
 
 msgid "You can't change this relation"
 msgstr ""
@@ -1033,6 +1009,9 @@ msgstr ""
 msgid "abstract base class for transitions"
 msgstr "Clase de base abstracta para la transiciones"
 
+msgid "action menu"
+msgstr ""
+
 msgid "action(s) on this selection"
 msgstr "Acción(es) en esta selección"
 
@@ -1050,6 +1029,9 @@ msgstr "Agregar"
 
 msgid "add Bookmark bookmarked_by CWUser object"
 msgstr "Agregar a los favoritos "
+
+msgid "add CWAttribute add_permission RQLExpression subject"
+msgstr ""
 
 msgid "add CWAttribute constrained_by CWConstraint subject"
 msgstr "Restricción"
@@ -1159,6 +1141,10 @@ msgstr "Agregar correo electrónico"
 msgid "add_permission"
 msgstr "Autorización para agregar"
 
+msgctxt "CWAttribute"
+msgid "add_permission"
+msgstr ""
+
 # subject and object forms for each relation type
 # (no object form for final relation types)
 msgctxt "CWEType"
@@ -1194,6 +1180,9 @@ msgid ""
 msgstr ""
 "la relación %(rtype)s de %(frometype)s #%(eidfrom)s a %(toetype)s #%(eidto)s "
 "ha sido agregada"
+
+msgid "additional type specific properties"
+msgstr ""
 
 msgid "addrelated"
 msgstr "Agregar"
@@ -1692,9 +1681,6 @@ msgstr ""
 "Relación sistema indicando los tipos (incluídos los tipos padres) de una "
 "entidad"
 
-msgid "cost"
-msgstr "Costo"
-
 msgid "could not connect to the SMTP server"
 msgstr "Imposible de conectarse al servidor SMTP"
 
@@ -1745,6 +1731,10 @@ msgstr "Creación de un usuario para agregar al grupo %(linkto)s"
 
 msgid "creating EmailAddress (CWUser %(linkto)s use_email EmailAddress)"
 msgstr "Creación de una dirección electrónica para el usuario %(linkto)s"
+
+msgid ""
+"creating RQLExpression (CWAttribute %(linkto)s add_permission RQLExpression)"
+msgstr ""
 
 msgid ""
 "creating RQLExpression (CWAttribute %(linkto)s read_permission RQLExpression)"
@@ -2129,6 +2119,9 @@ msgstr "Workflow por defecto de los usuarios"
 msgid "default value"
 msgstr "Valor por defecto"
 
+msgid "default value as gziped pickled python object"
+msgstr ""
+
 msgid "default workflow for an entity type"
 msgstr "Workflow por defecto para un tipo de entidad"
 
@@ -2412,17 +2405,8 @@ msgstr "Tabla modificable"
 msgid "eid"
 msgstr "eid"
 
-msgid "emails successfully sent"
-msgstr "Mensajes enviados con éxito"
-
-msgid "embed"
-msgstr "Incrustado"
-
 msgid "embedded html"
 msgstr "Html incrustado"
-
-msgid "embedding this url is forbidden"
-msgstr "La inclusión de este url esta prohibida"
 
 msgid "end_timestamp"
 msgstr ""
@@ -2478,9 +2462,6 @@ msgstr ""
 msgid "error"
 msgstr "error"
 
-msgid "error while embedding page"
-msgstr "Error durante la inclusión de la página"
-
 msgid "error while publishing ReST text"
 msgstr ""
 "Se ha producido un error durante la interpretación del texto en formato ReST"
@@ -2490,9 +2471,6 @@ msgid "error while querying source %s, some data may be missing"
 msgstr ""
 "Un error ha ocurrido al interrogar  %s, es posible que los \n"
 "datos visibles se encuentren incompletos"
-
-msgid "eta_date"
-msgstr "Fecha de fin"
 
 msgid "exit state must be a subworkflow state"
 msgstr "El estado de salida debe de ser un estado del Sub-Workflow"
@@ -2506,9 +2484,6 @@ msgstr "Estado de Salida de"
 #, python-format
 msgid "exiting from subworkflow %s"
 msgstr "Salida del subworkflow %s"
-
-msgid "expected:"
-msgstr "Previsto :"
 
 msgid "expression"
 msgstr "Expresión"
@@ -2524,8 +2499,12 @@ msgctxt "RQLExpression"
 msgid "exprtype"
 msgstr "Tipo"
 
-msgid "external page"
-msgstr "Página externa"
+msgid "extra_props"
+msgstr ""
+
+msgctxt "CWAttribute"
+msgid "extra_props"
+msgstr ""
 
 msgid "facet-loading-msg"
 msgstr ""
@@ -2942,10 +2921,6 @@ msgstr "indifferente"
 msgid "info"
 msgstr "Información del Sistema"
 
-#, python-format
-msgid "initial estimation %s"
-msgstr "Estimación inicial %s"
-
 msgid "initial state for this workflow"
 msgstr "Estado inicial para este Workflow"
 
@@ -3221,9 +3196,6 @@ msgstr "depuración (debugging) de fuga de memoria"
 msgid "message"
 msgstr ""
 
-msgid "milestone"
-msgstr "Milestone"
-
 #, python-format
 msgid "missing parameters for entity %s"
 msgstr "Parámetros faltantes a la entidad %s"
@@ -3280,6 +3252,10 @@ msgid "name"
 msgstr "Nombre"
 
 msgctxt "CWSource"
+msgid "name"
+msgstr ""
+
+msgctxt "CWUniqueTogetherConstraint"
 msgid "name"
 msgstr ""
 
@@ -3369,9 +3345,6 @@ msgstr ""
 
 msgid "no related entity"
 msgstr "No posee entidad asociada"
-
-msgid "no related project"
-msgstr "No tiene proyecto relacionado"
 
 msgid "no repository sessions found"
 msgstr "Ninguna sesión encontrada"
@@ -3571,15 +3544,6 @@ msgstr "Dirección principal de correo electrónico de"
 
 msgid "profile"
 msgstr "perfil"
-
-msgid "progress"
-msgstr "Progreso"
-
-msgid "progress bar"
-msgstr "Barra de Progreso"
-
-msgid "project"
-msgstr "Proyecto"
 
 msgid "rdef-description"
 msgstr "Descripción"
@@ -3858,9 +3822,6 @@ msgstr "Descripcion semántica de esta transición"
 msgid "semantic description of this workflow"
 msgstr "Descripcion semántica de este Workflow"
 
-msgid "send email"
-msgstr "Enviar email"
-
 msgid "september"
 msgstr "Septiembre"
 
@@ -3890,9 +3851,6 @@ msgstr "Mostrar campos avanzados"
 msgid "show filter form"
 msgstr "Mostrar el Filtro"
 
-msgid "sioc"
-msgstr "SIOC"
-
 msgid "site configuration"
 msgstr "Configuración Sistema"
 
@@ -3908,6 +3866,9 @@ msgstr "Una propiedad específica al Sistema no puede ser propia al usuario"
 msgid "some later transaction(s) touch entity, undo them first"
 msgstr ""
 "Las transacciones más recientes modificaron esta entidad, anúlelas primero"
+
+msgid "some relations violate a unicity constraint"
+msgstr ""
 
 msgid "sorry, the server is unable to handle this query"
 msgstr "Lo sentimos, el servidor no puede manejar esta consulta"
@@ -4106,9 +4067,6 @@ msgstr "Tabla"
 msgid "tablefilter"
 msgstr "Tablero de Filtrado"
 
-msgid "task progression"
-msgstr "Progreso de la Acción"
-
 msgid "text"
 msgstr "Texto"
 
@@ -4231,14 +4189,8 @@ msgctxt "State"
 msgid "to_state_object"
 msgstr "Transición hacia este Estado"
 
-msgid "todo_by"
-msgstr "Asignada a"
-
 msgid "toggle check boxes"
 msgstr "Cambiar valor"
-
-msgid "toggle filter"
-msgstr "esconder/mostrar el filtro"
 
 msgid "tr_count"
 msgstr "n° de transición"
@@ -4530,6 +4482,14 @@ msgstr "Vampr"
 msgid "value %(KEY-value)s must be %(KEY-op)s %(KEY-boundary)s"
 msgstr ""
 
+#, python-format
+msgid "value %(KEY-value)s must be <= %(KEY-boundary)s"
+msgstr ""
+
+#, python-format
+msgid "value %(KEY-value)s must be >= %(KEY-boundary)s"
+msgstr ""
+
 msgid "value associated to this key is not editable manually"
 msgstr "El valor asociado a este elemento no es editable manualmente"
 
@@ -4571,10 +4531,6 @@ msgstr "Ver Workflow"
 msgid "view_index"
 msgstr "Inicio"
 
-#, python-format
-msgid "violates unique_together constraints (%s)"
-msgstr "viola el principio (o restricción) de singularidad (%s)"
-
 msgid "visible"
 msgstr "Visible"
 
@@ -4583,6 +4539,9 @@ msgstr "atención"
 
 msgid "we are not yet ready to handle this query"
 msgstr "Aún no podemos manejar este tipo de consulta Sparql"
+
+msgid "web sessions without CNX"
+msgstr ""
 
 msgid "wednesday"
 msgstr "Miércoles"
@@ -4615,11 +4574,11 @@ msgstr ""
 msgid "workflow"
 msgstr "Workflow"
 
-msgid "workflow already have a state of that name"
-msgstr "El Workflow ya tiene un Estado con ese nombre"
+msgid "workflow already has a state of that name"
+msgstr ""
 
-msgid "workflow already have a transition of that name"
-msgstr "El Workflow ya tiene una transición con ese nombre"
+msgid "workflow already has a transition of that name"
+msgstr ""
 
 #, python-format
 msgid "workflow changed to \"%s\""
@@ -4692,6 +4651,9 @@ msgstr ""
 #~ msgid "%(value)r doesn't match the %(regexp)r regular expression"
 #~ msgstr "%(value)r no corresponde a la expresión regular %(regexp)r"
 
+#~ msgid "%s not estimated"
+#~ msgstr "%s no estimado(s)"
+
 #~ msgid ""
 #~ "Can't restore relation %(rtype)s of entity %(eid)s, this relation does "
 #~ "not exists anymore in the schema."
@@ -4699,17 +4661,106 @@ msgstr ""
 #~ "No puede restaurar la relación %(rtype)s de la entidad %(eid)s, esta "
 #~ "relación ya no existe en el esquema."
 
+#~ msgid "Data connection graph for %s"
+#~ msgstr "Gráfica de conexión de datos para %s"
+
+#~ msgid "From:"
+#~ msgstr "De: "
+
+#~ msgid "Got rhythm?"
+#~ msgstr "Tenemos Ritmo?"
+
+#~ msgid "Recipients:"
+#~ msgstr "Destinatarios :"
+
+#~ msgid "Subject:"
+#~ msgstr "Sujeto:"
+
+#~ msgid "What's new?"
+#~ msgstr "Lo más reciente"
+
+#~ msgid "You can use any of the following substitutions in your text"
+#~ msgstr ""
+#~ "Puede realizar cualquiera de las siguientes sustituciones en el contenido "
+#~ "de su email."
+
 #~ msgid "can't change the %s attribute"
 #~ msgstr "no puede modificar el atributo %s"
 
 #~ msgid "can't change this relation"
 #~ msgstr "no puede modificar esta relación"
 
+#~ msgid "cost"
+#~ msgstr "Costo"
+
+#~ msgid "emails successfully sent"
+#~ msgstr "Mensajes enviados con éxito"
+
+#~ msgid "embed"
+#~ msgstr "Incrustado"
+
+#~ msgid "embedding this url is forbidden"
+#~ msgstr "La inclusión de este url esta prohibida"
+
+#~ msgid "error while embedding page"
+#~ msgstr "Error durante la inclusión de la página"
+
+#~ msgid "eta_date"
+#~ msgstr "Fecha de fin"
+
+#~ msgid "expected:"
+#~ msgstr "Previsto :"
+
+#~ msgid "external page"
+#~ msgstr "Página externa"
+
 #~ msgid "incorrect value (%(value)s) for type \"%(type)s\""
 #~ msgstr "valor %(value)s incorrecto para el tipo \"%(type)s\""
+
+#~ msgid "initial estimation %s"
+#~ msgstr "Estimación inicial %s"
 
 #~ msgid "invalid value %(value)s, it must be one of %(choices)s"
 #~ msgstr "Valor %(value)s incorrecto, debe estar entre %(choices)s"
 
+#~ msgid "milestone"
+#~ msgstr "Milestone"
+
+#~ msgid "no related project"
+#~ msgstr "No tiene proyecto relacionado"
+
+#~ msgid "progress"
+#~ msgstr "Progreso"
+
+#~ msgid "progress bar"
+#~ msgstr "Barra de Progreso"
+
+#~ msgid "project"
+#~ msgstr "Proyecto"
+
+#~ msgid "send email"
+#~ msgstr "Enviar email"
+
+#~ msgid "sioc"
+#~ msgstr "SIOC"
+
+#~ msgid "task progression"
+#~ msgstr "Progreso de la Acción"
+
+#~ msgid "todo_by"
+#~ msgstr "Asignada a"
+
+#~ msgid "toggle filter"
+#~ msgstr "esconder/mostrar el filtro"
+
 #~ msgid "unknown source type"
 #~ msgstr "tipo de fuente desconocida"
+
+#~ msgid "violates unique_together constraints (%s)"
+#~ msgstr "viola el principio (o restricción) de singularidad (%s)"
+
+#~ msgid "workflow already have a state of that name"
+#~ msgstr "El Workflow ya tiene un Estado con ese nombre"
+
+#~ msgid "workflow already have a transition of that name"
+#~ msgstr "El Workflow ya tiene una transición con ese nombre"

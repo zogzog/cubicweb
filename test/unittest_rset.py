@@ -28,6 +28,8 @@ from logilab.common.testlib import TestCase, unittest_main, mock_object
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.rset import NotAnEntity, ResultSet, attr_desc_iterator
 
+from cubicweb import NoResultError, MultipleResultsError
+
 
 def pprelcachedict(d):
     res = {}
@@ -181,6 +183,7 @@ class ResultSetTC(CubicWebTC):
         rs2 = rs.filtered_rset(test_filter)
         self.assertEqual(len(rs2), 2)
         self.assertEqual([login for _, login in rs2], ['adim', 'syt'])
+        self.assertEqual(rs2.description, rs.description[1:])
 
     def test_transform(self):
         rs = ResultSet([[12, 'adim'], [13, 'syt'], [14, 'nico']],
@@ -366,6 +369,39 @@ class ResultSetTC(CubicWebTC):
             self.assertEqual(entity.cw_etype, etype)
             attr = etype == 'Bookmark' and 'title' or 'name'
             self.assertEqual(entity.cw_attr_cache[attr], n)
+
+    def test_one(self):
+        self.request().create_entity('CWUser', login=u'cdevienne',
+                                     upassword=u'cdevienne',
+                                     surname=u'de Vienne',
+                                     firstname=u'Christophe')
+        e = self.execute('Any X WHERE X login "cdevienne"').one()
+
+        self.assertEqual(e.surname, u'de Vienne')
+
+        e = self.execute(
+            'Any X, N WHERE X login "cdevienne", X surname N').one()
+        self.assertEqual(e.surname, u'de Vienne')
+
+        e = self.execute(
+            'Any N, X WHERE X login "cdevienne", X surname N').one(col=1)
+        self.assertEqual(e.surname, u'de Vienne')
+
+    def test_one_no_rows(self):
+        with self.assertRaises(NoResultError):
+            self.execute('Any X WHERE X login "patanok"').one()
+
+    def test_one_multiple_rows(self):
+        self.request().create_entity(
+            'CWUser', login=u'cdevienne', upassword=u'cdevienne',
+            surname=u'de Vienne', firstname=u'Christophe')
+
+        self.request().create_entity(
+            'CWUser', login=u'adim', upassword='adim', surname=u'di mascio',
+            firstname=u'adrien')
+
+        with self.assertRaises(MultipleResultsError):
+            self.execute('Any X WHERE X is CWUser').one()
 
     def test_related_entity_optional(self):
         e = self.request().create_entity('Bookmark', title=u'aaaa', path=u'path')

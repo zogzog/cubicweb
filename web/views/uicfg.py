@@ -114,6 +114,36 @@ class DisplayCtrlRelationTags(NoTargetRelationTagsDict):
                         'order',
                         self.counter)
 
+    def set_fields_order(self, etype, relations):
+        """specify the field order in `etype` primary view.
+
+        :param etype: the entity type as a string
+        :param attrs: the ordered list of attribute names (or relations)
+
+        `attrs` can be strings or 2-tuples (relname, role_of_etype_in_the_rel)
+
+        Unspecified fields will be displayed after specified ones, their
+        order being consistent with the schema definition.
+
+        Examples:
+
+        .. sourcecode:: python
+
+          from cubicweb.web.views.uicfg import primaryview_display_ctrl as pvdc
+          pvdc.set_fields_order('CWUser', ('firstname', ('in_group', 'subject'),
+                                           'surname', 'login'))
+
+        """
+        for index, relation in enumerate(relations):
+            if not isinstance(relation, tuple):
+                relation = (relation, 'subject')
+            rtype, role = relation
+            if role == 'subject':
+                self.tag_subject_of((etype, rtype, '*'), {'order': index})
+            else:
+                self.tag_object_of((etype, rtype, '*'), {'order': index})
+
+
 primaryview_display_ctrl = DisplayCtrlRelationTags()
 
 

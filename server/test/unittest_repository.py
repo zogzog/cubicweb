@@ -52,16 +52,18 @@ class RepositoryTC(CubicWebTC):
     and relation
     """
 
-    def test_uniquetogether(self):
+    def test_unique_together_constraint(self):
         self.execute('INSERT Societe S: S nom "Logilab", S type "SSLL", S cp "75013"')
         with self.assertRaises(ValidationError) as wraperr:
             self.execute('INSERT Societe S: S nom "Logilab", S type "SSLL", S cp "75013"')
-        self.assertEqual({'nom': u'violates unique_together constraints (cp, nom, type)',
-                          'cp': u'violates unique_together constraints (cp, nom, type)',
-                          'type': u'violates unique_together constraints (cp, nom, type)'},
-                     wraperr.exception.args[1])
+        self.assertEqual(
+            {'cp': u'cp is part of violated unicity constraint',
+             'nom': u'nom is part of violated unicity constraint',
+             'type': u'type is part of violated unicity constraint',
+             'unicity constraint': u'some relations violate a unicity constraint'},
+            wraperr.exception.args[1])
 
-    def test_unique_together(self):
+    def test_unique_together_schema(self):
         person = self.repo.schema.eschema('Personne')
         self.assertEqual(len(person._unique_together), 1)
         self.assertItemsEqual(person._unique_together[0],
@@ -135,7 +137,7 @@ class RepositoryTC(CubicWebTC):
             self.assertTrue(self.execute('Any X WHERE X is CWGroup, X name "toto"'))
             with self.assertRaises(QueryError) as cm:
                 self.commit()
-            self.assertEqual(str(cm.exception), 'transaction must be rollbacked')
+            self.assertEqual(str(cm.exception), 'transaction must be rolled back')
             self.rollback()
             self.assertFalse(self.execute('Any X WHERE X is CWGroup, X name "toto"'))
 
@@ -152,7 +154,7 @@ class RepositoryTC(CubicWebTC):
             self.assertTrue(self.execute('Any X WHERE X is CWGroup, X name "toto"'))
             with self.assertRaises(QueryError) as cm:
                 self.commit()
-            self.assertEqual(str(cm.exception), 'transaction must be rollbacked')
+            self.assertEqual(str(cm.exception), 'transaction must be rolled back')
             self.rollback()
             self.assertFalse(self.execute('Any X WHERE X is CWGroup, X name "toto"'))
 
@@ -272,19 +274,21 @@ class RepositoryTC(CubicWebTC):
     def test_initial_schema(self):
         schema = self.repo.schema
         # check order of attributes is respected
-        self.assertListEqual([r.type for r in schema.eschema('CWAttribute').ordered_relations()
-                               if not r.type in ('eid', 'is', 'is_instance_of', 'identity',
-                                                 'creation_date', 'modification_date', 'cwuri',
-                                                 'owned_by', 'created_by', 'cw_source',
-                                                 'update_permission', 'read_permission',
-                                                 'in_basket')],
-                              ['relation_type',
-                               'from_entity', 'to_entity',
-                               'constrained_by',
-                               'cardinality', 'ordernum',
-                               'indexed', 'fulltextindexed', 'internationalizable',
-                               'defaultval', 'extra_props',
-                               'description', 'description_format'])
+        notin = set(('eid', 'is', 'is_instance_of', 'identity',
+                     'creation_date', 'modification_date', 'cwuri',
+                     'owned_by', 'created_by', 'cw_source',
+                     'update_permission', 'read_permission',
+                     'add_permission', 'in_basket'))
+        self.assertListEqual(['relation_type',
+                              'from_entity', 'to_entity',
+                              'constrained_by',
+                              'cardinality', 'ordernum',
+                              'indexed', 'fulltextindexed', 'internationalizable',
+                              'defaultval', 'extra_props',
+                              'description', 'description_format'],
+                             [r.type
+                              for r in schema.eschema('CWAttribute').ordered_relations()
+                              if r.type not in notin])
 
         self.assertEqual(schema.eschema('CWEType').main_attribute(), 'name')
         self.assertEqual(schema.eschema('State').main_attribute(), 'name')
@@ -553,6 +557,30 @@ class RepositoryTC(CubicWebTC):
             req.create_entity('Affaire', ref=u'AFF01')
             req.create_entity('Affaire', ref=u'AFF02')
             req.execute('SET A duration 10 WHERE A is Affaire')
+
+
+    def test_user_friendly_error(self):
+        from cubicweb.entities.adapters import IUserFriendlyUniqueTogether
+        class MyIUserFriendlyUniqueTogether(IUserFriendlyUniqueTogether):
+            __select__ = IUserFriendlyUniqueTogether.__select__ & is_instance('Societe')
+            def raise_user_exception(self):
+                raise ValidationError(self.entity.eid, {'hip': 'hop'})
+
+        with self.temporary_appobjects(MyIUserFriendlyUniqueTogether):
+            req = self.request()
+            s = req.create_entity('Societe', nom=u'Logilab', type=u'ssll', cp=u'75013')
+            self.commit()
+            with self.assertRaises(ValidationError) as cm:
+                req.create_entity('Societe', nom=u'Logilab', type=u'ssll', cp=u'75013')
+            self.assertEqual(cm.exception.errors, {'hip': 'hop'})
+            self.rollback()
+            req.create_entity('Societe', nom=u'Logilab', type=u'ssll', cp=u'31400')
+            with self.assertRaises(ValidationError) as cm:
+                s.cw_set(cp=u'31400')
+            self.assertEqual(cm.exception.entity, s.eid)
+            self.assertEqual(cm.exception.errors, {'hip': 'hop'})
+            self.rollback()
+
 
 class SchemaDeserialTC(CubicWebTC):
 

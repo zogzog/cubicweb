@@ -410,14 +410,14 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
 
 
     def init(self, activated, source_entity):
-        super(NativeSQLSource, self).init(activated, source_entity)
-        self.init_creating(source_entity._cw.cnxset)
         try:
             # test if 'asource' column exists
             query = self.dbhelper.sql_add_limit_offset('SELECT asource FROM entities', 1)
             source_entity._cw.system_sql(query)
         except Exception as ex:
             self.eid_type_source = self.eid_type_source_pre_131
+        super(NativeSQLSource, self).init(activated, source_entity)
+        self.init_creating(source_entity._cw.cnxset)
 
     def shutdown(self):
         if self._eid_creation_cnx:
@@ -751,28 +751,23 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                 try:
                     session.cnxset.connection(self.uri).rollback()
                     if self.repo.config.mode != 'test':
-                        self.critical('transaction has been rollbacked')
+                        self.critical('transaction has been rolled back')
                 except Exception as ex:
                     pass
             if ex.__class__.__name__ == 'IntegrityError':
                 # need string comparison because of various backends
                 for arg in ex.args:
-                    mo = re.search('unique_cw_[^ ]+_idx', arg)
+                    # postgres, sqlserver
+                    mo = re.search("unique_[a-z0-9]{32}", arg)
                     if mo is not None:
-                        index_name = mo.group(0)
-                        # right-chop '_idx' postfix
-                        # (garanteed to be there, see regexp above)
-                        elements = index_name[:-4].split('_cw_')[1:]
-                        etype = elements[0]
-                        rtypes = elements[1:]
-                        raise UniqueTogetherError(etype, rtypes)
+                        raise UniqueTogetherError(session, cstrname=mo.group(0))
+                    # sqlite
                     mo = re.search('columns (.*) are not unique', arg)
                     if mo is not None: # sqlite in use
                         # we left chop the 'cw_' prefix of attribute names
                         rtypes = [c.strip()[3:]
                                   for c in mo.group(1).split(',')]
-                        etype = '???'
-                        raise UniqueTogetherError(etype, rtypes)
+                        raise UniqueTogetherError(session, rtypes=rtypes)
             raise
         return cursor
 
@@ -795,7 +790,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             try:
                 session.cnxset.connection(self.uri).rollback()
                 if self.repo.config.mode != 'test':
-                    self.critical('transaction has been rollbacked')
+                    self.critical('transaction has been rolled back')
             except Exception:
                 pass
             raise
@@ -1537,6 +1532,7 @@ CREATE TABLE transactions (
   tx_time %s NOT NULL
 );;
 CREATE INDEX transactions_tx_user_idx ON transactions(tx_user);;
+CREATE INDEX transactions_tx_time_idx ON transactions(tx_time);;
 
 CREATE TABLE tx_entity_actions (
   tx_uuid CHAR(32) REFERENCES transactions(tx_uuid) ON DELETE CASCADE,
@@ -1551,6 +1547,7 @@ CREATE INDEX tx_entity_actions_txa_action_idx ON tx_entity_actions(txa_action);;
 CREATE INDEX tx_entity_actions_txa_public_idx ON tx_entity_actions(txa_public);;
 CREATE INDEX tx_entity_actions_eid_idx ON tx_entity_actions(eid);;
 CREATE INDEX tx_entity_actions_etype_idx ON tx_entity_actions(etype);;
+CREATE INDEX tx_entity_actions_tx_uuid_idx ON tx_entity_actions(tx_uuid);;
 
 CREATE TABLE tx_relation_actions (
   tx_uuid CHAR(32) REFERENCES transactions(tx_uuid) ON DELETE CASCADE,
@@ -1565,6 +1562,7 @@ CREATE INDEX tx_relation_actions_txa_action_idx ON tx_relation_actions(txa_actio
 CREATE INDEX tx_relation_actions_txa_public_idx ON tx_relation_actions(txa_public);;
 CREATE INDEX tx_relation_actions_eid_from_idx ON tx_relation_actions(eid_from);;
 CREATE INDEX tx_relation_actions_eid_to_idx ON tx_relation_actions(eid_to);;
+CREATE INDEX tx_relation_actions_tx_uuid_idx ON tx_relation_actions(tx_uuid);;
 """ % (helper.sql_create_sequence('entities_id_seq').replace(';', ';;'),
        typemap['Datetime'], typemap['Datetime'], typemap['Datetime'],
        typemap['Boolean'], typemap['Bytes'], typemap['Boolean'])

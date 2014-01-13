@@ -29,6 +29,11 @@ however useful in other contexts such as tests or custom controllers.
 
   Also, a rollback is automatically done if an error occurs during commit.
 
+.. note::
+
+   A :exc:`ValidationError` has a `entity` attribute. In CubicWeb,
+   this atttribute is set to the entity's eid (not a reference to the
+   entity itself).
 
 Executing RQL queries from a view or a hook
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -57,18 +57,27 @@ started quickly.
 PostgreSQL
 ~~~~~~~~~~
 
-For installation, please refer to the `PostgreSQL project online documentation`_.
+Many Linux distributions ship with the appropriate PostgreSQL packages.
+Basically, you need to install the following packages:
 
-.. _`PostgreSQL project online documentation`: http://www.postgresql.org/
+* `postgresql` and `postgresql-client`, which will pull the respective
+  versioned packages (e.g. `postgresql-9.1` and `postgresql-client-9.1`) and,
+  optionally,
+* a `postgresql-plpython-X.Y` package with a version corresponding to that of
+  the aforementioned packages (e.g. `postgresql-plpython-9.1`).
 
-You need to install the three following packages: `postgresql-8.X`,
-`postgresql-client-8.X`, and `postgresql-plpython-8.X`. If you run postgres
-version prior to 8.3, you'll also need the `postgresql-contrib-8.X` package for
-full-text search extension.
+If you run postgres version prior to 8.3, you'll also need the
+`postgresql-contrib-8.X` package for full-text search extension.
 
 If you run postgres on another host than the |cubicweb| repository, you should
 install the `postgresql-client` package on the |cubicweb| host, and others on the
 database host.
+
+For extra details concerning installation, please refer to the `PostgreSQL
+project online documentation`_.
+
+.. _`PostgreSQL project online documentation`: http://www.postgresql.org/docs
+
 
 Database cluster
 ++++++++++++++++

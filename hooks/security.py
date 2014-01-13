@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -20,14 +20,18 @@ the user connected to a session
 """
 
 __docformat__ = "restructuredtext en"
+from warnings import warn
 
 from logilab.common.registry import objectify_predicate
+
+from yams import buildobjs
 
 from cubicweb import Unauthorized
 from cubicweb.server import BEFORE_ADD_RELATIONS, ON_COMMIT_ADD_RELATIONS, hook
 
 
-def check_entity_attributes(session, entity, editedattrs=None, creation=False):
+
+def check_entity_attributes(session, entity, action, editedattrs=None):
     eid = entity.eid
     eschema = entity.e_schema
     # ._cw_skip_security_attributes is there to bypass security for attributes
@@ -39,11 +43,26 @@ def check_entity_attributes(session, entity, editedattrs=None, creation=False):
         if attr in dontcheck:
             continue
         rdef = eschema.rdef(attr)
-        if rdef.final: # non final relation are checked by other hooks
-            # add/delete should be equivalent (XXX: unify them into 'update' ?)
-            if creation and not rdef.permissions.get('update'):
+        if rdef.final: # non final relation are checked by standard hooks
+            perms = rdef.permissions.get(action)
+            # comparison below works because the default update perm is:
+            #
+            #  ('managers', ERQLExpression(Any X WHERE U has_update_permission X,
+            #                              X eid %(x)s, U eid %(u)s))
+            #
+            # is deserialized in this order (groups first), and ERQLExpression
+            # implements comparison by rql expression.
+            if perms == buildobjs.DEFAULT_ATTRPERMS[action]:
+                # The default rule is to delegate to the entity
+                # rule. This is an historical artefact. Hence we take
+                # this object as a marker saying "no specific"
+                # permission rule for this attribute. Thus we just do
+                # nothing.
                 continue
-            rdef.check_perm(session, 'update', eid=eid)
+            if perms == ():
+                # That means an immutable attribute.
+                raise Unauthorized(action, str(rdef))
+            rdef.check_perm(session, action, eid=eid)
 
 
 class CheckEntityPermissionOp(hook.DataOperationMixIn, hook.LateOperation):
@@ -52,8 +71,7 @@ class CheckEntityPermissionOp(hook.DataOperationMixIn, hook.LateOperation):
         for eid, action, edited in self.get_data():
             entity = session.entity_from_eid(eid)
             entity.cw_check_perm(action)
-            check_entity_attributes(session, entity, edited,
-                                    creation=(action == 'add'))
+            check_entity_attributes(session, entity, action, edited)
 
 
 class CheckRelationPermissionOp(hook.DataOperationMixIn, hook.LateOperation):
@@ -91,17 +109,11 @@ class AfterUpdateEntitySecurityHook(SecurityHook):
     events = ('after_update_entity',)
 
     def __call__(self):
-        try:
-            # check user has permission right now, if not retry at commit time
-            self.entity.cw_check_perm('update')
-            check_entity_attributes(self._cw, self.entity)
-        except Unauthorized:
-            self.entity._cw_clear_local_perm_cache('update')
-            # save back editedattrs in case the entity is reedited later in the
-            # same transaction, which will lead to cw_edited being
-            # overwritten
-            CheckEntityPermissionOp.get_instance(self._cw).add_data(
-                (self.entity.eid, 'update', self.entity.cw_edited) )
+        # save back editedattrs in case the entity is reedited later in the
+        # same transaction, which will lead to cw_edited being
+        # overwritten
+        CheckEntityPermissionOp.get_instance(self._cw).add_data(
+            (self.entity.eid, 'update', self.entity.cw_edited) )
 
 
 class BeforeDelEntitySecurityHook(SecurityHook):

@@ -128,7 +128,6 @@ class FacetFilterMixIn(object):
 
     needs_js = ['cubicweb.ajax.js', 'cubicweb.facets.js']
     needs_css = ['cubicweb.facets.css']
-    roundcorners = True
 
     def generate_form(self, w, rset, divid, vid, vidargs=None, mainvar=None,
                       paginate=False, cssclass='', hiddens=None, **kwargs):
@@ -164,9 +163,6 @@ class FacetFilterMixIn(object):
         self._cw.add_css(self.needs_css)
         self._cw.html_headers.define_var('facetLoadingMsg',
                                          self._cw._('facet-loading-msg'))
-        if self.roundcorners:
-            self._cw.html_headers.add_onload(
-                'jQuery(".facet").corner("tl br 10px");')
         if vidargs is not None:
             warn("[3.14] vidargs is deprecated. Maybe you're using some TableView?",
                  DeprecationWarning, stacklevel=2)

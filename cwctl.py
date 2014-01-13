@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -48,13 +48,9 @@ from cubicweb.cwconfig import CubicWebConfiguration as cwcfg, CWDEV, CONFIGURATI
 from cubicweb.toolsutils import Command, rm, create_dir, underline_title
 from cubicweb.__pkginfo__ import version
 
-if support_args(CommandLine, 'check_duplicated_command'):
-    # don't check duplicated commands, it occurs when reloading site_cubicweb
-    CWCTL = CommandLine('cubicweb-ctl', 'The CubicWeb swiss-knife.',
-                        version=version, check_duplicated_command=False)
-else:
-    CWCTL = CommandLine('cubicweb-ctl', 'The CubicWeb swiss-knife.',
-                        version=version)
+# don't check duplicated commands, it occurs when reloading site_cubicweb
+CWCTL = CommandLine('cubicweb-ctl', 'The CubicWeb swiss-knife.',
+                    version=version, check_duplicated_command=False)
 
 def wait_process_end(pid, maxtry=10, waittime=1):
     """wait for a process to actually die"""
@@ -266,12 +262,7 @@ class ListCommand(Command):
                         if tinfo:
                             descr = getattr(tinfo, 'description', '')
                             if not descr:
-                                descr = getattr(tinfo, 'short_desc', '')
-                                if descr:
-                                    warn('[3.8] short_desc is deprecated, update %s'
-                                         ' pkginfo' % cube, DeprecationWarning)
-                                else:
-                                    descr = tinfo.__doc__
+                                descr = tinfo.__doc__
                             if descr:
                                 print '    '+ '    \n'.join(descr.splitlines())
                         modes = detect_available_modes(cwcfg.cube_dir(cube))
@@ -357,7 +348,7 @@ class CreateInstanceCommand(Command):
           }),
         ('config',
          {'short': 'c', 'type' : 'choice', 'metavar': '<install type>',
-          'choices': ('all-in-one', 'repository', 'twisted'),
+          'choices': ('all-in-one', 'repository'),
           'default': 'all-in-one',
           'help': 'installation type, telling which part of an instance '
           'should be installed. You can list available configurations using the'
@@ -751,6 +742,7 @@ given, appropriate sources for migration will be automatically selected \
         print '\n' + underline_title('Upgrading the instance %s' % appid)
         from logilab.common.changelog import Version
         config = cwcfg.config_for(appid)
+        instance_running = exists(config['pid-file'])
         config.repairing = True # notice we're not starting the server
         config.verbosity = self.config.verbosity
         set_sources_mode = getattr(config, 'set_sources_mode', None)
@@ -760,6 +752,7 @@ given, appropriate sources for migration will be automatically selected \
         mih = config.migration_handler()
         repo = mih.repo_connect()
         vcconf = repo.get_versions()
+        helper = self.config_helper(config, required=False)
         if self.config.force_cube_version:
             for cube, version in self.config.force_cube_version.iteritems():
                 vcconf[cube] = Version(version)
@@ -782,7 +775,7 @@ given, appropriate sources for migration will be automatically selected \
         if cubicwebversion > applcubicwebversion:
             toupgrade.append(('cubicweb', applcubicwebversion, cubicwebversion))
         # only stop once we're sure we have something to do
-        if not (CWDEV or self.config.nostartstop):
+        if instance_running and not (CWDEV or self.config.nostartstop):
             StopInstanceCommand(self.logger).stop_instance(appid)
         # run cubicweb/componants migration scripts
         if self.config.fs_only or toupgrade:
@@ -798,8 +791,10 @@ given, appropriate sources for migration will be automatically selected \
         if not self.i18nupgrade(config):
             return
         print
+        if helper:
+            helper.postupgrade(repo)
         print '-> instance migrated.'
-        if not (CWDEV or self.config.nostartstop):
+        if instance_running and not (CWDEV or self.config.nostartstop):
             # restart instance through fork to get a proper environment, avoid
             # uicfg pb (and probably gettext catalogs, to check...)
             forkcmd = '%s start %s' % (sys.argv[0], appid)
@@ -1038,9 +1033,56 @@ class ConfigureInstanceCommand(InstanceCommand):
                     raise ConfigurationError('unknown configuration key "%s" for mode %s' % (key, appcfg.name))
             appcfg.save()
 
+
+# WSGI #########
+
+def wsgichoices():
+    try:
+        from werkzeug import serving
+    except ImportError:
+        return ('stdlib',)
+    return ('stdlib', 'werkzeug')
+
+class WSGIDebugStartHandler(InstanceCommand):
+    """Start an interactive wsgi server """
+    name = 'wsgi'
+    actionverb = 'started'
+    arguments = '<instance>'
+    options = (
+        ('method',
+         {'short': 'm',
+          'type': 'choice',
+          'metavar': '<method>',
+          'default': 'stdlib',
+          'choices': wsgichoices(),
+          'help': 'wsgi utility/method'}),
+        ('loglevel',
+         {'short': 'l',
+          'type' : 'choice',
+          'metavar': '<log level>',
+          'default': 'debug',
+          'choices': ('debug', 'info', 'warning', 'error'),
+          'help': 'debug if -D is set, error otherwise',
+          }),
+        )
+
+    def wsgi_instance(self, appid):
+        config = cwcfg.config_for(appid, debugmode=1)
+        init_cmdline_log_threshold(config, self['loglevel'])
+        assert config.name == 'all-in-one'
+        meth = self['method']
+        if meth == 'stdlib':
+            from cubicweb.wsgi import server
+        else:
+            from cubicweb.wsgi import wz as server
+        return server.run(config)
+
+
+
 for cmdcls in (ListCommand,
                CreateInstanceCommand, DeleteInstanceCommand,
                StartInstanceCommand, StopInstanceCommand, RestartInstanceCommand,
+               WSGIDebugStartHandler,
                ReloadConfigurationCommand, StatusCommand,
                UpgradeInstanceCommand,
                ListVersionsInstanceCommand,
@@ -1050,6 +1092,8 @@ for cmdcls in (ListCommand,
                ConfigureInstanceCommand,
                ):
     CWCTL.register(cmdcls)
+
+
 
 def run(args):
     """command line tool"""

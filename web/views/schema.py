@@ -24,6 +24,7 @@ from itertools import cycle
 
 import tempfile
 import os, os.path as osp
+import codecs
 
 from logilab.common.graph import GraphGenerator, DotBackend
 from logilab.common.ureports import Section, Table
@@ -40,7 +41,6 @@ from cubicweb.utils import make_uid
 from cubicweb.view import EntityView, StartupView
 from cubicweb import tags, uilib
 from cubicweb.web import action, facet, schemaviewer
-from cubicweb.web.views import TmpFileViewMixin
 from cubicweb.web.views import uicfg, primary, baseviews, tabs, tableview, ibreadcrumbs
 
 ALWAYS_SKIP_TYPES = BASE_TYPES | SCHEMA_TYPES
@@ -225,6 +225,7 @@ class CWETypeDescriptionTab(tabs.PrimaryTab):
             {'x': entity.eid})
         self.wview('table', rset, 'null',
                    cellvids={0: 'rdef-name-cell',
+                             2: 'etype-attr-defaultval-cell',
                              3: 'etype-attr-cardinality-cell',
                              4: 'rdef-constraints-cell',
                              6: 'rdef-options-cell'},
@@ -270,6 +271,14 @@ class CWETypeAttributeCardinalityCell(baseviews.FinalView):
         else:
             self.w(self._cw._(u'no'))
 
+
+class CWETypeAttributeDefaultValCell(baseviews.FinalView):
+    __regid__ = 'etype-attr-defaultval-cell'
+
+    def cell_call(self, row, col):
+        defaultval = self.cw_rset.rows[row][col]
+        if defaultval is not None:
+            self.w(unicode(self.cw_rset.rows[row][col].unzpickle()))
 
 class CWETypeRelationCardinalityCell(baseviews.FinalView):
     __regid__ = 'etype-rel-cardinality-cell'
@@ -616,6 +625,8 @@ class SchemaGraphView(StartupView):
     __regid__ = 'schemagraph'
 
     def call(self, etype=None, rtype=None, alt=''):
+        if 'MSIE 8' in self._cw.useragent():
+            return
         schema = self._cw.vreg.schema
         if etype:
             assert rtype is None
@@ -643,22 +654,12 @@ class SchemaGraphView(StartupView):
                                                   'splines':'true',
                                                   'sep':'0.2',
                                               }))
-        # map file
-        pmap, mapfile = tempfile.mkstemp(".map")
-        os.close(pmap)
-        # image file
-        fd, tmpfile = tempfile.mkstemp('.png')
+        # svg image file
+        fd, tmpfile = tempfile.mkstemp('.svg')
         os.close(fd)
-        generator.generate(visitor, prophdlr, tmpfile, mapfile)
-        filekeyid = make_uid()
-        self._cw.session.data[filekeyid] = tmpfile
-        self.w(u'<img src="%s" alt="%s" usemap="#schema" />' % (
-            xml_escape(self._cw.build_url(vid='tmppng', tmpfile=filekeyid)),
-            xml_escape(self._cw._(alt))))
-        stream = open(mapfile, 'r').read()
-        stream = stream.decode(self._cw.encoding)
-        self.w(stream)
-        os.unlink(mapfile)
+        generator.generate(visitor, prophdlr, tmpfile)
+        with codecs.open(tmpfile, 'rb', encoding='utf-8') as svgfile:
+            self.w(svgfile.read())
 
 # breadcrumbs ##################################################################
 

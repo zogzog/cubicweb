@@ -105,8 +105,8 @@ def count_lines(stream_or_filename):
     return i+1
 
 def ucsvreader_pb(stream_or_path, encoding='utf-8', separator=',', quote='"',
-                  skipfirst=False, withpb=True):
-    """same as ucsvreader but a progress bar is displayed as we iter on rows"""
+                  skipfirst=False, withpb=True, skip_empty=True):
+    """same as :func:`ucsvreader` but a progress bar is displayed as we iter on rows"""
     if isinstance(stream_or_path, basestring):
         if not osp.exists(stream_or_path):
             raise Exception("file doesn't exists: %s" % stream_or_path)
@@ -118,23 +118,30 @@ def ucsvreader_pb(stream_or_path, encoding='utf-8', separator=',', quote='"',
         rowcount -= 1
     if withpb:
         pb = shellutils.ProgressBar(rowcount, 50)
-    for urow in ucsvreader(stream, encoding, separator, quote, skipfirst):
+    for urow in ucsvreader(stream, encoding, separator, quote,
+                           skipfirst=skipfirst, skip_empty=skip_empty):
         yield urow
         if withpb:
             pb.update()
     print ' %s rows imported' % rowcount
 
 def ucsvreader(stream, encoding='utf-8', separator=',', quote='"',
-               skipfirst=False, ignore_errors=False):
+               skipfirst=False, ignore_errors=False, skip_empty=True):
     """A csv reader that accepts files with any encoding and outputs unicode
     strings
+
+    if skip_empty (the default), lines without any values specified (only
+    separators) will be skipped. This is useful for Excel exports which may be
+    full of such lines.
     """
     it = iter(csv.reader(stream, delimiter=separator, quotechar=quote))
     if not ignore_errors:
         if skipfirst:
             it.next()
         for row in it:
-            yield [item.decode(encoding) for item in row]
+            decoded = [item.decode(encoding) for item in row]
+            if not skip_empty or any(decoded):
+                yield [item.decode(encoding) for item in row]
     else:
         # Skip first line
         try:
@@ -151,7 +158,10 @@ def ucsvreader(stream, encoding='utf-8', separator=',', quote='"',
             # Error in CSV, ignore line and continue
             except csv.Error:
                 continue
-            yield [item.decode(encoding) for item in row]
+            decoded = [item.decode(encoding) for item in row]
+            if not skip_empty or any(decoded):
+                yield decoded
+
 
 def callfunc_every(func, number, iterable):
     """yield items of `iterable` one by one and call function `func`
@@ -792,6 +802,9 @@ class NoHookRQLObjectStore(RQLObjectStore):
         assert not rtype.startswith('reverse_')
         self.add_relation(self.session, eid_from, rtype, eid_to,
                           self.rschema(rtype).inlined)
+        if self.rschema[rtype].symmetric:
+            self.add_relation(self.session, eid_to, rtype, eid_from,
+                              self.rschema(rtype).inlined)
         self._nb_inserted_relations += 1
 
     @property
@@ -918,6 +931,9 @@ class SQLGenObjectStore(NoHookRQLObjectStore):
         # XXX Could subjtype be inferred ?
         self.source.add_relation(self.session, subj_eid, rtype, obj_eid,
                                  self.rschema(rtype).inlined, **kwargs)
+        if self.rschema[rtype].symmetric:
+            self.source.add_relation(self.session, obj_eid, rtype, subj_eid,
+                                     self.rschema(rtype).inlined, **kwargs)
 
     def drop_indexes(self, etype):
         """Drop indexes for a given entity type"""

@@ -41,7 +41,7 @@ as server startup or shutdown).  In a typical application, most of the hooks are
 defined over data events.
 
 Also, some :class:`~cubicweb.server.hook.Operation` may be registered by hooks,
-which will be fired when the transaction is commited or rollbacked.
+which will be fired when the transaction is commited or rolled back.
 
 The purpose of data event hooks is usually to complement the data model as
 defined in the schema, which is static by nature and only provide a restricted
@@ -169,7 +169,10 @@ type and the eid of the object entity.
 
 * `after_add_relation`, `after_delete_relation`
 
-Take note that relations can be added or deleted, but not updated.
+Specific selectors are shipped for these kinds of events, see in particular
+:class:`~cubicweb.server.hook.match_rtype`.
+
+Also note that relations can be added or deleted, but not updated.
 
 Non data events
 ~~~~~~~~~~~~~~~
@@ -439,11 +442,13 @@ class rechain(object):
 
 
 class match_rtype(ExpectedValuePredicate):
-    """accept if parameters specified as initializer arguments are specified
-    in named arguments given to the predicate
+    """accept if the relation type is found in expected ones. Optional
+    named parameters `frometypes` and `toetypes` can be used to restrict
+    target subject and/or object entity types of the relation.
 
-    :param \*expected: parameters (eg `basestring`) which are expected to be
-                       found in named arguments (kwargs)
+    :param \*expected: possible relation types
+    :param frometypes: candidate entity types as subject of relation
+    :param toetypes: candidate entity types as object of relation
     """
     def __init__(self, *expected, **more):
         self.expected = expected
@@ -673,16 +678,6 @@ class PropagateRelationDelHook(PropagateRelationAddHook):
                         {'x': self.eidfrom, 'p': self.eidto})
 
 
-PropagateSubjectRelationHook = class_renamed(
-    'PropagateSubjectRelationHook', PropagateRelationHook,
-    '[3.9] PropagateSubjectRelationHook has been renamed to PropagateRelationHook')
-PropagateSubjectRelationAddHook = class_renamed(
-    'PropagateSubjectRelationAddHook', PropagateRelationAddHook,
-    '[3.9] PropagateSubjectRelationAddHook has been renamed to PropagateRelationAddHook')
-PropagateSubjectRelationDelHook = class_renamed(
-    'PropagateSubjectRelationDelHook', PropagateRelationDelHook,
-    '[3.9] PropagateSubjectRelationDelHook has been renamed to PropagateRelationDelHook')
-
 
 # abstract classes for operation ###############################################
 
@@ -715,10 +710,10 @@ class Operation(object):
 
     * `rollback`:
 
-      the transaction has been either rollbacked either:
+      the transaction has been either rolled back either:
 
        * intentionaly
-       * a 'precommit' event failed, in which case all operations are rollbacked
+       * a 'precommit' event failed, in which case all operations are rolled back
          once 'revertprecommit'' has been called
 
     * `postcommit`:
@@ -780,7 +775,7 @@ class Operation(object):
         """
 
     def rollback_event(self):
-        """the observed connections set has been rollbacked
+        """the observed connections set has been rolled back
 
         do nothing by default
         """
@@ -1044,7 +1039,7 @@ class CleanupNewEidsCacheOp(DataOperationMixIn, SingleLastOperation):
     type/source cache eids of entities added in that transaction.
 
     NOTE: querier's rqlst/solutions cache may have been polluted too with
-    queries such as Any X WHERE X eid 32 if 32 has been rollbacked however
+    queries such as Any X WHERE X eid 32 if 32 has been rolled back however
     generated queries are unpredictable and analysing all the cache probably
     too expensive. Notice that there is no pb when using args to specify eids
     instead of giving them into the rql string.
@@ -1052,7 +1047,7 @@ class CleanupNewEidsCacheOp(DataOperationMixIn, SingleLastOperation):
     data_key = 'neweids'
 
     def rollback_event(self):
-        """the observed connections set has been rollbacked,
+        """the observed connections set has been rolled back,
         remove inserted eid from repository type/source cache
         """
         try:
@@ -1066,7 +1061,7 @@ class CleanupDeletedEidsCacheOp(DataOperationMixIn, SingleLastOperation):
     """
     data_key = 'pendingeids'
     def postcommit_event(self):
-        """the observed connections set has been rollbacked,
+        """the observed connections set has been rolled back,
         remove inserted eid from repository type/source cache
         """
         try:

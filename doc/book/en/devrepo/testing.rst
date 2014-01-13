@@ -18,12 +18,7 @@ actions, hooks and operations, security. The
 convenience methods to help test all of this.
 
 In the realm of views, automatic tests check that views are valid
-XHTML. See :ref:`automatic_views_tests` for details. Since 3.9, bases
-for web functional testing using `windmill
-<http://www.getwindmill.com/>`_ are set. See test cases in
-cubicweb/web/test/windmill and python wrapper in
-cubicweb/web/test_windmill/ if you want to use this in your own cube.
-
+XHTML. See :ref:`automatic_views_tests` for details.
 
 Most unit tests need a live database to work against. This is achieved
 by CubicWeb using automatically sqlite (bundled with Python, see

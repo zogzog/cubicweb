@@ -109,6 +109,30 @@ class IntegrityHook(hook.Hook):
     category = 'integrity'
 
 
+class EnsureSymmetricRelationsAdd(hook.Hook):
+    """ ensure X r Y => Y r X iff r is symmetric """
+    __regid__ = 'cw.add_ensure_symmetry'
+    category = 'activeintegrity'
+    events = ('after_add_relation',)
+    # __select__ is set in the registration callback
+
+    def __call__(self):
+        self._cw.repo.system_source.add_relation(self._cw, self.eidto,
+                                                 self.rtype, self.eidfrom)
+
+
+class EnsureSymmetricRelationsDelete(hook.Hook):
+    """ ensure X r Y => Y r X iff r is symmetric """
+    __regid__ = 'cw.delete_ensure_symmetry'
+    category = 'activeintegrity'
+    events = ('after_delete_relation',)
+    # __select__ is set in the registration callback
+
+    def __call__(self):
+        self._cw.repo.system_source.delete_relation(self._cw, self.eidto,
+                                                    self.rtype, self.eidfrom)
+
+
 class CheckCardinalityHookBeforeDeleteRelation(IntegrityHook):
     """check cardinalities are satisfied"""
     __regid__ = 'checkcard_before_delete_relation'
@@ -348,3 +372,11 @@ class DeleteCompositeOrphanHook(hook.Hook):
         elif composite == 'object':
             _DelayedDeleteSEntityOp.get_instance(self._cw).add_data(
                 (self.eidfrom, rtype))
+
+def registration_callback(vreg):
+    vreg.register_all(globals().values(), __name__)
+    symmetric_rtypes = [rschema.type for rschema in vreg.schema.relations()
+                        if rschema.symmetric]
+    EnsureSymmetricRelationsAdd.__select__ = hook.Hook.__select__ & hook.match_rtype(*symmetric_rtypes)
+    EnsureSymmetricRelationsDelete.__select__ = hook.Hook.__select__ & hook.match_rtype(*symmetric_rtypes)
+

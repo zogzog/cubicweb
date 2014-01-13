@@ -1,0 +1,101 @@
+What's new in CubicWeb 3.18?
+============================
+
+The migration script does not handle sqlite nor mysql instances.
+
+
+New functionalities
+--------------------
+
+* add a security debugging tool
+  (see `#2920304 <http://www.cubicweb.org/2920304>`_)
+
+* introduce an `add` permission on attributes, to be interpreted at
+  entity creation time only and allow the implementation of complex
+  `update` rules that don't block entity creation (before that the
+  `update` attribute permission was interpreted at entity creation and
+  update time)
+
+* the primary view display controller (uicfg) now has a
+  `set_fields_order` method similar to the one available for forms
+
+* new method `ResultSet.one(col=0)` to retrive a single entity and enforce the
+  result has only one row (see `#3352314 https://www.cubicweb.org/ticket/3352314`_)
+
+* new method `RequestSessionBase.find` to look for entities
+  (see `#3361290 https://www.cubicweb.org/ticket/3361290`_)
+
+* the embedded jQuery copy has been updated to version 1.10.2, and jQuery UI to
+  version 1.10.3.
+
+* initial support for wsgi for the debug mode, available through the new
+  ``wsgi`` cubicweb-ctl command, which can use either python's builtin
+  wsgi server or the werkzeug module if present.
+
+* a ``rql-table`` directive is now available in ReST fields
+
+* cubicweb-ctl upgrade can now generate the static data resource directory
+  directly, without a manual call to gen-static-datadir.
+
+API changes
+-----------
+
+* not really an API change, but the entity permission checks are now
+  systematically deferred to an operation, instead of a) trying in a
+  hook and b) if it failed, retrying later in an operation
+
+* The default value storage for attributes is no longer String, but
+  Bytes.  This opens the road to storing arbitrary python objects, e.g.
+  numpy arrays, and fixes a bug where default values whose truth value
+  was False were not properly migrated.
+
+* `symmetric` relations are no more handled by an rql rewrite but are
+  now handled with hooks (from the `activeintegrity` category); this
+  may have some consequences for applications that do low-level database
+  manipulations or at times disable (some) hooks.
+
+* `unique together` constraints (multi-columns unicity constraints)
+  get a `name` attribute that maps the CubicWeb contraint entities to
+  corresponding backend index.
+
+* BreadCrumbEntityVComponent's open_breadcrumbs method now includes
+  the first breadcrumbs separator
+
+* entities can be compared for equality and hashed
+
+* the ``on_fire_transition`` predicate accepts a sequence of possible
+  transition names
+
+* the GROUP_CONCAT rql aggregate function no longer repeats duplicate
+  values, on the sqlite and postgresql backends
+
+Deprecation
+---------------------
+
+* ``pyrorql`` sources have been deprecated. Multisource will be fully dropped
+  in the next version. If you are still using pyrorql, switch to ``datafeed``
+  **NOW**!
+
+* the old multi-source system
+
+* `find_one_entity` and `find_entities` in favor of `find`
+  (see `#3361290 https://www.cubicweb.org/ticket/3361290`_)
+
+* the `TmpFileViewMixin` and `TmpPngView` classes (see `#3400448
+  https://www.cubicweb.org/ticket/3400448`_)
+
+Deprecated Code Drops
+----------------------
+
+* ``ldapuser`` have been dropped; use ``ldapfeed`` now
+  (see `#2936496 <http://www.cubicweb.org/2936496>`_)
+
+* action ``GotRhythm`` was removed, make sure you do not
+  import it in your cubes (even to unregister it)
+  (see `#3093362 <http://www.cubicweb.org/3093362>`_)
+
+* all 3.8 backward compat is gone
+
+* all 3.9 backward compat (including the javascript side) is gone
+
+* the ``twisted`` (web-only) instance type has been removed

@@ -22,6 +22,8 @@ __docformat__ = "restructuredtext en"
 
 # ignore the pygments UserWarnings
 import warnings
+import cPickle
+import zlib
 warnings.filterwarnings('ignore', category=UserWarning,
                         message='.*was already imported',
                         module='.*pygments')
@@ -120,12 +122,31 @@ class Binary(StringIO):
         binary.seek(0)
         return binary
 
+    def __eq__(self, other):
+        if not isinstance(other, Binary):
+            return False
+        return self.getvalue(), other.getvalue()
+
+
+    # Binary helpers to store/fetch python objects
+
+    @classmethod
+    def zpickle(cls, obj):
+        """ return a Binary containing a gzipped pickle of obj """
+        retval = cls()
+        retval.write(zlib.compress(cPickle.dumps(obj, protocol=2)))
+        return retval
+
+    def unzpickle(self):
+        """ decompress and loads the stream before returning it """
+        return cPickle.loads(zlib.decompress(self.getvalue()))
+
+
 def str_or_binary(value):
     if isinstance(value, Binary):
         return value
     return str(value)
 BASE_CONVERTERS['Password'] = str_or_binary
-
 
 
 # use this dictionary to rename entity types while keeping bw compat

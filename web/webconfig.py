@@ -135,7 +135,7 @@ class WebConfiguration(CubicWebConfiguration):
         ('https-deny-anonymous',
          {'type': 'yn',
           'default': False,
-          'help': 'Prevent anonymous user to browse thought https version of '
+          'help': 'Prevent anonymous user to browse through https version of '
                   'the site (https-url). Login form will then be displayed '
                   'until logged',
           'group': 'web',
@@ -235,6 +235,18 @@ have the python imaging library installed to use captcha)',
           'help': 'anonymize the connection before executing any jsonp query.',
           'group': 'web', 'level': 1
           }),
+        ('generate-staticdir',
+         {'type': 'yn',
+          'default': True,
+          'help': 'Generate the static data resource directory on upgrade.',
+          'group': 'web', 'level': 2,
+          }),
+        ('staticdir-path',
+         {'type': 'string',
+          'default': None,
+          'help': 'The static data resource directory path.',
+          'group': 'web', 'level': 2,
+          }),
         ))
 
     def __init__(self, *args, **kwargs):
@@ -296,6 +308,9 @@ have the python imaging library installed to use captcha)',
 
     def sign_text(self, text):
         """sign some text for later checking"""
+        # hmac.new expect bytes
+        if isinstance(text, unicode):
+            text = text.encode('utf-8')
         # replace \r\n so we do not depend on whether a browser "reencode"
         # original message using \r\n or not
         return hmac.new(self._instance_salt,
@@ -304,7 +319,6 @@ have the python imaging library installed to use captcha)',
     def check_text_sign(self, text, signature):
         """check the text signature is equal to the given signature"""
         return self.sign_text(text) == signature
-
 
     def locate_resource(self, rid):
         """return the (directory, filename) where the given resource
@@ -401,7 +415,7 @@ have the python imaging library installed to use captcha)',
             self._load_ui_properties_file(uiprops, path)
         self._load_ui_properties_file(uiprops, self.apphome)
         datadir_url = uiprops.context['datadir_url']
-        # XXX pre 3.9 css compat
+        # pre 3.9 css compat, however the old css still rules
         if self['use-old-css']:
             if (datadir_url+'/cubicweb.css') in uiprops['STYLESHEETS']:
                 idx = uiprops['STYLESHEETS'].index(datadir_url+'/cubicweb.css')
@@ -413,21 +427,6 @@ have the python imaging library installed to use captcha)',
             uiprops['JAVASCRIPTS'].insert(0, cubicweb_js_url)
 
     def _load_ui_properties_file(self, uiprops, path):
-        resourcesfile = join(path, 'data', 'external_resources')
-        if exists(resourcesfile):
-            warn('[3.9] %s file is deprecated, use an uiprops.py file'
-                 % resourcesfile, DeprecationWarning)
-            datadir_url = uiprops.context['datadir_url']
-            for rid, val in read_config(resourcesfile).iteritems():
-                if rid in ('STYLESHEETS', 'STYLESHEETS_PRINT',
-                           'IE_STYLESHEETS', 'JAVASCRIPTS'):
-                    val = [w.strip().replace('DATADIR', datadir_url)
-                           for w in val.split(',') if w.strip()]
-                    if rid == 'IE_STYLESHEETS':
-                        rid = 'STYLESHEETS_IE'
-                else:
-                    val = val.strip().replace('DATADIR', datadir_url)
-                uiprops[rid] = val
         uipropsfile = join(path, 'uiprops.py')
         if exists(uipropsfile):
             self.debug('loading %s', uipropsfile)

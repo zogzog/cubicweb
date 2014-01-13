@@ -144,7 +144,7 @@ class HTMLStreamTests(CubicWebTC):
         class MyView(StartupView):
             __regid__ = 'my-view'
             def call(self):
-                self._cw.set_doctype(html_doctype, reset_xmldecl=False)
+                self._cw.set_doctype(html_doctype)
                 self._cw.main_stream.set_htmlattrs([('lang', 'cz')])
 
         with self.temporary_appobjects(MyView):

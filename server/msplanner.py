@@ -92,6 +92,7 @@ from itertools import imap, ifilterfalse
 
 from logilab.common.compat import any
 from logilab.common.decorators import cached
+from logilab.common.deprecation import deprecated
 
 from rql import BadRQLQuery
 from rql.stmts import Union, Select
@@ -100,8 +101,7 @@ from rql.nodes import (VariableRef, Comparison, Relation, Constant, Variable,
 
 from cubicweb import server
 from cubicweb.utils import make_uid
-from cubicweb.rqlrewrite import add_types_restriction
-from cubicweb.server.utils import cleanup_solutions
+from cubicweb.rqlrewrite import add_types_restriction, cleanup_solutions
 from cubicweb.server.ssplanner import SSPlanner, OneFetchStep
 from cubicweb.server.mssteps import *
 
@@ -1263,6 +1263,7 @@ class PartPlanInformation(object):
         inputmap.update(step.outputmap)
 
 
+@deprecated('[3.18] old multi-source system will go away in the next version')
 class MSPlanner(SSPlanner):
     """MultiSourcesPlanner: build execution plan for rql queries
 

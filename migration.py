@@ -257,7 +257,7 @@ class MigrationHelper(object):
             home_key = 'HOME'
             if sys.platform == 'win32':
                 home_key = 'USERPROFILE'
-            histfile = os.path.join(os.environ[home_key], ".eshellhist")
+            histfile = os.path.join(os.environ[home_key], ".cwshell_history")
             try:
                 readline.read_history_file(histfile)
             except IOError:

@@ -70,7 +70,7 @@ def repairing(cls, req, **kwargs):
 
 
 class transaction(object):
-    """Ensure that the transaction is either commited or rollbacked at exit
+    """Ensure that the transaction is either commited or rolled back at exit
 
     Context manager to enter a transaction for a session: when exiting the
     `with` block on exception, call `session.rollback()`, else call
@@ -234,18 +234,17 @@ class SessionClosedError(RuntimeError):
 class CnxSetTracker(object):
     """Keep track of which connection use which cnxset.
 
-    There should be one of this object per session plus one another for
-    internal session.
+    There should be one of these objects per session (including internal sessions).
 
-    Session object are responsible of creating their CnxSetTracker object.
+    Session objects are responsible for creating their CnxSetTracker object.
 
-    Connection should use the :meth:`record` and :meth:`forget` to inform the
-    tracker of cnxset they have acquired.
+    Connections should use the :meth:`record` and :meth:`forget` to inform the
+    tracker of cnxsets they have acquired.
 
     .. automethod:: cubicweb.server.session.CnxSetTracker.record
     .. automethod:: cubicweb.server.session.CnxSetTracker.forget
 
-    Session use the :meth:`close` and :meth:`wait` method when closing.
+    Sessions use the :meth:`close` and :meth:`wait` methods when closing.
 
     .. automethod:: cubicweb.server.session.CnxSetTracker.close
     .. automethod:: cubicweb.server.session.CnxSetTracker.wait
@@ -260,18 +259,18 @@ class CnxSetTracker(object):
         self._record = {}
 
     def __enter__(self):
-        self._condition.__enter__()
+        return self._condition.__enter__()
 
     def __exit__(self, *args):
-        self._condition.__exit__(*args)
+        return self._condition.__exit__(*args)
 
     def record(self, cnxid, cnxset):
-        """Inform the tracker that a cnxid have acquired a cnxset
+        """Inform the tracker that a cnxid has acquired a cnxset
 
-        This methode is to be used by Connection object.
+        This method is to be used by Connection objects.
 
         This method fails when:
-        - The cnxid already have a recorded cnxset.
+        - The cnxid already has a recorded cnxset.
         - The tracker is not active anymore.
 
         Notes about the caller:
@@ -279,7 +278,7 @@ class CnxSetTracker(object):
         (2) It must be prepared to release the cnxset if the
             `cnxsettracker.forget` call fails.
         (3) It should acquire the tracker lock until the very end of the operation.
-        (4) However It take care to lock the CnxSetTracker object after having
+        (4) However it must only lock the CnxSetTracker object after having
             retrieved the cnxset to prevent deadlock.
 
         A typical usage look like::
@@ -294,13 +293,13 @@ class CnxSetTracker(object):
             repo._free_cnxset(cnxset) # (2)
             raise
         """
-        # dubious since the caller is suppose to have acquired it anyway.
+        # dubious since the caller is supposed to have acquired it anyway.
         with self._condition:
             if not self._active:
                 raise SessionClosedError('Closed')
             old = self._record.get(cnxid)
             if old is not None:
-                raise ValueError('"%s" already have a cnx_set (%r)'
+                raise ValueError('connection "%s" already has a cnx_set (%r)'
                                  % (cnxid, old))
             self._record[cnxid] = cnxset
 
@@ -340,19 +339,19 @@ class CnxSetTracker(object):
     def close(self):
         """Marks the tracker as inactive.
 
-        This methode is to be used by Session object.
+        This method is to be used by Session objects.
 
-        Inactive tracker does not accept new record anymore.
+        An inactive tracker does not accept new records anymore.
         """
         with self._condition:
             self._active = False
 
     def wait(self, timeout=10):
-        """Wait for all recorded cnxset to be released
+        """Wait for all recorded cnxsets to be released
 
-        This methode is to be used by Session object.
+        This method is to be used by Session objects.
 
-        returns a tuple of connection id that remains open.
+        Returns a tuple of connection ids that remain open.
         """
         with self._condition:
             if  self._active:
@@ -388,15 +387,15 @@ class Connection(RequestSessionBase):
 
     Holds all connection related data
 
-    Database connections resource:
+    Database connection resources:
 
       :attr:`running_dbapi_query`, boolean flag telling if the executing query
       is coming from a dbapi connection or is a query from within the repository
 
       :attr:`cnxset`, the connections set to use to execute queries on sources.
       If the transaction is read only, the connection set may be freed between
-      actual query. This allows multiple connection with a reasonable low
-      connection set pool size. control mechanism is detailed below
+      actual queries. This allows multiple connections with a reasonably low
+      connection set pool size.  Control mechanism is detailed below.
 
     .. automethod:: cubicweb.server.session.Connection.set_cnxset
     .. automethod:: cubicweb.server.session.Connection.free_cnxset
@@ -409,7 +408,7 @@ class Connection(RequestSessionBase):
 
     Internal transaction data:
 
-      :attr:`data`,is a dictionary containing some shared data
+      :attr:`data` is a dictionary containing some shared data
       cleared at the end of the transaction. Hooks and operations may put
       arbitrary data in there, and this may also be used as a communication
       channel between the client and the repository.
@@ -421,7 +420,7 @@ class Connection(RequestSessionBase):
       of None (not yet committing), 'precommit' (calling precommit event on
       operations), 'postcommit' (calling postcommit event on operations),
       'uncommitable' (some :exc:`ValidationError` or :exc:`Unauthorized` error
-      has been raised during the transaction and so it must be rollbacked).
+      has been raised during the transaction and so it must be rolled back).
 
     Hooks controls:
 
@@ -660,7 +659,7 @@ class Connection(RequestSessionBase):
 
     # Entity cache management #################################################
     #
-    # The connection entity cache as held in cnx.transaction_data it is removed at end the
+    # The connection entity cache as held in cnx.transaction_data is removed at the
     # end of the connection (commit and rollback)
     #
     # XXX connection level caching may be a pb with multiple repository
@@ -833,9 +832,7 @@ class Connection(RequestSessionBase):
             entity._cw_related_cache['%s_%s' % (rtype, role)] = (
                 rset, tuple(entities))
 
-    # Tracking of entity added of removed in the transaction ##################
-    #
-    # Those are function to  allows cheap call from client in other process.
+    # Tracking of entities added of removed in the transaction ##################
 
     @_open_only
     def deleted_in_transaction(self, eid):
@@ -982,6 +979,7 @@ class Connection(RequestSessionBase):
         num = self.transaction_data.setdefault('tx_action_count', 0) + 1
         self.transaction_data['tx_action_count'] = num
         return num
+
     # db-api like interface ###################################################
 
     @_open_only
@@ -995,7 +993,7 @@ class Connection(RequestSessionBase):
         metas = self.repo.type_and_source_from_eid(eid, self)
         if asdict:
             return dict(zip(('type', 'source', 'extid', 'asource'), metas))
-       # XXX :-1 for cw compat, use asdict=True for full information
+        # XXX :-1 for cw compat, use asdict=True for full information
         return metas[:-1]
 
     @_with_cnx_set
@@ -1211,6 +1209,7 @@ def cnx_meth(meth_name):
         if getattr(result, '_cw', None) is not None:
             result._cw = session
         return result
+    meth_from_cnx.__doc__ = getattr(Connection, meth_name).__doc__
     return meth_from_cnx
 
 class Timestamp(object):
@@ -1229,14 +1228,13 @@ class Session(RequestSessionBase): # XXX repoapi: stop being a
                                    # RequestSessionBase at some point
     """Repository user session
 
-    This tie all together:
+    This ties all together:
      * session id,
      * user,
      * connections set,
      * other session data.
 
-    About session storage / transactions
-    ------------------------------------
+    **About session storage / transactions**
 
     Here is a description of internal session attributes. Besides :attr:`data`
     and :attr:`transaction_data`, you should not have to use attributes
@@ -1280,8 +1278,8 @@ class Session(RequestSessionBase): # XXX repoapi: stop being a
       used by another session as long as no writing is done. This means we can
       have multiple sessions with a reasonably low connections set pool size.
 
-    .. automethod:: cubicweb.server.session.set_cnxset
-    .. automethod:: cubicweb.server.session.free_cnxset
+      .. automethod:: cubicweb.server.session.Session.set_cnxset
+      .. automethod:: cubicweb.server.session.Session.free_cnxset
 
       :attr:`mode`, string telling the connections set handling mode, may be one
       of 'read' (connections set may be freed), 'write' (some write was done in
@@ -1296,7 +1294,7 @@ class Session(RequestSessionBase): # XXX repoapi: stop being a
       of None (not yet committing), 'precommit' (calling precommit event on
       operations), 'postcommit' (calling postcommit event on operations),
       'uncommitable' (some :exc:`ValidationError` or :exc:`Unauthorized` error
-      has been raised during the transaction and so it must be rollbacked).
+      has been raised during the transaction and so it must be rolled back).
 
     .. automethod:: cubicweb.server.session.Session.commit
     .. automethod:: cubicweb.server.session.Session.rollback
@@ -1449,7 +1447,7 @@ class Session(RequestSessionBase): # XXX repoapi: stop being a
         call `session.commit()` on normal exit.
 
         The `free_cnxset` will be given to rollback/commit methods to indicate
-        wether the connections set should be freed or not.
+        whether the connections set should be freed or not.
         """
         return transaction(self, free_cnxset)
 
@@ -1505,7 +1503,7 @@ class Session(RequestSessionBase): # XXX repoapi: stop being a
     def keep_cnxset_mode(self, mode):
         """set `mode`, e.g. how the session will keep its connections set:
 
-        * if mode == 'write', the connections set is freed after each ready
+        * if mode == 'write', the connections set is freed after each read
           query, but kept until the transaction's end (eg commit or rollback)
           when a write query is detected (eg INSERT/SET/DELETE queries)
 
@@ -1631,7 +1629,7 @@ class Session(RequestSessionBase): # XXX repoapi: stop being a
         """commit the current session's transaction"""
         cstate = self._cnx.commit_state
         if cstate == 'uncommitable':
-            raise QueryError('transaction must be rollbacked')
+            raise QueryError('transaction must be rolled back')
         try:
             return self._cnx.commit(free_cnxset, reset_pool)
         finally:
@@ -1652,7 +1650,7 @@ class Session(RequestSessionBase): # XXX repoapi: stop being a
             self._closed = True
         tracker.close()
         self.rollback()
-        self.info('waiting for open connection of session: %s', self)
+        self.debug('waiting for open connection of session: %s', self)
         timeout = 10
         pendings = tracker.wait(timeout)
         if pendings:
@@ -1747,6 +1745,7 @@ class InternalSession(Session):
         self.user._cw = self # XXX remove when "vreg = user._cw.vreg" hack in entity.py is gone
         if not safe:
             self.disable_hook_categories('integrity')
+            self._tx.ctx_count += 1
 
     def __enter__(self):
         return self

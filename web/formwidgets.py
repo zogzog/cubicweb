@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -515,7 +515,8 @@ class InOutWidget(Select):
                                              name=field.dom_id(form),
                                              type="hidden"))
             else:
-                options.append(tags.option(label, value=value))
+                if value not in values:
+                    options.append(tags.option(label, value=value))
         if 'size' not in attrs:
             attrs['size'] = self.default_size
         if 'id' in attrs :
@@ -541,6 +542,7 @@ class InOutWidget(Select):
                  'addinput' : self.add_button % jsnodes,
                  'removeinput': self.remove_button % jsnodes
                  })
+
 
 class BitSelect(Select):
     """Select widget for IntField using a vocabulary with bit masks as values.
@@ -587,13 +589,7 @@ class CheckBox(Input):
     def _render(self, form, field, renderer):
         curvalues, attrs = self.values_and_attributes(form, field)
         domid = attrs.pop('id', None)
-        # XXX turn this as initializer argument
-        try:
-            sep = attrs.pop('separator')
-            warn('[3.8] separator should be specified using initializer argument',
-                 DeprecationWarning)
-        except KeyError:
-            sep = self.separator
+        sep = self.separator
         options = []
         for i, option in enumerate(field.vocabulary(form)):
             try:
@@ -691,16 +687,17 @@ class JQueryDatePicker(FieldWidget):
                        '{buttonImage: "%s", dateFormat: "%s", firstDay: 1,'
                        ' showOn: "button", buttonImageOnly: true})' % (
                            domid, req.uiprops['CALENDAR_ICON'], fmt))
-        return self._render_input(form, field, domid)
+        return self._render_input(form, field)
 
-    def _render_input(self, form, field, domid):
+    def _render_input(self, form, field):
         if self.value is None:
             value = self.values(form, field)[0]
         else:
             value = self.value
         attrs = self.attributes(form, field)
         attrs.setdefault('size', unicode(self.default_size))
-        return tags.input(name=domid, value=value, type='text', **attrs)
+        return tags.input(name=field.input_name(form, self.suffix),
+                          value=value, type='text', **attrs)
 
 
 class JQueryTimePicker(JQueryDatePicker):
@@ -720,7 +717,7 @@ class JQueryTimePicker(JQueryDatePicker):
         domid = field.dom_id(form, self.suffix)
         form._cw.add_onload(u'cw.jqNode("%s").timePicker({step: %s, separator: "%s"})' % (
                 domid, self.timesteps, self.separator))
-        return self._render_input(form, field, domid)
+        return self._render_input(form, field)
 
 
 class JQueryDateTimePicker(FieldWidget):
@@ -1016,6 +1013,8 @@ class Button(Input):
     time, you should not give an already translated string.
     """
     type = 'button'
+    css_class = 'validateButton'
+
     def __init__(self, label=stdmsgs.BUTTON_OK, attrs=None,
                  setdomid=None, settabindex=None,
                  name='', value='', onclick=None, cwaction=None):
@@ -1030,7 +1029,7 @@ class Button(Input):
         self.value = ''
         self.onclick = onclick
         self.cwaction = cwaction
-        self.attrs.setdefault('class', 'validateButton')
+        self.attrs.setdefault('class', self.css_class)
 
     def render(self, form, field=None, renderer=None):
         label = form._cw._(self.label)

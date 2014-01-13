@@ -49,10 +49,10 @@ def make_uid(key=None):
     """Return a unique identifier string.
 
     if specified, `key` is used to prefix the generated uid so it can be used
-    for instance as a DOM id or as sql table names.
+    for instance as a DOM id or as sql table name.
 
     See uuid.uuid4 documentation for the shape of the generated identifier, but
-    this is basicallly a 32 bits hexadecimal string.
+    this is basically a 32 bits hexadecimal string.
     """
     if key is None:
         return uuid4().hex
@@ -195,6 +195,8 @@ class RepeatList(object):
         if isinstance(other, RepeatList):
             return other._size == self._size and other._item == self._item
         return self[:] == other
+    # py3k future warning "Overriding __eq__ blocks inheritance of __hash__ in 3.x"
+    # is annoying but won't go away because we don't want to hash() the repeatlist
     def pop(self, i):
         self._size -= 1
 

@@ -34,9 +34,8 @@ from cubicweb.cwconfig import CONFIGURATIONS
 from cubicweb.web.webconfig import WebConfiguration
 
 
-class TwistedConfiguration(WebConfiguration):
+class WebConfigurationBase(WebConfiguration):
     """web instance (in a twisted web server) client of a RQL server"""
-    name = 'twisted'
 
     options = merge_options((
         # ctl configuration
@@ -107,19 +106,17 @@ much greater than connection-poolsize",
         return 'http://%s:%s/' % (self['host'] or getfqdn(), self['port'] or 8080)
 
 
-CONFIGURATIONS.append(TwistedConfiguration)
-
 try:
     from cubicweb.server.serverconfig import ServerConfiguration
 
-    class AllInOneConfiguration(TwistedConfiguration, ServerConfiguration):
+    class AllInOneConfiguration(WebConfigurationBase, ServerConfiguration):
         """repository and web instance in the same twisted process"""
         name = 'all-in-one'
-        options = merge_options(TwistedConfiguration.options
+        options = merge_options(WebConfigurationBase.options
                                 + ServerConfiguration.options)
 
-        cubicweb_appobject_path = TwistedConfiguration.cubicweb_appobject_path | ServerConfiguration.cubicweb_appobject_path
-        cube_appobject_path = TwistedConfiguration.cube_appobject_path | ServerConfiguration.cube_appobject_path
+        cubicweb_appobject_path = WebConfigurationBase.cubicweb_appobject_path | ServerConfiguration.cubicweb_appobject_path
+        cube_appobject_path = WebConfigurationBase.cube_appobject_path | ServerConfiguration.cube_appobject_path
         def pyro_enabled(self):
             """tell if pyro is activated for the in memory repository"""
             return self['pyro-server']

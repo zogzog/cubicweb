@@ -25,6 +25,15 @@ class InternalSessionTC(CubicWebTC):
         self.assertFalse(session.running_dbapi_query)
         session.close()
 
+    def test_integrity_hooks(self):
+        with self.repo.internal_session() as session:
+            self.assertEqual(HOOKS_ALLOW_ALL, session.hooks_mode)
+            self.assertEqual(set(('integrity',)), session.disabled_hook_categories)
+            self.assertEqual(set(), session.enabled_hook_categories)
+            session.commit()
+            self.assertEqual(HOOKS_ALLOW_ALL, session.hooks_mode)
+            self.assertEqual(set(('integrity',)), session.disabled_hook_categories)
+            self.assertEqual(set(), session.enabled_hook_categories)
 
 class SessionTC(CubicWebTC):
 

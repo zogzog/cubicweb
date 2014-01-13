@@ -1065,6 +1065,25 @@ class SynchronizeSourceCommand(Command):
             if val:
                 print key, ':', val
 
+
+
+def permissionshandler(relation, perms):
+    from yams.schema import RelationDefinitionSchema
+    from yams.buildobjs import DEFAULT_ATTRPERMS
+    from cubicweb.schema import (PUB_SYSTEM_ENTITY_PERMS, PUB_SYSTEM_REL_PERMS,
+                                 PUB_SYSTEM_ATTR_PERMS, RO_REL_PERMS, RO_ATTR_PERMS)
+    defaultrelperms = (DEFAULT_ATTRPERMS, PUB_SYSTEM_REL_PERMS,
+                       PUB_SYSTEM_ATTR_PERMS, RO_REL_PERMS, RO_ATTR_PERMS)
+    defaulteperms = (PUB_SYSTEM_ENTITY_PERMS,)
+    # canonicalize vs str/unicode
+    for p in ('read', 'add', 'update', 'delete'):
+        rule = perms.get(p)
+        if rule:
+            perms[p] = tuple(str(x) if isinstance(x, basestring) else x
+                             for x in rule)
+    return perms, perms in defaultrelperms or perms in defaulteperms
+
+
 class SchemaDiffCommand(Command):
     """Generate a diff between schema and fsschema description.
 
@@ -1085,7 +1104,7 @@ class SchemaDiffCommand(Command):
         repo, cnx = repo_cnx(config)
         session = repo._get_session(cnx.sessionid, setcnxset=True)
         fsschema = config.load_schema(expand_cubes=True)
-        schema_diff(repo.schema, fsschema, diff_tool)
+        schema_diff(fsschema, repo.schema, permissionshandler, diff_tool, ignore=('eid',))
 
 
 for cmdclass in (CreateInstanceDBCommand, InitInstanceCommand,

@@ -132,6 +132,8 @@ class CubicWebSchemaTC(TestCase):
         self.assertRaises(RQLSyntaxError, ERQLExpression, '1')
         expr = ERQLExpression('X travaille S, S owned_by U')
         self.assertEqual(str(expr), 'Any X WHERE X travaille S, S owned_by U, X eid %(x)s, U eid %(u)s')
+        expr = ERQLExpression('X foo S, S bar U, X baz XE, S quux SE HAVING XE > SE')
+        self.assertEqual(str(expr), 'Any X WHERE X foo S, S bar U, X baz XE, S quux SE, X eid %(x)s, U eid %(u)s HAVING XE > SE')
 
     def test_rrqlexpression(self):
         self.assertRaises(Exception, RRQLExpression, '1')
@@ -157,7 +159,7 @@ class SchemaReaderClassTest(TestCase):
         self.assert_(isinstance(schema, CubicWebSchema))
         self.assertEqual(schema.name, 'data')
         entities = sorted([str(e) for e in schema.entities()])
-        expected_entities = ['BaseTransition', 'BigInt', 'Bookmark', 'Boolean', 'Bytes', 'Card',
+        expected_entities = ['Ami', 'BaseTransition', 'BigInt', 'Bookmark', 'Boolean', 'Bytes', 'Card',
                              'Date', 'Datetime', 'Decimal',
                              'CWCache', 'CWConstraint', 'CWConstraintType', 'CWDataImport',
                              'CWEType', 'CWAttribute', 'CWGroup', 'EmailAddress', 'CWRelation',
@@ -216,6 +218,8 @@ class SchemaReaderClassTest(TestCase):
                               'value',
 
                               'wf_info_for', 'wikiid', 'workflow_of', 'tr_count']
+        if config.cube_version('file') >= (1, 14, 0):
+            expected_relations.append('data_sha1hex')
 
         self.assertListEqual(sorted(expected_relations), relations)
 

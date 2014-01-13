@@ -231,6 +231,8 @@ td.calendar table {
  font-weight:bold;
  padding-bottom:0.2em;
  background: %(incontextBoxBodyBgColor)s;
+ border-top-left-radius: 6px;
+ border-top-right-radius: 6px;
 }
 
 .calendar th.month a{

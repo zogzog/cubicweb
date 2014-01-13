@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -673,12 +673,6 @@ class _CubicWebRequestBase(RequestSessionBase):
                 cssfile = self.data_url(cssfile)
             add_css(cssfile, media, *extraargs)
 
-    @deprecated('[3.9] use ajax_replace_url() instead, naming rql and vid arguments')
-    def build_ajax_replace_url(self, nodeid, rql, vid, replacemode='replace',
-                               **extraparams):
-        return self.ajax_replace_url(nodeid, replacemode, rql=rql, vid=vid,
-                                     **extraparams)
-
     def ajax_replace_url(self, nodeid, replacemode='replace', **extraparams):
         """builds an ajax url that will replace nodeid's content
 
@@ -760,11 +754,13 @@ class _CubicWebRequestBase(RequestSessionBase):
             return controller
         return 'view'
 
-    def validate_cache(self):
-        """raise a `StatusResponse` exception if a cached page along the way
-        exists and is still usable.
+    def is_client_cache_valid(self):
+        """check if a client cached page exists (as specified in request
+        headers) and is still usable.
 
-        calls the client-dependant implementation of `_validate_cache`
+        Return False if the page has to be calculated, else True.
+
+        Some response cache headers may be set by this method.
         """
         modified = True
         if self.get_header('Cache-Control') not in ('max-age=0', 'no-cache'):
@@ -779,15 +775,30 @@ class _CubicWebRequestBase(RequestSessionBase):
                 # Expires header seems to be required by IE7 -- Are you sure ?
                 self.add_header('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT')
             if self.http_method() == 'HEAD':
-                raise StatusResponse(200, '')
-            # /!\ no raise, the function returns and we keep processing the request)
+                self.status_out = 200
+                # XXX replace by True once validate_cache bw compat method is dropped
+                return 200
+            # /!\ no raise, the function returns and we keep processing the request
         else:
             # overwrite headers_out to forge a brand new not-modified response
             self.headers_out = self._forge_cached_headers()
             if self.http_method() in ('HEAD', 'GET'):
-                raise StatusResponse(httplib.NOT_MODIFIED)
+                self.status_out = httplib.NOT_MODIFIED
             else:
-                raise StatusResponse(httplib.PRECONDITION_FAILED)
+                self.status_out = httplib.PRECONDITION_FAILED
+            # XXX replace by True once validate_cache bw compat method is dropped
+            return self.status_out
+        # XXX replace by False once validate_cache bw compat method is dropped
+        return None
+
+    @deprecated('[3.18] use .is_client_cache_valid() method instead')
+    def validate_cache(self):
+        """raise a `StatusResponse` exception if a cached page along the way
+        exists and is still usable.
+        """
+        status_code = self.is_client_cache_valid()
+        if status_code is not None:
+            raise StatusResponse(status_code)
 
     # abstract methods to override according to the web front-end #############
 
@@ -917,7 +928,7 @@ class _CubicWebRequestBase(RequestSessionBase):
         if reset_xmldecl is not None:
             warn('[3.17] reset_xmldecl is deprecated as we only serve html',
                  DeprecationWarning, stacklevel=2)
-        self.main_stream.set_doctype(doctype, reset_xmldecl)
+        self.main_stream.set_doctype(doctype)
 
     # page data management ####################################################
 
@@ -970,18 +981,6 @@ class _CubicWebRequestBase(RequestSessionBase):
     def html_content_type(self):
         return 'text/html'
 
-    @deprecated('[3.9] use req.uiprops[rid]')
-    def external_resource(self, rid, default=_MARKER):
-        """return a path to an external resource, using its identifier
-
-        raise `KeyError` if the resource is not defined
-        """
-        try:
-            return self.uiprops[rid]
-        except KeyError:
-            if default is _MARKER:
-                raise
-            return default
 
 class DBAPICubicWebRequestBase(_CubicWebRequestBase, DBAPIRequest):
 

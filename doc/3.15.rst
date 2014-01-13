@@ -13,7 +13,7 @@ New functionnalities
   used for entity cache invalidation.
 
 * Improved WSGI support. While there is still some caveats, most of the code
-  which as twisted only is now generic and allows related functionalities to work
+  which was twisted only is now generic and allows related functionalities to work
   with a WSGI front-end.
 
 * Full undo/transaction support : undo of modification has eventually been

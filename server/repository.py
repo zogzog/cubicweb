@@ -37,6 +37,7 @@ from os.path import join
 from datetime import datetime
 from time import time, localtime, strftime
 from contextlib import contextmanager
+from warnings import warn
 
 from logilab.common.decorators import cached, clear_cache
 from logilab.common.deprecation import deprecated
@@ -241,7 +242,7 @@ class Repository(object):
             # load schema from the file system
             if not config.creating:
                 self.warning("set fs instance'schema")
-            self.set_schema(config.load_schema())
+            self.set_schema(config.load_schema(expand_cubes=True))
         else:
             # normal start: load the instance schema from the database
             self.info('loading schema from the repository')
@@ -301,6 +302,8 @@ class Repository(object):
             # initialized)
             source.init(True, sourceent)
             if not source.copy_based_source:
+                warn('[3.18] old multi-source system will go away in the next version',
+                     DeprecationWarning)
                 self.sources.append(source)
                 self.querier.set_planner()
                 if add_to_cnxsets:
@@ -354,9 +357,8 @@ class Repository(object):
             except Exception as ex:
                 import traceback
                 traceback.print_exc()
-                raise Exception('Is the database initialised ? (cause: %s)' %
-                                (ex.args and ex.args[0].strip() or 'unknown')), \
-                                None, sys.exc_info()[-1]
+                raise (Exception('Is the database initialised ? (cause: %s)' % ex),
+                       None, sys.exc_info()[-1])
         return appschema
 
     def _prepare_startup(self):
@@ -410,7 +412,7 @@ class Repository(object):
             return self._cnxsets_pool.get(True, timeout=5)
         except Queue.Empty:
             raise Exception('no connections set available after 5 secs, probably either a '
-                            'bug in code (too many uncommited/rollbacked '
+                            'bug in code (too many uncommited/rolled back '
                             'connections) or too much load on the server (in '
                             'which case you can try to set a bigger '
                             'connections pool size)')
@@ -755,16 +757,7 @@ class Repository(object):
                 #       Zeroed to avoid useless overhead with pyro
                 rset._rqlst = None
                 return rset
-            except (Unauthorized, RQLSyntaxError):
-                raise
-            except ValidationError as ex:
-                # need ValidationError normalization here so error may pass
-                # through pyro
-                if hasattr(ex.entity, 'eid'):
-                    ex.entity = ex.entity.eid # error raised by yams
-                    args = list(ex.args)
-                    args[0] = ex.entity
-                    ex.args = tuple(args)
+            except (ValidationError, Unauthorized, RQLSyntaxError):
                 raise
             except Exception:
                 # FIXME: check error to catch internal errors
@@ -839,7 +832,7 @@ class Repository(object):
         """close the session with the given id"""
         session = self._get_session(sessionid, setcnxset=True, txid=txid,
                                     checkshuttingdown=checkshuttingdown)
-        # operation uncommited before close are rollbacked before hook is called
+        # operation uncommited before close are rolled back before hook is called
         session.rollback(free_cnxset=False)
         self.hm.call_hooks('session_close', session)
         # commit session at this point in case write operation has been done
@@ -981,7 +974,7 @@ class Repository(object):
 
     def _get_session(self, sessionid, setcnxset=False, txid=None,
                      checkshuttingdown=True):
-        """return the user associated to the given session identifier"""
+        """return the session associated with the given session identifier"""
         if checkshuttingdown and self.shutting_down:
             raise ShuttingDown('Repository is shutting down')
         try:
@@ -1408,11 +1401,9 @@ class Repository(object):
                 source.update_entity(session, entity)
                 edited.saved = True
             except UniqueTogetherError as exc:
-                etype, rtypes = exc.args
-                problems = {}
-                for col in rtypes:
-                    problems[col] = session._('violates unique_together constraints (%s)') % (','.join(rtypes))
-                raise ValidationError(entity.eid, problems)
+                userhdlr = session.vreg['adapters'].select(
+                    'IUserFriendlyError', session, entity=entity, exc=exc)
+                userhdlr.raise_user_exception()
             self.system_source.update_info(session, entity, need_fti_update)
             if source.should_call_hooks:
                 if not only_inline_rels:
@@ -1566,10 +1557,6 @@ class Repository(object):
         source.delete_relation(session, subject, rtype, object)
         rschema = self.schema.rschema(rtype)
         session.update_rel_cache_del(subject, rtype, object, rschema.symmetric)
-        if rschema.symmetric:
-            # on symmetric relation, we can't now in which sense it's
-            # stored so try to delete both
-            source.delete_relation(session, object, rtype, subject)
         if source.should_call_hooks:
             self.hm.call_hooks('after_delete_relation', session,
                                eidfrom=subject, rtype=rtype, eidto=object)
@@ -1623,7 +1610,7 @@ class Repository(object):
                 # client was not yet connected to the repo
                 return
             if not session.closed:
-                session.close()
+                self.close(session.id)
         daemon.removeConnection = removeConnection
         return daemon
 
@@ -1639,18 +1626,24 @@ class Repository(object):
 
     @cached
     def rel_type_sources(self, rtype):
+        warn('[3.18] old multi-source system will go away in the next version',
+             DeprecationWarning)
         return tuple([source for source in self.sources
                       if source.support_relation(rtype)
                       or rtype in source.dont_cross_relations])
 
     @cached
     def can_cross_relation(self, rtype):
+        warn('[3.18] old multi-source system will go away in the next version',
+             DeprecationWarning)
         return tuple([source for source in self.sources
                       if source.support_relation(rtype)
                       and rtype in source.cross_relations])
 
     @cached
     def is_multi_sources_relation(self, rtype):
+        warn('[3.18] old multi-source system will go away in the next version',
+             DeprecationWarning)
         return any(source for source in self.sources
                    if not source is self.system_source
                    and source.support_relation(rtype))

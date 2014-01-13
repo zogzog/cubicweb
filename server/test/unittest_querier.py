@@ -1,5 +1,5 @@
 # -*- coding: iso-8859-1 -*-
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -383,9 +383,9 @@ class QuerierTC(BaseQuerierTC):
         self.execute("INSERT Personne X: X nom 'bidule'")[0]
         rset = self.execute('Any Y where X name TMP, Y nom in (TMP, "bidule")')
         #self.assertEqual(rset.description, [('Personne',), ('Personne',)])
-        self.assert_(('Personne',) in rset.description)
+        self.assertIn(('Personne',), rset.description)
         rset = self.execute('DISTINCT Any Y where X name TMP, Y nom in (TMP, "bidule")')
-        self.assert_(('Personne',) in rset.description)
+        self.assertIn(('Personne',), rset.description)
 
     def test_select_not_attr(self):
         peid = self.execute("INSERT Personne X: X nom 'bidule'")[0][0]
@@ -466,8 +466,8 @@ class QuerierTC(BaseQuerierTC):
         self.execute("SET X tags Y WHERE X eid %(t)s, Y eid %(g)s",
                      {'g': geid, 't': teid})
         rset = self.execute("Any GN,TN ORDERBY GN WHERE T? tags G, T name TN, G name GN")
-        self.assertTrue(['users', 'tag'] in rset.rows)
-        self.assertTrue(['activated', None] in rset.rows)
+        self.assertIn(['users', 'tag'], rset.rows)
+        self.assertIn(['activated', None], rset.rows)
         rset = self.execute("Any GN,TN ORDERBY GN WHERE T tags G?, T name TN, G name GN")
         self.assertEqual(rset.rows, [[None, 'tagbis'], ['users', 'tag']])
 
@@ -576,7 +576,7 @@ class QuerierTC(BaseQuerierTC):
         self.assertListEqual(rset.rows,
                               [[u'description_format', 12],
                                [u'description', 13],
-                               [u'name', 16],
+                               [u'name', 17],
                                [u'created_by', 43],
                                [u'creation_date', 43],
                                [u'cw_source', 43],
@@ -818,11 +818,11 @@ class QuerierTC(BaseQuerierTC):
         self.execute("INSERT Tag X: X name 'bidule', X creation_date NOW")
         self.execute("INSERT Tag Y: Y name 'toto'")
         rset = self.execute("Any D WHERE X name in ('bidule', 'toto') , X creation_date D")
-        self.assert_(isinstance(rset.rows[0][0], datetime), rset.rows)
+        self.assertIsInstance(rset.rows[0][0], datetime)
         rset = self.execute('Tag X WHERE X creation_date TODAY')
         self.assertEqual(len(rset.rows), 2)
         rset = self.execute('Any MAX(D) WHERE X is Tag, X creation_date D')
-        self.assertTrue(isinstance(rset[0][0], datetime), (rset[0][0], type(rset[0][0])))
+        self.assertIsInstance(rset[0][0], datetime)
 
     def test_today(self):
         self.execute("INSERT Tag X: X name 'bidule', X creation_date TODAY")
@@ -1268,11 +1268,20 @@ Any P1,B,E WHERE P1 identity P2 WITH
         newname = self.execute('Any XN WHERE X eid %(x)s, X title XN', {'x': beid})[0][0]
         self.assertEqual(newname, 'toto-moved')
 
+    def test_update_not_exists(self):
+        rset = self.execute("INSERT Personne X, Societe Y: X nom 'bidule', Y nom 'toto'")
+        eid1, eid2 = rset[0][0], rset[0][1]
+        rset = self.execute("SET X travaille Y WHERE X eid %(x)s, Y eid %(y)s, "
+                            "NOT EXISTS(Z ecrit_par X)",
+                            {'x': unicode(eid1), 'y': unicode(eid2)})
+        self.assertEqual(tuplify(rset.rows), [(eid1, eid2)])
+
     def test_update_query_error(self):
         self.execute("INSERT Personne Y: Y nom 'toto'")
         self.assertRaises(Exception, self.execute, "SET X nom 'toto', X is Personne")
         self.assertRaises(QueryError, self.execute, "SET X nom 'toto', X has_text 'tutu' WHERE X is Personne")
         self.assertRaises(QueryError, self.execute, "SET X login 'tutu', X eid %s" % cnx.user(self.session).eid)
+
 
     # HAVING on write queries test #############################################
 

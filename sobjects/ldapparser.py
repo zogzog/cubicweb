@@ -71,7 +71,7 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
         return {}
 
     def _process(self, etype, sdict):
-        self.warning('fetched %s %s', etype, sdict)
+        self.debug('fetched %s %s', etype, sdict)
         extid = sdict['dn']
         entity = self.extid2entity(extid, etype, **sdict)
         if entity is not None and not self.created_during_pull(entity):
@@ -105,7 +105,7 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
             for etype, eids in byetype.iteritems():
                 if etype != 'CWUser':
                     continue
-                self.warning('deactivate %s %s entities', len(eids), etype)
+                self.info('deactivate %s %s entities', len(eids), etype)
                 for eid in eids:
                     wf = session.entity_from_eid(eid).cw_adapt_to('IWorkflowable')
                     wf.fire_transition_if_possible('deactivate')
@@ -119,7 +119,7 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
             wf = entity.cw_adapt_to('IWorkflowable')
             if wf.state == 'deactivated':
                 wf.fire_transition('activate')
-                self.warning('user %s reactivated', entity.login)
+                self.info('user %s reactivated', entity.login)
         mdate = attrs.get('modification_date')
         if not mdate or mdate > entity.modification_date:
             attrs = dict( (k, v) for k, v in attrs.iteritems()

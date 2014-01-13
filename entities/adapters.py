@@ -1,4 +1,4 @@
-# copyright 2010-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2010-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -28,9 +28,7 @@ from logilab.mtconverter import TransformError
 from logilab.common.decorators import cached
 
 from cubicweb import ValidationError, view
-from cubicweb.predicates import (implements, is_instance, relation_possible,
-                                match_exception)
-from cubicweb.interfaces import IDownloadable, ITree
+from cubicweb.predicates import is_instance, relation_possible, match_exception
 
 
 class IEmailableAdapter(view.EntityAdapter):
@@ -67,11 +65,9 @@ class IEmailableAdapter(view.EntityAdapter):
 
 
 class INotifiableAdapter(view.EntityAdapter):
-    __needs_bw_compat__ = True
     __regid__ = 'INotifiable'
     __select__ = is_instance('Any')
 
-    @view.implements_adapter_compat('INotifiableAdapter')
     def notification_references(self, view):
         """used to control References field of email send on notification
         for this entity. `view` is the notification view.
@@ -167,27 +163,25 @@ def merge_weight_dict(maindict, newdict):
 
 class IDownloadableAdapter(view.EntityAdapter):
     """interface for downloadable entities"""
-    __needs_bw_compat__ = True
     __regid__ = 'IDownloadable'
-    __select__ = implements(IDownloadable, warn=False) # XXX for bw compat, else should be abstract
+    __abstract__ = True
 
-    @view.implements_adapter_compat('IDownloadable')
     def download_url(self, **kwargs): # XXX not really part of this interface
         """return an url to download entity's content"""
         raise NotImplementedError
-    @view.implements_adapter_compat('IDownloadable')
+
     def download_content_type(self):
         """return MIME type of the downloadable content"""
         raise NotImplementedError
-    @view.implements_adapter_compat('IDownloadable')
+
     def download_encoding(self):
         """return encoding of the downloadable content"""
         raise NotImplementedError
-    @view.implements_adapter_compat('IDownloadable')
+
     def download_file_name(self):
         """return file name of the downloadable content"""
         raise NotImplementedError
-    @view.implements_adapter_compat('IDownloadable')
+
     def download_data(self):
         """return actual data of the downloadable content"""
         raise NotImplementedError
@@ -219,27 +213,16 @@ class ITreeAdapter(view.EntityAdapter):
     .. automethod: children_rql
     .. automethod: path
     """
-    __needs_bw_compat__ = True
     __regid__ = 'ITree'
-    __select__ = implements(ITree, warn=False) # XXX for bw compat, else should be abstract
+    __abstract__ = True
 
     child_role = 'subject'
     parent_role = 'object'
 
-    @property
-    def tree_relation(self):
-        warn('[3.9] tree_attribute is deprecated, define tree_relation on a custom '
-             'ITree for %s instead' % (self.entity.__class__),
-             DeprecationWarning)
-        return self.entity.tree_attribute
-
-    # XXX should be removed from the public interface
-    @view.implements_adapter_compat('ITree')
     def children_rql(self):
         """Returns RQL to get the children of the entity."""
         return self.entity.cw_related_rql(self.tree_relation, self.parent_role)
 
-    @view.implements_adapter_compat('ITree')
     def different_type_children(self, entities=True):
         """Return children entities of different type as this entity.
 
@@ -253,7 +236,6 @@ class ITreeAdapter(view.EntityAdapter):
             return [e for e in res if e.e_schema != eschema]
         return res.filtered_rset(lambda x: x.e_schema != eschema, self.entity.cw_col)
 
-    @view.implements_adapter_compat('ITree')
     def same_type_children(self, entities=True):
         """Return children entities of the same type as this entity.
 
@@ -267,23 +249,19 @@ class ITreeAdapter(view.EntityAdapter):
             return [e for e in res if e.e_schema == eschema]
         return res.filtered_rset(lambda x: x.e_schema is eschema, self.entity.cw_col)
 
-    @view.implements_adapter_compat('ITree')
     def is_leaf(self):
         """Returns True if the entity does not have any children."""
         return len(self.children()) == 0
 
-    @view.implements_adapter_compat('ITree')
     def is_root(self):
         """Returns true if the entity is root of the tree (e.g. has no parent).
         """
         return self.parent() is None
 
-    @view.implements_adapter_compat('ITree')
     def root(self):
         """Return the root entity of the tree."""
         return self._cw.entity_from_eid(self.path()[0])
 
-    @view.implements_adapter_compat('ITree')
     def parent(self):
         """Returns the parent entity if any, else None (e.g. if we are on the
         root).
@@ -294,7 +272,6 @@ class ITreeAdapter(view.EntityAdapter):
         except (KeyError, IndexError):
             return None
 
-    @view.implements_adapter_compat('ITree')
     def children(self, entities=True, sametype=False):
         """Return children entities.
 
@@ -307,7 +284,6 @@ class ITreeAdapter(view.EntityAdapter):
             return self.entity.related(self.tree_relation, self.parent_role,
                                        entities=entities)
 
-    @view.implements_adapter_compat('ITree')
     def iterparents(self, strict=True):
         """Return an iterator on the parents of the entity."""
         def _uptoroot(self):
@@ -322,7 +298,6 @@ class ITreeAdapter(view.EntityAdapter):
             return chain([self.entity], _uptoroot(self))
         return _uptoroot(self)
 
-    @view.implements_adapter_compat('ITree')
     def iterchildren(self, _done=None):
         """Return an iterator over the item's children."""
         if _done is None:
@@ -334,7 +309,6 @@ class ITreeAdapter(view.EntityAdapter):
             yield child
             _done.add(child.eid)
 
-    @view.implements_adapter_compat('ITree')
     def prefixiter(self, _done=None):
         """Return an iterator over the item's descendants in a prefixed order."""
         if _done is None:
@@ -347,7 +321,6 @@ class ITreeAdapter(view.EntityAdapter):
             for entity in child.cw_adapt_to('ITree').prefixiter(_done):
                 yield entity
 
-    @view.implements_adapter_compat('ITree')
     @cached
     def path(self):
         """Returns the list of eids from the root object to this object."""
@@ -379,6 +352,7 @@ from cubicweb import UniqueTogetherError
 class IUserFriendlyError(view.EntityAdapter):
     __regid__ = 'IUserFriendlyError'
     __abstract__ = True
+
     def __init__(self, *args, **kwargs):
         self.exc = kwargs.pop('exc')
         super(IUserFriendlyError, self).__init__(*args, **kwargs)
@@ -386,11 +360,16 @@ class IUserFriendlyError(view.EntityAdapter):
 
 class IUserFriendlyUniqueTogether(IUserFriendlyError):
     __select__ = match_exception(UniqueTogetherError)
+
     def raise_user_exception(self):
-        etype, rtypes = self.exc.args
-        msg = self._cw._('violates unique_together constraints (%s)') % (
-            ', '.join([self._cw._(rtype) for rtype in rtypes]))
-        raise ValidationError(self.entity.eid, dict((col, msg) for col in rtypes))
+        _ = self._cw._
+        rtypes = self.exc.rtypes
+        rtypes_msg = {}
+        for rtype in rtypes:
+            rtypes_msg[rtype] = _('%s is part of violated unicity constraint') % rtype
+        globalmsg = _('some relations violate a unicity constraint')
+        rtypes_msg['unicity constraint'] = globalmsg
+        raise ValidationError(self.entity.eid, rtypes_msg)
 
 # deprecated ###################################################################
 

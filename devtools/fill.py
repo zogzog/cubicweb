@@ -139,7 +139,7 @@ title
     def generate_integer(self, entity, attrname, index):
         """generates a consistent value for 'attrname' if it's an integer"""
         return self._constrained_generate(entity, attrname, 0, 1, index)
-    generate_int = generate_integer
+    generate_int = generate_bigint = generate_integer
 
     def generate_float(self, entity, attrname, index):
         """generates a consistent value for 'attrname' if it's a float"""

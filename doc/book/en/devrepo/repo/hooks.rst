@@ -237,7 +237,7 @@ This exception is used to convey enough information up to the user
 interface. Hence its constructor is different from the default Exception
 constructor. It accepts, positionally:
 
-* an entity eid,
+* an entity eid (**not the entity itself**),
 
 * a dict whose keys represent attribute (or relation) names and values
   an end-user facing message (hence properly translated) relating the

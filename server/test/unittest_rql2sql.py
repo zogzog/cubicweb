@@ -1070,68 +1070,6 @@ FUNCS = [
 FROM cw_Personne AS _P'''),
     ]
 
-SYMMETRIC = [
-    ('Any P WHERE X eid 0, X connait P',
-     '''SELECT DISTINCT _P.cw_eid
-FROM connait_relation AS rel_connait0, cw_Personne AS _P
-WHERE (rel_connait0.eid_from=0 AND rel_connait0.eid_to=_P.cw_eid OR rel_connait0.eid_to=0 AND rel_connait0.eid_from=_P.cw_eid)'''
-     ),
-
-    ('Any P WHERE X connait P',
-    '''SELECT DISTINCT _P.cw_eid
-FROM connait_relation AS rel_connait0, cw_Personne AS _P
-WHERE (rel_connait0.eid_to=_P.cw_eid OR rel_connait0.eid_from=_P.cw_eid)'''
-    ),
-
-    ('Any X WHERE X connait P',
-    '''SELECT DISTINCT _X.cw_eid
-FROM connait_relation AS rel_connait0, cw_Personne AS _X
-WHERE (rel_connait0.eid_from=_X.cw_eid OR rel_connait0.eid_to=_X.cw_eid)'''
-     ),
-
-    ('Any P WHERE X eid 0, NOT X connait P',
-     '''SELECT _P.cw_eid
-FROM cw_Personne AS _P
-WHERE NOT (EXISTS(SELECT 1 FROM connait_relation AS rel_connait0 WHERE (rel_connait0.eid_from=0 AND rel_connait0.eid_to=_P.cw_eid OR rel_connait0.eid_to=0 AND rel_connait0.eid_from=_P.cw_eid)))'''),
-
-    ('Any P WHERE NOT X connait P',
-    '''SELECT _P.cw_eid
-FROM cw_Personne AS _P
-WHERE NOT (EXISTS(SELECT 1 FROM connait_relation AS rel_connait0 WHERE (rel_connait0.eid_to=_P.cw_eid OR rel_connait0.eid_from=_P.cw_eid)))'''),
-
-    ('Any X WHERE NOT X connait P',
-    '''SELECT _X.cw_eid
-FROM cw_Personne AS _X
-WHERE NOT (EXISTS(SELECT 1 FROM connait_relation AS rel_connait0 WHERE (rel_connait0.eid_from=_X.cw_eid OR rel_connait0.eid_to=_X.cw_eid)))'''),
-
-    ('Any P WHERE X connait P, P nom "nom"',
-     '''SELECT DISTINCT _P.cw_eid
-FROM connait_relation AS rel_connait0, cw_Personne AS _P
-WHERE (rel_connait0.eid_to=_P.cw_eid OR rel_connait0.eid_from=_P.cw_eid) AND _P.cw_nom=nom'''),
-
-    ('Any X WHERE X connait P, P nom "nom"',
-     '''SELECT DISTINCT _X.cw_eid
-FROM connait_relation AS rel_connait0, cw_Personne AS _P, cw_Personne AS _X
-WHERE (rel_connait0.eid_from=_X.cw_eid AND rel_connait0.eid_to=_P.cw_eid OR rel_connait0.eid_to=_X.cw_eid AND rel_connait0.eid_from=_P.cw_eid) AND _P.cw_nom=nom'''
-    ),
-
-    ('DISTINCT Any P WHERE P connait S OR S connait P, S nom "chouette"',
-     '''SELECT DISTINCT _P.cw_eid
-FROM connait_relation AS rel_connait0, cw_Personne AS _P, cw_Personne AS _S
-WHERE (rel_connait0.eid_from=_P.cw_eid AND rel_connait0.eid_to=_S.cw_eid OR rel_connait0.eid_to=_P.cw_eid AND rel_connait0.eid_from=_S.cw_eid) AND _S.cw_nom=chouette'''
-     )
-    ]
-
-SYMMETRIC_WITH_LIMIT = [
-        ('Any X ORDERBY X DESC LIMIT 9 WHERE E eid 0, E connait X',
-    '''SELECT DISTINCT _X.cw_eid
-FROM connait_relation AS rel_connait0, cw_Personne AS _X
-WHERE (rel_connait0.eid_from=0 AND rel_connait0.eid_to=_X.cw_eid OR rel_connait0.eid_to=0 AND rel_connait0.eid_from=_X.cw_eid)
-ORDER BY 1 DESC
-LIMIT 9'''
-     ),
-]
-
 INLINE = [
 
     ('Any P WHERE N eid 1, N ecrit_par P, NOT P owned_by P2',
@@ -1478,6 +1416,20 @@ ORDER BY 1)'''),
     def test_subquery(self):
         for t in self._parse((
 
+            ('Any X,N '
+             'WHERE NOT EXISTS(X owned_by U) '
+             'WITH X,N BEING '
+             '((Any X,N WHERE X name N, X is State)'
+             ' UNION '
+             '(Any XX,NN WHERE XX name NN, XX is Transition))',
+             '''SELECT _T0.C0, _T0.C1
+FROM ((SELECT _X.cw_eid AS C0, _X.cw_name AS C1
+FROM cw_State AS _X)
+UNION ALL
+(SELECT _XX.cw_eid AS C0, _XX.cw_name AS C1
+FROM cw_Transition AS _XX)) AS _T0
+WHERE NOT (EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_by0 WHERE rel_owned_by0.eid_from=_T0.C0))'''),
+
             ('Any N ORDERBY 1 WITH N BEING '
              '((Any N WHERE X name N, X is State)'
              ' UNION '
@@ -1541,7 +1493,18 @@ WHERE _A.cw_ordernum=_T0.C0'''),
 FROM (SELECT MAX(_A.cw_ordernum) AS C0
 FROM cw_CWAttribute AS _A) AS _T0 LEFT OUTER JOIN (SELECT MAX(_A.cw_ordernum) AS C0
 FROM cw_CWRelation AS _A) AS _T1 ON (_T0.C0=_T1.C0)'''),
-            )):
+
+            ('''Any TT1,STD,STDD WHERE TT2 identity TT1?
+ WITH TT1,STDD BEING (Any T,SUM(TD) GROUPBY T WHERE T is Affaire, T duration TD, TAG? tags T, TAG name "t"),
+      TT2,STD BEING (Any T,SUM(TD) GROUPBY T WHERE T is Affaire, T duration TD)''',
+             '''SELECT _T0.C0, _T1.C1, _T0.C1
+FROM (SELECT _T.cw_eid AS C0, SUM(_T.cw_duration) AS C1
+FROM cw_Affaire AS _T
+GROUP BY _T.cw_eid) AS _T1 LEFT OUTER JOIN (SELECT _T.cw_eid AS C0, SUM(_T.cw_duration) AS C1
+FROM cw_Affaire AS _T LEFT OUTER JOIN tags_relation AS rel_tags0 ON (rel_tags0.eid_to=_T.cw_eid) LEFT OUTER JOIN cw_Tag AS _TAG ON (rel_tags0.eid_from=_TAG.cw_eid AND _TAG.cw_name=t)
+GROUP BY _T.cw_eid) AS _T0 ON (_T1.C0=_T0.C0)'''),
+
+                             )):
             yield t
 
 
@@ -1552,10 +1515,6 @@ FROM cw_CWRelation AS _A) AS _T1 ON (_T0.C0=_T1.C0)'''),
                ' (Any X WHERE X is Transition))')
         rqlst = self._prepare(rql)
         self.assertRaises(BadRQLQuery, self.o.generate, rqlst)
-
-    def test_symmetric(self):
-        for t in self._parse(SYMMETRIC + SYMMETRIC_WITH_LIMIT):
-            yield t
 
     def test_inline(self):
         for t in self._parse(INLINE):
@@ -1780,10 +1739,6 @@ FROM cw_Personne AS _P''')
         self._check("Any WEEKDAY(D) WHERE P is Personne, P creation_date D",
                     '''SELECT DATEPART(WEEKDAY, _P.cw_creation_date)
 FROM cw_Personne AS _P''')
-
-    def test_symmetric(self):
-        for t in self._parse(SYMMETRIC):
-            yield t
 
     def test_basic_parse(self):
         for t in self._parse(BASIC):# + BASIC_WITH_LIMIT):

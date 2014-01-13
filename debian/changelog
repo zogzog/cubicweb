@@ -1,3 +1,70 @@
+cubicweb (3.18.0-1) unstable; urgency=low
+
+  * new upstream release.
+
+ -- Julien Cristau <julien.cristau@logilab.fr>  Fri, 10 Jan 2014 17:14:18 +0100
+
+cubicweb (3.17.11-2) unstable; urgency=low
+
+  * Override lintian false-positive about debian/rules.tmpl in the cube
+    skeleton.
+
+ -- Julien Cristau <julien.cristau@logilab.fr>  Wed, 11 Dec 2013 15:56:39 +0100
+
+cubicweb (3.17.11-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Aurelien Campeas <aurelien.campeas@logilab.fr>  Fri, 06 Dec 2013 15:55:48 +0100
+
+cubicweb (3.17.10-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Julien Cristau <julien.cristau@logilab.fr>  Wed, 23 Oct 2013 17:23:45 +0200
+
+cubicweb (3.17.9-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Julien Cristau <julien.cristau@logilab.fr>  Tue, 08 Oct 2013 17:57:04 +0200
+
+cubicweb (3.17.8-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- David Douard <david.douard@logilab.fr>  Thu, 03 Oct 2013 15:12:32 +0200
+
+cubicweb (3.17.7-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- David Douard <david.douard@logilab.fr>  Thu, 26 Sep 2013 15:13:39 +0200
+
+cubicweb (3.17.6-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- David Douard <david.douard@logilab.fr>  Tue, 06 Aug 2013 11:49:04 +0200
+
+cubicweb (3.17.5-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- David Douard <david.douard@logilab.fr>  Wed, 31 Jul 2013 16:58:19 +0200
+
+cubicweb (3.17.4-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- David Douard <david.douard@logilab.fr>  Fri, 26 Jul 2013 09:44:19 +0200
+
+cubicweb (3.17.3-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- David Douard <david.douard@logilab.fr>  Tue, 09 Jul 2013 15:10:16 +0200
+
 cubicweb (3.17.2-1) unstable; urgency=low
 
   * new upstream release
@@ -21,6 +88,12 @@ cubicweb (3.17.0-1) unstable; urgency=low
   * new upstream release
 
  -- Pierre-Yves David <pierre-yves.david@logilab.fr>  Mon, 29 Apr 2013 11:20:56 +0200
+
+cubicweb (3.16.6-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Florent Cayré <florent.cayre@logilab.fr>  Sat, 13 Jul 2013 05:10:23 +0200
 
 cubicweb (3.16.5-1) unstable; urgency=low
 

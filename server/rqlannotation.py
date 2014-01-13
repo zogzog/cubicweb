@@ -130,8 +130,6 @@ def _annotate_select(annotator, rqlst):
                     # can use N.ecrit_par as principal
                     if (stinfo['selected'] or len(stinfo['relations']) > 1):
                         break
-                elif rschema.symmetric and stinfo['selected']:
-                    break
             joins.add( (rel, role) )
         else:
             # if there is at least one ambigous relation and no other to

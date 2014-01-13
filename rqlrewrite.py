@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -31,6 +31,13 @@ from logilab.common import tempattr
 from logilab.common.graph import has_path
 
 from cubicweb import Unauthorized
+
+
+def cleanup_solutions(rqlst, solutions):
+    for sol in solutions:
+        for vname in list(sol):
+            if not (vname in rqlst.defined_vars or vname in rqlst.aliases):
+                del sol[vname]
 
 
 def add_types_restriction(schema, rqlst, newroot=None, solutions=None):
@@ -85,6 +92,7 @@ def add_types_restriction(schema, rqlst, newroot=None, solutions=None):
                     for etype in possibletypes:
                         node.append(n.Constant(etype, 'etype'))
                 else:
+                    etype = iter(possibletypes).next()
                     node = n.Constant(etype, 'etype')
                 comp = mytyperel.children[1]
                 comp.replace(comp.children[0], node)
@@ -132,9 +140,68 @@ def remove_solutions(origsolutions, solutions, defined):
     return newsolutions
 
 
+def _add_noinvariant(noinvariant, restricted, select, nbtrees):
+    # a variable can actually be invariant if it has not been restricted for
+    # security reason or if security assertion hasn't modified the possible
+    # solutions for the query
+    for vname in restricted:
+        try:
+            var = select.defined_vars[vname]
+        except KeyError:
+            # this is an alias
+            continue
+        if nbtrees != 1 or len(var.stinfo['possibletypes']) != 1:
+            noinvariant.add(var)
+
+
+def _expand_selection(terms, selected, aliases, select, newselect):
+    for term in terms:
+        for vref in term.iget_nodes(n.VariableRef):
+            if not vref.name in selected:
+                select.append_selected(vref)
+                colalias = newselect.get_variable(vref.name, len(aliases))
+                aliases.append(n.VariableRef(colalias))
+                selected.add(vref.name)
+
+def _has_multiple_cardinality(etypes, rdef, ttypes_func, cardindex):
+    """return True if relation definitions from entity types (`etypes`) to
+    target types returned by the `ttypes_func` function all have single (1 or ?)
+    cardinality.
+    """
+    for etype in etypes:
+        for ttype in ttypes_func(etype):
+            if rdef(etype, ttype).cardinality[cardindex] in '+*':
+                return True
+    return False
+
+def _compatible_relation(relations, stmt, sniprel):
+    """Search among given rql relation nodes if there is one 'compatible' with the
+    snippet relation, and return it if any, else None.
+
+    A relation is compatible if it:
+    * belongs to the currently processed statement,
+    * isn't negged (i.e. direct parent is a NOT node)
+    * isn't optional (outer join) or similarly as the snippet relation
+    """
+    for rel in relations:
+        # don't share if relation's scope is not the current statement
+        if rel.scope is not stmt:
+            continue
+        # don't share neged relation
+        if rel.neged(strict=True):
+            continue
+        # don't share optional relation, unless the snippet relation is
+        # similarly optional
+        if rel.optional and rel.optional != sniprel.optional:
+            continue
+        return rel
+    return None
+
+
 def iter_relations(stinfo):
     # this is a function so that test may return relation in a predictable order
     return stinfo['relations'] - stinfo['rhsrelations']
+
 
 class Unsupported(Exception):
     """raised when an rql expression can't be inserted in some rql query
@@ -164,13 +231,118 @@ class RQLRewriter(object):
         if len(self.select.solutions) < len(self.solutions):
             raise Unsupported()
 
-    def rewrite(self, select, snippets, solutions, kwargs, existingvars=None):
+    def insert_local_checks(self, select, kwargs,
+                            localchecks, restricted, noinvariant):
+        """
+        select: the rql syntax tree Select node
+        kwargs: query arguments
+
+        localchecks: {(('Var name', (rqlexpr1, rqlexpr2)),
+                       ('Var name1', (rqlexpr1, rqlexpr23))): [solution]}
+
+              (see querier._check_permissions docstring for more information)
+
+        restricted: set of variable names to which an rql expression has to be
+              applied
+
+        noinvariant: set of variable names that can't be considered has
+              invariant due to security reason (will be filed by this method)
+        """
+        nbtrees = len(localchecks)
+        myunion = union = select.parent
+        # transform in subquery when len(localchecks)>1 and groups
+        if nbtrees > 1 and (select.orderby or select.groupby or
+                            select.having or select.has_aggregat or
+                            select.distinct or
+                            select.limit or select.offset):
+            newselect = stmts.Select()
+            # only select variables in subqueries
+            origselection = select.selection
+            select.select_only_variables()
+            select.has_aggregat = False
+            # create subquery first so correct node are used on copy
+            # (eg ColumnAlias instead of Variable)
+            aliases = [n.VariableRef(newselect.get_variable(vref.name, i))
+                       for i, vref in enumerate(select.selection)]
+            selected = set(vref.name for vref in aliases)
+            # now copy original selection and groups
+            for term in origselection:
+                newselect.append_selected(term.copy(newselect))
+            if select.orderby:
+                sortterms = []
+                for sortterm in select.orderby:
+                    sortterms.append(sortterm.copy(newselect))
+                    for fnode in sortterm.get_nodes(n.Function):
+                        if fnode.name == 'FTIRANK':
+                            # we've to fetch the has_text relation as well
+                            var = fnode.children[0].variable
+                            rel = iter(var.stinfo['ftirels']).next()
+                            assert not rel.ored(), 'unsupported'
+                            newselect.add_restriction(rel.copy(newselect))
+                            # remove relation from the orig select and
+                            # cleanup variable stinfo
+                            rel.parent.remove(rel)
+                            var.stinfo['ftirels'].remove(rel)
+                            var.stinfo['relations'].remove(rel)
+                            # XXX not properly re-annotated after security insertion?
+                            newvar = newselect.get_variable(var.name)
+                            newvar.stinfo.setdefault('ftirels', set()).add(rel)
+                            newvar.stinfo.setdefault('relations', set()).add(rel)
+                newselect.set_orderby(sortterms)
+                _expand_selection(select.orderby, selected, aliases, select, newselect)
+                select.orderby = () # XXX dereference?
+            if select.groupby:
+                newselect.set_groupby([g.copy(newselect) for g in select.groupby])
+                _expand_selection(select.groupby, selected, aliases, select, newselect)
+                select.groupby = () # XXX dereference?
+            if select.having:
+                newselect.set_having([g.copy(newselect) for g in select.having])
+                _expand_selection(select.having, selected, aliases, select, newselect)
+                select.having = () # XXX dereference?
+            if select.limit:
+                newselect.limit = select.limit
+                select.limit = None
+            if select.offset:
+                newselect.offset = select.offset
+                select.offset = 0
+            myunion = stmts.Union()
+            newselect.set_with([n.SubQuery(aliases, myunion)], check=False)
+            newselect.distinct = select.distinct
+            solutions = [sol.copy() for sol in select.solutions]
+            cleanup_solutions(newselect, solutions)
+            newselect.set_possible_types(solutions)
+            # if some solutions doesn't need rewriting, insert original
+            # select as first union subquery
+            if () in localchecks:
+                myunion.append(select)
+            # we're done, replace original select by the new select with
+            # subqueries (more added in the loop below)
+            union.replace(select, newselect)
+        elif not () in localchecks:
+            union.remove(select)
+        for lcheckdef, lchecksolutions in localchecks.iteritems():
+            if not lcheckdef:
+                continue
+            myrqlst = select.copy(solutions=lchecksolutions)
+            myunion.append(myrqlst)
+            # in-place rewrite + annotation / simplification
+            lcheckdef = [({var: 'X'}, rqlexprs) for var, rqlexprs in lcheckdef]
+            self.rewrite(myrqlst, lcheckdef, kwargs)
+            _add_noinvariant(noinvariant, restricted, myrqlst, nbtrees)
+        if () in localchecks:
+            select.set_possible_types(localchecks[()])
+            add_types_restriction(self.schema, select)
+            _add_noinvariant(noinvariant, restricted, select, nbtrees)
+        self.annotate(union)
+
+    def rewrite(self, select, snippets, kwargs, existingvars=None):
         """
         snippets: (varmap, list of rql expression)
                   with varmap a *tuple* (select var, snippet var)
         """
         self.select = select
-        self.solutions = solutions
+        # remove_solutions used below require a copy
+        self.solutions = solutions = select.solutions[:]
         self.kwargs = kwargs
         self.u_varname = None
         self.removing_ambiguity = False
@@ -195,6 +367,7 @@ class RQLRewriter(object):
             select, solutions, newsolutions))
         if len(newsolutions) > len(solutions):
             newsolutions = self.remove_ambiguities(snippets, newsolutions)
+            assert newsolutions
         select.solutions = newsolutions
         add_types_restriction(self.schema, select)
 
@@ -235,9 +408,14 @@ class RQLRewriter(object):
                                                       subselect.solutions, self.kwargs)
                     return
                 if varexistsmap is None:
-                    vi['rhs_rels'] = dict( (r.r_type, r) for r in sti['rhsrelations'])
-                    vi['lhs_rels'] = dict( (r.r_type, r) for r in sti['relations']
-                                           if not r in sti['rhsrelations'])
+                    # build an index for quick access to relations
+                    vi['rhs_rels'] = {}
+                    for rel in sti['rhsrelations']:
+                        vi['rhs_rels'].setdefault(rel.r_type, []).append(rel)
+                    vi['lhs_rels'] = {}
+                    for rel in sti['relations']:
+                        if not rel in sti['rhsrelations']:
+                            vi['lhs_rels'].setdefault(rel.r_type, []).append(rel)
                 else:
                     vi['rhs_rels'] = vi['lhs_rels'] = {}
         previous = None
@@ -464,7 +642,6 @@ class RQLRewriter(object):
                 exists = var.references()[0].scope
                 exists.add_constant_restriction(var, 'is', etype, 'etype')
         # recompute solutions
-        #select.annotated = False # avoid assertion error
         self.compute_solutions()
         # clean solutions according to initial solutions
         return remove_solutions(self.solutions, self.select.solutions,
@@ -509,38 +686,34 @@ class RQLRewriter(object):
         """if the snippet relation can be skipped to use a relation from the
         original query, return that relation node
         """
+        if sniprel.neged(strict=True):
+            return None # no way
         rschema = self.schema.rschema(sniprel.r_type)
         stmt = self.current_statement()
         for vi in self.varinfos:
             try:
                 if target == 'object':
-                    orel = vi['lhs_rels'][sniprel.r_type]
+                    orels = vi['lhs_rels'][sniprel.r_type]
                     cardindex = 0
                     ttypes_func = rschema.objects
                     rdef = rschema.rdef
                 else: # target == 'subject':
-                    orel = vi['rhs_rels'][sniprel.r_type]
+                    orels = vi['rhs_rels'][sniprel.r_type]
                     cardindex = 1
                     ttypes_func = rschema.subjects
                     rdef = lambda x, y: rschema.rdef(y, x)
             except KeyError:
                 # may be raised by vi['xhs_rels'][sniprel.r_type]
-                return None
-            # don't share if relation's statement is not the current statement
-            if orel.stmt is not stmt:
-                return None
-            # can't share neged relation or relations with different outer join
-            if (orel.neged(strict=True) or sniprel.neged(strict=True)
-                or (orel.optional and orel.optional != sniprel.optional)):
-                return None
-            # if cardinality is in '?1', we can ignore the snippet relation and use
-            # variable from the original query
-            for etype in vi['stinfo']['possibletypes']:
-                for ttype in ttypes_func(etype):
-                    if rdef(etype, ttype).cardinality[cardindex] in '+*':
-                        return None
-            break
-        return orel
+                continue
+            # if cardinality isn't in '?1', we can't ignore the snippet relation
+            # and use variable from the original query
+            if _has_multiple_cardinality(vi['stinfo']['possibletypes'], rdef,
+                                         ttypes_func, cardindex):
+                continue
+            orel = _compatible_relation(orels, stmt, sniprel)
+            if orel is not None:
+                return orel
+        return None
 
     def _use_orig_term(self, snippet_varname, term):
         key = (self.current_expr, self.varmap, snippet_varname)

@@ -1,14 +1,13 @@
 /** filter form, aka facets, javascript functions
  *
  *  :organization: Logilab
- *  :copyright: 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+ *  :copyright: 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
  *  :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
  */
 
-var SELECTED_IMG = baseuri() + "data/black-check.png";
-var UNSELECTED_IMG = baseuri() + "data/no-check-no-border.png";
-var UNSELECTED_BORDER_IMG = baseuri() + "data/black-uncheck.png";
-
+var SELECTED_IMG = DATA_URL + 'black-check.png';
+var UNSELECTED_IMG = DATA_URL + 'no-check-no-border.png';
+var UNSELECTED_BORDER_IMG = DATA_URL + 'black-uncheck.png';
 
 function copyParam(origparams, newparams, param) {
     var index = $.inArray(param, origparams[0]);
@@ -30,7 +29,7 @@ function facetFormContent($form) {
         });
         // FacetStringWidget (e.g. has-text)
         $(this).find('input:text').each(function(){
-            names.push(facetName);
+            names.push(this.name);
             values.push(this.value);
         });
     });
@@ -110,7 +109,7 @@ function buildRQL(divid, vid, paginate, vidargs) {
                 $node.loadxhtml(AJAX_BASE_URL, ajaxFuncArgs('render', {
                     'rql': rql
                 },
-                'ctxcomponents', 'edit_box'));
+                'ctxcomponents', 'edit_box'), 'GET', 'swap');
             }
             $node = $('#breadcrumbs');
             if ($node.length) {
@@ -170,7 +169,6 @@ function initFacetBoxEvents(root) {
             if ($('#'+divid).length) {
                 var $loadingDiv = $(DIV({id:'facetLoading'},
                                         facetLoadingMsg));
-                $loadingDiv.corner();
                 $($('#'+divid).get(0).parentNode).append($loadingDiv);
             }
             form.find('div.facet').each(function() {
@@ -328,7 +326,6 @@ $(document).ready(function () {
     if ($('div.facetBody').length) {
         var $loadingDiv = $(DIV({id:'facetLoading'},
                                 facetLoadingMsg));
-        $loadingDiv.corner();
         $('body').append($loadingDiv);
     }
 });

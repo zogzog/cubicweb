@@ -95,5 +95,5 @@ if raw_input('Commit ?') in 'yY':
     commit()
 else:
     rollback()
-    print 'rollbacked'
+    print 'rolled back'
 
