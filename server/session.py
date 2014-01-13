@@ -1066,7 +1066,7 @@ class Connection(RequestSessionBase):
             return
         cstate = self.commit_state
         if cstate == 'uncommitable':
-            raise QueryError('transaction must be rollbacked')
+            raise QueryError('transaction must be rolled back')
         if cstate is not None:
             return
         # on rollback, an operation should have the following state
@@ -1745,7 +1745,7 @@ class InternalSession(Session):
         self.user._cw = self # XXX remove when "vreg = user._cw.vreg" hack in entity.py is gone
         if not safe:
             self.disable_hook_categories('integrity')
-            self._tx.ctx_count += 1
+            self._cnx.ctx_count += 1
 
     def __enter__(self):
         return self
