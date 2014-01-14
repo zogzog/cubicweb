@@ -189,6 +189,33 @@ class CWUtilitiesTC(CubicWebTC):
             self.assertIn(AnAppobject, self.vreg['hip']['hop'])
         self.assertNotIn(AnAppobject, self.vreg['hip']['hop'])
 
+    def test_login(self):
+        """Calling login should not break self.session hook control"""
+        self.hook_executed = False
+        babar = self.create_user(self.request(), 'babar')
+        self.commit()
+
+        from cubicweb.server import hook
+        from cubicweb.predicates import is_instance
+
+        class MyHook(hook.Hook):
+            __regid__ = 'whatever'
+            __select__ = hook.Hook.__select__ & is_instance('CWProperty')
+            category = 'test-hook'
+            events = ('after_add_entity',)
+            test = self
+
+            def __call__(self):
+                self.test.hook_executed = True
+
+        self.login('babar')
+        with self.temporary_appobjects(MyHook):
+            with self.session.allow_all_hooks_but('test-hook'):
+                req = self.request()
+                prop = req.create_entity('CWProperty', pkey=u'ui.language', value=u'en')
+                self.commit()
+                self.assertFalse(self.hook_executed)
+
 
 class RepoAccessTC(CubicWebTC):
     def test_repo_connection(self):

@@ -316,6 +316,8 @@ class CubicWebTC(TestCase):
             # can't call set_cnx as the Connection is not managed by the
             # session.
             session._Session__threaddata.cnx = self._admin_clt_cnx._cnx
+        else:
+            session._Session__threaddata.cnx = self.cnx._cnx
         session.set_cnxset()
         return session
 
