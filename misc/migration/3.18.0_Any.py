@@ -125,5 +125,5 @@ for eschema in sorted(schema.entities()):
 
 # all attributes perms have to be refreshed ...
 for rschema in schema.relations():
-    if relation.final:
+    if rschema.final:
         sync_schema_props_perms(rschema.type, syncprops=False)
