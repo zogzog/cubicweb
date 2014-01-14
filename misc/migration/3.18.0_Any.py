@@ -4,6 +4,9 @@ if not (driver == 'postgres' or driver.startswith('sqlserver')):
     print >>sys.stderr, 'This migration is not supported for backends other than sqlserver or postgres (yet).'
     sys.exit(1)
 
+add_relation_definition('CWAttribute', 'add_permission', 'CWGroup')
+add_relation_definition('CWAttribute', 'add_permission', 'RQLExpression')
+
 sync_schema_props_perms('defaultval')
 
 def convert_defaultval(cwattr, default):
@@ -119,9 +122,6 @@ for eschema in sorted(schema.entities()):
             session.execute(rql, args)
         commit()
 
-
-add_relation_definition('CWAttribute', 'add_permission', 'CWGroup')
-add_relation_definition('CWAttribute', 'add_permission', 'RQLExpression')
 
 # all attributes perms have to be refreshed ...
 for rschema in schema.relations():
