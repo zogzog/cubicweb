@@ -42,7 +42,7 @@ def check_entity_attributes(session, entity, action, editedattrs=None):
     for attr in editedattrs:
         if attr in dontcheck:
             continue
-        rdef = eschema.rdef(attr)
+        rdef = eschema.rdef(attr, takefirst=True)
         if rdef.final: # non final relation are checked by standard hooks
             perms = rdef.permissions.get(action)
             # comparison below works because the default update perm is:
