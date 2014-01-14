@@ -337,8 +337,9 @@ class CubicWebTC(TestCase):
         """return a connection for the given login/password"""
         __ = kwargs.pop('autoclose', True) # not used anymore
         if login == self.admlogin:
-            # definitly don't want autoclose when used as a context manager
-            clt_cnx = repoapi.ClientConnection(self._admin_session)
+            # undo any previous login, if we're not used as a context manager
+            self.restore_connection()
+            return self.cnx
         else:
             if not kwargs:
                 kwargs['password'] = str(login)
