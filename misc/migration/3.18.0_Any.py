@@ -80,7 +80,7 @@ for rschema in schema.relations():
             sql('DELETE FROM %s_relation WHERE eid_from IN (%s) OR eid_to IN (%s)' % (rschema.type, martians, martians))
         with session.deny_all_hooks_but():
             rql('SET X %(r)s Y WHERE Y %(r)s X, NOT X %(r)s Y' % {'r': rschema.type})
-    commit()
+        commit()
 
 
 # multi columns unique constraints regeneration
