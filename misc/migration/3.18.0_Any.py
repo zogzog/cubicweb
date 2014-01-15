@@ -15,6 +15,9 @@ def convert_defaultval(cwattr, default):
     from cubicweb import Binary
     if default is None:
         return
+    if isinstance(default, Binary):
+        # partially migrated instance, try to be idempotent
+        return default
     atype = cwattr.to_entity[0].name
     if atype == 'Boolean':
         # boolean attributes with default=False were stored as ''
@@ -60,7 +63,7 @@ else: # sqlserver
 
 # Set object type to "Bytes" for CWAttribute's "defaultval" attribute
 rql('SET X to_entity B WHERE X is CWAttribute, X from_entity Y, Y name "CWAttribute", '
-    'X relation_type Z, Z name "defaultval", B name "Bytes"')
+    'X relation_type Z, Z name "defaultval", B name "Bytes", NOT X to_entity B')
 
 from yams import buildobjs as ybo
 schema.add_relation_def(ybo.RelationDefinition('CWAttribute', 'defaultval', 'Bytes'))
