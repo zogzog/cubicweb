@@ -21,7 +21,7 @@ __docformat__ = "restructuredtext en"
 
 from itertools import chain, repeat, izip
 
-from cubicweb import cwreg, AuthenticationError
+from cubicweb import AuthenticationError
 from cubicweb.web import DirectResponse
 from cubicweb.web.application import CubicWebPublisher
 from cubicweb.wsgi.request import CubicWebWsgiRequest
@@ -96,8 +96,8 @@ class CubicWebWSGIApplication(object):
     parameters.
     """
 
-    def __init__(self, repo, config):
-        self.appli = CubicWebPublisher(repo, config)
+    def __init__(self, config):
+        self.appli = CubicWebPublisher(config.repository(), config)
         self.config = config
         self.base_url = self.config['base-url']
         self.url_rewriter = self.appli.vreg['components'].select_or_none('urlrewriter')
