@@ -525,9 +525,9 @@ class CubicWebTC(TestCase):
         it2 = set(getattr(x, 'eid', x) for x in it2)
         super(CubicWebTC, self).assertItemsEqual(it1, it2, *args, **kwargs)
 
-    def assertMessageEqual(self, req, params, msg):
+    def assertMessageEqual(self, req, params, expected_msg):
         msg = req.session.data[params['_cwmsgid']]
-        self.assertEqual(msg, msg)
+        self.assertEqual(expected_msg, msg)
 
     # workflow utilities #######################################################
 
