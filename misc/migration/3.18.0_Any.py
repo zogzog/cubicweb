@@ -7,6 +7,12 @@ if not (driver == 'postgres' or driver.startswith('sqlserver')):
 add_relation_definition('CWAttribute', 'add_permission', 'CWGroup')
 add_relation_definition('CWAttribute', 'add_permission', 'RQLExpression')
 
+# the migration gets confused when we change rdefs out from under it.  So
+# explicitly remove this size constraint so it doesn't stick around and break
+# things later.
+rdefeid = schema['defaultval'].rdefs.values()[0].eid
+rql('DELETE CWConstraint C WHERE C cstrtype T, T name "SizeConstraint", R constrained_by C, R eid %(eid)s', {'eid': rdefeid})
+
 sync_schema_props_perms('defaultval')
 
 def convert_defaultval(cwattr, default):
@@ -65,11 +71,11 @@ else: # sqlserver
 rql('SET X to_entity B WHERE X is CWAttribute, X from_entity Y, Y name "CWAttribute", '
     'X relation_type Z, Z name "defaultval", B name "Bytes", NOT X to_entity B')
 
-from yams import buildobjs as ybo
-schema.add_relation_def(ybo.RelationDefinition('CWAttribute', 'defaultval', 'Bytes'))
-schema.del_relation_def('CWAttribute', 'defaultval', 'String')
+schema['defaultval'].rdefs.values()[0].object = schema['Bytes']
 
 commit()
+
+sync_schema_props_perms('defaultval')
 
 for rschema in schema.relations():
     if rschema.symmetric:
