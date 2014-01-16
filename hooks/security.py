@@ -60,7 +60,8 @@ def check_entity_attributes(session, entity, action, editedattrs=None):
                 # nothing.
                 continue
             if perms == ():
-                # That means an immutable attribute.
+                # That means an immutable attribute; as an optimization, avoid
+                # going through check_perm.
                 raise Unauthorized(action, str(rdef))
             rdef.check_perm(session, action, eid=eid)
 
