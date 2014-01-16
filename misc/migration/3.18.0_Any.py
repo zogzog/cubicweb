@@ -7,6 +7,9 @@ if not (driver == 'postgres' or driver.startswith('sqlserver')):
 add_relation_definition('CWAttribute', 'add_permission', 'CWGroup')
 add_relation_definition('CWAttribute', 'add_permission', 'RQLExpression')
 
+# a bad defaultval in 3.13.8 schema was fixed in 3.13.9, but the migration was missed
+rql('SET ATTR defaultval NULL WHERE ATTR from_entity E, E name "CWSource", ATTR relation_type T, T name "in_synchronization"')
+
 # the migration gets confused when we change rdefs out from under it.  So
 # explicitly remove this size constraint so it doesn't stick around and break
 # things later.
