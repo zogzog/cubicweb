@@ -1,4 +1,4 @@
-# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -39,7 +39,7 @@ from cubicweb.dbapi import DBAPISession, anonymous_session
 from cubicweb.web import LOGGER, component
 from cubicweb.web import (
     StatusResponse, DirectResponse, Redirect, NotFound, LogOut,
-    RemoteCallFailed, InvalidSession, RequestError)
+    RemoteCallFailed, InvalidSession, RequestError, PublishException)
 
 from cubicweb.web.request import CubicWebRequestBase
 
@@ -567,7 +567,7 @@ class CubicWebPublisher(object):
             content = self.vreg['views'].main_template(req, template, view=errview)
         except Exception:
             content = self.vreg['views'].main_template(req, 'error-template')
-        if getattr(ex, 'status', None) is not None:
+        if isinstance(ex, PublishException) and ex.status is not None:
             req.status_out = ex.status
         return content
 
@@ -580,11 +580,11 @@ class CubicWebPublisher(object):
 
     def ajax_error_handler(self, req, ex):
         req.set_header('content-type', 'application/json')
-        status = ex.status
-        if status is None:
-            status = httplib.INTERNAL_SERVER_ERROR
-        json_dumper = getattr(ex, 'dumps', lambda : unicode(ex))
+        status = httplib.INTERNAL_SERVER_ERROR
+        if isinstance(ex, PublishException) and ex.status is not None:
+            status = ex.status
         req.status_out = status
+        json_dumper = getattr(ex, 'dumps', lambda : unicode(ex))
         return json_dumper()
 
     # special case handling
