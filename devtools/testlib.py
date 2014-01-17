@@ -1,4 +1,4 @@
-# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -84,6 +84,28 @@ def unprotected_entities(schema, strict=False):
 class JsonValidator(object):
     def parse_string(self, data):
         return json.loads(data)
+
+@contextmanager
+def real_error_handling(app):
+    """By default, CubicWebTC `app` attribute (ie the publisher) is monkey
+    patched so that unexpected error are raised rather than going through the
+    `error_handler` method.
+
+    By using this context manager you disable this monkey-patching temporarily.
+    Hence when publishihng a request no error will be raised, you'll get
+    req.status_out set to an HTTP error status code and the generated page will
+    usually hold a traceback as HTML.
+
+    >>> with real_error_handling(app):
+    >>>     page = app.handle_request(req)
+    """
+    # remove the monkey patched error handler
+    fake_error_handler = app.error_handler
+    del app.error_handler
+    # return the app
+    yield app
+    # restore
+    app.error_handler = fake_error_handler
 
 # email handling, to test emails sent by an application ########################
 
@@ -707,17 +729,14 @@ class CubicWebTC(TestCase):
         return self.ctrl_publish(req, ctrlid, rset)
 
     def http_publish(self, url, data=None):
-        """like `url_publish`, except this returns a http response, even in case of errors"""
+        """like `url_publish`, except this returns a http response, even in case
+        of errors. You may give form parameters using the `data` argument.
+        """
         req = self.req_from_url(url)
         if data is not None:
             req.form.update(data)
-        # remove the monkey patched error handler
-        fake_error_handler = self.app.error_handler
-        del self.app.error_handler
-        try:
+        with real_error_handling(self.app):
             result = self.app_handle_request(req, req.relative_path(False))
-        finally:
-            self.app.error_handler = fake_error_handler
         return result, req
 
     @staticmethod
