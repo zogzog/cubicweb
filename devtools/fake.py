@@ -71,10 +71,6 @@ class FakeRequest(CubicWebRequestBase):
         self._headers_in.setHeader('Cookie', cookie)
 
     ## Implement request abstract API
-    def header_accept_language(self):
-        """returns an ordered list of preferred languages"""
-        return ('en',)
-
     def http_method(self):
         return self._http_method
 
