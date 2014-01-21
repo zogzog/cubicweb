@@ -283,14 +283,14 @@ class Repository(object):
                     self.sources_by_eid[sourceent.eid] = self.system_source
                     self.system_source.init(True, sourceent)
                     continue
-                self.add_source(sourceent, add_to_cnxsets=False)
+                self.add_source(sourceent)
 
     def _clear_planning_caches(self):
         for cache in ('source_defs', 'is_multi_sources_relation',
                       'can_cross_relation', 'rel_type_sources'):
             clear_cache(self, cache)
 
-    def add_source(self, sourceent, add_to_cnxsets=True):
+    def add_source(self, sourceent):
         source = self.get_source(sourceent.type, sourceent.name,
                                  sourceent.host_config, sourceent.eid)
         self.sources_by_eid[sourceent.eid] = source
@@ -301,14 +301,6 @@ class Repository(object):
             # internal session, which is not possible until connections sets have been
             # initialized)
             source.init(True, sourceent)
-            if not source.copy_based_source:
-                warn('[3.18] old multi-source system will go away in the next version',
-                     DeprecationWarning)
-                self.sources.append(source)
-                self.querier.set_planner()
-                if add_to_cnxsets:
-                    for cnxset in self.cnxsets:
-                       cnxset.add_source(source)
         else:
             source.init(False, sourceent)
         self._clear_planning_caches()
@@ -316,11 +308,6 @@ class Repository(object):
     def remove_source(self, uri):
         source = self.sources_by_uri.pop(uri)
         del self.sources_by_eid[source.eid]
-        if self.config.source_enabled(source) and not source.copy_based_source:
-            self.sources.remove(source)
-            self.querier.set_planner()
-            for cnxset in self.cnxsets:
-                cnxset.remove_source(source)
         self._clear_planning_caches()
 
     def get_source(self, type, uri, source_config, eid=None):
@@ -1087,7 +1074,7 @@ class Repository(object):
         6. unless source's :attr:`should_call_hooks` tell otherwise,
           'before_add_entity' hooks are called
         """
-        uri = 'system' if source.copy_based_source else source.uri
+        uri = 'system'
         cachekey = (extid, uri)
         try:
             return self._extid_cache[cachekey]
@@ -1300,8 +1287,7 @@ class Repository(object):
         if suri == 'system':
             extid = None
         else:
-            if source.copy_based_source:
-                suri = 'system'
+            suri = 'system'
             extid = source.get_extid(entity)
             self._extid_cache[(str(extid), suri)] = entity.eid
         self._type_source_cache[entity.eid] = (entity.cw_etype, suri, extid,

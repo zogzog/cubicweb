@@ -36,7 +36,7 @@ from cubicweb.utils import QueryCache, RepeatList
 from cubicweb.server.rqlannotation import SQLGenAnnotator, set_qdata
 from cubicweb.server.ssplanner import READ_ONLY_RTYPES, add_types_restriction
 from cubicweb.server.edition import EditedEntity
-
+from cubicweb.server.ssplanner import SSPlanner
 
 ETYPE_PYOBJ_MAP[Binary] = 'Bytes'
 
@@ -520,22 +520,9 @@ class QuerierHelper(object):
         self._parse = rqlhelper.parse
         self._annotate = rqlhelper.annotate
         # rql planner
-        if len(repo.sources) < 2:
-            from cubicweb.server.ssplanner import SSPlanner
-            self._planner = SSPlanner(schema, rqlhelper)
-        else:
-            from cubicweb.server.msplanner import MSPlanner
-            self._planner = MSPlanner(schema, rqlhelper)
+        self._planner = SSPlanner(schema, rqlhelper)
         # sql generation annotator
         self.sqlgen_annotate = SQLGenAnnotator(schema).annotate
-
-    def set_planner(self):
-        if len(self._repo.sources) < 2:
-            from cubicweb.server.ssplanner import SSPlanner
-            self._planner = SSPlanner(self.schema, self._repo.vreg.rqlhelper)
-        else:
-            from cubicweb.server.msplanner import MSPlanner
-            self._planner = MSPlanner(self.schema, self._repo.vreg.rqlhelper)
 
     def parse(self, rql, annotate=False):
         """return a rql syntax tree for the given rql"""

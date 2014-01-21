@@ -382,16 +382,6 @@ def _select_principal(scope, relations):
     return _orig_select_principal(scope, relations,
                                   _sort=lambda rels: sorted(rels, key=sort_key))
 
-try:
-    from cubicweb.server.msplanner import PartPlanInformation
-except ImportError:
-    class PartPlanInformation(object):
-        def merge_input_maps(self, *args, **kwargs):
-            pass
-        def _choose_term(self, sourceterms):
-            pass
-_orig_merge_input_maps = PartPlanInformation.merge_input_maps
-_orig_choose_term = PartPlanInformation._choose_term
 
 def _merge_input_maps(*args, **kwargs):
     return sorted(_orig_merge_input_maps(*args, **kwargs))
@@ -411,7 +401,6 @@ def _choose_term(self, source, sourceterms):
                 return x.value
     return _orig_choose_term(self, source, DumbOrderedDict2(sourceterms, get_key))
 
-
 def _ordered_iter_relations(stinfo):
     return sorted(_orig_iter_relations(stinfo), key=lambda x:x.r_type)
 
@@ -422,8 +411,6 @@ def do_monkey_patch():
     ExecutionPlan._check_permissions = _check_permissions
     ExecutionPlan.tablesinorder = None
     ExecutionPlan.init_temp_table = _init_temp_table
-    PartPlanInformation.merge_input_maps = _merge_input_maps
-    PartPlanInformation._choose_term = _choose_term
 
 def undo_monkey_patch():
     rqlrewrite.iter_relations = _orig_iter_relations
@@ -431,5 +418,3 @@ def undo_monkey_patch():
     rqlrewrite.RQLRewriter.build_variantes = _orig_build_variantes
     ExecutionPlan._check_permissions = _orig_check_permissions
     ExecutionPlan.init_temp_table = _orig_init_temp_table
-    PartPlanInformation.merge_input_maps = _orig_merge_input_maps
-    PartPlanInformation._choose_term = _orig_choose_term

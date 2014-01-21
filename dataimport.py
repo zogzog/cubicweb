@@ -971,7 +971,6 @@ class SQLGenSourceWrapper(object):
         self._storage_handler = self.system_source._storage_handler
         self.preprocess_entity = self.system_source.preprocess_entity
         self.sqlgen = self.system_source.sqlgen
-        self.copy_based_source = self.system_source.copy_based_source
         self.uri = self.system_source.uri
         self.eid = self.system_source.eid
         # Directory to write temporary files
@@ -1125,9 +1124,8 @@ class SQLGenSourceWrapper(object):
         if extid is not None:
             assert isinstance(extid, str)
             extid = b64encode(extid)
-        uri = 'system' if source.copy_based_source else source.uri
         attrs = {'type': entity.cw_etype, 'eid': entity.eid, 'extid': extid,
-                 'source': uri, 'asource': source.uri, 'mtime': datetime.utcnow()}
+                 'source': 'system', 'asource': source.uri, 'mtime': datetime.utcnow()}
         self._handle_insert_entity_sql(session, self.sqlgen.insert('entities', attrs), attrs)
         # insert core relations: is, is_instance_of and cw_source
         try:

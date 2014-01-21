@@ -59,7 +59,7 @@ class UpdateFeedsStartupHook(hook.Hook):
         def update_feeds(repo):
             # don't iter on repo.sources which doesn't include copy based
             # sources (the one we're looking for)
-            # take a list to avoid iterating on a dictionary which size may
+            # take a list to avoid iterating on a dictionary whose size may
             # change
             for source in list(repo.sources_by_eid.values()):
                 if (not source.copy_based_source
@@ -83,8 +83,8 @@ class DataImportsCleanupStartupHook(hook.Hook):
 
     def __call__(self):
         def expire_dataimports(repo=self.repo):
-            for source in repo.sources_by_eid.itervalues():
-                if (not source.copy_based_source
+            for uri, source in repo.sources_by_uri.iteritems():
+                if (uri == 'system'
                     or not repo.config.source_enabled(source)):
                     continue
                 session = repo.internal_session()

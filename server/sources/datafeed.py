@@ -35,7 +35,6 @@ from cubicweb.appobject import AppObject
 
 
 class DataFeedSource(AbstractSource):
-    copy_based_source = True
     use_cwuri_as_url = True
 
     options = (

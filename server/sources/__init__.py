@@ -64,9 +64,6 @@ def dbg_results(results):
 
 class AbstractSource(object):
     """an abstract class for sources"""
-    # does the source copy data into the system source, or is it a *true* source
-    # (i.e. entities are not stored physically here)
-    copy_based_source = False
 
     # boolean telling if modification hooks should be called when something is
     # modified in this source

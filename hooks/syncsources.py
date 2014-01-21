@@ -93,10 +93,7 @@ class SourceRenamedOp(hook.LateOperation):
 
     def precommit_event(self):
         source = self.session.repo.sources_by_uri[self.oldname]
-        if source.copy_based_source:
-            sql = 'UPDATE entities SET asource=%(newname)s WHERE asource=%(oldname)s'
-        else:
-            sql = 'UPDATE entities SET source=%(newname)s, asource=%(newname)s WHERE source=%(oldname)s'
+        sql = 'UPDATE entities SET asource=%(newname)s WHERE asource=%(oldname)s'
         self.session.system_sql(sql, {'oldname': self.oldname,
                                       'newname': self.newname})
 
@@ -109,11 +106,6 @@ class SourceRenamedOp(hook.LateOperation):
         repo.sources_by_uri[self.newname] = source
         repo._type_source_cache.clear()
         clear_cache(repo, 'source_defs')
-        if not source.copy_based_source:
-            repo._extid_cache.clear()
-            repo._clear_planning_caches()
-            for cnxset in repo.cnxsets:
-                cnxset.source_cnxs[self.oldname] = cnxset.source_cnxs.pop(self.oldname)
 
 
 class SourceUpdatedHook(SourceHook):
