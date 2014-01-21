@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -61,7 +61,7 @@ class CoreHooksTC(CubicWebTC):
         self.commit()
         self.execute('DELETE Email X')
         rset = self.execute('Any X WHERE X is EmailPart')
-        self.assertEqual(len(rset), 1)
+        self.assertEqual(len(rset), 0)
         self.commit()
         rset = self.execute('Any X WHERE X is EmailPart')
         self.assertEqual(len(rset), 0)
@@ -92,6 +92,42 @@ class CoreHooksTC(CubicWebTC):
         rset = self.execute('Any X WHERE X is EmailPart')
         self.assertEqual(len(rset), 1)
         self.assertEqual(rset.get_entity(0, 0).reverse_parts[0].messageid, '<2345>')
+
+    def test_composite_object_relation_deletion(self):
+        req = self.request()
+        root = req.create_entity('Folder', name=u'root')
+        a = req.create_entity('Folder', name=u'a', parent=root)
+        b = req.create_entity('Folder', name=u'b', parent=a)
+        c = req.create_entity('Folder', name=u'c', parent=root)
+        self.commit()
+        req = self.request()
+        req.execute('DELETE Folder F WHERE F name "a"')
+        req.execute('DELETE F parent R WHERE R name "root"')
+        self.commit()
+        req = self.request()
+        self.assertEqual([['root'], ['c']],
+                         req.execute('Any NF WHERE F is Folder, F name NF').rows)
+        self.assertEqual([],
+                         req.execute('Any NF,NP WHERE F parent P, F name NF, P name NP').rows)
+
+    def test_composite_subject_relation_deletion(self):
+        req = self.request()
+        root = req.create_entity('Folder', name=u'root')
+        a = req.create_entity('Folder', name=u'a')
+        b = req.create_entity('Folder', name=u'b')
+        c = req.create_entity('Folder', name=u'c')
+        root.cw_set(children=(a, c))
+        a.cw_set(children=b)
+        self.commit()
+        req = self.request()
+        req.execute('DELETE Folder F WHERE F name "a"')
+        req.execute('DELETE R children F WHERE R name "root"')
+        self.commit()
+        req = self.request()
+        self.assertEqual([['root'], ['c']],
+                         req.execute('Any NF WHERE F is Folder, F name NF').rows)
+        self.assertEqual([],
+                         req.execute('Any NF,NP WHERE F parent P, F name NF, P name NP').rows)
 
     def test_unsatisfied_constraints(self):
         releid = self.execute('SET U in_group G WHERE G name "owners", U login "admin"')[0][0]

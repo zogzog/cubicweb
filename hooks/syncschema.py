@@ -1123,20 +1123,20 @@ class AfterAddConstrainedByHook(SyncSchemaHook):
             self._cw.transaction_data.setdefault(self.eidfrom, []).append(self.eidto)
 
 
-class BeforeDeleteConstrainedByHook(SyncSchemaHook):
-    __regid__ = 'syncdelconstrainedby'
-    __select__ = SyncSchemaHook.__select__ & hook.match_rtype('constrained_by')
-    events = ('before_delete_relation',)
+class BeforeDeleteCWConstraintHook(SyncSchemaHook):
+    __regid__ = 'syncdelcwconstraint'
+    __select__ = SyncSchemaHook.__select__ & is_instance('CWConstraint')
+    events = ('before_delete_entity',)
 
     def __call__(self):
-        if self._cw.deleted_in_transaction(self.eidfrom):
-            return
+        entity = self.entity
         schema = self._cw.vreg.schema
-        entity = self._cw.entity_from_eid(self.eidto)
-        rdef = schema.schema_by_eid(self.eidfrom)
         try:
+            # KeyError, e.g. composite chain deletion
+            rdef = schema.schema_by_eid(entity.reverse_constrained_by[0].eid)
+            # IndexError
             cstr = rdef.constraint_by_type(entity.type)
-        except IndexError:
+        except (IndexError, KeyError):
             self._cw.critical('constraint type no more accessible')
         else:
             CWConstraintDelOp(self._cw, rdef=rdef, oldcstr=cstr)

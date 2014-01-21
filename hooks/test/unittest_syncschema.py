@@ -247,20 +247,16 @@ class SchemaModificationHooksTC(CubicWebTC):
         dbhelper = self.repo.system_source.dbhelper
         sqlcursor = self.session.cnxset.cu
         try:
-            self.execute('INSERT CWConstraint X: X cstrtype CT, DEF constrained_by X '
-                         'WHERE CT name "UniqueConstraint", DEF relation_type RT, DEF from_entity E,'
-                         'RT name "name", E name "Workflow"')
+            eid = self.execute('INSERT CWConstraint X: X cstrtype CT, DEF constrained_by X '
+                               'WHERE CT name "UniqueConstraint", DEF relation_type RT, DEF from_entity E,'
+                               'RT name "name", E name "Workflow"').rows[0][0]
             self.assertFalse(self.schema['Workflow'].has_unique_values('name'))
             self.assertFalse(self.index_exists('Workflow', 'name', unique=True))
             self.commit()
             self.assertTrue(self.schema['Workflow'].has_unique_values('name'))
             self.assertTrue(self.index_exists('Workflow', 'name', unique=True))
         finally:
-            self.execute('DELETE DEF constrained_by X WHERE X cstrtype CT, '
-                         'CT name "UniqueConstraint", DEF relation_type RT, DEF from_entity E,'
-                         'RT name "name", E name "Workflow"')
-            self.assertTrue(self.schema['Workflow'].has_unique_values('name'))
-            self.assertTrue(self.index_exists('Workflow', 'name', unique=True))
+            self.execute('DELETE CWConstraint C WHERE C eid %(eid)s', {'eid': eid})
             self.commit()
             self.assertFalse(self.schema['Workflow'].has_unique_values('name'))
             self.assertFalse(self.index_exists('Workflow', 'name', unique=True))

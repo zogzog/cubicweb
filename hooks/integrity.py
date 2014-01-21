@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -24,10 +24,10 @@ _ = unicode
 
 from threading import Lock
 
-from cubicweb import validation_error
+from cubicweb import validation_error, neg_role
 from cubicweb.schema import (META_RTYPES, WORKFLOW_RTYPES,
                              RQLConstraint, RQLUniqueConstraint)
-from cubicweb.predicates import is_instance
+from cubicweb.predicates import is_instance, composite_etype
 from cubicweb.uilib import soup2xhtml
 from cubicweb.server import hook
 
@@ -309,69 +309,25 @@ class StripCWUserLoginHook(IntegrityHook):
             self.entity.cw_edited['login'] = login.strip()
 
 
-# 'active' integrity hooks: you usually don't want to deactivate them, they are
-# not really integrity check, they maintain consistency on changes
-
-class _DelayedDeleteOp(hook.DataOperationMixIn, hook.Operation):
-    """delete the object of composite relation except if the relation has
-    actually been redirected to another composite
-    """
-    base_rql = None
-
-    def precommit_event(self):
-        session = self.session
-        pendingeids = session.transaction_data.get('pendingeids', ())
-        eids_by_etype_rtype = {}
-        for eid, rtype in self.get_data():
-            # don't do anything if the entity is being deleted
-            if eid not in pendingeids:
-                etype = session.entity_metas(eid)['type']
-                key = (etype, rtype)
-                if key not in eids_by_etype_rtype:
-                    eids_by_etype_rtype[key] = [str(eid)]
-                else:
-                    eids_by_etype_rtype[key].append(str(eid))
-        for (etype, rtype), eids in eids_by_etype_rtype.iteritems():
-            # quite unexpectedly, not deleting too many entities at a time in
-            # this operation benefits to the exec speed (possibly on the RQL
-            # parsing side)
-            start = 0
-            incr = 500
-            while start < len(eids):
-                session.execute(self.base_rql % (etype, ','.join(eids[start:start+incr]), rtype))
-                start += incr
-
-class _DelayedDeleteSEntityOp(_DelayedDeleteOp):
-    """delete orphan subject entity of a composite relation"""
-    base_rql = 'DELETE %s X WHERE X eid IN (%s), NOT X %s Y'
-
-class _DelayedDeleteOEntityOp(_DelayedDeleteOp):
-    """check required object relation"""
-    base_rql = 'DELETE %s X WHERE X eid IN (%s), NOT Y %s X'
-
-
 class DeleteCompositeOrphanHook(hook.Hook):
-    """delete the composed of a composite relation when this relation is deleted
+    """Delete the composed of a composite relation when the composite is
+    deleted (this is similar to the cascading ON DELETE CASCADE
+    semantics of sql).
     """
     __regid__ = 'deletecomposite'
-    events = ('before_delete_relation',)
+    __select__ = hook.Hook.__select__ & composite_etype()
+    events = ('before_delete_entity',)
     category = 'activeintegrity'
 
     def __call__(self):
-        # if the relation is being delete, don't delete composite's components
-        # automatically
-        session = self._cw
-        rtype = self.rtype
-        rdef = session.rtype_eids_rdef(rtype, self.eidfrom, self.eidto)
-        if (rdef.subject, rtype, rdef.object) in session.transaction_data.get('pendingrdefs', ()):
-            return
-        composite = rdef.composite
-        if composite == 'subject':
-            _DelayedDeleteOEntityOp.get_instance(self._cw).add_data(
-                (self.eidto, rtype))
-        elif composite == 'object':
-            _DelayedDeleteSEntityOp.get_instance(self._cw).add_data(
-                (self.eidfrom, rtype))
+        eid = self.entity.eid
+        for rdef, role in self.entity.e_schema.composite_rdef_roles:
+            rtype = rdef.rtype.type
+            target = getattr(rdef, neg_role(role))
+            expr = ('C %s X' % rtype) if role == 'subject' else ('X %s C' % rtype)
+            self._cw.execute('DELETE %s X WHERE C eid %%(c)s, %s' % (target, expr),
+                             {'c': eid})
+
 
 def registration_callback(vreg):
     vreg.register_all(globals().values(), __name__)

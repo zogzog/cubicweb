@@ -1,5 +1,5 @@
 # -*- coding: iso-8859-1 -*-
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -47,7 +47,7 @@ class SupervisingTC(CubicWebTC):
         self.execute('DELETE Card B WHERE B title "une news !"')
         self.execute('SET X bookmarked_by U WHERE X is Bookmark, U eid %(x)s', {'x': user.eid})
         self.execute('SET X content "duh?" WHERE X is Comment')
-        self.execute('DELETE X comments Y WHERE Y is Card, Y title "une autre news !"')
+        self.execute('DELETE Comment C WHERE C comments Y, Y is Card, Y title "une autre news !"')
         # check only one supervision email operation
         session = self.session
         sentops = [op for op in session.pending_operations
@@ -75,7 +75,7 @@ class SupervisingTC(CubicWebTC):
 * updated comment #EID (duh?)
   http://testing.fr/cubicweb/comment/EID
 
-* deleted relation comments from comment #EID to card #EID''',
+* deleted comment #EID (duh?)''',
                               data)
         # check prepared email
         op._prepare_email()

@@ -138,6 +138,11 @@ API changes
 * ``set_cnxset`` and ``free_cnxset`` are deprecated. cnxset are now
   automatically managed.
 
+* The implementation of cascading deletion when deleting `composite`
+  entities has changed. There comes a semantic change: merely deleting
+  a composite relation does not entail any more the deletion of the
+  component side of the relation.
+
 
 Deprecated Code Drops
 ----------------------
