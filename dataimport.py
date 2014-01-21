@@ -1064,7 +1064,7 @@ class SQLGenSourceWrapper(object):
             if subjtype is None:
                 # Try to infer it
                 targets = [t.type for t in
-                           self.schema.rschema(rtype).targets()]
+                           self.schema.rschema(rtype).subjects()]
                 if len(targets) == 1:
                     subjtype = targets[0]
                 else:

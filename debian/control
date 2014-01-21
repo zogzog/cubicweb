@@ -43,7 +43,8 @@ Description: the complete CubicWeb framework
 
 Package: cubicweb-server
 Architecture: all
-Conflicts: cubicweb-multisources
+Conflicts:
+ cubicweb-multisources
 Replaces: cubicweb-multisources
 Provides: cubicweb-multisources
 Depends:

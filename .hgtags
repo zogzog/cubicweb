@@ -320,6 +320,9 @@ fe0e1863a13772836f40f743cc6fe4865f288ed3 cubicweb-debian-version-3.17.10-1
 7f67db7c848ec20152daf489d9e11f0fc8402e9b cubicweb-version-3.17.11
 7f67db7c848ec20152daf489d9e11f0fc8402e9b cubicweb-debian-version-3.17.11-1
 b02e2912cad5d80395e488c55b548495e8320198 cubicweb-debian-version-3.17.11-2
+838d58a30f7efc6a8f83ac27ae8de7d79b84b2bb cubicweb-version-3.17.12
+838d58a30f7efc6a8f83ac27ae8de7d79b84b2bb cubicweb-debian-version-3.17.12-1
+838d58a30f7efc6a8f83ac27ae8de7d79b84b2bb cubicweb-centos-version-3.17.12-1
 db37bf35a1474843ded0a537f9cb4838f4a78cda cubicweb-version-3.18.0
 db37bf35a1474843ded0a537f9cb4838f4a78cda cubicweb-debian-version-3.18.0-1
 db37bf35a1474843ded0a537f9cb4838f4a78cda cubicweb-centos-version-3.18.0-1

@@ -764,7 +764,7 @@ class Entity(AppObject):
                           _engine=ENGINE):
         trdata = TransformData(data, format, encoding, appobject=self)
         data = _engine.convert(trdata, target_format).decode()
-        if format == 'text/html':
+        if target_format == 'text/html':
             data = soup2xhtml(data, self._cw.encoding)
         return data
 

@@ -24,6 +24,7 @@ from cubicweb.schema import make_workflowable
 
 class Company(EntityType):
     name = String()
+    description = RichString()
 
 class Division(Company):
     __specializes_schema__ = True

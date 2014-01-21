@@ -102,17 +102,16 @@ class IFTIndexableAdapter(view.EntityAdapter):
         _done.add(entity.eid)
         containers = tuple(entity.e_schema.fulltext_containers())
         if containers:
-            for rschema, target in containers:
-                if target == 'object':
+            for rschema, role in containers:
+                if role == 'object':
                     targets = getattr(entity, rschema.type)
                 else:
                     targets = getattr(entity, 'reverse_%s' % rschema)
-                for entity in targets:
-                    if entity.eid in _done:
+                for target in targets:
+                    if target.eid in _done:
                         continue
-                    for container in entity.cw_adapt_to('IFTIndexable').fti_containers(_done):
+                    for container in target.cw_adapt_to('IFTIndexable').fti_containers(_done):
                         yield container
-                        yielded = True
         else:
             yield entity
 
