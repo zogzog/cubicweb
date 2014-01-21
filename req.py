@@ -241,6 +241,11 @@ class RequestSessionBase(object):
         - cubes.blog.mycache
         - etc.
         """
+        warn.warning('[3.19] .get_cache will disappear soon. '
+                     'Distributed caching mechanisms are being introduced instead.'
+                     'Other caching mechanism can be used more reliably '
+                     'to the same effect.',
+                     DeprecationWarning)
         if cachename in CACHE_REGISTRY:
             cache = CACHE_REGISTRY[cachename]
         else:

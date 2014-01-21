@@ -18,6 +18,7 @@
 """entity classes for optional library entities"""
 
 __docformat__ = "restructuredtext en"
+from warnings import warn
 
 from urlparse import urlsplit, urlunsplit
 from datetime import datetime
@@ -129,6 +130,13 @@ class CWCache(AnyEntity):
     """Cache"""
     __regid__ = 'CWCache'
     fetch_attrs, cw_fetch_order = fetch_config(['name'])
+
+    def __init__(self, *args, **kwargs):
+        warn('[3.19] CWCache entity type is going away soon. '
+             'Other caching mechanisms can be used more reliably '
+             'to the same effect.',
+             DeprecationWarning)
+        super(CWCache, self).__init__(*args, **kwargs)
 
     def touch(self):
         self._cw.execute('SET X timestamp %(t)s WHERE X eid %(x)s',
