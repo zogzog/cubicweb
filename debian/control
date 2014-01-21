@@ -43,7 +43,9 @@ Description: the complete CubicWeb framework
 
 Package: cubicweb-server
 Architecture: all
-Conflicts: cubicweb-multisources
+Conflicts:
+ cubicweb-multisources
+ yams (>= 0.39)
 Replaces: cubicweb-multisources
 Provides: cubicweb-multisources
 Depends:

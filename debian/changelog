@@ -1,3 +1,9 @@
+cubicweb (3.17.12-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Aurelien Campeas <aurelien.campeas@logilab.fr>  Tue, 21 Jan 2014 13:10:22 +0100
+
 cubicweb (3.17.11-2) unstable; urgency=low
 
   * Override lintian false-positive about debian/rules.tmpl in the cube
