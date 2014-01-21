@@ -25,7 +25,7 @@ from cubicweb.devtools import TestServerConfiguration
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.web.formwidgets import PasswordInput, TextArea, Select, Radio
 from cubicweb.web.formfields import *
-from cubicweb.web.views.forms import EntityFieldsForm
+from cubicweb.web.views.forms import EntityFieldsForm, FieldsForm
 
 from cubes.file.entities import File
 
@@ -158,6 +158,21 @@ class MoreFieldsTC(CubicWebTC):
         form = EntityFieldsForm(req, entity=e)
         form.formvalues = {}
         field.render(form, renderer)
+
+
+class CompoundFieldTC(CubicWebTC):
+
+    def test_multipart(self):
+        """Ensures that compound forms have needs_multipart set if their
+        children require it"""
+        class AForm(FieldsForm):
+            comp = CompoundField([IntField(), StringField()])
+        aform = AForm(self.request(), None)
+        self.assertFalse(aform.needs_multipart)
+        class MForm(FieldsForm):
+            comp = CompoundField([IntField(), FileField()])
+        mform = MForm(self.request(), None)
+        self.assertTrue(mform.needs_multipart)
 
 
 class UtilsTC(TestCase):

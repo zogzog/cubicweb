@@ -1033,6 +1033,10 @@ class CompoundField(Field):
         # while it has no value, hence generating a false error.
         return list(self.fields)
 
+    @property
+    def needs_multipart(self):
+        return any(f.needs_multipart for f in self.fields)
+
 
 class RelationField(Field):
     """Use this field to edit a relation of an entity.
