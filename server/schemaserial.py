@@ -133,11 +133,6 @@ def deserialize_schema(schema, session):
             sqlexec('UPDATE entities SET type=%(n)s WHERE type=%(x)s',
                     {'x': etype, 'n': netype})
             session.commit(False)
-            try:
-                sqlexec('UPDATE deleted_entities SET type=%(n)s WHERE type=%(x)s',
-                        {'x': etype, 'n': netype})
-            except Exception:
-                pass
             tocleanup = [eid]
             tocleanup += (eid for eid, cached in repo._type_source_cache.iteritems()
                           if etype == cached[0])

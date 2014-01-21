@@ -8,4 +8,3 @@ cursor = session.cnxset['system']
 sql('UPDATE entities SET asource = source WHERE asource is NULL')
 dbhelper.change_col_type(cursor, 'entities', 'asource', attrtype, False)
 dbhelper.change_col_type(cursor, 'entities', 'source', attrtype, False)
-dbhelper.change_col_type(cursor, 'deleted_entities', 'source', attrtype, False)

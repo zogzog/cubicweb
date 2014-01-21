@@ -39,10 +39,6 @@ class TransactionsCleanupStartupHook(hook.Hook):
                 session.system_sql(
                     'DELETE FROM transactions WHERE tx_time < %(time)s',
                     {'time': mindate})
-                # cleanup deleted entities
-                session.system_sql(
-                    'DELETE FROM deleted_entities WHERE dtime < %(time)s',
-                    {'time': mindate})
                 session.commit()
             finally:
                 session.close()

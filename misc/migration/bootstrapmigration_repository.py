@@ -223,11 +223,11 @@ if applcubicwebversion < (3, 5, 0) and cubicwebversion >= (3, 5, 0):
 
 if applcubicwebversion < (3, 2, 2) and cubicwebversion >= (3, 2, 1):
     from base64 import b64encode
-    for table in ('entities', 'deleted_entities'):
-        for eid, extid in sql('SELECT eid, extid FROM %s WHERE extid is NOT NULL'
-                              % table, ask_confirm=False):
-            sql('UPDATE %s SET extid=%%(extid)s WHERE eid=%%(eid)s' % table,
-                {'extid': b64encode(extid), 'eid': eid}, ask_confirm=False)
+    for eid, extid in sql('SELECT eid, extid FROM entities '
+                          'WHERE extid is NOT NULL',
+                          ask_confirm=False):
+        sql('UPDATE entities SET extid=%(extid)s WHERE eid=%(eid)s',
+            {'extid': b64encode(extid), 'eid': eid}, ask_confirm=False)
     commit()
 
 if applcubicwebversion < (3, 2, 0) and cubicwebversion >= (3, 2, 0):

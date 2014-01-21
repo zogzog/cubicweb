@@ -297,8 +297,6 @@ class CWETypeRenameOp(MemSchemaOperation):
         for eid, (etype, uri, extid, auri) in self.session.repo._type_source_cache.items():
             if etype == oldname:
                 self.session.repo._type_source_cache[eid] = (newname, uri, extid, auri)
-        sqlexec('UPDATE deleted_entities SET type=%(newname)s WHERE type=%(oldname)s',
-                {'newname': newname, 'oldname': oldname})
         # XXX transaction records
 
     def precommit_event(self):

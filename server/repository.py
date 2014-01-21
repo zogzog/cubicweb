@@ -1137,9 +1137,7 @@ class Repository(object):
         """delete system information on deletion of an entity:
 
         * delete all remaining relations from/to this entity
-
-        * call delete info on the system source which will transfer record from
-          the entities table to the deleted_entities table
+        * call delete info on the system source
 
         When scleanup is specified, it's expected to be the source's eid, in
         which case we'll specify the target's relation source so that this

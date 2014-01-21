@@ -112,20 +112,6 @@ def make_schema(selected, solution, table, typemap):
     return ','.join(sql), varmap
 
 
-def _modified_sql(table, etypes):
-    # XXX protect against sql injection
-    if len(etypes) > 1:
-        restr = 'type IN (%s)' % ','.join("'%s'" % etype for etype in etypes)
-    else:
-        restr = "type='%s'" % etypes[0]
-    if table == 'entities':
-        attr = 'mtime'
-    else:
-        attr = 'dtime'
-    return 'SELECT type, eid FROM %s WHERE %s AND %s > %%(time)s' % (
-        table, restr, attr)
-
-
 def sql_or_clauses(sql, clauses):
     select, restr = sql.split(' WHERE ', 1)
     restrclauses = restr.split(' AND ')
@@ -138,12 +124,14 @@ def sql_or_clauses(sql, clauses):
         restr = '(%s)' % ' OR '.join(clauses)
     return '%s WHERE %s' % (select, restr)
 
+
 def rdef_table_column(rdef):
     """return table and column used to store the given relation definition in
     the database
     """
     return (SQL_PREFIX + str(rdef.subject),
             SQL_PREFIX + str(rdef.rtype))
+
 
 def rdef_physical_info(dbhelper, rdef):
     """return backend type and a boolean flag if NULL values should be allowed
@@ -299,8 +287,6 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         self._eid_creation_cnx = None
         # (etype, attr) / storage mapping
         self._storages = {}
-        # entity types that may be used by other multi-sources instances
-        self.multisources_etypes = set(repo.config['multi-sources-etypes'])
         # XXX no_sqlite_wrap trick since we've a sqlite locking pb when
         # running unittest_multisources with the wrapping below
         if self.dbdriver == 'sqlite' and \
@@ -968,9 +954,8 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             if extid is not None:
                 assert isinstance(extid, str)
                 extid = b64encode(extid)
-            uri = 'system'
             attrs = {'type': entity.cw_etype, 'eid': entity.eid, 'extid': extid,
-                     'source': uri, 'asource': source.uri, 'mtime': datetime.utcnow()}
+                     'source': 'system', 'asource': source.uri}
             self._handle_insert_entity_sql(session, self.sqlgen.insert('entities', attrs), attrs)
             # insert core relations: is, is_instance_of and cw_source
             try:
@@ -999,10 +984,6 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             # reindex the entity only if this query is updating at least
             # one indexable attribute
             self.index_entity(session, entity=entity)
-        # update entities.mtime.
-        # XXX Only if entity.cw_etype in self.multisources_etypes?
-        attrs = {'eid': entity.eid, 'mtime': datetime.utcnow()}
-        self.doexec(session, self.sqlgen.update('entities', attrs, ['eid']), attrs)
 
     def delete_info_multi(self, session, entities, uri):
         """delete system information on deletion of a list of entities with the
@@ -1010,43 +991,10 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
 
         * update the fti
         * remove record from the `entities` table
-        * transfer it to the `deleted_entities`
         """
         self.fti_unindex_entities(session, entities)
         attrs = {'eid': '(%s)' % ','.join([str(_e.eid) for _e in entities])}
         self.doexec(session, self.sqlgen.delete_many('entities', attrs), attrs)
-        if entities[0].__regid__ not in self.multisources_etypes:
-            return
-        attrs = {'type': entities[0].__regid__,
-                 'source': uri, 'dtime': datetime.utcnow()}
-        for entity in entities:
-            extid = entity.cw_metainformation()['extid']
-            if extid is not None:
-                assert isinstance(extid, str), type(extid)
-                extid = b64encode(extid)
-            attrs.update({'eid': entity.eid, 'extid': extid})
-            self.doexec(session, self.sqlgen.insert('deleted_entities', attrs), attrs)
-
-    def modified_entities(self, session, etypes, mtime):
-        """return a 2-uple:
-        * list of (etype, eid) of entities of the given types which have been
-          modified since the given timestamp (actually entities whose full text
-          index content has changed)
-        * list of (etype, eid) of entities of the given types which have been
-          deleted since the given timestamp
-        """
-        for etype in etypes:
-            if not etype in self.multisources_etypes:
-                self.error('%s not listed as a multi-sources entity types. '
-                              'Modify your configuration' % etype)
-                self.multisources_etypes.add(etype)
-        modsql = _modified_sql('entities', etypes)
-        cursor = self.doexec(session, modsql, {'time': mtime})
-        modentities = cursor.fetchall()
-        delsql = _modified_sql('deleted_entities', etypes)
-        cursor = self.doexec(session, delsql, {'time': mtime})
-        delentities = cursor.fetchall()
-        return modentities, delentities
 
     # undo support #############################################################
 
@@ -1294,10 +1242,6 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         self.doexec(session, sql, action.changes)
         # restore record in entities (will update fti if needed)
         self.add_info(session, entity, self, None, True)
-        # remove record from deleted_entities if entity's type is multi-sources
-        if entity.cw_etype in self.multisources_etypes:
-            self.doexec(session,
-                        'DELETE FROM deleted_entities WHERE eid=%s' % eid)
         self.repo.hm.call_hooks('after_add_entity', session, entity=entity)
         return errors
 
@@ -1499,23 +1443,10 @@ CREATE TABLE entities (
   type VARCHAR(64) NOT NULL,
   source VARCHAR(128) NOT NULL,
   asource VARCHAR(128) NOT NULL,
-  mtime %s NOT NULL,
   extid VARCHAR(256)
 );;
 CREATE INDEX entities_type_idx ON entities(type);;
-CREATE INDEX entities_mtime_idx ON entities(mtime);;
 CREATE INDEX entities_extid_idx ON entities(extid);;
-
-CREATE TABLE deleted_entities (
-  eid INTEGER PRIMARY KEY NOT NULL,
-  type VARCHAR(64) NOT NULL,
-  source VARCHAR(128) NOT NULL,
-  dtime %s NOT NULL,
-  extid VARCHAR(256)
-);;
-CREATE INDEX deleted_entities_type_idx ON deleted_entities(type);;
-CREATE INDEX deleted_entities_dtime_idx ON deleted_entities(dtime);;
-CREATE INDEX deleted_entities_extid_idx ON deleted_entities(extid);;
 
 CREATE TABLE transactions (
   tx_uuid CHAR(32) PRIMARY KEY NOT NULL,
@@ -1555,7 +1486,7 @@ CREATE INDEX tx_relation_actions_eid_from_idx ON tx_relation_actions(eid_from);;
 CREATE INDEX tx_relation_actions_eid_to_idx ON tx_relation_actions(eid_to);;
 CREATE INDEX tx_relation_actions_tx_uuid_idx ON tx_relation_actions(tx_uuid);;
 """ % (helper.sql_create_sequence('entities_id_seq').replace(';', ';;'),
-       typemap['Datetime'], typemap['Datetime'], typemap['Datetime'],
+       typemap['Datetime'],
        typemap['Boolean'], typemap['Bytes'], typemap['Boolean'])
     if helper.backend_name == 'sqlite':
         # sqlite support the ON DELETE CASCADE syntax but do nothing
@@ -1575,7 +1506,6 @@ def sql_drop_schema(driver):
     return """
 %s
 DROP TABLE entities;
-DROP TABLE deleted_entities;
 DROP TABLE tx_entity_actions;
 DROP TABLE tx_relation_actions;
 DROP TABLE transactions;
@@ -1584,7 +1514,7 @@ DROP TABLE transactions;
 
 def grant_schema(user, set_owner=True):
     result = ''
-    for table in ('entities', 'deleted_entities', 'entities_id_seq',
+    for table in ('entities', 'entities_id_seq',
                   'transactions', 'tx_entity_actions', 'tx_relation_actions'):
         if set_owner:
             result = 'ALTER TABLE %s OWNER TO %s;\n' % (table, user)
@@ -1731,7 +1661,6 @@ class DatabaseIndependentBackupRestore(object):
 
     def get_tables(self):
         non_entity_tables = ['entities',
-                             'deleted_entities',
                              'transactions',
                              'tx_entity_actions',
                              'tx_relation_actions',

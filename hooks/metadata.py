@@ -204,8 +204,7 @@ class ChangeEntitySourceAddHook(MetaDataHook):
             self._cw.system_sql('UPDATE entities SET eid=-eid WHERE eid=%(eid)s',
                                 {'eid': self.eidfrom})
             attrs = {'type': entity.cw_etype, 'eid': entity.eid, 'extid': None,
-                     'source': 'system', 'asource': 'system',
-                     'mtime': datetime.now()}
+                     'source': 'system', 'asource': 'system'}
             self._cw.system_sql(syssource.sqlgen.insert('entities', attrs), attrs)
             # register an operation to update repository/sources caches
             ChangeEntitySourceUpdateCaches(self._cw, entity=entity,

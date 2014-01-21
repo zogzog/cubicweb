@@ -1125,7 +1125,7 @@ class SQLGenSourceWrapper(object):
             assert isinstance(extid, str)
             extid = b64encode(extid)
         attrs = {'type': entity.cw_etype, 'eid': entity.eid, 'extid': extid,
-                 'source': 'system', 'asource': source.uri, 'mtime': datetime.utcnow()}
+                 'source': 'system', 'asource': source.uri}
         self._handle_insert_entity_sql(session, self.sqlgen.insert('entities', attrs), attrs)
         # insert core relations: is, is_instance_of and cw_source
         try:
