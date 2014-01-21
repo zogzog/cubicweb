@@ -99,7 +99,7 @@ class CWSourceMainTab(tabs.PrimaryTab):
                               cellvids={1: 'editable-final'})
 
 
-MAPPED_SOURCE_TYPES = set( ('pyrorql', 'datafeed') )
+MAPPED_SOURCE_TYPES = set( ('datafeed',) )
 
 class CWSourceMappingTab(EntityView):
     __regid__ = 'cwsource-mapping'
@@ -214,49 +214,6 @@ class MappingChecker(object):
     def custom_check(self):
         pass
 
-
-class PyroRQLMappingChecker(MappingChecker):
-    """pyrorql source mapping checker"""
-
-    def init(self):
-        self.dontcross = set()
-        self.maycross = set()
-        super(PyroRQLMappingChecker, self).init()
-
-    def init_schemacfg(self, schemacfg):
-        options = schemacfg.options or ()
-        if 'dontcross' in options:
-            self.dontcross.add(schemacfg.schema.name)
-        else:
-            super(PyroRQLMappingChecker, self).init_schemacfg(schemacfg)
-            if 'maycross' in options:
-                self.maycross.add(schemacfg.schema.name)
-
-    def custom_check(self):
-        error = self.errors.append
-        info = self.infos.append
-        for etype in self.sentities:
-            eschema = self.schema[etype]
-            for rschema, ttypes, role in eschema.relation_definitions():
-                if rschema in META_RTYPES:
-                    continue
-                if not rschema in self.srelations:
-                    if rschema not in self.dontcross:
-                        if role == 'subject' and rschema.inlined:
-                            error(_('inlined relation %(rtype)s of %(etype)s '
-                                    'should be supported') %
-                                  {'rtype': rschema, 'etype': etype})
-                        elif (rschema not in self.seen and rschema not in self.maycross):
-                            info(_('you may want to specify something for %s') %
-                                 rschema)
-                            self.seen.add(rschema)
-                elif rschema in self.maycross and rschema.inlined:
-                    error(_('you should un-inline relation %s which is '
-                            'supported and may be crossed ') % rschema)
-
-MAPPING_CHECKERS = {
-    'pyrorql': PyroRQLMappingChecker,
-    }
 
 
 class CWSourceImportsTab(EntityView):

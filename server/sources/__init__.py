@@ -61,26 +61,6 @@ def dbg_results(results):
     # return true so it can be used as assertion (and so be killed by python -O)
     return True
 
-class TimedCache(dict):
-    def __init__(self, ttl):
-        # time to live in seconds
-        if ttl <= 0:
-            raise ValueError('TimedCache initialized with a ttl of %ss' % ttl.seconds)
-        self.ttl = timedelta(seconds=ttl)
-
-    def __setitem__(self, key, value):
-        dict.__setitem__(self, key, (datetime.utcnow(), value))
-
-    def __getitem__(self, key):
-        return dict.__getitem__(self, key)[1]
-
-    def clear_expired(self):
-        now_ = datetime.utcnow()
-        ttl = self.ttl
-        for key, (timestamp, value) in self.items():
-            if now_ - timestamp > ttl:
-                del self[key]
-
 
 class AbstractSource(object):
     """an abstract class for sources"""
@@ -550,51 +530,6 @@ class AbstractSource(object):
     def extid2eid(self, value, etype, session=None, **kwargs):
         return self.repo.extid2eid(self, value, etype, session, **kwargs)
 
-
-class TrFunc(object):
-    """lower, upper"""
-    def __init__(self, trname, index, attrname=None):
-        self._tr = trname.lower()
-        self.index = index
-        self.attrname = attrname
-
-    def apply(self, resdict):
-        value = resdict.get(self.attrname)
-        if value is not None:
-            return getattr(value, self._tr)()
-        return None
-
-
-class GlobTrFunc(TrFunc):
-    """count, sum, max, min, avg"""
-    funcs = {
-        'count': len,
-        'sum': sum,
-        'max': max,
-        'min': min,
-        # XXX avg
-        }
-    def apply(self, result):
-        """have to 'groupby' manually. For instance, if we 'count' for index 1:
-        >>> self.apply([(1, 2), (3, 4), (1, 5)])
-        [(1, 7), (3, 4)]
-        """
-        keys, values = [], {}
-        for row in result:
-            key = tuple(v for i, v in enumerate(row) if i != self.index)
-            value = row[self.index]
-            try:
-                values[key].append(value)
-            except KeyError:
-                keys.append(key)
-                values[key] = [value]
-        result = []
-        trfunc = self.funcs[self._tr]
-        for key in keys:
-            row = list(key)
-            row.insert(self.index, trfunc(values[key]))
-            result.append(row)
-        return result
 
 
 class ConnectionWrapper(object):

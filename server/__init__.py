@@ -351,6 +351,4 @@ ON_COMMIT_ADD_RELATIONS = set(())
 SOURCE_TYPES = {'native': LazyObject('cubicweb.server.sources.native', 'NativeSQLSource'),
                 'datafeed': LazyObject('cubicweb.server.sources.datafeed', 'DataFeedSource'),
                 'ldapfeed': LazyObject('cubicweb.server.sources.ldapfeed', 'LDAPFeedSource'),
-                'pyrorql': LazyObject('cubicweb.server.sources.pyrorql', 'PyroRQLSource'),
-                'zmqrql': LazyObject('cubicweb.server.sources.zmqrql', 'ZMQRQLSource'),
                 }

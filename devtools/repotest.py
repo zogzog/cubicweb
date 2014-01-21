@@ -411,11 +411,6 @@ def _choose_term(self, source, sourceterms):
                 return x.value
     return _orig_choose_term(self, source, DumbOrderedDict2(sourceterms, get_key))
 
-from cubicweb.server.sources.pyrorql import PyroRQLSource
-_orig_syntax_tree_search = PyroRQLSource.syntax_tree_search
-
-def _syntax_tree_search(*args, **kwargs):
-    return deepcopy(_orig_syntax_tree_search(*args, **kwargs))
 
 def _ordered_iter_relations(stinfo):
     return sorted(_orig_iter_relations(stinfo), key=lambda x:x.r_type)
@@ -429,7 +424,6 @@ def do_monkey_patch():
     ExecutionPlan.init_temp_table = _init_temp_table
     PartPlanInformation.merge_input_maps = _merge_input_maps
     PartPlanInformation._choose_term = _choose_term
-    PyroRQLSource.syntax_tree_search = _syntax_tree_search
 
 def undo_monkey_patch():
     rqlrewrite.iter_relations = _orig_iter_relations
@@ -439,4 +433,3 @@ def undo_monkey_patch():
     ExecutionPlan.init_temp_table = _orig_init_temp_table
     PartPlanInformation.merge_input_maps = _orig_merge_input_maps
     PartPlanInformation._choose_term = _orig_choose_term
-    PyroRQLSource.syntax_tree_search = _orig_syntax_tree_search
