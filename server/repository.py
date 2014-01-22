@@ -1215,26 +1215,6 @@ class Repository(object):
                                    entities, rql)
         self.system_source.delete_info_multi(session, entities)
 
-    def locate_relation_source(self, session, subject, rtype, object):
-        subjsource = self.source_from_eid(subject, session)
-        objsource = self.source_from_eid(object, session)
-        if not subjsource.support_relation(rtype):
-            source = self.system_source
-        else:
-            source = subjsource
-        if not source.support_relation(rtype, True):
-            raise MultiSourcesError(
-                "source %s doesn't support write of %s relation"
-                % (source.uri, rtype))
-        return source
-
-    def locate_etype_source(self, etype):
-        for source in self.sources:
-            if source.support_entity(etype, 1):
-                return source
-        else:
-            raise ETypeNotSupportedBySources(etype)
-
     def init_entity_caches(self, session, entity, source):
         """add entity to session entities cache and repo's extid cache.
         Return entity's ext id if the source isn't the system source.
@@ -1261,7 +1241,7 @@ class Repository(object):
         entity._cw_is_saved = False # entity has an eid but is not yet saved
         # init edited_attributes before calling before_add_entity hooks
         entity.cw_edited = edited
-        source = self.locate_etype_source(entity.cw_etype)
+        source = self.system_source
         # allocate an eid to the entity before calling hooks
         entity.eid = self.system_source.create_eid(session)
         # set caches asap
@@ -1269,8 +1249,7 @@ class Repository(object):
         if server.DEBUG & server.DBG_REPO:
             print 'ADD entity', self, entity.cw_etype, entity.eid, edited
         prefill_entity_caches(entity)
-        if source.should_call_hooks:
-            self.hm.call_hooks('before_add_entity', session, entity=entity)
+        self.hm.call_hooks('before_add_entity', session, entity=entity)
         relations = preprocess_inlined_relations(session, entity)
         edited.set_defaults()
         if session.is_hook_category_activated('integrity'):
@@ -1284,14 +1263,13 @@ class Repository(object):
         self.add_info(session, entity, source, extid, complete=False)
         edited.saved = entity._cw_is_saved = True
         # trigger after_add_entity after after_add_relation
-        if source.should_call_hooks:
-            self.hm.call_hooks('after_add_entity', session, entity=entity)
-            # call hooks for inlined relations
-            for attr, value in relations:
-                self.hm.call_hooks('before_add_relation', session,
-                                    eidfrom=entity.eid, rtype=attr, eidto=value)
-                self.hm.call_hooks('after_add_relation', session,
-                                    eidfrom=entity.eid, rtype=attr, eidto=value)
+        self.hm.call_hooks('after_add_entity', session, entity=entity)
+        # call hooks for inlined relations
+        for attr, value in relations:
+            self.hm.call_hooks('before_add_relation', session,
+                                eidfrom=entity.eid, rtype=attr, eidto=value)
+            self.hm.call_hooks('after_add_relation', session,
+                                eidfrom=entity.eid, rtype=attr, eidto=value)
         return entity.eid
 
     def glob_update_entity(self, session, edited):
@@ -1307,10 +1285,10 @@ class Repository(object):
         session.set_entity_cache(entity)
         orig_edited = getattr(entity, 'cw_edited', None)
         entity.cw_edited = edited
+        source = self.system_source
         try:
             only_inline_rels, need_fti_update = True, False
             relations = []
-            source = self.source_from_eid(entity.eid, session)
             for attr in list(edited):
                 if attr == 'eid':
                     continue
@@ -1326,18 +1304,17 @@ class Repository(object):
                         previous_value = previous_value[0][0] # got a result set
                         if previous_value == entity.cw_attr_cache[attr]:
                             previous_value = None
-                        elif source.should_call_hooks:
+                        else:
                             hm.call_hooks('before_delete_relation', session,
                                           eidfrom=entity.eid, rtype=attr,
                                           eidto=previous_value)
                     relations.append((attr, edited[attr], previous_value))
-            if source.should_call_hooks:
-                # call hooks for inlined relations
-                for attr, value, _t in relations:
-                    hm.call_hooks('before_add_relation', session,
-                                  eidfrom=entity.eid, rtype=attr, eidto=value)
-                if not only_inline_rels:
-                    hm.call_hooks('before_update_entity', session, entity=entity)
+            # call hooks for inlined relations
+            for attr, value, _t in relations:
+                hm.call_hooks('before_add_relation', session,
+                              eidfrom=entity.eid, rtype=attr, eidto=value)
+            if not only_inline_rels:
+                hm.call_hooks('before_update_entity', session, entity=entity)
             if session.is_hook_category_activated('integrity'):
                 edited.check()
             try:
@@ -1348,25 +1325,24 @@ class Repository(object):
                     'IUserFriendlyError', session, entity=entity, exc=exc)
                 userhdlr.raise_user_exception()
             self.system_source.update_info(session, entity, need_fti_update)
-            if source.should_call_hooks:
-                if not only_inline_rels:
-                    hm.call_hooks('after_update_entity', session, entity=entity)
-                for attr, value, prevvalue in relations:
-                    # if the relation is already cached, update existant cache
-                    relcache = entity.cw_relation_cached(attr, 'subject')
-                    if prevvalue is not None:
-                        hm.call_hooks('after_delete_relation', session,
-                                      eidfrom=entity.eid, rtype=attr, eidto=prevvalue)
-                        if relcache is not None:
-                            session.update_rel_cache_del(entity.eid, attr, prevvalue)
-                    del_existing_rel_if_needed(session, entity.eid, attr, value)
+            if not only_inline_rels:
+                hm.call_hooks('after_update_entity', session, entity=entity)
+            for attr, value, prevvalue in relations:
+                # if the relation is already cached, update existant cache
+                relcache = entity.cw_relation_cached(attr, 'subject')
+                if prevvalue is not None:
+                    hm.call_hooks('after_delete_relation', session,
+                                  eidfrom=entity.eid, rtype=attr, eidto=prevvalue)
                     if relcache is not None:
-                        session.update_rel_cache_add(entity.eid, attr, value)
-                    else:
-                        entity.cw_set_relation_cache(attr, 'subject',
-                                                     session.eid_rset(value))
-                    hm.call_hooks('after_add_relation', session,
-                                  eidfrom=entity.eid, rtype=attr, eidto=value)
+                        session.update_rel_cache_del(entity.eid, attr, prevvalue)
+                del_existing_rel_if_needed(session, entity.eid, attr, value)
+                if relcache is not None:
+                    session.update_rel_cache_add(entity.eid, attr, value)
+                else:
+                    entity.cw_set_relation_cache(attr, 'subject',
+                                                 session.eid_rset(value))
+                hm.call_hooks('after_add_relation', session,
+                              eidfrom=entity.eid, rtype=attr, eidto=value)
         finally:
             if orig_edited is not None:
                 entity.cw_edited = orig_edited
@@ -1384,37 +1360,28 @@ class Repository(object):
             eids = frozenset(eids)
         eids = eids - op._container
         op._container |= eids
-        data_by_etype_source = {} # values are ([list of eids],
-                                  #             [list of extid],
-                                  #             [list of entities])
+        data_by_etype = {} # values are [list of entities]
         #
         # WARNING: the way this dictionary is populated is heavily optimized
         # and does not use setdefault on purpose. Unless a new release
         # of the Python interpreter advertises large perf improvements
         # in setdefault, this should not be changed without profiling.
-
         for eid in eids:
-            etype, sourceuri, extid, _ = self.type_and_source_from_eid(eid, session)
+            etype = self.type_from_eid(eid, session)
             # XXX should cache entity's cw_metainformation
             entity = session.entity_from_eid(eid, etype)
             try:
-                data_by_etype_source[(etype, sourceuri)].append(entity)
+                data_by_etype[etype].append(entity)
             except KeyError:
-                data_by_etype_source[(etype, sourceuri)] = [entity]
-        for (etype, sourceuri), entities in data_by_etype_source.iteritems():
+                data_by_etype[etype] = [entity]
+        source = self.system_source
+        for etype, entities in data_by_etype.iteritems():
             if server.DEBUG & server.DBG_REPO:
                 print 'DELETE entities', etype, [entity.eid for entity in entities]
-            source = self.sources_by_uri[sourceuri]
-            if source.should_call_hooks:
-                self.hm.call_hooks('before_delete_entity', session, entities=entities)
-            if session.deleted_in_transaction(source.eid):
-                # source is being deleted, think to give scleanup argument
-                self._delete_info_multi(session, entities, scleanup=source.eid)
-            else:
-                self._delete_info_multi(session, entities)
+            self.hm.call_hooks('before_delete_entity', session, entities=entities)
+            self._delete_info_multi(session, entities)
             source.delete_entities(session, entities)
-            if source.should_call_hooks:
-                self.hm.call_hooks('after_delete_entity', session, entities=entities)
+            self.hm.call_hooks('after_delete_entity', session, entities=entities)
         # don't clear cache here, it is done in a hook on commit
 
     def glob_add_relation(self, session, subject, rtype, object):
@@ -1426,7 +1393,8 @@ class Repository(object):
 
         relations is a dictionary rtype: [(subj_eid, obj_eid), ...]
         """
-        sources = {}
+        source = self.system_source
+        relations_by_rtype = {}
         subjects_by_types = {}
         objects_by_types = {}
         activintegrity = session.is_hook_category_activated('activeintegrity')
@@ -1435,12 +1403,6 @@ class Repository(object):
                 for subjeid, objeid in eids_subj_obj:
                     print 'ADD relation', subjeid, rtype, objeid
             for subjeid, objeid in eids_subj_obj:
-                source = self.locate_relation_source(session, subjeid, rtype, objeid)
-                if source not in sources:
-                    relations_by_rtype = {}
-                    sources[source] = relations_by_rtype
-                else:
-                    relations_by_rtype = sources[source]
                 if rtype in relations_by_rtype:
                     relations_by_rtype[rtype].append((subjeid, objeid))
                 else:
@@ -1474,35 +1436,30 @@ class Repository(object):
                         objects[objeid] = len(relations_by_rtype[rtype])
                         continue
                     objects[objeid] = len(relations_by_rtype[rtype])
-        for source, relations_by_rtype in sources.iteritems():
-            if source.should_call_hooks:
-                for rtype, source_relations in relations_by_rtype.iteritems():
-                    self.hm.call_hooks('before_add_relation', session,
-                                    rtype=rtype, eids_from_to=source_relations)
-            for rtype, source_relations in relations_by_rtype.iteritems():
-                source.add_relations(session, rtype, source_relations)
-                rschema = self.schema.rschema(rtype)
-                for subjeid, objeid in source_relations:
-                    session.update_rel_cache_add(subjeid, rtype, objeid, rschema.symmetric)
-            if source.should_call_hooks:
-                for rtype, source_relations in relations_by_rtype.iteritems():
-                    self.hm.call_hooks('after_add_relation', session,
-                                       rtype=rtype, eids_from_to=source_relations)
+        for rtype, source_relations in relations_by_rtype.iteritems():
+            self.hm.call_hooks('before_add_relation', session,
+                               rtype=rtype, eids_from_to=source_relations)
+        for rtype, source_relations in relations_by_rtype.iteritems():
+            source.add_relations(session, rtype, source_relations)
+            rschema = self.schema.rschema(rtype)
+            for subjeid, objeid in source_relations:
+                session.update_rel_cache_add(subjeid, rtype, objeid, rschema.symmetric)
+        for rtype, source_relations in relations_by_rtype.iteritems():
+            self.hm.call_hooks('after_add_relation', session,
+                               rtype=rtype, eids_from_to=source_relations)
 
     def glob_delete_relation(self, session, subject, rtype, object):
         """delete a relation from the repository"""
         if server.DEBUG & server.DBG_REPO:
             print 'DELETE relation', subject, rtype, object
-        source = self.locate_relation_source(session, subject, rtype, object)
-        if source.should_call_hooks:
-            self.hm.call_hooks('before_delete_relation', session,
-                               eidfrom=subject, rtype=rtype, eidto=object)
+        source = self.system_source
+        self.hm.call_hooks('before_delete_relation', session,
+                           eidfrom=subject, rtype=rtype, eidto=object)
         source.delete_relation(session, subject, rtype, object)
         rschema = self.schema.rschema(rtype)
         session.update_rel_cache_del(subject, rtype, object, rschema.symmetric)
-        if source.should_call_hooks:
-            self.hm.call_hooks('after_delete_relation', session,
-                               eidfrom=subject, rtype=rtype, eidto=object)
+        self.hm.call_hooks('after_delete_relation', session,
+                           eidfrom=subject, rtype=rtype, eidto=object)
 
 
     # pyro handling ###########################################################
