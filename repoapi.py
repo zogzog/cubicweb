@@ -17,8 +17,6 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Official API to access the content of a repository
 """
-from warnings import warn
-
 from logilab.common.deprecation import deprecated
 
 from cubicweb.utils import parse_repo_uri
@@ -239,15 +237,9 @@ class ClientConnection(RequestSessionBase):
         return self._session.repo.source_defs()
 
     @_open_only
-    def get_option_value(self, option, foreid=None):
-        """Return the value for `option` in the configuration. If `foreid` is
-        specified, the actual repository to which this entity belongs is
-        dereferenced and the option value retrieved from it.
-        """
-        if foreid is not None:
-            warn('[3.19] foreid argument is deprecated', DeprecationWarning,
-                 stacklevel=2)
-        return self._session.repo.get_option_value(option, foreid)
+    def get_option_value(self, option):
+        """Return the value for `option` in the configuration."""
+        return self._session.repo.get_option_value(option)
 
     describe = _srv_cnx_func('describe')
 

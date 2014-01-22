@@ -103,7 +103,7 @@ class RequestSessionBase(object):
         self._ = self.__ = gettext
         self.pgettext = pgettext
 
-    def get_option_value(self, option, foreid=None):
+    def get_option_value(self, option):
         raise NotImplementedError
 
     def property_value(self, key):
