@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -19,23 +19,25 @@
 
 __docformat__ = "restructuredtext en"
 
+import sys
 import os
 import re
 import subprocess
-from datetime import datetime, date
+from os.path import abspath
 from itertools import ifilter
+from logging import getLogger
 
 from logilab import database as db, common as lgc
 from logilab.common.shellutils import ProgressBar
-from logilab.common.date import todate, todatetime, utcdatetime, utctime
+from logilab.common.deprecation import deprecated
+from logilab.common.logging_ext import set_log_methods
 from logilab.database.sqlgen import SQLGenerator
 
-from cubicweb import Binary, ConfigurationError, server
+from cubicweb import Binary, ConfigurationError
 from cubicweb.uilib import remove_html_tags
 from cubicweb.schema import PURE_VIRTUAL_RTYPES
 from cubicweb.server import SQL_CONNECT_HOOKS
 from cubicweb.server.utils import crypt_password
-from rql.utils import RQL_FUNCTIONS_REGISTRY
 
 lgc.USE_MX_DATETIME = False
 SQL_PREFIX = 'cw_'
@@ -178,10 +180,124 @@ def sql_drop_all_user_tables(driver_or_helper, sqlcursor):
     return '\n'.join(cmds)
 
 
+class ConnectionWrapper(object):
+    """handle connection to the system source, at some point associated to a
+    :class:`Session`
+    """
+
+    # since 3.19, we only have to manage the system source connection
+    def __init__(self, system_source):
+        # dictionary of (source, connection), indexed by sources'uri
+        self._source = system_source
+        self.cnx = system_source.get_connection()
+        self.cu = self.cnx.cursor()
+
+    def commit(self):
+        """commit the current transaction for this user"""
+        # let exception propagates
+        self.cnx.commit()
+
+    def rollback(self):
+        """rollback the current transaction for this user"""
+        # catch exceptions, rollback other sources anyway
+        try:
+            self.cnx.rollback()
+        except Exception:
+            self._source.critical('rollback error', exc_info=sys.exc_info())
+            # error on rollback, the connection is much probably in a really
+            # bad state. Replace it by a new one.
+            self.reconnect()
+
+    def close(self, i_know_what_i_do=False):
+        """close all connections in the set"""
+        if i_know_what_i_do is not True: # unexpected closing safety belt
+            raise RuntimeError('connections set shouldn\'t be closed')
+        try:
+            self.cu.close()
+            self.cu = None
+        except Exception:
+            pass
+        try:
+            self.cnx.close()
+            self.cnx = None
+        except Exception:
+            pass
+
+    # internals ###############################################################
+
+    def cnxset_freed(self):
+        """connections set is being freed from a session"""
+        pass # no nothing by default
+
+    def reconnect(self):
+        """reopen a connection for this source or all sources if none specified
+        """
+        try:
+            # properly close existing connection if any
+            self.cnx.close()
+        except Exception:
+            pass
+        self._source.info('trying to reconnect')
+        self.cnx = self._source.get_connection()
+        self.cu = self.cnx.cursor()
+
+    @deprecated('[3.19] use .cu instead')
+    def __getitem__(self, uri):
+        assert uri == 'system'
+        return self.cu
+
+    @deprecated('[3.19] use repo.system_source instead')
+    def source(self, uid):
+        assert uid == 'system'
+        return self._source
+
+    @deprecated('[3.19] use .cnx instead')
+    def connection(self, uid):
+        assert uid == 'system'
+        return self.cnx
+
+
+class SqliteConnectionWrapper(ConnectionWrapper):
+    """Sqlite specific connection wrapper: close the connection each time it's
+    freed (and reopen it later when needed)
+    """
+    def __init__(self, system_source):
+        # don't call parent's __init__, we don't want to initiate the connection
+        self._source = system_source
+
+    _cnx = None
+
+    def cnxset_freed(self):
+        self.cu.close()
+        self.cnx.close()
+        self.cnx = self.cu = None
+
+    @property
+    def cnx(self):
+        if self._cnx is None:
+            self._cnx = self._source.get_connection()
+            self._cu = self._cnx.cursor()
+        return self._cnx
+    @cnx.setter
+    def cnx(self, value):
+        self._cnx = value
+
+    @property
+    def cu(self):
+        if self._cnx is None:
+            self._cnx = self._source.get_connection()
+            self._cu = self._cnx.cursor()
+        return self._cu
+    @cu.setter
+    def cu(self, value):
+        self._cu = value
+
+
 class SQLAdapterMixIn(object):
     """Mixin for SQL data sources, getting a connection from a configuration
     dictionary and handling connection locking
     """
+    cnx_wrap = ConnectionWrapper
 
     def __init__(self, source_config):
         try:
@@ -209,6 +325,15 @@ class SQLAdapterMixIn(object):
         self._binary = self.dbhelper.binary_value
         self._process_value = dbapi_module.process_value
         self._dbencoding = dbencoding
+        if self.dbdriver == 'sqlite':
+            self.cnx_wrap = SqliteConnectionWrapper
+            self.dbhelper.dbname = abspath(self.dbhelper.dbname)
+
+    def wrapped_connection(self):
+        """open and return a connection to the database, wrapped into a class
+        handling reconnection and all
+        """
+        return self.cnx_wrap(self)
 
     def get_connection(self):
         """open and return a connection to the database"""
@@ -320,46 +445,10 @@ class SQLAdapterMixIn(object):
     # only defining here to prevent pylint from complaining
     info = warning = error = critical = exception = debug = lambda msg,*a,**kw: None
 
-from logging import getLogger
-from cubicweb import set_log_methods
 set_log_methods(SQLAdapterMixIn, getLogger('cubicweb.sqladapter'))
 
 
-class SqliteCnxLoggingWrapper(object):
-    def __init__(self, source=None):
-        self.source = source
-        self._cnx = None
-
-    def cursor(self):
-        # sqlite connections can only be used in the same thread, so
-        # create a new one each time necessary. If it appears to be time
-        # consuming, find another way
-        if self._cnx is None:
-            # direct access to SQLAdapterMixIn to get an unwrapped connection
-            self._cnx = SQLAdapterMixIn.get_connection(self.source)
-            if server.DEBUG & server.DBG_SQL:
-                print 'sql cnx OPEN', self._cnx
-        return self._cnx.cursor()
-
-    def commit(self):
-        if self._cnx is not None:
-            if server.DEBUG & (server.DBG_SQL | server.DBG_RQL):
-                print 'sql cnx COMMIT', self._cnx
-            self._cnx.commit()
-
-    def rollback(self):
-        if self._cnx is not None:
-            if server.DEBUG & (server.DBG_SQL | server.DBG_RQL):
-                print 'sql cnx ROLLBACK', self._cnx
-            self._cnx.rollback()
-
-    def close(self):
-        if self._cnx is not None:
-            if server.DEBUG & server.DBG_SQL:
-                print 'sql cnx CLOSE', self._cnx
-            self._cnx.close()
-            self._cnx = None
-
+# connection initialization functions ##########################################
 
 def init_sqlite_connexion(cnx):
 

@@ -55,7 +55,7 @@ from cubicweb import (CW_SOFTWARE_ROOT, CW_MIGRATION_MAP, QueryError,
                       BadConnectionId, Unauthorized, ValidationError,
                       RepositoryError, UniqueTogetherError, onevent)
 from cubicweb import cwvreg, schema, server
-from cubicweb.server import ShuttingDown, utils, hook, pool, querier, sources
+from cubicweb.server import ShuttingDown, utils, hook, querier, sources
 from cubicweb.server.session import Session, InternalSession, InternalManager
 from cubicweb.server.ssplanner import EditedEntity
 
@@ -219,7 +219,7 @@ class Repository(object):
         self._cnxsets_pool = Queue.Queue()
         # 0. init a cnxset that will be used to fetch bootstrap information from
         #    the database
-        self._cnxsets_pool.put_nowait(pool.ConnectionsSet(self.system_source))
+        self._cnxsets_pool.put_nowait(self.system_source.wrapped_connection())
         # 1. set used cubes
         if config.creating or not config.read_instance_schema:
             config.bootstrap_cubes()
@@ -260,7 +260,7 @@ class Repository(object):
         self._get_cnxset().close(True)
         self.cnxsets = [] # list of available cnxsets (can't iterate on a Queue)
         for i in xrange(config['connections-pool-size']):
-            self.cnxsets.append(pool.ConnectionsSet(self.system_source))
+            self.cnxsets.append(self.system_source.wrapped_connection())
             self._cnxsets_pool.put_nowait(self.cnxsets[-1])
 
     # internals ###############################################################

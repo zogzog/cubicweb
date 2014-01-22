@@ -605,11 +605,6 @@ class Connection(RequestSessionBase):
             cnxset = self.repo._get_cnxset()
             try:
                 self.cnxset = cnxset
-                try:
-                    cnxset.cnxset_set()
-                except:
-                    self.cnxset = None
-                    raise
             except:
                 self.repo._free_cnxset(cnxset)
                 raise

@@ -232,13 +232,6 @@ class AbstractSource(object):
         """open and return a connection to the source"""
         raise NotImplementedError(self)
 
-    def check_connection(self, cnx):
-        """Check connection validity, return None if the connection is still
-        valid else a new connection (called when the connections set using the
-        given connection is being attached to a session). Do nothing by default.
-        """
-        pass
-
     def close_source_connections(self):
         for cnxset in self.repo.cnxsets:
             cnxset.cu = None

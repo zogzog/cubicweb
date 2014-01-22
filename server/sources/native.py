@@ -59,7 +59,7 @@ from cubicweb.schema import VIRTUAL_RTYPES
 from cubicweb.cwconfig import CubicWebNoAppConfiguration
 from cubicweb.server import hook
 from cubicweb.server.utils import crypt_password, eschema_eid, verify_and_update
-from cubicweb.server.sqlutils import SQL_PREFIX, SQLAdapterMixIn, SqliteCnxLoggingWrapper
+from cubicweb.server.sqlutils import SQL_PREFIX, SQLAdapterMixIn
 from cubicweb.server.rqlannotation import set_qdata
 from cubicweb.server.hook import CleanupDeletedEidsCacheOp
 from cubicweb.server.edition import EditedEntity
@@ -287,17 +287,6 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         self._eid_creation_cnx = None
         # (etype, attr) / storage mapping
         self._storages = {}
-        # XXX no_sqlite_wrap trick since we've a sqlite locking pb when
-        # running unittest_multisources with the wrapping below
-        if self.dbdriver == 'sqlite' and \
-               not getattr(repo.config, 'no_sqlite_wrap', False):
-            from cubicweb.server.pool import ConnectionsSet
-            self.dbhelper.dbname = abspath(self.dbhelper.dbname)
-            self.get_connection = lambda: SqliteCnxLoggingWrapper(self)
-            self.check_connection = lambda cnx: cnx
-            def cnxset_freed(self):
-                self.cnx.close()
-            ConnectionsSet.cnxset_freed = cnxset_freed
         if self.dbdriver == 'sqlite':
             self._create_eid = None
             self.create_eid = self._create_eid_sqlite
@@ -334,7 +323,6 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         if self.do_fti:
             if cnxset is None:
                 _cnxset = self.repo._get_cnxset()
-                _cnxset.cnxset_set()
             else:
                 _cnxset = cnxset
             if not self.dbhelper.has_fti_table(_cnxset.cu):
@@ -1598,6 +1586,7 @@ class EmailPasswordAuthentifier(BaseAuthentifier):
         login = rset.rows[0][0]
         authinfo['email_auth'] = True
         return self.source.repo.check_auth_info(session, login, authinfo)
+
 
 class DatabaseIndependentBackupRestore(object):
     """Helper class to perform db backend agnostic backup and restore
