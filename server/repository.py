@@ -286,8 +286,7 @@ class Repository(object):
                 self.add_source(sourceent)
 
     def _clear_planning_caches(self):
-        for cache in ('source_defs', 'is_multi_sources_relation',
-                      'can_cross_relation', 'rel_type_sources'):
+        for cache in ('source_defs', 'is_multi_sources_relation'):
             clear_cache(self, cache)
 
     def add_source(self, sourceent):
@@ -1163,13 +1162,6 @@ class Repository(object):
                 else:
                     rql = 'DELETE Y %s X WHERE X eid %%(x)s' % rtype
                 if scleanup is not None:
-                    # if the relation can't be crossed, nothing to cleanup (we
-                    # would get a BadRQLQuery from the multi-sources planner).
-                    # This may still leave some junk if the mapping has changed
-                    # at some point, but one can still run db-check to catch
-                    # those
-                    if not source in self.can_cross_relation(rtype):
-                        continue
                     # source cleaning: only delete relations stored locally
                     # (here, scleanup
                     rql += ', NOT (Y cw_source S, S eid %(seid)s)'
@@ -1205,13 +1197,6 @@ class Repository(object):
                 else:
                     rql = 'DELETE Y %s X WHERE X eid IN (%s)' % (rtype, in_eids)
                 if scleanup is not None:
-                    # if the relation can't be crossed, nothing to cleanup (we
-                    # would get a BadRQLQuery from the multi-sources planner).
-                    # This may still leave some junk if the mapping has changed
-                    # at some point, but one can still run db-check to catch
-                    # those
-                    if not source in self.can_cross_relation(rtype):
-                        continue
                     # source cleaning: only delete relations stored locally
                     rql += ', NOT (Y cw_source S, S eid %(seid)s)'
                 try:
@@ -1233,14 +1218,7 @@ class Repository(object):
     def locate_relation_source(self, session, subject, rtype, object):
         subjsource = self.source_from_eid(subject, session)
         objsource = self.source_from_eid(object, session)
-        if not subjsource is objsource:
-            source = self.system_source
-            if not (subjsource.may_cross_relation(rtype)
-                    and objsource.may_cross_relation(rtype)):
-                raise MultiSourcesError(
-                    "relation %s can't be crossed among sources"
-                    % rtype)
-        elif not subjsource.support_relation(rtype):
+        if not subjsource.support_relation(rtype):
             source = self.system_source
         else:
             source = subjsource
@@ -1588,22 +1566,6 @@ class Repository(object):
                   self.pyro_appid)
 
     # multi-sources planner helpers ###########################################
-
-    @cached
-    def rel_type_sources(self, rtype):
-        warn('[3.18] old multi-source system will go away in the next version',
-             DeprecationWarning)
-        return tuple([source for source in self.sources
-                      if source.support_relation(rtype)
-                      or rtype in source.dont_cross_relations])
-
-    @cached
-    def can_cross_relation(self, rtype):
-        warn('[3.18] old multi-source system will go away in the next version',
-             DeprecationWarning)
-        return tuple([source for source in self.sources
-                      if source.support_relation(rtype)
-                      and rtype in source.cross_relations])
 
     @cached
     def is_multi_sources_relation(self, rtype):

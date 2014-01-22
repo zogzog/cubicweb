@@ -117,20 +117,6 @@ class CWSourceMappingTab(EntityView):
             'Any X, SCH, XO ORDERBY ET WHERE X options XO, X cw_for_source S, S eid %(s)s, '
             'X cw_schema SCH, SCH is ET', {'s': entity.eid})
         self.wview('table', rset, 'noresult')
-        # self.w('<h3>%s</h3>' % _('Relations that should not be crossed'))
-        # self.w('<p>%s</p>' % _(
-        #     'By default, when a relation is not supported by a source, it is '
-        #     'supposed that a local relation may point to an entity from the '
-        #     'external source. Relations listed here won\'t have this '
-        #     '"crossing" behaviour.'))
-        # self.wview('list', entity.related('cw_dont_cross'), 'noresult')
-        # self.w('<h3>%s</h3>' % _('Relations that can be crossed'))
-        # self.w('<p>%s</p>' % _(
-        #     'By default, when a relation is supported by a source, it is '
-        #     'supposed that a local relation can\'t point to an entity from the '
-        #     'external source. Relations listed here may have this '
-        #     '"crossing" behaviour anyway.'))
-        # self.wview('list', entity.related('cw_may_cross'), 'noresult')
         checker = MAPPING_CHECKERS.get(entity.type, MappingChecker)(entity)
         checker.check()
         if (checker.errors or checker.warnings or checker.infos):

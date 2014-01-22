@@ -280,9 +280,6 @@ class BasePlannerTC(BaseQuerierTC):
     newsources = ()
 
     def setup(self):
-        clear_cache(self.repo, 'rel_type_sources')
-        clear_cache(self.repo, 'rel_type_sources')
-        clear_cache(self.repo, 'can_cross_relation')
         clear_cache(self.repo, 'is_multi_sources_relation')
         # XXX source_defs
         self.o = self.repo.querier

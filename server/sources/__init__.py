@@ -85,10 +85,6 @@ class AbstractSource(object):
     # a reference to the instance'schema (may differs from the source'schema)
     schema = None
 
-    # multi-sources planning control
-    dont_cross_relations = ()
-    cross_relations = ()
-
     # force deactivation (configuration error for instance)
     disabled = False
 
@@ -309,22 +305,6 @@ class AbstractSource(object):
         if write:
             return wsupport
         return True
-
-    def may_cross_relation(self, rtype):
-        """return True if the relation may be crossed among sources. Rules are:
-
-        * if this source support the relation, can't be crossed unless explicitly
-          specified in .cross_relations
-
-        * if this source doesn't support the relation, can be crossed unless
-          explicitly specified in .dont_cross_relations
-        """
-        # XXX find a way to have relation such as state_of in dont cross
-        #     relation (eg composite relation without both end type available?
-        #     card 1 relation ? ...)
-        if self.support_relation(rtype):
-            return rtype in self.cross_relations
-        return rtype not in self.dont_cross_relations
 
     def before_entity_insertion(self, session, lid, etype, eid, sourceparams):
         """called by the repository when an eid has been attributed for an
