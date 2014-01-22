@@ -241,12 +241,13 @@ class AbstractSource(object):
 
     def close_source_connections(self):
         for cnxset in self.repo.cnxsets:
-            cnxset._cursors.pop(self.uri, None)
-            cnxset.source_cnxs[self.uri][1].close()
+            cnxset.cu = None
+            cnxset.cnx.close()
 
     def open_source_connections(self):
         for cnxset in self.repo.cnxsets:
-            cnxset.source_cnxs[self.uri] = (self, self.get_connection())
+            cnxset.cnx = self.get_connection()
+            cnxset.cu = cnxset.cnx.cursor()
 
     def cnxset_freed(self, cnx):
         """the connections set holding the given connection is being reseted
@@ -386,7 +387,7 @@ class AbstractSource(object):
         .executemany().
         """
         res = self.syntax_tree_search(session, union, args, varmap=varmap)
-        session.cnxset.source('system').manual_insert(res, table, session)
+        session.repo.system_source.manual_insert(res, table, session)
 
     # write modification api ###################################################
     # read-only sources don't have to implement methods below

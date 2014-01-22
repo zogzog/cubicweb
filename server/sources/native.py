@@ -336,7 +336,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                 _cnxset.cnxset_set()
             else:
                 _cnxset = cnxset
-            if not self.dbhelper.has_fti_table(_cnxset['system']):
+            if not self.dbhelper.has_fti_table(_cnxset.cu):
                 if not self.repo.config.creating:
                     self.critical('no text index table')
                 self.do_fti = False
@@ -706,9 +706,9 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         """Execute a query.
         it's a function just so that it shows up in profiling
         """
-        cursor = session.cnxset[self.uri]
+        cursor = session.cnxset.cu
         if server.DEBUG & server.DBG_SQL:
-            cnx = session.cnxset.connection(self.uri)
+            cnx = session.cnxset.cnx
             # getattr to get the actual connection if cnx is a CnxLoggingWrapper
             # instance
             print 'exec', query, args, getattr(cnx, '_cnx', cnx)
@@ -723,7 +723,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                               query, args, ex.args[0])
             if rollback:
                 try:
-                    session.cnxset.connection(self.uri).rollback()
+                    session.cnxset.rollback()
                     if self.repo.config.mode != 'test':
                         self.critical('transaction has been rolled back')
                 except Exception as ex:
@@ -751,7 +751,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         """
         if server.DEBUG & server.DBG_SQL:
             print 'execmany', query, 'with', len(args), 'arguments'
-        cursor = session.cnxset[self.uri]
+        cursor = session.cnxset.cu
         try:
             # str(query) to avoid error if it's an unicode string
             cursor.executemany(str(query), args)
@@ -762,7 +762,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                 self.critical("sql many: %r\n args: %s\ndbms message: %r",
                               query, args, ex.args[0])
             try:
-                session.cnxset.connection(self.uri).rollback()
+                session.cnxset.rollback()
                 if self.repo.config.mode != 'test':
                     self.critical('transaction has been rolled back')
             except Exception:
@@ -780,7 +780,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             self.error("backend can't alter %s.%s to %s%s", table, column, coltype,
                        not allownull and 'NOT NULL' or '')
             return
-        self.dbhelper.change_col_type(LogCursor(session.cnxset[self.uri]),
+        self.dbhelper.change_col_type(LogCursor(session.cnxset.cu),
                                       table, column, coltype, allownull)
         self.info('altered %s.%s: now %s%s', table, column, coltype,
                   not allownull and 'NOT NULL' or '')
@@ -795,7 +795,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             return
         table, column = rdef_table_column(rdef)
         coltype, allownull = rdef_physical_info(self.dbhelper, rdef)
-        self.dbhelper.set_null_allowed(LogCursor(session.cnxset[self.uri]),
+        self.dbhelper.set_null_allowed(LogCursor(session.cnxset.cu),
                                        table, column, coltype, allownull)
 
     def update_rdef_indexed(self, session, rdef):
@@ -813,11 +813,11 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             self.drop_index(session, table, column, unique=True)
 
     def create_index(self, session, table, column, unique=False):
-        cursor = LogCursor(session.cnxset[self.uri])
+        cursor = LogCursor(session.cnxset.cu)
         self.dbhelper.create_index(cursor, table, column, unique)
 
     def drop_index(self, session, table, column, unique=False):
-        cursor = LogCursor(session.cnxset[self.uri])
+        cursor = LogCursor(session.cnxset.cu)
         self.dbhelper.drop_index(cursor, table, column, unique)
 
     # system source interface #################################################
@@ -1377,7 +1377,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
     def fti_unindex_entities(self, session, entities):
         """remove text content for entities from the full text index
         """
-        cursor = session.cnxset['system']
+        cursor = session.cnxset.cu
         cursor_unindex_object = self.dbhelper.cursor_unindex_object
         try:
             for entity in entities:
@@ -1390,7 +1390,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         """add text content of created/modified entities to the full text index
         """
         cursor_index_object = self.dbhelper.cursor_index_object
-        cursor = session.cnxset['system']
+        cursor = session.cnxset.cu
         try:
             # use cursor_index_object, not cursor_reindex_object since
             # unindexing done in the FTIndexEntityOp

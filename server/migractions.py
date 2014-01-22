@@ -1501,7 +1501,7 @@ class ServerMigrationHelper(MigrationHelper):
         self.sqlexec(sql, ask_confirm=False)
         dbhelper = self.repo.system_source.dbhelper
         sqltype = dbhelper.TYPE_MAPPING[newtype]
-        cursor = self.session.cnxset[self.repo.system_source.uri]
+        cursor = self.session.cnxset.cu
         dbhelper.change_col_type(cursor, 'cw_%s'  % etype, 'cw_%s' % attr, sqltype, allownull)
         if commit:
             self.commit()

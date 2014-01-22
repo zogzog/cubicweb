@@ -1164,7 +1164,7 @@ class Connection(RequestSessionBase):
         """return a sql cursor on the system database"""
         if sql.split(None, 1)[0].upper() != 'SELECT':
             self.mode = 'write'
-        source = self.cnxset.source('system')
+        source = self.repo.system_source
         try:
             return source.doexec(self, sql, args, rollback=rollback_on_failure)
         except (source.OperationalError, source.InterfaceError):

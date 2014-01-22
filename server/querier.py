@@ -151,7 +151,7 @@ class ExecutionPlan(object):
         # session executing the query
         self.session = session
         # quick reference to the system source
-        self.syssource = session.cnxset.source('system')
+        self.syssource = session.repo.system_source
         # execution steps
         self.steps = []
         # index of temporary tables created during execution

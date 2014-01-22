@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -99,7 +99,7 @@ def reindex_entities(schema, session, withpb=True, etypes=None):
     # deactivate modification_date hook since we don't want them
     # to be updated due to the reindexation
     repo = session.repo
-    cursor = session.cnxset['system']
+    cursor = session.cnxset.cu
     dbhelper = session.repo.system_source.dbhelper
     if not dbhelper.has_fti_table(cursor):
         print 'no text index table'

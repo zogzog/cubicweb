@@ -81,7 +81,7 @@ def add_inline_relation_column(session, etype, rtype):
     # create index before alter table which may expectingly fail during test
     # (sqlite) while index creation should never fail (test for index existence
     # is done by the dbhelper)
-    session.cnxset.source('system').create_index(session, table, column)
+    session.repo.system_source.create_index(session, table, column)
     session.info('added index on %s(%s)', table, column)
 
 
@@ -244,7 +244,7 @@ class CWETypeAddOp(MemSchemaOperation):
                                description=entity.description)
         eschema = schema.add_entity_type(etype)
         # create the necessary table
-        tablesql = y2sql.eschema2sql(session.cnxset.source('system').dbhelper,
+        tablesql = y2sql.eschema2sql(session.repo.system_source.dbhelper,
                                      eschema, prefix=SQL_PREFIX)
         for sql in tablesql.split(';'):
             if sql.strip():
@@ -287,7 +287,7 @@ class CWETypeRenameOp(MemSchemaOperation):
         self.session.vreg.schema.rename_entity_type(oldname, newname)
         # we need sql to operate physical changes on the system database
         sqlexec = self.session.system_sql
-        dbhelper= self.session.cnxset.source('system').dbhelper
+        dbhelper = self.session.repo.system_source.dbhelper
         sql = dbhelper.sql_rename_table(SQL_PREFIX+oldname,
                                         SQL_PREFIX+newname)
         sqlexec(sql)
@@ -432,7 +432,7 @@ class CWAttributeAddOp(MemSchemaOperation):
         # update the in-memory schema first
         rdefdef = self.init_rdef(**props)
         # then make necessary changes to the system source database
-        syssource = session.cnxset.source('system')
+        syssource = session.repo.system_source
         attrtype = y2sql.type_from_constraints(
             syssource.dbhelper, rdefdef.object, rdefdef.constraints)
         # XXX should be moved somehow into lgdb: sqlite doesn't support to
@@ -607,7 +607,7 @@ class RDefUpdateOp(MemSchemaOperation):
         self.oldvalues = dict( (attr, getattr(rdef, attr)) for attr in self.values)
         rdef.update(self.values)
         # then make necessary changes to the system source database
-        syssource = session.cnxset.source('system')
+        syssource = session.repo.system_source
         if 'indexed' in self.values:
             syssource.update_rdef_indexed(session, rdef)
             self.indexed_changed = True
@@ -625,7 +625,7 @@ class RDefUpdateOp(MemSchemaOperation):
         # revert changes on in memory schema
         self.rdef.update(self.oldvalues)
         # revert changes on database
-        syssource = self.session.cnxset.source('system')
+        syssource = self.session.repo.system_source
         if self.indexed_changed:
             syssource.update_rdef_indexed(self.session, self.rdef)
         if self.null_allowed_changed:
@@ -653,7 +653,7 @@ class CWConstraintDelOp(MemSchemaOperation):
         rdef.constraints.remove(self.oldcstr)
         # then update database: alter the physical schema on size/unique
         # constraint changes
-        syssource = session.cnxset.source('system')
+        syssource = session.repo.system_source
         cstrtype = self.oldcstr.type()
         if cstrtype == 'SizeConstraint':
             syssource.update_rdef_column(session, rdef)
@@ -669,7 +669,7 @@ class CWConstraintDelOp(MemSchemaOperation):
         if self.oldcstr is not None:
             self.rdef.constraints.append(self.oldcstr)
         # revert changes on database
-        syssource = self.session.cnxset.source('system')
+        syssource = self.session.repo.system_source
         if self.size_cstr_changed:
             syssource.update_rdef_column(self.session, self.rdef)
         if self.unique_changed:
@@ -700,7 +700,7 @@ class CWConstraintAddOp(CWConstraintDelOp):
         rdef.constraints.append(newcstr)
         # then update database: alter the physical schema on size/unique
         # constraint changes
-        syssource = session.cnxset.source('system')
+        syssource = session.repo.system_source
         if cstrtype == 'SizeConstraint' and (oldcstr is None or
                                              oldcstr.max != newcstr.max):
             syssource.update_rdef_column(session, rdef)
@@ -719,7 +719,7 @@ class CWUniqueTogetherConstraintAddOp(MemSchemaOperation):
         entity = self.entity
         table = '%s%s' % (prefix, entity.constraint_of[0].name)
         cols = ['%s%s' % (prefix, r.name) for r in entity.relations]
-        dbhelper = session.cnxset.source('system').dbhelper
+        dbhelper = session.repo.system_source.dbhelper
         sqls = dbhelper.sqls_create_multicol_unique_index(table, cols, entity.name)
         for sql in sqls:
             session.system_sql(sql)
@@ -739,7 +739,7 @@ class CWUniqueTogetherConstraintDelOp(MemSchemaOperation):
         session = self.session
         prefix = SQL_PREFIX
         table = '%s%s' % (prefix, self.entity.type)
-        dbhelper = session.cnxset.source('system').dbhelper
+        dbhelper = session.repo.system_source.dbhelper
         cols = ['%s%s' % (prefix, c) for c in self.cols]
         sqls = dbhelper.sqls_drop_multicol_unique_index(table, cols, self.cstrname)
         for sql in sqls:

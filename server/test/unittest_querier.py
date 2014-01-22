@@ -1169,7 +1169,7 @@ Any P1,B,E WHERE P1 identity P2 WITH
         #'INSERT Email X: X messageid "<1234>", X subject "test", X sender Y, X recipients Y'
         eeid, = self.execute('INSERT Email X: X messageid "<1234>", X subject "test", X sender Y, X recipients Y WHERE Y is EmailAddress')[0]
         self.execute("DELETE Email X")
-        sqlc = self.session.cnxset['system']
+        sqlc = self.session.cnxset.cu
         sqlc.execute('SELECT * FROM recipients_relation')
         self.assertEqual(len(sqlc.fetchall()), 0)
         sqlc.execute('SELECT * FROM owned_by_relation WHERE eid_from=%s'%eeid)
@@ -1310,7 +1310,7 @@ Any P1,B,E WHERE P1 identity P2 WITH
         self.assertEqual(rset.description, [('CWUser',)])
         self.assertRaises(Unauthorized,
                           self.execute, "Any P WHERE X is CWUser, X login 'bob', X upassword P")
-        cursor = self.cnxset['system']
+        cursor = self.cnxset.cu
         cursor.execute("SELECT %supassword from %sCWUser WHERE %slogin='bob'"
                        % (SQL_PREFIX, SQL_PREFIX, SQL_PREFIX))
         passwd = str(cursor.fetchone()[0])
@@ -1325,7 +1325,7 @@ Any P1,B,E WHERE P1 identity P2 WITH
         self.assertEqual(rset.description[0][0], 'CWUser')
         rset = self.execute("SET X upassword %(pwd)s WHERE X is CWUser, X login 'bob'",
                             {'pwd': 'tutu'})
-        cursor = self.cnxset['system']
+        cursor = self.cnxset.cu
         cursor.execute("SELECT %supassword from %sCWUser WHERE %slogin='bob'"
                        % (SQL_PREFIX, SQL_PREFIX, SQL_PREFIX))
         passwd = str(cursor.fetchone()[0])

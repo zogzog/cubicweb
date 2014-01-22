@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -938,7 +938,7 @@ class SQLGenObjectStore(NoHookRQLObjectStore):
     def drop_indexes(self, etype):
         """Drop indexes for a given entity type"""
         if etype not in self.indexes_etypes:
-            cu = self.session.cnxset['system']
+            cu = self.session.cnxset.cu
             def index_to_attr(index):
                 """turn an index name to (database) attribute name"""
                 return index.replace(etype.lower(), '').replace('idx', '').strip('_')
