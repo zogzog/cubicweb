@@ -112,6 +112,11 @@ class ConnectionsSet(object):
         assert uid == 'system'
         return self.cnx
 
+    @property
+    @deprecated('[3.19] use .cnx instead')
+    def source_cnxs(self):
+        return {'system': (self._source, self.cnx)}
+
 
 from cubicweb.server.hook import Operation, LateOperation, SingleLastOperation
 from logilab.common.deprecation import class_moved, class_renamed
