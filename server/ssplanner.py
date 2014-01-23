@@ -90,7 +90,7 @@ def _extract_eid_consts(plan, rqlst):
                 # to be selected)
                 if checkread and eid not in neweids:
                     with session.security_enabled(read=False):
-                        eschema(session.describe(eid)[0]).check_perm(
+                        eschema(session.entity_metas(eid)['type']).check_perm(
                             session, 'read', eid=eid)
                 eidconsts[lhs.variable] = eid
     return eidconsts

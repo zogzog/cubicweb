@@ -71,7 +71,7 @@ def term_etype(session, term, solution, args):
     try:
         return solution[term.name]
     except AttributeError:
-        return session.describe(term.eval(args))[0]
+        return session.entity_metas(term.eval(args))['type']
 
 def check_read_access(session, rqlst, solution, args):
     """Check that the given user has credentials to access data read by the
@@ -667,7 +667,7 @@ def manual_build_descr(tx, rqlst, args, result):
 
 def _build_descr(tx, result, basedescription, todetermine):
     description = []
-    etype_from_eid = tx.describe
+    entity_metas = tx.entity_metas
     todel = []
     for i, row in enumerate(result):
         row_descr = basedescription[:]
@@ -681,7 +681,7 @@ def _build_descr(tx, result, basedescription, todetermine):
                 row_descr[index] = etype_from_pyobj(value)
             else:
                 try:
-                    row_descr[index] = etype_from_eid(value)[0]
+                    row_descr[index] = entity_metas(value)['type']
                 except UnknownEid:
                     tx.error('wrong eid %s in repository, you should '
                              'db-check the database' % value)

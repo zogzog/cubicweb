@@ -91,8 +91,6 @@ class ConnectionProperties(object):
         self.close_on_del = close
 
 
-
-
 @deprecated('[3.19] the dbapi is deprecated. Have a look at the new repoapi.')
 def _repo_connect(repo, login, **kwargs):
     """Constructor to create a new connection to the given CubicWeb repository.
@@ -360,13 +358,18 @@ class DBAPIRequest(RequestSessionBase):
 
     # server session compat layer #############################################
 
-    def describe(self, eid, asdict=False):
+    def entity_metas(self, eid):
         """return a tuple (type, sourceuri, extid) for the entity with id <eid>"""
-        return self.cnx.describe(eid, asdict)
+        return self.cnx.entity_metas(eid)
 
     def source_defs(self):
         """return the definition of sources used by the repository."""
         return self.cnx.source_defs()
+
+    @deprecated('[3.19] use .entity_metas(eid) instead')
+    def describe(self, eid, asdict=False):
+        """return a tuple (type, sourceuri, extid) for the entity with id <eid>"""
+        return self.cnx.describe(eid, asdict)
 
     # these are overridden by set_log_methods below
     # only defining here to prevent pylint from complaining
@@ -671,16 +674,31 @@ class Connection(object):
                  stacklevel=2)
         return self._repo.get_option_value(option)
 
+
+    @check_not_closed
+    def entity_metas(self, eid):
+        """return a tuple (type, sourceuri, extid) for the entity with id <eid>"""
+        return self._repo.entity_metas(self.sessionid, eid, **self._txid())
+
+    @deprecated('[3.19] use .entity_metas(eid) instead')
     @check_not_closed
     def describe(self, eid, asdict=False):
-        metas = self._repo.describe(self.sessionid, eid, **self._txid())
-        if len(metas) == 3: # backward compat
-            metas = list(metas)
-            metas.append(metas[1])
+        try:
+            metas = self._repo.entity_metas(self.sessionid, eid, **self._txid())
+        except AttributeError:
+            metas = self._repo.describe(self.sessionid, eid, **self._txid())
+            # talking to pre 3.19 repository
+            if len(metas) == 3: # even older backward compat
+                metas = list(metas)
+                metas.append(metas[1])
+            if asdict:
+                return dict(zip(('type', 'source', 'extid', 'asource'), metas))
+            return metas[:-1]
         if asdict:
-            return dict(zip(('type', 'source', 'extid', 'asource'), metas))
-        # XXX :-1 for cw compat, use asdict=True for full information
-        return metas[:-1]
+            metas['asource'] = meta['source'] # XXX pre 3.19 client compat
+            return metas
+        return metas['type'], metas['source'], metas['extid']
+
 
     # db-api like interface ####################################################
 

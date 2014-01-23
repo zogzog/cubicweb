@@ -188,9 +188,9 @@ class Repository(object):
         self.sources_by_uri = {'system': self.system_source}
         # querier helper, need to be created after sources initialization
         self.querier = querier.QuerierHelper(self, self.schema)
-        # cache eid -> (type, physical source, extid, actual source)
+        # cache eid -> (type, extid, actual source)
         self._type_source_cache = {}
-        # cache (extid, source uri) -> eid
+        # cache extid -> eid
         self._extid_cache = {}
         # open some connection sets
         if config.init_cnxset_pool:
@@ -728,13 +728,35 @@ class Repository(object):
         finally:
             session.free_cnxset()
 
+    @deprecated('[3.19] use .entity_metas(sessionid, eid, txid) instead')
     def describe(self, sessionid, eid, txid=None):
         """return a tuple `(type, physical source uri, extid, actual source
         uri)` for the entity of the given `eid`
+
+        As of 3.19, physical source uri is always the system source.
         """
         session = self._get_session(sessionid, setcnxset=True, txid=txid)
         try:
-            return self.type_and_source_from_eid(eid, session)
+            etype, extid, source = self.type_and_source_from_eid(eid, session)
+            return etype, source, extid, source
+        finally:
+            session.free_cnxset()
+
+    def entity_metas(self, sessionid, eid, txid=None):
+        """return a dictionary containing meta-datas for the entity of the given
+        `eid`. Available keys are:
+
+        * 'type', the entity's type name,
+
+        * 'source', the name of the source from which this entity's coming from,
+
+        * 'extid', the identifierfor this entity in its originating source, as
+          an encoded string or `None` for entities from the 'system' source.
+        """
+        session = self._get_session(sessionid, setcnxset=True, txid=txid)
+        try:
+            etype, extid, source = self.type_and_source_from_eid(eid, session)
+            return {'type': etype, 'source': source, 'extid': extid}
         finally:
             session.free_cnxset()
 
@@ -934,8 +956,8 @@ class Repository(object):
     # * correspondance between eid and local id (i.e. specific to a given source)
 
     def type_and_source_from_eid(self, eid, session=None):
-        """return a tuple `(type, physical source uri, extid, actual source
-        uri)` for the entity of the given `eid`
+        """return a tuple `(type, extid, actual source uri)` for the entity of
+        the given `eid`
         """
         try:
             eid = int(eid)
@@ -950,15 +972,13 @@ class Repository(object):
             else:
                 free_cnxset = False
             try:
-                etype, uri, extid, auri = self.system_source.eid_type_source(
+                etype, extid, auri = self.system_source.eid_type_source(
                     session, eid)
             finally:
                 if free_cnxset:
                     session.free_cnxset()
-            self._type_source_cache[eid] = (etype, uri, extid, auri)
-            if uri != 'system':
-                self._extid_cache[(extid, uri)] = eid
-            return etype, uri, extid, auri
+            self._type_source_cache[eid] = (etype, extid, auri)
+            return etype, extid, auri
 
     def clear_caches(self, eids):
         etcache = self._type_source_cache
@@ -966,9 +986,9 @@ class Repository(object):
         rqlcache = self.querier._rql_cache
         for eid in eids:
             try:
-                etype, uri, extid, auri = etcache.pop(int(eid)) # may be a string in some cases
+                etype, extid, auri = etcache.pop(int(eid)) # may be a string in some cases
                 rqlcache.pop( ('%s X WHERE X eid %s' % (etype, eid),), None)
-                extidcache.pop((extid, uri), None)
+                extidcache.pop(extid, None)
             except KeyError:
                 etype = None
             rqlcache.pop( ('Any X WHERE X eid %s' % eid,), None)
@@ -977,10 +997,6 @@ class Repository(object):
     def type_from_eid(self, eid, session=None):
         """return the type of the entity with id <eid>"""
         return self.type_and_source_from_eid(eid, session)[0]
-
-    def source_from_eid(self, eid, session=None):
-        """return the source for the given entity's eid"""
-        return self.sources_by_uri[self.type_and_source_from_eid(eid, session)[1]]
 
     def querier_cache_key(self, session, rql, args, eidkeys):
         cachekey = [rql]
@@ -996,14 +1012,6 @@ class Repository(object):
             # ensure eid is correctly typed in args
             args[key] = int(args[key])
         return tuple(cachekey)
-
-    def eid2extid(self, source, eid, session=None):
-        """get local id from an eid"""
-        etype, uri, extid, _ = self.type_and_source_from_eid(eid, session)
-        if source.uri != uri:
-            # eid not from the given source
-            raise UnknownEid(eid)
-        return extid
 
     def extid2eid(self, source, extid, etype, session=None, insert=True,
                   complete=True, commit=True, sourceparams=None):
@@ -1029,20 +1037,18 @@ class Repository(object):
         6. unless source's :attr:`should_call_hooks` tell otherwise,
           'before_add_entity' hooks are called
         """
-        uri = 'system'
-        cachekey = (extid, uri)
         try:
-            return self._extid_cache[cachekey]
+            return self._extid_cache[extid]
         except KeyError:
             pass
         free_cnxset = False
         if session is None:
             session = self.internal_session()
             free_cnxset = True
-        eid = self.system_source.extid2eid(session, uri, extid)
+        eid = self.system_source.extid2eid(session, extid)
         if eid is not None:
-            self._extid_cache[cachekey] = eid
-            self._type_source_cache[eid] = (etype, uri, extid, source.uri)
+            self._extid_cache[extid] = eid
+            self._type_source_cache[eid] = (etype, extid, source.uri)
             if free_cnxset:
                 session.free_cnxset()
             return eid
@@ -1059,8 +1065,8 @@ class Repository(object):
             free_cnxset = True
         try:
             eid = self.system_source.create_eid(session)
-            self._extid_cache[cachekey] = eid
-            self._type_source_cache[eid] = (etype, uri, extid, source.uri)
+            self._extid_cache[extid] = eid
+            self._type_source_cache[eid] = (etype, extid, source.uri)
             entity = source.before_entity_insertion(
                 session, extid, etype, eid, sourceparams)
             if source.should_call_hooks:
@@ -1081,7 +1087,7 @@ class Repository(object):
             else:
                 # XXX do some cleanup manually so that the transaction has a
                 # chance to be commited, with simply this entity discarded
-                self._extid_cache.pop(cachekey, None)
+                self._extid_cache.pop(extid, None)
                 self._type_source_cache.pop(eid, None)
                 if 'entity' in locals():
                     hook.CleanupDeletedEidsCacheOp.get_instance(session).add_data(entity.eid)
@@ -1177,15 +1183,12 @@ class Repository(object):
         Return entity's ext id if the source isn't the system source.
         """
         session.set_entity_cache(entity)
-        suri = source.uri
-        if suri == 'system':
+        if source.uri == 'system':
             extid = None
         else:
-            suri = 'system'
             extid = source.get_extid(entity)
-            self._extid_cache[(str(extid), suri)] = entity.eid
-        self._type_source_cache[entity.eid] = (entity.cw_etype, suri, extid,
-                                               source.uri)
+            self._extid_cache[str(extid)] = entity.eid
+        self._type_source_cache[entity.eid] = (entity.cw_etype, extid, source.uri)
         return extid
 
     def glob_add_entity(self, session, edited):

@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -158,8 +158,8 @@ class ChangeEntitySourceUpdateCaches(hook.Operation):
         entity = self.entity
         extid = entity.cw_metainformation()['extid']
         repo._type_source_cache[entity.eid] = (
-            entity.cw_etype, self.newsource.uri, None, self.newsource.uri)
-        repo._extid_cache[(extid, 'system')] = -entity.eid
+            entity.cw_etype, None, self.newsource.uri)
+        repo._extid_cache[extid] = -entity.eid
 
 
 class ChangeEntitySourceDeleteHook(MetaDataHook):
@@ -204,7 +204,7 @@ class ChangeEntitySourceAddHook(MetaDataHook):
             self._cw.system_sql('UPDATE entities SET eid=-eid WHERE eid=%(eid)s',
                                 {'eid': self.eidfrom})
             attrs = {'type': entity.cw_etype, 'eid': entity.eid, 'extid': None,
-                     'source': 'system', 'asource': 'system'}
+                     'asource': 'system'}
             self._cw.system_sql(syssource.sqlgen.insert('entities', attrs), attrs)
             # register an operation to update repository/sources caches
             ChangeEntitySourceUpdateCaches(self._cw, entity=entity,

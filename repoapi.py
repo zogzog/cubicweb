@@ -241,7 +241,8 @@ class ClientConnection(RequestSessionBase):
         """Return the value for `option` in the configuration."""
         return self._session.repo.get_option_value(option)
 
-    describe = _srv_cnx_func('describe')
+    entity_metas = _srv_cnx_func('entity_metas')
+    describe = _srv_cnx_func('describe') # XXX deprecated in 3.19
 
     # undo support ############################################################
 

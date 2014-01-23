@@ -592,7 +592,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         else: # used by data import
             etypes = {}
             for subject, object in subj_obj_list:
-                etype = session.describe(subject)[0]
+                etype = session.entity_metas(subject)['type']
                 if etype in etypes:
                     etypes[etype].append((subject, object))
                 else:
@@ -617,7 +617,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
     def _delete_relation(self, session, subject, rtype, object, inlined=False):
         """delete a relation from the source"""
         if inlined:
-            table = SQL_PREFIX + session.describe(subject)[0]
+            table = SQL_PREFIX + session.entity_metas(subject)['type']
             column = SQL_PREFIX + rtype
             sql = 'UPDATE %s SET %s=NULL WHERE %seid=%%(eid)s' % (table, column,
                                                                   SQL_PREFIX)
@@ -764,7 +764,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
 
     def eid_type_source(self, session, eid): # pylint: disable=E0202
         """return a tuple (type, source, extid) for the entity with id <eid>"""
-        sql = 'SELECT type, source, extid, asource FROM entities WHERE eid=%s' % eid
+        sql = 'SELECT type, extid, asource FROM entities WHERE eid=%s' % eid
         res = self._eid_type_source(session, eid, sql)
         if res[-2] is not None:
             if not isinstance(res, list):
@@ -774,7 +774,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
 
     def eid_type_source_pre_131(self, session, eid):
         """return a tuple (type, source, extid) for the entity with id <eid>"""
-        sql = 'SELECT type, source, extid FROM entities WHERE eid=%s' % eid
+        sql = 'SELECT type, extid FROM entities WHERE eid=%s' % eid
         res = self._eid_type_source(session, eid, sql)
         if not isinstance(res, list):
             res = list(res)
@@ -783,13 +783,12 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         res.append(res[1])
         return res
 
-    def extid2eid(self, session, source_uri, extid):
+    def extid2eid(self, session, extid):
         """get eid from an external id. Return None if no record found."""
         assert isinstance(extid, str)
         cursor = self.doexec(session,
-                             'SELECT eid FROM entities '
-                             'WHERE extid=%(x)s AND source=%(s)s',
-                             {'x': b64encode(extid), 's': source_uri})
+                             'SELECT eid FROM entities WHERE extid=%(x)s',
+                             {'x': b64encode(extid)})
         # XXX testing rowcount cause strange bug with sqlite, results are there
         #     but rowcount is 0
         #if cursor.rowcount > 0:
@@ -863,7 +862,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                 assert isinstance(extid, str)
                 extid = b64encode(extid)
             attrs = {'type': entity.cw_etype, 'eid': entity.eid, 'extid': extid,
-                     'source': 'system', 'asource': source.uri}
+                     'asource': source.uri}
             self._handle_insert_entity_sql(session, self.sqlgen.insert('entities', attrs), attrs)
             # insert core relations: is, is_instance_of and cw_source
             try:
@@ -1349,7 +1348,6 @@ def sql_schema(driver):
 CREATE TABLE entities (
   eid INTEGER PRIMARY KEY NOT NULL,
   type VARCHAR(64) NOT NULL,
-  source VARCHAR(128) NOT NULL,
   asource VARCHAR(128) NOT NULL,
   extid VARCHAR(256)
 );;

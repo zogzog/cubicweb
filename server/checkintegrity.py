@@ -39,22 +39,10 @@ def has_eid(session, sqlcursor, eid, eids):
     """return true if the eid is a valid eid"""
     if eid in eids:
         return eids[eid]
-    sqlcursor.execute('SELECT type, source FROM entities WHERE eid=%s' % eid)
+    sqlcursor.execute('SELECT type FROM entities WHERE eid=%s' % eid)
     try:
-        etype, source = sqlcursor.fetchone()
+        etype = sqlcursor.fetchone()[0]
     except Exception:
-        eids[eid] = False
-        return False
-    if source and source != 'system':
-        try:
-            # insert eid *and* etype to attempt checking entity has not been
-            # replaced by another subsquently to a restore of an old dump
-            if session.execute('Any X WHERE X is %s, X eid %%(x)s' % etype,
-                               {'x': eid}):
-                eids[eid] = True
-                return True
-        except Exception: # TypeResolverError, Unauthorized...
-            pass
         eids[eid] = False
         return False
     if etype not in session.vreg.schema:

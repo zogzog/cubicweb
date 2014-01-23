@@ -191,9 +191,6 @@ class FakeRepo(object):
             source.after_entity_insertion(session, extid, entity)
             return eid
 
-    def eid2extid(self, source, eid, session=None):
-        return self.eids[eid]
-
 
 class FakeSource(object):
     dbhelper = get_db_helper('sqlite')

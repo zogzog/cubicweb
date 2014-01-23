@@ -145,7 +145,7 @@ class SupervisionEmailView(Component):
         session = self._cw
         def describe(eid):
             try:
-                return session._(session.describe(eid)[0]).lower()
+                return session._(session.entity_metas(eid)['type']).lower()
             except UnknownEid:
                 # may occurs when an entity has been deleted from an external
                 # source and we're cleaning its relation

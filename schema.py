@@ -812,20 +812,20 @@ class CubicWebRelationSchema(RelationSchema):
             assert not ('fromeid' in kwargs or 'toeid' in kwargs), kwargs
             assert action in ('read', 'update')
             if 'eid' in kwargs:
-                subjtype = _cw.describe(kwargs['eid'])[0]
+                subjtype = _cw.entity_metas(kwargs['eid'])['type']
             else:
                 subjtype = objtype = None
         else:
             assert not 'eid' in kwargs, kwargs
             assert action in ('read', 'add', 'delete')
             if 'fromeid' in kwargs:
-                subjtype = _cw.describe(kwargs['fromeid'])[0]
+                subjtype = _cw.entity_metas(kwargs['fromeid'])['type']
             elif 'frometype' in kwargs:
                 subjtype = kwargs.pop('frometype')
             else:
                 subjtype = None
             if 'toeid' in kwargs:
-                objtype = _cw.describe(kwargs['toeid'])[0]
+                objtype = _cw.entity_metas(kwargs['toeid'])['type']
             elif 'toetype' in kwargs:
                 objtype = kwargs.pop('toetype')
             else:

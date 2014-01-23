@@ -452,6 +452,7 @@ class Connection(RequestSessionBase):
         if cnxid is None:
             cnxid = '%s-%s' % (session.id, uuid4().hex)
         self.connectionid = cnxid
+        self.sessionid = session.id
         #: self._session_handled
         #: are the life cycle of this Connection automatically controlled by the
         #: Session This is the old backward compatibility mode
@@ -788,7 +789,7 @@ class Connection(RequestSessionBase):
             rset.rows.append([targeteid])
             if not isinstance(rset.description, list): # else description not set
                 rset.description = list(rset.description)
-            rset.description.append([self.describe(targeteid)[0]])
+            rset.description.append([self.entity_metas(targeteid)['type']])
             targetentity = self.entity_from_eid(targeteid)
             if targetentity.cw_rset is None:
                 targetentity.cw_rset = rset
@@ -981,21 +982,24 @@ class Connection(RequestSessionBase):
     def source_defs(self):
         return self.repo.source_defs()
 
+    @deprecated('[3.19] use .entity_metas(eid) instead')
     @_with_cnx_set
     @_open_only
     def describe(self, eid, asdict=False):
         """return a tuple (type, sourceuri, extid) for the entity with id <eid>"""
-        metas = self.repo.type_and_source_from_eid(eid, self)
+        etype, extid, source = self.repo.type_and_source_from_eid(eid, self)
+        metas = {'type': etype, 'source': source, 'extid': extid}
         if asdict:
-            return dict(zip(('type', 'source', 'extid', 'asource'), metas))
-        # XXX :-1 for cw compat, use asdict=True for full information
-        return metas[:-1]
+            metas['asource'] = meta['source'] # XXX pre 3.19 client compat
+            return meta
+        return etype, source, extid
 
     @_with_cnx_set
     @_open_only
-    def source_from_eid(self, eid):
-        """return the source where the entity with id <eid> is located"""
-        return self.repo.source_from_eid(eid, self)
+    def entity_metas(self, eid):
+        """return a tuple (type, sourceuri, extid) for the entity with id <eid>"""
+        etype, extid, source = self.repo.type_and_source_from_eid(eid, self)
+        return {'type': etype, 'source': source, 'extid': extid}
 
     # core method #############################################################
 
@@ -1589,8 +1593,8 @@ class Session(RequestSessionBase): # XXX repoapi: stop being a
     drop_entity_cache = cnx_meth('drop_entity_cache')
 
     source_defs = cnx_meth('source_defs')
-    describe = cnx_meth('describe')
-    source_from_eid = cnx_meth('source_from_eid')
+    entity_metas = cnx_meth('entity_metas')
+    describe = cnx_meth('describe') # XXX deprecated in 3.19
 
 
     @deprecated('[3.19] use a Connection object instead')

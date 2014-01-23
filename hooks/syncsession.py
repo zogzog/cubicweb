@@ -229,7 +229,7 @@ class AddForUserRelationHook(SyncSessionHook):
     def __call__(self):
         session = self._cw
         eidfrom = self.eidfrom
-        if not session.describe(eidfrom)[0] == 'CWProperty':
+        if not session.entity_metas(eidfrom)['type'] == 'CWProperty':
             return
         key, value = session.execute('Any K,V WHERE P eid %(x)s,P pkey K,P value V',
                                      {'x': eidfrom})[0]

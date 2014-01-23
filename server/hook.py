@@ -460,10 +460,10 @@ class match_rtype(ExpectedValuePredicate):
         if kwargs.get('rtype') not in self.expected:
             return 0
         if self.frometypes is not None and \
-               req.describe(kwargs['eidfrom'])[0] not in self.frometypes:
+               req.entity_metas(kwargs['eidfrom'])['type'] not in self.frometypes:
             return 0
         if self.toetypes is not None and \
-               req.describe(kwargs['eidto'])[0] not in self.toetypes:
+               req.entity_metas(kwargs['eidto'])['type'] not in self.toetypes:
             return 0
         return 1
 
@@ -604,7 +604,7 @@ class PropagateRelationHook(Hook):
     def __call__(self):
         assert self.main_rtype
         for eid in (self.eidfrom, self.eidto):
-            etype = self._cw.describe(eid)[0]
+            etype = self._cw.entity_metas(eid)['type']
             if self.main_rtype not in self._cw.vreg.schema.eschema(etype).subjrels:
                 return
         if self.rtype in self.subject_relations:
@@ -640,7 +640,7 @@ class PropagateRelationAddHook(Hook):
     skip_object_relations = ()
 
     def __call__(self):
-        eschema = self._cw.vreg.schema.eschema(self._cw.describe(self.eidfrom)[0])
+        eschema = self._cw.vreg.schema.eschema(self._cw.entity_metas(self.eidfrom)['type'])
         execute = self._cw.execute
         for rel in self.subject_relations:
             if rel in eschema.subjrels and not rel in self.skip_subject_relations:
@@ -664,7 +664,7 @@ class PropagateRelationDelHook(PropagateRelationAddHook):
     events = ('after_delete_relation',)
 
     def __call__(self):
-        eschema = self._cw.vreg.schema.eschema(self._cw.describe(self.eidfrom)[0])
+        eschema = self._cw.vreg.schema.eschema(self._cw.entity_metas(self.eidfrom)['type'])
         execute = self._cw.execute
         for rel in self.subject_relations:
             if rel in eschema.subjrels and not rel in self.skip_subject_relations:

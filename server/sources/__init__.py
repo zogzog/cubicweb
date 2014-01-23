@@ -450,10 +450,6 @@ class AbstractSource(object):
         raise NotImplementedError(self)
 
 
-    @deprecated('[3.13] use repo.eid2extid(source, eid, session)')
-    def eid2extid(self, eid, session=None):
-        return self.repo.eid2extid(self, eid, session)
-
     @deprecated('[3.13] use extid2eid(source, value, etype, session, **kwargs)')
     def extid2eid(self, value, etype, session=None, **kwargs):
         return self.repo.extid2eid(self, value, etype, session, **kwargs)

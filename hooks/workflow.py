@@ -32,12 +32,8 @@ def _change_state(session, x, oldstate, newstate):
     nocheck = session.transaction_data.setdefault('skip-security', set())
     nocheck.add((x, 'in_state', oldstate))
     nocheck.add((x, 'in_state', newstate))
-    # delete previous state first unless in_state isn't stored in the system
-    # source
-    fromsource = session.describe(x)[1]
-    if fromsource == 'system' or \
-           not session.repo.sources_by_uri[fromsource].support_relation('in_state'):
-        session.delete_relation(x, 'in_state', oldstate)
+    # delete previous state first
+    session.delete_relation(x, 'in_state', oldstate)
     session.add_relation(x, 'in_state', newstate)
 
 

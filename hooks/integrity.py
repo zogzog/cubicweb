@@ -85,7 +85,7 @@ class _CheckRequiredRelationOperation(hook.DataOperationMixIn,
             if rtype in pendingrtypes:
                 continue
             if not session.execute(self.base_rql % rtype, {'x': eid}):
-                etype = session.describe(eid)[0]
+                etype = session.entity_metas(eid)['type']
                 msg = _('at least one relation %(rtype)s is required on '
                         '%(etype)s (%(eid)s)')
                 raise validation_error(eid, {(rtype, self.role): msg},
@@ -325,7 +325,7 @@ class _DelayedDeleteOp(hook.DataOperationMixIn, hook.Operation):
         for eid, rtype in self.get_data():
             # don't do anything if the entity is being deleted
             if eid not in pendingeids:
-                etype = session.describe(eid)[0]
+                etype = session.entity_metas(eid)['type']
                 key = (etype, rtype)
                 if key not in eids_by_etype_rtype:
                     eids_by_etype_rtype[key] = [str(eid)]

@@ -294,9 +294,9 @@ class CWETypeRenameOp(MemSchemaOperation):
         self.info('renamed table %s to %s', oldname, newname)
         sqlexec('UPDATE entities SET type=%(newname)s WHERE type=%(oldname)s',
                 {'newname': newname, 'oldname': oldname})
-        for eid, (etype, uri, extid, auri) in self.session.repo._type_source_cache.items():
+        for eid, (etype, extid, auri) in self.session.repo._type_source_cache.items():
             if etype == oldname:
-                self.session.repo._type_source_cache[eid] = (newname, uri, extid, auri)
+                self.session.repo._type_source_cache[eid] = (newname, extid, auri)
         # XXX transaction records
 
     def precommit_event(self):
@@ -1180,7 +1180,7 @@ class AfterAddPermissionHook(SyncSchemaHook):
 
     def __call__(self):
         action = self.rtype.split('_', 1)[0]
-        if self._cw.describe(self.eidto)[0] == 'CWGroup':
+        if self._cw.entity_metas(self.eidto)['type'] == 'CWGroup':
             MemSchemaPermissionAdd(self._cw, action=action, eid=self.eidfrom,
                                    group_eid=self.eidto)
         else: # RQLExpression
@@ -1201,7 +1201,7 @@ class BeforeDelPermissionHook(AfterAddPermissionHook):
         if self._cw.deleted_in_transaction(self.eidfrom):
             return
         action = self.rtype.split('_', 1)[0]
-        if self._cw.describe(self.eidto)[0] == 'CWGroup':
+        if self._cw.entity_metas(self.eidto)['type'] == 'CWGroup':
             MemSchemaPermissionDel(self._cw, action=action, eid=self.eidfrom,
                                    group_eid=self.eidto)
         else: # RQLExpression

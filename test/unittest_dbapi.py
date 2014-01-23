@@ -49,9 +49,12 @@ class DBAPITC(CubicWebTC):
     def test_api(self):
         cnx = _repo_connect(self.repo, login='anon', password='anon')
         self.assertEqual(cnx.user(None).login, 'anon')
+        self.assertEqual({'type': u'CWSource', 'source': u'system', 'extid': None},
+                         cnx.entity_metas(1))
         self.assertEqual(cnx.describe(1), (u'CWSource', u'system', None))
         cnx.close()
         self.assertRaises(ProgrammingError, cnx.user, None)
+        self.assertRaises(ProgrammingError, cnx.entity_metas, 1)
         self.assertRaises(ProgrammingError, cnx.describe, 1)
 
     def test_shared_data_api(self):

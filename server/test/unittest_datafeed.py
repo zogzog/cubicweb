@@ -1,4 +1,4 @@
-# copyright 2011-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2011-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -70,8 +70,8 @@ class DataFeedTC(CubicWebTC):
             self.assertEqual(entity.absolute_url(), 'http://www.cubicweb.org/')
             # test repo cache keys
             self.assertEqual(self.repo._type_source_cache[entity.eid],
-                             ('Card', 'system', 'http://www.cubicweb.org/', 'myfeed'))
-            self.assertEqual(self.repo._extid_cache[('http://www.cubicweb.org/', 'system')],
+                             ('Card', 'http://www.cubicweb.org/', 'myfeed'))
+            self.assertEqual(self.repo._extid_cache['http://www.cubicweb.org/'],
                              entity.eid)
             # test repull
             session.set_cnxset()
@@ -86,8 +86,8 @@ class DataFeedTC(CubicWebTC):
             self.assertEqual(stats['created'], set())
             self.assertEqual(stats['updated'], set((entity.eid,)))
             self.assertEqual(self.repo._type_source_cache[entity.eid],
-                             ('Card', 'system', 'http://www.cubicweb.org/', 'myfeed'))
-            self.assertEqual(self.repo._extid_cache[('http://www.cubicweb.org/', 'system')],
+                             ('Card', 'http://www.cubicweb.org/', 'myfeed'))
+            self.assertEqual(self.repo._extid_cache['http://www.cubicweb.org/'],
                              entity.eid)
 
         self.assertEqual(dfsource.source_cwuris(self.session),
@@ -109,8 +109,8 @@ class DataFeedTC(CubicWebTC):
                           'extid': 'http://www.cubicweb.org/'}
                          )
         self.assertEqual(self.repo._type_source_cache[entity.eid],
-                         ('Card', 'system', 'http://www.cubicweb.org/', 'myrenamedfeed'))
-        self.assertEqual(self.repo._extid_cache[('http://www.cubicweb.org/', 'system')],
+                         ('Card', 'http://www.cubicweb.org/', 'myrenamedfeed'))
+        self.assertEqual(self.repo._extid_cache['http://www.cubicweb.org/'],
                          entity.eid)
 
         # test_delete_source

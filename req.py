@@ -131,7 +131,7 @@ class RequestSessionBase(object):
         """
         eid = int(eid)
         if etype is None:
-            etype = self.describe(eid)[0]
+            etype = self.entity_metas(eid)['type']
         rset = ResultSet([(eid,)], 'Any X WHERE X eid %(x)s', {'x': eid},
                          [(etype,)])
         rset.req = self

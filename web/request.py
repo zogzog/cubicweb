@@ -1052,10 +1052,11 @@ class ConnectionCubicWebRequestBase(_CubicWebRequestBase):
             self._ = self.__ = unicode
             self.pgettext = lambda x, y: unicode(y)
 
-    describe = _cnx_func('describe')
+    entity_metas = _cnx_func('entity_metas')
     source_defs = _cnx_func('source_defs')
     get_shared_data = _cnx_func('get_shared_data')
     set_shared_data = _cnx_func('set_shared_data')
+    describe = _cnx_func('describe') # deprecated XXX
 
     # server-side service call #################################################
 

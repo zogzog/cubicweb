@@ -78,8 +78,8 @@ class CheckRelationPermissionOp(hook.DataOperationMixIn, hook.LateOperation):
     def precommit_event(self):
         session = self.session
         for action, rschema, eidfrom, eidto in self.get_data():
-            rdef = rschema.rdef(session.describe(eidfrom)[0],
-                                session.describe(eidto)[0])
+            rdef = rschema.rdef(session.entity_metas(eidfrom)['type'],
+                                session.entity_metas(eidto)['type'])
             rdef.check_perm(session, action, fromeid=eidfrom, toeid=eidto)
 
 
@@ -134,8 +134,8 @@ class BeforeAddRelationSecurityHook(SecurityHook):
             if (self.eidfrom, self.rtype, self.eidto) in nocheck:
                 return
             rschema = self._cw.repo.schema[self.rtype]
-            rdef = rschema.rdef(self._cw.describe(self.eidfrom)[0],
-                                self._cw.describe(self.eidto)[0])
+            rdef = rschema.rdef(self._cw.entity_metas(self.eidfrom)['type'],
+                                self._cw.entity_metas(self.eidto)['type'])
             rdef.check_perm(self._cw, 'add', fromeid=self.eidfrom, toeid=self.eidto)
 
 
@@ -153,8 +153,8 @@ class AfterAddRelationSecurityHook(SecurityHook):
                 CheckRelationPermissionOp.get_instance(self._cw).add_data(
                     ('add', rschema, self.eidfrom, self.eidto) )
             else:
-                rdef = rschema.rdef(self._cw.describe(self.eidfrom)[0],
-                                    self._cw.describe(self.eidto)[0])
+                rdef = rschema.rdef(self._cw.entity_metas(self.eidfrom)['type'],
+                                    self._cw.entity_metas(self.eidto)['type'])
                 rdef.check_perm(self._cw, 'add', fromeid=self.eidfrom, toeid=self.eidto)
 
 
@@ -167,7 +167,7 @@ class BeforeDeleteRelationSecurityHook(SecurityHook):
         if (self.eidfrom, self.rtype, self.eidto) in nocheck:
             return
         rschema = self._cw.repo.schema[self.rtype]
-        rdef = rschema.rdef(self._cw.describe(self.eidfrom)[0],
-                            self._cw.describe(self.eidto)[0])
+        rdef = rschema.rdef(self._cw.entity_metas(self.eidfrom)['type'],
+                            self._cw.entity_metas(self.eidto)['type'])
         rdef.check_perm(self._cw, 'delete', fromeid=self.eidfrom, toeid=self.eidto)
 
