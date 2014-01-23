@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -19,13 +19,9 @@
 
 __docformat__ = "restructuredtext en"
 
-import os
-import sys
 import select
-import warnings
 from time import localtime, mktime
 
-from cubicweb.cwconfig import CubicWebConfiguration
 from cubicweb.server.utils import TasksManager
 from cubicweb.server.repository import Repository
 

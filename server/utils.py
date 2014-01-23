@@ -108,7 +108,7 @@ def manager_userpasswd(user=None, msg=DEFAULT_MSG, confirm=False,
     return user, passwd
 
 
-_MARKER=object()
+_MARKER = object()
 def func_name(func):
     name = getattr(func, '__name__', _MARKER)
     if name is _MARKER:

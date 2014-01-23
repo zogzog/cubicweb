@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -24,7 +24,7 @@ from os.path import join, exists
 from StringIO import StringIO
 
 import logilab.common.configuration as lgconfig
-from logilab.common.decorators import wproperty, cached
+from logilab.common.decorators import cached
 
 from cubicweb.toolsutils import read_config, restrict_perms_to_user
 from cubicweb.cwconfig import CONFIGURATIONS, CubicWebConfiguration

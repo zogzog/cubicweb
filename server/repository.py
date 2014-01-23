@@ -33,26 +33,22 @@ import threading
 import Queue
 from warnings import warn
 from itertools import chain
-from os.path import join
-from datetime import datetime
 from time import time, localtime, strftime
 from contextlib import contextmanager
 from warnings import warn
 
 from logilab.common.decorators import cached, clear_cache
 from logilab.common.deprecation import deprecated
-from logilab.common.compat import any
-from logilab.common import flatten
 
 from yams import BadSchemaDefinition
 from yams.schema import role_name
 from rql import RQLSyntaxError
 from rql.utils import rqlvar_maker
 
-from cubicweb import (CW_SOFTWARE_ROOT, CW_MIGRATION_MAP, QueryError,
+from cubicweb import (CW_MIGRATION_MAP, QueryError,
                       UnknownEid, AuthenticationError, ExecutionError,
                       BadConnectionId, Unauthorized, ValidationError,
-                      RepositoryError, UniqueTogetherError, onevent)
+                      UniqueTogetherError, onevent)
 from cubicweb import cwvreg, schema, server
 from cubicweb.server import ShuttingDown, utils, hook, querier, sources
 from cubicweb.server.session import Session, InternalSession, InternalManager
@@ -1486,7 +1482,7 @@ class Repository(object):
 
     # these are overridden by set_log_methods below
     # only defining here to prevent pylint from complaining
-    info = warning = error = critical = exception = debug = lambda msg,*a,**kw: None
+    info = warning = error = critical = exception = debug = lambda msg, *a, **kw: None
 
 
 def pyro_unregister(config):

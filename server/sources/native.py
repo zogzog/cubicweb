@@ -35,7 +35,7 @@ from threading import Lock
 from datetime import datetime
 from base64 import b64decode, b64encode
 from contextlib import contextmanager
-from os.path import abspath, basename
+from os.path import basename
 import re
 import itertools
 import zipfile
@@ -52,7 +52,7 @@ from yams import schema2sql as y2sql
 from yams.schema import role_name
 
 from cubicweb import (UnknownEid, AuthenticationError, ValidationError, Binary,
-                      UniqueTogetherError, QueryError, UndoTransactionException)
+                      UniqueTogetherError, UndoTransactionException)
 from cubicweb import transaction as tx, server, neg_role
 from cubicweb.utils import QueryCache
 from cubicweb.schema import VIRTUAL_RTYPES
@@ -1554,7 +1554,7 @@ class DatabaseIndependentBackupRestore(object):
         self.cnx = self.get_connection()
         try:
             self.cursor = self.cnx.cursor()
-            self.cursor.arraysize=100
+            self.cursor.arraysize = 100
             self.logger.info('writing metadata')
             self.write_metadata(archive)
             for seq in self.get_sequences():
@@ -1597,8 +1597,8 @@ class DatabaseIndependentBackupRestore(object):
         archive.writestr('tables.txt', '\n'.join(self.get_tables()))
         archive.writestr('sequences.txt', '\n'.join(self.get_sequences()))
         versions = self._get_versions()
-        versions_str = '\n'.join('%s %s' % (k,v)
-                                 for k,v in versions)
+        versions_str = '\n'.join('%s %s' % (k, v)
+                                 for k, v in versions)
         archive.writestr('versions.txt', versions_str)
 
     def write_sequence(self, archive, seq):

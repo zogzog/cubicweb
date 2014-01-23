@@ -20,7 +20,6 @@
 __docformat__ = "restructuredtext en"
 
 import os
-from itertools import chain
 import json
 
 from logilab.common.shellutils import ProgressBar
@@ -28,9 +27,9 @@ from logilab.common.shellutils import ProgressBar
 from yams import (BadSchemaDefinition, schema as schemamod, buildobjs as ybo,
                   schema2sql as y2sql)
 
-from cubicweb import CW_SOFTWARE_ROOT, Binary, typed_eid
+from cubicweb import Binary
 from cubicweb.schema import (KNOWN_RPROPERTIES, CONSTRAINTS, ETYPE_NAME_MAP,
-                             VIRTUAL_RTYPES, PURE_VIRTUAL_RTYPES)
+                             VIRTUAL_RTYPES)
 from cubicweb.server import sqlutils
 
 

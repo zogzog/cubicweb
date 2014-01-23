@@ -58,8 +58,8 @@ from logilab.database import FunctionDescr, SQL_FUNCTIONS_REGISTRY
 from rql import BadRQLQuery, CoercionError
 from rql.utils import common_parent
 from rql.stmts import Union, Select
-from rql.nodes import (SortTerm, VariableRef, Constant, Function, Variable, Or,
-                       Not, Comparison, ColumnAlias, Relation, SubQuery, Exists)
+from rql.nodes import (VariableRef, Constant, Function, Variable, Or,
+                       Not, Comparison, ColumnAlias, Relation, SubQuery)
 
 from cubicweb import QueryError
 from cubicweb.rqlrewrite import cleanup_solutions

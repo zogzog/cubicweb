@@ -55,13 +55,9 @@ from cubicweb.schema import (ETYPE_NAME_MAP, META_RTYPES, VIRTUAL_RTYPES,
 from cubicweb.cwvreg import CW_EVENT_MANAGER
 from cubicweb.dbapi import get_repository, _repo_connect
 from cubicweb.migration import MigrationHelper, yes
-from cubicweb.server import hook
-try:
-    from cubicweb.server import SOURCE_TYPES, schemaserial as ss
-    from cubicweb.server.utils import manager_userpasswd
-    from cubicweb.server.sqlutils import sqlexec, SQL_PREFIX
-except ImportError: # LAX
-    pass
+from cubicweb.server import hook, schemaserial as ss
+from cubicweb.server.utils import manager_userpasswd
+from cubicweb.server.sqlutils import sqlexec, SQL_PREFIX
 
 
 def mock_object(**params):

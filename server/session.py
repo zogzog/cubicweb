@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -31,7 +31,7 @@ from logilab.common.deprecation import deprecated
 from logilab.common.textutils import unormalize
 from logilab.common.registry import objectify_predicate
 
-from cubicweb import UnknownEid, QueryError, schema, server, ProgrammingError
+from cubicweb import QueryError, schema, server, ProgrammingError
 from cubicweb.req import RequestSessionBase
 from cubicweb.utils import make_uid
 from cubicweb.rqlrewrite import RQLRewriter
@@ -160,7 +160,7 @@ class _session_hooks_control(_hooks_control): # XXX repoapi: remove me when
     def __init__(self, session, mode, *categories):
         self.session = session
         super_init = super(_session_hooks_control, self).__init__
-        return super_init(session._cnx, mode, *categories)
+        super_init(session._cnx, mode, *categories)
 
     def __exit__(self, exctype, exc, traceback):
         super_exit = super(_session_hooks_control, self).__exit__
@@ -215,7 +215,7 @@ class _session_security_enabled(_security_enabled):
     def __init__(self, session, read=None, write=None):
         self.session = session
         super_init = super(_session_security_enabled, self).__init__
-        return super_init(session._cnx, read=read, write=write)
+        super_init(session._cnx, read=read, write=write)
 
     def __exit__(self, exctype, exc, traceback):
         super_exit = super(_session_security_enabled, self).__exit__

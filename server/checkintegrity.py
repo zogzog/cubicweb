@@ -193,7 +193,7 @@ def check_entities(schema, session, eids, fix=1):
             notify_fixed(fix)
     # source in entities, but no relation cw_source
     applcwversion = session.repo.get_versions().get('cubicweb')
-    if applcwversion >= (3,13,1): # entities.asource appeared in 3.13.1
+    if applcwversion >= (3, 13, 1): # entities.asource appeared in 3.13.1
         cursor = session.system_sql('SELECT e.eid FROM entities as e, cw_CWSource as s '
                                     'WHERE s.cw_name=e.asource AND '
                                     'NOT EXISTS(SELECT 1 FROM cw_source_relation as cs '

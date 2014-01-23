@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# copyright 2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2012-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -17,17 +17,17 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 
-from threading import Thread
 import cPickle
 import traceback
+from threading import Thread
+from logging import getLogger
 
 import zmq
 from zmq.eventloop import ioloop
 import zmq.eventloop.zmqstream
 
-from logging import getLogger
 from cubicweb import set_log_methods
-from cubicweb.server.server import QuitEvent
+from cubicweb.server.server import QuitEvent, Finished
 
 ctx = zmq.Context()
 
