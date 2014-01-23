@@ -138,4 +138,7 @@ for eschema in sorted(schema.entities()):
 # all attributes perms have to be refreshed ...
 for rschema in schema.relations():
     if rschema.final:
-        sync_schema_props_perms(rschema.type, syncprops=False)
+        if rschema.type in fsschema:
+            sync_schema_props_perms(rschema.type, syncprops=False, ask_confirm=False)
+        else:
+            print 'WARNING: attribute %s missing from fs schema' % rschema.type
