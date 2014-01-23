@@ -43,6 +43,6 @@ def clean_repo_test_cls(cls):
         if not cls.repo.shutting_down:
             cls.repo.shutdown()
         del cls.repo
-    for clsattr in ('cnx', '_orig_cnx', 'config', '_config', 'vreg', 'schema'):
+    for clsattr in ('cnx', 'config', '_config', 'vreg', 'schema'):
         if clsattr in cls.__dict__:
             delattr(cls, clsattr)
