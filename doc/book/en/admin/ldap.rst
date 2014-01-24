@@ -45,8 +45,8 @@ Credential checks are _always_ done against the LDAP server.
   be overridden in some subsequent source synchronisation).
 
 
-Configurations options of an LDAPfeed source
---------------------------------------------
+Configuration options of an LDAPfeed source
+-------------------------------------------
 
 Let us enumerate the options by categories (LDAP server connection,
 LDAP schema mapping information).
