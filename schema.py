@@ -1,4 +1,4 @@
-# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -668,6 +668,32 @@ class CubicWebEntitySchema(EntitySchema):
         if eid is None and edef is not None:
             eid = getattr(edef, 'eid', None)
         self.eid = eid
+
+    def targets(self, role):
+        assert role in ('subject', 'object')
+        if role == 'subject':
+            return self.subjrels.values()
+        return self.objrels.values()
+
+    @cachedproperty
+    def composite_rdef_roles(self):
+        """Return all relation definitions that define the current entity
+        type as a composite.
+        """
+        rdef_roles = []
+        for role in ('subject', 'object'):
+            for rschema in self.targets(role):
+                if rschema.final:
+                    continue
+                for rdef in rschema.rdefs.values():
+                    crole = rdef.composite
+                    if crole == role:
+                        rdef_roles.append((rdef, role))
+        return rdef_roles
+
+    @cachedproperty
+    def is_composite(self):
+        return bool(len(self.composite_rdef_roles))
 
     def check_permission_definitions(self):
         super(CubicWebEntitySchema, self).check_permission_definitions()

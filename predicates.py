@@ -1,4 +1,4 @@
-# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -706,6 +706,22 @@ def logged_user_in_rset(cls, req, rset=None, row=None, col=0, **kwargs):
 
 
 # entity predicates #############################################################
+
+class composite_etype(Predicate):
+    """Return 1 for composite entities.
+
+    A composite entity has an etype for which at least one relation
+    definition points in its direction with the
+    composite='subject'/'object' notation.
+    """
+
+    def __call__(self, cls, req, **kwargs):
+        entity = kwargs.pop('entity', None)
+        if entity is None:
+            return 0
+        return entity.e_schema.is_composite
+
+
 
 class non_final_entity(EClassPredicate):
     """Return 1 for entity of a non final entity type(s). Remember, "final"

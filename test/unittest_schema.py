@@ -1,4 +1,4 @@
-# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -354,6 +354,130 @@ class WorkflowShemaTC(CubicWebTC):
     def test_trinfo_default_format(self):
         tr = self.request().user.cw_adapt_to('IWorkflowable').fire_transition('deactivate')
         self.assertEqual(tr.comment_format, 'text/plain')
+
+
+class CompositeSchemaTC(CubicWebTC):
+    composites = {
+        'BaseTransition': [('condition', 'BaseTransition', 'RQLExpression', 'subject'),
+                           ('condition', 'Transition', 'RQLExpression', 'subject'),
+                           ('condition', 'WorkflowTransition', 'RQLExpression', 'subject')],
+        'CWAttribute': [('add_permission', 'CWAttribute', 'RQLExpression', 'subject'),
+                        ('add_permission', 'CWEType', 'RQLExpression', 'subject'),
+                        ('add_permission', 'CWRelation', 'RQLExpression', 'subject'),
+                        ('constrained_by', 'CWAttribute', 'CWConstraint', 'subject'),
+                        ('constrained_by', 'CWRelation', 'CWConstraint', 'subject'),
+                        ('read_permission', 'CWAttribute', 'RQLExpression', 'subject'),
+                        ('read_permission', 'CWEType', 'RQLExpression', 'subject'),
+                        ('read_permission', 'CWRelation', 'RQLExpression', 'subject'),
+                        ('update_permission', 'CWAttribute', 'RQLExpression', 'subject'),
+                        ('update_permission', 'CWEType', 'RQLExpression', 'subject')],
+        'CWEType': [('add_permission', 'CWAttribute', 'RQLExpression', 'subject'),
+                    ('add_permission', 'CWEType', 'RQLExpression', 'subject'),
+                    ('add_permission', 'CWRelation', 'RQLExpression', 'subject'),
+                    ('constraint_of', 'CWUniqueTogetherConstraint', 'CWEType', 'object'),
+                    ('cw_schema', 'CWSourceSchemaConfig', 'CWEType', 'object'),
+                    ('cw_schema', 'CWSourceSchemaConfig', 'CWRType', 'object'),
+                    ('cw_schema', 'CWSourceSchemaConfig', 'CWRelation', 'object'),
+                    ('delete_permission', 'CWEType', 'RQLExpression', 'subject'),
+                    ('delete_permission', 'CWRelation', 'RQLExpression', 'subject'),
+                    ('from_entity', 'CWAttribute', 'CWEType', 'object'),
+                    ('from_entity', 'CWRelation', 'CWEType', 'object'),
+                    ('read_permission', 'CWAttribute', 'RQLExpression', 'subject'),
+                    ('read_permission', 'CWEType', 'RQLExpression', 'subject'),
+                    ('read_permission', 'CWRelation', 'RQLExpression', 'subject'),
+                    ('to_entity', 'CWAttribute', 'CWEType', 'object'),
+                    ('to_entity', 'CWRelation', 'CWEType', 'object'),
+                    ('update_permission', 'CWAttribute', 'RQLExpression', 'subject'),
+                    ('update_permission', 'CWEType', 'RQLExpression', 'subject')],
+        'CWRType': [('cw_schema', 'CWSourceSchemaConfig', 'CWEType', 'object'),
+                    ('cw_schema', 'CWSourceSchemaConfig', 'CWRType', 'object'),
+                    ('cw_schema', 'CWSourceSchemaConfig', 'CWRelation', 'object'),
+                    ('relation_type', 'CWAttribute', 'CWRType', 'object'),
+                    ('relation_type', 'CWRelation', 'CWRType', 'object')],
+        'CWRelation': [('add_permission', 'CWAttribute', 'RQLExpression', 'subject'),
+                       ('add_permission', 'CWEType', 'RQLExpression', 'subject'),
+                       ('add_permission', 'CWRelation', 'RQLExpression', 'subject'),
+                       ('constrained_by', 'CWAttribute', 'CWConstraint', 'subject'),
+                       ('constrained_by', 'CWRelation', 'CWConstraint', 'subject'),
+                       ('cw_schema', 'CWSourceSchemaConfig', 'CWEType', 'object'),
+                       ('cw_schema', 'CWSourceSchemaConfig', 'CWRType', 'object'),
+                       ('cw_schema', 'CWSourceSchemaConfig', 'CWRelation', 'object'),
+                       ('delete_permission', 'CWEType', 'RQLExpression', 'subject'),
+                       ('delete_permission', 'CWRelation', 'RQLExpression', 'subject'),
+                       ('read_permission', 'CWAttribute', 'RQLExpression', 'subject'),
+                       ('read_permission', 'CWEType', 'RQLExpression', 'subject'),
+                       ('read_permission', 'CWRelation', 'RQLExpression', 'subject')],
+        'CWSource': [('cw_for_source', 'CWSourceSchemaConfig', 'CWSource', 'object'),
+                     ('cw_host_config_of', 'CWSourceHostConfig', 'CWSource', 'object'),
+                     ('cw_import_of', 'CWDataImport', 'CWSource', 'object'),
+                     ('cw_source', 'Ami', 'CWSource', 'object'),
+                     ('cw_source', 'BaseTransition', 'CWSource', 'object'),
+                     ('cw_source', 'Bookmark', 'CWSource', 'object'),
+                     ('cw_source', 'CWAttribute', 'CWSource', 'object'),
+                     ('cw_source', 'CWCache', 'CWSource', 'object'),
+                     ('cw_source', 'CWConstraint', 'CWSource', 'object'),
+                     ('cw_source', 'CWConstraintType', 'CWSource', 'object'),
+                     ('cw_source', 'CWDataImport', 'CWSource', 'object'),
+                     ('cw_source', 'CWEType', 'CWSource', 'object'),
+                     ('cw_source', 'CWGroup', 'CWSource', 'object'),
+                     ('cw_source', 'CWPermission', 'CWSource', 'object'),
+                     ('cw_source', 'CWProperty', 'CWSource', 'object'),
+                     ('cw_source', 'CWRType', 'CWSource', 'object'),
+                     ('cw_source', 'CWRelation', 'CWSource', 'object'),
+                     ('cw_source', 'CWSource', 'CWSource', 'object'),
+                     ('cw_source', 'CWSourceHostConfig', 'CWSource', 'object'),
+                     ('cw_source', 'CWSourceSchemaConfig', 'CWSource', 'object'),
+                     ('cw_source', 'CWUniqueTogetherConstraint', 'CWSource', 'object'),
+                     ('cw_source', 'CWUser', 'CWSource', 'object'),
+                     ('cw_source', 'Card', 'CWSource', 'object'),
+                     ('cw_source', 'EmailAddress', 'CWSource', 'object'),
+                     ('cw_source', 'ExternalUri', 'CWSource', 'object'),
+                     ('cw_source', 'File', 'CWSource', 'object'),
+                     ('cw_source', 'Note', 'CWSource', 'object'),
+                     ('cw_source', 'Personne', 'CWSource', 'object'),
+                     ('cw_source', 'Produit', 'CWSource', 'object'),
+                     ('cw_source', 'RQLExpression', 'CWSource', 'object'),
+                     ('cw_source', 'Service', 'CWSource', 'object'),
+                     ('cw_source', 'Societe', 'CWSource', 'object'),
+                     ('cw_source', 'State', 'CWSource', 'object'),
+                     ('cw_source', 'StateFull', 'CWSource', 'object'),
+                     ('cw_source', 'SubNote', 'CWSource', 'object'),
+                     ('cw_source', 'SubWorkflowExitPoint', 'CWSource', 'object'),
+                     ('cw_source', 'Tag', 'CWSource', 'object'),
+                     ('cw_source', 'TrInfo', 'CWSource', 'object'),
+                     ('cw_source', 'Transition', 'CWSource', 'object'),
+                     ('cw_source', 'Usine', 'CWSource', 'object'),
+                     ('cw_source', 'Workflow', 'CWSource', 'object'),
+                     ('cw_source', 'WorkflowTransition', 'CWSource', 'object')],
+        'CWUser': [('for_user', 'CWProperty', 'CWUser', 'object'),
+                   ('use_email', 'CWUser', 'EmailAddress', 'subject'),
+                   ('wf_info_for', 'TrInfo', 'CWUser', 'object'),
+                   ('wf_info_for', 'TrInfo', 'StateFull', 'object')],
+        'StateFull': [('wf_info_for', 'TrInfo', 'CWUser', 'object'),
+                      ('wf_info_for', 'TrInfo', 'StateFull', 'object')],
+        'Transition': [('condition', 'BaseTransition', 'RQLExpression', 'subject'),
+                       ('condition', 'Transition', 'RQLExpression', 'subject'),
+                       ('condition', 'WorkflowTransition', 'RQLExpression', 'subject')],
+        'Workflow': [('state_of', 'State', 'Workflow', 'object'),
+                     ('transition_of', 'BaseTransition', 'Workflow', 'object'),
+                     ('transition_of', 'Transition', 'Workflow', 'object'),
+                     ('transition_of', 'WorkflowTransition', 'Workflow', 'object')],
+        'WorkflowTransition': [('condition', 'BaseTransition', 'RQLExpression', 'subject'),
+                               ('condition', 'Transition', 'RQLExpression', 'subject'),
+                               ('condition', 'WorkflowTransition', 'RQLExpression', 'subject'),
+                               ('subworkflow_exit', 'WorkflowTransition', 'SubWorkflowExitPoint', 'subject')]
+    }
+
+    def test_composite_entities(self):
+        schema = self.vreg.schema
+        self.assertEqual(sorted(self.composites.keys()),
+                         [eschema.type
+                          for eschema in sorted(schema.entities())
+                          if eschema.is_composite])
+        for etype in self.composites:
+            self.assertEqual(self.composites[etype],
+                             sorted([(r.rtype.type, r.subject.type, r.object.type, role)
+                                     for r, role in sorted(schema[etype].composite_rdef_roles)]))
 
 if __name__ == '__main__':
     unittest_main()
