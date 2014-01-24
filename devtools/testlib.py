@@ -282,7 +282,7 @@ class CubicWebTC(TestCase):
         if cnx is self._admin_clt_cnx:
             self._pop_custom_cnx()
         else:
-            self._cnxs.add(cnx) # register the cns to make sure it is removed
+            self._cnxs.add(cnx) # register the cnx to make sure it is removed
             self._current_session = cnx._session
             self._current_clt_cnx = cnx
 

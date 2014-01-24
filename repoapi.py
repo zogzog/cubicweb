@@ -134,12 +134,12 @@ class ClientConnection(RequestSessionBase):
     """A Connection object to be used Client side.
 
     This object is aimed to be used client side (so potential communication
-    with the repo through RTC) and aims to offer some compatibility with the
+    with the repo through RPC) and aims to offer some compatibility with the
     cubicweb.dbapi.Connection interface.
 
-    The autoclose_session paramenter informs the connection that this session
-    have been open explictly and only for this client connection. The
-    connection will close the session of exit.
+    The autoclose_session parameter informs the connection that this session
+    has been opened explicitly and only for this client connection. The
+    connection will close the session on exit.
     """
     # make exceptions available through the connection object
     ProgrammingError = ProgrammingError
@@ -172,8 +172,8 @@ class ClientConnection(RequestSessionBase):
         self._cnx.__exit__(exc_type, exc_val, exc_tb)
         self._cnx = None
         if self._autoclose_session:
-            # we have to call repo.close to unsure the repo properly forget the
-            # session calling session.close() is not enought :-(
+            # we have to call repo.close to ensure the repo properly forgets the
+            # session; calling session.close() is not enough :-(
             self._session.repo.close(self._session.id)
 
 
