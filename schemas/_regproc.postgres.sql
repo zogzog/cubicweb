@@ -13,7 +13,7 @@ $$ LANGUAGE SQL;;
 
 CREATE FUNCTION cw_array_append_unique (anyarray, anyelement) RETURNS anyarray AS $$
     SELECT array_append($1, (SELECT $2 WHERE $2 <> ALL($1)))
-$$ LANGUAGE SQL
+$$ LANGUAGE SQL;;
 
 DROP AGGREGATE IF EXISTS group_concat (anyelement) CASCADE;
 CREATE AGGREGATE group_concat (

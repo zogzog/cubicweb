@@ -4,6 +4,18 @@ if not (driver == 'postgres' or driver.startswith('sqlserver')):
     print >>sys.stderr, 'This migration is not supported for backends other than sqlserver or postgres (yet).'
     sys.exit(1)
 
+add_relation_definition('CWAttribute', 'add_permission', 'CWGroup')
+add_relation_definition('CWAttribute', 'add_permission', 'RQLExpression')
+
+# a bad defaultval in 3.13.8 schema was fixed in 3.13.9, but the migration was missed
+rql('SET ATTR defaultval NULL WHERE ATTR from_entity E, E name "CWSource", ATTR relation_type T, T name "in_synchronization"')
+
+# the migration gets confused when we change rdefs out from under it.  So
+# explicitly remove this size constraint so it doesn't stick around and break
+# things later.
+rdefeid = schema['defaultval'].rdefs.values()[0].eid
+rql('DELETE CWConstraint C WHERE C cstrtype T, T name "SizeConstraint", R constrained_by C, R eid %(eid)s', {'eid': rdefeid})
+
 sync_schema_props_perms('defaultval')
 
 def convert_defaultval(cwattr, default):
@@ -12,6 +24,9 @@ def convert_defaultval(cwattr, default):
     from cubicweb import Binary
     if default is None:
         return
+    if isinstance(default, Binary):
+        # partially migrated instance, try to be idempotent
+        return default
     atype = cwattr.to_entity[0].name
     if atype == 'Boolean':
         # boolean attributes with default=False were stored as ''
@@ -57,13 +72,13 @@ else: # sqlserver
 
 # Set object type to "Bytes" for CWAttribute's "defaultval" attribute
 rql('SET X to_entity B WHERE X is CWAttribute, X from_entity Y, Y name "CWAttribute", '
-    'X relation_type Z, Z name "defaultval", B name "Bytes"')
+    'X relation_type Z, Z name "defaultval", B name "Bytes", NOT X to_entity B')
 
-from yams import buildobjs as ybo
-schema.add_relation_def(ybo.RelationDefinition('CWAttribute', 'defaultval', 'Bytes'))
-schema.del_relation_def('CWAttribute', 'defaultval', 'String')
+schema['defaultval'].rdefs.values()[0].object = schema['Bytes']
 
 commit()
+
+sync_schema_props_perms('defaultval')
 
 for rschema in schema.relations():
     if rschema.symmetric:
@@ -80,7 +95,7 @@ for rschema in schema.relations():
             sql('DELETE FROM %s_relation WHERE eid_from IN (%s) OR eid_to IN (%s)' % (rschema.type, martians, martians))
         with session.deny_all_hooks_but():
             rql('SET X %(r)s Y WHERE Y %(r)s X, NOT X %(r)s Y' % {'r': rschema.type})
-    commit()
+        commit()
 
 
 # multi columns unique constraints regeneration
@@ -120,10 +135,7 @@ for eschema in sorted(schema.entities()):
         commit()
 
 
-add_relation_definition('CWAttribute', 'add_permission', 'CWGroup')
-add_relation_definition('CWAttribute', 'add_permission', 'RQLExpression')
-
 # all attributes perms have to be refreshed ...
 for rschema in schema.relations():
-    if relation.final:
+    if rschema.final:
         sync_schema_props_perms(rschema.type, syncprops=False)

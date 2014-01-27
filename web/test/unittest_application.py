@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -19,13 +19,15 @@
 
 import base64, Cookie
 import sys
+import httplib
 from urllib import unquote
 
 from logilab.common.testlib import TestCase, unittest_main
 from logilab.common.decorators import clear_cache, classproperty
 
 from cubicweb import AuthenticationError, Unauthorized
-from cubicweb.devtools.testlib import CubicWebTC
+from cubicweb import view
+from cubicweb.devtools.testlib import CubicWebTC, real_error_handling
 from cubicweb.devtools.fake import FakeRequest
 from cubicweb.web import LogOut, Redirect, INTERNAL_FIELD_VALUE
 from cubicweb.web.views.basecontrollers import ViewController
@@ -257,6 +259,18 @@ class ApplicationTC(CubicWebTC):
                           {'login-subject': u'the value "admin" is already used, use another one'})
         self.assertEqual(forminfo['values'], req.form)
 
+    def test_ajax_view_raise_arbitrary_error(self):
+        class ErrorAjaxView(view.View):
+            __regid__ = 'test.ajax.error'
+            def call(self):
+                raise Exception('whatever')
+        with self.temporary_appobjects(ErrorAjaxView):
+            with real_error_handling(self.app) as app:
+                req = self.request(vid='test.ajax.error')
+                req.ajax_request = True
+                page = app.handle_request(req, '')
+        self.assertEqual(httplib.INTERNAL_SERVER_ERROR,
+                         req.status_out)
 
     def _test_cleaned(self, kwargs, injected, cleaned):
         req = self.request(**kwargs)
@@ -419,6 +433,7 @@ class ApplicationTC(CubicWebTC):
         # expect a rset with None in [0][0]
         req.form['rql'] = 'rql:Any OV1, X WHERE X custom_workflow OV1?'
         self.app_handle_request(req)
+
 
 if __name__ == '__main__':
     unittest_main()

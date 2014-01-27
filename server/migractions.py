@@ -387,11 +387,10 @@ class ServerMigrationHelper(MigrationHelper):
         sql_scripts = glob(osp.join(directory, '*.%s.sql' % driver))
         for fpath in sql_scripts:
             print '-> installing', fpath
-            try:
-                sqlexec(open(fpath).read(), self.session.system_sql, False,
-                        delimiter=';;')
-            except Exception as exc:
-                print '-> ERROR:', exc, ', skipping', fpath
+            failed = sqlexec(open(fpath).read(), self.session.system_sql, False,
+                             delimiter=';;')
+            if failed:
+                print '-> ERROR, skipping', fpath
 
     # schema synchronization internals ########################################
 

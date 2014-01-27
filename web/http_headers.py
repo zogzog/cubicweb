@@ -1307,7 +1307,7 @@ class Headers(object):
         return self._toRaw(name)
 
     def getHeader(self, name, default=None):
-        """Ret9urns the parsed representation of the given header.
+        """Returns the parsed representation of the given header.
         The exact form of the return value depends on the header in question.
 
         If no parser for the header exists, raise ValueError.

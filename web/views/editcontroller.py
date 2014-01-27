@@ -158,7 +158,7 @@ class EditController(basecontrollers.ViewController):
                         # if cardinality is 1 and if the target entity is being
                         # simultaneously edited, the current entity must be
                         # created before the target one
-                        if rdef.cardinality[0] == '1':
+                        if rdef.cardinality[0 if role == 'subject' else 1] == '1':
                             target_eid = values[param]
                             if target_eid in values_by_eid:
                                 # add dependency from the target entity to the

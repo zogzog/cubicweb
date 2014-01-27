@@ -42,7 +42,7 @@ def check_entity_attributes(session, entity, action, editedattrs=None):
     for attr in editedattrs:
         if attr in dontcheck:
             continue
-        rdef = eschema.rdef(attr)
+        rdef = eschema.rdef(attr, takefirst=True)
         if rdef.final: # non final relation are checked by standard hooks
             perms = rdef.permissions.get(action)
             # comparison below works because the default update perm is:
@@ -60,7 +60,8 @@ def check_entity_attributes(session, entity, action, editedattrs=None):
                 # nothing.
                 continue
             if perms == ():
-                # That means an immutable attribute.
+                # That means an immutable attribute; as an optimization, avoid
+                # going through check_perm.
                 raise Unauthorized(action, str(rdef))
             rdef.check_perm(session, action, eid=eid)
 

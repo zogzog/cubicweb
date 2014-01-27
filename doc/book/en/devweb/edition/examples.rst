@@ -55,7 +55,7 @@ Here is the source code:
 
 .. sourcecode:: python
 
-    def sender_value(form):
+    def sender_value(form, field):
 	return '%s <%s>' % (form._cw.user.dc_title(), form._cw.user.get_email())
 
     def recipient_choices(form, field):
@@ -63,7 +63,7 @@ Here is the source code:
                  for e in form.cw_rset.entities()
 		 if e.get_email()]
 
-    def recipient_value(form):
+    def recipient_value(form, field):
 	return [e.eid for e in form.cw_rset.entities()
                 if e.get_email()]
 
