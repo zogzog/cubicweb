@@ -255,30 +255,29 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     sqlcursor.close()
     sqlcnx.commit()
     sqlcnx.close()
-    session = repo.internal_session()
-    # insert entity representing the system source
-    ssource = session.create_entity('CWSource', type=u'native', name=u'system')
-    repo.system_source.eid = ssource.eid
-    session.execute('SET X cw_source X WHERE X eid %(x)s', {'x': ssource.eid})
-    # insert base groups and default admin
-    print '-> inserting default user and default groups.'
-    try:
-        login = unicode(sourcescfg['admin']['login'])
-        pwd = sourcescfg['admin']['password']
-    except KeyError:
-        if interactive:
-            msg = 'enter login and password of the initial manager account'
-            login, pwd = manager_userpasswd(msg=msg, confirm=True)
-        else:
-            login, pwd = unicode(source['db-user']), source['db-password']
-    # sort for eid predicatability as expected in some server tests
-    for group in sorted(BASE_GROUPS):
-        session.create_entity('CWGroup', name=unicode(group))
-    admin = create_user(session, login, pwd, 'managers')
-    session.execute('SET X owned_by U WHERE X is IN (CWGroup,CWSource), U eid %(u)s',
-                    {'u': admin.eid})
-    session.commit()
-    session.close()
+    with repo.internal_cnx() as cnx:
+        # insert entity representing the system source
+        ssource = cnx.create_entity('CWSource', type=u'native', name=u'system')
+        repo.system_source.eid = ssource.eid
+        cnx.execute('SET X cw_source X WHERE X eid %(x)s', {'x': ssource.eid})
+        # insert base groups and default admin
+        print '-> inserting default user and default groups.'
+        try:
+            login = unicode(sourcescfg['admin']['login'])
+            pwd = sourcescfg['admin']['password']
+        except KeyError:
+            if interactive:
+                msg = 'enter login and password of the initial manager account'
+                login, pwd = manager_userpasswd(msg=msg, confirm=True)
+            else:
+                login, pwd = unicode(source['db-user']), source['db-password']
+        # sort for eid predicatability as expected in some server tests
+        for group in sorted(BASE_GROUPS):
+            cnx.create_entity('CWGroup', name=unicode(group))
+        admin = create_user(cnx, login, pwd, 'managers')
+        cnx.execute('SET X owned_by U WHERE X is IN (CWGroup,CWSource), U eid %(u)s',
+                        {'u': admin.eid})
+        cnx.commit()
     repo.shutdown()
     # reloging using the admin user
     config._cubes = None # avoid assertion error
