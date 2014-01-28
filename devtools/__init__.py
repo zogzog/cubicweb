@@ -25,8 +25,11 @@ import logging
 import shutil
 import pickle
 import glob
+import random
+import subprocess
 import warnings
 import tempfile
+import getpass
 from hashlib import sha1 # pylint: disable=E0611
 from datetime import timedelta
 from os.path import (abspath, join, exists, split, isabs, isdir)
@@ -86,6 +89,13 @@ DEFAULT_SOURCES = {'system': {'adapter' : 'native',
                               'password': u'gingkow',
                               },
                    }
+DEFAULT_PSQL_SOURCES = DEFAULT_SOURCES.copy()
+DEFAULT_PSQL_SOURCES['system'] = DEFAULT_SOURCES['system'].copy()
+DEFAULT_PSQL_SOURCES['system']['db-driver'] = 'postgres'
+DEFAULT_PSQL_SOURCES['system']['db-host'] = '/tmp'
+DEFAULT_PSQL_SOURCES['system']['db-port'] = str(random.randrange(5432, 2**16))
+DEFAULT_PSQL_SOURCES['system']['db-user'] = unicode(getpass.getuser())
+DEFAULT_PSQL_SOURCES['system']['db-password'] = None
 
 def turn_repo_off(repo):
     """ Idea: this is less costly than a full re-creation of the repo object.
@@ -129,6 +139,8 @@ class TestServerConfiguration(ServerConfiguration):
     read_instance_schema = False
     init_repository = True
     skip_db_create_and_restore = False
+    default_sources = DEFAULT_SOURCES
+
     def __init__(self, appid='data', apphome=None, log_threshold=logging.CRITICAL+10):
         # must be set before calling parent __init__
         if apphome is None:
@@ -193,7 +205,7 @@ class TestServerConfiguration(ServerConfiguration):
     def read_sources_file(self):
         """By default, we run tests with the sqlite DB backend.  One may use its
         own configuration by just creating a 'sources' file in the test
-        directory from wich tests are launched or by specifying an alternative
+        directory from which tests are launched or by specifying an alternative
         sources file using self.sourcefile.
         """
         try:
@@ -201,9 +213,9 @@ class TestServerConfiguration(ServerConfiguration):
         except ExecutionError:
             sources = {}
         if not sources:
-            sources = DEFAULT_SOURCES
+            sources = self.default_sources
         if 'admin' not in sources:
-            sources['admin'] = DEFAULT_SOURCES['admin']
+            sources['admin'] = self.default_sources['admin']
         return sources
 
     # web config methods needed here for cases when we use this config as a web
@@ -242,6 +254,10 @@ class ApptestConfiguration(BaseApptestConfiguration):
                                           log_threshold=log_threshold)
         self.init_repository = sourcefile is None
         self.sourcefile = sourcefile
+
+
+class PostgresApptestConfiguration(ApptestConfiguration):
+    default_sources = DEFAULT_PSQL_SOURCES
 
 
 class RealDatabaseConfiguration(ApptestConfiguration):
@@ -518,6 +534,22 @@ class NoCreateDropDatabaseHandler(TestDataBaseHandler):
 class PostgresTestDataBaseHandler(TestDataBaseHandler):
     DRIVER = 'postgres'
 
+    __CTL = set()
+
+    @classmethod
+    def killall(cls):
+        for datadir in cls.__CTL:
+            subprocess.call(['pg_ctl', 'stop', '-D', datadir, '-m', 'fast'])
+
+    def __init__(self, config):
+        super(PostgresTestDataBaseHandler, self).__init__(config)
+        datadir = join(self.config.apphome, 'pgdb')
+        if not exists(datadir):
+            subprocess.check_call(['initdb', '-D', datadir, '-E', 'utf-8'])
+        port = self.system_source['db-port']
+        subprocess.check_call(['pg_ctl', 'start', '-w', '-D', datadir, '-o', '-h "" -k /tmp -p %s' % port])
+        self.__CTL.add(datadir)
+
     @property
     @cached
     def helper(self):
@@ -730,6 +762,7 @@ class SQLiteTestDataBaseHandler(TestDataBaseHandler):
 
 import atexit
 atexit.register(SQLiteTestDataBaseHandler._cleanup_all_tmpdb)
+atexit.register(PostgresTestDataBaseHandler.killall)
 
 
 def install_sqlite_patch(querier):
