@@ -266,9 +266,9 @@ class Repository(object):
                or not 'CWSource' in self.schema: # # 3.10 migration
             self.system_source.init_creating()
             return
-        with self.internal_session() as session:
+        with self.internal_cnx() as cnx:
             # FIXME: sources should be ordered (add_entity priority)
-            for sourceent in session.execute(
+            for sourceent in cnx.execute(
                 'Any S, SN, SA, SC WHERE S is_instance_of CWSource, '
                 'S name SN, S type SA, S config SC').entities():
                 if sourceent.name == 'system':
