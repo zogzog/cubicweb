@@ -91,6 +91,22 @@ class Note(Para):
     attachment = SubjectRelation('File')
 
 
+class Frozable(EntityType):
+    __permissions__ = {
+        'read':   ('managers', 'users'),
+        'add':    ('managers', 'users'),
+        'update': ('managers', ERQLExpression('X frozen False'),),
+        'delete': ('managers', ERQLExpression('X frozen False'),)
+    }
+    name = String()
+    frozen = Boolean(default=False,
+                     __permissions__ = {
+                         'read':   ('managers', 'users'),
+                         'add':    ('managers', 'users'),
+                         'update': ('managers', 'owners')
+                         })
+
+
 class Personne(EntityType):
     __unique_together__ = [('nom', 'prenom', 'datenaiss')]
     nom    = String(fulltextindexed=True, required=True, maxsize=64)

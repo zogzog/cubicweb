@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -390,6 +390,22 @@ class SecurityTC(BaseSecurityTC):
             self.assertRaises(Unauthorized, self.commit)
             cu.execute('SET X web "http://www.logilab.org" WHERE X eid %(x)s', {'x': eid})
             self.commit()
+        with self.login('iaminusersgrouponly') as cu:
+            eid = cu.execute('INSERT Frozable F: F name "Foo"')
+            self.commit()
+            cu.execute('SET F name "Bar" WHERE F is Frozable')
+            self.commit()
+            cu.execute('SET F name "BaBar" WHERE F is Frozable')
+            cu.execute('SET F frozen True WHERE F is Frozable')
+            with self.assertRaises(Unauthorized):
+                self.commit()
+            self.rollback()
+            cu.execute('SET F frozen True WHERE F is Frozable')
+            self.commit()
+            cu.execute('SET F name "Bar" WHERE F is Frozable')
+            with self.assertRaises(Unauthorized):
+                self.commit()
+            self.rollback()
 
     def test_attribute_security_rqlexpr(self):
         # Note.para attribute editable by managers or if the note is in "todo" state

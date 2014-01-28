@@ -70,7 +70,7 @@ X_ALL_SOLS = sorted([{'X': 'Affaire'}, {'X': 'BaseTransition'}, {'X': 'Basket'},
                      {'X': 'Card'}, {'X': 'Comment'}, {'X': 'Division'},
                      {'X': 'Email'}, {'X': 'EmailAddress'}, {'X': 'EmailPart'},
                      {'X': 'EmailThread'}, {'X': 'ExternalUri'}, {'X': 'File'},
-                     {'X': 'Folder'}, {'X': 'Note'}, {'X': 'Old'},
+                     {'X': 'Folder'}, {'X': 'Frozable'}, {'X': 'Note'}, {'X': 'Old'},
                      {'X': 'Personne'}, {'X': 'RQLExpression'}, {'X': 'Societe'},
                      {'X': 'State'}, {'X': 'SubDivision'}, {'X': 'SubWorkflowExitPoint'},
                      {'X': 'Tag'}, {'X': 'TrInfo'}, {'X': 'Transition'},
@@ -902,6 +902,7 @@ class MSPlannerTC(BaseMSPlannerTC):
         ALL_SOLS.remove({'X': 'CWSourceHostConfig'}) # not authorized
         ALL_SOLS.remove({'X': 'CWSourceSchemaConfig'}) # not authorized
         ALL_SOLS.remove({'X': 'CWDataImport'}) # not authorized
+        ALL_SOLS.remove({'X': 'Frozable'}) # not authorized
         self._test('Any MAX(X)',
                    [('FetchStep', [('Any E WHERE E type "X", E is Note', [{'E': 'Note'}])],
                      [self.cards, self.system],  None, {'E': 'table1.C0'}, []),
@@ -959,7 +960,8 @@ class MSPlannerTC(BaseMSPlannerTC):
         ueid = self.session.user.eid
         X_ET_ALL_SOLS = []
         for s in X_ALL_SOLS:
-            if s in ({'X': 'CWSourceHostConfig'}, {'X': 'CWSourceSchemaConfig'}, {'X': 'CWDataImport'}):
+            if s in ({'X': 'CWSourceHostConfig'}, {'X': 'CWSourceSchemaConfig'},
+                     {'X': 'CWDataImport'}, {'X': 'Frozable'}):
                 continue # not authorized
             ets = {'ET': 'CWEType'}
             ets.update(s)
@@ -2676,7 +2678,7 @@ class MSPlannerTwoSameExternalSourcesTC(BasePlannerTC):
                      None, {'X': 'table0.C0'}, []),
                     ('UnionStep', None, None,
                      [('OneFetchStep',
-                       [(u'Any X WHERE X owned_by U, U login "anon", U is CWUser, X is IN(Affaire, BaseTransition, Basket, Bookmark, CWAttribute, CWCache, CWConstraint, CWConstraintType, CWDataImport, CWEType, CWGroup, CWPermission, CWProperty, CWRType, CWRelation, CWSource, CWSourceHostConfig, CWSourceSchemaConfig, CWUniqueTogetherConstraint, CWUser, Division, Email, EmailAddress, EmailPart, EmailThread, ExternalUri, File, Folder, Old, Personne, RQLExpression, Societe, SubDivision, SubWorkflowExitPoint, Tag, TrInfo, Transition, Workflow, WorkflowTransition)',
+                       [(u'Any X WHERE X owned_by U, U login "anon", U is CWUser, X is IN(Affaire, BaseTransition, Basket, Bookmark, CWAttribute, CWCache, CWConstraint, CWConstraintType, CWDataImport, CWEType, CWGroup, CWPermission, CWProperty, CWRType, CWRelation, CWSource, CWSourceHostConfig, CWSourceSchemaConfig, CWUniqueTogetherConstraint, CWUser, Division, Email, EmailAddress, EmailPart, EmailThread, ExternalUri, File, Folder, Frozable, Old, Personne, RQLExpression, Societe, SubDivision, SubWorkflowExitPoint, Tag, TrInfo, Transition, Workflow, WorkflowTransition)',
                          [{'U': 'CWUser', 'X': 'Affaire'},
                           {'U': 'CWUser', 'X': 'BaseTransition'},
                           {'U': 'CWUser', 'X': 'Basket'},
@@ -2705,6 +2707,7 @@ class MSPlannerTwoSameExternalSourcesTC(BasePlannerTC):
                           {'U': 'CWUser', 'X': 'ExternalUri'},
                           {'U': 'CWUser', 'X': 'File'},
                           {'U': 'CWUser', 'X': 'Folder'},
+                          {'U': 'CWUser', 'X': 'Frozable'},
                           {'U': 'CWUser', 'X': 'Old'},
                           {'U': 'CWUser', 'X': 'Personne'},
                           {'U': 'CWUser', 'X': 'RQLExpression'},
