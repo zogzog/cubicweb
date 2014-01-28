@@ -74,9 +74,9 @@ def group_mapping(cursor, interactive=True):
                 break
     return res
 
-def cstrtype_mapping(cursor):
+def cstrtype_mapping(cnx):
     """cached constraint types mapping"""
-    map = dict(cursor.execute('Any T, X WHERE X is CWConstraintType, X name T'))
+    map = dict(cnx.execute('Any T, X WHERE X is CWConstraintType, X name T'))
     return map
 
 # schema / perms deserialization ##############################################
