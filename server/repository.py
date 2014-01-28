@@ -325,9 +325,9 @@ class Repository(object):
         from cubicweb.server.schemaserial import deserialize_schema
         appschema = schema.CubicWebSchema(self.config.appid)
         self.debug('deserializing db schema into %s %#x', appschema.name, id(appschema))
-        with self.internal_session() as session:
+        with self.internal_cnx() as cnx:
             try:
-                deserialize_schema(appschema, session)
+                deserialize_schema(appschema, cnx)
             except BadSchemaDefinition:
                 raise
             except Exception as ex:
