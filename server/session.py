@@ -1170,7 +1170,7 @@ class Connection(RequestSessionBase):
             if not rollback_on_failure:
                 raise
             source.warning("trying to reconnect")
-            self.cnxset.reconnect(source)
+            self.cnxset.reconnect()
             return source.doexec(self, sql, args, rollback=rollback_on_failure)
 
     @_open_only

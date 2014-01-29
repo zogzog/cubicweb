@@ -484,13 +484,13 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                 raise
             # FIXME: better detection of deconnection pb
             self.warning("trying to reconnect")
-            session.cnxset.reconnect(self)
+            session.cnxset.reconnect()
             cursor = self.doexec(session, sql, args)
         except self.DbapiError as exc:
             # We get this one with pyodbc and SQL Server when connection was reset
             if exc.args[0] == '08S01' and session.mode != 'write':
                 self.warning("trying to reconnect")
-                session.cnxset.reconnect(self)
+                session.cnxset.reconnect()
                 cursor = self.doexec(session, sql, args)
             else:
                 raise
@@ -755,7 +755,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         except (self.OperationalError, self.InterfaceError):
             if session.mode == 'read' and _retry:
                 self.warning("trying to reconnect (eid_type_source())")
-                session.cnxset.reconnect(self)
+                session.cnxset.reconnect()
                 return self._eid_type_source(session, eid, sql, _retry=False)
         except Exception:
             assert session.cnxset, 'session has no connections set'
