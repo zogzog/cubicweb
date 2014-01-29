@@ -559,8 +559,8 @@ class Repository(object):
         """
         from logilab.common.changelog import Version
         vcconf = {}
-        with self.internal_session() as session:
-            for pk, version in session.execute(
+        with self.internal_cnx() as cnx:
+            for pk, version in cnx.execute(
                 'Any K,V WHERE P is CWProperty, P value V, P pkey K, '
                 'P pkey ~="system.version.%"', build_descr=False):
                 cube = pk.split('.')[-1]
