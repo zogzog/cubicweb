@@ -346,7 +346,7 @@ class AbstractSource(object):
 
     # user authentication api ##################################################
 
-    def authenticate(self, session, login, **kwargs):
+    def authenticate(self, cnx, login, **kwargs):
         """if the source support CWUser entity type, it should implement
         this method which should return CWUser eid for the given login/password
         if this account is defined in this source and valid login / password is
@@ -356,7 +356,7 @@ class AbstractSource(object):
 
     # RQL query api ############################################################
 
-    def syntax_tree_search(self, session, union,
+    def syntax_tree_search(self, cnx, union,
                            args=None, cachekey=None, varmap=None, debug=0):
         """return result from this source for a rql query (actually from a rql
         syntax tree and a solution dictionary mapping each used variable to a

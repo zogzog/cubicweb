@@ -219,7 +219,7 @@ You can set multiple groups by separating them by a comma.',
             hostport = '%s:%s' % (hostport, PROTO_PORT[protocol])
         return protocol, hostport
 
-    def authenticate(self, session, login, password=None, **kwargs):
+    def authenticate(self, cnx, login, password=None, **kwargs):
         """return CWUser eid for the given login/password if this account is
         defined in this source, else raise `AuthenticationError`
 
@@ -237,7 +237,7 @@ You can set multiple groups by separating them by a comma.',
         searchstr = '(&%s)' % ''.join(searchfilter)
         # first search the user
         try:
-            user = self._search(session, self.user_base_dn,
+            user = self._search(cnx, self.user_base_dn,
                                 self.user_base_scope, searchstr)[0]
         except (IndexError, ldap.SERVER_DOWN):
             # no such user
@@ -252,7 +252,7 @@ You can set multiple groups by separating them by a comma.',
         except Exception:
             self.error('while trying to authenticate %s', user, exc_info=True)
             raise AuthenticationError()
-        eid = self.repo.extid2eid(self, user['dn'], 'CWUser', session, {})
+        eid = self.repo.extid2eid(self, user['dn'], 'CWUser', session=cnx, insert=False)
         if eid < 0:
             # user has been moved away from this source
             raise AuthenticationError()
@@ -314,28 +314,28 @@ You can set multiple groups by separating them by a comma.',
         #from ldap import sasl
         #conn.sasl_interactive_bind_s('', sasl.gssapi())
 
-    def _search(self, session, base, scope,
+    def _search(self, cnx, base, scope,
                 searchstr='(objectClass=*)', attrs=()):
         """make an ldap query"""
         self.debug('ldap search %s %s %s %s %s', self.uri, base, scope,
                    searchstr, list(attrs))
         if self._conn is None:
             self._conn = self._connect()
-        cnx = self._conn
+        ldapcnx = self._conn
         try:
-            res = cnx.search_s(base, scope, searchstr, attrs)
+            res = ldapcnx.search_s(base, scope, searchstr, attrs)
         except ldap.PARTIAL_RESULTS:
-            res = cnx.result(all=0)[1]
+            res = ldapcnx.result(all=0)[1]
         except ldap.NO_SUCH_OBJECT:
             self.info('ldap NO SUCH OBJECT %s %s %s', base, scope, searchstr)
-            self._process_no_such_object(session, base)
+            self._process_no_such_object(cnx, base)
             return []
         # except ldap.REFERRAL as e:
-        #     cnx = self.handle_referral(e)
+        #     ldapcnx = self.handle_referral(e)
         #     try:
-        #         res = cnx.search_s(base, scope, searchstr, attrs)
+        #         res = ldapcnx.search_s(base, scope, searchstr, attrs)
         #     except ldap.PARTIAL_RESULTS:
-        #         res_type, res = cnx.result(all=0)
+        #         res_type, res = ldapcnx.result(all=0)
         result = []
         for rec_dn, rec_dict in res:
             # When used against Active Directory, "rec_dict" may not be
@@ -380,7 +380,7 @@ You can set multiple groups by separating them by a comma.',
             itemdict[member] = [itemdict[member]]
         return itemdict
 
-    def _process_no_such_object(self, session, dn):
+    def _process_no_such_object(self, cnx, dn):
         """Some search return NO_SUCH_OBJECT error, handle this (usually because
         an object whose dn is no more existent in ldap as been encountered).
 

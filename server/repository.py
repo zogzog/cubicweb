@@ -448,7 +448,7 @@ class Repository(object):
         except ZeroDivisionError:
             pass
 
-    def check_auth_info(self, session, login, authinfo):
+    def check_auth_info(self, cnx, login, authinfo):
         """validate authentication, raise AuthenticationError on failure, return
         associated CWUser's eid on success.
         """
@@ -457,30 +457,31 @@ class Repository(object):
         for source in self.sources_by_uri.itervalues():
             if self.config.source_enabled(source) and source.support_entity('CWUser'):
                 try:
-                    return source.authenticate(session, login, **authinfo)
+                    with cnx.ensure_cnx_set:
+                        return source.authenticate(cnx, login, **authinfo)
                 except AuthenticationError:
                     continue
         else:
             raise AuthenticationError('authentication failed with all sources')
 
-    def authenticate_user(self, session, login, **authinfo):
+    def authenticate_user(self, cnx, login, **authinfo):
         """validate login / password, raise AuthenticationError on failure
         return associated CWUser instance on success
         """
-        eid = self.check_auth_info(session, login, authinfo)
-        cwuser = self._build_user(session, eid)
+        eid = self.check_auth_info(cnx, login, authinfo)
+        cwuser = self._build_user(cnx, eid)
         if self.config.consider_user_state and \
                not cwuser.cw_adapt_to('IWorkflowable').state in cwuser.AUTHENTICABLE_STATES:
             raise AuthenticationError('user is not in authenticable state')
         return cwuser
 
-    def _build_user(self, session, eid):
+    def _build_user(self, cnx, eid):
         """return a CWUser entity for user with the given eid"""
-        with session.ensure_cnx_set:
+        with cnx.ensure_cnx_set:
             cls = self.vreg['etypes'].etype_class('CWUser')
-            st = cls.fetch_rqlst(session.user, ordermethod=None)
+            st = cls.fetch_rqlst(cnx.user, ordermethod=None)
             st.add_eid_restriction(st.get_variable('X'), 'x', 'Substitute')
-            rset = session.execute(st.as_string(), {'x': eid})
+            rset = cnx.execute(st.as_string(), {'x': eid})
             assert len(rset) == 1, rset
             cwuser = rset.get_entity(0, 0)
             # pylint: disable=W0104
@@ -681,9 +682,9 @@ class Repository(object):
         """
         cnxprops = kwargs.pop('cnxprops', None)
         # use an internal connection
-        with self.internal_session() as session:
+        with self.internal_cnx() as cnx:
             # try to get a user object
-            user = self.authenticate_user(session, login, **kwargs)
+            user = self.authenticate_user(cnx, login, **kwargs)
         session = Session(user, self, cnxprops)
         if threading.currentThread() in self._pyro_sessions:
             # assume no pyro client does one get_repository followed by

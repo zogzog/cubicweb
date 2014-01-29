@@ -439,13 +439,13 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         # can't claim not supporting a relation
         return True #not rtype == 'content_for'
 
-    def authenticate(self, session, login, **kwargs):
+    def authenticate(self, cnx, login, **kwargs):
         """return CWUser eid for the given login and other authentication
         information found in kwargs, else raise `AuthenticationError`
         """
         for authentifier in self.authentifiers:
             try:
-                return authentifier.authenticate(session, login, **kwargs)
+                return authentifier.authenticate(cnx, login, **kwargs)
             except AuthenticationError:
                 continue
         raise AuthenticationError()
@@ -1450,7 +1450,7 @@ class LoginPasswordAuthentifier(BaseAuthentifier):
             self._passwd_rqlst = self.source.compile_rql(self.passwd_rql, self._sols)
             self._auth_rqlst = self.source.compile_rql(self.auth_rql, self._sols)
 
-    def authenticate(self, session, login, password=None, **kwargs):
+    def authenticate(self, cnx, login, password=None, **kwargs):
         """return CWUser eid for the given login/password if this account is
         defined in this source, else raise `AuthenticationError`
 
@@ -1459,7 +1459,7 @@ class LoginPasswordAuthentifier(BaseAuthentifier):
         """
         args = {'login': login, 'pwd' : None}
         if password is not None:
-            rset = self.source.syntax_tree_search(session, self._passwd_rqlst, args)
+            rset = self.source.syntax_tree_search(cnx, self._passwd_rqlst, args)
             try:
                 pwd = rset[0][0]
             except IndexError:
@@ -1470,7 +1470,7 @@ class LoginPasswordAuthentifier(BaseAuthentifier):
             # passwords are stored using the Bytes type, so we get a StringIO
             args['pwd'] = Binary(crypt_password(password, pwd.getvalue()))
         # get eid from login and (crypted) password
-        rset = self.source.syntax_tree_search(session, self._auth_rqlst, args)
+        rset = self.source.syntax_tree_search(cnx, self._auth_rqlst, args)
         try:
             user = rset[0][0]
             # If the stored hash uses a deprecated scheme (e.g. DES or MD5 used
@@ -1480,32 +1480,32 @@ class LoginPasswordAuthentifier(BaseAuthentifier):
                 if not verify: # should not happen, but...
                     raise AuthenticationError('bad password')
                 if newhash:
-                    session.system_sql("UPDATE %s SET %s=%%(newhash)s WHERE %s=%%(login)s" % (
+                    cnx.system_sql("UPDATE %s SET %s=%%(newhash)s WHERE %s=%%(login)s" % (
                                         SQL_PREFIX + 'CWUser',
                                         SQL_PREFIX + 'upassword',
                                         SQL_PREFIX + 'login'),
                                        {'newhash': self.source._binary(newhash),
                                         'login': login})
-                    session.commit(free_cnxset=False)
+                    cnx.commit(free_cnxset=False)
             return user
         except IndexError:
             raise AuthenticationError('bad password')
 
 
 class EmailPasswordAuthentifier(BaseAuthentifier):
-    def authenticate(self, session, login, **authinfo):
+    def authenticate(self, cnx, login, **authinfo):
         # email_auth flag prevent from infinite recursion (call to
         # repo.check_auth_info at the end of this method may lead us here again)
         if not '@' in login or authinfo.pop('email_auth', None):
             raise AuthenticationError('not an email')
-        rset = session.execute('Any L WHERE U login L, U primary_email M, '
+        rset = cnx.execute('Any L WHERE U login L, U primary_email M, '
                                'M address %(login)s', {'login': login},
                                build_descr=False)
         if rset.rowcount != 1:
             raise AuthenticationError('unexisting email')
         login = rset.rows[0][0]
         authinfo['email_auth'] = True
-        return self.source.repo.check_auth_info(session, login, authinfo)
+        return self.source.repo.check_auth_info(cnx, login, authinfo)
 
 
 class DatabaseIndependentBackupRestore(object):
