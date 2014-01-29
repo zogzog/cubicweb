@@ -68,13 +68,13 @@ def _extract_eid_consts(plan, rqlst):
     """return a dict mapping rqlst variable object to their eid if specified in
     the syntax tree
     """
-    session = plan.session
+    cnx = plan.cnx
     if rqlst.where is None:
         return {}
     eidconsts = {}
-    neweids = session.transaction_data.get('neweids', ())
-    checkread = session.read_security
-    eschema = session.vreg.schema.eschema
+    neweids = cnx.transaction_data.get('neweids', ())
+    checkread = cnx.read_security
+    eschema = cnx.vreg.schema.eschema
     for rel in rqlst.where.get_nodes(Relation):
         # only care for 'eid' relations ...
         if (rel.r_type == 'eid'
@@ -89,9 +89,9 @@ def _extract_eid_consts(plan, rqlst):
                 # the generated select substep if not emited (eg nothing
                 # to be selected)
                 if checkread and eid not in neweids:
-                    with session.security_enabled(read=False):
-                        eschema(session.entity_metas(eid)['type']).check_perm(
-                            session, 'read', eid=eid)
+                    with cnx.security_enabled(read=False):
+                        eschema(cnx.entity_metas(eid)['type']).check_perm(
+                            cnx, 'read', eid=eid)
                 eidconsts[lhs.variable] = eid
     return eidconsts
 
@@ -151,11 +151,11 @@ class SSPlanner(object):
         """get an execution plan from an INSERT RQL query"""
         # each variable in main variables is a new entity to insert
         to_build = {}
-        session = plan.session
-        etype_class = session.vreg['etypes'].etype_class
+        cnx = plan.cnx
+        etype_class = cnx.vreg['etypes'].etype_class
         for etype, var in rqlst.main_variables:
             # need to do this since entity class is shared w. web client code !
-            to_build[var.name] = EditedEntity(etype_class(etype)(session))
+            to_build[var.name] = EditedEntity(etype_class(etype)(cnx))
             plan.add_entity_def(to_build[var.name])
         # add constant values to entity def, mark variables to be selected
         to_select = _extract_const_attributes(plan, rqlst, to_build)
@@ -353,7 +353,7 @@ class OneFetchStep(Step):
         source for each solution
         """
         self.execute_children()
-        session = self.plan.session
+        cnx = self.plan.cnx
         args = self.plan.args
         inputmap = self.inputmap
         union = self.union
@@ -370,8 +370,8 @@ class OneFetchStep(Step):
         else:
             cachekey = union.as_string()
         # get results for query
-        source = session.repo.system_source
-        result = source.syntax_tree_search(session, union, args, cachekey, inputmap)
+        source = cnx.repo.system_source
+        result = source.syntax_tree_search(cnx, union, args, cachekey, inputmap)
         #print 'ONEFETCH RESULT %s' % (result)
         return result
 
@@ -466,8 +466,8 @@ class DeleteEntitiesStep(Step):
         results = self.execute_child()
         if results:
             todelete = frozenset(int(eid) for eid, in results)
-            session = self.plan.session
-            session.repo.glob_delete_entities(session, todelete)
+            cnx = self.plan.cnx
+            cnx.repo.glob_delete_entities(cnx, todelete)
         return results
 
 class DeleteRelationsStep(Step):
@@ -479,10 +479,10 @@ class DeleteRelationsStep(Step):
 
     def execute(self):
         """execute this step"""
-        session = self.plan.session
-        delete = session.repo.glob_delete_relation
+        cnx = self.plan.cnx
+        delete = cnx.repo.glob_delete_relation
         for subj, obj in self.execute_child():
-            delete(session, subj, self.rtype, obj)
+            delete(cnx, subj, self.rtype, obj)
 
 
 class UpdateStep(Step):
@@ -496,8 +496,8 @@ class UpdateStep(Step):
 
     def execute(self):
         """execute this step"""
-        session = self.plan.session
-        repo = session.repo
+        cnx = self.plan.cnx
+        repo = cnx.repo
         edefs = {}
         relations = {}
         # insert relations
@@ -515,7 +515,7 @@ class UpdateStep(Step):
                     try:
                         edited = edefs[eid]
                     except KeyError:
-                        edef = session.entity_from_eid(eid)
+                        edef = cnx.entity_from_eid(eid)
                         edefs[eid] = edited = EditedEntity(edef)
                     edited.edited_attribute(str(rschema), rhsval)
                 else:
@@ -526,9 +526,9 @@ class UpdateStep(Step):
                         relations[str_rschema] = [(lhsval, rhsval)]
             result[i] = newrow
         # update entities
-        repo.glob_add_relations(session, relations)
+        repo.glob_add_relations(cnx, relations)
         for eid, edited in edefs.iteritems():
-            repo.glob_update_entity(session, edited)
+            repo.glob_update_entity(cnx, edited)
         return result
 
 def _handle_relterm(info, row, newrow):

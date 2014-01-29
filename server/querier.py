@@ -64,16 +64,16 @@ def check_no_password_selected(rqlst):
             if etype == 'Password':
                 raise Unauthorized('Password selection is not allowed (%s)' % var)
 
-def term_etype(session, term, solution, args):
+def term_etype(cnx, term, solution, args):
     """return the entity type for the given term (a VariableRef or a Constant
     node)
     """
     try:
         return solution[term.name]
     except AttributeError:
-        return session.entity_metas(term.eval(args))['type']
+        return cnx.entity_metas(term.eval(args))['type']
 
-def check_read_access(session, rqlst, solution, args):
+def check_read_access(cnx, rqlst, solution, args):
     """Check that the given user has credentials to access data read by the
     query and return a dict defining necessary "local checks" (i.e. rql
     expression in read permission defined in the schema) where no group grants
@@ -86,7 +86,7 @@ def check_read_access(session, rqlst, solution, args):
     # when used as an external source by another repository.
     # XXX what about local read security w/ those rewritten constants...
     DBG = (server.DEBUG & server.DBG_SEC) and 'read' in server._SECURITY_CAPS
-    schema = session.repo.schema
+    schema = cnx.repo.schema
     if rqlst.where is not None:
         for rel in rqlst.where.iget_nodes(Relation):
             # XXX has_text may have specific perm ?
@@ -94,37 +94,37 @@ def check_read_access(session, rqlst, solution, args):
                 continue
             rschema = schema.rschema(rel.r_type)
             if rschema.final:
-                eschema = schema.eschema(term_etype(session, rel.children[0],
+                eschema = schema.eschema(term_etype(cnx, rel.children[0],
                                                     solution, args))
                 rdef = eschema.rdef(rschema)
             else:
-                rdef = rschema.rdef(term_etype(session, rel.children[0],
+                rdef = rschema.rdef(term_etype(cnx, rel.children[0],
                                                solution, args),
-                                    term_etype(session, rel.children[1].children[0],
+                                    term_etype(cnx, rel.children[1].children[0],
                                                solution, args))
-            if not session.user.matching_groups(rdef.get_groups('read')):
+            if not cnx.user.matching_groups(rdef.get_groups('read')):
                 if DBG:
                     print ('check_read_access: %s %s does not match %s' %
-                           (rdef, session.user.groups, rdef.get_groups('read')))
+                           (rdef, cnx.user.groups, rdef.get_groups('read')))
                 # XXX rqlexpr not allowed
                 raise Unauthorized('read', rel.r_type)
             if DBG:
                 print ('check_read_access: %s %s matches %s' %
-                       (rdef, session.user.groups, rdef.get_groups('read')))
+                       (rdef, cnx.user.groups, rdef.get_groups('read')))
     localchecks = {}
     # iterate on defined_vars and not on solutions to ignore column aliases
     for varname in rqlst.defined_vars:
         eschema = schema.eschema(solution[varname])
         if eschema.final:
             continue
-        if not session.user.matching_groups(eschema.get_groups('read')):
+        if not cnx.user.matching_groups(eschema.get_groups('read')):
             erqlexprs = eschema.get_rqlexprs('read')
             if not erqlexprs:
                 ex = Unauthorized('read', solution[varname])
                 ex.var = varname
                 if DBG:
                     print ('check_read_access: %s %s %s %s' %
-                           (varname, eschema, session.user.groups, eschema.get_groups('read')))
+                           (varname, eschema, cnx.user.groups, eschema.get_groups('read')))
                 raise ex
             # don't insert security on variable only referenced by 'NOT X relation Y' or
             # 'NOT EXISTS(X relation Y)'
@@ -144,21 +144,21 @@ def check_read_access(session, rqlst, solution, args):
 class ExecutionPlan(object):
     """the execution model of a rql query, composed of querier steps"""
 
-    def __init__(self, querier, rqlst, args, session):
+    def __init__(self, querier, rqlst, args, cnx):
         # original rql syntax tree
         self.rqlst = rqlst
         self.args = args or {}
-        # session executing the query
-        self.session = session
+        # cnx executing the query
+        self.cnx = cnx
         # quick reference to the system source
-        self.syssource = session.repo.system_source
+        self.syssource = cnx.repo.system_source
         # execution steps
         self.steps = []
         # various resource accesors
         self.querier = querier
         self.schema = querier.schema
         self.sqlannotate = querier.sqlgen_annotate
-        self.rqlhelper = session.vreg.rqlhelper
+        self.rqlhelper = cnx.vreg.rqlhelper
 
     def annotate_rqlst(self):
         if not self.rqlst.annotated:
@@ -169,7 +169,7 @@ class ExecutionPlan(object):
         self.steps.append(step)
 
     def sqlexec(self, sql, args=None):
-        return self.syssource.sqlexec(self.session, sql, args)
+        return self.syssource.sqlexec(self.cnx, sql, args)
 
     def execute(self):
         """execute a plan and return resulting rows"""
@@ -184,15 +184,15 @@ class ExecutionPlan(object):
         return rqlst to actually execute
         """
         cached = None
-        if security and self.session.read_security:
+        if security and self.cnx.read_security:
             # ensure security is turned of when security is inserted,
             # else we may loop for ever...
-            if self.session.transaction_data.get('security-rqlst-cache'):
+            if self.cnx.transaction_data.get('security-rqlst-cache'):
                 key = self.cache_key
             else:
                 key = None
-            if key is not None and key in self.session.transaction_data:
-                cachedunion, args = self.session.transaction_data[key]
+            if key is not None and key in self.cnx.transaction_data:
+                cachedunion, args = self.cnx.transaction_data[key]
                 union.children[:] = []
                 for select in cachedunion.children:
                     union.append(select)
@@ -201,10 +201,10 @@ class ExecutionPlan(object):
                 self.args = args
                 cached = True
             else:
-                with self.session.security_enabled(read=False):
+                with self.cnx.security_enabled(read=False):
                     noinvariant = self._insert_security(union)
                 if key is not None:
-                    self.session.transaction_data[key] = (union, self.args)
+                    self.cnx.transaction_data[key] = (union, self.args)
         else:
             noinvariant = ()
         if cached is None:
@@ -221,7 +221,7 @@ class ExecutionPlan(object):
                 self._insert_security(subquery.query)
             localchecks, restricted = self._check_permissions(select)
             if any(localchecks):
-                self.session.rql_rewriter.insert_local_checks(
+                self.cnx.rql_rewriter.insert_local_checks(
                     select, self.args, localchecks, restricted, noinvariant)
         return noinvariant
 
@@ -243,12 +243,12 @@ class ExecutionPlan(object):
 
         Note rqlst should not have been simplified at this point.
         """
-        session = self.session
+        cnx = self.cnx
         msgs = []
         # dict(varname: eid), allowing to check rql expression for variables
         # which have a known eid
         varkwargs = {}
-        if not session.transaction_data.get('security-rqlst-cache'):
+        if not cnx.transaction_data.get('security-rqlst-cache'):
             for var in rqlst.defined_vars.itervalues():
                 if var.stinfo['constnode'] is not None:
                     eid = var.stinfo['constnode'].eval(self.args)
@@ -259,10 +259,10 @@ class ExecutionPlan(object):
         newsolutions = []
         for solution in rqlst.solutions:
             try:
-                localcheck = check_read_access(session, rqlst, solution, self.args)
+                localcheck = check_read_access(cnx, rqlst, solution, self.args)
             except Unauthorized as ex:
                 msg = 'remove %s from solutions since %s has no %s access to %s'
-                msg %= (solution, session.user.login, ex.args[0], ex.args[1])
+                msg %= (solution, cnx.user.login, ex.args[0], ex.args[1])
                 msgs.append(msg)
                 LOGGER.info(msg)
             else:
@@ -277,10 +277,10 @@ class ExecutionPlan(object):
                     # if entity has been added in the current transaction, the
                     # user can read it whatever rql expressions are associated
                     # to its type
-                    if session.added_in_transaction(eid):
+                    if cnx.added_in_transaction(eid):
                         continue
                     for rqlexpr in rqlexprs:
-                        if rqlexpr.check(session, eid):
+                        if rqlexpr.check(cnx, eid):
                             break
                     else:
                         raise Unauthorized('No read acces on %r with eid %i.' % (var, eid))
@@ -316,8 +316,8 @@ class InsertPlan(ExecutionPlan):
     """an execution model specific to the INSERT rql query
     """
 
-    def __init__(self, querier, rqlst, args, session):
-        ExecutionPlan.__init__(self, querier, rqlst, args, session)
+    def __init__(self, querier, rqlst, args, cnx):
+        ExecutionPlan.__init__(self, querier, rqlst, args, cnx)
         # save originaly selected variable, we may modify this
         # dictionary for substitution (query parameters)
         self.selected = rqlst.selection
@@ -415,17 +415,17 @@ class InsertPlan(ExecutionPlan):
         if there is two entities matching U, the result set will look like
         [(eidX1, eidY1), (eidX2, eidY2)]
         """
-        session = self.session
-        repo = session.repo
+        cnx = self.cnx
+        repo = cnx.repo
         results = []
         for row in self.e_defs:
-            results.append([repo.glob_add_entity(session, edef)
+            results.append([repo.glob_add_entity(cnx, edef)
                             for edef in row])
         return results
 
     def insert_relation_defs(self):
-        session = self.session
-        repo = session.repo
+        cnx = self.cnx
+        repo = cnx.repo
         edited_entities = {}
         relations = {}
         for subj, rtype, obj in self.relation_defs():
@@ -440,7 +440,7 @@ class InsertPlan(ExecutionPlan):
                 obj = obj.entity.eid
             if repo.schema.rschema(rtype).inlined:
                 if subj not in edited_entities:
-                    entity = session.entity_from_eid(subj)
+                    entity = cnx.entity_from_eid(subj)
                     edited = EditedEntity(entity)
                     edited_entities[subj] = edited
                 else:
@@ -451,9 +451,9 @@ class InsertPlan(ExecutionPlan):
                     relations[rtype].append((subj, obj))
                 else:
                     relations[rtype] = [(subj, obj)]
-        repo.glob_add_relations(session, relations)
+        repo.glob_add_relations(cnx, relations)
         for edited in edited_entities.itervalues():
-            repo.glob_update_entity(session, edited)
+            repo.glob_update_entity(cnx, edited)
 
 
 class QuerierHelper(object):
@@ -495,13 +495,13 @@ class QuerierHelper(object):
         except UnicodeError:
             raise RQLSyntaxError(rql)
 
-    def plan_factory(self, rqlst, args, session):
+    def plan_factory(self, rqlst, args, cnx):
         """create an execution plan for an INSERT RQL query"""
         if rqlst.TYPE == 'insert':
-            return InsertPlan(self, rqlst, args, session)
-        return ExecutionPlan(self, rqlst, args, session)
+            return InsertPlan(self, rqlst, args, cnx)
+        return ExecutionPlan(self, rqlst, args, cnx)
 
-    def execute(self, session, rql, args=None, build_descr=True):
+    def execute(self, cnx, rql, args=None, build_descr=True):
         """execute a rql query, return resulting rows and their description in
         a `ResultSet` object
 
@@ -535,7 +535,7 @@ class QuerierHelper(object):
                     # if there are some, we need a better cache key, eg (rql +
                     # entity type of each eid)
                     try:
-                        cachekey = self._repo.querier_cache_key(session, rql,
+                        cachekey = self._repo.querier_cache_key(cnx, rql,
                                                                 args, eidkeys)
                     except UnknownEid:
                         # we want queries such as "Any X WHERE X eid 9999"
@@ -551,7 +551,7 @@ class QuerierHelper(object):
                 # which are eids. Notice that if you may not need `eidkeys`, we
                 # have to compute solutions anyway (kept as annotation on the
                 # tree)
-                eidkeys = self.solutions(session, rqlst, args)
+                eidkeys = self.solutions(cnx, rqlst, args)
             except UnknownEid:
                 # we want queries such as "Any X WHERE X eid 9999" return an
                 # empty result instead of raising UnknownEid
@@ -559,19 +559,19 @@ class QuerierHelper(object):
             if args and rql not in self._rql_ck_cache:
                 self._rql_ck_cache[rql] = eidkeys
                 if eidkeys:
-                    cachekey = self._repo.querier_cache_key(session, rql, args,
+                    cachekey = self._repo.querier_cache_key(cnx, rql, args,
                                                             eidkeys)
             self._rql_cache[cachekey] = rqlst
         orig_rqlst = rqlst
         if rqlst.TYPE != 'select':
-            if session.read_security:
+            if cnx.read_security:
                 check_no_password_selected(rqlst)
-            # write query, ensure session's mode is 'write' so connections won't
-            # be released until commit/rollback
-            session.mode = 'write'
+            # write query, ensure connection's mode is 'write' so connections
+            # won't be released until commit/rollback
+            cnx.mode = 'write'
             cachekey = None
         else:
-            if session.read_security:
+            if cnx.read_security:
                 for select in rqlst.children:
                     check_no_password_selected(select)
             # on select query, always copy the cached rqlst so we don't have to
@@ -585,7 +585,7 @@ class QuerierHelper(object):
                 cachekey += tuple(sorted([k for k, v in args.iteritems()
                                           if v is None]))
         # make an execution plan
-        plan = self.plan_factory(rqlst, args, session)
+        plan = self.plan_factory(rqlst, args, cnx)
         plan.cache_key = cachekey
         self._planner.build_plan(plan)
         # execute the plan
@@ -597,11 +597,11 @@ class QuerierHelper(object):
             #
             # notes:
             # * we should not reset the connections set here, since we don't want the
-            #   session to loose it during processing
+            #   connection to loose it during processing
             # * don't rollback if we're in the commit process, will be handled
-            #   by the session
-            if session.commit_state is None:
-                session.commit_state = 'uncommitable'
+            #   by the connection
+            if cnx.commit_state is None:
+                cnx.commit_state = 'uncommitable'
             raise
         # build a description for the results if necessary
         descr = ()
@@ -616,14 +616,14 @@ class QuerierHelper(object):
                     descr = RepeatList(len(results), tuple(description))
                 else:
                     # hard, delegate the work :o)
-                    descr = manual_build_descr(session, rqlst, args, results)
+                    descr = manual_build_descr(cnx, rqlst, args, results)
             elif rqlst.TYPE == 'insert':
                 # on insert plan, some entities may have been auto-casted,
                 # so compute description manually even if there is only
                 # one solution
                 basedescr = [None] * len(plan.selected)
                 todetermine = zip(xrange(len(plan.selected)), repeat(False))
-                descr = _build_descr(session, results, basedescr, todetermine)
+                descr = _build_descr(cnx, results, basedescr, todetermine)
             # FIXME: get number of affected entities / relations on non
             # selection queries ?
         # return a result set object
@@ -639,7 +639,7 @@ LOGGER = getLogger('cubicweb.querier')
 set_log_methods(QuerierHelper, LOGGER)
 
 
-def manual_build_descr(tx, rqlst, args, result):
+def manual_build_descr(cnx, rqlst, args, result):
     """build a description for a given result by analysing each row
 
     XXX could probably be done more efficiently during execution of query
@@ -663,11 +663,11 @@ def manual_build_descr(tx, rqlst, args, result):
             basedescr.append(ttype)
     if not todetermine:
         return RepeatList(len(result), tuple(basedescr))
-    return _build_descr(tx, result, basedescr, todetermine)
+    return _build_descr(cnx, result, basedescr, todetermine)
 
-def _build_descr(tx, result, basedescription, todetermine):
+def _build_descr(cnx, result, basedescription, todetermine):
     description = []
-    entity_metas = tx.entity_metas
+    entity_metas = cnx.entity_metas
     todel = []
     for i, row in enumerate(result):
         row_descr = basedescription[:]
@@ -683,7 +683,7 @@ def _build_descr(tx, result, basedescription, todetermine):
                 try:
                     row_descr[index] = entity_metas(value)['type']
                 except UnknownEid:
-                    tx.error('wrong eid %s in repository, you should '
+                    cnx.error('wrong eid %s in repository, you should '
                              'db-check the database' % value)
                     todel.append(i)
                     break

@@ -127,7 +127,7 @@ class UtilsTC(BaseQuerierTC):
     def test_preprocess_security(self):
         plan = self._prepare_plan('Any ETN,COUNT(X) GROUPBY ETN '
                                   'WHERE X is ET, ET name ETN')
-        plan.session = self.user_groups_session('users')
+        plan.cnx = self.user_groups_session('users')
         union = plan.rqlst
         plan.preprocess(union)
         self.assertEqual(len(union.children), 1)
@@ -210,7 +210,7 @@ class UtilsTC(BaseQuerierTC):
 
     def test_preprocess_security_aggregat(self):
         plan = self._prepare_plan('Any MAX(X)')
-        plan.session = self.user_groups_session('users')
+        plan.cnx = self.user_groups_session('users')
         union = plan.rqlst
         plan.preprocess(union)
         self.assertEqual(len(union.children), 1)
