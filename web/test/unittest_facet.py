@@ -303,6 +303,34 @@ class BaseFacetTC(CubicWebTC):
                           select=rqlst.children[0],
                           filtered_variable=filtered_variable)
 
+
+    def test_rqlpath_range(self):
+        req, rset, rqlst, filtered_variable = self.prepare_rqlst()
+        class RRF(facet.DateRangeRQLPathFacet):
+            path = [('X created_by U'), ('U owned_by O'), ('O creation_date OL')]
+            filter_variable = 'OL'
+        f = RRF(req, rset=rset, select=rqlst.children[0],
+                filtered_variable=filtered_variable)
+        mind, maxd = self.execute('Any MIN(CD), MAX(CD) WHERE X is CWUser, X created_by U, U owned_by O, O creation_date CD')[0]
+        self.assertEqual(f.vocabulary(), [(str(mind), mind),
+                                          (str(maxd), maxd)])
+        # ensure rqlst is left unmodified
+        self.assertEqual(rqlst.as_string(), 'DISTINCT Any  WHERE X is CWUser')
+        self.assertEqual(f.possible_values(),
+                         [str(mind), str(maxd)])
+        # ensure rqlst is left unmodified
+        self.assertEqual(rqlst.as_string(), 'DISTINCT Any  WHERE X is CWUser')
+        req.form['%s_inf' % f.__regid__] = str(datetime2ticks(mind))
+        req.form['%s_sup' % f.__regid__] = str(datetime2ticks(mind))
+        f.add_rql_restrictions()
+        # selection is cluttered because rqlst has been prepared for facet (it
+        # is not in real life)
+        self.assertEqual(f.select.as_string(),
+                         'DISTINCT Any  WHERE X is CWUser, X created_by G, G owned_by H, H creation_date >= "%s", '
+                         'H creation_date <= "%s"'
+                         % (mind.strftime('%Y/%m/%d'),
+                            mind.strftime('%Y/%m/%d')))
+
     def prepareg_aggregat_rqlst(self):
         return self.prepare_rqlst(
             'Any 1, COUNT(X) WHERE X is CWUser, X creation_date XD, '
