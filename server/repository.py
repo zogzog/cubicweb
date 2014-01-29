@@ -693,13 +693,13 @@ class Repository(object):
             self._pyro_sessions[threading.currentThread()] = session
         user._cw = user.cw_rset.req = session
         user.cw_clear_relation_cache()
-        self._sessions[session.id] = session
-        self.info('opened session %s for user %s', session.id, login)
+        self._sessions[session.sessionid] = session
+        self.info('opened session %s for user %s', session.sessionid, login)
         self.hm.call_hooks('session_open', session)
         # commit session at this point in case write operation has been done
         # during `session_open` hooks
         session.commit()
-        return session.id
+        return session.sessionid
 
     def execute(self, sessionid, rqlstring, args=None, build_descr=True,
                 txid=None):
@@ -901,7 +901,7 @@ class Repository(object):
         nbclosed = 0
         for session in self._sessions.values():
             if session.timestamp < mintime:
-                self.close(session.id)
+                self.close(session.sessionid)
                 nbclosed += 1
         return nbclosed
 
@@ -1471,7 +1471,7 @@ class Repository(object):
                 # client was not yet connected to the repo
                 return
             if not session.closed:
-                self.close(session.id)
+                self.close(session.sessionid)
         daemon.removeConnection = removeConnection
         return daemon
 
