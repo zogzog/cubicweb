@@ -598,9 +598,9 @@ class Repository(object):
 
         This is a public method, not requiring a session id.
         """
-        with self.internal_session() as session:
-            # don't use session.execute, we don't want rset.req set
-            return self.querier.execute(session, 'Any K,V WHERE P is CWProperty,'
+        with self.internal_cnx() as cnx, cnx.ensure_cnx_set:
+            # don't use cnx.execute, we don't want rset.req set
+            return self.querier.execute(cnx, 'Any K,V WHERE P is CWProperty,'
                                         'P pkey K, P value V, NOT P for_user U',
                                         build_descr=False)
 
