@@ -1638,8 +1638,11 @@ class Session(RequestSessionBase): # XXX repoapi: stop being a
             self._clear_thread_data(free_cnxset)
 
     @deprecated('[3.19] use a Connection object instead')
-    def rollback(self, free_cnxset=True, **kwargs):
+    def rollback(self, *args, **kwargs):
         """rollback the current session's transaction"""
+        return self._rollback(*args, **kwargs)
+
+    def _rollback(self, free_cnxset=True, **kwargs):
         try:
             return self._cnx.rollback(free_cnxset, **kwargs)
         finally:
@@ -1651,7 +1654,7 @@ class Session(RequestSessionBase): # XXX repoapi: stop being a
         with self._lock:
             self._closed = True
         tracker.close()
-        self.rollback()
+        self._rollback()
         self.debug('waiting for open connection of session: %s', self)
         timeout = 10
         pendings = tracker.wait(timeout)
