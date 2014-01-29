@@ -514,8 +514,8 @@ class Repository(object):
         nmax is the max number of (most) referenced object returned as
         the 'referenced' result
         """
-        with self.internal_session() as session:
-            return session.call_service('repo_gc_stats', nmax=nmax)
+        with self.internal_cnx() as cnx:
+            return cnx.call_service('repo_gc_stats', nmax=nmax)
 
     def get_schema(self):
         """Return the instance schema.
