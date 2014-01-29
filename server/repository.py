@@ -501,8 +501,8 @@ class Repository(object):
 
         This method is deprecated in favor of using _cw.call_service('repo_stats')
         """
-        with self.internal_session() as session:
-            return session.call_service('repo_stats')
+        with self.internal_cnx() as cnx:
+            return cnx.call_service('repo_stats')
 
     @deprecated("[3.19] use _cw.call_service('repo_gc_stats'")
     def gc_stats(self, nmax=20):
