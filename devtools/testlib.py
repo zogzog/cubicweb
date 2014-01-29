@@ -211,7 +211,7 @@ class RepoAccess(object):
             user.groups
             user.properties
             self._session = Session(user, repo)
-            repo._sessions[self._session.id] = self._session
+            repo._sessions[self._session.sessionid] = self._session
             self._session.user._cw = self._session
 
     @ contextmanager
@@ -244,7 +244,7 @@ class RepoAccess(object):
     def close(self):
         """Close the session associated to the RepoAccess"""
         if self._session is not None:
-            self._repo.close(self._session.id)
+            self._repo.close(self._session.sessionid)
         self._session = None
 
 
@@ -379,7 +379,7 @@ class CubicWebTC(TestCase):
             if self._current_clt_cnx._open:
                 self._current_clt_cnx.close()
             if not  self._current_session.closed:
-                self.repo.close(self._current_session.id)
+                self.repo.close(self._current_session.sessionid)
             self._current_clt_cnx = None
             self._current_session = None
 
@@ -564,7 +564,7 @@ class CubicWebTC(TestCase):
             self._admin_clt_cnx = None
         if self._admin_session is not None:
             if not self._admin_session.closed:
-                self.repo.close(self._admin_session.id)
+                self.repo.close(self._admin_session.sessionid)
             self._admin_session = None
         while self._cleanups:
             cleanup, args, kwargs = self._cleanups.pop(-1)
