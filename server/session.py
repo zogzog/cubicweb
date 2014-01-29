@@ -530,7 +530,7 @@ class Connection(RequestSessionBase):
 
     def __exit__(self, exctype=None, excvalue=None, tb=None):
         assert self._open # actually already open
-        self.free_cnxset(ignoremode=True)
+        self._free_cnxset(ignoremode=True)
         self.clear()
         self._open = False
 
@@ -1047,7 +1047,7 @@ class Connection(RequestSessionBase):
         finally:
             self._session_timestamp.touch()
             if free_cnxset:
-                self.free_cnxset(ignoremode=True)
+                self._free_cnxset(ignoremode=True)
             self.clear()
 
     @_open_only
@@ -1136,7 +1136,7 @@ class Connection(RequestSessionBase):
         finally:
             self._session_timestamp.touch()
             if free_cnxset:
-                self.free_cnxset(ignoremode=True)
+                self._free_cnxset(ignoremode=True)
             self.clear()
 
     # resource accessors ######################################################
@@ -1618,7 +1618,7 @@ class Session(RequestSessionBase): # XXX repoapi: stop being a
             pass
         else:
             if free_cnxset:
-                self.free_cnxset()
+                cnx._free_cnxset()
                 if cnx.ctx_count == 0:
                     self._close_cnx(cnx)
                 else:
