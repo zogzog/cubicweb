@@ -1427,7 +1427,7 @@ Session.DEFAULT_SECURITY = DEFAULT_SECURITY
 
 
 class InternalSession(Session):
-    """special session created internaly by the repository"""
+    """special session created internally by the repository"""
     is_internal_session = True
     running_dbapi_query = False
 
