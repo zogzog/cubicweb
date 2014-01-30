@@ -274,7 +274,7 @@ have the python imaging library installed to use captcha)',
         try:
             return self.__repo
         except AttributeError:
-            from cubicweb.dbapi import get_repository
+            from cubicweb.repoapi import get_repository
             repo = get_repository(config=self, vreg=vreg)
             self.__repo = repo
             return repo
