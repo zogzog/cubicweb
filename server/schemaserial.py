@@ -33,7 +33,7 @@ from cubicweb.schema import (KNOWN_RPROPERTIES, CONSTRAINTS, ETYPE_NAME_MAP,
 from cubicweb.server import sqlutils
 
 
-def group_mapping(cursor, interactive=True):
+def group_mapping(cnx, interactive=True):
     """create a group mapping from an rql cursor
 
     A group mapping has standard group names as key (managers, owners at least)
@@ -42,7 +42,7 @@ def group_mapping(cursor, interactive=True):
     from the user.
     """
     res = {}
-    for eid, name in cursor.execute('Any G, N WHERE G is CWGroup, G name N',
+    for eid, name in cnx.execute('Any G, N WHERE G is CWGroup, G name N',
                                     build_descr=False):
         res[name] = eid
     if not interactive:
@@ -305,7 +305,7 @@ def set_perms(erschema, permsidx):
 
 # schema / perms serialization ################################################
 
-def serialize_schema(cursor, schema):
+def serialize_schema(cnx, schema):
     """synchronize schema and permissions in the database according to
     current schema
     """
@@ -313,7 +313,7 @@ def serialize_schema(cursor, schema):
     if not quiet:
         _title = '-> storing the schema in the database '
         print _title,
-    execute = cursor.execute
+    execute = cnx.execute
     eschemas = schema.entities()
     if not quiet:
         pb_size = (len(eschemas + schema.relations())
@@ -322,7 +322,7 @@ def serialize_schema(cursor, schema):
         pb = ProgressBar(pb_size, title=_title)
     else:
         pb = None
-    groupmap = group_mapping(cursor, interactive=False)
+    groupmap = group_mapping(cnx, interactive=False)
     # serialize all entity types, assuring CWEType is serialized first for proper
     # is / is_instance_of insertion
     eschemas.remove(schema.eschema('CWEType'))
