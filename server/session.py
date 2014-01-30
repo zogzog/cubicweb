@@ -450,9 +450,9 @@ class Connection(RequestSessionBase):
         #: connection unique id
         self._open = None
         if cnxid is None:
-            cnxid = '%s-%s' % (session.id, uuid4().hex)
+            cnxid = '%s-%s' % (session.sessionid, uuid4().hex)
         self.connectionid = cnxid
-        self.sessionid = session.id
+        self.sessionid = session.sessionid
         #: self._session_handled
         #: are the life cycle of this Connection automatically controlled by the
         #: Session This is the old backward compatibility mode
@@ -1365,7 +1365,7 @@ class Session(RequestSessionBase): # XXX repoapi: stop being a
 
     def __unicode__(self):
         return '<session %s (%s 0x%x)>' % (
-            unicode(self.user.login), self.id, id(self))
+            unicode(self.user.login), self.sessionid, id(self))
     @property
     def timestamp(self):
         return float(self._timestamp)
