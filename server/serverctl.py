@@ -1006,26 +1006,6 @@ class RebuildFTICommand(Command):
         cnx.commit()
 
 
-class SynchronizeInstanceSchemaCommand(Command):
-    """Synchronize persistent schema with cube schema.
-
-    Will synchronize common stuff between the cube schema and the
-    actual persistent schema, but will not add/remove any entity or relation.
-
-    <instance>
-      the identifier of the instance to synchronize.
-    """
-    name = 'schema-sync'
-    arguments = '<instance>'
-    min_args = max_args = 1
-
-    def run(self, args):
-        appid = args[0]
-        config = ServerConfiguration.config_for(appid)
-        mih = config.migration_handler()
-        mih.cmd_synchronize_schema()
-
-
 class SynchronizeSourceCommand(Command):
     """Force a source synchronization.
 
@@ -1104,7 +1084,7 @@ for cmdclass in (CreateInstanceDBCommand, InitInstanceCommand,
                  StartRepositoryCommand,
                  DBDumpCommand, DBRestoreCommand, DBCopyCommand,
                  AddSourceCommand, CheckRepositoryCommand, RebuildFTICommand,
-                 SynchronizeInstanceSchemaCommand, SynchronizeSourceCommand, SchemaDiffCommand,
+                 SynchronizeSourceCommand, SchemaDiffCommand,
                  ):
     CWCTL.register(cmdclass)
 
