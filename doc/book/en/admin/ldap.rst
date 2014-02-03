@@ -45,8 +45,27 @@ Credential checks are _always_ done against the LDAP server.
   be overridden in some subsequent source synchronisation).
 
 
-Configuration options of an LDAPfeed source
--------------------------------------------
+Configuration of an LDAPfeed source
+-----------------------------------
+
+Additional sources are created at cube creation time or later through the
+user interface.
+
+Configure an `ldapfeed` source from the user interface under `Manage` then
+`data sources`:
+
+* At this point `type` has been set to `ldapfeed`.
+
+* The `parser` attribute shall be set to `ldapfeed`.
+
+* The `url` attribute shall be set to an URL such as ldap://ldapserver.domain/.
+
+* The `configuration` attribute contains many options. They are described in
+  detail in the next paragraph.
+
+
+Options of an LDAPfeed source
+-----------------------------
 
 Let us enumerate the options by categories (LDAP server connection,
 LDAP schema mapping information).
@@ -109,5 +128,5 @@ Other notes
   source, it (automatically) is activated again
 
 * You can use the :class:`CWSourceHostConfig` to have variants for a source
-  configuration according to the host the instance is running on. To do so go on
-  the source's view from the sources management view.
+  configuration according to the host the instance is running on. To do so
+  go on the source's view from the sources management view.
