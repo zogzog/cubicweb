@@ -252,15 +252,7 @@ class EditController(basecontrollers.ViewController):
             formid = 'edition'
         form = req.vreg['forms'].select(formid, req, entity=entity)
         eid = form.actual_eid(entity.eid)
-        try:
-            editedfields = formparams['_cw_entity_fields']
-        except KeyError:
-            try:
-                editedfields = formparams['_cw_edited_fields']
-                warn('[3.13] _cw_edited_fields has been renamed _cw_entity_fields',
-                     DeprecationWarning)
-            except KeyError:
-                raise RequestError(req._('no edited fields specified for entity %s' % entity.eid))
+        editedfields = formparams['_cw_entity_fields']
         form.formvalues = {} # init fields value cache
         for field in form.iter_modified_fields(editedfields, entity):
             self.handle_formfield(form, field, rqlquery)
