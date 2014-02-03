@@ -1110,9 +1110,9 @@ class SQLGenSourceWrapper(object):
     def _handle_source_relation_sql(self, session, sql, attrs):
         self._append_to_entities(sql, attrs)
 
-    # XXX add_info is similar to the one in NativeSQLSource. It is rewritten
-    # here to correctly used the _handle_xxx of the SQLGenSourceWrapper. This
-    # part should be rewritten in a more clearly way.
+    # add_info is _copypasted_ from the one in NativeSQLSource. We want it
+    # there because it will use the _handlers of the SQLGenSourceWrapper, which
+    # are not like the ones in the native source.
     def add_info(self, session, entity, source, extid, complete):
         """add type and source info for an eid into the system table"""
         # begin by inserting eid/type/source/extid into the entities table
