@@ -323,10 +323,16 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                   'want trusted authentication for the database connection',
           'group': 'native-source', 'level': 2,
           }),
+        ('db-statement-timeout',
+         {'type': 'int',
+          'default': 0,
+          'help': 'sql statement timeout, in milliseconds (postgres only)',
+          'group': 'native-source', 'level': 2,
+          }),
     )
 
     def __init__(self, repo, source_config, *args, **kwargs):
-        SQLAdapterMixIn.__init__(self, source_config)
+        SQLAdapterMixIn.__init__(self, source_config, repairing=repo.config.repairing)
         self.authentifiers = [LoginPasswordAuthentifier(self)]
         if repo.config['allow-email-login']:
             self.authentifiers.insert(0, EmailPasswordAuthentifier(self))
