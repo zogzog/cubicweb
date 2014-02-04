@@ -48,8 +48,9 @@ A new API has been introduced to replace the dbapi. It is called `repoapi`.
 
 There are three relevant functions for now:
 
-* ``repoapi.get_repository(config=config)`` takes a config object and returns a
-  Repository object.
+* ``repoapi.get_repository`` returns a Repository object either from an
+  URI when used as ``repoapi.get_repository(uri)`` or from a config
+  when used as ``repoapi.get_repository(config=config)``.
 
 * ``repoapi.connect(repo, login, **credentials)`` returns a ClientConnection
   associated with the user identified by the credentials. The
