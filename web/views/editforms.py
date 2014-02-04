@@ -80,7 +80,7 @@ class DeleteConfFormView(FormViewMixIn, EntityView):
         w(u'<script type="text/javascript">updateMessage(\'%s\');</script>\n'
           % _('this action is not reversible!'))
         # XXX above message should have style of a warning
-        w(u'<h4>%s</h4>\n' % _('Do you want to delete the following element(s) ?'))
+        w(u'<h4>%s</h4>\n' % _('Do you want to delete the following element(s)?'))
         form = self._cw.vreg['forms'].select(self.__regid__, req,
                                              rset=self.cw_rset,
                                              onsubmit=onsubmit)

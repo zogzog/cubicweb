@@ -688,7 +688,7 @@ class SQLGenerator(object):
     Groups and sort are not handled here since they should not be handled at
     this level (see cubicweb.server.querier)
 
-    we should not have errors here !
+    we should not have errors here!
 
     WARNING: a CubicWebSQLGenerator instance is not thread safe, but generate is
     protected by a lock

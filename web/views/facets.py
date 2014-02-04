@@ -143,7 +143,7 @@ class FacetFilterMixIn(object):
         :param vid:      ID of the view display in the div
         :type vid:       string
 
-        :param paginate: Is the view paginated ?
+        :param paginate: Is the view paginated?
         :type paginate:  boolean
 
         :param cssclass: Additional css classes to put on the form.

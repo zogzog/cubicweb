@@ -95,7 +95,7 @@ class InMemoryRepositorySessionManager(AbstractSessionManager):
         #      reopening. Is it actually a problem?
         if 'last_login_time' in req.vreg.schema:
             self._update_last_login_time(req)
-        req.set_message(req._('welcome %s !') % req.user.login)
+        req.set_message(req._('welcome %s!') % req.user.login)
 
     def _update_last_login_time(self, req):
         # XXX should properly detect missing permission / non writeable source

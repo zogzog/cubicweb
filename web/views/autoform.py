@@ -289,7 +289,7 @@ class InlineEntityEditionFormView(f.FormViewMixIn, EntityView):
     def keep_entity(self, form, entity):
         if not entity.has_eid():
             return True
-        # are we regenerating form because of a validation error ?
+        # are we regenerating form because of a validation error?
         if form.form_previous_values:
             cdvalues = self._cw.list_form_param(eid_param(self.rtype, self.peid),
                                                 form.form_previous_values)

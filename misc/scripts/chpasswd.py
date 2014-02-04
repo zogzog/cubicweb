@@ -26,15 +26,15 @@ from cubicweb.server.utils import crypt_password
 if __args__:
     login = __args__.pop()
 else:
-    login = raw_input("login ? ")
+    login = raw_input("login? ")
 
 rset = rql('Any U WHERE U is CWUser, U login %(login)s', {'login': login})
 
 if len(rset) != 1:
     sys.exit("user '%s' does not exist!" % login)
 
-pass1 = getpass.getpass(prompt='Enter new password ? ')
-pass2 = getpass.getpass(prompt='Confirm ? ')
+pass1 = getpass.getpass(prompt='Enter new password? ')
+pass2 = getpass.getpass(prompt='Confirm? ')
 
 if pass1 != pass2:
     sys.exit("passwords don't match!")

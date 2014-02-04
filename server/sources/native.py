@@ -424,7 +424,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             self._eid_creation_cnx.close()
             self._eid_creation_cnx = None
 
-    # XXX deprecates [un]map_attribute ?
+    # XXX deprecates [un]map_attribute?
     def map_attribute(self, etype, attr, cb, sourcedb=True):
         self._rql_sqlgen.attr_map['%s.%s' % (etype, attr)] = (cb, sourcedb)
 

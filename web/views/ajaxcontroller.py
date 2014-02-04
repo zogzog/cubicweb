@@ -246,7 +246,7 @@ class AjaxFunction(AppObject):
         view.render(**kwargs)
         extresources = self._cw.html_headers.getvalue(skiphead=True)
         if extresources:
-            stream.write(u'<div class="ajaxHtmlHead">\n') # XXX use a widget ?
+            stream.write(u'<div class="ajaxHtmlHead">\n') # XXX use a widget?
             stream.write(extresources)
             stream.write(u'</div>\n')
         if divid == 'pageContent':

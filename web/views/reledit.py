@@ -258,7 +258,7 @@ class AutoClickAndEditFormView(EntityView):
             _new_entity.eid = self._cw.varmaker.next()
             edit_entity = _new_entity
             # XXX see forms.py ~ 276 and entities.linked_to method
-            #     is there another way ?
+            #     is there another way?
             self._cw.form['__linkto'] = '%s:%s:%s' % (rschema, entity.eid, neg_role(role))
         assert edit_entity
         return label, edit_entity

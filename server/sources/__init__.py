@@ -344,7 +344,7 @@ class AbstractSource(object):
         """
         # XXX find a way to have relation such as state_of in dont cross
         #     relation (eg composite relation without both end type available?
-        #     card 1 relation ? ...)
+        #     card 1 relation? ...)
         if self.support_relation(rtype):
             return rtype in self.cross_relations
         return rtype not in self.dont_cross_relations
