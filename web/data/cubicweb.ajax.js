@@ -200,7 +200,7 @@ jQuery.extend(cw.ajax, {
     },
 
     _loadAjaxScripts: function($responseHead, $head) {
-        $responseHead.find('pre.script').each(function(i) {
+        $responseHead.find('cubicweb\\:script').each(function(i) {
             var $srcnode = $(this);
             var url = $srcnode.attr('src');
             if (url) {
@@ -222,7 +222,7 @@ jQuery.extend(cw.ajax, {
     	        jQuery.globalEval($srcnode.text());
     	    }
         });
-        $responseHead.find('pre.script').remove();
+        $responseHead.find('cubicweb\\:script').remove();
     }
 });
 
