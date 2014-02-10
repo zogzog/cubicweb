@@ -545,7 +545,7 @@ class PostgresTestDataBaseHandler(TestDataBaseHandler):
         super(PostgresTestDataBaseHandler, self).__init__(config)
         datadir = join(self.config.apphome, 'pgdb')
         if not exists(datadir):
-            subprocess.check_call(['initdb', '-D', datadir, '-E', 'utf-8'])
+            subprocess.check_call(['initdb', '-D', datadir, '-E', 'utf-8', '--locale=C'])
         port = self.system_source['db-port']
         subprocess.check_call(['pg_ctl', 'start', '-w', '-D', datadir, '-o', '-h "" -k /tmp -p %s' % port])
         self.__CTL.add(datadir)
