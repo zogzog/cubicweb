@@ -68,7 +68,7 @@ class RestTC(CubicWebTC):
     def test_rql_role_with_unknown_vid(self):
         context = self.context()
         out = rest_publish(context, ':rql:`Any X WHERE X is CWUser:toto`')
-        self.assertTrue(out.startswith("<p>an error occured while interpreting this rql directive: ObjectNotFound(u'toto',)</p>"))
+        self.assertTrue(out.startswith("<p>an error occurred while interpreting this rql directive: ObjectNotFound(u'toto',)</p>"))
 
     def test_rql_role_without_vid(self):
         context = self.context()

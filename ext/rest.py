@@ -127,7 +127,7 @@ def rql_role(role, rawtext, text, lineno, inliner, options={}, content=[]):
         view = _cw.vreg['views'].select(vid, _cw, rset=rset)
         content = view.render()
     except Exception as exc:
-        content = 'an error occured while interpreting this rql directive: %r' % exc
+        content = 'an error occurred while interpreting this rql directive: %r' % exc
     set_classes(options)
     return [nodes.raw('', content, format='html')], []
 
@@ -184,7 +184,7 @@ def bookmark_role(role, rawtext, text, lineno, inliner, options={}, content=[]):
         view = _cw.vreg['views'].select(vid, _cw, rset=rset)
         content = view.render()
     except Exception, exc:
-        content = 'An error occured while interpreting directive bookmark: %r' % exc
+        content = 'An error occurred while interpreting directive bookmark: %r' % exc
     set_classes(options)
     return [nodes.raw('', content, format='html')], []
 

@@ -193,7 +193,7 @@ class DataFeedSource(AbstractSource):
         myuris = self.source_cwuris(session)
         parser = self._get_parser(session, sourceuris=myuris, import_log=importlog)
         if self.process_urls(parser, self.urls, raise_on_error):
-            self.warning("some error occured, don't attempt to delete entities")
+            self.warning("some error occurred, don't attempt to delete entities")
         else:
             parser.handle_deletion(self.config, session, myuris)
         self.update_latest_retrieval(session)
