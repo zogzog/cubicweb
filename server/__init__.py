@@ -202,7 +202,7 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     with the minimal set of entities (ie at least the schema, base groups and
     a initial user)
     """
-    from cubicweb.dbapi import in_memory_repo_cnx
+    from cubicweb.repoapi import get_repository, connect
     from cubicweb.server.repository import Repository
     from cubicweb.server.utils import manager_userpasswd
     from cubicweb.server.sqlutils import sqlexec, sqlschema, sql_drop_all_user_tables
@@ -281,21 +281,21 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     repo.shutdown()
     # reloging using the admin user
     config._cubes = None # avoid assertion error
-    repo, cnx = in_memory_repo_cnx(config, login, password=pwd)
-    repo.system_source.eid = ssource.eid # redo this manually
-    handler = config.migration_handler(schema, interactive=False,
-                                       cnx=cnx, repo=repo)
-    # install additional driver specific sql files
-    handler.cmd_install_custom_sql_scripts()
-    for cube in reversed(config.cubes()):
-        handler.cmd_install_custom_sql_scripts(cube)
-    # serialize the schema
-    initialize_schema(config, schema, handler)
-    # yoo !
-    cnx.commit()
-    repo.system_source.init_creating()
-    cnx.commit()
-    cnx.close()
+    repo = get_repository(config=config)
+    with connect(repo, login, password=pwd) as cnx:
+        repo.system_source.eid = ssource.eid # redo this manually
+        handler = config.migration_handler(schema, interactive=False,
+                                           cnx=cnx, repo=repo)
+        # install additional driver specific sql files
+        handler.cmd_install_custom_sql_scripts()
+        for cube in reversed(config.cubes()):
+            handler.cmd_install_custom_sql_scripts(cube)
+        # serialize the schema
+        initialize_schema(config, schema, handler)
+        # yoo !
+        cnx.commit()
+        repo.system_source.init_creating()
+        cnx.commit()
     repo.shutdown()
     # restore initial configuration
     config.creating = False
@@ -308,13 +308,13 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
 
 def initialize_schema(config, schema, mhandler, event='create'):
     from cubicweb.server.schemaserial import serialize_schema
-    session = mhandler.session
+    cnx = mhandler.cnx
     cubes = config.cubes()
     # deactivate every hooks but those responsible to set metadata
     # so, NO INTEGRITY CHECKS are done, to have quicker db creation.
     # Active integrity is kept else we may pb such as two default
     # workflows for one entity type.
-    with session.deny_all_hooks_but('metadata', 'activeintegrity'):
+    with cnx._cnx.deny_all_hooks_but('metadata', 'activeintegrity'):
         # execute cubicweb's pre<event> script
         mhandler.cmd_exec_event_script('pre%s' % event)
         # execute cubes pre<event> script if any
@@ -323,8 +323,7 @@ def initialize_schema(config, schema, mhandler, event='create'):
         # execute instance's pre<event> script (useful in tests)
         mhandler.cmd_exec_event_script('pre%s' % event, apphome=True)
         # enter instance'schema into the database
-        session.set_cnxset()
-        serialize_schema(session, schema)
+        serialize_schema(cnx, schema)
         # execute cubicweb's post<event> script
         mhandler.cmd_exec_event_script('post%s' % event)
         # execute cubes'post<event> script if any

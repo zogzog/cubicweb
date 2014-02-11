@@ -781,7 +781,8 @@ given, appropriate sources for migration will be automatically selected \
         if self.config.fs_only or toupgrade:
             for cube, fromversion, toversion in toupgrade:
                 print '-> migration needed from %s to %s for %s' % (fromversion, toversion, cube)
-            mih.migrate(vcconf, reversed(toupgrade), self.config)
+            with mih.cnx:
+                mih.migrate(vcconf, reversed(toupgrade), self.config)
         else:
             print '-> no data migration needed for instance %s.' % appid
         # rewrite main configuration file
@@ -912,13 +913,14 @@ directly give URI as instance id instead',
     def _handle_networked(self, appuri):
         """ returns migration context handler & shutdown function """
         from cubicweb import AuthenticationError
-        from cubicweb.dbapi import connect
+        from cubicweb.repoapi import connect, get_repository
         from cubicweb.server.utils import manager_userpasswd
         from cubicweb.server.migractions import ServerMigrationHelper
         while True:
             try:
                 login, pwd = manager_userpasswd(msg=None)
-                cnx = connect(appuri, login=login, password=pwd, mulcnx=False)
+                repo = get_repository(appuri)
+                cnx = connect(repo, login=login, password=pwd, mulcnx=False)
             except AuthenticationError as ex:
                 print ex
             except (KeyboardInterrupt, EOFError):
@@ -948,15 +950,16 @@ directly give URI as instance id instead',
         else:
             mih, shutdown_callback = self._handle_networked(appuri)
         try:
-            if args:
-                # use cmdline parser to access left/right attributes only
-                # remember that usage requires instance appid as first argument
-                scripts, args = self.cmdline_parser.largs[1:], self.cmdline_parser.rargs
-                for script in scripts:
-                    mih.cmd_process_script(script, scriptargs=args)
-                    mih.commit()
-            else:
-                mih.interactive_shell()
+            with mih.cnx:
+                if args:
+                    # use cmdline parser to access left/right attributes only
+                    # remember that usage requires instance appid as first argument
+                    scripts, args = self.cmdline_parser.largs[1:], self.cmdline_parser.rargs
+                    for script in scripts:
+                            mih.cmd_process_script(script, scriptargs=args)
+                            mih.commit()
+                else:
+                    mih.interactive_shell()
         finally:
             shutdown_callback()
 

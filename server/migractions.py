@@ -53,7 +53,7 @@ from cubicweb.schema import (ETYPE_NAME_MAP, META_RTYPES, VIRTUAL_RTYPES,
                              PURE_VIRTUAL_RTYPES,
                              CubicWebRelationSchema, order_eschemas)
 from cubicweb.cwvreg import CW_EVENT_MANAGER
-from cubicweb.dbapi import get_repository, _repo_connect
+from cubicweb import repoapi
 from cubicweb.migration import MigrationHelper, yes
 from cubicweb.server import hook, schemaserial as ss
 from cubicweb.server.utils import manager_userpasswd
@@ -125,7 +125,7 @@ class ServerMigrationHelper(MigrationHelper):
 
     @cached
     def repo_connect(self):
-        self.repo = get_repository(config=self.config)
+        self.repo = repoapi.get_repository(config=self.config)
         return self.repo
 
     def cube_upgraded(self, cube, version):
@@ -268,7 +268,7 @@ class ServerMigrationHelper(MigrationHelper):
                 login, pwd = manager_userpasswd()
             while True:
                 try:
-                    self._cnx = _repo_connect(self.repo, login, password=pwd)
+                    self._cnx = repoapi.connect(self.repo, login, password=pwd)
                     if not 'managers' in self._cnx.user(self.session).groups:
                         print 'migration need an account in the managers group'
                     else:
@@ -327,7 +327,7 @@ class ServerMigrationHelper(MigrationHelper):
                         'schema': self.repo.get_schema(),
                         'cnx': self.cnx,
                         'fsschema': self.fs_schema,
-                        'session' : self.session,
+                        'session' : self.cnx._cnx,
                         'repo' : self.repo,
                         })
         return context
@@ -335,12 +335,12 @@ class ServerMigrationHelper(MigrationHelper):
     @cached
     def group_mapping(self):
         """cached group mapping"""
-        return ss.group_mapping(self._cw)
+        return ss.group_mapping(self.cnx)
 
     @cached
     def cstrtype_mapping(self):
         """cached constraint types mapping"""
-        return ss.cstrtype_mapping(self._cw)
+        return ss.cstrtype_mapping(self.cnx)
 
     def cmd_exec_event_script(self, event, cube=None, funcname=None,
                               *args, **kwargs):
@@ -809,7 +809,7 @@ class ServerMigrationHelper(MigrationHelper):
         groupmap = self.group_mapping()
         cstrtypemap = self.cstrtype_mapping()
         # register the entity into CWEType
-        execute = self._cw.execute
+        execute = self.cnx.execute
         ss.execschemarql(execute, eschema, ss.eschema2rql(eschema, groupmap))
         # add specializes relation if needed
         specialized = eschema.specializes()
@@ -1038,7 +1038,7 @@ class ServerMigrationHelper(MigrationHelper):
         """
         reposchema = self.repo.schema
         rschema = self.fs_schema.rschema(rtype)
-        execute = self._cw.execute
+        execute = self.cnx.execute
         if rtype in reposchema:
             print 'warning: relation type %s is already known, skip addition' % (
                 rtype)
@@ -1110,7 +1110,7 @@ class ServerMigrationHelper(MigrationHelper):
                 subjtype, rtype, objtype)
             return
         rdef = self._get_rdef(rschema, subjtype, objtype)
-        ss.execschemarql(self._cw.execute, rdef,
+        ss.execschemarql(self.cnx.execute, rdef,
                          ss.rdef2rql(rdef, self.cstrtype_mapping(),
                                      self.group_mapping()))
         if commit:
@@ -1337,14 +1337,6 @@ class ServerMigrationHelper(MigrationHelper):
 
     # other data migration commands ###########################################
 
-    @property
-    def _cw(self):
-        session = self.session
-        if session is not None:
-            session.set_cnxset()
-            return session
-        return self.cnx.request()
-
     def cmd_storage_changed(self, etype, attribute):
         """migrate entities to a custom storage. The new storage is expected to
         be set, it will be temporarily removed for the migration.
@@ -1368,14 +1360,14 @@ class ServerMigrationHelper(MigrationHelper):
 
     def cmd_create_entity(self, etype, commit=False, **kwargs):
         """add a new entity of the given type"""
-        entity = self._cw.create_entity(etype, **kwargs)
+        entity = self.cnx.create_entity(etype, **kwargs)
         if commit:
             self.commit()
         return entity
 
     def cmd_find_entities(self, etype, **kwargs):
         """find entities of the given type and attribute values"""
-        return self._cw.find_entities(etype, **kwargs)
+        return self.cnx.find_entities(etype, **kwargs)
 
     def cmd_find_one_entity(self, etype, **kwargs):
         """find one entity of the given type and attribute values.
@@ -1383,7 +1375,7 @@ class ServerMigrationHelper(MigrationHelper):
         raise :exc:`cubicweb.req.FindEntityError` if can not return one and only
         one entity.
         """
-        return self._cw.find_one_entity(etype, **kwargs)
+        return self.cnx.find_one_entity(etype, **kwargs)
 
     def cmd_update_etype_fti_weight(self, etype, weight):
         if self.repo.system_source.dbdriver == 'postgres':
@@ -1442,7 +1434,7 @@ class ServerMigrationHelper(MigrationHelper):
         """
         if not ask_confirm or self.confirm('Execute sql: %s ?' % sql):
             try:
-                cu = self.session.system_sql(sql, args)
+                cu = self.cnx._cnx.system_sql(sql, args)
             except Exception:
                 ex = sys.exc_info()[1]
                 if self.confirm('Error: %s\nabort?' % ex, pdb=True):
@@ -1460,7 +1452,7 @@ class ServerMigrationHelper(MigrationHelper):
         if not isinstance(rql, (tuple, list)):
             rql = ( (rql, kwargs), )
         res = None
-        execute = self._cw.execute
+        execute = self.cnx.execute
         for rql, kwargs in rql:
             if kwargs:
                 msg = '%s (%s)' % (rql, kwargs)
