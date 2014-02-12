@@ -41,7 +41,7 @@ def check_entity_attributes(session, entity, editedattrs=None, creation=False):
     for attr in editedattrs:
         if attr in dontcheck:
             continue
-        rdef = eschema.rdef(attr)
+        rdef = eschema.rdef(attr, takefirst=True)
         if rdef.final: # non final relation are checked by standard hooks
             # attributes only have a specific 'update' permission
             updateperm = rdef.permissions.get('update')

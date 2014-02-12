@@ -384,10 +384,10 @@ def make_relations_queries(schema, edict, cursor, ignored_relations=(),
 
 def composite_relation(rschema):
     for obj in rschema.objects():
-        if obj.rdef(rschema, 'object').composite == 'subject':
+        if obj.rdef(rschema, 'object', takefirst=True).composite == 'subject':
             return True
     for obj in rschema.subjects():
-        if obj.rdef(rschema, 'subject').composite == 'object':
+        if obj.rdef(rschema, 'subject', takefirst=True).composite == 'object':
             return True
     return False
 
