@@ -222,6 +222,9 @@ jQuery.extend(cw.utils, {
         cw.utils.nodeWalkDepthFirst(elem, function (elem) {
             var name = elem.name;
             if (name && name.length) {
+                if (elem.disabled) {
+                    return null;
+                }
                 var tagName = elem.tagName.toUpperCase();
                 if (tagName === "INPUT" && (elem.type == "radio" || elem.type == "checkbox") && !elem.checked) {
                     return null;
