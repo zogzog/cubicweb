@@ -68,8 +68,8 @@ class CookieSessionHandler(object):
     def __init__(self, appli):
         self.repo = appli.repo
         self.vreg = appli.vreg
-        self.session_manager = self.vreg['components'].select('sessionmanager',
-                                                              repo=self.repo)
+        self.session_manager = self.vreg['sessions'].select('sessionmanager',
+                                                            repo=self.repo)
         global SESSION_MANAGER
         SESSION_MANAGER = self.session_manager
         if self.vreg.config.mode != 'test':

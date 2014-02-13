@@ -19,15 +19,22 @@
 __docformat__ = "restructuredtext en"
 
 from time import time
+from logging import getLogger
 
-from cubicweb import RepositoryError, Unauthorized, BadConnectionId
-from cubicweb.web import InvalidSession, component
+from logilab.common.registry import RegistrableObject
+
+from cubicweb import RepositoryError, Unauthorized, BadConnectionId, set_log_methods
+from cubicweb.predicates import yes
+from cubicweb.web import InvalidSession
 
 from cubicweb.web.views import authentication
 
-class AbstractSessionManager(component.Component):
+
+class AbstractSessionManager(RegistrableObject):
     """manage session data associated to a session identifier"""
     __abstract__ = True
+    __select__ = yes()
+    __registry__ = 'sessions'
     __regid__ = 'sessionmanager'
 
     def __init__(self, repo):
@@ -96,11 +103,14 @@ class AbstractSessionManager(component.Component):
         raise NotImplementedError()
 
 
+set_log_methods(AbstractSessionManager, getLogger('cubicweb.sessionmanager'))
+
+
 class InMemoryRepositorySessionManager(AbstractSessionManager):
     """manage session data associated to a session identifier"""
 
     def __init__(self, *args, **kwargs):
-        AbstractSessionManager.__init__(self, *args, **kwargs)
+        super(InMemoryRepositorySessionManager, self).__init__(*args, **kwargs)
         # XXX require a RepositoryAuthenticationManager which violates
         #     authenticate interface by returning a session instead of a user
         #assert isinstance(self.authmanager, RepositoryAuthenticationManager)
