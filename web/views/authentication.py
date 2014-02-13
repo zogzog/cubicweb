@@ -19,12 +19,9 @@
 
 __docformat__ = "restructuredtext en"
 
-from threading import Lock
-
-from logilab.common.decorators import clear_cache
 from logilab.common.deprecation import class_renamed
 
-from cubicweb import AuthenticationError, BadConnectionId
+from cubicweb import AuthenticationError
 from cubicweb.view import Component
 from cubicweb.web import InvalidSession
 
@@ -101,41 +98,11 @@ LoginPasswordRetreiver = class_renamed(
     '("ie" instead of "ei")')
 
 
-class AbstractAuthenticationManager(Component):
-    """authenticate user associated to a request and check session validity"""
-    __abstract__ = True
-    __regid__ = 'authmanager'
 
-    def __init__(self, repo):
-        self.vreg = repo.vreg
-
-    def validate_session(self, req, session):
-        """check session validity, reconnecting it to the repository if the
-        associated connection expired in the repository side (hence the
-        necessity for this method).
-
-        raise :exc:`InvalidSession` if session is corrupted for a reason or
-        another and should be closed
-        """
-        raise NotImplementedError()
-
-    def authenticate(self, req):
-        """authenticate user using connection information found in the request,
-        and return corresponding a :class:`~cubicweb.dbapi.Connection` instance,
-        as well as login and authentication information dictionary used to open
-        the connection.
-
-        raise :exc:`cubicweb.AuthenticationError` if authentication failed
-        (no authentication info found or wrong user/password)
-        """
-        raise NotImplementedError()
-
-
-class RepositoryAuthenticationManager(AbstractAuthenticationManager):
+class RepositoryAuthenticationManager(object):
     """authenticate user associated to a request and check session validity"""
 
     def __init__(self, repo):
-        super(RepositoryAuthenticationManager, self).__init__(repo)
         self.repo = repo
         vreg = repo.vreg
         self.log_queries = vreg.config['query-log-file']

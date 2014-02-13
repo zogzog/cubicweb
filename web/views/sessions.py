@@ -23,6 +23,7 @@ from time import time
 from cubicweb import RepositoryError, Unauthorized, BadConnectionId
 from cubicweb.web import InvalidSession, component
 
+from cubicweb.web.views import authentication
 
 class AbstractSessionManager(component.Component):
     """manage session data associated to a session identifier"""
@@ -32,7 +33,7 @@ class AbstractSessionManager(component.Component):
     def __init__(self, repo):
         vreg = repo.vreg
         self.session_time = vreg.config['http-session-time'] or None
-        self.authmanager = vreg['components'].select('authmanager', repo=repo)
+        self.authmanager = authentication.RepositoryAuthenticationManager(repo)
         interval = (self.session_time or 0) / 2.
         if vreg.config.anonymous_user()[0] is not None:
             self.cleanup_anon_session_time = vreg.config['cleanup-anonymous-session-time'] or 5 * 60
