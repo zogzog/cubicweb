@@ -22,7 +22,7 @@ from logilab.common.testlib import unittest_main
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb import Unauthorized, ValidationError, QueryError, Binary
 from cubicweb.schema import ERQLExpression
-from cubicweb.server.querier import check_read_access
+from cubicweb.server.querier import get_local_checks, check_relations_read_access
 from cubicweb.server.utils import _CRYPTO_CTX
 
 
@@ -37,18 +37,33 @@ class BaseSecurityTC(CubicWebTC):
 
 class LowLevelSecurityFunctionTC(BaseSecurityTC):
 
-    def test_check_read_access(self):
-        rql = u'Personne U where U nom "managers"'
+    def test_check_relation_read_access(self):
+        rql = u'Personne U WHERE U nom "managers"'
+        rqlst = self.repo.vreg.rqlhelper.parse(rql).children[0]
+        nom = self.repo.schema['Personne'].rdef('nom')
+        with self.temporary_permissions((nom, {'read': ('users', 'managers')})):
+            with self.admin_access.repo_cnx() as cnx:
+                self.repo.vreg.solutions(cnx, rqlst, None)
+                check_relations_read_access(cnx, rqlst, {})
+            with self.new_access('anon').repo_cnx() as cnx:
+                self.assertRaises(Unauthorized,
+                                  check_relations_read_access,
+                                  cnx, rqlst, {})
+                self.assertRaises(Unauthorized, cnx.execute, rql)
+
+    def test_get_local_checks(self):
+        rql = u'Personne U WHERE U nom "managers"'
         rqlst = self.repo.vreg.rqlhelper.parse(rql).children[0]
         with self.temporary_permissions(Personne={'read': ('users', 'managers')}):
             with self.admin_access.repo_cnx() as cnx:
                 self.repo.vreg.solutions(cnx, rqlst, None)
                 solution = rqlst.solutions[0]
-                check_read_access(cnx, rqlst, solution, {})
+                localchecks = get_local_checks(cnx, rqlst, solution)
+                self.assertEqual({}, localchecks)
             with self.new_access('anon').repo_cnx() as cnx:
                 self.assertRaises(Unauthorized,
-                                  check_read_access,
-                                  cnx, rqlst, solution, {})
+                                  get_local_checks,
+                                  cnx, rqlst, solution)
                 self.assertRaises(Unauthorized, cnx.execute, rql)
 
     def test_upassword_not_selectable(self):
