@@ -873,7 +873,7 @@ class MetaGenerator(object):
         return getattr(self, 'gen_%s' % rtype)(entity)
 
     def gen_cwuri(self, entity):
-        return u'%seid/%s' % (self.baseurl, entity.eid)
+        return u'%s%s' % (self.baseurl, entity.eid)
 
     def gen_creation_date(self, entity):
         return self.time
