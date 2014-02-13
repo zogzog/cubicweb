@@ -15,18 +15,83 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""web session component: by dfault the session is actually the db connection
-object :/
-"""
-
+"""web session: by default the session is actually the db connection """
 __docformat__ = "restructuredtext en"
 
 from time import time
 
-from cubicweb import (RepositoryError, Unauthorized, AuthenticationError,
-                      BadConnectionId)
-from cubicweb.web import InvalidSession, Redirect
-from cubicweb.web.application import AbstractSessionManager
+from cubicweb import RepositoryError, Unauthorized, BadConnectionId
+from cubicweb.web import InvalidSession, component
+
+
+class AbstractSessionManager(component.Component):
+    """manage session data associated to a session identifier"""
+    __abstract__ = True
+    __regid__ = 'sessionmanager'
+
+    def __init__(self, repo):
+        vreg = repo.vreg
+        self.session_time = vreg.config['http-session-time'] or None
+        self.authmanager = vreg['components'].select('authmanager', repo=repo)
+        interval = (self.session_time or 0) / 2.
+        if vreg.config.anonymous_user()[0] is not None:
+            self.cleanup_anon_session_time = vreg.config['cleanup-anonymous-session-time'] or 5 * 60
+            assert self.cleanup_anon_session_time > 0
+            if self.session_time is not None:
+                self.cleanup_anon_session_time = min(self.session_time,
+                                                     self.cleanup_anon_session_time)
+            interval = self.cleanup_anon_session_time / 2.
+        # we don't want to check session more than once every 5 minutes
+        self.clean_sessions_interval = max(5 * 60, interval)
+
+    def clean_sessions(self):
+        """cleanup sessions which has not been unused since a given amount of
+        time. Return the number of sessions which have been closed.
+        """
+        self.debug('cleaning http sessions')
+        session_time = self.session_time
+        closed, total = 0, 0
+        for session in self.current_sessions():
+            total += 1
+            try:
+                last_usage_time = session.cnx.check()
+            except AttributeError:
+                last_usage_time = session.mtime
+            except BadConnectionId:
+                self.close_session(session)
+                closed += 1
+            else:
+                no_use_time = (time() - last_usage_time)
+                if session.anonymous_session:
+                    if no_use_time >= self.cleanup_anon_session_time:
+                        self.close_session(session)
+                        closed += 1
+                elif session_time is not None and no_use_time >= session_time:
+                    self.close_session(session)
+                    closed += 1
+        return closed, total - closed
+
+    def current_sessions(self):
+        """return currently open sessions"""
+        raise NotImplementedError()
+
+    def get_session(self, req, sessionid):
+        """return existing session for the given session identifier"""
+        raise NotImplementedError()
+
+    def open_session(self, req):
+        """open and return a new session for the given request.
+
+        raise :exc:`cubicweb.AuthenticationError` if authentication failed
+        (no authentication info found or wrong user/password)
+        """
+        raise NotImplementedError()
+
+    def close_session(self, session):
+        """close session on logout or on invalid session detected (expired out,
+        corrupted...)
+        """
+        raise NotImplementedError()
 
 
 class InMemoryRepositorySessionManager(AbstractSessionManager):
