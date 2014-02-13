@@ -62,35 +62,6 @@ def anonymized_request(req):
 
 
 
-class AbstractAuthenticationManager(component.Component):
-    """authenticate user associated to a request and check session validity"""
-    __regid__ = 'authmanager'
-
-    def __init__(self, repo):
-        self.vreg = repo.vreg
-
-    def validate_session(self, req, session):
-        """check session validity, reconnecting it to the repository if the
-        associated connection expired in the repository side (hence the
-        necessity for this method).
-
-        raise :exc:`InvalidSession` if session is corrupted for a reason or
-        another and should be closed
-        """
-        raise NotImplementedError()
-
-    def authenticate(self, req):
-        """authenticate user using connection information found in the request,
-        and return corresponding a :class:`~cubicweb.dbapi.Connection` instance,
-        as well as login and authentication information dictionary used to open
-        the connection.
-
-        raise :exc:`cubicweb.AuthenticationError` if authentication failed
-        (no authentication info found or wrong user/password)
-        """
-        raise NotImplementedError()
-
-
 class CookieSessionHandler(object):
     """a session handler using a cookie to store the session identifier"""
 
