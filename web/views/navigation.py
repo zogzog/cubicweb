@@ -55,7 +55,6 @@ from rql.nodes import VariableRef, Constant
 from logilab.mtconverter import xml_escape
 from logilab.common.deprecation import deprecated
 
-from cubicweb.utils import json_dumps
 from cubicweb.predicates import (paginated_rset, sorted_rset,
                                 adaptable, implements)
 from cubicweb.uilib import cut
@@ -282,13 +281,6 @@ def do_paginate(view, rset=None, w=None, show_all_option=True, page_size=None):
     nav = req.vreg['components'].select_or_none(
         'navigation', req, rset=rset, page_size=page_size, view=view)
     if nav:
-        domid = getattr(view, 'domid', 'pageContent')
-        view._cw.add_onload('''
-        jQuery('div.displayAllLink a, div.pagination a').click(function() {
-            cw.jqNode(%s).loadxhtml(this.href, null, 'get', 'swap');
-            return false;
-        });
-            ''' % json_dumps(domid))
         if w is None:
             w = view.w
         if req.form.get('__force_display'):
