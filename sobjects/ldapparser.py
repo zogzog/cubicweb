@@ -142,9 +142,11 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
                 try:
                     tdict[tattr] = sdict[sattr]
                 except KeyError:
-                    raise ConfigurationError('source attribute %s is not present '
-                                             'in the source, please check the '
-                                             '%s-attrs-map field' %
+                    raise ConfigurationError('source attribute %s has not '
+                                             'been found in the source, '
+                                             'please check the %s-attrs-map '
+                                             'field and the permissions of '
+                                             'the LDAP binding user' %
                                              (sattr, etype[2:].lower()))
         return tdict
 
@@ -168,7 +170,7 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
         etype = entity.cw_etype
         if etype == 'EmailAddress':
             return
-        # all CWUsers must be treated before CWGroups to have to in_group relation
+        # all CWUsers must be treated before CWGroups to have the in_group relation
         # set correctly in _associate_ldapusers
         elif etype == 'CWUser':
             groups = filter(None, [self._get_group(name)
@@ -196,7 +198,7 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
         if not isinstance(emailaddrs, list):
             emailaddrs = [emailaddrs]
         for emailaddr in emailaddrs:
-            # search for existant email first, may be coming from another source
+            # search for existing email first, may be coming from another source
             rset = self._cw.execute('EmailAddress X WHERE X address %(addr)s',
                                    {'addr': emailaddr})
             if not rset:

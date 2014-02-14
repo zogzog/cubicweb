@@ -85,7 +85,9 @@ LDAP server connection options:
 
 If the LDAP server accepts anonymous binds, then it is possible to
 leave data-cnx-dn and data-cnx-password empty. This is, however, quite
-unlikely in practice.
+unlikely in practice. Beware that the LDAP server might hide attributes
+such as "userPassword" while the rest of the attributes remain visible
+through an anonymous binding.
 
 LDAP schema mapping options:
 
