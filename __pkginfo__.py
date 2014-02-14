@@ -22,14 +22,13 @@ software
 
 modname = distname = "cubicweb"
 
-numversion = (3, 18, 2)
+numversion = (3, 18, 3)
 version = '.'.join(str(num) for num in numversion)
 
 description = "a repository of entities / relations for knowledge management"
 author = "Logilab"
 author_email = "contact@logilab.fr"
 web = 'http://www.cubicweb.org'
-ftp = 'ftp://ftp.logilab.org/pub/cubicweb'
 license = 'LGPL'
 
 classifiers = [
