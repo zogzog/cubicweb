@@ -338,7 +338,6 @@ jQuery.fn.loadxhtml = function(url, form, reqtype, mode, cursor) {
     } else if (this.size() < 1) {
         cw.log('loadxhtml called without an element');
     }
-    var callback = null;
     var node = this.get(0); // only consider the first element
     if (cursor) {
         setProgressCursor();
@@ -362,9 +361,6 @@ jQuery.fn.loadxhtml = function(url, form, reqtype, mode, cursor) {
             jQuery(node).append(domnode);
         }
         _postAjaxLoad(node);
-        while (jQuery.isFunction(callback)) {
-            callback = callback.apply(this, [domnode]);
-        }
     });
     d.addErrback(remoteCallFailed);
     if (cursor) {
