@@ -4390,7 +4390,7 @@ msgid "wednesday"
 msgstr ""
 
 #, python-format
-msgid "welcome %s !"
+msgid "welcome %s!"
 msgstr ""
 
 msgid "wf_info_for"
@@ -4482,12 +4482,3 @@ msgstr ""
 #, python-format
 msgid "you should un-inline relation %s which is supported and may be crossed "
 msgstr ""
-
-#~ msgid "eta_date"
-#~ msgstr "ETA date"
-
-#~ msgid "todo_by"
-#~ msgstr "to do by"
-
-#~ msgid "violates unique_together constraints (%s)"
-#~ msgstr "violates unique_together constraints (%s)"

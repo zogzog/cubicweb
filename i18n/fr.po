@@ -4569,7 +4569,7 @@ msgid "wednesday"
 msgstr "mercredi"
 
 #, python-format
-msgid "welcome %s !"
+msgid "welcome %s!"
 msgstr "bienvenue %s !"
 
 msgid "wf_info_for"

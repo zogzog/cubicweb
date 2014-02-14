@@ -4501,8 +4501,8 @@ msgid "wednesday"
 msgstr "Mittwoch"
 
 #, python-format
-msgid "welcome %s !"
-msgstr "Willkommen %s !"
+msgid "welcome %s!"
+msgstr "Willkommen %s!"
 
 msgid "wf_info_for"
 msgstr "Chronik von"
@@ -4595,115 +4595,3 @@ msgstr "Sie sollten diese Eigenschaft wahrscheinlich löschen."
 #, python-format
 msgid "you should un-inline relation %s which is supported and may be crossed "
 msgstr ""
-
-#~ msgid "%(cstr)s constraint failed for value %(value)r"
-#~ msgstr "%(cstr)s Einschränkung verletzt für Wert %(value)r"
-
-#~ msgid "%(value)r doesn't match the %(regexp)r regular expression"
-#~ msgstr "%(value)r entspricht nicht dem regulären Ausdruck %(regexp)r"
-
-#~ msgid "%s not estimated"
-#~ msgstr "%s unbekannt(e)"
-
-#~ msgid ""
-#~ "Can't restore relation %(rtype)s of entity %(eid)s, this relation does "
-#~ "not exists anymore in the schema."
-#~ msgstr ""
-#~ "Kann die Relation %(rtype)s der Entität %(eid)s nicht wieder herstellen, "
-#~ "diese Relation existiert nicht mehr in dem Schema."
-
-#~ msgid "Data connection graph for %s"
-#~ msgstr "Graf der Datenverbindungen für %s"
-
-#~ msgid "From:"
-#~ msgstr "Von:"
-
-#~ msgid "Got rhythm?"
-#~ msgstr "Hast Du Rhythmus ?"
-
-#~ msgid "Recipients:"
-#~ msgstr "Adressaten:"
-
-#~ msgid "Subject:"
-#~ msgstr "Subjekt :"
-
-#~ msgid "What's new?"
-#~ msgstr "Was ist neu?"
-
-#~ msgid "You can use any of the following substitutions in your text"
-#~ msgstr "Sie können die folgenden Ersetzungen in Ihrem Text verwenden:"
-
-#~ msgid "can't change the %s attribute"
-#~ msgstr "Kann das Attribut %s nicht ändern."
-
-#~ msgid "cost"
-#~ msgstr "Kosten"
-
-#~ msgid "emails successfully sent"
-#~ msgstr "E-Mails erfolgreich versandt."
-
-#~ msgid "embed"
-#~ msgstr "einbetten"
-
-#~ msgid "embedding this url is forbidden"
-#~ msgstr "Einbettung dieses URLs ist nicht erlaubt."
-
-#~ msgid "error while embedding page"
-#~ msgstr "Fehler beim Einbetten der Seite"
-
-#~ msgid "eta_date"
-#~ msgstr "Enddatum"
-
-#~ msgid "expected:"
-#~ msgstr "erwartet:"
-
-#~ msgid "external page"
-#~ msgstr "externe Seite"
-
-#~ msgid "incorrect value (%(value)s) for type \"%(type)s\""
-#~ msgstr "Wert %(value)s ungültig für den Typ \"%(type)s\""
-
-#~ msgid "initial estimation %s"
-#~ msgstr "Erste Schätzung %s"
-
-#~ msgid "invalid value %(value)s, it must be one of %(choices)s"
-#~ msgstr "Wert %(value)s ungültig, er muss zwischen %(choices)s"
-
-#~ msgid "milestone"
-#~ msgstr "Meilenstein"
-
-#~ msgid "no related project"
-#~ msgstr "kein verknüpftes Projekt"
-
-#~ msgid "progress"
-#~ msgstr "Fortschritt"
-
-#~ msgid "progress bar"
-#~ msgstr "Fortschrittsbalken"
-
-#~ msgid "project"
-#~ msgstr "Projekt"
-
-#~ msgid "send email"
-#~ msgstr "E-Mail senden"
-
-#~ msgid "sioc"
-#~ msgstr "sioc"
-
-#~ msgid "task progression"
-#~ msgstr "Fortschritt der Aufgabe"
-
-#~ msgid "todo_by"
-#~ msgstr "zu erledigen bis"
-
-#~ msgid "toggle filter"
-#~ msgstr "filter verbergen/zeigen"
-
-#~ msgid "violates unique_together constraints (%s)"
-#~ msgstr "Verletzung der unique_together-Einschränkung (%s)"
-
-#~ msgid "workflow already have a state of that name"
-#~ msgstr "Der Workflow hat bereits einen Zustand desselben Namens."
-
-#~ msgid "workflow already have a transition of that name"
-#~ msgstr "Der Workflow hat bereits einen Übergang desselben Namens."
