@@ -17,6 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 
 import os, os.path as osp, glob
+import urllib
 
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.devtools.httptest import CubicWebServerTC
@@ -57,8 +58,13 @@ class HostPrefixedBaseURLTC(CubicWebTC):
 
 class ETwistHTTPTC(CubicWebServerTC):
     def test_put_content(self):
-        body = 'hop'
+        data = {'hip': 'hop'}
+        headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+        body = urllib.urlencode(data)
         response = self.web_request('?vid=put', method='PUT', body=body)
+        self.assertEqual(body, response.body)
+        response = self.web_request('?vid=put', method='POST', body=body,
+                                    headers=headers)
         self.assertEqual(body, response.body)
 
 if __name__ == '__main__':

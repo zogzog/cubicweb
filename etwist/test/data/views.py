@@ -22,7 +22,7 @@ from cubicweb.predicates import match_http_method
 
 class PutView(View):
     __regid__ = 'put'
-    __select__ = match_http_method('PUT')
+    __select__ = match_http_method('PUT') | match_http_method('POST')
     binary = True
 
     def call(self):
