@@ -201,7 +201,7 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
                                    {'addr': emailaddr})
             if not rset:
                 # not found, create it. first forge an external id
-                emailextid = userdict['dn'] + '@@' + emailaddr
+                emailextid = userdict['dn'] + '@@' + emailaddr.encode('utf-8')
                 email = self.extid2entity(emailextid, 'EmailAddress',
                                           address=emailaddr)
                 entity.cw_set(use_email=email)
