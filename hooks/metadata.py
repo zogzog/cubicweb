@@ -149,7 +149,7 @@ class UpdateFTIHook(MetaDataHook):
 
 # entity source handling #######################################################
 
-class ChangeEntityUpdateCaches(hook.Operation):
+class ChangeEntitySourceUpdateCaches(hook.Operation):
     oldsource = newsource = entity = None # make pylint happy
 
     def postcommit_event(self):
@@ -221,6 +221,6 @@ class ChangeEntitySourceAddHook(MetaDataHook):
                      'mtime': datetime.now()}
             self._cw.system_sql(syssource.sqlgen.insert('entities', attrs), attrs)
             # register an operation to update repository/sources caches
-            ChangeEntityUpdateCaches(self._cw, entity=entity,
-                                     oldsource=oldsource.repo_source,
-                                     newsource=syssource)
+            ChangeEntitySourceUpdateCaches(self._cw, entity=entity,
+                                           oldsource=oldsource.repo_source,
+                                           newsource=syssource)

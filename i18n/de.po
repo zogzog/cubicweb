@@ -145,9 +145,6 @@ msgstr ""
 msgid "(UNEXISTANT EID)"
 msgstr "(EID nicht gefunden)"
 
-msgid "(not all shown here) "
-msgstr ""
-
 #, python-format
 msgid "(suppressed) entity #%d"
 msgstr ""
@@ -442,10 +439,6 @@ msgstr ""
 msgid "DEBUG"
 msgstr ""
 
-#, python-format
-msgid "Data connection graph for %s"
-msgstr "Graf der Datenverbindungen für %s"
-
 msgid "Date"
 msgstr "Datum"
 
@@ -475,7 +468,7 @@ msgstr ""
 msgid "Detected problems"
 msgstr ""
 
-msgid "Do you want to delete the following element(s) ?"
+msgid "Do you want to delete the following element(s)?"
 msgstr "Wollen Sie das/die folgend(n) Element(e) löschen?"
 
 msgid "Download schema as OWL"
@@ -523,9 +516,6 @@ msgstr "Format-Einschränkung"
 
 msgid "Garbage collection information"
 msgstr "Information zur Speicherbereinigung"
-
-msgid "Got rhythm?"
-msgstr "Hast Du Rhythmus ?"
 
 msgid "Help"
 msgstr "Hilfe"
@@ -1032,6 +1022,9 @@ msgstr "hinzufügen"
 msgid "add Bookmark bookmarked_by CWUser object"
 msgstr "Lesezeichen"
 
+msgid "add CWAttribute add_permission RQLExpression subject"
+msgstr ""
+
 msgid "add CWAttribute constrained_by CWConstraint subject"
 msgstr "Einschränkung"
 
@@ -1139,6 +1132,10 @@ msgstr "Email-Adresse hinzufügen"
 # (no object form for final relation types)
 msgid "add_permission"
 msgstr "kann hinzugefügt werden durch"
+
+msgctxt "CWAttribute"
+msgid "add_permission"
+msgstr ""
 
 # subject and object forms for each relation type
 # (no object form for final relation types)
@@ -1718,6 +1715,10 @@ msgid "creating EmailAddress (CWUser %(linkto)s use_email EmailAddress)"
 msgstr "Erstelle E-Mail-Adresse für Nutzer %(linkto)s"
 
 msgid ""
+"creating RQLExpression (CWAttribute %(linkto)s add_permission RQLExpression)"
+msgstr ""
+
+msgid ""
 "creating RQLExpression (CWAttribute %(linkto)s read_permission RQLExpression)"
 msgstr "RQL-Ausdruck für Leseberechtigung für %(linkto)s"
 
@@ -2089,6 +2090,9 @@ msgstr "Standard-Workflow für Nutzer"
 
 msgid "default value"
 msgstr "Standardwert"
+
+msgid "default value as gziped pickled python object"
+msgstr ""
 
 msgid "default workflow for an entity type"
 msgstr "Standard-Workflow eines Entitätstyps"
@@ -3212,6 +3216,10 @@ msgctxt "CWSource"
 msgid "name"
 msgstr ""
 
+msgctxt "CWUniqueTogetherConstraint"
+msgid "name"
+msgstr ""
+
 msgctxt "State"
 msgid "name"
 msgstr "Name"
@@ -3813,8 +3821,7 @@ msgstr ""
 "Eine oder mehrere frühere Transaktion(en) betreffen die Tntität. Machen Sie "
 "sie zuerst rückgängig."
 
-#, python-format
-msgid "some relations %sviolate a unicity constraint"
+msgid "some relations violate a unicity constraint"
 msgstr ""
 
 msgid "sorry, the server is unable to handle this query"
@@ -4494,8 +4501,8 @@ msgid "wednesday"
 msgstr "Mittwoch"
 
 #, python-format
-msgid "welcome %s !"
-msgstr "Willkommen %s !"
+msgid "welcome %s!"
+msgstr "Willkommen %s!"
 
 msgid "wf_info_for"
 msgstr "Chronik von"
@@ -4588,109 +4595,3 @@ msgstr "Sie sollten diese Eigenschaft wahrscheinlich löschen."
 #, python-format
 msgid "you should un-inline relation %s which is supported and may be crossed "
 msgstr ""
-
-#~ msgid "%(cstr)s constraint failed for value %(value)r"
-#~ msgstr "%(cstr)s Einschränkung verletzt für Wert %(value)r"
-
-#~ msgid "%(value)r doesn't match the %(regexp)r regular expression"
-#~ msgstr "%(value)r entspricht nicht dem regulären Ausdruck %(regexp)r"
-
-#~ msgid "%s not estimated"
-#~ msgstr "%s unbekannt(e)"
-
-#~ msgid ""
-#~ "Can't restore relation %(rtype)s of entity %(eid)s, this relation does "
-#~ "not exists anymore in the schema."
-#~ msgstr ""
-#~ "Kann die Relation %(rtype)s der Entität %(eid)s nicht wieder herstellen, "
-#~ "diese Relation existiert nicht mehr in dem Schema."
-
-#~ msgid "From:"
-#~ msgstr "Von:"
-
-#~ msgid "Recipients:"
-#~ msgstr "Adressaten:"
-
-#~ msgid "Subject:"
-#~ msgstr "Subjekt :"
-
-#~ msgid "What's new?"
-#~ msgstr "Was ist neu?"
-
-#~ msgid "You can use any of the following substitutions in your text"
-#~ msgstr "Sie können die folgenden Ersetzungen in Ihrem Text verwenden:"
-
-#~ msgid "can't change the %s attribute"
-#~ msgstr "Kann das Attribut %s nicht ändern."
-
-#~ msgid "cost"
-#~ msgstr "Kosten"
-
-#~ msgid "emails successfully sent"
-#~ msgstr "E-Mails erfolgreich versandt."
-
-#~ msgid "embed"
-#~ msgstr "einbetten"
-
-#~ msgid "embedding this url is forbidden"
-#~ msgstr "Einbettung dieses URLs ist nicht erlaubt."
-
-#~ msgid "error while embedding page"
-#~ msgstr "Fehler beim Einbetten der Seite"
-
-#~ msgid "eta_date"
-#~ msgstr "Enddatum"
-
-#~ msgid "expected:"
-#~ msgstr "erwartet:"
-
-#~ msgid "external page"
-#~ msgstr "externe Seite"
-
-#~ msgid "incorrect value (%(value)s) for type \"%(type)s\""
-#~ msgstr "Wert %(value)s ungültig für den Typ \"%(type)s\""
-
-#~ msgid "initial estimation %s"
-#~ msgstr "Erste Schätzung %s"
-
-#~ msgid "invalid value %(value)s, it must be one of %(choices)s"
-#~ msgstr "Wert %(value)s ungültig, er muss zwischen %(choices)s"
-
-#~ msgid "milestone"
-#~ msgstr "Meilenstein"
-
-#~ msgid "no related project"
-#~ msgstr "kein verknüpftes Projekt"
-
-#~ msgid "progress"
-#~ msgstr "Fortschritt"
-
-#~ msgid "progress bar"
-#~ msgstr "Fortschrittsbalken"
-
-#~ msgid "project"
-#~ msgstr "Projekt"
-
-#~ msgid "send email"
-#~ msgstr "E-Mail senden"
-
-#~ msgid "sioc"
-#~ msgstr "sioc"
-
-#~ msgid "task progression"
-#~ msgstr "Fortschritt der Aufgabe"
-
-#~ msgid "todo_by"
-#~ msgstr "zu erledigen bis"
-
-#~ msgid "toggle filter"
-#~ msgstr "filter verbergen/zeigen"
-
-#~ msgid "violates unique_together constraints (%s)"
-#~ msgstr "Verletzung der unique_together-Einschränkung (%s)"
-
-#~ msgid "workflow already have a state of that name"
-#~ msgstr "Der Workflow hat bereits einen Zustand desselben Namens."
-
-#~ msgid "workflow already have a transition of that name"
-#~ msgstr "Der Workflow hat bereits einen Übergang desselben Namens."

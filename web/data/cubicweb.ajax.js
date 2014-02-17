@@ -339,11 +339,6 @@ jQuery.fn.loadxhtml = function(url, form, reqtype, mode, cursor) {
         cw.log('loadxhtml called without an element');
     }
     var callback = null;
-    if (form && form.callback) {
-        cw.log('[3.9] callback given through form.callback is deprecated, add ' + 'callback on the defered');
-        callback = form.callback;
-        delete form.callback;
-    }
     var node = this.get(0); // only consider the first element
     if (cursor) {
         setProgressCursor();
@@ -734,13 +729,7 @@ function triggerLoad(divid) {
 
 /* DEPRECATED *****************************************************************/
 
-preprocessAjaxLoad = cw.utils.deprecatedFunction(
-    '[3.9] preprocessAjaxLoad() is deprecated, use loadAjaxHtmlHead instead',
-    function(node, newdomnode) {
-        return loadAjaxHtmlHead(newdomnode);
-    }
-);
-
+// still used in cwo and keyword cubes at least
 reloadComponent = cw.utils.deprecatedFunction(
     '[3.9] reloadComponent() is deprecated, use loadxhtml instead',
     function(compid, rql, registry, nodeid, extraargs) {
@@ -754,52 +743,6 @@ reloadComponent = cw.utils.deprecatedFunction(
     }
 );
 
-reloadBox = cw.utils.deprecatedFunction(
-    '[3.9] reloadBox() is deprecated, use loadxhtml instead',
-    function(boxid, rql) {
-        return reloadComponent(boxid, rql, 'ctxcomponents', boxid);
-    }
-);
-
-replacePageChunk = cw.utils.deprecatedFunction(
-    '[3.9] replacePageChunk() is deprecated, use loadxhtml instead',
-    function(nodeId, rql, vid, extraparams, /* ... */ swap, callback) {
-        var params = null;
-        if (callback) {
-            params = {
-                callback: callback
-            };
-        }
-        var node = jQuery('#' + nodeId)[0];
-        var props = {};
-        if (node) {
-            props['rql'] = rql;
-            props['fname'] = 'view';
-            props['pageid'] = pageid;
-            if (vid) {
-                props['vid'] = vid;
-            }
-            if (extraparams) {
-                jQuery.extend(props, extraparams);
-            }
-            // FIXME we need to do asURL(props) manually instead of
-            // passing `props` directly to loadxml because replacePageChunk
-            // is sometimes called (abusively) with some extra parameters in `vid`
-            var mode = swap ? 'swap': 'replace';
-            var url = AJAX_BASE_URL + asURL(props);
-            jQuery(node).loadxhtml(url, params, 'get', mode);
-        } else {
-            cw.log('Node', nodeId, 'not found');
-        }
-    }
-);
-
-loadxhtml = cw.utils.deprecatedFunction(
-    '[3.9] loadxhtml() function is deprecated, use loadxhtml method instead',
-    function(nodeid, url, /* ... */ replacemode) {
-        jQuery('#' + nodeid).loadxhtml(url, null, 'post', replacemode);
-    }
-);
 
 function remoteExec(fname /* ... */) {
     setProgressCursor();

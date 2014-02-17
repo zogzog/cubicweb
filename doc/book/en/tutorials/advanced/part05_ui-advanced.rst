@@ -1,8 +1,6 @@
 Building my photos web site with |cubicweb| part V: let's make it even more user friendly
 =========================================================================================
 
-We'll now see how to benefit from features introduced in 3.9 and 3.10 releases of CubicWeb
-
 .. _uiprops:
 
 Step 1: tired of the default look?
@@ -29,9 +27,9 @@ the cube's :file:`uiprops.py` file:
 
    LOGO = data('logo.jpg')
 
-The uiprops machinery has been introduced in `CubicWeb 3.9`_. It is used to define
-some static file resources, such as the logo, default Javascript / CSS files, as
-well as CSS properties (we'll see that later).
+The uiprops machinery is used to define some static file resources,
+such as the logo, default Javascript / CSS files, as well as CSS
+properties (we'll see that later).
 
 .. Note::
    This file is imported specifically by |cubicweb|, with a predefined name space,
@@ -373,5 +371,4 @@ friends...
 
 
 .. _`CubicWeb 3.10`: http://www.cubicweb.org/blogentry/1330518
-.. _`CubicWeb 3.9`: http://www.cubicweb.org/blogentry/1179899
 .. _`here`: http://webdesign.about.com/od/css3/f/blfaqbgsize.htm

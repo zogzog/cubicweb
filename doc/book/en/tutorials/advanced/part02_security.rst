@@ -259,26 +259,26 @@ the following code to *hooks.py*:
     # relations where the "parent" entity is the object
     O_RELS = set(('filed_under', 'comments',))
 
-    class AddEntitySecurityPropagationHook(hook.PropagateSubjectRelationHook):
+    class AddEntitySecurityPropagationHook(hook.PropagateRelationHook):
 	"""propagate permissions when new entity are added"""
 	__regid__ = 'sytweb.addentity_security_propagation'
-	__select__ = (hook.PropagateSubjectRelationHook.__select__
+	__select__ = (hook.PropagateRelationHook.__select__
 		      & hook.match_rtype_sets(S_RELS, O_RELS))
 	main_rtype = 'may_be_read_by'
 	subject_relations = S_RELS
 	object_relations = O_RELS
 
-    class AddPermissionSecurityPropagationHook(hook.PropagateSubjectRelationAddHook):
+    class AddPermissionSecurityPropagationHook(hook.PropagateRelationAddHook):
 	"""propagate permissions when new entity are added"""
 	__regid__ = 'sytweb.addperm_security_propagation'
-	__select__ = (hook.PropagateSubjectRelationAddHook.__select__
+	__select__ = (hook.PropagateRelationAddHook.__select__
 		      & hook.match_rtype('may_be_read_by',))
 	subject_relations = S_RELS
 	object_relations = O_RELS
 
-    class DelPermissionSecurityPropagationHook(hook.PropagateSubjectRelationDelHook):
+    class DelPermissionSecurityPropagationHook(hook.PropagateRelationDelHook):
 	__regid__ = 'sytweb.delperm_security_propagation'
-	__select__ = (hook.PropagateSubjectRelationDelHook.__select__
+	__select__ = (hook.PropagateRelationDelHook.__select__
 		      & hook.match_rtype('may_be_read_by',))
 	subject_relations = S_RELS
 	object_relations = O_RELS

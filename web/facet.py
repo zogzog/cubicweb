@@ -127,11 +127,9 @@ def init_facets(rset, select, mainvar=None):
     return filtered_variable, baserql
 
 def get_filtered_variable(select, mainvar=None):
-    """drop any limit/offset from select (in-place modification) and return the
-    variable whose name is `mainvar` or the first variable selected in column 0
+    """ Return the variable whose name is `mainvar`
+    or the first variable selected in column 0
     """
-    select.set_limit(None)
-    select.set_offset(None)
     if mainvar is None:
         vref = select.selection[0].iget_nodes(nodes.VariableRef).next()
         return vref.variable
@@ -882,7 +880,7 @@ class RelationAttributeFacet(RelationFacet):
     though linked to a different address entity. There is a great chance your
     users won't understand that...
 
-    That's where this class come in ! It's used to said that you want to filter
+    That's where this class come in! It's used to said that you want to filter
     according to the *attribute value* of a relatied entity, not to the entity
     itself. Now here is the source code for the facet:
 

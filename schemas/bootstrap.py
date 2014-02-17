@@ -83,7 +83,7 @@ class CWAttribute(EntityType):
     indexed = Boolean(description=_('create an index for quick search on this attribute'))
     fulltextindexed = Boolean(description=_('index this attribute\'s value in the plain text index'))
     internationalizable = Boolean(description=_('is this attribute\'s value translatable'))
-    defaultval = String(maxsize=256)
+    defaultval = Bytes(description=_('default value as gziped pickled python object'))
     extra_props = Bytes(description=_('additional type specific properties'))
 
     description = RichString(internationalizable=True,
@@ -158,6 +158,7 @@ class CWConstraint(EntityType):
 class CWUniqueTogetherConstraint(EntityType):
     """defines a sql-level multicolumn unique index"""
     __permissions__ = PUB_SYSTEM_ENTITY_PERMS
+    name = String(required=True, unique=True, maxsize=64)
     constraint_of = SubjectRelation('CWEType', cardinality='1*', composite='object',
                                     inlined=True)
     relations = SubjectRelation('CWRType', cardinality='+*',
@@ -235,7 +236,7 @@ class add_permission_cwgroup(RelationDefinition):
     """groups allowed to add entities/relations of this type"""
     __permissions__ = PUB_SYSTEM_REL_PERMS
     name = 'add_permission'
-    subject = ('CWEType', 'CWRelation')
+    subject = ('CWEType', 'CWRelation', 'CWAttribute')
     object = 'CWGroup'
     cardinality = '**'
 
@@ -268,7 +269,7 @@ class add_permission_rqlexpr(RelationDefinition):
     """rql expression allowing to add entities/relations of this type"""
     __permissions__ = PUB_SYSTEM_REL_PERMS
     name = 'add_permission'
-    subject = ('CWEType', 'CWRelation')
+    subject = ('CWEType', 'CWRelation', 'CWAttribute')
     object = 'RQLExpression'
     cardinality = '*?'
     composite = 'subject'

@@ -116,7 +116,6 @@ def rewrite_unstable_outer_join(select, solutions, unstable, schema):
             continue
         unstable.remove(varname)
         newselect = Select()
-        newselect.need_distinct = False
         myunion = Union()
         myunion.append(newselect)
         # extract aliases / selection
@@ -241,12 +240,6 @@ def relation_info(relation):
     except KeyError:
         rhsconst = None # ColumnAlias
     return lhs, lhsconst, rhs, rhsconst
-
-def switch_relation_field(sql, table=''):
-    switchedsql = sql.replace(table + '.eid_from', '__eid_from__')
-    switchedsql = switchedsql.replace(table + '.eid_to',
-                                      table + '.eid_from')
-    return switchedsql.replace('__eid_from__', table + '.eid_to')
 
 def sort_term_selection(sorts, rqlst, groups):
     # XXX beurk
@@ -694,7 +687,7 @@ class SQLGenerator(object):
     Groups and sort are not handled here since they should not be handled at
     this level (see cubicweb.server.querier)
 
-    we should not have errors here !
+    we should not have errors here!
 
     WARNING: a CubicWebSQLGenerator instance is not thread safe, but generate is
     protected by a lock
@@ -709,9 +702,6 @@ class SQLGenerator(object):
                             }
         if not self.dbhelper.union_parentheses_support:
             self.union_sql = self.noparen_union_sql
-        if self.dbhelper.fti_need_distinct:
-            self.__union_sql = self.union_sql
-            self.union_sql = self.has_text_need_distinct_union_sql
         self._lock = threading.Lock()
         if attrmap is None:
             attrmap = {}
@@ -745,12 +735,6 @@ class SQLGenerator(object):
         finally:
             self._lock.release()
 
-    def has_text_need_distinct_union_sql(self, union, needalias=False):
-        if getattr(union, 'has_text_query', False):
-            for select in union.children:
-                select.need_distinct = True
-        return self.__union_sql(union, needalias)
-
     def union_sql(self, union, needalias=False): # pylint: disable=E0202
         if len(union.children) == 1:
             return self.select_sql(union.children[0], needalias)
@@ -778,7 +762,12 @@ class SQLGenerator(object):
         :needwrap: boolean telling if the query will be wrapped in an outer
           query (to deal with aggregat and/or grouping)
         """
-        distinct = selectsortterms = select.need_distinct
+        if select.distinct:
+            distinct = True
+        elif self.dbhelper.fti_need_distinct:
+            distinct = getattr(select.parent, 'has_text_query', False)
+        else:
+            distinct = False
         sorts = select.orderby
         groups = select.groupby
         having = select.having
@@ -802,6 +791,7 @@ class SQLGenerator(object):
         # selection (union or distinct query) and wrapping (union with groups)
         needwrap = False
         sols = select.solutions
+        selectsortterms = distinct
         if len(sols) > 1:
             # remove invariant from solutions
             sols, existssols, unstable = remove_unused_solutions(
@@ -1132,8 +1122,6 @@ class SQLGenerator(object):
         sqls += self._process_relation_term(relation, rid, lhsvar, lhsconst, 'eid_from')
         sqls += self._process_relation_term(relation, rid, rhsvar, rhsconst, 'eid_to')
         sql = ' AND '.join(sqls)
-        if rschema.symmetric:
-            sql = '(%s OR %s)' % (sql, switch_relation_field(sql))
         return sql
 
     def _visit_outer_join_relation(self, relation, rschema):

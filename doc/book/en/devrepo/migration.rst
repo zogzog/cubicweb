@@ -46,7 +46,7 @@ in which :
 Again in the directory `migration`, the file `depends.map` allows to indicate
 that for the migration to a particular model version, you always have to first
 migrate to a particular *CubicWeb* version. This file can contain comments (lines
-starting by `#`) and a dependancy is listed as follows: ::
+starting with `#`) and a dependency is listed as follows: ::
 
   <model version n° X.Y.Z> : <cubicweb version n° X.Y.Z>
 
@@ -170,9 +170,9 @@ The following functions for data migration are available in `repository` scripts
 * `rql(rql, kwargs=None, cachekey=None, ask_confirm=True)`, executes an arbitrary RQL
   query, either to interrogate or update. A result set object is returned.
 
-* `add_entity(etype, *args, **kwargs)`, adds a nes entity type of the given
-  type. The attribute and relation values are specified using the named and
-  positionned parameters.
+* `add_entity(etype, *args, **kwargs)`, adds a new entity of the given type.
+  The attribute and relation values are specified as named positional
+  arguments.
 
 Workflow creation
 -----------------

@@ -25,9 +25,10 @@ import json
 
 from logilab.common.shellutils import ProgressBar
 
-from yams import BadSchemaDefinition, schema as schemamod, buildobjs as ybo
+from yams import (BadSchemaDefinition, schema as schemamod, buildobjs as ybo,
+                  schema2sql as y2sql)
 
-from cubicweb import CW_SOFTWARE_ROOT, Binary
+from cubicweb import CW_SOFTWARE_ROOT, Binary, typed_eid
 from cubicweb.schema import (KNOWN_RPROPERTIES, CONSTRAINTS, ETYPE_NAME_MAP,
                              VIRTUAL_RTYPES, PURE_VIRTUAL_RTYPES)
 from cubicweb.server import sqlutils
@@ -77,8 +78,6 @@ def group_mapping(cursor, interactive=True):
 def cstrtype_mapping(cursor):
     """cached constraint types mapping"""
     map = dict(cursor.execute('Any T, X WHERE X is CWConstraintType, X name T'))
-    if not 'BoundConstraint' in map:
-        map['BoundConstraint'] = map['BoundaryConstraint']
     return map
 
 # schema / perms deserialization ##############################################
@@ -214,6 +213,11 @@ def deserialize_schema(schema, session):
         rdefeid, seid, reid, oeid, card, ord, desc, idx, ftidx, i18n, default = values
         typeparams = extra_props.get(rdefeid)
         typeparams = json.load(typeparams) if typeparams else {}
+        if default is not None:
+            if isinstance(default, Binary):
+                # while migrating from 3.17 to 3.18, we still have to
+                # handle String defaults
+                default = default.unzpickle()
         _add_rdef(rdefeid, seid, reid, oeid,
                   cardinality=card, description=desc, order=ord,
                   indexed=idx, fulltextindexed=ftidx, internationalizable=i18n,
@@ -234,28 +238,24 @@ def deserialize_schema(schema, session):
         if rdefs is not None:
             set_perms(rdefs, permsidx)
     unique_togethers = {}
-    try:
-        rset = session.execute(
-        'Any X,E,R WHERE '
-        'X is CWUniqueTogetherConstraint, '
-        'X constraint_of E, X relations R', build_descr=False)
-    except Exception:
-        session.rollback() # first migration introducing CWUniqueTogetherConstraint cw 3.9.6
-    else:
-        for values in rset:
-            uniquecstreid, eeid, releid = values
-            eschema = schema.schema_by_eid(eeid)
-            relations = unique_togethers.setdefault(uniquecstreid, (eschema, []))
-            rel = ertidx[releid]
-            if isinstance(rel, schemamod.RelationDefinitionSchema):
-                # not yet migrated 3.9 database ('relations' target type changed
-                # to CWRType in 3.10)
-                rtype = rel.rtype.type
-            else:
-                rtype = str(rel)
-            relations[1].append(rtype)
-        for eschema, unique_together in unique_togethers.itervalues():
-            eschema._unique_together.append(tuple(sorted(unique_together)))
+    rset = session.execute(
+    'Any X,E,R WHERE '
+    'X is CWUniqueTogetherConstraint, '
+    'X constraint_of E, X relations R', build_descr=False)
+    for values in rset:
+        uniquecstreid, eeid, releid = values
+        eschema = schema.schema_by_eid(eeid)
+        relations = unique_togethers.setdefault(uniquecstreid, (eschema, []))
+        rel = ertidx[releid]
+        if isinstance(rel, schemamod.RelationDefinitionSchema):
+            # not yet migrated 3.9 database ('relations' target type changed
+            # to CWRType in 3.10)
+            rtype = rel.rtype.type
+        else:
+            rtype = str(rel)
+        relations[1].append(rtype)
+    for eschema, unique_together in unique_togethers.itervalues():
+        eschema._unique_together.append(tuple(sorted(unique_together)))
     schema.infer_specialization_rules()
     session.commit()
     schema.reading_from_database = False
@@ -304,9 +304,6 @@ def set_perms(erschema, permsidx):
     except KeyError:
         return
     for action, somethings in thispermsdict.iteritems():
-        # XXX cw < 3.6.1 bw compat
-        if isinstance(erschema, schemamod.RelationDefinitionSchema) and erschema.final and action == 'add':
-            action = 'update'
         erschema.permissions[action] = tuple(
             isinstance(p, tuple) and erschema.rql_expression(*p) or p
             for p in somethings)
@@ -344,13 +341,10 @@ def serialize_schema(cursor, schema):
     cstrtypemap = {}
     rql = 'INSERT CWConstraintType X: X name %(ct)s'
     for cstrtype in CONSTRAINTS:
-        if cstrtype == 'BoundConstraint':
-            continue # XXX deprecated in yams 0.29 / cw 3.8.1
         cstrtypemap[cstrtype] = execute(rql, {'ct': unicode(cstrtype)},
                                         build_descr=False)[0][0]
         if pb is not None:
             pb.update()
-    cstrtypemap['BoundConstraint'] = cstrtypemap['BoundaryConstraint']
     # serialize relations
     for rschema in schema.relations():
         # skip virtual relations such as eid, has_text and identity
@@ -371,8 +365,8 @@ def serialize_schema(cursor, schema):
             pb.update()
     # serialize unique_together constraints
     for eschema in eschemas:
-        for unique_together in eschema._unique_together:
-            execschemarql(execute, eschema, [uniquetogether2rql(eschema, unique_together)])
+        if eschema._unique_together:
+            execschemarql(execute, eschema, uniquetogether2rqls(eschema))
     # serialize yams inheritance relationships
     for rql, kwargs in specialize2rql(schema):
         execute(rql, kwargs, build_descr=False)
@@ -431,7 +425,15 @@ def eschemaspecialize2rql(eschema):
         values = {'x': eschema.eid, 'et': specialized_type.eid}
         yield 'SET X specializes ET WHERE X eid %(x)s, ET eid %(et)s', values
 
-def uniquetogether2rql(eschema, unique_together):
+def uniquetogether2rqls(eschema):
+    rql_args = []
+    for columns in eschema._unique_together:
+        rql, args = _uniquetogether2rql(eschema, columns)
+        args['name'] = y2sql.unique_index_name(eschema, columns)
+        rql_args.append((rql, args))
+    return rql_args
+
+def _uniquetogether2rql(eschema, unique_together):
     relations = []
     restrictions = []
     substs = {}
@@ -443,10 +445,8 @@ def uniquetogether2rql(eschema, unique_together):
         restrictions.append('%(rtype)s name %%(%(rtype)s)s' % {'rtype': rtype})
     relations = ', '.join(relations)
     restrictions = ', '.join(restrictions)
-    rql = ('INSERT CWUniqueTogetherConstraint C: '
-           '    C constraint_of X, %s  '
-           'WHERE '
-           '    X eid %%(x)s, %s')
+    rql = ('INSERT CWUniqueTogetherConstraint C: C name %%(name)s, C constraint_of X, %s '
+           'WHERE X eid %%(x)s, %s')
     return rql % (relations, restrictions), substs
 
 
@@ -536,10 +536,7 @@ def _rdef_values(rdef):
         elif isinstance(value, str):
             value = unicode(value)
         if value is not None and prop == 'default':
-            if value is False:
-                value = u''
-            if not isinstance(value, unicode):
-                value = unicode(value)
+            value = Binary.zpickle(value)
         values[amap.get(prop, prop)] = value
     if extra:
         values['extra_props'] = Binary(json.dumps(extra))

@@ -111,7 +111,7 @@ def real_error_handling(app):
 
 MAILBOX = []
 
-class Email:
+class Email(object):
     """you'll get instances of Email into MAILBOX during tests that trigger
     some notification.
 
@@ -120,7 +120,8 @@ class Email:
     * `recipients` is a list of email address which are the recipients of this
       message
     """
-    def __init__(self, recipients, msg):
+    def __init__(self, fromaddr, recipients, msg):
+        self.fromaddr = fromaddr
         self.recipients = recipients
         self.msg = msg
 
@@ -147,8 +148,8 @@ class MockSMTP:
         pass
     def close(self):
         pass
-    def sendmail(self, helo_addr, recipients, msg):
-        MAILBOX.append(Email(recipients, msg))
+    def sendmail(self, fromaddr, recipients, msg):
+        MAILBOX.append(Email(fromaddr, recipients, msg))
 
 cwconfig.SMTP = MockSMTP
 
@@ -441,13 +442,10 @@ class CubicWebTC(TestCase):
         return self.cnx.cursor(req or self.request())
 
     @nocoverage
-    def execute(self, rql, args=None, eidkey=None, req=None):
+    def execute(self, rql, args=None, req=None):
         """executes <rql>, builds a resultset, and returns a couple (rset, req)
         where req is a FakeRequest
         """
-        if eidkey is not None:
-            warn('[3.8] eidkey is deprecated, you can safely remove this argument',
-                 DeprecationWarning, stacklevel=2)
         req = req or self.request(rql=rql)
         return req.execute(unicode(rql), args)
 
@@ -469,10 +467,7 @@ class CubicWebTC(TestCase):
 
     # server side db api #######################################################
 
-    def sexecute(self, rql, args=None, eid_key=None):
-        if eid_key is not None:
-            warn('[3.8] eid_key is deprecated, you can safely remove this argument',
-                 DeprecationWarning, stacklevel=2)
+    def sexecute(self, rql, args=None):
         self.session.set_cnxset()
         return self.session.execute(rql, args)
 
@@ -1004,15 +999,6 @@ class CubicWebTC(TestCase):
         if nb_msgs is not None:
             self.assertEqual(len(MAILBOX), nb_msgs)
         return messages
-
-    # deprecated ###############################################################
-
-    @deprecated('[3.8] use self.execute(...).get_entity(0, 0)')
-    def entity(self, rql, args=None, eidkey=None, req=None):
-        if eidkey is not None:
-            warn('[3.8] eidkey is deprecated, you can safely remove this argument',
-                 DeprecationWarning, stacklevel=2)
-        return self.execute(rql, args, req=req).get_entity(0, 0)
 
 
 # auto-populating test classes and utilities ###################################

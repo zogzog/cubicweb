@@ -221,6 +221,21 @@ class EditControllerTC(CubicWebTC):
         # created before.
         self.assertGreater(salesterm.eid, salesterm.described_by_test[0].eid)
 
+    def test_edit_mandatory_inlined3_object(self):
+        # non regression test for #3120495. Without the fix, leads to
+        # "unhashable type: 'list'" error
+        req = self.request()
+        cwrelation = u(req.execute('CWEType X WHERE X name "CWSource"')[0][0])
+        req.form = {'eid': [cwrelation], '__maineid' : cwrelation,
+
+                    '__type:'+cwrelation: 'CWEType',
+                    '_cw_entity_fields:'+cwrelation: 'to_entity-object',
+                    'to_entity-object:'+cwrelation: [9999, 9998],
+                    }
+        with self.session.deny_all_hooks_but():
+            path, params = self.expect_redirect_handle_request(req, 'edit')
+        self.assertTrue(path.startswith('cwetype/CWSource'), path)
+
     def test_edit_multiple_linked(self):
         req = self.request()
         peid = u(self.create_user(req, 'adim').eid)

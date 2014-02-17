@@ -10,13 +10,7 @@ concerns in object oriented applications.
 .. _`interfaces`: http://java.sun.com/docs/books/tutorial/java/concepts/interface.html
 .. _`adapter`: http://en.wikipedia.org/wiki/Adapter_pattern
 
-In |cubicweb| adapters provide logical functionalities to entity types. They
-are introduced in version `3.9`. Before that one had to implement Interfaces in
-entity classes to achieve a similar goal. However, the problem with this
-approach is that is clutters the entity class's namespace, exposing name
-collision risks with schema attributes/relations or even methods names
-(different interfaces may define the same method with not necessarily the same
-behaviour expected).
+In |cubicweb| adapters provide logical functionalities to entity types.
 
 Definition of an adapter is quite trivial. An excerpt from cubicweb
 itself (found in :mod:`cubicweb.entities.adapters`):

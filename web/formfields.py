@@ -404,17 +404,6 @@ class Field(object):
                      for label, value in vocab]
         if self.sort:
             vocab = vocab_sort(vocab)
-        # XXX pre 3.9 bw compat
-        for i, option in enumerate(vocab):
-            # option may be a 2 or 3-uple (see Select widget _render method for
-            # explanation)
-            value = option[1]
-            if value is not None and not isinstance(value, basestring):
-                warn('[3.9] %s: vocabulary value should be an unicode string'
-                     % self, DeprecationWarning)
-                option = list(option)
-                option[1] = unicode(value)
-                vocab[i] = option
         return vocab
 
     # support field as argument to avoid warning when used as format field value
@@ -760,8 +749,13 @@ class FileField(StringField):
             # raise UnmodifiedField instead of returning None, since the later
             # will try to remove already attached file if any
             raise UnmodifiedField()
-        # value is a 2-uple (filename, stream)
+        # value is a 2-uple (filename, stream) or a list of such
+        # tuples (multiple files)
         try:
+            if isinstance(value, list):
+                value = value[0]
+                form.warning('mutiple files provided, however '
+                             'only the first will be picked')
             filename, stream = value
         except ValueError:
             raise UnmodifiedField()

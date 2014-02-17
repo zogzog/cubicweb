@@ -678,16 +678,6 @@ class PropagateRelationDelHook(PropagateRelationAddHook):
                         {'x': self.eidfrom, 'p': self.eidto})
 
 
-PropagateSubjectRelationHook = class_renamed(
-    'PropagateSubjectRelationHook', PropagateRelationHook,
-    '[3.9] PropagateSubjectRelationHook has been renamed to PropagateRelationHook')
-PropagateSubjectRelationAddHook = class_renamed(
-    'PropagateSubjectRelationAddHook', PropagateRelationAddHook,
-    '[3.9] PropagateSubjectRelationAddHook has been renamed to PropagateRelationAddHook')
-PropagateSubjectRelationDelHook = class_renamed(
-    'PropagateSubjectRelationDelHook', PropagateRelationDelHook,
-    '[3.9] PropagateSubjectRelationDelHook has been renamed to PropagateRelationDelHook')
-
 
 # abstract classes for operation ###############################################
 

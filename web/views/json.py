@@ -93,7 +93,7 @@ class JsonRsetView(JsonMixIn, AnyRsetView):
     title = _('json-export-view')
 
     def call(self):
-        # XXX mimic w3c recommandations to serialize SPARQL results in json ?
+        # XXX mimic w3c recommandations to serialize SPARQL results in json?
         #     http://www.w3.org/TR/rdf-sparql-json-res/
         self.wdata(self.cw_rset.rows)
 

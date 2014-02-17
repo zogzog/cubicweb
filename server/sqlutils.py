@@ -41,11 +41,6 @@ lgc.USE_MX_DATETIME = False
 SQL_PREFIX = 'cw_'
 
 def _run_command(cmd):
-    """backup/restore command are string w/ lgc < 0.47, lists with earlier versions
-    """
-    if isinstance(cmd, basestring):
-        print '->', cmd
-        return subprocess.call(cmd, shell=True)
     print ' '.join(cmd)
     return subprocess.call(cmd)
 
@@ -332,10 +327,10 @@ def init_sqlite_connexion(cnx):
 
     class group_concat(object):
         def __init__(self):
-            self.values = []
+            self.values = set()
         def step(self, value):
             if value is not None:
-                self.values.append(value)
+                self.values.add(value)
         def finalize(self):
             return ', '.join(unicode(v) for v in self.values)
 

@@ -27,9 +27,8 @@ from logilab.mtconverter import xml_escape
 from logilab.common.date import todatetime
 
 from cubicweb.utils import json_dumps, make_uid
-from cubicweb.interfaces import ICalendarable
-from cubicweb.predicates import implements, adaptable
-from cubicweb.view import EntityView, EntityAdapter, implements_adapter_compat
+from cubicweb.predicates import adaptable
+from cubicweb.view import EntityView, EntityAdapter
 
 # useful constants & functions ################################################
 
@@ -46,16 +45,14 @@ MONTHNAMES = ( _('january'), _('february'), _('march'), _('april'), _('may'),
 class ICalendarableAdapter(EntityAdapter):
     __needs_bw_compat__ = True
     __regid__ = 'ICalendarable'
-    __select__ = implements(ICalendarable, warn=False) # XXX for bw compat, should be abstract
+    __abstract__ = True
 
     @property
-    @implements_adapter_compat('ICalendarable')
     def start(self):
         """return start date"""
         raise NotImplementedError
 
     @property
-    @implements_adapter_compat('ICalendarable')
     def stop(self):
         """return stop date"""
         raise NotImplementedError

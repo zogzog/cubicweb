@@ -79,10 +79,6 @@ class MigrationToolsTC(TestCase):
         self.assert_(not isinstance(config.migration_handler(), ServerMigrationHelper))
         self.assertIsInstance(config.migration_handler(), MigrationHelper)
         config = self.config
-        config.__class__.name = 'twisted'
-        self.assertListEqual(filter_scripts(config, TMIGRDIR, (0,0,4), (0,1,0)),
-                              [((0, 1 ,0), TMIGRDIR+'0.1.0_common.py'),
-                               ((0, 1 ,0), TMIGRDIR+'0.1.0_web.py')])
         config.__class__.name = 'repository'
         self.assertListEqual(filter_scripts(config, TMIGRDIR, (0,0,4), (0,1,0)),
                               [((0, 1 ,0), TMIGRDIR+'0.1.0_Any.py'),
@@ -92,8 +88,7 @@ class MigrationToolsTC(TestCase):
         self.assertListEqual(filter_scripts(config, TMIGRDIR, (0,0,4), (0,1,0)),
                               [((0, 1 ,0), TMIGRDIR+'0.1.0_Any.py'),
                                ((0, 1 ,0), TMIGRDIR+'0.1.0_common.py'),
-                               ((0, 1 ,0), TMIGRDIR+'0.1.0_repository.py'),
-                               ((0, 1 ,0), TMIGRDIR+'0.1.0_web.py')])
+                               ((0, 1 ,0), TMIGRDIR+'0.1.0_repository.py')])
         config.__class__.name = 'repository'
 
 

@@ -231,6 +231,8 @@ td.calendar table {
  font-weight:bold;
  padding-bottom:0.2em;
  background: %(incontextBoxBodyBgColor)s;
+ border-top-left-radius: 6px;
+ border-top-right-radius: 6px;
 }
 
 .calendar th.month a{
@@ -340,21 +342,21 @@ td.next {
 /* ------------------------- */
 /* tooltips for fullcalendar */
 
-div.calevent div.tooltip {
+a.calevent div.tooltip {
    display: none; /* tooltip hidden */
 }
 
-div.calevent:hover {
+a.calevent:hover {
    z-index: auto !important; /* in order that the tooltip from the above .calevent div can be put over this div*/
 }
 
-div.calevent a{
+a.calevent {
    display: inline;
    font-size: none;
    font-weight: bold;
 }
 
-div.calevent:hover div.tooltip{
+a.calevent:hover div.tooltip{
    display: block;
    position: absolute;
    z-index: 10;

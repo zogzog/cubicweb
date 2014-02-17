@@ -35,15 +35,6 @@ def _annotate_select(annotator, rqlst):
     #if server.DEBUG:
     #    print '-------- sql annotate', repr(rqlst)
     getrschema = annotator.schema.rschema
-    need_distinct = rqlst.distinct
-    for rel in rqlst.iget_nodes(Relation):
-        if getrschema(rel.r_type).symmetric and not isinstance(rel.parent, Exists):
-            for vref in rel.iget_nodes(VariableRef):
-                stinfo = vref.variable.stinfo
-                if not stinfo['constnode'] and stinfo['selected']:
-                    need_distinct = True
-                    # XXX could mark as not invariant
-                    break
     for var in rqlst.defined_vars.itervalues():
         stinfo = var.stinfo
         if stinfo.get('ftirels'):
@@ -130,8 +121,6 @@ def _annotate_select(annotator, rqlst):
                     # can use N.ecrit_par as principal
                     if (stinfo['selected'] or len(stinfo['relations']) > 1):
                         break
-                elif rschema.symmetric and stinfo['selected']:
-                    break
             joins.add( (rel, role) )
         else:
             # if there is at least one ambigous relation and no other to
@@ -160,7 +149,6 @@ def _annotate_select(annotator, rqlst):
     for col_alias in rqlst.aliases.itervalues():
         if col_alias.stinfo.get('ftirels'):
             has_text_query = True
-    rqlst.need_distinct = need_distinct
     return has_text_query
 
 

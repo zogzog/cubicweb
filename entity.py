@@ -42,7 +42,6 @@ from cubicweb.schema import (RQLVocabularyConstraint, RQLConstraint,
 from cubicweb.rqlrewrite import RQLRewriter
 
 from cubicweb.uilib import soup2xhtml
-from cubicweb.mixins import MI_REL_TRIGGERS
 from cubicweb.mttransforms import ENGINE
 
 _marker = object()
@@ -194,31 +193,11 @@ class Entity(AppObject):
             setattr(cls, rschema.type, Attribute(rschema.type))
         mixins = []
         for rschema, _, role in eschema.relation_definitions():
-            if (rschema, role) in MI_REL_TRIGGERS:
-                mixin = MI_REL_TRIGGERS[(rschema, role)]
-                if not (issubclass(cls, mixin) or mixin in mixins): # already mixed ?
-                    mixins.append(mixin)
-                for iface in getattr(mixin, '__implements__', ()):
-                    if not interface.implements(cls, iface):
-                        interface.extend(cls, iface)
             if role == 'subject':
                 attr = rschema.type
             else:
                 attr = 'reverse_%s' % rschema.type
             setattr(cls, attr, Relation(rschema, role))
-        if mixins:
-            # see etype class instantation in cwvreg.ETypeRegistry.etype_class method:
-            # due to class dumping, cls is the generated top level class with actual
-            # user class as (only) parent. Since we want to be able to override mixins
-            # method from this user class, we have to take care to insert mixins after that
-            # class
-            #
-            # note that we don't plug mixins as user class parent since it causes pb
-            # with some cases of entity classes inheritance.
-            mixins.insert(0, cls.__bases__[0])
-            mixins += cls.__bases__[1:]
-            cls.__bases__ = tuple(mixins)
-            cls.info('plugged %s mixins on %s', mixins, cls)
 
     fetch_attrs = ('modification_date',)
 
@@ -308,7 +287,10 @@ class Entity(AppObject):
         select._varmaker = rqlvar_maker(defined=select.defined_vars,
                                         aliases=select.aliases, index=26)
         if settype:
-            select.add_type_restriction(mainvar, cls.__regid__)
+            rel = select.add_type_restriction(mainvar, cls.__regid__)
+            # should use 'is_instance_of' instead of 'is' so we retrieve
+            # subclasses instances as well
+            rel.r_type = 'is_instance_of'
         if fetchattrs is None:
             fetchattrs = cls.fetch_attrs
         cls._fetch_restrictions(mainvar, select, fetchattrs, user, ordermethod)
@@ -558,7 +540,14 @@ class Entity(AppObject):
         raise NotImplementedError('comparison not implemented for %s' % self.__class__)
 
     def __eq__(self, other):
-        raise NotImplementedError('comparison not implemented for %s' % self.__class__)
+        if isinstance(self.eid, (int, long)):
+            return self.eid == other.eid
+        return self is other
+
+    def __hash__(self):
+        if isinstance(self.eid, (int, long)):
+            return self.eid
+        return super(Entity, self).__hash__()
 
     def _cw_update_attr_cache(self, attrcache):
         # if context is a repository session, don't consider dont-cache-attrs as
@@ -983,7 +972,7 @@ class Entity(AppObject):
             return value
 
     def related(self, rtype, role='subject', limit=None, entities=False, # XXX .cw_related
-                safe=False):
+                safe=False, targettypes=None):
         """returns a resultset of related entities
 
         :param rtype:
@@ -997,10 +986,13 @@ class Entity(AppObject):
         :param safe:
           if True, an empty rset/list of entities will be returned in case of
           :exc:`Unauthorized`, else (the default), the exception is propagated
+        :param targettypes:
+          a tuple of target entity types to restrict the query
         """
         rtype = str(rtype)
-        if limit is None:
-            # we cannot do much wrt cache on limited queries
+        # Caching restricted/limited results is best avoided.
+        cacheable = limit is None and targettypes is None
+        if cacheable:
             cache_key = '%s_%s' % (rtype, role)
             if cache_key in self._cw_related_cache:
                 return self._cw_related_cache[cache_key][entities]
@@ -1008,7 +1000,7 @@ class Entity(AppObject):
             if entities:
                 return []
             return self._cw.empty_rset()
-        rql = self.cw_related_rql(rtype, role, limit=limit)
+        rql = self.cw_related_rql(rtype, role, limit=limit, targettypes=targettypes)
         try:
             rset = self._cw.execute(rql, {'x': self.eid})
         except Unauthorized:
@@ -1016,9 +1008,9 @@ class Entity(AppObject):
                 raise
             rset = self._cw.empty_rset()
         if entities:
-            if limit is None:
+            if cacheable:
                 self.cw_set_relation_cache(rtype, role, rset)
-                return self.related(rtype, role, limit, entities)
+                return self.related(rtype, role, entities=entities)
             return list(rset.entities())
         else:
             return rset
@@ -1339,34 +1331,6 @@ class Entity(AppObject):
     @deprecated('[3.13] use entity.cw_clear_all_caches()')
     def clear_all_caches(self):
         return self.cw_clear_all_caches()
-
-    @deprecated('[3.9] use entity.cw_attr_value(attr)')
-    def get_value(self, name):
-        return self.cw_attr_value(name)
-
-    @deprecated('[3.9] use entity.cw_delete()')
-    def delete(self, **kwargs):
-        return self.cw_delete(**kwargs)
-
-    @deprecated('[3.9] use entity.cw_attr_metadata(attr, metadata)')
-    def attr_metadata(self, attr, metadata):
-        return self.cw_attr_metadata(attr, metadata)
-
-    @deprecated('[3.9] use entity.cw_has_perm(action)')
-    def has_perm(self, action):
-        return self.cw_has_perm(action)
-
-    @deprecated('[3.9] use entity.cw_set_relation_cache(rtype, role, rset)')
-    def set_related_cache(self, rtype, role, rset):
-        self.cw_set_relation_cache(rtype, role, rset)
-
-    @deprecated('[3.9] use entity.cw_clear_relation_cache(rtype, role)')
-    def clear_related_cache(self, rtype=None, role=None):
-        self.cw_clear_relation_cache(rtype, role)
-
-    @deprecated('[3.9] use entity.cw_related_rql(rtype, [role, [targettypes]])')
-    def related_rql(self, rtype, role='subject', targettypes=None):
-        return self.cw_related_rql(rtype, role, targettypes)
 
     @property
     @deprecated('[3.10] use entity.cw_edited')

@@ -1068,7 +1068,7 @@ class TableView(AnyRsetView):
         """Build an url to the current view using the <navcomp> attributes
 
         :param navcomp: a NavigationComponent to call an url method on.
-        :param path:    expected to be json here ?
+        :param path:    expected to be json here?
         :param params: params to give to build_url method
 
         this is called by :class:`cubiweb.web.component.NavigationComponent`

@@ -22,14 +22,13 @@ software
 
 modname = distname = "cubicweb"
 
-numversion = (3, 17, 13)
+numversion = (3, 18, 3)
 version = '.'.join(str(num) for num in numversion)
 
 description = "a repository of entities / relations for knowledge management"
 author = "Logilab"
 author_email = "contact@logilab.fr"
 web = 'http://www.cubicweb.org'
-ftp = 'ftp://ftp.logilab.org/pub/cubicweb'
 license = 'LGPL'
 
 classifiers = [
@@ -40,10 +39,10 @@ classifiers = [
 ]
 
 __depends__ = {
-    'logilab-common': '>= 0.59.0',
+    'logilab-common': '>= 0.60.0',
     'logilab-mtconverter': '>= 0.8.0',
     'rql': '>= 0.31.2',
-    'yams': '>= 0.38.1',
+    'yams': '>= 0.39.0',
     #gettext                    # for xgettext, msgcat, etc...
     # web dependancies
     'simplejson': '>= 2.0.9',
@@ -51,7 +50,7 @@ __depends__ = {
     'Twisted': '',
     # XXX graphviz
     # server dependencies
-    'logilab-database': '>= 1.10',
+    'logilab-database': '>= 1.11',
     'passlib': '',
     }
 

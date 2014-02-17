@@ -28,7 +28,6 @@ from logilab.mtconverter import xml_escape
 from cubicweb.predicates import (is_instance, non_final_entity, one_line_rset,
                                 appobject_selectable, adaptable)
 from cubicweb.view import EntityView, EntityAdapter, AnyRsetView, Component
-from cubicweb.view import implements_adapter_compat
 from cubicweb.uilib import simple_sgml_tag
 from cubicweb.web import httpcache, component
 
@@ -185,7 +184,6 @@ class IFeedAdapter(EntityAdapter):
     __regid__ = 'IFeed'
     __select__ = is_instance('Any')
 
-    @implements_adapter_compat('IFeed')
     def rss_feed_url(self):
         """return an url to the rss feed for this entity"""
         return self.entity.absolute_url(vid='rss')

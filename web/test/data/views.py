@@ -18,6 +18,7 @@
 
 from cubicweb.web import Redirect
 from cubicweb.web.application import CubicWebPublisher
+from cubicweb.web.views.ajaxcontroller import ajaxfunc
 
 # proof of concept : monkey patch handle method so that if we are in an
 # anonymous session and __fblogin is found is req.form, the user with the
@@ -39,6 +40,36 @@ def auto_login_handle_request(self, req, path):
             pass
         assert req.user.login == login
     return orig_handle(self, req, path)
+
+
+def _recursive_replace_stream_by_content(tree):
+    """ Search for streams (i.e. object that have a 'read' method) in a tree
+    (which branches are lists or tuples), and substitute them by their content,
+    leaving other leafs identical. A copy of the tree with only lists as
+    branches is returned.
+    """
+    if not isinstance(tree, (list, tuple)):
+        if hasattr(tree, 'read'):
+            return tree.read()
+        return tree
+    else:
+        return [_recursive_replace_stream_by_content(value)
+                for value in tree]            
+
+
+@ajaxfunc(output_type='json')
+def fileupload(self):
+    """ Return a json copy of the web request formin which uploaded files
+    are read and their content substitute the received streams.
+    """
+    try:
+        result_dict = {}
+        for key, value in self._cw.form.iteritems():
+            result_dict[key] = _recursive_replace_stream_by_content(value)
+        return result_dict
+    except Exception, ex:
+        import traceback as tb
+        tb.print_exc(ex)
 
 orig_handle = CubicWebPublisher.main_handle_request
 CubicWebPublisher.main_handle_request = auto_login_handle_request

@@ -10,10 +10,15 @@ CREATE FUNCTION comma_join (anyarray) RETURNS text AS $$
     SELECT array_to_string($1, ', ')
 $$ LANGUAGE SQL;;
 
+
+CREATE FUNCTION cw_array_append_unique (anyarray, anyelement) RETURNS anyarray AS $$
+    SELECT array_append($1, (SELECT $2 WHERE $2 <> ALL($1)))
+$$ LANGUAGE SQL;;
+
 DROP AGGREGATE IF EXISTS group_concat (anyelement) CASCADE;
 CREATE AGGREGATE group_concat (
   basetype = anyelement,
-  sfunc = array_append,
+  sfunc = cw_array_append_unique,
   stype = anyarray,
   finalfunc = comma_join,
   initcond = '{}'

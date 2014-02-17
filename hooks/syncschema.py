@@ -28,7 +28,7 @@ _ = unicode
 
 from copy import copy
 from yams.schema import BASE_TYPES, RelationSchema, RelationDefinitionSchema
-from yams import buildobjs as ybo, schema2sql as y2sql
+from yams import buildobjs as ybo, schema2sql as y2sql, convert_default_value
 
 from logilab.common.decorators import clear_cache
 
@@ -38,21 +38,6 @@ from cubicweb.schema import (SCHEMA_TYPES, META_RTYPES, VIRTUAL_RTYPES,
                              CONSTRAINTS, ETYPE_NAME_MAP, display_name)
 from cubicweb.server import hook, schemaserial as ss
 from cubicweb.server.sqlutils import SQL_PREFIX
-
-
-TYPE_CONVERTER = { # XXX
-    'Boolean': bool,
-    'Int': int,
-    'BigInt': int,
-    'Float': float,
-    'Password': str,
-    'String': unicode,
-    'Date' : unicode,
-    'Datetime' : unicode,
-    'Time' : unicode,
-    'TZDatetime' : unicode,
-    'TZTime' : unicode,
-    }
 
 # core entity and relation types which can't be removed
 CORE_TYPES = BASE_TYPES | SCHEMA_TYPES | META_RTYPES | set(
@@ -116,7 +101,7 @@ def insert_rdef_on_subclasses(session, eschema, rschema, rdefdef, props):
         if (specialization, rdefdef.object) in rschema.rdefs:
             continue
         sperdef = RelationDefinitionSchema(specialization, rschema,
-                                           object, props)
+                                           object, None, values=props)
         ss.execschemarql(session.execute, sperdef,
                          ss.rdef2rql(sperdef, cstrtypemap, groupmap))
 
@@ -437,11 +422,11 @@ class CWAttributeAddOp(MemSchemaOperation):
     def precommit_event(self):
         session = self.session
         entity = self.entity
-        # entity.defaultval is a string or None, but we need a correctly typed
+        # entity.defaultval is a Binary or None, but we need a correctly typed
         # value
         default = entity.defaultval
         if default is not None:
-            default = TYPE_CONVERTER[entity.otype.name](default)
+            default = default.unzpickle()
         props = {'default': default,
                  'indexed': entity.indexed,
                  'fulltextindexed': entity.fulltextindexed,
@@ -493,20 +478,11 @@ class CWAttributeAddOp(MemSchemaOperation):
         # attribute is still set to False, so we've to ensure it's False
         rschema.final = True
         insert_rdef_on_subclasses(session, eschema, rschema, rdefdef, props)
-        # set default value, using sql for performance and to avoid
-        # modification_date update
-        if default:
-            if rdefdef.object in ('Date', 'Datetime', 'TZDatetime'):
-                # XXX may may want to use creation_date
-                if default == 'TODAY':
-                    default = syssource.dbhelper.sql_current_date()
-                elif default == 'NOW':
-                    default = syssource.dbhelper.sql_current_timestamp()
-                session.system_sql('UPDATE %s SET %s=%s'
-                                   % (table, column, default))
-            else:
-                session.system_sql('UPDATE %s SET %s=%%(default)s' % (table, column),
-                                   {'default': default})
+        # update existing entities with the default value of newly added attribute
+        if default is not None:
+            default = convert_default_value(self.rdefdef, default)
+            session.system_sql('UPDATE %s SET %s=%%(default)s' % (table, column),
+                               {'default': default})
 
     def revertprecommit_event(self):
         # revert changes on in memory schema
@@ -738,44 +714,38 @@ class CWConstraintAddOp(CWConstraintDelOp):
 
 class CWUniqueTogetherConstraintAddOp(MemSchemaOperation):
     entity = None # make pylint happy
+
     def precommit_event(self):
         session = self.session
         prefix = SQL_PREFIX
-        table = '%s%s' % (prefix, self.entity.constraint_of[0].name)
-        cols = ['%s%s' % (prefix, r.name) for r in self.entity.relations]
-        dbhelper= session.cnxset.source('system').dbhelper
-        sqls = dbhelper.sqls_create_multicol_unique_index(table, cols)
+        entity = self.entity
+        table = '%s%s' % (prefix, entity.constraint_of[0].name)
+        cols = ['%s%s' % (prefix, r.name) for r in entity.relations]
+        dbhelper = session.cnxset.source('system').dbhelper
+        sqls = dbhelper.sqls_create_multicol_unique_index(table, cols, entity.name)
         for sql in sqls:
             session.system_sql(sql)
 
-    # XXX revertprecommit_event
-
     def postcommit_event(self):
-        eschema = self.session.vreg.schema.schema_by_eid(self.entity.constraint_of[0].eid)
-        attrs = [r.name for r in self.entity.relations]
+        entity = self.entity
+        eschema = self.session.vreg.schema.schema_by_eid(entity.constraint_of[0].eid)
+        attrs = [r.name for r in entity.relations]
         eschema._unique_together.append(attrs)
 
 
 class CWUniqueTogetherConstraintDelOp(MemSchemaOperation):
-    entity = oldcstr = None # for pylint
-    cols = [] # for pylint
+    entity = cstrname = None # for pylint
+    cols = () # for pylint
+
     def precommit_event(self):
         session = self.session
         prefix = SQL_PREFIX
         table = '%s%s' % (prefix, self.entity.type)
-        dbhelper= session.cnxset.source('system').dbhelper
+        dbhelper = session.cnxset.source('system').dbhelper
         cols = ['%s%s' % (prefix, c) for c in self.cols]
-        sqls = dbhelper.sqls_drop_multicol_unique_index(table, cols)
+        sqls = dbhelper.sqls_drop_multicol_unique_index(table, cols, self.cstrname)
         for sql in sqls:
-            try:
-                session.system_sql(sql)
-            except Exception as exc: # should be ProgrammingError
-                if sql.startswith('DROP'):
-                    self.error('execute of `%s` failed (cause: %s)', sql, exc)
-                    continue
-                raise
-
-    # XXX revertprecommit_event
+            session.system_sql(sql)
 
     def postcommit_event(self):
         eschema = self.session.vreg.schema.schema_by_eid(self.entity.eid)
@@ -1195,9 +1165,9 @@ class BeforeDeleteConstraintOfHook(SyncSchemaHook):
         schema = self._cw.vreg.schema
         cstr = self._cw.entity_from_eid(self.eidfrom)
         entity = schema.schema_by_eid(self.eidto)
-        cols = [r.name for r in cstr.relations]
+        cols = tuple(r.name for r in cstr.relations)
         CWUniqueTogetherConstraintDelOp(self._cw, entity=entity,
-                                        oldcstr=cstr, cols=cols)
+                                        cstrname=cstr.name, cols=cols)
 
 
 # permissions synchronization hooks ############################################

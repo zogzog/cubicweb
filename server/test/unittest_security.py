@@ -413,6 +413,16 @@ class SecurityTC(BaseSecurityTC):
             self.commit()
             cu.execute("SET X para 'chouette' WHERE X eid %(x)s", {'x': note2.eid})
             self.commit()
+            cu.execute("INSERT Note X: X something 'A'")
+            self.assertRaises(Unauthorized, self.commit)
+            cu.execute("INSERT Note X: X para 'zogzog', X something 'A'")
+            self.commit()
+            note = cu.execute("INSERT Note X").get_entity(0,0)
+            self.commit()
+            note.cw_set(something=u'B')
+            self.commit()
+            note.cw_set(something=None, para=u'zogzog')
+            self.commit()
 
     def test_attribute_read_security(self):
         # anon not allowed to see users'login, but they can see users

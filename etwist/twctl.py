@@ -22,7 +22,7 @@ from os.path import join
 from logilab.common.shellutils import rm
 
 from cubicweb.toolsutils import CommandHandler
-from cubicweb.web.webctl import WebCreateHandler
+from cubicweb.web.webctl import WebCreateHandler, WebUpgradeHandler
 
 # trigger configuration registration
 import cubicweb.etwist.twconfig # pylint: disable=W0611
@@ -48,6 +48,9 @@ class TWStopHandler(CommandHandler):
     def poststop(self):
         pass
 
+class TWUpgradeHandler(WebUpgradeHandler):
+    cfgname = 'twisted'
+
 
 try:
     from cubicweb.server import serverctl
@@ -72,6 +75,9 @@ try:
         cmdname = 'stop'
         cfgname = 'all-in-one'
         subcommand = 'cubicweb-twisted'
+
+    class AllInOneUpgradeHandler(TWUpgradeHandler):
+        cfgname = 'all-in-one'
 
 except ImportError:
     pass

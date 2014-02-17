@@ -36,6 +36,7 @@ from itertools import chain
 from os.path import join
 from datetime import datetime
 from time import time, localtime, strftime
+from warnings import warn
 
 from logilab.common.decorators import cached, clear_cache
 from logilab.common.compat import any
@@ -299,6 +300,8 @@ class Repository(object):
             # initialized)
             source.init(True, sourceent)
             if not source.copy_based_source:
+                warn('[3.18] old multi-source system will go away in the next version',
+                     DeprecationWarning)
                 self.sources.append(source)
                 self.querier.set_planner()
                 if add_to_cnxsets:
@@ -1592,10 +1595,6 @@ class Repository(object):
         source.delete_relation(session, subject, rtype, object)
         rschema = self.schema.rschema(rtype)
         session.update_rel_cache_del(subject, rtype, object, rschema.symmetric)
-        if rschema.symmetric:
-            # on symmetric relation, we can't now in which sense it's
-            # stored so try to delete both
-            source.delete_relation(session, object, rtype, subject)
         if source.should_call_hooks:
             self.hm.call_hooks('after_delete_relation', session,
                                eidfrom=subject, rtype=rtype, eidto=object)
@@ -1665,18 +1664,24 @@ class Repository(object):
 
     @cached
     def rel_type_sources(self, rtype):
+        warn('[3.18] old multi-source system will go away in the next version',
+             DeprecationWarning)
         return tuple([source for source in self.sources
                       if source.support_relation(rtype)
                       or rtype in source.dont_cross_relations])
 
     @cached
     def can_cross_relation(self, rtype):
+        warn('[3.18] old multi-source system will go away in the next version',
+             DeprecationWarning)
         return tuple([source for source in self.sources
                       if source.support_relation(rtype)
                       and rtype in source.cross_relations])
 
     @cached
     def is_multi_sources_relation(self, rtype):
+        warn('[3.18] old multi-source system will go away in the next version',
+             DeprecationWarning)
         return any(source for source in self.sources
                    if not source is self.system_source
                    and source.support_relation(rtype))

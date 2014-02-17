@@ -47,8 +47,8 @@ Considering an entity type ``ET``, the default *fti* process is to :
 See :class:`~cubicweb.entities.adapters.IFTIndexableAdapter` for more documentation.
 
 
-Yams and ``fultext_container``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Yams and ``fulltext_container``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 It is possible in the datamodel to indicate that fulltext-indexed
 attributes defined for an entity type will be used to index not the

@@ -32,7 +32,6 @@ from logilab.common.compat import any
 from cubicweb.entities import AnyEntity, fetch_config
 from cubicweb.view import EntityAdapter
 from cubicweb.predicates import relation_possible
-from cubicweb.mixins import MI_REL_TRIGGERS
 
 class WorkflowException(Exception): pass
 
@@ -379,65 +378,8 @@ class TrInfo(AnyEntity):
         return self.by_transition and self.by_transition[0] or None
 
 
-class WorkflowableMixIn(object):
-    """base mixin providing workflow helper methods for workflowable entities.
-    This mixin will be automatically set on class supporting the 'in_state'
-    relation (which implies supporting 'wf_info_for' as well)
-    """
 
-    @property
-    @deprecated("[3.9] use entity.cw_adapt_to('IWorkflowable').main_workflow")
-    def main_workflow(self):
-        return self.cw_adapt_to('IWorkflowable').main_workflow
-    @property
-    @deprecated("[3.9] use entity.cw_adapt_to('IWorkflowable').current_workflow")
-    def current_workflow(self):
-        return self.cw_adapt_to('IWorkflowable').current_workflow
-    @property
-    @deprecated("[3.9] use entity.cw_adapt_to('IWorkflowable').current_state")
-    def current_state(self):
-        return self.cw_adapt_to('IWorkflowable').current_state
-    @property
-    @deprecated("[3.9] use entity.cw_adapt_to('IWorkflowable').state")
-    def state(self):
-        return self.cw_adapt_to('IWorkflowable').state
-    @property
-    @deprecated("[3.9] use entity.cw_adapt_to('IWorkflowable').printable_state")
-    def printable_state(self):
-        return self.cw_adapt_to('IWorkflowable').printable_state
-    @property
-    @deprecated("[3.9] use entity.cw_adapt_to('IWorkflowable').workflow_history")
-    def workflow_history(self):
-        return self.cw_adapt_to('IWorkflowable').workflow_history
-
-    @deprecated("[3.9] use entity.cw_adapt_to('IWorkflowable').cwetype_workflow()")
-    def cwetype_workflow(self):
-        return self.cw_adapt_to('IWorkflowable').main_workflow()
-    @deprecated("[3.9] use entity.cw_adapt_to('IWorkflowable').latest_trinfo()")
-    def latest_trinfo(self):
-        return self.cw_adapt_to('IWorkflowable').latest_trinfo()
-    @deprecated("[3.9] use entity.cw_adapt_to('IWorkflowable').possible_transitions()")
-    def possible_transitions(self, type='normal'):
-        return self.cw_adapt_to('IWorkflowable').possible_transitions(type)
-    @deprecated("[3.9] use entity.cw_adapt_to('IWorkflowable').fire_transition()")
-    def fire_transition(self, tr, comment=None, commentformat=None):
-        return self.cw_adapt_to('IWorkflowable').fire_transition(tr, comment, commentformat)
-    @deprecated("[3.9] use entity.cw_adapt_to('IWorkflowable').change_state()")
-    def change_state(self, statename, comment=None, commentformat=None, tr=None):
-        return self.cw_adapt_to('IWorkflowable').change_state(statename, comment, commentformat, tr)
-    @deprecated("[3.9] use entity.cw_adapt_to('IWorkflowable').subworkflow_input_trinfo()")
-    def subworkflow_input_trinfo(self):
-        return self.cw_adapt_to('IWorkflowable').subworkflow_input_trinfo()
-    @deprecated("[3.9] use entity.cw_adapt_to('IWorkflowable').subworkflow_input_transition()")
-    def subworkflow_input_transition(self):
-        return self.cw_adapt_to('IWorkflowable').subworkflow_input_transition()
-
-
-MI_REL_TRIGGERS[('in_state', 'subject')] = WorkflowableMixIn
-
-
-
-class IWorkflowableAdapter(WorkflowableMixIn, EntityAdapter):
+class IWorkflowableAdapter(EntityAdapter):
     """base adapter providing workflow helper methods for workflowable entities.
     """
     __regid__ = 'IWorkflowable'

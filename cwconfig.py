@@ -53,8 +53,7 @@ Within virtual environment
 
 If you are not administrator of you machine or if you need to play with some
 specific version of |cubicweb| you can use `virtualenv`_ a tool to create
-isolated Python environments.  Since version 3.9 |cubicweb| is **`virtualenv`
-friendly** and won't write any file outside the virtualenv directory.
+isolated Python environments.
 
 - instances are stored in :file:`<VIRTUAL_ENV>/etc/cubicweb.d`
 - temporary files (such as pid file) in :file:`<VIRTUAL_ENV>/var/run/cubicweb`
@@ -206,7 +205,7 @@ def possible_configurations(directory):
     """return a list of installed configurations in a directory
     according to \*-ctl files
     """
-    return [name for name in ('repository', 'twisted', 'all-in-one')
+    return [name for name in ('repository', 'all-in-one')
             if exists(join(directory, '%s.conf' % name))]
 
 def guess_configuration(directory):
@@ -328,7 +327,7 @@ class CubicWebNoAppConfiguration(ConfigurationMixIn):
     # the format below can be useful to debug multi thread issues:
     # log_format = '%(asctime)s - [%(threadName)s] (%(name)s) %(levelname)s: %(message)s'
     # nor remove appobjects based on unused interface [???]
-    cleanup_interface_sobjects = True
+    cleanup_unused_appobjects = True
 
     if (CWDEV and _forced_mode != 'system'):
         mode = 'user'
@@ -499,21 +498,11 @@ this option is set to yes",
             try:
                 gendeps = getattr(pkginfo, key.replace('_cubes', ''))
             except AttributeError:
-                # bw compat
-                if hasattr(pkginfo, oldkey):
-                    warn('[3.8] cube %s: %s is deprecated, use %s dict'
-                         % (cube, oldkey, key), DeprecationWarning)
-                    deps = getattr(pkginfo, oldkey)
-                else:
-                    deps = {}
+                deps = {}
             else:
                 deps = dict( (x[len('cubicweb-'):], v)
                              for x, v in gendeps.iteritems()
                              if x.startswith('cubicweb-'))
-        if not isinstance(deps, dict):
-            deps = dict((key, None) for key in deps)
-            warn('[3.8] cube %s should define %s as a dict' % (cube, key),
-                 DeprecationWarning)
         for depcube in deps:
             try:
                 newname = CW_MIGRATION_MAP[depcube]
@@ -940,10 +929,9 @@ the repository',
                                      ' "cubicweb-ctl list")' % appid)
         return home
 
-    MODES = ('common', 'repository', 'Any', 'web')
+    MODES = ('common', 'repository', 'Any')
     MCOMPAT = {'all-in-one': MODES,
-               'repository': ('common', 'repository', 'Any'),
-               'twisted'   : ('common', 'web'),}
+               'repository': ('common', 'repository', 'Any')}
     @classmethod
     def accept_mode(cls, mode):
         #assert mode in cls.MODES, mode
@@ -1189,11 +1177,13 @@ the repository',
         sourcedirs.append(self.i18n_lib_dir())
         return i18n.compile_i18n_catalogs(sourcedirs, i18ndir, langs)
 
-    def sendmails(self, msgs):
+    def sendmails(self, msgs, fromaddr=None):
         """msgs: list of 2-uple (message object, recipients). Return False
         if connection to the smtp server failed, else True.
         """
         server, port = self['smtp-host'], self['smtp-port']
+        if fromaddr is None:
+            fromaddr = '%s <%s>' % (self['sender-name'], self['sender-addr'])
         SMTP_LOCK.acquire()
         try:
             try:
@@ -1202,10 +1192,9 @@ the repository',
                 self.exception("can't connect to smtp server %s:%s (%s)",
                                server, port, ex)
                 return False
-            heloaddr = '%s <%s>' % (self['sender-name'], self['sender-addr'])
             for msg, recipients in msgs:
                 try:
-                    smtp.sendmail(heloaddr, recipients, msg.as_string())
+                    smtp.sendmail(fromaddr, recipients, msg.as_string())
                 except Exception as ex:
                     self.exception("error sending mail to %s (%s)",
                                    recipients, ex)

@@ -226,13 +226,13 @@ General Constraints
 * `SizeConstraint`: allows to specify a minimum and/or maximum size on
   string (generic case of `maxsize`)
 
-* `BoundConstraint`: allows to specify a minimum and/or maximum value
+* `BoundaryConstraint`: allows to specify a minimum and/or maximum value
   on numeric types and date
 
 .. sourcecode:: python
 
-   from yams.constraints import BoundConstraint, TODAY
-   BoundConstraint('<=', TODAY())
+   from yams.constraints import BoundaryConstraint, TODAY
+   BoundaryConstraint('<=', TODAY())
 
 * `IntervalBoundConstraint`: allows to specify an interval with
   included values
@@ -330,7 +330,8 @@ For an entity type, the possible actions are `read`, `add`, `update` and
 
 For a relation, the possible actions are `read`, `add`, and `delete`.
 
-For an attribute, the possible actions are `read`, and `update`.
+For an attribute, the possible actions are `read`, `add` and `update`,
+and they are a refinement of an entity type permission.
 
 For each access type, a tuple indicates the name of the authorized groups and/or
 one or multiple RQL expressions to satisfy to grant access. The access is
@@ -364,7 +365,8 @@ The default permissions for attributes are:
 .. sourcecode:: python
 
    __permissions__ = {'read': ('managers', 'users', 'guests',),
-                     'update': ('managers', ERQLExpression('U has_update_permission X')),}
+                      'add': ('managers', ERQLExpression('U has_add_permission X'),
+                      'update': ('managers', ERQLExpression('U has_update_permission X')),}
 
 The standard user groups
 ````````````````````````
@@ -476,13 +478,8 @@ by rql expressions may changes, hence the permission being granted or not.
 
 Here are the current rules:
 
-1. permission to add/update entity and its attributes are checked:
-
-   - on commit if the entity has been added
-
-   - in an 'after_update_entity' hook if the entity has been updated. If it fails
-     at this time, it will be retried on commit (hence you get the permission if
-     you have it just after the modification or *at* commit time)
+1. permission to add/update entity and its attributes are checked on
+   commit
 
 2. permission to delete an entity is checked in 'before_delete_entity' hook
 

@@ -8,6 +8,8 @@
   background: #fff;
   padding: %(facet_Padding)s;
   margin-bottom: %(facet_MarginBottom)s;
+  border-top-left-radius: 5px;
+  border-bottom-right-radius: 7px;
 }
 
 .facetGroup {

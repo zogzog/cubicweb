@@ -81,12 +81,12 @@ function ajaxBoxShowSelector(boxid, eid,
             });
             $input.cwautocomplete(unrelated, {multiple: Boolean(separator)});
             var buttons = DIV({'class' : "sgformbuttons"},
-                              A({href : "javascript: noop();",
+                              A({href : "javascript: $.noop();",
                                  onclick : cw.utils.strFuncCall('ajaxBoxValidateSelectorInput',
                                                                 boxid, eid, separator, addfname, msg)},
                                 oklabel),
                               ' / ',
-                              A({'href' : "javascript: noop();",
+                              A({'href' : "javascript: $.noop();",
                                  'onclick' : '$("#' + holderid + '").empty()'},
                                   cancellabel));
             holder.append(buttons);

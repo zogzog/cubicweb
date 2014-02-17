@@ -55,10 +55,10 @@ from rql.nodes import VariableRef, Constant
 from logilab.mtconverter import xml_escape
 from logilab.common.deprecation import deprecated
 
-from cubicweb.predicates import (paginated_rset, sorted_rset,
-                                adaptable, implements)
+from cubicweb.utils import json_dumps
+from cubicweb.predicates import paginated_rset, sorted_rset, adaptable
 from cubicweb.uilib import cut
-from cubicweb.view import EntityAdapter, implements_adapter_compat
+from cubicweb.view import EntityAdapter
 from cubicweb.web.component import EmptyComponent, EntityCtxComponent, NavigationComponent
 
 
@@ -281,6 +281,13 @@ def do_paginate(view, rset=None, w=None, show_all_option=True, page_size=None):
     nav = req.vreg['components'].select_or_none(
         'navigation', req, rset=rset, page_size=page_size, view=view)
     if nav:
+        domid = getattr(view, 'domid', 'pageContent')
+        view._cw.add_onload('''
+        jQuery('div.displayAllLink a, div.pagination a').click(function() {
+            cw.jqNode(%s).loadxhtml(this.href, null, 'get', 'swap');
+            return false;
+        });
+            ''' % json_dumps(domid))
         if w is None:
             w = view.w
         if req.form.get('__force_display'):
@@ -324,7 +331,6 @@ View.paginate = paginate
 View.handle_pagination = False
 
 
-from cubicweb.interfaces import IPrevNext
 
 class IPrevNextAdapter(EntityAdapter):
     """Interface for entities which can be linked to a previous and/or next
@@ -335,14 +341,12 @@ class IPrevNextAdapter(EntityAdapter):
     """
     __needs_bw_compat__ = True
     __regid__ = 'IPrevNext'
-    __select__ = implements(IPrevNext, warn=False) # XXX for bw compat, else should be abstract
+    __abstract__ = True
 
-    @implements_adapter_compat('IPrevNext')
     def next_entity(self):
         """return the 'next' entity"""
         raise NotImplementedError
 
-    @implements_adapter_compat('IPrevNext')
     def previous_entity(self):
         """return the 'previous' entity"""
         raise NotImplementedError

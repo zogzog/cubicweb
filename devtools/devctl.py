@@ -46,7 +46,7 @@ class DevConfiguration(ServerConfiguration, WebConfiguration):
     a cube or for cubicweb (without a home)
     """
     creating = True
-    cleanup_interface_sobjects = False
+    cleanup_unused_appobjects = False
 
     cubicweb_appobject_path = (ServerConfiguration.cubicweb_appobject_path
                                | WebConfiguration.cubicweb_appobject_path)
@@ -619,7 +619,7 @@ layout, and a full featured cube with "full" layout.',
                           % (cubesdir, err))
         cubedir = osp.join(cubesdir, cubename)
         if osp.exists(cubedir):
-            self.fail("%s already exists !" % cubedir)
+            self.fail("%s already exists!" % cubedir)
         skeldir = osp.join(BASEDIR, 'skeleton')
         default_name = 'cubicweb-%s' % cubename.lower().replace('_', '-')
         if verbose:

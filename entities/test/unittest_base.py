@@ -25,7 +25,6 @@ from logilab.common.interface import implements
 
 from cubicweb.devtools.testlib import CubicWebTC
 
-from cubicweb.interfaces import IMileStone, ICalendarable
 from cubicweb.entities import AnyEntity
 
 
@@ -153,27 +152,6 @@ Elephant management best practices.
         c.cw_clear_all_caches()
         self.assertIn('alert', c.printable_value('description', format='text/plain'))
         self.assertNotIn('alert', c.printable_value('description', format='text/html'))
-
-
-class InterfaceTC(CubicWebTC):
-
-    def test_nonregr_subclasses_and_mixins_interfaces(self):
-        from cubicweb.entities.wfobjs import WorkflowableMixIn
-        WorkflowableMixIn.__implements__ = (ICalendarable,)
-        CWUser = self.vreg['etypes'].etype_class('CWUser')
-        class MyUser(CWUser):
-            __implements__ = (IMileStone,)
-        self.vreg._loadedmods[__name__] = {}
-        self.vreg.register(MyUser)
-        self.vreg['etypes'].initialization_completed()
-        MyUser_ = self.vreg['etypes'].etype_class('CWUser')
-        # a copy is done systematically
-        self.assertTrue(issubclass(MyUser_, MyUser))
-        self.assertTrue(implements(MyUser_, IMileStone))
-        self.assertTrue(implements(MyUser_, ICalendarable))
-        # original class should not have beed modified, only the copy
-        self.assertTrue(implements(MyUser, IMileStone))
-        self.assertFalse(implements(MyUser, ICalendarable))
 
 
 class SpecializedEntityClassesTC(CubicWebTC):

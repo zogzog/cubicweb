@@ -85,6 +85,7 @@ def check_read_access(session, rqlst, solution, args):
     # use `term_etype` since we've to deal with rewritten constants here,
     # when used as an external source by another repository.
     # XXX what about local read security w/ those rewritten constants...
+    DBG = (server.DEBUG & server.DBG_SEC) and 'read' in server._SECURITY_CAPS
     schema = session.repo.schema
     if rqlst.where is not None:
         for rel in rqlst.where.iget_nodes(Relation):
@@ -102,8 +103,14 @@ def check_read_access(session, rqlst, solution, args):
                                     term_etype(session, rel.children[1].children[0],
                                                solution, args))
             if not session.user.matching_groups(rdef.get_groups('read')):
+                if DBG:
+                    print ('check_read_access: %s %s does not match %s' %
+                           (rdef, session.user.groups, rdef.get_groups('read')))
                 # XXX rqlexpr not allowed
                 raise Unauthorized('read', rel.r_type)
+            if DBG:
+                print ('check_read_access: %s %s matches %s' %
+                       (rdef, session.user.groups, rdef.get_groups('read')))
     localchecks = {}
     # iterate on defined_vars and not on solutions to ignore column aliases
     for varname in rqlst.defined_vars:
@@ -115,6 +122,9 @@ def check_read_access(session, rqlst, solution, args):
             if not erqlexprs:
                 ex = Unauthorized('read', solution[varname])
                 ex.var = varname
+                if DBG:
+                    print ('check_read_access: %s %s %s %s' %
+                           (varname, eschema, session.user.groups, eschema.get_groups('read')))
                 raise ex
             # don't insert security on variable only referenced by 'NOT X relation Y' or
             # 'NOT EXISTS(X relation Y)'

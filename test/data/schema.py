@@ -41,7 +41,7 @@ class Personne(EntityType):
                                   constraints=[RQLConstraint('NOT EXISTS(O contrat_exclusif S)')])
     dirige = SubjectRelation('Societe', cardinality='??',
                              constraints=[RQLConstraint('S actionnaire O')])
-    associe = SubjectRelation('Personne', cardinality='1*',
+    associe = SubjectRelation('Personne', cardinality='?*',
                               constraints=[RQLConstraint('S actionnaire SOC, O actionnaire SOC')])
 
 class Ami(EntityType):

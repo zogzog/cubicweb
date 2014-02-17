@@ -22,6 +22,7 @@ _ = unicode
 
 import tempfile
 import os
+import codecs
 
 from logilab.mtconverter import xml_escape
 from logilab.common.graph import GraphGenerator, DotBackend
@@ -33,30 +34,22 @@ class DotGraphView(EntityView):
     __abstract__ = True
     backend_class = DotBackend
     backend_kwargs = {'ratio': 'compress', 'size': '30,10'}
+
     def cell_call(self, row, col):
+        if 'MSIE 8' in self._cw.useragent():
+            return
         entity = self.cw_rset.get_entity(row, col)
         visitor = self.build_visitor(entity)
         prophdlr = self.build_dotpropshandler()
         graphname = 'dotgraph%s' % str(entity.eid)
         generator = GraphGenerator(self.backend_class(graphname, None,
                                                       **self.backend_kwargs))
-        # map file
-        pmap, mapfile = tempfile.mkstemp(".map", graphname)
-        os.close(pmap)
         # image file
-        fd, tmpfile = tempfile.mkstemp('.png')
+        fd, tmpfile = tempfile.mkstemp('.svg')
         os.close(fd)
-        generator.generate(visitor, prophdlr, tmpfile, mapfile)
-        filekeyid = make_uid()
-        self._cw.session.data[filekeyid] = tmpfile
-        self.w(u'<img src="%s" alt="%s" usemap="#%s" />' % (
-            xml_escape(entity.absolute_url(vid='tmppng', tmpfile=filekeyid)),
-            xml_escape(self._cw._('Data connection graph for %s') % entity.dc_title()),
-            graphname))
-        stream = open(mapfile, 'r').read()
-        stream = stream.decode(self._cw.encoding)
-        self.w(stream)
-        os.unlink(mapfile)
+        generator.generate(visitor, prophdlr, tmpfile)
+        with codecs.open(tmpfile, 'rb', encoding='utf-8') as svgfile:
+            self.w(svgfile.read())
 
     def build_visitor(self, entity):
         raise NotImplementedError

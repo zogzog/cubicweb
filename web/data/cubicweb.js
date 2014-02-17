@@ -45,6 +45,15 @@ jQuery.extend(cw, {
         return null;
     },
 
+    // escapes string selectors (e.g. "foo.[subject]:42" -> "foo\.\[subject\]\:42"
+    escape: function(selector) {
+        if (typeof(selector) == 'string') {
+            return  selector.replace( /(:|\.|\[|\])/g, "\\$1" );
+        }
+        // cw.log('non string selector', selector);
+        return '';
+    },
+
     getNode: function (node) {
         if (typeof(node) == 'string') {
             return document.getElementById(node);
@@ -103,15 +112,6 @@ jQuery.extend(cw.utils, {
             cw.log(msg);
             return newfunc.apply(this, arguments);
         };
-    },
-
-    movedToNamespace: function (funcnames, namespace) {
-        for (var i = 0; i < funcnames.length; i++) {
-            var funcname = funcnames[i];
-            var msg = ('[3.9] ' + funcname + ' is deprecated, use ' +
-		       namespace.__name__ + '.' + funcname + ' instead');
-            window[funcname] = cw.utils.deprecatedFunction(msg, namespace[funcname]);
-        }
     },
 
     createDomFunction: function (tag) {
@@ -222,6 +222,9 @@ jQuery.extend(cw.utils, {
         cw.utils.nodeWalkDepthFirst(elem, function (elem) {
             var name = elem.name;
             if (name && name.length) {
+                if (elem.disabled) {
+                    return null;
+                }
                 var tagName = elem.tagName.toUpperCase();
                 if (tagName === "INPUT" && (elem.type == "radio" || elem.type == "checkbox") && !elem.checked) {
                     return null;
@@ -388,14 +391,6 @@ jQuery.extend(cw.utils, {
 
 });
 
-String.prototype.startsWith = cw.utils.deprecatedFunction('[3.9] str.startsWith() is deprecated, use str.startswith() instead', function (prefix) {
-    return this.startswith(prefix);
-});
-
-String.prototype.endsWith = cw.utils.deprecatedFunction('[3.9] str.endsWith() is deprecated, use str.endswith() instead', function (suffix) {
-    return this.endswith(prefix);
-});
-
 /** DOM factories ************************************************************/
 A = cw.utils.createDomFunction('a');
 BUTTON = cw.utils.createDomFunction('button');
@@ -472,7 +467,8 @@ function IFRAME(params) {
     return node;
 }
 
-// XXX avoid crashes / backward compat
+// cubes: tag, keyword and apycot seem to use this, including require/provide
+// backward compat
 CubicWeb = cw;
 
 jQuery.extend(cw, {

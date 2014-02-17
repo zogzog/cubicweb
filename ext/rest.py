@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -29,6 +29,8 @@ following ReST directives:
 
 * `sourcecode` (if pygments is installed), source code colorization
 
+* `rql-table`, create a table from a RQL query
+
 """
 __docformat__ = "restructuredtext en"
 
@@ -40,7 +42,7 @@ from urlparse import urlsplit
 
 from docutils import statemachine, nodes, utils, io
 from docutils.core import Publisher
-from docutils.parsers.rst import Parser, states, directives
+from docutils.parsers.rst import Parser, states, directives, Directive
 from docutils.parsers.rst.roles import register_canonical_role, set_classes
 
 from logilab.mtconverter import ESC_UCAR_TABLE, ESC_CAR_TABLE, xml_escape
@@ -125,7 +127,7 @@ def rql_role(role, rawtext, text, lineno, inliner, options={}, content=[]):
         view = _cw.vreg['views'].select(vid, _cw, rset=rset)
         content = view.render()
     except Exception as exc:
-        content = 'an error occured while interpreting this rql directive: %r' % exc
+        content = 'an error occurred while interpreting this rql directive: %r' % exc
     set_classes(options)
     return [nodes.raw('', content, format='html')], []
 
@@ -182,7 +184,7 @@ def bookmark_role(role, rawtext, text, lineno, inliner, options={}, content=[]):
         view = _cw.vreg['views'].select(vid, _cw, rset=rset)
         content = view.render()
     except Exception, exc:
-        content = 'An error occured while interpreting directive bookmark: %r' % exc
+        content = 'An error occurred while interpreting directive bookmark: %r' % exc
     set_classes(options)
     return [nodes.raw('', content, format='html')], []
 
@@ -250,6 +252,76 @@ def winclude_directive(name, arguments, options, content, lineno,
 winclude_directive.arguments = (1, 0, 1)
 winclude_directive.options = {'literal': directives.flag,
                               'encoding': directives.encoding}
+
+class RQLTableDirective(Directive):
+    """rql-table directive
+
+    Example:
+
+        .. rql-table::
+           :vid: mytable
+           :headers: , , progress
+           :colvids: 2=progress
+
+            Any X,U,X WHERE X is Project, X url U
+
+    All fields but the RQL string are optionnal. The ``:headers:`` option can
+    contain empty column names.
+    """
+
+    required_arguments = 0
+    optional_arguments = 0
+    has_content= True
+    final_argument_whitespace = True
+    option_spec = {'vid': directives.unchanged,
+                   'headers': directives.unchanged,
+                   'colvids': directives.unchanged}
+
+    def run(self):
+        errid = "rql-table directive"
+        self.assert_has_content()
+        if self.arguments:
+            raise self.warning('%s does not accept arguments' % errid)
+        rql = ' '.join([l.strip() for l in self.content])
+        _cw = self.state.document.settings.context._cw
+        _cw.ensure_ro_rql(rql)
+        try:
+            rset = _cw.execute(rql)
+        except Exception as exc:
+            raise self.error("fail to execute RQL query in %s: %r" %
+                             (errid, exc))
+        if not rset:
+            raise self.warning("empty result set")
+        vid = self.options.get('vid', 'table')
+        try:
+            view = _cw.vreg['views'].select(vid, _cw, rset=rset)
+        except Exception as exc:
+            raise self.error("fail to select '%s' view in %s: %r" %
+                             (vid, errid, exc))
+        headers = None
+        if 'headers' in self.options:
+            headers = [h.strip() for h in self.options['headers'].split(',')]
+            while headers.count(''):
+                headers[headers.index('')] = None
+            if len(headers) != len(rset[0]):
+                raise self.error("the number of 'headers' does not match the "
+                                 "number of columns in %s" % errid)
+        cellvids = None
+        if 'colvids' in self.options:
+            cellvids = {}
+            for f in self.options['colvids'].split(','):
+                try:
+                    idx, vid = f.strip().split('=')
+                except ValueError:
+                    raise self.error("malformatted 'colvids' option in %s" %
+                                     errid)
+                cellvids[int(idx.strip())] = vid.strip()
+        try:
+            content = view.render(headers=headers, cellvids=cellvids)
+        except Exception as exc:
+            raise self.error("Error rendering %s (%s)" % (errid, exc))
+        return [nodes.raw('', content, format='html')]
+
 
 try:
     from pygments import highlight
@@ -385,3 +457,4 @@ def cw_rest_init():
     directives.register_directive('winclude', winclude_directive)
     if pygments_directive is not None:
         directives.register_directive('sourcecode', pygments_directive)
+    directives.register_directive('rql-table', RQLTableDirective)

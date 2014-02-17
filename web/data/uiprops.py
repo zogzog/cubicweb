@@ -9,7 +9,7 @@ STYLESHEETS_PRINT = [data('cubicweb.print.css')]
 
 # Javascripts files to include systematically in HTML headers
 JAVASCRIPTS = [data('jquery.js'),
-               data('jquery.corner.js'),
+               data('jquery-migrate.js'),
                data('jquery.json.js'),
                data('cubicweb.js'),
                data('cubicweb.compat.js'),
@@ -66,7 +66,6 @@ defaultFontFamily = "'Bitstream Vera Sans','Lucida Grande','Lucida Sans Unicode'
 defaultSize = '12px'
 defaultLineHeight = '1.5'
 defaultLineHeightEm = lazystr('%(defaultLineHeight)sem')
-baseRhythmBg = 'rhythm18.png'
 
 inputHeight = '1.3em'
 inputPadding = 'O.2em'

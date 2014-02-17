@@ -148,9 +148,6 @@ msgstr "l'action '%s' nécessite une option 'linkattr'"
 msgid "(UNEXISTANT EID)"
 msgstr "(EID INTROUVABLE)"
 
-msgid "(not all shown here) "
-msgstr "(toutes ne sont pas montrées)"
-
 #, python-format
 msgid "(suppressed) entity #%d"
 msgstr "entité #%d (supprimée)"
@@ -445,10 +442,6 @@ msgstr "Entité %(etype)s crée : %(entity)s"
 msgid "DEBUG"
 msgstr "DEBUG"
 
-#, python-format
-msgid "Data connection graph for %s"
-msgstr "Graphique de connection des données pour %s"
-
 msgid "Date"
 msgstr "Date"
 
@@ -478,7 +471,7 @@ msgstr "Entité %(etype)s supprimée : %(entity)s"
 msgid "Detected problems"
 msgstr "Problèmes détectés"
 
-msgid "Do you want to delete the following element(s) ?"
+msgid "Do you want to delete the following element(s)?"
 msgstr "Voulez-vous supprimer le(s) élément(s) suivant(s) ?"
 
 msgid "Download schema as OWL"
@@ -526,9 +519,6 @@ msgstr "contrainte de format"
 
 msgid "Garbage collection information"
 msgstr "Information sur le ramasse-miette"
-
-msgid "Got rhythm?"
-msgstr "T'as le rythme ?"
 
 msgid "Help"
 msgstr "Aide"
@@ -1045,6 +1035,9 @@ msgstr "ajouter"
 msgid "add Bookmark bookmarked_by CWUser object"
 msgstr "signet"
 
+msgid "add CWAttribute add_permission RQLExpression subject"
+msgstr "définir une expression RQL d'ajout"
+
 msgid "add CWAttribute constrained_by CWConstraint subject"
 msgstr "contrainte"
 
@@ -1152,6 +1145,10 @@ msgstr "ajouter une adresse électronique"
 # (no object form for final relation types)
 msgid "add_permission"
 msgstr "peut ajouter"
+
+msgctxt "CWAttribute"
+msgid "add_permission"
+msgstr "permission d'ajout"
 
 # subject and object forms for each relation type
 # (no object form for final relation types)
@@ -1750,6 +1747,10 @@ msgid "creating EmailAddress (CWUser %(linkto)s use_email EmailAddress)"
 msgstr "création d'une adresse électronique pour l'utilisateur %(linkto)s"
 
 msgid ""
+"creating RQLExpression (CWAttribute %(linkto)s add_permission RQLExpression)"
+msgstr "création d'une expression rql pour le droit d'ajout de %(linkto)s"
+
+msgid ""
 "creating RQLExpression (CWAttribute %(linkto)s read_permission RQLExpression)"
 msgstr "création d'une expression rql pour le droit de lecture de %(linkto)s"
 
@@ -2133,6 +2134,9 @@ msgstr "workflow par défaut des utilisateurs"
 
 msgid "default value"
 msgstr "valeur par défaut"
+
+msgid "default value as gziped pickled python object"
+msgstr "valeur par défaut, sous forme d'objet python picklé zippé"
 
 msgid "default workflow for an entity type"
 msgstr "workflow par défaut pour un type d'entité"
@@ -3264,6 +3268,10 @@ msgctxt "CWSource"
 msgid "name"
 msgstr "nom"
 
+msgctxt "CWUniqueTogetherConstraint"
+msgid "name"
+msgstr "nom"
+
 msgctxt "State"
 msgid "name"
 msgstr "nom"
@@ -3874,9 +3882,8 @@ msgid "some later transaction(s) touch entity, undo them first"
 msgstr ""
 "des transactions plus récentes modifient cette entité, annulez les d'abord"
 
-#, python-format
-msgid "some relations %sviolate a unicity constraint"
-msgstr "certaines relations %stransgressent une contrainte d'unicité"
+msgid "some relations violate a unicity constraint"
+msgstr "certaines relations transgressent une contrainte d'unicité"
 
 msgid "sorry, the server is unable to handle this query"
 msgstr "désolé, le serveur ne peut traiter cette requête"
@@ -4562,7 +4569,7 @@ msgid "wednesday"
 msgstr "mercredi"
 
 #, python-format
-msgid "welcome %s !"
+msgid "welcome %s!"
 msgstr "bienvenue %s !"
 
 msgid "wf_info_for"
@@ -4659,107 +4666,3 @@ msgid "you should un-inline relation %s which is supported and may be crossed "
 msgstr ""
 "vous devriez enlevé la mise en ligne de la relation %s qui est supportée et "
 "peut-être croisée"
-
-#~ msgid "%s not estimated"
-#~ msgstr "%s non estimé(s)"
-
-#~ msgid "Action"
-#~ msgstr "Action"
-
-#~ msgid "From:"
-#~ msgstr "De :"
-
-#~ msgid "Recipients:"
-#~ msgstr "Destinataires :"
-
-#~ msgid "Subject:"
-#~ msgstr "Sujet :"
-
-#~ msgid "What's new?"
-#~ msgstr "Nouveautés"
-
-#~ msgid "You can use any of the following substitutions in your text"
-#~ msgstr ""
-#~ "Vous pouvez utiliser n'importe quelle substitution parmi la liste "
-#~ "suivante dans le contenu de votre courriel."
-
-#~ msgid "cost"
-#~ msgstr "coût"
-
-#~ msgid "day"
-#~ msgstr "jour"
-
-#~ msgid "emails successfully sent"
-#~ msgstr "courriels envoyés avec succès"
-
-#~ msgid "embed"
-#~ msgstr "embarqué"
-
-#~ msgid "embedding this url is forbidden"
-#~ msgstr "l'inclusion de cette url est interdite"
-
-#~ msgid "error while embedding page"
-#~ msgstr "erreur pendant l'inclusion de la page"
-
-#~ msgid "eta_date"
-#~ msgstr "date de fin"
-
-#~ msgid "expected:"
-#~ msgstr "attendu :"
-
-#~ msgid "external page"
-#~ msgstr "page externe"
-
-#~ msgid "initial estimation %s"
-#~ msgstr "estimation initiale %s"
-
-#~ msgid "jump to selection"
-#~ msgstr "afficher cette sélection"
-
-#~ msgid "log out first"
-#~ msgstr "déconnecter vous d'abord"
-
-#~ msgid "milestone"
-#~ msgstr "jalon"
-
-#~ msgid "month"
-#~ msgstr "mois"
-
-#~ msgid "no related project"
-#~ msgstr "pas de projet rattaché"
-
-#~ msgid "progress"
-#~ msgstr "avancement"
-
-#~ msgid "progress bar"
-#~ msgstr "barre d'avancement"
-
-#~ msgid "project"
-#~ msgstr "projet"
-
-#~ msgid "send email"
-#~ msgstr "envoyer un courriel"
-
-#~ msgid "sioc"
-#~ msgstr "sioc"
-
-#~ msgid "task progression"
-#~ msgstr "avancement de la tâche"
-
-#~ msgid "today"
-#~ msgstr "aujourd'hui"
-
-#~ msgid "todo_by"
-#~ msgstr "à faire par"
-
-#~ msgid "toggle filter"
-#~ msgstr "afficher/masquer le filtre"
-
-#~ msgid "undo last change"
-#~ msgstr "annuler dernier changement"
-
-#~ msgid "violates unique_together constraints (%s)"
-#~ msgstr "violation de contrainte unique_together (%s)"
-
-#~ msgid "week"
-#~ msgstr "semaine"

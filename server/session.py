@@ -1082,7 +1082,7 @@ class Session(RequestSessionBase):
     def keep_cnxset_mode(self, mode):
         """set `mode`, e.g. how the session will keep its connections set:
 
-        * if mode == 'write', the connections set is freed after each ready
+        * if mode == 'write', the connections set is freed after each read
           query, but kept until the transaction's end (eg commit or rollback)
           when a write query is detected (eg INSERT/SET/DELETE queries)
 
@@ -1174,14 +1174,11 @@ class Session(RequestSessionBase):
     source_from_eid = tx_meth('source_from_eid')
 
 
-    def execute(self, rql, kwargs=None, eid_key=None, build_descr=True):
+    def execute(self, rql, kwargs=None, build_descr=True):
         """db-api like method directly linked to the querier execute method.
 
         See :meth:`cubicweb.dbapi.Cursor.execute` documentation.
         """
-        if eid_key is not None:
-            warn('[3.8] eid_key is deprecated, you can safely remove this argument',
-                 DeprecationWarning, stacklevel=2)
         self.timestamp = time() # update timestamp
         rset = self._execute(self, rql, kwargs, build_descr)
         rset.req = self
@@ -1430,7 +1427,7 @@ Session.DEFAULT_SECURITY = DEFAULT_SECURITY
 
 
 class InternalSession(Session):
-    """special session created internaly by the repository"""
+    """special session created internally by the repository"""
     is_internal_session = True
     running_dbapi_query = False
 
@@ -1440,7 +1437,8 @@ class InternalSession(Session):
         self.user._cw = self # XXX remove when "vreg = user._cw.vreg" hack in entity.py is gone
         if not safe:
             self.disable_hook_categories('integrity')
-            self._tx.ctx_count += 1
+        self.disable_hook_categories('security')
+        self._tx.ctx_count += 1
 
     def __enter__(self):
         return self

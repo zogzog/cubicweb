@@ -576,7 +576,7 @@ class QuerierTC(BaseQuerierTC):
         self.assertListEqual(rset.rows,
                               [[u'description_format', 12],
                                [u'description', 13],
-                               [u'name', 16],
+                               [u'name', 17],
                                [u'created_by', 43],
                                [u'creation_date', 43],
                                [u'cw_source', 43],
@@ -718,17 +718,17 @@ class QuerierTC(BaseQuerierTC):
         self.execute("INSERT Personne X: X nom 'trucmuche'")
         self.execute("SET X connait Y WHERE X nom 'chouette', Y nom 'bidule'")
         self.execute("SET X connait Y WHERE X nom 'machin', Y nom 'chouette'")
-        rset = self.execute('Any P where P connait P2')
-        self.assertEqual(len(rset.rows), 3, rset.rows)
-        rset = self.execute('Any P where NOT P connait P2')
+        rset = self.execute('Any P WHERE P connait P2')
+        self.assertEqual(len(rset.rows), 4, rset.rows)
+        rset = self.execute('Any P WHERE NOT P connait P2')
         self.assertEqual(len(rset.rows), 1, rset.rows) # trucmuche
-        rset = self.execute('Any P where P connait P2, P2 nom "bidule"')
+        rset = self.execute('Any P WHERE P connait P2, P2 nom "bidule"')
         self.assertEqual(len(rset.rows), 1, rset.rows)
-        rset = self.execute('Any P where P2 connait P, P2 nom "bidule"')
+        rset = self.execute('Any P WHERE P2 connait P, P2 nom "bidule"')
         self.assertEqual(len(rset.rows), 1, rset.rows)
-        rset = self.execute('Any P where P connait P2, P2 nom "chouette"')
+        rset = self.execute('Any P WHERE P connait P2, P2 nom "chouette"')
         self.assertEqual(len(rset.rows), 2, rset.rows)
-        rset = self.execute('Any P where P2 connait P, P2 nom "chouette"')
+        rset = self.execute('Any P WHERE P2 connait P, P2 nom "chouette"')
         self.assertEqual(len(rset.rows), 2, rset.rows)
 
     def test_select_inline(self):
