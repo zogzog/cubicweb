@@ -660,12 +660,19 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                     mo = re.search("unique_[a-z0-9]{32}", arg)
                     if mo is not None:
                         raise UniqueTogetherError(session, cstrname=mo.group(0))
-                    # sqlite
+                    # old sqlite
                     mo = re.search('columns (.*) are not unique', arg)
                     if mo is not None: # sqlite in use
                         # we left chop the 'cw_' prefix of attribute names
                         rtypes = [c.strip()[3:]
                                   for c in mo.group(1).split(',')]
+                        raise UniqueTogetherError(session, rtypes=rtypes)
+                    # sqlite after http://www.sqlite.org/cgi/src/info/c80e229dd9c1230a
+                    if arg.startswith('UNIQUE constraint failed:'):
+                        # message looks like: "UNIQUE constraint failed: foo.cw_bar, foo.cw_baz"
+                        # so drop the prefix, split on comma, drop the tablenames, and drop "cw_"
+                        columns = arg.split(':', 1)[1].split(',')
+                        rtypes = [c.split('.', 1)[1].strip()[3:] for c in columns]
                         raise UniqueTogetherError(session, rtypes=rtypes)
             raise
         return cursor
