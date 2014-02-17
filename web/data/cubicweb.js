@@ -207,91 +207,40 @@ jQuery.extend(cw.utils, {
     },
 
     /**
-     * .. function:: formContents(elem \/* = document.body *\/)
+     * .. function:: formContents(elem)
      *
-     * this implementation comes from MochiKit
+     * cannot use jQuery.serializeArray() directly because of FCKeditor
      */
-    formContents: function (elem /* = document.body */ ) {
-        var names = [];
-        var values = [];
-        if (typeof(elem) == "undefined" || elem === null) {
-            elem = document.body;
-        } else {
-            elem = cw.getNode(elem);
+    formContents: function (elem) {
+        var $elem, array, names, values;
+        $elem = cw.jqNode(elem);
+        array = $elem.serializeArray();
+
+        if (typeof FCKeditor !== 'undefined') {
+            $elem.find('textarea').each(function (idx, textarea) {
+                var fck = FCKeditorAPI.GetInstance(textarea.id);
+                if (fck) {
+                    array = jQuery.map(array, function (dict) {
+                        if (dict.name === textarea.name) {
+                            // filter out the textarea's - likely empty - value ...
+                            return null;
+                        }
+                        return dict;
+                    });
+                    // ... so we can put the HTML coming from FCKeditor instead.
+                    array.push({
+                        name: textarea.name,
+                        value: fck.GetHTML()
+                    });
+                }
+            });
         }
-        cw.utils.nodeWalkDepthFirst(elem, function (elem) {
-            var name = elem.name;
-            if (name && name.length) {
-                if (elem.disabled) {
-                    return null;
-                }
-                var tagName = elem.tagName.toUpperCase();
-                if (tagName === "INPUT" && (elem.type == "radio" || elem.type == "checkbox") && !elem.checked) {
-                    return null;
-                }
-                if (tagName === "SELECT") {
-                    if (elem.type == "select-one") {
-                        if (elem.selectedIndex >= 0) {
-                            var opt = elem.options[elem.selectedIndex];
-                            var v = opt.value;
-                            if (!v) {
-                                var h = opt.outerHTML;
-                                // internet explorer sure does suck.
-                                if (h && !h.match(/^[^>]+\svalue\s*=/i)) {
-                                    v = opt.text;
-                                }
-                            }
-                            names.push(name);
-                            values.push(v);
-                            return null;
-                        }
-                        // no form elements?
-                        names.push(name);
-                        values.push("");
-                        return null;
-                    } else {
-                        var opts = elem.options;
-                        if (!opts.length) {
-                            names.push(name);
-                            values.push("");
-                            return null;
-                        }
-                        for (var i = 0; i < opts.length; i++) {
-                            var opt = opts[i];
-                            if (!opt.selected) {
-                                continue;
-                            }
-                            var v = opt.value;
-                            if (!v) {
-                                var h = opt.outerHTML;
-                                // internet explorer sure does suck.
-                                if (h && !h.match(/^[^>]+\svalue\s*=/i)) {
-                                    v = opt.text;
-                                }
-                            }
-                            names.push(name);
-                            values.push(v);
-                        }
-                        return null;
-                    }
-                }
-                if (tagName === "FORM" || tagName === "P" || tagName === "SPAN" || tagName === "DIV") {
-                    return elem.childNodes;
-                }
-		var value = elem.value;
-		if (tagName === "TEXTAREA") {
-		    if (typeof(FCKeditor) != 'undefined') {
-			var fck = FCKeditorAPI.GetInstance(elem.id);
-			if (fck) {
-			    value = fck.GetHTML();
-			}
-		    }
-		}
-                names.push(name);
-                values.push(value || '');
-                return null;
-            }
-            return elem.childNodes;
+
+        names = [];
+        values = [];
+        jQuery.each(array, function (idx, dict) {
+            names.push(dict.name);
+            values.push(dict.value);
         });
         return [names, values];
     },
