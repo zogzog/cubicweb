@@ -157,7 +157,7 @@ if applcubicwebversion < (3, 4, 0) and cubicwebversion >= (3, 4, 0):
             type, source, extid = session.describe(eid)
             if source == 'system':
                 rql('SET X cwuri %(u)s WHERE X eid %(x)s',
-                    {'x': eid, 'u': base_url + u'eid/%s' % eid})
+                    {'x': eid, 'u': u'%s%s' % (base_url, eid)})
         isession.commit()
         session.set_shared_data('do-not-insert-cwuri', False)
 

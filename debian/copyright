@@ -1,5 +1,5 @@
 This package was debianized by Logilab <contact@logilab.fr>.
-It was downloaded from ftp://ftp.logilab.org/pub/cubicweb
+It was downloaded from http://download.logilab.org/pub/cubicweb
 
 
 Upstream Author:
@@ -8,7 +8,7 @@ Upstream Author:
 
 Copyright:
 
-    Copyright (c) 2003-2013 LOGILAB S.A. (Paris, FRANCE).
+    Copyright (c) 2003-2014 LOGILAB S.A. (Paris, FRANCE).
     http://www.logilab.fr/ -- mailto:contact@logilab.fr
 
 License:

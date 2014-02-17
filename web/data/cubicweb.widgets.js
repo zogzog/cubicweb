@@ -415,17 +415,16 @@ function toggleTree(event) {
     var url = linode.attr('cubicweb:loadurl');
     if (url) {
         linode.find('ul.placeholder').remove();
-        linode.loadxhtml(url, {
-            callback: function(domnode) {
+        var d = linode.loadxhtml(url, null, 'post', 'append');
+        d.addCallback(function(domnode) {
                 linode.removeAttr('cubicweb:loadurl');
-                jQuery(domnode).treeview({
+                linode.find('> ul.treeview').treeview({
                     toggle: toggleTree,
                     prerendered: true
                 });
                 return null;
             }
-        },
-        'post', 'append');
+        );
     }
 }
 

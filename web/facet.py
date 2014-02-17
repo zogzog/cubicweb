@@ -880,7 +880,7 @@ class RelationAttributeFacet(RelationFacet):
     though linked to a different address entity. There is a great chance your
     users won't understand that...
 
-    That's where this class come in ! It's used to said that you want to filter
+    That's where this class come in! It's used to said that you want to filter
     according to the *attribute value* of a relatied entity, not to the entity
     itself. Now here is the source code for the facet:
 

@@ -215,7 +215,7 @@ from lxml.html import clean, defs
 
 ALLOWED_TAGS = (defs.general_block_tags | defs.list_tags | defs.table_tags |
                 defs.phrase_tags | defs.font_style_tags |
-                set(('span', 'a', 'br', 'img', 'map', 'area', 'sub', 'sup'))
+                set(('span', 'a', 'br', 'img', 'map', 'area', 'sub', 'sup', 'canvas'))
                 )
 
 CLEANER = clean.Cleaner(allow_tags=ALLOWED_TAGS, remove_unknown_tags=False,

@@ -247,6 +247,7 @@ class CWSource(EntityType):
                                   'source\'s type'),
                     __permissions__={
                         'read':   ('managers',),
+                        'add':    ('managers',),
                         'update': ('managers',),
                         })
     # put this here and not in a subclass even if it's only for some sources
@@ -284,6 +285,7 @@ class CWSourceHostConfig(EntityType):
                                   'values defined on the source.'),
                     __permissions__={
                         'read':   ('managers',),
+                        'add':    ('managers',),
                         'update': ('managers',),
                         })
 

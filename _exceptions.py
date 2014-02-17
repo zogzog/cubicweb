@@ -180,9 +180,9 @@ class UndoTransactionException(QueryError):
     :param txuuid: Unique identifier of the partialy undone transaction
 
     :type errors: list
-    :param errors: List of errors occured during undoing
+    :param errors: List of errors occurred during undoing
     """
-    msg = u"The following error(s) occured while undoing transaction #%d : %s"
+    msg = u"The following error(s) occurred while undoing transaction #%d : %s"
 
     def __init__(self, txuuid, errors):
         super(UndoTransactionException, self).__init__(txuuid, errors)

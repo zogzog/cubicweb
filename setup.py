@@ -188,7 +188,7 @@ if USE_SETUPTOOLS:
             MyInstallMoreData.run(self)
             self.install_dir = _old_install_dir
     try:
-        import setuptools.command.easy_install # only if easy_install avaible
+        import setuptools.command.easy_install # only if easy_install available
         # monkey patch: Crack SandboxViolation verification
         from setuptools.sandbox import DirectorySandbox as DS
         old_ok = DS._ok

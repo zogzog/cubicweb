@@ -238,6 +238,7 @@ def requestReceived(self, command, path, version):
         key, pdict = parse_header(ctype)
         if key == 'application/x-www-form-urlencoded':
             self.args.update(http.parse_qs(self.content.read(), 1))
+            self.content.seek(0)
         elif key == 'multipart/form-data':
             # defer this as it can be extremely time consumming
             # with big files

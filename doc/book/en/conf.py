@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -65,7 +65,7 @@ master_doc = 'index'
 
 # General substitutions.
 project = 'CubicWeb'
-copyright = '2001-2011, Logilab'
+copyright = '2001-2014, Logilab'
 
 # The default replacements for |version| and |release|, also used in various
 # other places throughout the built documents.

@@ -55,8 +55,8 @@ def has_eid(session, sqlcursor, eid, eids):
         eids[eid] = False
         return False
     elif len(result) > 1:
-        msg = ('  More than one entity with eid %s exists in source !\n'
-               '  WARNING : Unable to fix this, do it yourself !\n')
+        msg = ('  More than one entity with eid %s exists in source!\n'
+               '  WARNING : Unable to fix this, do it yourself!\n')
         sys.stderr.write(msg % eid)
     eids[eid] = True
     return True

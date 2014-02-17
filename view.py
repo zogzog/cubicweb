@@ -356,7 +356,7 @@ class EntityView(View):
 
 class StartupView(View):
     """base class for views which doesn't need a particular result set to be
-    displayed (so they can always be displayed !)
+    displayed (so they can always be displayed!)
     """
     __select__ = none_rset()
 

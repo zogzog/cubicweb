@@ -127,7 +127,7 @@ class SimpleReqRewriter(URLRewriter):
                     req.form.update(infos)
                     break
             elif inputurl.match(uri): # it's a regexp
-                # XXX what about i18n ? (vtitle for instance)
+                # XXX what about i18n? (vtitle for instance)
                 for param, value in infos.items():
                     if isinstance(value, basestring):
                         req.form[param] = inputurl.sub(value, uri)

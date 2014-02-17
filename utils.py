@@ -375,9 +375,9 @@ class HTMLHead(UStringIO):
             if skiphead:
                 # Don't insert <script> tags directly as they would be
                 # interpreted directly by some browsers (e.g. IE).
-                # Use <pre class="script"> tags instead and let
+                # Use <cubicweb:script> tags instead and let
                 # `loadAjaxHtmlHead` handle the script insertion / execution.
-                w(u'<pre class="script" src="%s"></pre>\n' %
+                w(u'<cubicweb:script src="%s"></cubicweb:script>\n' %
                   xml_escape(jsfile))
                 # FIXME: a probably better implementation might be to add
                 #        JS or CSS urls in a JS list that loadAjaxHtmlHead
@@ -392,9 +392,9 @@ class HTMLHead(UStringIO):
         if self.post_inlined_scripts:
             if skiphead:
                 for script in self.post_inlined_scripts:
-                    w(u'<pre class="script">')
+                    w(u'<cubicweb:script>')
                     w(xml_escape(script))
-                    w(u'</pre>')
+                    w(u'</cubicweb:script>')
             else:
                 w(self.script_opening)
                 w(u'\n\n'.join(self.post_inlined_scripts))
@@ -455,8 +455,8 @@ class HTMLStream(object):
         attrs = ' '.join('%s="%s"' % (attr, xml_escape(value))
                          for attr, value in self._htmlattrs)
         if attrs:
-            return '<html %s>' % attrs
-        return '<html>'
+            return '<html xmlns:cubicweb="http://www.cubicweb.org" %s>' % attrs
+        return '<html xmlns:cubicweb="http://www.cubicweb.org">'
 
     def getvalue(self):
         """writes HTML headers, closes </head> tag and writes HTML body"""
