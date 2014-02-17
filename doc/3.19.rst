@@ -148,3 +148,7 @@ Deprecated Code Drops
 ----------------------
 
 * session.hijack_user mechanism has been dropped.
+
+* EtypeRestrictionComponent has been removed, its functionality has been
+  replaced by facets a while ago.
+
