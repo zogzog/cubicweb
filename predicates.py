@@ -1290,7 +1290,7 @@ def no_cnx(cls, req, **kwargs):
 
 @objectify_predicate
 def authenticated_user(cls, req, **kwargs):
-    """Return 1 if the user is authenticated (e.g. not the anonymous user).
+    """Return 1 if the user is authenticated (i.e. not the anonymous user).
 
     May only be used on the web side, not on the data repository side.
     """
@@ -1301,7 +1301,7 @@ def authenticated_user(cls, req, **kwargs):
 
 # XXX == ~ authenticated_user()
 def anonymous_user():
-    """Return 1 if the user is not authenticated (e.g. is the anonymous user).
+    """Return 1 if the user is not authenticated (i.e. is the anonymous user).
 
     May only be used on the web side, not on the data repository side.
     """
