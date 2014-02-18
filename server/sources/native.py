@@ -1291,10 +1291,10 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         """
         FTIndexEntityOp.get_instance(session).add_data(entity.eid)
 
-    def fti_unindex_entities(self, session, entities):
+    def fti_unindex_entities(self, cnx, entities):
         """remove text content for entities from the full text index
         """
-        cursor = session.cnxset.cu
+        cursor = cnx.cnxset.cu
         cursor_unindex_object = self.dbhelper.cursor_unindex_object
         try:
             for entity in entities:
@@ -1303,11 +1303,11 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             self.exception('error while unindexing %s', entity)
 
 
-    def fti_index_entities(self, session, entities):
+    def fti_index_entities(self, cnx, entities):
         """add text content of created/modified entities to the full text index
         """
         cursor_index_object = self.dbhelper.cursor_index_object
-        cursor = session.cnxset.cu
+        cursor = cnx.cnxset.cu
         try:
             # use cursor_index_object, not cursor_reindex_object since
             # unindexing done in the FTIndexEntityOp

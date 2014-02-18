@@ -82,13 +82,13 @@ def etype_fti_containers(eschema, _done=None):
     else:
         yield eschema
 
-def reindex_entities(schema, session, withpb=True, etypes=None):
+def reindex_entities(schema, cnx, withpb=True, etypes=None):
     """reindex all entities in the repository"""
     # deactivate modification_date hook since we don't want them
     # to be updated due to the reindexation
-    repo = session.repo
-    cursor = session.cnxset.cu
-    dbhelper = session.repo.system_source.dbhelper
+    repo = cnx.repo
+    cursor = cnx.cnxset.cu
+    dbhelper = repo.system_source.dbhelper
     if not dbhelper.has_fti_table(cursor):
         print 'no text index table'
         dbhelper.init_fti(cursor)
@@ -105,15 +105,15 @@ def reindex_entities(schema, session, withpb=True, etypes=None):
             for container in etype_fti_containers(eschema):
                 etypes.add(container)
         # clear fti table first
-        session.system_sql('DELETE FROM %s' % dbhelper.fti_table)
+        cnx.system_sql('DELETE FROM %s' % dbhelper.fti_table)
     else:
         print 'Reindexing entities of type %s' % \
               ', '.join(sorted(str(e) for e in etypes))
         # clear fti table first. Use subquery for sql compatibility
-        session.system_sql("DELETE FROM %s WHERE EXISTS(SELECT 1 FROM ENTITIES "
-                           "WHERE eid=%s AND type IN (%s))" % (
-                               dbhelper.fti_table, dbhelper.fti_uid_attr,
-                               ','.join("'%s'" % etype for etype in etypes)))
+        cnx.system_sql("DELETE FROM %s WHERE EXISTS(SELECT 1 FROM ENTITIES "
+                       "WHERE eid=%s AND type IN (%s))" % (
+                           dbhelper.fti_table, dbhelper.fti_uid_attr,
+                           ','.join("'%s'" % etype for etype in etypes)))
     if withpb:
         pb = ProgressBar(len(etypes) + 1)
         pb.update()
@@ -121,12 +121,12 @@ def reindex_entities(schema, session, withpb=True, etypes=None):
     # attribute to their current value
     source = repo.system_source
     for eschema in etypes:
-        etype_class = session.vreg['etypes'].etype_class(str(eschema))
-        for fti_rql in etype_class.cw_fti_index_rql_queries(session):
-            rset = session.execute(fti_rql)
-            source.fti_index_entities(session, rset.entities())
+        etype_class = cnx.vreg['etypes'].etype_class(str(eschema))
+        for fti_rql in etype_class.cw_fti_index_rql_queries(cnx):
+            rset = cnx.execute(fti_rql)
+            source.fti_index_entities(cnx, rset.entities())
             # clear entity cache to avoid high memory consumption on big tables
-            session.drop_entity_cache()
+            cnx.drop_entity_cache()
         if withpb:
             pb.update()
 
