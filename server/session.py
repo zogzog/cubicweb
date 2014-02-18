@@ -103,7 +103,7 @@ class _hooks_control(object): # XXX repoapi: remove me when
                               # session stop being connection
     """context manager to control activated hooks categories.
 
-    If mode is`HOOKS_DENY_ALL`, given hooks categories will
+    If mode is `HOOKS_DENY_ALL`, given hooks categories will
     be enabled.
 
     If mode is `HOOKS_ALLOW_ALL`, given hooks categories will
@@ -117,10 +117,10 @@ class _hooks_control(object): # XXX repoapi: remove me when
        with _hooks_control(cnx, HOOKS_DENY_ALL, 'integrity'):
            # ... do stuff with none but 'integrity' hooks activated
 
-    This is an internal api, you should rather use
+    This is an internal API, you should rather use
     :meth:`~cubicweb.server.session.Connection.deny_all_hooks_but` or
     :meth:`~cubicweb.server.session.Connection.allow_all_hooks_but`
-    Transaction methods.
+    Connection methods.
     """
     def __init__(self, cnx, mode, *categories):
         assert mode in (HOOKS_ALLOW_ALL, HOOKS_DENY_ALL)
