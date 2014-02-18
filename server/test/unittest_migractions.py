@@ -64,7 +64,7 @@ class MigrationCommandsTC(CubicWebTC):
         self.mh = ServerMigrationHelper(self.repo.config, migrschema,
                                         repo=self.repo, cnx=self.cnx,
                                         interactive=False)
-        assert self.cnx is self.mh._cnx
+        assert self.cnx is self.mh.cnx
         assert self.session is self.mh.session, (self.session.id, self.mh.session.id)
 
     def tearDown(self):

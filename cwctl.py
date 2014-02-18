@@ -782,7 +782,8 @@ given, appropriate sources for migration will be automatically selected \
             for cube, fromversion, toversion in toupgrade:
                 print '-> migration needed from %s to %s for %s' % (fromversion, toversion, cube)
             with mih.cnx:
-                mih.migrate(vcconf, reversed(toupgrade), self.config)
+                with mih.cnx.security_enabled(False, False):
+                    mih.migrate(vcconf, reversed(toupgrade), self.config)
         else:
             print '-> no data migration needed for instance %s.' % appid
         # rewrite main configuration file
@@ -951,15 +952,16 @@ directly give URI as instance id instead',
             mih, shutdown_callback = self._handle_networked(appuri)
         try:
             with mih.cnx:
-                if args:
-                    # use cmdline parser to access left/right attributes only
-                    # remember that usage requires instance appid as first argument
-                    scripts, args = self.cmdline_parser.largs[1:], self.cmdline_parser.rargs
-                    for script in scripts:
-                            mih.cmd_process_script(script, scriptargs=args)
-                            mih.commit()
-                else:
-                    mih.interactive_shell()
+                with mih.cnx.security_enabled(False, False):
+                    if args:
+                        # use cmdline parser to access left/right attributes only
+                        # remember that usage requires instance appid as first argument
+                        scripts, args = self.cmdline_parser.largs[1:], self.cmdline_parser.rargs
+                        for script in scripts:
+                                mih.cmd_process_script(script, scriptargs=args)
+                                mih.commit()
+                    else:
+                        mih.interactive_shell()
         finally:
             shutdown_callback()
 

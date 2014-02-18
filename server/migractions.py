@@ -91,10 +91,14 @@ class ServerMigrationHelper(MigrationHelper):
             assert repo
         if cnx is not None:
             assert repo
-            self._cnx = cnx
+            self.cnx = cnx
             self.repo = repo
+            self.session = repo._get_session(cnx.sessionid)
         elif connect:
             self.repo_connect()
+            self.set_session()
+        else:
+            self.session = None
         # no config on shell to a remote instance
         if config is not None and (cnx or connect):
             repo = self.repo
@@ -121,6 +125,33 @@ class ServerMigrationHelper(MigrationHelper):
         self.fs_schema = schema
         self._synchronized = set()
 
+    def set_session(self):
+        try:
+            login = self.repo.config.default_admin_config['login']
+            pwd = self.repo.config.default_admin_config['password']
+        except KeyError:
+            login, pwd = manager_userpasswd()
+        while True:
+            try:
+                self.cnx = repoapi.connect(self.repo, login, password=pwd)
+                if not 'managers' in self.cnx.user.groups:
+                    print 'migration need an account in the managers group'
+                else:
+                    break
+            except AuthenticationError:
+                print 'wrong user/password'
+            except (KeyboardInterrupt, EOFError):
+                print 'aborting...'
+                sys.exit(0)
+            try:
+                login, pwd = manager_userpasswd()
+            except (KeyboardInterrupt, EOFError):
+                print 'aborting...'
+                sys.exit(0)
+        self.session = self.repo._get_session(self.cnx.sessionid)
+        self.session.keep_cnxset_mode('transaction')
+        self.session.set_shared_data('rebuild-infered', False)
+
     # overriden from base MigrationHelper ######################################
 
     @cached
@@ -144,7 +175,7 @@ class ServerMigrationHelper(MigrationHelper):
             elif options.backup_db:
                 self.backup_database(askconfirm=False)
         # disable notification during migration
-        with self.session.allow_all_hooks_but('notification'):
+        with self.cnx.allow_all_hooks_but('notification'):
             super(ServerMigrationHelper, self).migrate(vcconf, toupgrade, options)
 
     def cmd_process_script(self, migrscript, funcname=None, *args, **kwargs):
@@ -255,61 +286,13 @@ class ServerMigrationHelper(MigrationHelper):
         repo.hm.call_hooks('server_restore', repo=repo, timestamp=backupfile)
         print '-> database restored.'
 
-    @property
-    def cnx(self):
-        """lazy connection"""
-        try:
-            return self._cnx
-        except AttributeError:
-            try:
-                login = self.repo.config.default_admin_config['login']
-                pwd = self.repo.config.default_admin_config['password']
-            except KeyError:
-                login, pwd = manager_userpasswd()
-            while True:
-                try:
-                    self._cnx = repoapi.connect(self.repo, login, password=pwd)
-                    if not 'managers' in self._cnx.user(self.session).groups:
-                        print 'migration need an account in the managers group'
-                    else:
-                        break
-                except AuthenticationError:
-                    print 'wrong user/password'
-                except (KeyboardInterrupt, EOFError):
-                    print 'aborting...'
-                    sys.exit(0)
-                try:
-                    login, pwd = manager_userpasswd()
-                except (KeyboardInterrupt, EOFError):
-                    print 'aborting...'
-                    sys.exit(0)
-            self.session.keep_cnxset_mode('transaction')
-            self.session.set_shared_data('rebuild-infered', False)
-            return self._cnx
-
-    @property
-    def session(self):
-        if self.config is not None:
-            session = self.repo._get_session(self.cnx.sessionid)
-            if session.cnxset is None:
-                session.read_security = False
-                session.write_security = False
-            session.set_cnxset()
-            return session
-        # no access to session on remote instance
-        return None
-
     def commit(self):
-        if hasattr(self, '_cnx'):
-            self._cnx.commit()
-        if self.session:
-            self.session.set_cnxset()
+        if hasattr(self, 'cnx'):
+            self.cnx.commit(free_cnxset=False)
 
     def rollback(self):
-        if hasattr(self, '_cnx'):
-            self._cnx.rollback()
-        if self.session:
-            self.session.set_cnxset()
+        if hasattr(self, 'cnx'):
+            self.cnx.rollback(free_cnxset=False)
 
     def rqlexecall(self, rqliter, ask_confirm=False):
         for rql, kwargs in rqliter:
@@ -365,7 +348,7 @@ class ServerMigrationHelper(MigrationHelper):
             self.execscript_confirm = yes
             try:
                 if event == 'postcreate':
-                    with self.session.allow_all_hooks_but():
+                    with self.cnx.allow_all_hooks_but():
                         return self.cmd_process_script(apc, funcname, *args, **kwargs)
                 return self.cmd_process_script(apc, funcname, *args, **kwargs)
             finally:
@@ -387,7 +370,7 @@ class ServerMigrationHelper(MigrationHelper):
         sql_scripts = glob(osp.join(directory, '*.%s.sql' % driver))
         for fpath in sql_scripts:
             print '-> installing', fpath
-            failed = sqlexec(open(fpath).read(), self.session.system_sql, False,
+            failed = sqlexec(open(fpath).read(), self.cnx.system_sql, False,
                              delimiter=';;')
             if failed:
                 print '-> ERROR, skipping', fpath
@@ -556,7 +539,7 @@ class ServerMigrationHelper(MigrationHelper):
             repo = {}
             for cols in eschema._unique_together or ():
                 fs[unique_index_name(repoeschema, cols)] = sorted(cols)
-            schemaentity = self.session.entity_from_eid(repoeschema.eid)
+            schemaentity = self.cnx.entity_from_eid(repoeschema.eid)
             for entity in schemaentity.related('constraint_of', 'object',
                                                targettypes=('CWUniqueTogetherConstraint',)).entities():
                 repo[entity.name] = sorted(rel.name for rel in entity.relations)
@@ -707,7 +690,7 @@ class ServerMigrationHelper(MigrationHelper):
                                                  str(totype))
         # execute post-create files
         for cube in reversed(newcubes):
-            with self.session.allow_all_hooks_but():
+            with self.cnx.allow_all_hooks_but():
                 self.cmd_exec_event_script('postcreate', cube)
                 self.commit()
 
@@ -989,8 +972,8 @@ class ServerMigrationHelper(MigrationHelper):
                 # repository caches are properly cleanup
                 hook.CleanupDeletedEidsCacheOp.get_instance(session).union(thispending)
                 # and don't forget to remove record from system tables
-                entities = [session.entity_from_eid(eid, rdeftype) for eid in thispending]
-                self.repo.system_source.delete_info_multi(session, entities)
+                entities = [self.cnx.entity_from_eid(eid, rdeftype) for eid in thispending]
+                self.repo.system_source.delete_info_multi(self.cnx._cnx, entities)
                 self.sqlexec('DELETE FROM cw_%s WHERE cw_from_entity=%%(eid)s OR '
                              'cw_to_entity=%%(eid)s' % rdeftype,
                              {'eid': oldeid}, ask_confirm=False)
@@ -1389,7 +1372,7 @@ class ServerMigrationHelper(MigrationHelper):
         indexable entity types
         """
         from cubicweb.server.checkintegrity import reindex_entities
-        reindex_entities(self.repo.schema, self.session, etypes=etypes)
+        reindex_entities(self.repo.schema, self.cnx._cnx, etypes=etypes)
 
     @contextmanager
     def cmd_dropped_constraints(self, etype, attrname, cstrtype=None,
@@ -1488,7 +1471,7 @@ class ServerMigrationHelper(MigrationHelper):
         self.sqlexec(sql, ask_confirm=False)
         dbhelper = self.repo.system_source.dbhelper
         sqltype = dbhelper.TYPE_MAPPING[newtype]
-        cursor = self.session.cnxset.cu
+        cursor = self.cnx._cnx.cnxset.cu
         dbhelper.change_col_type(cursor, 'cw_%s'  % etype, 'cw_%s' % attr, sqltype, allownull)
         if commit:
             self.commit()

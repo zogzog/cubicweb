@@ -283,19 +283,20 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     config._cubes = None # avoid assertion error
     repo = get_repository(config=config)
     with connect(repo, login, password=pwd) as cnx:
-        repo.system_source.eid = ssource.eid # redo this manually
-        handler = config.migration_handler(schema, interactive=False,
-                                           cnx=cnx, repo=repo)
-        # install additional driver specific sql files
-        handler.cmd_install_custom_sql_scripts()
-        for cube in reversed(config.cubes()):
-            handler.cmd_install_custom_sql_scripts(cube)
-        # serialize the schema
-        initialize_schema(config, schema, handler)
-        # yoo !
-        cnx.commit()
-        repo.system_source.init_creating()
-        cnx.commit()
+        with cnx.security_enabled(False, False):
+            repo.system_source.eid = ssource.eid # redo this manually
+            handler = config.migration_handler(schema, interactive=False,
+                                               cnx=cnx, repo=repo)
+            # install additional driver specific sql files
+            handler.cmd_install_custom_sql_scripts()
+            for cube in reversed(config.cubes()):
+                handler.cmd_install_custom_sql_scripts(cube)
+            # serialize the schema
+            initialize_schema(config, schema, handler)
+            # yoo !
+            cnx.commit()
+            repo.system_source.init_creating()
+            cnx.commit()
     repo.shutdown()
     # restore initial configuration
     config.creating = False
