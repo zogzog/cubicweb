@@ -219,6 +219,16 @@ class ClientConnection(RequestSessionBase):
     commit = _srv_cnx_func('commit')
     rollback = _srv_cnx_func('rollback')
 
+    # security #################################################################
+
+    allow_all_hooks_but = _srv_cnx_func('allow_all_hooks_but')
+    deny_all_hooks_but = _srv_cnx_func('deny_all_hooks_but')
+    security_enabled = _srv_cnx_func('security_enabled')
+
+    # direct sql ###############################################################
+
+    system_sql = _srv_cnx_func('system_sql')
+
     # session data methods #####################################################
 
     get_shared_data = _srv_cnx_func('get_shared_data')
