@@ -37,7 +37,7 @@ Another example showing how to debug hooks at a specific code site:
 
 .. sourcecode:: python
 
-    from cubicweb.server import debuged, DBG_HOOKS
+    from cubicweb.server import debugged, DBG_HOOKS
     with debugged(DBG_HOOKS):
         person.cw_set(works_for=company)
 
