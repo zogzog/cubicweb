@@ -676,7 +676,11 @@ class CWConstraintDelOp(MemSchemaOperation):
         rdef = self.rdef
         # in-place modification of in-memory schema first
         _set_modifiable_constraints(rdef)
-        rdef.constraints.remove(self.oldcstr)
+        if self.oldcstr in rdef.constraints:
+            rdef.constraints.remove(self.oldcstr)
+        else:
+            self.critical('constraint %s for rdef %s was missing or already removed',
+                          self.oldcstr, rdef)
         # then update database: alter the physical schema on size/unique
         # constraint changes
         syssource = session.cnxset.source('system')
