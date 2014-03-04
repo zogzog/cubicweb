@@ -89,11 +89,12 @@ class _CubicWebRequestBase(RequestSessionBase):
     """
     ajax_request = False # to be set to True by ajax controllers
 
-    def __init__(self, vreg, https=False, form=None, headers={}):
+    def __init__(self, vreg, https=False, form=None, headers=None):
         """
         :vreg: Vregistry,
         :https: boolean, s this a https request
         :form: Forms value
+        :headers: dict, request header
         """
         super(_CubicWebRequestBase, self).__init__(vreg)
         #: (Boolean) Is this an https request.
@@ -114,8 +115,9 @@ class _CubicWebRequestBase(RequestSessionBase):
         self.html_headers = HTMLHead(self)
         #: received headers
         self._headers_in = Headers()
-        for k, v in headers.iteritems():
-            self._headers_in.addRawHeader(k, v)
+        if headers is not None:
+            for k, v in headers.iteritems():
+                self._headers_in.addRawHeader(k, v)
         #: form parameters
         self.setup_params(form)
         #: received body
