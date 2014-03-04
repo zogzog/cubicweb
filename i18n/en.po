@@ -110,10 +110,6 @@ msgid "%s is part of violated unicity constraint"
 msgstr ""
 
 #, python-format
-msgid "%s relation should not be in mapped"
-msgstr ""
-
-#, python-format
 msgid "%s software version of the database"
 msgstr ""
 
@@ -1233,9 +1229,6 @@ msgstr ""
 msgid "attribute"
 msgstr ""
 
-msgid "attribute/relation can't be mapped, only entity and relation types"
-msgstr ""
-
 msgid "august"
 msgstr ""
 
@@ -1358,20 +1351,10 @@ msgid "can't change this attribute"
 msgstr ""
 
 #, python-format
-msgid "can't connect to source %s, some data may be missing"
-msgstr ""
-
-#, python-format
 msgid "can't display data, unexpected error: %s"
 msgstr ""
 
 msgid "can't have multiple exits on the same state"
-msgstr ""
-
-msgid "can't mix dontcross and maycross options"
-msgstr ""
-
-msgid "can't mix dontcross and write options"
 msgstr ""
 
 #, python-format
@@ -2375,10 +2358,6 @@ msgstr ""
 msgid "error while publishing ReST text"
 msgstr ""
 
-#, python-format
-msgid "error while querying source %s, some data may be missing"
-msgstr ""
-
 msgid "exit state must be a subworkflow state"
 msgstr ""
 
@@ -2833,10 +2812,6 @@ msgctxt "CWRType"
 msgid "inlined"
 msgstr "inlined"
 
-#, python-format
-msgid "inlined relation %(rtype)s of %(etype)s should be supported"
-msgstr ""
-
 msgid "instance home"
 msgstr ""
 
@@ -3211,10 +3186,6 @@ msgid "no content prev link"
 msgstr ""
 
 msgid "no edited fields specified"
-msgstr ""
-
-#, python-format
-msgid "no edited fields specified for entity %s"
 msgstr ""
 
 msgid "no log to display"
@@ -4175,10 +4146,6 @@ msgid "unknown external entity"
 msgstr ""
 
 #, python-format
-msgid "unknown option(s): %s"
-msgstr ""
-
-#, python-format
 msgid "unknown options %s"
 msgstr ""
 
@@ -4472,13 +4439,5 @@ msgstr ""
 msgid "you have been logged out"
 msgstr ""
 
-#, python-format
-msgid "you may want to specify something for %s"
-msgstr ""
-
 msgid "you should probably delete that property"
-msgstr ""
-
-#, python-format
-msgid "you should un-inline relation %s which is supported and may be crossed "
 msgstr ""

@@ -119,10 +119,6 @@ msgid "%s is part of violated unicity constraint"
 msgstr "%s appartient à une contrainte d'unicité transgressée"
 
 #, python-format
-msgid "%s relation should not be in mapped"
-msgstr "la relation %s ne devrait pas ếtre mappé"
-
-#, python-format
 msgid "%s software version of the database"
 msgstr "version logicielle de la base pour %s"
 
@@ -1288,11 +1284,6 @@ msgstr ""
 msgid "attribute"
 msgstr "attribut"
 
-msgid "attribute/relation can't be mapped, only entity and relation types"
-msgstr ""
-"les attributs et relations ne peuvent être mappés, uniquement les types "
-"d'entité et de relation"
-
 msgid "august"
 msgstr "août"
 
@@ -1417,21 +1408,11 @@ msgid "can't change this attribute"
 msgstr "cet attribut ne peut pas être modifié"
 
 #, python-format
-msgid "can't connect to source %s, some data may be missing"
-msgstr "ne peut se connecter à la source %s, des données peuvent manquer"
-
-#, python-format
 msgid "can't display data, unexpected error: %s"
 msgstr "impossible d'afficher les données à cause de l'erreur suivante: %s"
 
 msgid "can't have multiple exits on the same state"
 msgstr "ne peut avoir plusieurs sorties sur le même état"
-
-msgid "can't mix dontcross and maycross options"
-msgstr "ne peut mélanger dontcross et maycross options"
-
-msgid "can't mix dontcross and write options"
-msgstr "ne peut mélanger dontcross et write options"
 
 #, python-format
 msgid "can't parse %(value)r (expected %(format)s)"
@@ -2479,12 +2460,6 @@ msgid "error while publishing ReST text"
 msgstr ""
 "une erreur s'est produite lors de l'interprétation du texte au format ReST"
 
-#, python-format
-msgid "error while querying source %s, some data may be missing"
-msgstr ""
-"une erreur est survenue en interrogeant %s, il est possible que les\n"
-"données affichées soient incomplètes"
-
 msgid "exit state must be a subworkflow state"
 msgstr "l'état de sortie doit être un état du sous-workflow"
 
@@ -2956,12 +2931,6 @@ msgctxt "CWRType"
 msgid "inlined"
 msgstr "mise en ligne"
 
-#, python-format
-msgid "inlined relation %(rtype)s of %(etype)s should be supported"
-msgstr ""
-"la relation %(rtype)s du type d'entité %(etype)s doit être supportée "
-"('inlined')"
-
 msgid "instance home"
 msgstr "répertoire de l'instance"
 
@@ -3348,10 +3317,6 @@ msgstr "pas de lien 'précédent'"
 
 msgid "no edited fields specified"
 msgstr "aucun champ à éditer spécifié"
-
-#, python-format
-msgid "no edited fields specified for entity %s"
-msgstr "aucun champ à éditer spécifié pour l'entité %s"
 
 msgid "no log to display"
 msgstr "rien à afficher"
@@ -4340,10 +4305,6 @@ msgid "unknown external entity"
 msgstr "entité (externe) introuvable"
 
 #, python-format
-msgid "unknown option(s): %s"
-msgstr "option(s) inconnue(s) : %s"
-
-#, python-format
 msgid "unknown options %s"
 msgstr "options inconnues : %s"
 
@@ -4654,15 +4615,47 @@ msgstr "oui"
 msgid "you have been logged out"
 msgstr "vous avez été déconnecté"
 
-#, python-format
-msgid "you may want to specify something for %s"
-msgstr "vous désirez peut-être spécifié quelque chose pour la relation %s"
-
 msgid "you should probably delete that property"
 msgstr "vous devriez probablement supprimer cette propriété"
 
-#, python-format
-msgid "you should un-inline relation %s which is supported and may be crossed "
-msgstr ""
-"vous devriez enlevé la mise en ligne de la relation %s qui est supportée et "
-"peut-être croisée"
+#~ msgid "%s relation should not be in mapped"
+#~ msgstr "la relation %s ne devrait pas ếtre mappé"
+
+#~ msgid "attribute/relation can't be mapped, only entity and relation types"
+#~ msgstr ""
+#~ "les attributs et relations ne peuvent être mappés, uniquement les types "
+#~ "d'entité et de relation"
+
+#~ msgid "can't connect to source %s, some data may be missing"
+#~ msgstr "ne peut se connecter à la source %s, des données peuvent manquer"
+
+#~ msgid "can't mix dontcross and maycross options"
+#~ msgstr "ne peut mélanger dontcross et maycross options"
+
+#~ msgid "can't mix dontcross and write options"
+#~ msgstr "ne peut mélanger dontcross et write options"
+
+#~ msgid "error while querying source %s, some data may be missing"
+#~ msgstr ""
+#~ "une erreur est survenue en interrogeant %s, il est possible que les\n"
+#~ "données affichées soient incomplètes"
+
+#~ msgid "inlined relation %(rtype)s of %(etype)s should be supported"
+#~ msgstr ""
+#~ "la relation %(rtype)s du type d'entité %(etype)s doit être supportée "
+#~ "('inlined')"
+
+#~ msgid "no edited fields specified for entity %s"
+#~ msgstr "aucun champ à éditer spécifié pour l'entité %s"
+
+#~ msgid "unknown option(s): %s"
+#~ msgstr "option(s) inconnue(s) : %s"
+
+#~ msgid "you may want to specify something for %s"
+#~ msgstr "vous désirez peut-être spécifié quelque chose pour la relation %s"
+
+#~ msgid ""
+#~ "you should un-inline relation %s which is supported and may be crossed "
+#~ msgstr ""
+#~ "vous devriez enlevé la mise en ligne de la relation %s qui est supportée "
+#~ "et peut-être croisée"

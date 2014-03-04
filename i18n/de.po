@@ -118,10 +118,6 @@ msgid "%s is part of violated unicity constraint"
 msgstr ""
 
 #, python-format
-msgid "%s relation should not be in mapped"
-msgstr ""
-
-#, python-format
 msgid "%s software version of the database"
 msgstr "Software-Version der Datenbank %s"
 
@@ -1276,9 +1272,6 @@ msgstr ""
 msgid "attribute"
 msgstr "Attribut"
 
-msgid "attribute/relation can't be mapped, only entity and relation types"
-msgstr ""
-
 msgid "august"
 msgstr "August"
 
@@ -1401,21 +1394,11 @@ msgid "can't change this attribute"
 msgstr ""
 
 #, python-format
-msgid "can't connect to source %s, some data may be missing"
-msgstr "Keine Verbindung zu der Quelle %s, einige Daten könnten fehlen"
-
-#, python-format
 msgid "can't display data, unexpected error: %s"
 msgstr "Kann die Daten aufgrund des folgenden Fehlers nicht anzeigen: %s"
 
 msgid "can't have multiple exits on the same state"
 msgstr "Mehrere Ausgänge aus demselben Zustand nicht möglich."
-
-msgid "can't mix dontcross and maycross options"
-msgstr ""
-
-msgid "can't mix dontcross and write options"
-msgstr ""
 
 #, python-format
 msgid "can't parse %(value)r (expected %(format)s)"
@@ -2426,12 +2409,6 @@ msgstr ""
 msgid "error while publishing ReST text"
 msgstr "Fehler beim Übersetzen von reST"
 
-#, python-format
-msgid "error while querying source %s, some data may be missing"
-msgstr ""
-"Fehler beim Zugriff auf Quelle %s, möglicherweise sind die Daten "
-"unvollständig."
-
 msgid "exit state must be a subworkflow state"
 msgstr "Exit-Zustand muss ein Subworkflow-Zustand sein."
 
@@ -2906,10 +2883,6 @@ msgctxt "CWRType"
 msgid "inlined"
 msgstr "eingereiht"
 
-#, python-format
-msgid "inlined relation %(rtype)s of %(etype)s should be supported"
-msgstr ""
-
 msgid "instance home"
 msgstr "Startseite der Instanz"
 
@@ -3296,10 +3269,6 @@ msgstr ""
 
 msgid "no edited fields specified"
 msgstr ""
-
-#, python-format
-msgid "no edited fields specified for entity %s"
-msgstr "kein Eingabefeld spezifiziert Für Entität %s"
 
 msgid "no log to display"
 msgstr ""
@@ -4275,10 +4244,6 @@ msgid "unknown external entity"
 msgstr "(Externe) Entität nicht gefunden"
 
 #, python-format
-msgid "unknown option(s): %s"
-msgstr ""
-
-#, python-format
 msgid "unknown options %s"
 msgstr ""
 
@@ -4585,13 +4550,16 @@ msgstr "Ja"
 msgid "you have been logged out"
 msgstr "Sie sind jetzt abgemeldet."
 
-#, python-format
-msgid "you may want to specify something for %s"
-msgstr ""
-
 msgid "you should probably delete that property"
 msgstr "Sie sollten diese Eigenschaft wahrscheinlich löschen."
 
-#, python-format
-msgid "you should un-inline relation %s which is supported and may be crossed "
-msgstr ""
+#~ msgid "can't connect to source %s, some data may be missing"
+#~ msgstr "Keine Verbindung zu der Quelle %s, einige Daten könnten fehlen"
+
+#~ msgid "error while querying source %s, some data may be missing"
+#~ msgstr ""
+#~ "Fehler beim Zugriff auf Quelle %s, möglicherweise sind die Daten "
+#~ "unvollständig."
+
+#~ msgid "no edited fields specified for entity %s"
+#~ msgstr "kein Eingabefeld spezifiziert Für Entität %s"
