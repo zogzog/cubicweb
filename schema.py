@@ -609,7 +609,7 @@ def set_action_permissions(self, action, permissions):
 PermissionMixIn.set_action_permissions = set_action_permissions
 
 def has_local_role(self, action):
-    """return true if the action *may* be granted locally (eg either rql
+    """return true if the action *may* be granted locally (i.e. either rql
     expressions or the owners group are used in security definition)
 
     XXX this method is only there since we don't know well how to deal with
@@ -1138,16 +1138,16 @@ class BaseRQLConstraint(RRQLExpression, BaseConstraint):
 class RQLVocabularyConstraint(BaseRQLConstraint):
     """the rql vocabulary constraint:
 
-    limit the proposed values to a set of entities returned by a rql query,
+    limits the proposed values to a set of entities returned by an rql query,
     but this is not enforced at the repository level
 
-     `expression` is additional rql restriction that will be added to
-     a predefined query, where the S and O variables respectivly represent
-     the subject and the object of the relation
+    `expression` is an additional rql restriction that will be added to
+    a predefined query, where the S and O variables respectively represent
+    the subject and the object of the relation
 
-     `mainvars` is a set of variables that should be used as selection variable
-     (eg `'Any %s WHERE ...' % mainvars`). If not specified, an attempt will be
-     done to guess it according to variable used in the expression.
+    `mainvars` is a set of variables that should be used as selection variables
+    (i.e. `'Any %s WHERE ...' % mainvars`). If not specified, an attempt will be
+    made to guess it based on the variables used in the expression.
     """
 
     def repo_check(self, session, eidfrom, rtype, eidto):
