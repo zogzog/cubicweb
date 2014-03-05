@@ -314,7 +314,7 @@ def initialize_schema(config, schema, mhandler, event='create'):
     # so, NO INTEGRITY CHECKS are done, to have quicker db creation.
     # Active integrity is kept else we may pb such as two default
     # workflows for one entity type.
-    with cnx._cnx.deny_all_hooks_but('metadata', 'activeintegrity'):
+    with cnx.deny_all_hooks_but('metadata', 'activeintegrity'):
         # execute cubicweb's pre<event> script
         mhandler.cmd_exec_event_script('pre%s' % event)
         # execute cubes pre<event> script if any

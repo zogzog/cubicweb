@@ -327,7 +327,7 @@ class ServerMigrationHelper(MigrationHelper):
                         'schema': self.repo.get_schema(),
                         'cnx': self.cnx,
                         'fsschema': self.fs_schema,
-                        'session' : self.cnx._cnx,
+                        'session' : self.cnx,
                         'repo' : self.repo,
                         })
         return context
@@ -1434,7 +1434,7 @@ class ServerMigrationHelper(MigrationHelper):
         """
         if not ask_confirm or self.confirm('Execute sql: %s ?' % sql):
             try:
-                cu = self.cnx._cnx.system_sql(sql, args)
+                cu = self.cnx.system_sql(sql, args)
             except Exception:
                 ex = sys.exc_info()[1]
                 if self.confirm('Error: %s\nabort?' % ex, pdb=True):
