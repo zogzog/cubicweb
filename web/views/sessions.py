@@ -21,6 +21,8 @@ object :/
 
 __docformat__ = "restructuredtext en"
 
+from time import time
+
 from cubicweb import (RepositoryError, Unauthorized, AuthenticationError,
                       BadConnectionId)
 from cubicweb.web import InvalidSession, Redirect
@@ -73,6 +75,7 @@ class InMemoryRepositorySessionManager(AbstractSessionManager):
         """
         session, login = self.authmanager.authenticate(req)
         self._sessions[session.sessionid] = session
+        session.mtime = time()
         return session
 
     def postlogin(self, req, session):
