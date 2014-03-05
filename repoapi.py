@@ -174,7 +174,7 @@ class ClientConnection(RequestSessionBase):
         if self._autoclose_session:
             # we have to call repo.close to ensure the repo properly forgets the
             # session; calling session.close() is not enough :-(
-            self._session.repo.close(self._session.id)
+            self._session.repo.close(self._session.sessionid)
 
 
     # begin silly BC
@@ -351,7 +351,7 @@ class ClientConnection(RequestSessionBase):
     @ property
     @deprecated('[3.19] This is a repoapi.ClientConnection object not a dbapi one')
     def sessionid(self):
-        return self._session.id
+        return self._session.sessionid
 
     @property
     @deprecated('[3.19] This is a repoapi.ClientConnection object not a dbapi one')
