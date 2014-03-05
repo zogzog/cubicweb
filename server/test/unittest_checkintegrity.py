@@ -41,8 +41,9 @@ class CheckIntegrityTC(TestCase):
         self.repo.shutdown()
 
     def test_checks(self):
-        check(self.repo, self.cnx, ('entities', 'relations', 'text_index', 'metadata'),
-              reindex=False, fix=True, withpb=False)
+        with self.cnx:
+            check(self.repo, self.cnx, ('entities', 'relations', 'text_index', 'metadata'),
+                  reindex=False, fix=True, withpb=False)
 
     def test_reindex_all(self):
         self.execute('INSERT Personne X: X nom "toto", X prenom "tutu"')

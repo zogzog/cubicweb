@@ -402,12 +402,12 @@ class TestDataBaseHandler(object):
 
     def get_cnx(self):
         """return Connection object on the current repository"""
-        from cubicweb.dbapi import _repo_connect
+        from cubicweb.repoapi import connect
         repo = self.get_repo()
         sources = self.config.read_sources_file()
         login  = unicode(sources['admin']['login'])
         password = sources['admin']['password'] or 'xxx'
-        cnx = _repo_connect(repo, login, password=password)
+        cnx = connect(repo, login, password=password)
         return cnx
 
     def get_repo_and_cnx(self, db_id=DEFAULT_EMPTY_DB_ID):
