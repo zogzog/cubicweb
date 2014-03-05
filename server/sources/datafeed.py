@@ -127,6 +127,9 @@ class DataFeedSource(AbstractSource):
         self.load_mapping(source_entity._cw)
 
     def _get_parser(self, cnx, **kwargs):
+        if self.parser_id is None:
+            self.warning('No parser defined on source %r', self)
+            raise ObjectNotFound()
         return self.repo.vreg['parsers'].select(
             self.parser_id, cnx, source=self, **kwargs)
 
@@ -201,7 +204,10 @@ class DataFeedSource(AbstractSource):
     def _pull_data(self, cnx, force=False, raise_on_error=False):
         importlog = self.init_import_log(cnx)
         myuris = self.source_cwuris(cnx)
-        parser = self._get_parser(cnx, sourceuris=myuris, import_log=importlog)
+        try:
+            parser = self._get_parser(cnx, sourceuris=myuris, import_log=importlog)
+        except ObjectNotFound:
+            return {}
         if self.process_urls(parser, self.urls, raise_on_error):
             self.warning("some error occurred, don't attempt to delete entities")
         else:
