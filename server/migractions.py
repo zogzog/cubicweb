@@ -1099,12 +1099,19 @@ class ServerMigrationHelper(MigrationHelper):
         if commit:
             self.commit()
 
-    def cmd_rename_relation_type(self, oldname, newname, commit=True):
+    def cmd_rename_relation_type(self, oldname, newname, commit=True, force=False):
         """rename an existing relation
 
         `oldname` is a string giving the name of the existing relation
         `newname` is a string giving the name of the renamed relation
+
+        If `force` is True, proceed even if `oldname` still appears in the fs schema
         """
+        if oldname in self.fs_schema and not force:
+            if not self.confirm('Relation %s is still present in the filesystem schema,'
+                                ' do you really want to drop it?' % oldname,
+                                default='n'):
+                raise SystemExit(1)
         self.cmd_add_relation_type(newname, commit=True)
         self.rqlexec('SET X %s Y WHERE X %s Y' % (newname, oldname),
                      ask_confirm=self.verbosity>=2)
