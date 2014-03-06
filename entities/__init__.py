@@ -26,6 +26,12 @@ from cubicweb import Unauthorized
 from cubicweb.entity import Entity
 
 
+def chunks(seq, step):
+    """See http://stackoverflow.com/questions/312443/how-do-you-split-a-list-into-evenly-sized-chunks-in-python)"""
+    return (seq[i:i+step]
+            for i in xrange(0, len(seq), step))
+
+
 class AnyEntity(Entity):
     """an entity instance has e_schema automagically set on the class and
     instances have access to their issuing cursor
@@ -44,21 +50,25 @@ class AnyEntity(Entity):
 
     @classmethod
     def cw_fti_index_rql_queries(cls, req):
-        """return the list of rql queries to fetch entities to FT-index
+        """return an iterator on rql queries to fetch entities to FT-index
 
-        The default is to fetch all entities at once and to prefetch
-        indexable attributes but one could imagine iterating over
+        The default is to fetch entities 1000 per 1000 and to prefetch
+        indexable attributes, but one could imagine iterating over
         "smaller" resultsets if the table is very big or returning
         a subset of entities that match some business-logic condition.
         """
-        restrictions = ['X is %s' % cls.__regid__]
+        restrictions = []
         selected = ['X']
         for attrschema in sorted(cls.e_schema.indexable_attributes()):
             varname = attrschema.type.upper()
             restrictions.append('X %s %s' % (attrschema, varname))
             selected.append(varname)
-        return ['Any %s WHERE %s' % (', '.join(selected),
-                                     ', '.join(restrictions))]
+        rset = req.execute('Any EID WHERE X eid EID, X is %s' % cls.__regid__)
+        for rows in chunks(rset.rows, 1000):
+            q_restrictions = restrictions + [
+                'X eid IN (%s)' % ', '.join(str(r[0]) for r in rows)]
+            yield 'Any %s WHERE %s' % (', '.join(selected),
+                                       ', '.join(q_restrictions))
 
     # meta data api ###########################################################
 

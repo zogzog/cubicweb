@@ -122,7 +122,10 @@ def reindex_entities(schema, cnx, withpb=True, etypes=None):
     source = repo.system_source
     for eschema in etypes:
         etype_class = cnx.vreg['etypes'].etype_class(str(eschema))
-        for fti_rql in etype_class.cw_fti_index_rql_queries(cnx):
+        queries = list(etype_class.cw_fti_index_rql_queries(cnx))
+        for i, fti_rql in enumerate(queries):
+            if withpb:
+                pb.text = "%s: %s%%" % (str(eschema), i * 100 / len(queries))
             rset = cnx.execute(fti_rql)
             source.fti_index_entities(cnx, rset.entities())
             # clear entity cache to avoid high memory consumption on big tables
