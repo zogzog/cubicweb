@@ -45,7 +45,17 @@ class CubicWebWsgiRequest(CubicWebRequestBase):
         self.environ = environ
         self.path = environ['PATH_INFO']
         self.method = environ['REQUEST_METHOD'].upper()
-        self.content = environ['wsgi.input']
+        try:
+            length = int(environ['CONTENT_LENGTH'])
+        except (KeyError, ValueError):
+            length = 0
+        # wsgi.input is not seekable, so copy the request contents to a temporary file
+        if length < 100000:
+            self.content = StringIO()
+        else:
+            self.content = tempfile.TemporaryFile()
+        safe_copyfileobj(environ['wsgi.input'], self.content, size=length)
+        self.content.seek(0, 0)
 
         headers_in = dict((normalize_header(k[5:]), v) for k, v in self.environ.items()
                           if k.startswith('HTTP_'))
@@ -139,15 +149,6 @@ class CubicWebWsgiRequest(CubicWebRequestBase):
     @property
     @cached
     def raw_post_data(self):
-        buf = StringIO()
-        try:
-            # CONTENT_LENGTH might be absent if POST doesn't have content at all (lighttpd)
-            content_length = int(self.environ.get('CONTENT_LENGTH', 0))
-        except ValueError: # if CONTENT_LENGTH was empty string or not an integer
-            content_length = 0
-        if content_length > 0:
-            safe_copyfileobj(self.environ['wsgi.input'], buf,
-                    size=content_length)
-        postdata = buf.getvalue()
-        buf.close()
+        postdata = self.content.read()
+        self.content.seek(0, 0)
         return postdata
