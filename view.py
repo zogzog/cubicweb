@@ -501,28 +501,6 @@ class MainTemplate(View):
 class ReloadableMixIn(object):
     """simple mixin for reloadable parts of UI"""
 
-    def user_callback(self, cb, args, msg=None, nonify=False):
-        """register the given user callback and return an url to call it ready to be
-        inserted in html
-        """
-        self._cw.add_js('cubicweb.ajax.js')
-        if nonify:
-            _cb = cb
-            def cb(*args):
-                _cb(*args)
-        cbname = self._cw.register_onetime_callback(cb, *args)
-        return self.build_js(cbname, xml_escape(msg or ''))
-
-    def build_update_js_call(self, cbname, msg):
-        rql = self.cw_rset.printable_rql()
-        return "javascript: %s" % js.userCallbackThenUpdateUI(
-            cbname, self.__regid__, rql, msg, self.__registry__, self.domid)
-
-    def build_reload_js_call(self, cbname, msg):
-        return "javascript: %s" % js.userCallbackThenReloadPage(cbname, msg)
-
-    build_js = build_update_js_call # expect updatable component by default
-
     @property
     def domid(self):
         return domid(self.__regid__)

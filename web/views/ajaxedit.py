@@ -36,8 +36,6 @@ class AddRelationView(component.EditRelationMixIn, View):
     cw_property_defs = {} # don't want to inherit this from Box
     expected_kwargs = form_params = ('rtype', 'target')
 
-    build_js = component.EditRelationMixIn.build_reload_js_call
-
     def cell_call(self, row, col, rtype=None, target=None, etype=None):
         self.rtype = rtype or self._cw.form['rtype']
         self.target = target or self._cw.form['target']
