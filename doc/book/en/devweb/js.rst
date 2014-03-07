@@ -317,67 +317,6 @@ The browser-side definition follows.
     }
 
 
-python/ajax dynamic callbacks
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-CubicWeb provides a way to dynamically register a function and make it
-callable from the javascript side. The typical use case for this is a
-situation where you have everything at hand to implement an action
-(whether it be performing a RQL query or executing a few python
-statements) that you'd like to defer to a user click in the web
-interface.  In other words, generate an HTML ``<a href=...`` link that
-would execute your few lines of code.
-
-The trick is to create a python function and store this function in
-the user's session data. You will then be able to access it later.
-While this might sound hard to implement, it's actually quite easy
-thanks to the ``_cw.user_callback()``. This method takes a function,
-registers it and returns a javascript instruction suitable for
-``href`` or ``onclick`` usage. The call is then performed
-asynchronously.
-
-Here's a simplified example taken from the vcreview_ cube that will
-generate a link to change an entity state directly without the
-standard intermediate *comment / validate* step:
-
-.. sourcecode:: python
-
-    def entity_call(self, entity):
-        # [...]
-        def change_state(req, eid):
-            entity = req.entity_from_eid(eid)
-            entity.cw_adapt_to('IWorkflowable').fire_transition('done')
-        url = self._cw.user_callback(change_state, (entity.eid,))
-        self.w(tags.input(type='button', onclick=url, value=self._cw._('mark as done')))
-
-
-The ``change_state`` callback function is registered with
-``self._cw.user_callback()`` which returns the ``url`` value directly
-used for the ``onclick`` attribute of the button. On the javascript
-side, the ``userCallback()`` function is used but you most probably
-won't have to bother with it.
-
-Of course, when dealing with session data, the question of session
-cleaning pops up immediately. If you use ``user_callback()``, the
-registered function will be deleted automatically at some point
-as any other session data. If you want your function to be deleted once
-the web page is unloaded or when the user has clicked once on your link, then
-``_cw.register_onetime_callback()`` is what you need. It behaves as
-``_cw.user_callback()`` but stores the function in page data instead
-of global session data.
-
-
-.. Warning::
-
-  Be careful when registering functions with closures, keep in mind that
-  enclosed data will be kept in memory until the session gets cleared. Also,
-  if you keep entities or any object referecing the current ``req`` object, you
-  might have problems reusing them later because the underlying session
-  might have been closed at the time the callback gets executed.
-
-
-.. _vcreview: http://www.cubicweb.org/project/cubicweb-vcreview
-
 Javascript library: overview
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

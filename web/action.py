@@ -25,43 +25,11 @@ action box.
 
 The most important method from a developper point of view in the
 :meth:'Action.url' method, which returns a URL on which the navigation
-should directed to perform the action.  There are two common ways of
-writing that method:
+should be directed to perform the action.  The common way of
+writing that method is to simply return a URL to the current rset with a
+special view (with `self._cw.build_url(...)` for instance) 
 
-* do nothing special and simply return a URL to the current rset with
-  a special view (with `self._cw.build_url(...)` for instance)
-
-* define an inner function `callback_func(req, *args)` which will do
-  the work and call it through `self._cw.user_callback(callback_func,
-  args, msg)`: this method will return a URL which calls the inner
-  function, and displays the message in the web interface when the
-  callback has completed (and report any exception occuring in the
-  callback too)
-
-Many examples of the first approach are available in :mod:`cubicweb.web.views.actions`.
-
-Here is an example of the second approach:
-
-.. sourcecode:: python
-
- from cubicweb.web import action
- class SomeAction(action.Action):
-     __regid__ = 'mycube_some_action'
-     title = _(some action)
-     __select__ = action.Action.__select__ & is_instance('TargetEntity')
- 
-     def url(self):
-         if self.cw_row is None:
-             eids = [row[0] for row in self.cw_rset]
-         else:
-             eids = (self.cw_rset[self.cw_row][self.cw_col or 0],)
-         def do_action(req, eids):
-             for eid in eids:
-                 entity = req.entity_from_eid(eid, 'TargetEntity')
-                 entity.perform_action()
-         msg = self._cw._('some_action performed')
-         return self._cw.user_callback(do_action, (eids,), msg)
-
+Many examples are available in :mod:`cubicweb.web.views.actions`.
 """
 
 __docformat__ = "restructuredtext en"
