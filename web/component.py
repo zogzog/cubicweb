@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -508,25 +508,27 @@ class RQLCtxComponent(CtxComponent):
 
 
 class EditRelationMixIn(ReloadableMixIn):
-    def box_item(self, entity, etarget, rql, label):
+
+    def box_item(self, entity, etarget, fname, label):
         """builds HTML link to edit relation between `entity` and `etarget`"""
-        args = {role(self)[0] : entity.eid, target(self)[0] : etarget.eid}
-        url = self._cw.user_rql_callback((rql, args))
+        args = {role(self) : entity.eid, target(self): etarget.eid}
         # for each target, provide a link to edit the relation
-        return u'[<a href="%s" class="action">%s</a>] %s' % (
-            xml_escape(url), label, etarget.view('incontext'))
+        jscall = unicode(js.cw.utils.callAddOrDeleteThenReload(fname,
+                                                               self.rtype,
+                                                               args['subject'],
+                                                               args['object']))
+        return u'[<a href="javascript: %s" class="action">%s</a>] %s' % (
+            xml_escape(jscall), label, etarget.view('incontext'))
 
     def related_boxitems(self, entity):
-        rql = 'DELETE S %s O WHERE S eid %%(s)s, O eid %%(o)s' % self.rtype
-        return [self.box_item(entity, etarget, rql, u'-')
+        return [self.box_item(entity, etarget, 'delete_relation', u'-')
                 for etarget in self.related_entities(entity)]
 
     def related_entities(self, entity):
         return entity.related(self.rtype, role(self), entities=True)
 
     def unrelated_boxitems(self, entity):
-        rql = 'SET S %s O WHERE S eid %%(s)s, O eid %%(o)s' % self.rtype
-        return [self.box_item(entity, etarget, rql, u'+')
+        return [self.box_item(entity, etarget, 'add_relation', u'+')
                 for etarget in self.unrelated_entities(entity)]
 
     def unrelated_entities(self, entity):
