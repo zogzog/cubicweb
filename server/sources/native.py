@@ -1,4 +1,4 @@
-# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -193,6 +193,79 @@ AND (EXISTS(SELECT 1 FROM tx_entity_actions AS TEA
              'eid': eid}).fetchone()
 
 
+class DefaultEidGenerator(object):
+    __slots__ = ('source', 'cnx', 'lock')
+
+    def __init__(self, source):
+        self.source = source
+        self.cnx = None
+        self.lock = Lock()
+
+    def close(self):
+        if self.cnx:
+            self.cnx.close()
+        self.cnx = None
+
+    def create_eid(self, _session):
+        # lock needed to prevent 'Connection is busy with results for another
+        # command (0)' errors with SQLServer
+        with self.lock:
+            return self._create_eid() # pylint: disable=E1102
+
+    def _create_eid(self): # pylint: disable=E0202
+        # internal function doing the eid creation without locking.
+        # needed for the recursive handling of disconnections (otherwise we
+        # deadlock on self._eid_cnx_lock
+        source = self.source
+        if self.cnx is None:
+            self.cnx = source.get_connection()
+        cnx = self.cnx
+        try:
+            cursor = cnx.cursor()
+            for sql in source.dbhelper.sqls_increment_sequence('entities_id_seq'):
+                cursor.execute(sql)
+            eid = cursor.fetchone()[0]
+        except (source.OperationalError, source.InterfaceError):
+            # FIXME: better detection of deconnection pb
+            source.warning("trying to reconnect create eid connection")
+            self.cnx = None
+            return self._create_eid() # pylint: disable=E1102
+        except source.DbapiError as exc:
+            # We get this one with pyodbc and SQL Server when connection was reset
+            if exc.args[0] == '08S01':
+                source.warning("trying to reconnect create eid connection")
+                self.cnx = None
+                return self._create_eid() # pylint: disable=E1102
+            else:
+                raise
+        except Exception: # WTF?
+            cnx.rollback()
+            self.cnx = None
+            source.exception('create eid failed in an unforeseen way on SQL statement %s', sql)
+            raise
+        else:
+            cnx.commit()
+            return eid
+
+
+class SQLITEEidGenerator(object):
+    __slots__ = ('source', 'lock')
+
+    def __init__(self, source):
+        self.source = source
+        self.lock = Lock()
+
+    def close(self):
+        pass
+
+    def create_eid(self, session):
+        source = self.source
+        with self.lock:
+            for sql in source.dbhelper.sqls_increment_sequence('entities_id_seq'):
+                cursor = source.doexec(session, sql)
+            return cursor.fetchone()[0]
+
+
 class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
     """adapter for source using the native cubicweb schema (see below)
     """
@@ -263,16 +336,14 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         self.do_fti = not repo.config['delay-full-text-indexation']
         # sql queries cache
         self._cache = QueryCache(repo.config['rql-cache-size'])
-        # we need a lock to protect eid attribution function (XXX, really?
-        # explain)
-        self._eid_cnx_lock = Lock()
-        self._eid_creation_cnx = None
         # (etype, attr) / storage mapping
         self._storages = {}
-        if self.dbdriver == 'sqlite':
-            self._create_eid = None
-            self.create_eid = self._create_eid_sqlite
         self.binary_to_str = self.dbhelper.dbapi_module.binary_to_str
+        if self.dbdriver == 'sqlite':
+            self.eid_generator = SQLITEEidGenerator(self)
+        else:
+            self.eid_generator = DefaultEidGenerator(self)
+        self.create_eid = self.eid_generator.create_eid
 
     def check_config(self, source_entity):
         """check configuration of source entity"""
@@ -368,9 +439,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         self.init_creating(source_entity._cw.cnxset)
 
     def shutdown(self):
-        if self._eid_creation_cnx:
-            self._eid_creation_cnx.close()
-            self._eid_creation_cnx = None
+        self.eid_generator.close()
 
     # XXX deprecates [un]map_attribute?
     def map_attribute(self, etype, attr, cb, sourcedb=True):
@@ -806,52 +875,6 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         except Exception:
             pass
         return None
-
-    def _create_eid_sqlite(self, session):
-        with self._eid_cnx_lock:
-            for sql in self.dbhelper.sqls_increment_sequence('entities_id_seq'):
-                cursor = self.doexec(session, sql)
-            return cursor.fetchone()[0]
-
-    def create_eid(self, session): # pylint: disable=E0202
-        # lock needed to prevent 'Connection is busy with results for another
-        # command (0)' errors with SQLServer
-        with self._eid_cnx_lock:
-            return self._create_eid() # pylint: disable=E1102
-
-    def _create_eid(self): # pylint: disable=E0202
-        # internal function doing the eid creation without locking.
-        # needed for the recursive handling of disconnections (otherwise we
-        # deadlock on self._eid_cnx_lock
-        if self._eid_creation_cnx is None:
-            self._eid_creation_cnx = self.get_connection()
-        cnx = self._eid_creation_cnx
-        try:
-            cursor = cnx.cursor()
-            for sql in self.dbhelper.sqls_increment_sequence('entities_id_seq'):
-                cursor.execute(sql)
-            eid = cursor.fetchone()[0]
-        except (self.OperationalError, self.InterfaceError):
-            # FIXME: better detection of deconnection pb
-            self.warning("trying to reconnect create eid connection")
-            self._eid_creation_cnx = None
-            return self._create_eid() # pylint: disable=E1102
-        except self.DbapiError as exc:
-            # We get this one with pyodbc and SQL Server when connection was reset
-            if exc.args[0] == '08S01':
-                self.warning("trying to reconnect create eid connection")
-                self._eid_creation_cnx = None
-                return self._create_eid() # pylint: disable=E1102
-            else:
-                raise
-        except Exception: # WTF?
-            cnx.rollback()
-            self._eid_creation_cnx = None
-            self.exception('create eid failed in an unforeseen way on SQL statement %s', sql)
-            raise
-        else:
-            cnx.commit()
-            return eid
 
     def _handle_is_relation_sql(self, session, sql, attrs):
         """ Handler for specific is_relation sql that may be
