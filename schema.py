@@ -323,6 +323,13 @@ def check_permission_definitions(self):
                 raise BadSchemaDefinition(msg % self)
 RelationDefinitionSchema.check_permission_definitions = check_permission_definitions
 
+def constraint_by_eid(self, eid):
+    for cstr in self.constraints:
+        if cstr.eid == eid:
+            return cstr
+    raise ValueError('No constraint with eid %d' % eid)
+RelationDefinitionSchema.constraint_by_eid = constraint_by_eid
+
 
 class CubicWebEntitySchema(EntitySchema):
     """a entity has a type, a set of subject and or object relations

@@ -345,6 +345,26 @@ class MigrationCommandsTC(CubicWebTC):
             self.mh.cmd_change_relation_props('Personne', 'adel', 'String',
                                               fulltextindexed=False)
 
+    def test_sync_schema_props_perms_rqlconstraints(self):
+        # Drop one of the RQLConstraint.
+        rdef = self.schema['evaluee'].rdefs[('Personne', 'Note')]
+        oldconstraints = rdef.constraints
+        self.assertIn('S created_by U',
+                      [cstr.expression for cstr in oldconstraints])
+        self.mh.cmd_sync_schema_props_perms('evaluee', commit=True)
+        newconstraints = rdef.constraints
+        self.assertNotIn('S created_by U',
+                         [cstr.expression for cstr in newconstraints])
+
+        # Drop all RQLConstraint.
+        rdef = self.schema['travaille'].rdefs[('Personne', 'Societe')]
+        oldconstraints = rdef.constraints
+        self.assertEqual(len(oldconstraints), 2)
+        self.mh.cmd_sync_schema_props_perms('travaille', commit=True)
+        rdef = self.schema['travaille'].rdefs[('Personne', 'Societe')]
+        newconstraints = rdef.constraints
+        self.assertEqual(len(newconstraints), 0)
+
     @tag('longrun')
     def test_sync_schema_props_perms(self):
         cursor = self.mh.session

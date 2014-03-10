@@ -1168,12 +1168,11 @@ class BeforeDeleteConstrainedByHook(SyncSchemaHook):
         if self._cw.deleted_in_transaction(self.eidfrom):
             return
         schema = self._cw.vreg.schema
-        entity = self._cw.entity_from_eid(self.eidto)
         rdef = schema.schema_by_eid(self.eidfrom)
         try:
-            cstr = rdef.constraint_by_type(entity.type)
-        except IndexError:
-            self._cw.critical('constraint type no more accessible')
+            cstr = rdef.constraint_by_eid(self.eidto)
+        except ValueError:
+            self._cw.critical('constraint no more accessible')
         else:
             CWConstraintDelOp(self._cw, rdef=rdef, oldcstr=cstr)
 

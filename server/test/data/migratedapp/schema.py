@@ -21,6 +21,7 @@ from yams.buildobjs import (EntityType, RelationType, RelationDefinition,
                             RichString, String, Int, Boolean, Datetime, Date)
 from yams.constraints import SizeConstraint, UniqueConstraint
 from cubicweb.schema import (WorkflowableEntityType, RQLConstraint,
+                             RQLVocabularyConstraint,
                              ERQLExpression, RRQLExpression)
 
 class Affaire(EntityType):
@@ -149,3 +150,6 @@ class same_as(RelationDefinition):
 class evaluee(RelationDefinition):
     subject = ('Personne', 'CWUser', 'Societe')
     object = ('Note')
+    constraints = [
+        RQLVocabularyConstraint('S owned_by U'),
+    ]
