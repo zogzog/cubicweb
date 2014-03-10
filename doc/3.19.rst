@@ -143,6 +143,10 @@ API changes
   a composite relation does not entail any more the deletion of the
   component side of the relation.
 
+* ``_cw.user_callback`` and ``_cw.user_rql_callback`` are deprecated.  Users
+  are encouraged to write an actual controller (e.g. using ``ajaxfunc``)
+  instead of storing a closure in the session data.
+
 
 Deprecated Code Drops
 ----------------------

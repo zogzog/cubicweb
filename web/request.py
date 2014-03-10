@@ -416,6 +416,7 @@ class _CubicWebRequestBase(RequestSessionBase):
             req.execute(rql, args, key)
         return self.user_callback(rqlexec, rqlargs, *args, **kwargs)
 
+    @deprecated('[3.19] use a traditional ajaxfunc / controller')
     def user_callback(self, cb, cbargs, *args, **kwargs):
         """register the given user callback and return a URL which can
         be inserted in an HTML view. When the URL is accessed, the
