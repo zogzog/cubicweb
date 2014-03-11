@@ -3,50 +3,47 @@
 Sessions
 ========
 
-Sessions are object carrying the `.execute` method to query the data
-sources.
+Sessions are objects linked to an authenticated user.  The `Session.new_cnx`
+method returns a new Connection linked to that session.
 
-Kinds of sessions
------------------
+Connections
+===========
 
-There are two kinds of sessions.
+Connections provide the `.execute` method to query the data sources.
 
-* `normal sessions` are the most common: they are related to users and
+Kinds of connections
+--------------------
+
+There are two kinds of connections.
+
+* `normal connections` are the most common: they are related to users and
   carry security checks coming with user credentials
 
-* `internal sessions` have all the powers; they are also used in only a
+* `internal connections` have all the powers; they are also used in only a
   few situations where you don't already have an adequate session at
   hand, like: user authentication, data synchronisation in
   multi-source contexts
 
-.. note::
-  Do not confuse the session type with their connection mode, for
-  instance : `in memory` or `pyro`.
-
-Normal sessions are typically named `_cw` in most appobjects or
+Normal connections are typically named `_cw` in most appobjects or
 sometimes just `session`.
 
-Internal sessions are available from the `Repository` object and are
+Internal connections are available from the `Repository` object and are
 to be used like this:
 
 .. sourcecode:: python
 
-   session = self.repo.internal_session()
-   try:
-       do_stuff_with(session)
-   finally:
-       session.close()
+   with self.repo.internal_cnx() as cnx:
+       do_stuff_with(cnx)
+       cnx.commit()
 
-.. warning::
-  Do not forget to close such a session after use for a session leak
-  will quickly lead to an application crash.
+Connections should always be used as context managers, to avoid leaks.
 
 Authentication and management of sessions
 -----------------------------------------
 
 The authentication process is a ballet involving a few dancers:
 
-* through its `connect` method the top-level application object (the
+* through its `get_session` method the top-level application object (the
   `CubicWebPublisher`) will open a session whenever a web request
   comes in; it asks the `session manager` to open a session (giving
   the web request object as context) using `open_session`
@@ -88,7 +85,7 @@ Writing authentication plugins
 ------------------------------
 
 Sometimes CubicWeb's out-of-the-box authentication schemes (cookie and
-http) are not sufficient. Nowadays there is a plethore of such schemes
+http) are not sufficient. Nowadays there is a plethora of such schemes
 and the framework cannot provide them all, but as the sequence above
 shows, it is extensible.
 
@@ -154,7 +151,7 @@ Web authentication plugins
 
 .. sourcecode:: python
 
- class XFooUserRetriever(authentication.LoginPasswordRetreiver):
+ class XFooUserRetriever(authentication.LoginPasswordRetriever):
      """ authenticate by the x-foo-user http header
      or just do normal login/password authentication
      """
@@ -200,7 +197,8 @@ preauthenticated or not.
          return 1
      return 0
 
-Full API Session
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+Full Session and Connection API
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: cubicweb.server.session.Session
+.. autoclass:: cubicweb.server.session.Connection

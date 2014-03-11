@@ -39,8 +39,9 @@ from logilab.common.decorators import cached, classproperty, clear_cache, iclass
 from logilab.common.deprecation import deprecated, class_deprecated
 from logilab.common.shellutils import getlogin
 
-from cubicweb import ValidationError, NoSelectableObject, AuthenticationError
-from cubicweb import cwconfig, dbapi, devtools, web, server, repoapi
+from cubicweb import (ValidationError, NoSelectableObject, AuthenticationError,
+                      ProgrammingError)
+from cubicweb import cwconfig, devtools, web, server, repoapi
 from cubicweb.utils import json
 from cubicweb.sobjects import notification
 from cubicweb.web import Redirect, application
@@ -156,7 +157,7 @@ cwconfig.SMTP = MockSMTP
 
 
 class TestCaseConnectionProxy(object):
-    """thin wrapper around `cubicweb.dbapi.Connection` context-manager
+    """thin wrapper around `cubicweb.repoapi.ClientConnection` context-manager
     used in CubicWebTC (cf. `cubicweb.devtools.testlib.CubicWebTC.login` method)
 
     It just proxies to the default connection context manager but
@@ -260,7 +261,7 @@ class CubicWebTC(TestCase):
     * `vreg`, the vregistry
     * `schema`, self.vreg.schema
     * `config`, cubicweb configuration
-    * `cnx`, dbapi connection to the repository using an admin user
+    * `cnx`, repoapi connection to the repository using an admin user
     * `session`, server side session associated to `cnx`
     * `app`, the cubicweb publisher (for web testing)
     * `repo`, the repository object
@@ -436,7 +437,7 @@ class CubicWebTC(TestCase):
     def rollback(self):
         try:
             self.cnx.rollback()
-        except dbapi.ProgrammingError:
+        except ProgrammingError:
             pass # connection closed
         finally:
             self.session.set_cnxset() # ensure cnxset still set after commit
@@ -667,14 +668,13 @@ class CubicWebTC(TestCase):
 
           .. sourcecode:: python
 
-                rdef = self.schema['CWUser'].rdef('login')
                 with self.temporary_permissions(CWUser={'read': ()}):
                     ...
 
-        Usually the former will be prefered to override permissions on a
+        Usually the former will be preferred to override permissions on a
         relation definition, while the latter is well suited for entity types.
 
-        The allowed keys in the permission dictionary depends on the schema type
+        The allowed keys in the permission dictionary depend on the schema type
         (entity type / relation definition). Resulting permissions will be
         similar to `orig_permissions.update(partial_perms)`.
         """

@@ -20,8 +20,6 @@ request objects (grouped by category):
 
   * `ie_browser`: tells if the browser belong to the Internet Explorer
     family
-  * `xhtml_browser`: tells if the browser is able to properly handle
-    XHTML (at the HTTP content_type level)
 
 * `User and identification`:
 
@@ -30,7 +28,8 @@ request objects (grouped by category):
 
 * `Session data handling`
 
-  * `session.data` is the dictionnary of the session data; it can be manipulated like an ordinary Python dictionnary
+  * `session.data` is the dictionary of the session data; it can be
+    manipulated like an ordinary Python dictionary
 
 * `Edition` (utilities for edition control):
 
@@ -104,8 +103,7 @@ request objects (grouped by category):
   * `get_header(header)`, returns the value associated to an arbitrary header
     of the HTTP request
   * `set_header(header, value)`, adds an arbitrary header in the response
-  * `cursor()` returns a RQL cursor on the session
-  * `execute(*args, **kwargs)`, shortcut to ``.cursor().execute()``
+  * `execute(*args, **kwargs)`, executes an RQL query and return the result set
   * `property_value(key)`, properties management (`CWProperty`)
   * dictionary `data` to store data to share informations between components
     *while a request is executed*
@@ -120,14 +118,14 @@ API
 ```
 
 The elements we gave in overview for above are built in three layers,
-from ``cubicweb.req.RequestSessionBase``, ``cubicweb.dbapi.DBAPIRequest`` and
-``cubicweb.web.CubicWebRequestBase``.
+from ``cubicweb.req.RequestSessionBase``, ``cubicweb.repoapi.ClientConnection`` and
+``cubicweb.web.ConnectionCubicWebRequestBase``.
 
 .. autoclass:: cubicweb.req.RequestSessionBase
    :members:
 
-.. autoclass:: cubicweb.dbapi.DBAPIRequest
+.. autoclass:: cubicweb.repoapi.ClientConnection
    :members:
 
-.. autoclass:: cubicweb.web.request.CubicWebRequestBase
+.. autoclass:: cubicweb.web.request.ConnectionCubicWebRequestBase
    :members:
