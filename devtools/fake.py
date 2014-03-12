@@ -88,20 +88,20 @@ class FakeRequest(ConnectionCubicWebRequestBase):
         return url.split('?', 1)[0]
 
     def set_request_header(self, header, value, raw=False):
-        """set an incoming HTTP header (For test purpose only)"""
+        """set an incoming HTTP header (for test purpose only)"""
         if isinstance(value, basestring):
             value = [value]
-        if raw: #
+        if raw:
             # adding encoded header is important, else page content
             # will be reconverted back to unicode and apart unefficiency, this
             # may cause decoding problem (e.g. when downloading a file)
             self._headers_in.setRawHeaders(header, value)
-        else: #
+        else:
             self._headers_in.setHeader(header, value) #
 
     def get_response_header(self, header, default=None, raw=False):
-        """return output header (For test purpose only"""
-        if raw: #
+        """return output header (for test purpose only)"""
+        if raw:
             return self.headers_out.getRawHeaders(header, [default])[0]
         return self.headers_out.getHeader(header, default)
 

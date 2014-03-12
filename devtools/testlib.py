@@ -227,7 +227,7 @@ class RepoAccess(object):
             yield cnx
 
     @ contextmanager
-    def web_request(self, url=None, headers={}, **kwargs):
+    def web_request(self, url=None, headers={}, method='GET', **kwargs):
         """Context manager returning a web request pre-linked to a client cnx
 
         To commit and rollback use::
@@ -235,7 +235,8 @@ class RepoAccess(object):
             req.cnx.commit()
             req.cnx.rolback()
         """
-        req = self.requestcls(self._repo.vreg, url=url, headers=headers, form=kwargs)
+        req = self.requestcls(self._repo.vreg, url=url, headers=headers,
+                              method=method, form=kwargs)
         clt_cnx = repoapi.ClientConnection(self._session)
         req.set_cnx(clt_cnx)
         with clt_cnx:
@@ -269,6 +270,7 @@ class CubicWebTC(TestCase):
     """
     appid = 'data'
     configcls = devtools.ApptestConfiguration
+    requestcls = fake.FakeRequest
     tags = TestCase.tags | Tags('cubicweb', 'cw_repo')
     test_db_id = DEFAULT_EMPTY_DB_ID
     _cnxs = set() # establised connection
@@ -298,8 +300,6 @@ class CubicWebTC(TestCase):
 
     @deprecated('[3.19] explicitly use RepoAccess object in test instead')
     def set_cnx(self, cnx):
-        """ """
-        # XXX we want to deprecate this
         assert getattr(cnx, '_session', None) is not None
         if cnx is self._admin_clt_cnx:
             self._pop_custom_cnx()
@@ -441,7 +441,6 @@ class CubicWebTC(TestCase):
         finally:
             self.session.set_cnxset() # ensure cnxset still set after commit
 
-    requestcls = fake.FakeRequest
     @deprecated('[3.19] explicitly use RepoAccess object in test instead')
     def request(self, rollbackfirst=False, url=None, headers={}, **kwargs):
         """return a web ui request"""
