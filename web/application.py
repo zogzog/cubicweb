@@ -480,7 +480,7 @@ class CubicWebPublisher(object):
         except Unauthorized as ex:
             req.data['errmsg'] = req._('You\'re not authorized to access this page. '
                                        'If you think you should, please contact the site administrator.')
-            req.status_out = httplib.UNAUTHORIZED
+            req.status_out = httplib.FORBIDDEN
             result = self.error_handler(req, ex, tb=False)
         except Forbidden as ex:
             req.data['errmsg'] = req._('This action is forbidden. '
