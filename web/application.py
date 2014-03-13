@@ -23,6 +23,7 @@ import sys
 from time import clock, time
 from contextlib import contextmanager
 from warnings import warn
+import json
 
 import httplib
 
@@ -584,7 +585,7 @@ class CubicWebPublisher(object):
         if req.status_out < 400:
             # don't overwrite it if it's already set
             req.status_out = status
-        json_dumper = getattr(ex, 'dumps', lambda : unicode(ex))
+        json_dumper = getattr(ex, 'dumps', lambda : json.dumps({'reason': unicode(ex)}))
         return json_dumper()
 
     # special case handling
