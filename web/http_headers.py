@@ -380,6 +380,14 @@ def last(seq):
 
     return seq[-1]
 
+def unique(seq):
+    '''if seq is not a string, check it's a sequence of one element and return it'''
+    if isinstance(seq, basestring):
+        return seq
+    if len(seq) != 1:
+        raise ValueError('single value required, not %s' % seq)
+    return seq[0]
+
 ##### Generation utilities
 def quoteString(s):
     return '"%s"' % s.replace('\\', '\\\\').replace('"', '\\"')
@@ -1472,19 +1480,19 @@ generator_request_headers = {
     'Authorization': (generateAuthorization,), # what is "credentials"
     'Cookie':(generateCookie,singleHeader),
     'Expect':(iteritems, listGenerator(generateExpect), singleHeader),
-    'From':(str,singleHeader),
-    'Host':(str,singleHeader),
+    'From':(unique, str,singleHeader),
+    'Host':(unique, str,singleHeader),
     'If-Match':(listGenerator(generateStarOrETag), singleHeader),
     'If-Modified-Since':(generateDateTime,singleHeader),
     'If-None-Match':(listGenerator(generateStarOrETag), singleHeader),
     'If-Range':(generateIfRange, singleHeader),
     'If-Unmodified-Since':(generateDateTime,singleHeader),
-    'Max-Forwards':(str, singleHeader),
+    'Max-Forwards':(unique, str, singleHeader),
 #    'Proxy-Authorization':str, # what is "credentials"
     'Range':(generateRange,singleHeader),
-    'Referer':(str,singleHeader),
+    'Referer':(unique, str,singleHeader),
     'TE': (iteritems, listGenerator(generateAcceptQvalue),singleHeader),
-    'User-Agent':(str,singleHeader),
+    'User-Agent':(unique, str,singleHeader),
 }
 
 parser_response_headers = {
@@ -1504,12 +1512,12 @@ parser_response_headers = {
 
 generator_response_headers = {
     'Accept-Ranges':(generateList, singleHeader),
-    'Age':(str, singleHeader),
+    'Age':(unique, str, singleHeader),
     'ETag':(ETag.generate, singleHeader),
-    'Location':(str, singleHeader),
+    'Location':(unique, str, singleHeader),
 #    'Proxy-Authenticate'
     'Retry-After':(generateRetryAfter, singleHeader),
-    'Server':(str, singleHeader),
+    'Server':(unique, str, singleHeader),
     'Set-Cookie':(generateSetCookie,),
     'Set-Cookie2':(generateSetCookie2,),
     'Vary':(generateList, singleHeader),
@@ -1533,8 +1541,8 @@ generator_entity_headers = {
     'Allow':(generateList, singleHeader),
     'Content-Encoding':(generateList, singleHeader),
     'Content-Language':(generateList, singleHeader),
-    'Content-Length':(str, singleHeader),
-    'Content-Location':(str, singleHeader),
+    'Content-Length':(unique, str, singleHeader),
+    'Content-Location':(unique, str, singleHeader),
     'Content-MD5':(base64.encodestring, lambda x: x.strip("\n"), singleHeader),
     'Content-Range':(generateContentRange, singleHeader),
     'Content-Type':(generateContentType, singleHeader),
