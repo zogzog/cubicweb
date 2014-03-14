@@ -26,6 +26,7 @@ import decimal
 import datetime
 import random
 import re
+import json
 
 from operator import itemgetter
 from inspect import getargspec
@@ -39,6 +40,7 @@ from logging import getLogger
 
 from logilab.mtconverter import xml_escape
 from logilab.common.deprecation import deprecated
+from logilab.common.date import ustrftime
 
 _MARKER = object()
 
@@ -465,77 +467,66 @@ class HTMLStream(object):
                                              self.head.getvalue(),
                                              self.body.getvalue())
 
-try:
-    # may not be there if cubicweb-web not installed
-    if sys.version_info < (2, 6):
-        import simplejson as json
-    else:
-        import json
-except ImportError:
-    json_dumps = JSString = None
 
-else:
-    from logilab.common.date import ustrftime
+class CubicWebJsonEncoder(json.JSONEncoder):
+    """define a json encoder to be able to encode yams std types"""
 
-    class CubicWebJsonEncoder(json.JSONEncoder):
-        """define a json encoder to be able to encode yams std types"""
+    def default(self, obj):
+        if hasattr(obj, '__json_encode__'):
+            return obj.__json_encode__()
+        if isinstance(obj, datetime.datetime):
+            return ustrftime(obj, '%Y/%m/%d %H:%M:%S')
+        elif isinstance(obj, datetime.date):
+            return ustrftime(obj, '%Y/%m/%d')
+        elif isinstance(obj, datetime.time):
+            return obj.strftime('%H:%M:%S')
+        elif isinstance(obj, datetime.timedelta):
+            return (obj.days * 24 * 60 * 60) + obj.seconds
+        elif isinstance(obj, decimal.Decimal):
+            return float(obj)
+        try:
+            return json.JSONEncoder.default(self, obj)
+        except TypeError:
+            # we never ever want to fail because of an unknown type,
+            # just return None in those cases.
+            return None
 
-        def default(self, obj):
-            if hasattr(obj, '__json_encode__'):
-                return obj.__json_encode__()
-            if isinstance(obj, datetime.datetime):
-                return ustrftime(obj, '%Y/%m/%d %H:%M:%S')
-            elif isinstance(obj, datetime.date):
-                return ustrftime(obj, '%Y/%m/%d')
-            elif isinstance(obj, datetime.time):
-                return obj.strftime('%H:%M:%S')
-            elif isinstance(obj, datetime.timedelta):
-                return (obj.days * 24 * 60 * 60) + obj.seconds
-            elif isinstance(obj, decimal.Decimal):
-                return float(obj)
-            try:
-                return json.JSONEncoder.default(self, obj)
-            except TypeError:
-                # we never ever want to fail because of an unknown type,
-                # just return None in those cases.
-                return None
-
-    def json_dumps(value, **kwargs):
-        return json.dumps(value, cls=CubicWebJsonEncoder, **kwargs)
+def json_dumps(value, **kwargs):
+    return json.dumps(value, cls=CubicWebJsonEncoder, **kwargs)
 
 
-    class JSString(str):
-        """use this string sub class in values given to :func:`js_dumps` to
-        insert raw javascript chain in some JSON string
-        """
+class JSString(str):
+    """use this string sub class in values given to :func:`js_dumps` to
+    insert raw javascript chain in some JSON string
+    """
 
-    def _dict2js(d, predictable=False):
-        res = [key + ': ' + js_dumps(val, predictable)
-               for key, val in d.iteritems()]
-        return '{%s}' % ', '.join(res)
+def _dict2js(d, predictable=False):
+    res = [key + ': ' + js_dumps(val, predictable)
+           for key, val in d.iteritems()]
+    return '{%s}' % ', '.join(res)
 
-    def _list2js(l, predictable=False):
-        return '[%s]' % ', '.join([js_dumps(val, predictable) for val in l])
+def _list2js(l, predictable=False):
+    return '[%s]' % ', '.join([js_dumps(val, predictable) for val in l])
 
-    def js_dumps(something, predictable=False):
-        """similar as :func:`json_dumps`, except values which are instances of
-        :class:`JSString` are expected to be valid javascript and will be output
-        as is
+def js_dumps(something, predictable=False):
+    """similar as :func:`json_dumps`, except values which are instances of
+    :class:`JSString` are expected to be valid javascript and will be output
+    as is
 
-        >>> js_dumps({'hop': JSString('$.hop'), 'bar': None}, predictable=True)
-        '{bar: null, hop: $.hop}'
-        >>> js_dumps({'hop': '$.hop'})
-        '{hop: "$.hop"}'
-        >>> js_dumps({'hip': {'hop': JSString('momo')}})
-        '{hip: {hop: momo}}'
-        """
-        if isinstance(something, dict):
-            return _dict2js(something, predictable)
-        if isinstance(something, list):
-            return _list2js(something, predictable)
-        if isinstance(something, JSString):
-            return something
-        return json_dumps(something)
+    >>> js_dumps({'hop': JSString('$.hop'), 'bar': None}, predictable=True)
+    '{bar: null, hop: $.hop}'
+    >>> js_dumps({'hop': '$.hop'})
+    '{hop: "$.hop"}'
+    >>> js_dumps({'hip': {'hop': JSString('momo')}})
+    '{hip: {hop: momo}}'
+    """
+    if isinstance(something, dict):
+        return _dict2js(something, predictable)
+    if isinstance(something, list):
+        return _list2js(something, predictable)
+    if isinstance(something, JSString):
+        return something
+    return json_dumps(something)
 
 PERCENT_IN_URLQUOTE_RE = re.compile(r'%(?=[0-9a-fA-F]{2})')
 def js_href(javascript_code):
