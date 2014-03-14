@@ -1324,6 +1324,9 @@ class Headers(object):
         h = self._headers.get(name, None)
         r = self.handler.generate(name, h)
         if r is not None:
+            assert isinstance(r, list)
+            for v in r:
+                assert isinstance(v, str)
             self._raw_headers[name] = r
         return r
 
@@ -1362,6 +1365,9 @@ class Headers(object):
         Value should be a list of strings, each being one header of the
         given name.
         """
+        assert isinstance(value, list)
+        for v in value:
+            assert isinstance(v, str)
         name = name.lower()
         self._raw_headers[name] = value
         self._headers[name] = _RecalcNeeded
