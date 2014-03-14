@@ -1,6 +1,13 @@
 What's new in CubicWeb 3.19?
 ============================
 
+New functionalities
+--------------------
+
+* implement Cross Origin Resource Sharing (CORS)
+  (see `#2491768 <http://www.cubicweb.org/2491768>`_)
+
+
 Behaviour Changes
 -----------------
 

@@ -15,9 +15,13 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
+
+import contextlib
+
 from logilab.common.testlib import TestCase, unittest_main, tag, Tags
 
 from cubicweb.devtools.fake import FakeRequest
+from cubicweb.devtools.testlib import CubicWebTC
 
 
 def _test_cache(hin, hout, method='GET'):
@@ -288,6 +292,168 @@ class HTTPCache(TestCase):
         self.assertCache(None, req.status_out, 'not modifier HEAD verb')
         value = req.headers_out.getRawHeaders('expires')
         self.assertEqual(value, [DATE])
+
+
+alloworig = 'access-control-allow-origin'
+allowmethods = 'access-control-allow-methods'
+allowheaders = 'access-control-allow-headers'
+allowcreds = 'access-control-allow-credentials'
+exposeheaders = 'access-control-expose-headers'
+maxage = 'access-control-max-age'
+
+requestmethod = 'access-control-request-method'
+requestheaders = 'access-control-request-headers'
+
+class _BaseAccessHeadersTC(CubicWebTC):
+
+    @contextlib.contextmanager
+    def options(self, **options):
+        for k, values in options.items():
+            self.config.set_option(k, values)
+        try:
+            yield
+        finally:
+            for k in options:
+                self.config.set_option(k, '')
+    def check_no_cors(self, req):
+        self.assertEqual(None, req.get_response_header(alloworig))
+        self.assertEqual(None, req.get_response_header(allowmethods))
+        self.assertEqual(None, req.get_response_header(allowheaders))
+        self.assertEqual(None, req.get_response_header(allowcreds))
+        self.assertEqual(None, req.get_response_header(exposeheaders))
+        self.assertEqual(None, req.get_response_header(maxage))
+
+
+class SimpleAccessHeadersTC(_BaseAccessHeadersTC):
+
+    def test_noaccess(self):
+        with self.admin_access.web_request() as req:
+            data = self.app_handle_request(req)
+            self.check_no_cors(req)
+
+    def test_noorigin(self):
+        with self.options(**{alloworig: '*'}):
+            with self.admin_access.web_request() as req:
+                req = self.request()
+                data = self.app_handle_request(req)
+                self.check_no_cors(req)
+
+    def test_origin_noaccess(self):
+        with self.admin_access.web_request() as req:
+            req.set_request_header('Origin', 'http://www.cubicweb.org')
+            data = self.app_handle_request(req)
+            self.check_no_cors(req)
+
+    def test_origin_noaccess_bad_host(self):
+        with self.options(**{alloworig: '*'}):
+            with self.admin_access.web_request() as req:
+                req.set_request_header('Origin', 'http://www.cubicweb.org')
+                # in these tests, base_url is http://testing.fr/cubicweb/
+                req.set_request_header('Host', 'badhost.net')
+                data = self.app_handle_request(req)
+                self.check_no_cors(req)
+
+    def test_explicit_origin_noaccess(self):
+        with self.options(**{alloworig: ['http://www.toto.org', 'http://othersite.fr']}):
+            with self.admin_access.web_request() as req:
+                req.set_request_header('Origin', 'http://www.cubicweb.org')
+                # in these tests, base_url is http://testing.fr/cubicweb/
+                req.set_request_header('Host', 'testing.fr')
+                data = self.app_handle_request(req)
+                self.check_no_cors(req)
+
+    def test_origin_access(self):
+        with self.options(**{alloworig: '*'}):
+            with self.admin_access.web_request() as req:
+                req.set_request_header('Origin', 'http://www.cubicweb.org')
+                # in these tests, base_url is http://testing.fr/cubicweb/
+                req.set_request_header('Host', 'testing.fr')
+                data = self.app_handle_request(req)
+                self.assertEqual('http://www.cubicweb.org',
+                                 req.get_response_header(alloworig))
+
+    def test_explicit_origin_access(self):
+        with self.options(**{alloworig: ['http://www.cubicweb.org', 'http://othersite.fr']}):
+            with self.admin_access.web_request() as req:
+                req.set_request_header('Origin', 'http://www.cubicweb.org')
+                # in these tests, base_url is http://testing.fr/cubicweb/
+                req.set_request_header('Host', 'testing.fr')
+                data = self.app_handle_request(req)
+                self.assertEqual('http://www.cubicweb.org',
+                                 req.get_response_header(alloworig))
+
+    def test_origin_access_headers(self):
+        with self.options(**{alloworig: '*',
+                             exposeheaders: ['ExposeHead1', 'ExposeHead2'],
+                             allowheaders: ['AllowHead1', 'AllowHead2'],
+                             allowmethods: ['GET', 'POST', 'OPTIONS']}):
+            with self.admin_access.web_request() as req:
+                req.set_request_header('Origin', 'http://www.cubicweb.org')
+                # in these tests, base_url is http://testing.fr/cubicweb/
+                req.set_request_header('Host', 'testing.fr')
+                data = self.app_handle_request(req)
+                self.assertEqual('http://www.cubicweb.org',
+                                 req.get_response_header(alloworig))
+                self.assertEqual("true",
+                                 req.get_response_header(allowcreds))
+                self.assertEqual(['ExposeHead1', 'ExposeHead2'],
+                                 req.get_response_header(exposeheaders))
+                self.assertEqual(None, req.get_response_header(allowmethods))
+                self.assertEqual(None, req.get_response_header(allowheaders))
+
+
+class PreflightAccessHeadersTC(_BaseAccessHeadersTC):
+
+    def test_noaccess(self):
+        with self.admin_access.web_request(method='OPTIONS') as req:
+            data = self.app_handle_request(req)
+            self.check_no_cors(req)
+
+    def test_noorigin(self):
+        with self.options(**{alloworig: '*'}):
+            with self.admin_access.web_request(method='OPTIONS') as req:
+                req = self.request()
+                data = self.app_handle_request(req)
+                self.check_no_cors(req)
+
+    def test_origin_noaccess(self):
+        with self.admin_access.web_request(method='OPTIONS') as req:
+            req.set_request_header('Origin', 'http://www.cubicweb.org')
+            data = self.app_handle_request(req)
+            self.check_no_cors(req)
+
+    def test_origin_noaccess_bad_host(self):
+        with self.options(**{alloworig: '*'}):
+            with self.admin_access.web_request(method='OPTIONS') as req:
+                req.set_request_header('Origin', 'http://www.cubicweb.org')
+                # in these tests, base_url is http://testing.fr/cubicweb/
+                req.set_request_header('Host', 'badhost.net')
+                data = self.app_handle_request(req)
+                self.check_no_cors(req)
+
+    def test_origin_access(self):
+        with self.options(**{alloworig: '*',
+                             exposeheaders: ['ExposeHead1', 'ExposeHead2'],
+                             allowheaders: ['AllowHead1', 'AllowHead2'],
+                             allowmethods: ['GET', 'POST', 'OPTIONS']}):
+            with self.admin_access.web_request(method='OPTIONS') as req:
+                req.set_request_header('Origin', 'http://www.cubicweb.org')
+                # in these tests, base_url is http://testing.fr/cubicweb/
+                req.set_request_header('Host', 'testing.fr')
+                req.set_request_header(requestmethod, 'GET')
+
+                data = self.app_handle_request(req)
+                self.assertEqual(200, req.status_out)
+                self.assertEqual('http://www.cubicweb.org',
+                                 req.get_response_header(alloworig))
+                self.assertEqual("true",
+                                 req.get_response_header(allowcreds))
+                self.assertEqual(set(['GET', 'POST', 'OPTIONS']),
+                                 req.get_response_header(allowmethods))
+                self.assertEqual(set(['AllowHead1', 'AllowHead2']),
+                                 req.get_response_header(allowheaders))
+                self.assertEqual(None,
+                                 req.get_response_header(exposeheaders))
 
 
 if __name__ == '__main__':

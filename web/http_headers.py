@@ -8,6 +8,7 @@ import types, time
 from calendar import timegm
 import base64
 import re
+import urlparse
 
 def dashCapitalize(s):
     ''' Capitalize a string, making sure to treat - as a word seperator '''
@@ -387,6 +388,35 @@ def unique(seq):
     if len(seq) != 1:
         raise ValueError('single value required, not %s' % seq)
     return seq[0]
+
+def parseHTTPMethod(method):
+    """Ensure a HTTP method is valid according the rfc2616, but extension-method ones"""
+    method = method.strip()
+    if method not in ("OPTIONS", "GET", "HEAD", "POST", "PUT", "DELETE",
+                      "TRACE", "CONNECT"):
+        raise ValueError('Unsupported HTTP method %s' % method)
+    return method
+
+def parseAllowOrigin(origin):
+    """Ensure origin is a valid URL-base stuff, or null"""
+    if origin == 'null':
+        return origin
+    p = urlparse.urlparse(origin)
+    if p.params or p.query or p.username or p.path not in ('', '/'):
+        raise ValueError('Incorrect Accept-Control-Allow-Origin value %s' % origin)
+    if p.scheme not in ('http', 'https'):
+        raise ValueError('Unsupported Accept-Control-Allow-Origin URL scheme %s' % origin)
+    if not p.netloc:
+        raise ValueError('Accept-Control-Allow-Origin: host name cannot be unset  (%s)' % origin)
+    return origin
+
+def parseAllowCreds(cred):
+    """Can be "true" """
+    if cred:
+        cred = cred.lower()
+    if cred and cred != 'true':
+        raise ValueError('Accept-Control-Allow-Credentials can only be "true" (%s)' % cred)
+    return cred
 
 ##### Generation utilities
 def quoteString(s):
@@ -1454,6 +1484,12 @@ parser_request_headers = {
     'Accept-Charset': (tokenize, listParser(parseAcceptQvalue), dict, addDefaultCharset),
     'Accept-Encoding':(tokenize, listParser(parseAcceptQvalue), dict, addDefaultEncoding),
     'Accept-Language':(tokenize, listParser(parseAcceptQvalue), dict),
+    'Access-Control-Allow-Origin': (last, parseAllowOrigin,),
+    'Access-Control-Allow-Credentials': (last, parseAllowCreds,),
+    'Access-Control-Allow-Methods': (tokenize, listParser(parseHTTPMethod), list),
+    'Access-Control-Request-Method': (parseHTTPMethod, ),
+    'Access-Control-Request-Headers': (filterTokens, ),
+    'Access-Control-Expose-Headers': (filterTokens, ),
     'Authorization': (last, parseAuthorization),
     'Cookie':(parseCookie,),
     'Expect':(tokenize, listParser(parseExpect), dict),
@@ -1465,6 +1501,7 @@ parser_request_headers = {
     'If-Range':(parseIfRange,),
     'If-Unmodified-Since':(last,parseDateTime),
     'Max-Forwards':(last,int),
+    'Origin': (last,),
 #    'Proxy-Authorization':str, # what is "credentials"
     'Range':(tokenize, parseRange),
     'Referer':(last,str), # TODO: URI object?
@@ -1477,11 +1514,15 @@ generator_request_headers = {
     'Accept-Charset': (iteritems, listGenerator(generateAcceptQvalue),singleHeader),
     'Accept-Encoding': (iteritems, removeDefaultEncoding, listGenerator(generateAcceptQvalue),singleHeader),
     'Accept-Language': (iteritems, listGenerator(generateAcceptQvalue),singleHeader),
+    'Access-Control-Request-Method': (unique, str, singleHeader, ),
+    'Access-Control-Expose-Headers': (listGenerator(str), ),
+    'Access-Control-Allow-Headers': (listGenerator(str), ),
     'Authorization': (generateAuthorization,), # what is "credentials"
     'Cookie':(generateCookie,singleHeader),
     'Expect':(iteritems, listGenerator(generateExpect), singleHeader),
     'From':(unique, str,singleHeader),
     'Host':(unique, str,singleHeader),
+    'Origin': (unique, str, singleHeader),
     'If-Match':(listGenerator(generateStarOrETag), singleHeader),
     'If-Modified-Since':(generateDateTime,singleHeader),
     'If-None-Match':(listGenerator(generateStarOrETag), singleHeader),

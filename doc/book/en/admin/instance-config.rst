@@ -189,3 +189,38 @@ RQL queries.
 :`navigation.combobox-limit`:
     number of entities unrelated to show up on the drop-down lists of
     the sight on an editing entity view
+
+Cross-Origin Resource Sharing
+-----------------------------
+
+CubicWeb provides some support for the CORS_ protocol. For now, the
+provided implementation only deals with access to a CubicWeb instance
+as a whole. Support for a finer granularity may be considered in the
+future.
+
+Specificities of the provided implementation:
+
+- ``Access-Control-Allow-Credentials`` is always true
+- ``Access-Control-Allow-Origin`` header in response will never be
+  ``*``
+- ``Access-Control-Expose-Headers`` can be configured globally (see below)
+- ``Access-Control-Max-Age`` can be configured globally (see below)
+- ``Access-Control-Allow-Methods`` can be configured globally (see below)
+- ``Access-Control-Allow-Headers`` can be configured globally (see below)
+
+
+A few parameters can be set to configure the CORS_ capabilities of CubicWeb.
+
+.. _CORS: http://www.w3.org/TR/cors/
+
+:`access-control-allow-origin`:
+   comma-separated list of allowed origin domains or "*" for any domain
+:`access-control-allow-methods`:
+   comma-separated list of allowed HTTP methods
+:`access-control-max-age`:
+   maximum age of cross-origin resource sharing (in seconds)
+:`access-control-allow-headers`:
+   comma-separated list of allowed HTTP custom headers (used in simple requests)
+:`access-control-expose-headers`:
+   comma-separated list of allowed HTTP custom headers (used in preflight requests)
+

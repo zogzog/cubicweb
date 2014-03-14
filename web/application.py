@@ -36,7 +36,7 @@ from cubicweb import (
     AuthenticationError, NoSelectableObject,
     BadConnectionId, CW_EVENT_MANAGER)
 from cubicweb.repoapi import anonymous_cnx
-from cubicweb.web import LOGGER, component
+from cubicweb.web import LOGGER, component, cors
 from cubicweb.web import (
     StatusResponse, DirectResponse, Redirect, NotFound, LogOut,
     RemoteCallFailed, InvalidSession, RequestError, PublishException)
@@ -415,6 +415,7 @@ class CubicWebPublisher(object):
                     content = self.need_login_content(req)
         return content
 
+
     def core_handle(self, req, path):
         """method called by the main publisher to process <path>
 
@@ -440,6 +441,8 @@ class CubicWebPublisher(object):
         try:
             ### standard processing of the request
             try:
+                # apply CORS sanity checks
+                cors.process_request(req, self.vreg.config)
                 ctrlid, rset = self.url_resolver.process(req, path)
                 try:
                     controller = self.vreg['controllers'].select(ctrlid, req,
@@ -448,6 +451,10 @@ class CubicWebPublisher(object):
                     raise Unauthorized(req._('not authorized'))
                 req.update_search_state()
                 result = controller.publish(rset=rset)
+            except cors.CORSPreflight:
+                # Return directly an empty 200
+                req.status_out = 200
+                result = ''
             except StatusResponse as ex:
                 warn('[3.16] StatusResponse is deprecated use req.status_out',
                      DeprecationWarning, stacklevel=2)
