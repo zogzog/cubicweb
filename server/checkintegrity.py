@@ -35,7 +35,7 @@ def notify_fixed(fix):
         sys.stderr.write(' [FIXED]')
     sys.stderr.write('\n')
 
-def has_eid(session, sqlcursor, eid, eids):
+def has_eid(cnx, sqlcursor, eid, eids):
     """return true if the eid is a valid eid"""
     if eid in eids:
         return eids[eid]
@@ -45,7 +45,7 @@ def has_eid(session, sqlcursor, eid, eids):
     except Exception:
         eids[eid] = False
         return False
-    if etype not in session.vreg.schema:
+    if etype not in cnx.vreg.schema:
         eids[eid] = False
         return False
     sqlcursor.execute('SELECT * FROM %s%s WHERE %seid=%s' % (SQL_PREFIX, etype,
@@ -87,11 +87,12 @@ def reindex_entities(schema, cnx, withpb=True, etypes=None):
     # deactivate modification_date hook since we don't want them
     # to be updated due to the reindexation
     repo = cnx.repo
-    cursor = cnx.cnxset.cu
     dbhelper = repo.system_source.dbhelper
-    if not dbhelper.has_fti_table(cursor):
-        print 'no text index table'
-        dbhelper.init_fti(cursor)
+    with cnx.ensure_cnx_set:
+        cursor = cnx.cnxset.cu
+        if not dbhelper.has_fti_table(cursor):
+            print 'no text index table'
+            dbhelper.init_fti(cursor)
     repo.system_source.do_fti = True  # ensure full-text indexation is activated
     if etypes is None:
         print 'Reindexing entities'
@@ -131,7 +132,7 @@ def reindex_entities(schema, cnx, withpb=True, etypes=None):
             pb.update()
 
 
-def check_schema(schema, session, eids, fix=1):
+def check_schema(schema, cnx, eids, fix=1):
     """check serialized schema"""
     print 'Checking serialized schema'
     unique_constraints = ('SizeConstraint', 'FormatConstraint',
@@ -141,7 +142,7 @@ def check_schema(schema, session, eids, fix=1):
            'WHERE X is CWConstraint, R constrained_by X, '
            'R relation_type RT, RT name RN, R from_entity ST, ST name SN, '
            'R to_entity OT, OT name ON, X cstrtype CT, CT name CTN')
-    for count, rn, sn, on, cstrname in session.execute(rql):
+    for count, rn, sn, on, cstrname in cnx.execute(rql):
         if count == 1:
             continue
         if cstrname in unique_constraints:
@@ -152,37 +153,38 @@ def check_schema(schema, session, eids, fix=1):
 
 
 
-def check_text_index(schema, session, eids, fix=1):
+def check_text_index(schema, cnx, eids, fix=1):
     """check all entities registered in the text index"""
     print 'Checking text index'
     msg = '  Entity with eid %s exists in the text index but in no source (autofix will remove from text index)'
-    cursor = session.system_sql('SELECT uid FROM appears;')
+    cursor = cnx.system_sql('SELECT uid FROM appears;')
     for row in cursor.fetchall():
         eid = row[0]
-        if not has_eid(session, cursor, eid, eids):
+        if not has_eid(cnx, cursor, eid, eids):
             sys.stderr.write(msg % eid)
             if fix:
-                session.system_sql('DELETE FROM appears WHERE uid=%s;' % eid)
+                cnx.system_sql('DELETE FROM appears WHERE uid=%s;' % eid)
             notify_fixed(fix)
 
 
-def check_entities(schema, session, eids, fix=1):
+def check_entities(schema, cnx, eids, fix=1):
     """check all entities registered in the repo system table"""
     print 'Checking entities system table'
     # system table but no source
     msg = '  Entity %s with eid %s exists in the system table but in no source (autofix will delete the entity)'
-    cursor = session.system_sql('SELECT eid,type FROM entities;')
+    cursor = cnx.system_sql('SELECT eid,type FROM entities;')
     for row in cursor.fetchall():
         eid, etype = row
-        if not has_eid(session, cursor, eid, eids):
+        if not has_eid(cnx, cursor, eid, eids):
             sys.stderr.write(msg % (etype, eid))
             if fix:
-                session.system_sql('DELETE FROM entities WHERE eid=%s;' % eid)
+                cnx.system_sql('DELETE FROM entities WHERE eid=%s;' % eid)
             notify_fixed(fix)
     # source in entities, but no relation cw_source
-    applcwversion = session.repo.get_versions().get('cubicweb')
+    # XXX this (get_versions) requires a second connection to the db when we already have one open
+    applcwversion = cnx.repo.get_versions().get('cubicweb')
     if applcwversion >= (3, 13, 1): # entities.asource appeared in 3.13.1
-        cursor = session.system_sql('SELECT e.eid FROM entities as e, cw_CWSource as s '
+        cursor = cnx.system_sql('SELECT e.eid FROM entities as e, cw_CWSource as s '
                                     'WHERE s.cw_name=e.asource AND '
                                     'NOT EXISTS(SELECT 1 FROM cw_source_relation as cs '
                                     '  WHERE cs.eid_from=e.eid AND cs.eid_to=s.cw_eid) '
@@ -192,35 +194,35 @@ def check_entities(schema, session, eids, fix=1):
         for row in cursor.fetchall():
             sys.stderr.write(msg % row[0])
         if fix:
-            session.system_sql('INSERT INTO cw_source_relation (eid_from, eid_to) '
+            cnx.system_sql('INSERT INTO cw_source_relation (eid_from, eid_to) '
                                'SELECT e.eid, s.cw_eid FROM entities as e, cw_CWSource as s '
                                'WHERE s.cw_name=e.asource AND NOT EXISTS(SELECT 1 FROM cw_source_relation as cs '
                                '  WHERE cs.eid_from=e.eid AND cs.eid_to=s.cw_eid)')
             notify_fixed(True)
     # inconsistencies for 'is'
     msg = '  %s #%s is missing relation "is" (autofix will create the relation)\n'
-    cursor = session.system_sql('SELECT e.type, e.eid FROM entities as e, cw_CWEType as s '
+    cursor = cnx.system_sql('SELECT e.type, e.eid FROM entities as e, cw_CWEType as s '
                                 'WHERE s.cw_name=e.type AND NOT EXISTS(SELECT 1 FROM is_relation as cs '
                                 '  WHERE cs.eid_from=e.eid AND cs.eid_to=s.cw_eid) '
                                 'ORDER BY e.eid')
     for row in cursor.fetchall():
         sys.stderr.write(msg % row)
     if fix:
-        session.system_sql('INSERT INTO is_relation (eid_from, eid_to) '
+        cnx.system_sql('INSERT INTO is_relation (eid_from, eid_to) '
                            'SELECT e.eid, s.cw_eid FROM entities as e, cw_CWEType as s '
                            'WHERE s.cw_name=e.type AND NOT EXISTS(SELECT 1 FROM is_relation as cs '
                            '  WHERE cs.eid_from=e.eid AND cs.eid_to=s.cw_eid)')
         notify_fixed(True)
     # inconsistencies for 'is_instance_of'
     msg = '  %s #%s is missing relation "is_instance_of" (autofix will create the relation)\n'
-    cursor = session.system_sql('SELECT e.type, e.eid FROM entities as e, cw_CWEType as s '
+    cursor = cnx.system_sql('SELECT e.type, e.eid FROM entities as e, cw_CWEType as s '
                                 'WHERE s.cw_name=e.type AND NOT EXISTS(SELECT 1 FROM is_instance_of_relation as cs '
                                 '  WHERE cs.eid_from=e.eid AND cs.eid_to=s.cw_eid) '
                                 'ORDER BY e.eid')
     for row in cursor.fetchall():
         sys.stderr.write(msg % row)
     if fix:
-        session.system_sql('INSERT INTO is_instance_of_relation (eid_from, eid_to) '
+        cnx.system_sql('INSERT INTO is_instance_of_relation (eid_from, eid_to) '
                            'SELECT e.eid, s.cw_eid FROM entities as e, cw_CWEType as s '
                            'WHERE s.cw_name=e.type AND NOT EXISTS(SELECT 1 FROM is_instance_of_relation as cs '
                            '  WHERE cs.eid_from=e.eid AND cs.eid_to=s.cw_eid)')
@@ -232,7 +234,7 @@ def check_entities(schema, session, eids, fix=1):
             continue
         table = SQL_PREFIX + eschema.type
         column = SQL_PREFIX +  'eid'
-        cursor = session.system_sql('SELECT %s FROM %s;' % (column, table))
+        cursor = cnx.system_sql('SELECT %s FROM %s;' % (column, table))
         for row in cursor.fetchall():
             eid = row[0]
             # eids is full since we have fetched everything from the entities table,
@@ -240,7 +242,7 @@ def check_entities(schema, session, eids, fix=1):
             if not eid in eids or not eids[eid]:
                 sys.stderr.write(msg % (eid, eschema.type))
                 if fix:
-                    session.system_sql('DELETE FROM %s WHERE %s=%s;' % (table, column, eid))
+                    cnx.system_sql('DELETE FROM %s WHERE %s=%s;' % (table, column, eid))
                 notify_fixed(fix)
 
 
@@ -256,7 +258,7 @@ def bad_inlined_msg(rtype, parent_eid, eid, fix):
     notify_fixed(fix)
 
 
-def check_relations(schema, session, eids, fix=1):
+def check_relations(schema, cnx, eids, fix=1):
     """check that eids referenced by relations are registered in the repo system
     table
     """
@@ -270,42 +272,42 @@ def check_relations(schema, session, eids, fix=1):
                 column = SQL_PREFIX +  str(rschema)
                 sql = 'SELECT cw_eid,%s FROM %s WHERE %s IS NOT NULL;' % (
                     column, table, column)
-                cursor = session.system_sql(sql)
+                cursor = cnx.system_sql(sql)
                 for row in cursor.fetchall():
                     parent_eid, eid = row
-                    if not has_eid(session, cursor, eid, eids):
+                    if not has_eid(cnx, cursor, eid, eids):
                         bad_inlined_msg(rschema, parent_eid, eid, fix)
                         if fix:
                             sql = 'UPDATE %s SET %s=NULL WHERE %s=%s;' % (
                                 table, column, column, eid)
-                            session.system_sql(sql)
+                            cnx.system_sql(sql)
             continue
         try:
-            cursor = session.system_sql('SELECT eid_from FROM %s_relation;' % rschema)
+            cursor = cnx.system_sql('SELECT eid_from FROM %s_relation;' % rschema)
         except Exception as ex:
             # usually because table doesn't exist
             print 'ERROR', ex
             continue
         for row in cursor.fetchall():
             eid = row[0]
-            if not has_eid(session, cursor, eid, eids):
+            if not has_eid(cnx, cursor, eid, eids):
                 bad_related_msg(rschema, 'subject', eid, fix)
                 if fix:
                     sql = 'DELETE FROM %s_relation WHERE eid_from=%s;' % (
                         rschema, eid)
-                    session.system_sql(sql)
-        cursor = session.system_sql('SELECT eid_to FROM %s_relation;' % rschema)
+                    cnx.system_sql(sql)
+        cursor = cnx.system_sql('SELECT eid_to FROM %s_relation;' % rschema)
         for row in cursor.fetchall():
             eid = row[0]
-            if not has_eid(session, cursor, eid, eids):
+            if not has_eid(cnx, cursor, eid, eids):
                 bad_related_msg(rschema, 'object', eid, fix)
                 if fix:
                     sql = 'DELETE FROM %s_relation WHERE eid_to=%s;' % (
                         rschema, eid)
-                    session.system_sql(sql)
+                    cnx.system_sql(sql)
 
 
-def check_mandatory_relations(schema, session, eids, fix=1):
+def check_mandatory_relations(schema, cnx, eids, fix=1):
     """check entities missing some mandatory relation"""
     print 'Checking mandatory relations'
     msg = '%s #%s is missing mandatory %s relation %s (autofix will delete the entity)'
@@ -325,7 +327,7 @@ def check_mandatory_relations(schema, session, eids, fix=1):
                     rql = 'Any X WHERE NOT X %s Y, X is %s' % (rschema, etype)
                 else:
                     rql = 'Any X WHERE NOT Y %s X, X is %s' % (rschema, etype)
-                for entity in session.execute(rql).entities():
+                for entity in cnx.execute(rql).entities():
                     sys.stderr.write(msg % (entity.cw_etype, entity.eid, role, rschema))
                     if fix:
                         #if entity.cw_describe()['source']['uri'] == 'system': XXX
@@ -333,7 +335,7 @@ def check_mandatory_relations(schema, session, eids, fix=1):
                     notify_fixed(fix)
 
 
-def check_mandatory_attributes(schema, session, eids, fix=1):
+def check_mandatory_attributes(schema, cnx, eids, fix=1):
     """check for entities stored in the system source missing some mandatory
     attribute
     """
@@ -346,40 +348,40 @@ def check_mandatory_attributes(schema, session, eids, fix=1):
             if rdef.cardinality[0] in '1+':
                 rql = 'Any X WHERE X %s NULL, X is %s, X cw_source S, S name "system"' % (
                     rschema, rdef.subject)
-                for entity in session.execute(rql).entities():
+                for entity in cnx.execute(rql).entities():
                     sys.stderr.write(msg % (entity.cw_etype, entity.eid, rschema))
                     if fix:
                         entity.cw_delete()
                     notify_fixed(fix)
 
 
-def check_metadata(schema, session, eids, fix=1):
+def check_metadata(schema, cnx, eids, fix=1):
     """check entities has required metadata
 
     FIXME: rewrite using RQL queries ?
     """
     print 'Checking metadata'
-    cursor = session.system_sql("SELECT DISTINCT type FROM entities;")
+    cursor = cnx.system_sql("SELECT DISTINCT type FROM entities;")
     eidcolumn = SQL_PREFIX + 'eid'
     msg = '  %s with eid %s has no %s (autofix will set it to now)'
     for etype, in cursor.fetchall():
-        if etype not in session.vreg.schema:
+        if etype not in cnx.vreg.schema:
             sys.stderr.write('entities table references unknown type %s\n' %
                              etype)
             if fix:
-                session.system_sql("DELETE FROM entities WHERE type = %(type)s",
+                cnx.system_sql("DELETE FROM entities WHERE type = %(type)s",
                                    {'type': etype})
             continue
         table = SQL_PREFIX + etype
         for rel, default in ( ('creation_date', datetime.now()),
                               ('modification_date', datetime.now()), ):
             column = SQL_PREFIX + rel
-            cursor = session.system_sql("SELECT %s FROM %s WHERE %s is NULL"
+            cursor = cnx.system_sql("SELECT %s FROM %s WHERE %s is NULL"
                                         % (eidcolumn, table, column))
             for eid, in cursor.fetchall():
                 sys.stderr.write(msg % (etype, eid, rel))
                 if fix:
-                    session.system_sql("UPDATE %s SET %s=%%(v)s WHERE %s=%s ;"
+                    cnx.system_sql("UPDATE %s SET %s=%%(v)s WHERE %s=%s ;"
                                        % (table, column, eidcolumn, eid),
                                        {'v': default})
                 notify_fixed(fix)
@@ -390,22 +392,23 @@ def check(repo, cnx, checks, reindex, fix, withpb=True):
     using given user and password to locally connect to the repository
     (no running cubicweb server needed)
     """
-    session = repo._get_session(cnx.sessionid, setcnxset=True)
     # yo, launch checks
+    srvcnx = cnx._cnx
     if checks:
         eids_cache = {}
-        with session.security_enabled(read=False, write=False): # ensure no read security
+        with srvcnx.security_enabled(read=False, write=False): # ensure no read security
             for check in checks:
                 check_func = globals()['check_%s' % check]
-                check_func(repo.schema, session, eids_cache, fix=fix)
+                with srvcnx.ensure_cnx_set:
+                    check_func(repo.schema, srvcnx, eids_cache, fix=fix)
         if fix:
-            session.commit()
+            srvcnx.commit()
         else:
             print
         if not fix:
             print 'WARNING: Diagnostic run, nothing has been corrected'
     if reindex:
-        session.rollback()
-        session.set_cnxset()
-        reindex_entities(repo.schema, session, withpb=withpb)
-        session.commit()
+        srvcnx.rollback()
+        with srvcnx.ensure_cnx_set:
+            reindex_entities(repo.schema, srvcnx, withpb=withpb)
+        srvcnx.commit()

@@ -132,8 +132,8 @@ def _db_sys_cnx(source, special_privs, interactive=True):
     return cnx
 
 def repo_cnx(config):
-    """return a in-memory repository and a db api connection it"""
-    from cubicweb.dbapi import in_memory_repo_cnx
+    """return a in-memory repository and a repoapi connection to it"""
+    from cubicweb import repoapi
     from cubicweb.server.utils import manager_userpasswd
     try:
         login = config.default_admin_config['login']
@@ -142,7 +142,9 @@ def repo_cnx(config):
         login, pwd = manager_userpasswd()
     while True:
         try:
-            return in_memory_repo_cnx(config, login, password=pwd)
+            repo = repoapi.get_repository(config=config)
+            cnx = repoapi.connect(repo, login, password=pwd)
+            return repo, cnx
         except AuthenticationError:
             print '-> Error: wrong user/password.'
             # reset cubes else we'll have an assertion error on next retry
@@ -482,43 +484,43 @@ class AddSourceCommand(Command):
         config = ServerConfiguration.config_for(appid)
         config.quick_start = True
         repo, cnx = repo_cnx(config)
-        req = cnx.request()
-        used = set(n for n, in req.execute('Any SN WHERE S is CWSource, S name SN'))
-        cubes = repo.get_cubes()
-        while True:
-            type = raw_input('source type (%s): '
-                                % ', '.join(sorted(SOURCE_TYPES)))
-            if type not in SOURCE_TYPES:
-                print '-> unknown source type, use one of the available types.'
-                continue
-            sourcemodule = SOURCE_TYPES[type].module
-            if not sourcemodule.startswith('cubicweb.'):
-                # module names look like cubes.mycube.themodule
-                sourcecube = SOURCE_TYPES[type].module.split('.', 2)[1]
-                # if the source adapter is coming from an external component,
-                # ensure it's specified in used cubes
-                if not sourcecube in cubes:
-                    print ('-> this source type require the %s cube which is '
-                           'not used by the instance.')
+        with cnx:
+            used = set(n for n, in cnx.execute('Any SN WHERE S is CWSource, S name SN'))
+            cubes = repo.get_cubes()
+            while True:
+                type = raw_input('source type (%s): '
+                                    % ', '.join(sorted(SOURCE_TYPES)))
+                if type not in SOURCE_TYPES:
+                    print '-> unknown source type, use one of the available types.'
                     continue
-            break
-        while True:
-            sourceuri = raw_input('source identifier (a unique name used to '
-                                  'tell sources apart): ').strip()
-            if not sourceuri:
-                print '-> mandatory.'
-            else:
-                sourceuri = unicode(sourceuri, sys.stdin.encoding)
-                if sourceuri in used:
-                    print '-> uri already used, choose another one.'
+                sourcemodule = SOURCE_TYPES[type].module
+                if not sourcemodule.startswith('cubicweb.'):
+                    # module names look like cubes.mycube.themodule
+                    sourcecube = SOURCE_TYPES[type].module.split('.', 2)[1]
+                    # if the source adapter is coming from an external component,
+                    # ensure it's specified in used cubes
+                    if not sourcecube in cubes:
+                        print ('-> this source type require the %s cube which is '
+                               'not used by the instance.')
+                        continue
+                break
+            while True:
+                sourceuri = raw_input('source identifier (a unique name used to '
+                                      'tell sources apart): ').strip()
+                if not sourceuri:
+                    print '-> mandatory.'
                 else:
-                    break
-        # XXX configurable inputlevel
-        sconfig = ask_source_config(config, type, inputlevel=self.config.config_level)
-        cfgstr = unicode(generate_source_config(sconfig), sys.stdin.encoding)
-        req.create_entity('CWSource', name=sourceuri,
-                          type=unicode(type), config=cfgstr)
-        cnx.commit()
+                    sourceuri = unicode(sourceuri, sys.stdin.encoding)
+                    if sourceuri in used:
+                        print '-> uri already used, choose another one.'
+                    else:
+                        break
+            # XXX configurable inputlevel
+            sconfig = ask_source_config(config, type, inputlevel=self.config.config_level)
+            cfgstr = unicode(generate_source_config(sconfig), sys.stdin.encoding)
+            cnx.create_entity('CWSource', name=sourceuri,
+                              type=unicode(type), config=cfgstr)
+            cnx.commit()
 
 
 class GrantUserOnInstanceCommand(Command):
@@ -978,8 +980,9 @@ option is set to "y" or "yes" (may be long for large database).'}
         config = ServerConfiguration.config_for(appid)
         config.repairing = self.config.force
         repo, cnx = repo_cnx(config)
-        check(repo, cnx,
-              self.config.checks, self.config.reindex, self.config.autofix)
+        with cnx:
+            check(repo, cnx,
+                  self.config.checks, self.config.reindex, self.config.autofix)
 
 
 class RebuildFTICommand(Command):
@@ -1001,9 +1004,9 @@ class RebuildFTICommand(Command):
         etypes = args or None
         config = ServerConfiguration.config_for(appid)
         repo, cnx = repo_cnx(config)
-        session = repo._get_session(cnx.sessionid, setcnxset=True)
-        reindex_entities(repo.schema, session, etypes=etypes)
-        cnx.commit()
+        with cnx:
+            reindex_entities(repo.schema, cnx._cnx, etypes=etypes)
+            cnx.commit()
 
 
 class SynchronizeSourceCommand(Command):
@@ -1074,7 +1077,7 @@ class SchemaDiffCommand(Command):
         diff_tool = args.pop(0)
         config = ServerConfiguration.config_for(appid)
         repo, cnx = repo_cnx(config)
-        session = repo._get_session(cnx.sessionid, setcnxset=True)
+        cnx.close()
         fsschema = config.load_schema(expand_cubes=True)
         schema_diff(fsschema, repo.schema, permissionshandler, diff_tool, ignore=('eid',))
 
