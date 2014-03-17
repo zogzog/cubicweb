@@ -184,13 +184,16 @@ class CalendarView(EntityView):
                    },
         }
 
-    def call(self):
+    def call(self, cssclass=""):
         self._cw.add_css(('fullcalendar.css', 'cubicweb.calendar.css'))
         self._cw.add_js(('jquery.ui.js', 'fullcalendar.min.js', 'jquery.qtip.min.js', 'fullcalendar.locale.js'))
         self.calendar_id = 'cal' + make_uid('uid')
         self.add_onload()
         # write calendar div to load jquery fullcalendar object
-        self.w(u'<div id="%s"></div>' % self.calendar_id)
+        if cssclass:
+            self.w(u'<div class="%s" id="%s"></div>' % (cssclass, self.calendar_id))
+        else:
+            self.w(u'<div id="%s"></div>' % (cssclass, self.calendar_id))
 
     def add_onload(self):
         fullcalendar_options = self.fullcalendar_options.copy()
