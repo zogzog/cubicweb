@@ -130,6 +130,8 @@ def reindex_entities(schema, cnx, withpb=True, etypes=None):
             cnx.drop_entity_cache()
         if withpb:
             pb.update()
+    if withpb:
+        pb.finish()
 
 
 def check_schema(schema, cnx, eids, fix=1):
