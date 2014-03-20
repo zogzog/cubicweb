@@ -111,14 +111,6 @@ class WebConfiguration(CubicWebConfiguration):
           'group': 'web', 'level': 3,
           }),
         # web configuration
-        ('ui-cube',
-         {'type' : 'string',
-          'default': None,
-          'help': 'the name of the UI cube that will be loaded before all other '\
-          'cubes. Setting this value to None will instruct cubicweb not to load '\
-          'any extra cube.',
-          'group': 'web', 'level': 3,
-          }),
         ('https-url',
          {'type' : 'string',
           'default': None,
