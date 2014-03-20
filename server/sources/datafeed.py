@@ -298,11 +298,34 @@ class DataFeedParser(AppObject):
         self.stats = {'created': set(), 'updated': set(), 'checked': set()}
 
     def normalize_url(self, url):
-        from cubicweb.sobjects import URL_MAPPING # available after registration
+        """Normalize an url by looking if there is a replacement for it in
+        `cubicweb.sobjects.URL_MAPPING`.
+
+        This dictionary allow to redirect from one host to another, which may be
+        useful for example in case of test instance using production data, while
+        you don't want to load the external source nor to hack your `/etc/hosts`
+        file.
+        """
+        # local import mandatory, it's available after registration
+        from cubicweb.sobjects import URL_MAPPING
         for mappedurl in URL_MAPPING:
             if url.startswith(mappedurl):
                 return url.replace(mappedurl, URL_MAPPING[mappedurl], 1)
         return url
+
+    def retrieve_url(self, url):
+        """Return stream linked by the given url:
+        * HTTP urls will be normalized (see :meth:`normalize_url`)
+        * handle file:// URL
+        * other will be considered as plain content, useful for testing purpose
+        """
+        if url.startswith('http'):
+            url = self.normalize_url(url)
+            self.source.info('GET %s', url)
+            return _OPENER.open(url, timeout=self.source.http_timeout)
+        if url.startswith('file://'):
+            return open(url[7:])
+        return StringIO.StringIO(url)
 
     def add_schema_config(self, schemacfg, checkonly=False):
         """added CWSourceSchemaConfig, modify mapping accordingly"""
@@ -446,14 +469,7 @@ class DataFeedXMLParser(DataFeedParser):
         return error
 
     def parse(self, url):
-        if url.startswith('http'):
-            url = self.normalize_url(url)
-            self.source.info('GET %s', url)
-            stream = _OPENER.open(url, timeout=self.source.http_timeout)
-        elif url.startswith('file://'):
-            stream = open(url[7:])
-        else:
-            stream = StringIO.StringIO(url)
+        stream = self.retrieve_url(url)
         return self.parse_etree(etree.parse(stream).getroot())
 
     def parse_etree(self, document):
