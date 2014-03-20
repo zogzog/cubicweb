@@ -598,27 +598,41 @@ class AjaxEditRelationCtxComponent(EntityCtxComponent):
         w(self.rdef.rtype.display_name(self._cw, self.role,
                                        context=self.entity.cw_etype))
 
+    def add_js_css(self):
+        self._cw.add_js(('jquery.ui.js', 'cubicweb.widgets.js'))
+        self._cw.add_js(('cubicweb.ajax.js', 'cubicweb.ajax.box.js'))
+        self._cw.add_css('jquery.ui.css')
+        return True
+
     def render_body(self, w):
         req = self._cw
         entity = self.entity
         related = entity.related(self.rtype, self.role)
         if self.role == 'subject':
             mayadd = self.rdef.has_perm(req, 'add', fromeid=entity.eid)
-            maydel = self.rdef.has_perm(req, 'delete', fromeid=entity.eid)
         else:
             mayadd = self.rdef.has_perm(req, 'add', toeid=entity.eid)
-            maydel = self.rdef.has_perm(req, 'delete', toeid=entity.eid)
-        if mayadd or maydel:
-            req.add_js(('jquery.ui.js', 'cubicweb.widgets.js'))
-            req.add_js(('cubicweb.ajax.js', 'cubicweb.ajax.box.js'))
-            req.add_css('jquery.ui.css')
+        js_css_added = False
+        if mayadd:
+            js_css_added = self.add_js_css()
         _ = req._
         if related:
+            maydel = None
             w(u'<table class="ajaxEditRelationTable">')
             for rentity in related.entities():
+                if maydel is None:
+                    # Only check permission for the first related.
+                    if self.role == 'subject':
+                        fromeid, toeid = entity.eid, rentity.eid
+                    else:
+                        fromeid, toeid = rentity.eid, entity.eid
+                    maydel = self.rdef.has_perm(
+                            req, 'delete', fromeid=fromeid, toeid=toeid)
                 # for each related entity, provide a link to remove the relation
                 subview = rentity.view(self.item_vid)
                 if maydel:
+                    if not js_css_added:
+                        js_css_added = self.add_js_css()
                     jscall = unicode(js.ajaxBoxRemoveLinkedEntity(
                         self.__regid__, entity.eid, rentity.eid,
                         self.fname_remove,

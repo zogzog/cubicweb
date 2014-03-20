@@ -31,6 +31,7 @@ from logilab.common.testlib import unittest_main
 from logilab.common.decorators import monkeypatch
 
 from cubicweb import Binary, NoSelectableObject, ValidationError
+from cubicweb.schema import RRQLExpression
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.utils import json_dumps
 from cubicweb.uilib import rql_for_eid
@@ -807,6 +808,22 @@ class AjaxControllerTC(CubicWebTC):
             self.assertEqual(
                 req.execute('Any N WHERE T tags P, P is CWUser, T name N').rows,
                 [['javascript']])
+
+    def test_maydel_perms(self):
+        """Check that AjaxEditRelationCtxComponent calls rdef.check with a
+        sufficient context"""
+        self.remote_call('tag_entity', self.john.eid, ['python'])
+        with self.temporary_permissions(
+                (self.schema['tags'].rdefs['Tag', 'CWUser'],
+                 {'delete': (RRQLExpression('S owned_by U'), )}, )):
+            req = self.request(rql='CWUser P WHERE P login "John"',
+                               pageid='123', fname='view')
+            ctrl = self.ctrl(req)
+            rset = self.john.as_rset()
+            rset.req = req
+            source = ctrl.publish()
+            # maydel jscall
+            self.assertIn('ajaxBoxRemoveLinkedEntity', source)
 
     def test_pending_insertion(self):
         with self.remote_calling('add_pending_inserts', [['12', 'tags', '13']]) as (_, req):
