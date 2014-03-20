@@ -33,6 +33,10 @@ class DataFeedTC(CubicWebTC):
     def test(self):
         self.assertIn('myfeed', self.repo.sources_by_uri)
         dfsource = self.repo.sources_by_uri['myfeed']
+        self.assertNotIn('use_cwuri_as_url', dfsource.__dict__)
+        self.assertEqual({'type': u'datafeed', 'uri': u'myfeed', 'use-cwuri-as-url': True},
+                         dfsource.public_config)
+        self.assertEqual(dfsource.use_cwuri_as_url, True)
         self.assertEqual(dfsource.latest_retrieval, None)
         self.assertEqual(dfsource.synchro_interval, timedelta(seconds=60))
         self.assertFalse(dfsource.fresh())
@@ -118,6 +122,20 @@ class DataFeedTC(CubicWebTC):
             cnx.commit()
             self.assertFalse(cnx.execute('Card X WHERE X title "cubicweb.org"'))
             self.assertFalse(cnx.execute('Any X WHERE X has_text "cubicweb.org"'))
+
+
+class DataFeedConfigTC(CubicWebTC):
+
+    def test_use_cwuri_as_url_override(self):
+        with self.admin_access.client_cnx() as cnx:
+            cnx.create_entity('CWSource', name=u'myfeed', type=u'datafeed',
+                              parser=u'testparser', url=u'ignored',
+                              config=u'use-cwuri-as-url=no')
+            cnx.commit()
+        dfsource = self.repo.sources_by_uri['myfeed']
+        self.assertEqual(dfsource.use_cwuri_as_url, False)
+        self.assertEqual({'type': u'datafeed', 'uri': u'myfeed', 'use-cwuri-as-url': False},
+                         dfsource.public_config)
 
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main

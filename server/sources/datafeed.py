@@ -83,6 +83,13 @@ class DataFeedSource(AbstractSource):
           'help': ('Timeout of HTTP GET requests, when synchronizing a source.'),
           'group': 'datafeed-source', 'level': 2,
           }),
+        ('use-cwuri-as-url',
+         {'type': 'yn',
+          'default': None, # explicitly unset
+          'help': ('Use cwuri (i.e. external URL) for link to the entity '
+                   'instead of its local URL.'),
+          'group': 'datafeed-source', 'level': 1,
+          }),
         )
 
     def check_config(self, source_entity):
@@ -107,6 +114,12 @@ class DataFeedSource(AbstractSource):
         self.synchro_interval = timedelta(seconds=typed_config['synchronization-interval'])
         self.max_lock_lifetime = timedelta(seconds=typed_config['max-lock-lifetime'])
         self.http_timeout = typed_config['http-timeout']
+        # if typed_config['use-cwuri-as-url'] is set, we have to update
+        # use_cwuri_as_url attribute and public configuration dictionary
+        # accordingly
+        if typed_config['use-cwuri-as-url'] is not None:
+            self.use_cwuri_as_url = typed_config['use-cwuri-as-url']
+            self.public_config['use-cwuri-as-url'] = self.use_cwuri_as_url
 
     def init(self, activated, source_entity):
         super(DataFeedSource, self).init(activated, source_entity)

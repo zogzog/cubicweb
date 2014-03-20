@@ -105,7 +105,7 @@ class AbstractSource(object):
         self.support_relations['identity'] = False
         self.eid = eid
         self.public_config = source_config.copy()
-        self.public_config.setdefault('use-cwuri-as-url', self.use_cwuri_as_url)
+        self.public_config['use-cwuri-as-url'] = self.use_cwuri_as_url
         self.remove_sensitive_information(self.public_config)
         self.uri = source_config.pop('uri')
         set_log_methods(self, getLogger('cubicweb.sources.'+self.uri))
