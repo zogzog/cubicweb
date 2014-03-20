@@ -282,8 +282,14 @@ class Repository(object):
         clear_cache(self, 'source_defs')
 
     def add_source(self, sourceent):
-        source = self.get_source(sourceent.type, sourceent.name,
-                                 sourceent.host_config, sourceent.eid)
+        try:
+            source = self.get_source(sourceent.type, sourceent.name,
+                                     sourceent.host_config, sourceent.eid)
+        except RuntimeError:
+            if self.config.repairing:
+                self.exception('cant setup source %s, skipped', sourceent.name)
+                return
+            raise
         self.sources_by_eid[sourceent.eid] = source
         self.sources_by_uri[sourceent.name] = source
         if self.config.source_enabled(source):
