@@ -313,7 +313,7 @@ class DataFeedParser(AppObject):
                 return url.replace(mappedurl, URL_MAPPING[mappedurl], 1)
         return url
 
-    def retrieve_url(self, url):
+    def retrieve_url(self, url, data=None, headers=None):
         """Return stream linked by the given url:
         * HTTP urls will be normalized (see :meth:`normalize_url`)
         * handle file:// URL
@@ -321,8 +321,12 @@ class DataFeedParser(AppObject):
         """
         if url.startswith('http'):
             url = self.normalize_url(url)
-            self.source.info('GET %s', url)
-            return _OPENER.open(url, timeout=self.source.http_timeout)
+            if data:
+                self.source.info('POST %s %s', url, data)
+            else:
+                self.source.info('GET %s', url)
+            req = urllib2.Request(url, data, headers)
+            return _OPENER.open(req, timeout=self.source.http_timeout)
         if url.startswith('file://'):
             return URLLibResponseAdapter(open(url[7:]), url)
         return URLLibResponseAdapter(StringIO.StringIO(url), url)
