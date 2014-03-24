@@ -1095,7 +1095,7 @@ class Repository(object):
                     hook.CleanupDeletedEidsCacheOp.get_instance(session).add_data(entity.eid)
                     self.system_source.delete_info_multi(session, [entity])
                     if source.should_call_hooks:
-                        session._tx.pending_operations = pending_operations
+                        session._cnx.pending_operations = pending_operations
             raise
 
     def add_info(self, session, entity, source, extid=None, complete=True):
