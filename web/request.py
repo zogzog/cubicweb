@@ -769,10 +769,6 @@ class _CubicWebRequestBase(RequestSessionBase):
             if 'Expires' not in self.headers_out:
                 # Expires header seems to be required by IE7 -- Are you sure ?
                 self.add_header('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT')
-            if self.http_method() == 'HEAD':
-                self.status_out = 200
-                # XXX replace by True once validate_cache bw compat method is dropped
-                return 200
             # /!\ no raise, the function returns and we keep processing the request
         else:
             # overwrite headers_out to forge a brand new not-modified response

@@ -227,7 +227,7 @@ class HTTPCache(TestCase):
         hout = [('etag', 'rhino/really-not-babar'),
                ]
         req = _test_cache(hin, hout, method='HEAD')
-        self.assertCache(200, req.status_out, 'modifier HEAD verb')
+        self.assertCache(None, req.status_out, 'modifier HEAD verb')
         # not modified
         hin  = [('if-none-match', 'babar'),
                ]
