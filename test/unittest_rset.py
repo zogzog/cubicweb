@@ -275,6 +275,7 @@ class ResultSetTC(CubicWebTC):
     def test_get_entity_simple(self):
         self.request().create_entity('CWUser', login=u'adim', upassword='adim',
                                      surname=u'di mascio', firstname=u'adrien')
+        self.cnx.drop_entity_cache()
         e = self.execute('Any X,T WHERE X login "adim", X surname T').get_entity(0, 0)
         self.assertEqual(e.cw_attr_cache['surname'], 'di mascio')
         self.assertRaises(KeyError, e.cw_attr_cache.__getitem__, 'firstname')
@@ -286,6 +287,7 @@ class ResultSetTC(CubicWebTC):
 
     def test_get_entity_advanced(self):
         self.request().create_entity('Bookmark', title=u'zou', path=u'/view')
+        self.cnx.drop_entity_cache()
         self.execute('SET X bookmarked_by Y WHERE X is Bookmark, Y login "anon"')
         rset = self.execute('Any X,Y,XT,YN WHERE X bookmarked_by Y, X title XT, Y login YN')
 
@@ -357,6 +359,7 @@ class ResultSetTC(CubicWebTC):
 
     def test_get_entity_union(self):
         e = self.request().create_entity('Bookmark', title=u'manger', path=u'path')
+        self.cnx.drop_entity_cache()
         rset = self.execute('Any X,N ORDERBY N WITH X,N BEING '
                             '((Any X,N WHERE X is Bookmark, X title N)'
                             ' UNION '

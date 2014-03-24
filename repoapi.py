@@ -154,6 +154,8 @@ class ClientConnection(RequestSessionBase):
         self._cnx = None
         self._open = None
         self._web_request = False
+        #: cache entities built during the connection
+        self._eid_cache = {}
         self.vreg = session.vreg
         self._set_user(session.user)
         self._autoclose_session = autoclose_session
@@ -216,8 +218,19 @@ class ClientConnection(RequestSessionBase):
         rset._rqlst = None
         return rset
 
-    commit = _srv_cnx_func('commit')
-    rollback = _srv_cnx_func('rollback')
+    @_open_only
+    def commit(self, *args, **kwargs):
+        try:
+            return self._cnx.commit(*args, **kwargs)
+        finally:
+            self.drop_entity_cache()
+
+    @_open_only
+    def rollback(self, *args, **kwargs):
+        try:
+            return self._cnx.rollback(*args, **kwargs)
+        finally:
+            self.drop_entity_cache()
 
     # security #################################################################
 
@@ -339,6 +352,25 @@ class ClientConnection(RequestSessionBase):
         # proper cnx loaded. This can be simplified one we have Standalone
         # Connection object
         return self._cnx.repo.system_source.undo_transaction(self._cnx, txuuid)
+
+    # cache management
+
+    def entity_cache(self, eid):
+        return self._eid_cache[eid]
+
+    def set_entity_cache(self, entity):
+        self._eid_cache[entity.eid] = entity
+
+    def cached_entities(self):
+        return self._eid_cache.values()
+
+    def drop_entity_cache(self, eid=None):
+        if eid is None:
+            self._eid_cache = {}
+        else:
+            del self._eid_cache[eid]
+
+    # deprecated stuff
 
     @deprecated('[3.19] This is a repoapi.ClientConnection object not a dbapi one')
     def request(self):

@@ -19,6 +19,7 @@
 
 from operator import eq, lt, le, gt
 from logilab.common.testlib import TestCase, unittest_main
+from logilab.common.decorators import clear_cache
 
 from cubicweb import Binary
 from cubicweb.devtools.testlib import CubicWebTC
@@ -96,6 +97,8 @@ class WorkflowSelectorTC(CubicWebTC):
         self._commit()
         self.assertEqual(self.adapter.state, 'validated')
 
+        clear_cache(self.rset, 'get_entity')
+
         selector = is_in_state('created')
         self.assertEqual(selector(None, self.req, rset=self.rset), 0)
         selector = is_in_state('validated')
@@ -108,6 +111,8 @@ class WorkflowSelectorTC(CubicWebTC):
         self.adapter.fire_transition('forsake')
         self._commit()
         self.assertEqual(self.adapter.state, 'abandoned')
+
+        clear_cache(self.rset, 'get_entity')
 
         selector = is_in_state('created')
         self.assertEqual(selector(None, self.req, rset=self.rset), 0)
@@ -139,6 +144,8 @@ class WorkflowSelectorTC(CubicWebTC):
         self._commit()
         self.assertEqual(self.adapter.state, 'validated')
 
+        clear_cache(self.rset, 'get_entity')
+
         selector = on_transition("validate")
         self.assertEqual(selector(None, self.req, rset=self.rset), 1)
         selector = on_transition("validate", "forsake")
@@ -149,6 +156,8 @@ class WorkflowSelectorTC(CubicWebTC):
         self.adapter.fire_transition('forsake')
         self._commit()
         self.assertEqual(self.adapter.state, 'abandoned')
+
+        clear_cache(self.rset, 'get_entity')
 
         selector = on_transition("validate")
         self.assertEqual(selector(None, self.req, rset=self.rset), 0)

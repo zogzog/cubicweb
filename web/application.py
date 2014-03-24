@@ -507,9 +507,6 @@ class CubicWebPublisher(object):
                     req.cnx.rollback()
                 except Exception:
                     pass # ignore rollback error at this point
-            # request may be referenced by "onetime callback", so clear its entity
-            # cache to avoid memory usage
-            req.drop_entity_cache()
         self.add_undo_link_to_msg(req)
         self.debug('query %s executed in %s sec', req.relative_path(), clock() - tstart)
         return result

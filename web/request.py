@@ -1025,8 +1025,6 @@ class ConnectionCubicWebRequestBase(_CubicWebRequestBase):
         from cubicweb.dbapi import DBAPISession, _NeedAuthAccessMock
         self.session = DBAPISession(None)
         self.cnx = self.user = _NeedAuthAccessMock()
-        #: cache entities built during the request
-        self._eid_cache = {}
 
     def set_cnx(self, cnx):
         self.cnx = cnx
@@ -1070,20 +1068,11 @@ class ConnectionCubicWebRequestBase(_CubicWebRequestBase):
 
     # entities cache management ###############################################
 
-    def entity_cache(self, eid):
-        return self._eid_cache[eid]
+    entity_cache = _cnx_func('entity_cache')
+    set_entity_cache = _cnx_func('set_entity_cache')
+    cached_entities = _cnx_func('cached_entities')
+    drop_entity_cache = _cnx_func('drop_entity_cache')
 
-    def set_entity_cache(self, entity):
-        self._eid_cache[entity.eid] = entity
-
-    def cached_entities(self):
-        return self._eid_cache.values()
-
-    def drop_entity_cache(self, eid=None):
-        if eid is None:
-            self._eid_cache = {}
-        else:
-            del self._eid_cache[eid]
 
 
 

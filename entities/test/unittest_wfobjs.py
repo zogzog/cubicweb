@@ -263,6 +263,7 @@ class WorkflowTC(CubicWebTC):
         state3 = mwf.add_state(u'state3')
         swftr1 = mwf.add_wftransition(u'swftr1', swf, state1,
                                       [(swfstate2, state2), (swfstate3, state3)])
+        swf.cw_clear_all_caches()
         self.assertEqual(swftr1.destination(None).eid, swfstate1.eid)
         # workflows built, begin test
         group = self.request().create_entity('CWGroup', name=u'grp1')
