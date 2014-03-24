@@ -206,13 +206,14 @@ class DefaultEidGenerator(object):
             self.cnx.close()
         self.cnx = None
 
-    def create_eid(self, _session):
+    def create_eid(self, _session, count=1):
         # lock needed to prevent 'Connection is busy with results for another
         # command (0)' errors with SQLServer
+        assert count > 0
         with self.lock:
-            return self._create_eid() # pylint: disable=E1102
+            return self._create_eid(count)
 
-    def _create_eid(self): # pylint: disable=E0202
+    def _create_eid(self, count):
         # internal function doing the eid creation without locking.
         # needed for the recursive handling of disconnections (otherwise we
         # deadlock on self._eid_cnx_lock
@@ -222,20 +223,20 @@ class DefaultEidGenerator(object):
         cnx = self.cnx
         try:
             cursor = cnx.cursor()
-            for sql in source.dbhelper.sqls_increment_sequence('entities_id_seq'):
+            for sql in source.dbhelper.sqls_increment_numrange('entities_id_seq', count):
                 cursor.execute(sql)
             eid = cursor.fetchone()[0]
         except (source.OperationalError, source.InterfaceError):
             # FIXME: better detection of deconnection pb
             source.warning("trying to reconnect create eid connection")
             self.cnx = None
-            return self._create_eid() # pylint: disable=E1102
+            return self._create_eid(count)
         except source.DbapiError as exc:
             # We get this one with pyodbc and SQL Server when connection was reset
             if exc.args[0] == '08S01':
                 source.warning("trying to reconnect create eid connection")
                 self.cnx = None
-                return self._create_eid() # pylint: disable=E1102
+                return self._create_eid(count)
             else:
                 raise
         except Exception: # WTF?
@@ -258,10 +259,11 @@ class SQLITEEidGenerator(object):
     def close(self):
         pass
 
-    def create_eid(self, session):
+    def create_eid(self, session, count=1):
+        assert count > 0
         source = self.source
         with self.lock:
-            for sql in source.dbhelper.sqls_increment_sequence('entities_id_seq'):
+            for sql in source.dbhelper.sqls_increment_numrange('entities_id_seq', count):
                 cursor = source.doexec(session, sql)
             return cursor.fetchone()[0]
 
@@ -1421,7 +1423,7 @@ CREATE INDEX tx_relation_actions_txa_public_idx ON tx_relation_actions(txa_publi
 CREATE INDEX tx_relation_actions_eid_from_idx ON tx_relation_actions(eid_from);;
 CREATE INDEX tx_relation_actions_eid_to_idx ON tx_relation_actions(eid_to);;
 CREATE INDEX tx_relation_actions_tx_uuid_idx ON tx_relation_actions(tx_uuid);;
-""" % (helper.sql_create_sequence('entities_id_seq').replace(';', ';;'),
+""" % (helper.sql_create_numrange('entities_id_seq').replace(';', ';;'),
        typemap['Datetime'],
        typemap['Boolean'], typemap['Bytes'], typemap['Boolean'])
     if helper.backend_name == 'sqlite':
@@ -1445,7 +1447,7 @@ DROP TABLE entities;
 DROP TABLE tx_entity_actions;
 DROP TABLE tx_relation_actions;
 DROP TABLE transactions;
-""" % helper.sql_drop_sequence('entities_id_seq')
+""" % helper.sql_drop_numrange('entities_id_seq')
 
 
 def grant_schema(user, set_owner=True):

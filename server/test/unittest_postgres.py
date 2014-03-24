@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -17,6 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 
 from datetime import datetime
+from threading import Thread
 
 from logilab.common.testlib import SkipTest
 
@@ -29,6 +30,26 @@ from unittest_querier import FixedOffset
 
 class PostgresFTITC(CubicWebTC):
     configcls = PostgresApptestConfiguration
+
+    def test_eid_range(self):
+        # concurrent allocation of eid ranges
+        source = self.session.repo.sources_by_uri['system']
+        range1 = []
+        range2 = []
+        def allocate_eid_ranges(session, target):
+            for x in xrange(1, 10):
+                eid = source.create_eid(session, count=x)
+                target.extend(range(eid-x, eid))
+
+        t1 = Thread(target=lambda: allocate_eid_ranges(self.session, range1))
+        t2 = Thread(target=lambda: allocate_eid_ranges(self.session, range2))
+        t1.start()
+        t2.start()
+        t1.join()
+        t2.join()
+        self.assertEqual(range1, sorted(range1))
+        self.assertEqual(range2, sorted(range2))
+        self.assertEqual(set(), set(range1) & set(range2))
 
     def test_occurence_count(self):
         req = self.request()
