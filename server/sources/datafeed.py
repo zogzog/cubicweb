@@ -324,8 +324,8 @@ class DataFeedParser(AppObject):
             self.source.info('GET %s', url)
             return _OPENER.open(url, timeout=self.source.http_timeout)
         if url.startswith('file://'):
-            return open(url[7:])
-        return StringIO.StringIO(url)
+            return URLLibResponseAdapter(open(url[7:]), url)
+        return URLLibResponseAdapter(StringIO.StringIO(url), url)
 
     def add_schema_config(self, schemacfg, checkonly=False):
         """added CWSourceSchemaConfig, modify mapping accordingly"""
@@ -489,6 +489,27 @@ class DataFeedXMLParser(DataFeedParser):
         elif extid.startswith('file://'):
             return exists(extid[7:])
         return False
+
+
+class URLLibResponseAdapter(object):
+    """Thin wrapper to be used to fake a value returned by urllib2.urlopen"""
+    def __init__(self, stream, url, code=200):
+        self._stream = stream
+        self._url = url
+        self.code = code
+
+    def read(self, *args):
+        return self._stream.read(*args)
+
+    def geturl(self):
+        return self._url
+
+    def getcode(self):
+        return self.code
+
+    def info(self):
+        from mimetools import Message
+        return Message(StringIO.StringIO())
 
 # use a cookie enabled opener to use session cookie if any
 _OPENER = urllib2.build_opener()

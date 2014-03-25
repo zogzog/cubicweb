@@ -16,7 +16,9 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 
+import mimetools
 from datetime import timedelta
+from contextlib import contextmanager
 
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.server.sources import datafeed
@@ -25,23 +27,14 @@ from cubicweb.server.sources import datafeed
 class DataFeedTC(CubicWebTC):
     def setup_database(self):
         with self.admin_access.repo_cnx() as cnx:
-            cnx.create_entity('CWSource', name=u'myfeed', type=u'datafeed',
-                              parser=u'testparser', url=u'ignored',
-                              config=u'synchronization-interval=1min')
-            cnx.commit()
+            with self.base_parser(cnx):
+                cnx.create_entity('CWSource', name=u'myfeed', type=u'datafeed',
+                                  parser=u'testparser', url=u'ignored',
+                                  config=u'synchronization-interval=1min')
+                cnx.commit()
 
-    def test(self):
-        self.assertIn('myfeed', self.repo.sources_by_uri)
-        dfsource = self.repo.sources_by_uri['myfeed']
-        self.assertNotIn('use_cwuri_as_url', dfsource.__dict__)
-        self.assertEqual({'type': u'datafeed', 'uri': u'myfeed', 'use-cwuri-as-url': True},
-                         dfsource.public_config)
-        self.assertEqual(dfsource.use_cwuri_as_url, True)
-        self.assertEqual(dfsource.latest_retrieval, None)
-        self.assertEqual(dfsource.synchro_interval, timedelta(seconds=60))
-        self.assertFalse(dfsource.fresh())
-
-
+    @contextmanager
+    def base_parser(self, session):
         class AParser(datafeed.DataFeedParser):
             __regid__ = 'testparser'
             def process(self, url, raise_on_error=False):
@@ -54,7 +47,24 @@ class DataFeedTC(CubicWebTC):
                 entity.cw_edited.update(sourceparams['item'])
 
         with self.temporary_appobjects(AParser):
-            with self.repo.internal_cnx() as cnx:
+            if 'myfeed' in self.repo.sources_by_uri:
+                yield self.repo.sources_by_uri['myfeed']._get_parser(session)
+            else:
+                yield
+
+    def test(self):
+        self.assertIn('myfeed', self.repo.sources_by_uri)
+        dfsource = self.repo.sources_by_uri['myfeed']
+        self.assertNotIn('use_cwuri_as_url', dfsource.__dict__)
+        self.assertEqual({'type': u'datafeed', 'uri': u'myfeed', 'use-cwuri-as-url': True},
+                         dfsource.public_config)
+        self.assertEqual(dfsource.use_cwuri_as_url, True)
+        self.assertEqual(dfsource.latest_retrieval, None)
+        self.assertEqual(dfsource.synchro_interval, timedelta(seconds=60))
+        self.assertFalse(dfsource.fresh())
+
+        with self.repo.internal_cnx() as cnx:
+            with self.base_parser(cnx):
                 stats = dfsource.pull_data(cnx, force=True)
                 cnx.commit()
                 # test import stats
@@ -122,6 +132,14 @@ class DataFeedTC(CubicWebTC):
             cnx.commit()
             self.assertFalse(cnx.execute('Card X WHERE X title "cubicweb.org"'))
             self.assertFalse(cnx.execute('Any X WHERE X has_text "cubicweb.org"'))
+
+    def test_parser_retrieve_url_local(self):
+        with self.admin_access.repo_cnx() as cnx:
+            with self.base_parser(cnx) as parser:
+                value = parser.retrieve_url('a string')
+                self.assertEqual(200, value.getcode())
+                self.assertEqual('a string', value.geturl())
+                self.assertIsInstance(value.info(), mimetools.Message)
 
 
 class DataFeedConfigTC(CubicWebTC):
