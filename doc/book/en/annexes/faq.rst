@@ -83,11 +83,9 @@ like frameworks for several reasons.
 
 2. it offers an abstraction layer allowing your applications to run
    on multiple back-ends. That means not only various SQL backends
-   (postgresql, sqlite, mysql), but also multiple databases at the
-   same time, and also non-SQL data stores like LDAP directories and
-   subversion/mercurial repositories (see the `vcsfile`
-   component). Google App Engine is yet another supported target for
-   RQL.
+   (postgresql, sqlite, sqlserver, mysql), but also non-SQL data stores like
+   LDAP directories and subversion/mercurial repositories (see the `vcsfile`
+   component).
 
 Which ajax library is CubicWeb using ?
 --------------------------------------

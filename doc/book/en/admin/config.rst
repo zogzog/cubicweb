@@ -43,7 +43,7 @@ Databases configuration
 Each instance can be configured with its own database connection information,
 that will be stored in the instance's :file:`sources` file. The database to use
 will be chosen when creating the instance. CubicWeb is known to run with
-Postgresql (recommended), MySQL, SQLServer and SQLite.
+Postgresql (recommended), SQLServer and SQLite, and may run with MySQL.
 
 Other possible sources of data include CubicWeb, Subversion, LDAP and Mercurial,
 but at least one relational database is required for CubicWeb to work. You do
@@ -162,6 +162,8 @@ To install the tsearch plain-text index extension on postgres prior to 8.3, run:
 
 MySql
 ~~~~~
+.. warning::
+    CubicWeb's MySQL support is not commonly used, so things may or may not work properly.
 
 You must add the following lines in ``/etc/mysql/my.cnf`` file::
 

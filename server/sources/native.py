@@ -272,7 +272,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
          {'type' : 'string',
           'default': 'postgres',
           # XXX use choice type
-          'help': 'database driver (postgres, mysql, sqlite, sqlserver2005)',
+          'help': 'database driver (postgres, sqlite, sqlserver2005)',
           'group': 'native-source', 'level': 0,
           }),
         ('db-host',
