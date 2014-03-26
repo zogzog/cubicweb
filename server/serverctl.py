@@ -1105,9 +1105,14 @@ for cmdclass in (CreateInstanceDBCommand, InitInstanceCommand,
 
 db_options = (
     ('db',
-     {'short': 'd', 'type' : 'named', 'metavar' : 'key1:value1,key2:value2',
+     {'short': 'd', 'type' : 'named', 'metavar' : '[section1.]key1:value1,[section2.]key2:value2',
       'default': None,
-      'help': 'set <key> to <value> in "source" configuration file.',
+      'help': '''set <key> in <section> to <value> in "source" configuration file. If <section> is not specified, it defaults to "system".
+
+Beware that changing admin.login or admin.password using this command
+will NOT update the database with new admin credentials.  Use the
+reset-admin-pwd command instead.
+''',
       }),
     )
 
@@ -1121,10 +1126,14 @@ def configure_instance2(self, appid):
         appcfg = ServerConfiguration.config_for(appid)
         srccfg = appcfg.read_sources_file()
         for key, value in self.config.db.iteritems():
+            if '.' in key:
+                section, key = key.split('.', 1)
+            else:
+                section = 'system'
             try:
-                srccfg['system'][key] = value
+                srccfg[section][key] = value
             except KeyError:
-                raise ConfigurationError('unknown configuration key "%s" for source' % key)
+                raise ConfigurationError('unknown configuration key "%s" in section "%s" for source' % (key, section))
         admcfg = Configuration(options=USER_OPTIONS)
         admcfg['login'] = srccfg['admin']['login']
         admcfg['password'] = srccfg['admin']['password']
