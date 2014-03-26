@@ -74,7 +74,12 @@ else: # sqlserver
 rql('SET X to_entity B WHERE X is CWAttribute, X from_entity Y, Y name "CWAttribute", '
     'X relation_type Z, Z name "defaultval", B name "Bytes", NOT X to_entity B')
 
-schema['defaultval'].rdefs.values()[0].object = schema['Bytes']
+oldrdef = schema['CWAttribute'].rdef('defaultval')
+import yams.buildobjs as ybo
+newrdef = ybo.RelationDefinition('CWAttribute', 'defaultval', 'Bytes')
+newrdef.eid = oldrdef.eid
+schema.add_relation_def(newrdef)
+schema.del_relation_def('CWAttribute', 'defaultval', 'String')
 
 commit()
 
