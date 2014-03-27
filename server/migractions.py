@@ -1,4 +1,4 @@
-# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -102,7 +102,6 @@ class ServerMigrationHelper(MigrationHelper):
         # no config on shell to a remote instance
         if config is not None and (cnx or connect):
             repo = self.repo
-            self.session.data['rebuild-infered'] = False
             # register a hook to clear our group_mapping cache and the
             # self._synchronized set when some group is added or updated
             ClearGroupMap.mih = self
@@ -292,7 +291,6 @@ class ServerMigrationHelper(MigrationHelper):
                     print 'aborting...'
                     sys.exit(0)
             self.session.keep_cnxset_mode('transaction')
-            self.session.data['rebuild-infered'] = False
             return self._cnx
 
     @property

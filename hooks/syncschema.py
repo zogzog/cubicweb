@@ -1,4 +1,4 @@
-# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -196,13 +196,11 @@ class MemSchemaNotifyChanges(hook.SingleLastOperation):
                 clear_cache(eschema, 'ordered_relations')
 
     def postcommit_event(self):
-        rebuildinfered = self.session.data.get('rebuild-infered', True)
         repo = self.session.repo
         # commit event should not raise error, while set_schema has chances to
         # do so because it triggers full vreg reloading
         try:
-            if rebuildinfered:
-                repo.schema.rebuild_infered_relations()
+            repo.schema.rebuild_infered_relations()
             # trigger vreg reload
             repo.set_schema(repo.schema)
             # CWUser class might have changed, update current session users
