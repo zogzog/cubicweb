@@ -142,7 +142,6 @@ INDEX_IN_ORDER = [
 FILES_TO_IGNORE = set([
     'jquery.js',
     'jquery.treeview.js',
-    'jquery.json.js',
     'jquery.tablesorter.js',
     'jquery.timePicker.js',
     'jquery.flot.js',

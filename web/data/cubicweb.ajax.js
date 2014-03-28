@@ -312,7 +312,7 @@ function ajaxFuncArgs(fname, form /* ... */) {
     $.extend(form, {
         'fname': fname,
         'pageid': pageid,
-        'arg': $.map(cw.utils.sliceList(arguments, 2), jQuery.toJSON)
+        'arg': $.map(cw.utils.sliceList(arguments, 2), JSON.stringify)
     });
     return form;
 }
@@ -745,7 +745,7 @@ function remoteExec(fname /* ... */) {
     var props = {
         fname: fname,
         pageid: pageid,
-        arg: $.map(cw.utils.sliceList(arguments, 1), jQuery.toJSON)
+        arg: $.map(cw.utils.sliceList(arguments, 1), JSON.stringify)
     };
     var result = jQuery.ajax({
         url: AJAX_BASE_URL,
@@ -765,7 +765,7 @@ function asyncRemoteExec(fname /* ... */) {
     var props = {
         fname: fname,
         pageid: pageid,
-        arg: $.map(cw.utils.sliceList(arguments, 1), jQuery.toJSON)
+        arg: $.map(cw.utils.sliceList(arguments, 1), JSON.stringify)
     };
     // XXX we should inline the content of loadRemote here
     var deferred = loadRemote(AJAX_BASE_URL, props, 'POST');

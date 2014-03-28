@@ -384,7 +384,7 @@ jQuery.extend(cw.utils, {
      */
     strFuncCall: function(fname /* ...*/) {
 	    return (fname + '(' +
-		    $.map(cw.utils.sliceList(arguments, 1), jQuery.toJSON).join(',')
+		    $.map(cw.utils.sliceList(arguments, 1), JSON.stringify).join(',')
 		    + ')'
 		    );
     }

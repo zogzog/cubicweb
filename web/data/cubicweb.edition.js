@@ -26,7 +26,7 @@ function setPropValueWidget(varname, tabindex) {
         var args = {
             fname: 'prop_widget',
             pageid: pageid,
-            arg: $.map([key, varname, tabindex], jQuery.toJSON)
+            arg: $.map([key, varname, tabindex], JSON.stringify)
         };
         cw.jqNode('div:value:' + varname).loadxhtml(AJAX_BASE_URL, args, 'post');
     }
