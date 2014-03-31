@@ -802,7 +802,7 @@ class NoHookRQLObjectStore(RQLObjectStore):
         assert not rtype.startswith('reverse_')
         self.add_relation(self.session, eid_from, rtype, eid_to,
                           self.rschema(rtype).inlined)
-        if self.rschema[rtype].symmetric:
+        if self.rschema(rtype).symmetric:
             self.add_relation(self.session, eid_to, rtype, eid_from,
                               self.rschema(rtype).inlined)
         self._nb_inserted_relations += 1
@@ -931,7 +931,7 @@ class SQLGenObjectStore(NoHookRQLObjectStore):
         # XXX Could subjtype be inferred ?
         self.source.add_relation(self.session, subj_eid, rtype, obj_eid,
                                  self.rschema(rtype).inlined, **kwargs)
-        if self.rschema[rtype].symmetric:
+        if self.rschema(rtype).symmetric:
             self.source.add_relation(self.session, obj_eid, rtype, subj_eid,
                                      self.rschema(rtype).inlined, **kwargs)
 
