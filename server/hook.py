@@ -203,8 +203,8 @@ It is sometimes convenient to explicitly enable or disable some hooks. For
 instance if you want to disable some integrity checking hook. This can be
 controlled more finely through the `category` class attribute, which is a string
 giving a category name.  One can then uses the
-:meth:`~cubicweb.server.session.Session.deny_all_hooks_but` and
-:meth:`~cubicweb.server.session.Session.allow_all_hooks_but` context managers to
+:meth:`~cubicweb.server.session.Connection.deny_all_hooks_but` and
+:meth:`~cubicweb.server.session.Connection.allow_all_hooks_but` context managers to
 explicitly enable or disable some categories.
 
 The existing categories are:
@@ -295,13 +295,13 @@ class HooksRegistry(CWRegistry):
         obj.check_events()
         super(HooksRegistry, self).register(obj, **kwargs)
 
-    def call_hooks(self, event, session=None, **kwargs):
+    def call_hooks(self, event, cnx=None, **kwargs):
         """call `event` hooks for an entity or a list of entities (passed
         respectively as the `entity` or ``entities`` keyword argument).
         """
         kwargs['event'] = event
-        if session is None: # True for events such as server_start
-            for hook in sorted(self.possible_objects(session, **kwargs),
+        if cnx is None: # True for events such as server_start
+            for hook in sorted(self.possible_objects(cnx, **kwargs),
                                key=lambda x: x.order):
                 hook()
         else:
@@ -318,28 +318,28 @@ class HooksRegistry(CWRegistry):
             else:
                 entities = []
                 eids_from_to = []
-            pruned = self.get_pruned_hooks(session, event,
+            pruned = self.get_pruned_hooks(cnx, event,
                                            entities, eids_from_to, kwargs)
             # by default, hooks are executed with security turned off
-            with session.security_enabled(read=False):
+            with cnx.security_enabled(read=False):
                 for _kwargs in _iter_kwargs(entities, eids_from_to, kwargs):
-                    hooks = sorted(self.filtered_possible_objects(pruned, session, **_kwargs),
+                    hooks = sorted(self.filtered_possible_objects(pruned, cnx, **_kwargs),
                                    key=lambda x: x.order)
                     debug = server.DEBUG & server.DBG_HOOKS
-                    with session.security_enabled(write=False):
+                    with cnx.security_enabled(write=False):
                         for hook in hooks:
                             if debug:
                                 print event, _kwargs, hook
                             hook()
 
-    def get_pruned_hooks(self, session, event, entities, eids_from_to, kwargs):
+    def get_pruned_hooks(self, cnx, event, entities, eids_from_to, kwargs):
         """return a set of hooks that should not be considered by filtered_possible objects
 
         the idea is to make a first pass over all the hooks in the
         registry and to mark put some of them in a pruned list. The
         pruned hooks are the one which:
 
-        * are disabled at the session level
+        * are disabled at the connection level
 
         * have a selector containing a :class:`match_rtype` or an
           :class:`is_instance` predicate which does not match the rtype / etype
@@ -362,17 +362,17 @@ class HooksRegistry(CWRegistry):
         else: # nothing to prune, how did we get there ???
             return set()
         cache_key = (event, kwargs.get('rtype'), etype)
-        pruned = session.pruned_hooks_cache.get(cache_key)
+        pruned = cnx.pruned_hooks_cache.get(cache_key)
         if pruned is not None:
             return pruned
         pruned = set()
-        session.pruned_hooks_cache[cache_key] = pruned
+        cnx.pruned_hooks_cache[cache_key] = pruned
         if look_for_selector is not None:
             for id, hooks in self.iteritems():
                 for hook in hooks:
                     enabled_cat, main_filter = hook.filterable_selectors()
                     if enabled_cat is not None:
-                        if not enabled_cat(hook, session):
+                        if not enabled_cat(hook, cnx):
                             pruned.add(hook)
                             continue
                     if main_filter is not None:
@@ -381,7 +381,7 @@ class HooksRegistry(CWRegistry):
                             main_filter.toetypes is not None):
                             continue
                         first_kwargs = _iter_kwargs(entities, eids_from_to, kwargs).next()
-                        if not main_filter(hook, session, **first_kwargs):
+                        if not main_filter(hook, cnx, **first_kwargs):
                             pruned.add(hook)
         return pruned
 
@@ -404,12 +404,12 @@ class HooksManager(object):
     def __init__(self, vreg):
         self.vreg = vreg
 
-    def call_hooks(self, event, session=None, **kwargs):
+    def call_hooks(self, event, cnx=None, **kwargs):
         try:
             registry = self.vreg['%s_hooks' % event]
         except RegistryNotFound:
             return # no hooks for this event
-        registry.call_hooks(event, session, **kwargs)
+        registry.call_hooks(event, cnx, **kwargs)
 
 
 for event in ALL_HOOKS:
@@ -507,7 +507,7 @@ class Hook(AppObject):
 
     Hooks being appobjects like views, they have a `__regid__` and a `__select__`
     class attribute. Like all appobjects, hooks have the `self._cw` attribute which
-    represents the current session. In entity hooks, a `self.entity` attribute is
+    represents the current connection. In entity hooks, a `self.entity` attribute is
     also present.
 
     The `events` tuple is used by the base class selector to dispatch the hook
@@ -685,7 +685,7 @@ class Operation(object):
     """Base class for operations.
 
     Operation may be instantiated in the hooks' `__call__` method. It always
-    takes a session object as first argument (accessible as `.session` from the
+    takes a connection object as first argument (accessible as `.cnx` from the
     operation instance), and optionally all keyword arguments needed by the
     operation. These keyword arguments will be accessible as attributes from the
     operation instance.
@@ -720,8 +720,8 @@ class Operation(object):
 
       the transaction is over. All the ORM entities accessed by the earlier
       transaction are invalid. If you need to work on the database, you need to
-      start a new transaction, for instance using a new internal session, which
-      you will need to commit (and close!).
+      start a new transaction, for instance using a new internal connection,
+      which you will need to commit.
 
     For an operation to support an event, one has to implement the `<event
     name>_event` method with no arguments.
@@ -731,24 +731,29 @@ class Operation(object):
     base hook class used).
     """
 
-    def __init__(self, session, **kwargs):
-        self.session = session
+    def __init__(self, cnx, **kwargs):
+        self.cnx = cnx
         self.__dict__.update(kwargs)
-        self.register(session)
+        self.register(cnx)
         # execution information
         self.processed = None # 'precommit', 'commit'
         self.failed = False
 
-    def register(self, session):
-        session.add_operation(self, self.insert_index())
+    @property
+    @deprecated('[3.19] Operation.session is deprecated, use Operation.cnx instead')
+    def session(self):
+        return self.cnx
+
+    def register(self, cnx):
+        cnx.add_operation(self, self.insert_index())
 
     def insert_index(self):
-        """return the index of  the lastest instance which is not a
+        """return the index of the latest instance which is not a
         LateOperation instance
         """
         # faster by inspecting operation in reverse order for heavy transactions
         i = None
-        for i, op in enumerate(reversed(self.session.pending_operations)):
+        for i, op in enumerate(reversed(self.cnx.pending_operations)):
             if isinstance(op, (LateOperation, SingleLastOperation)):
                 continue
             return -i or None
@@ -849,12 +854,12 @@ class DataOperationMixIn(object):
         return ('cw.dataops', cls.__name__)
 
     @classmethod
-    def get_instance(cls, session, **kwargs):
+    def get_instance(cls, cnx, **kwargs):
         # no need to lock: transaction_data already comes from thread's local storage
         try:
-            return session.transaction_data[cls.data_key]
+            return cnx.transaction_data[cls.data_key]
         except KeyError:
-            op = session.transaction_data[cls.data_key] = cls(session, **kwargs)
+            op = cnx.transaction_data[cls.data_key] = cls(cnx, **kwargs)
             return op
 
     def __init__(self, *args, **kwargs):
@@ -892,14 +897,14 @@ postcommit method of the operation."""
 Iterating over operation data closed it and should be reserved to precommit /
 postcommit method of the operation."""
         self._processed = True
-        op = self.session.transaction_data.pop(self.data_key)
+        op = self.cnx.transaction_data.pop(self.data_key)
         assert op is self, "Bad handling of operation data, found %s instead of %s for key %s" % (
             op, self, self.data_key)
         return self._container
 
 
-@deprecated('[3.10] use opcls.get_instance(session, **opkwargs).add_data(value)')
-def set_operation(session, datakey, value, opcls, containercls=set, **opkwargs):
+@deprecated('[3.10] use opcls.get_instance(cnx, **opkwargs).add_data(value)')
+def set_operation(cnx, datakey, value, opcls, containercls=set, **opkwargs):
     """Function to ease applying a single operation on a set of data, avoiding
     to create as many as operation as they are individual modification. You
     should try to use this instead of creating on operation for each `value`,
@@ -907,10 +912,10 @@ def set_operation(session, datakey, value, opcls, containercls=set, **opkwargs):
 
     Arguments are:
 
-    * the `session` object
+    * `cnx`, the current connection
 
     * `datakey`, a specially forged key that will be used as key in
-      session.transaction_data
+      cnx.transaction_data
 
     * `value` that is the actual payload of an individual operation
 
@@ -940,15 +945,15 @@ def set_operation(session, datakey, value, opcls, containercls=set, **opkwargs):
        get unexpected data loss in some case of nested hooks.
     """
     try:
-        # Search for session.transaction_data[`datakey`] (expected to be a set):
+        # Search for cnx.transaction_data[`datakey`] (expected to be a set):
         # if found, simply append `value`
-        _container_add(session.transaction_data[datakey], value)
+        _container_add(cnx.transaction_data[datakey], value)
     except KeyError:
         # else, initialize it to containercls([`value`]) and instantiate the given
         # `opcls` operation class with additional keyword arguments
-        opcls(session, **opkwargs)
-        session.transaction_data[datakey] = containercls()
-        _container_add(session.transaction_data[datakey], value)
+        opcls(cnx, **opkwargs)
+        cnx.transaction_data[datakey] = containercls()
+        _container_add(cnx.transaction_data[datakey], value)
 
 
 class LateOperation(Operation):
@@ -961,7 +966,7 @@ class LateOperation(Operation):
         """
         # faster by inspecting operation in reverse order for heavy transactions
         i = None
-        for i, op in enumerate(reversed(self.session.pending_operations)):
+        for i, op in enumerate(reversed(self.cnx.pending_operations)):
             if isinstance(op, SingleLastOperation):
                 continue
             return -i or None
@@ -976,17 +981,17 @@ class SingleLastOperation(Operation):
     operations
     """
 
-    def register(self, session):
+    def register(self, cnx):
         """override register to handle cases where this operation has already
         been added
         """
-        operations = session.pending_operations
+        operations = cnx.pending_operations
         index = self.equivalent_index(operations)
         if index is not None:
             equivalent = operations.pop(index)
         else:
             equivalent = None
-        session.add_operation(self, self.insert_index())
+        cnx.add_operation(self, self.insert_index())
         return equivalent
 
     def equivalent_index(self, operations):
@@ -1001,7 +1006,7 @@ class SingleLastOperation(Operation):
 
 
 class SendMailOp(SingleLastOperation):
-    def __init__(self, session, msg=None, recipients=None, **kwargs):
+    def __init__(self, cnx, msg=None, recipients=None, **kwargs):
         # may not specify msg yet, as
         # `cubicweb.sobjects.supervision.SupervisionMailOp`
         if msg is not None:
@@ -1010,18 +1015,18 @@ class SendMailOp(SingleLastOperation):
         else:
             assert recipients is None
             self.to_send = []
-        super(SendMailOp, self).__init__(session, **kwargs)
+        super(SendMailOp, self).__init__(cnx, **kwargs)
 
-    def register(self, session):
-        previous = super(SendMailOp, self).register(session)
+    def register(self, cnx):
+        previous = super(SendMailOp, self).register(cnx)
         if previous:
             self.to_send = previous.to_send + self.to_send
 
     def postcommit_event(self):
-        self.session.repo.threaded_task(self.sendmails)
+        self.cnx.repo.threaded_task(self.sendmails)
 
     def sendmails(self):
-        self.session.vreg.config.sendmails(self.to_send)
+        self.cnx.vreg.config.sendmails(self.to_send)
 
 
 class RQLPrecommitOperation(Operation):
@@ -1029,7 +1034,7 @@ class RQLPrecommitOperation(Operation):
     rqls = None
 
     def precommit_event(self):
-        execute = self.session.execute
+        execute = self.cnx.execute
         for rql in self.rqls:
             execute(*rql)
 
@@ -1051,7 +1056,7 @@ class CleanupNewEidsCacheOp(DataOperationMixIn, SingleLastOperation):
         remove inserted eid from repository type/source cache
         """
         try:
-            self.session.repo.clear_caches(self.get_data())
+            self.cnx.repo.clear_caches(self.get_data())
         except KeyError:
             pass
 
@@ -1066,7 +1071,7 @@ class CleanupDeletedEidsCacheOp(DataOperationMixIn, SingleLastOperation):
         """
         try:
             eids = self.get_data()
-            self.session.repo.clear_caches(eids)
-            self.session.repo.app_instances_bus.publish(['delete'] + list(str(eid) for eid in eids))
+            self.cnx.repo.clear_caches(eids)
+            self.cnx.repo.app_instances_bus.publish(['delete'] + list(str(eid) for eid in eids))
         except KeyError:
             pass
