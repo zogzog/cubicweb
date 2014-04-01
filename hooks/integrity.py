@@ -40,30 +40,30 @@ _UNIQUE_CONSTRAINTS_LOCK = Lock()
 _UNIQUE_CONSTRAINTS_HOLDER = None
 
 
-def _acquire_unique_cstr_lock(session):
-    """acquire the _UNIQUE_CONSTRAINTS_LOCK for the session.
+def _acquire_unique_cstr_lock(cnx):
+    """acquire the _UNIQUE_CONSTRAINTS_LOCK for the cnx.
 
     This lock used to avoid potential integrity pb when checking
     RQLUniqueConstraint in two different transactions, as explained in
     http://intranet.logilab.fr/jpl/ticket/36564
     """
-    if 'uniquecstrholder' in session.transaction_data:
+    if 'uniquecstrholder' in cnx.transaction_data:
         return
     _UNIQUE_CONSTRAINTS_LOCK.acquire()
-    session.transaction_data['uniquecstrholder'] = True
+    cnx.transaction_data['uniquecstrholder'] = True
     # register operation responsible to release the lock on commit/rollback
-    _ReleaseUniqueConstraintsOperation(session)
+    _ReleaseUniqueConstraintsOperation(cnx)
 
-def _release_unique_cstr_lock(session):
-    if 'uniquecstrholder' in session.transaction_data:
-        del session.transaction_data['uniquecstrholder']
+def _release_unique_cstr_lock(cnx):
+    if 'uniquecstrholder' in cnx.transaction_data:
+        del cnx.transaction_data['uniquecstrholder']
         _UNIQUE_CONSTRAINTS_LOCK.release()
 
 class _ReleaseUniqueConstraintsOperation(hook.Operation):
     def postcommit_event(self):
-        _release_unique_cstr_lock(self.session)
+        _release_unique_cstr_lock(self.cnx)
     def rollback_event(self):
-        _release_unique_cstr_lock(self.session)
+        _release_unique_cstr_lock(self.cnx)
 
 
 class _CheckRequiredRelationOperation(hook.DataOperationMixIn,
@@ -75,17 +75,17 @@ class _CheckRequiredRelationOperation(hook.DataOperationMixIn,
     role = key = base_rql = None
 
     def precommit_event(self):
-        session = self.session
-        pendingeids = session.transaction_data.get('pendingeids', ())
-        pendingrtypes = session.transaction_data.get('pendingrtypes', ())
+        cnx = self.cnx
+        pendingeids = cnx.transaction_data.get('pendingeids', ())
+        pendingrtypes = cnx.transaction_data.get('pendingrtypes', ())
         for eid, rtype in self.get_data():
             # recheck pending eids / relation types
             if eid in pendingeids:
                 continue
             if rtype in pendingrtypes:
                 continue
-            if not session.execute(self.base_rql % rtype, {'x': eid}):
-                etype = session.entity_metas(eid)['type']
+            if not cnx.execute(self.base_rql % rtype, {'x': eid}):
+                etype = cnx.entity_metas(eid)['type']
                 msg = _('at least one relation %(rtype)s is required on '
                         '%(etype)s (%(eid)s)')
                 raise validation_error(eid, {(rtype, self.role): msg},
@@ -142,16 +142,16 @@ class CheckCardinalityHookBeforeDeleteRelation(IntegrityHook):
         rtype = self.rtype
         if rtype in DONT_CHECK_RTYPES_ON_DEL:
             return
-        session = self._cw
+        cnx = self._cw
         eidfrom, eidto = self.eidfrom, self.eidto
-        rdef = session.rtype_eids_rdef(rtype, eidfrom, eidto)
-        if (rdef.subject, rtype, rdef.object) in session.transaction_data.get('pendingrdefs', ()):
+        rdef = cnx.rtype_eids_rdef(rtype, eidfrom, eidto)
+        if (rdef.subject, rtype, rdef.object) in cnx.transaction_data.get('pendingrdefs', ()):
             return
         card = rdef.cardinality
-        if card[0] in '1+' and not session.deleted_in_transaction(eidfrom):
-            _CheckSRelationOp.get_instance(session).add_data((eidfrom, rtype))
-        if card[1] in '1+' and not session.deleted_in_transaction(eidto):
-            _CheckORelationOp.get_instance(session).add_data((eidto, rtype))
+        if card[0] in '1+' and not cnx.deleted_in_transaction(eidfrom):
+            _CheckSRelationOp.get_instance(cnx).add_data((eidfrom, rtype))
+        if card[1] in '1+' and not cnx.deleted_in_transaction(eidto):
+            _CheckORelationOp.get_instance(cnx).add_data((eidto, rtype))
 
 
 class CheckCardinalityHookAfterAddEntity(IntegrityHook):
@@ -179,14 +179,14 @@ class _CheckConstraintsOp(hook.DataOperationMixIn, hook.LateOperation):
     """ check a new relation satisfy its constraints """
     containercls = list
     def precommit_event(self):
-        session = self.session
+        cnx = self.cnx
         for values in self.get_data():
             eidfrom, rtype, eidto, constraints = values
             # first check related entities have not been deleted in the same
             # transaction
-            if session.deleted_in_transaction(eidfrom):
+            if cnx.deleted_in_transaction(eidfrom):
                 continue
-            if session.deleted_in_transaction(eidto):
+            if cnx.deleted_in_transaction(eidto):
                 continue
             for constraint in constraints:
                 # XXX
@@ -194,9 +194,9 @@ class _CheckConstraintsOp(hook.DataOperationMixIn, hook.LateOperation):
                 # * use a constraint id to use per constraint lock and avoid
                 #   unnecessary commit serialization ?
                 if isinstance(constraint, RQLUniqueConstraint):
-                    _acquire_unique_cstr_lock(session)
+                    _acquire_unique_cstr_lock(cnx)
                 try:
-                    constraint.repo_check(session, eidfrom, rtype, eidto)
+                    constraint.repo_check(cnx, eidfrom, rtype, eidto)
                 except NotImplementedError:
                     self.critical('can\'t check constraint %s, not supported',
                                   constraint)
