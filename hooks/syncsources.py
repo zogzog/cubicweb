@@ -37,7 +37,7 @@ class SourceHook(hook.Hook):
 class SourceAddedOp(hook.Operation):
     entity = None # make pylint happy
     def postcommit_event(self):
-        self.session.repo.add_source(self.entity)
+        self.cnx.repo.add_source(self.entity)
 
 class SourceAddedHook(SourceHook):
     __regid__ = 'cw.sources.added'
@@ -61,7 +61,7 @@ class SourceAddedHook(SourceHook):
 class SourceRemovedOp(hook.Operation):
     uri = None # make pylint happy
     def postcommit_event(self):
-        self.session.repo.remove_source(self.uri)
+        self.cnx.repo.remove_source(self.uri)
 
 class SourceRemovedHook(SourceHook):
     __regid__ = 'cw.sources.removed'
@@ -79,7 +79,7 @@ class SourceConfigUpdatedOp(hook.DataOperationMixIn, hook.Operation):
     def precommit_event(self):
         self.__processed = []
         for source in self.get_data():
-            if not self.session.deleted_in_transaction(source.eid):
+            if not self.cnx.deleted_in_transaction(source.eid):
                 conf = source.repo_source.check_config(source)
                 self.__processed.append( (source, conf) )
 
@@ -92,13 +92,13 @@ class SourceRenamedOp(hook.LateOperation):
     oldname = newname = None # make pylint happy
 
     def precommit_event(self):
-        source = self.session.repo.sources_by_uri[self.oldname]
+        source = self.cnx.repo.sources_by_uri[self.oldname]
         sql = 'UPDATE entities SET asource=%(newname)s WHERE asource=%(oldname)s'
-        self.session.system_sql(sql, {'oldname': self.oldname,
+        self.cnx.system_sql(sql, {'oldname': self.oldname,
                                       'newname': self.newname})
 
     def postcommit_event(self):
-        repo = self.session.repo
+        repo = self.cnx.repo
         # XXX race condition
         source = repo.sources_by_uri.pop(self.oldname)
         source.uri = self.newname
@@ -164,7 +164,7 @@ class SourceMappingImmutableHook(SourceHook):
 
 class SourceMappingChangedOp(hook.DataOperationMixIn, hook.Operation):
     def check_or_update(self, checkonly):
-        session = self.session
+        cnx = self.cnx
         # take care, can't call get_data() twice
         try:
             data = self.__data
@@ -173,10 +173,10 @@ class SourceMappingChangedOp(hook.DataOperationMixIn, hook.Operation):
         for schemacfg, source in data:
             if source is None:
                 source = schemacfg.cwsource.repo_source
-            if session.added_in_transaction(schemacfg.eid):
-                if not session.deleted_in_transaction(schemacfg.eid):
+            if cnx.added_in_transaction(schemacfg.eid):
+                if not cnx.deleted_in_transaction(schemacfg.eid):
                     source.add_schema_config(schemacfg, checkonly=checkonly)
-            elif session.deleted_in_transaction(schemacfg.eid):
+            elif cnx.deleted_in_transaction(schemacfg.eid):
                 source.del_schema_config(schemacfg, checkonly=checkonly)
             else:
                 source.update_schema_config(schemacfg, checkonly=checkonly)
