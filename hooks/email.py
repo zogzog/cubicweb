@@ -38,7 +38,7 @@ class SetUseEmailRelationOp(hook.Operation):
 
     def precommit_event(self):
         if self.condition():
-            self.session.execute(
+            self.cnx.execute(
                 'SET X %s Y WHERE X eid %%(x)s, Y eid %%(y)s' % self.rtype,
                 {'x': self.entity.eid, 'y': self.email.eid})
 
