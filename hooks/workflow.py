@@ -28,13 +28,13 @@ from cubicweb.predicates import is_instance, adaptable
 from cubicweb.server import hook
 
 
-def _change_state(session, x, oldstate, newstate):
-    nocheck = session.transaction_data.setdefault('skip-security', set())
+def _change_state(cnx, x, oldstate, newstate):
+    nocheck = cnx.transaction_data.setdefault('skip-security', set())
     nocheck.add((x, 'in_state', oldstate))
     nocheck.add((x, 'in_state', newstate))
     # delete previous state first
-    session.delete_relation(x, 'in_state', oldstate)
-    session.add_relation(x, 'in_state', newstate)
+    cnx.delete_relation(x, 'in_state', oldstate)
+    cnx.add_relation(x, 'in_state', newstate)
 
 
 # operations ###################################################################
@@ -44,17 +44,17 @@ class _SetInitialStateOp(hook.Operation):
     entity = None # make pylint happy
 
     def precommit_event(self):
-        session = self.session
+        cnx = self.cnx
         entity = self.entity
         iworkflowable = entity.cw_adapt_to('IWorkflowable')
         # if there is an initial state and the entity's state is not set,
         # use the initial state as a default state
-        if not (session.deleted_in_transaction(entity.eid) or entity.in_state) \
+        if not (cnx.deleted_in_transaction(entity.eid) or entity.in_state) \
                and iworkflowable.current_workflow:
             state = iworkflowable.current_workflow.initial
             if state:
-                session.add_relation(entity.eid, 'in_state', state.eid)
-                _FireAutotransitionOp(session, entity=entity)
+                cnx.add_relation(entity.eid, 'in_state', state.eid)
+                _FireAutotransitionOp(cnx, entity=entity)
 
 class _FireAutotransitionOp(hook.Operation):
     """try to fire auto transition after state changes"""
@@ -76,11 +76,11 @@ class _WorkflowChangedOp(hook.Operation):
     def precommit_event(self):
         # notice that enforcement that new workflow apply to the entity's type is
         # done by schema rule, no need to check it here
-        session = self.session
-        pendingeids = session.transaction_data.get('pendingeids', ())
+        cnx = self.cnx
+        pendingeids = cnx.transaction_data.get('pendingeids', ())
         if self.eid in pendingeids:
             return
-        entity = session.entity_from_eid(self.eid)
+        entity = cnx.entity_from_eid(self.eid)
         iworkflowable = entity.cw_adapt_to('IWorkflowable')
         # check custom workflow has not been rechanged to another one in the same
         # transaction
@@ -96,13 +96,13 @@ class _WorkflowChangedOp(hook.Operation):
             # if there are no history, simply go to new workflow's initial state
             if not iworkflowable.workflow_history:
                 if iworkflowable.current_state.eid != deststate.eid:
-                    _change_state(session, entity.eid,
+                    _change_state(cnx, entity.eid,
                                   iworkflowable.current_state.eid, deststate.eid)
-                    _FireAutotransitionOp(session, entity=entity)
+                    _FireAutotransitionOp(cnx, entity=entity)
                 return
-            msg = session._('workflow changed to "%s"')
-            msg %= session._(mainwf.name)
-            session.transaction_data[(entity.eid, 'customwf')] = self.wfeid
+            msg = cnx._('workflow changed to "%s"')
+            msg %= cnx._(mainwf.name)
+            cnx.transaction_data[(entity.eid, 'customwf')] = self.wfeid
             iworkflowable.change_state(deststate, msg, u'text/plain')
 
 
@@ -110,7 +110,7 @@ class _CheckTrExitPoint(hook.Operation):
     treid = None # make pylint happy
 
     def precommit_event(self):
-        tr = self.session.entity_from_eid(self.treid)
+        tr = self.cnx.entity_from_eid(self.treid)
         outputs = set()
         for ep in tr.subworkflow_exit:
             if ep.subwf_state.eid in outputs:
@@ -123,7 +123,7 @@ class _SubWorkflowExitOp(hook.Operation):
     forentity = trinfo = None # make pylint happy
 
     def precommit_event(self):
-        session = self.session
+        cnx = self.cnx
         forentity = self.forentity
         iworkflowable = forentity.cw_adapt_to('IWorkflowable')
         trinfo = self.trinfo
@@ -137,8 +137,8 @@ class _SubWorkflowExitOp(hook.Operation):
         if tostate is not None:
             # reached an exit point
             msg = _('exiting from subworkflow %s')
-            msg %= session._(iworkflowable.current_workflow.name)
-            session.transaction_data[(forentity.eid, 'subwfentrytr')] = True
+            msg %= cnx._(iworkflowable.current_workflow.name)
+            cnx.transaction_data[(forentity.eid, 'subwfentrytr')] = True
             iworkflowable.change_state(tostate, msg, u'text/plain', tr=wftr)
 
 
@@ -173,7 +173,7 @@ class FireTransitionHook(WorkflowHook):
     events = ('before_add_entity',)
 
     def __call__(self):
-        session = self._cw
+        cnx = self._cw
         entity = self.entity
         # first retreive entity to which the state change apply
         try:
@@ -181,15 +181,15 @@ class FireTransitionHook(WorkflowHook):
         except KeyError:
             msg = _('mandatory relation')
             raise validation_error(entity, {('wf_info_for', 'subject'): msg})
-        forentity = session.entity_from_eid(foreid)
+        forentity = cnx.entity_from_eid(foreid)
         # see comment in the TrInfo entity definition
         entity.cw_edited['tr_count']=len(forentity.reverse_wf_info_for)
         iworkflowable = forentity.cw_adapt_to('IWorkflowable')
         # then check it has a workflow set, unless we're in the process of changing
         # entity's workflow
-        if session.transaction_data.get((forentity.eid, 'customwf')):
-            wfeid = session.transaction_data[(forentity.eid, 'customwf')]
-            wf = session.entity_from_eid(wfeid)
+        if cnx.transaction_data.get((forentity.eid, 'customwf')):
+            wfeid = cnx.transaction_data[(forentity.eid, 'customwf')]
+            wf = cnx.entity_from_eid(wfeid)
         else:
             wf = iworkflowable.current_workflow
         if wf is None:
@@ -201,9 +201,9 @@ class FireTransitionHook(WorkflowHook):
             msg = _('related entity has no state')
             raise validation_error(entity, {None: msg})
         # True if we are coming back from subworkflow
-        swtr = session.transaction_data.pop((forentity.eid, 'subwfentrytr'), None)
-        cowpowers = (session.user.is_in_group('managers')
-                     or not session.write_security)
+        swtr = cnx.transaction_data.pop((forentity.eid, 'subwfentrytr'), None)
+        cowpowers = (cnx.user.is_in_group('managers')
+                     or not cnx.write_security)
         # no investigate the requested state change...
         try:
             treid = entity.cw_attr_cache['by_transition']
@@ -224,7 +224,7 @@ class FireTransitionHook(WorkflowHook):
         else:
             # check transition is valid and allowed, unless we're coming back
             # from subworkflow
-            tr = session.entity_from_eid(treid)
+            tr = cnx.entity_from_eid(treid)
             if swtr is None:
                 qname = ('by_transition', 'subject')
                 if tr is None:
@@ -243,7 +243,7 @@ class FireTransitionHook(WorkflowHook):
                     msg = _("transition isn't allowed")
                     raise validation_error(entity, {('by_transition', 'subject'): msg})
                 if swtr is None:
-                    deststate = session.entity_from_eid(deststateeid)
+                    deststate = cnx.entity_from_eid(deststateeid)
                     if not cowpowers and deststate is None:
                         msg = _("state doesn't belong to entity's workflow")
                         raise validation_error(entity, {('to_state', 'subject'): msg})
@@ -252,10 +252,10 @@ class FireTransitionHook(WorkflowHook):
         # everything is ok, add missing information on the trinfo entity
         entity.cw_edited['from_state'] = fromstate.eid
         entity.cw_edited['to_state'] = deststateeid
-        nocheck = session.transaction_data.setdefault('skip-security', set())
+        nocheck = cnx.transaction_data.setdefault('skip-security', set())
         nocheck.add((entity.eid, 'from_state', fromstate.eid))
         nocheck.add((entity.eid, 'to_state', deststateeid))
-        _FireAutotransitionOp(session, entity=forentity)
+        _FireAutotransitionOp(cnx, entity=forentity)
 
 
 class FiredTransitionHook(WorkflowHook):
@@ -285,12 +285,12 @@ class CheckInStateChangeAllowed(WorkflowHook):
     category = 'integrity'
 
     def __call__(self):
-        session = self._cw
-        nocheck = session.transaction_data.get('skip-security', ())
+        cnx = self._cw
+        nocheck = cnx.transaction_data.get('skip-security', ())
         if (self.eidfrom, 'in_state', self.eidto) in nocheck:
             # state changed through TrInfo insertion, so we already know it's ok
             return
-        entity = session.entity_from_eid(self.eidfrom)
+        entity = cnx.entity_from_eid(self.eidfrom)
         iworkflowable = entity.cw_adapt_to('IWorkflowable')
         mainwf = iworkflowable.main_workflow
         if mainwf is None:
