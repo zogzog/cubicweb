@@ -69,14 +69,14 @@ class UpdateMetaAttrsHook(MetaDataHook):
 class SetCreatorOp(hook.DataOperationMixIn, hook.Operation):
 
     def precommit_event(self):
-        session = self.session
-        relations = [(eid, session.user.eid) for eid in self.get_data()
+        cnx = self.cnx
+        relations = [(eid, cnx.user.eid) for eid in self.get_data()
                 # don't consider entities that have been created and deleted in
                 # the same transaction, nor ones where created_by has been
                 # explicitly set
-                if not session.deleted_in_transaction(eid) and \
-                   not session.entity_from_eid(eid).created_by]
-        session.add_relations([('created_by', relations)])
+                if not cnx.deleted_in_transaction(eid) and \
+                   not cnx.entity_from_eid(eid).created_by]
+        cnx.add_relations([('created_by', relations)])
 
 
 class SetOwnershipHook(MetaDataHook):
@@ -93,7 +93,7 @@ class SetOwnershipHook(MetaDataHook):
 class SyncOwnersOp(hook.DataOperationMixIn, hook.Operation):
     def precommit_event(self):
         for compositeeid, composedeid in self.get_data():
-            self.session.execute('SET X owned_by U WHERE C owned_by U, C eid %(c)s,'
+            self.cnx.execute('SET X owned_by U WHERE C owned_by U, C eid %(c)s,'
                                  'NOT EXISTS(X owned_by U, X eid %(x)s)',
                                  {'c': compositeeid, 'x': composedeid})
 
@@ -136,14 +136,14 @@ class UpdateFTIHook(MetaDataHook):
 
     def __call__(self):
         rtype = self.rtype
-        session = self._cw
-        ftcontainer = session.vreg.schema.rschema(rtype).fulltext_container
+        cnx = self._cw
+        ftcontainer = cnx.vreg.schema.rschema(rtype).fulltext_container
         if ftcontainer == 'subject':
-            session.repo.system_source.index_entity(
-                session, session.entity_from_eid(self.eidfrom))
+            cnx.repo.system_source.index_entity(
+                cnx, cnx.entity_from_eid(self.eidfrom))
         elif ftcontainer == 'object':
-            session.repo.system_source.index_entity(
-                session, session.entity_from_eid(self.eidto))
+            cnx.repo.system_source.index_entity(
+                cnx, cnx.entity_from_eid(self.eidto))
 
 
 
@@ -154,7 +154,7 @@ class ChangeEntitySourceUpdateCaches(hook.Operation):
 
     def postcommit_event(self):
         self.oldsource.reset_caches()
-        repo = self.session.repo
+        repo = self.cnx.repo
         entity = self.entity
         extid = entity.cw_metainformation()['extid']
         repo._type_source_cache[entity.eid] = (
