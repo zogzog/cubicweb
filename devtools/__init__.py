@@ -108,6 +108,7 @@ def turn_repo_off(repo):
         repo._needs_refresh = True
         repo._has_started = False
 
+
 def turn_repo_on(repo):
     """Idea: this is less costly than a full re-creation of the repo object.
     on:
@@ -820,7 +821,22 @@ HCACHE = HCache()
 
 
 # XXX a class method on Test ?
+
+_CONFIG = None
 def get_test_db_handler(config):
+    global _CONFIG
+    if _CONFIG is not None and config is not _CONFIG:
+        from logilab.common.modutils import cleanup_sys_modules
+        # cleanup all dynamically loaded modules and everything in the instance
+        # directory
+        apphome = _CONFIG.apphome
+        if apphome: # may be unset in tests
+            cleanup_sys_modules([apphome])
+        # also cleanup sys.path
+        if apphome in sys.path:
+            sys.path.remove(apphome)
+    _CONFIG = config
+    config.adjust_sys_path()
     handler = HCACHE.get(config)
     if handler is not None:
         return handler

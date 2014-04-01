@@ -618,12 +618,18 @@ class ServerMigrationHelper(MigrationHelper):
             self.rqlexecall(ss.updaterdef2rql(rdef, repordef.eid),
                             ask_confirm=confirm)
             # constraints
-            newconstraints = list(rdef.constraints)
+            # 0. eliminate the set of unmodified constraints from the sets of
+            # old/new constraints
+            newconstraints = set(rdef.constraints)
+            oldconstraints = set(repordef.constraints)
+            unchanged_constraints = newconstraints & oldconstraints
+            newconstraints -= unchanged_constraints
+            oldconstraints -= unchanged_constraints
             # 1. remove old constraints and update constraints of the same type
             # NOTE: don't use rschema.constraint_by_type because it may be
             #       out of sync with newconstraints when multiple
             #       constraints of the same type are used
-            for cstr in repordef.constraints:
+            for cstr in oldconstraints:
                 for newcstr in newconstraints:
                     if newcstr.type() == cstr.type():
                         break
