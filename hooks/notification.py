@@ -29,11 +29,11 @@ from cubicweb.sobjects.supervising import SupervisionMailOp
 
 
 @deprecated('[3.17] use notify_on_commit instead')
-def RenderAndSendNotificationView(session, view, viewargs=None):
-    notify_on_commit(session, view, viewargs)
+def RenderAndSendNotificationView(cnx, view, viewargs=None):
+    notify_on_commit(cnx, view, viewargs)
 
 
-def notify_on_commit(session, view, viewargs=None):
+def notify_on_commit(cnx, view, viewargs=None):
     """register a notification view (see
     :class:`~cubicweb.sobjects.notification.NotificationView`) to be sent at
     post-commit time, ie only if the transaction has succeeded.
@@ -43,7 +43,7 @@ def notify_on_commit(session, view, viewargs=None):
     """
     if viewargs is None:
         viewargs = {}
-    notif_op = _RenderAndSendNotificationOp.get_instance(session)
+    notif_op = _RenderAndSendNotificationOp.get_instance(cnx)
     notif_op.add_data((view, viewargs))
 
 
@@ -58,7 +58,7 @@ class _RenderAndSendNotificationOp(hook.DataOperationMixIn, hook.Operation):
     containercls = list
 
     def postcommit_event(self):
-        deleted = self.session.deleted_in_transaction
+        deleted = self.cnx.deleted_in_transaction
         for view, viewargs in self.get_data():
             if view.cw_rset is not None:
                 if not view.cw_rset:
@@ -153,13 +153,13 @@ class EntityUpdatedNotificationOp(hook.SingleLastOperation):
 
     def precommit_event(self):
         # precommit event that creates postcommit operation
-        session = self.session
-        for eid in session.transaction_data['changes']:
-            view = session.vreg['views'].select('notif_entity_updated', session,
-                                                rset=session.eid_rset(eid),
+        cnx = self.cnx
+        for eid in cnx.transaction_data['changes']:
+            view = cnx.vreg['views'].select('notif_entity_updated', cnx,
+                                                rset=cnx.eid_rset(eid),
                                                 row=0)
-            notify_on_commit(self.session, view,
-                    viewargs={'changes': session.transaction_data['changes'][eid]})
+            notify_on_commit(self.cnx, view,
+                    viewargs={'changes': cnx.transaction_data['changes'][eid]})
 
 
 class EntityUpdateHook(NotificationHook):
@@ -170,15 +170,15 @@ class EntityUpdateHook(NotificationHook):
     skip_attrs = set()
 
     def __call__(self):
-        session = self._cw
-        if session.added_in_transaction(self.entity.eid):
+        cnx = self._cw
+        if cnx.added_in_transaction(self.entity.eid):
             return # entity is being created
         # then compute changes
         attrs = [k for k in self.entity.cw_edited
                  if not k in self.skip_attrs]
         if not attrs:
             return
-        changes = session.transaction_data.setdefault('changes', {})
+        changes = cnx.transaction_data.setdefault('changes', {})
         thisentitychanges = changes.setdefault(self.entity.eid, set())
         rqlsel, rqlrestr = [], ['X eid %(x)s']
         for i, attr in enumerate(attrs):
@@ -186,14 +186,14 @@ class EntityUpdateHook(NotificationHook):
             rqlsel.append(var)
             rqlrestr.append('X %s %s' % (attr, var))
         rql = 'Any %s WHERE %s' % (','.join(rqlsel), ','.join(rqlrestr))
-        rset = session.execute(rql, {'x': self.entity.eid})
+        rset = cnx.execute(rql, {'x': self.entity.eid})
         for i, attr in enumerate(attrs):
             oldvalue = rset[0][i]
             newvalue = self.entity.cw_edited[attr]
             if oldvalue != newvalue:
                 thisentitychanges.add((attr, oldvalue, newvalue))
         if thisentitychanges:
-            EntityUpdatedNotificationOp(session)
+            EntityUpdatedNotificationOp(cnx)
 
 
 # supervising ##################################################################
