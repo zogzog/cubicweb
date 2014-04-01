@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -271,6 +271,7 @@ class HTMLHeadTC(CubicWebTC):
         self.assertEqual(list(result), expected)
 
     def test_getvalue_with_concat(self):
+        self.config.global_set_option('concat-resources', True)
         base_url = u'http://test.fr/data/'
         head = self.htmlhead(base_url)
         head.add_js(base_url + u'bob0.js')
