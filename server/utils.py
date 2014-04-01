@@ -73,13 +73,13 @@ def crypt_password(passwd, salt=None):
     return ''
 
 
-def eschema_eid(session, eschema):
+def eschema_eid(cnx, eschema):
     """get eid of the CWEType entity for the given yams type. You should use
     this because when schema has been loaded from the file-system, not from the
     database, (e.g. during tests), eschema.eid is not set.
     """
     if eschema.eid is None:
-        eschema.eid = session.execute(
+        eschema.eid = cnx.execute(
             'Any X WHERE X is CWEType, X name %(name)s',
             {'name': str(eschema)})[0][0]
     return eschema.eid
