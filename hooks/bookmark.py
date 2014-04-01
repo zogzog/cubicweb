@@ -25,7 +25,7 @@ from cubicweb.server import hook
 class AutoDeleteBookmarkOp(hook.Operation):
     bookmark = None # make pylint happy
     def precommit_event(self):
-        if not self.session.deleted_in_transaction(self.bookmark.eid):
+        if not self.cnx.deleted_in_transaction(self.bookmark.eid):
             if not self.bookmark.bookmarked_by:
                 self.bookmark.cw_delete()
 
