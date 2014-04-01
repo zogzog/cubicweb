@@ -44,10 +44,10 @@ CORE_TYPES = BASE_TYPES | SCHEMA_TYPES | META_RTYPES | set(
     ('CWUser', 'CWGroup','login', 'upassword', 'name', 'in_group'))
 
 
-def get_constraints(session, entity):
+def get_constraints(cnx, entity):
     constraints = []
-    for cstreid in session.transaction_data.get(entity.eid, ()):
-        cstrent = session.entity_from_eid(cstreid)
+    for cstreid in cnx.transaction_data.get(entity.eid, ()):
+        cstrent = cnx.entity_from_eid(cstreid)
         cstr = CONSTRAINTS[cstrent.type].deserialize(cstrent.value)
         cstr.eid = cstreid
         constraints.append(cstr)
@@ -60,32 +60,32 @@ def group_mapping(cw):
         cw.transaction_data['groupmap'] = gmap = ss.group_mapping(cw)
         return gmap
 
-def add_inline_relation_column(session, etype, rtype):
+def add_inline_relation_column(cnx, etype, rtype):
     """add necessary column and index for an inlined relation"""
     attrkey = '%s.%s' % (etype, rtype)
-    createdattrs = session.transaction_data.setdefault('createdattrs', set())
+    createdattrs = cnx.transaction_data.setdefault('createdattrs', set())
     if attrkey in createdattrs:
         return
     createdattrs.add(attrkey)
     table = SQL_PREFIX + etype
     column = SQL_PREFIX + rtype
     try:
-        session.system_sql(str('ALTER TABLE %s ADD %s integer'
+        cnx.system_sql(str('ALTER TABLE %s ADD %s integer'
                                % (table, column)), rollback_on_failure=False)
-        session.info('added column %s to table %s', column, table)
+        cnx.info('added column %s to table %s', column, table)
     except Exception:
         # silent exception here, if this error has not been raised because the
         # column already exists, index creation will fail anyway
-        session.exception('error while adding column %s to table %s',
+        cnx.exception('error while adding column %s to table %s',
                           table, column)
     # create index before alter table which may expectingly fail during test
     # (sqlite) while index creation should never fail (test for index existence
     # is done by the dbhelper)
-    session.repo.system_source.create_index(session, table, column)
-    session.info('added index on %s(%s)', table, column)
+    cnx.repo.system_source.create_index(cnx, table, column)
+    cnx.info('added index on %s(%s)', table, column)
 
 
-def insert_rdef_on_subclasses(session, eschema, rschema, rdefdef, props):
+def insert_rdef_on_subclasses(cnx, eschema, rschema, rdefdef, props):
     # XXX 'infered': True/False, not clear actually
     props.update({'constraints': rdefdef.constraints,
                   'description': rdefdef.description,
@@ -94,19 +94,19 @@ def insert_rdef_on_subclasses(session, eschema, rschema, rdefdef, props):
                   'order': rdefdef.order,
                   'infered': False, 'eid': None
                   })
-    cstrtypemap = ss.cstrtype_mapping(session)
-    groupmap = group_mapping(session)
+    cstrtypemap = ss.cstrtype_mapping(cnx)
+    groupmap = group_mapping(cnx)
     object = rschema.schema.eschema(rdefdef.object)
     for specialization in eschema.specialized_by(False):
         if (specialization, rdefdef.object) in rschema.rdefs:
             continue
         sperdef = RelationDefinitionSchema(specialization, rschema,
                                            object, None, values=props)
-        ss.execschemarql(session.execute, sperdef,
+        ss.execschemarql(cnx.execute, sperdef,
                          ss.rdef2rql(sperdef, cstrtypemap, groupmap))
 
 
-def check_valid_changes(session, entity, ro_attrs=('name', 'final')):
+def check_valid_changes(cnx, entity, ro_attrs=('name', 'final')):
     errors = {}
     # don't use getattr(entity, attr), we would get the modified value if any
     for attr in entity.cw_edited:
@@ -137,22 +137,22 @@ class DropTable(hook.Operation):
     """actually remove a database from the instance's schema"""
     table = None # make pylint happy
     def precommit_event(self):
-        dropped = self.session.transaction_data.setdefault('droppedtables',
+        dropped = self.cnx.transaction_data.setdefault('droppedtables',
                                                            set())
         if self.table in dropped:
             return # already processed
         dropped.add(self.table)
-        self.session.system_sql('DROP TABLE %s' % self.table)
+        self.cnx.system_sql('DROP TABLE %s' % self.table)
         self.info('dropped table %s', self.table)
 
     # XXX revertprecommit_event
 
 
 class DropRelationTable(DropTable):
-    def __init__(self, session, rtype):
+    def __init__(self, cnx, rtype):
         super(DropRelationTable, self).__init__(
-            session, table='%s_relation' % rtype)
-        session.transaction_data.setdefault('pendingrtypes', set()).add(rtype)
+            cnx, table='%s_relation' % rtype)
+        cnx.transaction_data.setdefault('pendingrtypes', set()).add(rtype)
 
 
 class DropColumn(hook.Operation):
@@ -161,12 +161,12 @@ class DropColumn(hook.Operation):
     """
     table = column = None # make pylint happy
     def precommit_event(self):
-        session, table, column = self.session, self.table, self.column
-        source = session.repo.system_source
+        cnx, table, column = self.cnx, self.table, self.column
+        source = cnx.repo.system_source
         # drop index if any
-        source.drop_index(session, table, column)
+        source.drop_index(cnx, table, column)
         if source.dbhelper.alter_column_support:
-            session.system_sql('ALTER TABLE %s DROP COLUMN %s'
+            cnx.system_sql('ALTER TABLE %s DROP COLUMN %s'
                                % (table, column), rollback_on_failure=False)
             self.info('dropped column %s from table %s', column, table)
         else:
@@ -187,17 +187,17 @@ class MemSchemaNotifyChanges(hook.SingleLastOperation):
     schema changes.
     """
 
-    def __init__(self, session):
-        hook.SingleLastOperation.__init__(self, session)
+    def __init__(self, cnx):
+        hook.SingleLastOperation.__init__(self, cnx)
 
     def precommit_event(self):
-        for eschema in self.session.repo.schema.entities():
+        for eschema in self.cnx.repo.schema.entities():
             if not eschema.final:
                 clear_cache(eschema, 'ordered_relations')
 
     def postcommit_event(self):
-        rebuildinfered = self.session.get_shared_data('rebuild-infered', True)
-        repo = self.session.repo
+        rebuildinfered = self.cnx.get_shared_data('rebuild-infered', True)
+        repo = self.cnx.repo
         # commit event should not raise error, while set_schema has chances to
         # do so because it triggers full vreg reloading
         try:
@@ -206,7 +206,7 @@ class MemSchemaNotifyChanges(hook.SingleLastOperation):
             # trigger vreg reload
             repo.set_schema(repo.schema)
             # CWUser class might have changed, update current session users
-            cwuser_cls = self.session.vreg['etypes'].etype_class('CWUser')
+            cwuser_cls = self.cnx.vreg['etypes'].etype_class('CWUser')
             for session in repo._sessions.itervalues():
                 session.user.__class__ = cwuser_cls
         except Exception:
@@ -218,10 +218,10 @@ class MemSchemaNotifyChanges(hook.SingleLastOperation):
 
 class MemSchemaOperation(hook.Operation):
     """base class for schema operations"""
-    def __init__(self, session, **kwargs):
-        hook.Operation.__init__(self, session, **kwargs)
+    def __init__(self, cnx, **kwargs):
+        hook.Operation.__init__(self, cnx, **kwargs)
         # every schema operation is triggering a schema update
-        MemSchemaNotifyChanges(session)
+        MemSchemaNotifyChanges(cnx)
 
 
 # operations for high-level source database alteration  ########################
@@ -237,21 +237,21 @@ class CWETypeAddOp(MemSchemaOperation):
     entity = None # make pylint happy
 
     def precommit_event(self):
-        session = self.session
+        cnx = self.cnx
         entity = self.entity
-        schema = session.vreg.schema
+        schema = cnx.vreg.schema
         etype = ybo.EntityType(eid=entity.eid, name=entity.name,
                                description=entity.description)
         eschema = schema.add_entity_type(etype)
         # create the necessary table
-        tablesql = y2sql.eschema2sql(session.repo.system_source.dbhelper,
+        tablesql = y2sql.eschema2sql(cnx.repo.system_source.dbhelper,
                                      eschema, prefix=SQL_PREFIX)
         for sql in tablesql.split(';'):
             if sql.strip():
-                session.system_sql(sql)
+                cnx.system_sql(sql)
         # add meta relations
-        gmap = group_mapping(session)
-        cmap = ss.cstrtype_mapping(session)
+        gmap = group_mapping(cnx)
+        cmap = ss.cstrtype_mapping(cnx)
         for rtype in (META_RTYPES - VIRTUAL_RTYPES):
             try:
                 rschema = schema[rtype]
@@ -270,13 +270,13 @@ class CWETypeAddOp(MemSchemaOperation):
                 continue
             rdef.subject = _MockEntity(eid=entity.eid)
             mock = _MockEntity(eid=None)
-            ss.execschemarql(session.execute, mock, ss.rdef2rql(rdef, cmap, gmap))
+            ss.execschemarql(cnx.execute, mock, ss.rdef2rql(rdef, cmap, gmap))
 
     def revertprecommit_event(self):
         # revert changes on in memory schema
-        self.session.vreg.schema.del_entity_type(self.entity.name)
+        self.cnx.vreg.schema.del_entity_type(self.entity.name)
         # revert changes on database
-        self.session.system_sql('DROP TABLE %s%s' % (SQL_PREFIX, self.entity.name))
+        self.cnx.system_sql('DROP TABLE %s%s' % (SQL_PREFIX, self.entity.name))
 
 
 class CWETypeRenameOp(MemSchemaOperation):
@@ -284,19 +284,19 @@ class CWETypeRenameOp(MemSchemaOperation):
     oldname = newname = None # make pylint happy
 
     def rename(self, oldname, newname):
-        self.session.vreg.schema.rename_entity_type(oldname, newname)
+        self.cnx.vreg.schema.rename_entity_type(oldname, newname)
         # we need sql to operate physical changes on the system database
-        sqlexec = self.session.system_sql
-        dbhelper = self.session.repo.system_source.dbhelper
+        sqlexec = self.cnx.system_sql
+        dbhelper = self.cnx.repo.system_source.dbhelper
         sql = dbhelper.sql_rename_table(SQL_PREFIX+oldname,
                                         SQL_PREFIX+newname)
         sqlexec(sql)
         self.info('renamed table %s to %s', oldname, newname)
         sqlexec('UPDATE entities SET type=%(newname)s WHERE type=%(oldname)s',
                 {'newname': newname, 'oldname': oldname})
-        for eid, (etype, extid, auri) in self.session.repo._type_source_cache.items():
+        for eid, (etype, extid, auri) in self.cnx.repo._type_source_cache.items():
             if etype == oldname:
-                self.session.repo._type_source_cache[eid] = (newname, extid, auri)
+                self.cnx.repo._type_source_cache[eid] = (newname, extid, auri)
         # XXX transaction records
 
     def precommit_event(self):
@@ -315,9 +315,9 @@ class CWRTypeUpdateOp(MemSchemaOperation):
         rschema = self.rschema
         if rschema.final:
             return # watched changes to final relation type are unexpected
-        session = self.session
+        cnx = self.cnx
         if 'fulltext_container' in self.values:
-            op = UpdateFTIndexOp.get_instance(session)
+            op = UpdateFTIndexOp.get_instance(cnx)
             for subjtype, objtype in rschema.rdefs:
                 op.add_data(subjtype)
                 op.add_data(objtype)
@@ -332,19 +332,19 @@ class CWRTypeUpdateOp(MemSchemaOperation):
         if inlined:
             self.entity.check_inlined_allowed()
         # inlined changed, make necessary physical changes!
-        sqlexec = self.session.system_sql
+        sqlexec = self.cnx.system_sql
         rtype = rschema.type
         eidcolumn = SQL_PREFIX + 'eid'
         if not inlined:
             # need to create the relation if it has not been already done by
             # another event of the same transaction
-            if not rschema.type in session.transaction_data.get('createdtables', ()):
+            if not rschema.type in cnx.transaction_data.get('createdtables', ()):
                 tablesql = y2sql.rschema2sql(rschema)
                 # create the necessary table
                 for sql in tablesql.split(';'):
                     if sql.strip():
                         sqlexec(sql)
-                session.transaction_data.setdefault('createdtables', []).append(
+                cnx.transaction_data.setdefault('createdtables', []).append(
                     rschema.type)
             # copy existant data
             column = SQL_PREFIX + rtype
@@ -353,14 +353,14 @@ class CWRTypeUpdateOp(MemSchemaOperation):
                 sqlexec('INSERT INTO %s_relation SELECT %s, %s FROM %s WHERE NOT %s IS NULL'
                         % (rtype, eidcolumn, column, table, column))
             # drop existant columns
-            #if session.repo.system_source.dbhelper.alter_column_support:
+            #if cnx.repo.system_source.dbhelper.alter_column_support:
             for etype in rschema.subjects():
-                DropColumn(session, table=SQL_PREFIX + str(etype),
+                DropColumn(cnx, table=SQL_PREFIX + str(etype),
                            column=SQL_PREFIX + rtype)
         else:
             for etype in rschema.subjects():
                 try:
-                    add_inline_relation_column(session, str(etype), rtype)
+                    add_inline_relation_column(cnx, str(etype), rtype)
                 except Exception as ex:
                     # the column probably already exists. this occurs when the
                     # entity's type has just been added or if the column has not
@@ -382,7 +382,7 @@ class CWRTypeUpdateOp(MemSchemaOperation):
                     cursor.executemany('UPDATE %s SET %s=%%(val)s WHERE %s=%%(x)s'
                                        % (table, column, eidcolumn), args)
                 # drop existant table
-                DropRelationTable(session, rtype)
+                DropRelationTable(cnx, rtype)
 
     def revertprecommit_event(self):
         # revert changes on in memory schema
@@ -407,10 +407,10 @@ class CWAttributeAddOp(MemSchemaOperation):
         rdefdef = self.rdefdef = ybo.RelationDefinition(
             str(fromentity.name), entity.rtype.name, str(entity.otype.name),
             description=entity.description, cardinality=entity.cardinality,
-            constraints=get_constraints(self.session, entity),
+            constraints=get_constraints(self.cnx, entity),
             order=entity.ordernum, eid=entity.eid, **kwargs)
-        self.session.vreg.schema.add_relation_def(rdefdef)
-        self.session.execute('SET X ordernum Y+1 '
+        self.cnx.vreg.schema.add_relation_def(rdefdef)
+        self.cnx.execute('SET X ordernum Y+1 '
                              'WHERE X from_entity SE, SE eid %(se)s, X ordernum Y, '
                              'X ordernum >= %(order)s, NOT X eid %(x)s',
                              {'x': entity.eid, 'se': fromentity.eid,
@@ -418,7 +418,7 @@ class CWAttributeAddOp(MemSchemaOperation):
         return rdefdef
 
     def precommit_event(self):
-        session = self.session
+        cnx = self.cnx
         entity = self.entity
         # entity.defaultval is a Binary or None, but we need a correctly typed
         # value
@@ -432,7 +432,7 @@ class CWAttributeAddOp(MemSchemaOperation):
         # update the in-memory schema first
         rdefdef = self.init_rdef(**props)
         # then make necessary changes to the system source database
-        syssource = session.repo.system_source
+        syssource = cnx.repo.system_source
         attrtype = y2sql.type_from_constraints(
             syssource.dbhelper, rdefdef.object, rdefdef.constraints)
         # XXX should be moved somehow into lgdb: sqlite doesn't support to
@@ -448,7 +448,7 @@ class CWAttributeAddOp(MemSchemaOperation):
         table = SQL_PREFIX + rdefdef.subject
         column = SQL_PREFIX + rdefdef.name
         try:
-            session.system_sql(str('ALTER TABLE %s ADD %s %s'
+            cnx.system_sql(str('ALTER TABLE %s ADD %s %s'
                                    % (table, column, attrtype)),
                                rollback_on_failure=False)
             self.info('added column %s to table %s', table, column)
@@ -459,13 +459,13 @@ class CWAttributeAddOp(MemSchemaOperation):
             self.error('error while altering table %s: %s', table, ex)
         if extra_unique_index or entity.indexed:
             try:
-                syssource.create_index(session, table, column,
+                syssource.create_index(cnx, table, column,
                                       unique=extra_unique_index)
             except Exception as ex:
                 self.error('error while creating index for %s.%s: %s',
                            table, column, ex)
         # final relations are not infered, propagate
-        schema = session.vreg.schema
+        schema = cnx.vreg.schema
         try:
             eschema = schema.eschema(rdefdef.subject)
         except KeyError:
@@ -475,18 +475,18 @@ class CWAttributeAddOp(MemSchemaOperation):
         # if relation type has been inserted in the same transaction, its final
         # attribute is still set to False, so we've to ensure it's False
         rschema.final = True
-        insert_rdef_on_subclasses(session, eschema, rschema, rdefdef, props)
+        insert_rdef_on_subclasses(cnx, eschema, rschema, rdefdef, props)
         # update existing entities with the default value of newly added attribute
         if default is not None:
             default = convert_default_value(self.rdefdef, default)
-            session.system_sql('UPDATE %s SET %s=%%(default)s' % (table, column),
+            cnx.system_sql('UPDATE %s SET %s=%%(default)s' % (table, column),
                                {'default': default})
 
     def revertprecommit_event(self):
         # revert changes on in memory schema
         if getattr(self, 'rdefdef', None) is None:
             return
-        self.session.vreg.schema.del_relation_def(
+        self.cnx.vreg.schema.del_relation_def(
             self.rdefdef.subject, self.rdefdef.name, self.rdefdef.object)
         # XXX revert changes on database
 
@@ -505,12 +505,12 @@ class CWRelationAddOp(CWAttributeAddOp):
     entity = None # make pylint happy
 
     def precommit_event(self):
-        session = self.session
+        cnx = self.cnx
         entity = self.entity
         # update the in-memory schema first
         rdefdef = self.init_rdef(composite=entity.composite)
         # then make necessary changes to the system source database
-        schema = session.vreg.schema
+        schema = cnx.vreg.schema
         rtype = rdefdef.name
         rschema = schema.rschema(rtype)
         # this have to be done before permissions setting
@@ -518,9 +518,9 @@ class CWRelationAddOp(CWAttributeAddOp):
             # need to add a column if the relation is inlined and if this is the
             # first occurence of "Subject relation Something" whatever Something
             if len(rschema.objects(rdefdef.subject)) == 1:
-                add_inline_relation_column(session, rdefdef.subject, rtype)
+                add_inline_relation_column(cnx, rdefdef.subject, rtype)
             eschema = schema[rdefdef.subject]
-            insert_rdef_on_subclasses(session, eschema, rschema, rdefdef,
+            insert_rdef_on_subclasses(cnx, eschema, rschema, rdefdef,
                                       {'composite': entity.composite})
         else:
             if rschema.symmetric:
@@ -533,13 +533,13 @@ class CWRelationAddOp(CWAttributeAddOp):
             # schema and if it has not been added during other event of the same
             # transaction
             if not (relation_already_defined or
-                    rtype in session.transaction_data.get('createdtables', ())):
+                    rtype in cnx.transaction_data.get('createdtables', ())):
                 rschema = schema.rschema(rtype)
                 # create the necessary table
                 for sql in y2sql.rschema2sql(rschema).split(';'):
                     if sql.strip():
-                        session.system_sql(sql)
-                session.transaction_data.setdefault('createdtables', []).append(
+                        cnx.system_sql(sql)
+                cnx.transaction_data.setdefault('createdtables', []).append(
                     rtype)
 
     # XXX revertprecommit_event
@@ -550,12 +550,12 @@ class RDefDelOp(MemSchemaOperation):
     rdef = None # make pylint happy
 
     def precommit_event(self):
-        session = self.session
+        cnx = self.cnx
         rdef = self.rdef
         rschema = rdef.rtype
         # make necessary changes to the system source database first
         rdeftype = rschema.final and 'CWAttribute' or 'CWRelation'
-        execute = session.execute
+        execute = cnx.execute
         rset = execute('Any COUNT(X) WHERE X is %s, X relation_type R,'
                        'R eid %%(x)s' % rdeftype, {'x': rschema.eid})
         lastrel = rset[0][0] == 0
@@ -567,19 +567,19 @@ class RDefDelOp(MemSchemaOperation):
                            'R eid %%(r)s, X from_entity E, E eid %%(e)s'
                            % rdeftype,
                            {'r': rschema.eid, 'e': rdef.subject.eid})
-            if rset[0][0] == 0 and not session.deleted_in_transaction(rdef.subject.eid):
-                ptypes = session.transaction_data.setdefault('pendingrtypes', set())
+            if rset[0][0] == 0 and not cnx.deleted_in_transaction(rdef.subject.eid):
+                ptypes = cnx.transaction_data.setdefault('pendingrtypes', set())
                 ptypes.add(rschema.type)
-                DropColumn(session, table=SQL_PREFIX + str(rdef.subject),
+                DropColumn(cnx, table=SQL_PREFIX + str(rdef.subject),
                            column=SQL_PREFIX + str(rschema))
         elif lastrel:
-            DropRelationTable(session, str(rschema))
+            DropRelationTable(cnx, str(rschema))
         # then update the in-memory schema
         if rdef.subject not in ETYPE_NAME_MAP and rdef.object not in ETYPE_NAME_MAP:
             rschema.del_relation_def(rdef.subject, rdef.object)
         # if this is the last relation definition of this type, drop associated
         # relation type
-        if lastrel and not session.deleted_in_transaction(rschema.eid):
+        if lastrel and not cnx.deleted_in_transaction(rschema.eid):
             execute('DELETE CWRType X WHERE X eid %(x)s', {'x': rschema.eid})
 
     def revertprecommit_event(self):
@@ -590,7 +590,7 @@ class RDefDelOp(MemSchemaOperation):
         rdef = self.rdef
         rdef.name = str(rdef.rtype)
         if rdef.subject not in ETYPE_NAME_MAP and rdef.object not in ETYPE_NAME_MAP:
-            self.session.vreg.schema.add_relation_def(rdef)
+            self.cnx.vreg.schema.add_relation_def(rdef)
 
 
 
@@ -601,23 +601,23 @@ class RDefUpdateOp(MemSchemaOperation):
     indexed_changed = null_allowed_changed = False
 
     def precommit_event(self):
-        session = self.session
+        cnx = self.cnx
         rdef = self.rdef = self.rschema.rdefs[self.rdefkey]
         # update the in-memory schema first
         self.oldvalues = dict( (attr, getattr(rdef, attr)) for attr in self.values)
         rdef.update(self.values)
         # then make necessary changes to the system source database
-        syssource = session.repo.system_source
+        syssource = cnx.repo.system_source
         if 'indexed' in self.values:
-            syssource.update_rdef_indexed(session, rdef)
+            syssource.update_rdef_indexed(cnx, rdef)
             self.indexed_changed = True
         if 'cardinality' in self.values and (rdef.rtype.final or
                                              rdef.rtype.inlined) \
               and self.values['cardinality'][0] != self.oldvalues['cardinality'][0]:
-            syssource.update_rdef_null_allowed(self.session, rdef)
+            syssource.update_rdef_null_allowed(self.cnx, rdef)
             self.null_allowed_changed = True
         if 'fulltextindexed' in self.values:
-            UpdateFTIndexOp.get_instance(session).add_data(rdef.subject)
+            UpdateFTIndexOp.get_instance(cnx).add_data(rdef.subject)
 
     def revertprecommit_event(self):
         if self.rdef is None:
@@ -625,11 +625,11 @@ class RDefUpdateOp(MemSchemaOperation):
         # revert changes on in memory schema
         self.rdef.update(self.oldvalues)
         # revert changes on database
-        syssource = self.session.repo.system_source
+        syssource = self.cnx.repo.system_source
         if self.indexed_changed:
-            syssource.update_rdef_indexed(self.session, self.rdef)
+            syssource.update_rdef_indexed(self.cnx, self.rdef)
         if self.null_allowed_changed:
-            syssource.update_rdef_null_allowed(self.session, self.rdef)
+            syssource.update_rdef_null_allowed(self.cnx, self.rdef)
 
 
 def _set_modifiable_constraints(rdef):
@@ -646,20 +646,20 @@ class CWConstraintDelOp(MemSchemaOperation):
     size_cstr_changed = unique_changed = False
 
     def precommit_event(self):
-        session = self.session
+        cnx = self.cnx
         rdef = self.rdef
         # in-place modification of in-memory schema first
         _set_modifiable_constraints(rdef)
         rdef.constraints.remove(self.oldcstr)
         # then update database: alter the physical schema on size/unique
         # constraint changes
-        syssource = session.repo.system_source
+        syssource = cnx.repo.system_source
         cstrtype = self.oldcstr.type()
         if cstrtype == 'SizeConstraint':
-            syssource.update_rdef_column(session, rdef)
+            syssource.update_rdef_column(cnx, rdef)
             self.size_cstr_changed = True
         elif cstrtype == 'UniqueConstraint':
-            syssource.update_rdef_unique(session, rdef)
+            syssource.update_rdef_unique(cnx, rdef)
             self.unique_changed = True
 
     def revertprecommit_event(self):
@@ -669,11 +669,11 @@ class CWConstraintDelOp(MemSchemaOperation):
         if self.oldcstr is not None:
             self.rdef.constraints.append(self.oldcstr)
         # revert changes on database
-        syssource = self.session.repo.system_source
+        syssource = self.cnx.repo.system_source
         if self.size_cstr_changed:
-            syssource.update_rdef_column(self.session, self.rdef)
+            syssource.update_rdef_column(self.cnx, self.rdef)
         if self.unique_changed:
-            syssource.update_rdef_unique(self.session, self.rdef)
+            syssource.update_rdef_unique(self.cnx, self.rdef)
 
 
 class CWConstraintAddOp(CWConstraintDelOp):
@@ -681,14 +681,14 @@ class CWConstraintAddOp(CWConstraintDelOp):
     entity = None # make pylint happy
 
     def precommit_event(self):
-        session = self.session
+        cnx = self.cnx
         rdefentity = self.entity.reverse_constrained_by[0]
         # when the relation is added in the same transaction, the constraint
         # object is created by the operation adding the attribute or relation,
         # so there is nothing to do here
-        if session.added_in_transaction(rdefentity.eid):
+        if cnx.added_in_transaction(rdefentity.eid):
             return
-        rdef = self.rdef = session.vreg.schema.schema_by_eid(rdefentity.eid)
+        rdef = self.rdef = cnx.vreg.schema.schema_by_eid(rdefentity.eid)
         cstrtype = self.entity.type
         oldcstr = self.oldcstr = rdef.constraint_by_type(cstrtype)
         newcstr = self.newcstr = CONSTRAINTS[cstrtype].deserialize(self.entity.value)
@@ -700,13 +700,13 @@ class CWConstraintAddOp(CWConstraintDelOp):
         rdef.constraints.append(newcstr)
         # then update database: alter the physical schema on size/unique
         # constraint changes
-        syssource = session.repo.system_source
+        syssource = cnx.repo.system_source
         if cstrtype == 'SizeConstraint' and (oldcstr is None or
                                              oldcstr.max != newcstr.max):
-            syssource.update_rdef_column(session, rdef)
+            syssource.update_rdef_column(cnx, rdef)
             self.size_cstr_changed = True
         elif cstrtype == 'UniqueConstraint' and oldcstr is None:
-            syssource.update_rdef_unique(session, rdef)
+            syssource.update_rdef_unique(cnx, rdef)
             self.unique_changed = True
 
 
@@ -714,19 +714,19 @@ class CWUniqueTogetherConstraintAddOp(MemSchemaOperation):
     entity = None # make pylint happy
 
     def precommit_event(self):
-        session = self.session
+        cnx = self.cnx
         prefix = SQL_PREFIX
         entity = self.entity
         table = '%s%s' % (prefix, entity.constraint_of[0].name)
         cols = ['%s%s' % (prefix, r.name) for r in entity.relations]
-        dbhelper = session.repo.system_source.dbhelper
+        dbhelper = cnx.repo.system_source.dbhelper
         sqls = dbhelper.sqls_create_multicol_unique_index(table, cols, entity.name)
         for sql in sqls:
-            session.system_sql(sql)
+            cnx.system_sql(sql)
 
     def postcommit_event(self):
         entity = self.entity
-        eschema = self.session.vreg.schema.schema_by_eid(entity.constraint_of[0].eid)
+        eschema = self.cnx.vreg.schema.schema_by_eid(entity.constraint_of[0].eid)
         attrs = [r.name for r in entity.relations]
         eschema._unique_together.append(attrs)
 
@@ -736,17 +736,17 @@ class CWUniqueTogetherConstraintDelOp(MemSchemaOperation):
     cols = () # for pylint
 
     def precommit_event(self):
-        session = self.session
+        cnx = self.cnx
         prefix = SQL_PREFIX
         table = '%s%s' % (prefix, self.entity.type)
-        dbhelper = session.repo.system_source.dbhelper
+        dbhelper = cnx.repo.system_source.dbhelper
         cols = ['%s%s' % (prefix, c) for c in self.cols]
         sqls = dbhelper.sqls_drop_multicol_unique_index(table, cols, self.cstrname)
         for sql in sqls:
-            session.system_sql(sql)
+            cnx.system_sql(sql)
 
     def postcommit_event(self):
-        eschema = self.session.vreg.schema.schema_by_eid(self.entity.eid)
+        eschema = self.cnx.vreg.schema.schema_by_eid(self.entity.eid)
         cols = set(self.cols)
         unique_together = [ut for ut in eschema._unique_together
                            if set(ut) != cols]
@@ -761,7 +761,7 @@ class MemSchemaCWETypeDel(MemSchemaOperation):
 
     def postcommit_event(self):
         # del_entity_type also removes entity's relations
-        self.session.vreg.schema.del_entity_type(self.etype)
+        self.cnx.vreg.schema.del_entity_type(self.etype)
 
 
 class MemSchemaCWRTypeAdd(MemSchemaOperation):
@@ -769,10 +769,10 @@ class MemSchemaCWRTypeAdd(MemSchemaOperation):
     rtypedef = None # make pylint happy
 
     def precommit_event(self):
-        self.session.vreg.schema.add_relation_type(self.rtypedef)
+        self.cnx.vreg.schema.add_relation_type(self.rtypedef)
 
     def revertprecommit_event(self):
-        self.session.vreg.schema.del_relation_type(self.rtypedef.name)
+        self.cnx.vreg.schema.del_relation_type(self.rtypedef.name)
 
 
 class MemSchemaCWRTypeDel(MemSchemaOperation):
@@ -781,7 +781,7 @@ class MemSchemaCWRTypeDel(MemSchemaOperation):
 
     def postcommit_event(self):
         try:
-            self.session.vreg.schema.del_relation_type(self.rtype)
+            self.cnx.vreg.schema.del_relation_type(self.rtype)
         except KeyError:
             # s/o entity type have already been deleted
             pass
@@ -795,14 +795,14 @@ class MemSchemaPermissionAdd(MemSchemaOperation):
     def precommit_event(self):
         """the observed connections.cnxset has been commited"""
         try:
-            erschema = self.session.vreg.schema.schema_by_eid(self.eid)
+            erschema = self.cnx.vreg.schema.schema_by_eid(self.eid)
         except KeyError:
             # duh, schema not found, log error and skip operation
             self.warning('no schema for %s', self.eid)
             return
         perms = list(erschema.action_permissions(self.action))
         if self.group_eid is not None:
-            perm = self.session.entity_from_eid(self.group_eid).name
+            perm = self.cnx.entity_from_eid(self.group_eid).name
         else:
             perm = erschema.rql_expression(self.expr)
         try:
@@ -824,7 +824,7 @@ class MemSchemaPermissionDel(MemSchemaPermissionAdd):
     def precommit_event(self):
         """the observed connections set has been commited"""
         try:
-            erschema = self.session.vreg.schema.schema_by_eid(self.eid)
+            erschema = self.cnx.vreg.schema.schema_by_eid(self.eid)
         except KeyError:
             # duh, schema not found, log error and skip operation
             self.warning('no schema for %s', self.eid)
@@ -836,7 +836,7 @@ class MemSchemaPermissionDel(MemSchemaPermissionAdd):
             return
         perms = list(erschema.action_permissions(self.action))
         if self.group_eid is not None:
-            perm = self.session.entity_from_eid(self.group_eid).name
+            perm = self.cnx.entity_from_eid(self.group_eid).name
         else:
             perm = erschema.rql_expression(self.expr)
         try:
@@ -853,8 +853,8 @@ class MemSchemaSpecializesAdd(MemSchemaOperation):
     etypeeid = parentetypeeid = None # make pylint happy
 
     def precommit_event(self):
-        eschema = self.session.vreg.schema.schema_by_eid(self.etypeeid)
-        parenteschema = self.session.vreg.schema.schema_by_eid(self.parentetypeeid)
+        eschema = self.cnx.vreg.schema.schema_by_eid(self.etypeeid)
+        parenteschema = self.cnx.vreg.schema.schema_by_eid(self.parentetypeeid)
         eschema._specialized_type = parenteschema.type
         parenteschema._specialized_by.append(eschema.type)
 
@@ -866,8 +866,8 @@ class MemSchemaSpecializesDel(MemSchemaOperation):
 
     def precommit_event(self):
         try:
-            eschema = self.session.vreg.schema.schema_by_eid(self.etypeeid)
-            parenteschema = self.session.vreg.schema.schema_by_eid(self.parentetypeeid)
+            eschema = self.cnx.vreg.schema.schema_by_eid(self.etypeeid)
+            parenteschema = self.cnx.vreg.schema.schema_by_eid(self.parentetypeeid)
         except KeyError:
             # etype removed, nothing to do
             return
@@ -1026,14 +1026,14 @@ class AfterDelRelationTypeHook(SyncSchemaHook):
     events = ('after_delete_relation',)
 
     def __call__(self):
-        session = self._cw
+        cnx = self._cw
         try:
-            rdef = session.vreg.schema.schema_by_eid(self.eidfrom)
+            rdef = cnx.vreg.schema.schema_by_eid(self.eidfrom)
         except KeyError:
             self.critical('cant get schema rdef associated to %s', self.eidfrom)
             return
         subjschema, rschema, objschema = rdef.as_triple()
-        pendingrdefs = session.transaction_data.setdefault('pendingrdefs', set())
+        pendingrdefs = cnx.transaction_data.setdefault('pendingrdefs', set())
         # first delete existing relation if necessary
         if rschema.final:
             rdeftype = 'CWAttribute'
@@ -1041,11 +1041,11 @@ class AfterDelRelationTypeHook(SyncSchemaHook):
         else:
             rdeftype = 'CWRelation'
             pendingrdefs.add((subjschema, rschema, objschema))
-            if not (session.deleted_in_transaction(subjschema.eid) or
-                    session.deleted_in_transaction(objschema.eid)):
-                session.execute('DELETE X %s Y WHERE X is %s, Y is %s'
+            if not (cnx.deleted_in_transaction(subjschema.eid) or
+                    cnx.deleted_in_transaction(objschema.eid)):
+                cnx.execute('DELETE X %s Y WHERE X is %s, Y is %s'
                                 % (rschema, subjschema, objschema))
-        RDefDelOp(session, rdef=rdef)
+        RDefDelOp(cnx, rdef=rdef)
 
 
 # CWAttribute / CWRelation hooks ###############################################
@@ -1219,26 +1219,26 @@ class UpdateFTIndexOp(hook.DataOperationMixIn, hook.SingleLastOperation):
     """
 
     def postcommit_event(self):
-        session = self.session
-        source = session.repo.system_source
-        schema = session.repo.vreg.schema
+        cnx = self.cnx
+        source = cnx.repo.system_source
+        schema = cnx.repo.vreg.schema
         to_reindex = self.get_data()
         self.info('%i etypes need full text indexed reindexation',
                   len(to_reindex))
         for etype in to_reindex:
-            rset = session.execute('Any X WHERE X is %s' % etype)
+            rset = cnx.execute('Any X WHERE X is %s' % etype)
             self.info('Reindexing full text index for %i entity of type %s',
                       len(rset), etype)
             still_fti = list(schema[etype].indexable_attributes())
             for entity in rset.entities():
-                source.fti_unindex_entities(session, [entity])
+                source.fti_unindex_entities(cnx, [entity])
                 for container in entity.cw_adapt_to('IFTIndexable').fti_containers():
                     if still_fti or container is not entity:
-                        source.fti_unindex_entities(session, [container])
-                        source.fti_index_entities(session, [container])
+                        source.fti_unindex_entities(cnx, [container])
+                        source.fti_index_entities(cnx, [container])
         if to_reindex:
             # Transaction has already been committed
-            session.cnxset.commit()
+            cnx.cnxset.commit()
 
 
 
