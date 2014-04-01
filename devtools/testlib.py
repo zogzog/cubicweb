@@ -553,7 +553,7 @@ class CubicWebTC(TestCase):
             raise
         resume_tracing()
         self.setup_database()
-        self.commit()
+        self._admin_clt_cnx.commit()
         MAILBOX[:] = [] # reset mailbox
 
     def tearDown(self):

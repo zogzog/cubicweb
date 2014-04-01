@@ -93,7 +93,7 @@ class ServerMigrationHelper(MigrationHelper):
             assert repo
             self.cnx = cnx
             self.repo = repo
-            self.session = repo._get_session(cnx.sessionid)
+            self.session = cnx._session
         elif connect:
             self.repo_connect()
             self.set_session()
