@@ -619,35 +619,35 @@ class Repository(object):
         given password. This method is designed to be used for anonymous
         registration on public web site.
         """
-        with self.internal_session() as session:
+        with self.internal_cnx() as cnx:
             # for consistency, keep same error as unique check hook (although not required)
-            errmsg = session._('the value "%s" is already used, use another one')
-            if (session.execute('CWUser X WHERE X login %(login)s', {'login': login},
-                                build_descr=False)
-                or session.execute('CWUser X WHERE X use_email C, C address %(login)s',
-                                   {'login': login}, build_descr=False)):
+            errmsg = cnx._('the value "%s" is already used, use another one')
+            if (cnx.execute('CWUser X WHERE X login %(login)s', {'login': login},
+                            build_descr=False)
+                or cnx.execute('CWUser X WHERE X use_email C, C address %(login)s',
+                               {'login': login}, build_descr=False)):
                 qname = role_name('login', 'subject')
                 raise ValidationError(None, {qname: errmsg % login})
             # we have to create the user
-            user = self.vreg['etypes'].etype_class('CWUser')(session)
+            user = self.vreg['etypes'].etype_class('CWUser')(cnx)
             if isinstance(password, unicode):
                 # password should *always* be utf8 encoded
                 password = password.encode('UTF8')
             kwargs['login'] = login
             kwargs['upassword'] = password
-            self.glob_add_entity(session, EditedEntity(user, **kwargs))
-            session.execute('SET X in_group G WHERE X eid %(x)s, G name "users"',
-                            {'x': user.eid})
+            self.glob_add_entity(cnx, EditedEntity(user, **kwargs))
+            cnx.execute('SET X in_group G WHERE X eid %(x)s, G name "users"',
+                        {'x': user.eid})
             if email or '@' in login:
                 d = {'login': login, 'email': email or login}
-                if session.execute('EmailAddress X WHERE X address %(email)s', d,
-                                   build_descr=False):
+                if cnx.execute('EmailAddress X WHERE X address %(email)s', d,
+                               build_descr=False):
                     qname = role_name('address', 'subject')
                     raise ValidationError(None, {qname: errmsg % d['email']})
-                session.execute('INSERT EmailAddress X: X address %(email)s, '
-                                'U primary_email X, U use_email X '
-                                'WHERE U login %(login)s', d, build_descr=False)
-            session.commit()
+                cnx.execute('INSERT EmailAddress X: X address %(email)s, '
+                            'U primary_email X, U use_email X '
+                            'WHERE U login %(login)s', d, build_descr=False)
+            cnx.commit()
         return True
 
     def find_users(self, fetch_attrs, **query_attrs):
