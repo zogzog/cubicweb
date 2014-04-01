@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Security hooks: check permissions to add/delete/update entities according to
-the user connected to a session
+the connected user
 """
 
 __docformat__ = "restructuredtext en"
@@ -31,7 +31,7 @@ from cubicweb.server import BEFORE_ADD_RELATIONS, ON_COMMIT_ADD_RELATIONS, hook
 
 
 
-def check_entity_attributes(session, entity, action, editedattrs=None):
+def check_entity_attributes(cnx, entity, action, editedattrs=None):
     eid = entity.eid
     eschema = entity.e_schema
     # ._cw_skip_security_attributes is there to bypass security for attributes
@@ -63,25 +63,25 @@ def check_entity_attributes(session, entity, action, editedattrs=None):
                 # That means an immutable attribute; as an optimization, avoid
                 # going through check_perm.
                 raise Unauthorized(action, str(rdef))
-            rdef.check_perm(session, action, eid=eid)
+            rdef.check_perm(cnx, action, eid=eid)
 
 
 class CheckEntityPermissionOp(hook.DataOperationMixIn, hook.LateOperation):
     def precommit_event(self):
-        session = self.session
+        cnx = self.cnx
         for eid, action, edited in self.get_data():
-            entity = session.entity_from_eid(eid)
+            entity = cnx.entity_from_eid(eid)
             entity.cw_check_perm(action)
-            check_entity_attributes(session, entity, action, edited)
+            check_entity_attributes(cnx, entity, action, edited)
 
 
 class CheckRelationPermissionOp(hook.DataOperationMixIn, hook.LateOperation):
     def precommit_event(self):
-        session = self.session
+        cnx = self.cnx
         for action, rschema, eidfrom, eidto in self.get_data():
-            rdef = rschema.rdef(session.entity_metas(eidfrom)['type'],
-                                session.entity_metas(eidto)['type'])
-            rdef.check_perm(session, action, fromeid=eidfrom, toeid=eidto)
+            rdef = rschema.rdef(cnx.entity_metas(eidfrom)['type'],
+                                cnx.entity_metas(eidto)['type'])
+            rdef.check_perm(cnx, action, fromeid=eidfrom, toeid=eidto)
 
 
 @objectify_predicate
