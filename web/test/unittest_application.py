@@ -423,13 +423,13 @@ class ApplicationTC(CubicWebTC):
         with self.admin_access.web_request() as req:
             self.assertEqual(self.admlogin, req.session.user.login)
             # admin should see anon + admin
-            self.assertEqual(2, len(list(req.find_entities('CWUser'))))
+            self.assertEqual(2, len(list(req.find('CWUser'))))
             with anonymized_request(req):
                 self.assertEqual('anon', req.session.login, 'anon')
                 # anon should only see anon user
-                self.assertEqual(1, len(list(req.find_entities('CWUser'))))
+                self.assertEqual(1, len(list(req.find('CWUser'))))
             self.assertEqual(self.admlogin, req.session.login)
-            self.assertEqual(2, len(list(req.find_entities('CWUser'))))
+            self.assertEqual(2, len(list(req.find('CWUser'))))
 
     def test_non_regr_optional_first_var(self):
         with self.admin_access.web_request() as req:
