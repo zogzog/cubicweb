@@ -1706,7 +1706,6 @@ class Session(RequestSessionBase): # XXX repoapi: stop being a
     # deprecated ###############################################################
 
     @property
-    @deprecated('[3.19] use a Connection object instead')
     def anonymous_session(self):
         # XXX for now, anonymous-user is a web side option.
         # It will only be present inside all-in-one instance.
