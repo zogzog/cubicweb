@@ -600,6 +600,7 @@ class CubicWebTC(TestCase):
         while self._cleanups:
             cleanup, args, kwargs = self._cleanups.pop(-1)
             cleanup(*args, **kwargs)
+        self.repo.turn_repo_off()
 
     def _patch_SendMailOp(self):
         # monkey patch send mail operation so emails are sent synchronously
