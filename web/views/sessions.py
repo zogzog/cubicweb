@@ -112,4 +112,4 @@ class InMemoryRepositorySessionManager(AbstractSessionManager):
         self.info('closing http session %s' % session.sessionid)
         self._sessions.pop(session.sessionid, None)
         if not session.closed:
-            session.repo.close(session.id)
+            session.repo.close(session.sessionid)
