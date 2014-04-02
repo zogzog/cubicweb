@@ -167,39 +167,40 @@ class ApplicationTC(CubicWebTC):
             return config
 
     def test_cnx_user_groups_sync(self):
-        user = self.user()
-        self.assertEqual(user.groups, set(('managers',)))
-        self.execute('SET X in_group G WHERE X eid %s, G name "guests"' % user.eid)
-        user = self.user()
-        self.assertEqual(user.groups, set(('managers',)))
-        self.commit()
-        user = self.user()
-        self.assertEqual(user.groups, set(('managers', 'guests')))
-        # cleanup
-        self.execute('DELETE X in_group G WHERE X eid %s, G name "guests"' % user.eid)
-        self.commit()
+        with self.admin_access.client_cnx() as cnx:
+            user = cnx.user
+            self.assertEqual(user.groups, set(('managers',)))
+            cnx.execute('SET X in_group G WHERE X eid %s, G name "guests"' % user.eid)
+            user = cnx.user
+            self.assertEqual(user.groups, set(('managers',)))
+            cnx.commit()
+            user = cnx.user
+            self.assertEqual(user.groups, set(('managers', 'guests')))
+            # cleanup
+            cnx.execute('DELETE X in_group G WHERE X eid %s, G name "guests"' % user.eid)
+            cnx.commit()
 
     def test_publish_validation_error(self):
-        req = self.request()
-        user = self.user()
-        eid = unicode(user.eid)
-        req.form = {
-            'eid':       eid,
-            '__type:'+eid:    'CWUser', '_cw_entity_fields:'+eid: 'login-subject',
-            'login-subject:'+eid:     '', # ERROR: no login specified
-             # just a sample, missing some necessary information for real life
-            '__errorurl': 'view?vid=edition...'
-            }
-        path, params = self.expect_redirect_handle_request(req, 'edit')
-        forminfo = req.session.data['view?vid=edition...']
-        eidmap = forminfo['eidmap']
-        self.assertEqual(eidmap, {})
-        values = forminfo['values']
-        self.assertEqual(values['login-subject:'+eid], '')
-        self.assertEqual(values['eid'], eid)
-        error = forminfo['error']
-        self.assertEqual(error.entity, user.eid)
-        self.assertEqual(error.errors['login-subject'], 'required field')
+        with self.admin_access.web_request() as req:
+            user = self.user()
+            eid = unicode(user.eid)
+            req.form = {
+                'eid':       eid,
+                '__type:'+eid:    'CWUser', '_cw_entity_fields:'+eid: 'login-subject',
+                'login-subject:'+eid:     '', # ERROR: no login specified
+                 # just a sample, missing some necessary information for real life
+                '__errorurl': 'view?vid=edition...'
+                }
+            path, params = self.expect_redirect_handle_request(req, 'edit')
+            forminfo = req.session.data['view?vid=edition...']
+            eidmap = forminfo['eidmap']
+            self.assertEqual(eidmap, {})
+            values = forminfo['values']
+            self.assertEqual(values['login-subject:'+eid], '')
+            self.assertEqual(values['eid'], eid)
+            error = forminfo['error']
+            self.assertEqual(error.entity, user.eid)
+            self.assertEqual(error.errors['login-subject'], 'required field')
 
 
     def test_validation_error_dont_loose_subentity_data_ctrl(self):
@@ -207,28 +208,28 @@ class ApplicationTC(CubicWebTC):
 
         error occurs on the web controller
         """
-        req = self.request()
-        # set Y before X to ensure both entities are edited, not only X
-        req.form = {'eid': ['Y', 'X'], '__maineid': 'X',
-                    '__type:X': 'CWUser', '_cw_entity_fields:X': 'login-subject',
-                    # missing required field
-                    'login-subject:X': u'',
-                    # but email address is set
-                    '__type:Y': 'EmailAddress', '_cw_entity_fields:Y': 'address-subject',
-                    'address-subject:Y': u'bougloup@logilab.fr',
-                    'use_email-object:Y': 'X',
-                    # necessary to get validation error handling
-                    '__errorurl': 'view?vid=edition...',
-                    }
-        path, params = self.expect_redirect_handle_request(req, 'edit')
-        forminfo = req.session.data['view?vid=edition...']
-        self.assertEqual(set(forminfo['eidmap']), set('XY'))
-        self.assertEqual(forminfo['eidmap']['X'], None)
-        self.assertIsInstance(forminfo['eidmap']['Y'], int)
-        self.assertEqual(forminfo['error'].entity, 'X')
-        self.assertEqual(forminfo['error'].errors,
-                          {'login-subject': 'required field'})
-        self.assertEqual(forminfo['values'], req.form)
+        with self.admin_access.web_request() as req:
+            # set Y before X to ensure both entities are edited, not only X
+            req.form = {'eid': ['Y', 'X'], '__maineid': 'X',
+                        '__type:X': 'CWUser', '_cw_entity_fields:X': 'login-subject',
+                        # missing required field
+                        'login-subject:X': u'',
+                        # but email address is set
+                        '__type:Y': 'EmailAddress', '_cw_entity_fields:Y': 'address-subject',
+                        'address-subject:Y': u'bougloup@logilab.fr',
+                        'use_email-object:Y': 'X',
+                        # necessary to get validation error handling
+                        '__errorurl': 'view?vid=edition...',
+                        }
+            path, params = self.expect_redirect_handle_request(req, 'edit')
+            forminfo = req.session.data['view?vid=edition...']
+            self.assertEqual(set(forminfo['eidmap']), set('XY'))
+            self.assertEqual(forminfo['eidmap']['X'], None)
+            self.assertIsInstance(forminfo['eidmap']['Y'], int)
+            self.assertEqual(forminfo['error'].entity, 'X')
+            self.assertEqual(forminfo['error'].errors,
+                              {'login-subject': 'required field'})
+            self.assertEqual(forminfo['values'], req.form)
 
 
     def test_validation_error_dont_loose_subentity_data_repo(self):
@@ -236,28 +237,28 @@ class ApplicationTC(CubicWebTC):
 
         error occurs on the repository
         """
-        req = self.request()
-        # set Y before X to ensure both entities are edited, not only X
-        req.form = {'eid': ['Y', 'X'], '__maineid': 'X',
-                    '__type:X': 'CWUser', '_cw_entity_fields:X': 'login-subject,upassword-subject',
-                    # already existent user
-                    'login-subject:X': u'admin',
-                    'upassword-subject:X': u'admin', 'upassword-subject-confirm:X': u'admin',
-                    '__type:Y': 'EmailAddress', '_cw_entity_fields:Y': 'address-subject',
-                    'address-subject:Y': u'bougloup@logilab.fr',
-                    'use_email-object:Y': 'X',
-                    # necessary to get validation error handling
-                    '__errorurl': 'view?vid=edition...',
-                    }
-        path, params = self.expect_redirect_handle_request(req, 'edit')
-        forminfo = req.session.data['view?vid=edition...']
-        self.assertEqual(set(forminfo['eidmap']), set('XY'))
-        self.assertIsInstance(forminfo['eidmap']['X'], int)
-        self.assertIsInstance(forminfo['eidmap']['Y'], int)
-        self.assertEqual(forminfo['error'].entity, forminfo['eidmap']['X'])
-        self.assertEqual(forminfo['error'].errors,
-                          {'login-subject': u'the value "admin" is already used, use another one'})
-        self.assertEqual(forminfo['values'], req.form)
+        with self.admin_access.web_request() as req:
+            # set Y before X to ensure both entities are edited, not only X
+            req.form = {'eid': ['Y', 'X'], '__maineid': 'X',
+                        '__type:X': 'CWUser', '_cw_entity_fields:X': 'login-subject,upassword-subject',
+                        # already existent user
+                        'login-subject:X': u'admin',
+                        'upassword-subject:X': u'admin', 'upassword-subject-confirm:X': u'admin',
+                        '__type:Y': 'EmailAddress', '_cw_entity_fields:Y': 'address-subject',
+                        'address-subject:Y': u'bougloup@logilab.fr',
+                        'use_email-object:Y': 'X',
+                        # necessary to get validation error handling
+                        '__errorurl': 'view?vid=edition...',
+                        }
+            path, params = self.expect_redirect_handle_request(req, 'edit')
+            forminfo = req.session.data['view?vid=edition...']
+            self.assertEqual(set(forminfo['eidmap']), set('XY'))
+            self.assertIsInstance(forminfo['eidmap']['X'], int)
+            self.assertIsInstance(forminfo['eidmap']['Y'], int)
+            self.assertEqual(forminfo['error'].entity, forminfo['eidmap']['X'])
+            self.assertEqual(forminfo['error'].errors,
+                              {'login-subject': u'the value "admin" is already used, use another one'})
+            self.assertEqual(forminfo['values'], req.form)
 
     def test_ajax_view_raise_arbitrary_error(self):
         class ErrorAjaxView(view.View):
@@ -266,17 +267,17 @@ class ApplicationTC(CubicWebTC):
                 raise Exception('whatever')
         with self.temporary_appobjects(ErrorAjaxView):
             with real_error_handling(self.app) as app:
-                req = self.request(vid='test.ajax.error')
-                req.ajax_request = True
-                page = app.handle_request(req, '')
+                with self.admin_access.web_request(vid='test.ajax.error') as req:
+                    req.ajax_request = True
+                    page = app.handle_request(req, '')
         self.assertEqual(httplib.INTERNAL_SERVER_ERROR,
                          req.status_out)
 
     def _test_cleaned(self, kwargs, injected, cleaned):
-        req = self.request(**kwargs)
-        page = self.app_handle_request(req, 'view')
-        self.assertNotIn(injected, page)
-        self.assertIn(cleaned, page)
+        with self.admin_access.web_request(**kwargs) as req:
+            page = self.app_handle_request(req, 'view')
+            self.assertNotIn(injected, page)
+            self.assertIn(cleaned, page)
 
     def test_nonregr_script_kiddies(self):
         """test against current script injection"""
@@ -295,18 +296,19 @@ class ApplicationTC(CubicWebTC):
         vreg = self.app.vreg
         # default value
         self.assertEqual(vreg.property_value('ui.language'), 'en')
-        self.execute('INSERT CWProperty X: X value "fr", X pkey "ui.language"')
-        self.assertEqual(vreg.property_value('ui.language'), 'en')
-        self.commit()
-        self.assertEqual(vreg.property_value('ui.language'), 'fr')
-        self.execute('SET X value "de" WHERE X pkey "ui.language"')
-        self.assertEqual(vreg.property_value('ui.language'), 'fr')
-        self.commit()
-        self.assertEqual(vreg.property_value('ui.language'), 'de')
-        self.execute('DELETE CWProperty X WHERE X pkey "ui.language"')
-        self.assertEqual(vreg.property_value('ui.language'), 'de')
-        self.commit()
-        self.assertEqual(vreg.property_value('ui.language'), 'en')
+        with self.admin_access.client_cnx() as cnx:
+            cnx.execute('INSERT CWProperty X: X value "fr", X pkey "ui.language"')
+            self.assertEqual(vreg.property_value('ui.language'), 'en')
+            cnx.commit()
+            self.assertEqual(vreg.property_value('ui.language'), 'fr')
+            cnx.execute('SET X value "de" WHERE X pkey "ui.language"')
+            self.assertEqual(vreg.property_value('ui.language'), 'fr')
+            cnx.commit()
+            self.assertEqual(vreg.property_value('ui.language'), 'de')
+            cnx.execute('DELETE CWProperty X WHERE X pkey "ui.language"')
+            self.assertEqual(vreg.property_value('ui.language'), 'de')
+            cnx.commit()
+            self.assertEqual(vreg.property_value('ui.language'), 'en')
 
     # authentication tests ####################################################
 
@@ -340,11 +342,12 @@ class ApplicationTC(CubicWebTC):
         self.assertEqual(len(self.open_sessions), 0)
 
     def test_login_by_email(self):
-        login = self.request().user.login
-        address = login + u'@localhost'
-        self.execute('INSERT EmailAddress X: X address %(address)s, U primary_email X '
-                     'WHERE U login %(login)s', {'address': address, 'login': login})
-        self.commit()
+        with self.admin_access.client_cnx() as cnx:
+            login = cnx.user.login
+            address = login + u'@localhost'
+            cnx.execute('INSERT EmailAddress X: X address %(address)s, U primary_email X '
+                        'WHERE U login %(login)s', {'address': address, 'login': login})
+            cnx.commit()
         # # option allow-email-login not set
         req, origsession = self.init_authentication('cookie')
         # req.form['__login'] = address
@@ -417,22 +420,22 @@ class ApplicationTC(CubicWebTC):
         self.assertEqual(0, len(self.open_sessions))
 
     def test_anonymized_request(self):
-        req = self.request()
-        self.assertEqual(self.admlogin, req.session.user.login)
-        # admin should see anon + admin
-        self.assertEqual(2, len(list(req.find_entities('CWUser'))))
-        with anonymized_request(req):
-            self.assertEqual('anon', req.session.login, 'anon')
-            # anon should only see anon user
-            self.assertEqual(1, len(list(req.find_entities('CWUser'))))
-        self.assertEqual(self.admlogin, req.session.login)
-        self.assertEqual(2, len(list(req.find_entities('CWUser'))))
+        with self.admin_access.web_request() as req:
+            self.assertEqual(self.admlogin, req.session.user.login)
+            # admin should see anon + admin
+            self.assertEqual(2, len(list(req.find_entities('CWUser'))))
+            with anonymized_request(req):
+                self.assertEqual('anon', req.session.login, 'anon')
+                # anon should only see anon user
+                self.assertEqual(1, len(list(req.find_entities('CWUser'))))
+            self.assertEqual(self.admlogin, req.session.login)
+            self.assertEqual(2, len(list(req.find_entities('CWUser'))))
 
     def test_non_regr_optional_first_var(self):
-        req = self.request()
-        # expect a rset with None in [0][0]
-        req.form['rql'] = 'rql:Any OV1, X WHERE X custom_workflow OV1?'
-        self.app_handle_request(req)
+        with self.admin_access.web_request() as req:
+            # expect a rset with None in [0][0]
+            req.form['rql'] = 'rql:Any OV1, X WHERE X custom_workflow OV1?'
+            self.app_handle_request(req)
 
 
 if __name__ == '__main__':
