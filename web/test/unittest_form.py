@@ -35,131 +35,138 @@ from cubicweb.web.views.formrenderers import FormRenderer
 class FieldsFormTC(CubicWebTC):
 
     def test_form_field_format(self):
-        form = FieldsForm(self.request(), None)
-        self.assertEqual(StringField().format(form), 'text/html')
-        self.execute('INSERT CWProperty X: X pkey "ui.default-text-format", X value "text/rest", X for_user U WHERE U login "admin"')
-        self.commit()
-        self.assertEqual(StringField().format(form), 'text/rest')
+        with self.admin_access.web_request() as req:
+            form = FieldsForm(req, None)
+            self.assertEqual(StringField().format(form), 'text/html')
+            req.cnx.execute('INSERT CWProperty X: X pkey "ui.default-text-format", X value "text/rest", X for_user U WHERE U login "admin"')
+            req.cnx.commit()
+            self.assertEqual(StringField().format(form), 'text/rest')
 
 
     def test_process_posted(self):
         class AForm(FieldsForm):
             anint = IntField()
             astring = StringField()
-        form = AForm(self.request(anint='1', astring='2', _cw_fields='anint,astring'))
-        self.assertEqual(form.process_posted(), {'anint': 1, 'astring': '2'})
-        form = AForm(self.request(anint='1a', astring='2b', _cw_fields='anint,astring'))
-        self.assertRaises(ValidationError, form.process_posted)
+        with self.admin_access.web_request(anint='1', astring='2', _cw_fields='anint,astring') as req:
+            form = AForm(req)
+            self.assertEqual(form.process_posted(), {'anint': 1, 'astring': '2'})
+        with self.admin_access.web_request(anint='1a', astring='2b', _cw_fields='anint,astring') as req:
+            form = AForm(req)
+            self.assertRaises(ValidationError, form.process_posted)
 
 
 class EntityFieldsFormTC(CubicWebTC):
 
-    def setUp(self):
-        super(EntityFieldsFormTC, self).setUp()
-        self.req = self.request()
-        self.entity = self.user(self.req)
-
     def test_form_field_choices(self):
-        b = self.req.create_entity('BlogEntry', title=u'di mascii code', content=u'a best-seller')
-        t = self.req.create_entity('Tag', name=u'x')
-        form1 = self.vreg['forms'].select('edition', self.req, entity=t)
-        choices = [reid for rview, reid in form1.field_by_name('tags', 'subject', t.e_schema).choices(form1)]
-        self.assertIn(unicode(b.eid), choices)
-        form2 = self.vreg['forms'].select('edition', self.req, entity=b)
-        choices = [reid for rview, reid in form2.field_by_name('tags', 'object', t.e_schema).choices(form2)]
-        self.assertIn(unicode(t.eid), choices)
+        with self.admin_access.web_request() as req:
+            b = req.create_entity('BlogEntry', title=u'di mascii code', content=u'a best-seller')
+            t = req.create_entity('Tag', name=u'x')
+            form1 = self.vreg['forms'].select('edition', req, entity=t)
+            choices = [reid for rview, reid in form1.field_by_name('tags', 'subject', t.e_schema).choices(form1)]
+            self.assertIn(unicode(b.eid), choices)
+            form2 = self.vreg['forms'].select('edition', req, entity=b)
+            choices = [reid for rview, reid in form2.field_by_name('tags', 'object', t.e_schema).choices(form2)]
+            self.assertIn(unicode(t.eid), choices)
 
-        b.cw_clear_all_caches()
-        t.cw_clear_all_caches()
-        self.execute('SET X tags Y WHERE X is Tag, Y is BlogEntry')
+            b.cw_clear_all_caches()
+            t.cw_clear_all_caches()
+            req.cnx.execute('SET X tags Y WHERE X is Tag, Y is BlogEntry')
 
-        choices = [reid for rview, reid in form1.field_by_name('tags', 'subject', t.e_schema).choices(form1)]
-        self.assertIn(unicode(b.eid), choices)
-        choices = [reid for rview, reid in form2.field_by_name('tags', 'object', t.e_schema).choices(form2)]
-        self.assertIn(unicode(t.eid), choices)
+            choices = [reid for rview, reid in form1.field_by_name('tags', 'subject', t.e_schema).choices(form1)]
+            self.assertIn(unicode(b.eid), choices)
+            choices = [reid for rview, reid in form2.field_by_name('tags', 'object', t.e_schema).choices(form2)]
+            self.assertIn(unicode(t.eid), choices)
 
     def test_form_field_choices_new_entity(self):
-        e = self.vreg['etypes'].etype_class('CWUser')(self.request())
-        form = self.vreg['forms'].select('edition', self.req, entity=e)
-        unrelated = [rview for rview, reid in form.field_by_name('in_group', 'subject').choices(form)]
-        # should be default groups but owners, i.e. managers, users, guests
-        self.assertEqual(unrelated, [u'guests', u'managers', u'users'])
+        with self.admin_access.web_request() as req:
+            e = self.vreg['etypes'].etype_class('CWUser')(req)
+            form = self.vreg['forms'].select('edition', req, entity=e)
+            unrelated = [rview for rview, reid in form.field_by_name('in_group', 'subject').choices(form)]
+            # should be default groups but owners, i.e. managers, users, guests
+            self.assertEqual(unrelated, [u'guests', u'managers', u'users'])
 
     def test_consider_req_form_params(self):
-        e = self.vreg['etypes'].etype_class('CWUser')(self.request())
-        e.eid = 'A'
-        form = EntityFieldsForm(self.request(login=u'toto'), None, entity=e)
-        field = StringField(name='login', role='subject', eidparam=True)
-        form.append_field(field)
-        form.build_context({})
-        self.assertEqual(field.widget.values(form, field), (u'toto',))
+        with self.admin_access.web_request() as req:
+            e = self.vreg['etypes'].etype_class('CWUser')(req)
+            e.eid = 'A'
+            with self.admin_access.web_request(login=u'toto') as toto_req:
+                form = EntityFieldsForm(toto_req, None, entity=e)
+                field = StringField(name='login', role='subject', eidparam=True)
+                form.append_field(field)
+                form.build_context({})
+                self.assertEqual(field.widget.values(form, field), (u'toto',))
 
     def test_linkto_field_duplication_inout(self):
-        e = self.vreg['etypes'].etype_class('CWUser')(self.request())
-        e.eid = 'A'
-        e._cw = self.req
-        geid = self.execute('CWGroup X WHERE X name "users"')[0][0]
-        self.req.form['__linkto'] = 'in_group:%s:subject' % geid
-        form = self.vreg['forms'].select('edition', self.req, entity=e)
-        form.content_type = 'text/html'
-        pageinfo = self._check_html(form.render(), form, template=None)
-        inputs = pageinfo.find_tag('select', False)
-        ok = False
-        for selectnode in pageinfo.matching_nodes('select', name='from_in_group-subject:A'):
-            for optionnode in selectnode:
-                self.assertEqual(optionnode.get('value'), str(geid))
-                self.assertEqual(ok, False)
-                ok = True
-        inputs = pageinfo.find_tag('input', False)
-        self.assertFalse(list(pageinfo.matching_nodes('input', name='__linkto')))
+        with self.admin_access.web_request() as req:
+            e = self.vreg['etypes'].etype_class('CWUser')(req)
+            e.eid = 'A'
+            e._cw = req
+            geid = req.cnx.execute('CWGroup X WHERE X name "users"')[0][0]
+            req.form['__linkto'] = 'in_group:%s:subject' % geid
+            form = self.vreg['forms'].select('edition', req, entity=e)
+            form.content_type = 'text/html'
+            pageinfo = self._check_html(form.render(), form, template=None)
+            inputs = pageinfo.find_tag('select', False)
+            ok = False
+            for selectnode in pageinfo.matching_nodes('select', name='from_in_group-subject:A'):
+                for optionnode in selectnode:
+                    self.assertEqual(optionnode.get('value'), str(geid))
+                    self.assertEqual(ok, False)
+                    ok = True
+            inputs = pageinfo.find_tag('input', False)
+            self.assertFalse(list(pageinfo.matching_nodes('input', name='__linkto')))
 
     def test_reledit_composite_field(self):
-        rset = self.execute('INSERT BlogEntry X: X title "cubicweb.org", X content "hop"')
-        form = self.vreg['views'].select('reledit', self.request(),
-                                         rset=rset, row=0, rtype='content')
-        data = form.render(row=0, rtype='content', formid='base', action='edit_rtype')
-        self.assertTrue('content_format' in data)
+        with self.admin_access.web_request() as req:
+            rset = req.execute('INSERT BlogEntry X: X title "cubicweb.org", X content "hop"')
+            form = self.vreg['views'].select('reledit', req,
+                                             rset=rset, row=0, rtype='content')
+            data = form.render(row=0, rtype='content', formid='base', action='edit_rtype')
+            self.assertIn('content_format', data)
 
 
     # form tests ##############################################################
 
     def test_form_inheritance(self):
-        class CustomChangeStateForm(ChangeStateForm):
-            hello = IntField(name='youlou')
-            creation_date = DateTimeField(widget=DateTimePicker)
-        form = CustomChangeStateForm(self.req, redirect_path='perdu.com',
-                                     entity=self.entity)
-        form.render(formvalues=dict(state=123, trcomment=u'',
-                                    trcomment_format=u'text/plain'))
+        with self.admin_access.web_request() as req:
+            class CustomChangeStateForm(ChangeStateForm):
+                hello = IntField(name='youlou')
+                creation_date = DateTimeField(widget=DateTimePicker)
+            form = CustomChangeStateForm(req, redirect_path='perdu.com',
+                                         entity=req.user)
+            form.render(formvalues=dict(state=123, trcomment=u'',
+                                        trcomment_format=u'text/plain'))
 
     def test_change_state_form(self):
-        form = ChangeStateForm(self.req, redirect_path='perdu.com',
-                               entity=self.entity)
-        form.render(formvalues=dict(state=123, trcomment=u'',
-                                    trcomment_format=u'text/plain'))
+        with self.admin_access.web_request() as req:
+            form = ChangeStateForm(req, redirect_path='perdu.com',
+                                   entity=req.user)
+            form.render(formvalues=dict(state=123, trcomment=u'',
+                                        trcomment_format=u'text/plain'))
 
     # fields tests ############################################################
 
-    def _render_entity_field(self, name, form):
+    def _render_entity_field(self, req, name, form):
         form.build_context({})
-        renderer = FormRenderer(self.req)
+        renderer = FormRenderer(req)
         return form.field_by_name(name, 'subject').render(form, renderer)
 
-    def _test_richtextfield(self, expected):
+    def _test_richtextfield(self, req, expected):
         class RTFForm(EntityFieldsForm):
             description = RichTextField(eidparam=True, role='subject')
-        state = self.vreg['etypes'].etype_class('State')(self.req)
+        state = self.vreg['etypes'].etype_class('State')(req)
         state.eid = 'S'
-        form = RTFForm(self.req, redirect_path='perdu.com', entity=state)
+        form = RTFForm(req, redirect_path='perdu.com', entity=state)
         # make it think it can use fck editor anyway
         form.field_by_name('description', 'subject').format = lambda form, field=None: 'text/html'
-        self.assertMultiLineEqual(self._render_entity_field('description', form),
+        self.assertMultiLineEqual(self._render_entity_field(req, 'description', form),
                               expected % {'eid': state.eid})
 
 
     def test_richtextfield_1(self):
-        self.req.use_fckeditor = lambda: False
-        self._test_richtextfield('''<select id="description_format-subject:%(eid)s" name="description_format-subject:%(eid)s" size="1" style="display: block" tabindex="1">
+        with self.admin_access.web_request() as req:
+            req.use_fckeditor = lambda: False
+            self._test_richtextfield(req, '''<select id="description_format-subject:%(eid)s" name="description_format-subject:%(eid)s" size="1" style="display: block" tabindex="1">
 <option value="text/cubicweb-page-template">text/cubicweb-page-template</option>
 <option selected="selected" value="text/html">text/html</option>
 <option value="text/plain">text/plain</option>
@@ -168,8 +175,9 @@ class EntityFieldsFormTC(CubicWebTC):
 
 
     def test_richtextfield_2(self):
-        self.req.use_fckeditor = lambda: True
-        self._test_richtextfield('<input name="description_format-subject:%(eid)s" type="hidden" value="text/html" /><textarea cols="80" cubicweb:type="wysiwyg" id="description-subject:%(eid)s" name="description-subject:%(eid)s" onkeyup="autogrow(this)" rows="2" tabindex="1"></textarea>')
+        with self.admin_access.web_request() as req:
+            req.use_fckeditor = lambda: True
+            self._test_richtextfield(req, '<input name="description_format-subject:%(eid)s" type="hidden" value="text/html" /><textarea cols="80" cubicweb:type="wysiwyg" id="description-subject:%(eid)s" name="description-subject:%(eid)s" onkeyup="autogrow(this)" rows="2" tabindex="1"></textarea>')
 
 
     def test_filefield(self):
@@ -180,10 +188,11 @@ class EntityFieldsFormTC(CubicWebTC):
                 encoding_field=StringField(name='data_encoding', max_length=20,
                                            eidparam=True, role='subject'),
                 eidparam=True, role='subject')
-        file = self.req.create_entity('File', data_name=u"pouet.txt", data_encoding=u'UTF-8',
-                               data=Binary('new widgets system'))
-        form = FFForm(self.req, redirect_path='perdu.com', entity=file)
-        self.assertMultiLineEqual(self._render_entity_field('data', form),
+        with self.admin_access.web_request() as req:
+            file = req.create_entity('File', data_name=u"pouet.txt", data_encoding=u'UTF-8',
+                                     data=Binary('new widgets system'))
+            form = FFForm(req, redirect_path='perdu.com', entity=file)
+            self.assertMultiLineEqual(self._render_entity_field(req, 'data', form),
                               '''<input id="data-subject:%(eid)s" name="data-subject:%(eid)s" tabindex="1" type="file" value="" />
 <a href="javascript: toggleVisibility(&#39;data-subject:%(eid)s-advanced&#39;)" title="show advanced fields"><img src="http://testing.fr/cubicweb/data/puce_down.png" alt="show advanced fields"/></a>
 <div id="data-subject:%(eid)s-advanced" class="hidden">
@@ -203,10 +212,11 @@ detach attached file''' % {'eid': file.eid})
                 encoding_field=StringField('data_encoding', max_length=20,
                                            eidparam=True, role='subject'),
                 eidparam=True, role='subject')
-        file = self.req.create_entity('File', data_name=u"pouet.txt", data_encoding=u'UTF-8',
-                               data=Binary('new widgets system'))
-        form = EFFForm(self.req, redirect_path='perdu.com', entity=file)
-        self.assertMultiLineEqual(self._render_entity_field('data', form),
+        with self.admin_access.web_request() as req:
+            file = req.create_entity('File', data_name=u"pouet.txt", data_encoding=u'UTF-8',
+                                     data=Binary('new widgets system'))
+            form = EFFForm(req, redirect_path='perdu.com', entity=file)
+            self.assertMultiLineEqual(self._render_entity_field(req, 'data', form),
                               '''<input id="data-subject:%(eid)s" name="data-subject:%(eid)s" tabindex="1" type="file" value="" />
 <a href="javascript: toggleVisibility(&#39;data-subject:%(eid)s-advanced&#39;)" title="show advanced fields"><img src="http://testing.fr/cubicweb/data/puce_down.png" alt="show advanced fields"/></a>
 <div id="data-subject:%(eid)s-advanced" class="hidden">
@@ -223,13 +233,14 @@ detach attached file
     def test_passwordfield(self):
         class PFForm(EntityFieldsForm):
             upassword = PasswordField(eidparam=True, role='subject')
-        form = PFForm(self.req, redirect_path='perdu.com', entity=self.entity)
-        self.assertMultiLineEqual(self._render_entity_field('upassword', form),
-                              '''<input id="upassword-subject:%(eid)s" name="upassword-subject:%(eid)s" tabindex="1" type="password" value="" />
+        with self.admin_access.web_request() as req:
+            form = PFForm(req, redirect_path='perdu.com', entity=req.user)
+            self.assertMultiLineEqual(self._render_entity_field(req, 'upassword', form),
+                                  '''<input id="upassword-subject:%(eid)s" name="upassword-subject:%(eid)s" tabindex="1" type="password" value="" />
 <br/>
 <input name="upassword-subject-confirm:%(eid)s" tabindex="1" type="password" value="" />
 &#160;
-<span class="emphasis">confirm password</span>''' % {'eid': self.entity.eid})
+<span class="emphasis">confirm password</span>''' % {'eid': req.user.eid})
 
 
     # def test_datefield(self):
