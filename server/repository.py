@@ -702,10 +702,11 @@ class Repository(object):
         user.cw_clear_relation_cache()
         self._sessions[session.sessionid] = session
         self.info('opened session %s for user %s', session.sessionid, login)
-        self.hm.call_hooks('session_open', session)
-        # commit session at this point in case write operation has been done
-        # during `session_open` hooks
-        session.commit()
+        with session.new_cnx() as cnx:
+            self.hm.call_hooks('session_open', cnx)
+            # commit connection at this point in case write operation has been
+            # done during `session_open` hooks
+            cnx.commit()
         return session.sessionid
 
     def execute(self, sessionid, rqlstring, args=None, build_descr=True,
@@ -825,11 +826,12 @@ class Repository(object):
         session = self._get_session(sessionid, setcnxset=True, txid=txid,
                                     checkshuttingdown=checkshuttingdown)
         # operation uncommited before close are rolled back before hook is called
-        session.rollback(free_cnxset=False)
-        self.hm.call_hooks('session_close', session)
-        # commit session at this point in case write operation has been done
-        # during `session_close` hooks
-        session.commit()
+        session._cnx.rollback(free_cnxset=False)
+        with session.new_cnx() as cnx:
+            self.hm.call_hooks('session_close', cnx)
+            # commit connection at this point in case write operation has been
+            # done during `session_close` hooks
+            cnx.commit()
         session.close()
         if threading.currentThread() in self._pyro_sessions:
             self._pyro_sessions[threading.currentThread()] = None
