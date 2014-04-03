@@ -37,14 +37,11 @@ def setUpModule(*args):
 
 class GuessFieldTC(CubicWebTC):
 
-    def setUp(self):
-        super(GuessFieldTC, self).setUp()
-        self.req = self.request()
-
     def test_state_fields(self):
-        title_field = guess_field(schema['State'], schema['name'], req=self.req)
-        self.assertIsInstance(title_field, StringField)
-        self.assertEqual(title_field.required, True)
+        with self.admin_access.web_request() as req:
+            title_field = guess_field(schema['State'], schema['name'], req=req)
+            self.assertIsInstance(title_field, StringField)
+            self.assertEqual(title_field.required, True)
 
 #         synopsis_field = guess_field(schema['State'], schema['synopsis'])
 #         self.assertIsInstance(synopsis_field, StringField)
@@ -52,18 +49,20 @@ class GuessFieldTC(CubicWebTC):
 #         self.assertEqual(synopsis_field.required, False)
 #         self.assertEqual(synopsis_field.help, 'an abstract for this state')
 
-        description_field = guess_field(schema['State'], schema['description'], req=self.req)
-        self.assertIsInstance(description_field, RichTextField)
-        self.assertEqual(description_field.required, False)
-        self.assertEqual(description_field.format_field, None)
+        with self.admin_access.web_request() as req:
+            description_field = guess_field(schema['State'], schema['description'], req=req)
+            self.assertIsInstance(description_field, RichTextField)
+            self.assertEqual(description_field.required, False)
+            self.assertEqual(description_field.format_field, None)
 
         # description_format_field = guess_field(schema['State'], schema['description_format'])
         # self.assertEqual(description_format_field, None)
 
-        description_format_field = guess_field(schema['State'], schema['description_format'],
-                                               req=self.req)
-        self.assertEqual(description_format_field.internationalizable, True)
-        self.assertEqual(description_format_field.sort, True)
+        with self.admin_access.web_request() as req:
+            description_format_field = guess_field(schema['State'], schema['description_format'],
+                                                   req=req)
+            self.assertEqual(description_format_field.internationalizable, True)
+            self.assertEqual(description_format_field.sort, True)
 
 #         wikiid_field = guess_field(schema['State'], schema['wikiid'])
 #         self.assertIsInstance(wikiid_field, StringField)
@@ -71,25 +70,29 @@ class GuessFieldTC(CubicWebTC):
 
 
     def test_cwuser_fields(self):
-        upassword_field = guess_field(schema['CWUser'], schema['upassword'], req=self.req)
-        self.assertIsInstance(upassword_field, StringField)
-        self.assertIsInstance(upassword_field.widget, PasswordInput)
-        self.assertEqual(upassword_field.required, True)
+        with self.admin_access.web_request() as req:
+            upassword_field = guess_field(schema['CWUser'], schema['upassword'], req=req)
+            self.assertIsInstance(upassword_field, StringField)
+            self.assertIsInstance(upassword_field.widget, PasswordInput)
+            self.assertEqual(upassword_field.required, True)
 
-        last_login_time_field = guess_field(schema['CWUser'], schema['last_login_time'], req=self.req)
-        self.assertIsInstance(last_login_time_field, DateTimeField)
-        self.assertEqual(last_login_time_field.required, False)
+        with self.admin_access.web_request() as req:
+            last_login_time_field = guess_field(schema['CWUser'], schema['last_login_time'], req=req)
+            self.assertIsInstance(last_login_time_field, DateTimeField)
+            self.assertEqual(last_login_time_field.required, False)
 
-        in_group_field = guess_field(schema['CWUser'], schema['in_group'], req=self.req)
-        self.assertIsInstance(in_group_field, RelationField)
-        self.assertEqual(in_group_field.required, True)
-        self.assertEqual(in_group_field.role, 'subject')
-        self.assertEqual(in_group_field.help, 'groups grant permissions to the user')
+        with self.admin_access.web_request() as req:
+            in_group_field = guess_field(schema['CWUser'], schema['in_group'], req=req)
+            self.assertIsInstance(in_group_field, RelationField)
+            self.assertEqual(in_group_field.required, True)
+            self.assertEqual(in_group_field.role, 'subject')
+            self.assertEqual(in_group_field.help, 'groups grant permissions to the user')
 
-        owned_by_field = guess_field(schema['CWUser'], schema['owned_by'], 'object', req=self.req)
-        self.assertIsInstance(owned_by_field, RelationField)
-        self.assertEqual(owned_by_field.required, False)
-        self.assertEqual(owned_by_field.role, 'object')
+        with self.admin_access.web_request() as req:
+            owned_by_field = guess_field(schema['CWUser'], schema['owned_by'], 'object', req=req)
+            self.assertIsInstance(owned_by_field, RelationField)
+            self.assertEqual(owned_by_field.required, False)
+            self.assertEqual(owned_by_field.role, 'object')
 
 
     def test_file_fields(self):
@@ -100,64 +103,68 @@ class GuessFieldTC(CubicWebTC):
         # data_name_field = guess_field(schema['File'], schema['data_name'])
         # self.assertEqual(data_name_field, None)
 
-        data_field = guess_field(schema['File'], schema['data'], req=self.req)
-        self.assertIsInstance(data_field, FileField)
-        self.assertEqual(data_field.required, True)
-        self.assertIsInstance(data_field.format_field, StringField)
-        self.assertIsInstance(data_field.encoding_field, StringField)
-        self.assertIsInstance(data_field.name_field, StringField)
+        with self.admin_access.web_request() as req:
+            data_field = guess_field(schema['File'], schema['data'], req=req)
+            self.assertIsInstance(data_field, FileField)
+            self.assertEqual(data_field.required, True)
+            self.assertIsInstance(data_field.format_field, StringField)
+            self.assertIsInstance(data_field.encoding_field, StringField)
+            self.assertIsInstance(data_field.name_field, StringField)
 
     def test_constraints_priority(self):
-        salesterm_field = guess_field(schema['Salesterm'], schema['reason'], req=self.req)
-        constraints = schema['reason'].rdef('Salesterm', 'String').constraints
-        self.assertEqual([c.__class__ for c in constraints],
-                          [SizeConstraint, StaticVocabularyConstraint])
-        self.assertIsInstance(salesterm_field, StringField)
-        self.assertIsInstance(salesterm_field.widget, Select)
+        with self.admin_access.web_request() as req:
+            salesterm_field = guess_field(schema['Salesterm'], schema['reason'], req=req)
+            constraints = schema['reason'].rdef('Salesterm', 'String').constraints
+            self.assertEqual([c.__class__ for c in constraints],
+                              [SizeConstraint, StaticVocabularyConstraint])
+            self.assertIsInstance(salesterm_field, StringField)
+            self.assertIsInstance(salesterm_field.widget, Select)
 
 
     def test_bool_field_base(self):
-        field = guess_field(schema['CWAttribute'], schema['indexed'], req=self.req)
-        self.assertIsInstance(field, BooleanField)
-        self.assertEqual(field.required, False)
-        self.assertIsInstance(field.widget, Radio)
-        self.assertEqual(field.vocabulary(mock(_cw=mock(_=unicode))),
-                          [(u'yes', '1'), (u'no', '')])
+        with self.admin_access.web_request() as req:
+            field = guess_field(schema['CWAttribute'], schema['indexed'], req=req)
+            self.assertIsInstance(field, BooleanField)
+            self.assertEqual(field.required, False)
+            self.assertIsInstance(field.widget, Radio)
+            self.assertEqual(field.vocabulary(mock(_cw=mock(_=unicode))),
+                              [(u'yes', '1'), (u'no', '')])
 
     def test_bool_field_explicit_choices(self):
-        field = guess_field(schema['CWAttribute'], schema['indexed'],
-                            choices=[(u'maybe', '1'), (u'no', '')], req=self.req)
-        self.assertIsInstance(field.widget, Radio)
-        self.assertEqual(field.vocabulary(mock(req=mock(_=unicode))),
-                          [(u'maybe', '1'), (u'no', '')])
+        with self.admin_access.web_request() as req:
+            field = guess_field(schema['CWAttribute'], schema['indexed'],
+                                choices=[(u'maybe', '1'), (u'no', '')], req=req)
+            self.assertIsInstance(field.widget, Radio)
+            self.assertEqual(field.vocabulary(mock(req=mock(_=unicode))),
+                              [(u'maybe', '1'), (u'no', '')])
 
 
 class MoreFieldsTC(CubicWebTC):
     def test_rtf_format_field(self):
-        req = self.request()
-        req.use_fckeditor = lambda: False
-        e = self.vreg['etypes'].etype_class('State')(req)
-        form = EntityFieldsForm(req, entity=e)
-        description_field = guess_field(schema['State'], schema['description'])
-        description_format_field = description_field.get_format_field(form)
-        self.assertEqual(description_format_field.internationalizable, True)
-        self.assertEqual(description_format_field.sort, True)
-        # unlike below, initial is bound to form.form_field_format
-        self.assertEqual(description_format_field.value(form), 'text/html')
-        self.execute('INSERT CWProperty X: X pkey "ui.default-text-format", X value "text/rest", X for_user U WHERE U login "admin"')
-        self.commit()
-        self.assertEqual(description_format_field.value(form), 'text/rest')
+        with self.admin_access.web_request() as req:
+            req.use_fckeditor = lambda: False
+            e = self.vreg['etypes'].etype_class('State')(req)
+            form = EntityFieldsForm(req, entity=e)
+            description_field = guess_field(schema['State'], schema['description'])
+            description_format_field = description_field.get_format_field(form)
+            self.assertEqual(description_format_field.internationalizable, True)
+            self.assertEqual(description_format_field.sort, True)
+            # unlike below, initial is bound to form.form_field_format
+            self.assertEqual(description_format_field.value(form), 'text/html')
+            req.cnx.execute('INSERT CWProperty X: X pkey "ui.default-text-format", X value "text/rest", X for_user U WHERE U login "admin"')
+            req.cnx.commit()
+            self.assertEqual(description_format_field.value(form), 'text/rest')
 
 
     def test_property_key_field(self):
         from cubicweb.web.views.cwproperties import PropertyKeyField
-        req = self.request()
-        field = PropertyKeyField(name='test')
-        e = self.vreg['etypes'].etype_class('CWProperty')(req)
-        renderer = self.vreg['formrenderers'].select('base', req)
-        form = EntityFieldsForm(req, entity=e)
-        form.formvalues = {}
-        field.render(form, renderer)
+        with self.admin_access.web_request() as req:
+            field = PropertyKeyField(name='test')
+            e = self.vreg['etypes'].etype_class('CWProperty')(req)
+            renderer = self.vreg['formrenderers'].select('base', req)
+            form = EntityFieldsForm(req, entity=e)
+            form.formvalues = {}
+            field.render(form, renderer)
 
 
 class CompoundFieldTC(CubicWebTC):
@@ -167,12 +174,14 @@ class CompoundFieldTC(CubicWebTC):
         children require it"""
         class AForm(FieldsForm):
             comp = CompoundField([IntField(), StringField()])
-        aform = AForm(self.request(), None)
-        self.assertFalse(aform.needs_multipart)
+        with self.admin_access.web_request() as req:
+            aform = AForm(req, None)
+            self.assertFalse(aform.needs_multipart)
         class MForm(FieldsForm):
             comp = CompoundField([IntField(), FileField()])
-        mform = MForm(self.request(), None)
-        self.assertTrue(mform.needs_multipart)
+        with self.admin_access.web_request() as req:
+            mform = MForm(req, None)
+            self.assertTrue(mform.needs_multipart)
 
 
 class UtilsTC(TestCase):
