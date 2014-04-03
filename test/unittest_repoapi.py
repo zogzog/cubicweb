@@ -1,4 +1,4 @@
-# copyright 2013-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2013-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -27,9 +27,8 @@ from cubicweb.repoapi import ClientConnection, connect, anonymous_cnx
 class REPOAPITC(CubicWebTC):
 
     def test_clt_cnx_basic_usage(self):
-        """Test that a client connection can be used to access the data base"""
-        cltcnx = ClientConnection(self.session)
-        with cltcnx:
+        """Test that a client connection can be used to access the database"""
+        with self.admin_access.client_cnx() as cltcnx:
             # (1) some RQL request
             rset = cltcnx.execute('Any X WHERE X is CWUser')
             self.assertTrue(rset)
@@ -43,19 +42,21 @@ class REPOAPITC(CubicWebTC):
                                                  X surname "babar"
                                   ''')
             self.assertTrue(rset)
-            # prepare test for implicite rollback
+            # prepare test for implicit rollback
             random_user = rset.get_entity(0, 0)
             random_user.cw_set(surname=u'celestine')
-        # implicite rollback on exit
-        rset = self.session.execute('''Any X WHERE X is CWUser,
+        # implicit rollback on exit
+        with self.admin_access.client_cnx() as cltcnx:
+            rset = cltcnx.execute('''Any X WHERE X is CWUser,
                                                  X surname "babar"
-                                    ''')
-        self.assertTrue(rset)
+                                  ''')
+            self.assertTrue(rset)
 
     def test_clt_cnx_life_cycle(self):
-        """Check that ClientConnection requires explicite open and  close
+        """Check that ClientConnection requires explicit open and close
         """
-        cltcnx = ClientConnection(self.session)
+        access = self.admin_access
+        cltcnx = ClientConnection(access._session)
         # connection not open yet
         with self.assertRaises(ProgrammingError):
             cltcnx.execute('Any X WHERE X is CWUser')
@@ -67,7 +68,7 @@ class REPOAPITC(CubicWebTC):
             cltcnx.execute('Any X WHERE X is CWUser')
 
     def test_connect(self):
-        """check that repoapi.connect works and return a usable connection"""
+        """check that repoapi.connect works and returns a usable connection"""
         clt_cnx = connect(self.repo, login='admin', password='gingkow')
         self.assertEqual('admin', clt_cnx.user.login)
         with clt_cnx:
@@ -76,7 +77,6 @@ class REPOAPITC(CubicWebTC):
 
     def test_anonymous_connect(self):
         """check that you can get anonymous connection when the data exist"""
-
         clt_cnx = anonymous_cnx(self.repo)
         self.assertEqual('anon', clt_cnx.user.login)
         with clt_cnx:
@@ -84,5 +84,6 @@ class REPOAPITC(CubicWebTC):
             self.assertTrue(rset)
 
 
-
-
+if __name__ == '__main__':
+    from logilab.common.testlib import unittest_main
+    unittest_main()
