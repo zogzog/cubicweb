@@ -215,19 +215,19 @@ class RepoAccess(object):
             repo._sessions[self._session.sessionid] = self._session
             self._session.user._cw = self._session
 
-    @ contextmanager
+    @contextmanager
     def repo_cnx(self):
         """Context manager returning a server side connection for the user"""
         with self._session.new_cnx() as cnx:
             yield cnx
 
-    @ contextmanager
+    @contextmanager
     def client_cnx(self):
         """Context manager returning a client side connection for the user"""
         with repoapi.ClientConnection(self._session) as cnx:
             yield cnx
 
-    @ contextmanager
+    @contextmanager
     def web_request(self, url=None, headers={}, method='GET', **kwargs):
         """Context manager returning a web request pre-linked to a client cnx
 
@@ -287,6 +287,7 @@ class CubicWebTC(TestCase):
         super(CubicWebTC, self).__init__(*args, **kwargs)
 
     # repository connection handling ###########################################
+
     def new_access(self, login):
         """provide a new RepoAccess object for a given user
 

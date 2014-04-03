@@ -382,6 +382,7 @@ def _open_only(func):
         return func(cnx, *args, **kwargs)
     return check_open
 
+
 class Connection(RequestSessionBase):
     """Repository Connection
 
@@ -1371,7 +1372,7 @@ class Session(RequestSessionBase): # XXX repoapi: stop being a
         return float(self._timestamp)
 
     @property
-    @deprecated('[3.19] session.id is deprecated. use session.sessionid')
+    @deprecated('[3.19] session.id is deprecated, use session.sessionid')
     def id(self):
         return self.sessionid
 

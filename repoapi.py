@@ -380,7 +380,7 @@ class ClientConnection(RequestSessionBase):
     def cursor(self):
         return self
 
-    @ property
+    @property
     @deprecated('[3.19] This is a repoapi.ClientConnection object not a dbapi one')
     def sessionid(self):
         return self._session.sessionid

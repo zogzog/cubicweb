@@ -78,6 +78,7 @@ class ClearGroupMap(hook.Hook):
         if not cls.__regid__ in repo.vreg['after_add_entity_hooks']:
             repo.vreg.register(ClearGroupMap)
 
+
 class ServerMigrationHelper(MigrationHelper):
     """specific migration helper for server side migration scripts,
     providing actions related to schema/data migration
