@@ -823,10 +823,11 @@ class Repository(object):
 
     def close(self, sessionid, txid=None, checkshuttingdown=True):
         """close the session with the given id"""
-        session = self._get_session(sessionid, setcnxset=True, txid=txid,
+        session = self._get_session(sessionid, txid=txid,
                                     checkshuttingdown=checkshuttingdown)
         # operation uncommited before close are rolled back before hook is called
-        session._cnx.rollback(free_cnxset=False)
+        if session._cnx._session_handled:
+            session._cnx.rollback(free_cnxset=False)
         with session.new_cnx() as cnx:
             self.hm.call_hooks('session_close', cnx)
             # commit connection at this point in case write operation has been

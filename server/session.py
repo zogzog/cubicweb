@@ -1654,7 +1654,8 @@ class Session(RequestSessionBase): # XXX repoapi: stop being a
         with self._lock:
             self._closed = True
         tracker.close()
-        self._rollback()
+        if self._cnx._session_handled:
+            self._rollback()
         self.debug('waiting for open connection of session: %s', self)
         timeout = 10
         pendings = tracker.wait(timeout)
