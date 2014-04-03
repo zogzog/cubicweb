@@ -597,6 +597,7 @@ class CubicWebTC(TestCase):
 
     # user / session management ###############################################
 
+    @deprecated('[3.19] explicitly use RepoAccess object in test instead')
     def user(self, req=None):
         """return the application schema"""
         if req is None:
