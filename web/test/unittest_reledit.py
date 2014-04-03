@@ -25,10 +25,11 @@ from cubicweb.web.views.uicfg import reledit_ctrl
 class ReleditMixinTC(object):
 
     def setup_database(self):
-        self.req = self.request()
-        self.proj = self.req.create_entity('Project', title=u'cubicweb-world-domination')
-        self.tick = self.req.create_entity('Ticket', title=u'write the code')
-        self.toto = self.req.create_entity('Personne', nom=u'Toto')
+        with self.admin_access.client_cnx() as cnx:
+            self.proj = cnx.create_entity('Project', title=u'cubicweb-world-domination').eid
+            self.tick = cnx.create_entity('Ticket', title=u'write the code').eid
+            self.toto = cnx.create_entity('Personne', nom=u'Toto').eid
+            cnx.commit()
 
 class ClickAndEditFormTC(ReleditMixinTC, CubicWebTC):
 
@@ -39,13 +40,16 @@ class ClickAndEditFormTC(ReleditMixinTC, CubicWebTC):
                    'composite_card11_2ttypes': """&lt;not specified&gt;""",
                    'concerns': """&lt;not specified&gt;"""}
 
-        for rschema, ttypes, role in self.proj.e_schema.relation_definitions(includefinal=True):
-            if rschema not in reledit:
-                continue
-            rtype = rschema.type
-            self.assertMultiLineEqual(reledit[rtype] % {'eid': self.proj.eid},
-                                      self.proj.view('reledit', rtype=rtype, role=role),
-                                      rtype)
+        with self.admin_access.web_request() as req:
+            proj = req.entity_from_eid(self.proj)
+
+            for rschema, ttypes, role in proj.e_schema.relation_definitions(includefinal=True):
+                if rschema not in reledit:
+                    continue
+                rtype = rschema.type
+                self.assertMultiLineEqual(reledit[rtype] % {'eid': self.proj},
+                                          proj.view('reledit', rtype=rtype, role=role),
+                                          rtype)
 
     def test_default_forms(self):
         self.skipTest('Need to check if this test should still run post reledit/doreledit merge')
@@ -175,8 +179,10 @@ class ClickAndEditFormUICFGTC(ReleditMixinTC, CubicWebTC):
 
     def setup_database(self):
         super(ClickAndEditFormUICFGTC, self).setup_database()
-        self.tick.cw_set(concerns=self.proj)
-        self.proj.cw_set(manager=self.toto)
+        with self.admin_access.client_cnx() as cnx:
+            cnx.execute('SET T concerns P WHERE T eid %(t)s, P eid %(p)s', {'t': self.tick, 'p': self.proj})
+            cnx.execute('SET P manager T WHERE P eid %(p)s, T eid %(t)s', {'p': self.proj, 't': self.toto})
+            cnx.commit()
 
     def test_with_uicfg(self):
         old_rctl = reledit_ctrl._tagdefs.copy()
@@ -198,13 +204,15 @@ class ClickAndEditFormUICFGTC(ReleditMixinTC, CubicWebTC):
             'composite_card11_2ttypes': """&lt;not specified&gt;""",
             'concerns': """<div id="concerns-object-%(eid)s-reledit" onmouseout="jQuery('#concerns-object-%(eid)s').addClass('hidden')" onmouseover="jQuery('#concerns-object-%(eid)s').removeClass('hidden')" class="releditField"><div id="concerns-object-%(eid)s-value" class="editableFieldValue"><a href="http://testing.fr/cubicweb/ticket/%(tick)s" title="">write the code</a></div><div id="concerns-object-%(eid)s" class="editableField hidden"><div id="concerns-object-%(eid)s-update" class="editableField" onclick="cw.reledit.loadInlineEditionForm(&#39;base&#39;, %(eid)s, &#39;concerns&#39;, &#39;object&#39;, &#39;concerns-object-%(eid)s&#39;, false, &#39;autolimited&#39;, &#39;edit_rtype&#39;);" title="click to edit this field"><img title="click to edit this field" src="http://testing.fr/cubicweb/data/pen_icon.png" alt="click to edit this field"/></div></div></div>"""
             }
-        for rschema, ttypes, role in self.proj.e_schema.relation_definitions(includefinal=True):
-            if rschema not in reledit:
-                continue
-            rtype = rschema.type
-            self.assertMultiLineEqual(reledit[rtype] % {'eid': self.proj.eid, 'toto': self.toto.eid, 'tick': self.tick.eid},
-                                  self.proj.view('reledit', rtype=rtype, role=role),
-                                  rtype)
+        with self.admin_access.web_request() as req:
+            proj = req.entity_from_eid(self.proj)
+            for rschema, ttypes, role in proj.e_schema.relation_definitions(includefinal=True):
+                if rschema not in reledit:
+                    continue
+                rtype = rschema.type
+                self.assertMultiLineEqual(reledit[rtype] % {'eid': self.proj, 'toto': self.toto, 'tick': self.tick},
+                                      proj.view('reledit', rtype=rtype, role=role),
+                                      rtype)
         reledit_ctrl.clear()
         reledit_ctrl._tagdefs.update(old_rctl)
 
