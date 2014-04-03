@@ -143,11 +143,11 @@ def ucsvreader(stream, encoding='utf-8', separator=',', quote='"',
             if not skip_empty or any(decoded):
                 yield decoded
     else:
-        # Skip first line
-        try:
-            row = it.next()
-        except csv.Error:
-            pass
+        if skipfirst:
+            try:
+                row = it.next()
+            except csv.Error:
+                pass
         # Safe version, that can cope with error in CSV file
         while True:
             try:
