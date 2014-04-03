@@ -1,4 +1,4 @@
-# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -344,7 +344,8 @@ class Entity(AppObject):
                 cls.warning('skipping fetch_attr %s defined in %s (not found in schema)',
                             attr, cls.__regid__)
                 continue
-            rdef = eschema.rdef(attr)
+            # XXX takefirst=True to remove warning triggered by ambiguous inlined relations
+            rdef = eschema.rdef(attr, takefirst=True)
             if not user.matching_groups(rdef.get_groups('read')):
                 continue
             if rschema.final or rdef.cardinality[0] in '?1':
@@ -793,8 +794,9 @@ class Entity(AppObject):
             # skip already defined relations
             if getattr(self, rschema.type):
                 continue
+            # XXX takefirst=True to remove warning triggered by ambiguous relations
+            rdef = self.e_schema.rdef(rschema, takefirst=True)
             # skip composite relation
-            rdef = self.e_schema.rdef(rschema)
             if rdef.composite:
                 continue
             # skip relation with card in ?1 else we either change the copied
@@ -813,7 +815,8 @@ class Entity(AppObject):
                 continue
             if rschema.type in skip_copy_for['object']:
                 continue
-            rdef = self.e_schema.rdef(rschema, 'object')
+            # XXX takefirst=True to remove warning triggered by ambiguous relations
+            rdef = self.e_schema.rdef(rschema, 'object', takefirst=True)
             # skip composite relation
             if rdef.composite:
                 continue
