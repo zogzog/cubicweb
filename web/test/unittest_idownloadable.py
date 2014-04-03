@@ -21,7 +21,7 @@ from functools import partial
 
 from logilab.common.testlib import unittest_main
 
-from cubicweb.devtools.testlib import CubicWebTC
+from cubicweb.devtools.testlib import CubicWebTC, real_error_handling
 from cubicweb import view
 from cubicweb.predicates import is_instance
 
@@ -136,11 +136,8 @@ class IDownloadableTC(CubicWebTC):
         with self.admin_access.web_request() as req:
             req.form['vid'] = 'download'
             req.form['eid'] = str(req.execute('CWGroup X WHERE X name "managers"')[0][0])
-            errhdlr = self.app.__dict__.pop('error_handler') # temporarily restore error handler
-            try:
+            with real_error_handling(self.app):
                 data = self.app_handle_request(req)
-            finally:
-                self.app.error_handler = errhdlr
             get = req.headers_out.getRawHeaders
             self.assertEqual(['text/html;charset=UTF-8'],
                              get('content-type'))
