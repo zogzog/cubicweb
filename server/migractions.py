@@ -310,7 +310,7 @@ class ServerMigrationHelper(MigrationHelper):
                         'schema': self.repo.get_schema(),
                         'cnx': self.cnx,
                         'fsschema': self.fs_schema,
-                        'session' : self.cnx,
+                        'session' : self.cnx._cnx,
                         'repo' : self.repo,
                         })
         return context
