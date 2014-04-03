@@ -507,11 +507,12 @@ class RewriteFullTC(CubicWebTC):
             args = {}
         querier = self.repo.querier
         union = querier.parse(rql)
-        querier.solutions(self.session, union, args)
-        querier._annotate(union)
-        plan = querier.plan_factory(union, args, self.session)
-        plan.preprocess(union)
-        return union
+        with self.admin_access.repo_cnx() as cnx:
+            querier.solutions(cnx, union, args)
+            querier._annotate(union)
+            plan = querier.plan_factory(union, args, cnx)
+            plan.preprocess(union)
+            return union
 
     def test_ambiguous_optional_same_exprs(self):
         """See #3013535"""
