@@ -63,23 +63,22 @@ class IDownloadableTC(CubicWebTC):
         self.addCleanup(partial(self.vreg.unregister, IDownloadableUser))
 
     def test_header_simple_case(self):
-        req = self.request()
-        req.form['vid'] = 'download'
-        req.form['eid'] = str(req.user.eid)
-        data = self.ctrl_publish(req, 'view')
-        get = req.headers_out.getRawHeaders
-        self.assertEqual(['attachment;filename="admin.txt"'],
-                         get('content-disposition'))
-        self.assertEqual(['text/plain;charset=ascii'],
-                         get('content-type'))
-        self.assertEqual('Babar is not dead!', data)
+        with self.admin_access.web_request() as req:
+            req.form['vid'] = 'download'
+            req.form['eid'] = str(req.user.eid)
+            data = self.ctrl_publish(req, 'view')
+            get = req.headers_out.getRawHeaders
+            self.assertEqual(['attachment;filename="admin.txt"'],
+                             get('content-disposition'))
+            self.assertEqual(['text/plain;charset=ascii'],
+                             get('content-type'))
+            self.assertEqual('Babar is not dead!', data)
 
     def test_header_with_space(self):
-        req = self.request()
-        self.create_user(req, login=u'c c l a', password='babar')
-        self.commit()
-        with self.login(u'c c l a', password='babar'):
-            req = self.request()
+        with self.admin_access.web_request() as req:
+            self.create_user(req, login=u'c c l a', password='babar')
+            req.cnx.commit()
+        with self.new_access(u'c c l a').web_request() as req:
             req.form['vid'] = 'download'
             req.form['eid'] = str(req.user.eid)
             data = self.ctrl_publish(req,'view')
@@ -91,11 +90,10 @@ class IDownloadableTC(CubicWebTC):
             self.assertEqual('Babar is not dead!', data)
 
     def test_header_with_space_and_comma(self):
-        req = self.request()
-        self.create_user(req, login=ur'c " l\ a', password='babar')
-        self.commit()
-        with self.login(ur'c " l\ a', password='babar'):
-            req = self.request()
+        with self.admin_access.web_request() as req:
+            self.create_user(req, login=ur'c " l\ a', password='babar')
+            req.cnx.commit()
+        with self.new_access(ur'c " l\ a').web_request() as req:
             req.form['vid'] = 'download'
             req.form['eid'] = str(req.user.eid)
             data = self.ctrl_publish(req,'view')
@@ -107,11 +105,10 @@ class IDownloadableTC(CubicWebTC):
             self.assertEqual('Babar is not dead!', data)
 
     def test_header_unicode_filename(self):
-        req = self.request()
-        self.create_user(req, login=u'cécilia', password='babar')
-        self.commit()
-        with self.login(u'cécilia', password='babar'):
-            req = self.request()
+        with self.admin_access.web_request() as req:
+            self.create_user(req, login=u'cécilia', password='babar')
+            req.cnx.commit()
+        with self.new_access(u'cécilia').web_request() as req:
             req.form['vid'] = 'download'
             req.form['eid'] = str(req.user.eid)
             self.ctrl_publish(req,'view')
@@ -120,12 +117,11 @@ class IDownloadableTC(CubicWebTC):
                              get('content-disposition'))
 
     def test_header_unicode_long_filename(self):
-        req = self.request()
         name = u'Bèrte_hô_grand_nôm_ça_va_totallement_déborder_de_la_limite_là'
-        self.create_user(req, login=name, password='babar')
-        self.commit()
-        with self.login(name, password='babar'):
-            req = self.request()
+        with self.admin_access.web_request() as req:
+            self.create_user(req, login=name, password='babar')
+            req.cnx.commit()
+        with self.new_access(name).web_request() as req:
             req.form['vid'] = 'download'
             req.form['eid'] = str(req.user.eid)
             self.ctrl_publish(req,'view')
@@ -137,20 +133,20 @@ class IDownloadableTC(CubicWebTC):
     def test_download_data_error(self):
         self.vreg.register(BrokenIDownloadableGroup)
         self.addCleanup(partial(self.vreg.unregister, BrokenIDownloadableGroup))
-        req = self.request()
-        req.form['vid'] = 'download'
-        req.form['eid'] = str(req.execute('CWGroup X WHERE X name "managers"')[0][0])
-        errhdlr = self.app.__dict__.pop('error_handler') # temporarily restore error handler
-        try:
-            data = self.app_handle_request(req)
-        finally:
-            self.app.error_handler = errhdlr
-        get = req.headers_out.getRawHeaders
-        self.assertEqual(['text/html;charset=UTF-8'],
-                         get('content-type'))
-        self.assertEqual(None,
-                         get('content-disposition'))
-        self.assertEqual(req.status_out, 500)
+        with self.admin_access.web_request() as req:
+            req.form['vid'] = 'download'
+            req.form['eid'] = str(req.execute('CWGroup X WHERE X name "managers"')[0][0])
+            errhdlr = self.app.__dict__.pop('error_handler') # temporarily restore error handler
+            try:
+                data = self.app_handle_request(req)
+            finally:
+                self.app.error_handler = errhdlr
+            get = req.headers_out.getRawHeaders
+            self.assertEqual(['text/html;charset=UTF-8'],
+                             get('content-type'))
+            self.assertEqual(None,
+                             get('content-disposition'))
+            self.assertEqual(req.status_out, 500)
 
 if __name__ == '__main__':
     unittest_main()
