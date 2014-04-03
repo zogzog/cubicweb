@@ -16,6 +16,17 @@ New features
 
 .. _CWEP-002: http://hg.logilab.org/review/cwep/file/tip/CWEP-002.rst
 
+
+API Changes
+-----------
+
+* ``ucsvreader()`` and ``ucsvreader_pb()`` from the ``dataimport`` module have
+  2 new keyword arguments ``delimiter`` and ``quotechar`` to replace the
+  ``separator`` and ``quote`` arguments respectively. This makes the API match
+  that of Python's ``csv.reader()``.  The old arguments are still supported
+  though deprecated.
+
+
 Deprecated Code Drops
 ----------------------
 

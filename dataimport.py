@@ -99,9 +99,16 @@ def count_lines(stream_or_filename):
     f.seek(0)
     return i+1
 
-def ucsvreader_pb(stream_or_path, encoding='utf-8', separator=',', quote='"',
-                  skipfirst=False, withpb=True, skip_empty=True):
+def ucsvreader_pb(stream_or_path, encoding='utf-8', delimiter=',', quotechar='"',
+                  skipfirst=False, withpb=True, skip_empty=True, separator=None,
+                  quote=None):
     """same as :func:`ucsvreader` but a progress bar is displayed as we iter on rows"""
+    if separator is not None:
+        delimiter = separator
+        warnings.warn("[3.20] 'separator' kwarg is deprecated, use 'delimiter' instead")
+    if quote is not None:
+        quotechar = quote
+        warnings.warn("[3.20] 'quote' kwarg is deprecated, use 'quotechar' instead")
     if isinstance(stream_or_path, basestring):
         if not osp.exists(stream_or_path):
             raise Exception("file doesn't exists: %s" % stream_or_path)
@@ -113,15 +120,16 @@ def ucsvreader_pb(stream_or_path, encoding='utf-8', separator=',', quote='"',
         rowcount -= 1
     if withpb:
         pb = shellutils.ProgressBar(rowcount, 50)
-    for urow in ucsvreader(stream, encoding, separator, quote,
+    for urow in ucsvreader(stream, encoding, delimiter, quotechar,
                            skipfirst=skipfirst, skip_empty=skip_empty):
         yield urow
         if withpb:
             pb.update()
     print ' %s rows imported' % rowcount
 
-def ucsvreader(stream, encoding='utf-8', separator=',', quote='"',
-               skipfirst=False, ignore_errors=False, skip_empty=True):
+def ucsvreader(stream, encoding='utf-8', delimiter=',', quotechar='"',
+               skipfirst=False, ignore_errors=False, skip_empty=True,
+               separator=None, quote=None):
     """A csv reader that accepts files with any encoding and outputs unicode
     strings
 
@@ -129,7 +137,13 @@ def ucsvreader(stream, encoding='utf-8', separator=',', quote='"',
     separators) will be skipped. This is useful for Excel exports which may be
     full of such lines.
     """
-    it = iter(csv.reader(stream, delimiter=separator, quotechar=quote))
+    if separator is not None:
+        delimiter = separator
+        warnings.warn("[3.20] 'separator' kwarg is deprecated, use 'delimiter' instead")
+    if quote is not None:
+        quotechar = quote
+        warnings.warn("[3.20] 'quote' kwarg is deprecated, use 'quotechar' instead")
+    it = iter(csv.reader(stream, delimiter=delimiter, quotechar=quotechar))
     if not ignore_errors:
         if skipfirst:
             it.next()
