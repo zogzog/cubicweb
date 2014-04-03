@@ -40,7 +40,7 @@ from logilab.common.deprecation import deprecated, class_deprecated
 from logilab.common.shellutils import getlogin
 
 from cubicweb import (ValidationError, NoSelectableObject, AuthenticationError,
-                      ProgrammingError)
+                      ProgrammingError, BadConnectionId)
 from cubicweb import cwconfig, devtools, web, server, repoapi
 from cubicweb.utils import json
 from cubicweb.sobjects import notification
@@ -297,7 +297,10 @@ class CubicWebTC(TestCase):
 
     def _close_access(self):
         while self._open_access:
-            self._open_access.pop().close()
+            try:
+                self._open_access.pop().close()
+            except BadConnectionId:
+                continue # already closed
 
     @deprecated('[3.19] explicitly use RepoAccess object in test instead')
     def set_cnx(self, cnx):
@@ -552,6 +555,7 @@ class CubicWebTC(TestCase):
         except Exception as ex:
             self.__class__._repo_init_failed = ex
             raise
+        self.addCleanup(self._close_access)
         resume_tracing()
         self.setup_database()
         self._admin_clt_cnx.commit()
