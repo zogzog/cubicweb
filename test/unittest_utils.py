@@ -229,11 +229,11 @@ class JSONEncoderTC(TestCase):
 class HTMLHeadTC(CubicWebTC):
 
     def htmlhead(self, datadir_url):
-        req = self.request()
-        base_url = u'http://test.fr/data/'
-        req.datadir_url = base_url
-        head = HTMLHead(req)
-        return head
+        with self.admin_access.web_request() as req:
+            base_url = u'http://test.fr/data/'
+            req.datadir_url = base_url
+            head = HTMLHead(req)
+            return head
 
     def test_concat_urls(self):
         base_url = u'http://test.fr/data/'
