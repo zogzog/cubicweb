@@ -334,7 +334,6 @@ class SimpleAccessHeadersTC(_BaseAccessHeadersTC):
     def test_noorigin(self):
         with self.options(**{alloworig: '*'}):
             with self.admin_access.web_request() as req:
-                req = self.request()
                 data = self.app_handle_request(req)
                 self.check_no_cors(req)
 
@@ -412,7 +411,6 @@ class PreflightAccessHeadersTC(_BaseAccessHeadersTC):
     def test_noorigin(self):
         with self.options(**{alloworig: '*'}):
             with self.admin_access.web_request(method='OPTIONS') as req:
-                req = self.request()
                 data = self.app_handle_request(req)
                 self.check_no_cors(req)
 
