@@ -141,7 +141,7 @@ def ucsvreader(stream, encoding='utf-8', separator=',', quote='"',
         for row in it:
             decoded = [item.decode(encoding) for item in row]
             if not skip_empty or any(decoded):
-                yield [item.decode(encoding) for item in row]
+                yield decoded
     else:
         # Skip first line
         try:
