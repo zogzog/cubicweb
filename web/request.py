@@ -122,19 +122,9 @@ class _CubicWebRequestBase(RequestSessionBase):
         self.setup_params(form)
         #: received body
         self.content = StringIO()
-        # use header to set default language (may ne overwriten by user one later)
-        if vreg.config.get('language-negociation', False):
-            # http negociated language
-            accepted_languages = self.header_accept_language()
-        else:
-            accepted_languages = ()
-        for lang in accepted_languages:
-            if lang in self.translations:
-                self.set_language(lang)
-                break
-        else:
-            self.set_default_language(vreg)
-        # 3. default language
+        # set up language based on request headers or site default (we don't
+        # have a user yet, and might not get one)
+        self.set_user_language(None)
         #: dictionary that may be used to store request data that has to be
         #: shared among various components used to publish the request (views,
         #: controller, application...)
@@ -986,6 +976,25 @@ class _CubicWebRequestBase(RequestSessionBase):
     def html_content_type(self):
         return 'text/html'
 
+    def set_user_language(self, user):
+        vreg = self.vreg
+        if user is not None:
+            try:
+                # 1. user-specified language
+                lang = vreg.typed_value('ui.language', user.properties['ui.language'])
+                self.set_language(lang)
+                return
+            except KeyError:
+                pass
+        if vreg.config.get('language-negociation', False):
+            # 2. http accept-language
+            for lang in self.header_accept_language():
+                if lang in self.translations:
+                    self.set_language(lang)
+                    return
+        # 3. site's default language
+        self.set_default_language(vreg)
+
 
 class DBAPICubicWebRequestBase(_CubicWebRequestBase, DBAPIRequest):
 
@@ -995,11 +1004,7 @@ class DBAPICubicWebRequestBase(_CubicWebRequestBase, DBAPIRequest):
         """
         super(CubicWebRequestBase, self).set_session(session)
         # set request language
-        user_lang = self.user.properties.get('ui.language')
-        if user_lang is not None:
-            lang = self.vreg.typed_value('ui.language', user_lang)
-            self.set_language(lang)
-
+        self.set_user_language(session.user)
 
 
 def _cnx_func(name):
@@ -1030,12 +1035,7 @@ class ConnectionCubicWebRequestBase(_CubicWebRequestBase):
         self.cnx = cnx
         self.session = cnx._session
         self._set_user(cnx.user)
-        # set user language
-        user_lang = self.user.properties.get('ui.language')
-        if user_lang is not None:
-            lang = self.vreg.typed_value('ui.language', user_lang)
-            self.set_language(lang)
-
+        self.set_user_language(cnx.user)
 
     def execute(self, *args, **kwargs):
         rset = self.cnx.execute(*args, **kwargs)

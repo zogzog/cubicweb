@@ -92,6 +92,16 @@ class FileUploadTC(CubicWebServerTC):
         self.assertEqual(webreq.status_code, 200)
         self.assertDictEqual(expect, loads(webreq.content))
 
+class LanguageTC(CubicWebServerTC):
+
+    def test_language_neg(self):
+        headers = {'Accept-Language': 'fr'}
+        webreq = self.web_request(headers=headers)
+        self.assertIn('lang="fr"', webreq.read())
+        headers = {'Accept-Language': 'en'}
+        webreq = self.web_request(headers=headers)
+        self.assertIn('lang="en"', webreq.read())
+
 
 if __name__ == '__main__':
     unittest_main()
