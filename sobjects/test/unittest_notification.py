@@ -1,5 +1,5 @@
 # -*- coding: iso-8859-1 -*-
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -16,9 +16,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""
 
-"""
 from socket import gethostname
 
 from logilab.common.testlib import unittest_main, TestCase
@@ -63,33 +61,34 @@ class MessageIdTC(TestCase):
 class NotificationTC(CubicWebTC):
 
     def test_recipients_finder(self):
-        urset = self.execute('CWUser X WHERE X login "admin"')
-        self.execute('INSERT EmailAddress X: X address "admin@logilab.fr", U primary_email X '
-                     'WHERE U eid %(x)s', {'x': urset[0][0]})
-        self.execute('INSERT CWProperty X: X pkey "ui.language", X value "fr", X for_user U '
-                     'WHERE U eid %(x)s', {'x': urset[0][0]})
-        self.commit() # commit so that admin get its properties updated
-        finder = self.vreg['components'].select('recipients_finder',
-                                                self.request(), rset=urset)
-        self.set_option('default-recipients-mode', 'none')
-        self.assertEqual(finder.recipients(), [])
-        self.set_option('default-recipients-mode', 'users')
-        self.assertEqual(finder.recipients(), [(u'admin@logilab.fr', 'fr')])
-        self.set_option('default-recipients-mode', 'default-dest-addrs')
-        self.set_option('default-dest-addrs', 'abcd@logilab.fr, efgh@logilab.fr')
-        self.assertEqual(finder.recipients(), [('abcd@logilab.fr', 'en'), ('efgh@logilab.fr', 'en')])
+        with self.admin_access.web_request() as req:
+            urset = req.execute('CWUser X WHERE X login "admin"')
+            req.execute('INSERT EmailAddress X: X address "admin@logilab.fr", U primary_email X '
+                        'WHERE U eid %(x)s', {'x': urset[0][0]})
+            req.execute('INSERT CWProperty X: X pkey "ui.language", X value "fr", X for_user U '
+                        'WHERE U eid %(x)s', {'x': urset[0][0]})
+            req.cnx.commit() # commit so that admin get its properties updated
+            finder = self.vreg['components'].select('recipients_finder',
+                                                    req, rset=urset)
+            self.set_option('default-recipients-mode', 'none')
+            self.assertEqual(finder.recipients(), [])
+            self.set_option('default-recipients-mode', 'users')
+            self.assertEqual(finder.recipients(), [(u'admin@logilab.fr', 'fr')])
+            self.set_option('default-recipients-mode', 'default-dest-addrs')
+            self.set_option('default-dest-addrs', 'abcd@logilab.fr, efgh@logilab.fr')
+            self.assertEqual(finder.recipients(), [('abcd@logilab.fr', 'en'), ('efgh@logilab.fr', 'en')])
 
     def test_status_change_view(self):
-        req = self.request()
-        u = self.create_user(req, 'toto')
-        iwfable = u.cw_adapt_to('IWorkflowable')
-        iwfable.fire_transition('deactivate', comment=u'yeah')
-        self.assertFalse(MAILBOX)
-        self.commit()
-        self.assertEqual(len(MAILBOX), 1)
-        email = MAILBOX[0]
-        self.assertEqual(email.content,
-                          '''
+        with self.admin_access.web_request() as req:
+            u = self.create_user(req, 'toto')
+            iwfable = u.cw_adapt_to('IWorkflowable')
+            iwfable.fire_transition('deactivate', comment=u'yeah')
+            self.assertFalse(MAILBOX)
+            req.cnx.commit()
+            self.assertEqual(len(MAILBOX), 1)
+            email = MAILBOX[0]
+            self.assertEqual(email.content,
+                             '''
 admin changed status from <activated> to <deactivated> for entity
 'toto'
 
@@ -97,8 +96,8 @@ yeah
 
 url: http://testing.fr/cubicweb/cwuser/toto
 ''')
-        self.assertEqual(email.subject,
-                         'status changed CWUser #%s (admin)' % u.eid)
+            self.assertEqual(email.subject,
+                             'status changed CWUser #%s (admin)' % u.eid)
 
 if __name__ == '__main__':
     unittest_main()
