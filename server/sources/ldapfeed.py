@@ -252,7 +252,7 @@ You can set multiple groups by separating them by a comma.',
         except Exception:
             self.error('while trying to authenticate %s', user, exc_info=True)
             raise AuthenticationError()
-        eid = self.repo.extid2eid(self, user['dn'], 'CWUser', session=cnx, insert=False)
+        eid = self.repo.extid2eid(self, user['dn'], 'CWUser', cnx, insert=False)
         if eid < 0:
             # user has been moved away from this source
             raise AuthenticationError()

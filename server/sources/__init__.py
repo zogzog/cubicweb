@@ -451,7 +451,7 @@ class AbstractSource(object):
 
 
     @deprecated('[3.13] use extid2eid(source, value, etype, session, **kwargs)')
-    def extid2eid(self, value, etype, session=None, **kwargs):
+    def extid2eid(self, value, etype, session, **kwargs):
         return self.repo.extid2eid(self, value, etype, session, **kwargs)
 
 

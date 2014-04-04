@@ -1029,7 +1029,7 @@ class Repository(object):
             args[key] = int(args[key])
         return tuple(cachekey)
 
-    def extid2eid(self, source, extid, etype, session=None, insert=True,
+    def extid2eid(self, source, extid, etype, session, insert=True,
                   complete=True, commit=True, sourceparams=None):
         """Return eid from a local id. If the eid is a negative integer, that
         means the entity is known but has been copied back to the system source
@@ -1058,15 +1058,10 @@ class Repository(object):
         except KeyError:
             pass
         free_cnxset = False
-        if session is None:
-            session = self.internal_session()
-            free_cnxset = True
         eid = self.system_source.extid2eid(session, extid)
         if eid is not None:
             self._extid_cache[extid] = eid
             self._type_source_cache[eid] = (etype, extid, source.uri)
-            if free_cnxset:
-                session.free_cnxset()
             return eid
         if not insert:
             return
