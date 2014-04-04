@@ -1748,10 +1748,6 @@ class InternalSession(Session):
         super(InternalSession, self).__init__(InternalManager(), repo, cnxprops,
                                               _id='internal')
         self.user._cw = self # XXX remove when "vreg = user._cw.vreg" hack in entity.py is gone
-        if not safe:
-            self.disable_hook_categories('integrity')
-        self.disable_hook_categories('security')
-        self._cnx.ctx_count += 1
 
     def __enter__(self):
         return self

@@ -925,7 +925,11 @@ class Repository(object):
         session once the job's done, else you'll leak connections set up to the
         time where no one is available, causing irremediable freeze...
         """
-        session = InternalSession(self, cnxprops, safe)
+        session = InternalSession(self, cnxprops)
+        if not safe:
+            session.disable_hook_categories('integrity')
+        session.disable_hook_categories('security')
+        session._cnx.ctx_count += 1
         session.set_cnxset()
         return session
 
@@ -942,7 +946,8 @@ class Repository(object):
         """
         with InternalSession(self) as session:
             with session.new_cnx() as cnx:
-                yield cnx
+                with cnx.allow_all_hooks_but('security'):
+                    yield cnx
 
 
     def _get_session(self, sessionid, setcnxset=False, txid=None,
