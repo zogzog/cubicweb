@@ -1041,22 +1041,22 @@ class Repository(object):
                         cnx.pending_operations = pending_operations
                 raise
 
-    def add_info(self, session, entity, source, extid=None):
+    def add_info(self, cnx, entity, source, extid=None):
         """add type and source info for an eid into the system table,
         and index the entity with the full text index
         """
         # begin by inserting eid/type/source/extid into the entities table
-        hook.CleanupNewEidsCacheOp.get_instance(session).add_data(entity.eid)
-        self.system_source.add_info(session, entity, source, extid)
+        hook.CleanupNewEidsCacheOp.get_instance(cnx).add_data(entity.eid)
+        self.system_source.add_info(cnx, entity, source, extid)
 
-    def _delete_cascade_multi(self, session, entities):
+    def _delete_cascade_multi(self, cnx, entities):
         """same as _delete_cascade but accepts a list of entities with
         the same etype and belonging to the same source.
         """
-        pendingrtypes = session.transaction_data.get('pendingrtypes', ())
+        pendingrtypes = cnx.transaction_data.get('pendingrtypes', ())
         # delete remaining relations: if user can delete the entity, he can
         # delete all its relations without security checking
-        with session.security_enabled(read=False, write=False):
+        with cnx.security_enabled(read=False, write=False):
             in_eids = ','.join([str(_e.eid) for _e in entities])
             for rschema, _, role in entities[0].e_schema.relation_definitions():
                 if rschema.rule:
@@ -1071,7 +1071,7 @@ class Repository(object):
                 else:
                     rql = 'DELETE Y %s X WHERE X eid IN (%s)' % (rtype, in_eids)
                 try:
-                    session.execute(rql, build_descr=False)
+                    cnx.execute(rql, build_descr=False)
                 except ValidationError:
                     raise
                 except Unauthorized:

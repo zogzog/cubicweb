@@ -173,7 +173,7 @@ class FakeRepo(object):
     def internal_session(self):
         return FakeSession(self)
 
-    def extid2eid(self, source, extid, etype, session, insert=True):
+    def extid2eid(self, source, extid, etype, cnx, insert=True):
         try:
             return self.extids[extid]
         except KeyError:
@@ -181,10 +181,10 @@ class FakeRepo(object):
                 return None
             self._count += 1
             eid = self._count
-            entity = source.before_entity_insertion(session, extid, etype, eid)
+            entity = source.before_entity_insertion(cnx, extid, etype, eid)
             self.extids[extid] = eid
             self.eids[eid] = extid
-            source.after_entity_insertion(session, extid, entity)
+            source.after_entity_insertion(cnx, extid, entity)
             return eid
 
 
