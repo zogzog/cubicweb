@@ -1021,7 +1021,7 @@ class Repository(object):
         return tuple(cachekey)
 
     def extid2eid(self, source, extid, etype, session, insert=True,
-                  commit=True, sourceparams=None):
+                  sourceparams=None):
         """Return eid from a local id. If the eid is a negative integer, that
         means the entity is known but has been copied back to the system source
         hence should be ignored.
@@ -1048,7 +1048,6 @@ class Repository(object):
             return self._extid_cache[extid]
         except KeyError:
             pass
-        free_cnxset = False
         eid = self.system_source.extid2eid(session, extid)
         if eid is not None:
             self._extid_cache[extid] = eid
@@ -1059,12 +1058,6 @@ class Repository(object):
         # no link between extid and eid, create one using an internal session
         # since the current session user may not have required permissions to
         # do necessary stuff and we don't want to commit user session.
-        #
-        # Moreover, even if session is already an internal session but is
-        # processing a commit, we have to use another one
-        if not session.is_internal_session:
-            session = self.internal_session()
-            free_cnxset = True
         try:
             eid = self.system_source.create_eid(session)
             self._extid_cache[extid] = eid
@@ -1080,22 +1073,17 @@ class Repository(object):
             source.after_entity_insertion(session, extid, entity, sourceparams)
             if source.should_call_hooks:
                 self.hm.call_hooks('after_add_entity', session, entity=entity)
-            if commit or free_cnxset:
-                session.commit(free_cnxset)
             return eid
         except Exception:
-            if commit or free_cnxset:
-                session.rollback(free_cnxset)
-            else:
-                # XXX do some cleanup manually so that the transaction has a
-                # chance to be commited, with simply this entity discarded
-                self._extid_cache.pop(extid, None)
-                self._type_source_cache.pop(eid, None)
-                if 'entity' in locals():
-                    hook.CleanupDeletedEidsCacheOp.get_instance(session).add_data(entity.eid)
-                    self.system_source.delete_info_multi(session, [entity])
-                    if source.should_call_hooks:
-                        session._cnx.pending_operations = pending_operations
+            # XXX do some cleanup manually so that the transaction has a
+            # chance to be commited, with simply this entity discarded
+            self._extid_cache.pop(extid, None)
+            self._type_source_cache.pop(eid, None)
+            if 'entity' in locals():
+                hook.CleanupDeletedEidsCacheOp.get_instance(session).add_data(entity.eid)
+                self.system_source.delete_info_multi(session, [entity])
+                if source.should_call_hooks:
+                    session._cnx.pending_operations = pending_operations
             raise
 
     def add_info(self, session, entity, source, extid=None):
