@@ -60,13 +60,11 @@ class UpdateFeedsStartupHook(hook.Hook):
                     or not repo.config.source_enabled(source)
                     or not source.config['synchronize']):
                     continue
-                session = repo.internal_session(safe=True)
-                try:
-                    source.pull_data(session)
-                except Exception as exc:
-                    session.exception('while trying to update feed %s', source)
-                finally:
-                    session.close()
+                with repo.internal_connection() as cnx:
+                    try:
+                        source.pull_data(cnx)
+                    except Exception as exc:
+                        cnx.exception('while trying to update feed %s', source)
         self.repo.looping_task(60, update_feeds, self.repo)
 
 
