@@ -29,10 +29,9 @@ class SupervisingTC(CubicWebTC):
     def setup_database(self):
         with self.admin_access.client_cnx() as cnx:
             cnx.create_entity('Card', title=u"une news !", content=u"cubicweb c'est beau")
-            cnx.create_entity('Card', title=u"une autre news !", content=u"cubicweb c'est beau")
+            card = cnx.create_entity('Card', title=u"une autre news !", content=u"cubicweb c'est beau")
             cnx.create_entity('Bookmark', title=u"un signet !", path=u"view?vid=index")
-            cnx.create_entity('Comment', content=u"Yo !")
-            cnx.execute('SET C comments B WHERE B title "une autre news !", C content "Yo !"')
+            cnx.create_entity('Comment', content=u"Yo !", comments=card)
             cnx.commit()
         self.vreg.config.global_set_option('supervising-addrs', 'test@logilab.fr')
 
