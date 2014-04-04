@@ -514,7 +514,7 @@ class EntityTC(CubicWebTC):
             req.execute('SET X tags Y WHERE X is Tag, Y is Personne')
             e = req.execute('Any X WHERE X is Tag').get_entity(0, 0)
             unrelated = [r[0] for r in e.unrelated('tags', 'Personne', 'subject')]
-            self.assertFalse(p.eid in unrelated)
+            self.assertNotIn(p.eid, unrelated)
 
     def test_unrelated_limit(self):
         with self.admin_access.web_request() as req:
@@ -694,7 +694,7 @@ du :eid:`1:*ReST*`'''
             p2 = req.create_entity('Personne', nom=u'toto')
             req.execute('SET X evaluee Y WHERE X nom "di mascio", Y nom "toto"')
             self.assertEqual(p1.evaluee[0].nom, "toto")
-            self.assertTrue(not p1.reverse_evaluee)
+            self.assertFalse(p1.reverse_evaluee)
 
     def test_complete_relation(self):
         with self.admin_access.repo_cnx() as session:
@@ -703,7 +703,7 @@ du :eid:`1:*ReST*`'''
                 'WHERE U login "admin", S1 name "activated", S2 name "deactivated"')[0][0]
             trinfo = session.execute('Any X WHERE X eid %(x)s', {'x': eid}).get_entity(0, 0)
             trinfo.complete()
-            self.assertTrue(isinstance(trinfo.cw_attr_cache['creation_date'], datetime))
+            self.assertIsInstance(trinfo.cw_attr_cache['creation_date'], datetime)
             self.assertTrue(trinfo.cw_relation_cached('from_state', 'subject'))
             self.assertTrue(trinfo.cw_relation_cached('to_state', 'subject'))
             self.assertTrue(trinfo.cw_relation_cached('wf_info_for', 'subject'))
@@ -714,7 +714,7 @@ du :eid:`1:*ReST*`'''
             user = req.execute('CWUser X WHERE X login "admin"').get_entity(0, 0)
             state = user.in_state[0]
             samestate = req.execute('State X WHERE X name "activated"').get_entity(0, 0)
-            self.assertTrue(state is samestate)
+            self.assertIs(state, samestate)
 
     def test_rest_path(self):
         with self.admin_access.web_request() as req:
