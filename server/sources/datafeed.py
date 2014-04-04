@@ -322,7 +322,7 @@ class DataFeedParser(AppObject):
             uri = uri.encode('utf-8')
         try:
             eid = session.repo.extid2eid(source, str(uri), etype, session,
-                                         complete=False, commit=False,
+                                         commit=False,
                                          sourceparams=sourceparams)
         except ValidationError as ex:
             # XXX use critical so they are seen during tests. Should consider

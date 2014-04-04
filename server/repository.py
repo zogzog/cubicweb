@@ -1021,7 +1021,7 @@ class Repository(object):
         return tuple(cachekey)
 
     def extid2eid(self, source, extid, etype, session, insert=True,
-                  complete=True, commit=True, sourceparams=None):
+                  commit=True, sourceparams=None):
         """Return eid from a local id. If the eid is a negative integer, that
         means the entity is known but has been copied back to the system source
         hence should be ignored.
@@ -1076,7 +1076,7 @@ class Repository(object):
                 # see below
                 pending_operations = session.pending_operations[:]
                 self.hm.call_hooks('before_add_entity', session, entity=entity)
-            self.add_info(session, entity, source, extid, complete=complete)
+            self.add_info(session, entity, source, extid)
             source.after_entity_insertion(session, extid, entity, sourceparams)
             if source.should_call_hooks:
                 self.hm.call_hooks('after_add_entity', session, entity=entity)
@@ -1098,13 +1098,13 @@ class Repository(object):
                         session._cnx.pending_operations = pending_operations
             raise
 
-    def add_info(self, session, entity, source, extid=None, complete=True):
+    def add_info(self, session, entity, source, extid=None):
         """add type and source info for an eid into the system table,
         and index the entity with the full text index
         """
         # begin by inserting eid/type/source/extid into the entities table
         hook.CleanupNewEidsCacheOp.get_instance(session).add_data(entity.eid)
-        self.system_source.add_info(session, entity, source, extid, complete)
+        self.system_source.add_info(session, entity, source, extid)
 
     def delete_info(self, session, entity, sourceuri):
         """called by external source when some entity known by the system source
@@ -1222,7 +1222,7 @@ class Repository(object):
             userhdlr = cnx.vreg['adapters'].select(
                 'IUserFriendlyError', cnx, entity=entity, exc=exc)
             userhdlr.raise_user_exception()
-        self.add_info(cnx, entity, source, extid, complete=False)
+        self.add_info(cnx, entity, source, extid)
         edited.saved = entity._cw_is_saved = True
         # trigger after_add_entity after after_add_relation
         self.hm.call_hooks('after_add_entity', cnx, entity=entity)

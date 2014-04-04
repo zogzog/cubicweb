@@ -886,7 +886,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
     _handle_insert_entity_sql = doexec
     _handle_is_instance_of_sql = _handle_source_relation_sql = _handle_is_relation_sql
 
-    def add_info(self, cnx, entity, source, extid, complete):
+    def add_info(self, cnx, entity, source, extid):
         """add type and source info for an eid into the system table"""
         with cnx.ensure_cnx_set:
             # begin by inserting eid/type/source/extid into the entities table
@@ -913,8 +913,6 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                                              (entity.eid, source.eid))
             # now we can update the full text index
             if self.do_fti and self.need_fti_indexation(entity.cw_etype):
-                if complete:
-                    entity.complete(entity.e_schema.indexable_attributes())
                 self.index_entity(cnx, entity=entity)
 
     def update_info(self, cnx, entity, need_fti_update):
@@ -1181,7 +1179,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         sql = self.sqlgen.insert(SQL_PREFIX + etype, action.changes)
         self.doexec(cnx, sql, action.changes)
         # restore record in entities (will update fti if needed)
-        self.add_info(cnx, entity, self, None, True)
+        self.add_info(cnx, entity, self, None)
         self.repo.hm.call_hooks('after_add_entity', cnx, entity=entity)
         return errors
 
