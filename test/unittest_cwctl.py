@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -43,21 +43,22 @@ class CubicWebCtlTC(TestCase):
 class CubicWebShellTC(CubicWebTC):
 
     def test_process_script_args_context(self):
-        repo = self.cnx._repo
-        mih = ServerMigrationHelper(None, repo=repo, cnx=self.cnx,
-                                    interactive=False,
-                                    # hack so it don't try to load fs schema
-                                    schema=1)
-        scripts = {'script1.py': list(),
-                   'script2.py': ['-v'],
-                   'script3.py': ['-vd', '-f', 'FILE.TXT'],
-                  }
-        mih.cmd_process_script(join(self.datadir, 'scripts', 'script1.py'),
-                               funcname=None)
-        for script, args in scripts.items():
-            scriptname = os.path.join(self.datadir, 'scripts', script)
-            self.assert_(os.path.exists(scriptname))
-            mih.cmd_process_script(scriptname, None, scriptargs=args)
+        repo = self.repo
+        with self.admin_access.client_cnx() as cnx:
+            mih = ServerMigrationHelper(None, repo=repo, cnx=cnx,
+                                        interactive=False,
+                                        # hack so it don't try to load fs schema
+                                        schema=1)
+            scripts = {'script1.py': list(),
+                       'script2.py': ['-v'],
+                       'script3.py': ['-vd', '-f', 'FILE.TXT'],
+                      }
+            mih.cmd_process_script(join(self.datadir, 'scripts', 'script1.py'),
+                                   funcname=None)
+            for script, args in scripts.items():
+                scriptname = os.path.join(self.datadir, 'scripts', script)
+                self.assert_(os.path.exists(scriptname))
+                mih.cmd_process_script(scriptname, None, scriptargs=args)
 
 
 if __name__ == '__main__':
