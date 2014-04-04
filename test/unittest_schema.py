@@ -329,12 +329,14 @@ class NormalizeExpressionTC(TestCase):
         self.assertEqual(normalize_expression('X  bla Y,Y blur Z  ,  Z zigoulou   X '),
                                                'X bla Y, Y blur Z, Z zigoulou X')
 
+
 class RQLExpressionTC(TestCase):
     def test_comparison(self):
         self.assertEqual(ERQLExpression('X is CWUser', 'X', 0),
                           ERQLExpression('X is CWUser', 'X', 0))
         self.assertNotEqual(ERQLExpression('X is CWUser', 'X', 0),
                              ERQLExpression('X is CWGroup', 'X', 0))
+
 
 class GuessRrqlExprMainVarsTC(TestCase):
     def test_exists(self):
@@ -345,15 +347,19 @@ class GuessRrqlExprMainVarsTC(TestCase):
 class RQLConstraintTC(CubicWebTC):
     def test_user_constraint(self):
         cstr = RQLConstraint('U identity O')
-        anoneid = self.execute('Any X WHERE X login "anon"')[0][0]
-        self.assertRaises(ValidationError, cstr.repo_check, self.session, 1, 'rel', anoneid)
-        self.assertEqual(cstr.repo_check(self.session, 1, self.session.user.eid),
-        None) # no validation error, constraint checked
+        with self.admin_access.repo_cnx() as cnx:
+            anoneid = cnx.execute('Any X WHERE X login "anon"')[0][0]
+            self.assertRaises(ValidationError,
+                              cstr.repo_check, cnx, 1, 'rel', anoneid)
+            self.assertEqual(cstr.repo_check(cnx, 1, cnx.user.eid),
+                             None) # no validation error, constraint checked
+
 
 class WorkflowShemaTC(CubicWebTC):
     def test_trinfo_default_format(self):
-        tr = self.request().user.cw_adapt_to('IWorkflowable').fire_transition('deactivate')
-        self.assertEqual(tr.comment_format, 'text/plain')
+        with self.admin_access.web_request() as req:
+            tr = req.user.cw_adapt_to('IWorkflowable').fire_transition('deactivate')
+            self.assertEqual(tr.comment_format, 'text/plain')
 
 
 class CompositeSchemaTC(CubicWebTC):
