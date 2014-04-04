@@ -971,7 +971,7 @@ class Repository(object):
     # * correspondance between eid and (type, source)
     # * correspondance between eid and local id (i.e. specific to a given source)
 
-    def type_and_source_from_eid(self, eid, session=None):
+    def type_and_source_from_eid(self, eid, session):
         """return a tuple `(type, extid, actual source uri)` for the entity of
         the given `eid`
         """
@@ -982,17 +982,8 @@ class Repository(object):
         try:
             return self._type_source_cache[eid]
         except KeyError:
-            if session is None:
-                session = self.internal_session()
-                free_cnxset = True
-            else:
-                free_cnxset = False
-            try:
-                etype, extid, auri = self.system_source.eid_type_source(
-                    session, eid)
-            finally:
-                if free_cnxset:
-                    session.free_cnxset()
+            etype, extid, auri = self.system_source.eid_type_source(session,
+                                                                    eid)
             self._type_source_cache[eid] = (etype, extid, auri)
             return etype, extid, auri
 
@@ -1010,7 +1001,7 @@ class Repository(object):
             rqlcache.pop( ('Any X WHERE X eid %s' % eid,), None)
             self.system_source.clear_eid_cache(eid, etype)
 
-    def type_from_eid(self, eid, session=None):
+    def type_from_eid(self, eid, session):
         """return the type of the entity with id <eid>"""
         return self.type_and_source_from_eid(eid, session)[0]
 

@@ -262,7 +262,7 @@ class MigrationCommandsTC(CubicWebTC):
 
     def test_rename_entity_type(self):
         entity = self.mh.create_entity('Old', name=u'old')
-        self.repo.type_and_source_from_eid(entity.eid)
+        self.repo.type_and_source_from_eid(entity.eid, entity._cw)
         self.mh.cmd_rename_entity_type('Old', 'New')
         self.mh.cmd_rename_attribute('New', 'name', 'new_name')
 
