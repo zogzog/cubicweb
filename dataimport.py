@@ -472,11 +472,13 @@ def _create_copyfrom_buffer(data, columns, encoding='utf-8', replace_sep=None):
                 if isinstance(value, unicode):
                     value = value.encode(encoding)
             elif isinstance(value, (date, datetime)):
-                # Do not use strftime, as it yields issue
-                # with date < 1900
                 value = '%04d-%02d-%02d' % (value.year,
                                             value.month,
                                             value.day)
+                if isinstance(value, datetime):
+                    value += ' %02d:%02d:%02d' % (value.hour,
+                                                  value.minutes,
+                                                  value.second)
             else:
                 return None
             # We push the value to the new formatted row
