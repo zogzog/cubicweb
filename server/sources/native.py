@@ -1005,9 +1005,10 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             restr.update(tearestr)
         # we want results ordered by transaction's time descendant
         sql += ' ORDER BY tx_time DESC'
-        cu = self.doexec(session, sql, restr)
-        # turn results into transaction objects
-        return [tx.Transaction(*args) for args in cu.fetchall()]
+        with session.ensure_cnx_set:
+            cu = self.doexec(session, sql, restr)
+            # turn results into transaction objects
+            return [tx.Transaction(*args) for args in cu.fetchall()]
 
     def tx_info(self, session, txuuid):
         """See :class:`cubicweb.repoapi.ClientConnection.transaction_info`"""
