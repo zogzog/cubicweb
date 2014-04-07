@@ -364,54 +364,28 @@ class WorkflowShemaTC(CubicWebTC):
 
 class CompositeSchemaTC(CubicWebTC):
     composites = {
-        'BaseTransition': [('condition', 'BaseTransition', 'RQLExpression', 'subject'),
-                           ('condition', 'Transition', 'RQLExpression', 'subject'),
-                           ('condition', 'WorkflowTransition', 'RQLExpression', 'subject')],
+        'BaseTransition': [('condition', 'BaseTransition', 'RQLExpression', 'subject')],
         'CWAttribute': [('add_permission', 'CWAttribute', 'RQLExpression', 'subject'),
-                        ('add_permission', 'CWEType', 'RQLExpression', 'subject'),
-                        ('add_permission', 'CWRelation', 'RQLExpression', 'subject'),
                         ('constrained_by', 'CWAttribute', 'CWConstraint', 'subject'),
-                        ('constrained_by', 'CWRelation', 'CWConstraint', 'subject'),
                         ('read_permission', 'CWAttribute', 'RQLExpression', 'subject'),
-                        ('read_permission', 'CWEType', 'RQLExpression', 'subject'),
-                        ('read_permission', 'CWRelation', 'RQLExpression', 'subject'),
-                        ('update_permission', 'CWAttribute', 'RQLExpression', 'subject'),
-                        ('update_permission', 'CWEType', 'RQLExpression', 'subject')],
-        'CWEType': [('add_permission', 'CWAttribute', 'RQLExpression', 'subject'),
-                    ('add_permission', 'CWEType', 'RQLExpression', 'subject'),
-                    ('add_permission', 'CWRelation', 'RQLExpression', 'subject'),
+                        ('update_permission', 'CWAttribute', 'RQLExpression', 'subject')],
+        'CWEType': [('add_permission', 'CWEType', 'RQLExpression', 'subject'),
                     ('constraint_of', 'CWUniqueTogetherConstraint', 'CWEType', 'object'),
                     ('cw_schema', 'CWSourceSchemaConfig', 'CWEType', 'object'),
-                    ('cw_schema', 'CWSourceSchemaConfig', 'CWRType', 'object'),
-                    ('cw_schema', 'CWSourceSchemaConfig', 'CWRelation', 'object'),
                     ('delete_permission', 'CWEType', 'RQLExpression', 'subject'),
-                    ('delete_permission', 'CWRelation', 'RQLExpression', 'subject'),
                     ('from_entity', 'CWAttribute', 'CWEType', 'object'),
                     ('from_entity', 'CWRelation', 'CWEType', 'object'),
-                    ('read_permission', 'CWAttribute', 'RQLExpression', 'subject'),
                     ('read_permission', 'CWEType', 'RQLExpression', 'subject'),
-                    ('read_permission', 'CWRelation', 'RQLExpression', 'subject'),
                     ('to_entity', 'CWAttribute', 'CWEType', 'object'),
                     ('to_entity', 'CWRelation', 'CWEType', 'object'),
-                    ('update_permission', 'CWAttribute', 'RQLExpression', 'subject'),
                     ('update_permission', 'CWEType', 'RQLExpression', 'subject')],
-        'CWRType': [('cw_schema', 'CWSourceSchemaConfig', 'CWEType', 'object'),
-                    ('cw_schema', 'CWSourceSchemaConfig', 'CWRType', 'object'),
-                    ('cw_schema', 'CWSourceSchemaConfig', 'CWRelation', 'object'),
+        'CWRType': [('cw_schema', 'CWSourceSchemaConfig', 'CWRType', 'object'),
                     ('relation_type', 'CWAttribute', 'CWRType', 'object'),
                     ('relation_type', 'CWRelation', 'CWRType', 'object')],
-        'CWRelation': [('add_permission', 'CWAttribute', 'RQLExpression', 'subject'),
-                       ('add_permission', 'CWEType', 'RQLExpression', 'subject'),
-                       ('add_permission', 'CWRelation', 'RQLExpression', 'subject'),
-                       ('constrained_by', 'CWAttribute', 'CWConstraint', 'subject'),
+        'CWRelation': [('add_permission', 'CWRelation', 'RQLExpression', 'subject'),
                        ('constrained_by', 'CWRelation', 'CWConstraint', 'subject'),
-                       ('cw_schema', 'CWSourceSchemaConfig', 'CWEType', 'object'),
-                       ('cw_schema', 'CWSourceSchemaConfig', 'CWRType', 'object'),
                        ('cw_schema', 'CWSourceSchemaConfig', 'CWRelation', 'object'),
-                       ('delete_permission', 'CWEType', 'RQLExpression', 'subject'),
                        ('delete_permission', 'CWRelation', 'RQLExpression', 'subject'),
-                       ('read_permission', 'CWAttribute', 'RQLExpression', 'subject'),
-                       ('read_permission', 'CWEType', 'RQLExpression', 'subject'),
                        ('read_permission', 'CWRelation', 'RQLExpression', 'subject')],
         'CWSource': [('cw_for_source', 'CWSourceSchemaConfig', 'CWSource', 'object'),
                      ('cw_host_config_of', 'CWSourceHostConfig', 'CWSource', 'object'),
@@ -457,33 +431,27 @@ class CompositeSchemaTC(CubicWebTC):
                      ('cw_source', 'WorkflowTransition', 'CWSource', 'object')],
         'CWUser': [('for_user', 'CWProperty', 'CWUser', 'object'),
                    ('use_email', 'CWUser', 'EmailAddress', 'subject'),
-                   ('wf_info_for', 'TrInfo', 'CWUser', 'object'),
-                   ('wf_info_for', 'TrInfo', 'StateFull', 'object')],
-        'StateFull': [('wf_info_for', 'TrInfo', 'CWUser', 'object'),
-                      ('wf_info_for', 'TrInfo', 'StateFull', 'object')],
-        'Transition': [('condition', 'BaseTransition', 'RQLExpression', 'subject'),
-                       ('condition', 'Transition', 'RQLExpression', 'subject'),
-                       ('condition', 'WorkflowTransition', 'RQLExpression', 'subject')],
+                   ('wf_info_for', 'TrInfo', 'CWUser', 'object')],
+        'StateFull': [('wf_info_for', 'TrInfo', 'StateFull', 'object')],
+        'Transition': [('condition', 'Transition', 'RQLExpression', 'subject')],
         'Workflow': [('state_of', 'State', 'Workflow', 'object'),
                      ('transition_of', 'BaseTransition', 'Workflow', 'object'),
                      ('transition_of', 'Transition', 'Workflow', 'object'),
                      ('transition_of', 'WorkflowTransition', 'Workflow', 'object')],
-        'WorkflowTransition': [('condition', 'BaseTransition', 'RQLExpression', 'subject'),
-                               ('condition', 'Transition', 'RQLExpression', 'subject'),
-                               ('condition', 'WorkflowTransition', 'RQLExpression', 'subject'),
+        'WorkflowTransition': [('condition', 'WorkflowTransition', 'RQLExpression', 'subject'),
                                ('subworkflow_exit', 'WorkflowTransition', 'SubWorkflowExitPoint', 'subject')]
     }
 
     def test_composite_entities(self):
         schema = self.vreg.schema
-        self.assertEqual(sorted(self.composites.keys()),
-                         [eschema.type
-                          for eschema in sorted(schema.entities())
+        self.assertEqual(sorted(self.composites),
+                         [eschema.type for eschema in sorted(schema.entities())
                           if eschema.is_composite])
         for etype in self.composites:
-            self.assertEqual(self.composites[etype],
+            self.set_description('composite rdefs for %s' % etype)
+            yield self.assertEqual, self.composites[etype], \
                              sorted([(r.rtype.type, r.subject.type, r.object.type, role)
-                                     for r, role in sorted(schema[etype].composite_rdef_roles)]))
+                                     for r, role in sorted(schema[etype].composite_rdef_roles)])
 
 if __name__ == '__main__':
     unittest_main()

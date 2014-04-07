@@ -696,9 +696,11 @@ class CubicWebEntitySchema(EntitySchema):
                 if rschema.final:
                     continue
                 for rdef in rschema.rdefs.values():
-                    crole = rdef.composite
-                    if crole == role:
-                        rdef_roles.append((rdef, role))
+                    if (role == 'subject' and rdef.subject == self) or \
+                            (role == 'object' and rdef.object == self):
+                        crole = rdef.composite
+                        if crole == role:
+                            rdef_roles.append((rdef, role))
         return rdef_roles
 
     @cachedproperty
