@@ -860,30 +860,38 @@ class MetaGenerator(object):
         del entity.cw_extra_kwargs
         entity.cw_edited = EditedEntity(entity)
         for attr in self.etype_attrs:
-            entity.cw_edited.edited_attribute(attr, self.generate(entity, attr))
+            genfunc = self.generate(attr)
+            if genfunc:
+                entity.cw_edited.edited_attribute(attr, genfunc(entity))
         rels = {}
         for rel in self.etype_rels:
-            rels[rel] = self.generate(entity, rel)
+            genfunc = self.generate(rel)
+            if genfunc:
+                rels[rel] = genfunc(entity)
         return entity, rels
 
     def init_entity(self, entity):
         entity.eid = self.source.create_eid(self.session)
         for attr in self.entity_attrs:
-            entity.cw_edited.edited_attribute(attr, self.generate(entity, attr))
+            genfunc = self.generate(attr)
+            if genfunc:
+                entity.cw_edited.edited_attribute(attr, genfunc(entity))
 
-    def generate(self, entity, rtype):
-        return getattr(self, 'gen_%s' % rtype)(entity)
+    def generate(self, rtype):
+        return getattr(self, 'gen_%s' % rtype, None)
 
     def gen_cwuri(self, entity):
         return u'%s%s' % (self.baseurl, entity.eid)
 
     def gen_creation_date(self, entity):
         return self.time
+
     def gen_modification_date(self, entity):
         return self.time
 
     def gen_created_by(self, entity):
         return self.session.user.eid
+
     def gen_owned_by(self, entity):
         return self.session.user.eid
 
