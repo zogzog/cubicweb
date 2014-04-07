@@ -437,7 +437,7 @@ def rest_publish(context, data):
         # necessary for proper garbage collection, else a ref is kept somewhere in docutils...
         del pub.settings.context
         return res
-    except Exception:
+    except BaseException:
         LOGGER.exception('error while publishing ReST text')
         if not isinstance(data, unicode):
             data = unicode(data, encoding, 'replace')

@@ -788,12 +788,12 @@ class Entity(AppObject):
             assert role in ('subject', 'object'), role
             skip_copy_for[role].add(rtype)
         for rschema in self.e_schema.subject_relations():
+            if rschema.type in skip_copy_for['subject']:
+                continue
             if rschema.final or rschema.meta:
                 continue
             # skip already defined relations
             if getattr(self, rschema.type):
-                continue
-            if rschema.type in skip_copy_for['subject']:
                 continue
             # skip composite relation
             rdef = self.e_schema.rdef(rschema)

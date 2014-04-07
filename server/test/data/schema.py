@@ -22,6 +22,7 @@ from yams.buildobjs import (EntityType, RelationType, RelationDefinition,
 from yams.constraints import SizeConstraint
 from cubicweb.schema import (WorkflowableEntityType,
                              RQLConstraint, RQLUniqueConstraint,
+                             RQLVocabularyConstraint,
                              ERQLExpression, RRQLExpression)
 
 class Affaire(WorkflowableEntityType):
@@ -157,6 +158,8 @@ class travaille(RelationDefinition):
         }
     subject = 'Personne'
     object = 'Societe'
+    constraints = [RQLVocabularyConstraint('S owned_by U'),
+                   RQLVocabularyConstraint('S created_by U')]
 
 class comments(RelationDefinition):
     subject = 'Comment'
@@ -187,6 +190,10 @@ class see_also_2(RelationDefinition):
 class evaluee(RelationDefinition):
     subject = ('Personne', 'CWUser', 'Societe')
     object = ('Note')
+    constraints = [
+        RQLVocabularyConstraint('S created_by U'),
+        RQLVocabularyConstraint('S owned_by U'),
+    ]
 
 class ecrit_par(RelationType):
     inlined = True

@@ -1,3 +1,9 @@
+cubicweb (3.18.4-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Aurelien Campeas <aurelien.campeas@logilab.fr>  Fri, 28 Mar 2014 17:12:48 +0100
+
 cubicweb (3.18.3-1) unstable; urgency=low
 
   * new upstream release
@@ -21,6 +27,12 @@ cubicweb (3.18.0-1) unstable; urgency=low
   * new upstream release.
 
  -- Julien Cristau <julien.cristau@logilab.fr>  Fri, 10 Jan 2014 17:14:18 +0100
+
+cubicweb (3.17.14-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Aurelien Campeas <aurelien.campeas@logilab.fr>  Wed, 05 Mar 2014 15:48:38 +0100
 
 cubicweb (3.17.13-1) unstable; urgency=low
 

@@ -1,4 +1,4 @@
-# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -103,7 +103,6 @@ class ServerMigrationHelper(MigrationHelper):
         # no config on shell to a remote instance
         if config is not None and (cnx or connect):
             repo = self.repo
-            self.session.set_shared_data('rebuild-infered', False)
             # register a hook to clear our group_mapping cache and the
             # self._synchronized set when some group is added or updated
             ClearGroupMap.mih = self
@@ -596,12 +595,18 @@ class ServerMigrationHelper(MigrationHelper):
             self.rqlexecall(ss.updaterdef2rql(rdef, repordef.eid),
                             ask_confirm=confirm)
             # constraints
-            newconstraints = list(rdef.constraints)
+            # 0. eliminate the set of unmodified constraints from the sets of
+            # old/new constraints
+            newconstraints = set(rdef.constraints)
+            oldconstraints = set(repordef.constraints)
+            unchanged_constraints = newconstraints & oldconstraints
+            newconstraints -= unchanged_constraints
+            oldconstraints -= unchanged_constraints
             # 1. remove old constraints and update constraints of the same type
             # NOTE: don't use rschema.constraint_by_type because it may be
             #       out of sync with newconstraints when multiple
             #       constraints of the same type are used
-            for cstr in repordef.constraints:
+            for cstr in oldconstraints:
                 for newcstr in newconstraints:
                     if newcstr.type() == cstr.type():
                         break

@@ -1,4 +1,4 @@
-# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -196,13 +196,11 @@ class MemSchemaNotifyChanges(hook.SingleLastOperation):
                 clear_cache(eschema, 'ordered_relations')
 
     def postcommit_event(self):
-        rebuildinfered = self.cnx.get_shared_data('rebuild-infered', True)
         repo = self.cnx.repo
         # commit event should not raise error, while set_schema has chances to
         # do so because it triggers full vreg reloading
         try:
-            if rebuildinfered:
-                repo.schema.rebuild_infered_relations()
+            repo.schema.rebuild_infered_relations()
             # trigger vreg reload
             repo.set_schema(repo.schema)
             # CWUser class might have changed, update current session users
@@ -650,7 +648,11 @@ class CWConstraintDelOp(MemSchemaOperation):
         rdef = self.rdef
         # in-place modification of in-memory schema first
         _set_modifiable_constraints(rdef)
-        rdef.constraints.remove(self.oldcstr)
+        if self.oldcstr in rdef.constraints:
+            rdef.constraints.remove(self.oldcstr)
+        else:
+            self.critical('constraint %s for rdef %s was missing or already removed',
+                          self.oldcstr, rdef)
         # then update database: alter the physical schema on size/unique
         # constraint changes
         syssource = cnx.repo.system_source
@@ -1136,7 +1138,7 @@ class BeforeDeleteCWConstraintHook(SyncSchemaHook):
             rdef = schema.schema_by_eid(entity.reverse_constrained_by[0].eid)
             # IndexError
             cstr = rdef.constraint_by_type(entity.type)
-        except (IndexError, KeyError):
+        except (KeyError, IndexError):
             self._cw.critical('constraint type no more accessible')
         else:
             CWConstraintDelOp(self._cw, rdef=rdef, oldcstr=cstr)

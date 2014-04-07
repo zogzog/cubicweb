@@ -1,4 +1,4 @@
-# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -224,7 +224,6 @@ class MigrationCommandsTC(CubicWebTC):
         self.assertTrue(self.session.execute('CWEType X WHERE X name "Folder2"'))
         self.assertTrue('filed_under2' in self.schema)
         self.assertTrue(self.session.execute('CWRType X WHERE X name "filed_under2"'))
-        self.schema.rebuild_infered_relations()
         self.assertEqual(sorted(str(rs) for rs in self.schema['Folder2'].subject_relations()),
                           ['created_by', 'creation_date', 'cw_source', 'cwuri',
                            'description', 'description_format',
@@ -270,7 +269,6 @@ class MigrationCommandsTC(CubicWebTC):
     def test_add_drop_relation_type(self):
         self.mh.cmd_add_entity_type('Folder2', auto=False)
         self.mh.cmd_add_relation_type('filed_under2')
-        self.schema.rebuild_infered_relations()
         self.assertTrue('filed_under2' in self.schema)
         # Old will be missing as it has been renamed into 'New' in the migrated
         # schema while New hasn't been added here.
@@ -327,16 +325,10 @@ class MigrationCommandsTC(CubicWebTC):
         self.assertEqual(sorted(str(e) for e in self.schema['concerne'].subjects()),
                           ['Affaire', 'Personne'])
         self.assertEqual(sorted(str(e) for e in self.schema['concerne'].objects()),
-                          ['Affaire', 'Division', 'Note', 'SubDivision'])
-        self.schema.rebuild_infered_relations() # need to be explicitly called once everything is in place
-        self.assertEqual(sorted(str(e) for e in self.schema['concerne'].objects()),
                           ['Affaire', 'Note'])
         self.mh.cmd_add_relation_definition('Affaire', 'concerne', 'Societe')
         self.assertEqual(sorted(str(e) for e in self.schema['concerne'].subjects()),
                           ['Affaire', 'Personne'])
-        self.assertEqual(sorted(str(e) for e in self.schema['concerne'].objects()),
-                          ['Affaire', 'Note', 'Societe'])
-        self.schema.rebuild_infered_relations() # need to be explicitly called once everything is in place
         self.assertEqual(sorted(str(e) for e in self.schema['concerne'].objects()),
                           ['Affaire', 'Division', 'Note', 'Societe', 'SubDivision'])
         # trick: overwrite self.maxeid to avoid deletion of just reintroduced types
@@ -370,6 +362,26 @@ class MigrationCommandsTC(CubicWebTC):
         finally:
             self.mh.cmd_change_relation_props('Personne', 'adel', 'String',
                                               fulltextindexed=False)
+
+    def test_sync_schema_props_perms_rqlconstraints(self):
+        # Drop one of the RQLConstraint.
+        rdef = self.schema['evaluee'].rdefs[('Personne', 'Note')]
+        oldconstraints = rdef.constraints
+        self.assertIn('S created_by U',
+                      [cstr.expression for cstr in oldconstraints])
+        self.mh.cmd_sync_schema_props_perms('evaluee', commit=True)
+        newconstraints = rdef.constraints
+        self.assertNotIn('S created_by U',
+                         [cstr.expression for cstr in newconstraints])
+
+        # Drop all RQLConstraint.
+        rdef = self.schema['travaille'].rdefs[('Personne', 'Societe')]
+        oldconstraints = rdef.constraints
+        self.assertEqual(len(oldconstraints), 2)
+        self.mh.cmd_sync_schema_props_perms('travaille', commit=True)
+        rdef = self.schema['travaille'].rdefs[('Personne', 'Societe')]
+        newconstraints = rdef.constraints
+        self.assertEqual(len(newconstraints), 0)
 
     @tag('longrun')
     def test_sync_schema_props_perms(self):
@@ -598,12 +610,10 @@ class MigrationCommandsTC(CubicWebTC):
     @tag('longrun')
     def test_introduce_base_class(self):
         self.mh.cmd_add_entity_type('Para')
-        self.mh.repo.schema.rebuild_infered_relations()
         self.assertEqual(sorted(et.type for et in self.schema['Para'].specialized_by()),
                           ['Note'])
         self.assertEqual(self.schema['Note'].specializes().type, 'Para')
         self.mh.cmd_add_entity_type('Text')
-        self.mh.repo.schema.rebuild_infered_relations()
         self.assertEqual(sorted(et.type for et in self.schema['Para'].specialized_by()),
                           ['Note', 'Text'])
         self.assertEqual(self.schema['Text'].specializes().type, 'Para')
@@ -627,12 +637,8 @@ class MigrationCommandsTC(CubicWebTC):
         #
         # also we need more tests about introducing/removing base classes or
         # specialization relationship...
-        self.session.set_shared_data('rebuild-infered', True)
-        try:
-            self.session.execute('DELETE X specializes Y WHERE Y name "Para"')
-            self.session.commit(free_cnxset=False)
-        finally:
-            self.session.set_shared_data('rebuild-infered', False)
+        self.session.execute('DELETE X specializes Y WHERE Y name "Para"')
+        self.session.commit(free_cnxset=False)
         self.assertEqual(sorted(et.type for et in self.schema['Para'].specialized_by()),
                           [])
         self.assertEqual(self.schema['Note'].specializes(), None)

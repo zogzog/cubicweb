@@ -350,6 +350,13 @@ class ERQLExpression(RQLExpression):
             return self._check(_cw, x=eid, **kwargs)
         return self._check(_cw, **kwargs)
 
+def constraint_by_eid(self, eid):
+    for cstr in self.constraints:
+        if cstr.eid == eid:
+            return cstr
+    raise ValueError('No constraint with eid %d' % eid)
+RelationDefinitionSchema.constraint_by_eid = constraint_by_eid
+
 
 def vargraph(rqlst):
     """ builds an adjacency graph of variables from the rql syntax tree, e.g:

@@ -264,7 +264,7 @@ class EditController(basecontrollers.ViewController):
             errors = dict((f.role_name(), unicode(ex)) for f, ex in self.errors)
             raise ValidationError(valerror_eid(entity.eid), errors)
         if eid is None: # creation or copy
-            entity.eid = self._insert_entity(etype, formparams['eid'], rqlquery)
+            entity.eid = eid = self._insert_entity(etype, formparams['eid'], rqlquery)
         elif rqlquery.edited: # edition of an existant entity
             self._update_entity(eid, rqlquery)
         if is_main_entity:

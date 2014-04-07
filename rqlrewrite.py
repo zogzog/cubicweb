@@ -1,4 +1,4 @@
-# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -405,7 +405,7 @@ class RQLRewriter(object):
                     assert len(subquery.children) == 1
                     subselect = subquery.children[0]
                     RQLRewriter(self.session).rewrite(subselect, [(varmap, rqlexprs)],
-                                                      subselect.solutions, self.kwargs)
+                                                      self.kwargs)
                     return
                 if varexistsmap is None:
                     # build an index for quick access to relations
@@ -790,7 +790,7 @@ class RQLRewriter(object):
         vargraph = self.current_expr.vargraph
         for existingvar in self.existingvars:
             #path = has_path(vargraph, varname, existingvar)
-            if has_path(vargraph, varname, existingvar):
+            if not varname in vargraph or has_path(vargraph, varname, existingvar):
                 return True
         # no path from this variable to an existing variable
         return False

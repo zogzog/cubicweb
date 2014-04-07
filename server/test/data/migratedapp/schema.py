@@ -22,6 +22,7 @@ from yams.buildobjs import (EntityType, RelationType, RelationDefinition,
                             RichString, String, Int, Boolean, Datetime, Date)
 from yams.constraints import SizeConstraint, UniqueConstraint
 from cubicweb.schema import (WorkflowableEntityType, RQLConstraint,
+                             RQLVocabularyConstraint,
                              ERQLExpression, RRQLExpression)
 
 class Affaire(EntityType):
@@ -177,4 +178,3 @@ class New(EntityType):
 class same_as(RelationDefinition):
     subject = ('Societe',)
     object = 'ExternalUri'
-

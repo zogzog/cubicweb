@@ -544,25 +544,6 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
             names = [t for t, in cu.execute('Any N ORDERBY lower(N) WHERE X name N')]
             self.assertEqual(names, sorted(names, key=lambda x: x.lower()))
 
-    def test_restrict_is_instance_ok(self):
-        rset = self.execute('Any X WHERE X is_instance_of BaseTransition')
-        rqlst = rset.syntax_tree()
-        select = rqlst.children[0]
-        x = select.get_selected_variables().next()
-        self.assertRaises(RQLException, select.add_type_restriction,
-                          x.variable, 'CWUser')
-        select.add_type_restriction(x.variable, 'BaseTransition')
-        select.add_type_restriction(x.variable, 'WorkflowTransition')
-        self.assertEqual(rqlst.as_string(), 'Any X WHERE X is_instance_of WorkflowTransition')
-
-    def test_restrict_is_instance_no_supported(self):
-        rset = self.execute('Any X WHERE X is_instance_of IN(CWUser, CWGroup)')
-        rqlst = rset.syntax_tree()
-        select = rqlst.children[0]
-        x = select.get_selected_variables().next()
-        self.assertRaises(NotImplementedError, select.add_type_restriction,
-                          x.variable, 'WorkflowTransition')
-
     def test_in_state_without_update_perm(self):
         """check a user change in_state without having update permission on the
         subject
