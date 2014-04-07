@@ -1020,7 +1020,7 @@ class Repository(object):
             args[key] = int(args[key])
         return tuple(cachekey)
 
-    def extid2eid(self, source, extid, etype, session, insert=True,
+    def extid2eid(self, source, extid, etype, cnx, insert=True,
                   sourceparams=None):
         """Return eid from a local id. If the eid is a negative integer, that
         means the entity is known but has been copied back to the system source
@@ -1048,31 +1048,34 @@ class Repository(object):
             return self._extid_cache[extid]
         except KeyError:
             pass
-        eid = self.system_source.extid2eid(session, extid)
+        try:
+            # bw compat: cnx may be a session, get at the Connection
+            cnx = cnx._cnx
+        except AttributeError:
+            pass
+        eid = self.system_source.extid2eid(cnx, extid)
         if eid is not None:
             self._extid_cache[extid] = eid
             self._type_source_cache[eid] = (etype, extid, source.uri)
             return eid
         if not insert:
             return
-        # no link between extid and eid, create one using an internal session
-        # since the current session user may not have required permissions to
-        # do necessary stuff and we don't want to commit user session.
+        # no link between extid and eid, create one
         try:
-            eid = self.system_source.create_eid(session)
+            eid = self.system_source.create_eid(cnx)
             self._extid_cache[extid] = eid
             self._type_source_cache[eid] = (etype, extid, source.uri)
             entity = source.before_entity_insertion(
-                session, extid, etype, eid, sourceparams)
+                cnx, extid, etype, eid, sourceparams)
             if source.should_call_hooks:
                 # get back a copy of operation for later restore if necessary,
                 # see below
-                pending_operations = session.pending_operations[:]
-                self.hm.call_hooks('before_add_entity', session, entity=entity)
-            self.add_info(session, entity, source, extid)
-            source.after_entity_insertion(session, extid, entity, sourceparams)
+                pending_operations = cnx.pending_operations[:]
+                self.hm.call_hooks('before_add_entity', cnx, entity=entity)
+            self.add_info(cnx, entity, source, extid)
+            source.after_entity_insertion(cnx, extid, entity, sourceparams)
             if source.should_call_hooks:
-                self.hm.call_hooks('after_add_entity', session, entity=entity)
+                self.hm.call_hooks('after_add_entity', cnx, entity=entity)
             return eid
         except Exception:
             # XXX do some cleanup manually so that the transaction has a
@@ -1080,10 +1083,10 @@ class Repository(object):
             self._extid_cache.pop(extid, None)
             self._type_source_cache.pop(eid, None)
             if 'entity' in locals():
-                hook.CleanupDeletedEidsCacheOp.get_instance(session).add_data(entity.eid)
-                self.system_source.delete_info_multi(session, [entity])
+                hook.CleanupDeletedEidsCacheOp.get_instance(cnx).add_data(entity.eid)
+                self.system_source.delete_info_multi(cnx, [entity])
                 if source.should_call_hooks:
-                    session._cnx.pending_operations = pending_operations
+                    cnx.pending_operations = pending_operations
             raise
 
     def add_info(self, session, entity, source, extid=None):
