@@ -156,8 +156,8 @@ class EntityUpdatedNotificationOp(hook.SingleLastOperation):
         cnx = self.cnx
         for eid in cnx.transaction_data['changes']:
             view = cnx.vreg['views'].select('notif_entity_updated', cnx,
-                                                rset=cnx.eid_rset(eid),
-                                                row=0)
+                                            rset=cnx.eid_rset(eid),
+                                            row=0)
             notify_on_commit(self.cnx, view,
                     viewargs={'changes': cnx.transaction_data['changes'][eid]})
 
