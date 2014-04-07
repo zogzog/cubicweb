@@ -633,7 +633,7 @@ class RDefUpdateOp(MemSchemaOperation):
 def _set_modifiable_constraints(rdef):
     # for proper in-place modification of in-memory schema: if rdef.constraints
     # is already a list, reuse it (we're updating multiple constraints of the
-    # same rdef in the same transactions)
+    # same rdef in the same transaction)
     if not isinstance(rdef.constraints, list):
         rdef.constraints = list(rdef.constraints)
 
@@ -1137,7 +1137,7 @@ class BeforeDeleteCWConstraintHook(SyncSchemaHook):
             # KeyError, e.g. composite chain deletion
             rdef = schema.schema_by_eid(entity.reverse_constrained_by[0].eid)
             # IndexError
-            cstr = rdef.constraint_by_type(entity.type)
+            cstr = rdef.constraint_by_eid(entity.eid)
         except (KeyError, IndexError):
             self._cw.critical('constraint type no more accessible')
         else:

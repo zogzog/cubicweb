@@ -607,21 +607,8 @@ class ServerMigrationHelper(MigrationHelper):
             #       out of sync with newconstraints when multiple
             #       constraints of the same type are used
             for cstr in oldconstraints:
-                for newcstr in newconstraints:
-                    if newcstr.type() == cstr.type():
-                        break
-                else:
-                    newcstr = None
-                if newcstr is None:
-                    self.rqlexec('DELETE X constrained_by C WHERE C eid %(x)s',
-                                 {'x': cstr.eid}, ask_confirm=confirm)
-                else:
-                    newconstraints.remove(newcstr)
-                    value = unicode(newcstr.serialize())
-                    if value != unicode(cstr.serialize()):
-                        self.rqlexec('SET X value %(v)s WHERE X eid %(x)s',
-                                     {'x': cstr.eid, 'v': value},
-                                     ask_confirm=confirm)
+                self.rqlexec('DELETE CWConstraint C WHERE C eid %(x)s',
+                             {'x': cstr.eid}, ask_confirm=confirm)
             # 2. add new constraints
             cstrtype_map = self.cstrtype_mapping()
             self.rqlexecall(ss.constraints2rql(cstrtype_map, newconstraints,

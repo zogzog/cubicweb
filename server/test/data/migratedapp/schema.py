@@ -127,6 +127,7 @@ class concerne(RelationType):
 class evaluee(RelationDefinition):
     subject = ('Personne', 'CWUser', 'Societe')
     object = ('Note')
+    constraints = [RQLVocabularyConstraint('S owned_by U')]
 
 class ecrit_par(RelationType):
     __permissions__ = {'read':   ('managers', 'users', 'guests',),
