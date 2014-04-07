@@ -75,12 +75,13 @@ class WorkflowSelectorTC(CubicWebTC):
         super(WorkflowSelectorTC, self).tearDown()
 
     def setup_database(self):
-        wf = self.shell().add_workflow("wf_test", 'StateFull', default=True)
-        created   = wf.add_state('created', initial=True)
-        validated = wf.add_state('validated')
-        abandoned = wf.add_state('abandoned')
-        wf.add_transition('validate', created, validated, ('managers',))
-        wf.add_transition('forsake', (created, validated,), abandoned, ('managers',))
+        with self.admin_access.shell() as shell:
+            wf = shell.add_workflow("wf_test", 'StateFull', default=True)
+            created   = wf.add_state('created', initial=True)
+            validated = wf.add_state('validated')
+            abandoned = wf.add_state('abandoned')
+            wf.add_transition('validate', created, validated, ('managers',))
+            wf.add_transition('forsake', (created, validated,), abandoned, ('managers',))
 
     @contextmanager
     def statefull_stuff(self):
