@@ -249,6 +249,17 @@ class RepoAccess(object):
             self._repo.close(self._session.sessionid)
         self._session = None
 
+    @contextmanager
+    def shell(self):
+        from cubicweb.server.migractions import ServerMigrationHelper
+        with repoapi.ClientConnection(self._session) as cnx:
+            mih = ServerMigrationHelper(None, repo=self._repo, cnx=cnx,
+                                        interactive=False,
+                                        # hack so it don't try to load fs schema
+                                        schema=1)
+            yield mih
+            cnx.commit()
+
 
 
 # base class for cubicweb tests requiring a full cw environments ###############
@@ -524,6 +535,7 @@ class CubicWebTC(TestCase):
         """return the application schema"""
         return self.vreg.schema
 
+    @deprecated('[3.19] explicitly use RepoAccess object in test instead')
     def shell(self):
         """return a shell session object"""
         from cubicweb.server.migractions import ServerMigrationHelper
