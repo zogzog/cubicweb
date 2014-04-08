@@ -121,7 +121,7 @@ class EditControllerTC(CubicWebTC):
         path, params = self.expect_redirect_handle_request(req, 'edit')
         cnx.commit() # commit to check we don't get late validation error for instance
         self.assertEqual(path, 'cwuser/user')
-        self.assertFalse('vid' in params)
+        self.assertNotIn('vid', params)
 
     def test_user_editing_itself_no_relation(self):
         """checking we can edit an entity without specifying some required

@@ -82,8 +82,8 @@ class SchemaModificationHooksTC(CubicWebTC):
             'INSERT CWRelation X: X cardinality "**", X relation_type RT, X from_entity E, X to_entity E '
             'WHERE RT name "concerne2", E name "Societe2"')[0][0]
         self._set_perms(concerne2_rdef_eid)
-        self.assertFalse('name' in schema['Societe2'].subject_relations())
-        self.assertFalse('concerne2' in schema['Societe2'].subject_relations())
+        self.assertNotIn('name', schema['Societe2'].subject_relations())
+        self.assertNotIn('concerne2', schema['Societe2'].subject_relations())
         self.assertFalse(self.index_exists('Societe2', 'name'))
         self.commit()
         self.assertIn('name', schema['Societe2'].subject_relations())
@@ -104,7 +104,7 @@ class SchemaModificationHooksTC(CubicWebTC):
         self.execute('DELETE CWRelation X WHERE X eid %(x)s', {'x': concerne2_rdef_eid})
         self.commit()
         self.assertIn('concerne2', schema['CWUser'].subject_relations())
-        self.assertFalse('concerne2' in schema['Societe2'].subject_relations())
+        self.assertNotIn('concerne2', schema['Societe2'].subject_relations())
         self.assertFalse(self.execute('Any X WHERE X concerne2 Y'))
         # schema should be cleaned on delete (after commit)
         self.execute('DELETE CWEType X WHERE X name "Societe2"')
@@ -116,7 +116,7 @@ class SchemaModificationHooksTC(CubicWebTC):
         self.assertFalse(self.index_exists('Societe2', 'name'))
         self.assertFalse(schema.has_entity('Societe2'))
         self.assertFalse(schema.has_entity('concerne2'))
-        self.assertFalse('concerne2' in schema['CWUser'].subject_relations())
+        self.assertNotIn('concerne2', schema['CWUser'].subject_relations())
 
     def test_metartype_with_nordefs(self):
         META_RTYPES.add('custom_meta')
@@ -152,7 +152,7 @@ class SchemaModificationHooksTC(CubicWebTC):
         instanceof_etypes = [etype for etype, in self.execute('Any ETN WHERE X eid %s, X is_instance_of ET, ET name ETN' % seid)]
         self.assertEqual(sorted(instanceof_etypes), ['BaseTransition', 'Transition'])
         snames = [name for name, in self.execute('Any N WHERE S is BaseTransition, S name N')]
-        self.assertFalse('subdiv' in snames)
+        self.assertNotIn('subdiv', snames)
         snames = [name for name, in self.execute('Any N WHERE S is_instance_of BaseTransition, S name N')]
         self.assertIn('subdiv', snames)
 

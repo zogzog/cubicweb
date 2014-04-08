@@ -74,7 +74,7 @@ class VRegistryTC(TestCase):
 
     def test_properties(self):
         self.vreg.reset()
-        self.assertFalse('system.version.cubicweb' in self.vreg['propertydefs'])
+        self.assertNotIn('system.version.cubicweb', self.vreg['propertydefs'])
         self.assertTrue(self.vreg.property_info('system.version.cubicweb'))
         self.assertRaises(UnknownProperty, self.vreg.property_info, 'a.non.existent.key')
 

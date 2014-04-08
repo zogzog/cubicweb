@@ -42,12 +42,12 @@ class PropertySheetTC(TestCase):
         self.assertTrue(ps.need_reload())
         self.assertIn('pouet.css', ps._cache)
         ps.reload()
-        self.assertFalse('pouet.css' in ps._cache)
+        self.assertNotIn('pouet.css', ps._cache)
         self.assertFalse(ps.need_reload())
         ps.process_resource(DATADIR, 'pouet.css') # put in cache
         os.utime(join(DATADIR, 'pouet.css'), None)
         self.assertFalse(ps.need_reload())
-        self.assertFalse('pouet.css' in ps._cache)
+        self.assertNotIn('pouet.css', ps._cache)
 
 if __name__ == '__main__':
     unittest_main()
