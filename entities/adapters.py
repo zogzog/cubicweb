@@ -187,13 +187,11 @@ class IDownloadableAdapter(view.EntityAdapter):
 
 # XXX should propose to use two different relations for children/parent
 class ITreeAdapter(view.EntityAdapter):
-    """This adapter has to be overriden to be configured using the
-    tree_relation, child_role and parent_role class attributes to benefit from
-    this default implementation.
+    """This adapter provides a tree interface.
 
-    This adapter provides a tree interface. It has to be overriden to be
-    configured using the tree_relation, child_role and parent_role class
-    attributes to benefit from this default implementation.
+    It has to be overriden to be configured using the tree_relation,
+    child_role and parent_role class attributes to benefit from this default
+    implementation.
 
     This class provides the following methods:
 
