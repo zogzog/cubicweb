@@ -102,6 +102,18 @@ class LanguageTC(CubicWebServerTC):
         webreq = self.web_request(headers=headers)
         self.assertIn('lang="en"', webreq.read())
 
+    def test_response_codes(self):
+        with self.admin_access.client_cnx() as cnx:
+            admin_eid = cnx.user.eid
+        # guest can't see admin
+        webreq = self.web_request('/%d' % admin_eid)
+        self.assertEqual(webreq.status, 403)
+
+        # but admin can
+        self.web_login()
+        webreq = self.web_request('/%d' % admin_eid)
+        self.assertEqual(webreq.status, 200)
+
 
 if __name__ == '__main__':
     unittest_main()
