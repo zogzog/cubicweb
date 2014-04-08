@@ -129,7 +129,7 @@ class RQLRewriteTC(TestCase):
             "F name 'read', F require_group E, A is State, E is CWGroup, F is CWPermission), "
             "(EXISTS(S ref LIKE 'PUBLIC%')) OR (EXISTS(B in_group G, G name 'public', G is CWGroup)), "
             "S is Affaire")
-        self.assertTrue('D' in kwargs)
+        self.assertIn('D', kwargs)
 
     def test_or(self):
         constraint = '(X identity U) OR (X in_state ST, CL identity U, CL in_state ST, ST name "subscribed")'

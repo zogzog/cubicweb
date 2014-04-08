@@ -53,11 +53,11 @@ def req_form(user):
 class EditControllerTC(CubicWebTC):
     def setUp(self):
         CubicWebTC.setUp(self)
-        self.assertTrue('users' in self.schema.eschema('CWGroup').get_groups('read'))
+        self.assertIn('users', self.schema.eschema('CWGroup').get_groups('read'))
 
     def tearDown(self):
         CubicWebTC.tearDown(self)
-        self.assertTrue('users' in self.schema.eschema('CWGroup').get_groups('read'))
+        self.assertIn('users', self.schema.eschema('CWGroup').get_groups('read'))
 
     def test_noparam_edit(self):
         """check behaviour of this controller without any form parameter

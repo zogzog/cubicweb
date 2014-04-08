@@ -86,8 +86,8 @@ class SchemaModificationHooksTC(CubicWebTC):
         self.assertFalse('concerne2' in schema['Societe2'].subject_relations())
         self.assertFalse(self.index_exists('Societe2', 'name'))
         self.commit()
-        self.assertTrue('name' in schema['Societe2'].subject_relations())
-        self.assertTrue('concerne2' in schema['Societe2'].subject_relations())
+        self.assertIn('name', schema['Societe2'].subject_relations())
+        self.assertIn('concerne2', schema['Societe2'].subject_relations())
         self.assertTrue(self.index_exists('Societe2', 'name'))
         # now we should be able to insert and query Societe2
         s2eid = self.execute('INSERT Societe2 X: X name "logilab"')[0][0]
@@ -103,7 +103,7 @@ class SchemaModificationHooksTC(CubicWebTC):
         self.commit()
         self.execute('DELETE CWRelation X WHERE X eid %(x)s', {'x': concerne2_rdef_eid})
         self.commit()
-        self.assertTrue('concerne2' in schema['CWUser'].subject_relations())
+        self.assertIn('concerne2', schema['CWUser'].subject_relations())
         self.assertFalse('concerne2' in schema['Societe2'].subject_relations())
         self.assertFalse(self.execute('Any X WHERE X concerne2 Y'))
         # schema should be cleaned on delete (after commit)
@@ -154,7 +154,7 @@ class SchemaModificationHooksTC(CubicWebTC):
         snames = [name for name, in self.execute('Any N WHERE S is BaseTransition, S name N')]
         self.assertFalse('subdiv' in snames)
         snames = [name for name, in self.execute('Any N WHERE S is_instance_of BaseTransition, S name N')]
-        self.assertTrue('subdiv' in snames)
+        self.assertIn('subdiv', snames)
 
 
     def test_perms_synchronization_1(self):
@@ -294,8 +294,8 @@ class SchemaModificationHooksTC(CubicWebTC):
                      {'x': attreid})
         self.commit()
         self.schema.rebuild_infered_relations()
-        self.assertTrue('Transition' in self.schema['messageid'].subjects())
-        self.assertTrue('WorkflowTransition' in self.schema['messageid'].subjects())
+        self.assertIn('Transition', self.schema['messageid'].subjects())
+        self.assertIn('WorkflowTransition', self.schema['messageid'].subjects())
         self.execute('Any X WHERE X is_instance_of BaseTransition, X messageid "hop"')
 
     def test_change_fulltextindexed(self):

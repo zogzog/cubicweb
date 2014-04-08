@@ -43,7 +43,7 @@ class AutoExtendableTC(TestCase):
         class MyValueGenerator(ValueGenerator):
             def generate_server(self, index):
                 return attrname
-        self.assertTrue('generate_server' in dir(ValueGenerator))
+        self.assertIn('generate_server', dir(ValueGenerator))
 
 
     def test_bad_signature_detection(self):
@@ -63,7 +63,7 @@ class AutoExtendableTC(TestCase):
         class MyValueGenerator(ValueGenerator):
             def generate_server(self, index, foo):
                 pass
-        self.assertTrue('generate_server' in dir(ValueGenerator))
+        self.assertIn('generate_server', dir(ValueGenerator))
 
 
 if __name__ == '__main__':

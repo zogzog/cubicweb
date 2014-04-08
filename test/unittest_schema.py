@@ -248,7 +248,7 @@ class SchemaReaderClassTest(TestCase):
 
     def test_fulltext_container(self):
         schema = loader.load(config)
-        self.assertTrue('has_text' in schema['CWUser'].subject_relations())
+        self.assertIn('has_text', schema['CWUser'].subject_relations())
         self.assertFalse('has_text' in schema['EmailAddress'].subject_relations())
 
     def test_permission_settings(self):

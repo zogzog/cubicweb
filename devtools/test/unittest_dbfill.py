@@ -86,7 +86,7 @@ class ValueGeneratorTC(TestCase):
         # Test for random index
         for index in range(5):
             cost_value = self.bug_valgen.generate_attribute_value({}, 'cost', index)
-            self.assertTrue(cost_value in range(index+1))
+            self.assertIn(cost_value, range(index+1))
 
     def test_date(self):
         """test date generation"""

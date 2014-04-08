@@ -38,11 +38,11 @@ class WebconfigTC(TestCase):
         self.assertTrue(isinstance(ie_css, list))
 
     def test_locate_resource(self):
-        self.assertTrue('FILE_ICON' in self.config.uiprops)
+        self.assertIn('FILE_ICON', self.config.uiprops)
         rname = self.config.uiprops['FILE_ICON'].replace(self.config.datadir_url, '')
-        self.assertTrue('file' in self.config.locate_resource(rname)[0].split(os.sep))
+        self.assertIn('file', self.config.locate_resource(rname)[0].split(os.sep))
         cubicwebcsspath = self.config.locate_resource('cubicweb.css')[0].split(os.sep)
-        self.assertTrue('web' in cubicwebcsspath or 'shared' in cubicwebcsspath) # 'shared' if tests under apycot
+        self.assertIn('web' in cubicwebcsspath or 'shared', cubicwebcsspath) # 'shared' if tests under apycot
 
     def test_sign_text(self):
         signature = self.config.sign_text(u'hôp')

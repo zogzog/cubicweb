@@ -40,7 +40,7 @@ class MessageIdTC(TestCase):
         # parse_message_id should work with or without surrounding <>
         self.assertEqual(values, parse_message_id(msgid1[1:-1], 'testapp'))
         self.assertEqual(values['eid'], '21')
-        self.assertTrue('timestamp' in values)
+        self.assertIn('timestamp', values)
         self.assertEqual(parse_message_id(msgid1[1:-1], 'anotherapp'), None)
 
     def test_notimestamp(self):

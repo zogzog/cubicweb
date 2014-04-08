@@ -241,7 +241,7 @@ class LDAPFeedUserTC(LDAPFeedTestBase):
         self.assertMetadata(e)
         self.assertEqual(e.firstname, None)
         self.assertEqual(e.surname, None)
-        self.assertTrue('users' in [g.name for g in e.in_group])
+        self.assertIn('users' in [g.name for g, e.in_group])
         self.assertEqual(e.owned_by[0].login, 'syt')
         self.assertEqual(e.created_by, ())
         addresses = [pe.address for pe in e.use_email]
