@@ -459,7 +459,7 @@ class InitInstanceCommand(Command):
         init_repository(config, drop=self.config.drop)
         if not self.config.automatic:
             while ASK.confirm('Enter another source ?', default_is_yes=False):
-                CWCTL.run(['add-source', '--config-level',
+                CWCTL.run(['source-add', '--config-level',
                            str(self.config.config_level), config.appid])
 
 
@@ -469,7 +469,7 @@ class AddSourceCommand(Command):
     <instance>
       the identifier of the instance to initialize.
     """
-    name = 'add-source'
+    name = 'source-add'
     arguments = '<instance>'
     min_args = max_args = 1
     options = (
