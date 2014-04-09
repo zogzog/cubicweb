@@ -254,3 +254,18 @@ if applcubicwebversion < (3, 2, 2) and cubicwebversion >= (3, 2, 1):
 
 if applcubicwebversion < (3, 2, 0) and cubicwebversion >= (3, 2, 0):
     add_cube('card', update_database=False)
+
+def sync_constraint_types():
+    """Make sure the repository knows about all constraint types defined in the code"""
+    from cubicweb.schema import CONSTRAINTS
+    repo_constraints = set(row[0] for row in rql('Any N WHERE X is CWConstraintType, X name N'))
+
+    for cstrtype in set(CONSTRAINTS) - repo_constraints:
+        if cstrtype == 'BoundConstraint':
+            # was renamed to BoundaryConstraint, we don't need the old name
+            continue
+        rql('INSERT CWConstraintType X: X name %(name)s', {'name': cstrtype})
+
+    commit()
+
+sync_constraint_types()
