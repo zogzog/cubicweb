@@ -105,7 +105,7 @@ class ProcessInformationView(StartupView):
         w(u'</table>')
         if req.cnx.is_repo_in_memory and req.user.is_in_group('managers'):
             w(u'<h3>%s</h3>' % _('opened sessions'))
-            sessions = repo._sessions.itervalues()
+            sessions = repo._sessions.values()
             if sessions:
                 w(u'<ul>')
                 for session in sessions:
