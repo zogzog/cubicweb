@@ -163,3 +163,6 @@ Deprecated Code Drops
 * EtypeRestrictionComponent has been removed, its functionality has been
   replaced by facets a while ago.
 
+* the old multi-source support has been removed.  Only copy-based sources
+  remain, such as datafeed or ldapfeed.
+
