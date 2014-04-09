@@ -1021,7 +1021,8 @@ class Repository(object):
             cnx = cnx._cnx
         except AttributeError:
             pass
-        eid = self.system_source.extid2eid(cnx, extid)
+        with cnx.ensure_cnx_set:
+            eid = self.system_source.extid2eid(cnx, extid)
         if eid is not None:
             self._extid_cache[extid] = eid
             self._type_source_cache[eid] = (etype, extid, source.uri)
@@ -1029,33 +1030,37 @@ class Repository(object):
         if not insert:
             return
         # no link between extid and eid, create one
-        try:
-            eid = self.system_source.create_eid(cnx)
-            self._extid_cache[extid] = eid
-            self._type_source_cache[eid] = (etype, extid, source.uri)
-            entity = source.before_entity_insertion(
-                cnx, extid, etype, eid, sourceparams)
-            if source.should_call_hooks:
-                # get back a copy of operation for later restore if necessary,
-                # see below
-                pending_operations = cnx.pending_operations[:]
-                self.hm.call_hooks('before_add_entity', cnx, entity=entity)
-            self.add_info(cnx, entity, source, extid)
-            source.after_entity_insertion(cnx, extid, entity, sourceparams)
-            if source.should_call_hooks:
-                self.hm.call_hooks('after_add_entity', cnx, entity=entity)
-            return eid
-        except Exception:
-            # XXX do some cleanup manually so that the transaction has a
-            # chance to be commited, with simply this entity discarded
-            self._extid_cache.pop(extid, None)
-            self._type_source_cache.pop(eid, None)
-            if 'entity' in locals():
-                hook.CleanupDeletedEidsCacheOp.get_instance(cnx).add_data(entity.eid)
-                self.system_source.delete_info_multi(cnx, [entity])
+        with cnx.ensure_cnx_set:
+            # write query, ensure connection's mode is 'write' so connections
+            # won't be released until commit/rollback
+            cnx.mode = 'write'
+            try:
+                eid = self.system_source.create_eid(cnx)
+                self._extid_cache[extid] = eid
+                self._type_source_cache[eid] = (etype, extid, source.uri)
+                entity = source.before_entity_insertion(
+                    cnx, extid, etype, eid, sourceparams)
                 if source.should_call_hooks:
-                    cnx.pending_operations = pending_operations
-            raise
+                    # get back a copy of operation for later restore if
+                    # necessary, see below
+                    pending_operations = cnx.pending_operations[:]
+                    self.hm.call_hooks('before_add_entity', cnx, entity=entity)
+                self.add_info(cnx, entity, source, extid)
+                source.after_entity_insertion(cnx, extid, entity, sourceparams)
+                if source.should_call_hooks:
+                    self.hm.call_hooks('after_add_entity', cnx, entity=entity)
+                return eid
+            except Exception:
+                # XXX do some cleanup manually so that the transaction has a
+                # chance to be commited, with simply this entity discarded
+                self._extid_cache.pop(extid, None)
+                self._type_source_cache.pop(eid, None)
+                if 'entity' in locals():
+                    hook.CleanupDeletedEidsCacheOp.get_instance(cnx).add_data(entity.eid)
+                    self.system_source.delete_info_multi(cnx, [entity])
+                    if source.should_call_hooks:
+                        cnx.pending_operations = pending_operations
+                raise
 
     def add_info(self, session, entity, source, extid=None):
         """add type and source info for an eid into the system table,
