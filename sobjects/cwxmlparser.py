@@ -467,7 +467,7 @@ class CWEntityXMLActionLink(CWEntityXMLActionCopy):
             self._clear_relation((ttype,))
 
     def _find_entities(self, item, kwargs):
-        return tuple(self._cw.find_entities(item['cwtype'], **kwargs))
+        return tuple(self._cw.find(item['cwtype'], **kwargs).entities())
 
 
 class CWEntityXMLActionLinkInState(CWEntityXMLActionLink):

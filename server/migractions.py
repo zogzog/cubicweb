@@ -1342,17 +1342,23 @@ class ServerMigrationHelper(MigrationHelper):
             self.commit()
         return entity
 
+    def cmd_find(self, etype, **kwargs):
+        """find entities of the given type and attribute values"""
+        return self.cnx.find(etype, **kwargs)
+
+    @deprecated("[3.19] use find(*args, **kwargs).entities() instead")
     def cmd_find_entities(self, etype, **kwargs):
         """find entities of the given type and attribute values"""
-        return self.cnx.find_entities(etype, **kwargs)
+        return self.cnx.find(etype, **kwargs).entities()
 
+    @deprecated("[3.19] use find(*args, **kwargs).one() instead")
     def cmd_find_one_entity(self, etype, **kwargs):
         """find one entity of the given type and attribute values.
 
         raise :exc:`cubicweb.req.FindEntityError` if can not return one and only
         one entity.
         """
-        return self.cnx.find_one_entity(etype, **kwargs)
+        return self.cnx.find(etype, **kwargs).one()
 
     def cmd_update_etype_fti_weight(self, etype, weight):
         if self.repo.system_source.dbdriver == 'postgres':

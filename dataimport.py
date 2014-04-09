@@ -620,11 +620,13 @@ class RQLObjectStore(ObjectStore):
         self.rql('SET X %s Y WHERE X eid %%(x)s, Y eid %%(y)s' % rtype,
                  {'x': int(eid_from), 'y': int(eid_to)})
 
+    @deprecated("[3.19] use session.find(*args, **kwargs).entities() instead")
     def find_entities(self, *args, **kwargs):
-        return self.session.find_entities(*args, **kwargs)
+        return self.session.find(*args, **kwargs).entities()
 
+    @deprecated("[3.19] use session.find(*args, **kwargs).one() instead")
     def find_one_entity(self, *args, **kwargs):
-        return self.session.find_one_entity(*args, **kwargs)
+        return self.session.find(*args, **kwargs).one()
 
 # the import controller ########################################################
 
