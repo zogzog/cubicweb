@@ -1,4 +1,4 @@
-# copyright 2011-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2011-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -157,17 +157,18 @@ class CWEntityXMLParserTC(CubicWebTC):
 
     def test_complete_url(self):
         dfsource = self.repo.sources_by_uri['myfeed']
-        parser = dfsource._get_parser(self.session)
-        self.assertEqual(parser.complete_url('http://www.cubicweb.org/CWUser'),
-                         'http://www.cubicweb.org/CWUser?relation=tags-object&relation=in_group-subject&relation=in_state-subject&relation=use_email-subject')
-        self.assertEqual(parser.complete_url('http://www.cubicweb.org/cwuser'),
-                         'http://www.cubicweb.org/cwuser?relation=tags-object&relation=in_group-subject&relation=in_state-subject&relation=use_email-subject')
-        self.assertEqual(parser.complete_url('http://www.cubicweb.org/cwuser?vid=rdf&relation=hop'),
-                         'http://www.cubicweb.org/cwuser?relation=hop&relation=tags-object&relation=in_group-subject&relation=in_state-subject&relation=use_email-subject&vid=rdf')
-        self.assertEqual(parser.complete_url('http://www.cubicweb.org/?rql=cwuser&vid=rdf&relation=hop'),
-                         'http://www.cubicweb.org/?rql=cwuser&relation=hop&vid=rdf')
-        self.assertEqual(parser.complete_url('http://www.cubicweb.org/?rql=cwuser&relation=hop'),
-                         'http://www.cubicweb.org/?rql=cwuser&relation=hop')
+        with self.admin_access.repo_cnx() as cnx:
+            parser = dfsource._get_parser(cnx)
+            self.assertEqual(parser.complete_url('http://www.cubicweb.org/CWUser'),
+                             'http://www.cubicweb.org/CWUser?relation=tags-object&relation=in_group-subject&relation=in_state-subject&relation=use_email-subject')
+            self.assertEqual(parser.complete_url('http://www.cubicweb.org/cwuser'),
+                             'http://www.cubicweb.org/cwuser?relation=tags-object&relation=in_group-subject&relation=in_state-subject&relation=use_email-subject')
+            self.assertEqual(parser.complete_url('http://www.cubicweb.org/cwuser?vid=rdf&relation=hop'),
+                             'http://www.cubicweb.org/cwuser?relation=hop&relation=tags-object&relation=in_group-subject&relation=in_state-subject&relation=use_email-subject&vid=rdf')
+            self.assertEqual(parser.complete_url('http://www.cubicweb.org/?rql=cwuser&vid=rdf&relation=hop'),
+                             'http://www.cubicweb.org/?rql=cwuser&relation=hop&vid=rdf')
+            self.assertEqual(parser.complete_url('http://www.cubicweb.org/?rql=cwuser&relation=hop'),
+                             'http://www.cubicweb.org/?rql=cwuser&relation=hop')
 
 
     def test_actions(self):
@@ -192,113 +193,105 @@ class CWEntityXMLParserTC(CubicWebTC):
                                  (u'Tag', {u'linkattr': u'name'})],
                              },
                           })
-        session = self.repo.internal_session(safe=True)
-        stats = dfsource.pull_data(session, force=True, raise_on_error=True)
-        self.assertEqual(sorted(stats), ['checked', 'created', 'updated'])
-        self.assertEqual(len(stats['created']), 2)
-        self.assertEqual(stats['updated'], set())
+        with self.repo.internal_cnx() as cnx:
+            stats = dfsource.pull_data(cnx, force=True, raise_on_error=True)
+            self.assertEqual(sorted(stats), ['checked', 'created', 'updated'])
+            self.assertEqual(len(stats['created']), 2)
+            self.assertEqual(stats['updated'], set())
 
-        user = self.execute('CWUser X WHERE X login "sthenault"').get_entity(0, 0)
-        self.assertEqual(user.creation_date, datetime(2010, 01, 22, 10, 27, 59))
-        self.assertEqual(user.modification_date, datetime(2011, 01, 25, 14, 14, 06))
-        self.assertEqual(user.cwuri, 'http://pouet.org/5')
-        self.assertEqual(user.cw_source[0].name, 'myfeed')
-        self.assertEqual(user.absolute_url(), 'http://pouet.org/5')
-        self.assertEqual(len(user.use_email), 1)
-        # copy action
-        email = user.use_email[0]
-        self.assertEqual(email.address, 'syt@logilab.fr')
-        self.assertEqual(email.cwuri, 'http://pouet.org/6')
-        self.assertEqual(email.absolute_url(), 'http://pouet.org/6')
-        self.assertEqual(email.cw_source[0].name, 'myfeed')
-        self.assertEqual(len(email.reverse_tags), 1)
-        self.assertEqual(email.reverse_tags[0].name, 'hop')
-        # link action
-        self.assertFalse(self.execute('CWGroup X WHERE X name "unknown"'))
-        groups = sorted([g.name for g in user.in_group])
-        self.assertEqual(groups, ['users'])
-        group = user.in_group[0]
-        self.assertEqual(len(group.reverse_tags), 1)
-        self.assertEqual(group.reverse_tags[0].name, 'hop')
-        # link or create action
-        tags = set([(t.name, t.cwuri.replace(str(t.eid), ''), t.cw_source[0].name)
-                    for t in user.reverse_tags])
-        self.assertEqual(tags, set((('hop', 'http://testing.fr/cubicweb/', 'system'),
-                                    ('unknown', 'http://testing.fr/cubicweb/', 'system')))
-                         )
-        session.set_cnxset()
-        with session.security_enabled(read=False): # avoid Unauthorized due to password selection
-            stats = dfsource.pull_data(session, force=True, raise_on_error=True)
-        self.assertEqual(stats['created'], set())
-        self.assertEqual(len(stats['updated']), 0)
-        self.assertEqual(len(stats['checked']), 2)
-        self.repo._type_source_cache.clear()
-        self.repo._extid_cache.clear()
-        session.set_cnxset()
-        with session.security_enabled(read=False): # avoid Unauthorized due to password selection
-            stats = dfsource.pull_data(session, force=True, raise_on_error=True)
-        self.assertEqual(stats['created'], set())
-        self.assertEqual(len(stats['updated']), 0)
-        self.assertEqual(len(stats['checked']), 2)
-        session.commit()
+        with self.admin_access.web_request() as req:
+            user = req.execute('CWUser X WHERE X login "sthenault"').get_entity(0, 0)
+            self.assertEqual(user.creation_date, datetime(2010, 01, 22, 10, 27, 59))
+            self.assertEqual(user.modification_date, datetime(2011, 01, 25, 14, 14, 06))
+            self.assertEqual(user.cwuri, 'http://pouet.org/5')
+            self.assertEqual(user.cw_source[0].name, 'myfeed')
+            self.assertEqual(user.absolute_url(), 'http://pouet.org/5')
+            self.assertEqual(len(user.use_email), 1)
+            # copy action
+            email = user.use_email[0]
+            self.assertEqual(email.address, 'syt@logilab.fr')
+            self.assertEqual(email.cwuri, 'http://pouet.org/6')
+            self.assertEqual(email.absolute_url(), 'http://pouet.org/6')
+            self.assertEqual(email.cw_source[0].name, 'myfeed')
+            self.assertEqual(len(email.reverse_tags), 1)
+            self.assertEqual(email.reverse_tags[0].name, 'hop')
+            # link action
+            self.assertFalse(req.execute('CWGroup X WHERE X name "unknown"'))
+            groups = sorted([g.name for g in user.in_group])
+            self.assertEqual(groups, ['users'])
+            group = user.in_group[0]
+            self.assertEqual(len(group.reverse_tags), 1)
+            self.assertEqual(group.reverse_tags[0].name, 'hop')
+            # link or create action
+            tags = set([(t.name, t.cwuri.replace(str(t.eid), ''), t.cw_source[0].name)
+                        for t in user.reverse_tags])
+            self.assertEqual(tags, set((('hop', 'http://testing.fr/cubicweb/', 'system'),
+                                        ('unknown', 'http://testing.fr/cubicweb/', 'system')))
+                             )
+        with self.repo.internal_cnx() as cnx:
+            stats = dfsource.pull_data(cnx, force=True, raise_on_error=True)
+            self.assertEqual(stats['created'], set())
+            self.assertEqual(len(stats['updated']), 0)
+            self.assertEqual(len(stats['checked']), 2)
+            self.repo._type_source_cache.clear()
+            self.repo._extid_cache.clear()
+            stats = dfsource.pull_data(cnx, force=True, raise_on_error=True)
+            self.assertEqual(stats['created'], set())
+            self.assertEqual(len(stats['updated']), 0)
+            self.assertEqual(len(stats['checked']), 2)
 
-        # test move to system source
-        self.sexecute('SET X cw_source S WHERE X eid %(x)s, S name "system"', {'x': email.eid})
-        self.commit()
-        rset = self.sexecute('EmailAddress X WHERE X address "syt@logilab.fr"')
-        self.assertEqual(len(rset), 1)
-        e = rset.get_entity(0, 0)
-        self.assertEqual(e.eid, email.eid)
-        self.assertEqual(e.cw_metainformation(), {'source': {'type': u'native', 'uri': u'system',
-                                                             'use-cwuri-as-url': False},
-                                                  'type': 'EmailAddress',
-                                                  'extid': None})
-        self.assertEqual(e.cw_source[0].name, 'system')
-        self.assertEqual(e.reverse_use_email[0].login, 'sthenault')
-        self.commit()
-        # test everything is still fine after source synchronization
-        session.set_cnxset()
-        with session.security_enabled(read=False): # avoid Unauthorized due to password selection
-            stats = dfsource.pull_data(session, force=True, raise_on_error=True)
-        rset = self.sexecute('EmailAddress X WHERE X address "syt@logilab.fr"')
-        self.assertEqual(len(rset), 1)
-        e = rset.get_entity(0, 0)
-        self.assertEqual(e.eid, email.eid)
-        self.assertEqual(e.cw_metainformation(), {'source': {'type': u'native', 'uri': u'system',
-                                                             'use-cwuri-as-url': False},
-                                                  'type': 'EmailAddress',
-                                                  'extid': None})
-        self.assertEqual(e.cw_source[0].name, 'system')
-        self.assertEqual(e.reverse_use_email[0].login, 'sthenault')
-        session.commit()
+            # test move to system source
+            cnx.execute('SET X cw_source S WHERE X eid %(x)s, S name "system"', {'x': email.eid})
+            cnx.commit()
+            rset = cnx.execute('EmailAddress X WHERE X address "syt@logilab.fr"')
+            self.assertEqual(len(rset), 1)
+            e = rset.get_entity(0, 0)
+            self.assertEqual(e.eid, email.eid)
+            self.assertEqual(e.cw_metainformation(), {'source': {'type': u'native', 'uri': u'system',
+                                                                 'use-cwuri-as-url': False},
+                                                      'type': 'EmailAddress',
+                                                      'extid': None})
+            self.assertEqual(e.cw_source[0].name, 'system')
+            self.assertEqual(e.reverse_use_email[0].login, 'sthenault')
+            # test everything is still fine after source synchronization
+            stats = dfsource.pull_data(cnx, force=True, raise_on_error=True)
+            rset = cnx.execute('EmailAddress X WHERE X address "syt@logilab.fr"')
+            self.assertEqual(len(rset), 1)
+            e = rset.get_entity(0, 0)
+            self.assertEqual(e.eid, email.eid)
+            self.assertEqual(e.cw_metainformation(), {'source': {'type': u'native', 'uri': u'system',
+                                                                 'use-cwuri-as-url': False},
+                                                      'type': 'EmailAddress',
+                                                      'extid': None})
+            self.assertEqual(e.cw_source[0].name, 'system')
+            self.assertEqual(e.reverse_use_email[0].login, 'sthenault')
+            cnx.commit()
 
-        # test delete entity
-        e.cw_delete()
-        self.commit()
-        # test everything is still fine after source synchronization
-        session.set_cnxset()
-        with session.security_enabled(read=False): # avoid Unauthorized due to password selection
-            stats = dfsource.pull_data(session, force=True, raise_on_error=True)
-        rset = self.sexecute('EmailAddress X WHERE X address "syt@logilab.fr"')
-        self.assertEqual(len(rset), 0)
-        rset = self.sexecute('Any X WHERE X use_email E, X login "sthenault"')
-        self.assertEqual(len(rset), 0)
+            # test delete entity
+            e.cw_delete()
+            cnx.commit()
+            # test everything is still fine after source synchronization
+            stats = dfsource.pull_data(cnx, force=True, raise_on_error=True)
+            rset = cnx.execute('EmailAddress X WHERE X address "syt@logilab.fr"')
+            self.assertEqual(len(rset), 0)
+            rset = cnx.execute('Any X WHERE X use_email E, X login "sthenault"')
+            self.assertEqual(len(rset), 0)
 
     def test_external_entity(self):
         dfsource = self.repo.sources_by_uri['myotherfeed']
-        session = self.repo.internal_session(safe=True)
-        stats = dfsource.pull_data(session, force=True, raise_on_error=True)
-        user = self.execute('CWUser X WHERE X login "sthenault"').get_entity(0, 0)
-        self.assertEqual(user.creation_date, datetime(2010, 01, 22, 10, 27, 59))
-        self.assertEqual(user.modification_date, datetime(2011, 01, 25, 14, 14, 06))
-        self.assertEqual(user.cwuri, 'http://pouet.org/5')
-        self.assertEqual(user.cw_source[0].name, 'myfeed')
+        with self.repo.internal_cnx() as cnx:
+            stats = dfsource.pull_data(cnx, force=True, raise_on_error=True)
+            user = cnx.execute('CWUser X WHERE X login "sthenault"').get_entity(0, 0)
+            self.assertEqual(user.creation_date, datetime(2010, 01, 22, 10, 27, 59))
+            self.assertEqual(user.modification_date, datetime(2011, 01, 25, 14, 14, 06))
+            self.assertEqual(user.cwuri, 'http://pouet.org/5')
+            self.assertEqual(user.cw_source[0].name, 'myfeed')
 
     def test_noerror_missing_fti_attribute(self):
         dfsource = self.repo.sources_by_uri['myfeed']
-        session = self.repo.internal_session(safe=True)
-        parser = dfsource._get_parser(session)
-        dfsource.process_urls(parser, ['''
+        with self.repo.internal_cnx() as cnx:
+            parser = dfsource._get_parser(cnx)
+            dfsource.process_urls(parser, ['''
 <rset size="1">
  <Card eid="50" cwuri="http://pouet.org/50" cwsource="system">
   <title>how-to</title>
@@ -308,9 +301,9 @@ class CWEntityXMLParserTC(CubicWebTC):
 
     def test_noerror_unspecified_date(self):
         dfsource = self.repo.sources_by_uri['myfeed']
-        session = self.repo.internal_session(safe=True)
-        parser = dfsource._get_parser(session)
-        dfsource.process_urls(parser, ['''
+        with self.repo.internal_cnx() as cnx:
+            parser = dfsource._get_parser(cnx)
+            dfsource.process_urls(parser, ['''
 <rset size="1">
  <Card eid="50" cwuri="http://pouet.org/50" cwsource="system">
   <title>how-to</title>
