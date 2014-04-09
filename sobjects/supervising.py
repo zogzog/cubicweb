@@ -142,16 +142,16 @@ class SupervisionEmailView(Component):
         self.w(u'  %s' % entity.absolute_url())
 
     def _relation_context(self, changedescr):
-        session = self._cw
+        cnx = self._cw
         def describe(eid):
             try:
-                return session._(session.entity_metas(eid)['type']).lower()
+                return cnx._(cnx.entity_metas(eid)['type']).lower()
             except UnknownEid:
                 # may occurs when an entity has been deleted from an external
                 # source and we're cleaning its relation
-                return session._('unknown external entity')
+                return cnx._('unknown external entity')
         eidfrom, rtype, eidto = changedescr.eidfrom, changedescr.rtype, changedescr.eidto
-        return {'rtype': session._(rtype),
+        return {'rtype': cnx._(rtype),
                 'eidfrom': eidfrom,
                 'frometype': describe(eidfrom),
                 'eidto': eidto,
@@ -171,16 +171,15 @@ class SupervisionMailOp(SendMailOp):
     of changes
     """
     def _get_view(self):
-        return self.session.vreg['components'].select('supervision_notif',
-                                                      self.session)
+        return self.cnx.vreg['components'].select('supervision_notif', self.cnx)
 
     def _prepare_email(self):
-        session = self.session
-        config = session.vreg.config
+        cnx = self.cnx
+        config = cnx.vreg.config
         uinfo = {'email': config['sender-addr'],
                  'name': config['sender-name']}
         view = self._get_view()
-        content = view.render(changes=session.transaction_data.get('pendingchanges'))
+        content = view.render(changes=cnx.transaction_data.get('pendingchanges'))
         recipients = view.recipients()
         msg = format_mail(uinfo, recipients, content, view.subject(), config=config)
         self.to_send = [(msg, recipients)]
