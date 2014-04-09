@@ -909,23 +909,17 @@ class Repository(object):
 
     @contextmanager
     def internal_cnx(self):
-        """return a Connection using internal user which have
-        every rights on the repository. The `safe` argument is dropped. all
-        hook are enabled by default.
+        """Context manager returning a Connection using internal user which have
+        every access rights on the repository.
 
-        /!\ IN OPPOSITE OF THE OLDER INTERNAL_SESSION,
-        /!\ INTERNAL CONNECTION HAVE ALL HOOKS ENABLED.
-
-        This is to be used a context manager.
+        Beware that unlike the older :meth:`internal_session`, internal
+        connections have all hooks beside security enabled.
         """
         with InternalSession(self) as session:
             with session.new_cnx() as cnx:
-                # equivalent to cnx.security_enabled(False, False) because
-                # InternalSession gives full read access
-                with cnx.allow_all_hooks_but('security'):
+                with cnx.security_enabled(read=False, write=False):
                     with cnx.ensure_cnx_set:
                         yield cnx
-
 
     def _get_session(self, sessionid, setcnxset=False, txid=None,
                      checkshuttingdown=True):
