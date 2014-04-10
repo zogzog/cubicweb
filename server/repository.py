@@ -606,11 +606,10 @@ class Repository(object):
         This is a public method, not requiring a session id.
         """
         with self.internal_cnx() as cnx:
-            with cnx.ensure_cnx_set:
-                # don't use cnx.execute, we don't want rset.req set
-                return self.querier.execute(cnx, 'Any K,V WHERE P is CWProperty,'
-                                            'P pkey K, P value V, NOT P for_user U',
-                                            build_descr=False)
+            # don't use cnx.execute, we don't want rset.req set
+            return self.querier.execute(cnx, 'Any K,V WHERE P is CWProperty,'
+                                        'P pkey K, P value V, NOT P for_user U',
+                                        build_descr=False)
 
     # XXX protect this method: anonymous should be allowed and registration
     # plugged
@@ -620,35 +619,34 @@ class Repository(object):
         registration on public web site.
         """
         with self.internal_cnx() as cnx:
-            with cnx.ensure_cnx_set:
-                # for consistency, keep same error as unique check hook (although not required)
-                errmsg = cnx._('the value "%s" is already used, use another one')
-                if (cnx.execute('CWUser X WHERE X login %(login)s', {'login': login},
-                                build_descr=False)
-                    or cnx.execute('CWUser X WHERE X use_email C, C address %(login)s',
-                                   {'login': login}, build_descr=False)):
-                    qname = role_name('login', 'subject')
-                    raise ValidationError(None, {qname: errmsg % login})
-                # we have to create the user
-                user = self.vreg['etypes'].etype_class('CWUser')(cnx)
-                if isinstance(password, unicode):
-                    # password should *always* be utf8 encoded
-                    password = password.encode('UTF8')
-                kwargs['login'] = login
-                kwargs['upassword'] = password
-                self.glob_add_entity(cnx, EditedEntity(user, **kwargs))
-                cnx.execute('SET X in_group G WHERE X eid %(x)s, G name "users"',
-                            {'x': user.eid})
-                if email or '@' in login:
-                    d = {'login': login, 'email': email or login}
-                    if cnx.execute('EmailAddress X WHERE X address %(email)s', d,
-                                   build_descr=False):
-                        qname = role_name('address', 'subject')
-                        raise ValidationError(None, {qname: errmsg % d['email']})
-                    cnx.execute('INSERT EmailAddress X: X address %(email)s, '
-                                'U primary_email X, U use_email X '
-                                'WHERE U login %(login)s', d, build_descr=False)
-                cnx.commit()
+            # for consistency, keep same error as unique check hook (although not required)
+            errmsg = cnx._('the value "%s" is already used, use another one')
+            if (cnx.execute('CWUser X WHERE X login %(login)s', {'login': login},
+                            build_descr=False)
+                or cnx.execute('CWUser X WHERE X use_email C, C address %(login)s',
+                               {'login': login}, build_descr=False)):
+                qname = role_name('login', 'subject')
+                raise ValidationError(None, {qname: errmsg % login})
+            # we have to create the user
+            user = self.vreg['etypes'].etype_class('CWUser')(cnx)
+            if isinstance(password, unicode):
+                # password should *always* be utf8 encoded
+                password = password.encode('UTF8')
+            kwargs['login'] = login
+            kwargs['upassword'] = password
+            self.glob_add_entity(cnx, EditedEntity(user, **kwargs))
+            cnx.execute('SET X in_group G WHERE X eid %(x)s, G name "users"',
+                        {'x': user.eid})
+            if email or '@' in login:
+                d = {'login': login, 'email': email or login}
+                if cnx.execute('EmailAddress X WHERE X address %(email)s', d,
+                               build_descr=False):
+                    qname = role_name('address', 'subject')
+                    raise ValidationError(None, {qname: errmsg % d['email']})
+                cnx.execute('INSERT EmailAddress X: X address %(email)s, '
+                            'U primary_email X, U use_email X '
+                            'WHERE U login %(login)s', d, build_descr=False)
+            cnx.commit()
         return True
 
     def find_users(self, fetch_attrs, **query_attrs):
@@ -950,8 +948,11 @@ class Repository(object):
         """
         with InternalSession(self) as session:
             with session.new_cnx() as cnx:
+                # equivalent to cnx.security_enabled(False, False) because
+                # InternalSession gives full read access
                 with cnx.allow_all_hooks_but('security'):
-                    yield cnx
+                    with cnx.ensure_cnx_set:
+                        yield cnx
 
 
     def _get_session(self, sessionid, setcnxset=False, txid=None,
