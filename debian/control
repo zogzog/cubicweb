@@ -166,6 +166,9 @@ Breaks:
  cubicweb-person (<< 1.8.0),
  cubicweb-geocoding (<< 0.2.0),
  cubicweb-invoice (<< 0.6.1),
+ cubicweb-mercurial-server (<< 0.4.2),
+ cubicweb-forgotpwd (<< 0.4.3),
+ cubicweb-registration (<< 0.4.3),
 Description: common library for the CubicWeb framework
  CubicWeb is a semantic web application framework.
  .
