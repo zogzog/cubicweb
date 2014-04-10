@@ -318,6 +318,8 @@ class DeleteCompositeOrphanHook(hook.Hook):
     __select__ = hook.Hook.__select__ & composite_etype()
     events = ('before_delete_entity',)
     category = 'activeintegrity'
+    # give the application's before_delete_entity hooks a chance to run before we cascade
+    order = 99
 
     def __call__(self):
         eid = self.entity.eid
