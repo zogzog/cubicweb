@@ -42,7 +42,7 @@ class WebconfigTC(TestCase):
         rname = self.config.uiprops['FILE_ICON'].replace(self.config.datadir_url, '')
         self.assertIn('file', self.config.locate_resource(rname)[0].split(os.sep))
         cubicwebcsspath = self.config.locate_resource('cubicweb.css')[0].split(os.sep)
-        self.assertIn('web' in cubicwebcsspath or 'shared', cubicwebcsspath) # 'shared' if tests under apycot
+        self.assertTrue('web' in cubicwebcsspath or 'shared' in cubicwebcsspath) # 'shared' if tests under apycot
 
     def test_sign_text(self):
         signature = self.config.sign_text(u'hôp')
