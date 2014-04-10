@@ -991,7 +991,7 @@ the repository',
         super(CubicWebConfiguration, self).adjust_sys_path()
         # adding apphome to python path is not usually necessary in production
         # environments, but necessary for tests
-        if self.apphome and not self.apphome in sys.path:
+        if self.apphome and self.apphome not in sys.path:
             sys.path.insert(0, self.apphome)
 
     @property
