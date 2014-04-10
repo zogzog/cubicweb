@@ -548,7 +548,12 @@ class PostgresTestDataBaseHandler(TestDataBaseHandler):
         if not exists(datadir):
             subprocess.check_call(['initdb', '-D', datadir, '-E', 'utf-8', '--locale=C'])
         port = self.system_source['db-port']
-        subprocess.check_call(['pg_ctl', 'start', '-w', '-D', datadir, '-o', '-h "" -k /tmp -p %s' % port])
+        directory = self.system_source['db-host']
+        env = os.environ.copy()
+        env['PGPORT'] = str(port)
+        env['PGHOST'] = str(directory)
+        subprocess.check_call(['pg_ctl', 'start', '-w', '-D', datadir, '-o', '-h "" -k %s -p %s' % (directory, port)],
+                              env=env)
         self.__CTL.add(datadir)
 
     @property
