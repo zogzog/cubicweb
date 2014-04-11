@@ -34,6 +34,7 @@ HTML <input> based widgets
 
 .. autoclass:: cubicweb.web.formwidgets.HiddenInput
 .. autoclass:: cubicweb.web.formwidgets.TextInput
+.. autoclass:: cubicweb.web.formwidgets.EmailInput
 .. autoclass:: cubicweb.web.formwidgets.PasswordSingleInput
 .. autoclass:: cubicweb.web.formwidgets.FileInput
 .. autoclass:: cubicweb.web.formwidgets.ButtonInput
@@ -312,6 +313,11 @@ class Input(FieldWidget):
 class TextInput(Input):
     """Simple <input type='text'>, will return an unicode string."""
     type = 'text'
+
+
+class EmailInput(Input):
+    """Simple <input type='email'>, will return a unicode string."""
+    type = 'email'
 
 
 class PasswordSingleInput(Input):
