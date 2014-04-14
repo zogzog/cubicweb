@@ -185,7 +185,7 @@ class IFeedAdapter(EntityAdapter):
     __select__ = is_instance('Any')
 
     def rss_feed_url(self):
-        """return an url to the rss feed for this entity"""
+        """return a URL to the rss feed for this entity"""
         return self.entity.absolute_url(vid='rss')
 
 

@@ -1065,9 +1065,9 @@ class TableView(AnyRsetView):
             self.w(u'</div>\n')
 
     def page_navigation_url(self, navcomp, path, params):
-        """Build an url to the current view using the <navcomp> attributes
+        """Build a URL to the current view using the <navcomp> attributes
 
-        :param navcomp: a NavigationComponent to call an url method on.
+        :param navcomp: a NavigationComponent to call a URL method on.
         :param path:    expected to be json here?
         :param params: params to give to build_url method
 

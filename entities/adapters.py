@@ -166,7 +166,7 @@ class IDownloadableAdapter(view.EntityAdapter):
     __abstract__ = True
 
     def download_url(self, **kwargs): # XXX not really part of this interface
-        """return an url to download entity's content"""
+        """return a URL to download entity's content"""
         raise NotImplementedError
 
     def download_content_type(self):

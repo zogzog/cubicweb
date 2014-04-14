@@ -847,7 +847,7 @@ class ShellCommand(Command):
     in batch mode.
 
     By default it will connect to a local instance using an in memory
-    connection, unless an URL to a running instance is specified.
+    connection, unless a URL to a running instance is specified.
 
     Arguments after bare "--" string will not be processed by the shell command
     You can use it to pass extra arguments to your script and expect for

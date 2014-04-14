@@ -925,7 +925,7 @@ class HorizontalLayoutWidget(FieldWidget):
 
 
 class EditableURLWidget(FieldWidget):
-    """Custom widget to edit separatly an url path / query string (used by
+    """Custom widget to edit separatly a URL path / query string (used by
     default for the `path` attribute of `Bookmark` entities).
 
     It deals with url quoting nicely so that the user edit the unquoted value.

@@ -279,7 +279,7 @@ class RequestSessionBase(object):
         return u'%s%s?%s' % (base_url, path, self.build_url_params(**kwargs))
 
     def build_url_params(self, **kwargs):
-        """return encoded params to incorporate them in an URL"""
+        """return encoded params to incorporate them in a URL"""
         args = []
         for param, values in kwargs.iteritems():
             if not isinstance(values, (list, tuple)):
