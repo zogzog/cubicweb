@@ -315,7 +315,7 @@ class TextInput(Input):
 
 
 class PasswordSingleInput(Input):
-    """Simple <input type='password'>, will return an utf-8 encoded string.
+    """Simple <input type='password'>, will return a utf-8 encoded string.
 
     You may prefer using the :class:`~cubicweb.web.formwidgets.PasswordInput`
     widget which handles password confirmation.
@@ -332,7 +332,7 @@ class PasswordSingleInput(Input):
 class PasswordInput(Input):
     """<input type='password'> and a confirmation input. Form processing will
     fail if password and confirmation differs, else it will return the password
-    as an utf-8 encoded string.
+    as a utf-8 encoded string.
     """
     type = 'password'
 
