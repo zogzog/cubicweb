@@ -202,6 +202,8 @@ class FormRenderer(AppObject):
             attrs.setdefault('class', form.cssclass)
         if form.cwtarget:
             attrs.setdefault('cubicweb:target', form.cwtarget)
+        if not form.autocomplete:
+            attrs.setdefault('autocomplete', 'off')
         return '<form %s>' % uilib.sgml_attributes(attrs)
 
     def close_form(self, form, values):

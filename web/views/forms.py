@@ -111,6 +111,9 @@ class FieldsForm(form.Form):
     :attr:`fieldsets_in_order`
       sequence of fieldset names , to control order
 
+    :attr:`autocomplete`
+      set to False to add 'autocomplete=off' in the form open tag
+
     **Generic methods**
 
     .. automethod:: cubicweb.web.form.Form.field_by_name(name, role=None)
@@ -160,6 +163,7 @@ class FieldsForm(form.Form):
     form_buttons = None
     form_renderer_id = 'default'
     fieldsets_in_order = None
+    autocomplete = True
 
     @property
     def needs_multipart(self):
