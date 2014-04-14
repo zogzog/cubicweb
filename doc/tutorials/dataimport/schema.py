@@ -47,7 +47,7 @@ class Disease(EntityType):
       only has unique omim and omim_page identifiers, when it has them,
       these attributes have been defined through relations such that
       for each disease there is at most one omim and one omim_page. 
-      Each such identifier is defined through an URI, that is, through
+      Each such identifier is defined through a URI, that is, through
       an ``ExternalUri`` entity.
       That is, these relations are of cardinality "?*". For optimization
       purposes, one might be tempted to defined them as inlined, by setting
@@ -55,7 +55,7 @@ class Disease(EntityType):
     - chromosomal_location is also defined through a relation of 
       cardinality "?*", since any disease has at most one chromosomal
       location associated to it.
-    - same_as is also defined through an URI, and hence through a
+    - same_as is also defined through a URI, and hence through a
       relation having ``ExternalUri`` entities as objects.
 
     For more information on this data set and the data set itself, 
@@ -109,12 +109,12 @@ class Gene(EntityType):
     - label, defined through a Yams String.
     - bio2rdf_symbol, also defined as a Yams String, since it is 
       just an identifier.
-    - gene_id is an URI identifying a gene, hence it is defined
+    - gene_id is a URI identifying a gene, hence it is defined
       as a relation with an ``ExternalUri`` object.
     - a pair of unique identifiers in the HUGO Gene Nomenclature
       Committee (http://http://www.genenames.org/). They are defined
       as ``ExternalUri`` entities as well.
-    - same_as is also defined through an URI, and hence through a
+    - same_as is also defined through a URI, and hence through a
       relation having ``ExternalUri`` entities as objects.
     """
     # Corresponds to http://www.w3.org/2000/01/rdf-schema#label

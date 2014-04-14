@@ -164,7 +164,7 @@ def connect(database, login=None,
 
     * a simple instance id for in-memory connection
 
-    * an uri like scheme://host:port/instanceid where scheme may be one of
+    * a uri like scheme://host:port/instanceid where scheme may be one of
       'pyro', 'inmemory' or 'zmqpickle'
 
       * if scheme is 'pyro', <host:port> determine the name server address. If
