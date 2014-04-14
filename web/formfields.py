@@ -382,7 +382,7 @@ class Field(object):
         called by widgets which requires a vocabulary.
 
         It should return a list of tuple (label, value), where value
-        *must be an unicode string*, not a typed value.
+        *must be a unicode string*, not a typed value.
         """
         assert self.choices is not None
         if callable(self.choices):

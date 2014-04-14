@@ -781,7 +781,7 @@ class Repository(object):
                 txid=None):
         """execute a RQL query
 
-        * rqlstring should be an unicode string or a plain ascii string
+        * rqlstring should be a unicode string or a plain ascii string
         * args the optional parameters used in the query
         * build_descr is a flag indicating if the description should be
           built on select queries

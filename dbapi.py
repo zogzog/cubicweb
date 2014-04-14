@@ -471,7 +471,7 @@ class Cursor(object):
         """execute a rql query, return resulting rows and their description in
         a :class:`~cubicweb.rset.ResultSet` object
 
-        * `rql` should be an Unicode string or a plain ASCII string, containing
+        * `rql` should be a Unicode string or a plain ASCII string, containing
           the rql query
 
         * `args` the optional args dictionary associated to the query, with key

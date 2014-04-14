@@ -288,7 +288,7 @@ repository.',
             print 'exec', query, args
         cursor = session.cnxset[self.uri]
         try:
-            # str(query) to avoid error if it's an unicode string
+            # str(query) to avoid error if it's a unicode string
             cursor.execute(str(query), args)
         except Exception as ex:
             self.critical("sql: %r\n args: %s\ndbms message: %r",

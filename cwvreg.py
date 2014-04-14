@@ -753,7 +753,7 @@ class CWRegistryStore(RegistryStore):
             return self.property_info(key)['default']
 
     def typed_value(self, key, value):
-        """value is an unicode string, return it correctly typed. Let potential
+        """value is a unicode string, return it correctly typed. Let potential
         type error propagates.
         """
         pdef = self.property_info(key)

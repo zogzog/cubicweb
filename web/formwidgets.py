@@ -310,7 +310,7 @@ class Input(FieldWidget):
 # basic html widgets ###########################################################
 
 class TextInput(Input):
-    """Simple <input type='text'>, will return an unicode string."""
+    """Simple <input type='text'>, will return a unicode string."""
     type = 'text'
 
 
@@ -373,7 +373,7 @@ class FileInput(Input):
 
 
 class HiddenInput(Input):
-    """Simple <input type='hidden'> for hidden value, will return an unicode
+    """Simple <input type='hidden'> for hidden value, will return a unicode
     string.
     """
     type = 'hidden'
@@ -382,7 +382,7 @@ class HiddenInput(Input):
 
 
 class ButtonInput(Input):
-    """Simple <input type='button'>, will return an unicode string.
+    """Simple <input type='button'>, will return a unicode string.
 
     If you want a global form button, look at the :class:`Button`,
     :class:`SubmitButton`, :class:`ResetButton` and :class:`ImgButton` below.
@@ -391,7 +391,7 @@ class ButtonInput(Input):
 
 
 class TextArea(FieldWidget):
-    """Simple <textarea>, will return an unicode string."""
+    """Simple <textarea>, will return a unicode string."""
 
     def _render(self, form, field, renderer):
         values, attrs = self.values_and_attributes(form, field)
@@ -413,7 +413,7 @@ class TextArea(FieldWidget):
 
 
 class FCKEditor(TextArea):
-    """FCKEditor enabled <textarea>, will return an unicode string containing
+    """FCKEditor enabled <textarea>, will return a unicode string containing
     HTML formated text.
     """
     def __init__(self, *args, **kwargs):
@@ -427,7 +427,7 @@ class FCKEditor(TextArea):
 
 class Select(FieldWidget):
     """Simple <select>, for field having a specific vocabulary. Will return
-    an unicode string, or a list of unicode strings.
+    a unicode string, or a list of unicode strings.
     """
     vocabulary_widget = True
     default_size = 10
@@ -623,7 +623,7 @@ class Radio(CheckBox):
 
 class DateTimePicker(TextInput):
     """<input type='text'> + javascript date/time picker for date or datetime
-    fields. Will return the date or datetime as an unicode string.
+    fields. Will return the date or datetime as a unicode string.
     """
     monthnames = ('january', 'february', 'march', 'april',
                   'may', 'june', 'july', 'august',
@@ -665,7 +665,7 @@ class DateTimePicker(TextInput):
 
 class JQueryDatePicker(FieldWidget):
     """Use jquery.ui.datepicker to define a date picker. Will return the date as
-    an unicode string.
+    a unicode string.
     """
     needs_js = ('jquery.ui.js', )
     needs_css = ('jquery.ui.css',)
