@@ -317,7 +317,7 @@ def check_options_consistency(config):
                               'used together')
 
 class CreateInstanceCommand(Command):
-    """Create an instance from a cube. This is an unified
+    """Create an instance from a cube. This is a unified
     command which can handle web / server / all-in-one installation
     according to available parts of the software library and of the
     desired cube.
