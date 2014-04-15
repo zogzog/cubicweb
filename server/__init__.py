@@ -1,4 +1,4 @@
-# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -197,7 +197,8 @@ def create_user(session, login, pwd, *groups):
                         {'u': user.eid, 'group': group})
     return user
 
-def init_repository(config, interactive=True, drop=False, vreg=None):
+def init_repository(config, interactive=True, drop=False, vreg=None,
+                    init_config=None):
     """initialise a repository database by creating tables add filling them
     with the minimal set of entities (ie at least the schema, base groups and
     a initial user)
@@ -215,6 +216,9 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     config.cube_appobject_path = set(('hooks', 'entities'))
     # only enable the system source at initialization time
     repo = Repository(config, vreg=vreg)
+    if init_config is not None:
+        # further config initialization once it has been bootstrapped
+        init_config(config)
     schema = repo.schema
     sourcescfg = config.read_sources_file()
     source = sourcescfg['system']

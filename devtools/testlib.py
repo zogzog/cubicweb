@@ -413,12 +413,9 @@ class CubicWebTC(TestCase):
     def _init_repo(self):
         """init the repository and connection to it.
         """
-        # setup configuration for test
-        self.init_config(self.config)
         # get or restore and working db.
-        db_handler = devtools.get_test_db_handler(self.config)
+        db_handler = devtools.get_test_db_handler(self.config, self.init_config)
         db_handler.build_db_cache(self.test_db_id, self.pre_setup_database)
-
         db_handler.restore_database(self.test_db_id)
         self.repo = db_handler.get_repo(startup=True)
         # get an admin session (without actual login)
@@ -501,14 +498,18 @@ class CubicWebTC(TestCase):
             config.mode = 'test'
             return config
 
-    @classmethod
+    @classmethod # XXX could be turned into a regular method
     def init_config(cls, config):
         """configuration initialization hooks.
 
         You may only want to override here the configuraton logic.
 
         Otherwise, consider to use a different :class:`ApptestConfiguration`
-        defined in the `configcls` class attribute"""
+        defined in the `configcls` class attribute.
+
+        This method will be called by the database handler once the config has
+        been properly bootstrapped.
+        """
         source = config.system_source_config
         cls.admlogin = unicode(source['db-user'])
         cls.admpassword = source['db-password']
