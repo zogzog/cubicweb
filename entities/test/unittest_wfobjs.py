@@ -50,11 +50,13 @@ class WorkflowBuildingTC(CubicWebTC):
             wf = add_wf(shell, 'Company')
             wf.add_state(u'foo', initial=True)
             shell.commit()
-            wf.add_state(u'foo')
             with self.assertRaises(ValidationError) as cm:
-                shell.commit()
-            self.assertEqual({'name-subject': 'workflow already has a state of that name'},
+                wf.add_state(u'foo')
+            self.assertEqual({'name': u'name is part of violated unicity constraint',
+                              'state_of': u'state_of is part of violated unicity constraint',
+                              'unicity constraint': u'some relations violate a unicity constraint'},
                              cm.exception.errors)
+            shell.rollback()
             # no pb if not in the same workflow
             wf2 = add_wf(shell, 'Company')
             foo = wf2.add_state(u'foo', initial=True)
@@ -62,10 +64,12 @@ class WorkflowBuildingTC(CubicWebTC):
             # gnark gnark
             bar = wf.add_state(u'bar')
             shell.commit()
-            bar.cw_set(name=u'foo')
             with self.assertRaises(ValidationError) as cm:
-                shell.commit()
-            self.assertEqual({'name-subject': 'workflow already has a state of that name'},
+                bar.cw_set(name=u'foo')
+            shell.rollback()
+            self.assertEqual({'name': u'name is part of violated unicity constraint',
+                              'state_of': u'state_of is part of violated unicity constraint',
+                              'unicity constraint': u'some relations violate a unicity constraint'},
                              cm.exception.errors)
 
     def test_duplicated_transition(self):
@@ -74,10 +78,13 @@ class WorkflowBuildingTC(CubicWebTC):
             foo = wf.add_state(u'foo', initial=True)
             bar = wf.add_state(u'bar')
             wf.add_transition(u'baz', (foo,), bar, ('managers',))
-            wf.add_transition(u'baz', (bar,), foo)
             with self.assertRaises(ValidationError) as cm:
-                shell.commit()
-            self.assertEqual(cm.exception.errors, {'name-subject': 'workflow already has a transition of that name'})
+                wf.add_transition(u'baz', (bar,), foo)
+            self.assertEqual({'name': u'name is part of violated unicity constraint',
+                              'transition_of': u'transition_of is part of violated unicity constraint',
+                              'unicity constraint': u'some relations violate a unicity constraint'},
+                             cm.exception.errors)
+            shell.rollback()
             # no pb if not in the same workflow
             wf2 = add_wf(shell, 'Company')
             foo = wf.add_state(u'foo', initial=True)
@@ -87,10 +94,13 @@ class WorkflowBuildingTC(CubicWebTC):
             # gnark gnark
             biz = wf.add_transition(u'biz', (bar,), foo)
             shell.commit()
-            biz.cw_set(name=u'baz')
             with self.assertRaises(ValidationError) as cm:
-                shell.commit()
-            self.assertEqual(cm.exception.errors, {'name-subject': 'workflow already has a transition of that name'})
+                biz.cw_set(name=u'baz')
+            shell.rollback()
+            self.assertEqual({'name': u'name is part of violated unicity constraint',
+                              'transition_of': u'transition_of is part of violated unicity constraint',
+                              'unicity constraint': u'some relations violate a unicity constraint'},
+                             cm.exception.errors)
 
 
 class WorkflowTC(CubicWebTC):

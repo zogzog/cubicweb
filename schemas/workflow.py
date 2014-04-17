@@ -24,7 +24,7 @@ _ = unicode
 from yams.buildobjs import (EntityType, RelationType, RelationDefinition,
                             SubjectRelation,
                             RichString, String, Int)
-from cubicweb.schema import RQLConstraint, RQLUniqueConstraint
+from cubicweb.schema import RQLConstraint
 from cubicweb.schemas import (PUB_SYSTEM_ENTITY_PERMS, PUB_SYSTEM_REL_PERMS,
                               RO_REL_PERMS)
 
@@ -62,11 +62,8 @@ class State(EntityType):
     workflows
     """
     __permissions__ = PUB_SYSTEM_ENTITY_PERMS
-
-    name = String(required=True, indexed=True, internationalizable=True,
-                  maxsize=256,
-                  constraints=[RQLUniqueConstraint('S name N, S state_of WF, Y state_of WF, Y name N', 'Y',
-                                                   _('workflow already has a state of that name'))])
+    __unique_together__ = [('name', 'state_of')]
+    name = String(required=True, indexed=True, internationalizable=True, maxsize=256)
     description = RichString(default_format='text/rest',
                              description=_('semantic description of this state'))
 
@@ -76,27 +73,21 @@ class State(EntityType):
                                          constraints=[RQLConstraint('S state_of WF, O transition_of WF',
                                                                     msg=_('state and transition don\'t belong the the same workflow'))],
                                          description=_('allowed transitions from this state'))
-    state_of = SubjectRelation('Workflow', cardinality='1*', composite='object',
-                               description=_('workflow to which this state belongs'),
-                               constraints=[RQLUniqueConstraint('S name N, Y state_of O, Y name N', 'Y',
-                                                                _('workflow already has a state of that name'))])
+    state_of = SubjectRelation('Workflow', cardinality='1*', composite='object', inlined=True,
+                               description=_('workflow to which this state belongs'))
 
 
 class BaseTransition(EntityType):
     """abstract base class for transitions"""
     __permissions__ = PUB_SYSTEM_ENTITY_PERMS
+    __unique_together__ = [('name', 'transition_of')]
 
-    name = String(required=True, indexed=True, internationalizable=True,
-                  maxsize=256,
-                  constraints=[RQLUniqueConstraint('S name N, S transition_of WF, Y transition_of WF, Y name N', 'Y',
-                                                   _('workflow already has a transition of that name'))])
+    name = String(required=True, indexed=True, internationalizable=True, maxsize=256)
     type = String(vocabulary=(_('normal'), _('auto')), default='normal')
     description = RichString(description=_('semantic description of this transition'))
 
-    transition_of = SubjectRelation('Workflow', cardinality='1*', composite='object',
-                                    description=_('workflow to which this transition belongs'),
-                                    constraints=[RQLUniqueConstraint('S name N, Y transition_of O, Y name N', 'Y',
-                                                                     _('workflow already has a transition of that name'))])
+    transition_of = SubjectRelation('Workflow', cardinality='1*', composite='object', inlined=True,
+                                    description=_('workflow to which this transition belongs'))
 
 
 class require_group(RelationDefinition):
