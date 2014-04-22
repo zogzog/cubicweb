@@ -531,6 +531,7 @@ class Connection(RequestSessionBase):
 
     def __exit__(self, exctype=None, excvalue=None, tb=None):
         assert self._open # actually already open
+        assert self._cnxset_count == 0
         self._free_cnxset(ignoremode=True)
         self.clear()
         self._open = False
@@ -619,6 +620,7 @@ class Connection(RequestSessionBase):
         # or rollback
         cnxset = self.cnxset
         if cnxset is not None and (ignoremode or self.mode == 'read'):
+            assert self._cnxset_count == 0
             try:
                 self.cnxset = None
             finally:
@@ -1027,6 +1029,9 @@ class Connection(RequestSessionBase):
             warn('[3.13] use free_cnxset argument instead for reset_pool',
                  DeprecationWarning, stacklevel=2)
             free_cnxset = reset_pool
+        if self._cnxset_count != 0:
+            # we are inside ensure_cnx_set, don't lose it
+            free_cnxset = False
         cnxset = self.cnxset
         if cnxset is None:
             self.clear()
@@ -1064,6 +1069,9 @@ class Connection(RequestSessionBase):
             self._session_timestamp.touch()
             self.debug('commit transaction %s done (no db activity)', self.connectionid)
             return
+        if self._cnxset_count != 0:
+            # we are inside ensure_cnx_set, don't lose it
+            free_cnxset = False
         cstate = self.commit_state
         if cstate == 'uncommitable':
             raise QueryError('transaction must be rolled back')
