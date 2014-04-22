@@ -118,8 +118,9 @@ class RegisterUserService(Service):
     """
     __regid__ = 'register_user'
     __select__ = Service.__select__ & match_kwargs('login', 'password')
+    default_groups = ('users',)
 
-    def call(self, login, password, email=None, **kwargs):
+    def call(self, login, password, email=None, groups=None, **kwargs):
         cnx = self._cw
         errmsg = cnx._('the value "%s" is already used, use another one')
 
@@ -137,7 +138,10 @@ class RegisterUserService(Service):
         kwargs['upassword'] = password
         # we have to create the user
         user = cnx.create_entity('CWUser', **kwargs)
-        cnx.execute('SET X in_group G WHERE X eid %(x)s, G name "users"',
+        if groups is None:
+            groups = self.default_groups
+        group_names = ', '.join('%r' % group for group in groups)
+        cnx.execute('SET X in_group G WHERE X eid %%(x)s, G name IN (%s)' % group_names,
                     {'x': user.eid})
 
         if email or '@' in login:

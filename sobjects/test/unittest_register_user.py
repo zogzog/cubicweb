@@ -58,6 +58,37 @@ class RegisterUserTC(CubicWebTC):
             self.assertEqual(user.firstname, u'Foo3')
             self.assertEqual(user.use_email[0].address, u'foo3@bar3.com')
 
+    def test_register_user_groups(self):
+        with self.repo.internal_cnx() as cnx:
+            # default
+            cnx.call_service('register_user', login=u'foo_user',
+                             password=u'bar_user', email=u'foo_user@bar_user.com',
+                             firstname=u'Foo_user', surname=u'Bar_user')
+
+            # group kwarg
+            cnx.call_service('register_user', login=u'foo_admin',
+                             password=u'bar_admin', email=u'foo_admin@bar_admin.com',
+                             firstname=u'Foo_admin', surname=u'Bar_admin',
+                             groups=('managers', 'users'))
+
+            # class attribute
+            from cubicweb.sobjects import services
+            services.RegisterUserService.default_groups = ('guests',)
+            cnx.call_service('register_user', login=u'foo_guest',
+                             password=u'bar_guest', email=u'foo_guest@bar_guest.com',
+                             firstname=u'Foo_guest', surname=u'Bar_guest')
+            cnx.commit()
+
+        with self.admin_access.client_cnx() as cnx:
+            user = cnx.find('CWUser', login=u'foo_user').one()
+            self.assertEqual([g.name for g in user.in_group], ['users'])
+
+            admin = cnx.find('CWUser', login=u'foo_admin').one()
+            self.assertEqual(sorted(g.name for g in admin.in_group), ['managers', 'users'])
+
+            guest = cnx.find('CWUser', login=u'foo_guest').one()
+            self.assertEqual([g.name for g in guest.in_group], ['guests'])
+
 
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main
