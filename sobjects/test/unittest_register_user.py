@@ -25,7 +25,7 @@ from cubicweb.devtools.testlib import CubicWebTC
 class RegisterUserTC(CubicWebTC):
 
     def test_register_user_service(self):
-        acc = self.new_access('admin')
+        acc = self.admin_access
         with acc.client_cnx() as cnx:
             cnx.call_service('register_user', login=u'foo1', password=u'bar1',
                              email=u'foo1@bar1.com', firstname=u'Foo1',
@@ -45,6 +45,18 @@ class RegisterUserTC(CubicWebTC):
             with self.assertRaises(ValidationError):
                 cnx.call_service('register_user', login=u'foo3',
                                  password=u'bar3')
+
+    def test_register_user_attributes(self):
+        with self.repo.internal_cnx() as cnx:
+            cnx.call_service('register_user', login=u'foo3',
+                             password=u'bar3', email=u'foo3@bar3.com',
+                             firstname=u'Foo3', surname=u'Bar3')
+            cnx.commit()
+
+        with self.admin_access.client_cnx() as cnx:
+            user = cnx.find('CWUser', login=u'foo3').one()
+            self.assertEqual(user.firstname, u'Foo3')
+            self.assertEqual(user.use_email[0].address, u'foo3@bar3.com')
 
 
 if __name__ == '__main__':
