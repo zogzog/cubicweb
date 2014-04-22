@@ -709,7 +709,7 @@ class JQueryDatePicker(FieldWidget):
 
 
 class JQueryTimePicker(JQueryDatePicker):
-    """Use jquery.timePicker to define a time picker. Will return the time as an
+    """Use jquery.timePicker to define a time picker. Will return the time as a
     unicode string.
     """
     needs_js = ('jquery.timePicker.js',)

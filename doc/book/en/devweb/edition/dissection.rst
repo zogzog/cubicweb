@@ -320,7 +320,7 @@ parameters:
 
   * on success:
 
-    * an url (string) representing the next thing to jump to
+    * a url (string) representing the next thing to jump to
 
 Given the array structure described above, it is quite simple to
 manipulate the DOM to show the errors at appropriate places.

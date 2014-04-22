@@ -17,7 +17,7 @@ classes are registered in order to initialize the class according to its schema:
 `Formatting and output generation`:
 
 * :meth:`view(__vid, __registry='views', **kwargs)`, applies the given view to the entity
-  (and returns an unicode string)
+  (and returns a unicode string)
 
 * :meth:`absolute_url(*args, **kwargs)`, returns an absolute URL including the base-url
 

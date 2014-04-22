@@ -97,7 +97,7 @@ class URLPublisherComponent(component.Component):
         self.evaluators = sorted(evaluators, key=lambda x: x.priority)
 
     def process(self, req, path):
-        """Given a URL (essentialy caracterized by a path on the
+        """Given a URL (essentially characterized by a path on the
         server, but additional information may be found in the request
         object), return a publishing method identifier
         (e.g. controller) and an optional result set.

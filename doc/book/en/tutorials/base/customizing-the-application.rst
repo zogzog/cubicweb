@@ -268,7 +268,7 @@ e.g. :file:`cubes/myblog/views.py`, the code below:
   but this is not mandatory.
 
 * When we want to write something to the output stream, we simply call `self.w`,
-  with *must be passed an unicode string*.
+  which *must be passed a unicode string*.
 
 * The latest function is the most exotic stuff. The point is that without it, you
   would get an error at display time because the framework wouldn't be able to

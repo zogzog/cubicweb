@@ -92,7 +92,7 @@ class LoginControllerForAuthed(Controller):
     def publish(self, rset=None):
         """log in the instance"""
         path = self._cw.form.get('postlogin_path', '')
-        # redirect expect a URL, not a path. Also path may contains a query
+        # Redirect expects a URL, not a path. Also path may contain a query
         # string, hence should not be given to _cw.build_url()
         raise Redirect(self._cw.base_url() + path)
 

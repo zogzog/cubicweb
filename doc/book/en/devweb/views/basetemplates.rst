@@ -116,7 +116,7 @@ view to modify the base template behaviour:
 
 * `binary`: boolean flag telling if the view generates some text or a binary
   stream.  Default to False. When view generates text argument given to `self.w`
-  **must be an unicode string**, encoded string otherwise.
+  **must be a unicode string**, encoded string otherwise.
 
 * `content_type`, view's content type, default to 'text/xhtml'
 
@@ -132,7 +132,7 @@ view to modify the base template behaviour:
 
 
 You can also modify certain aspects of the main template of a page
-when building an url or setting these parameters in the req.form:
+when building a url or setting these parameters in the req.form:
 
 * `__notemplate`, if present (whatever the value assigned), only the content view
   is returned

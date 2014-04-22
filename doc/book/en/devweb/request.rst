@@ -89,7 +89,7 @@ request objects (grouped by category):
     html headers
   * `add_js(jsfiles)`: adds the given list of javascript resources to the
     current html headers
-  * `add_onload(jscode)`: inject the given jscode fragment (an unicode
+  * `add_onload(jscode)`: inject the given jscode fragment (a unicode
     string) into the current html headers, wrapped inside a
     document.ready(...) or another ajax-friendly one-time trigger event
   * `add_header(header, values)`: adds the header/value pair to the

@@ -163,7 +163,7 @@ value.
 
 Common properties for attributes and relations:
 
-* `description`: an unicode string describing an attribute or a
+* `description`: a unicode string describing an attribute or a
   relation. By default this string will be used in the editing form of
   the entity, which means that it is supposed to help the end-user and
   should be flagged by the function `_` to be properly

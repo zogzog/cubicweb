@@ -105,9 +105,9 @@ The `edit_target` tag on the `boss` relation being set to `related` will
 ensure edition of the `Person` entity instead (using a standard
 automatic form) of the association of Company and Person.
 
-Finally, the `reload` key accepts either a boolean, an eid or an
-unicode string representing an url. If an eid is provided, it will be
-internally transformed into an url. The eid/url case helps when one
+Finally, the `reload` key accepts either a boolean, an eid or a
+unicode string representing a url. If an eid is provided, it will be
+internally transformed into a url. The eid/url case helps when one
 needs to reload and the current url is inappropriate. A common case is
 edition of a key attribute, which is part of the current url. If one
 user changed the Company's name from `lozilab` to `logilab`, reloading
