@@ -140,6 +140,7 @@ class RegisterUserService(Service):
         user = cnx.create_entity('CWUser', **cwuserkwargs)
         if groups is None:
             groups = self.default_groups
+        assert groups, "CWUsers must belong to at least one CWGroup"
         group_names = ', '.join('%r' % group for group in groups)
         cnx.execute('SET X in_group G WHERE X eid %%(x)s, G name IN (%s)' % group_names,
                     {'x': user.eid})
