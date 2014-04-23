@@ -114,13 +114,13 @@ class RegisterUserService(Service):
         cnx.call_service('register_user',
                          login=login,
                          password=password,
-                         **kwargs)
+                         **cwuserkwargs)
     """
     __regid__ = 'register_user'
     __select__ = Service.__select__ & match_kwargs('login', 'password')
     default_groups = ('users',)
 
-    def call(self, login, password, email=None, groups=None, **kwargs):
+    def call(self, login, password, email=None, groups=None, **cwuserkwargs):
         cnx = self._cw
         errmsg = cnx._('the value "%s" is already used, use another one')
 
@@ -134,10 +134,10 @@ class RegisterUserService(Service):
         if isinstance(password, unicode):
             # password should *always* be utf8 encoded
             password = password.encode('UTF8')
-        kwargs['login'] = login
-        kwargs['upassword'] = password
+        cwuserkwargs['login'] = login
+        cwuserkwargs['upassword'] = password
         # we have to create the user
-        user = cnx.create_entity('CWUser', **kwargs)
+        user = cnx.create_entity('CWUser', **cwuserkwargs)
         if groups is None:
             groups = self.default_groups
         group_names = ', '.join('%r' % group for group in groups)
