@@ -169,6 +169,7 @@ Breaks:
  cubicweb-mercurial-server (<< 0.4.2),
  cubicweb-forgotpwd (<< 0.4.3),
  cubicweb-registration (<< 0.4.3),
+ cubicweb-vcsfile (<< 1.15.0),
 Description: common library for the CubicWeb framework
  CubicWeb is a semantic web application framework.
  .
