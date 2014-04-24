@@ -169,8 +169,6 @@ class RepeatList(object):
             id(self), self._item, self._size)
     def __len__(self):
         return self._size
-    def __nonzero__(self):
-        return self._size
     def __iter__(self):
         return repeat(self._item, self._size)
     def __getitem__(self, index):
