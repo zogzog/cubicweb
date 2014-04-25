@@ -345,7 +345,20 @@ class RequestSessionBase(object):
 
     @cached
     def user_data(self):
-        """returns a dictionary with this user's information"""
+        """returns a dictionary with this user's information.
+
+        The keys are :
+
+        login
+            The user login
+
+        name
+            The user name, returned by user.name()
+
+        email
+            The user principal email
+
+        """
         userinfo = {}
         user = self.user
         userinfo['login'] = user.login
