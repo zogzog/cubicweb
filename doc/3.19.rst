@@ -7,6 +7,8 @@ New functionalities
 * implement Cross Origin Resource Sharing (CORS)
   (see `#2491768 <http://www.cubicweb.org/2491768>`_)
 
+* system_source.create_eid can get a range of IDs, to reduce overhead of batch
+  entity creation
 
 Behaviour Changes
 -----------------
@@ -31,10 +33,10 @@ Connection objects need to have an explicit begin and end. Use them as a context
 manager to never miss an end::
 
     with session.new_cnx() as cnx:
-        self.execute('INSERT Elephant E, E name "Cabar"')
-        self.commit()
-        self.execute('INSERT Elephant E, E name "Celeste"')
-        self.commit()
+        cnx.execute('INSERT Elephant E, E name "Babar"')
+        cnx.commit()
+        cnx.execute('INSERT Elephant E, E name "Celeste"')
+        cnx.commit()
     # Once you get out of the "with" clause, the connection is closed.
 
 Using the same Connection object in multiple threads will give you access to the
