@@ -50,6 +50,11 @@ def replace_eid_sequence_with_eid_numrange(session):
     session.commit()
 
 if applcubicwebversion < (3, 19, 0) and cubicwebversion >= (3, 19, 0):
+    sql('ALTER TABLE "entities" DROP COLUMN "mtime"')
+    sql('ALTER TABLE "entities" DROP COLUMN "source"')
+
+    commit()
+
     replace_eid_sequence_with_eid_numrange(session)
 
 if applcubicwebversion < (3, 17, 0) and cubicwebversion >= (3, 17, 0):
