@@ -482,7 +482,6 @@ class AddSourceCommand(Command):
     def run(self, args):
         appid = args[0]
         config = ServerConfiguration.config_for(appid)
-        config.quick_start = True
         repo, cnx = repo_cnx(config)
         with cnx:
             used = set(n for n, in cnx.execute('Any SN WHERE S is CWSource, S name SN'))
@@ -505,6 +504,12 @@ class AddSourceCommand(Command):
                         continue
                 break
             while True:
+                parser = raw_input('parser type (%s): '
+                                    % ', '.join(sorted(repo.vreg['parsers'])))
+                if parser in repo.vreg['parsers']:
+                    break
+                print '-> unknown parser identifier, use one of the available types.'
+            while True:
                 sourceuri = raw_input('source identifier (a unique name used to '
                                       'tell sources apart): ').strip()
                 if not sourceuri:
@@ -518,8 +523,8 @@ class AddSourceCommand(Command):
             # XXX configurable inputlevel
             sconfig = ask_source_config(config, type, inputlevel=self.config.config_level)
             cfgstr = unicode(generate_source_config(sconfig), sys.stdin.encoding)
-            cnx.create_entity('CWSource', name=sourceuri,
-                              type=unicode(type), config=cfgstr)
+            cnx.create_entity('CWSource', name=sourceuri, type=unicode(type),
+                              config=cfgstr, parser=unicode(parser))
             cnx.commit()
 
 
