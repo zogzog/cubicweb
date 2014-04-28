@@ -1017,7 +1017,55 @@ class CubicWebSchema(Schema):
 
     def finalize(self):
         super(CubicWebSchema, self).finalize()
+        self.finalize_computed_attributes()
         self.finalize_computed_relations()
+
+    def finalize_computed_attributes(self):
+        """Check consistency of computed attributes types"""
+        analyzer = ETypeResolver(self)
+        for relation in self.relations():
+            for rdef in relation.rdefs.itervalues():
+                if rdef.final and rdef.formula is not None:
+                    computed_etype = rdef.subject.type
+                    computed_attr = rdef.rtype
+                    rqlst = parse(rdef.formula)
+                    if len(rqlst.children) != 1:
+                        raise BadSchemaDefinition(
+                            'computed attribute %(attr)s on %(etype)s: '
+                            'can not use UNION in formula %(form)r' %
+                            dict(attr=computed_attr,
+                                 etype=computed_etype,
+                                 form=rdef.formula))
+                    select = rqlst.children[0]
+                    analyzer.visit(select)
+                    if len(select.selection) != 1:
+                        raise BadSchemaDefinition(
+                            'computed attribute %(attr)s on %(etype)s: '
+                            'can only select one term in formula %(form)r' %
+                            dict(attr=computed_attr,
+                                 etype=computed_etype,
+                                 form=rdef.formula))
+                    term = select.selection[0]
+                    types = set(term.get_type(sol) for sol in select.solutions)
+                    if len(types) != 1:
+                        raise BadSchemaDefinition(
+                            'computed attribute %(attr)s on %(etype)s: '
+                            'multiple possible types (%(types)s) for formula %(form)s' %
+                            dict(attr=computed_attr,
+                                 etype=computed_etype,
+                                 types=list(types),
+                                 form=rdef.formula))
+                    computed_type = types.pop()
+                    expected_type = rdef.object.type
+                    if computed_type != expected_type:
+                        raise BadSchemaDefinition(
+                            'computed attribute %(attr)s on %(etype)s: '
+                            'computed attribute type (%(comp_type)s) mismatch with '
+                            'specified type (%(attr_type)s)' %
+                            dict(attr=computed_attr,
+                                 etype=computed_etype,
+                                 comp_type=computed_type,
+                                 attr_type=expected_type))
 
     def finalize_computed_relations(self):
         """Build relation definitions for computed relations

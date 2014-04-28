@@ -27,7 +27,7 @@ from rql import RQLSyntaxError
 from yams import ValidationError, BadSchemaDefinition
 from yams.constraints import SizeConstraint, StaticVocabularyConstraint
 from yams.buildobjs import (RelationDefinition, EntityType, RelationType,
-                            String, SubjectRelation, ComputedRelation)
+                            Int, String, SubjectRelation, ComputedRelation)
 from yams.reader import fill_schema
 
 from cubicweb.schema import (
@@ -283,6 +283,33 @@ class SchemaReaderClassTest(TestCase):
                          {'read': ('managers', 'users'),
                           'add': ('managers',),
                           'delete': ('managers',)})
+
+    def test_computed_attribute(self):
+        """Check schema finalization for computed attributes."""
+        class Person(EntityType):
+            salary = Int()
+
+        class works_for(RelationDefinition):
+            subject = 'Person'
+            object  = 'Company'
+            cardinality = '?*'
+
+        class Company(EntityType):
+            total_salary = Int(formula='Any SUM(SA) GROUPBY X WHERE '
+                                       'P works_for X, P salary SA')
+        good_schema = build_schema_from_namespace(vars().items())
+
+        class Company(EntityType):
+            total_salary = String(formula='Any SUM(SA) GROUPBY X WHERE '
+                                          'P works_for X, P salary SA')
+
+        with self.assertRaises(BadSchemaDefinition) as exc:
+            bad_schema = build_schema_from_namespace(vars().items())
+
+        self.assertEqual(str(exc.exception),
+                         'computed attribute total_salary on Company: '
+                         'computed attribute type (Int) mismatch with '
+                         'specified type (String)')
 
 
 class SchemaReaderComputedRelationAndAttributesTest(TestCase):
