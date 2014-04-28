@@ -371,6 +371,13 @@ class EntityTC(CubicWebTC):
             clear_cache(self.schema['EmailAddress'], 'get_rqlexprs')
             self.schema['EmailAddress'].permissions['read'] = rperms
 
+    def test_cw_linkable_rql(self):
+        with self.admin_access.web_request() as req:
+            email = req.execute('INSERT EmailAddress X: X address "hop"').get_entity(0, 0)
+            rql = email.cw_linkable_rql('use_email', 'CWUser', 'object')[0]
+            self.assertEqual(rql, 'Any S,AA,AB,AC,AD ORDERBY AA '
+                             'WHERE O eid %(x)s, S is_instance_of CWUser, '
+                             'S login AA, S firstname AB, S surname AC, S modification_date AD')
 
     def test_unrelated_rql_security_nonexistant(self):
         with self.new_access('anon').web_request() as req:

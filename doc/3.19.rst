@@ -159,6 +159,10 @@ API changes
   are encouraged to write an actual controller (e.g. using ``ajaxfunc``)
   instead of storing a closure in the session data.
 
+* A new ``entity.cw_linkable_rql`` method provides the rql to fetch all entities
+  that are already or may be related to the current entity using the given
+  relation.
+
 
 Deprecated Code Drops
 ----------------------
