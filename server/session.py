@@ -593,6 +593,7 @@ class Connection(RequestSessionBase):
             if new_cnxset is old_cnxset:
                 return #nothing to do
             if old_cnxset is not None:
+                old_cnxset.rollback()
                 self._cnxset = None
                 self.ctx_count -= 1
                 self._cnxset_tracker.forget(self.connectionid, old_cnxset)
