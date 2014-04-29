@@ -520,11 +520,13 @@ class AddSourceCommand(Command):
                         print '-> uri already used, choose another one.'
                     else:
                         break
+            url = raw_input('source URL (leave empty for none): ').strip()
+            url = unicode(url) if url else None
             # XXX configurable inputlevel
             sconfig = ask_source_config(config, type, inputlevel=self.config.config_level)
             cfgstr = unicode(generate_source_config(sconfig), sys.stdin.encoding)
             cnx.create_entity('CWSource', name=sourceuri, type=unicode(type),
-                              config=cfgstr, parser=unicode(parser))
+                              config=cfgstr, parser=unicode(parser), url=unicode(url))
             cnx.commit()
 
 
