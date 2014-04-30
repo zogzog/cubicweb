@@ -207,7 +207,7 @@ class RequestSessionBase(object):
         """
         parts = ['Any X WHERE X is %s' % etype]
         varmaker = rqlvar_maker(defined='X')
-        eschema = self.vreg.schema[etype]
+        eschema = self.vreg.schema.eschema(etype)
         for attr, value in kwargs.items():
             if isinstance(value, list) or isinstance(value, tuple):
                 raise NotImplementedError("List of values are not supported")
