@@ -34,7 +34,7 @@ Here is the default evaluator chain:
 
 3. :class:`cubicweb.web.views.urlpublishing.URLRewriteEvaluator`
    selects all urlrewriter components, sorts them according to their
-   priorty, call their ``rewrite()`` method, the first one that
+   priority, call their ``rewrite()`` method, the first one that
    doesn't raise a ``KeyError`` wins. This is where the
    :mod:`cubicweb.web.views.urlrewrite` and
    :class:`cubicweb.web.views.urlrewrite.SimpleReqRewriter` comes into
