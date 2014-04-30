@@ -174,6 +174,7 @@ class EntityFieldsFormTC(CubicWebTC):
             self._test_richtextfield(req, '''<select id="description_format-subject:%(eid)s" name="description_format-subject:%(eid)s" size="1" style="display: block" tabindex="1">
 <option value="text/cubicweb-page-template">text/cubicweb-page-template</option>
 <option selected="selected" value="text/html">text/html</option>
+<option value="text/markdown">text/markdown</option>
 <option value="text/plain">text/plain</option>
 <option value="text/rest">text/rest</option>
 </select><textarea cols="80" id="description-subject:%(eid)s" name="description-subject:%(eid)s" onkeyup="autogrow(this)" rows="2" tabindex="2"></textarea>''')

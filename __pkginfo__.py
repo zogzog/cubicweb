@@ -51,6 +51,7 @@ __depends__ = {
     # server dependencies
     'logilab-database': '>= 1.12.1',
     'passlib': '',
+    'Markdown': ''
     }
 
 __recommends__ = {

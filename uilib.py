@@ -163,12 +163,15 @@ def css_em_num_value(vreg, propname, default):
 
 # text publishing #############################################################
 
+from cubicweb.ext.markdown import markdown_publish # pylint: disable=W0611
+
 try:
     from cubicweb.ext.rest import rest_publish # pylint: disable=W0611
 except ImportError:
     def rest_publish(entity, data):
         """default behaviour if docutils was not found"""
         return xml_escape(data)
+
 
 TAG_PROG = re.compile(r'</?.*?>', re.U)
 def remove_html_tags(text):

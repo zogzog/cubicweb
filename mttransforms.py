@@ -28,7 +28,7 @@ from logilab.mtconverter import (register_base_transforms,
                                  register_pygments_transforms)
 
 from cubicweb.utils import UStringIO
-from cubicweb.uilib import rest_publish, html_publish
+from cubicweb.uilib import rest_publish, markdown_publish, html_publish
 
 HTML_MIMETYPES = ('text/html', 'text/xhtml', 'application/xhtml+xml')
 
@@ -39,6 +39,12 @@ class rest_to_html(Transform):
     output = 'text/html'
     def _convert(self, trdata):
         return rest_publish(trdata.appobject, trdata.decode())
+
+class markdown_to_html(Transform):
+    inputs = ('text/markdown', 'text/x-markdown')
+    output = 'text/html'
+    def _convert(self, trdata):
+        return markdown_publish(trdata.appobject, trdata.decode())
 
 class html_to_html(Transform):
     inputs = HTML_MIMETYPES
@@ -53,6 +59,7 @@ mtconverter.UNICODE_POLICY = 'replace'
 
 ENGINE = TransformEngine()
 ENGINE.add_transform(rest_to_html())
+ENGINE.add_transform(markdown_to_html())
 ENGINE.add_transform(html_to_html())
 
 try:

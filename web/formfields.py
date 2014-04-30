@@ -779,11 +779,13 @@ class EditableFileField(FileField):
     actually contains some text.
 
     If the stream format is one of text/plain, text/html, text/rest,
+    text/markdown
     then a :class:`~cubicweb.web.formwidgets.TextArea` will be additionaly
     displayed, allowing to directly the file's content when desired, instead
     of choosing a file from user's file system.
     """
-    editable_formats = ('text/plain', 'text/html', 'text/rest')
+    editable_formats = (
+        'text/plain', 'text/html', 'text/rest', 'text/markdown')
 
     def render(self, form, renderer):
         wdgs = [super(EditableFileField, self).render(form, renderer)]

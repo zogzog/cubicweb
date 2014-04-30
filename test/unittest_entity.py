@@ -587,6 +587,16 @@ class EntityTC(CubicWebTC):
             # should be default groups but owners, i.e. managers, users, guests
             self.assertEqual(len(unrelated), 3)
 
+    def test_markdown_printable_value_string(self):
+        with self.admin_access.web_request() as req:
+            e = req.create_entity('Card', title=u'rest markdown',
+                                  content=u'This is [an example](http://example.com/ "Title") inline link`',
+                                  content_format=u'text/markdown')
+            self.assertEqual(
+                u'<p>This is <a href="http://example.com/" '
+                u'title="Title">an example</a> inline link`</p>',
+                e.printable_value('content'))
+
     def test_printable_value_string(self):
         with self.admin_access.web_request() as req:
             e = req.create_entity('Card', title=u'rest test',
