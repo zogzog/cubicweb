@@ -439,10 +439,6 @@ class _CubicWebRequestBase(RequestSessionBase):
         """
         self.add_js('cubicweb.ajax.js')
         jsfunc = kwargs.pop('jsfunc', 'userCallbackThenReloadPage')
-        if 'msg' in kwargs:
-            warn('[3.10] msg should be given as positional argument',
-                 DeprecationWarning, stacklevel=2)
-            args = (kwargs.pop('msg'),) + args
         assert not kwargs, 'dunno what to do with remaining kwargs: %s' % kwargs
         cbname = self.register_onetime_callback(cb, *cbargs)
         return "javascript: %s" % getattr(js, jsfunc)(cbname, *args)

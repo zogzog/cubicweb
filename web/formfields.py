@@ -349,13 +349,7 @@ class Field(object):
     def initial_typed_value(self, form, load_bytes):
         if self.value is not _MARKER:
             if callable(self.value):
-                # pylint: disable=E1102
-                if support_args(self.value, 'form', 'field'):
-                    return self.value(form, self)
-                else:
-                    warn("[3.10] field's value callback must now take form and "
-                         "field as argument (%s)" % self, DeprecationWarning)
-                    return self.value(form)
+                return self.value(form, self)
             return self.value
         formattr = '%s_%s_default' % (self.role, self.name)
         if self.eidparam and self.role is not None:

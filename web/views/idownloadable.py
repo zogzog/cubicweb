@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -32,23 +32,6 @@ from cubicweb.predicates import (one_line_rset, is_instance, match_context_prop,
 from cubicweb.mttransforms import ENGINE
 from cubicweb.web import component, httpcache
 from cubicweb.web.views import primary, baseviews
-
-
-@deprecated('[3.10] use a custom IDownloadable adapter instead')
-def download_box(w, entity, title=None, label=None, footer=u''):
-    req = entity._cw
-    w(u'<div class="sideBox">')
-    if title is None:
-        title = req._('download')
-    w(u'<div class="sideBoxTitle downloadBoxTitle"><span>%s</span></div>'
-      % xml_escape(title))
-    w(u'<div class="sideBox downloadBox"><div class="sideBoxBody">')
-    w(u'<a href="%s"><img src="%s" alt="%s"/> %s</a>'
-      % (xml_escape(entity.cw_adapt_to('IDownloadable').download_url()),
-         req.uiprops['DOWNLOAD_ICON'],
-         req._('download icon'), xml_escape(label or entity.dc_title())))
-    w(u'%s</div>' % footer)
-    w(u'</div></div>\n')
 
 
 class DownloadBox(component.EntityCtxComponent):
@@ -174,10 +157,6 @@ class IDownloadableOneLineView(baseviews.OneLineView):
         durl = xml_escape(adapter.download_url())
         self.w(u'<a href="%s">%s</a> [<a href="%s">%s</a>]' %
                (url, name, durl, self._cw._('download')))
-
-IDownloadableLineView = class_renamed(
-    'IDownloadableLineView', IDownloadableOneLineView,
-    '[3.10] IDownloadableLineView is deprecated, use IDownloadableOneLineView')
 
 
 class AbstractEmbeddedView(EntityView):

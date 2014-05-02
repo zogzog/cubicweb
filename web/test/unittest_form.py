@@ -104,7 +104,9 @@ class EntityFieldsFormTC(CubicWebTC):
             req.form['__linkto'] = 'in_group:%s:subject' % geid
             form = self.vreg['forms'].select('edition', req, entity=e)
             form.content_type = 'text/html'
-            pageinfo = self._check_html(form.render(), form, template=None)
+            data = []
+            form.render(w=data.append)
+            pageinfo = self._check_html(u'\n'.join(data), form, template=None)
             inputs = pageinfo.find_tag('select', False)
             ok = False
             for selectnode in pageinfo.matching_nodes('select', name='from_in_group-subject:A'):
@@ -133,14 +135,18 @@ class EntityFieldsFormTC(CubicWebTC):
                 creation_date = DateTimeField(widget=DateTimePicker)
             form = CustomChangeStateForm(req, redirect_path='perdu.com',
                                          entity=req.user)
-            form.render(formvalues=dict(state=123, trcomment=u'',
+            data = []
+            form.render(w=data.append,
+                        formvalues=dict(state=123, trcomment=u'',
                                         trcomment_format=u'text/plain'))
 
     def test_change_state_form(self):
         with self.admin_access.web_request() as req:
             form = ChangeStateForm(req, redirect_path='perdu.com',
                                    entity=req.user)
-            form.render(formvalues=dict(state=123, trcomment=u'',
+            data = []
+            form.render(w=data.append,
+                        formvalues=dict(state=123, trcomment=u'',
                                         trcomment_format=u'text/plain'))
 
     # fields tests ############################################################

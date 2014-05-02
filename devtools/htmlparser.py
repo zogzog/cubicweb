@@ -176,23 +176,6 @@ class XMLSyntaxValidator(Validator):
         return super(XMLSyntaxValidator, self)._parse(data)
 
 
-class XMLDemotingValidator(XMLValidator):
-    """ some views produce html instead of xhtml, using demote_to_html
-
-    this is typically related to the use of external dependencies
-    which do not produce valid xhtml (google maps, ...)
-    """
-    __metaclass__ = class_deprecated
-    __deprecation_warning__ = '[3.10] this is now handled in testlib.py'
-
-    def preprocess_data(self, data):
-        if data.startswith('<?xml'):
-            self.parser = etree.XMLParser()
-        else:
-            self.parser = etree.HTMLParser()
-        return data
-
-
 class HTMLValidator(Validator):
 
     def __init__(self):

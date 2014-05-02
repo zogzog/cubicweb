@@ -1,4 +1,4 @@
-# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -415,10 +415,6 @@ class HooksManager(object):
 for event in ALL_HOOKS:
     CWRegistryStore.REGISTRY_FACTORY['%s_hooks' % event] = HooksRegistry
 
-@deprecated('[3.10] use entity.cw_edited.oldnewvalue(attr)')
-def entity_oldnewvalue(entity, attr):
-    return entity.cw_edited.oldnewvalue(attr)
-
 
 # some hook specific predicates #################################################
 
@@ -763,10 +759,6 @@ class Operation(object):
 
     def handle_event(self, event):
         """delegate event handling to the opertaion"""
-        if event == 'postcommit_event' and hasattr(self, 'commit_event'):
-            warn('[3.10] %s: commit_event method has been replaced by postcommit_event'
-                 % self.__class__, DeprecationWarning)
-            self.commit_event() # pylint: disable=E1101
         getattr(self, event)()
 
     def precommit_event(self):
@@ -902,58 +894,6 @@ postcommit method of the operation."""
             op, self, self.data_key)
         return self._container
 
-
-@deprecated('[3.10] use opcls.get_instance(cnx, **opkwargs).add_data(value)')
-def set_operation(cnx, datakey, value, opcls, containercls=set, **opkwargs):
-    """Function to ease applying a single operation on a set of data, avoiding
-    to create as many as operation as they are individual modification. You
-    should try to use this instead of creating on operation for each `value`,
-    since handling operations becomes coslty on massive data import.
-
-    Arguments are:
-
-    * `cnx`, the current connection
-
-    * `datakey`, a specially forged key that will be used as key in
-      cnx.transaction_data
-
-    * `value` that is the actual payload of an individual operation
-
-    * `opcls`, the class of the operation. An instance is created on the first
-      call for the given key, and then subsequent calls will simply add the
-      payload to the container (hence `opkwargs` is only used on that first
-      call)
-
-    * `containercls`, the container class that should be instantiated to hold
-      payloads.  An instance is created on the first call for the given key, and
-      then subsequent calls will add the data to the existing container. Default
-      to a set. Give `list` if you want to keep arrival ordering.
-
-    * more optional parameters to give to the operation (here the rtype which do not
-      vary accross operations).
-
-    The body of the operation must then iterate over the values that have been mapped
-    in the transaction_data dictionary to the forged key, e.g.:
-
-    .. sourcecode:: python
-
-           for value in self._cw.transaction_data.pop(datakey):
-               ...
-
-    .. Note::
-       **poping** the key from `transaction_data` is not an option, else you may
-       get unexpected data loss in some case of nested hooks.
-    """
-    try:
-        # Search for cnx.transaction_data[`datakey`] (expected to be a set):
-        # if found, simply append `value`
-        _container_add(cnx.transaction_data[datakey], value)
-    except KeyError:
-        # else, initialize it to containercls([`value`]) and instantiate the given
-        # `opcls` operation class with additional keyword arguments
-        opcls(cnx, **opkwargs)
-        cnx.transaction_data[datakey] = containercls()
-        _container_add(cnx.transaction_data[datakey], value)
 
 
 class LateOperation(Operation):

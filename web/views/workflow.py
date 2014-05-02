@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -169,14 +169,7 @@ class WFHistoryVComponent(component.EntityCtxComponent):
     title = _('Workflow history')
 
     def render_body(self, w):
-        if hasattr(self, 'cell_call'):
-            warn('[3.10] %s should now implement render_body instead of cell_call'
-                 % self.__class__, DeprecationWarning)
-            self.w = w
-            # pylint: disable=E1101
-            self.cell_call(self.entity.cw_row, self.entity.cw_col)
-        else:
-            self.entity.view('wfhistory', w=w, title=None)
+        self.entity.view('wfhistory', w=w, title=None)
 
 
 class InContextWithStateView(EntityView):

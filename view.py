@@ -290,12 +290,6 @@ class View(AppObject):
             clabel = vtitle
         return u'%s (%s)' % (clabel, self._cw.property_value('ui.site-title'))
 
-    @deprecated('[3.10] use vreg["etypes"].etype_class(etype).cw_create_url(req)')
-    def create_url(self, etype, **kwargs):
-        """ return the url of the entity creation form for a given entity type"""
-        return self._cw.vreg["etypes"].etype_class(etype).cw_create_url(
-            self._cw, **kwargs)
-
     def field(self, label, value, row=True, show_label=True, w=None, tr=True,
               table=False):
         """read-only field"""
@@ -505,10 +499,6 @@ class ReloadableMixIn(object):
     def domid(self):
         return domid(self.__regid__)
 
-    @deprecated('[3.10] use .domid property')
-    def div_id(self):
-        return self.domid
-
 
 class Component(ReloadableMixIn, View):
     """base class for components"""
@@ -525,10 +515,6 @@ class Component(ReloadableMixIn, View):
     @property
     def domid(self):
         return '%sComponent' % domid(self.__regid__)
-
-    @deprecated('[3.10] use .cssclass property')
-    def div_class(self):
-        return self.cssclass
 
 
 class Adapter(AppObject):

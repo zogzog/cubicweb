@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -131,16 +131,7 @@ class PrimaryView(EntityView):
             boxes = None
         if boxes or hasattr(self, 'render_side_related'):
             self.w(u'<table width="100%"><tr><td style="width: 75%">')
-        if hasattr(self, 'render_entity_summary'):
-            warn('[3.10] render_entity_summary method is deprecated (%s)' % self,
-                 DeprecationWarning)
-            self.render_entity_summary(entity) # pylint: disable=E1101
 
-        summary = self.summary(entity)
-        if summary:
-            warn('[3.10] summary method is deprecated (%s)' % self,
-                 DeprecationWarning)
-            self.w(u'<div class="summary">%s</div>' % summary)
         self.w(u'<div class="mainInfo">')
         self.content_navigation_components('navcontenttop')
         self.render_entity_attributes(entity)
@@ -188,10 +179,6 @@ class PrimaryView(EntityView):
 
     def render_entity_toolbox(self, entity):
         self.content_navigation_components('ctxtoolbar')
-
-    def summary(self, entity):
-        """default implementation return an empty string"""
-        return u''
 
     def render_entity_attributes(self, entity):
         """Renders all attributes and relations in the 'attributes' section. 
@@ -263,23 +250,10 @@ class PrimaryView(EntityView):
         explicit box appobjects selectable in this context.
         """
         for box in boxes:
-            if isinstance(box, tuple):
-                try:
-                    label, rset, vid, dispctrl  = box
-                except ValueError:
-                    label, rset, vid = box
-                    dispctrl = {}
-                warn('[3.10] box views should now be a RsetBox instance, '
-                     'please update %s' % self.__class__.__name__,
-                     DeprecationWarning)
-                self.w(u'<div class="sideBox">')
-                self.wview(vid, rset, title=label, initargs={'dispctrl': dispctrl})
-                self.w(u'</div>')
-            else:
-                 try:
-                     box.render(w=self.w, row=self.cw_row)
-                 except TypeError:
-                     box.render(w=self.w)
+            try:
+                box.render(w=self.w, row=self.cw_row)
+            except TypeError:
+                box.render(w=self.w)
 
     def _prepare_side_boxes(self, entity):
         sideboxes = []

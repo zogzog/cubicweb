@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -64,16 +64,9 @@ class IBreadCrumbsAdapter(EntityAdapter):
         """
         parent = self.parent_entity()
         if parent is not None:
-            if recurs is True:
-                _recurs = set()
-                warn('[3.10] recurs argument should be a set() or None',
-                     DeprecationWarning, stacklevel=2)
-            elif recurs:
+            if recurs:
                 _recurs = recurs
             else:
-                if recurs is False:
-                    warn('[3.10] recurs argument should be a set() or None',
-                         DeprecationWarning, stacklevel=2)
                 _recurs = set()
             if _recurs and parent.eid in _recurs:
                 self.error('cycle in breadcrumbs for entity %s' % self.entity)

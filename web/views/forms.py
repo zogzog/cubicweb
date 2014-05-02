@@ -197,24 +197,10 @@ class FieldsForm(form.Form):
         Extra keyword arguments will be given to renderer's :meth:`render` method.
         """
         w = kwargs.pop('w', None)
-        if w is None:
-            warn('[3.10] you should specify "w" to form.render() named arguments',
-                 DeprecationWarning, stacklevel=2)
-            data = []
-            w = data.append
-        else:
-            data = None
         self.build_context(formvalues)
         if renderer is None:
             renderer = self.default_renderer()
-        if support_args(renderer.render, 'w'):
-            renderer.render(w, self, kwargs)
-        else:
-            warn('[3.10] you should add "w" as first argument o %s.render()'
-                 % renderer.__class__, DeprecationWarning)
-            w(renderer.render(self, kwargs))
-        if data is not None:
-            return '\n'.join(data)
+        renderer.render(w, self, kwargs)
 
     def default_renderer(self):
         return self._cw.vreg['formrenderers'].select(

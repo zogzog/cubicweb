@@ -1,0 +1,8 @@
+What's new in CubicWeb 3.20
+===========================
+
+Deprecated Code Drops
+----------------------
+
+* most 3.10 backward compat is gone (box related objects are still
+  there, but you are encouraged to not depend on them)
