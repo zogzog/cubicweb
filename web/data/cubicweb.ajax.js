@@ -283,8 +283,6 @@ function _postAjaxLoad(node) {
         setFormsTarget(node);
     }
     _loadDynamicFragments(node);
-    // XXX [3.7] jQuery.one is now used instead jQuery.bind,
-    // jquery.treeview.js can be unpatched accordingly.
     jQuery(cw).trigger('server-response', [true, node]);
     jQuery(node).trigger('server-response', [true, node]);
 }

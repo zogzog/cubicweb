@@ -447,11 +447,8 @@ class Cursor(object):
 class LogCursor(Cursor):
     """override the standard cursor to log executed queries"""
 
-    def execute(self, operation, parameters=None, eid_key=None, build_descr=True):
+    def execute(self, operation, parameters=None, build_descr=True):
         """override the standard cursor to log executed queries"""
-        if eid_key is not None:
-            warn('[3.8] eid_key is deprecated, you can safely remove this argument',
-                 DeprecationWarning, stacklevel=2)
         tstart, cstart = time(), clock()
         rset = Cursor.execute(self, operation, parameters, build_descr=build_descr)
         self.connection.executed_queries.append((operation, parameters,
