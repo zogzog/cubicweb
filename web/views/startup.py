@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -156,14 +156,6 @@ class ManageView(StartupView):
         return u'[<a href="%s" title="%s">+</a>]' % (
             xml_escape(url), self._cw.__('New %s' % etype))
 
-    @deprecated('[3.11] display_folders method is deprecated, backport it if needed')
-    def display_folders(self):
-        return False
-
-    @deprecated('[3.11] folders method is deprecated, backport it if needed')
-    def folders(self):
-        self.w(u'<h2>%s</h2>\n' % self._cw._('Browse by category'))
-        self._cw.vreg['views'].select('tree', self._cw).render(w=self.w, maxlevel=1)
 
 
 class IndexView(ManageView):

@@ -6,3 +6,5 @@ Deprecated Code Drops
 
 * most 3.10 backward compat is gone (box related objects are still
   there, but you are encouraged to not depend on them)
+
+* 3.11 backward compat is gone

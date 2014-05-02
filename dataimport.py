@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -556,13 +556,6 @@ class ObjectStore(object):
         self.eids[eid] = data
         self.types.setdefault(etype, []).append(eid)
         return data
-
-    @deprecated("[3.11] add is deprecated, use create_entity instead")
-    def add(self, etype, item):
-        assert isinstance(item, dict), 'item is not a dict but a %s' % type(item)
-        data = self.create_entity(etype, **item)
-        item['eid'] = data['eid']
-        return item
 
     def relate(self, eid_from, rtype, eid_to, **kwargs):
         """Add new relation"""
