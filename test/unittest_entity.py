@@ -366,6 +366,7 @@ class EntityTC(CubicWebTC):
             self.assertEqual(rql, 'Any S,AA,AB,AC,AD ORDERBY AA '
                              'WHERE NOT S use_email O, O eid %(x)s, S is_instance_of CWUser, '
                              'S login AA, S firstname AB, S surname AC, S modification_date AD')
+            req.cnx.commit()
         rperms = self.schema['EmailAddress'].permissions['read']
         clear_cache(self.schema['EmailAddress'], 'get_groups')
         clear_cache(self.schema['EmailAddress'], 'get_rqlexprs')
@@ -700,7 +701,7 @@ du :eid:`1:*ReST*`'''
             e.cw_attr_cache['data_name'] = 'an html file'
             e.cw_attr_cache['data_format'] = 'text/html'
             e.cw_attr_cache['data_encoding'] = 'ascii'
-            e._cw.transaction_data = {} # XXX req should be a session
+            e._cw.transaction_data.clear()
             words = e.cw_adapt_to('IFTIndexable').get_words()
             words['C'].sort()
             self.assertEqual({'C': sorted(['an', 'html', 'file', 'du', 'html', 'some', 'data'])},

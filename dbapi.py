@@ -343,10 +343,12 @@ class DBAPIRequest(RequestSessionBase):
 
     # low level session data management #######################################
 
+    @deprecated('[3.19] use session or transaction data')
     def get_shared_data(self, key, default=None, pop=False, txdata=False):
         """see :meth:`Connection.get_shared_data`"""
         return self.cnx.get_shared_data(key, default, pop, txdata)
 
+    @deprecated('[3.19] use session or transaction data')
     def set_shared_data(self, key, value, txdata=False, querydata=None):
         """see :meth:`Connection.set_shared_data`"""
         if querydata is not None:

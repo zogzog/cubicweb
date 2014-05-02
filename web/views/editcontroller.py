@@ -178,7 +178,7 @@ class EditController(basecontrollers.ViewController):
         form = req.form
         # so we're able to know the main entity from the repository side
         if '__maineid' in form:
-            req.set_shared_data('__maineid', form['__maineid'], txdata=True)
+            req.transaction_data['__maineid'] = form['__maineid']
         # no specific action, generic edition
         self._to_create = req.data['eidmap'] = {}
         # those two data variables are used to handle relation from/to entities

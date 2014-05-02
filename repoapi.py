@@ -247,6 +247,10 @@ class ClientConnection(RequestSessionBase):
     get_shared_data = _srv_cnx_func('get_shared_data')
     set_shared_data = _srv_cnx_func('set_shared_data')
 
+    @property
+    def transaction_data(self):
+        return self._cnx.transaction_data
+
     # meta-data accessors ######################################################
 
     @_open_only

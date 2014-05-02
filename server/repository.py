@@ -746,6 +746,7 @@ class Repository(object):
         """
         return self._get_session(sessionid, setcnxset=False).timestamp
 
+    @deprecated('[3.19] use session or transaction data')
     def get_shared_data(self, sessionid, key, default=None, pop=False, txdata=False):
         """return value associated to key in the session's data dictionary or
         session's transaction's data if `txdata` is true.
@@ -758,6 +759,7 @@ class Repository(object):
         session = self._get_session(sessionid, setcnxset=False)
         return session.get_shared_data(key, default, pop, txdata)
 
+    @deprecated('[3.19] use session or transaction data')
     def set_shared_data(self, sessionid, key, value, txdata=False):
         """set value associated to `key` in shared data
 

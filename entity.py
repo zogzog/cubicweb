@@ -551,14 +551,12 @@ class Entity(AppObject):
 
     def _cw_update_attr_cache(self, attrcache):
         # if context is a repository session, don't consider dont-cache-attrs as
-        # the instance already hold modified values and loosing them could
+        # the instance already holds modified values and loosing them could
         # introduce severe problems
-        get_set = partial(self._cw.get_shared_data, default=(), txdata=True,
-                          pop=True)
-        uncached_attrs = set()
-        uncached_attrs.update(get_set('%s.storage-special-process-attrs' % self.eid))
+        trdata = self._cw.transaction_data
+        uncached_attrs = trdata.get('%s.storage-special-process-attrs' % self.eid, set())
         if self._cw.is_request:
-            uncached_attrs.update(get_set('%s.dont-cache-attrs' % self.eid))
+            uncached_attrs.update(trdata.get('%s.dont-cache-attrs' % self.eid, set()))
         for attr in uncached_attrs:
             attrcache.pop(attr, None)
             self.cw_attr_cache.pop(attr, None)
