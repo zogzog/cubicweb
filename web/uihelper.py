@@ -76,12 +76,9 @@ class meta_formconfig(type):
     def __init__(cls, name, bases, classdict):
         if cls.etype is None:
             return
-        if cls.uicfg_afs is None:
-            uicfg_afs = uicfg.autoform_section
-        if cls.uicfg_aff is None:
-            uicfg_aff = uicfg.autoform_field
-        if cls.uicfg_affk is None:
-            uicfg_affk = uicfg.autoform_field_kwargs
+        uicfg_afs = cls.uicfg_afs or uicfg.autoform_section
+        uicfg_aff = cls.uicfg_aff or uicfg.autoform_field
+        uicfg_affk = cls.uicfg_affk or uicfg.autoform_field_kwargs
         for attr_role in cls.hidden:
             uicfg_afs.hide_field(cls.etype, attr_role, formtype=cls.formtype)
         for attr_role in cls.rels_as_attrs:
