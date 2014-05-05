@@ -25,13 +25,13 @@ body {
 h1,
 .vtitle {
   font-size: %(h1FontSize)s;
-  margin: 0.2em 0px 0.3em;
+  margin: 0.2em 0px 0.5em;
   border-bottom: 1px solid #000;
 }
 
 h2, h3 {
   margin-top: 0.2em;
-  margin-bottom: 0.3em;
+  margin-bottom: 0.5em;
 }
 
 h2 {
@@ -90,7 +90,7 @@ img.prevnext_nogo {
 }
 
 p {
-  margin: 0em 0px 0.2em;
+  margin: 0em 0px 0.5em;
   padding-top: 2px;
 }
 
@@ -357,7 +357,7 @@ table#mainLayout td#contentColumn {
 
 table#mainLayout td#navColumnLeft,
 table#mainLayout td#navColumnRight {
-  width: 16em;
+  width: 150px;
 }
 
 #contentheader {
@@ -373,6 +373,7 @@ div#pageContent {
   clear: both;
   padding: 10px 1em 2em;
   background: #ffffff;
+  border-radius: 3px;
   border: 1px solid #ccc;
 }
 
@@ -406,7 +407,6 @@ div.boxFrame {
 div.boxTitle {
   padding-top: 0px;
   padding-bottom: 0.2em;
-  font: bold 100% Georgia;
   color: #fff;
   background: #ff9900 url("search.png") left bottom repeat-x;
 }
@@ -443,6 +443,10 @@ div.sideBoxTitle {
   border-top-right-radius: 6px;
 }
 
+#navColumnLeft div.boxTitle {
+  border-top-left-radius: 0px;
+}
+
 div.sideBox {
   padding: 0 0 0.2em;
   margin-bottom: 0.5em;
@@ -476,7 +480,7 @@ div.sideBox table td {
 /* boxes */
 
 div.navboxes {
-  padding-top: 0.5em;
+  padding-top: 8px;
 }
 
 div.boxTitle {
@@ -495,6 +499,8 @@ div.boxBody {
   padding: 3px 3px;
   border-top: none;
   background-color: %(leftrightBoxBodyBgColor)s;
+  border-bottom-left-radius: 2px;
+  border-bottom-right-radius: 2px;
 }
 
 div.boxBody a {
@@ -517,6 +523,9 @@ hr.boxSeparator {
 .contextFreeBox div.boxTitle {
   background: %(contextFreeBoxTitleBg)s;
   color: %(contextFreeBoxTitleColor)s;
+}
+.contextFreeBox div.boxTitle span {
+  text-shadow: 0px 1px 0 #ccc;
 }
 
 .contextualBox div.boxTitle {
@@ -551,10 +560,10 @@ hr.boxSeparator {
 }
 
 .navboxes {
-  padding: 2px;
+  padding: 0px;
 }
 
-.boxBody, .boxTitle, #pageContent, #appMsg {
+.boxBody, .boxTitle, #appMsg {
     box-shadow: 1px 1px 3px Gray;
 }
 
@@ -1101,6 +1110,7 @@ div.ui-tabs .ui-widget-header li {
 div.ui-tabs .ui-tabs-panel {
   border-top:1px solid #97A5B0;
   padding-left:0.5em;
+  padding-right: 2px;
   color:inherit;
 }
 
