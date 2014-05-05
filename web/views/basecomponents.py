@@ -97,8 +97,7 @@ class ApplLogo(HeaderComponent):
     context = _('header-left')
 
     def render(self, w):
-        w(u'<a href="%s"><img id="logo" src="%s" alt="logo"/></a>'
-          % (self._cw.base_url(), self._cw.uiprops['LOGO']))
+        w(u'<a id="logo" href="%s"></a>' % self._cw.base_url())
 
 
 class ApplicationName(HeaderComponent):
