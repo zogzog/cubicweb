@@ -119,8 +119,8 @@ class CookieLoginComponent(HeaderComponent):
                   & configuration_values('auth-mode', 'cookie'))
     context = 'header-right'
     loginboxid = 'popupLoginBox'
-    _html = u"""[<a class="logout" title="%s" href="javascript:
-cw.htmlhelpers.popupLoginBox('%s', '__login');">%s</a>]"""
+    _html = u"""<a class="logout icon-login" title="%s" href="javascript:
+cw.htmlhelpers.popupLoginBox('%s', '__login');">%s</a>"""
 
     def render(self, w):
         # XXX bw compat, though should warn about subclasses redefining call
@@ -128,6 +128,7 @@ cw.htmlhelpers.popupLoginBox('%s', '__login');">%s</a>]"""
         self.call()
 
     def call(self):
+        self._cw.add_css('cubicweb.pictograms.css')
         self.w(self._html % (self._cw._('login / password'),
                              self.loginboxid, self._cw._('i18n_login_popup')))
         self._cw.view('logform', rset=self.cw_rset, id=self.loginboxid,
@@ -160,17 +161,17 @@ class AnonUserStatusLink(HeaderComponent):
     order = HeaderComponent.order - 10
 
     def render(self, w):
-        w(u'<span class="caption">%s</span>' % self._cw._('anonymous'))
-
+        pass
 
 class AuthenticatedUserStatus(AnonUserStatusLink):
     __select__ = authenticated_user()
 
     def render(self, w):
         # display useractions and siteactions
+        self._cw.add_css('cubicweb.pictograms.css')
         actions = self._cw.vreg['actions'].possible_actions(self._cw, rset=self.cw_rset)
         box = MenuWidget('', 'userActionsBox', _class='', islist=False)
-        menu = PopupBoxMenu(self._cw.user.login, isitem=False)
+        menu = PopupBoxMenu(self._cw.user.login, isitem=False, link_class='icon-user')
         box.append(menu)
         for action in actions.get('useractions', ()):
             menu.append(self.action_link(action))
