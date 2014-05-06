@@ -127,8 +127,7 @@ class CubicWebWsgiRequest(CubicWebRequestBase):
         return '%s%s' % (self.path, self.environ.get('QUERY_STRING', '') and ('?' + self.environ.get('QUERY_STRING', '')) or '')
 
     def is_secure(self):
-        return 'wsgi.url_scheme' in self.environ \
-            and self.environ['wsgi.url_scheme'] == 'https'
+        return self.environ['wsgi.url_scheme'] == 'https'
 
     def get_posted_data(self):
         # The WSGI spec says 'QUERY_STRING' may be absent.
