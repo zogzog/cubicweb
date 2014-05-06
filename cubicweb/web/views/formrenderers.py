@@ -312,15 +312,15 @@ class HTableFormRenderer(FormRenderer):
     display_help = False
     def _render_fields(self, fields, w, form):
         w(u'<table border="0" class="htableForm">')
-        w(u'<tr>')
-        for field in fields:
-            if self.display_label:
+        if self.display_label:
+            w(u'<tr>')
+            for field in fields:
                 w(u'<th class="labelCol">%s</th>' % self.render_label(form, field))
-            if self.display_help:
-                w(self.render_help(form, field))
-        # empty slot for buttons
-        w(u'<th class="labelCol">&#160;</th>')
-        w(u'</tr>')
+                if self.display_help:
+                    w(self.render_help(form, field))
+            # empty slot for buttons
+            w(u'<th class="labelCol">&#160;</th>')
+            w(u'</tr>')
         w(u'<tr>')
         for field in fields:
             error = form.field_error(field)
