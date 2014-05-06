@@ -28,8 +28,14 @@ from cubicweb.entities.adapters import IFTIndexableAdapter
 
 from unittest_querier import FixedOffset
 
+class PostgresTimeoutConfiguration(PostgresApptestConfiguration):
+    default_sources = PostgresApptestConfiguration.default_sources.copy()
+    default_sources['system'] = PostgresApptestConfiguration.default_sources['system'].copy()
+    default_sources['system']['db-statement-timeout'] = 200
+
+
 class PostgresFTITC(CubicWebTC):
-    configcls = PostgresApptestConfiguration
+    configcls = PostgresTimeoutConfiguration
 
     def test_eid_range(self):
         # concurrent allocation of eid ranges
@@ -130,6 +136,13 @@ class PostgresLimitSizeTC(CubicWebTC):
                 'he...'
             yield self.assertEqual, sql("SELECT limit_size('<span>a>b</span>', 'text/html', 2)"), \
                 'a>...'
+
+    def test_statement_timeout(self):
+        with self.admin_access.repo_cnx() as cnx:
+            cnx.system_sql('select pg_sleep(0.1)')
+            with self.assertRaises(Exception):
+                cnx.system_sql('select pg_sleep(0.3)')
+
 
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main
