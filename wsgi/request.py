@@ -103,29 +103,6 @@ class CubicWebWsgiRequest(CubicWebRequestBase):
 
     ## wsgi request helpers ###################################################
 
-    def instance_uri(self):
-        """Return the instance's base URI (no PATH_INFO or QUERY_STRING)
-
-        see python2.5's wsgiref.util.instance_uri code
-        """
-        environ = self.environ
-        url = environ['wsgi.url_scheme'] + '://'
-        if environ.get('HTTP_HOST'):
-            url += environ['HTTP_HOST']
-        else:
-            url += environ['SERVER_NAME']
-            if environ['wsgi.url_scheme'] == 'https':
-                if environ['SERVER_PORT'] != '443':
-                    url += ':' + environ['SERVER_PORT']
-            else:
-                if environ['SERVER_PORT'] != '80':
-                    url += ':' + environ['SERVER_PORT']
-        url += quote(environ.get('SCRIPT_NAME') or '/')
-        return url
-
-    def get_full_path(self):
-        return '%s%s' % (self.path, self.environ.get('QUERY_STRING', '') and ('?' + self.environ.get('QUERY_STRING', '')) or '')
-
     def is_secure(self):
         return self.environ['wsgi.url_scheme'] == 'https'
 
