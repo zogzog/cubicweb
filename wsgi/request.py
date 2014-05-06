@@ -59,7 +59,7 @@ class CubicWebWsgiRequest(CubicWebRequestBase):
 
         headers_in = dict((normalize_header(k[5:]), v) for k, v in self.environ.items()
                           if k.startswith('HTTP_'))
-        https = environ.get("HTTPS") in ('yes', 'on', '1')
+        https = self.is_secure()
         post, files = self.get_posted_data()
 
         super(CubicWebWsgiRequest, self).__init__(vreg, https, post,
