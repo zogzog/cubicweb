@@ -25,7 +25,12 @@ import os, sys
 import subprocess
 from os import listdir, makedirs, environ, chmod, walk, remove
 from os.path import exists, join, abspath, normpath
-
+import re
+from rlcompleter import Completer
+try:
+    import readline
+except ImportError: # readline not available, no completion
+    pass
 try:
     from os import symlink
 except ImportError:
@@ -264,3 +269,155 @@ def config_connect(appid, optconfig):
         password = getpass('password: ')
     return connect(login=user, password=password, host=optconfig.host, database=appid)
 
+
+## cwshell helpers #############################################################
+
+class AbstractMatcher(object):
+    """Abstract class for CWShellCompleter's matchers.
+
+    A matcher should implement a ``possible_matches`` method. This
+    method has to return the list of possible completions for user's input.
+    Because of the python / readline interaction, each completion should
+    be a superset of the user's input.
+
+    NOTE: readline tokenizes user's input and only passes last token to
+    completers.
+    """
+
+    def possible_matches(self, text):
+        """return possible completions for user's input.
+
+        Parameters:
+            text: the user's input
+
+        Return:
+            a list of completions. Each completion includes the original input.
+        """
+        raise NotImplementedError()
+
+
+class RQLExecuteMatcher(AbstractMatcher):
+    """Custom matcher for rql queries.
+
+    If user's input starts with ``rql(`` or ``session.execute(`` and
+    the corresponding rql query is incomplete, suggest some valid completions.
+    """
+    query_match_rgx = re.compile(
+        r'(?P<func_prefix>\s*(?:rql)'  # match rql, possibly indented
+        r'|'                           # or
+        r'\s*(?:\w+\.execute))'        # match .execute, possibly indented
+        # end of <func_prefix>
+        r'\('                          # followed by a parenthesis
+        r'(?P<quote_delim>["\'])'      # a quote or double quote
+        r'(?P<parameters>.*)')         # and some content
+
+    def __init__(self, local_ctx, req):
+        self.local_ctx = local_ctx
+        self.req = req
+        self.schema = req.vreg.schema
+        self.rsb = req.vreg['components'].select('rql.suggestions', req)
+
+    @staticmethod
+    def match(text):
+        """check if ``text`` looks like a call to ``rql`` or ``session.execute``
+
+        Parameters:
+            text: the user's input
+
+        Returns:
+            None if it doesn't match, the query structure otherwise.
+        """
+        query_match = RQLExecuteMatcher.query_match_rgx.match(text)
+        if query_match is None:
+            return None
+        parameters_text = query_match.group('parameters')
+        quote_delim = query_match.group('quote_delim')
+        # first parameter is fully specified, no completion needed
+        if re.match(r"(.*?)%s" % quote_delim, parameters_text) is not None:
+            return None
+        func_prefix = query_match.group('func_prefix')
+        return {
+            # user's input
+            'text': text,
+            # rql( or session.execute(
+            'func_prefix': func_prefix,
+            # offset of rql query
+            'rql_offset': len(func_prefix) + 2,
+            # incomplete rql query
+            'rql_query': parameters_text,
+            }
+
+    def possible_matches(self, text):
+        """call ``rql.suggestions`` component to complete user's input.
+        """
+        # readline will only send last token, but we need the entire user's input
+        user_input = readline.get_line_buffer()
+        query_struct = self.match(user_input)
+        if query_struct is None:
+            return []
+        else:
+            # we must only send completions of the last token => compute where it
+            # starts relatively to the rql query itself.
+            completion_offset = readline.get_begidx() - query_struct['rql_offset']
+            rql_query = query_struct['rql_query']
+            return [suggestion[completion_offset:]
+                    for suggestion in self.rsb.build_suggestions(rql_query)]
+
+
+class DefaultMatcher(AbstractMatcher):
+    """Default matcher: delegate to standard's `rlcompleter.Completer`` class
+    """
+    def __init__(self, local_ctx):
+        self.completer = Completer(local_ctx)
+
+    def possible_matches(self, text):
+        if "." in text:
+            return self.completer.attr_matches(text)
+        else:
+            return self.completer.global_matches(text)
+
+
+class CWShellCompleter(object):
+    """Custom auto-completion helper for cubicweb-ctl shell.
+
+    ``CWShellCompleter`` provides a ``complete`` method suitable for
+    ``readline.set_completer``.
+
+    Attributes:
+        matchers: the list of ``AbstractMatcher`` instances that will suggest
+                  possible completions
+
+    The completion process is the following:
+
+    - readline calls the ``complete`` method with user's input,
+    - the ``complete`` method asks for each known matchers if
+      it can suggest completions for user's input.
+    """
+
+    def __init__(self, local_ctx):
+        # list of matchers to ask for possible matches on completion
+        self.matchers = [DefaultMatcher(local_ctx)]
+        self.matchers.insert(0, RQLExecuteMatcher(local_ctx, local_ctx['session']))
+
+    def complete(self, text, state):
+        """readline's completer method
+
+        cf http://docs.python.org/2/library/readline.html#readline.set_completer
+        for more details.
+
+        Implementation inspired by `rlcompleter.Completer`
+        """
+        if state == 0:
+            # reset self.matches
+            self.matches = []
+            for matcher in self.matchers:
+                matches = matcher.possible_matches(text)
+                if matches:
+                    self.matches = matches
+                    break
+            else:
+                return None # no matcher able to handle `text`
+        try:
+            return self.matches[state]
+        except IndexError:
+            return None

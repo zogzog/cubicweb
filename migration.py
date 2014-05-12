@@ -247,12 +247,13 @@ class MigrationHelper(object):
         local_ctx = self._create_context()
         try:
             import readline
-            from rlcompleter import Completer
+            from cubicweb.toolsutils import CWShellCompleter
         except ImportError:
             # readline not available
             pass
         else:
-            readline.set_completer(Completer(local_ctx).complete)
+            rql_completer = CWShellCompleter(local_ctx)
+            readline.set_completer(rql_completer.complete)
             readline.parse_and_bind('tab: complete')
             home_key = 'HOME'
             if sys.platform == 'win32':
