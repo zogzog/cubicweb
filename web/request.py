@@ -403,6 +403,7 @@ class _CubicWebRequestBase(RequestSessionBase):
             return breadcrumbs.pop()
         return self.base_url()
 
+    @deprecated('[3.19] use a traditional ajaxfunc / controller')
     def user_rql_callback(self, rqlargs, *args, **kwargs):
         """register a user callback to execute some rql query, and return a URL
         to call that callback which can be inserted in an HTML view.
@@ -438,6 +439,7 @@ class _CubicWebRequestBase(RequestSessionBase):
         cbname = self.register_onetime_callback(cb, *cbargs)
         return "javascript: %s" % getattr(js, jsfunc)(cbname, *args)
 
+    @deprecated('[3.19] use a traditional ajaxfunc / controller')
     def register_onetime_callback(self, func, *args):
         cbname = build_cb_uid(func.__name__)
         def _cb(req):
@@ -448,12 +450,14 @@ class _CubicWebRequestBase(RequestSessionBase):
         self.set_page_data(cbname, _cb)
         return cbname
 
+    @deprecated('[3.19] use a traditional ajaxfunc / controller')
     def unregister_callback(self, pageid, cbname):
         assert pageid is not None
         assert cbname.startswith('cb_')
         self.info('unregistering callback %s for pageid %s', cbname, pageid)
         self.del_page_data(cbname)
 
+    @deprecated('[3.19] use a traditional ajaxfunc / controller')
     def clear_user_callbacks(self):
         if self.session is not None: # XXX
             for key in list(self.session.data):
