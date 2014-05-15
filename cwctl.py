@@ -1044,19 +1044,30 @@ class ConfigureInstanceCommand(InstanceCommand):
 
 # WSGI #########
 
+WSGI_CHOICES = {}
+from cubicweb.wsgi import server as stdlib_server
+WSGI_CHOICES['stdlib'] = stdlib_server
+try:
+    from cubicweb.wsgi import wz
+except ImportError:
+    pass
+else:
+    WSGI_CHOICES['werkzeug'] = wz
+
+
 def wsgichoices():
-    try:
-        from werkzeug import serving
-    except ImportError:
-        return ('stdlib',)
-    return ('stdlib', 'werkzeug')
+    return tuple(WSGI_CHOICES)
+
 
 class WSGIStartHandler(InstanceCommand):
     """Start an interactive wsgi server """
     name = 'wsgi'
     actionverb = 'started'
     arguments = '<instance>'
-    options = (
+
+    @property
+    def options(self):
+        return (
         ("debug",
          {'short': 'D', 'action': 'store_true',
           'default': False,
@@ -1083,10 +1094,7 @@ class WSGIStartHandler(InstanceCommand):
         init_cmdline_log_threshold(config, self['loglevel'])
         assert config.name == 'all-in-one'
         meth = self['method']
-        if meth == 'stdlib':
-            from cubicweb.wsgi import server
-        else:
-            from cubicweb.wsgi import wz as server
+        server = WSGI_CHOICES[meth]
         return server.run(config)
 
 
