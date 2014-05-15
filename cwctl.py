@@ -1053,6 +1053,12 @@ except ImportError:
     pass
 else:
     WSGI_CHOICES['werkzeug'] = wz
+try:
+    from cubicweb.wsgi import tnd
+except ImportError:
+    pass
+else:
+    WSGI_CHOICES['tornado'] = tnd
 
 
 def wsgichoices():
