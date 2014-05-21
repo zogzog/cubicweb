@@ -80,15 +80,8 @@ class NotificationView(EntityView):
 
     # this is usually the method to call
     def render_and_send(self, **kwargs):
-        """generate and send an email message for this view"""
-        delayed = kwargs.pop('delay_to_commit', None)
-        for recipients, msg in self.render_emails(**kwargs):
-            if delayed is None:
-                self.send(recipients, msg)
-            elif delayed:
-                self.send_on_commit(recipients, msg)
-            else:
-                self.send_now(recipients, msg)
+        """generate and send email messages for this view"""
+        self._cw.vreg.config.sendmails(self.render_emails(**kwargs))
 
     def cell_call(self, row, col=0, **kwargs):
         self.w(self._cw._(self.content) % self.context(**kwargs))
@@ -146,16 +139,11 @@ class NotificationView(EntityView):
                         continue
                     msg = format_mail(self.user_data, [emailaddr], content, subject,
                                       config=self._cw.vreg.config, msgid=msgid, references=refs)
-                    yield [emailaddr], msg
+                    yield msg, [emailaddr]
                 finally:
-                    # ensure we have a cnxset since commit will fail if there is
-                    # some operation but no cnxset. This may occurs in this very
-                    # specific case (eg SendMailOp)
-                    with cnx.ensure_cnx_set:
-                        cnx.commit()
                     self._cw = req
 
-    # recipients / email sending ###############################################
+    # recipients handling ######################################################
 
     def recipients(self):
         """return a list of either 2-uple (email, language) or user entity to
@@ -165,13 +153,6 @@ class NotificationView(EntityView):
             'recipients_finder', self._cw, rset=self.cw_rset,
             row=self.cw_row or 0, col=self.cw_col or 0)
         return finder.recipients()
-
-    def send_now(self, recipients, msg):
-        self._cw.vreg.config.sendmails([(msg, recipients)])
-
-    def send_on_commit(self, recipients, msg):
-        SendMailOp(self._cw, recipients=recipients, msg=msg)
-    send = send_on_commit
 
     # email generation helpers #################################################
 
