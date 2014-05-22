@@ -170,7 +170,7 @@ Breaks:
  cubicweb-forgotpwd (<< 0.4.3),
  cubicweb-registration (<< 0.4.3),
  cubicweb-vcsfile (<< 1.15.0),
- cubicweb-bootstrap,
+ cubicweb-bootstrap (<< 0.6),
 Description: common library for the CubicWeb framework
  CubicWeb is a semantic web application framework.
  .
