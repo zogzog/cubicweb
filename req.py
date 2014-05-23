@@ -472,12 +472,16 @@ class RequestSessionBase(object):
             raise ValueError(self._('can\'t parse %(value)r (expected %(format)s)')
                              % {'value': value, 'format': format})
 
-    def base_url(self, secure=None):
-        """return the root url of the instance
-        """
+    def _base_url(self, secure=None):
         if secure:
             return self.vreg.config.get('https-url') or self.vreg.config['base-url']
         return self.vreg.config['base-url']
+
+    def base_url(self, secure=None):
+        """return the root url of the instance
+        """
+        url = self._base_url(secure=secure)
+        return url if url is None else url.rstrip('/') + '/'
 
     # abstract methods to override according to the web front-end #############
 

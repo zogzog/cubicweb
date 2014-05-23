@@ -162,7 +162,7 @@ class _CubicWebRequestBase(RequestSessionBase):
         self.ajax_request = value
     json_request = property(_get_json_request, _set_json_request)
 
-    def base_url(self, secure=None):
+    def _base_url(self, secure=None):
         """return the root url of the instance
 
         secure = False -> base-url
@@ -175,7 +175,7 @@ class _CubicWebRequestBase(RequestSessionBase):
         if secure:
             base_url = self.vreg.config.get('https-url')
         if base_url is None:
-            base_url = super(_CubicWebRequestBase, self).base_url()
+            base_url = super(_CubicWebRequestBase, self)._base_url()
         return base_url
 
     @property

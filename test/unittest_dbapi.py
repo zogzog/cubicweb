@@ -78,7 +78,7 @@ class DBAPITC(CubicWebTC):
         with tempattr(cnx.vreg, 'config', config):
             cnx.use_web_compatible_requests('http://perdu.com')
             req = cnx.request()
-            self.assertEqual(req.base_url(), 'http://perdu.com')
+            self.assertEqual(req.base_url(), 'http://perdu.com/')
             self.assertEqual(req.from_controller(), 'view')
             self.assertEqual(req.relative_path(), '')
             req.ajax_replace_url('domid') # don't crash
