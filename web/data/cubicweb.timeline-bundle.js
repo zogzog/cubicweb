@@ -3,8 +3,8 @@
  *  :organization: Logilab
  */
 
-var SimileAjax_urlPrefix = baseuri() + 'data/';
-var Timeline_urlPrefix = baseuri() + 'data/';
+var SimileAjax_urlPrefix = BASE_URL + 'data/';
+var Timeline_urlPrefix = BASE_URL + 'data/';
 
 /*
  *  Simile Ajax API

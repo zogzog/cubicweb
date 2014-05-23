@@ -12,20 +12,13 @@ jQuery.extend(cw.htmlhelpers, {
 /**
  * .. function:: baseuri()
  *
- * returns the document's baseURI. (baseuri() uses document.baseURI if
- * available and inspects the <base> tag manually otherwise.)
+ * returns the document's baseURI.
  */
-function baseuri() {
-    if (typeof BASE_URL === 'undefined') {
-        // backward compatibility, BASE_URL might be undefined
-        var uri = document.baseURI;
-        if (uri) { // some browsers don't define baseURI
-            return uri.toLowerCase();
-        }
-        return jQuery('base').attr('href').toLowerCase();
-    }
-    return BASE_URL;
-}
+baseuri = cw.utils.deprecatedFunction(
+    "[3.20] baseuri() is deprecated, use BASE_URL instead",
+    function () {
+        return BASE_URL;
+    });
 
 /**
  * .. function:: setProgressCursor()

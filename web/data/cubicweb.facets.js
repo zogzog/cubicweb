@@ -69,7 +69,7 @@ function buildRQL(divid, vid, paginate, vidargs) {
         }
         var $focusLink = $('#focusLink');
         if ($focusLink.length) {
-            var url = baseuri()+ 'view?rql=' + encodeURIComponent(rql);
+            var url = BASE_URL + 'view?rql=' + encodeURIComponent(rql);
             if (vid) {
                 url += '&vid=' + encodeURIComponent(vid);
             }

@@ -67,7 +67,7 @@ function showMatchingSelect(selectedValue, eid) {
                 rql: rql_for_eid(eid),
                 '__notemplate': 1
             };
-            var d = jQuery('#unrelatedDivs_' + eid).loadxhtml(baseuri() + 'view', args, 'post', 'append');
+            var d = jQuery('#unrelatedDivs_' + eid).loadxhtml(BASE_URL + 'view', args, 'post', 'append');
             d.addCallback(function() {
                 _showMatchingSelect(eid, jQuery('#' + divId));
             });
