@@ -107,18 +107,6 @@ function toggleVisibility(elemId) {
 }
 
 /**
- * .. function:: popupLoginBox()
- *
- * toggles visibility of login popup div
- */
-// XXX used exactly ONCE in basecomponents
-popupLoginBox = cw.utils.deprecatedFunction(
-    function() {
-        $('#popupLoginBox').toggleClass('hidden');
-        jQuery('#__login:visible').focus();
-});
-
-/**
  * .. function getElementsMatching(tagName, properties, \/* optional \*\/ parent)
  *
  * returns the list of elements in the document matching the tag name
