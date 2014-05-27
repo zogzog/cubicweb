@@ -1,4 +1,4 @@
-# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -577,7 +577,6 @@ class QuerierHelper(object):
                     cachekey = self._repo.querier_cache_key(cnx, rql, args,
                                                             eidkeys)
             self._rql_cache[cachekey] = rqlst
-        orig_rqlst = rqlst
         if rqlst.TYPE != 'select':
             if cnx.read_security:
                 check_no_password_selected(rqlst)
@@ -646,7 +645,7 @@ class QuerierHelper(object):
             # FIXME: get number of affected entities / relations on non
             # selection queries ?
         # return a result set object
-        return ResultSet(results, rql, args, descr, orig_rqlst)
+        return ResultSet(results, rql, args, descr)
 
     # these are overridden by set_log_methods below
     # only defining here to prevent pylint from complaining

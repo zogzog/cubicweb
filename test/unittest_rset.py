@@ -100,7 +100,7 @@ class ResultSetTC(CubicWebTC):
 
     def test_pickle(self):
         del self.rset.req
-        self.assertEqual(len(pickle.dumps(self.rset)), 392)
+        self.assertEqual(len(pickle.dumps(self.rset)), 376)
 
     def test_build_url(self):
         with self.admin_access.web_request() as req:

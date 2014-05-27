@@ -19,6 +19,8 @@
 
 __docformat__ = "restructuredtext en"
 
+from warnings import warn
+
 from logilab.common.decorators import cached, clear_cache, copy_cache
 
 from rql import nodes, stmts
@@ -46,6 +48,9 @@ class ResultSet(object):
     """
 
     def __init__(self, results, rql, args=None, description=None, rqlst=None):
+        if rqlst is not None:
+            warn('[3.20] rqlst parameter is deprecated',
+                 DeprecationWarning, stacklevel=2)
         self.rows = results
         self.rowcount = results and len(results) or 0
         # original query and arguments
@@ -57,10 +62,6 @@ class ResultSet(object):
             self.description = []
         else:
             self.description = description
-        # parsed syntax tree
-        if rqlst is not None:
-            rqlst.schema = None # reset schema in case of pyro transfert
-        self._rqlst = rqlst
         # set to (limit, offset) when a result set is limited using the
         # .limit method
         self.limited = None
@@ -550,18 +551,11 @@ class ResultSet(object):
 
     @cached
     def syntax_tree(self):
-        """return the syntax tree (:class:`rql.stmts.Union`) for the originating
-        query. You can expect it to have solutions computed but it won't be
-        annotated (you usually don't need that for simple introspection).
+        """return the syntax tree (:class:`rql.stmts.Union`) for the
+        originating query. You can expect it to have solutions
+        computed and it will be properly annotated.
         """
-        if self._rqlst:
-            rqlst = self._rqlst.copy()
-            # to avoid transport overhead when pyro is used, the schema has been
-            # unset from the syntax tree
-            rqlst.schema = self.req.vreg.schema
-        else:
-            rqlst = self.req.vreg.parse(self.req, self.rql, self.args)
-        return rqlst
+        return self.req.vreg.parse(self.req, self.rql, self.args)
 
     @cached
     def column_types(self, col):

@@ -212,10 +212,6 @@ class ClientConnection(RequestSessionBase):
         # Connection object
         rset = self._cnx.execute(*args, **kwargs)
         rset.req = self
-        # XXX keep the same behavior as the old dbapi
-        # otherwise multiple tests break.
-        # The little internet kitten is very sad about this situation.
-        rset._rqlst = None
         return rset
 
     @_open_only
