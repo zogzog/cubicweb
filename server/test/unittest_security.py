@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -62,16 +62,22 @@ class LowLevelSecurityFunctionTC(BaseSecurityTC):
                               cu.execute, 'Any X,P WHERE X is CWUser, X upassword P')
 
     def test_update_password(self):
-        """Ensure that if a user's password is stored with a deprecated hash, it will be updated on next login"""
-        oldhash = str(self.session.system_sql("SELECT cw_upassword FROM cw_CWUser WHERE cw_login = 'oldpassword'").fetchone()[0])
+        """Ensure that if a user's password is stored with a deprecated hash,
+        it will be updated on next login
+        """
+        oldhash = str(self.session.system_sql("SELECT cw_upassword FROM cw_CWUser "
+                                              "WHERE cw_login = 'oldpassword'").fetchone()[0])
         with self.login('oldpassword') as cu:
             pass
-        newhash = str(self.session.system_sql("SELECT cw_upassword FROM cw_CWUser WHERE cw_login = 'oldpassword'").fetchone()[0])
+        newhash = str(self.session.system_sql("SELECT cw_upassword FROM cw_CWUser "
+                                              "WHERE cw_login = 'oldpassword'").fetchone()[0])
         self.assertNotEqual(oldhash, newhash)
         self.assertTrue(newhash.startswith('$6$'))
         with self.login('oldpassword') as cu:
             pass
-        self.assertEqual(newhash, str(self.session.system_sql("SELECT cw_upassword FROM cw_CWUser WHERE cw_login = 'oldpassword'").fetchone()[0]))
+        self.assertEqual(newhash,
+                         str(self.session.system_sql("SELECT cw_upassword FROM cw_CWUser WHERE "
+                                                     "cw_login = 'oldpassword'").fetchone()[0]))
 
 
 class SecurityRewritingTC(BaseSecurityTC):
@@ -136,7 +142,8 @@ class SecurityTC(BaseSecurityTC):
         with self.temporary_permissions(Personne={'read': ('users', 'managers'),
                                                   'add': ('guests', 'users', 'managers')}):
             with self.login('anon') as cu:
-                self.assertRaises(Unauthorized, cu.execute, "SET X nom 'bidulechouette' WHERE X is Personne")
+                self.assertRaises(Unauthorized, cu.execute,
+                                  "SET X nom 'bidulechouette' WHERE X is Personne")
                 self.rollback()
                 # self.assertRaises(Unauthorized, cnx.commit)
         # test nothing has actually been inserted
@@ -233,7 +240,8 @@ class SecurityTC(BaseSecurityTC):
             self.commit()
         # to actually get Unauthorized exception, try to delete a relation we can read
         eid = self.execute("INSERT Affaire X: X sujet 'pascool'")[0][0]
-        self.execute('SET X owned_by U WHERE X eid %(x)s, U login "iaminusersgrouponly"', {'x': eid})
+        self.execute('SET X owned_by U WHERE X eid %(x)s, U login "iaminusersgrouponly"',
+                     {'x': eid})
         self.execute("SET A concerne S WHERE A sujet 'pascool', S is Societe")
         self.commit()
         with self.login('iaminusersgrouponly') as cu:
@@ -295,7 +303,8 @@ class SecurityTC(BaseSecurityTC):
             rset = cu.execute('Affaire X WHERE NOT X eid %(x)s', {'x': aff2})
             self.assertEqual(rset.rows, [])
             # test can't update an attribute of an entity that can't be readen
-            self.assertRaises(Unauthorized, cu.execute, 'SET X sujet "hacked" WHERE X eid %(x)s', {'x': eid})
+            self.assertRaises(Unauthorized, cu.execute,
+                              'SET X sujet "hacked" WHERE X eid %(x)s', {'x': eid})
             self.rollback()
 
 
@@ -314,7 +323,8 @@ class SecurityTC(BaseSecurityTC):
     def test_read_erqlexpr_has_text1(self):
         aff1 = self.execute("INSERT Affaire X: X sujet 'cool'")[0][0]
         card1 = self.execute("INSERT Card X: X title 'cool'")[0][0]
-        self.execute('SET X owned_by U WHERE X eid %(x)s, U login "iaminusersgrouponly"', {'x': card1})
+        self.execute('SET X owned_by U WHERE X eid %(x)s, U login "iaminusersgrouponly"',
+                     {'x': card1})
         self.commit()
         with self.login('iaminusersgrouponly') as cu:
             aff2 = cu.execute("INSERT Affaire X: X sujet 'cool'")[0][0]
@@ -365,7 +375,8 @@ class SecurityTC(BaseSecurityTC):
             values = dict(rset)
             self.assertEqual(values['Affaire'], 1)
             self.assertEqual(values['Societe'], 2)
-            rset = cu.execute('Any ETN, COUNT(X) GROUPBY ETN WHERE X is ET, ET name ETN WITH X BEING ((Affaire X) UNION (Societe X))')
+            rset = cu.execute('Any ETN, COUNT(X) GROUPBY ETN WHERE X is ET, ET name ETN '
+                              'WITH X BEING ((Affaire X) UNION (Societe X))')
             self.assertEqual(len(rset), 2)
             values = dict(rset)
             self.assertEqual(values['Affaire'], 1)
@@ -374,15 +385,19 @@ class SecurityTC(BaseSecurityTC):
 
     def test_attribute_security(self):
         # only managers should be able to edit the 'test' attribute of Personne entities
-        eid = self.execute("INSERT Personne X: X nom 'bidule', X web 'http://www.debian.org', X test TRUE")[0][0]
+        eid = self.execute("INSERT Personne X: X nom 'bidule', "
+                           "X web 'http://www.debian.org', X test TRUE")[0][0]
         self.execute('SET X test FALSE WHERE X eid %(x)s', {'x': eid})
         self.commit()
         with self.login('iaminusersgrouponly') as cu:
-            cu.execute("INSERT Personne X: X nom 'bidule', X web 'http://www.debian.org', X test TRUE")
+            cu.execute("INSERT Personne X: X nom 'bidule', "
+                       "X web 'http://www.debian.org', X test TRUE")
             self.assertRaises(Unauthorized, self.commit)
-            cu.execute("INSERT Personne X: X nom 'bidule', X web 'http://www.debian.org', X test FALSE")
+            cu.execute("INSERT Personne X: X nom 'bidule', "
+                       "X web 'http://www.debian.org', X test FALSE")
             self.assertRaises(Unauthorized, self.commit)
-            eid = cu.execute("INSERT Personne X: X nom 'bidule', X web 'http://www.debian.org'")[0][0]
+            eid = cu.execute("INSERT Personne X: X nom 'bidule', "
+                             "X web 'http://www.debian.org'")[0][0]
             self.commit()
             cu.execute('SET X test FALSE WHERE X eid %(x)s', {'x': eid})
             self.assertRaises(Unauthorized, self.commit)
@@ -405,7 +420,8 @@ class SecurityTC(BaseSecurityTC):
             self.commit()
             note2.cw_adapt_to('IWorkflowable').fire_transition('markasdone')
             self.commit()
-            self.assertEqual(len(cu.execute('Any X WHERE X in_state S, S name "todo", X eid %(x)s', {'x': note2.eid})),
+            self.assertEqual(len(cu.execute('Any X WHERE X in_state S, S name "todo", X eid %(x)s',
+                                            {'x': note2.eid})),
                               0)
             cu.execute("SET X para 'chouette' WHERE X eid %(x)s", {'x': note2.eid})
             self.assertRaises(Unauthorized, self.commit)
@@ -441,7 +457,8 @@ class SecurityTC(BaseSecurityTC):
                 self.assertTrue(x.creation_date)
 
     def test_yams_inheritance_and_security_bug(self):
-        with self.temporary_permissions(Division={'read': ('managers', ERQLExpression('X owned_by U'))}):
+        with self.temporary_permissions(Division={'read': ('managers',
+                                                           ERQLExpression('X owned_by U'))}):
             with self.login('iaminusersgrouponly'):
                 querier = self.repo.querier
                 rqlst = querier.parse('Any X WHERE X is_instance_of Societe')
@@ -451,7 +468,8 @@ class SecurityTC(BaseSecurityTC):
                 plan.preprocess(rqlst)
                 self.assertEqual(
                     rqlst.as_string(),
-                    '(Any X WHERE X is IN(SubDivision, Societe)) UNION (Any X WHERE X is Division, EXISTS(X owned_by %(B)s))')
+                    '(Any X WHERE X is IN(SubDivision, Societe)) UNION '
+                    '(Any X WHERE X is Division, EXISTS(X owned_by %(B)s))')
 
 
 class BaseSchemaSecurityTC(BaseSecurityTC):
@@ -520,7 +538,8 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
 
     def test_bookmarked_by_guests_security(self):
         beid1 = self.execute('INSERT Bookmark B: B path "?vid=manage", B title "manage"')[0][0]
-        beid2 = self.execute('INSERT Bookmark B: B path "?vid=index", B title "index", B bookmarked_by U WHERE U login "anon"')[0][0]
+        beid2 = self.execute('INSERT Bookmark B: B path "?vid=index", B title "index", '
+                             'B bookmarked_by U WHERE U login "anon"')[0][0]
         self.commit()
         with self.login('anon') as cu:
             anoneid = self.session.user.eid
@@ -607,7 +626,8 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
             raise RuntimeError('\n'.join(msg))
         # actual test
         self.execute('INSERT EmailAddress X: X address "hop"').get_entity(0, 0)
-        self.execute('INSERT EmailAddress X: X address "anon", U use_email X WHERE U login "anon"').get_entity(0, 0)
+        self.execute('INSERT EmailAddress X: X address "anon", '
+                     'U use_email X WHERE U login "anon"').get_entity(0, 0)
         self.commit()
         self.assertEqual(len(self.execute('Any X WHERE X is EmailAddress')), 2)
         self.login('anon')
