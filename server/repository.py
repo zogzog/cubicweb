@@ -652,7 +652,7 @@ class Repository(object):
             return rset.rows
 
     def connect(self, login, **kwargs):
-        """open a connection for a given user
+        """open a session for a given user
 
         raise `AuthenticationError` if the authentication failed
         raise `ConnectionError` if we can't open a connection
