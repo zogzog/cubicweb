@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -25,41 +25,40 @@ from cubicweb.devtools import get_test_db_handler, TestServerConfiguration
 from cubicweb.server.checkintegrity import check, reindex_entities
 
 class CheckIntegrityTC(TestCase):
+
     def setUp(self):
         handler = get_test_db_handler(TestServerConfiguration(apphome=self.datadir))
         handler.build_db_cache()
-        self.repo, self.cnx = handler.get_repo_and_cnx()
-        session = self.repo._get_session(self.cnx.sessionid, setcnxset=True)
-        self.session = session
-        self.execute = session.execute
+        self.repo, _cnx = handler.get_repo_and_cnx()
         sys.stderr = sys.stdout = StringIO()
 
     def tearDown(self):
         sys.stderr = sys.__stderr__
         sys.stdout = sys.__stdout__
-        self.cnx.close()
         self.repo.shutdown()
 
     def test_checks(self):
-        with self.cnx:
-            check(self.repo, self.cnx, ('entities', 'relations', 'text_index', 'metadata'),
+        with self.repo.internal_cnx() as cnx:
+            check(self.repo, cnx, ('entities', 'relations', 'text_index', 'metadata'),
                   reindex=False, fix=True, withpb=False)
 
     def test_reindex_all(self):
-        self.execute('INSERT Personne X: X nom "toto", X prenom "tutu"')
-        self.session.commit(False)
-        self.assertTrue(self.execute('Any X WHERE X has_text "tutu"'))
-        reindex_entities(self.repo.schema, self.session, withpb=False)
-        self.assertTrue(self.execute('Any X WHERE X has_text "tutu"'))
+        with self.repo.internal_cnx() as cnx:
+            cnx.execute('INSERT Personne X: X nom "toto", X prenom "tutu"')
+            cnx.commit()
+            self.assertTrue(cnx.execute('Any X WHERE X has_text "tutu"'))
+            reindex_entities(self.repo.schema, cnx, withpb=False)
+            self.assertTrue(cnx.execute('Any X WHERE X has_text "tutu"'))
 
     def test_reindex_etype(self):
-        self.execute('INSERT Personne X: X nom "toto", X prenom "tutu"')
-        self.execute('INSERT Affaire X: X ref "toto"')
-        self.session.commit(False)
-        reindex_entities(self.repo.schema, self.session, withpb=False,
-                         etypes=('Personne',))
-        self.assertTrue(self.execute('Any X WHERE X has_text "tutu"'))
-        self.assertTrue(self.execute('Any X WHERE X has_text "toto"'))
+        with self.repo.internal_cnx() as cnx:
+            cnx.execute('INSERT Personne X: X nom "toto", X prenom "tutu"')
+            cnx.execute('INSERT Affaire X: X ref "toto"')
+            cnx.commit()
+            reindex_entities(self.repo.schema, cnx, withpb=False,
+                             etypes=('Personne',))
+            self.assertTrue(cnx.execute('Any X WHERE X has_text "tutu"'))
+            self.assertTrue(cnx.execute('Any X WHERE X has_text "toto"'))
 
 if __name__ == '__main__':
     unittest_main()
