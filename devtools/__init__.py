@@ -490,15 +490,9 @@ class TestDataBaseHandler(object):
             self.restore_database(DEFAULT_EMPTY_DB_ID)
             repo = self.get_repo(startup=True)
             cnx = self.get_cnx()
-            session = repo._sessions[cnx.sessionid]
-            session.set_cnxset()
-            _commit = session.commit
-            def keep_cnxset_commit(free_cnxset=False):
-                _commit(free_cnxset=free_cnxset)
-            session.commit = keep_cnxset_commit
-            pre_setup_func(session, self.config)
-            session.commit()
-            cnx.close()
+            with cnx:
+                pre_setup_func(cnx, self.config)
+                cnx.commit()
         self.backup_database(test_db_id)
 
 
