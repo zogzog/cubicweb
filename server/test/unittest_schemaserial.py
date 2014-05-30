@@ -26,6 +26,10 @@ from cubicweb import Binary
 from cubicweb.schema import CubicWebSchemaLoader
 from cubicweb.devtools import TestServerConfiguration
 
+from cubicweb.server.schemaserial import (updateeschema2rql, updaterschema2rql, rschema2rql,
+                                          eschema2rql, rdef2rql, specialize2rql,
+                                          _erperms2rql as erperms2rql)
+
 from logilab.database import get_db_helper
 from yams import register_base_type, unregister_base_type
 
@@ -52,9 +56,6 @@ def tearDownModule(*args):
     helper = get_db_helper('sqlite')
     helper.TYPE_MAPPING.pop('BabarTestType', None)
     helper.TYPE_CONVERTERS.pop('BabarTestType', None)
-
-from cubicweb.server.schemaserial import *
-from cubicweb.server.schemaserial import _erperms2rql as erperms2rql
 
 cstrtypemap = {'RQLConstraint': 'RQLConstraint_eid',
                'SizeConstraint': 'SizeConstraint_eid',
