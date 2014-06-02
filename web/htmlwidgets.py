@@ -153,8 +153,6 @@ class RawBoxItem(HTMLWidget): # XXX deprecated
         else:
             return u'<li class="%s">' % self.liclass
 
-        return self.label
-
     def _render(self):
         self.w(u'%s%s</li>' % (self._start_li(), self.label))
 
