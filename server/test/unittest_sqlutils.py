@@ -51,18 +51,18 @@ class SQLAdapterMixInTC(TestCase):
 class SQLUtilsTC(CubicWebTC):
 
     def test_group_concat(self):
-        req = self.request()
-        g = req.create_entity('CWGroup', name=u'héhé')
-        u = req.create_entity('CWUser', login=u'toto', upassword=u'',
-                              in_group=g.eid)
-        rset = self.execute(u'Any L,GROUP_CONCAT(G) GROUPBY L WHERE X login L,'
-                            u'X in_group G, G name GN, NOT G name IN ("users", "héhé")')
-        self.assertEqual([[u'admin', u'3'], [u'anon', u'2']],
-                         rset.rows)
-        rset = self.execute('Any L,GROUP_CONCAT(GN) GROUPBY L WHERE X login L,'
-                            'X in_group G, G name GN, NOT G name "users"')
-        self.assertEqual([[u'admin', u'managers'], [u'anon', u'guests'], [u'toto', u'héhé']],
-                         rset.rows)
+        with self.admin_access.repo_cnx() as cnx:
+            g = cnx.create_entity('CWGroup', name=u'héhé')
+            u = cnx.create_entity('CWUser', login=u'toto', upassword=u'',
+                                  in_group=g.eid)
+            rset = cnx.execute(u'Any L,GROUP_CONCAT(G) GROUPBY L WHERE X login L,'
+                               u'X in_group G, G name GN, NOT G name IN ("users", "héhé")')
+            self.assertEqual([[u'admin', u'3'], [u'anon', u'2']],
+                             rset.rows)
+            rset = cnx.execute('Any L,GROUP_CONCAT(GN) GROUPBY L WHERE X login L,'
+                               'X in_group G, G name GN, NOT G name "users"')
+            self.assertEqual([[u'admin', u'managers'], [u'anon', u'guests'], [u'toto', u'héhé']],
+                             rset.rows)
 
 if __name__ == '__main__':
     unittest_main()
