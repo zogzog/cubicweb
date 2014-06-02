@@ -203,9 +203,10 @@ hr.boxSeparator{
   visibility: hidden;
 }
 
-li.invisible {
-  background: none;
-  padding: 0px 0px 1px 1px;
+/* copied verbatim from bootstrap 3.0 */
+.list-unstyled {
+  padding-left: 0;
+  list-style: none;
 }
 
 .caption {
