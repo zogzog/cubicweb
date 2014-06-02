@@ -450,10 +450,10 @@ def _copyfrom_buffer_convert_string(value, **opts):
             # If a replace_sep is given, replace
             # the separator
             # (and thus avoid empty buffer)
-            if replace_sep is not None:
-                value = value.replace(_char, replace_sep)
-            else:
-                return
+            if replace_sep is None:
+                raise ValueError('conflicting separator: '
+                                 'you must provide the replace_sep option')
+            value = value.replace(_char, replace_sep)
         value = value.replace('\\', r'\\')
     if isinstance(value, unicode):
         value = value.encode(encoding)
@@ -511,11 +511,9 @@ def _create_copyfrom_buffer(data, columns, **convert_opts):
             for types, converter in _COPYFROM_BUFFER_CONVERTERS:
                 if isinstance(value, types):
                     value = converter(value, **convert_opts)
-                    if value is None:
-                        return None
                     break
             else:
-                return None
+                raise ValueError("Unsupported value type %s" % type(value))
             # We push the value to the new formatted row
             # if the value is not None and could be converted to a string.
             formatted_row.append(value)
