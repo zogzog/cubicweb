@@ -677,19 +677,21 @@ class DataHelpersTC(CubicWebTC):
         self.assertRaises(UnknownEid, self.repo.type_from_eid, -2, self.session)
 
     def test_add_delete_info(self):
-        entity = self.repo.vreg['etypes'].etype_class('Personne')(self.session)
-        entity.eid = -1
-        entity.complete = lambda x: None
-        self.session.set_cnxset()
-        self.repo.add_info(self.session, entity, self.repo.system_source)
-        cu = self.session.system_sql('SELECT * FROM entities WHERE eid = -1')
-        data = cu.fetchall()
-        self.assertEqual(tuplify(data), [(-1, 'Personne', 'system', None)])
-        self.repo.delete_info(self.session, entity, 'system')
-        #self.repo.commit()
-        cu = self.session.system_sql('SELECT * FROM entities WHERE eid = -1')
-        data = cu.fetchall()
-        self.assertEqual(data, [])
+        with self.admin_access.repo_cnx() as cnx:
+            with cnx.ensure_cnx_set:
+                cnx.mode = 'write'
+                entity = self.repo.vreg['etypes'].etype_class('Personne')(cnx)
+                entity.eid = -1
+                entity.complete = lambda x: None
+                self.repo.add_info(cnx, entity, self.repo.system_source)
+                cu = cnx.system_sql('SELECT * FROM entities WHERE eid = -1')
+                data = cu.fetchall()
+                self.assertEqual(tuplify(data), [(-1, 'Personne', 'system', None)])
+                self.repo.delete_info(cnx, entity, 'system')
+                #self.repo.commit()
+                cu = cnx.system_sql('SELECT * FROM entities WHERE eid = -1')
+                data = cu.fetchall()
+                self.assertEqual(data, [])
 
 
 class FTITC(CubicWebTC):
