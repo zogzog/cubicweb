@@ -76,7 +76,7 @@ import os.path as osp
 import inspect
 from collections import defaultdict
 from copy import copy
-from datetime import date, datetime
+from datetime import date, datetime, time
 from time import asctime
 from StringIO import StringIO
 
@@ -459,23 +459,32 @@ def _copyfrom_buffer_convert_string(value, **opts):
         value = value.encode(encoding)
     return value
 
-def _copyfrom_buffer_convert_datetime(value, **opts):
+def _copyfrom_buffer_convert_date(value, **opts):
     '''Convert date into "YYYY-MM-DD"'''
-    # Do not use strftime, as it yields issue
-    # with date < 1900
-    value = '%04d-%02d-%02d' % (value.year, value.month, value.day)
-    if isinstance(value, datetime):
-        value += ' %02d:%02d:%02d' % (value.hour,
-                                      value.minutes,
-                                      value.second)
-    return value
+    # Do not use strftime, as it yields issue with date < 1900
+    # (http://bugs.python.org/issue1777412)
+    return '%04d-%02d-%02d' % (value.year, value.month, value.day)
+
+def _copyfrom_buffer_convert_datetime(value, **opts):
+    '''Convert date into "YYYY-MM-DD HH:MM:SS.UUUUUU"'''
+    # Do not use strftime, as it yields issue with date < 1900
+    # (http://bugs.python.org/issue1777412)
+    return '%s %s' % (_copyfrom_buffer_convert_date(value, **opts),
+                      _copyfrom_buffer_convert_time(value, **opts))
+
+def _copyfrom_buffer_convert_time(value, **opts):
+    '''Convert time into "HH:MM:SS.UUUUUU"'''
+    return '%02d:%02d:%02d.%06d' % (value.hour, value.minute,
+                                    value.second, value.microsecond)
 
 # (types, converter) list.
 _COPYFROM_BUFFER_CONVERTERS = [
     (type(None), _copyfrom_buffer_convert_None),
     ((long, int, float), _copyfrom_buffer_convert_number),
     (basestring, _copyfrom_buffer_convert_string),
-    ((date, datetime), _copyfrom_buffer_convert_datetime)
+    (datetime, _copyfrom_buffer_convert_datetime),
+    (date, _copyfrom_buffer_convert_date),
+    (time, _copyfrom_buffer_convert_time),
 ]
 
 def _create_copyfrom_buffer(data, columns, **convert_opts):
