@@ -506,7 +506,7 @@ class GenericRelationsWidget(fw.FieldWidget):
                 w(u'<td>')
                 w(u'<ul>')
                 for viewparams in related:
-                    w(u'<li class="invisible">%s<div id="span%s" class="%s">%s</div></li>'
+                    w(u'<li class="invisible">%s<span id="span%s" class="%s">%s</span></li>'
                       % (viewparams[1], viewparams[0], viewparams[2], viewparams[3]))
                 if not form.force_display and form.maxrelitems < len(related):
                     link = (u'<span class="invisible">'

@@ -205,10 +205,6 @@ li.invisible {
   padding: 0px 0px 1px 1px;
 }
 
-li.invisible div{
-  display: inline;
-}
-
 .caption {
     font-weight: bold;
 }
