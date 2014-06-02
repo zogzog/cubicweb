@@ -450,7 +450,7 @@ def _copyfrom_buffer_convert_string(value, **opts):
             # If a replace_sep is given, replace
             # the separator
             # (and thus avoid empty buffer)
-            if replace_sep:
+            if replace_sep is not None:
                 value = value.replace(_char, replace_sep)
             else:
                 return
