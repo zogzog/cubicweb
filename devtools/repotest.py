@@ -1,4 +1,4 @@
-# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -22,10 +22,8 @@ This module contains functions to initialize a new repository.
 
 __docformat__ = "restructuredtext en"
 
-from copy import deepcopy
 from pprint import pprint
 
-from logilab.common.decorators import clear_cache
 from logilab.common.testlib import SkipTest
 
 def tuplify(list):
@@ -204,27 +202,22 @@ class BaseQuerierTC(TestCase):
         self.ueid = self.session.user.eid
         assert self.ueid != -1
         self.repo._type_source_cache = {} # clear cache
-        self.cnxset = self.session.set_cnxset()
         self.maxeid = self.get_max_eid()
         do_monkey_patch()
         self._dumb_sessions = []
 
     def get_max_eid(self):
-        return self.session.execute('Any MAX(X)')[0][0]
+        with self.session.new_cnx() as cnx:
+            return cnx.execute('Any MAX(X)')[0][0]
+
     def cleanup(self):
-        self.session.set_cnxset()
-        self.session.execute('DELETE Any X WHERE X eid > %s' % self.maxeid)
+        with self.session.new_cnx() as cnx:
+            cnx.execute('DELETE Any X WHERE X eid > %s' % self.maxeid)
+            cnx.commit()
 
     def tearDown(self):
         undo_monkey_patch()
-        self.session.rollback()
         self.cleanup()
-        self.commit()
-        # properly close dumb sessions
-        for session in self._dumb_sessions:
-            session.rollback()
-            session.close()
-        self.repo._free_cnxset(self.cnxset)
         assert self.session.user.eid != -1
 
     def set_debug(self, debug):
@@ -259,21 +252,11 @@ class BaseQuerierTC(TestCase):
     def user_groups_session(self, *groups):
         """lightweight session using the current user with hi-jacked groups"""
         # use self.session.user.eid to get correct owned_by relation, unless explicit eid
-        u = self.repo._build_user(self.session, self.session.user.eid)
-        u._groups = set(groups)
-        s = Session(u, self.repo)
-        s._cnx.cnxset = self.cnxset
-        s._cnx.ctx_count = 1
-        # register session to ensure it gets closed
-        self._dumb_sessions.append(s)
-        return s
-
-    def execute(self, rql, args=None, build_descr=True):
-        return self.o.execute(self.session, rql, args, build_descr)
-
-    def commit(self):
-        self.session.commit()
-        self.session.set_cnxset()
+        with self.session.new_cnx() as cnx:
+            u = self.repo._build_user(cnx, self.session.user.eid)
+            u._groups = set(groups)
+            s = Session(u, self.repo)
+            return s
 
     def qexecute(self, rql, args=None, build_descr=True):
         with self.session.new_cnx() as cnx:
@@ -291,19 +274,13 @@ class BasePlannerTC(BaseQuerierTC):
         # XXX source_defs
         self.o = self.repo.querier
         self.session = self.repo._sessions.values()[0]
-        self.cnxset = self.session.set_cnxset()
         self.schema = self.o.schema
         self.system = self.repo.system_source
         do_monkey_patch()
-        self._dumb_sessions = [] # by hi-jacked parent setup
         self.repo.vreg.rqlhelper.backend = 'postgres' # so FTIRANK is considered
 
     def tearDown(self):
         undo_monkey_patch()
-        for session in self._dumb_sessions:
-            if session._cnx.cnxset is not None:
-                session._cnx.cnxset = None
-            session.close()
 
     def _prepare_plan(self, rql, kwargs=None):
         rqlst = self.o.parse(rql, annotate=True)
@@ -362,24 +339,6 @@ def _select_principal(scope, relations):
     return _orig_select_principal(scope, relations,
                                   _sort=lambda rels: sorted(rels, key=sort_key))
 
-
-def _merge_input_maps(*args, **kwargs):
-    return sorted(_orig_merge_input_maps(*args, **kwargs))
-
-def _choose_term(self, source, sourceterms):
-    # predictable order for test purpose
-    def get_key(x):
-        try:
-            # variable
-            return x.name
-        except AttributeError:
-            try:
-                # relation
-                return x.r_type
-            except AttributeError:
-                # const
-                return x.value
-    return _orig_choose_term(self, source, DumbOrderedDict2(sourceterms, get_key))
 
 def _ordered_iter_relations(stinfo):
     return sorted(_orig_iter_relations(stinfo), key=lambda x:x.r_type)
