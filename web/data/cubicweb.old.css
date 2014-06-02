@@ -220,6 +220,11 @@ blockquote {
 }
 
 /* copied verbatim from bootstrap 3.0 */
+.invisible {
+  visibility: hidden;
+}
+
+/* copied verbatim from bootstrap 3.0 */
 .list-unstyled {
   padding-left: 0;
   list-style: none;
