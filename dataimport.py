@@ -487,7 +487,7 @@ _COPYFROM_BUFFER_CONVERTERS = [
     (time, _copyfrom_buffer_convert_time),
 ]
 
-def _create_copyfrom_buffer(data, columns, **convert_opts):
+def _create_copyfrom_buffer(data, columns=None, **convert_opts):
     """
     Create a StringIO buffer for 'COPY FROM' command.
     Deals with Unicode, Int, Float, Date... (see ``converters``)
@@ -499,8 +499,13 @@ def _create_copyfrom_buffer(data, columns, **convert_opts):
     # Create a list rather than directly create a StringIO
     # to correctly write lines separated by '\n' in a single step
     rows = []
-    if isinstance(data[0], (tuple, list)):
-        columns = range(len(data[0]))
+    if columns is None:
+        if isinstance(data[0], (tuple, list)):
+            columns = range(len(data[0]))
+        elif isinstance(data[0], dict):
+            columns = data[0].keys()
+        else:
+            raise ValueError('Could not get columns: you must provide columns.')
     for row in data:
         # Iterate over the different columns and the different values
         # and try to convert them to a correct datatype.
