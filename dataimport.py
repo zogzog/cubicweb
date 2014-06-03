@@ -622,10 +622,8 @@ class RQLObjectStore(ObjectStore):
     """ObjectStore that works with an actual RQL repository (production mode)"""
     _rql = None # bw compat
 
-    def __init__(self, session=None, commit=None):
+    def __init__(self, session, commit=None):
         ObjectStore.__init__(self)
-        if session is None:
-            sys.exit('please provide a session of run this script with cubicweb-ctl shell and pass cnx as session')
         if not hasattr(session, 'set_cnxset'):
             if hasattr(session, 'request'):
                 # connection object
