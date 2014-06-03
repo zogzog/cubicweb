@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -26,7 +26,6 @@ from logilab.common.deprecation import class_renamed
 
 from cubicweb import AuthenticationError, BadConnectionId
 from cubicweb.view import Component
-from cubicweb.dbapi import _repo_connect, ConnectionProperties
 from cubicweb.web import InvalidSession
 from cubicweb.web.application import AbstractAuthenticationManager
 

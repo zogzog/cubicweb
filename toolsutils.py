@@ -257,18 +257,6 @@ broadcast if not provided.',
       }),
     )
 
-def config_connect(appid, optconfig):
-    from cubicweb.dbapi import connect
-    from getpass import getpass
-    user = optconfig.user
-    if not user:
-        user = raw_input('login: ')
-    password = optconfig.password
-    if not password:
-        password = getpass('password: ')
-    return connect(login=user, password=password, host=optconfig.host, database=appid)
-
-
 ## cwshell helpers #############################################################
 
 class AbstractMatcher(object):

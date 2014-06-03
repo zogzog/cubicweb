@@ -37,3 +37,4 @@ Deprecated code drops
   rename the configuration file from repository.conf to all-in-one.conf
   and run ``cubicweb-ctl upgrade`` to update it.
 
+* the old (deprecated since 3.19) `DBAPI` api is completely removed

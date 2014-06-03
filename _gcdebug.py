@@ -19,7 +19,10 @@
 import gc, types, weakref
 
 from cubicweb.schema import CubicWebRelationSchema, CubicWebEntitySchema
-from cubicweb.dbapi import _NeedAuthAccessMock
+try:
+    from cubicweb.web.request import _NeedAuthAccessMock
+except ImportError:
+    _NeedAuthAccessMock = None
 
 listiterator = type(iter([]))
 
@@ -30,8 +33,9 @@ IGNORE_CLASSES = (
     property, classmethod,
     types.ModuleType, types.FunctionType, types.MethodType,
     types.MemberDescriptorType, types.GetSetDescriptorType,
-    _NeedAuthAccessMock,
     )
+if _NeedAuthAccessMock is not None:
+    IGNORE_CLASSES = IGNORE_CLASSES + (_NeedAuthAccessMock,)
 
 def _get_counted_class(obj, classes):
     for cls in classes:

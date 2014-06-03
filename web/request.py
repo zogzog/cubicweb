@@ -38,8 +38,8 @@ from logilab.common.decorators import cached
 from logilab.common.deprecation import deprecated
 from logilab.mtconverter import xml_escape
 
+from cubicweb import AuthenticationError
 from cubicweb.req import RequestSessionBase
-from cubicweb.dbapi import DBAPIRequest
 from cubicweb.uilib import remove_html_tags, js
 from cubicweb.utils import SizeConstrainedList, HTMLHead, make_uid
 from cubicweb.view import TRANSITIONAL_DOCTYPE_NOEXT
@@ -956,22 +956,29 @@ class _CubicWebRequestBase(RequestSessionBase):
         self.set_default_language(vreg)
 
 
-class DBAPICubicWebRequestBase(_CubicWebRequestBase, DBAPIRequest):
-
-    def set_session(self, session):
-        """method called by the session handler when the user is authenticated
-        or an anonymous connection is open
-        """
-        super(CubicWebRequestBase, self).set_session(session)
-        # set request language
-        self.set_user_language(session.user)
-
-
 def _cnx_func(name):
     def proxy(req, *args, **kwargs):
         return getattr(req.cnx, name)(*args, **kwargs)
     return proxy
 
+class _NeedAuthAccessMock(object):
+
+    def __getattribute__(self, attr):
+        raise AuthenticationError()
+
+    def __nonzero__(self):
+        return False
+
+class _MockAnonymousSession(object):
+    sessionid = 'thisisnotarealsession'
+
+    @property
+    def data(self):
+        return {}
+
+    @property
+    def anonymous_session(self):
+        return True
 
 class ConnectionCubicWebRequestBase(_CubicWebRequestBase):
 
@@ -987,8 +994,7 @@ class ConnectionCubicWebRequestBase(_CubicWebRequestBase):
             self.translations = {}
         super(ConnectionCubicWebRequestBase, self).__init__(vreg, https=https,
                                                        form=form, headers=headers)
-        from cubicweb.dbapi import DBAPISession, _NeedAuthAccessMock
-        self.session = DBAPISession(None)
+        self.session = _MockAnonymousSession()
         self.cnx = self.user = _NeedAuthAccessMock()
 
     @property
@@ -1007,7 +1013,6 @@ class ConnectionCubicWebRequestBase(_CubicWebRequestBase):
         return rset
 
     def set_default_language(self, vreg):
-        # XXX copy from dbapi
         try:
             lang = vreg.property_value('ui.language')
         except Exception: # property may not be registered

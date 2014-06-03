@@ -394,9 +394,9 @@ class TestDataBaseHandler(object):
 
     def _new_repo(self, config):
         """Factory method to create a new Repository Instance"""
-        from cubicweb.dbapi import in_memory_repo
+        from cubicweb.repoapi import _get_inmemory_repo
         config._cubes = None
-        repo = in_memory_repo(config)
+        repo = _get_inmemory_repo(config)
         # extending Repository class
         repo._has_started = False
         repo._needs_refresh = False

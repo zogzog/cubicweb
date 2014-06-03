@@ -27,7 +27,6 @@ from cubicweb import (RepositoryError, Unauthorized, AuthenticationError,
                       BadConnectionId)
 from cubicweb.web import InvalidSession, Redirect
 from cubicweb.web.application import AbstractSessionManager
-from cubicweb.dbapi import ProgrammingError, DBAPISession
 from cubicweb import repoapi
 
 
