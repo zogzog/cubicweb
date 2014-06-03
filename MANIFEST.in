@@ -10,7 +10,7 @@ recursive-include doc README makefile *.conf *.js *.css *.py *.rst *.txt *.html 
 recursive-include misc *.py *.png *.display
 
 include web/views/*.pt
-recursive-include web/data external_resources *.js *.css *.py *.png *.gif *.ico *.ttf
+recursive-include web/data external_resources *.js *.css *.py *.png *.gif *.ico *.ttf *.svg *.woff *.eot
 recursive-include web/wdoc *.rst *.png *.xml ChangeLog*
 recursive-include devtools/data *.js *.css *.sh
 
