@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -18,7 +18,6 @@
 
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.devtools.htmlparser import XMLValidator
-from cubicweb.dbapi import DBAPISession
 
 
 class LogFormTemplateTC(CubicWebTC):
@@ -39,7 +38,8 @@ class LogFormTemplateTC(CubicWebTC):
 class MainNoTopTemplateTC(CubicWebTC):
 
     def test_valid_xhtml(self):
-        self.view('index', template='main-no-top')
+        with self.admin_access.web_request() as req:
+            self.view('index', template='main-no-top', req=req)
 
 
 if __name__ == '__main__':
