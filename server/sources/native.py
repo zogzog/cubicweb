@@ -25,12 +25,8 @@ Notes:
 """
 __docformat__ = "restructuredtext en"
 
-try:
-    from cPickle import loads, dumps
-    import cPickle as pickle
-except ImportError:
-    from pickle import loads, dumps
-    import pickle
+from cPickle import loads, dumps
+import cPickle as pickle
 from threading import Lock
 from datetime import datetime
 from base64 import b64decode, b64encode
