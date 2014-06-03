@@ -375,12 +375,12 @@ class SQLAdapterMixIn(object):
             return newargs
         return query_args
 
-    def process_result(self, cursor, column_callbacks=None, session=None):
+    def process_result(self, cursor, cnx=None, column_callbacks=None):
         """return a list of CubicWeb compliant values from data in the given cursor
         """
-        return list(self.iter_process_result(cursor, column_callbacks, session))
+        return list(self.iter_process_result(cursor, cnx, column_callbacks))
 
-    def iter_process_result(self, cursor, column_callbacks=None, session=None):
+    def iter_process_result(self, cursor, cnx, column_callbacks=None):
         """return a iterator on tuples of CubicWeb compliant values from data
         in the given cursor
         """
@@ -390,10 +390,10 @@ class SQLAdapterMixIn(object):
         if not column_callbacks:
             return self.dbhelper.dbapi_module.process_cursor(cursor, self._dbencoding,
                                                              Binary)
-        assert session
-        return self._cb_process_result(cursor, column_callbacks, session)
+        assert cnx
+        return self._cb_process_result(cursor, column_callbacks, cnx)
 
-    def _cb_process_result(self, cursor, column_callbacks, session):
+    def _cb_process_result(self, cursor, column_callbacks, cnx):
         # begin bind to locals for optimization
         descr = cursor.description
         encoding = self._dbencoding
@@ -416,7 +416,7 @@ class SQLAdapterMixIn(object):
                         value = process_value(value, descr[col], encoding, binary)
                     else:
                         for cb in cbstack:
-                            value = cb(self, session, value)
+                            value = cb(self, cnx, value)
                     result.append(value)
                 yield result
 

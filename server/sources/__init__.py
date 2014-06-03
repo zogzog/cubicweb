@@ -1,4 +1,4 @@
-# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -19,10 +19,7 @@
 
 __docformat__ = "restructuredtext en"
 
-import itertools
-from os.path import join, splitext
 from time import time
-from datetime import datetime, timedelta
 from logging import getLogger
 
 from logilab.common import configuration
@@ -31,8 +28,7 @@ from logilab.common.deprecation import deprecated
 from yams.schema import role_name
 
 from cubicweb import ValidationError, set_log_methods, server
-from cubicweb.schema import VIRTUAL_RTYPES
-from cubicweb.server.sqlutils import SQL_PREFIX
+from cubicweb.server import SOURCE_TYPES
 from cubicweb.server.edition import EditedEntity
 
 
@@ -311,23 +307,15 @@ class AbstractSource(object):
         """
         pass
 
-    def _load_mapping(self, session=None, **kwargs):
+    def _load_mapping(self, cnx, **kwargs):
         if not 'CWSourceSchemaConfig' in self.schema:
             self.warning('instance is not mapping ready')
             return
-        if session is None:
-            _session = self.repo.internal_session()
-        else:
-            _session = session
-        try:
-            for schemacfg in _session.execute(
-                'Any CFG,CFGO,S WHERE '
-                'CFG options CFGO, CFG cw_schema S, '
-                'CFG cw_for_source X, X eid %(x)s', {'x': self.eid}).entities():
-                self.add_schema_config(schemacfg, **kwargs)
-        finally:
-            if session is None:
-                _session.close()
+        for schemacfg in cnx.execute(
+            'Any CFG,CFGO,S WHERE '
+            'CFG options CFGO, CFG cw_schema S, '
+            'CFG cw_for_source X, X eid %(x)s', {'x': self.eid}).entities():
+            self.add_schema_config(schemacfg, **kwargs)
 
     def add_schema_config(self, schemacfg, checkonly=False):
         """added CWSourceSchemaConfig, modify mapping accordingly"""
@@ -372,33 +360,33 @@ class AbstractSource(object):
         """return the external id for the given newly inserted entity"""
         raise NotImplementedError(self)
 
-    def add_entity(self, session, entity):
+    def add_entity(self, cnx, entity):
         """add a new entity to the source"""
         raise NotImplementedError(self)
 
-    def update_entity(self, session, entity):
+    def update_entity(self, cnx, entity):
         """update an entity in the source"""
         raise NotImplementedError(self)
 
-    def delete_entities(self, session, entities):
+    def delete_entities(self, cnx, entities):
         """delete several entities from the source"""
         for entity in entities:
-            self.delete_entity(session, entity)
+            self.delete_entity(cnx, entity)
 
-    def delete_entity(self, session, entity):
+    def delete_entity(self, cnx, entity):
         """delete an entity from the source"""
         raise NotImplementedError(self)
 
-    def add_relation(self, session, subject, rtype, object):
+    def add_relation(self, cnx, subject, rtype, object):
         """add a relation to the source"""
         raise NotImplementedError(self)
 
-    def add_relations(self, session,  rtype, subj_obj_list):
+    def add_relations(self, cnx,  rtype, subj_obj_list):
         """add a relations to the source"""
         # override in derived classes if you feel you can
         # optimize
         for subject, object in subj_obj_list:
-            self.add_relation(session, subject, rtype, object)
+            self.add_relation(cnx, subject, rtype, object)
 
     def delete_relation(self, session, subject, rtype, object):
         """delete a relation from the source"""
@@ -406,57 +394,56 @@ class AbstractSource(object):
 
     # system source interface #################################################
 
-    def eid_type_source(self, session, eid):
+    def eid_type_source(self, cnx, eid):
         """return a tuple (type, source, extid) for the entity with id <eid>"""
         raise NotImplementedError(self)
 
-    def create_eid(self, session):
+    def create_eid(self, cnx):
         raise NotImplementedError(self)
 
-    def add_info(self, session, entity, source, extid):
+    def add_info(self, cnx, entity, source, extid):
         """add type and source info for an eid into the system table"""
         raise NotImplementedError(self)
 
-    def update_info(self, session, entity, need_fti_update):
+    def update_info(self, cnx, entity, need_fti_update):
         """mark entity as being modified, fulltext reindex if needed"""
         raise NotImplementedError(self)
 
-    def index_entity(self, session, entity):
+    def index_entity(self, cnx, entity):
         """create an operation to [re]index textual content of the given entity
         on commit
         """
         raise NotImplementedError(self)
 
-    def fti_unindex_entities(self, session, entities):
+    def fti_unindex_entities(self, cnx, entities):
         """remove text content for entities from the full text index
         """
         raise NotImplementedError(self)
 
-    def fti_index_entities(self, session, entities):
+    def fti_index_entities(self, cnx, entities):
         """add text content of created/modified entities to the full text index
         """
         raise NotImplementedError(self)
 
     # sql system source interface #############################################
 
-    def sqlexec(self, session, sql, args=None):
+    def sqlexec(self, cnx, sql, args=None):
         """execute the query and return its result"""
         raise NotImplementedError(self)
 
-    def create_index(self, session, table, column, unique=False):
+    def create_index(self, cnx, table, column, unique=False):
         raise NotImplementedError(self)
 
-    def drop_index(self, session, table, column, unique=False):
+    def drop_index(self, cnx, table, column, unique=False):
         raise NotImplementedError(self)
 
 
-    @deprecated('[3.13] use extid2eid(source, value, etype, session, **kwargs)')
-    def extid2eid(self, value, etype, session, **kwargs):
-        return self.repo.extid2eid(self, value, etype, session, **kwargs)
+    @deprecated('[3.13] use extid2eid(source, value, etype, cnx, **kwargs)')
+    def extid2eid(self, value, etype, cnx, **kwargs):
+        return self.repo.extid2eid(self, value, etype, cnx, **kwargs)
 
 
 
-from cubicweb.server import SOURCE_TYPES
 
 def source_adapter(source_type):
     try:
