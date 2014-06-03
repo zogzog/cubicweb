@@ -4,7 +4,7 @@ from shutil import rmtree
 
 from logilab.common.testlib import TestCase, unittest_main
 
-from cubicweb.web.propertysheet import *
+from cubicweb.web.propertysheet import PropertySheet, lazystr
 
 DATADIR = join(dirname(__file__), 'data')
 CACHEDIR = join(DATADIR, 'uicache')
