@@ -843,6 +843,7 @@ class CubicWebTC(TestCase):
         publisher.error_handler = raise_error_handler
         return publisher
 
+    @deprecated('[3.19] use the .remote_calling method')
     def remote_call(self, fname, *args):
         """remote json call simulation"""
         dump = json.dumps
@@ -850,6 +851,14 @@ class CubicWebTC(TestCase):
         req = self.request(fname=fname, pageid='123', arg=args)
         ctrl = self.vreg['controllers'].select('ajax', req)
         return ctrl.publish(), req
+
+    @contextmanager
+    def remote_calling(self, fname, *args):
+        """remote json call simulation"""
+        args = [json.dumps(arg) for arg in args]
+        with self.admin_access.web_request(fname=fname, pageid='123', arg=args) as req:
+            ctrl = self.vreg['controllers'].select('ajax', req)
+            yield ctrl.publish(), req
 
     def app_handle_request(self, req, path='view'):
         return self.app.core_handle(req, path)
