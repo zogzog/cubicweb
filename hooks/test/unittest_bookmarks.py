@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -22,16 +22,17 @@ class BookmarkHooksTC(CubicWebTC):
 
 
     def test_auto_delete_bookmarks(self):
-        beid = self.execute('INSERT Bookmark X: X title "hop", X path "view", X bookmarked_by U '
-                            'WHERE U login "admin"')[0][0]
-        self.execute('SET X bookmarked_by U WHERE U login "anon"')
-        self.commit()
-        self.execute('DELETE X bookmarked_by U WHERE U login "admin"')
-        self.commit()
-        self.assertTrue(self.execute('Any X WHERE X eid %(x)s', {'x': beid}))
-        self.execute('DELETE X bookmarked_by U WHERE U login "anon"')
-        self.commit()
-        self.assertFalse(self.execute('Any X WHERE X eid %(x)s', {'x': beid}))
+        with self.admin_access.repo_cnx() as cnx:
+            beid = cnx.execute('INSERT Bookmark X: X title "hop", X path "view", X bookmarked_by U '
+                               'WHERE U login "admin"')[0][0]
+            cnx.execute('SET X bookmarked_by U WHERE U login "anon"')
+            cnx.commit()
+            cnx.execute('DELETE X bookmarked_by U WHERE U login "admin"')
+            cnx.commit()
+            self.assertTrue(cnx.execute('Any X WHERE X eid %(x)s', {'x': beid}))
+            cnx.execute('DELETE X bookmarked_by U WHERE U login "anon"')
+            cnx.commit()
+            self.assertFalse(cnx.execute('Any X WHERE X eid %(x)s', {'x': beid}))
 
 if __name__ == '__main__':
     unittest_main()
