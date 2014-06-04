@@ -38,17 +38,18 @@ def snippet_cmp(a, b):
     return cmp(a, b)
 
 def test_plan(self, rql, expected, kwargs=None):
-    plan = self._prepare_plan(rql, kwargs)
-    self.planner.build_plan(plan)
-    try:
-        self.assertEqual(len(plan.steps), len(expected),
-                          'expected %s steps, got %s' % (len(expected), len(plan.steps)))
-        # step order is important
-        for i, step in enumerate(plan.steps):
-            compare_steps(self, step.test_repr(), expected[i])
-    except AssertionError:
-        pprint([step.test_repr() for step in plan.steps])
-        raise
+    with self.session.new_cnx() as cnx:
+        plan = self._prepare_plan(cnx, rql, kwargs)
+        self.planner.build_plan(plan)
+        try:
+            self.assertEqual(len(plan.steps), len(expected),
+                              'expected %s steps, got %s' % (len(expected), len(plan.steps)))
+            # step order is important
+            for i, step in enumerate(plan.steps):
+                compare_steps(self, step.test_repr(), expected[i])
+        except AssertionError:
+            pprint([step.test_repr() for step in plan.steps])
+            raise
 
 def compare_steps(self, step, expected):
     try:
@@ -282,17 +283,16 @@ class BasePlannerTC(BaseQuerierTC):
     def tearDown(self):
         undo_monkey_patch()
 
-    def _prepare_plan(self, rql, kwargs=None):
+    def _prepare_plan(self, cnx, rql, kwargs=None):
         rqlst = self.o.parse(rql, annotate=True)
-        self.o.solutions(self.session, rqlst, kwargs)
+        self.o.solutions(cnx, rqlst, kwargs)
         if rqlst.TYPE == 'select':
             self.repo.vreg.rqlhelper.annotate(rqlst)
             for select in rqlst.children:
                 select.solutions.sort()
         else:
             rqlst.solutions.sort()
-        with self.session.ensure_cnx_set:
-            return self.o.plan_factory(rqlst, kwargs, self.session)
+        return self.o.plan_factory(rqlst, kwargs, cnx)
 
 
 # monkey patch some methods to get predicatable results #######################
