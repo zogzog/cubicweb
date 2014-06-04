@@ -26,11 +26,8 @@ from pprint import pprint
 
 from logilab.common.testlib import SkipTest
 
-def tuplify(list):
-    for i in range(len(list)):
-        if type(list[i]) is not type(()):
-            list[i] = tuple(list[i])
-    return list
+def tuplify(mylist):
+    return [tuple(item) for item in mylist]
 
 def snippet_cmp(a, b):
     a = (a[0], [e.expression for e in a[1]])
