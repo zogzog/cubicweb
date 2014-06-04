@@ -112,20 +112,21 @@ class UtilsTC(BaseQuerierTC):
     def test_preprocess_1(self):
         with self.session.new_cnx() as cnx:
             reid = cnx.execute('Any X WHERE X is CWRType, X name "owned_by"')[0][0]
-            rqlst = self._prepare('Any COUNT(RDEF) WHERE RDEF relation_type X, X eid %(x)s',
+            rqlst = self._prepare(cnx, 'Any COUNT(RDEF) WHERE RDEF relation_type X, X eid %(x)s',
                                   {'x': reid})
             self.assertEqual([{'RDEF': 'CWAttribute'}, {'RDEF': 'CWRelation'}],
                              rqlst.solutions)
 
     def test_preprocess_2(self):
-        teid = self.qexecute("INSERT Tag X: X name 'tag'")[0][0]
-        #geid = self.execute("CWGroup G WHERE G name 'users'")[0][0]
-        #self.execute("SET X tags Y WHERE X eid %(t)s, Y eid %(g)s",
-        #             {'g': geid, 't': teid}, 'g')
-        rqlst = self._prepare('Any X WHERE E eid %(x)s, E tags X', {'x': teid})
-        # the query may be optimized, should keep only one solution
-        # (any one, etype will be discarded)
-        self.assertEqual(1, len(rqlst.solutions))
+        with self.session.new_cnx() as cnx:
+            teid = cnx.execute("INSERT Tag X: X name 'tag'")[0][0]
+            #geid = self.execute("CWGroup G WHERE G name 'users'")[0][0]
+            #self.execute("SET X tags Y WHERE X eid %(t)s, Y eid %(g)s",
+            #             {'g': geid, 't': teid}, 'g')
+            rqlst = self._prepare(cnx, 'Any X WHERE E eid %(x)s, E tags X', {'x': teid})
+            # the query may be optimized, should keep only one solution
+            # (any one, etype will be discarded)
+            self.assertEqual(1, len(rqlst.solutions))
 
     def assertRQLEqual(self, expected, got):
         from rql import parse
@@ -133,114 +134,117 @@ class UtilsTC(BaseQuerierTC):
                                   unicode(parse(got)))
 
     def test_preprocess_security(self):
-        plan = self._prepare_plan('Any ETN,COUNT(X) GROUPBY ETN '
-                                  'WHERE X is ET, ET name ETN')
-        plan.cnx = self.user_groups_session('users')
-        union = plan.rqlst
-        plan.preprocess(union)
-        self.assertEqual(len(union.children), 1)
-        self.assertEqual(len(union.children[0].with_), 1)
-        subq = union.children[0].with_[0].query
-        self.assertEqual(len(subq.children), 4)
-        self.assertEqual([t.as_string() for t in union.children[0].selection],
-                          ['ETN','COUNT(X)'])
-        self.assertEqual([t.as_string() for t in union.children[0].groupby],
-                          ['ETN'])
-        partrqls = sorted(((rqlst.as_string(), rqlst.solutions) for rqlst in subq.children))
-        rql, solutions = partrqls[0]
-        self.assertRQLEqual(rql,
-                            'Any ETN,X WHERE X is ET, ET name ETN, (EXISTS(X owned_by %(B)s))'
-                            ' OR ((((EXISTS(D concerne C?, C owned_by %(B)s, '
-                            '               X identity D, C is Division, D is Affaire))'
-                            ' OR (EXISTS(H concerne G?, G owned_by %(B)s, G is SubDivision, '
-                            '            X identity H, H is Affaire)))'
-                            ' OR (EXISTS(I concerne F?, F owned_by %(B)s, F is Societe, '
-                            '            X identity I, I is Affaire)))'
-                            ' OR (EXISTS(J concerne E?, E owned_by %(B)s, E is Note, '
-                            '            X identity J, J is Affaire)))'
-                            ', ET is CWEType, X is Affaire')
-        self.assertEqual(solutions, [{'C': 'Division',
-                                       'D': 'Affaire',
-                                       'E': 'Note',
-                                       'F': 'Societe',
-                                       'G': 'SubDivision',
-                                       'H': 'Affaire',
-                                       'I': 'Affaire',
-                                       'J': 'Affaire',
-                                       'X': 'Affaire',
-                                       'ET': 'CWEType', 'ETN': 'String'}])
-        rql, solutions = partrqls[1]
-        self.assertRQLEqual(rql,  'Any ETN,X WHERE X is ET, ET name ETN, ET is CWEType, '
-                            'X is IN(BaseTransition, Bookmark, CWAttribute, CWCache, CWConstraint, '
-                            '        CWConstraintType, CWEType, CWGroup, CWPermission, CWProperty, CWRType, '
-                            '        CWRelation, CWSource, CWUniqueTogetherConstraint, CWUser, Card, Comment, '
-                            '        Division, Email, EmailPart, EmailThread, ExternalUri, File, Folder, Note, '
-                            '        Old, Personne, RQLExpression, Societe, State, SubDivision, '
-                            '        SubWorkflowExitPoint, Tag, TrInfo, Transition, Workflow, WorkflowTransition)')
-        self.assertListEqual(sorted(solutions),
-                              sorted([{'X': 'BaseTransition', 'ETN': 'String', 'ET': 'CWEType'},
-                                      {'X': 'Bookmark', 'ETN': 'String', 'ET': 'CWEType'},
-                                      {'X': 'Card', 'ETN': 'String', 'ET': 'CWEType'},
-                                      {'X': 'Comment', 'ETN': 'String', 'ET': 'CWEType'},
-                                      {'X': 'Division', 'ETN': 'String', 'ET': 'CWEType'},
-                                      {'X': 'CWCache', 'ETN': 'String', 'ET': 'CWEType'},
-                                      {'X': 'CWConstraint', 'ETN': 'String', 'ET': 'CWEType'},
-                                      {'X': 'CWConstraintType', 'ETN': 'String', 'ET': 'CWEType'},
-                                      {'X': 'CWEType', 'ETN': 'String', 'ET': 'CWEType'},
-                                      {'X': 'CWAttribute', 'ETN': 'String', 'ET': 'CWEType'},
-                                      {'X': 'CWGroup', 'ETN': 'String', 'ET': 'CWEType'},
-                                      {'X': 'CWRelation', 'ETN': 'String', 'ET': 'CWEType'},
-                                      {'X': 'CWPermission', 'ETN': 'String', 'ET': 'CWEType'},
-                                      {'X': 'CWProperty', 'ETN': 'String', 'ET': 'CWEType'},
-                                      {'X': 'CWRType', 'ETN': 'String', 'ET': 'CWEType'},
-                                      {'X': 'CWSource', 'ETN': 'String', 'ET': 'CWEType'},
-                                      {'X': 'CWUniqueTogetherConstraint', 'ETN': 'String', 'ET': 'CWEType'},
-                                      {'X': 'CWUser', 'ETN': 'String', 'ET': 'CWEType'},
-                                      {'X': 'Email', 'ETN': 'String', 'ET': 'CWEType'},
-                                      {'X': 'EmailPart', 'ETN': 'String', 'ET': 'CWEType'},
-                                      {'X': 'EmailThread', 'ETN': 'String', 'ET': 'CWEType'},
-                                      {'X': 'ExternalUri', 'ETN': 'String', 'ET': 'CWEType'},
-                                      {'X': 'File', 'ETN': 'String', 'ET': 'CWEType'},
-                                      {'X': 'Folder', 'ETN': 'String', 'ET': 'CWEType'},
-                                      {'X': 'Note', 'ETN': 'String', 'ET': 'CWEType'},
-                                      {'X': 'Old', 'ETN': 'String', 'ET': 'CWEType'},
-                                      {'X': 'Personne', 'ETN': 'String', 'ET': 'CWEType'},
-                                      {'X': 'RQLExpression', 'ETN': 'String', 'ET': 'CWEType'},
-                                      {'X': 'Societe', 'ETN': 'String', 'ET': 'CWEType'},
-                                      {'X': 'State', 'ETN': 'String', 'ET': 'CWEType'},
-                                      {'X': 'SubDivision', 'ETN': 'String', 'ET': 'CWEType'},
-                                      {'X': 'SubWorkflowExitPoint', 'ETN': 'String', 'ET': 'CWEType'},
-                                      {'X': 'Tag', 'ETN': 'String', 'ET': 'CWEType'},
-                                      {'X': 'Transition', 'ETN': 'String', 'ET': 'CWEType'},
-                                      {'X': 'TrInfo', 'ETN': 'String', 'ET': 'CWEType'},
-                                      {'X': 'Workflow', 'ETN': 'String', 'ET': 'CWEType'},
-                                      {'X': 'WorkflowTransition', 'ETN': 'String', 'ET': 'CWEType'}]))
-        rql, solutions = partrqls[2]
-        self.assertEqual(rql,
-                         'Any ETN,X WHERE X is ET, ET name ETN, EXISTS(%(D)s use_email X), '
-                         'ET is CWEType, X is EmailAddress')
-        self.assertEqual(solutions, [{'X': 'EmailAddress', 'ET': 'CWEType', 'ETN': 'String'}])
-        rql, solutions = partrqls[3]
-        self.assertEqual(rql,
-                          'Any ETN,X WHERE X is ET, ET name ETN, EXISTS(X owned_by %(C)s), '
-                          'ET is CWEType, X is Basket')
-        self.assertEqual(solutions, [{'X': 'Basket', 'ET': 'CWEType', 'ETN': 'String'}])
+        s = self.user_groups_session('users')
+        with s.new_cnx() as cnx:
+            plan = self._prepare_plan(cnx, 'Any ETN,COUNT(X) GROUPBY ETN '
+                                      'WHERE X is ET, ET name ETN')
+            union = plan.rqlst
+            plan.preprocess(union)
+            self.assertEqual(len(union.children), 1)
+            self.assertEqual(len(union.children[0].with_), 1)
+            subq = union.children[0].with_[0].query
+            self.assertEqual(len(subq.children), 4)
+            self.assertEqual([t.as_string() for t in union.children[0].selection],
+                              ['ETN','COUNT(X)'])
+            self.assertEqual([t.as_string() for t in union.children[0].groupby],
+                              ['ETN'])
+            partrqls = sorted(((rqlst.as_string(), rqlst.solutions) for rqlst in subq.children))
+            rql, solutions = partrqls[0]
+            self.assertRQLEqual(rql,
+                                'Any ETN,X WHERE X is ET, ET name ETN, (EXISTS(X owned_by %(B)s))'
+                                ' OR ((((EXISTS(D concerne C?, C owned_by %(B)s, '
+                                '               X identity D, C is Division, D is Affaire))'
+                                ' OR (EXISTS(H concerne G?, G owned_by %(B)s, G is SubDivision, '
+                                '            X identity H, H is Affaire)))'
+                                ' OR (EXISTS(I concerne F?, F owned_by %(B)s, F is Societe, '
+                                '            X identity I, I is Affaire)))'
+                                ' OR (EXISTS(J concerne E?, E owned_by %(B)s, E is Note, '
+                                '            X identity J, J is Affaire)))'
+                                ', ET is CWEType, X is Affaire')
+            self.assertEqual(solutions, [{'C': 'Division',
+                                           'D': 'Affaire',
+                                           'E': 'Note',
+                                           'F': 'Societe',
+                                           'G': 'SubDivision',
+                                           'H': 'Affaire',
+                                           'I': 'Affaire',
+                                           'J': 'Affaire',
+                                           'X': 'Affaire',
+                                           'ET': 'CWEType', 'ETN': 'String'}])
+            rql, solutions = partrqls[1]
+            self.assertRQLEqual(rql,  'Any ETN,X WHERE X is ET, ET name ETN, ET is CWEType, '
+                                'X is IN(BaseTransition, Bookmark, CWAttribute, CWCache, CWConstraint, '
+                                '        CWConstraintType, CWEType, CWGroup, CWPermission, CWProperty, CWRType, '
+                                '        CWRelation, CWSource, CWUniqueTogetherConstraint, CWUser, Card, Comment, '
+                                '        Division, Email, EmailPart, EmailThread, ExternalUri, File, Folder, Note, '
+                                '        Old, Personne, RQLExpression, Societe, State, SubDivision, '
+                                '        SubWorkflowExitPoint, Tag, TrInfo, Transition, Workflow, WorkflowTransition)')
+            self.assertListEqual(sorted(solutions),
+                                  sorted([{'X': 'BaseTransition', 'ETN': 'String', 'ET': 'CWEType'},
+                                          {'X': 'Bookmark', 'ETN': 'String', 'ET': 'CWEType'},
+                                          {'X': 'Card', 'ETN': 'String', 'ET': 'CWEType'},
+                                          {'X': 'Comment', 'ETN': 'String', 'ET': 'CWEType'},
+                                          {'X': 'Division', 'ETN': 'String', 'ET': 'CWEType'},
+                                          {'X': 'CWCache', 'ETN': 'String', 'ET': 'CWEType'},
+                                          {'X': 'CWConstraint', 'ETN': 'String', 'ET': 'CWEType'},
+                                          {'X': 'CWConstraintType', 'ETN': 'String', 'ET': 'CWEType'},
+                                          {'X': 'CWEType', 'ETN': 'String', 'ET': 'CWEType'},
+                                          {'X': 'CWAttribute', 'ETN': 'String', 'ET': 'CWEType'},
+                                          {'X': 'CWGroup', 'ETN': 'String', 'ET': 'CWEType'},
+                                          {'X': 'CWRelation', 'ETN': 'String', 'ET': 'CWEType'},
+                                          {'X': 'CWPermission', 'ETN': 'String', 'ET': 'CWEType'},
+                                          {'X': 'CWProperty', 'ETN': 'String', 'ET': 'CWEType'},
+                                          {'X': 'CWRType', 'ETN': 'String', 'ET': 'CWEType'},
+                                          {'X': 'CWSource', 'ETN': 'String', 'ET': 'CWEType'},
+                                          {'X': 'CWUniqueTogetherConstraint', 'ETN': 'String', 'ET': 'CWEType'},
+                                          {'X': 'CWUser', 'ETN': 'String', 'ET': 'CWEType'},
+                                          {'X': 'Email', 'ETN': 'String', 'ET': 'CWEType'},
+                                          {'X': 'EmailPart', 'ETN': 'String', 'ET': 'CWEType'},
+                                          {'X': 'EmailThread', 'ETN': 'String', 'ET': 'CWEType'},
+                                          {'X': 'ExternalUri', 'ETN': 'String', 'ET': 'CWEType'},
+                                          {'X': 'File', 'ETN': 'String', 'ET': 'CWEType'},
+                                          {'X': 'Folder', 'ETN': 'String', 'ET': 'CWEType'},
+                                          {'X': 'Note', 'ETN': 'String', 'ET': 'CWEType'},
+                                          {'X': 'Old', 'ETN': 'String', 'ET': 'CWEType'},
+                                          {'X': 'Personne', 'ETN': 'String', 'ET': 'CWEType'},
+                                          {'X': 'RQLExpression', 'ETN': 'String', 'ET': 'CWEType'},
+                                          {'X': 'Societe', 'ETN': 'String', 'ET': 'CWEType'},
+                                          {'X': 'State', 'ETN': 'String', 'ET': 'CWEType'},
+                                          {'X': 'SubDivision', 'ETN': 'String', 'ET': 'CWEType'},
+                                          {'X': 'SubWorkflowExitPoint', 'ETN': 'String', 'ET': 'CWEType'},
+                                          {'X': 'Tag', 'ETN': 'String', 'ET': 'CWEType'},
+                                          {'X': 'Transition', 'ETN': 'String', 'ET': 'CWEType'},
+                                          {'X': 'TrInfo', 'ETN': 'String', 'ET': 'CWEType'},
+                                          {'X': 'Workflow', 'ETN': 'String', 'ET': 'CWEType'},
+                                          {'X': 'WorkflowTransition', 'ETN': 'String', 'ET': 'CWEType'}]))
+            rql, solutions = partrqls[2]
+            self.assertEqual(rql,
+                             'Any ETN,X WHERE X is ET, ET name ETN, EXISTS(%(D)s use_email X), '
+                             'ET is CWEType, X is EmailAddress')
+            self.assertEqual(solutions, [{'X': 'EmailAddress', 'ET': 'CWEType', 'ETN': 'String'}])
+            rql, solutions = partrqls[3]
+            self.assertEqual(rql,
+                              'Any ETN,X WHERE X is ET, ET name ETN, EXISTS(X owned_by %(C)s), '
+                              'ET is CWEType, X is Basket')
+            self.assertEqual(solutions, [{'X': 'Basket', 'ET': 'CWEType', 'ETN': 'String'}])
 
     def test_preprocess_security_aggregat(self):
-        plan = self._prepare_plan('Any MAX(X)')
-        plan.cnx = self.user_groups_session('users')
-        union = plan.rqlst
-        plan.preprocess(union)
-        self.assertEqual(len(union.children), 1)
-        self.assertEqual(len(union.children[0].with_), 1)
-        subq = union.children[0].with_[0].query
-        self.assertEqual(len(subq.children), 4)
-        self.assertEqual([t.as_string() for t in union.children[0].selection],
-                          ['MAX(X)'])
+        s = self.user_groups_session('users')
+        with s.new_cnx() as cnx:
+            plan = self._prepare_plan(cnx, 'Any MAX(X)')
+            union = plan.rqlst
+            plan.preprocess(union)
+            self.assertEqual(len(union.children), 1)
+            self.assertEqual(len(union.children[0].with_), 1)
+            subq = union.children[0].with_[0].query
+            self.assertEqual(len(subq.children), 4)
+            self.assertEqual([t.as_string() for t in union.children[0].selection],
+                              ['MAX(X)'])
 
     def test_preprocess_nonregr(self):
-        rqlst = self._prepare('Any S ORDERBY SI WHERE NOT S ecrit_par O, S para SI')
-        self.assertEqual(len(rqlst.solutions), 1)
+        with self.session.new_cnx() as cnx:
+            rqlst = self._prepare(cnx, 'Any S ORDERBY SI WHERE NOT S ecrit_par O, S para SI')
+            self.assertEqual(len(rqlst.solutions), 1)
 
     def test_build_description(self):
         # should return an empty result set

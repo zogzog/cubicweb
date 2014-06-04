@@ -157,8 +157,9 @@ class RQLGeneratorTC(TestCase):
     def setUp(self):
         self.repo = FakeRepo(self.schema, config=FakeConfig(apphome=self.datadir))
         self.repo.system_source = mock_object(dbdriver=self.backend)
-        self.rqlhelper = RQLHelper(self.schema, special_relations={'eid': 'uid',
-                                                                   'has_text': 'fti'},
+        self.rqlhelper = RQLHelper(self.schema,
+                                   special_relations={'eid': 'uid',
+                                                      'has_text': 'fti'},
                                    backend=self.backend)
         self.qhelper = QuerierHelper(self.repo, self.schema)
         ExecutionPlan._check_permissions = _dummy_check_permissions
@@ -230,7 +231,7 @@ class BaseQuerierTC(TestCase):
         rqlhelper._analyser.uid_func_mapping = {}
         return rqlhelper
 
-    def _prepare_plan(self, rql, kwargs=None, simplify=True):
+    def _prepare_plan(self, cnx, rql, kwargs=None, simplify=True):
         rqlhelper = self._rqlhelper()
         rqlst = rqlhelper.parse(rql)
         rqlhelper.compute_solutions(rqlst, kwargs=kwargs)
@@ -238,10 +239,10 @@ class BaseQuerierTC(TestCase):
             rqlhelper.simplify(rqlst)
         for select in rqlst.children:
             select.solutions.sort()
-        return self.o.plan_factory(rqlst, kwargs, self.session)
+        return self.o.plan_factory(rqlst, kwargs, cnx)
 
-    def _prepare(self, rql, kwargs=None):
-        plan = self._prepare_plan(rql, kwargs, simplify=False)
+    def _prepare(self, cnx, rql, kwargs=None):
+        plan = self._prepare_plan(cnx, rql, kwargs, simplify=False)
         plan.preprocess(plan.rqlst)
         rqlst = plan.rqlst.children[0]
         rqlst.solutions = remove_unused_solutions(rqlst, rqlst.solutions, {}, self.repo.schema)[0]
