@@ -259,12 +259,12 @@ class DataFeedSource(AbstractSource):
                 call_hooks('after_add_relation', session,
                            eidfrom=entity.eid, rtype=attr, eidto=value)
 
-    def source_cwuris(self, session):
+    def source_cwuris(self, cnx):
         sql = ('SELECT extid, eid, type FROM entities, cw_source_relation '
                'WHERE entities.eid=cw_source_relation.eid_from '
                'AND cw_source_relation.eid_to=%s' % self.eid)
         return dict((b64decode(uri), (eid, type))
-                    for uri, eid, type in session.system_sql(sql).fetchall())
+                    for uri, eid, type in cnx.system_sql(sql).fetchall())
 
     def init_import_log(self, session, **kwargs):
         dataimport = session.create_entity('CWDataImport', cw_import_of=self,
