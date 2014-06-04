@@ -664,30 +664,6 @@ class Repository(object):
         """open a new session for a given user and return its sessionid """
         return self.new_session(login, **kwargs).sessionid
 
-    def execute(self, sessionid, rqlstring, args=None, build_descr=True,
-                txid=None):
-        """execute a RQL query
-
-        * rqlstring should be a unicode string or a plain ascii string
-        * args the optional parameters used in the query
-        * build_descr is a flag indicating if the description should be
-          built on select queries
-        """
-        session = self._get_session(sessionid, setcnxset=True, txid=txid)
-        try:
-            try:
-                rset = self.querier.execute(session, rqlstring, args,
-                                            build_descr)
-                return rset
-            except (ValidationError, Unauthorized, RQLSyntaxError):
-                raise
-            except Exception:
-                # FIXME: check error to catch internal errors
-                self.exception('unexpected error while executing %s with %s', rqlstring, args)
-                raise
-        finally:
-            session.free_cnxset()
-
     @deprecated('[3.19] use .entity_metas(sessionid, eid, txid) instead')
     def describe(self, sessionid, eid, txid=None):
         """return a tuple `(type, physical source uri, extid, actual source

@@ -146,20 +146,6 @@ class CoreHooksTC(CubicWebTC):
 
 class UserGroupHooksTC(CubicWebTC):
 
-    def test_user_synchronization(self):
-        with self.admin_access.repo_cnx() as cnx:
-            self.create_user(cnx, 'toto', password='hop', commit=False)
-            self.assertRaises(AuthenticationError,
-                              self.repo.connect, u'toto', password='hop')
-            cnx.commit()
-            cnxid = self.repo.connect(u'toto', password='hop')
-            self.assertNotEqual(cnxid, cnx.sessionid)
-            cnx.execute('DELETE CWUser X WHERE X login "toto"')
-            self.repo.execute(cnxid, 'State X')
-            cnx.commit()
-            self.assertRaises(BadConnectionId,
-                              self.repo.execute, cnxid, 'State X')
-
     def test_user_group_synchronization(self):
         with self.admin_access.repo_cnx() as cnx:
             user = cnx.user

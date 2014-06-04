@@ -92,34 +92,16 @@ class RepositoryTC(CubicWebTC):
         self.assertRaises(AuthenticationError,
                           self.repo.connect, None)
 
-    def test_execute(self):
-        repo = self.repo
-        cnxid = repo.connect(self.admlogin, password=self.admpassword)
-        repo.execute(cnxid, 'Any X')
-        repo.execute(cnxid, 'Any X where X is Personne')
-        repo.execute(cnxid, 'Any X where X is Personne, X nom ~= "to"')
-        repo.execute(cnxid, 'Any X WHERE X has_text %(text)s', {'text': u'\xe7a'})
-        repo.close(cnxid)
-
     def test_login_upassword_accent(self):
+        with self.admin_access.repo_cnx() as cnx:
+            cnx.execute('INSERT CWUser X: X login %(login)s, X upassword %(passwd)s, '
+                        'X in_group G WHERE G name "users"',
+                        {'login': u"barnabé", 'passwd': u"héhéhé".encode('UTF8')})
+            cnx.commit()
         repo = self.repo
-        cnxid = repo.connect(self.admlogin, password=self.admpassword)
-        repo.execute(cnxid, 'INSERT CWUser X: X login %(login)s, X upassword %(passwd)s, X in_group G WHERE G name "users"',
-                     {'login': u"barnabé", 'passwd': u"héhéhé".encode('UTF8')})
-        repo.commit(cnxid)
-        repo.close(cnxid)
         cnxid = repo.connect(u"barnabé", password=u"héhéhé".encode('UTF8'))
         self.assert_(cnxid)
         repo.close(cnxid)
-
-    def test_rollback_on_commit_error(self):
-        cnxid = self.repo.connect(self.admlogin, password=self.admpassword)
-        self.repo.execute(cnxid,
-                          'INSERT CWUser X: X login %(login)s, X upassword %(passwd)s',
-                          {'login': u"tutetute", 'passwd': 'tutetute'})
-        self.assertRaises(ValidationError, self.repo.commit, cnxid)
-        self.assertFalse(self.repo.execute(cnxid, 'CWUser X WHERE X login "tutetute"'))
-        self.repo.close(cnxid)
 
     def test_rollback_on_execute_validation_error(self):
         class ValidationErrorAfterHook(Hook):
@@ -165,11 +147,6 @@ class RepositoryTC(CubicWebTC):
         cnxid = repo.connect(self.admlogin, password=self.admpassword)
         self.assert_(cnxid)
         repo.close(cnxid)
-        self.assertRaises(BadConnectionId, repo.execute, cnxid, 'Any X')
-
-    def test_invalid_cnxid(self):
-        self.assertRaises(BadConnectionId, self.repo.execute, 0, 'Any X')
-        self.assertRaises(BadConnectionId, self.repo.close, None)
 
     def test_shared_data(self):
         repo = self.repo
@@ -197,76 +174,6 @@ class RepositoryTC(CubicWebTC):
         self.assertIsInstance(repo.check_session(cnxid), float)
         repo.close(cnxid)
         self.assertRaises(BadConnectionId, repo.check_session, cnxid)
-
-    def test_transaction_base(self):
-        repo = self.repo
-        cnxid = repo.connect(self.admlogin, password=self.admpassword)
-        # check db state
-        result = repo.execute(cnxid, 'Personne X')
-        self.assertEqual(result.rowcount, 0)
-        # rollback entity insertion
-        repo.execute(cnxid, "INSERT Personne X: X nom 'bidule'")
-        result = repo.execute(cnxid, 'Personne X')
-        self.assertEqual(result.rowcount, 1)
-        repo.rollback(cnxid)
-        result = repo.execute(cnxid, 'Personne X')
-        self.assertEqual(result.rowcount, 0, result.rows)
-        # commit
-        repo.execute(cnxid, "INSERT Personne X: X nom 'bidule'")
-        repo.commit(cnxid)
-        result = repo.execute(cnxid, 'Personne X')
-        self.assertEqual(result.rowcount, 1)
-        repo.close(cnxid)
-
-    def test_transaction_base2(self):
-        repo = self.repo
-        cnxid = repo.connect(self.admlogin, password=self.admpassword)
-        # rollback relation insertion
-        repo.execute(cnxid, "SET U in_group G WHERE U login 'admin', G name 'guests'")
-        result = repo.execute(cnxid, "Any U WHERE U in_group G, U login 'admin', G name 'guests'")
-        self.assertEqual(result.rowcount, 1)
-        repo.rollback(cnxid)
-        result = repo.execute(cnxid, "Any U WHERE U in_group G, U login 'admin', G name 'guests'")
-        self.assertEqual(result.rowcount, 0, result.rows)
-        repo.close(cnxid)
-
-    def test_transaction_base3(self):
-        repo = self.repo
-        cnxid = repo.connect(self.admlogin, password=self.admpassword)
-        # rollback state change which trigger TrInfo insertion
-        session = repo._get_session(cnxid)
-        user = session.user
-        user.cw_adapt_to('IWorkflowable').fire_transition('deactivate')
-        rset = repo.execute(cnxid, 'TrInfo T WHERE T wf_info_for X, X eid %(x)s', {'x': user.eid})
-        self.assertEqual(len(rset), 1)
-        repo.rollback(cnxid)
-        rset = repo.execute(cnxid, 'TrInfo T WHERE T wf_info_for X, X eid %(x)s', {'x': user.eid})
-        self.assertEqual(len(rset), 0)
-        repo.close(cnxid)
-
-    def test_close_kill_processing_request(self):
-        repo = self.repo
-        cnxid = repo.connect(self.admlogin, password=self.admpassword)
-        repo.execute(cnxid, 'INSERT CWUser X: X login "toto", X upassword "tutu", X in_group G WHERE G name "users"')
-        repo.commit(cnxid)
-        lock = threading.Lock()
-        lock.acquire()
-        # close has to be in the thread due to sqlite limitations
-        def close_in_a_few_moment():
-            lock.acquire()
-            repo.close(cnxid)
-        t = threading.Thread(target=close_in_a_few_moment)
-        t.start()
-        def run_transaction():
-            lock.release()
-            repo.execute(cnxid, 'DELETE CWUser X WHERE X login "toto"')
-            repo.commit(cnxid)
-        try:
-            with self.assertRaises(SessionClosedError) as cm:
-                run_transaction()
-            self.assertEqual(str(cm.exception), 'try to access connections set on a closed session %s' % cnxid)
-        finally:
-            t.join()
 
     def test_initial_schema(self):
         schema = self.repo.schema
