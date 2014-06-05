@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -33,106 +33,135 @@ class URLPublisherTC(CubicWebTC):
     """test suite for QSPreProcessor"""
 
     def setup_database(self):
-        req = self.request()
-        self.create_user(req, u'ÿsaÿe')
-        b = req.create_entity('BlogEntry', title=u'hell\'o', content=u'blabla')
-        c = req.create_entity('Tag', name=u'yo') # take care: Tag's name normalized to lower case
-        self.execute('SET C tags B WHERE C eid %(c)s, B eid %(b)s', {'c':c.eid, 'b':b.eid})
+        with self.admin_access.repo_cnx() as cnx:
+            self.create_user(cnx, u'ÿsaÿe')
+            b = cnx.create_entity('BlogEntry', title=u'hell\'o', content=u'blabla')
+            # take care: Tag's name normalized to lower case
+            c = cnx.create_entity('Tag', name=u'yo')
+            cnx.execute('SET C tags B WHERE C eid %(c)s, B eid %(b)s',
+                        {'c':c.eid, 'b':b.eid})
+            cnx.commit()
 
-    def process(self, url):
-        req = self.req = self.request()
+    def process(self, req, url):
         return self.app.url_resolver.process(req, url)
 
     def test_raw_path(self):
         """tests raw path resolution'"""
-        self.assertEqual(self.process('view'), ('view', None))
-        self.assertEqual(self.process('edit'), ('edit', None))
-        self.assertRaises(NotFound, self.process, 'whatever')
+        with self.admin_access.web_request() as req:
+            self.assertEqual(self.process(req, 'view'), ('view', None))
+            self.assertEqual(self.process(req, 'edit'), ('edit', None))
+            self.assertRaises(NotFound, self.process, req, 'whatever')
 
     def test_eid_path(self):
         """tests eid path resolution"""
-        self.assertIsInstance(self.process('123')[1], ResultSet)
-        self.assertEqual(len(self.process('123')[1]), 1)
-        self.assertRaises(NotFound, self.process, '123/345')
-        self.assertRaises(NotFound, self.process, 'not_eid')
+        with self.admin_access.web_request() as req:
+            self.assertIsInstance(self.process(req, '123')[1], ResultSet)
+            self.assertEqual(len(self.process(req, '123')[1]), 1)
+            self.assertRaises(NotFound, self.process, req, '123/345')
+            self.assertRaises(NotFound, self.process, req, 'not_eid')
 
     def test_rest_path_etype(self):
         """tests the rest path resolution"""
-        ctrl, rset = self.process('CWEType')
-        self.assertEqual(ctrl, 'view')
-        self.assertEqual(rset.description[0][0], 'CWEType')
-        self.assertEqual(rset.printable_rql(),
-                          "Any X,AA,AB ORDERBY AA WHERE X is_instance_of CWEType, X name AA, X modification_date AB")
+        with self.admin_access.web_request() as req:
+            ctrl, rset = self.process(req, 'CWEType')
+            self.assertEqual(ctrl, 'view')
+            self.assertEqual(rset.description[0][0], 'CWEType')
+            self.assertEqual("Any X,AA,AB ORDERBY AA WHERE X is_instance_of CWEType, "
+                             "X name AA, X modification_date AB",
+                             rset.printable_rql())
 
     def test_rest_path_by_attr(self):
-        ctrl, rset = self.process('CWUser/login/admin')
-        self.assertEqual(ctrl, 'view')
-        self.assertEqual(len(rset), 1)
-        self.assertEqual(rset.description[0][0], 'CWUser')
-        self.assertEqual(rset.printable_rql(), 'Any X,AA,AB,AC,AD WHERE X is_instance_of CWUser, X login AA, X firstname AB, X surname AC, X modification_date AD, X login "admin"')
+        with self.admin_access.web_request() as req:
+            ctrl, rset = self.process(req, 'CWUser/login/admin')
+            self.assertEqual(ctrl, 'view')
+            self.assertEqual(len(rset), 1)
+            self.assertEqual(rset.description[0][0], 'CWUser')
+            self.assertEqual('Any X,AA,AB,AC,AD WHERE X is_instance_of CWUser, '
+                             'X login AA, X firstname AB, X surname AC, '
+                             'X modification_date AD, X login "admin"',
+                             rset.printable_rql())
 
     def test_rest_path_unique_attr(self):
-        ctrl, rset = self.process('cwuser/admin')
-        self.assertEqual(ctrl, 'view')
-        self.assertEqual(len(rset), 1)
-        self.assertEqual(rset.description[0][0], 'CWUser')
-        self.assertEqual(rset.printable_rql(), 'Any X,AA,AB,AC,AD WHERE X is_instance_of CWUser, X login AA, X firstname AB, X surname AC, X modification_date AD, X login "admin"')
+        with self.admin_access.web_request() as req:
+            ctrl, rset = self.process(req, 'cwuser/admin')
+            self.assertEqual(ctrl, 'view')
+            self.assertEqual(len(rset), 1)
+            self.assertEqual(rset.description[0][0], 'CWUser')
+            self.assertEqual('Any X,AA,AB,AC,AD WHERE X is_instance_of CWUser, '
+                             'X login AA, X firstname AB, X surname AC, '
+                             'X modification_date AD, X login "admin"',
+                             rset.printable_rql())
 
     def test_rest_path_eid(self):
-        ctrl, rset = self.process('cwuser/eid/%s' % self.user().eid)
-        self.assertEqual(ctrl, 'view')
-        self.assertEqual(len(rset), 1)
-        self.assertEqual(rset.description[0][0], 'CWUser')
-        self.assertEqual(rset.printable_rql(), 'Any X,AA,AB,AC,AD WHERE X is_instance_of CWUser, X login AA, X firstname AB, X surname AC, X modification_date AD, X eid %s' % rset[0][0])
+        with self.admin_access.web_request() as req:
+            ctrl, rset = self.process(req, 'cwuser/eid/%s' % self.user(req).eid)
+            self.assertEqual(ctrl, 'view')
+            self.assertEqual(len(rset), 1)
+            self.assertEqual(rset.description[0][0], 'CWUser')
+            self.assertEqual('Any X,AA,AB,AC,AD WHERE X is_instance_of CWUser, '
+                             'X login AA, X firstname AB, X surname AC, '
+                             'X modification_date AD, X eid %s' % rset[0][0],
+                             rset.printable_rql())
 
     def test_rest_path_non_ascii_paths(self):
-        ctrl, rset = self.process('CWUser/login/%C3%BFsa%C3%BFe')
-        self.assertEqual(ctrl, 'view')
-        self.assertEqual(len(rset), 1)
-        self.assertEqual(rset.description[0][0], 'CWUser')
-        self.assertEqual(rset.printable_rql(), u'Any X,AA,AB,AC,AD WHERE X is_instance_of CWUser, X login AA, X firstname AB, X surname AC, X modification_date AD, X login "\xffsa\xffe"')
+        with self.admin_access.web_request() as req:
+            ctrl, rset = self.process(req, 'CWUser/login/%C3%BFsa%C3%BFe')
+            self.assertEqual(ctrl, 'view')
+            self.assertEqual(len(rset), 1)
+            self.assertEqual(rset.description[0][0], 'CWUser')
+            self.assertEqual(u'Any X,AA,AB,AC,AD WHERE X is_instance_of CWUser, '
+                             u'X login AA, X firstname AB, X surname AC, '
+                             u'X modification_date AD, X login "\xffsa\xffe"',
+                             rset.printable_rql())
 
     def test_rest_path_quoted_paths(self):
-        ctrl, rset = self.process('BlogEntry/title/hell%27o')
-        self.assertEqual(ctrl, 'view')
-        self.assertEqual(len(rset), 1)
-        self.assertEqual(rset.description[0][0], 'BlogEntry')
-        self.assertEqual(rset.printable_rql(), u'Any X,AA,AB,AC WHERE X is_instance_of BlogEntry, X creation_date AA, X title AB, X modification_date AC, X title "hell\'o"')
+        with self.admin_access.web_request() as req:
+            ctrl, rset = self.process(req, 'BlogEntry/title/hell%27o')
+            self.assertEqual(ctrl, 'view')
+            self.assertEqual(len(rset), 1)
+            self.assertEqual(rset.description[0][0], 'BlogEntry')
+            self.assertEqual(u'Any X,AA,AB,AC WHERE X is_instance_of BlogEntry, '
+                             'X creation_date AA, X title AB, X modification_date AC, '
+                             'X title "hell\'o"',
+                             rset.printable_rql())
 
     def test_rest_path_errors(self):
-        self.assertRaises(NotFound, self.process, 'CWUser/eid/30000')
-        self.assertRaises(NotFound, self.process, 'Workcases')
-        self.assertRaises(NotFound, self.process, 'CWUser/inexistant_attribute/joe')
+        with self.admin_access.web_request() as req:
+            self.assertRaises(NotFound, self.process, req, 'CWUser/eid/30000')
+            self.assertRaises(NotFound, self.process, req, 'Workcases')
+            self.assertRaises(NotFound, self.process, req, 'CWUser/inexistant_attribute/joe')
 
     def test_action_path(self):
         """tests the action path resolution"""
-        self.assertRaises(Redirect, self.process, '1/edit')
-        self.assertRaises(Redirect, self.process, 'Tag/name/yo/edit')
-        self.assertRaises(Redirect, self.process, 'Tag/yo/edit')
-        self.assertRaises(NotFound, self.process, 'view/edit')
-        self.assertRaises(NotFound, self.process, '1/non_action')
-        self.assertRaises(NotFound, self.process, 'CWUser/login/admin/non_action')
+        with self.admin_access.web_request() as req:
+            self.assertRaises(Redirect, self.process, req, '1/edit')
+            self.assertRaises(Redirect, self.process, req, 'Tag/name/yo/edit')
+            self.assertRaises(Redirect, self.process, req, 'Tag/yo/edit')
+            self.assertRaises(NotFound, self.process, req, 'view/edit')
+            self.assertRaises(NotFound, self.process, req, '1/non_action')
+            self.assertRaises(NotFound, self.process, req, 'CWUser/login/admin/non_action')
 
 
     def test_regexp_path(self):
         """tests the regexp path resolution"""
-        ctrl, rset = self.process('add/Task')
-        self.assertEqual(ctrl, 'view')
-        self.assertEqual(rset, None)
-        self.assertEqual(self.req.form, {'etype' : "Task", 'vid' : "creation"})
-        self.assertRaises(NotFound, self.process, 'add/foo/bar')
-
+        with self.admin_access.web_request() as req:
+            ctrl, rset = self.process(req, 'add/Task')
+            self.assertEqual(ctrl, 'view')
+            self.assertEqual(rset, None)
+            self.assertEqual(req.form, {'etype' : "Task", 'vid' : "creation"})
+            self.assertRaises(NotFound, self.process, req, 'add/foo/bar')
 
     def test_nonascii_path(self):
         oldrules = SimpleReqRewriter.rules
         SimpleReqRewriter.rules = [(re.compile('/\w+', re.U), dict(vid='foo')),]
-        try:
-            path = str(FakeRequest().url_quote(u'été'))
-            ctrl, rset = self.process(path)
-            self.assertEqual(rset, None)
-            self.assertEqual(self.req.form, {'vid' : "foo"})
-        finally:
-            SimpleReqRewriter.rules = oldrules
+        with self.admin_access.web_request() as req:
+            try:
+                path = str(FakeRequest().url_quote(u'été'))
+                ctrl, rset = self.process(req, path)
+                self.assertEqual(rset, None)
+                self.assertEqual(req.form, {'vid' : "foo"})
+            finally:
+                SimpleReqRewriter.rules = oldrules
 
 
 if __name__ == '__main__':
