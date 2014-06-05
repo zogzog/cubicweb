@@ -431,59 +431,6 @@ class CubicWebTC(TestCase):
         self._admin_clt_cnx.__enter__()
         self.config.repository = lambda x=None: self.repo
 
-    # db api ##################################################################
-
-    @nocoverage
-    @deprecated('[3.19] explicitly use RepoAccess object in test instead')
-    def cursor(self, req=None):
-        if req is not None:
-            return req.cnx
-        else:
-            return self.cnx
-
-    @nocoverage
-    @deprecated('[3.19] explicitly use RepoAccess object in test instead')
-    def execute(self, rql, args=None, req=None):
-        """executes <rql>, builds a resultset, and returns a couple (rset, req)
-        where req is a FakeRequest
-        """
-        req = req or self.request(rql=rql)
-        return req.execute(unicode(rql), args)
-
-    @nocoverage
-    @deprecated('[3.19] explicitly use RepoAccess object in test instead')
-    def commit(self):
-        try:
-            return self.cnx.commit()
-        finally:
-            self.session.set_cnxset() # ensure cnxset still set after commit
-
-    @nocoverage
-    @deprecated('[3.19] explicitly use RepoAccess object in test instead')
-    def rollback(self):
-        try:
-            self.cnx.rollback()
-        except ProgrammingError:
-            pass # connection closed
-        finally:
-            self.session.set_cnxset() # ensure cnxset still set after commit
-
-    @deprecated('[3.19] explicitly use RepoAccess object in test instead')
-    def request(self, rollbackfirst=False, url=None, headers={}, **kwargs):
-        """return a web ui request"""
-        if rollbackfirst:
-            self.cnx.rollback()
-        req = self.requestcls(self.vreg, url=url, headers=headers, form=kwargs)
-        req.set_cnx(self.cnx)
-        return req
-
-    # server side db api #######################################################
-
-    @deprecated('[3.19] explicitly use RepoAccess object in test instead')
-    def sexecute(self, rql, args=None):
-        self.session.set_cnxset()
-        return self.session.execute(rql, args)
-
 
     # config management ########################################################
 
