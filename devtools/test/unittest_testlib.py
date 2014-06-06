@@ -41,11 +41,11 @@ class WebTestTC(TestCase):
             def test_error_view(self):
                 with self.admin_access.web_request() as req:
                     req.create_entity('Bug', title=u"bt")
-                    self.view('raising', req.execute('Bug B'), template=None)
+                    self.view('raising', req.execute('Bug B'), template=None, req=req)
 
             def test_correct_view(self):
                 with self.admin_access.web_request() as req:
-                    self.view('primary', req.execute('CWUser U'), template=None)
+                    self.view('primary', req.execute('CWUser U'), template=None, req=req)
 
         tests = [MyWebTest('test_error_view'), MyWebTest('test_correct_view')]
         result = self.runner.run(TestSuite(tests))

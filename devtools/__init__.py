@@ -277,8 +277,9 @@ class RealDatabaseConfiguration(ApptestConfiguration):
                                               sourcefile='/path/to/sources')
 
           def test_something(self):
-              rset = self.execute('Any X WHERE X is CWUser')
-              self.view('foaf', rset)
+              with self.admin_access.web_request() as req:
+                  rset = req.execute('Any X WHERE X is CWUser')
+                  self.view('foaf', rset, req=req)
 
     """
     skip_db_create_and_restore = True
