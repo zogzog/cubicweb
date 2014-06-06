@@ -314,45 +314,44 @@ model, in *test/unittest_sytweb.py*:
     class SecurityTC(CubicWebTC):
 
 	def test_visibility_propagation(self):
-	    # create a user for later security checks
-	    toto = self.create_user('toto')
-	    # init some data using the default manager connection
-	    req = self.request()
-	    folder = req.create_entity('Folder',
-				       name=u'restricted',
-				       visibility=u'restricted')
-	    photo1 = req.create_entity('File',
-				       data_name=u'photo1.jpg',
-				       data=Binary('xxx'),
-				       filed_under=folder)
-	    self.commit()
-	    photo1.clear_all_caches() # good practice, avoid request cache effects
-	    # visibility propagation
-	    self.assertEquals(photo1.visibility, 'restricted')
-	    # unless explicitly specified
-	    photo2 = req.create_entity('File',
-				       data_name=u'photo2.jpg',
-				       data=Binary('xxx'),
-				       visibility=u'public',
-				       filed_under=folder)
-	    self.commit()
-	    self.assertEquals(photo2.visibility, 'public')
-	    # test security
-	    self.login('toto')
-	    req = self.request()
-	    self.assertEquals(len(req.execute('File X')), 1) # only the public one
-	    self.assertEquals(len(req.execute('Folder X')), 0) # restricted...
-	    # may_be_read_by propagation
-	    self.restore_connection()
-	    folder.cw_set(may_be_read_by=toto)
-	    self.commit()
-	    photo1.clear_all_caches()
-	    self.failUnless(photo1.may_be_read_by)
-	    # test security with permissions
-	    self.login('toto')
-	    req = self.request()
-	    self.assertEquals(len(req.execute('File X')), 2) # now toto has access to photo2
-	    self.assertEquals(len(req.execute('Folder X')), 1) # and to restricted folder
+
+            with self.admin_access.repo_cnx() as cnx:
+                # create a user for later security checks
+                toto = self.create_user(cnx, 'toto')
+                cnx.commit()
+                # init some data using the default manager connection
+                folder = cnx.create_entity('Folder',
+                                           name=u'restricted',
+    				           visibility=u'restricted')
+                photo1 = cnx.create_entity('File',
+    	                                   data_name=u'photo1.jpg',
+                                           data=Binary('xxx'),
+                                           filed_under=folder)
+                cnx.commit()
+                # visibility propagation
+                self.assertEquals(photo1.visibility, 'restricted')
+                # unless explicitly specified
+                photo2 = cnx.create_entity('File',
+                                           data_name=u'photo2.jpg',
+				           data=Binary('xxx'),
+				           visibility=u'public',
+				           filed_under=folder)
+                cnx.commit()
+                self.assertEquals(photo2.visibility, 'public')
+
+            with self.new_access('toto').repo_cnx() as cnx:
+                # test security
+                self.assertEqual(1, len(cnx.execute('File X'))) # only the public one
+                self.assertEqual(0, len(cnx.execute('Folder X'))) # restricted...
+                # may_be_read_by propagation
+                folder = cnx.entity_from_eid(folder.eid)
+                folder.cw_set(may_be_read_by=toto)
+                cnx.commit()
+                photo1 = cnx.entity_from_eid(photo1)
+                self.failUnless(photo1.may_be_read_by)
+                # test security with permissions
+                self.assertEquals(2, len(cnx.execute('File X'))) # now toto has access to photo2
+                self.assertEquals(1, len(cnx.execute('Folder X'))) # and to restricted folder
 
     if __name__ == '__main__':
 	from logilab.common.testlib import unittest_main

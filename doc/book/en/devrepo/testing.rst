@@ -53,49 +53,51 @@ from http://www.cubicweb.org/project/cubicweb-keyword).
     class ClassificationHooksTC(CubicWebTC):
 
         def setup_database(self):
-            req = self.request()
-            group_etype = req.find_one_entity('CWEType', name='CWGroup')
-            c1 = req.create_entity('Classification', name=u'classif1',
-                                   classifies=group_etype)
-            user_etype = req.find_one_entity('CWEType', name='CWUser')
-            c2 = req.create_entity('Classification', name=u'classif2',
-                                   classifies=user_etype)
-            self.kw1 = req.create_entity('Keyword', name=u'kwgroup', included_in=c1)
-            self.kw2 = req.create_entity('Keyword', name=u'kwuser', included_in=c2)
+            with self.admin_access.repo_cnx() as cnx:
+                group_etype = cnx.find('CWEType', name='CWGroup').one()
+                c1 = cnx.create_entity('Classification', name=u'classif1',
+                                       classifies=group_etype)
+                user_etype = cnx.find('CWEType', name='CWUser').one()
+                c2 = cnx.create_entity('Classification', name=u'classif2',
+                                       classifies=user_etype)
+                self.kw1eid = cnx.create_entity('Keyword', name=u'kwgroup', included_in=c1).eid
+                cnx.commit()
 
         def test_cannot_create_cycles(self):
-            # direct obvious cycle
-            self.assertRaises(ValidationError, self.kw1.cw_set,
-                              subkeyword_of=self.kw1)
-            # testing indirect cycles
-            kw3 = self.execute('INSERT Keyword SK: SK name "kwgroup2", SK included_in C, '
-                               'SK subkeyword_of K WHERE C name "classif1", K eid %s'
-                               % self.kw1.eid).get_entity(0,0)
-            self.kw1.cw_set(subkeyword_of=kw3)
-            self.assertRaises(ValidationError, self.commit)
+            with self.admin_access.repo_cnx() as cnx:
+                kw1 = cnx.entity_from_eid(self.kw1eid)
+                # direct obvious cycle
+                with self.assertRaises(ValidationError):
+                    kw1.cw_set(subkeyword_of=kw1)
+                cnx.rollback()
+                # testing indirect cycles
+                kw3 = cnx.execute('INSERT Keyword SK: SK name "kwgroup2", SK included_in C, '
+                                  'SK subkeyword_of K WHERE C name "classif1", K eid %(k)s'
+                                  {'k': kw1}).get_entity(0,0)
+                kw3.cw_set(reverse_subkeyword_of=kw1)
+                self.assertRaises(ValidationError, cnx.commit)
 
 The test class defines a :meth:`setup_database` method which populates the
 database with initial data. Each test of the class runs with this
-pre-populated database. A commit is done automatically after the
-:meth:`setup_database` call. You don't have to call it explicitely.
+pre-populated database.
 
-The test case itself checks that an Operation does it job of
+The test case itself checks that an Operation does its job of
 preventing cycles amongst Keyword entities.
 
-`create_entity` is a useful method, which easily allows to create an
-entity. You can link this entity to others entities, by specifying as
-argument, the relation name, and the entity to link, as value. In the
-above example, the `Classification` entity is linked to a `CWEtype`
-via the relation `classifies`. Conversely, if you are creating a
-`CWEtype` entity, you can link it to a `Classification` entity, by
-adding `reverse_classifies` as argument.
+The `create_entity` method of connection (or request) objects allows
+to create an entity. You can link this entity to others entities, by
+specifying as argument, the relation name, and the entity to link, as
+value. In the above example, the `Classification` entity is linked to
+a `CWEtype` via the relation `classifies`. Conversely, if you are
+creating a `CWEtype` entity, you can link it to a `Classification`
+entity, by adding `reverse_classifies` as argument.
 
 .. note::
 
-   :meth:`commit` method is not called automatically in test_XXX
-   methods. You have to call it explicitely if needed (notably to test
-   operations). It is a good practice to call :meth:`clear_all_caches`
-   on entities after a commit to avoid request cache effects.
+   the :meth:`commit` method is not called automatically. You have to
+   call it explicitely if needed (notably to test operations). It is a
+   good practice to regenerate entities with :meth:`entity_from_eid`
+   after a commit to avoid request cache effects.
 
 You can see an example of security tests in the
 :ref:`adv_tuto_security`.
@@ -114,45 +116,29 @@ support multiple connections at a time, you must be careful when
 simulating security, changing users.
 
 By default, tests run with a user with admin privileges. This
-user/connection must never be closed.
+user/connection must never be closed. It is accessible through the
+`admin_access` object of the test classes.
 
-Before a self.login, one has to release the connection pool in use
-with a self.commit, self.rollback or self.close.
-
-The `login` method returns a connection object that can be used as a
+The `repo_cnx()` method returns a connection object that can be used as a
 context manager:
 
 .. sourcecode:: python
 
-   with self.login('user1') as user:
-       req = user.req
+   # admin_access is a pre-cooked session wrapping object
+   # it is built with:
+   # self.admin_access = self.new_access('admin')
+   with self.admin_access.repo_cnx() as cnx:
+       cnx.execute(...)
+       self.create_user(cnx, login='user1')
+       cnx.commit()
+
+   user1access = self.new_access('user1')
+   with user1access.web_request() as req:
        req.execute(...)
+       req.cnx.commit()
 
-On exit of the context manager, either a commit or rollback is issued,
-which releases the connection.
-
-When one is logged in as a normal user and wants to switch back to the
-admin user without committing, one has to use
-self.restore_connection().
-
-Usage with restore_connection:
-
-.. sourcecode:: python
-
-    # execute using default admin connection
-    self.execute(...)
-    # I want to login with another user, ensure to free admin connection pool
-    # (could have used rollback but not close here
-    # we should never close defaut admin connection)
-    self.commit()
-    cnx = self.login('user')
-    # execute using user connection
-    self.execute(...)
-    # I want to login with another user or with admin user
-    self.commit();  cnx.close()
-    # restore admin connection, never use cnx = self.login('admin'), it will return
-    # the default admin connection and one may be tempted to close it
-    self.restore_connection()
+On exit of the context manager, a rollback is issued, which releases
+the connection. Don't forget to issue the `cnx.commit()` calls !
 
 .. warning::
 
@@ -182,22 +168,22 @@ Let us look at simple example from the ``blog`` cube.
         """test blog specific behaviours"""
 
         def test_notifications(self):
-            req = self.request()
-            cubicweb_blog = req.create_entity('Blog', title=u'cubicweb',
-                                description=u'cubicweb is beautiful')
-            blog_entry_1 = req.create_entity('BlogEntry', title=u'hop',
-                                             content=u'cubicweb hop')
-            blog_entry_1.cw_set(entry_of=cubicweb_blog)
-            blog_entry_2 = req.create_entity('BlogEntry', title=u'yes',
-                                             content=u'cubicweb yes')
-            blog_entry_2.cw_set(entry_of=cubicweb_blog)
-            self.assertEqual(len(MAILBOX), 0)
-            self.commit()
-            self.assertEqual(len(MAILBOX), 2)
-            mail = MAILBOX[0]
-            self.assertEqual(mail.subject, '[data] hop')
-            mail = MAILBOX[1]
-            self.assertEqual(mail.subject, '[data] yes')
+            with self.admin_access.web_request() as req:
+                cubicweb_blog = req.create_entity('Blog', title=u'cubicweb',
+                                    description=u'cubicweb is beautiful')
+                blog_entry_1 = req.create_entity('BlogEntry', title=u'hop',
+                                                 content=u'cubicweb hop')
+                blog_entry_1.cw_set(entry_of=cubicweb_blog)
+                blog_entry_2 = req.create_entity('BlogEntry', title=u'yes',
+                                                 content=u'cubicweb yes')
+                blog_entry_2.cw_set(entry_of=cubicweb_blog)
+                self.assertEqual(len(MAILBOX), 0)
+                req.cnx.commit()
+                self.assertEqual(len(MAILBOX), 2)
+                mail = MAILBOX[0]
+                self.assertEqual(mail.subject, '[data] hop')
+                mail = MAILBOX[1]
+                self.assertEqual(mail.subject, '[data] yes')
 
 Visible actions tests
 `````````````````````
@@ -212,34 +198,35 @@ user or to a category of users. Let's take an example in the
     class ConferenceActionsTC(CubicWebTC):
 
         def setup_database(self):
-            self.conf = self.create_entity('Conference',
-                                           title=u'my conf',
-                                           url_id=u'conf',
-                                           start_on=date(2010, 1, 27),
-                                           end_on = date(2010, 1, 29),
-                                           call_open=True,
-                                           reverse_is_chair_at=chair,
-                                           reverse_is_reviewer_at=reviewer)
+            with self.admin_access.repo_cnx() as cnx:
+                self.conf = cnx.create_entity('Conference',
+                                              title=u'my conf',
+                                              url_id=u'conf',
+                                              start_on=date(2010, 1, 27),
+                                              end_on = date(2010, 1, 29),
+                                              call_open=True,
+                                              reverse_is_chair_at=chair,
+                                              reverse_is_reviewer_at=reviewer)
 
         def test_admin(self):
-            req = self.request()
-            rset = req.find_entities('Conference')
-            self.assertListEqual(self.pactions(req, rset),
-                                  [('workflow', workflow.WorkflowActions),
-                                   ('edit', confactions.ModifyAction),
-                                   ('managepermission', actions.ManagePermissionsAction),
-                                   ('addrelated', actions.AddRelatedActions),
-                                   ('delete', actions.DeleteAction),
-                                   ('generate_badge_action', badges.GenerateBadgeAction),
-                                   ('addtalkinconf', confactions.AddTalkInConferenceAction)
-                                   ])
-            self.assertListEqual(self.action_submenu(req, rset, 'addrelated'),
-                                  [(u'add Track in_conf Conference object',
-                                    u'http://testing.fr/cubicweb/add/Track'
-                                    u'?__linkto=in_conf%%3A%(conf)s%%3Asubject&'
-                                    u'__redirectpath=conference%%2Fconf&'
-                                    u'__redirectvid=' % {'conf': self.conf.eid}),
-                                   ])
+            with self.admin_access.web_request() as req:
+                rset = req.find('Conference').one()
+                self.assertListEqual(self.pactions(req, rset),
+                                      [('workflow', workflow.WorkflowActions),
+                                       ('edit', confactions.ModifyAction),
+                                       ('managepermission', actions.ManagePermissionsAction),
+                                       ('addrelated', actions.AddRelatedActions),
+                                       ('delete', actions.DeleteAction),
+                                       ('generate_badge_action', badges.GenerateBadgeAction),
+                                       ('addtalkinconf', confactions.AddTalkInConferenceAction)
+                                       ])
+                self.assertListEqual(self.action_submenu(req, rset, 'addrelated'),
+                                      [(u'add Track in_conf Conference object',
+                                        u'http://testing.fr/cubicweb/add/Track'
+                                        u'?__linkto=in_conf%%3A%(conf)s%%3Asubject&'
+                                        u'__redirectpath=conference%%2Fconf&'
+                                        u'__redirectvid=' % {'conf': self.conf.eid}),
+                                       ])
 
 You just have to execute a rql query corresponding to the view you want to test,
 and to compare the result of
@@ -290,23 +277,26 @@ mechanism. These are:
 Cache heavy database setup
 -------------------------------
 
-Some tests suite require a complex setup of the database that takes seconds (or
-event minutes) to complete. Doing the whole setup for all individual tests make
-the whole run very slow. The ``CubicWebTC`` class offer a simple way to prepare
-specific database once for multiple tests. The `test_db_id` class attribute of
-your ``CubicWebTC`` must be set a unique identifier and the
-:meth:`pre_setup_database` class method build the cached content. As the
-:meth:`pre_setup_database` method is not grantee to be called, you must not set
-any class attribut to be used during test there.  Databases for each `test_db_id`
-are automatically created if not already in cache.  Clearing the cache is up to
-the user. Cache files are found in the :file:`data/database` subdirectory of your
-test directory.
+Some tests suite require a complex setup of the database that takes
+seconds (or event minutes) to complete. Doing the whole setup for all
+individual tests make the whole run very slow. The ``CubicWebTC``
+class offer a simple way to prepare specific database once for
+multiple tests. The `test_db_id` class attribute of your
+``CubicWebTC`` must be set a unique identifier and the
+:meth:`pre_setup_database` class method build the cached content. As
+the :meth:`pre_setup_database` method is not garantee to be called
+every time a test method is run, you must not set any class attribute
+to be used during test *there*. Databases for each `test_db_id` are
+automatically created if not already in cache. Clearing the cache is
+up to the user. Cache files are found in the :file:`data/database`
+subdirectory of your test directory.
 
 .. warning::
 
-  Take care to always have the same :meth:`pre_setup_database` function for all
-  call with a given `test_db_id` otherwise you test will have unpredictable
-  result given the first encountered one.
+  Take care to always have the same :meth:`pre_setup_database`
+  function for all calls with a given `test_db_id` otherwise your test
+  will have unpredictable results depending on the first encountered one.
+
 
 Testing on a real-life database
 -------------------------------
@@ -332,9 +322,9 @@ the `_config` class attribute on the class as in:
                                             sourcefile='/path/to/realdb_sources')
 
         def test_blog_rss(self):
-            req = self.request()
+            with self.admin_access.web_request() as req:
             rset = req.execute('Any B ORDERBY D DESC WHERE B is BlogEntry, '
-                'B created_by U, U login "logilab", B creation_date D')
+                               'B created_by U, U login "logilab", B creation_date D')
             self.view('rss', rset, req=req)
 
 
@@ -474,6 +464,11 @@ other on the repository side. More precisely:
 The client interacts with the repository through a repoapi connection.
 
 
+.. note::
+
+   These distinction are going to disappear in cubicweb 3.21 (if not
+   before).
+
 A repoapi connection is tied to a session in the repository. The connection and
 request objects are unaccessible from repository code / the session object is
 unaccessible from client code (theoretically at least).
@@ -529,24 +524,21 @@ be thrown away once the response is sent.
 The web publisher handles the transaction:
 
 * commit / rollback is done automatically
-* you should not commit / rollback explicitly
 
-Because a session lives for a long time, and database connections are a limited
-resource, we can't bind a session to its own database connection for all its
-lifetime. The repository handles a pool of connections (4 by default), and it's
-responsible to attribute them as needed.
+* you should not commit / rollback explicitly, except if you really
+  need it
 
 Let's detail the process:
 
-1. an incoming RQL query comes from a client to the repository
+1. an incoming RQL query comes from a client to the web stack
 
-2. the repository attributes a database connection to the session
+2. the web stack opens an authenticated database connection for the
+   request, which is associated to a user session
 
-3. the repository's querier executes the query
+3. the query is executed (through the repository connection)
 
 4. this query may trigger hooks. Hooks and operation may execute some rql queries
-   through `_cw.execute`. Those queries go directly to the querier, hence don't
-   touch the database connection, they use the one attributed in 2.
+   through `cnx.execute`.
 
 5. the repository gets the result of the query in 1. If it was a RQL read query,
    the database connection is released. If it was a write query, the connection
@@ -556,18 +548,12 @@ Let's detail the process:
 
 This implies several things:
 
-* when using a request, or code executed in hooks, this database connection
-  handling is totally transparent
+* when using a request, or code executed in hooks, this database
+  connection handling is totally transparent
 
-* however, take care when writing tests: you are usually faking / testing both the
-  server and the client side, so you have to decide when to use RepoAccess.client_cnx /
-  RepoAccess.repo_cnx. Ask yourself "where the code I want to test will be running,
-  client or repository side ?". The response is usually : use a client connection :)
-  However, if you really need using a server-side object:
-
-  - commit / rollback will free the database connection (unless explicitly told
-    not to do so).
-
-  - if you issue a query after that without asking for a database connection
-    (`session.get_cnxset()`), you will end up with a 'None type has no attribute
-    source()' error
+* however, take care when writing tests: you are usually faking /
+  testing both the server and the client side, so you have to decide
+  when to use RepoAccess.client_cnx or RepoAccess.repo_cnx. Ask
+  yourself "where the code I want to test will be running, client or
+  repository side ?". The response is usually: use a repo (since the
+  "client connection" concept is going away in a couple of releases).
