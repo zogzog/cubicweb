@@ -201,10 +201,12 @@ class RepositoryTC(CubicWebTC):
     def test_internal_api(self):
         repo = self.repo
         cnxid = repo.connect(self.admlogin, password=self.admpassword)
-        session = repo._get_session(cnxid, setcnxset=True)
-        self.assertEqual(repo.type_and_source_from_eid(2, session),
-                         ('CWGroup', None, 'system'))
-        self.assertEqual(repo.type_from_eid(2, session), 'CWGroup')
+        session = repo._get_session(cnxid)
+        with session.new_cnx() as cnx:
+            with cnx.ensure_cnx_set:
+                self.assertEqual(repo.type_and_source_from_eid(2, cnx),
+                                 ('CWGroup', None, 'system'))
+                self.assertEqual(repo.type_from_eid(2, cnx), 'CWGroup')
         repo.close(cnxid)
 
     def test_public_api(self):

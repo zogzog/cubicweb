@@ -358,19 +358,9 @@ class CubicWebTC(TestCase):
     @deprecated('[3.19] explicitly use RepoAccess object in test instead')
     def session(self):
         """return current server side session"""
-        # XXX We want to use a srv_connection instead and deprecate this
-        # property
         session = self._current_session
         if session is None:
             session = self._admin_session
-            # bypassing all sanity to use the same repo cnx in the session
-            #
-            # we can't call set_cnx as the Connection is not managed by the
-            # session.
-            session._Session__threaddata.cnx = self._admin_clt_cnx._cnx
-        else:
-            session._Session__threaddata.cnx = self.cnx._cnx
-        session.set_cnxset()
         return session
 
     @property
@@ -542,8 +532,7 @@ class CubicWebTC(TestCase):
                 self._admin_clt_cnx.close()
             self._admin_clt_cnx = None
         if self._admin_session is not None:
-            if not self._admin_session.closed:
-                self.repo.close(self._admin_session.sessionid)
+            self.repo.close(self._admin_session.sessionid)
             self._admin_session = None
         while self._cleanups:
             cleanup, args, kwargs = self._cleanups.pop(-1)

@@ -439,6 +439,7 @@ class Connection(RequestSessionBase):
     """
 
     is_request = False
+    mode = 'read'
 
     def __init__(self, session, cnxid=None, session_handled=False):
         # using super(Connection, self) confuse some test hack
@@ -473,12 +474,10 @@ class Connection(RequestSessionBase):
         # other session utility
         self._session_timestamp = session._timestamp
 
-        #: connection handling mode
-        self.mode = session.default_mode
         #: connection set used to execute queries on sources
         self._cnxset = None
         #: CnxSetTracker used to report cnxset usage
-        self._cnxset_tracker = session._cnxset_tracker
+        self._cnxset_tracker = CnxSetTracker()
         #: is this connection from a client or internal to the repo
         self.running_dbapi_query = True
         # internal (root) session
@@ -1226,148 +1225,37 @@ class Timestamp(object):
         return float(self.value)
 
 
-class Session(RequestSessionBase): # XXX repoapi: stop being a
-                                   # RequestSessionBase at some point
+class Session(object):
     """Repository user session
 
     This ties all together:
      * session id,
      * user,
-     * connections set,
      * other session data.
-
-    **About session storage / transactions**
-
-    Here is a description of internal session attributes. Besides :attr:`data`
-    and :attr:`transaction_data`, you should not have to use attributes
-    described here but higher level APIs.
-
-      :attr:`data` is a dictionary containing shared data, used to communicate
-      extra information between the client and the repository
-
-      :attr:`_cnxs` is a dictionary of :class:`Connection` instance, one
-      for each running connection. The key is the connection id. By default
-      the connection id is the thread name but it can be otherwise (per dbapi
-      cursor for instance, or per thread name *from another process*).
-
-      :attr:`__threaddata` is a thread local storage whose `cnx` attribute
-      refers to the proper instance of :class:`Connection` according to the
-      connection.
-
-    You should not have to use neither :attr:`_cnx` nor :attr:`__threaddata`,
-    simply access connection data transparently through the :attr:`_cnx`
-    property. Also, you usually don't have to access it directly since current
-    connection's data may be accessed/modified through properties / methods:
-
-      :attr:`connection_data`, similarly to :attr:`data`, is a dictionary
-      containing some shared data that should be cleared at the end of the
-      connection. Hooks and operations may put arbitrary data in there, and
-      this may also be used as a communication channel between the client and
-      the repository.
-
-    .. automethod:: cubicweb.server.session.Session.get_shared_data
-    .. automethod:: cubicweb.server.session.Session.set_shared_data
-    .. automethod:: cubicweb.server.session.Session.added_in_transaction
-    .. automethod:: cubicweb.server.session.Session.deleted_in_transaction
-
-    Connection state information:
-
-      :attr:`running_dbapi_query`, boolean flag telling if the executing query
-      is coming from a dbapi connection or is a query from within the repository
-
-      :attr:`cnxset`, the connections set to use to execute queries on sources.
-      During a transaction, the connection set may be freed so that is may be
-      used by another session as long as no writing is done. This means we can
-      have multiple sessions with a reasonably low connections set pool size.
-
-      .. automethod:: cubicweb.server.session.Session.set_cnxset
-      .. automethod:: cubicweb.server.session.Session.free_cnxset
-
-      :attr:`mode`, string telling the connections set handling mode, may be one
-      of 'read' (connections set may be freed), 'write' (some write was done in
-      the connections set, it can't be freed before end of the transaction),
-      'transaction' (we want to keep the connections set during all the
-      transaction, with or without writing)
-
-      :attr:`pending_operations`, ordered list of operations to be processed on
-      commit/rollback
-
-      :attr:`commit_state`, describing the transaction commit state, may be one
-      of None (not yet committing), 'precommit' (calling precommit event on
-      operations), 'postcommit' (calling postcommit event on operations),
-      'uncommitable' (some :exc:`ValidationError` or :exc:`Unauthorized` error
-      has been raised during the transaction and so it must be rolled back).
-
-    .. automethod:: cubicweb.server.session.Session.commit
-    .. automethod:: cubicweb.server.session.Session.rollback
-    .. automethod:: cubicweb.server.session.Session.close
-    .. automethod:: cubicweb.server.session.Session.closed
-
-    Security level Management:
-
-      :attr:`read_security` and :attr:`write_security`, boolean flags telling if
-      read/write security is currently activated.
-
-    .. automethod:: cubicweb.server.session.Session.security_enabled
-
-    Hooks Management:
-
-      :attr:`hooks_mode`, may be either `HOOKS_ALLOW_ALL` or `HOOKS_DENY_ALL`.
-
-      :attr:`enabled_hook_categories`, when :attr:`hooks_mode` is
-      `HOOKS_DENY_ALL`, this set contains hooks categories that are enabled.
-
-      :attr:`disabled_hook_categories`, when :attr:`hooks_mode` is
-      `HOOKS_ALLOW_ALL`, this set contains hooks categories that are disabled.
-
-    .. automethod:: cubicweb.server.session.Session.deny_all_hooks_but
-    .. automethod:: cubicweb.server.session.Session.allow_all_hooks_but
-    .. automethod:: cubicweb.server.session.Session.is_hook_category_activated
-    .. automethod:: cubicweb.server.session.Session.is_hook_activated
-
-    Data manipulation:
-
-    .. automethod:: cubicweb.server.session.Session.add_relation
-    .. automethod:: cubicweb.server.session.Session.add_relations
-    .. automethod:: cubicweb.server.session.Session.delete_relation
-
-    Other:
-
-    .. automethod:: cubicweb.server.session.Session.call_service
-
-
-
     """
-    is_request = False
 
     def __init__(self, user, repo, cnxprops=None, _id=None):
-        super(Session, self).__init__(repo.vreg)
         self.sessionid = _id or make_uid(unormalize(user.login).encode('UTF8'))
         self.user = user # XXX repoapi: deprecated and store only a login.
         self.repo = repo
+        self.vreg = repo.vreg
         self._timestamp = Timestamp()
-        self.default_mode = 'read'
-        # short cut to querier .execute method
-        self._execute = repo.querier.execute
-        # shared data, used to communicate extra information between the client
-        # and the rql server
         self.data = {}
-        # i18n initialization
-        self.set_language(user.prefered_language())
-        ### internals
-        # Connection of this section
-        self._cnxs = {} # XXX repoapi: remove this when nobody use the session
-                        # as a Connection
-        # Data local to the thread
-        self.__threaddata = threading.local() # XXX repoapi: remove this when
-                                              # nobody use the session as a Connection
-        self._cnxset_tracker = CnxSetTracker()
-        self._closed = False
-        self._lock = threading.RLock()
+        self.closed = False
+
+    def close(self):
+        self.closed = True
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        pass
 
     def __unicode__(self):
         return '<session %s (%s 0x%x)>' % (
             unicode(self.user.login), self.sessionid, id(self))
+
     @property
     def timestamp(self):
         return float(self._timestamp)
@@ -1388,163 +1276,12 @@ class Session(RequestSessionBase): # XXX repoapi: stop being a
         """
         return Connection(self)
 
-    def _get_cnx(self, cnxid):
-        """return the <cnxid> connection attached to this session
-
-        Connection is created if necessary"""
-        with self._lock: # no connection exist with the same id
-            try:
-                if self.closed:
-                    raise SessionClosedError('try to access connections set on'
-                                             ' a closed session %s' % self.id)
-                cnx = self._cnxs[cnxid]
-                assert cnx._session_handled
-            except KeyError:
-                cnx = Connection(self, cnxid=cnxid, session_handled=True)
-                self._cnxs[cnxid] = cnx
-                cnx.__enter__()
-        return cnx
-
-    def _close_cnx(self, cnx):
-        """Close a Connection related to a session"""
-        assert cnx._session_handled
-        cnx.__exit__()
-        self._cnxs.pop(cnx.connectionid, None)
-        try:
-            if self.__threaddata.cnx is cnx:
-                del self.__threaddata.cnx
-        except AttributeError:
-            pass
-
-    def set_cnx(self, cnxid=None):
-        # XXX repoapi: remove this when nobody use the session as a Connection
-        """set the default connection of the current thread to <cnxid>
-
-        Connection is created if necessary"""
-        if cnxid is None:
-            cnxid = threading.currentThread().getName()
-        cnx = self._get_cnx(cnxid)
-        # New style session should not be accesed through the session.
-        assert cnx._session_handled
-        self.__threaddata.cnx = cnx
-
-    @property
-    def _cnx(self):
-        """default connection for current session in current thread"""
-        try:
-            return self.__threaddata.cnx
-        except AttributeError:
-            self.set_cnx()
-            return self.__threaddata.cnx
-
     @deprecated('[3.19] use a Connection object instead')
     def get_option_value(self, option, foreid=None):
         if foreid is not None:
             warn('[3.19] foreid argument is deprecated', DeprecationWarning,
                  stacklevel=2)
         return self.repo.get_option_value(option)
-
-    @deprecated('[3.19] use a Connection object instead')
-    def transaction(self, free_cnxset=True):
-        """return context manager to enter a transaction for the session: when
-        exiting the `with` block on exception, call `session.rollback()`, else
-        call `session.commit()` on normal exit.
-
-        The `free_cnxset` will be given to rollback/commit methods to indicate
-        whether the connections set should be freed or not.
-        """
-        return transaction(self, free_cnxset)
-
-    add_relation = cnx_meth('add_relation')
-    add_relations = cnx_meth('add_relations')
-    delete_relation = cnx_meth('delete_relation')
-
-    # relations cache handling #################################################
-
-    update_rel_cache_add = cnx_meth('update_rel_cache_add')
-    update_rel_cache_del = cnx_meth('update_rel_cache_del')
-
-    # resource accessors ######################################################
-
-    system_sql = cnx_meth('system_sql')
-    deleted_in_transaction = cnx_meth('deleted_in_transaction')
-    added_in_transaction = cnx_meth('added_in_transaction')
-    rtype_eids_rdef = cnx_meth('rtype_eids_rdef')
-
-    # security control #########################################################
-
-    @deprecated('[3.19] use a Connection object instead')
-    def security_enabled(self, read=None, write=None):
-        return _session_security_enabled(self, read=read, write=write)
-
-    read_security = cnx_attr('read_security', writable=True)
-    write_security = cnx_attr('write_security', writable=True)
-    running_dbapi_query = cnx_attr('running_dbapi_query')
-
-    # hooks activation control #################################################
-    # all hooks should be activated during normal execution
-
-
-    @deprecated('[3.19] use a Connection object instead')
-    def allow_all_hooks_but(self, *categories):
-        return _session_hooks_control(self, HOOKS_ALLOW_ALL, *categories)
-    @deprecated('[3.19] use a Connection object instead')
-    def deny_all_hooks_but(self, *categories):
-        return _session_hooks_control(self, HOOKS_DENY_ALL, *categories)
-
-    hooks_mode = cnx_attr('hooks_mode')
-
-    disabled_hook_categories = cnx_attr('disabled_hook_cats')
-    enabled_hook_categories = cnx_attr('enabled_hook_cats')
-    disable_hook_categories = cnx_meth('disable_hook_categories')
-    enable_hook_categories = cnx_meth('enable_hook_categories')
-    is_hook_category_activated = cnx_meth('is_hook_category_activated')
-    is_hook_activated = cnx_meth('is_hook_activated')
-
-    # connection management ###################################################
-
-    @deprecated('[3.19] use a Connection object instead')
-    def keep_cnxset_mode(self, mode):
-        """set `mode`, e.g. how the session will keep its connections set:
-
-        * if mode == 'write', the connections set is freed after each read
-          query, but kept until the transaction's end (eg commit or rollback)
-          when a write query is detected (eg INSERT/SET/DELETE queries)
-
-        * if mode == 'transaction', the connections set is only freed after the
-          transaction's end
-
-        notice that a repository has a limited set of connections sets, and a
-        session has to wait for a free connections set to run any rql query
-        (unless it already has one set).
-        """
-        assert mode in ('transaction', 'write')
-        if mode == 'transaction':
-            self.default_mode = 'transaction'
-        else: # mode == 'write'
-            self.default_mode = 'read'
-
-    mode = cnx_attr('mode', writable=True)
-    commit_state = cnx_attr('commit_state', writable=True)
-
-    @property
-    @deprecated('[3.19] use a Connection object instead')
-    def cnxset(self):
-        """connections set, set according to transaction mode for each query"""
-        if self._closed:
-            self.free_cnxset(True)
-            raise SessionClosedError('try to access connections set on a closed session %s' % self.id)
-        return self._cnx.cnxset
-
-    def set_cnxset(self):
-        """the session need a connections set to execute some queries"""
-        with self._lock: # can probably be removed
-            if self._closed:
-                self.free_cnxset(True)
-                raise SessionClosedError('try to set connections set on a closed session %s' % self.id)
-            return self._cnx.set_cnxset()
-    free_cnxset = cnx_meth('free_cnxset')
-    ensure_cnx_set = cnx_attr('ensure_cnx_set')
 
     def _touch(self):
         """update latest session usage timestamp and reset mode to read"""
@@ -1556,156 +1293,6 @@ class Session(RequestSessionBase): # XXX repoapi: stop being a
         #base class assign an empty dict:-(
         assert value == {}
         pass
-
-    # shared data handling ###################################################
-
-    @deprecated('[3.19] use session or transaction data')
-    def get_shared_data(self, key, default=None, pop=False, txdata=False):
-        """return value associated to `key` in session data"""
-        if txdata:
-            return self._cnx.get_shared_data(key, default, pop, txdata=True)
-        else:
-            data = self.data
-        if pop:
-            return data.pop(key, default)
-        else:
-            return data.get(key, default)
-
-    @deprecated('[3.19] use session or transaction data')
-    def set_shared_data(self, key, value, txdata=False):
-        """set value associated to `key` in session data"""
-        if txdata:
-            return self._cnx.set_shared_data(key, value, txdata=True)
-        else:
-            self.data[key] = value
-
-    # server-side service call #################################################
-
-    call_service = cnx_meth('call_service')
-
-    # request interface #######################################################
-
-    @property
-    @deprecated('[3.19] use a Connection object instead')
-    def cursor(self):
-        """return a rql cursor"""
-        return self
-
-    set_entity_cache  = cnx_meth('set_entity_cache')
-    entity_cache      = cnx_meth('entity_cache')
-    cache_entities    = cnx_meth('cached_entities')
-    drop_entity_cache = cnx_meth('drop_entity_cache')
-
-    source_defs = cnx_meth('source_defs')
-    entity_metas = cnx_meth('entity_metas')
-    describe = cnx_meth('describe') # XXX deprecated in 3.19
-
-
-    @deprecated('[3.19] use a Connection object instead')
-    def execute(self, *args, **kwargs):
-        """db-api like method directly linked to the querier execute method.
-
-        See :meth:`cubicweb.dbapi.Cursor.execute` documentation.
-        """
-        rset = self._cnx.execute(*args, **kwargs)
-        rset.req = self
-        return rset
-
-    def _clear_thread_data(self, free_cnxset=True):
-        """remove everything from the thread local storage, except connections set
-        which is explicitly removed by free_cnxset, and mode which is set anyway
-        by _touch
-        """
-        try:
-            cnx = self.__threaddata.cnx
-        except AttributeError:
-            pass
-        else:
-            if free_cnxset:
-                cnx._free_cnxset()
-                if cnx.ctx_count == 0:
-                    self._close_cnx(cnx)
-                else:
-                    cnx.clear()
-            else:
-                cnx.clear()
-
-    @deprecated('[3.19] use a Connection object instead')
-    def commit(self, free_cnxset=True, reset_pool=None):
-        """commit the current session's transaction"""
-        cstate = self._cnx.commit_state
-        if cstate == 'uncommitable':
-            raise QueryError('transaction must be rolled back')
-        try:
-            return self._cnx.commit(free_cnxset, reset_pool)
-        finally:
-            self._clear_thread_data(free_cnxset)
-
-    @deprecated('[3.19] use a Connection object instead')
-    def rollback(self, *args, **kwargs):
-        """rollback the current session's transaction"""
-        return self._rollback(*args, **kwargs)
-
-    def _rollback(self, free_cnxset=True, **kwargs):
-        try:
-            return self._cnx.rollback(free_cnxset, **kwargs)
-        finally:
-            self._clear_thread_data(free_cnxset)
-
-    def close(self):
-        # do not close connections set on session close, since they are shared now
-        tracker = self._cnxset_tracker
-        with self._lock:
-            self._closed = True
-        tracker.close()
-        if self._cnx._session_handled:
-            self._rollback()
-        self.debug('waiting for open connection of session: %s', self)
-        timeout = 10
-        pendings = tracker.wait(timeout)
-        if pendings:
-            self.error('%i connection still alive after 10 seconds, will close '
-                       'session anyway', len(pendings))
-            for cnxid in pendings:
-                cnx = self._cnxs.get(cnxid)
-                if cnx is not None:
-                    # drop cnx.cnxset
-                    with tracker:
-                        try:
-                            cnxset = cnx.cnxset
-                            if cnxset is None:
-                                continue
-                            cnx.cnxset = None
-                        except RuntimeError:
-                            msg = 'issue while force free of cnxset in %s'
-                            self.error(msg, cnx)
-                    # cnxset.reconnect() do an hard reset of the cnxset
-                    # it force it to be freed
-                    cnxset.reconnect()
-                    self.repo._free_cnxset(cnxset)
-        del self.__threaddata
-        del self._cnxs
-
-    @property
-    def closed(self):
-        return not hasattr(self, '_cnxs')
-
-    # transaction data/operations management ##################################
-
-    transaction_data = cnx_attr('transaction_data')
-    pending_operations = cnx_attr('pending_operations')
-    pruned_hooks_cache = cnx_attr('pruned_hooks_cache')
-    add_operation      = cnx_meth('add_operation')
-
-    # undo support ############################################################
-
-    ertype_supports_undo = cnx_meth('ertype_supports_undo')
-    transaction_inc_action_counter = cnx_meth('transaction_inc_action_counter')
-    transaction_uuid = cnx_meth('transaction_uuid')
-
-    # querier helpers #########################################################
-
-    rql_rewriter = cnx_attr('_rewriter')
 
     # deprecated ###############################################################
 
@@ -1723,26 +1310,10 @@ class Session(RequestSessionBase): # XXX repoapi: stop being a
     def schema_rproperty(self, rtype, eidfrom, eidto, rprop):
         return getattr(self.rtype_eids_rdef(rtype, eidfrom, eidto), rprop)
 
-    @property
-    @deprecated("[3.13] use .cnxset attribute instead of .pool")
-    def pool(self):
-        return self.cnxset
-
-    @deprecated("[3.13] use .set_cnxset() method instead of .set_pool()")
-    def set_pool(self):
-        return self.set_cnxset()
-
-    @deprecated("[3.13] use .free_cnxset() method instead of .reset_pool()")
-    def reset_pool(self):
-        return self.free_cnxset()
-
     # these are overridden by set_log_methods below
     # only defining here to prevent pylint from complaining
     info = warning = error = critical = exception = debug = lambda msg,*a,**kw: None
 
-Session.HOOKS_ALLOW_ALL = HOOKS_ALLOW_ALL
-Session.HOOKS_DENY_ALL = HOOKS_DENY_ALL
-Session.DEFAULT_SECURITY = DEFAULT_SECURITY
 
 
 class InternalManager(object):

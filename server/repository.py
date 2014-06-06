@@ -668,15 +668,13 @@ class Repository(object):
         """raise `BadConnectionId` if the connection is no more valid, else
         return its latest activity timestamp.
         """
-        return self._get_session(sessionid, setcnxset=False).timestamp
+        return self._get_session(sessionid).timestamp
 
     def close(self, sessionid, txid=None, checkshuttingdown=True):
         """close the session with the given id"""
         session = self._get_session(sessionid, txid=txid,
                                     checkshuttingdown=checkshuttingdown)
         # operation uncommited before close are rolled back before hook is called
-        if session._cnx._session_handled:
-            session._cnx.rollback(free_cnxset=False)
         with session.new_cnx() as cnx:
             self.hm.call_hooks('session_close', cnx)
             # commit connection at this point in case write operation has been
@@ -724,8 +722,7 @@ class Repository(object):
                     with cnx.ensure_cnx_set:
                         yield cnx
 
-    def _get_session(self, sessionid, setcnxset=False, txid=None,
-                     checkshuttingdown=True):
+    def _get_session(self, sessionid, txid=None, checkshuttingdown=True):
         """return the session associated with the given session identifier"""
         if checkshuttingdown and self.shutting_down:
             raise ShuttingDown('Repository is shutting down')
@@ -733,9 +730,6 @@ class Repository(object):
             session = self._sessions[sessionid]
         except KeyError:
             raise BadConnectionId('No such session %s' % sessionid)
-        if setcnxset:
-            session.set_cnx(txid) # must be done before set_cnxset
-            session.set_cnxset()
         return session
 
     # data sources handling ###################################################

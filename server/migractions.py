@@ -97,7 +97,7 @@ class ServerMigrationHelper(MigrationHelper):
             self.session = cnx._session
         elif connect:
             self.repo_connect()
-            self.set_session()
+            self.set_cnx()
         else:
             self.session = None
         # no config on shell to a remote instance
@@ -125,7 +125,7 @@ class ServerMigrationHelper(MigrationHelper):
         self.fs_schema = schema
         self._synchronized = set()
 
-    def set_session(self):
+    def set_cnx(self):
         try:
             login = self.repo.config.default_admin_config['login']
             pwd = self.repo.config.default_admin_config['password']
@@ -149,7 +149,6 @@ class ServerMigrationHelper(MigrationHelper):
                 print 'aborting...'
                 sys.exit(0)
         self.session = self.repo._get_session(self.cnx.sessionid)
-        self.session.keep_cnxset_mode('transaction')
 
     # overriden from base MigrationHelper ######################################
 
