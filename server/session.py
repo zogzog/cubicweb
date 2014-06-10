@@ -450,23 +450,14 @@ class Connection(RequestSessionBase):
     is_repo_in_memory = True # bw compat
     mode = 'read'
 
-    def __init__(self, session, cnxid=None, session_handled=False):
+    def __init__(self, session):
         # using super(Connection, self) confuse some test hack
         RequestSessionBase.__init__(self, session.vreg)
-        # only the session provide explicite
-        if cnxid is not None:
-            assert session_handled # only session profive explicite cnxid
         #: connection unique id
         self._open = None
-        if cnxid is None:
-            cnxid = '%s-%s' % (session.sessionid, uuid4().hex)
-        self.connectionid = cnxid
+        self.connectionid = '%s-%s' % (session.sessionid, uuid4().hex)
         self.session = session
         self.sessionid = session.sessionid
-        #: self._session_handled
-        #: are the life cycle of this Connection automatically controlled by the
-        #: Session This is the old backward compatibility mode
-        self._session_handled = session_handled
         #: reentrance handling
         self.ctx_count = 0
         #: count the number of entry in a context needing a cnxset
