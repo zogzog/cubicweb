@@ -77,23 +77,23 @@ class CoreHooksTC(CubicWebTC):
             entity = cnx.create_entity('Workflow', name=u'wf1',
                                        description_format=u'text/html',
                                        description=u'yo')
-            self.assertEqual(entity.description, u'yo')
+            self.assertEqual(u'yo', entity.description)
             entity = cnx.create_entity('Workflow', name=u'wf2',
                                        description_format=u'text/html',
                                        description=u'<b>yo')
-            self.assertEqual(entity.description, u'<b>yo</b>')
+            self.assertEqual(u'<b>yo</b>', entity.description)
             entity = cnx.create_entity('Workflow', name=u'wf3',
                                        description_format=u'text/html',
                                        description=u'<b>yo</b>')
-            self.assertEqual(entity.description, u'<b>yo</b>')
+            self.assertEqual(u'<b>yo</b>', entity.description)
             entity = cnx.create_entity('Workflow', name=u'wf4',
                                        description_format=u'text/html',
                                        description=u'<b>R&D</b>')
-            self.assertEqual(entity.description, u'<b>R&amp;D</b>')
+            self.assertEqual(u'<b>R&amp;D</b>', entity.description, )
             entity = cnx.create_entity('Workflow', name=u'wf5',
                                        description_format=u'text/html',
                                        description=u"<div>c&apos;est <b>l'ét&eacute;")
-            self.assertEqual(entity.description, u"<div>c'est <b>l'été</b></div>")
+            self.assertEqual(u"<div>c'est <b>l'été</b></div>", entity.description)
 
     def test_nonregr_html_tidy_hook_no_update(self):
         with self.admin_access.client_cnx() as cnx:
