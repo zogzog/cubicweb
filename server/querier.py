@@ -505,7 +505,7 @@ class QuerierHelper(object):
         """execute a rql query, return resulting rows and their description in
         a `ResultSet` object
 
-        * `rql` should be an Unicode string or a plain ASCII string
+        * `rql` should be a Unicode string or a plain ASCII string
         * `args` the optional parameters dictionary associated to the query
         * `build_descr` is a boolean flag indicating if the description should
           be built on select queries (if false, the description will be en empty

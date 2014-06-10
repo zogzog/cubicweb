@@ -684,7 +684,7 @@ class Repository(object):
                 txid=None):
         """execute a RQL query
 
-        * rqlstring should be an unicode string or a plain ascii string
+        * rqlstring should be a unicode string or a plain ascii string
         * args the optional parameters used in the query
         * build_descr is a flag indicating if the description should be
           built on select queries
@@ -1262,11 +1262,7 @@ class Repository(object):
                     if relcache is not None:
                         cnx.update_rel_cache_del(entity.eid, attr, prevvalue)
                 del_existing_rel_if_needed(cnx, entity.eid, attr, value)
-                if relcache is not None:
-                    cnx.update_rel_cache_add(entity.eid, attr, value)
-                else:
-                    entity.cw_set_relation_cache(attr, 'subject',
-                                                 cnx.eid_rset(value))
+                cnx.update_rel_cache_add(entity.eid, attr, value)
                 hm.call_hooks('after_add_relation', cnx,
                               eidfrom=entity.eid, rtype=attr, eidto=value)
         finally:

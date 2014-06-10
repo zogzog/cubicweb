@@ -502,7 +502,7 @@ class ReloadableMixIn(object):
     """simple mixin for reloadable parts of UI"""
 
     def user_callback(self, cb, args, msg=None, nonify=False):
-        """register the given user callback and return an url to call it ready to be
+        """register the given user callback and return a URL to call it ready to be
         inserted in html
         """
         self._cw.add_js('cubicweb.ajax.js')

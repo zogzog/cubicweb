@@ -32,7 +32,7 @@ I18NSTRINGS = [_('read'), _('add'), _('delete'), _('update'), _('order')]
 
 
 class SchemaViewer(object):
-    """return an ureport layout for some part of a schema"""
+    """return a ureport layout for some part of a schema"""
     def __init__(self, req=None, encoding=None):
         self.req = req
         if req is not None:

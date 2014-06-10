@@ -448,7 +448,7 @@ class EntityCtxComponent(CtxComponent):
         return domid(self.__regid__) + unicode(self.entity.eid)
 
     def lazy_view_holder(self, w, entity, oid, registry='views'):
-        """add a holder and return an url that may be used to replace this
+        """add a holder and return a URL that may be used to replace this
         holder by the html generate by the view specified by registry and
         identifier. Registry defaults to 'views'.
         """

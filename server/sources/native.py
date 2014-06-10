@@ -709,7 +709,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             # instance
             print 'exec', query, args, getattr(cnx, '_cnx', cnx)
         try:
-            # str(query) to avoid error if it's an unicode string
+            # str(query) to avoid error if it's a unicode string
             cursor.execute(str(query), args)
         except Exception as ex:
             if self.repo.config.mode != 'test':
@@ -756,7 +756,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             print 'execmany', query, 'with', len(args), 'arguments'
         cursor = cnx.cnxset.cu
         try:
-            # str(query) to avoid error if it's an unicode string
+            # str(query) to avoid error if it's a unicode string
             cursor.executemany(str(query), args)
         except Exception as ex:
             if self.repo.config.mode != 'test':

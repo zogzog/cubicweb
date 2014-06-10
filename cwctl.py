@@ -317,7 +317,7 @@ def check_options_consistency(config):
                               'used together')
 
 class CreateInstanceCommand(Command):
-    """Create an instance from a cube. This is an unified
+    """Create an instance from a cube. This is a unified
     command which can handle web / server / all-in-one installation
     according to available parts of the software library and of the
     desired cube.
@@ -849,7 +849,7 @@ class ShellCommand(Command):
     in batch mode.
 
     By default it will connect to a local instance using an in memory
-    connection, unless an URL to a running instance is specified.
+    connection, unless a URL to a running instance is specified.
 
     Arguments after bare "--" string will not be processed by the shell command
     You can use it to pass extra arguments to your script and expect for

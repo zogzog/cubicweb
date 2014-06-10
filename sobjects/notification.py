@@ -130,9 +130,10 @@ class NotificationView(EntityView):
                     # since the same view (eg self) may be called multiple time and we
                     # need a fresh stream at each iteration, reset it explicitly
                     self.w = None
-                    # XXX call render before subject to set .row/.col attributes on the
-                    #     view
                     try:
+                        # XXX forcing the row & col here may make the content and
+                        #     subject inconsistent because subject will depend on
+                        #     self.cw_row & self.cw_col if they are set.
                         content = self.render(row=0, col=0, **kwargs)
                         subject = self.subject()
                     except SkipEmail:

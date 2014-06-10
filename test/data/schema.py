@@ -60,7 +60,7 @@ class Service(EntityType):
 
 
 class Produit(EntityType):
-    fabrique_par = SubjectRelation('Usine', cardinality='1*')
+    fabrique_par = SubjectRelation('Usine', cardinality='1*', inlined=True)
 
 
 class Usine(EntityType):
