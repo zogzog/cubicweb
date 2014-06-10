@@ -202,7 +202,6 @@ class ecrit_par_1(RelationDefinition):
     name = 'ecrit_par'
     subject = 'Note'
     object ='Personne'
-    constraints = [RQLConstraint('E concerns P, S version_of P')]
     cardinality = '?*'
 
 class ecrit_par_2(RelationDefinition):

@@ -416,12 +416,12 @@ class QuerierTC(BaseQuerierTC):
         self.assertEqual(len(rset.rows), 1, rset.rows)
 
     def test_select_nonregr_inlined(self):
-        self.execute("INSERT Note X: X para 'bidule'")
-        self.execute("INSERT Personne X: X nom 'chouette'")
-        self.execute("INSERT Personne X: X nom 'autre'")
-        self.execute("SET X ecrit_par P WHERE X para 'bidule', P nom 'chouette'")
-        rset = self.execute('Any U,T ORDERBY T DESC WHERE U is CWUser, '
-                            'N ecrit_par U, N type T')#, {'x': self.ueid})
+        self.qexecute("INSERT Note X: X para 'bidule'")
+        self.qexecute("INSERT Personne X: X nom 'chouette'")
+        self.qexecute("INSERT Personne X: X nom 'autre'")
+        self.qexecute("SET X ecrit_par P WHERE X para 'bidule', P nom 'chouette'")
+        rset = self.qexecute('Any U,T ORDERBY T DESC WHERE U is CWUser, '
+                             'N ecrit_par U, N type T')#, {'x': self.ueid})
         self.assertEqual(len(rset.rows), 0)
 
     def test_select_nonregr_edition_not(self):
@@ -476,11 +476,11 @@ class QuerierTC(BaseQuerierTC):
         self.assertEqual(rset.rows, [[None, 'tagbis'], ['users', 'tag']])
 
     def test_select_not_inline_rel(self):
-        self.execute("INSERT Personne X: X nom 'bidule'")
-        self.execute("INSERT Note X: X type 'a'")
-        self.execute("INSERT Note X: X type 'b'")
-        self.execute("SET X ecrit_par Y WHERE X type 'a', Y nom 'bidule'")
-        rset = self.execute('Note X WHERE NOT X ecrit_par P')
+        self.qexecute("INSERT Personne X: X nom 'bidule'")
+        self.qexecute("INSERT Note X: X type 'a'")
+        self.qexecute("INSERT Note X: X type 'b'")
+        self.qexecute("SET X ecrit_par Y WHERE X type 'a', Y nom 'bidule'")
+        rset = self.qexecute('Note X WHERE NOT X ecrit_par P')
         self.assertEqual(len(rset.rows), 1, rset.rows)
 
     def test_select_not_unlinked_multiple_solutions(self):
