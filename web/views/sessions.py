@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -27,7 +27,6 @@ from cubicweb import (RepositoryError, Unauthorized, AuthenticationError,
                       BadConnectionId)
 from cubicweb.web import InvalidSession, Redirect
 from cubicweb.web.application import AbstractSessionManager
-from cubicweb import repoapi
 
 
 class InMemoryRepositorySessionManager(AbstractSessionManager):
@@ -96,8 +95,7 @@ class InMemoryRepositorySessionManager(AbstractSessionManager):
         # XXX should properly detect missing permission / non writeable source
         # and avoid "except (RepositoryError, Unauthorized)" below
         try:
-            cnx = repoapi.Connection(session)
-            with cnx:
+            with session.new_cnx() as cnx:
                 cnx.execute('SET X last_login_time NOW WHERE X eid %(x)s',
                            {'x' : session.user.eid})
                 cnx.commit()
