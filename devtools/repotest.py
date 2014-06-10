@@ -275,6 +275,15 @@ class BaseQuerierTC(TestCase):
         self.session.commit()
         self.session.set_cnxset()
 
+    def qexecute(self, rql, args=None, build_descr=True):
+        with self.session.new_cnx() as cnx:
+            with cnx.ensure_cnx_set:
+                try:
+                    return self.o.execute(cnx, rql, args, build_descr)
+                finally:
+                    if rql.startswith(('INSERT', 'DELETE', 'SET')):
+                        cnx.commit()
+
 
 class BasePlannerTC(BaseQuerierTC):
 
