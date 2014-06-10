@@ -1455,11 +1455,7 @@ class Repository(object):
                         if relcache is not None:
                             session.update_rel_cache_del(entity.eid, attr, prevvalue)
                     del_existing_rel_if_needed(session, entity.eid, attr, value)
-                    if relcache is not None:
-                        session.update_rel_cache_add(entity.eid, attr, value)
-                    else:
-                        entity.cw_set_relation_cache(attr, 'subject',
-                                                     session.eid_rset(value))
+                    session.update_rel_cache_add(entity.eid, attr, value)
                     hm.call_hooks('after_add_relation', session,
                                   eidfrom=entity.eid, rtype=attr, eidto=value)
         finally:

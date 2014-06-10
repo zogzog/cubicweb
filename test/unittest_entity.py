@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -43,6 +43,18 @@ class EntityTC(CubicWebTC):
         super(EntityTC, self).tearDown()
         for cls in self.vreg['etypes'].iter_classes():
             cls.fetch_attrs, cls.cw_fetch_order = self.backup_dict[cls]
+
+    def test_no_prefill_related_cache_bug(self):
+        session = self.session
+        usine = session.create_entity('Usine', lieu=u'Montbeliard')
+        produit = session.create_entity('Produit')
+        # usine was prefilled in glob_add_entity
+        # let's simulate produit creation without prefill
+        produit._cw_related_cache.clear()
+        # use add_relations
+        session.add_relations([('fabrique_par', [(produit.eid, usine.eid)])])
+        self.assertEqual(1, len(usine.reverse_fabrique_par))
+        self.assertEqual(1, len(produit.fabrique_par))
 
     def test_boolean_value(self):
         e = self.vreg['etypes'].etype_class('CWUser')(self.request())
