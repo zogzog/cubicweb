@@ -554,28 +554,6 @@ class Entity(AppObject):
             return self.eid
         return super(Entity, self).__hash__()
 
-    def _cw_update_attr_cache(self, attrcache):
-        trdata = self._cw.transaction_data
-        uncached_attrs = trdata.get('%s.storage-special-process-attrs' % self.eid, set())
-        for attr in uncached_attrs:
-            attrcache.pop(attr, None)
-            self.cw_attr_cache.pop(attr, None)
-        self.cw_attr_cache.update(attrcache)
-
-    def _cw_dont_cache_attribute(self, attr, repo_side=False):
-        """Called when some attribute has been transformed by a *storage*,
-        hence the original value should not be cached **by anyone**.
-
-        For example we have a special "fs_importing" mode in BFSS
-        where a file path is given as attribute value and stored as is
-        in the data base. Later access to the attribute will provide
-        the content of the file at the specified path. We do not want
-        the "filepath" value to be cached.
-
-        """
-        trdata = self._cw.transaction_data
-        trdata.setdefault('%s.storage-special-process-attrs' % self.eid, set()).add(attr)
-
     def __json_encode__(self):
         """custom json dumps hook to dump the entity's eid
         which is not part of dict structure itself
