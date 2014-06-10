@@ -140,13 +140,24 @@ class EntityTC(CubicWebTC):
         with self.admin_access.web_request() as req:
             user = req.execute('Any X WHERE X eid %(x)s', {'x':req.user.eid}).get_entity(0, 0)
             adeleid = req.execute('INSERT EmailAddress X: X address "toto@logilab.org", U use_email X WHERE U login "admin"')[0][0]
+            self.assertEqual({}, user._cw_related_cache)
             req.cnx.commit()
-            self.assertEqual(user._cw_related_cache, {})
+            self.assertEqual(['primary_email_subject', 'use_email_subject', 'wf_info_for_object'],
+                             sorted(user._cw_related_cache))
             email = user.primary_email[0]
-            self.assertEqual(sorted(user._cw_related_cache), ['primary_email_subject'])
-            self.assertEqual(list(email._cw_related_cache), ['primary_email_object'])
+            self.assertEqual(u'toto@logilab.org', email.address)
+            self.assertEqual(['created_by_subject',
+                              'cw_source_subject',
+                              'is_instance_of_subject',
+                              'is_subject',
+                              'owned_by_subject',
+                              'prefered_form_object',
+                              'prefered_form_subject',
+                              'primary_email_object',
+                              'use_email_object'],
+                             sorted(email._cw_related_cache))
+            self.assertEqual('admin', email._cw_related_cache['primary_email_object'][1][0].login)
             groups = user.in_group
-            self.assertEqual(sorted(user._cw_related_cache), ['in_group_subject', 'primary_email_subject'])
             for group in groups:
                 self.assertNotIn('in_group_subject', group._cw_related_cache)
             user.cw_clear_all_caches()

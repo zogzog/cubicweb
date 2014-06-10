@@ -514,7 +514,7 @@ class Entity(AppObject):
         prefixing the relation name by 'reverse_'. Also, relation values may be
         an entity or eid, a list of entities or eids.
         """
-        rql, qargs, pendingrels, attrcache = cls._cw_build_entity_query(kwargs)
+        rql, qargs, pendingrels, _attrcache = cls._cw_build_entity_query(kwargs)
         if rql:
             rql = 'INSERT %s X: %s' % (cls.__regid__, rql)
         else:
@@ -524,7 +524,6 @@ class Entity(AppObject):
         except IndexError:
             raise Exception('could not create a %r with %r (%r)' %
                             (cls.__regid__, rql, qargs))
-        created._cw_update_attr_cache(attrcache)
         cls._cw_handle_pending_relations(created.eid, pendingrels, execute)
         return created
 
@@ -556,41 +555,26 @@ class Entity(AppObject):
         return super(Entity, self).__hash__()
 
     def _cw_update_attr_cache(self, attrcache):
-        # if context is a repository session, don't consider dont-cache-attrs as
-        # the instance already holds modified values and loosing them could
-        # introduce severe problems
         trdata = self._cw.transaction_data
         uncached_attrs = trdata.get('%s.storage-special-process-attrs' % self.eid, set())
-        if self._cw.is_request:
-            uncached_attrs.update(trdata.get('%s.dont-cache-attrs' % self.eid, set()))
         for attr in uncached_attrs:
             attrcache.pop(attr, None)
             self.cw_attr_cache.pop(attr, None)
         self.cw_attr_cache.update(attrcache)
 
     def _cw_dont_cache_attribute(self, attr, repo_side=False):
-        """Repository side method called when some attribute has been
-        transformed by a hook, hence original value should not be cached by
-        the client.
-
-        If repo_side is True, this means that the attribute has been
-        transformed by a *storage*, hence the original value should
-        not be cached **by anyone**.
-
-        This only applies to a storage special case where the value
-        specified in creation or update is **not** the value that will
-        be transparently exposed later.
+        """Called when some attribute has been transformed by a *storage*,
+        hence the original value should not be cached **by anyone**.
 
         For example we have a special "fs_importing" mode in BFSS
         where a file path is given as attribute value and stored as is
         in the data base. Later access to the attribute will provide
         the content of the file at the specified path. We do not want
         the "filepath" value to be cached.
+
         """
-        self._cw.transaction_data.setdefault('%s.dont-cache-attrs' % self.eid, set()).add(attr)
-        if repo_side:
-            trdata = self._cw.transaction_data
-            trdata.setdefault('%s.storage-special-process-attrs' % self.eid, set()).add(attr)
+        trdata = self._cw.transaction_data
+        trdata.setdefault('%s.storage-special-process-attrs' % self.eid, set()).add(attr)
 
     def __json_encode__(self):
         """custom json dumps hook to dump the entity's eid
@@ -836,7 +820,6 @@ class Entity(AppObject):
 
     # data fetching methods ###################################################
 
-    @cached
     def as_rset(self): # XXX .cw_as_rset
         """returns a resultset containing `self` information"""
         rset = ResultSet([(self.eid,)], 'Any X WHERE X eid %(x)s',
@@ -1329,10 +1312,6 @@ class Entity(AppObject):
             else:
                 rql += ' WHERE X eid %(x)s'
             self._cw.execute(rql, qargs)
-        # update current local object _after_ the rql query to avoid
-        # interferences between the query execution itself and the cw_edited /
-        # skip_security machinery
-        self._cw_update_attr_cache(attrcache)
         self._cw_handle_pending_relations(self.eid, pendingrels, self._cw.execute)
         # XXX update relation cache
 

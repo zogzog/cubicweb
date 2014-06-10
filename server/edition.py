@@ -103,8 +103,6 @@ class EditedEntity(dict):
         assert not self.saved, 'too late to modify edited attributes'
         super(EditedEntity, self).__setitem__(attr, value)
         self.entity.cw_attr_cache[attr] = value
-        # mark attribute as needing purge by the client
-        self.entity._cw_dont_cache_attribute(attr)
 
     def oldnewvalue(self, attr):
         """returns the couple (old attr value, new attr value)

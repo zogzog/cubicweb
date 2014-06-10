@@ -569,8 +569,9 @@ class AutoTransitionTC(CubicWebTC):
         with self.admin_access.web_request() as req:
             user = self.create_user(req, 'member', surname=u'toto')
             req.execute('SET X custom_workflow WF WHERE X eid %(x)s, WF eid %(wf)s',
-                     {'wf': wf.eid, 'x': user.eid})
+                        {'wf': wf.eid, 'x': user.eid})
             req.cnx.commit()
+            user.cw_clear_all_caches()
             iworkflowable = user.cw_adapt_to('IWorkflowable')
             self.assertEqual(iworkflowable.state, 'dead')
 

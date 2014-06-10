@@ -96,7 +96,7 @@ class InMemoryRepositorySessionManager(AbstractSessionManager):
         # XXX should properly detect missing permission / non writeable source
         # and avoid "except (RepositoryError, Unauthorized)" below
         try:
-            cnx = repoapi.ClientConnection(session)
+            cnx = repoapi.Connection(session)
             with cnx:
                 cnx.execute('SET X last_login_time NOW WHERE X eid %(x)s',
                            {'x' : session.user.eid})

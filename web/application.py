@@ -350,7 +350,7 @@ class CubicWebPublisher(object):
             try:
                 session = self.get_session(req)
                 from  cubicweb import repoapi
-                cnx = repoapi.ClientConnection(session)
+                cnx = repoapi.Connection(session)
                 req.set_cnx(cnx)
             except AuthenticationError:
                 # Keep the dummy session set at initialisation.

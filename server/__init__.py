@@ -289,7 +289,6 @@ def init_repository(config, interactive=True, drop=False, vreg=None,
     config._cubes = None # avoid assertion error
     repo = get_repository(config=config)
     with connect(repo, login, password=pwd) as cnx:
-        cnx = cnx._cnx # client connection -> repo connection
         with cnx.security_enabled(False, False):
             repo.system_source.eid = ssource.eid # redo this manually
             handler = config.migration_handler(schema, interactive=False,

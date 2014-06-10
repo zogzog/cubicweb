@@ -957,7 +957,7 @@ class RebuildFTICommand(Command):
         config = ServerConfiguration.config_for(appid)
         repo, cnx = repo_cnx(config)
         with cnx:
-            reindex_entities(repo.schema, cnx._cnx, etypes=etypes)
+            reindex_entities(repo.schema, cnx, etypes=etypes)
             cnx.commit()
 
 

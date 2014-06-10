@@ -494,7 +494,7 @@ class TestDataBaseHandler(object):
             repo = self.get_repo(startup=True)
             cnx = self.get_cnx()
             with cnx:
-                pre_setup_func(cnx._cnx, self.config)
+                pre_setup_func(cnx, self.config)
                 cnx.commit()
         self.backup_database(test_db_id)
 

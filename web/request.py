@@ -1002,6 +1002,8 @@ class ConnectionCubicWebRequestBase(_CubicWebRequestBase):
         return self.cnx.transaction_data
 
     def set_cnx(self, cnx):
+        if 'ecache' in cnx.transaction_data:
+            del cnx.transaction_data['ecache']
         self.cnx = cnx
         self.session = cnx._session
         self._set_user(cnx.user)

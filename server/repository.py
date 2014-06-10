@@ -812,11 +812,6 @@ class Repository(object):
             return self._extid_cache[extid]
         except KeyError:
             pass
-        try:
-            # bw compat: cnx may be a session, get at the Connection
-            cnx = cnx._cnx
-        except AttributeError:
-            pass
         with cnx.ensure_cnx_set:
             eid = self.system_source.extid2eid(cnx, extid)
         if eid is not None:

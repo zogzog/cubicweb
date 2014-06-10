@@ -483,6 +483,7 @@ class ResultSet(object):
         #     new attributes found in this resultset ?
         try:
             entity = req.entity_cache(eid)
+            entity._cw = req
         except KeyError:
             pass
         else:

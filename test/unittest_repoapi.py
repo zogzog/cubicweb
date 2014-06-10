@@ -21,7 +21,7 @@
 from cubicweb.devtools.testlib import CubicWebTC
 
 from cubicweb import ProgrammingError
-from cubicweb.repoapi import ClientConnection, connect, anonymous_cnx
+from cubicweb.repoapi import Connection, connect, anonymous_cnx
 
 
 class REPOAPITC(CubicWebTC):
@@ -56,7 +56,7 @@ class REPOAPITC(CubicWebTC):
         """Check that ClientConnection requires explicit open and close
         """
         access = self.admin_access
-        cltcnx = ClientConnection(access._session)
+        cltcnx = Connection(access._session)
         # connection not open yet
         with self.assertRaises(ProgrammingError):
             cltcnx.execute('Any X WHERE X is CWUser')

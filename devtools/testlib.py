@@ -189,8 +189,7 @@ class RepoAccess(object):
 
     A repo access can create three type of object:
 
-    .. automethod:: cubicweb.testlib.RepoAccess.repo_cnx
-    .. automethod:: cubicweb.testlib.RepoAccess.client_cnx
+    .. automethod:: cubicweb.testlib.RepoAccess.cnx
     .. automethod:: cubicweb.testlib.RepoAccess.web_request
 
     The RepoAccess need to be closed to destroy the associated Session.
@@ -225,16 +224,13 @@ class RepoAccess(object):
         return session
 
     @contextmanager
-    def repo_cnx(self):
+    def cnx(self):
         """Context manager returning a server side connection for the user"""
         with self._session.new_cnx() as cnx:
             yield cnx
 
-    @contextmanager
-    def client_cnx(self):
-        """Context manager returning a client side connection for the user"""
-        with repoapi.ClientConnection(self._session) as cnx:
-            yield cnx
+    # aliases for bw compat
+    client_cnx = repo_cnx = cnx
 
     @contextmanager
     def web_request(self, url=None, headers={}, method='GET', **kwargs):
@@ -247,9 +243,10 @@ class RepoAccess(object):
         """
         req = self.requestcls(self._repo.vreg, url=url, headers=headers,
                               method=method, form=kwargs)
-        clt_cnx = repoapi.ClientConnection(self._session)
-        req.set_cnx(clt_cnx)
-        with clt_cnx:
+        with self._session.new_cnx() as cnx:
+            if 'ecache' in cnx.transaction_data:
+                del cnx.transaction_data['ecache']
+            req.set_cnx(cnx)
             yield req
 
     def close(self):
@@ -349,9 +346,7 @@ class CubicWebTC(TestCase):
     def _close_cnx(self):
         """ensure that all cnx used by a test have been closed"""
         for cnx in list(self._cnxs):
-            if cnx._open and not cnx._session.closed:
-                cnx.rollback()
-                cnx.close()
+            cnx.rollback()
             self._cnxs.remove(cnx)
 
     @property
@@ -416,7 +411,7 @@ class CubicWebTC(TestCase):
         login = unicode(db_handler.config.default_admin_config['login'])
         self.admin_access = self.new_access(login)
         self._admin_session = self.admin_access._session
-        self._admin_clt_cnx = repoapi.ClientConnection(self._admin_session)
+        self._admin_clt_cnx = repoapi.Connection(self._admin_session)
         self._cnxs.add(self._admin_clt_cnx)
         self._admin_clt_cnx.__enter__()
         self.config.repository = lambda x=None: self.repo
@@ -528,8 +523,6 @@ class CubicWebTC(TestCase):
     def tearDown(self):
         # XXX hack until logilab.common.testlib is fixed
         if self._admin_clt_cnx is not None:
-            if self._admin_clt_cnx._open:
-                self._admin_clt_cnx.close()
             self._admin_clt_cnx = None
         if self._admin_session is not None:
             self.repo.close(self._admin_session.sessionid)
@@ -976,7 +969,7 @@ class CubicWebTC(TestCase):
     def assertAuthSuccess(self, req, origsession, nbsessions=1):
         sh = self.app.session_handler
         session = self.app.get_session(req)
-        clt_cnx = repoapi.ClientConnection(session)
+        clt_cnx = repoapi.Connection(session)
         req.set_cnx(clt_cnx)
         self.assertEqual(len(self.open_sessions), nbsessions, self.open_sessions)
         self.assertEqual(session.login, origsession.login)
@@ -1263,7 +1256,7 @@ class AutoPopulateTest(CubicWebTC):
         """this method populates the database with `how_many` entities
         of each possible type. It also inserts random relations between them
         """
-        with self.admin_access.repo_cnx() as cnx:
+        with self.admin_access.cnx() as cnx:
             with cnx.security_enabled(read=False, write=False):
                 self._auto_populate(cnx, how_many)
                 cnx.commit()

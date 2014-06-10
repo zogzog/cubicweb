@@ -69,7 +69,6 @@ def setUpClass(cls, *args):
 
 def tearDownClass(cls, *args):
     global repo, cnx
-    cnx.close()
     repo.shutdown()
     del repo, cnx
 
