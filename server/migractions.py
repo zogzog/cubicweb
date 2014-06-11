@@ -150,7 +150,6 @@ class ServerMigrationHelper(MigrationHelper):
                 sys.exit(0)
         self.session = self.repo._get_session(self.cnx.sessionid)
         self.session.keep_cnxset_mode('transaction')
-        self.session.set_shared_data('rebuild-infered', False)
 
     # overriden from base MigrationHelper ######################################
 
