@@ -76,8 +76,7 @@ def hooks_control(obj, mode, *categories):
         return obj.deny_all_hooks_but(*categories)
 
 
-class _hooks_control(object): # XXX repoapi: remove me when
-                              # session stop being connection
+class _hooks_control(object):
     """context manager to control activated hooks categories.
 
     If mode is `HOOKS_DENY_ALL`, given hooks categories will
@@ -127,24 +126,6 @@ class _hooks_control(object): # XXX repoapi: remove me when
         finally:
             self.cnx.hooks_mode = self.oldmode
 
-class _session_hooks_control(_hooks_control): # XXX repoapi: remove me when
-                                              # session stop being connection
-    """hook control context manager for session
-
-    Necessary to handle some unholy transaction scope logic."""
-
-
-    def __init__(self, session, mode, *categories):
-        self.session = session
-        super_init = super(_session_hooks_control, self).__init__
-        super_init(session._cnx, mode, *categories)
-
-    def __exit__(self, exctype, exc, traceback):
-        super_exit = super(_session_hooks_control, self).__exit__
-        ret = super_exit(exctype, exc, traceback)
-        if self.cnx.ctx_count == 0:
-            self.session._close_cnx(self.cnx)
-        return ret
 
 @deprecated('[3.17] use <object>.security_enabled instead')
 def security_enabled(obj, *args, **kwargs):
@@ -182,24 +163,6 @@ class _security_enabled(object):
             self.cnx.read_security = self.oldread
         if self.oldwrite is not None:
             self.cnx.write_security = self.oldwrite
-
-class _session_security_enabled(_security_enabled):
-    """hook security context manager for session
-
-    Necessary To handle some unholy transaction scope logic."""
-
-
-    def __init__(self, session, read=None, write=None):
-        self.session = session
-        super_init = super(_session_security_enabled, self).__init__
-        super_init(session._cnx, read=read, write=write)
-
-    def __exit__(self, exctype, exc, traceback):
-        super_exit = super(_session_security_enabled, self).__exit__
-        ret = super_exit(exctype, exc, traceback)
-        if self.cnx.ctx_count == 0:
-            self.session._close_cnx(self.cnx)
-        return ret
 
 HOOKS_ALLOW_ALL = object()
 HOOKS_DENY_ALL = object()
