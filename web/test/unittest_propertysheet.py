@@ -1,13 +1,21 @@
 import os
 from os.path import join, dirname
 from shutil import rmtree
+import errno
+import tempfile
 
 from logilab.common.testlib import TestCase, unittest_main
 
 from cubicweb.web.propertysheet import PropertySheet, lazystr
 
 DATADIR = join(dirname(__file__), 'data')
-CACHEDIR = join(DATADIR, 'uicache')
+
+try:
+    os.makedirs(join(DATADIR, 'uicache'))
+except OSError as err:
+    if err.errno != errno.EEXIST:
+        raise
+CACHEDIR = tempfile.mkdtemp(dir=join(DATADIR, 'uicache'))
 
 class PropertySheetTC(TestCase):
 
