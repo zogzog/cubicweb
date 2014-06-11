@@ -85,6 +85,9 @@ to ease the transition.
 The authentication stack has been altered to use the ``repoapi`` instead of
 the ``dbapi``. Cubes adding new element to this stack are likely to break.
 
+Session data can be accessed using the cnx.data dictionary, while
+transaction data is available through cnx.transaction_data.  These
+replace the [gs]et_shared_data methods with optional txid kwarg.
 
 New API in tests
 ~~~~~~~~~~~~~~~~
