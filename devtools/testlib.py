@@ -156,30 +156,6 @@ class MockSMTP:
 cwconfig.SMTP = MockSMTP
 
 
-class TestCaseConnectionProxy(object):
-    """thin wrapper around `cubicweb.repoapi.Connection` context-manager
-    used in CubicWebTC (cf. `cubicweb.devtools.testlib.CubicWebTC.login` method)
-
-    It just proxies to the default connection context manager but
-    restores the original connection on exit.
-    """
-    def __init__(self, testcase, cnx):
-        self.testcase = testcase
-        self.cnx = cnx
-
-    def __getattr__(self, attrname):
-        return getattr(self.cnx, attrname)
-
-    def __enter__(self):
-        # already open
-        return self.cnx
-
-    def __exit__(self, exctype, exc, tb):
-        try:
-            return self.cnx.__exit__(exctype, exc, tb)
-        finally:
-            self.testcase.restore_connection()
-
 # Repoaccess utility ###############################################3###########
 
 class RepoAccess(object):
@@ -291,17 +267,12 @@ class CubicWebTC(TestCase):
     requestcls = fake.FakeRequest
     tags = TestCase.tags | Tags('cubicweb', 'cw_repo')
     test_db_id = DEFAULT_EMPTY_DB_ID
-    _cnxs = set() # establised connection
-                  # stay on connection for leak detection purpose
 
     # anonymous is logged by default in cubicweb test cases
     anonymous_allowed = True
 
     def __init__(self, *args, **kwargs):
         self._admin_session = None
-        self._admin_cnx = None
-        self._current_session = None
-        self._current_cnx = None
         self.repo = None
         self._open_access = set()
         super(CubicWebTC, self).__init__(*args, **kwargs)
@@ -324,79 +295,10 @@ class CubicWebTC(TestCase):
             except BadConnectionId:
                 continue # already closed
 
-    @deprecated('[3.19] explicitly use RepoAccess object in test instead')
-    def set_cnx(self, cnx):
-        assert getattr(cnx, '_session', None) is not None
-        if cnx is self._admin_cnx:
-            self._pop_custom_cnx()
-        else:
-            self._cnxs.add(cnx) # register the cnx to make sure it is removed
-            self._current_session = cnx.session
-            self._current_cnx = cnx
-
     @property
-    @deprecated('[3.19] explicitly use RepoAccess object in test instead')
-    def cnx(self):
-        # XXX we want to deprecate this
-        cnx = self._current_cnx
-        if cnx is None:
-            cnx = self._admin_cnx
-        return cnx
-
-    def _close_cnx(self):
-        """ensure that all cnx used by a test have been closed"""
-        for cnx in list(self._cnxs):
-            cnx.rollback()
-            self._cnxs.remove(cnx)
-
-    @property
-    @deprecated('[3.19] explicitly use RepoAccess object in test instead')
     def session(self):
-        """return current server side session"""
-        session = self._current_session
-        if session is None:
-            session = self._admin_session
-        return session
-
-    @property
-    @deprecated('[3.19] explicitly use RepoAccess object in test instead')
-    def websession(self):
-        return self.session
-
-    @property
-    @deprecated('[3.19] explicitly use RepoAccess object in test instead')
-    def adminsession(self):
-        """return current server side session (using default manager account)"""
+        """return admin session"""
         return self._admin_session
-
-    @deprecated('[3.19] explicitly use RepoAccess object in test instead')
-    def login(self, login, **kwargs):
-        """return a connection for the given login/password"""
-        __ = kwargs.pop('autoclose', True) # not used anymore
-        if login == self.admlogin:
-            # undo any previous login, if we're not used as a context manager
-            self.restore_connection()
-            return self.cnx
-        else:
-            if not kwargs:
-                kwargs['password'] = str(login)
-            cnx = repoapi.connect(self.repo, login, **kwargs)
-        self.set_cnx(cnx)
-        cnx.__enter__()
-        return TestCaseConnectionProxy(self, cnx)
-
-    @deprecated('[3.19] explicitly use RepoAccess object in test instead')
-    def restore_connection(self):
-        self._pop_custom_cnx()
-
-    def _pop_custom_cnx(self):
-        if self._current_cnx is not None:
-            if self._current_cnx._open:
-                self._current_cnx.close()
-            if not  self._current_session.closed:
-                self.repo.close(self._current_session.sessionid)
-            self._current_cnx = None
-            self._current_session = None
 
     #XXX this doesn't need to a be classmethod anymore
     def _init_repo(self):
@@ -411,9 +313,6 @@ class CubicWebTC(TestCase):
         login = unicode(db_handler.config.default_admin_config['login'])
         self.admin_access = self.new_access(login)
         self._admin_session = self.admin_access._session
-        self._admin_cnx = repoapi.Connection(self._admin_session)
-        self._cnxs.add(self._admin_cnx)
-        self._admin_cnx.__enter__()
         self.config.repository = lambda x=None: self.repo
 
 
@@ -482,15 +381,6 @@ class CubicWebTC(TestCase):
         """return the application schema"""
         return self.vreg.schema
 
-    @deprecated('[3.19] explicitly use RepoAccess object in test instead')
-    def shell(self):
-        """return a shell session object"""
-        from cubicweb.server.migractions import ServerMigrationHelper
-        return ServerMigrationHelper(None, repo=self.repo, cnx=self.cnx,
-                                     interactive=False,
-                                     # hack so it don't try to load fs schema
-                                     schema=1)
-
     def set_option(self, optname, value):
         self.config.global_set_option(optname, value)
 
@@ -511,19 +401,15 @@ class CubicWebTC(TestCase):
                 self.skipTest('repository is not initialised: %r' % previous_failure)
             try:
                 self._init_repo()
-                self.addCleanup(self._close_cnx)
             except Exception as ex:
                 self.__class__._repo_init_failed = ex
                 raise
             self.addCleanup(self._close_access)
         self.setup_database()
-        self._admin_cnx.commit()
         MAILBOX[:] = [] # reset mailbox
 
     def tearDown(self):
         # XXX hack until logilab.common.testlib is fixed
-        if self._admin_cnx is not None:
-            self._admin_cnx = None
         if self._admin_session is not None:
             self.repo.close(self._admin_session.sessionid)
             self._admin_session = None
@@ -565,19 +451,10 @@ class CubicWebTC(TestCase):
     def create_user(self, req, login=None, groups=('users',), password=None,
                     email=None, commit=True, **kwargs):
         """create and return a new user entity"""
-        if isinstance(req, basestring):
-            warn('[3.12] create_user arguments are now (req, login[, groups, password, commit, **kwargs])',
-                 DeprecationWarning, stacklevel=2)
-            if not isinstance(groups, (tuple, list)):
-                password = groups
-                groups = login
-            elif isinstance(login, tuple):
-                groups = login
-                req = self._admin_cnx
-        if login is not None:
-            login = unicode(login)
         if password is None:
             password = login
+        if login is not None:
+            login = unicode(login)
         user = req.create_entity('CWUser', login=login,
                                  upassword=password, **kwargs)
         req.execute('SET X in_group G WHERE X eid %%(x)s, G name IN(%s)'
