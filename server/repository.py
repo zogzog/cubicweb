@@ -27,30 +27,26 @@ repository mainly:
 """
 __docformat__ = "restructuredtext en"
 
-import sys
 import threading
 import Queue
 from warnings import warn
 from itertools import chain
 from time import time, localtime, strftime
 from contextlib import contextmanager
-from warnings import warn
 
 from logilab.common.decorators import cached, clear_cache
 from logilab.common.deprecation import deprecated
 
 from yams import BadSchemaDefinition
-from rql import RQLSyntaxError
 from rql.utils import rqlvar_maker
 
 from cubicweb import (CW_MIGRATION_MAP, QueryError,
                       UnknownEid, AuthenticationError, ExecutionError,
-                      BadConnectionId, Unauthorized, ValidationError,
+                      BadConnectionId, ValidationError,
                       UniqueTogetherError, onevent)
 from cubicweb import cwvreg, schema, server
 from cubicweb.server import ShuttingDown, utils, hook, querier, sources
 from cubicweb.server.session import Session, InternalManager
-from cubicweb.server.ssplanner import EditedEntity
 
 NO_CACHE_RELATIONS = set( [('owned_by', 'object'),
                            ('created_by', 'object'),
@@ -58,7 +54,7 @@ NO_CACHE_RELATIONS = set( [('owned_by', 'object'),
                            ])
 
 def prefill_entity_caches(entity):
-    session = entity._cw
+    cnx = entity._cw
     # prefill entity relation caches
     for rschema in entity.e_schema.subject_relations():
         rtype = str(rschema)
@@ -68,14 +64,14 @@ def prefill_entity_caches(entity):
             entity.cw_attr_cache.setdefault(rtype, None)
         else:
             entity.cw_set_relation_cache(rtype, 'subject',
-                                         session.empty_rset())
+                                         cnx.empty_rset())
     for rschema in entity.e_schema.object_relations():
         rtype = str(rschema)
         if rtype in schema.VIRTUAL_RTYPES or (rtype, 'object') in NO_CACHE_RELATIONS:
             continue
-        entity.cw_set_relation_cache(rtype, 'object', session.empty_rset())
+        entity.cw_set_relation_cache(rtype, 'object', cnx.empty_rset())
 
-def del_existing_rel_if_needed(session, eidfrom, rtype, eidto):
+def del_existing_rel_if_needed(cnx, eidfrom, rtype, eidto):
     """delete existing relation when adding a new one if card is 1 or ?
 
     have to be done once the new relation has been inserted to avoid having
@@ -85,9 +81,9 @@ def del_existing_rel_if_needed(session, eidfrom, rtype, eidto):
     hooks order hazardness
     """
     # skip that if integrity explicitly disabled
-    if not session.is_hook_category_activated('activeintegrity'):
+    if not cnx.is_hook_category_activated('activeintegrity'):
         return
-    rdef = session.rtype_eids_rdef(rtype, eidfrom, eidto)
+    rdef = cnx.rtype_eids_rdef(rtype, eidfrom, eidto)
     card = rdef.cardinality
     # one may be tented to check for neweids but this may cause more than one
     # relation even with '1?'  cardinality if thoses relations are added in the
@@ -101,34 +97,34 @@ def del_existing_rel_if_needed(session, eidfrom, rtype, eidto):
     # * we don't want read permissions to be applied but we want delete
     #   permission to be checked
     if card[0] in '1?':
-        with session.security_enabled(read=False):
-            session.execute('DELETE X %s Y WHERE X eid %%(x)s, '
-                            'NOT Y eid %%(y)s' % rtype,
-                                {'x': eidfrom, 'y': eidto})
+        with cnx.security_enabled(read=False):
+            cnx.execute('DELETE X %s Y WHERE X eid %%(x)s, '
+                        'NOT Y eid %%(y)s' % rtype,
+                        {'x': eidfrom, 'y': eidto})
     if card[1] in '1?':
-        with session.security_enabled(read=False):
-            session.execute('DELETE X %s Y WHERE Y eid %%(y)s, '
-                            'NOT X eid %%(x)s' % rtype,
-                            {'x': eidfrom, 'y': eidto})
+        with cnx.security_enabled(read=False):
+            cnx.execute('DELETE X %s Y WHERE Y eid %%(y)s, '
+                        'NOT X eid %%(x)s' % rtype,
+                        {'x': eidfrom, 'y': eidto})
 
 
-def preprocess_inlined_relations(session, entity):
+def preprocess_inlined_relations(cnx, entity):
     """when an entity is added, check if it has some inlined relation which
     requires to be extrated for proper call hooks
     """
     relations = []
-    activeintegrity = session.is_hook_category_activated('activeintegrity')
+    activeintegrity = cnx.is_hook_category_activated('activeintegrity')
     eschema = entity.e_schema
     for attr in entity.cw_edited:
         rschema = eschema.subjrels[attr]
         if not rschema.final: # inlined relation
             value = entity.cw_edited[attr]
             relations.append((attr, value))
-            session.update_rel_cache_add(entity.eid, attr, value)
-            rdef = session.rtype_eids_rdef(attr, entity.eid, value)
+            cnx.update_rel_cache_add(entity.eid, attr, value)
+            rdef = cnx.rtype_eids_rdef(attr, entity.eid, value)
             if rdef.cardinality[1] in '1?' and activeintegrity:
-                with session.security_enabled(read=False):
-                    session.execute('DELETE X %s Y WHERE Y eid %%(y)s' % attr,
+                with cnx.security_enabled(read=False):
+                    cnx.execute('DELETE X %s Y WHERE Y eid %%(y)s' % attr,
                                     {'x': entity.eid, 'y': value})
     return relations
 
@@ -766,11 +762,11 @@ class Repository(object):
         """return the type of the entity with id <eid>"""
         return self.type_and_source_from_eid(eid, cnx)[0]
 
-    def querier_cache_key(self, session, rql, args, eidkeys):
+    def querier_cache_key(self, cnx, rql, args, eidkeys):
         cachekey = [rql]
         for key in sorted(eidkeys):
             try:
-                etype = self.type_from_eid(args[key], session)
+                etype = self.type_from_eid(args[key], cnx)
             except KeyError:
                 raise QueryError('bad cache key %s (no value)' % key)
             except TypeError:
