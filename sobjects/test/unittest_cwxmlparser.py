@@ -132,13 +132,14 @@ class CWEntityXMLParserTC(CubicWebTC):
     REMOVE THE DATABASE TEMPLATE else it won't be considered
     """
     test_db_id = 'xmlparser'
+
     @classmethod
-    def pre_setup_database(cls, session, config):
-        myfeed = session.create_entity('CWSource', name=u'myfeed', type=u'datafeed',
+    def pre_setup_database(cls, cnx, config):
+        myfeed = cnx.create_entity('CWSource', name=u'myfeed', type=u'datafeed',
                                    parser=u'cw.entityxml', url=BASEXML)
-        myotherfeed = session.create_entity('CWSource', name=u'myotherfeed', type=u'datafeed',
-                                            parser=u'cw.entityxml', url=OTHERXML)
-        session.commit()
+        myotherfeed = cnx.create_entity('CWSource', name=u'myotherfeed', type=u'datafeed',
+                                        parser=u'cw.entityxml', url=OTHERXML)
+        cnx.commit()
         myfeed.init_mapping([(('CWUser', 'use_email', '*'),
                               u'role=subject\naction=copy'),
                              (('CWUser', 'in_group', '*'),
@@ -153,7 +154,8 @@ class CWEntityXMLParserTC(CubicWebTC):
                                   (('CWUser', 'in_state', '*'),
                                    u'role=subject\naction=link\nlinkattr=name'),
                                   ])
-        session.create_entity('Tag', name=u'hop')
+        cnx.create_entity('Tag', name=u'hop')
+        cnx.commit()
 
     def test_complete_url(self):
         dfsource = self.repo.sources_by_uri['myfeed']
