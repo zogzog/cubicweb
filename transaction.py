@@ -36,27 +36,21 @@ class NoSuchTransaction(RepositoryError):
     msg = _("there is no transaction #%s")
 
     def __init__(self, txuuid):
-        super(RepositoryError, self).__init__(txuuid)
+        super(NoSuchTransaction, self).__init__(txuuid)
         self.txuuid = txuuid
 
 class Transaction(object):
     """an undoable transaction"""
 
-    def __init__(self, uuid, time, ueid):
+    def __init__(self, cnx, uuid, time, ueid):
+        self.cnx = cnx
         self.uuid = uuid
         self.datetime = time
         self.user_eid = ueid
-        # should be set by the dbapi connection
-        self.req = None  # old style
-        self.cnx = None  # new style
 
     def _execute(self, *args, **kwargs):
         """execute a query using either the req or the cnx"""
-        if self.req is None:
-            execute = self.cnx.execute
-        else:
-            execute = self.req
-        return execute(*args, **kwargs)
+        return self.cnx.execute(*args, **kwargs)
 
 
     def __repr__(self):
@@ -67,8 +61,7 @@ class Transaction(object):
         """return the user entity which has done the transaction,
         none if not found.
         """
-        return self._execute('Any X WHERE X eid %(x)s',
-                             {'x': self.user_eid}).get_entity(0, 0)
+        return self.cnx.find('CWUser', eid=self.user_eid).one()
 
     def actions_list(self, public=True):
         """return an ordered list of action effectued during that transaction
@@ -76,14 +69,11 @@ class Transaction(object):
         if public is true, return only 'public' action, eg not ones triggered
         under the cover by hooks.
         """
-        if self.req is not None:
-            cnx = self.req.cnx
-        else:
-            cnx = self.cnx
-        return cnx.transaction_actions(self.uuid, public)
+        return self.cnx.transaction_actions(self.uuid, public)
 
 
 class AbstractAction(object):
+
     def __init__(self, action, public, order):
         self.action = action
         self.public = public
@@ -100,8 +90,9 @@ class AbstractAction(object):
 
 
 class EntityAction(AbstractAction):
+
     def __init__(self, action, public, order, etype, eid, changes):
-        AbstractAction.__init__(self, action, public, order)
+        super(EntityAction, self).__init__(action, public, order)
         self.etype = etype
         self.eid = eid
         self.changes = changes
@@ -118,8 +109,9 @@ class EntityAction(AbstractAction):
 
 
 class RelationAction(AbstractAction):
+
     def __init__(self, action, public, order, rtype, eidfrom, eidto):
-        AbstractAction.__init__(self, action, public, order)
+        super(RelationAction, self).__init__(action, public, order)
         self.rtype = rtype
         self.eid_from = eidfrom
         self.eid_to = eidto

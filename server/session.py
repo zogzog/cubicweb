@@ -536,7 +536,7 @@ class Connection(RequestSessionBase):
     # transaction api
 
     @_open_only
-    def undoable_transactions(self, ueid=None, req=None, **actionfilters):
+    def undoable_transactions(self, ueid=None, **actionfilters):
         """Return a list of undoable transaction objects by the connection's
         user, ordered by descendant transaction time.
 
@@ -559,26 +559,18 @@ class Connection(RequestSessionBase):
           only searched in 'public' actions, unless a `public` argument is given
           and set to false.
         """
-        source = self.repo.system_source
-        txinfos = source.undoable_transactions(self, ueid, **actionfilters)
-        for txinfo in txinfos:
-            txinfo.req = req or self
-        return txinfos
+        return self.repo.system_source.undoable_transactions(self, ueid,
+                                                             **actionfilters)
 
     @_open_only
-    def transaction_info(self, txuuid, req=None):
+    def transaction_info(self, txuuid):
         """Return transaction object for the given uid.
 
         raise `NoSuchTransaction` if not found or if session's user is
         not allowed (eg not in managers group and the transaction
         doesn't belong to him).
         """
-        txinfo = self.repo.system_source.tx_info(self, txuuid)
-        if req:
-            txinfo.req = req
-        else:
-            txinfo.cnx = self
-        return txinfo
+        return self.repo.system_source.tx_info(self, txuuid)
 
     @_open_only
     def transaction_actions(self, txuuid, public=True):

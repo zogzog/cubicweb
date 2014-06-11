@@ -1022,11 +1022,11 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         with cnx.ensure_cnx_set:
             cu = self.doexec(cnx, sql, restr)
             # turn results into transaction objects
-            return [tx.Transaction(*args) for args in cu.fetchall()]
+            return [tx.Transaction(cnx, *args) for args in cu.fetchall()]
 
     def tx_info(self, cnx, txuuid):
         """See :class:`cubicweb.repoapi.Connection.transaction_info`"""
-        return tx.Transaction(txuuid, *self._tx_info(cnx, unicode(txuuid)))
+        return tx.Transaction(cnx, txuuid, *self._tx_info(cnx, unicode(txuuid)))
 
     def tx_actions(self, cnx, txuuid, public):
         """See :class:`cubicweb.repoapi.Connection.transaction_actions`"""
