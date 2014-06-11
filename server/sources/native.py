@@ -1541,7 +1541,7 @@ class LoginPasswordAuthentifier(BaseAuthentifier):
                                         SQL_PREFIX + 'login'),
                                        {'newhash': self.source._binary(newhash),
                                         'login': login})
-                    cnx.commit(free_cnxset=False)
+                    cnx.commit()
             return user
         except IndexError:
             raise AuthenticationError('bad password')
