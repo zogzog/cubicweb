@@ -38,12 +38,11 @@ class SchemaModificationHooksTC(CubicWebTC):
 
     def index_exists(self, cnx, etype, attr, unique=False):
         dbhelper = self.repo.system_source.dbhelper
-        with cnx.ensure_cnx_set:
-            sqlcursor = cnx.cnxset.cu
-            return dbhelper.index_exists(sqlcursor,
-                                         SQL_PREFIX + etype,
-                                         SQL_PREFIX + attr,
-                                         unique=unique)
+        sqlcursor = cnx.cnxset.cu
+        return dbhelper.index_exists(sqlcursor,
+                                     SQL_PREFIX + etype,
+                                     SQL_PREFIX + attr,
+                                     unique=unique)
 
     def _set_perms(self, cnx, eid):
         cnx.execute('SET X read_permission G WHERE X eid %(x)s, G is CWGroup',

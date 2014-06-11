@@ -1019,10 +1019,9 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             restr.update(tearestr)
         # we want results ordered by transaction's time descendant
         sql += ' ORDER BY tx_time DESC'
-        with cnx.ensure_cnx_set:
-            cu = self.doexec(cnx, sql, restr)
-            # turn results into transaction objects
-            return [tx.Transaction(cnx, *args) for args in cu.fetchall()]
+        cu = self.doexec(cnx, sql, restr)
+        # turn results into transaction objects
+        return [tx.Transaction(cnx, *args) for args in cu.fetchall()]
 
     def tx_info(self, cnx, txuuid):
         """See :class:`cubicweb.repoapi.Connection.transaction_info`"""
@@ -1119,19 +1118,18 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         raise `NoSuchTransaction` if there is no such transaction of if the
         connection's user isn't allowed to see it.
         """
-        with cnx.ensure_cnx_set:
-            restr = {'tx_uuid': txuuid}
-            sql = self.sqlgen.select('transactions', restr,
-                                     ('tx_time', 'tx_user'))
-            cu = self.doexec(cnx, sql, restr)
-            try:
-                time, ueid = cu.fetchone()
-            except TypeError:
-                raise tx.NoSuchTransaction(txuuid)
-            if not (cnx.user.is_in_group('managers')
-                    or cnx.user.eid == ueid):
-                raise tx.NoSuchTransaction(txuuid)
-            return time, ueid
+        restr = {'tx_uuid': txuuid}
+        sql = self.sqlgen.select('transactions', restr,
+                                 ('tx_time', 'tx_user'))
+        cu = self.doexec(cnx, sql, restr)
+        try:
+            time, ueid = cu.fetchone()
+        except TypeError:
+            raise tx.NoSuchTransaction(txuuid)
+        if not (cnx.user.is_in_group('managers')
+                or cnx.user.eid == ueid):
+            raise tx.NoSuchTransaction(txuuid)
+        return time, ueid
 
     def _reedit_entity(self, entity, changes, err):
         cnx = entity._cw

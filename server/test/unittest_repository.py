@@ -203,10 +203,9 @@ class RepositoryTC(CubicWebTC):
         cnxid = repo.connect(self.admlogin, password=self.admpassword)
         session = repo._get_session(cnxid)
         with session.new_cnx() as cnx:
-            with cnx.ensure_cnx_set:
-                self.assertEqual(repo.type_and_source_from_eid(2, cnx),
-                                 ('CWGroup', None, 'system'))
-                self.assertEqual(repo.type_from_eid(2, cnx), 'CWGroup')
+            self.assertEqual(repo.type_and_source_from_eid(2, cnx),
+                             ('CWGroup', None, 'system'))
+            self.assertEqual(repo.type_from_eid(2, cnx), 'CWGroup')
         repo.close(cnxid)
 
     def test_public_api(self):
@@ -385,38 +384,37 @@ class SchemaDeserialTC(CubicWebTC):
             namecol = SQL_PREFIX + 'name'
             finalcol = SQL_PREFIX + 'final'
             with self.admin_access.repo_cnx() as cnx:
-                with cnx.ensure_cnx_set:
-                    cu = cnx.system_sql('SELECT %s FROM %s WHERE %s is NULL'
-                                        % (namecol, table, finalcol))
-                    self.assertEqual(cu.fetchall(), [])
-                    cu = cnx.system_sql('SELECT %s FROM %s '
-                                        'WHERE %s=%%(final)s ORDER BY %s'
-                                        % (namecol, table, finalcol, namecol),
-                                        {'final': True})
-                    self.assertEqual(cu.fetchall(),
-                                     [(u'BabarTestType',),
-                                      (u'BigInt',), (u'Boolean',), (u'Bytes',),
-                                      (u'Date',), (u'Datetime',),
-                                      (u'Decimal',),(u'Float',),
-                                      (u'Int',),
-                                      (u'Interval',), (u'Password',),
-                                      (u'String',),
-                                      (u'TZDatetime',), (u'TZTime',), (u'Time',)])
-                    sql = ("SELECT etype.cw_eid, etype.cw_name, cstr.cw_eid, rel.eid_to "
-                           "FROM cw_CWUniqueTogetherConstraint as cstr, "
-                           "     relations_relation as rel, "
-                           "     cw_CWEType as etype "
-                           "WHERE cstr.cw_eid = rel.eid_from "
-                           "  AND cstr.cw_constraint_of = etype.cw_eid "
-                           "  AND etype.cw_name = 'Personne' "
-                           ";")
-                    cu = cnx.system_sql(sql)
-                    rows = cu.fetchall()
-                    self.assertEqual(len(rows), 3)
-                    person = self.repo.schema.eschema('Personne')
-                    self.assertEqual(len(person._unique_together), 1)
-                    self.assertItemsEqual(person._unique_together[0],
-                                          ('nom', 'prenom', 'inline2'))
+                cu = cnx.system_sql('SELECT %s FROM %s WHERE %s is NULL'
+                                    % (namecol, table, finalcol))
+                self.assertEqual(cu.fetchall(), [])
+                cu = cnx.system_sql('SELECT %s FROM %s '
+                                    'WHERE %s=%%(final)s ORDER BY %s'
+                                    % (namecol, table, finalcol, namecol),
+                                    {'final': True})
+                self.assertEqual(cu.fetchall(),
+                                 [(u'BabarTestType',),
+                                  (u'BigInt',), (u'Boolean',), (u'Bytes',),
+                                  (u'Date',), (u'Datetime',),
+                                  (u'Decimal',),(u'Float',),
+                                  (u'Int',),
+                                  (u'Interval',), (u'Password',),
+                                  (u'String',),
+                                  (u'TZDatetime',), (u'TZTime',), (u'Time',)])
+                sql = ("SELECT etype.cw_eid, etype.cw_name, cstr.cw_eid, rel.eid_to "
+                       "FROM cw_CWUniqueTogetherConstraint as cstr, "
+                       "     relations_relation as rel, "
+                       "     cw_CWEType as etype "
+                       "WHERE cstr.cw_eid = rel.eid_from "
+                       "  AND cstr.cw_constraint_of = etype.cw_eid "
+                       "  AND etype.cw_name = 'Personne' "
+                       ";")
+                cu = cnx.system_sql(sql)
+                rows = cu.fetchall()
+                self.assertEqual(len(rows), 3)
+                person = self.repo.schema.eschema('Personne')
+                self.assertEqual(len(person._unique_together), 1)
+                self.assertItemsEqual(person._unique_together[0],
+                                      ('nom', 'prenom', 'inline2'))
 
         finally:
             self.repo.set_schema(origshema)
@@ -439,30 +437,27 @@ class DataHelpersTC(CubicWebTC):
 
     def test_type_from_eid(self):
         with self.admin_access.repo_cnx() as cnx:
-            with cnx.ensure_cnx_set:
-                self.assertEqual(self.repo.type_from_eid(2, cnx), 'CWGroup')
+            self.assertEqual(self.repo.type_from_eid(2, cnx), 'CWGroup')
 
     def test_type_from_eid_raise(self):
         with self.admin_access.repo_cnx() as cnx:
-            with cnx.ensure_cnx_set:
-                self.assertRaises(UnknownEid, self.repo.type_from_eid, -2, cnx)
+            self.assertRaises(UnknownEid, self.repo.type_from_eid, -2, cnx)
 
     def test_add_delete_info(self):
         with self.admin_access.repo_cnx() as cnx:
-            with cnx.ensure_cnx_set:
-                cnx.mode = 'write'
-                entity = self.repo.vreg['etypes'].etype_class('Personne')(cnx)
-                entity.eid = -1
-                entity.complete = lambda x: None
-                self.repo.add_info(cnx, entity, self.repo.system_source)
-                cu = cnx.system_sql('SELECT * FROM entities WHERE eid = -1')
-                data = cu.fetchall()
-                self.assertEqual(tuplify(data), [(-1, 'Personne', 'system', None)])
-                self.repo._delete_cascade_multi(cnx, [entity])
-                self.repo.system_source.delete_info_multi(cnx, [entity])
-                cu = cnx.system_sql('SELECT * FROM entities WHERE eid = -1')
-                data = cu.fetchall()
-                self.assertEqual(data, [])
+            cnx.mode = 'write'
+            entity = self.repo.vreg['etypes'].etype_class('Personne')(cnx)
+            entity.eid = -1
+            entity.complete = lambda x: None
+            self.repo.add_info(cnx, entity, self.repo.system_source)
+            cu = cnx.system_sql('SELECT * FROM entities WHERE eid = -1')
+            data = cu.fetchall()
+            self.assertEqual(tuplify(data), [(-1, 'Personne', 'system', None)])
+            self.repo._delete_cascade_multi(cnx, [entity])
+            self.repo.system_source.delete_info_multi(cnx, [entity])
+            cu = cnx.system_sql('SELECT * FROM entities WHERE eid = -1')
+            data = cu.fetchall()
+            self.assertEqual(data, [])
 
 
 class FTITC(CubicWebTC):

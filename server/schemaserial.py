@@ -108,14 +108,13 @@ def deserialize_schema(schema, cnx):
         has_computed_attributes = False
 
     # XXX bw compat (3.6 migration)
-    with cnx.ensure_cnx_set:
-        sqlcu = cnx.system_sql("SELECT * FROM cw_CWRType WHERE cw_name='symetric'")
-        if sqlcu.fetchall():
-            sql = dbhelper.sql_rename_col('cw_CWRType', 'cw_symetric', 'cw_symmetric',
-                                          dbhelper.TYPE_MAPPING['Boolean'], True)
-            sqlcu.execute(sql)
-            sqlcu.execute("UPDATE cw_CWRType SET cw_name='symmetric' WHERE cw_name='symetric'")
-            cnx.commit(False)
+    sqlcu = cnx.system_sql("SELECT * FROM cw_CWRType WHERE cw_name='symetric'")
+    if sqlcu.fetchall():
+        sql = dbhelper.sql_rename_col('cw_CWRType', 'cw_symetric', 'cw_symmetric',
+                                      dbhelper.TYPE_MAPPING['Boolean'], True)
+        sqlcu.execute(sql)
+        sqlcu.execute("UPDATE cw_CWRType SET cw_name='symmetric' WHERE cw_name='symetric'")
+        cnx.commit()
     ertidx = {}
     copiedeids = set()
     permsidx = deserialize_ertype_permissions(cnx)

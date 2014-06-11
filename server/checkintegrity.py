@@ -88,11 +88,10 @@ def reindex_entities(schema, cnx, withpb=True, etypes=None):
     # to be updated due to the reindexation
     repo = cnx.repo
     dbhelper = repo.system_source.dbhelper
-    with cnx.ensure_cnx_set:
-        cursor = cnx.cnxset.cu
-        if not dbhelper.has_fti_table(cursor):
-            print 'no text index table'
-            dbhelper.init_fti(cursor)
+    cursor = cnx.cnxset.cu
+    if not dbhelper.has_fti_table(cursor):
+        print 'no text index table'
+        dbhelper.init_fti(cursor)
     repo.system_source.do_fti = True  # ensure full-text indexation is activated
     if etypes is None:
         print 'Reindexing entities'
@@ -400,8 +399,7 @@ def check(repo, cnx, checks, reindex, fix, withpb=True):
         with cnx.security_enabled(read=False, write=False): # ensure no read security
             for check in checks:
                 check_func = globals()['check_%s' % check]
-                with cnx.ensure_cnx_set:
-                    check_func(repo.schema, cnx, eids_cache, fix=fix)
+                check_func(repo.schema, cnx, eids_cache, fix=fix)
         if fix:
             cnx.commit()
         else:
@@ -410,6 +408,5 @@ def check(repo, cnx, checks, reindex, fix, withpb=True):
             print 'WARNING: Diagnostic run, nothing has been corrected'
     if reindex:
         cnx.rollback()
-        with cnx.ensure_cnx_set:
-            reindex_entities(repo.schema, cnx, withpb=withpb)
+        reindex_entities(repo.schema, cnx, withpb=withpb)
         cnx.commit()

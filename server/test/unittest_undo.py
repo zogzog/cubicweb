@@ -214,8 +214,7 @@ class UndoableTransactionTC(CubicWebTC):
             self.assertRaises(NoSuchTransaction,
                               cnx.transaction_info, txuuid)
         with self.admin_access.repo_cnx() as cnx:
-            with cnx.ensure_cnx_set:
-                self.check_transaction_deleted(cnx, txuuid)
+            self.check_transaction_deleted(cnx, txuuid)
             # the final test: check we can login with the previously deleted user
         with self.new_access('toto').client_cnx():
             pass
@@ -273,18 +272,17 @@ class UndoableTransactionTC(CubicWebTC):
             self.assertFalse(cnx.execute('Any X WHERE X eid %(x)s', {'x': p.eid}))
             self.assertFalse(cnx.execute('Any X,Y WHERE X fiche Y'))
         with self.admin_access.repo_cnx() as cnx:
-            with cnx.ensure_cnx_set:
-                for eid in (p.eid, c.eid):
-                    self.assertFalse(cnx.system_sql(
-                        'SELECT * FROM entities WHERE eid=%s' % eid).fetchall())
-                    self.assertFalse(cnx.system_sql(
-                        'SELECT 1 FROM owned_by_relation WHERE eid_from=%s' % eid).fetchall())
-                    # added by sql in hooks (except when using dataimport)
-                    self.assertFalse(cnx.system_sql(
-                        'SELECT 1 FROM is_relation WHERE eid_from=%s' % eid).fetchall())
-                    self.assertFalse(cnx.system_sql(
-                        'SELECT 1 FROM is_instance_of_relation WHERE eid_from=%s' % eid).fetchall())
-                self.check_transaction_deleted(cnx, txuuid)
+            for eid in (p.eid, c.eid):
+                self.assertFalse(cnx.system_sql(
+                    'SELECT * FROM entities WHERE eid=%s' % eid).fetchall())
+                self.assertFalse(cnx.system_sql(
+                    'SELECT 1 FROM owned_by_relation WHERE eid_from=%s' % eid).fetchall())
+                # added by sql in hooks (except when using dataimport)
+                self.assertFalse(cnx.system_sql(
+                    'SELECT 1 FROM is_relation WHERE eid_from=%s' % eid).fetchall())
+                self.assertFalse(cnx.system_sql(
+                    'SELECT 1 FROM is_instance_of_relation WHERE eid_from=%s' % eid).fetchall())
+            self.check_transaction_deleted(cnx, txuuid)
 
     def test_undo_creation_integrity_1(self):
         with self.admin_access.client_cnx() as cnx:
@@ -357,9 +355,8 @@ class UndoableTransactionTC(CubicWebTC):
             p.cw_clear_all_caches()
             self.assertFalse(p.fiche)
         with self.admin_access.repo_cnx() as cnx:
-            with cnx.ensure_cnx_set:
-                self.assertIsNone(cnx.system_sql(
-                    'SELECT cw_fiche FROM cw_Personne WHERE cw_eid=%s' % p.eid).fetchall()[0][0])
+            self.assertIsNone(cnx.system_sql(
+                'SELECT cw_fiche FROM cw_Personne WHERE cw_eid=%s' % p.eid).fetchall()[0][0])
 
     def test_undo_inline_rel_add_ok(self):
         """Undo add relation  Personne (?) fiche (?) Card

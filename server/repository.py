@@ -448,8 +448,7 @@ class Repository(object):
         for source in self.sources_by_uri.itervalues():
             if self.config.source_enabled(source) and source.support_entity('CWUser'):
                 try:
-                    with cnx.ensure_cnx_set:
-                        return source.authenticate(cnx, login, **authinfo)
+                    return source.authenticate(cnx, login, **authinfo)
                 except AuthenticationError:
                     continue
         else:
@@ -468,19 +467,18 @@ class Repository(object):
 
     def _build_user(self, cnx, eid):
         """return a CWUser entity for user with the given eid"""
-        with cnx.ensure_cnx_set:
-            cls = self.vreg['etypes'].etype_class('CWUser')
-            st = cls.fetch_rqlst(cnx.user, ordermethod=None)
-            st.add_eid_restriction(st.get_variable('X'), 'x', 'Substitute')
-            rset = cnx.execute(st.as_string(), {'x': eid})
-            assert len(rset) == 1, rset
-            cwuser = rset.get_entity(0, 0)
-            # pylint: disable=W0104
-            # prefetch / cache cwuser's groups and properties. This is especially
-            # useful for internal sessions to avoid security insertions
-            cwuser.groups
-            cwuser.properties
-            return cwuser
+        cls = self.vreg['etypes'].etype_class('CWUser')
+        st = cls.fetch_rqlst(cnx.user, ordermethod=None)
+        st.add_eid_restriction(st.get_variable('X'), 'x', 'Substitute')
+        rset = cnx.execute(st.as_string(), {'x': eid})
+        assert len(rset) == 1, rset
+        cwuser = rset.get_entity(0, 0)
+        # pylint: disable=W0104
+        # prefetch / cache cwuser's groups and properties. This is especially
+        # useful for internal sessions to avoid security insertions
+        cwuser.groups
+        cwuser.properties
+        return cwuser
 
     # public (dbapi) interface ################################################
 
@@ -719,8 +717,7 @@ class Repository(object):
         with Session(InternalManager(), self) as session:
             with session.new_cnx() as cnx:
                 with cnx.security_enabled(read=False, write=False):
-                    with cnx.ensure_cnx_set:
-                        yield cnx
+                    yield cnx
 
     def _get_session(self, sessionid, txid=None, checkshuttingdown=True):
         """return the session associated with the given session identifier"""
@@ -812,8 +809,7 @@ class Repository(object):
             return self._extid_cache[extid]
         except KeyError:
             pass
-        with cnx.ensure_cnx_set:
-            eid = self.system_source.extid2eid(cnx, extid)
+        eid = self.system_source.extid2eid(cnx, extid)
         if eid is not None:
             self._extid_cache[extid] = eid
             self._type_source_cache[eid] = (etype, extid, source.uri)
@@ -821,37 +817,35 @@ class Repository(object):
         if not insert:
             return
         # no link between extid and eid, create one
-        with cnx.ensure_cnx_set:
-            # write query, ensure connection's mode is 'write' so connections
-            # won't be released until commit/rollback
-            cnx.mode = 'write'
-            try:
-                eid = self.system_source.create_eid(cnx)
-                self._extid_cache[extid] = eid
-                self._type_source_cache[eid] = (etype, extid, source.uri)
-                entity = source.before_entity_insertion(
-                    cnx, extid, etype, eid, sourceparams)
+        # write query, ensure connection's mode is 'write' so connections
+        # won't be released until commit/rollback
+        try:
+            eid = self.system_source.create_eid(cnx)
+            self._extid_cache[extid] = eid
+            self._type_source_cache[eid] = (etype, extid, source.uri)
+            entity = source.before_entity_insertion(
+                cnx, extid, etype, eid, sourceparams)
+            if source.should_call_hooks:
+                # get back a copy of operation for later restore if
+                # necessary, see below
+                pending_operations = cnx.pending_operations[:]
+                self.hm.call_hooks('before_add_entity', cnx, entity=entity)
+            self.add_info(cnx, entity, source, extid)
+            source.after_entity_insertion(cnx, extid, entity, sourceparams)
+            if source.should_call_hooks:
+                self.hm.call_hooks('after_add_entity', cnx, entity=entity)
+            return eid
+        except Exception:
+            # XXX do some cleanup manually so that the transaction has a
+            # chance to be commited, with simply this entity discarded
+            self._extid_cache.pop(extid, None)
+            self._type_source_cache.pop(eid, None)
+            if 'entity' in locals():
+                hook.CleanupDeletedEidsCacheOp.get_instance(cnx).add_data(entity.eid)
+                self.system_source.delete_info_multi(cnx, [entity])
                 if source.should_call_hooks:
-                    # get back a copy of operation for later restore if
-                    # necessary, see below
-                    pending_operations = cnx.pending_operations[:]
-                    self.hm.call_hooks('before_add_entity', cnx, entity=entity)
-                self.add_info(cnx, entity, source, extid)
-                source.after_entity_insertion(cnx, extid, entity, sourceparams)
-                if source.should_call_hooks:
-                    self.hm.call_hooks('after_add_entity', cnx, entity=entity)
-                return eid
-            except Exception:
-                # XXX do some cleanup manually so that the transaction has a
-                # chance to be commited, with simply this entity discarded
-                self._extid_cache.pop(extid, None)
-                self._type_source_cache.pop(eid, None)
-                if 'entity' in locals():
-                    hook.CleanupDeletedEidsCacheOp.get_instance(cnx).add_data(entity.eid)
-                    self.system_source.delete_info_multi(cnx, [entity])
-                    if source.should_call_hooks:
-                        cnx.pending_operations = pending_operations
-                raise
+                    cnx.pending_operations = pending_operations
+            raise
 
     def add_info(self, cnx, entity, source, extid=None):
         """add type and source info for an eid into the system table,

@@ -178,15 +178,14 @@ class ServerMigrationHelper(MigrationHelper):
             super(ServerMigrationHelper, self).migrate(vcconf, toupgrade, options)
 
     def cmd_process_script(self, migrscript, funcname=None, *args, **kwargs):
-        with self.cnx.ensure_cnx_set:
-            try:
-                return super(ServerMigrationHelper, self).cmd_process_script(
-                      migrscript, funcname, *args, **kwargs)
-            except ExecutionError as err:
-                sys.stderr.write("-> %s\n" % err)
-            except BaseException:
-                self.rollback()
-                raise
+        try:
+            return super(ServerMigrationHelper, self).cmd_process_script(
+                  migrscript, funcname, *args, **kwargs)
+        except ExecutionError as err:
+            sys.stderr.write("-> %s\n" % err)
+        except BaseException:
+            self.rollback()
+            raise
 
     # Adjust docstring
     cmd_process_script.__doc__ = MigrationHelper.cmd_process_script.__doc__
