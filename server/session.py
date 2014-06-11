@@ -245,7 +245,6 @@ class Connection(RequestSessionBase):
       read/write security is currently activated.
 
     """
-    mode = 'write'
     is_request = False
     hooks_in_progress = False
     is_repo_in_memory = True # bw compat

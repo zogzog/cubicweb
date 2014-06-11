@@ -39,8 +39,6 @@ DONT_GET_BACK_ETYPES = set(( # XXX edit as desired
         ))
 
 
-session.mode = 'write' # hold on the connections set
-
 print '******************** backport entity content ***************************'
 
 from cubicweb.server import debugged

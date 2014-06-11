@@ -445,7 +445,6 @@ class DataHelpersTC(CubicWebTC):
 
     def test_add_delete_info(self):
         with self.admin_access.repo_cnx() as cnx:
-            cnx.mode = 'write'
             entity = self.repo.vreg['etypes'].etype_class('Personne')(cnx)
             entity.eid = -1
             entity.complete = lambda x: None

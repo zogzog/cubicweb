@@ -553,25 +553,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                 self._cache[cachekey] = sql, qargs, cbs
         args = self.merge_args(args, qargs)
         assert isinstance(sql, basestring), repr(sql)
-        try:
-            cursor = self.doexec(cnx, sql, args)
-        except (self.OperationalError, self.InterfaceError):
-            if cnx.mode == 'write':
-                # do not attempt to reconnect if there has been some write
-                # during the transaction
-                raise
-            # FIXME: better detection of deconnection pb
-            self.warning("trying to reconnect")
-            cnx.cnxset.reconnect()
-            cursor = self.doexec(cnx, sql, args)
-        except self.DbapiError as exc:
-            # We get this one with pyodbc and SQL Server when connection was reset
-            if exc.args[0] == '08S01' and cnx.mode != 'write':
-                self.warning("trying to reconnect")
-                cnx.cnxset.reconnect()
-                cursor = self.doexec(cnx, sql, args)
-            else:
-                raise
+        cursor = self.doexec(cnx, sql, args)
         results = self.process_result(cursor, cnx, cbs)
         assert dbg_results(results)
         return results
@@ -829,18 +811,12 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
 
     # system source interface #################################################
 
-    def _eid_type_source(self, cnx, eid, sql, _retry=True):
+    def _eid_type_source(self, cnx, eid, sql):
         try:
             res = self.doexec(cnx, sql).fetchone()
             if res is not None:
                 return res
-        except (self.OperationalError, self.InterfaceError):
-            if cnx.mode == 'read' and _retry:
-                self.warning("trying to reconnect (eid_type_source())")
-                cnx.cnxset.reconnect()
-                return self._eid_type_source(cnx, eid, sql, _retry=False)
         except Exception:
-            assert cnx.cnxset, 'connection has no connections set'
             self.exception('failed to query entities table for eid %s', eid)
         raise UnknownEid(eid)
 
@@ -1056,8 +1032,6 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         important note: while undoing of a transaction, only hooks in the
         'integrity', 'activeintegrity' and 'undo' categories are called.
         """
-        # set mode so connections set isn't released subsquently until commit/rollback
-        cnx.mode = 'write'
         errors = []
         cnx.transaction_data['undoing_uuid'] = txuuid
         with cnx.deny_all_hooks_but('integrity', 'activeintegrity', 'undo'):

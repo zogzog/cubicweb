@@ -580,9 +580,6 @@ class QuerierHelper(object):
         if rqlst.TYPE != 'select':
             if cnx.read_security:
                 check_no_password_selected(rqlst)
-            # write query, ensure connection's mode is 'write' so connections
-            # won't be released until commit/rollback
-            cnx.mode = 'write'
             cachekey = None
         else:
             if cnx.read_security:

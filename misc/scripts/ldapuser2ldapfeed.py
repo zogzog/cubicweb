@@ -31,8 +31,6 @@ from datetime import datetime
 from cubicweb.server.edition import EditedEntity
 
 
-session.mode = 'write' # hold on the connections set
-
 print '******************** backport entity content ***************************'
 
 todelete = defaultdict(list)
