@@ -67,27 +67,6 @@ def repairing(cls, req, **kwargs):
     return req.vreg.config.repairing
 
 
-class transaction(object):
-    """Ensure that the transaction is either commited or rolled back at exit
-
-    Context manager to enter a transaction for a session: when exiting the
-    `with` block on exception, call `session.rollback()`, else call
-    `session.commit()` on normal exit
-    """
-    def __init__(self, session, free_cnxset=True):
-        self.session = session
-        self.free_cnxset = free_cnxset
-
-    def __enter__(self):
-        # ensure session has a cnxset
-        self.session.set_cnxset()
-
-    def __exit__(self, exctype, exc, traceback):
-        if exctype:
-            self.session.rollback(free_cnxset=self.free_cnxset)
-        else:
-            self.session.commit(free_cnxset=self.free_cnxset)
-
 @deprecated('[3.17] use <object>.allow/deny_all_hooks_but instead')
 def hooks_control(obj, mode, *categories):
     assert mode in  (HOOKS_ALLOW_ALL, HOOKS_DENY_ALL)
