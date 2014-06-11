@@ -222,16 +222,6 @@ class RepositoryTC(CubicWebTC):
             no_is_rset = cnx.execute('Any X WHERE NOT X is ET')
             self.assertFalse(no_is_rset, no_is_rset.description)
 
-#     def test_perfo(self):
-#         self.set_debug(True)
-#         from time import time, clock
-#         t, c = time(), clock()
-#         try:
-#             self.create_user('toto')
-#         finally:
-#             self.set_debug(False)
-#         print 'test time: %.3f (time) %.3f (cpu)' % ((time() - t), clock() - c)
-
     def test_delete_if_singlecard1(self):
         with self.admin_access.repo_cnx() as cnx:
             note = cnx.create_entity('Affaire')
