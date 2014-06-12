@@ -25,7 +25,10 @@ __docformat__ = "restructuredtext en"
 
 from pprint import pprint
 
+from logilab.common.decorators import cachedproperty
 from logilab.common.testlib import SkipTest
+
+from cubicweb.devtools.testlib import RepoAccess
 
 def tuplify(mylist):
     return [tuple(item) for item in mylist]
@@ -138,7 +141,7 @@ from logilab.database import get_db_helper
 from rql import RQLHelper
 
 from cubicweb.devtools.testlib import BaseTestCase
-from cubicweb.devtools.fake import FakeRepo, FakeConfig, FakeSession
+from cubicweb.devtools.fake import FakeRepo, FakeConfig, FakeSession, FakeRequest
 from cubicweb.server import set_debug, debugged
 from cubicweb.server.querier import QuerierHelper
 from cubicweb.server.session import Session
@@ -196,9 +199,13 @@ class RQLGeneratorTC(BaseTestCase):
 class BaseQuerierTC(TestCase):
     repo = None # set this in concrete class
 
+    @cachedproperty
+    def session(self):
+        return self._access._session
+
     def setUp(self):
         self.o = self.repo.querier
-        self.session = next(iter(self.repo._sessions.values()))
+        self._access = RepoAccess(self.repo, 'admin', FakeRequest)
         self.ueid = self.session.user.eid
         assert self.ueid != -1
         self.repo._type_source_cache = {} # clear cache
