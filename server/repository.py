@@ -338,8 +338,7 @@ class Repository(object):
             except Exception as ex:
                 import traceback
                 traceback.print_exc()
-                raise (Exception('Is the database initialised ? (cause: %s)' % ex),
-                       None, sys.exc_info()[-1])
+                raise Exception('Is the database initialised ? (cause: %s)' % ex)
         return appschema
 
     def _prepare_startup(self):
