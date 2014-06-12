@@ -30,7 +30,6 @@ from calendar import timegm
 from datetime import date, datetime
 from urlparse import urlsplit
 import httplib
-from itertools import count
 from warnings import warn
 
 from rql.utils import rqlvar_maker
@@ -81,6 +80,24 @@ def list_form_param(form, param, pop=False):
         value = [value]
     return [v for v in value if v != INTERNAL_FIELD_VALUE]
 
+
+class Counter(object):
+    """A picklable counter object, usable for e.g. page tab index count"""
+    __slots__ = ('value',)
+
+    def __init__(self, initialvalue=0):
+        self.value = initialvalue
+
+    def __call__(self):
+        value = self.value
+        self.value += 1
+        return value
+
+    def __getstate__(self):
+        return {'value': self.value}
+
+    def __setstate__(self, state):
+        self.value = state['value']
 
 
 class _CubicWebRequestBase(RequestSessionBase):
@@ -201,7 +218,7 @@ class _CubicWebRequestBase(RequestSessionBase):
     def next_tabindex(self):
         nextfunc = self.get_page_data('nexttabfunc')
         if nextfunc is None:
-            nextfunc = count(1).next
+            nextfunc = Counter(1)
             self.set_page_data('nexttabfunc', nextfunc)
         return nextfunc()
 
