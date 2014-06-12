@@ -633,7 +633,7 @@ class Repository(object):
             return rset.rows
 
     def new_session(self, login, **kwargs):
-        """open a new session for a given user
+        """open a *new* session for a given user
 
         raise `AuthenticationError` if the authentication failed
         raise `ConnectionError` if we can't open a connection
@@ -655,33 +655,20 @@ class Repository(object):
             cnx.commit()
         return session
 
+    @deprecated('[3.23] use .new_session instead (and get a plain session object)')
     def connect(self, login, **kwargs):
-        """open a new session for a given user and return its sessionid """
         return self.new_session(login, **kwargs).sessionid
 
-    def close(self, sessionid, txid=None, checkshuttingdown=True):
-        """close the session with the given id"""
-        session = self._get_session(sessionid, txid=txid,
-                                    checkshuttingdown=checkshuttingdown)
-        # operation uncommited before close are rolled back before hook is called
-        with session.new_cnx() as cnx:
-            self.hm.call_hooks('session_close', cnx)
-            # commit connection at this point in case write operation has been
-            # done during `session_close` hooks
-            cnx.commit()
-        session.close()
-        del self._sessions[sessionid]
-        self.info('closed session %s for user %s', sessionid, session.user.login)
+    @deprecated('[3.23] use session.close() directly')
+    def close(self, sessionid):
+        self._get_session(sessionid).close()
 
     # session handling ########################################################
 
     def close_sessions(self):
         """close every opened sessions"""
-        for sessionid in list(self._sessions):
-            try:
-                self.close(sessionid, checkshuttingdown=False)
-            except Exception: # XXX BaseException?
-                self.exception('error while closing session %s' % sessionid)
+        for session in list(self._sessions.values()):
+            session.close()
 
     def clean_sessions(self):
         """close sessions not used since an amount of time specified in the
@@ -691,9 +678,9 @@ class Repository(object):
         self.debug('cleaning session unused since %s',
                    strftime('%H:%M:%S', localtime(mintime)))
         nbclosed = 0
-        for session in self._sessions.values():
+        for session in list(self._sessions.values()):
             if session.timestamp < mintime:
-                self.close(session.sessionid)
+                session.close()
                 nbclosed += 1
         return nbclosed
 

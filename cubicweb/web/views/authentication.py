@@ -170,5 +170,4 @@ class RepositoryAuthenticationManager(object):
         raise AuthenticationError()
 
     def _authenticate(self, login, authinfo):
-        sessionid = self.repo.connect(login, **authinfo)
-        return self.repo._sessions[sessionid]
+        return self.repo.new_session(login, **authinfo)

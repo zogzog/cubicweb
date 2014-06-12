@@ -106,13 +106,7 @@ def turn_repo_off(repo):
     * system source is shutdown
     """
     if not repo._needs_refresh:
-        for sessionid in list(repo._sessions):
-            warnings.warn('%s Open session found while turning repository off'
-                          %sessionid, RuntimeWarning)
-            try:
-                repo.close(sessionid)
-            except BadConnectionId: #this is strange ? thread issue ?
-                print('XXX unknown session', sessionid)
+        repo.close_sessions()
         for cnxset in repo.cnxsets:
             cnxset.close(True)
         repo.system_source.shutdown()

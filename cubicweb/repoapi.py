@@ -47,11 +47,7 @@ def connect(repo, login, **kwargs):
     """Take credential and return associated Connection.
 
     raise AuthenticationError if the credential are invalid."""
-    sessionid = repo.connect(login, **kwargs)
-    session = repo._get_session(sessionid)
-    # XXX the autoclose_session should probably be handle on the session directly
-    # this is something to consider once we have proper server side Connection.
-    return Connection(session)
+    return repo.new_session(login, **kwargs).new_cnx()
 
 def anonymous_cnx(repo):
     """return a Connection for Anonymous user.

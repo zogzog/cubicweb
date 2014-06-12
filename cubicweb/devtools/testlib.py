@@ -267,9 +267,7 @@ class RepoAccess(object):
 
     def close(self):
         """Close the session associated to the RepoAccess"""
-        if self._session is not None:
-            self._repo.close(self._session.sessionid)
-        self._session = None
+        self._session.close()
 
     @contextmanager
     def shell(self):
@@ -457,7 +455,7 @@ class CubicWebTC(BaseTestCase):
     def tearDown(self):
         # XXX hack until logilab.common.testlib is fixed
         if self._admin_session is not None:
-            self.repo.close(self._admin_session.sessionid)
+            self._admin_session.close()
             self._admin_session = None
         while self._cleanups:
             cleanup, args, kwargs = self._cleanups.pop(-1)

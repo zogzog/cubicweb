@@ -1017,7 +1017,15 @@ class Session(object):
         self.closed = False
 
     def close(self):
+        if self.closed:
+            self.warning('closing already closed session %s', self.sessionid)
+            return
+        with self.new_cnx() as cnx:
+            self.repo.hm.call_hooks('session_close', cnx)
+            cnx.commit()
+            del self.repo._sessions[self.sessionid]
         self.closed = True
+        self.info('closed session %s for user %s', self.sessionid, self.user.login)
 
     def __enter__(self):
         return self

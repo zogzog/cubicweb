@@ -18,7 +18,6 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unit tests for module cubicweb.server.repository"""
 
-import threading
 import time
 import logging
 
@@ -39,7 +38,6 @@ from cubicweb.server import hook
 from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.server.hook import Hook
 from cubicweb.server.sources import native
-from cubicweb.server.session import SessionClosedError
 
 
 class RepositoryTC(CubicWebTC):
@@ -78,9 +76,9 @@ class RepositoryTC(CubicWebTC):
             self.assertFalse(cnx.execute('Any X WHERE NOT X cw_source S'))
 
     def test_connect(self):
-        cnxid = self.repo.connect(self.admlogin, password=self.admpassword)
-        self.assertTrue(cnxid)
-        self.repo.close(cnxid)
+        session = self.repo.new_session(self.admlogin, password=self.admpassword)
+        self.assertTrue(session.sessionid)
+        session.close()
         self.assertRaises(AuthenticationError,
                           self.repo.connect, self.admlogin, password='nimportnawak')
         self.assertRaises(AuthenticationError,
@@ -101,9 +99,9 @@ class RepositoryTC(CubicWebTC):
                         {'login': u"barnabé", 'passwd': u"héhéhé".encode('UTF8')})
             cnx.commit()
         repo = self.repo
-        cnxid = repo.connect(u"barnabé", password=u"héhéhé".encode('UTF8'))
-        self.assertTrue(cnxid)
-        repo.close(cnxid)
+        session = repo.new_session(u"barnabé", password=u"héhéhé".encode('UTF8'))
+        self.assertTrue(session.sessionid)
+        session.close()
 
     def test_rollback_on_execute_validation_error(self):
         class ValidationErrorAfterHook(Hook):
@@ -146,9 +144,9 @@ class RepositoryTC(CubicWebTC):
 
     def test_close(self):
         repo = self.repo
-        cnxid = repo.connect(self.admlogin, password=self.admpassword)
-        self.assertTrue(cnxid)
-        repo.close(cnxid)
+        session = repo.new_session(self.admlogin, password=self.admpassword)
+        self.assertTrue(session.sessionid)
+        session.close()
 
 
     def test_initial_schema(self):
@@ -196,13 +194,12 @@ class RepositoryTC(CubicWebTC):
 
     def test_internal_api(self):
         repo = self.repo
-        cnxid = repo.connect(self.admlogin, password=self.admpassword)
-        session = repo._get_session(cnxid)
+        session = repo.new_session(self.admlogin, password=self.admpassword)
         with session.new_cnx() as cnx:
             self.assertEqual(repo.type_and_source_from_eid(2, cnx),
                              ('CWGroup', None, 'system'))
             self.assertEqual(repo.type_from_eid(2, cnx), 'CWGroup')
-        repo.close(cnxid)
+        session.close()
 
     def test_public_api(self):
         self.assertEqual(self.repo.get_schema(), self.repo.schema)
