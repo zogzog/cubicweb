@@ -92,6 +92,7 @@ class Note(WorkflowableEntityType):
     type = String(maxsize=6)
     para = String(maxsize=512,
                   __permissions__ = {
+                      'add': ('managers', ERQLExpression('X in_state S, S name "todo"')),
                       'read':   ('managers', 'users', 'guests'),
                       'update': ('managers', ERQLExpression('X in_state S, S name "todo"')),
                       })
