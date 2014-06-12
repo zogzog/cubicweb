@@ -427,26 +427,6 @@ def external_resource(self, resource):
     """returns the URL of the external resource named `resource`"""
     return self._cw.uiprops[resource]
 
-@ajaxfunc(output_type='json', check_pageid=True)
-def user_callback(self, cbname):
-    """execute the previously registered user callback `cbname`.
-
-    If matching callback is not found, return None
-    """
-    page_data = self._cw.session.data.get(self._cw.pageid, {})
-    try:
-        cb = page_data[cbname]
-    except KeyError:
-        self.warning('unable to find user callback %s', cbname)
-        return None
-    return cb(self._cw)
-
-
-@ajaxfunc
-def unregister_user_callback(self, cbname):
-    """unregister user callback `cbname`"""
-    self._cw.unregister_callback(self._cw.pageid, cbname)
-
 @ajaxfunc
 def unload_page_data(self):
     """remove user's session data associated to current pageid"""

@@ -517,59 +517,6 @@ function removeBookmark(beid) {
     });
 }
 
-userCallback = cw.utils.deprecatedFunction(
-    '[3.19] use a plain ajaxfunc instead of user callbacks',
-    function userCallback(cbname) {
-    setProgressCursor();
-    var d = loadRemote(AJAX_BASE_URL, ajaxFuncArgs('user_callback', null, cbname));
-    d.addCallback(resetCursor);
-    d.addErrback(resetCursor);
-    d.addErrback(remoteCallFailed);
-    return d;
-});
-
-userCallbackThenUpdateUI = cw.utils.deprecatedFunction(
-    '[3.19] use a plain ajaxfunc instead of user callbacks',
-    function userCallbackThenUpdateUI(cbname, compid, rql, msg, registry, nodeid) {
-    var d = userCallback(cbname);
-    d.addCallback(function() {
-        $('#' + nodeid).loadxhtml(AJAX_BASE_URL, ajaxFuncArgs('render', {'rql': rql},
-                                                       registry, compid), null, 'swap');
-        if (msg) {
-            updateMessage(msg);
-        }
-    });
-});
-
-userCallbackThenReloadPage = cw.utils.deprecatedFunction(
-    '[3.19] use a plain ajaxfunc instead of user callbacks',
-    function userCallbackThenReloadPage(cbname, msg) {
-    var d = userCallback(cbname);
-    d.addCallback(function() {
-        window.location.reload();
-        if (msg) {
-            updateMessage(msg);
-        }
-    });
-});
-
-/**
- * .. function:: unregisterUserCallback(cbname)
- *
- * unregisters the python function registered on the server's side
- * while the page was generated.
- */
-unregisterUserCallback = cw.utils.deprecatedFunction(
-    '[3.19] use a plain ajaxfunc instead of user callbacks',
-    function unregisterUserCallback(cbname) {
-    setProgressCursor();
-    var d = loadRemote(AJAX_BASE_URL, ajaxFuncArgs('unregister_user_callback',
-                                            null, cbname));
-    d.addCallback(resetCursor);
-    d.addErrback(resetCursor);
-    d.addErrback(remoteCallFailed);
-});
-
 
 //============= XXX move those functions? ====================================//
 function openHash() {

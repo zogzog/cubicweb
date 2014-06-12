@@ -1,4 +1,4 @@
-# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -402,67 +402,6 @@ class _CubicWebRequestBase(RequestSessionBase):
         if breadcrumbs:
             return breadcrumbs.pop()
         return self.base_url()
-
-    @deprecated('[3.19] use a traditional ajaxfunc / controller')
-    def user_rql_callback(self, rqlargs, *args, **kwargs):
-        """register a user callback to execute some rql query, and return a URL
-        to call that callback which can be inserted in an HTML view.
-
-        `rqlargs` should be a tuple containing argument to give to the execute function.
-
-        The first argument following rqlargs must be the message to be
-        displayed after the callback is called.
-
-        For other allowed arguments, see :meth:`user_callback` method
-        """
-        def rqlexec(req, rql, args=None, key=None):
-            req.execute(rql, args, key)
-        return self.user_callback(rqlexec, rqlargs, *args, **kwargs)
-
-    @deprecated('[3.19] use a traditional ajaxfunc / controller')
-    def user_callback(self, cb, cbargs, *args, **kwargs):
-        """register the given user callback and return a URL which can
-        be inserted in an HTML view. When the URL is accessed, the
-        callback function will be called (as 'cb(req, \*cbargs)', and a
-        message will be displayed in the web interface. The third
-        positional argument must be 'msg', containing the message.
-
-        You can specify the underlying js function to call using a 'jsfunc'
-        named args, to one of :func:`userCallback`,
-        ':func:`userCallbackThenUpdateUI`, ':func:`userCallbackThenReloadPage`
-        (the default). Take care arguments may vary according to the used
-        function.
-        """
-        self.add_js('cubicweb.ajax.js')
-        jsfunc = kwargs.pop('jsfunc', 'userCallbackThenReloadPage')
-        assert not kwargs, 'dunno what to do with remaining kwargs: %s' % kwargs
-        cbname = self.register_onetime_callback(cb, *cbargs)
-        return "javascript: %s" % getattr(js, jsfunc)(cbname, *args)
-
-    @deprecated('[3.19] use a traditional ajaxfunc / controller')
-    def register_onetime_callback(self, func, *args):
-        cbname = build_cb_uid(func.__name__)
-        def _cb(req):
-            try:
-                return func(req, *args)
-            finally:
-                self.unregister_callback(self.pageid, cbname)
-        self.set_page_data(cbname, _cb)
-        return cbname
-
-    @deprecated('[3.19] use a traditional ajaxfunc / controller')
-    def unregister_callback(self, pageid, cbname):
-        assert pageid is not None
-        assert cbname.startswith('cb_')
-        self.info('unregistering callback %s for pageid %s', cbname, pageid)
-        self.del_page_data(cbname)
-
-    @deprecated('[3.19] use a traditional ajaxfunc / controller')
-    def clear_user_callbacks(self):
-        if self.session is not None: # XXX
-            for key in list(self.session.data):
-                if key.startswith('cb_'):
-                    del self.session.data[key]
 
     # web edition helpers #####################################################
 
