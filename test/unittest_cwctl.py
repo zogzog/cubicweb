@@ -44,7 +44,7 @@ class CubicWebShellTC(CubicWebTC):
 
     def test_process_script_args_context(self):
         repo = self.repo
-        with self.admin_access.client_cnx() as cnx:
+        with self.admin_access.repo_cnx() as cnx:
             mih = ServerMigrationHelper(None, repo=repo, cnx=cnx,
                                         interactive=False,
                                         # hack so it don't try to load fs schema

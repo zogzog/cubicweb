@@ -72,7 +72,7 @@ class MigrationTC(CubicWebTC):
 
     @contextmanager
     def mh(self):
-        with self.admin_access.client_cnx() as cnx:
+        with self.admin_access.repo_cnx() as cnx:
             yield cnx, ServerMigrationHelper(self.repo.config, migrschema,
                                              repo=self.repo, cnx=cnx,
                                              interactive=False)

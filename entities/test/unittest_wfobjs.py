@@ -87,12 +87,12 @@ class WorkflowBuildingTC(CubicWebTC):
             shell.rollback()
             # no pb if not in the same workflow
             wf2 = add_wf(shell, 'Company')
-            foo = wf.add_state(u'foo', initial=True)
-            bar = wf.add_state(u'bar')
-            wf.add_transition(u'baz', (foo,), bar, ('managers',))
+            foo = wf2.add_state(u'foo', initial=True)
+            bar = wf2.add_state(u'bar')
+            wf2.add_transition(u'baz', (foo,), bar, ('managers',))
             shell.commit()
             # gnark gnark
-            biz = wf.add_transition(u'biz', (bar,), foo)
+            biz = wf2.add_transition(u'biz', (bar,), foo)
             shell.commit()
             with self.assertRaises(ValidationError) as cm:
                 biz.cw_set(name=u'baz')

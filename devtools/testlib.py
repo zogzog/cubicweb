@@ -261,7 +261,7 @@ class RepoAccess(object):
     @contextmanager
     def shell(self):
         from cubicweb.server.migractions import ServerMigrationHelper
-        with repoapi.ClientConnection(self._session) as cnx:
+        with self._session.new_cnx() as cnx:
             mih = ServerMigrationHelper(None, repo=self._repo, cnx=cnx,
                                         interactive=False,
                                         # hack so it don't try to load fs schema
