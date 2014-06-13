@@ -447,6 +447,7 @@ class Connection(RequestSessionBase):
 
     is_request = False
     hooks_in_progress = False
+    is_repo_in_memory = True # bw compat
     mode = 'read'
 
     def __init__(self, session, cnxid=None, session_handled=False):
@@ -460,6 +461,7 @@ class Connection(RequestSessionBase):
         if cnxid is None:
             cnxid = '%s-%s' % (session.sessionid, uuid4().hex)
         self.connectionid = cnxid
+        self.session = session
         self.sessionid = session.sessionid
         #: self._session_handled
         #: are the life cycle of this Connection automatically controlled by the
@@ -525,6 +527,94 @@ class Connection(RequestSessionBase):
         else:
             self._set_user(session.user)
 
+    # session bw compat
+
+    @property
+    def _session(self):
+        return self.session
+
+    @_open_only
+    def source_defs(self):
+        """Return the definition of sources used by the repository."""
+        return self._session.repo.source_defs()
+
+    @_open_only
+    def get_schema(self):
+        """Return the schema currently used by the repository."""
+        return self._session.repo.source_defs()
+
+    @_open_only
+    def get_option_value(self, option):
+        """Return the value for `option` in the configuration."""
+        return self._session.repo.get_option_value(option)
+
+    # transaction api
+
+    @_open_only
+    def undoable_transactions(self, ueid=None, req=None, **actionfilters):
+        """Return a list of undoable transaction objects by the connection's
+        user, ordered by descendant transaction time.
+
+        Managers may filter according to user (eid) who has done the transaction
+        using the `ueid` argument. Others will only see their own transactions.
+
+        Additional filtering capabilities is provided by using the following
+        named arguments:
+
+        * `etype` to get only transactions creating/updating/deleting entities
+          of the given type
+
+        * `eid` to get only transactions applied to entity of the given eid
+
+        * `action` to get only transactions doing the given action (action in
+          'C', 'U', 'D', 'A', 'R'). If `etype`, action can only be 'C', 'U' or
+          'D'.
+
+        * `public`: when additional filtering is provided, they are by default
+          only searched in 'public' actions, unless a `public` argument is given
+          and set to false.
+        """
+        source = self.repo.system_source
+        txinfos = source.undoable_transactions(self, ueid, **actionfilters)
+        for txinfo in txinfos:
+            txinfo.req = req or self
+        return txinfos
+
+    @_open_only
+    def transaction_info(self, txuuid, req=None):
+        """Return transaction object for the given uid.
+
+        raise `NoSuchTransaction` if not found or if session's user is
+        not allowed (eg not in managers group and the transaction
+        doesn't belong to him).
+        """
+        txinfo = self.repo.system_source.tx_info(self, txuuid)
+        if req:
+            txinfo.req = req
+        else:
+            txinfo.cnx = self
+        return txinfo
+
+    @_open_only
+    def transaction_actions(self, txuuid, public=True):
+        """Return an ordered list of actions effectued during that transaction.
+
+        If public is true, return only 'public' actions, i.e. not ones
+        triggered under the cover by hooks, else return all actions.
+
+        raise `NoSuchTransaction` if the transaction is not found or
+        if the user is not allowed (eg not in managers group).
+        """
+        return self.repo.system_source.tx_actions(self, txuuid, public)
+
+    @_open_only
+    def undo_transaction(self, txuuid):
+        """Undo the given transaction. Return potential restoration errors.
+
+        raise `NoSuchTransaction` if not found or if user is not
+        allowed (eg not in managers group).
+        """
+        return self.repo.system_source.undo_transaction(self, txuuid)
 
     # life cycle handling ####################################################
 
