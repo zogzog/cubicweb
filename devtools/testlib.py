@@ -157,7 +157,7 @@ cwconfig.SMTP = MockSMTP
 
 
 class TestCaseConnectionProxy(object):
-    """thin wrapper around `cubicweb.repoapi.ClientConnection` context-manager
+    """thin wrapper around `cubicweb.repoapi.Connection` context-manager
     used in CubicWebTC (cf. `cubicweb.devtools.testlib.CubicWebTC.login` method)
 
     It just proxies to the default connection context manager but
@@ -299,9 +299,9 @@ class CubicWebTC(TestCase):
 
     def __init__(self, *args, **kwargs):
         self._admin_session = None
-        self._admin_clt_cnx = None
+        self._admin_cnx = None
         self._current_session = None
-        self._current_clt_cnx = None
+        self._current_cnx = None
         self.repo = None
         self._open_access = set()
         super(CubicWebTC, self).__init__(*args, **kwargs)
@@ -327,21 +327,21 @@ class CubicWebTC(TestCase):
     @deprecated('[3.19] explicitly use RepoAccess object in test instead')
     def set_cnx(self, cnx):
         assert getattr(cnx, '_session', None) is not None
-        if cnx is self._admin_clt_cnx:
+        if cnx is self._admin_cnx:
             self._pop_custom_cnx()
         else:
             self._cnxs.add(cnx) # register the cnx to make sure it is removed
             self._current_session = cnx.session
-            self._current_clt_cnx = cnx
+            self._current_cnx = cnx
 
     @property
     @deprecated('[3.19] explicitly use RepoAccess object in test instead')
     def cnx(self):
         # XXX we want to deprecate this
-        clt_cnx = self._current_clt_cnx
-        if clt_cnx is None:
-            clt_cnx = self._admin_clt_cnx
-        return clt_cnx
+        cnx = self._current_cnx
+        if cnx is None:
+            cnx = self._admin_cnx
+        return cnx
 
     def _close_cnx(self):
         """ensure that all cnx used by a test have been closed"""
@@ -380,22 +380,22 @@ class CubicWebTC(TestCase):
         else:
             if not kwargs:
                 kwargs['password'] = str(login)
-            clt_cnx = repoapi.connect(self.repo, login, **kwargs)
-        self.set_cnx(clt_cnx)
-        clt_cnx.__enter__()
-        return TestCaseConnectionProxy(self, clt_cnx)
+            cnx = repoapi.connect(self.repo, login, **kwargs)
+        self.set_cnx(cnx)
+        cnx.__enter__()
+        return TestCaseConnectionProxy(self, cnx)
 
     @deprecated('[3.19] explicitly use RepoAccess object in test instead')
     def restore_connection(self):
         self._pop_custom_cnx()
 
     def _pop_custom_cnx(self):
-        if self._current_clt_cnx is not None:
-            if self._current_clt_cnx._open:
-                self._current_clt_cnx.close()
+        if self._current_cnx is not None:
+            if self._current_cnx._open:
+                self._current_cnx.close()
             if not  self._current_session.closed:
                 self.repo.close(self._current_session.sessionid)
-            self._current_clt_cnx = None
+            self._current_cnx = None
             self._current_session = None
 
     #XXX this doesn't need to a be classmethod anymore
@@ -411,9 +411,9 @@ class CubicWebTC(TestCase):
         login = unicode(db_handler.config.default_admin_config['login'])
         self.admin_access = self.new_access(login)
         self._admin_session = self.admin_access._session
-        self._admin_clt_cnx = repoapi.Connection(self._admin_session)
-        self._cnxs.add(self._admin_clt_cnx)
-        self._admin_clt_cnx.__enter__()
+        self._admin_cnx = repoapi.Connection(self._admin_session)
+        self._cnxs.add(self._admin_cnx)
+        self._admin_cnx.__enter__()
         self.config.repository = lambda x=None: self.repo
 
 
@@ -517,13 +517,13 @@ class CubicWebTC(TestCase):
                 raise
             self.addCleanup(self._close_access)
         self.setup_database()
-        self._admin_clt_cnx.commit()
+        self._admin_cnx.commit()
         MAILBOX[:] = [] # reset mailbox
 
     def tearDown(self):
         # XXX hack until logilab.common.testlib is fixed
-        if self._admin_clt_cnx is not None:
-            self._admin_clt_cnx = None
+        if self._admin_cnx is not None:
+            self._admin_cnx = None
         if self._admin_session is not None:
             self.repo.close(self._admin_session.sessionid)
             self._admin_session = None
@@ -573,9 +573,7 @@ class CubicWebTC(TestCase):
                 groups = login
             elif isinstance(login, tuple):
                 groups = login
-            login = req
-            assert not isinstance(self, type)
-            req = self._admin_clt_cnx
+                req = self._admin_cnx
         if login is not None:
             login = unicode(login)
         if password is None:
@@ -969,8 +967,8 @@ class CubicWebTC(TestCase):
     def assertAuthSuccess(self, req, origsession, nbsessions=1):
         sh = self.app.session_handler
         session = self.app.get_session(req)
-        clt_cnx = repoapi.Connection(session)
-        req.set_cnx(clt_cnx)
+        cnx = repoapi.Connection(session)
+        req.set_cnx(cnx)
         self.assertEqual(len(self.open_sessions), nbsessions, self.open_sessions)
         self.assertEqual(session.login, origsession.login)
         self.assertEqual(session.anonymous_session, False)

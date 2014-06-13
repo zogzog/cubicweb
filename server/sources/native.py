@@ -952,7 +952,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
     # undo support #############################################################
 
     def undoable_transactions(self, cnx, ueid=None, **actionfilters):
-        """See :class:`cubicweb.repoapi.ClientConnection.undoable_transactions`"""
+        """See :class:`cubicweb.repoapi.Connection.undoable_transactions`"""
         # force filtering to connection's user if not a manager
         if not cnx.user.is_in_group('managers'):
             ueid = cnx.user.eid
@@ -1025,11 +1025,11 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             return [tx.Transaction(*args) for args in cu.fetchall()]
 
     def tx_info(self, cnx, txuuid):
-        """See :class:`cubicweb.repoapi.ClientConnection.transaction_info`"""
+        """See :class:`cubicweb.repoapi.Connection.transaction_info`"""
         return tx.Transaction(txuuid, *self._tx_info(cnx, unicode(txuuid)))
 
     def tx_actions(self, cnx, txuuid, public):
-        """See :class:`cubicweb.repoapi.ClientConnection.transaction_actions`"""
+        """See :class:`cubicweb.repoapi.Connection.transaction_actions`"""
         txuuid = unicode(txuuid)
         self._tx_info(cnx, txuuid)
         restr = {'tx_uuid': txuuid}
@@ -1052,7 +1052,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         return sorted(actions, key=lambda x: x.order)
 
     def undo_transaction(self, cnx, txuuid):
-        """See :class:`cubicweb.repoapi.ClientConnection.undo_transaction`
+        """See :class:`cubicweb.repoapi.Connection.undo_transaction`
 
         important note: while undoing of a transaction, only hooks in the
         'integrity', 'activeintegrity' and 'undo' categories are called.

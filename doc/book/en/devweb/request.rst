@@ -118,13 +118,13 @@ API
 ```
 
 The elements we gave in overview for above are built in three layers,
-from ``cubicweb.req.RequestSessionBase``, ``cubicweb.repoapi.ClientConnection`` and
+from ``cubicweb.req.RequestSessionBase``, ``cubicweb.repoapi.Connection`` and
 ``cubicweb.web.ConnectionCubicWebRequestBase``.
 
 .. autoclass:: cubicweb.req.RequestSessionBase
    :members:
 
-.. autoclass:: cubicweb.repoapi.ClientConnection
+.. autoclass:: cubicweb.repoapi.Connection
    :members:
 
 .. autoclass:: cubicweb.web.request.ConnectionCubicWebRequestBase

@@ -53,10 +53,7 @@ def get_repository(uri=None, config=None, vreg=None):
     raise ConnectionError('unknown protocol: `%s`' % protocol)
 
 def connect(repo, login, **kwargs):
-    """Take credential and return associated ClientConnection.
-
-    The ClientConnection is associated to a new Session object that will be
-    closed when the ClientConnection is closed.
+    """Take credential and return associated Connection.
 
     raise AuthenticationError if the credential are invalid."""
     sessionid = repo.connect(login, **kwargs)
@@ -66,10 +63,7 @@ def connect(repo, login, **kwargs):
     return Connection(session)
 
 def anonymous_cnx(repo):
-    """return a ClientConnection for Anonymous user.
-
-    The ClientConnection is associated to a new Session object that will be
-    closed when the ClientConnection is closed.
+    """return a Connection for Anonymous user.
 
     raises an AuthenticationError if anonymous usage is not allowed
     """

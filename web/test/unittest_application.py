@@ -371,7 +371,7 @@ class ApplicationTC(CubicWebTC):
     def _test_auth_anon(self, req):
         asession = self.app.get_session(req)
         # important otherwise _reset_cookie will not use the right session
-        req.set_cnx(repoapi.ClientConnection(asession))
+        req.set_cnx(repoapi.Connection(asession))
         self.assertEqual(len(self.open_sessions), 1)
         self.assertEqual(asession.login, 'anon')
         self.assertTrue(asession.anonymous_session)
@@ -381,7 +381,7 @@ class ApplicationTC(CubicWebTC):
         self.assertEqual(1, len(self.open_sessions))
         session = self.app.get_session(req)
         # important otherwise _reset_cookie will not use the right session
-        req.set_cnx(repoapi.ClientConnection(session))
+        req.set_cnx(repoapi.Connection(session))
         self.assertEqual(req.message, 'authentication failure')
         self.assertEqual(req.session.anonymous_session, True)
         self.assertEqual(1, len(self.open_sessions))
