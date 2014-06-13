@@ -331,7 +331,7 @@ class CubicWebTC(TestCase):
             self._pop_custom_cnx()
         else:
             self._cnxs.add(cnx) # register the cnx to make sure it is removed
-            self._current_session = cnx._session
+            self._current_session = cnx.session
             self._current_clt_cnx = cnx
 
     @property

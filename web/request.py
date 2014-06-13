@@ -981,11 +981,11 @@ class _MockAnonymousSession(object):
         return True
 
 class ConnectionCubicWebRequestBase(_CubicWebRequestBase):
+    cnx = None
+    session = None
 
     def __init__(self, vreg, https=False, form=None, headers={}):
         """"""
-        self.cnx = None
-        self.session = None
         self.vreg = vreg
         try:
             # no vreg or config which doesn't handle translations
@@ -1005,7 +1005,7 @@ class ConnectionCubicWebRequestBase(_CubicWebRequestBase):
         if 'ecache' in cnx.transaction_data:
             del cnx.transaction_data['ecache']
         self.cnx = cnx
-        self.session = cnx._session
+        self.session = cnx.session
         self._set_user(cnx.user)
         self.set_user_language(cnx.user)
 

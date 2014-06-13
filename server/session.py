@@ -527,26 +527,20 @@ class Connection(RequestSessionBase):
         else:
             self._set_user(session.user)
 
-    # session bw compat
-
-    @property
-    def _session(self):
-        return self.session
-
     @_open_only
     def source_defs(self):
         """Return the definition of sources used by the repository."""
-        return self._session.repo.source_defs()
+        return self.session.repo.source_defs()
 
     @_open_only
     def get_schema(self):
         """Return the schema currently used by the repository."""
-        return self._session.repo.source_defs()
+        return self.session.repo.source_defs()
 
     @_open_only
     def get_option_value(self, option):
         """Return the value for `option` in the configuration."""
-        return self._session.repo.get_option_value(option)
+        return self.session.repo.get_option_value(option)
 
     # transaction api
 

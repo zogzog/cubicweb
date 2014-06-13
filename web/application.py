@@ -52,10 +52,10 @@ SESSION_MANAGER = None
 @contextmanager
 def anonymized_request(req):
     orig_cnx = req.cnx
-    anon_clt_cnx = anonymous_cnx(orig_cnx._session.repo)
-    req.set_cnx(anon_clt_cnx)
+    anon_cnx = anonymous_cnx(orig_cnx.session.repo)
+    req.set_cnx(anon_cnx)
     try:
-        with anon_clt_cnx:
+        with anon_cnx:
             yield req
     finally:
         req.set_cnx(orig_cnx)
