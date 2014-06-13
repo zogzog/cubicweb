@@ -396,13 +396,14 @@ class CreateInstanceCommand(Command):
         print
         helper.bootstrap(cubes, self.config.automatic, self.config.config_level)
         # input for cubes specific options
-        sections = set(sect.lower() for sect, opt, odict in config.all_options()
-                       if 'type' in odict
-                       and odict.get('level') <= self.config.config_level)
-        for section in sections:
-            if section not in ('main', 'email', 'pyro', 'web'):
-                print '\n' + underline_title('%s options' % section)
-                config.input_config(section, self.config.config_level)
+        if not self.config.automatic:
+            sections = set(sect.lower() for sect, opt, odict in config.all_options()
+                           if 'type' in odict
+                           and odict.get('level') <= self.config.config_level)
+            for section in sections:
+                if section not in ('main', 'email', 'pyro', 'web'):
+                    print '\n' + underline_title('%s options' % section)
+                    config.input_config(section, self.config.config_level)
         # write down configuration
         config.save()
         self._handle_win32(config, appid)
