@@ -1,4 +1,4 @@
-# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -15,8 +15,14 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-from yams.buildobjs import EntityType, RelationDefinition, String, SubjectRelation
+from yams.buildobjs import (EntityType, RelationDefinition, String, SubjectRelation,
+                            ComputedRelation, Int)
 from cubicweb.schema import ERQLExpression
+
+
+class Person(EntityType):
+    name = String()
+
 
 class Affaire(EntityType):
     __permissions__ = {
@@ -82,3 +88,37 @@ class responsable(RelationDefinition):
     object = 'CWUser'
     inlined = True
     cardinality = '1*'
+
+class Contribution(EntityType):
+    code = Int()
+
+class ArtWork(EntityType):
+    name = String()
+
+class Role(EntityType):
+    name = String()
+
+class contributor(RelationDefinition):
+    subject = 'Contribution'
+    object = 'Person'
+    cardinality = '1*'
+    inlined = True
+
+class manifestation(RelationDefinition):
+    subject = 'Contribution'
+    object = 'ArtWork'
+
+class role(RelationDefinition):
+    subject = 'Contribution'
+    object = 'Role'
+
+class illustrator_of(ComputedRelation):
+    rule = ('C is Contribution, C contributor S, C manifestation O, '
+            'C role R, R name "illustrator"')
+
+class participated_in(ComputedRelation):
+    rule = 'S contributor O'
+
+class match(RelationDefinition):
+    subject = 'ArtWork'
+    object = 'Note'

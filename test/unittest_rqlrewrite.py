@@ -19,6 +19,7 @@
 from logilab.common.testlib import unittest_main, TestCase
 from logilab.common.testlib import mock_object
 from yams import BadSchemaDefinition
+from yams.buildobjs import RelationDefinition
 from rql import parse, nodes, RQLHelper
 
 from cubicweb import Unauthorized, rqlrewrite
@@ -31,10 +32,8 @@ def setUpModule(*args):
     config = TestServerConfiguration(RQLRewriteTC.datapath('rewrite'))
     config.bootstrap_cubes()
     schema = config.load_schema()
-    from yams.buildobjs import RelationDefinition
     schema.add_relation_def(RelationDefinition(subject='Card', name='in_state',
                                                object='State', cardinality='1*'))
-
     rqlhelper = RQLHelper(schema, special_relations={'eid': 'uid',
                                                      'has_text': 'fti'})
     repotest.do_monkey_patch()
@@ -49,11 +48,11 @@ def eid_func_map(eid):
             2: 'Card',
             3: 'Affaire'}[eid]
 
-def rewrite(rqlst, snippets_map, kwargs, existingvars=None):
+def _prepare_rewriter(rewriter_cls, kwargs):
     class FakeVReg:
         schema = schema
         @staticmethod
-        def solutions(sqlcursor, mainrqlst, kwargs):
+        def solutions(sqlcursor, rqlst, kwargs):
             rqlhelper.compute_solutions(rqlst, {'eid': eid_func_map}, kwargs=kwargs)
         class rqlhelper:
             @staticmethod
@@ -62,8 +61,10 @@ def rewrite(rqlst, snippets_map, kwargs, existingvars=None):
             @staticmethod
             def simplify(mainrqlst, needcopy=False):
                 rqlhelper.simplify(rqlst, needcopy)
-    rewriter = rqlrewrite.RQLRewriter(
-        mock_object(vreg=FakeVReg, user=(mock_object(eid=1))))
+    return rewriter_cls(mock_object(vreg=FakeVReg, user=(mock_object(eid=1))))
+
+def rewrite(rqlst, snippets_map, kwargs, existingvars=None):
+    rewriter = _prepare_rewriter(rqlrewrite.RQLRewriter, kwargs)
     snippets = []
     for v, exprs in sorted(snippets_map.items()):
         rqlexprs = [isinstance(snippet, basestring)
@@ -87,7 +88,7 @@ def test_vrefs(node):
         except KeyError:
             vrefmaps[stmt] = {vref.name: set( (vref,) )}
             selects.append(stmt)
-    assert node in selects
+    assert node in selects, (node, selects)
     for stmt in selects:
         for var in stmt.defined_vars.itervalues():
             assert var.stinfo['references']
@@ -590,6 +591,205 @@ class RewriteFullTC(CubicWebTC):
                                  union.as_string())
         finally:
             RQLRewriter.insert_snippets = orig_insert_snippets
+
+
+class RQLRelationRewriterTC(TestCase):
+    # XXX valid rules: S and O specified, not in a SET, INSERT, DELETE scope
+    #     valid uses: no outer join
+
+    # Basic tests
+    def test_base_rule(self):
+        rules = {'participated_in': 'S contributor O'}
+        rqlst = rqlhelper.parse('Any X WHERE X participated_in S')
+        rule_rewrite(rqlst, rules)
+        self.assertEqual('Any X WHERE X contributor S',
+                         rqlst.as_string())
+
+    def test_complex_rule_1(self):
+        rules = {'illustrator_of': ('C is Contribution, C contributor S, '
+                                    'C manifestation O, C role R, '
+                                    'R name "illustrator"')}
+        rqlst = rqlhelper.parse('Any A,B WHERE A illustrator_of B')
+        rule_rewrite(rqlst, rules)
+        self.assertEqual('Any A,B WHERE C is Contribution, '
+                         'C contributor A, C manifestation B, '
+                         'C role D, D name "illustrator"',
+                         rqlst.as_string())
+
+    def test_complex_rule_2(self):
+        rules = {'illustrator_of': ('C is Contribution, C contributor S, '
+                                    'C manifestation O, C role R, '
+                                    'R name "illustrator"')}
+        rqlst = rqlhelper.parse('Any A WHERE EXISTS(A illustrator_of B)')
+        rule_rewrite(rqlst, rules)
+        self.assertEqual('Any A WHERE EXISTS(C is Contribution, '
+                         'C contributor A, C manifestation B, '
+                         'C role D, D name "illustrator")',
+                         rqlst.as_string())
+
+
+    def test_rewrite2(self):
+        rules = {'illustrator_of': 'C is Contribution, C contributor S, '
+                'C manifestation O, C role R, R name "illustrator"'}
+        rqlst = rqlhelper.parse('Any A,B WHERE A illustrator_of B, C require_permission R, S'
+                                'require_state O')
+        rule_rewrite(rqlst, rules)
+        self.assertEqual('Any A,B WHERE C require_permission R, S require_state O, '
+                         'D is Contribution, D contributor A, D manifestation B, D role E, '
+                         'E name "illustrator"',
+                          rqlst.as_string())
+
+    def test_rewrite3(self):
+        rules = {'illustrator_of': 'C is Contribution, C contributor S, '
+                'C manifestation O, C role R, R name "illustrator"'}
+        rqlst = rqlhelper.parse('Any A,B WHERE E require_permission T, A illustrator_of B')
+        rule_rewrite(rqlst, rules)
+        self.assertEqual('Any A,B WHERE E require_permission T, '
+                         'C is Contribution, C contributor A, C manifestation B, '
+                         'C role D, D name "illustrator"',
+                         rqlst.as_string())
+
+    def test_rewrite4(self):
+        rules = {'illustrator_of': 'C is Contribution, C contributor S, '
+                'C manifestation O, C role R, R name "illustrator"'}
+        rqlst = rqlhelper.parse('Any A,B WHERE C require_permission R, A illustrator_of B')
+        rule_rewrite(rqlst, rules)
+        self.assertEqual('Any A,B WHERE C require_permission R, '
+                         'D is Contribution, D contributor A, D manifestation B, '
+                         'D role E, E name "illustrator"',
+                         rqlst.as_string())
+
+    def test_rewrite5(self):
+        rules = {'illustrator_of': 'C is Contribution, C contributor S, '
+                'C manifestation O, C role R, R name "illustrator"'}
+        rqlst = rqlhelper.parse('Any A,B WHERE C require_permission R, A illustrator_of B, '
+                                'S require_state O')
+        rule_rewrite(rqlst, rules)
+        self.assertEqual('Any A,B WHERE C require_permission R, S require_state O, '
+                         'D is Contribution, D contributor A, D manifestation B, D role E, '
+                         'E name "illustrator"',
+                         rqlst.as_string())
+
+    # Tests for the with clause
+    def test_rewrite_with(self):
+        rules = {'illustrator_of': 'C is Contribution, C contributor S, '
+                'C manifestation O, C role R, R name "illustrator"'}
+        rqlst = rqlhelper.parse('Any A,B WITH A, B BEING(Any X, Y WHERE X illustrator_of Y)')
+        rule_rewrite(rqlst, rules)
+        self.assertEqual('Any A,B WITH A,B BEING '
+                         '(Any X,Y WHERE A is Contribution, A contributor X, '
+                         'A manifestation Y, A role B, B name "illustrator")',
+                         rqlst.as_string())
+
+    def test_rewrite_with2(self):
+        rules = {'illustrator_of': 'C is Contribution, C contributor S, '
+                'C manifestation O, C role R, R name "illustrator"'}
+        rqlst = rqlhelper.parse('Any A,B WHERE T require_permission C WITH A, B BEING(Any X, Y WHERE X illustrator_of Y)')
+        rule_rewrite(rqlst, rules)
+        self.assertEqual('Any A,B WHERE T require_permission C '
+                         'WITH A,B BEING (Any X,Y WHERE A is Contribution, '
+                         'A contributor X, A manifestation Y, A role B, B name "illustrator")',
+                         rqlst.as_string())
+
+    def test_rewrite_with3(self):
+        rules = {'participated_in': 'S contributor O'}
+        rqlst = rqlhelper.parse('Any A,B WHERE A participated_in B '
+                                'WITH A, B BEING(Any X,Y WHERE X contributor Y)')
+        rule_rewrite(rqlst, rules)
+        self.assertEqual('Any A,B WHERE A contributor B WITH A,B BEING '
+                         '(Any X,Y WHERE X contributor Y)', 
+                         rqlst.as_string())
+
+    def test_rewrite_with4(self):
+        rules = {'illustrator_of': 'C is Contribution, C contributor S, '
+                'C manifestation O, C role R, R name "illustrator"'}
+        rqlst = rqlhelper.parse('Any A,B WHERE A illustrator_of B '
+                               'WITH A, B BEING(Any X, Y WHERE X illustrator_of Y)')
+        rule_rewrite(rqlst, rules)
+        self.assertEqual('Any A,B WHERE C is Contribution, '
+                         'C contributor A, C manifestation B, C role D, '
+                         'D name "illustrator" WITH A,B BEING '
+                         '(Any X,Y WHERE A is Contribution, A contributor X, '
+                         'A manifestation Y, A role B, B name "illustrator")',
+                          rqlst.as_string()) 
+
+    # Tests for the union
+    def test_rewrite_union(self):
+        rules = {'illustrator_of': 'C is Contribution, C contributor S, '
+                'C manifestation O, C role R, R name "illustrator"'}
+        rqlst = rqlhelper.parse('(Any A,B WHERE A illustrator_of B) UNION'
+                                '(Any X,Y WHERE X is CWUser, Z manifestation Y)')
+        rule_rewrite(rqlst, rules)
+        self.assertEqual('(Any A,B WHERE C is Contribution, '
+                         'C contributor A, C manifestation B, C role D, '
+                         'D name "illustrator") UNION (Any X,Y WHERE X is CWUser, Z manifestation Y)',
+                         rqlst.as_string())
+
+    def test_rewrite_union2(self):
+        rules = {'illustrator_of': 'C is Contribution, C contributor S, '
+                'C manifestation O, C role R, R name "illustrator"'}
+        rqlst = rqlhelper.parse('(Any Y WHERE Y match W) UNION '
+                                '(Any A WHERE A illustrator_of B) UNION '
+                                '(Any Y WHERE Y is ArtWork)')
+        rule_rewrite(rqlst, rules)
+        self.assertEqual('(Any Y WHERE Y match W) '
+                         'UNION (Any A WHERE C is Contribution, C contributor A, '
+                         'C manifestation B, C role D, D name "illustrator") '
+                         'UNION (Any Y WHERE Y is ArtWork)',
+                         rqlst.as_string())
+
+    # Tests for the exists clause
+    def test_rewrite_exists(self):
+        rules = {'illustrator_of': 'C is Contribution, C contributor S, '
+                'C manifestation O, C role R, R name "illustrator"'}
+        rqlst = rqlhelper.parse('(Any A,B WHERE A illustrator_of B, '
+                     'EXISTS(B is ArtWork))')
+        rule_rewrite(rqlst, rules)
+        self.assertEqual('Any A,B WHERE EXISTS(B is ArtWork), '
+                         'C is Contribution, C contributor A, C manifestation B, C role D, '
+                         'D name "illustrator"',
+                         rqlst.as_string())
+
+    def test_rewrite_exists2(self):
+        rules = {'illustrator_of': 'C is Contribution, C contributor S, '
+                'C manifestation O, C role R, R name "illustrator"'}
+        rqlst = rqlhelper.parse('(Any A,B WHERE B contributor A, EXISTS(A illustrator_of W))')
+        rule_rewrite(rqlst, rules)
+        self.assertEqual('Any A,B WHERE B contributor A, '
+                         'EXISTS(C is Contribution, C contributor A, C manifestation W, '
+                         'C role D, D name "illustrator")',
+                         rqlst.as_string())
+
+    def test_rewrite_exists3(self):
+        rules = {'illustrator_of': 'C is Contribution, C contributor S, '
+                'C manifestation O, C role R, R name "illustrator"'}
+        rqlst = rqlhelper.parse('(Any A,B WHERE A illustrator_of B, EXISTS(A illustrator_of W))')
+        rule_rewrite(rqlst, rules)
+        self.assertEqual('Any A,B WHERE EXISTS(C is Contribution, C contributor A, '
+                         'C manifestation W, C role D, D name "illustrator"), '
+                         'E is Contribution, E contributor A, E manifestation B, E role F, '
+                         'F name "illustrator"',
+                         rqlst.as_string())
+
+    # Test for GROUPBY
+    def test_rewrite_groupby(self):
+        rules = {'participated_in': 'S contributor O'}
+        rqlst = rqlhelper.parse('Any SUM(SA) GROUPBY S WHERE P participated_in S, P manifestation SA')
+        rule_rewrite(rqlst, rules)
+        self.assertEqual('Any SUM(SA) GROUPBY S WHERE P manifestation SA, P contributor S',
+                         rqlst.as_string())
+
+
+
+def rule_rewrite(rqlst, kwargs=None):
+    rewriter = _prepare_rewriter(rqlrewrite.RQLRelationRewriter, kwargs)
+    rqlhelper.compute_solutions(rqlst.children[0], {'eid': eid_func_map},
+                                kwargs=kwargs)
+    rewriter.rewrite(rqlst)
+    for select in rqlst.children:
+        test_vrefs(select)
+    return rewriter.rewritten
+
 
 if __name__ == '__main__':
     unittest_main()
