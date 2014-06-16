@@ -114,6 +114,7 @@ def deserialize_schema(schema, cnx):
     copiedeids = set()
     permsidx = deserialize_ertype_permissions(cnx)
     schema.reading_from_database = True
+    # load every entity types
     for eid, etype, desc in cnx.execute(
         'Any X, N, D WHERE X is CWEType, X name N, X description D',
         build_descr=False):
@@ -162,6 +163,7 @@ def deserialize_schema(schema, cnx):
         eschema = schema.add_entity_type(
             ybo.EntityType(name=etype, description=desc, eid=eid))
         set_perms(eschema, permsidx)
+    # load inheritance relations
     for etype, stype in cnx.execute(
         'Any XN, ETN WHERE X is CWEType, X name XN, X specializes ET, ET name ETN',
         build_descr=False):
@@ -169,6 +171,7 @@ def deserialize_schema(schema, cnx):
         stype = ETYPE_NAME_MAP.get(stype, stype)
         schema.eschema(etype)._specialized_type = stype
         schema.eschema(stype)._specialized_by.append(etype)
+    # load every relation types
     for eid, rtype, desc, sym, il, ftc in cnx.execute(
         'Any X,N,D,S,I,FTC WHERE X is CWRType, X name N, X description D, '
         'X symmetric S, X inlined I, X fulltext_container FTC', build_descr=False):
@@ -177,6 +180,7 @@ def deserialize_schema(schema, cnx):
             ybo.RelationType(name=rtype, description=desc,
                              symmetric=bool(sym), inlined=bool(il),
                              fulltext_container=ftc, eid=eid))
+    # remains to load every relation definitions (ie relations and attributes)
     cstrsidx = deserialize_rdef_constraints(cnx)
     pendingrdefs = []
     # closure to factorize common code of attribute/relation rdef addition
@@ -207,10 +211,10 @@ def deserialize_schema(schema, cnx):
     # Get the type parameters for additional base types.
     try:
         extra_props = dict(cnx.execute('Any X, XTP WHERE X is CWAttribute, '
-                                           'X extra_props XTP'))
+                                       'X extra_props XTP'))
     except Exception:
         cnx.critical('Previous CRITICAL notification about extra_props is not '
-                         'a problem if you are migrating to cubicweb 3.17')
+                     'a problem if you are migrating to cubicweb 3.17')
         extra_props = {} # not yet in the schema (introduced by 3.17 migration)
     for values in cnx.execute(
         'Any X,SE,RT,OE,CARD,ORD,DESC,IDX,FTIDX,I18N,DFLT WHERE X is CWAttribute,'
