@@ -90,6 +90,7 @@ class CWAttribute(EntityType):
                          description=_('subject/object cardinality'))
     ordernum = Int(description=('control subject entity\'s relations order'), default=0)
 
+    formula = String(maxsize=2048)
     indexed = Boolean(description=_('create an index for quick search on this attribute'))
     fulltextindexed = Boolean(description=_('index this attribute\'s value in the plain text index'))
     internationalizable = Boolean(description=_('is this attribute\'s value translatable'))

@@ -193,7 +193,7 @@ class SchemaReaderClassTest(TestCase):
 
                               'ecrit_par', 'eid', 'end_timestamp', 'evaluee', 'expression', 'exprtype', 'extra_props',
 
-                              'fabrique_par', 'final', 'firstname', 'for_user', 'fournit',
+                              'fabrique_par', 'final', 'firstname', 'for_user', 'formula', 'fournit',
                               'from_entity', 'from_state', 'fulltext_container', 'fulltextindexed',
 
                               'has_group_permission', 'has_text',

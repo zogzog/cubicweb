@@ -448,6 +448,7 @@ class CWAttributeAddOp(MemSchemaOperation):
             default = default.unzpickle()
         props = {'default': default,
                  'indexed': entity.indexed,
+                 'formula': entity.formula,
                  'fulltextindexed': entity.fulltextindexed,
                  'internationalizable': entity.internationalizable}
         # update the in-memory schema first

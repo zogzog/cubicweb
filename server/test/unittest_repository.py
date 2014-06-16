@@ -280,7 +280,7 @@ class RepositoryTC(CubicWebTC):
         self.assertListEqual(['relation_type',
                               'from_entity', 'to_entity',
                               'constrained_by',
-                              'cardinality', 'ordernum',
+                              'cardinality', 'ordernum', 'formula',
                               'indexed', 'fulltextindexed', 'internationalizable',
                               'defaultval', 'extra_props',
                               'description', 'description_format'],
