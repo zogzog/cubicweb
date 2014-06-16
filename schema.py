@@ -154,6 +154,7 @@ class RQLExpression(object):
     # to be defined in concrete classes
     rqlst = None
     predefined_variables = None
+    full_rql = None
 
     def __init__(self, expression, mainvars, eid):
         """
