@@ -89,8 +89,6 @@ class CubicWebServerTC(CubicWebTC):
     * `anonymous_allowed`: flag telling if anonymous browsing should be allowed
     """
     configcls = CubicWebServerConfig
-    # anonymous is logged by default in cubicweb test cases
-    anonymous_allowed = True
 
     def start_server(self):
         # use a semaphore to avoid starting test while the http server isn't
@@ -185,8 +183,3 @@ class CubicWebServerTC(CubicWebTC):
             # Server could be launched manually
             print err
         super(CubicWebServerTC, self).tearDown()
-
-    @classmethod
-    def init_config(cls, config):
-        config.set_anonymous_allowed(cls.anonymous_allowed)
-        super(CubicWebServerTC, cls).init_config(config)

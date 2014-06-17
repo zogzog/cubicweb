@@ -297,6 +297,9 @@ class CubicWebTC(TestCase):
     _cnxs = set() # establised connection
                   # stay on connection for leak detection purpose
 
+    # anonymous is logged by default in cubicweb test cases
+    anonymous_allowed = True
+
     def __init__(self, *args, **kwargs):
         self._admin_session = None
         self._admin_clt_cnx = None
@@ -532,6 +535,7 @@ class CubicWebTC(TestCase):
             config.global_set_option('embed-allowed', re.compile('.*'))
         except Exception: # not in server only configuration
             pass
+        config.set_anonymous_allowed(cls.anonymous_allowed)
 
     @property
     def vreg(self):
