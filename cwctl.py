@@ -835,6 +835,8 @@ class ListVersionsInstanceCommand(InstanceCommand):
         config = cwcfg.config_for(appid)
         # should not raise error if db versions don't match fs versions
         config.repairing = True
+        # no need to load all appobjects and schema
+        config.quick_start = True
         if hasattr(config, 'set_sources_mode'):
             config.set_sources_mode(('migration',))
         repo = config.migration_handler().repo_connect()
