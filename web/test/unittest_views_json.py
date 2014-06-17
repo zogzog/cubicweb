@@ -70,6 +70,11 @@ class JsonViewsTC(CubicWebTC):
             self.assertEqual(data[0]['name'], 'guests')
             self.assertEqual(data[1]['name'], 'managers')
 
+            rset = req.execute('Any G WHERE G is CWGroup, G name "foo"')
+            data = self.view('ejsonexport', rset, req=req)
+            self.assertEqual(req.headers_out.getRawHeaders('content-type'), ['application/json'])
+            self.assertEqual(data, [])
+
 
 class NotAnonymousJsonViewsTC(JsonViewsTC):
     anonymize = False

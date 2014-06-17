@@ -21,7 +21,7 @@ __docformat__ = "restructuredtext en"
 _ = unicode
 
 from cubicweb.utils import json_dumps
-from cubicweb.predicates import any_rset
+from cubicweb.predicates import any_rset, empty_rset
 from cubicweb.view import EntityView, AnyRsetView
 from cubicweb.web.application import anonymized_request
 from cubicweb.web.views import basecontrollers
@@ -106,6 +106,7 @@ class JsonEntityView(JsonMixIn, EntityView):
     - ``__cwetype__`` : entity type
     """
     __regid__ = 'ejsonexport'
+    __select__ = EntityView.__select__ | empty_rset()
     title = _('json-entities-export-view')
 
     def call(self):

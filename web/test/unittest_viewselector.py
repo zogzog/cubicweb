@@ -110,6 +110,7 @@ class VRegistryTC(ViewSelectorTC):
             self.assertListEqual(self.pviews(req, rset),
                     [('csvexport', csvexport.CSVRsetView),
                      ('ecsvexport', csvexport.CSVEntityView),
+                     ('ejsonexport', json.JsonEntityView),
                      ('jsonexport', json.JsonRsetView),
                      ])
 
