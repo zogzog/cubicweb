@@ -20,6 +20,7 @@
 from logilab.common.testlib import unittest_main, tag, Tags
 from cubicweb.devtools.testlib import CubicWebTC
 
+from glob import glob
 import os
 import os.path as osp
 import shutil
@@ -88,16 +89,21 @@ class StorageTC(CubicWebTC):
     def test_bfss_storage(self):
         with self.admin_access.repo_cnx() as cnx:
             f1 = self.create_file(cnx)
-            expected_filepath = osp.join(self.tempdir, '%s_data_%s' %
-                                         (f1.eid, f1.data_name))
-            self.assertTrue(osp.isfile(expected_filepath))
+            filepaths = glob(osp.join(self.tempdir, '%s_data_*' % f1.eid))
+            self.assertEqual(len(filepaths), 1, filepaths)
+            expected_filepath = filepaths[0]
             # file should be read only
             self.assertFalse(os.access(expected_filepath, os.W_OK))
             self.assertEqual(file(expected_filepath).read(), 'the-data')
             cnx.rollback()
             self.assertFalse(osp.isfile(expected_filepath))
+            filepaths = glob(osp.join(self.tempdir, '%s_data_*' % f1.eid))
+            self.assertEqual(len(filepaths), 0, filepaths)
             f1 = self.create_file(cnx)
             cnx.commit()
+            filepaths = glob(osp.join(self.tempdir, '%s_data_*' % f1.eid))
+            self.assertEqual(len(filepaths), 1, filepaths)
+            expected_filepath = filepaths[0]
             self.assertEqual(file(expected_filepath).read(), 'the-data')
             f1.cw_set(data=Binary('the new data'))
             cnx.rollback()
@@ -114,7 +120,9 @@ class StorageTC(CubicWebTC):
         with self.admin_access.repo_cnx() as cnx:
             f1 = self.create_file(cnx)
             expected_filepath = osp.join(self.tempdir, '%s_data_%s' % (f1.eid, f1.data_name))
-            self.assertEqual(self.fspath(cnx, f1), expected_filepath)
+            base, ext = osp.splitext(expected_filepath)
+            self.assertTrue(self.fspath(cnx, f1).startswith(base))
+            self.assertTrue(self.fspath(cnx, f1).endswith(ext))
 
     def test_bfss_fs_importing_doesnt_touch_path(self):
         with self.admin_access.repo_cnx() as cnx:

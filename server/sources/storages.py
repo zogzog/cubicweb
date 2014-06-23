@@ -21,6 +21,7 @@ import os
 import sys
 from os import unlink, path as osp
 from contextlib import contextmanager
+import tempfile
 
 from yams.schema import role_name
 
@@ -84,20 +85,11 @@ class Storage(object):
 # * handle backup/restore
 
 def uniquify_path(dirpath, basename):
-    """return a unique file name for `basename` in `dirpath`, or None
-    if all attemps failed.
-
-    XXX subject to race condition.
+    """return a file descriptor and unique file name for `basename` in `dirpath`
     """
-    path = osp.join(dirpath, basename.replace(osp.sep, '-'))
-    if not osp.isfile(path):
-        return path
+    path = basename.replace(osp.sep, '-')
     base, ext = osp.splitext(path)
-    for i in xrange(1, 256):
-        path = '%s%s%s' % (base, i, ext)
-        if not osp.isfile(path):
-            return path
-    return None
+    return tempfile.mkstemp(prefix=base, suffix=ext, dir=dirpath)
 
 @contextmanager
 def fsimport(session):
@@ -122,16 +114,13 @@ class BytesFileSystemStorage(Storage):
         # 0444 as in "only allow read bit in permission"
         self._wmode = wmode
 
-    def _writecontent(self, path, binary):
+    def _writecontent(self, fd, binary):
         """write the content of a binary in readonly file
 
-        As the bfss never alter a create file it does not prevent it to work as
-        intended. This is a beter safe than sorry approach.
+        As the bfss never alters an existing file it does not prevent it from
+        working as intended. This is a better safe than sorry approach.
         """
-        write_flag = os.O_WRONLY | os.O_CREAT | os.O_EXCL
-        if sys.platform == 'win32':
-            write_flag |= os.O_BINARY
-        fd = os.open(path, write_flag, self._wmode)
+        os.fchmod(fd, self._wmode)
         fileobj = os.fdopen(fd, 'wb')
         binary.to_file(fileobj)
         fileobj.close()
@@ -155,10 +144,10 @@ class BytesFileSystemStorage(Storage):
             entity._cw_dont_cache_attribute(attr, repo_side=True)
         else:
             binary = entity.cw_edited.pop(attr)
-            fpath = self.new_fs_path(entity, attr)
+            fd, fpath = self.new_fs_path(entity, attr)
             # bytes storage used to store file's path
             entity.cw_edited.edited_attribute(attr, Binary(fpath))
-            self._writecontent(fpath, binary)
+            self._writecontent(fd, binary)
             AddFileOp.get_instance(entity._cw).add_data(fpath)
         return binary
 
@@ -189,10 +178,9 @@ class BytesFileSystemStorage(Storage):
                 fpath = None
             else:
                 # Get filename for it
-                fpath = self.new_fs_path(entity, attr)
-                assert not osp.exists(fpath)
+                fd, fpath = self.new_fs_path(entity, attr)
                 # write attribute value on disk
-                self._writecontent(fpath, binary)
+                self._writecontent(fd, binary)
                 # Mark the new file as added during the transaction.
                 # The file will be removed on rollback
                 AddFileOp.get_instance(entity._cw).add_data(fpath)
@@ -224,13 +212,13 @@ class BytesFileSystemStorage(Storage):
         name = entity.cw_attr_metadata(attr, 'name')
         if name is not None:
             basename.append(name.encode(self.fsencoding))
-        fspath = uniquify_path(self.default_directory,
+        fd, fspath = uniquify_path(self.default_directory,
                                '_'.join(basename))
         if fspath is None:
             msg = entity._cw._('failed to uniquify path (%s, %s)') % (
                 self.default_directory, '_'.join(basename))
             raise ValidationError(entity.eid, {role_name(attr, 'subject'): msg})
-        return fspath
+        return fd, fspath
 
     def current_fs_path(self, entity, attr):
         """return the current fs_path of the attribute, or None is the attr is
