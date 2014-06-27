@@ -117,7 +117,7 @@ class CWSourceMappingTab(EntityView):
             'Any X, SCH, XO ORDERBY ET WHERE X options XO, X cw_for_source S, S eid %(s)s, '
             'X cw_schema SCH, SCH is ET', {'s': entity.eid})
         self.wview('table', rset, 'noresult')
-        checker = MAPPING_CHECKERS.get(entity.type, MappingChecker)(entity)
+        checker = MappingChecker(entity)
         checker.check()
         if (checker.errors or checker.warnings or checker.infos):
             self.w('<h2>%s</h2>' % _('Detected problems'))

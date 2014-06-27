@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -123,32 +123,37 @@ class NotificationView(EntityView):
                 emailaddr = something.cw_adapt_to('IEmailable').get_email()
                 user = something
             # hi-jack self._cw to get a session for the returned user
-            self._cw = Session(user, self._cw.repo)
-            try:
-                self._cw.set_cnxset()
-                # since the same view (eg self) may be called multiple time and we
-                # need a fresh stream at each iteration, reset it explicitly
-                self.w = None
-                # XXX call render before subject to set .row/.col attributes on the
-                #     view
+            session = Session(user, self._cw.repo)
+            with session.new_cnx() as cnx:
+                self._cw = cnx
                 try:
-                    content = self.render(row=0, col=0, **kwargs)
-                    subject = self.subject()
-                except SkipEmail:
-                    continue
-                except Exception as ex:
-                    # shouldn't make the whole transaction fail because of rendering
-                    # error (unauthorized or such) XXX check it doesn't actually
-                    # occurs due to rollback on such error
-                    self.exception(str(ex))
-                    continue
-                msg = format_mail(self.user_data, [emailaddr], content, subject,
-                                  config=self._cw.vreg.config, msgid=msgid, references=refs)
-                yield [emailaddr], msg
-            finally:
-                self._cw.commit()
-                self._cw.close()
-                self._cw = req
+                    # since the same view (eg self) may be called multiple time and we
+                    # need a fresh stream at each iteration, reset it explicitly
+                    self.w = None
+                    try:
+                        # XXX forcing the row & col here may make the content and
+                        #     subject inconsistent because subject will depend on
+                        #     self.cw_row & self.cw_col if they are set.
+                        content = self.render(row=0, col=0, **kwargs)
+                        subject = self.subject()
+                    except SkipEmail:
+                        continue
+                    except Exception as ex:
+                        # shouldn't make the whole transaction fail because of rendering
+                        # error (unauthorized or such) XXX check it doesn't actually
+                        # occurs due to rollback on such error
+                        self.exception(str(ex))
+                        continue
+                    msg = format_mail(self.user_data, [emailaddr], content, subject,
+                                      config=self._cw.vreg.config, msgid=msgid, references=refs)
+                    yield [emailaddr], msg
+                finally:
+                    # ensure we have a cnxset since commit will fail if there is
+                    # some operation but no cnxset. This may occurs in this very
+                    # specific case (eg SendMailOp)
+                    with cnx.ensure_cnx_set:
+                        cnx.commit()
+                    self._cw = req
 
     # recipients / email sending ###############################################
 

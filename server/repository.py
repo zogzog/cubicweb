@@ -652,7 +652,7 @@ class Repository(object):
             return rset.rows
 
     def connect(self, login, **kwargs):
-        """open a connection for a given user
+        """open a session for a given user
 
         raise `AuthenticationError` if the authentication failed
         raise `ConnectionError` if we can't open a connection
@@ -684,7 +684,7 @@ class Repository(object):
                 txid=None):
         """execute a RQL query
 
-        * rqlstring should be an unicode string or a plain ascii string
+        * rqlstring should be a unicode string or a plain ascii string
         * args the optional parameters used in the query
         * build_descr is a flag indicating if the description should be
           built on select queries
@@ -746,6 +746,7 @@ class Repository(object):
         """
         return self._get_session(sessionid, setcnxset=False).timestamp
 
+    @deprecated('[3.19] use session or transaction data')
     def get_shared_data(self, sessionid, key, default=None, pop=False, txdata=False):
         """return value associated to key in the session's data dictionary or
         session's transaction's data if `txdata` is true.
@@ -758,6 +759,7 @@ class Repository(object):
         session = self._get_session(sessionid, setcnxset=False)
         return session.get_shared_data(key, default, pop, txdata)
 
+    @deprecated('[3.19] use session or transaction data')
     def set_shared_data(self, sessionid, key, value, txdata=False):
         """set value associated to `key` in shared data
 
@@ -909,23 +911,17 @@ class Repository(object):
 
     @contextmanager
     def internal_cnx(self):
-        """return a Connection using internal user which have
-        every rights on the repository. The `safe` argument is dropped. all
-        hook are enabled by default.
+        """Context manager returning a Connection using internal user which have
+        every access rights on the repository.
 
-        /!\ IN OPPOSITE OF THE OLDER INTERNAL_SESSION,
-        /!\ INTERNAL CONNECTION HAVE ALL HOOKS ENABLED.
-
-        This is to be used a context manager.
+        Beware that unlike the older :meth:`internal_session`, internal
+        connections have all hooks beside security enabled.
         """
         with InternalSession(self) as session:
             with session.new_cnx() as cnx:
-                # equivalent to cnx.security_enabled(False, False) because
-                # InternalSession gives full read access
-                with cnx.allow_all_hooks_but('security'):
+                with cnx.security_enabled(read=False, write=False):
                     with cnx.ensure_cnx_set:
                         yield cnx
-
 
     def _get_session(self, sessionid, setcnxset=False, txid=None,
                      checkshuttingdown=True):
@@ -945,7 +941,7 @@ class Repository(object):
     # * correspondance between eid and (type, source)
     # * correspondance between eid and local id (i.e. specific to a given source)
 
-    def type_and_source_from_eid(self, eid, session):
+    def type_and_source_from_eid(self, eid, cnx):
         """return a tuple `(type, extid, actual source uri)` for the entity of
         the given `eid`
         """
@@ -956,8 +952,7 @@ class Repository(object):
         try:
             return self._type_source_cache[eid]
         except KeyError:
-            etype, extid, auri = self.system_source.eid_type_source(session,
-                                                                    eid)
+            etype, extid, auri = self.system_source.eid_type_source(cnx, eid)
             self._type_source_cache[eid] = (etype, extid, auri)
             return etype, extid, auri
 
@@ -975,9 +970,9 @@ class Repository(object):
             rqlcache.pop( ('Any X WHERE X eid %s' % eid,), None)
             self.system_source.clear_eid_cache(eid, etype)
 
-    def type_from_eid(self, eid, session):
+    def type_from_eid(self, eid, cnx):
         """return the type of the entity with id <eid>"""
-        return self.type_and_source_from_eid(eid, session)[0]
+        return self.type_and_source_from_eid(eid, cnx)[0]
 
     def querier_cache_key(self, session, rql, args, eidkeys):
         cachekey = [rql]
@@ -1027,7 +1022,8 @@ class Repository(object):
             cnx = cnx._cnx
         except AttributeError:
             pass
-        eid = self.system_source.extid2eid(cnx, extid)
+        with cnx.ensure_cnx_set:
+            eid = self.system_source.extid2eid(cnx, extid)
         if eid is not None:
             self._extid_cache[extid] = eid
             self._type_source_cache[eid] = (etype, extid, source.uri)
@@ -1035,33 +1031,37 @@ class Repository(object):
         if not insert:
             return
         # no link between extid and eid, create one
-        try:
-            eid = self.system_source.create_eid(cnx)
-            self._extid_cache[extid] = eid
-            self._type_source_cache[eid] = (etype, extid, source.uri)
-            entity = source.before_entity_insertion(
-                cnx, extid, etype, eid, sourceparams)
-            if source.should_call_hooks:
-                # get back a copy of operation for later restore if necessary,
-                # see below
-                pending_operations = cnx.pending_operations[:]
-                self.hm.call_hooks('before_add_entity', cnx, entity=entity)
-            self.add_info(cnx, entity, source, extid)
-            source.after_entity_insertion(cnx, extid, entity, sourceparams)
-            if source.should_call_hooks:
-                self.hm.call_hooks('after_add_entity', cnx, entity=entity)
-            return eid
-        except Exception:
-            # XXX do some cleanup manually so that the transaction has a
-            # chance to be commited, with simply this entity discarded
-            self._extid_cache.pop(extid, None)
-            self._type_source_cache.pop(eid, None)
-            if 'entity' in locals():
-                hook.CleanupDeletedEidsCacheOp.get_instance(cnx).add_data(entity.eid)
-                self.system_source.delete_info_multi(cnx, [entity])
+        with cnx.ensure_cnx_set:
+            # write query, ensure connection's mode is 'write' so connections
+            # won't be released until commit/rollback
+            cnx.mode = 'write'
+            try:
+                eid = self.system_source.create_eid(cnx)
+                self._extid_cache[extid] = eid
+                self._type_source_cache[eid] = (etype, extid, source.uri)
+                entity = source.before_entity_insertion(
+                    cnx, extid, etype, eid, sourceparams)
                 if source.should_call_hooks:
-                    cnx.pending_operations = pending_operations
-            raise
+                    # get back a copy of operation for later restore if
+                    # necessary, see below
+                    pending_operations = cnx.pending_operations[:]
+                    self.hm.call_hooks('before_add_entity', cnx, entity=entity)
+                self.add_info(cnx, entity, source, extid)
+                source.after_entity_insertion(cnx, extid, entity, sourceparams)
+                if source.should_call_hooks:
+                    self.hm.call_hooks('after_add_entity', cnx, entity=entity)
+                return eid
+            except Exception:
+                # XXX do some cleanup manually so that the transaction has a
+                # chance to be commited, with simply this entity discarded
+                self._extid_cache.pop(extid, None)
+                self._type_source_cache.pop(eid, None)
+                if 'entity' in locals():
+                    hook.CleanupDeletedEidsCacheOp.get_instance(cnx).add_data(entity.eid)
+                    self.system_source.delete_info_multi(cnx, [entity])
+                    if source.should_call_hooks:
+                        cnx.pending_operations = pending_operations
+                raise
 
     def add_info(self, session, entity, source, extid=None):
         """add type and source info for an eid into the system table,
@@ -1263,11 +1263,7 @@ class Repository(object):
                     if relcache is not None:
                         cnx.update_rel_cache_del(entity.eid, attr, prevvalue)
                 del_existing_rel_if_needed(cnx, entity.eid, attr, value)
-                if relcache is not None:
-                    cnx.update_rel_cache_add(entity.eid, attr, value)
-                else:
-                    entity.cw_set_relation_cache(attr, 'subject',
-                                                 cnx.eid_rset(value))
+                cnx.update_rel_cache_add(entity.eid, attr, value)
                 hm.call_hooks('after_add_relation', cnx,
                               eidfrom=entity.eid, rtype=attr, eidto=value)
         finally:

@@ -118,7 +118,7 @@ def connect(database, login=None,
 
     * a simple instance id for in-memory connection
 
-    * an uri like scheme://host:port/instanceid where scheme may be one of
+    * a uri like scheme://host:port/instanceid where scheme may be one of
       'pyro', 'inmemory' or 'zmqpickle'
 
       * if scheme is 'pyro', <host:port> determine the name server address. If
@@ -343,10 +343,12 @@ class DBAPIRequest(RequestSessionBase):
 
     # low level session data management #######################################
 
+    @deprecated('[3.19] use session or transaction data')
     def get_shared_data(self, key, default=None, pop=False, txdata=False):
         """see :meth:`Connection.get_shared_data`"""
         return self.cnx.get_shared_data(key, default, pop, txdata)
 
+    @deprecated('[3.19] use session or transaction data')
     def set_shared_data(self, key, value, txdata=False, querydata=None):
         """see :meth:`Connection.set_shared_data`"""
         if querydata is not None:
@@ -409,7 +411,7 @@ class Cursor(object):
         """execute a rql query, return resulting rows and their description in
         a :class:`~cubicweb.rset.ResultSet` object
 
-        * `rql` should be an Unicode string or a plain ASCII string, containing
+        * `rql` should be a Unicode string or a plain ASCII string, containing
           the rql query
 
         * `args` the optional args dictionary associated to the query, with key

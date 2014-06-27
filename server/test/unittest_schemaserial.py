@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -25,6 +25,10 @@ from logilab.common.testlib import TestCase, unittest_main
 from cubicweb import Binary
 from cubicweb.schema import CubicWebSchemaLoader
 from cubicweb.devtools import TestServerConfiguration
+
+from cubicweb.server.schemaserial import (updateeschema2rql, updaterschema2rql, rschema2rql,
+                                          eschema2rql, rdef2rql, specialize2rql,
+                                          _erperms2rql as erperms2rql)
 
 from logilab.database import get_db_helper
 from yams import register_base_type, unregister_base_type
@@ -53,9 +57,6 @@ def tearDownModule(*args):
     helper.TYPE_MAPPING.pop('BabarTestType', None)
     helper.TYPE_CONVERTERS.pop('BabarTestType', None)
 
-from cubicweb.server.schemaserial import *
-from cubicweb.server.schemaserial import _erperms2rql as erperms2rql
-
 cstrtypemap = {'RQLConstraint': 'RQLConstraint_eid',
                'SizeConstraint': 'SizeConstraint_eid',
                'StaticVocabularyConstraint': 'StaticVocabularyConstraint_eid',
@@ -67,7 +68,9 @@ class Schema2RQLTC(TestCase):
     def test_eschema2rql1(self):
         self.assertListEqual([
             ('INSERT CWEType X: X description %(description)s,X final %(final)s,X name %(name)s',
-             {'description': u'define a final relation: link a final relation type from a non final entity to a final entity type. used to build the instance schema',
+             {'description': u'define a final relation: '
+              'link a final relation type from a non final entity '
+              'to a final entity type. used to build the instance schema',
               'name': u'CWAttribute', 'final': False})],
                              list(eschema2rql(schema.eschema('CWAttribute'))))
 
@@ -86,7 +89,8 @@ class Schema2RQLTC(TestCase):
                              sorted(specialize2rql(schema)))
 
     def test_esche2rql_custom_type(self):
-        expected = [('INSERT CWEType X: X description %(description)s,X final %(final)s,X name %(name)s',
+        expected = [('INSERT CWEType X: X description %(description)s,X final %(final)s,'
+                     'X name %(name)s',
                      {'description': u'',
                      'name': u'BabarTestType', 'final': True},)]
         got = list(eschema2rql(schema.eschema('BabarTestType')))
@@ -94,69 +98,180 @@ class Schema2RQLTC(TestCase):
 
     def test_rschema2rql1(self):
         self.assertListEqual([
-            ('INSERT CWRType X: X description %(description)s,X final %(final)s,X fulltext_container %(fulltext_container)s,X inlined %(inlined)s,X name %(name)s,X symmetric %(symmetric)s',
-             {'description': u'link a relation definition to its relation type', 'symmetric': False, 'name': u'relation_type', 'final' : False, 'fulltext_container': None, 'inlined': True}),
+            ('INSERT CWRType X: X description %(description)s,X final %(final)s,'
+             'X fulltext_container %(fulltext_container)s,X inlined %(inlined)s,'
+             'X name %(name)s,X symmetric %(symmetric)s',
+             {'description': u'link a relation definition to its relation type',
+              'symmetric': False,
+              'name': u'relation_type',
+              'final' : False,
+              'fulltext_container': None,
+              'inlined': True}),
 
-            ('INSERT CWRelation X: X cardinality %(cardinality)s,X composite %(composite)s,X description %(description)s,X ordernum %(ordernum)s,X relation_type ER,X from_entity SE,X to_entity OE WHERE SE eid %(se)s,ER eid %(rt)s,OE eid %(oe)s',
+            ('INSERT CWRelation X: X cardinality %(cardinality)s,X composite %(composite)s,'
+             'X description %(description)s,X ordernum %(ordernum)s,X relation_type ER,'
+             'X from_entity SE,X to_entity OE WHERE SE eid %(se)s,ER eid %(rt)s,OE eid %(oe)s',
              {'se': None, 'rt': None, 'oe': None,
-              'description': u'', 'composite': u'object', 'cardinality': u'1*',
+              'description': u'',
+              'composite': u'object',
+              'cardinality': u'1*',
               'ordernum': 1}),
-            ('INSERT CWConstraint X: X value %(value)s, X cstrtype CT, EDEF constrained_by X WHERE CT eid %(ct)s, EDEF eid %(x)s',
-             {'x': None, 'ct': u'RQLConstraint_eid', 'value': u';O;O final TRUE\n'}),
+            ('INSERT CWConstraint X: X value %(value)s, X cstrtype CT, EDEF constrained_by X '
+             'WHERE CT eid %(ct)s, EDEF eid %(x)s',
+             {'x': None, 'ct': u'RQLConstraint_eid',
+              'value': u';O;O final TRUE\n'}),
 
-            ('INSERT CWRelation X: X cardinality %(cardinality)s,X composite %(composite)s,X description %(description)s,X ordernum %(ordernum)s,X relation_type ER,X from_entity SE,X to_entity OE WHERE SE eid %(se)s,ER eid %(rt)s,OE eid %(oe)s',
+            ('INSERT CWRelation X: X cardinality %(cardinality)s,X composite %(composite)s,'
+             'X description %(description)s,X ordernum %(ordernum)s,X relation_type ER,'
+             'X from_entity SE,X to_entity OE WHERE SE eid %(se)s,ER eid %(rt)s,OE eid %(oe)s',
              {'se': None, 'rt': None, 'oe': None,
-              'description': u'', 'composite': u'object', 
+              'description': u'', 'composite': u'object',
               'ordernum': 1, 'cardinality': u'1*'}),
-            ('INSERT CWConstraint X: X value %(value)s, X cstrtype CT, EDEF constrained_by X WHERE CT eid %(ct)s, EDEF eid %(x)s',
+            ('INSERT CWConstraint X: X value %(value)s, X cstrtype CT, EDEF constrained_by X '
+             'WHERE CT eid %(ct)s, EDEF eid %(x)s',
              {'x': None, 'ct': u'RQLConstraint_eid', 'value': u';O;O final FALSE\n'}),
         ],
                              list(rschema2rql(schema.rschema('relation_type'), cstrtypemap)))
 
     def test_rschema2rql2(self):
         self.assertListEqual([
-            ('INSERT CWRType X: X description %(description)s,X final %(final)s,X fulltext_container %(fulltext_container)s,X inlined %(inlined)s,X name %(name)s,X symmetric %(symmetric)s', {'description': u'', 'symmetric': False, 'name': u'add_permission', 'final': False, 'fulltext_container': None, 'inlined': False}),
+            ('INSERT CWRType X: X description %(description)s,X final %(final)s,'
+             'X fulltext_container %(fulltext_container)s,X inlined %(inlined)s,'
+             'X name %(name)s,X symmetric %(symmetric)s',
+             {'description': u'',
+              'symmetric': False,
+              'name': u'add_permission',
+              'final': False,
+              'fulltext_container': None,
+              'inlined': False}),
 
-            ('INSERT CWRelation X: X cardinality %(cardinality)s,X composite %(composite)s,X description %(description)s,X ordernum %(ordernum)s,X relation_type ER,X from_entity SE,X to_entity OE WHERE SE eid %(se)s,ER eid %(rt)s,OE eid %(oe)s',
-             {'se': None, 'rt': None, 'oe': None,
-              'description': u'groups allowed to add entities/relations of this type', 'composite': None, 'ordernum': 9999, 'cardinality': u'**'}),
-            ('INSERT CWRelation X: X cardinality %(cardinality)s,X composite %(composite)s,X description %(description)s,X ordernum %(ordernum)s,X relation_type ER,X from_entity SE,X to_entity OE WHERE SE eid %(se)s,ER eid %(rt)s,OE eid %(oe)s',
-             {'se': None, 'rt': None, 'oe': None,
-              'description': u'rql expression allowing to add entities/relations of this type', 'composite': 'subject', 'ordernum': 9999, 'cardinality': u'*?'}),
+            ('INSERT CWRelation X: X cardinality %(cardinality)s,X composite %(composite)s,'
+             'X description %(description)s,X ordernum %(ordernum)s,X relation_type ER,'
+             'X from_entity SE,X to_entity OE WHERE SE eid %(se)s,ER eid %(rt)s,OE eid %(oe)s',
+             {'se': None,
+              'rt': None,
+              'oe': None,
+              'description': u'groups allowed to add entities/relations of this type',
+              'composite': None,
+              'ordernum': 9999,
+              'cardinality': u'**'}),
+            ('INSERT CWRelation X: X cardinality %(cardinality)s,X composite %(composite)s,'
+             'X description %(description)s,X ordernum %(ordernum)s,X relation_type ER,'
+             'X from_entity SE,X to_entity OE WHERE SE eid %(se)s,ER eid %(rt)s,OE eid %(oe)s',
+             {'se': None,
+              'rt': None,
+              'oe': None,
+              'description': u'rql expression allowing to add entities/relations of this type',
+              'composite': 'subject',
+              'ordernum': 9999,
+              'cardinality': u'*?'}),
 
-            ('INSERT CWRelation X: X cardinality %(cardinality)s,X composite %(composite)s,X description %(description)s,X ordernum %(ordernum)s,X relation_type ER,X from_entity SE,X to_entity OE WHERE SE eid %(se)s,ER eid %(rt)s,OE eid %(oe)s',
-             {'se': None, 'rt': None, 'oe': None,
-              'description': u'groups allowed to add entities/relations of this type', 'composite': None, 'ordernum': 9999, 'cardinality': u'**'}),
-            ('INSERT CWRelation X: X cardinality %(cardinality)s,X composite %(composite)s,X description %(description)s,X ordernum %(ordernum)s,X relation_type ER,X from_entity SE,X to_entity OE WHERE SE eid %(se)s,ER eid %(rt)s,OE eid %(oe)s',
-             {'se': None, 'rt': None, 'oe': None,
-              'description': u'rql expression allowing to add entities/relations of this type', 'composite': 'subject', 'ordernum': 9999, 'cardinality': u'*?'}),
-            ('INSERT CWRelation X: X cardinality %(cardinality)s,X composite %(composite)s,X description %(description)s,X ordernum %(ordernum)s,X relation_type ER,X from_entity SE,X to_entity OE WHERE SE eid %(se)s,ER eid %(rt)s,OE eid %(oe)s',
-            {'cardinality': u'**', 'composite': None, 'description': u'groups allowed to add entities/relations of this type',
-             'oe': None, 'ordernum': 9999, 'rt': None, 'se': None}),
-            ('INSERT CWRelation X: X cardinality %(cardinality)s,X composite %(composite)s,X description %(description)s,X ordernum %(ordernum)s,X relation_type ER,X from_entity SE,X to_entity OE WHERE SE eid %(se)s,ER eid %(rt)s,OE eid %(oe)s',
-             {'cardinality': u'*?', 'composite': u'subject', 'description': u'rql expression allowing to add entities/relations of this type', 'oe': None, 'ordernum': 9999, 'rt': None, 'se': None})],
+            ('INSERT CWRelation X: X cardinality %(cardinality)s,X composite %(composite)s,'
+             'X description %(description)s,X ordernum %(ordernum)s,X relation_type ER,'
+             'X from_entity SE,X to_entity OE WHERE SE eid %(se)s,ER eid %(rt)s,OE eid %(oe)s',
+             {'se': None,
+              'rt': None,
+              'oe': None,
+              'description': u'groups allowed to add entities/relations of this type',
+              'composite': None,
+              'ordernum': 9999,
+              'cardinality': u'**'}),
+            ('INSERT CWRelation X: X cardinality %(cardinality)s,X composite %(composite)s,'
+             'X description %(description)s,X ordernum %(ordernum)s,X relation_type ER,'
+             'X from_entity SE,X to_entity OE WHERE SE eid %(se)s,ER eid %(rt)s,OE eid %(oe)s',
+             {'se': None,
+              'rt': None,
+              'oe': None,
+              'description': u'rql expression allowing to add entities/relations of this type',
+              'composite': 'subject',
+              'ordernum': 9999,
+              'cardinality': u'*?'}),
+            ('INSERT CWRelation X: X cardinality %(cardinality)s,X composite %(composite)s,'
+             'X description %(description)s,X ordernum %(ordernum)s,X relation_type ER,'
+             'X from_entity SE,X to_entity OE WHERE SE eid %(se)s,ER eid %(rt)s,OE eid %(oe)s',
+            {'cardinality': u'**',
+             'composite': None,
+             'description': u'groups allowed to add entities/relations of this type',
+             'oe': None,
+             'ordernum': 9999,
+             'rt': None,
+             'se': None}),
+            ('INSERT CWRelation X: X cardinality %(cardinality)s,X composite %(composite)s,'
+             'X description %(description)s,X ordernum %(ordernum)s,X relation_type ER,'
+             'X from_entity SE,X to_entity OE WHERE SE eid %(se)s,ER eid %(rt)s,OE eid %(oe)s',
+             {'cardinality': u'*?',
+              'composite': u'subject',
+              'description': u'rql expression allowing to add entities/relations of this type',
+              'oe': None,
+              'ordernum': 9999,
+              'rt': None,
+              'se': None})],
                              list(rschema2rql(schema.rschema('add_permission'), cstrtypemap)))
 
     def test_rschema2rql3(self):
         self.assertListEqual([
-            ('INSERT CWRType X: X description %(description)s,X final %(final)s,X fulltext_container %(fulltext_container)s,X inlined %(inlined)s,X name %(name)s,X symmetric %(symmetric)s',
-             {'description': u'', 'symmetric': False, 'name': u'cardinality', 'final': True, 'fulltext_container': None, 'inlined': False}),
+            ('INSERT CWRType X: X description %(description)s,X final %(final)s,'
+             'X fulltext_container %(fulltext_container)s,X inlined %(inlined)s,'
+             'X name %(name)s,X symmetric %(symmetric)s',
+             {'description': u'',
+              'symmetric': False,
+              'name': u'cardinality',
+              'final': True,
+              'fulltext_container': None,
+              'inlined': False}),
 
-            ('INSERT CWAttribute X: X cardinality %(cardinality)s,X defaultval %(defaultval)s,X description %(description)s,X fulltextindexed %(fulltextindexed)s,X indexed %(indexed)s,X internationalizable %(internationalizable)s,X ordernum %(ordernum)s,X relation_type ER,X from_entity SE,X to_entity OE WHERE SE eid %(se)s,ER eid %(rt)s,OE eid %(oe)s',
-             {'se': None, 'rt': None, 'oe': None,
-              'description': u'subject/object cardinality', 'internationalizable': True, 'fulltextindexed': False, 'ordernum': 5, 'defaultval': None, 'indexed': False, 'cardinality': u'?1'}),
-            ('INSERT CWConstraint X: X value %(value)s, X cstrtype CT, EDEF constrained_by X WHERE CT eid %(ct)s, EDEF eid %(x)s',
-             {'x': None, 'ct': u'SizeConstraint_eid', 'value': u'max=2'}),
-            ('INSERT CWConstraint X: X value %(value)s, X cstrtype CT, EDEF constrained_by X WHERE CT eid %(ct)s, EDEF eid %(x)s',
-             {'x': None, 'ct': u'StaticVocabularyConstraint_eid', 'value': u"u'?1', u'11'"}),
+            ('INSERT CWAttribute X: X cardinality %(cardinality)s,X defaultval %(defaultval)s,'
+             'X description %(description)s,X fulltextindexed %(fulltextindexed)s,'
+             'X indexed %(indexed)s,X internationalizable %(internationalizable)s,'
+             'X ordernum %(ordernum)s,X relation_type ER,X from_entity SE,'
+             'X to_entity OE WHERE SE eid %(se)s,ER eid %(rt)s,OE eid %(oe)s',
+             {'se': None,
+              'rt': None,
+              'oe': None,
+              'description': u'subject/object cardinality',
+              'internationalizable': True,
+              'fulltextindexed': False,
+              'ordernum': 5,
+              'defaultval': None,
+              'indexed': False,
+              'cardinality': u'?1'}),
+            ('INSERT CWConstraint X: X value %(value)s, X cstrtype CT, EDEF constrained_by X '
+             'WHERE CT eid %(ct)s, EDEF eid %(x)s',
+             {'x': None,
+              'ct': u'SizeConstraint_eid',
+              'value': u'max=2'}),
+            ('INSERT CWConstraint X: X value %(value)s, X cstrtype CT, EDEF constrained_by X '
+             'WHERE CT eid %(ct)s, EDEF eid %(x)s',
+             {'x': None,
+              'ct': u'StaticVocabularyConstraint_eid',
+              'value': u"u'?1', u'11'"}),
 
-            ('INSERT CWAttribute X: X cardinality %(cardinality)s,X defaultval %(defaultval)s,X description %(description)s,X fulltextindexed %(fulltextindexed)s,X indexed %(indexed)s,X internationalizable %(internationalizable)s,X ordernum %(ordernum)s,X relation_type ER,X from_entity SE,X to_entity OE WHERE SE eid %(se)s,ER eid %(rt)s,OE eid %(oe)s',
-             {'se': None, 'rt': None, 'oe': None,
-              'description': u'subject/object cardinality', 'internationalizable': True, 'fulltextindexed': False, 'ordernum': 5, 'defaultval': None, 'indexed': False, 'cardinality': u'?1'}),
-            ('INSERT CWConstraint X: X value %(value)s, X cstrtype CT, EDEF constrained_by X WHERE CT eid %(ct)s, EDEF eid %(x)s',
-             {'x': None, 'ct': u'SizeConstraint_eid', 'value': u'max=2'}),
-            ('INSERT CWConstraint X: X value %(value)s, X cstrtype CT, EDEF constrained_by X WHERE CT eid %(ct)s, EDEF eid %(x)s',
-             {'x': None, 'ct': u'StaticVocabularyConstraint_eid', 'value': u"u'?*', u'1*', u'+*', u'**', u'?+', u'1+', u'++', u'*+', u'?1', u'11', u'+1', u'*1', u'??', u'1?', u'+?', u'*?'"})],
+            ('INSERT CWAttribute X: X cardinality %(cardinality)s,X defaultval %(defaultval)s,'
+             'X description %(description)s,X fulltextindexed %(fulltextindexed)s,'
+             'X indexed %(indexed)s,X internationalizable %(internationalizable)s,'
+             'X ordernum %(ordernum)s,X relation_type ER,X from_entity SE,X to_entity OE '
+             'WHERE SE eid %(se)s,ER eid %(rt)s,OE eid %(oe)s',
+             {'se': None,
+              'rt': None,
+              'oe': None,
+              'description': u'subject/object cardinality',
+              'internationalizable': True,
+              'fulltextindexed': False,
+              'ordernum': 5,
+              'defaultval': None,
+              'indexed': False,
+              'cardinality': u'?1'}),
+            ('INSERT CWConstraint X: X value %(value)s, X cstrtype CT, EDEF constrained_by X '
+             'WHERE CT eid %(ct)s, EDEF eid %(x)s',
+             {'x': None,
+              'ct': u'SizeConstraint_eid',
+              'value': u'max=2'}),
+            ('INSERT CWConstraint X: X value %(value)s, X cstrtype CT, EDEF constrained_by X '
+             'WHERE CT eid %(ct)s, EDEF eid %(x)s',
+             {'x': None,
+              'ct': u'StaticVocabularyConstraint_eid',
+              'value': (u"u'?*', u'1*', u'+*', u'**', u'?+', u'1+', u'++', u'*+', u'?1', "
+                        "u'11', u'+1', u'*1', u'??', u'1?', u'+?', u'*?'")})],
                              list(rschema2rql(schema.rschema('cardinality'), cstrtypemap)))
 
     def test_rschema2rql_custom_type(self):
@@ -196,41 +311,74 @@ class Schema2RQLTC(TestCase):
 
     def test_rdef2rql(self):
         self.assertListEqual([
-            ('INSERT CWAttribute X: X cardinality %(cardinality)s,X defaultval %(defaultval)s,X description %(description)s,X fulltextindexed %(fulltextindexed)s,X indexed %(indexed)s,X internationalizable %(internationalizable)s,X ordernum %(ordernum)s,X relation_type ER,X from_entity SE,X to_entity OE WHERE SE eid %(se)s,ER eid %(rt)s,OE eid %(oe)s',
-             {'se': None, 'rt': None, 'oe': None,
-              'description': u'', 'internationalizable': True, 'fulltextindexed': False,
-              'ordernum': 3, 'defaultval': Binary('text/plain'), 'indexed': False, 'cardinality': u'?1'}),
-            ('INSERT CWConstraint X: X value %(value)s, X cstrtype CT, EDEF constrained_by X WHERE CT eid %(ct)s, EDEF eid %(x)s',
-             {'x': None, 'value': u'None', 'ct': 'FormatConstraint_eid'}),
-            ('INSERT CWConstraint X: X value %(value)s, X cstrtype CT, EDEF constrained_by X WHERE CT eid %(ct)s, EDEF eid %(x)s',
-             {'x': None, 'value': u'max=50', 'ct': 'SizeConstraint_eid'})],
-                             list(rdef2rql(schema['description_format'].rdefs[('CWRType', 'String')], cstrtypemap)))
+            ('INSERT CWAttribute X: X cardinality %(cardinality)s,X defaultval %(defaultval)s,'
+             'X description %(description)s,X fulltextindexed %(fulltextindexed)s,'
+             'X indexed %(indexed)s,X internationalizable %(internationalizable)s,'
+             'X ordernum %(ordernum)s,X relation_type ER,X from_entity SE,'
+             'X to_entity OE WHERE SE eid %(se)s,ER eid %(rt)s,OE eid %(oe)s',
+             {'se': None,
+              'rt': None,
+              'oe': None,
+              'description': u'',
+              'internationalizable': True,
+              'fulltextindexed': False,
+              'ordernum': 3,
+              'defaultval': Binary('text/plain'),
+              'indexed': False,
+              'cardinality': u'?1'}),
+            ('INSERT CWConstraint X: X value %(value)s, X cstrtype CT, EDEF constrained_by X '
+             'WHERE CT eid %(ct)s, EDEF eid %(x)s',
+             {'x': None,
+              'value': u'None',
+              'ct': 'FormatConstraint_eid'}),
+            ('INSERT CWConstraint X: X value %(value)s, X cstrtype CT, EDEF constrained_by X '
+             'WHERE CT eid %(ct)s, EDEF eid %(x)s',
+             {'x': None,
+              'value': u'max=50',
+              'ct': 'SizeConstraint_eid'})],
+                             list(rdef2rql(schema['description_format'].rdefs[('CWRType', 'String')],
+                                           cstrtypemap)))
 
 
     def test_updateeschema2rql1(self):
-        self.assertListEqual([('SET X description %(description)s,X final %(final)s,X name %(name)s WHERE X eid %(x)s',
-                               {'description': u'define a final relation: link a final relation type from a non final entity to a final entity type. used to build the instance schema', 'x': 1, 'final': False, 'name': u'CWAttribute'})],
+        self.assertListEqual([('SET X description %(description)s,X final %(final)s,'
+                               'X name %(name)s WHERE X eid %(x)s',
+                               {'description': u'define a final relation: link a final relation type from'
+                                ' a non final entity to a final entity type. used to build the instance schema',
+                                'x': 1, 'final': False, 'name': u'CWAttribute'})],
                              list(updateeschema2rql(schema.eschema('CWAttribute'), 1)))
 
     def test_updateeschema2rql2(self):
-        self.assertListEqual([('SET X description %(description)s,X final %(final)s,X name %(name)s WHERE X eid %(x)s',
+        self.assertListEqual([('SET X description %(description)s,X final %(final)s,'
+                               'X name %(name)s WHERE X eid %(x)s',
                                {'description': u'', 'x': 1, 'final': True, 'name': u'String'})],
                              list(updateeschema2rql(schema.eschema('String'), 1)))
 
     def test_updaterschema2rql1(self):
         self.assertListEqual([
-            ('SET X description %(description)s,X final %(final)s,X fulltext_container %(fulltext_container)s,X inlined %(inlined)s,X name %(name)s,X symmetric %(symmetric)s WHERE X eid %(x)s',
-             {'x': 1, 'symmetric': False,
+            ('SET X description %(description)s,X final %(final)s,'
+             'X fulltext_container %(fulltext_container)s,X inlined %(inlined)s,'
+             'X name %(name)s,X symmetric %(symmetric)s WHERE X eid %(x)s',
+             {'x': 1,
+              'symmetric': False,
               'description': u'link a relation definition to its relation type',
-              'final': False, 'fulltext_container': None, 'inlined': True, 'name': u'relation_type'})],
+              'final': False, 'fulltext_container': None,
+              'inlined': True,
+              'name': u'relation_type'})],
                              list(updaterschema2rql(schema.rschema('relation_type'), 1)))
 
     def test_updaterschema2rql2(self):
         expected = [
-            ('SET X description %(description)s,X final %(final)s,X fulltext_container %(fulltext_container)s,X inlined %(inlined)s,X name %(name)s,X symmetric %(symmetric)s WHERE X eid %(x)s',
-             {'x': 1, 'symmetric': False,
-              'description': u'', 'final': False, 'fulltext_container': None,
-              'inlined': False, 'name': u'add_permission'})
+            ('SET X description %(description)s,X final %(final)s,'
+             'X fulltext_container %(fulltext_container)s,X inlined %(inlined)s,'
+             'X name %(name)s,X symmetric %(symmetric)s WHERE X eid %(x)s',
+             {'x': 1,
+              'symmetric': False,
+              'description': u'',
+              'final': False,
+              'fulltext_container': None,
+              'inlined': False,
+              'name': u'add_permission'})
             ]
         for i, (rql, args) in enumerate(updaterschema2rql(schema.rschema('add_permission'), 1)):
             yield self.assertEqual, expected[i], (rql, args)

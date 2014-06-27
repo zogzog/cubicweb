@@ -1,4 +1,4 @@
-# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -395,22 +395,21 @@ def check(repo, cnx, checks, reindex, fix, withpb=True):
     (no running cubicweb server needed)
     """
     # yo, launch checks
-    srvcnx = cnx._cnx
     if checks:
         eids_cache = {}
-        with srvcnx.security_enabled(read=False, write=False): # ensure no read security
+        with cnx.security_enabled(read=False, write=False): # ensure no read security
             for check in checks:
                 check_func = globals()['check_%s' % check]
-                with srvcnx.ensure_cnx_set:
-                    check_func(repo.schema, srvcnx, eids_cache, fix=fix)
+                with cnx.ensure_cnx_set:
+                    check_func(repo.schema, cnx, eids_cache, fix=fix)
         if fix:
-            srvcnx.commit()
+            cnx.commit()
         else:
             print
         if not fix:
             print 'WARNING: Diagnostic run, nothing has been corrected'
     if reindex:
-        srvcnx.rollback()
-        with srvcnx.ensure_cnx_set:
-            reindex_entities(repo.schema, srvcnx, withpb=withpb)
-        srvcnx.commit()
+        cnx.rollback()
+        with cnx.ensure_cnx_set:
+            reindex_entities(repo.schema, cnx, withpb=withpb)
+        cnx.commit()

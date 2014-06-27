@@ -29,7 +29,7 @@ __docformat__ = "restructuredtext en"
 from email import message, message_from_string
 from Cookie import SimpleCookie
 from StringIO import StringIO
-from cgi import parse_header, parse_qsl
+from cgi import parse_header
 from pprint import pformat as _pformat
 
 
@@ -39,13 +39,6 @@ def pformat(obj):
         return _pformat(obj)
     except Exception:
         return u'<could not parse>'
-
-def qs2dict(qs):
-    """transforms a query string into a regular python dict"""
-    result = {}
-    for key, value in parse_qsl(qs, True):
-        result.setdefault(key, []).append(value)
-    return result
 
 def normalize_header(header):
     """returns a normalized header name
@@ -70,31 +63,3 @@ def safe_copyfileobj(fsrc, fdst, length=16*1024, size=0):
             break
         fdst.write(buf)
         size -= len(buf)
-
-def parse_file_upload(header_dict, post_data):
-    """This is adapted FROM DJANGO"""
-    raw_message = '\r\n'.join('%s:%s' % pair for pair in header_dict.iteritems())
-    raw_message += '\r\n\r\n' + post_data
-    msg = message_from_string(raw_message)
-    post, files = {}, {}
-    for submessage in msg.get_payload():
-        name_dict = parse_header(submessage['Content-Disposition'])[1]
-        key = name_dict['name']
-        # name_dict is something like {'name': 'file', 'filename': 'test.txt'} for file uploads
-        # or {'name': 'blah'} for POST fields
-        # We assume all uploaded files have a 'filename' set.
-        if 'filename' in name_dict:
-            assert type([]) != type(submessage.get_payload()), "Nested MIME messages are not supported"
-            if not name_dict['filename'].strip():
-                continue
-            # IE submits the full path, so trim everything but the basename.
-            # (We can't use os.path.basename because that uses the server's
-            # directory separator, which may not be the same as the
-            # client's one.)
-            filename = name_dict['filename'][name_dict['filename'].rfind("\\")+1:]
-            mimetype = 'Content-Type' in submessage and submessage['Content-Type'] or None
-            content = StringIO(submessage.get_payload())
-            files[key] = [filename, mimetype, content]
-        else:
-            post.setdefault(key, []).append(submessage.get_payload())
-    return post, files

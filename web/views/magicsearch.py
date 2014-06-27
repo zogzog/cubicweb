@@ -201,7 +201,7 @@ class QSPreProcessor(BaseQueryProcessor):
     priority = 4
 
     def preprocess_query(self, uquery):
-        """try to get rql from an unicode query string"""
+        """try to get rql from a unicode query string"""
         args = None
         try:
             # Process as if there was a quoted part

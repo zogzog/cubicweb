@@ -1027,6 +1027,10 @@ class ConnectionCubicWebRequestBase(_CubicWebRequestBase):
         self.session = DBAPISession(None)
         self.cnx = self.user = _NeedAuthAccessMock()
 
+    @property
+    def transaction_data(self):
+        return self.cnx.transaction_data
+
     def set_cnx(self, cnx):
         self.cnx = cnx
         self.session = cnx._session

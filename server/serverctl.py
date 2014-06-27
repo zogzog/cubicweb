@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -459,7 +459,7 @@ class InitInstanceCommand(Command):
         init_repository(config, drop=self.config.drop)
         if not self.config.automatic:
             while ASK.confirm('Enter another source ?', default_is_yes=False):
-                CWCTL.run(['add-source', '--config-level',
+                CWCTL.run(['source-add', '--config-level',
                            str(self.config.config_level), config.appid])
 
 
@@ -469,7 +469,7 @@ class AddSourceCommand(Command):
     <instance>
       the identifier of the instance to initialize.
     """
-    name = 'add-source'
+    name = 'source-add'
     arguments = '<instance>'
     min_args = max_args = 1
     options = (
@@ -979,10 +979,12 @@ option is set to "y" or "yes" (may be long for large database).'}
         appid = args[0]
         config = ServerConfiguration.config_for(appid)
         config.repairing = self.config.force
-        repo, cnx = repo_cnx(config)
-        with cnx:
+        repo, _cnx = repo_cnx(config)
+        with repo.internal_cnx() as cnx:
             check(repo, cnx,
-                  self.config.checks, self.config.reindex, self.config.autofix)
+                  self.config.checks,
+                  self.config.reindex,
+                  self.config.autofix)
 
 
 class RebuildFTICommand(Command):

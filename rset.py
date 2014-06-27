@@ -112,9 +112,6 @@ class ResultSet(object):
         """returns the result set's size"""
         return self.rowcount
 
-    def __nonzero__(self):
-        return self.rowcount
-
     def __getitem__(self, i):
         """returns the ith element of the result set"""
         return self.rows[i] #ResultSetRow(self.rows[i])

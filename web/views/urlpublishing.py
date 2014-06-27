@@ -34,7 +34,7 @@ Here is the default evaluator chain:
 
 3. :class:`cubicweb.web.views.urlpublishing.URLRewriteEvaluator`
    selects all urlrewriter components, sorts them according to their
-   priorty, call their ``rewrite()`` method, the first one that
+   priority, call their ``rewrite()`` method, the first one that
    doesn't raise a ``KeyError`` wins. This is where the
    :mod:`cubicweb.web.views.urlrewrite` and
    :class:`cubicweb.web.views.urlrewrite.SimpleReqRewriter` comes into
@@ -97,7 +97,7 @@ class URLPublisherComponent(component.Component):
         self.evaluators = sorted(evaluators, key=lambda x: x.priority)
 
     def process(self, req, path):
-        """Given an url (essentialy caracterized by a path on the
+        """Given a URL (essentialy caracterized by a path on the
         server, but additional information may be found in the request
         object), return a publishing method identifier
         (e.g. controller) and an optional result set.

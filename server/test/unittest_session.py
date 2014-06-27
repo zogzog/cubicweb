@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -17,7 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 
 from cubicweb.devtools.testlib import CubicWebTC
-from cubicweb.server.session import HOOKS_ALLOW_ALL, HOOKS_DENY_ALL, Connection
+from cubicweb.server.session import HOOKS_ALLOW_ALL, HOOKS_DENY_ALL
 
 class InternalSessionTC(CubicWebTC):
     def test_dbapi_query(self):

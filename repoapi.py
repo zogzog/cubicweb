@@ -148,6 +148,7 @@ class ClientConnection(RequestSessionBase):
     is_repo_in_memory = True # BC, always true
 
     def __init__(self, session, autoclose_session=False):
+        super(ClientConnection, self).__init__(session.vreg)
         self._session = session # XXX there is no real reason to keep the
                                 # session around function still using it should
                                 # be rewritten and migrated.
@@ -156,7 +157,6 @@ class ClientConnection(RequestSessionBase):
         self._web_request = False
         #: cache entities built during the connection
         self._eid_cache = {}
-        self.vreg = session.vreg
         self._set_user(session.user)
         self._autoclose_session = autoclose_session
 
@@ -246,6 +246,10 @@ class ClientConnection(RequestSessionBase):
 
     get_shared_data = _srv_cnx_func('get_shared_data')
     set_shared_data = _srv_cnx_func('set_shared_data')
+
+    @property
+    def transaction_data(self):
+        return self._cnx.transaction_data
 
     # meta-data accessors ######################################################
 

@@ -141,13 +141,13 @@ def ucsvreader(stream, encoding='utf-8', separator=',', quote='"',
         for row in it:
             decoded = [item.decode(encoding) for item in row]
             if not skip_empty or any(decoded):
-                yield [item.decode(encoding) for item in row]
+                yield decoded
     else:
-        # Skip first line
-        try:
-            row = it.next()
-        except csv.Error:
-            pass
+        if skipfirst:
+            try:
+                row = it.next()
+            except csv.Error:
+                pass
         # Safe version, that can cope with error in CSV file
         while True:
             try:
@@ -472,11 +472,13 @@ def _create_copyfrom_buffer(data, columns, encoding='utf-8', replace_sep=None):
                 if isinstance(value, unicode):
                     value = value.encode(encoding)
             elif isinstance(value, (date, datetime)):
-                # Do not use strftime, as it yields issue
-                # with date < 1900
                 value = '%04d-%02d-%02d' % (value.year,
                                             value.month,
                                             value.day)
+                if isinstance(value, datetime):
+                    value += ' %02d:%02d:%02d' % (value.hour,
+                                                  value.minutes,
+                                                  value.second)
             else:
                 return None
             # We push the value to the new formatted row
@@ -620,11 +622,13 @@ class RQLObjectStore(ObjectStore):
         self.rql('SET X %s Y WHERE X eid %%(x)s, Y eid %%(y)s' % rtype,
                  {'x': int(eid_from), 'y': int(eid_to)})
 
+    @deprecated("[3.19] use session.find(*args, **kwargs).entities() instead")
     def find_entities(self, *args, **kwargs):
-        return self.session.find_entities(*args, **kwargs)
+        return self.session.find(*args, **kwargs).entities()
 
+    @deprecated("[3.19] use session.find(*args, **kwargs).one() instead")
     def find_one_entity(self, *args, **kwargs):
-        return self.session.find_one_entity(*args, **kwargs)
+        return self.session.find(*args, **kwargs).one()
 
 # the import controller ########################################################
 
@@ -858,30 +862,38 @@ class MetaGenerator(object):
         del entity.cw_extra_kwargs
         entity.cw_edited = EditedEntity(entity)
         for attr in self.etype_attrs:
-            entity.cw_edited.edited_attribute(attr, self.generate(entity, attr))
+            genfunc = self.generate(attr)
+            if genfunc:
+                entity.cw_edited.edited_attribute(attr, genfunc(entity))
         rels = {}
         for rel in self.etype_rels:
-            rels[rel] = self.generate(entity, rel)
+            genfunc = self.generate(rel)
+            if genfunc:
+                rels[rel] = genfunc(entity)
         return entity, rels
 
     def init_entity(self, entity):
         entity.eid = self.source.create_eid(self.session)
         for attr in self.entity_attrs:
-            entity.cw_edited.edited_attribute(attr, self.generate(entity, attr))
+            genfunc = self.generate(attr)
+            if genfunc:
+                entity.cw_edited.edited_attribute(attr, genfunc(entity))
 
-    def generate(self, entity, rtype):
-        return getattr(self, 'gen_%s' % rtype)(entity)
+    def generate(self, rtype):
+        return getattr(self, 'gen_%s' % rtype, None)
 
     def gen_cwuri(self, entity):
         return u'%s%s' % (self.baseurl, entity.eid)
 
     def gen_creation_date(self, entity):
         return self.time
+
     def gen_modification_date(self, entity):
         return self.time
 
     def gen_created_by(self, entity):
         return self.session.user.eid
+
     def gen_owned_by(self, entity):
         return self.session.user.eid
 

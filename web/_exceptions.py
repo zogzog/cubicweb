@@ -64,7 +64,6 @@ class StatusResponse(PublishException):
 
     def __repr__(self):
         return '%s(%r, %r)' % (self.__class__.__name__, self.status, self.content)
-        self.url = url
 
 # Publish related error
 

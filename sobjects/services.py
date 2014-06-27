@@ -154,3 +154,5 @@ class RegisterUserService(Service):
             cnx.execute('INSERT EmailAddress X: X address %(email)s, '
                         'U primary_email X, U use_email X '
                         'WHERE U login %(login)s', d, build_descr=False)
+
+        return user

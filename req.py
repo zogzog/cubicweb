@@ -207,7 +207,7 @@ class RequestSessionBase(object):
         """
         parts = ['Any X WHERE X is %s' % etype]
         varmaker = rqlvar_maker(defined='X')
-        eschema = self.vreg.schema[etype]
+        eschema = self.vreg.schema.eschema(etype)
         for attr, value in kwargs.items():
             if isinstance(value, list) or isinstance(value, tuple):
                 raise NotImplementedError("List of values are not supported")
@@ -299,7 +299,7 @@ class RequestSessionBase(object):
         return u'%s%s?%s' % (base_url, path, self.build_url_params(**kwargs))
 
     def build_url_params(self, **kwargs):
-        """return encoded params to incorporate them in an URL"""
+        """return encoded params to incorporate them in a URL"""
         args = []
         for param, values in kwargs.iteritems():
             if not isinstance(values, (list, tuple)):
@@ -365,7 +365,20 @@ class RequestSessionBase(object):
 
     @cached
     def user_data(self):
-        """returns a dictionary with this user's information"""
+        """returns a dictionary with this user's information.
+
+        The keys are :
+
+        login
+            The user login
+
+        name
+            The user name, returned by user.name()
+
+        email
+            The user principal email
+
+        """
         userinfo = {}
         user = self.user
         userinfo['login'] = user.login

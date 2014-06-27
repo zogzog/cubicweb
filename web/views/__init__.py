@@ -103,7 +103,7 @@ def vid_from_rset(req, rset, schema):
 
 
 def linksearch_select_url(req, rset):
-    """when searching an entity to create a relation, return an url to select
+    """when searching an entity to create a relation, return a URL to select
     entities in the given rset
     """
     req.add_js( ('cubicweb.ajax.js', 'cubicweb.edition.js') )

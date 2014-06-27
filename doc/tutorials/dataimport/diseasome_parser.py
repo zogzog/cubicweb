@@ -31,9 +31,9 @@ MAPPING_RELS = {'geneId': 'gene_id',
 
 def _retrieve_reltype(uri):
     """
-    Retrieve a relation type from an URI.
+    Retrieve a relation type from a URI.
 
-    Internal function which takes an URI containing a relation type as input
+    Internal function which takes a URI containing a relation type as input
     and returns the name of the relation.
     If no URI string is given, then the function returns None.
     """

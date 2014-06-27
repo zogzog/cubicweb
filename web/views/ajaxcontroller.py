@@ -460,3 +460,15 @@ def set_cookie(self, cookiename, cookievalue):
     """
     cookiename, cookievalue = str(cookiename), str(cookievalue)
     self._cw.set_cookie(cookiename, cookievalue)
+
+
+
+@ajaxfunc
+def delete_relation(self, rtype, subjeid, objeid):
+    rql = 'DELETE S %s O WHERE S eid %%(s)s, O eid %%(o)s' % rtype
+    self._cw.execute(rql, {'s': subjeid, 'o': objeid})
+
+@ajaxfunc
+def add_relation(self, rtype, subjeid, objeid):
+    rql = 'SET S %s O WHERE S eid %%(s)s, O eid %%(o)s' % rtype
+    self._cw.execute(rql, {'s': subjeid, 'o': objeid})

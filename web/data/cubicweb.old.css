@@ -260,32 +260,48 @@ img.align-center{
 /* header */
 
 table#header {
-  background: %(headerBg)s;
+  background-image: linear-gradient(white, #e2e2e2);
   width: 100%;
+  border-bottom: 1px solid #bbb;
+  text-shadow: 1px 1px 0 #f5f5f5;
 }
 
 table#header td {
   vertical-align: middle;
 }
 
-table#header a {
-  color: #000;
+table#header, table#header a {
+  color: #444;
 }
+
 table#header td#headtext {
   white-space: nowrap;
+  padding: 0 10px;
+  width: 10%;
+}
+
+#logo{
+  width: 150px;
+  height: 42px;
+  background-image: url(logo-cubicweb.svg);
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: contain;
+  float: left;
 }
 
 table#header td#header-right {
-  padding-top: 1em;
   white-space: nowrap;
+  width: 10%;
 }
 table#header td#header-center{
-  width: 100%;
+  border-bottom-left-radius: 10px;
+  border-top-left-radius: 10px;
+  padding-left: 1em;
 }
 
 span#appliName {
   font-weight: bold;
-  color: #000;
   white-space: nowrap;
 }
 
@@ -637,6 +653,8 @@ a.logout, a.logout:visited, a.logout:hover{
 div#userActionsBox {
   width: 14em;
   text-align: right;
+  display: inline-block;
+  padding-right: 10px;
 }
 
 div#userActionsBox a.popupMenu {

@@ -176,7 +176,6 @@ class TheMainTemplate(MainTemplate):
         w = self.whead
         lang = self._cw.lang
         self.write_doctype()
-        # explictly close the <base> tag to avoid IE 6 bugs while browsing DOM
         self._cw.html_headers.define_var('BASE_URL', self._cw.base_url())
         self._cw.html_headers.define_var('DATA_URL', self._cw.datadir_url)
         w(u'<meta http-equiv="content-type" content="%s; charset=%s"/>\n'

@@ -1,4 +1,4 @@
-/* copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+/* copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
  * contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
  *
  * This file is part of CubicWeb.
@@ -371,7 +371,7 @@ jQuery.fn.loadxhtml = function(url, form, reqtype, mode, cursor) {
 /**
  * .. function:: loadRemote(url, form, reqtype='GET', sync=false)
  *
- * Asynchronously (unless `sync` argument is set to true) load an url or path
+ * Asynchronously (unless `sync` argument is set to true) load a URL or path
  * and return a deferred whose callbacks args are decoded according to the
  * Content-Type response header. `form` should be additional form params
  * dictionary, `reqtype` the HTTP request type (get 'GET' or 'POST').
@@ -515,16 +515,20 @@ function removeBookmark(beid) {
     });
 }
 
-function userCallback(cbname) {
+userCallback = cw.utils.deprecatedFunction(
+    '[3.19] use a plain ajaxfunc instead of user callbacks',
+    function userCallback(cbname) {
     setProgressCursor();
     var d = loadRemote(AJAX_BASE_URL, ajaxFuncArgs('user_callback', null, cbname));
     d.addCallback(resetCursor);
     d.addErrback(resetCursor);
     d.addErrback(remoteCallFailed);
     return d;
-}
+});
 
-function userCallbackThenUpdateUI(cbname, compid, rql, msg, registry, nodeid) {
+userCallbackThenUpdateUI = cw.utils.deprecatedFunction(
+    '[3.19] use a plain ajaxfunc instead of user callbacks',
+    function userCallbackThenUpdateUI(cbname, compid, rql, msg, registry, nodeid) {
     var d = userCallback(cbname);
     d.addCallback(function() {
         $('#' + nodeid).loadxhtml(AJAX_BASE_URL, ajaxFuncArgs('render', {'rql': rql},
@@ -533,9 +537,11 @@ function userCallbackThenUpdateUI(cbname, compid, rql, msg, registry, nodeid) {
             updateMessage(msg);
         }
     });
-}
+});
 
-function userCallbackThenReloadPage(cbname, msg) {
+userCallbackThenReloadPage = cw.utils.deprecatedFunction(
+    '[3.19] use a plain ajaxfunc instead of user callbacks',
+    function userCallbackThenReloadPage(cbname, msg) {
     var d = userCallback(cbname);
     d.addCallback(function() {
         window.location.reload();
@@ -543,7 +549,7 @@ function userCallbackThenReloadPage(cbname, msg) {
             updateMessage(msg);
         }
     });
-}
+});
 
 /**
  * .. function:: unregisterUserCallback(cbname)
@@ -551,14 +557,17 @@ function userCallbackThenReloadPage(cbname, msg) {
  * unregisters the python function registered on the server's side
  * while the page was generated.
  */
-function unregisterUserCallback(cbname) {
+unregisterUserCallback = cw.utils.deprecatedFunction(
+    '[3.19] use a plain ajaxfunc instead of user callbacks',
+    function unregisterUserCallback(cbname) {
     setProgressCursor();
     var d = loadRemote(AJAX_BASE_URL, ajaxFuncArgs('unregister_user_callback',
                                             null, cbname));
     d.addCallback(resetCursor);
     d.addErrback(resetCursor);
     d.addErrback(remoteCallFailed);
-}
+});
+
 
 //============= XXX move those functions? ====================================//
 function openHash() {

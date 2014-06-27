@@ -19,41 +19,7 @@
 import os, os.path as osp, glob
 import urllib
 
-from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.devtools.httptest import CubicWebServerTC
-from cubicweb.etwist.server import host_prefixed_baseurl
-
-
-class HostPrefixedBaseURLTC(CubicWebTC):
-
-    def _check(self, baseurl, host, waited):
-        self.assertEqual(host_prefixed_baseurl(baseurl, host), waited,
-                         'baseurl %s called through host %s should be considered as %s'
-                         % (baseurl, host, waited))
-
-    def test1(self):
-        self._check('http://www.cubicweb.org/hg/', 'code.cubicweb.org',
-                    'http://code.cubicweb.org/hg/')
-
-    def test2(self):
-        self._check('http://www.cubicweb.org/hg/', 'cubicweb.org',
-                    'http://www.cubicweb.org/hg/')
-
-    def test3(self):
-        self._check('http://cubicweb.org/hg/', 'code.cubicweb.org',
-                    'http://code.cubicweb.org/hg/')
-
-    def test4(self):
-        self._check('http://www.cubicweb.org/hg/', 'localhost',
-                    'http://www.cubicweb.org/hg/')
-
-    def test5(self):
-        self._check('http://www.cubicweb.org/cubes/', 'hg.code.cubicweb.org',
-                    'http://hg.code.cubicweb.org/cubes/')
-
-    def test6(self):
-        self._check('http://localhost:8080/hg/', 'code.cubicweb.org',
-                    'http://localhost:8080/hg/')
 
 
 class ETwistHTTPTC(CubicWebServerTC):

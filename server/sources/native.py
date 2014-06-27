@@ -715,7 +715,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             # instance
             print 'exec', query, args, getattr(cnx, '_cnx', cnx)
         try:
-            # str(query) to avoid error if it's an unicode string
+            # str(query) to avoid error if it's a unicode string
             cursor.execute(str(query), args)
         except Exception as ex:
             if self.repo.config.mode != 'test':
@@ -762,7 +762,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             print 'execmany', query, 'with', len(args), 'arguments'
         cursor = cnx.cnxset.cu
         try:
-            # str(query) to avoid error if it's an unicode string
+            # str(query) to avoid error if it's a unicode string
             cursor.executemany(str(query), args)
         except Exception as ex:
             if self.repo.config.mode != 'test':
@@ -894,32 +894,32 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
 
     def add_info(self, cnx, entity, source, extid):
         """add type and source info for an eid into the system table"""
-        with cnx.ensure_cnx_set:
-            # begin by inserting eid/type/source/extid into the entities table
-            if extid is not None:
-                assert isinstance(extid, str)
-                extid = b64encode(extid)
-            attrs = {'type': entity.cw_etype, 'eid': entity.eid, 'extid': extid,
-                     'asource': source.uri}
-            self._handle_insert_entity_sql(cnx, self.sqlgen.insert('entities', attrs), attrs)
-            # insert core relations: is, is_instance_of and cw_source
-            try:
-                self._handle_is_relation_sql(cnx, 'INSERT INTO is_relation(eid_from,eid_to) VALUES (%s,%s)',
-                                             (entity.eid, eschema_eid(cnx, entity.e_schema)))
-            except IndexError:
-                # during schema serialization, skip
-                pass
-            else:
-                for eschema in entity.e_schema.ancestors() + [entity.e_schema]:
-                    self._handle_is_relation_sql(cnx,
-                                                 'INSERT INTO is_instance_of_relation(eid_from,eid_to) VALUES (%s,%s)',
-                                                 (entity.eid, eschema_eid(cnx, eschema)))
-            if 'CWSource' in self.schema and source.eid is not None: # else, cw < 3.10
-                self._handle_is_relation_sql(cnx, 'INSERT INTO cw_source_relation(eid_from,eid_to) VALUES (%s,%s)',
-                                             (entity.eid, source.eid))
-            # now we can update the full text index
-            if self.do_fti and self.need_fti_indexation(entity.cw_etype):
-                self.index_entity(cnx, entity=entity)
+        assert cnx.cnxset is not None
+        # begin by inserting eid/type/source/extid into the entities table
+        if extid is not None:
+            assert isinstance(extid, str)
+            extid = b64encode(extid)
+        attrs = {'type': entity.cw_etype, 'eid': entity.eid, 'extid': extid,
+                 'asource': source.uri}
+        self._handle_insert_entity_sql(cnx, self.sqlgen.insert('entities', attrs), attrs)
+        # insert core relations: is, is_instance_of and cw_source
+        try:
+            self._handle_is_relation_sql(cnx, 'INSERT INTO is_relation(eid_from,eid_to) VALUES (%s,%s)',
+                                         (entity.eid, eschema_eid(cnx, entity.e_schema)))
+        except IndexError:
+            # during schema serialization, skip
+            pass
+        else:
+            for eschema in entity.e_schema.ancestors() + [entity.e_schema]:
+                self._handle_is_relation_sql(cnx,
+                                             'INSERT INTO is_instance_of_relation(eid_from,eid_to) VALUES (%s,%s)',
+                                             (entity.eid, eschema_eid(cnx, eschema)))
+        if 'CWSource' in self.schema and source.eid is not None: # else, cw < 3.10
+            self._handle_is_relation_sql(cnx, 'INSERT INTO cw_source_relation(eid_from,eid_to) VALUES (%s,%s)',
+                                         (entity.eid, source.eid))
+        # now we can update the full text index
+        if self.do_fti and self.need_fti_indexation(entity.cw_etype):
+            self.index_entity(cnx, entity=entity)
 
     def update_info(self, cnx, entity, need_fti_update):
         """mark entity as being modified, fulltext reindex if needed"""

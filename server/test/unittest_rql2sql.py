@@ -1882,12 +1882,12 @@ ORDER BY 1''')
         for t in self._parse([("Any X WHERE X creation_date TODAY, X is Affaire",
                         '''SELECT _X.cw_eid
 FROM cw_Affaire AS _X
-WHERE DATE(_X.cw_creation_date)=CURRENT_DATE'''),
+WHERE DATE(_X.cw_creation_date)=%s''' % self.dbhelper.sql_current_date()),
 
                        ("Personne P where not P datenaiss TODAY",
                         '''SELECT _P.cw_eid
 FROM cw_Personne AS _P
-WHERE NOT (DATE(_P.cw_datenaiss)=CURRENT_DATE)'''),
+WHERE NOT (DATE(_P.cw_datenaiss)=%s)''' % self.dbhelper.sql_current_date()),
                        ]):
             yield t
 

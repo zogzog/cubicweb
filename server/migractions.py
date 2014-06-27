@@ -150,7 +150,6 @@ class ServerMigrationHelper(MigrationHelper):
                 sys.exit(0)
         self.session = self.repo._get_session(self.cnx.sessionid)
         self.session.keep_cnxset_mode('transaction')
-        self.session.set_shared_data('rebuild-infered', False)
 
     # overriden from base MigrationHelper ######################################
 
@@ -1064,12 +1063,19 @@ class ServerMigrationHelper(MigrationHelper):
         if commit:
             self.commit()
 
-    def cmd_rename_relation_type(self, oldname, newname, commit=True):
+    def cmd_rename_relation_type(self, oldname, newname, commit=True, force=False):
         """rename an existing relation
 
         `oldname` is a string giving the name of the existing relation
         `newname` is a string giving the name of the renamed relation
+
+        If `force` is True, proceed even if `oldname` still appears in the fs schema
         """
+        if oldname in self.fs_schema and not force:
+            if not self.confirm('Relation %s is still present in the filesystem schema,'
+                                ' do you really want to drop it?' % oldname,
+                                default='n'):
+                raise SystemExit(1)
         self.cmd_add_relation_type(newname, commit=True)
         self.rqlexec('SET X %s Y WHERE X %s Y' % (newname, oldname),
                      ask_confirm=self.verbosity>=2)
@@ -1342,17 +1348,23 @@ class ServerMigrationHelper(MigrationHelper):
             self.commit()
         return entity
 
+    def cmd_find(self, etype, **kwargs):
+        """find entities of the given type and attribute values"""
+        return self.cnx.find(etype, **kwargs)
+
+    @deprecated("[3.19] use find(*args, **kwargs).entities() instead")
     def cmd_find_entities(self, etype, **kwargs):
         """find entities of the given type and attribute values"""
-        return self.cnx.find_entities(etype, **kwargs)
+        return self.cnx.find(etype, **kwargs).entities()
 
+    @deprecated("[3.19] use find(*args, **kwargs).one() instead")
     def cmd_find_one_entity(self, etype, **kwargs):
         """find one entity of the given type and attribute values.
 
         raise :exc:`cubicweb.req.FindEntityError` if can not return one and only
         one entity.
         """
-        return self.cnx.find_one_entity(etype, **kwargs)
+        return self.cnx.find(etype, **kwargs).one()
 
     def cmd_update_etype_fti_weight(self, etype, weight):
         if self.repo.system_source.dbdriver == 'postgres':

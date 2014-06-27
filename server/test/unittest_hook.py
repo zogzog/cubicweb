@@ -25,46 +25,35 @@ from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.server import hook
 from cubicweb.hooks import integrity, syncschema
 
-def clean_session_ops(func):
-    def wrapper(self, *args, **kwargs):
-        try:
-            return func(self, *args, **kwargs)
-        finally:
-            self.session.pending_operations[:] = []
-    return wrapper
-
 class OperationsTC(CubicWebTC):
 
     def setUp(self):
         CubicWebTC.setUp(self)
         self.hm = self.repo.hm
 
-    @clean_session_ops
     def test_late_operation(self):
-        session = self.session
-        l1 = hook.LateOperation(session)
-        l2 = hook.LateOperation(session)
-        l3 = hook.Operation(session)
-        self.assertEqual(session.pending_operations, [l3, l1, l2])
+        with self.admin_access.repo_cnx() as cnx:
+            l1 = hook.LateOperation(cnx)
+            l2 = hook.LateOperation(cnx)
+            l3 = hook.Operation(cnx)
+            self.assertEqual(cnx.pending_operations, [l3, l1, l2])
 
-    @clean_session_ops
     def test_single_last_operation(self):
-        session = self.session
-        l0 = hook.SingleLastOperation(session)
-        l1 = hook.LateOperation(session)
-        l2 = hook.LateOperation(session)
-        l3 = hook.Operation(session)
-        self.assertEqual(session.pending_operations, [l3, l1, l2, l0])
-        l4 = hook.SingleLastOperation(session)
-        self.assertEqual(session.pending_operations, [l3, l1, l2, l4])
+        with self.admin_access.repo_cnx() as cnx:
+            l0 = hook.SingleLastOperation(cnx)
+            l1 = hook.LateOperation(cnx)
+            l2 = hook.LateOperation(cnx)
+            l3 = hook.Operation(cnx)
+            self.assertEqual(cnx.pending_operations, [l3, l1, l2, l0])
+            l4 = hook.SingleLastOperation(cnx)
+            self.assertEqual(cnx.pending_operations, [l3, l1, l2, l4])
 
-    @clean_session_ops
     def test_global_operation_order(self):
-        session = self.session
-        op1 = syncschema.RDefDelOp(session)
-        op2 = integrity._CheckORelationOp(session)
-        op3 = syncschema.MemSchemaNotifyChanges(session)
-        self.assertEqual([op1, op2, op3], session.pending_operations)
+        with self.admin_access.repo_cnx() as cnx:
+            op1 = syncschema.RDefDelOp(cnx)
+            op2 = integrity._CheckORelationOp(cnx)
+            op3 = syncschema.MemSchemaNotifyChanges(cnx)
+            self.assertEqual([op1, op2, op3], cnx.pending_operations)
 
 class HookCalled(Exception): pass
 
@@ -139,9 +128,10 @@ class SystemHooksTC(CubicWebTC):
 
     def test_session_open_close(self):
         import hooks # cubicweb/server/test/data/hooks.py
-        cnx = self.login('anon')
-        self.assertEqual(hooks.CALLED_EVENTS['session_open'], 'anon')
-        cnx.close()
+        anonaccess = self.new_access('anon')
+        with anonaccess.repo_cnx() as cnx:
+            self.assertEqual(hooks.CALLED_EVENTS['session_open'], 'anon')
+        anonaccess.close()
         self.assertEqual(hooks.CALLED_EVENTS['session_close'], 'anon')
 
 

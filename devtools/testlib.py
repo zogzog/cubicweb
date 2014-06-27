@@ -203,17 +203,26 @@ class RepoAccess(object):
         self._repo = repo
         self._login = login
         self.requestcls = requestcls
-        # opening session
-        #
-        # XXX this very hackish code should be cleaned and move on repo.
-        with repo.internal_cnx() as cnx:
-            rset = cnx.execute('CWUser U WHERE U login %(u)s', {'u': login})
-            user = rset.get_entity(0, 0)
+        self._session = self._unsafe_connect(login)
+
+    def _unsafe_connect(self, login, **kwargs):
+        """ a completely unsafe connect method for the tests """
+        # use an internal connection
+        with self._repo.internal_cnx() as cnx:
+            # try to get a user object
+            user = cnx.find('CWUser', login=login).one()
             user.groups
             user.properties
-            self._session = Session(user, repo)
-            repo._sessions[self._session.sessionid] = self._session
-            self._session.user._cw = self._session
+            user.login
+            session = Session(user, self._repo)
+            self._repo._sessions[session.sessionid] = session
+            user._cw = user.cw_rset.req = session
+        with session.new_cnx() as cnx:
+            self._repo.hm.call_hooks('session_open', cnx)
+            # commit connection at this point in case write operation has been
+            # done during `session_open` hooks
+            cnx.commit()
+        return session
 
     @contextmanager
     def repo_cnx(self):
@@ -404,12 +413,9 @@ class CubicWebTC(TestCase):
     def _init_repo(self):
         """init the repository and connection to it.
         """
-        # setup configuration for test
-        self.init_config(self.config)
         # get or restore and working db.
-        db_handler = devtools.get_test_db_handler(self.config)
+        db_handler = devtools.get_test_db_handler(self.config, self.init_config)
         db_handler.build_db_cache(self.test_db_id, self.pre_setup_database)
-
         db_handler.restore_database(self.test_db_id)
         self.repo = db_handler.get_repo(startup=True)
         # get an admin session (without actual login)
@@ -492,14 +498,18 @@ class CubicWebTC(TestCase):
             config.mode = 'test'
             return config
 
-    @classmethod
+    @classmethod # XXX could be turned into a regular method
     def init_config(cls, config):
         """configuration initialization hooks.
 
         You may only want to override here the configuraton logic.
 
         Otherwise, consider to use a different :class:`ApptestConfiguration`
-        defined in the `configcls` class attribute"""
+        defined in the `configcls` class attribute.
+
+        This method will be called by the database handler once the config has
+        been properly bootstrapped.
+        """
         source = config.system_source_config
         cls.admlogin = unicode(source['db-user'])
         cls.admpassword = source['db-password']

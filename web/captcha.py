@@ -24,7 +24,7 @@ __docformat__ = "restructuredtext en"
 from random import randint, choice
 from cStringIO import StringIO
 
-import Image, ImageFont, ImageDraw, ImageFilter
+from PIL import Image, ImageFont, ImageDraw, ImageFilter
 
 
 from time import time

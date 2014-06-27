@@ -23,7 +23,6 @@ import threading
 from time import time
 from uuid import uuid4
 from warnings import warn
-import json
 import functools
 from contextlib import contextmanager
 
@@ -518,6 +517,7 @@ class Connection(RequestSessionBase):
         # other session utility
         if session.user.login == '__internal_manager__':
             self.user = session.user
+            self.set_language(self.user.prefered_language())
         else:
             self._set_user(session.user)
 
@@ -549,6 +549,7 @@ class Connection(RequestSessionBase):
         return self._rewriter
 
     @_open_only
+    @deprecated('[3.19] use session or transaction data')
     def get_shared_data(self, key, default=None, pop=False, txdata=False):
         """return value associated to `key` in session data"""
         if txdata:
@@ -561,6 +562,7 @@ class Connection(RequestSessionBase):
             return data.get(key, default)
 
     @_open_only
+    @deprecated('[3.19] use session or transaction data')
     def set_shared_data(self, key, value, txdata=False):
         """set value associated to `key` in session data"""
         if txdata:
@@ -1154,18 +1156,9 @@ class Connection(RequestSessionBase):
     @_with_cnx_set
     @_open_only
     def call_service(self, regid, **kwargs):
-        json.dumps(kwargs) # This line ensure that people use serialisable
-                           # argument for call service. this is very important
-                           # to enforce that from start to make sure RPC
-                           # version is available.
-        self.info('calling service %s', regid)
+        self.debug('calling service %s', regid)
         service = self.vreg['services'].select(regid, self, **kwargs)
-        result = service.call(**kwargs)
-        json.dumps(result) # This line ensure that service have serialisable
-                           # output. this is very important to enforce that
-                           # from start to make sure RPC version is
-                           # available.
-        return result
+        return service.call(**kwargs)
 
     @_with_cnx_set
     @_open_only
@@ -1567,6 +1560,7 @@ class Session(RequestSessionBase): # XXX repoapi: stop being a
 
     # shared data handling ###################################################
 
+    @deprecated('[3.19] use session or transaction data')
     def get_shared_data(self, key, default=None, pop=False, txdata=False):
         """return value associated to `key` in session data"""
         if txdata:
@@ -1578,6 +1572,7 @@ class Session(RequestSessionBase): # XXX repoapi: stop being a
         else:
             return data.get(key, default)
 
+    @deprecated('[3.19] use session or transaction data')
     def set_shared_data(self, key, value, txdata=False):
         """set value associated to `key` in session data"""
         if txdata:

@@ -563,7 +563,7 @@ def set_action_permissions(self, action, permissions):
 PermissionMixIn.set_action_permissions = set_action_permissions
 
 def has_local_role(self, action):
-    """return true if the action *may* be granted localy (eg either rql
+    """return true if the action *may* be granted locally (eg either rql
     expressions or the owners group are used in security definition)
 
     XXX this method is only there since we don't know well how to deal with
@@ -585,7 +585,7 @@ def may_have_permission(self, action, req):
 PermissionMixIn.may_have_permission = may_have_permission
 
 def has_perm(self, _cw, action, **kwargs):
-    """return true if the action is granted globaly or localy"""
+    """return true if the action is granted globally or locally"""
     try:
         self.check_perm(_cw, action, **kwargs)
         return True

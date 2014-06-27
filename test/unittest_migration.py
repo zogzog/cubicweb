@@ -76,7 +76,7 @@ class MigrationToolsTC(TestCase):
     def test_filter_scripts_for_mode(self):
         config = CubicWebConfiguration('data')
         config.verbosity = 0
-        self.assert_(not isinstance(config.migration_handler(), ServerMigrationHelper))
+        self.assertNotIsInstance(config.migration_handler(), ServerMigrationHelper)
         self.assertIsInstance(config.migration_handler(), MigrationHelper)
         config = self.config
         config.__class__.name = 'repository'

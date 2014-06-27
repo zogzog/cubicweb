@@ -1,5 +1,5 @@
 # -*- coding: iso-8859-1 -*-
-# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -18,25 +18,19 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unit tests for module cubicweb.server.repository"""
 
-import os
-import sys
 import threading
 import time
 import logging
-from copy import deepcopy
-from datetime import datetime
-
-from logilab.common.testlib import TestCase, unittest_main
 
 from yams.constraints import UniqueConstraint
 from yams import register_base_type, unregister_base_type
 
 from logilab.database import get_db_helper
 
-from cubicweb import (BadConnectionId, RepositoryError, ValidationError,
+from cubicweb import (BadConnectionId, ValidationError,
                       UnknownEid, AuthenticationError, Unauthorized, QueryError)
 from cubicweb.predicates import is_instance
-from cubicweb.schema import CubicWebSchema, RQLConstraint
+from cubicweb.schema import RQLConstraint
 from cubicweb.dbapi import connect, multiple_connections_unfix
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.devtools.repotest import tuplify
@@ -53,15 +47,16 @@ class RepositoryTC(CubicWebTC):
     """
 
     def test_unique_together_constraint(self):
-        self.execute('INSERT Societe S: S nom "Logilab", S type "SSLL", S cp "75013"')
-        with self.assertRaises(ValidationError) as wraperr:
-            self.execute('INSERT Societe S: S nom "Logilab", S type "SSLL", S cp "75013"')
-        self.assertEqual(
-            {'cp': u'cp is part of violated unicity constraint',
-             'nom': u'nom is part of violated unicity constraint',
-             'type': u'type is part of violated unicity constraint',
-             'unicity constraint': u'some relations violate a unicity constraint'},
-            wraperr.exception.args[1])
+        with self.admin_access.repo_cnx() as cnx:
+            cnx.execute('INSERT Societe S: S nom "Logilab", S type "SSLL", S cp "75013"')
+            with self.assertRaises(ValidationError) as wraperr:
+                cnx.execute('INSERT Societe S: S nom "Logilab", S type "SSLL", S cp "75013"')
+            self.assertEqual(
+                {'cp': u'cp is part of violated unicity constraint',
+                 'nom': u'nom is part of violated unicity constraint',
+                 'type': u'type is part of violated unicity constraint',
+                 'unicity constraint': u'some relations violate a unicity constraint'},
+                wraperr.exception.args[1])
 
     def test_unique_together_schema(self):
         person = self.repo.schema.eschema('Personne')
@@ -70,13 +65,16 @@ class RepositoryTC(CubicWebTC):
                                            ('nom', 'prenom', 'inline2'))
 
     def test_all_entities_have_owner(self):
-        self.assertFalse(self.execute('Any X WHERE NOT X owned_by U'))
+        with self.admin_access.repo_cnx() as cnx:
+            self.assertFalse(cnx.execute('Any X WHERE NOT X owned_by U'))
 
     def test_all_entities_have_is(self):
-        self.assertFalse(self.execute('Any X WHERE NOT X is ET'))
+        with self.admin_access.repo_cnx() as cnx:
+            self.assertFalse(cnx.execute('Any X WHERE NOT X is ET'))
 
     def test_all_entities_have_cw_source(self):
-        self.assertFalse(self.execute('Any X WHERE NOT X cw_source S'))
+        with self.admin_access.repo_cnx() as cnx:
+            self.assertFalse(cnx.execute('Any X WHERE NOT X cw_source S'))
 
     def test_connect(self):
         cnxid = self.repo.connect(self.admlogin, password=self.admpassword)
@@ -131,15 +129,17 @@ class RepositoryTC(CubicWebTC):
             events = ('after_update_entity',)
             def __call__(self):
                 raise ValidationError(self.entity.eid, {})
-        with self.temporary_appobjects(ValidationErrorAfterHook):
-            self.assertRaises(ValidationError,
-                              self.execute, 'SET X name "toto" WHERE X is CWGroup, X name "guests"')
-            self.assertTrue(self.execute('Any X WHERE X is CWGroup, X name "toto"'))
-            with self.assertRaises(QueryError) as cm:
-                self.commit()
-            self.assertEqual(str(cm.exception), 'transaction must be rolled back')
-            self.rollback()
-            self.assertFalse(self.execute('Any X WHERE X is CWGroup, X name "toto"'))
+
+        with self.admin_access.repo_cnx() as cnx:
+            with self.temporary_appobjects(ValidationErrorAfterHook):
+                self.assertRaises(ValidationError,
+                                  cnx.execute, 'SET X name "toto" WHERE X is CWGroup, X name "guests"')
+                self.assertTrue(cnx.execute('Any X WHERE X is CWGroup, X name "toto"'))
+                with self.assertRaises(QueryError) as cm:
+                    cnx.commit()
+                self.assertEqual(str(cm.exception), 'transaction must be rolled back')
+                cnx.rollback()
+                self.assertFalse(cnx.execute('Any X WHERE X is CWGroup, X name "toto"'))
 
     def test_rollback_on_execute_unauthorized(self):
         class UnauthorizedAfterHook(Hook):
@@ -148,15 +148,17 @@ class RepositoryTC(CubicWebTC):
             events = ('after_update_entity',)
             def __call__(self):
                 raise Unauthorized()
-        with self.temporary_appobjects(UnauthorizedAfterHook):
-            self.assertRaises(Unauthorized,
-                              self.execute, 'SET X name "toto" WHERE X is CWGroup, X name "guests"')
-            self.assertTrue(self.execute('Any X WHERE X is CWGroup, X name "toto"'))
-            with self.assertRaises(QueryError) as cm:
-                self.commit()
-            self.assertEqual(str(cm.exception), 'transaction must be rolled back')
-            self.rollback()
-            self.assertFalse(self.execute('Any X WHERE X is CWGroup, X name "toto"'))
+
+        with self.admin_access.repo_cnx() as cnx:
+            with self.temporary_appobjects(UnauthorizedAfterHook):
+                self.assertRaises(Unauthorized,
+                                  cnx.execute, 'SET X name "toto" WHERE X is CWGroup, X name "guests"')
+                self.assertTrue(cnx.execute('Any X WHERE X is CWGroup, X name "toto"'))
+                with self.assertRaises(QueryError) as cm:
+                    cnx.commit()
+                self.assertEqual(str(cm.exception), 'transaction must be rolled back')
+                cnx.rollback()
+                self.assertFalse(cnx.execute('Any X WHERE X is CWGroup, X name "toto"'))
 
 
     def test_close(self):
@@ -234,7 +236,6 @@ class RepositoryTC(CubicWebTC):
         cnxid = repo.connect(self.admlogin, password=self.admpassword)
         # rollback state change which trigger TrInfo insertion
         session = repo._get_session(cnxid)
-        session.set_cnxset()
         user = session.user
         user.cw_adapt_to('IWorkflowable').fire_transition('deactivate')
         rset = repo.execute(cnxid, 'TrInfo T WHERE T wf_info_for X, X eid %(x)s', {'x': user.eid})
@@ -243,9 +244,6 @@ class RepositoryTC(CubicWebTC):
         rset = repo.execute(cnxid, 'TrInfo T WHERE T wf_info_for X, X eid %(x)s', {'x': user.eid})
         self.assertEqual(len(rset), 0)
         repo.close(cnxid)
-
-    def test_transaction_interleaved(self):
-        self.skipTest('implement me')
 
     def test_close_kill_processing_request(self):
         repo = self.repo
@@ -462,8 +460,9 @@ class RepositoryTC(CubicWebTC):
         self.assertRaises(BadConnectionId, repo.get_shared_data, cnxid, 'data')
 
     def test_schema_is_relation(self):
-        no_is_rset = self.execute('Any X WHERE NOT X is ET')
-        self.assertFalse(no_is_rset, no_is_rset.description)
+        with self.admin_access.repo_cnx() as cnx:
+            no_is_rset = cnx.execute('Any X WHERE NOT X is ET')
+            self.assertFalse(no_is_rset, no_is_rset.description)
 
 #     def test_perfo(self):
 #         self.set_debug(True)
@@ -476,28 +475,29 @@ class RepositoryTC(CubicWebTC):
 #         print 'test time: %.3f (time) %.3f (cpu)' % ((time() - t), clock() - c)
 
     def test_delete_if_singlecard1(self):
-        note = self.request().create_entity('Affaire')
-        p1 = self.request().create_entity('Personne', nom=u'toto')
-        self.execute('SET A todo_by P WHERE A eid %(x)s, P eid %(p)s',
-                     {'x': note.eid, 'p': p1.eid})
-        rset = self.execute('Any P WHERE A todo_by P, A eid %(x)s',
-                            {'x': note.eid})
-        self.assertEqual(len(rset), 1)
-        p2 = self.request().create_entity('Personne', nom=u'tutu')
-        self.execute('SET A todo_by P WHERE A eid %(x)s, P eid %(p)s',
-                     {'x': note.eid, 'p': p2.eid})
-        rset = self.execute('Any P WHERE A todo_by P, A eid %(x)s',
-                            {'x': note.eid})
-        self.assertEqual(len(rset), 1)
-        self.assertEqual(rset.rows[0][0], p2.eid)
+        with self.admin_access.repo_cnx() as cnx:
+            note = cnx.create_entity('Affaire')
+            p1 = cnx.create_entity('Personne', nom=u'toto')
+            cnx.execute('SET A todo_by P WHERE A eid %(x)s, P eid %(p)s',
+                        {'x': note.eid, 'p': p1.eid})
+            rset = cnx.execute('Any P WHERE A todo_by P, A eid %(x)s',
+                               {'x': note.eid})
+            self.assertEqual(len(rset), 1)
+            p2 = cnx.create_entity('Personne', nom=u'tutu')
+            cnx.execute('SET A todo_by P WHERE A eid %(x)s, P eid %(p)s',
+                        {'x': note.eid, 'p': p2.eid})
+            rset = cnx.execute('Any P WHERE A todo_by P, A eid %(x)s',
+                                {'x': note.eid})
+            self.assertEqual(len(rset), 1)
+            self.assertEqual(rset.rows[0][0], p2.eid)
 
     def test_delete_if_object_inlined_singlecard(self):
-        req = self.request()
-        c = req.create_entity('Card', title=u'Carte')
-        req.create_entity('Personne', nom=u'Vincent', fiche=c)
-        req.create_entity('Personne', nom=u'Florent', fiche=c)
-        self.commit()
-        self.assertEqual(len(c.reverse_fiche), 1)
+        with self.admin_access.repo_cnx() as cnx:
+            c = cnx.create_entity('Card', title=u'Carte')
+            cnx.create_entity('Personne', nom=u'Vincent', fiche=c)
+            cnx.create_entity('Personne', nom=u'Florent', fiche=c)
+            cnx.commit()
+            self.assertEqual(len(c.reverse_fiche), 1)
 
     def test_cw_set_in_before_update(self):
         # local hook
@@ -512,13 +512,14 @@ class RepositoryTC(CubicWebTC):
                 if self.entity.eid not in pendings:
                     pendings.add(self.entity.eid)
                     self.entity.cw_set(alias=u'foo')
-        with self.temporary_appobjects(DummyBeforeHook):
-            req = self.request()
-            addr = req.create_entity('EmailAddress', address=u'a@b.fr')
-            addr.cw_set(address=u'a@b.com')
-            rset = self.execute('Any A,AA WHERE X eid %(x)s, X address A, X alias AA',
-                                {'x': addr.eid})
-            self.assertEqual(rset.rows, [[u'a@b.com', u'foo']])
+
+        with self.admin_access.repo_cnx() as cnx:
+            with self.temporary_appobjects(DummyBeforeHook):
+                addr = cnx.create_entity('EmailAddress', address=u'a@b.fr')
+                addr.cw_set(address=u'a@b.com')
+                rset = cnx.execute('Any A,AA WHERE X eid %(x)s, X address A, X alias AA',
+                                   {'x': addr.eid})
+                self.assertEqual(rset.rows, [[u'a@b.com', u'foo']])
 
     def test_cw_set_in_before_add(self):
         # local hook
@@ -529,11 +530,12 @@ class RepositoryTC(CubicWebTC):
             def __call__(self):
                 # cw_set is forbidden within before_add_entity()
                 self.entity.cw_set(alias=u'foo')
-        with self.temporary_appobjects(DummyBeforeHook):
-            req = self.request()
-            # XXX will fail with python -O
-            self.assertRaises(AssertionError, req.create_entity,
-                              'EmailAddress', address=u'a@b.fr')
+
+        with self.admin_access.repo_cnx() as cnx:
+            with self.temporary_appobjects(DummyBeforeHook):
+                # XXX will fail with python -O
+                self.assertRaises(AssertionError, cnx.create_entity,
+                                  'EmailAddress', address=u'a@b.fr')
 
     def test_multiple_edit_cw_set(self):
         """make sure cw_edited doesn't get cluttered
@@ -550,11 +552,12 @@ class RepositoryTC(CubicWebTC):
                 self._test.assertFalse('invoiced' in self.entity.cw_edited,
                                   'cw_edited cluttered by previous update')
                 self.entity.cw_edited['invoiced'] = 10
-        with self.temporary_appobjects(DummyBeforeHook):
-            req = self.request()
-            req.create_entity('Affaire', ref=u'AFF01')
-            req.create_entity('Affaire', ref=u'AFF02')
-            req.execute('SET A duration 10 WHERE A is Affaire')
+
+        with self.admin_access.repo_cnx() as cnx:
+            with self.temporary_appobjects(DummyBeforeHook):
+                cnx.create_entity('Affaire', ref=u'AFF01')
+                cnx.create_entity('Affaire', ref=u'AFF02')
+                cnx.execute('SET A duration 10 WHERE A is Affaire')
 
 
     def test_user_friendly_error(self):
@@ -564,20 +567,20 @@ class RepositoryTC(CubicWebTC):
             def raise_user_exception(self):
                 raise ValidationError(self.entity.eid, {'hip': 'hop'})
 
-        with self.temporary_appobjects(MyIUserFriendlyUniqueTogether):
-            req = self.request()
-            s = req.create_entity('Societe', nom=u'Logilab', type=u'ssll', cp=u'75013')
-            self.commit()
-            with self.assertRaises(ValidationError) as cm:
-                req.create_entity('Societe', nom=u'Logilab', type=u'ssll', cp=u'75013')
-            self.assertEqual(cm.exception.errors, {'hip': 'hop'})
-            self.rollback()
-            req.create_entity('Societe', nom=u'Logilab', type=u'ssll', cp=u'31400')
-            with self.assertRaises(ValidationError) as cm:
-                s.cw_set(cp=u'31400')
-            self.assertEqual(cm.exception.entity, s.eid)
-            self.assertEqual(cm.exception.errors, {'hip': 'hop'})
-            self.rollback()
+        with self.admin_access.repo_cnx() as cnx:
+            with self.temporary_appobjects(MyIUserFriendlyUniqueTogether):
+                s = cnx.create_entity('Societe', nom=u'Logilab', type=u'ssll', cp=u'75013')
+                cnx.commit()
+                with self.assertRaises(ValidationError) as cm:
+                    cnx.create_entity('Societe', nom=u'Logilab', type=u'ssll', cp=u'75013')
+                self.assertEqual(cm.exception.errors, {'hip': 'hop'})
+                cnx.rollback()
+                cnx.create_entity('Societe', nom=u'Logilab', type=u'ssll', cp=u'31400')
+                with self.assertRaises(ValidationError) as cm:
+                    s.cw_set(cp=u'31400')
+                self.assertEqual(cm.exception.entity, s.eid)
+                self.assertEqual(cm.exception.errors, {'hip': 'hop'})
+                cnx.rollback()
 
 
 class SchemaDeserialTC(CubicWebTC):
@@ -615,35 +618,39 @@ class SchemaDeserialTC(CubicWebTC):
             table = SQL_PREFIX + 'CWEType'
             namecol = SQL_PREFIX + 'name'
             finalcol = SQL_PREFIX + 'final'
-            self.session.set_cnxset()
-            cu = self.session.system_sql('SELECT %s FROM %s WHERE %s is NULL' % (
-                namecol, table, finalcol))
-            self.assertEqual(cu.fetchall(), [])
-            cu = self.session.system_sql('SELECT %s FROM %s WHERE %s=%%(final)s ORDER BY %s'
-                                         % (namecol, table, finalcol, namecol), {'final': True})
-            self.assertEqual(cu.fetchall(), [(u'BabarTestType',),
-                                             (u'BigInt',), (u'Boolean',), (u'Bytes',),
-                                             (u'Date',), (u'Datetime',),
-                                             (u'Decimal',),(u'Float',),
-                                             (u'Int',),
-                                             (u'Interval',), (u'Password',),
-                                             (u'String',),
-                                             (u'TZDatetime',), (u'TZTime',), (u'Time',)])
-            sql = ("SELECT etype.cw_eid, etype.cw_name, cstr.cw_eid, rel.eid_to "
-                   "FROM cw_CWUniqueTogetherConstraint as cstr, "
-                   "     relations_relation as rel, "
-                   "     cw_CWEType as etype "
-                   "WHERE cstr.cw_eid = rel.eid_from "
-                   "  AND cstr.cw_constraint_of = etype.cw_eid "
-                   "  AND etype.cw_name = 'Personne' "
-                   ";")
-            cu = self.session.system_sql(sql)
-            rows = cu.fetchall()
-            self.assertEqual(len(rows), 3)
-            person = self.repo.schema.eschema('Personne')
-            self.assertEqual(len(person._unique_together), 1)
-            self.assertItemsEqual(person._unique_together[0],
-                                  ('nom', 'prenom', 'inline2'))
+            with self.admin_access.repo_cnx() as cnx:
+                with cnx.ensure_cnx_set:
+                    cu = cnx.system_sql('SELECT %s FROM %s WHERE %s is NULL'
+                                        % (namecol, table, finalcol))
+                    self.assertEqual(cu.fetchall(), [])
+                    cu = cnx.system_sql('SELECT %s FROM %s '
+                                        'WHERE %s=%%(final)s ORDER BY %s'
+                                        % (namecol, table, finalcol, namecol),
+                                        {'final': True})
+                    self.assertEqual(cu.fetchall(),
+                                     [(u'BabarTestType',),
+                                      (u'BigInt',), (u'Boolean',), (u'Bytes',),
+                                      (u'Date',), (u'Datetime',),
+                                      (u'Decimal',),(u'Float',),
+                                      (u'Int',),
+                                      (u'Interval',), (u'Password',),
+                                      (u'String',),
+                                      (u'TZDatetime',), (u'TZTime',), (u'Time',)])
+                    sql = ("SELECT etype.cw_eid, etype.cw_name, cstr.cw_eid, rel.eid_to "
+                           "FROM cw_CWUniqueTogetherConstraint as cstr, "
+                           "     relations_relation as rel, "
+                           "     cw_CWEType as etype "
+                           "WHERE cstr.cw_eid = rel.eid_from "
+                           "  AND cstr.cw_constraint_of = etype.cw_eid "
+                           "  AND etype.cw_name = 'Personne' "
+                           ";")
+                    cu = cnx.system_sql(sql)
+                    rows = cu.fetchall()
+                    self.assertEqual(len(rows), 3)
+                    person = self.repo.schema.eschema('Personne')
+                    self.assertEqual(len(person._unique_together), 1)
+                    self.assertItemsEqual(person._unique_together[0],
+                                          ('nom', 'prenom', 'inline2'))
 
         finally:
             self.repo.set_schema(origshema)
@@ -664,80 +671,90 @@ class SchemaDeserialTC(CubicWebTC):
 
 class DataHelpersTC(CubicWebTC):
 
-    def test_create_eid(self):
-        self.session.set_cnxset()
-        self.assert_(self.repo.system_source.create_eid(self.session))
-
     def test_type_from_eid(self):
-        self.session.set_cnxset()
-        self.assertEqual(self.repo.type_from_eid(2, self.session), 'CWGroup')
+        with self.admin_access.repo_cnx() as cnx:
+            with cnx.ensure_cnx_set:
+                self.assertEqual(self.repo.type_from_eid(2, cnx), 'CWGroup')
 
     def test_type_from_eid_raise(self):
-        self.session.set_cnxset()
-        self.assertRaises(UnknownEid, self.repo.type_from_eid, -2, self.session)
+        with self.admin_access.repo_cnx() as cnx:
+            with cnx.ensure_cnx_set:
+                self.assertRaises(UnknownEid, self.repo.type_from_eid, -2, cnx)
 
     def test_add_delete_info(self):
-        entity = self.repo.vreg['etypes'].etype_class('Personne')(self.session)
-        entity.eid = -1
-        entity.complete = lambda x: None
-        self.session.set_cnxset()
-        self.repo.add_info(self.session, entity, self.repo.system_source)
-        cu = self.session.system_sql('SELECT * FROM entities WHERE eid = -1')
-        data = cu.fetchall()
-        self.assertEqual(tuplify(data), [(-1, 'Personne', 'system', None)])
-        self.repo.delete_info(self.session, entity, 'system')
-        #self.repo.commit()
-        cu = self.session.system_sql('SELECT * FROM entities WHERE eid = -1')
-        data = cu.fetchall()
-        self.assertEqual(data, [])
+        with self.admin_access.repo_cnx() as cnx:
+            with cnx.ensure_cnx_set:
+                cnx.mode = 'write'
+                entity = self.repo.vreg['etypes'].etype_class('Personne')(cnx)
+                entity.eid = -1
+                entity.complete = lambda x: None
+                self.repo.add_info(cnx, entity, self.repo.system_source)
+                cu = cnx.system_sql('SELECT * FROM entities WHERE eid = -1')
+                data = cu.fetchall()
+                self.assertEqual(tuplify(data), [(-1, 'Personne', 'system', None)])
+                self.repo.delete_info(cnx, entity, 'system')
+                #self.repo.commit()
+                cu = cnx.system_sql('SELECT * FROM entities WHERE eid = -1')
+                data = cu.fetchall()
+                self.assertEqual(data, [])
 
 
 class FTITC(CubicWebTC):
 
     def test_fulltext_container_entity(self):
-        assert self.schema.rschema('use_email').fulltext_container == 'subject'
-        req = self.request()
-        toto = req.create_entity('EmailAddress', address=u'toto@logilab.fr')
-        self.commit()
-        rset = req.execute('Any X WHERE X has_text %(t)s', {'t': 'toto'})
-        self.assertEqual(rset.rows, [])
-        req.user.cw_set(use_email=toto)
-        self.commit()
-        rset = req.execute('Any X WHERE X has_text %(t)s', {'t': 'toto'})
-        self.assertEqual(rset.rows, [[req.user.eid]])
-        req.execute('DELETE X use_email Y WHERE X login "admin", Y eid %(y)s',
-                    {'y': toto.eid})
-        self.commit()
-        rset = req.execute('Any X WHERE X has_text %(t)s', {'t': 'toto'})
-        self.assertEqual(rset.rows, [])
-        tutu = req.create_entity('EmailAddress', address=u'tutu@logilab.fr')
-        req.user.cw_set(use_email=tutu)
-        self.commit()
-        rset = req.execute('Any X WHERE X has_text %(t)s', {'t': 'tutu'})
-        self.assertEqual(rset.rows, [[req.user.eid]])
-        tutu.cw_set(address=u'hip@logilab.fr')
-        self.commit()
-        rset = req.execute('Any X WHERE X has_text %(t)s', {'t': 'tutu'})
-        self.assertEqual(rset.rows, [])
-        rset = req.execute('Any X WHERE X has_text %(t)s', {'t': 'hip'})
-        self.assertEqual(rset.rows, [[req.user.eid]])
+        with self.admin_access.repo_cnx() as cnx:
+            assert self.schema.rschema('use_email').fulltext_container == 'subject'
+            toto = cnx.create_entity('EmailAddress', address=u'toto@logilab.fr')
+            cnx.commit()
+            rset = cnx.execute('Any X WHERE X has_text %(t)s', {'t': 'toto'})
+            self.assertEqual(rset.rows, [])
+            cnx.user.cw_set(use_email=toto)
+            cnx.commit()
+            rset = cnx.execute('Any X WHERE X has_text %(t)s', {'t': 'toto'})
+            self.assertEqual(rset.rows, [[cnx.user.eid]])
+            cnx.execute('DELETE X use_email Y WHERE X login "admin", Y eid %(y)s',
+                        {'y': toto.eid})
+            cnx.commit()
+            rset = cnx.execute('Any X WHERE X has_text %(t)s', {'t': 'toto'})
+            self.assertEqual(rset.rows, [])
+            tutu = cnx.create_entity('EmailAddress', address=u'tutu@logilab.fr')
+            cnx.user.cw_set(use_email=tutu)
+            cnx.commit()
+            rset = cnx.execute('Any X WHERE X has_text %(t)s', {'t': 'tutu'})
+            self.assertEqual(rset.rows, [[cnx.user.eid]])
+            tutu.cw_set(address=u'hip@logilab.fr')
+            cnx.commit()
+            rset = cnx.execute('Any X WHERE X has_text %(t)s', {'t': 'tutu'})
+            self.assertEqual(rset.rows, [])
+            rset = cnx.execute('Any X WHERE X has_text %(t)s', {'t': 'hip'})
+            self.assertEqual(rset.rows, [[cnx.user.eid]])
 
     def test_no_uncessary_ftiindex_op(self):
-        req = self.request()
-        req.create_entity('Workflow', name=u'dummy workflow', description=u'huuuuu')
-        self.assertFalse(any(x for x in self.session.pending_operations
-                        if isinstance(x, native.FTIndexEntityOp)))
+        with self.admin_access.repo_cnx() as cnx:
+            cnx.create_entity('Workflow',
+                              name=u'dummy workflow',
+                              description=u'huuuuu')
+            self.assertFalse(any(x for x in cnx.pending_operations
+                                 if isinstance(x, native.FTIndexEntityOp)))
 
 
 class DBInitTC(CubicWebTC):
 
     def test_versions_inserted(self):
-        inserted = [r[0] for r in self.execute('Any K ORDERBY K WHERE P pkey K, P pkey ~= "system.version.%"')]
-        self.assertEqual(inserted,
-                          [u'system.version.basket', u'system.version.card', u'system.version.comment',
-                           u'system.version.cubicweb', u'system.version.email',
-                           u'system.version.file', u'system.version.folder',
-                           u'system.version.localperms', u'system.version.tag'])
+        with self.admin_access.repo_cnx() as cnx:
+            inserted = [r[0]
+                        for r in cnx.execute('Any K ORDERBY K '
+                                             'WHERE P pkey K, P pkey ~= "system.version.%"')]
+            self.assertEqual(inserted,
+                             [u'system.version.basket',
+                              u'system.version.card',
+                              u'system.version.comment',
+                              u'system.version.cubicweb',
+                              u'system.version.email',
+                              u'system.version.file',
+                              u'system.version.folder',
+                              u'system.version.localperms',
+                              u'system.version.tag'])
 
 CALLED = []
 
@@ -748,11 +765,9 @@ class InlineRelHooksTC(CubicWebTC):
         CubicWebTC.setUp(self)
         CALLED[:] = ()
 
-    def _after_relation_hook(self, cnxset, fromeid, rtype, toeid):
-        self.called.append((fromeid, rtype, toeid))
-
     def test_inline_relation(self):
         """make sure <event>_relation hooks are called for inlined relation"""
+
         class EcritParHook(hook.Hook):
             __regid__ = 'inlinedrelhook'
             __select__ = hook.Hook.__select__ & hook.match_rtype('ecrit_par')
@@ -762,47 +777,51 @@ class InlineRelHooksTC(CubicWebTC):
                 CALLED.append((self.event, self.eidfrom, self.rtype, self.eidto))
 
         with self.temporary_appobjects(EcritParHook):
-            eidp = self.execute('INSERT Personne X: X nom "toto"')[0][0]
-            eidn = self.execute('INSERT Note X: X type "T"')[0][0]
-            self.execute('SET N ecrit_par Y WHERE N type "T", Y nom "toto"')
-            self.assertEqual(CALLED, [('before_add_relation', eidn, 'ecrit_par', eidp),
-                                       ('after_add_relation', eidn, 'ecrit_par', eidp)])
-            CALLED[:] = ()
-            self.execute('DELETE N ecrit_par Y WHERE N type "T", Y nom "toto"')
-            self.assertEqual(CALLED, [('before_delete_relation', eidn, 'ecrit_par', eidp),
-                                       ('after_delete_relation', eidn, 'ecrit_par', eidp)])
-            CALLED[:] = ()
-            eidn = self.execute('INSERT Note N: N ecrit_par P WHERE P nom "toto"')[0][0]
-            self.assertEqual(CALLED, [('before_add_relation', eidn, 'ecrit_par', eidp),
-                                       ('after_add_relation', eidn, 'ecrit_par', eidp)])
+            with self.admin_access.repo_cnx() as cnx:
+                eidp = cnx.execute('INSERT Personne X: X nom "toto"')[0][0]
+                eidn = cnx.execute('INSERT Note X: X type "T"')[0][0]
+                cnx.execute('SET N ecrit_par Y WHERE N type "T", Y nom "toto"')
+                self.assertEqual(CALLED, [('before_add_relation', eidn, 'ecrit_par', eidp),
+                                          ('after_add_relation', eidn, 'ecrit_par', eidp)])
+                CALLED[:] = ()
+                cnx.execute('DELETE N ecrit_par Y WHERE N type "T", Y nom "toto"')
+                self.assertEqual(CALLED, [('before_delete_relation', eidn, 'ecrit_par', eidp),
+                                          ('after_delete_relation', eidn, 'ecrit_par', eidp)])
+                CALLED[:] = ()
+                eidn = cnx.execute('INSERT Note N: N ecrit_par P WHERE P nom "toto"')[0][0]
+                self.assertEqual(CALLED, [('before_add_relation', eidn, 'ecrit_par', eidp),
+                                          ('after_add_relation', eidn, 'ecrit_par', eidp)])
 
     def test_unique_contraint(self):
-        req = self.request()
-        toto = req.create_entity('Personne', nom=u'toto')
-        a01 = req.create_entity('Affaire', ref=u'A01', todo_by=toto)
-        req.cnx.commit()
-        req = self.request()
-        req.create_entity('Note', type=u'todo', inline1=a01)
-        req.cnx.commit()
-        req = self.request()
-        req.create_entity('Note', type=u'todo', inline1=a01)
-        with self.assertRaises(ValidationError) as cm:
-            req.cnx.commit()
-        self.assertEqual(cm.exception.errors, {'inline1-subject': u'RQLUniqueConstraint S type T, S inline1 A1, A1 todo_by C, Y type T, Y inline1 A2, A2 todo_by C failed'})
+        with self.admin_access.repo_cnx() as cnx:
+            toto = cnx.create_entity('Personne', nom=u'toto')
+            a01 = cnx.create_entity('Affaire', ref=u'A01', todo_by=toto)
+            cnx.commit()
+            cnx.create_entity('Note', type=u'todo', inline1=a01)
+            cnx.commit()
+            cnx.create_entity('Note', type=u'todo', inline1=a01)
+            with self.assertRaises(ValidationError) as cm:
+                cnx.commit()
+            self.assertEqual(cm.exception.errors,
+                             {'inline1-subject': u'RQLUniqueConstraint S type T, S inline1 A1, '
+                              'A1 todo_by C, Y type T, Y inline1 A2, A2 todo_by C failed'})
 
     def test_add_relations_at_creation_with_del_existing_rel(self):
-        req = self.request()
-        person = req.create_entity('Personne', nom=u'Toto', prenom=u'Lanturlu', sexe=u'M')
-        users_rql = 'Any U WHERE U is CWGroup, U name "users"'
-        users = self.execute(users_rql).get_entity(0, 0)
-        req.create_entity('CWUser',
-                      login=u'Toto',
-                      upassword=u'firstname',
-                      firstname=u'firstname',
-                      surname=u'surname',
-                      reverse_login_user=person,
-                      in_group=users)
-        self.commit()
+        with self.admin_access.repo_cnx() as cnx:
+            person = cnx.create_entity('Personne',
+                                       nom=u'Toto',
+                                       prenom=u'Lanturlu',
+                                       sexe=u'M')
+            users_rql = 'Any U WHERE U is CWGroup, U name "users"'
+            users = cnx.execute(users_rql).get_entity(0, 0)
+            cnx.create_entity('CWUser',
+                              login=u'Toto',
+                              upassword=u'firstname',
+                              firstname=u'firstname',
+                              surname=u'surname',
+                              reverse_login_user=person,
+                              in_group=users)
+            cnx.commit()
 
 
 class PerformanceTest(CubicWebTC):
@@ -819,160 +838,161 @@ class PerformanceTest(CubicWebTC):
         logger.setLevel(logging.CRITICAL)
 
     def test_composite_deletion(self):
-        req = self.request()
-        personnes = []
-        t0 = time.time()
-        for i in xrange(2000):
-            p = req.create_entity('Personne', nom=u'Doe%03d'%i, prenom=u'John', sexe=u'M')
-            personnes.append(p)
-        abraham = req.create_entity('Personne', nom=u'Abraham', prenom=u'John', sexe=u'M')
-        for j in xrange(0, 2000, 100):
-            abraham.cw_set(personne_composite=personnes[j:j+100])
-        t1 = time.time()
-        self.info('creation: %.2gs', (t1 - t0))
-        req.cnx.commit()
-        t2 = time.time()
-        self.info('commit creation: %.2gs', (t2 - t1))
-        self.execute('DELETE Personne P WHERE P eid %(eid)s', {'eid': abraham.eid})
-        t3 = time.time()
-        self.info('deletion: %.2gs', (t3 - t2))
-        req.cnx.commit()
-        t4 = time.time()
-        self.info("commit deletion: %2gs", (t4 - t3))
+        with self.admin_access.repo_cnx() as cnx:
+            personnes = []
+            t0 = time.time()
+            for i in xrange(2000):
+                p = cnx.create_entity('Personne', nom=u'Doe%03d'%i, prenom=u'John', sexe=u'M')
+                personnes.append(p)
+            abraham = cnx.create_entity('Personne', nom=u'Abraham', prenom=u'John', sexe=u'M')
+            for j in xrange(0, 2000, 100):
+                abraham.cw_set(personne_composite=personnes[j:j+100])
+            t1 = time.time()
+            self.info('creation: %.2gs', (t1 - t0))
+            cnx.commit()
+            t2 = time.time()
+            self.info('commit creation: %.2gs', (t2 - t1))
+            cnx.execute('DELETE Personne P WHERE P eid %(eid)s', {'eid': abraham.eid})
+            t3 = time.time()
+            self.info('deletion: %.2gs', (t3 - t2))
+            cnx.commit()
+            t4 = time.time()
+            self.info("commit deletion: %2gs", (t4 - t3))
 
     def test_add_relation_non_inlined(self):
-        req = self.request()
-        personnes = []
-        for i in xrange(2000):
-            p = req.create_entity('Personne', nom=u'Doe%03d'%i, prenom=u'John', sexe=u'M')
-            personnes.append(p)
-        req.cnx.commit()
-        t0 = time.time()
-        abraham = req.create_entity('Personne', nom=u'Abraham', prenom=u'John', sexe=u'M',
-                                    personne_composite=personnes[:100])
-        t1 = time.time()
-        self.info('creation: %.2gs', (t1 - t0))
-        for j in xrange(100, 2000, 100):
-            abraham.cw_set(personne_composite=personnes[j:j+100])
-        t2 = time.time()
-        self.info('more relations: %.2gs', (t2-t1))
-        req.cnx.commit()
-        t3 = time.time()
-        self.info('commit creation: %.2gs', (t3 - t2))
+        with self.admin_access.repo_cnx() as cnx:
+            personnes = []
+            for i in xrange(2000):
+                p = cnx.create_entity('Personne', nom=u'Doe%03d'%i, prenom=u'John', sexe=u'M')
+                personnes.append(p)
+            cnx.commit()
+            t0 = time.time()
+            abraham = cnx.create_entity('Personne', nom=u'Abraham', prenom=u'John', sexe=u'M',
+                                        personne_composite=personnes[:100])
+            t1 = time.time()
+            self.info('creation: %.2gs', (t1 - t0))
+            for j in xrange(100, 2000, 100):
+                abraham.cw_set(personne_composite=personnes[j:j+100])
+            t2 = time.time()
+            self.info('more relations: %.2gs', (t2-t1))
+            cnx.commit()
+            t3 = time.time()
+            self.info('commit creation: %.2gs', (t3 - t2))
 
     def test_add_relation_inlined(self):
-        req = self.request()
-        personnes = []
-        for i in xrange(2000):
-            p = req.create_entity('Personne', nom=u'Doe%03d'%i, prenom=u'John', sexe=u'M')
-            personnes.append(p)
-        req.cnx.commit()
-        t0 = time.time()
-        abraham = req.create_entity('Personne', nom=u'Abraham', prenom=u'John', sexe=u'M',
-                                    personne_inlined=personnes[:100])
-        t1 = time.time()
-        self.info('creation: %.2gs', (t1 - t0))
-        for j in xrange(100, 2000, 100):
-            abraham.cw_set(personne_inlined=personnes[j:j+100])
-        t2 = time.time()
-        self.info('more relations: %.2gs', (t2-t1))
-        req.cnx.commit()
-        t3 = time.time()
-        self.info('commit creation: %.2gs', (t3 - t2))
+        with self.admin_access.repo_cnx() as cnx:
+            personnes = []
+            for i in xrange(2000):
+                p = cnx.create_entity('Personne', nom=u'Doe%03d'%i, prenom=u'John', sexe=u'M')
+                personnes.append(p)
+            cnx.commit()
+            t0 = time.time()
+            abraham = cnx.create_entity('Personne', nom=u'Abraham', prenom=u'John', sexe=u'M',
+                                        personne_inlined=personnes[:100])
+            t1 = time.time()
+            self.info('creation: %.2gs', (t1 - t0))
+            for j in xrange(100, 2000, 100):
+                abraham.cw_set(personne_inlined=personnes[j:j+100])
+            t2 = time.time()
+            self.info('more relations: %.2gs', (t2-t1))
+            cnx.commit()
+            t3 = time.time()
+            self.info('commit creation: %.2gs', (t3 - t2))
 
 
     def test_session_add_relation(self):
         """ to be compared with test_session_add_relations"""
-        req = self.request()
-        personnes = []
-        for i in xrange(2000):
-            p = req.create_entity('Personne', nom=u'Doe%03d'%i, prenom=u'John', sexe=u'M')
-            personnes.append(p)
-        abraham = req.create_entity('Personne', nom=u'Abraham', prenom=u'John', sexe=u'M')
-        req.cnx.commit()
-        t0 = time.time()
-        add_relation = self.session.add_relation
-        for p in personnes:
-            add_relation(abraham.eid, 'personne_composite', p.eid)
-        req.cnx.commit()
-        t1 = time.time()
-        self.info('add relation: %.2gs', t1-t0)
+        with self.admin_access.repo_cnx() as cnx:
+            personnes = []
+            for i in xrange(2000):
+                p = cnx.create_entity('Personne', nom=u'Doe%03d'%i, prenom=u'John', sexe=u'M')
+                personnes.append(p)
+            abraham = cnx.create_entity('Personne', nom=u'Abraham', prenom=u'John', sexe=u'M')
+            cnx.commit()
+            t0 = time.time()
+            add_relation = cnx.add_relation
+            for p in personnes:
+                add_relation(abraham.eid, 'personne_composite', p.eid)
+            cnx.commit()
+            t1 = time.time()
+            self.info('add relation: %.2gs', t1-t0)
 
     def test_session_add_relations (self):
         """ to be compared with test_session_add_relation"""
-        req = self.request()
-        personnes = []
-        for i in xrange(2000):
-            p = req.create_entity('Personne', nom=u'Doe%03d'%i, prenom=u'John', sexe=u'M')
-            personnes.append(p)
-        abraham = req.create_entity('Personne', nom=u'Abraham', prenom=u'John', sexe=u'M')
-        req.cnx.commit()
-        t0 = time.time()
-        add_relations = self.session.add_relations
-        relations = [('personne_composite', [(abraham.eid, p.eid) for p in personnes])]
-        add_relations(relations)
-        req.cnx.commit()
-        t1 = time.time()
-        self.info('add relations: %.2gs', t1-t0)
+        with self.admin_access.repo_cnx() as cnx:
+            personnes = []
+            for i in xrange(2000):
+                p = cnx.create_entity('Personne', nom=u'Doe%03d'%i, prenom=u'John', sexe=u'M')
+                personnes.append(p)
+            abraham = cnx.create_entity('Personne', nom=u'Abraham', prenom=u'John', sexe=u'M')
+            cnx.commit()
+            t0 = time.time()
+            add_relations = cnx.add_relations
+            relations = [('personne_composite', [(abraham.eid, p.eid) for p in personnes])]
+            add_relations(relations)
+            cnx.commit()
+            t1 = time.time()
+            self.info('add relations: %.2gs', t1-t0)
 
     def test_session_add_relation_inlined(self):
         """ to be compared with test_session_add_relations"""
-        req = self.request()
-        personnes = []
-        for i in xrange(2000):
-            p = req.create_entity('Personne', nom=u'Doe%03d'%i, prenom=u'John', sexe=u'M')
-            personnes.append(p)
-        abraham = req.create_entity('Personne', nom=u'Abraham', prenom=u'John', sexe=u'M')
-        req.cnx.commit()
-        t0 = time.time()
-        add_relation = self.session.add_relation
-        for p in personnes:
-            add_relation(abraham.eid, 'personne_inlined', p.eid)
-        req.cnx.commit()
-        t1 = time.time()
-        self.info('add relation (inlined): %.2gs', t1-t0)
+        with self.admin_access.repo_cnx() as cnx:
+            personnes = []
+            for i in xrange(2000):
+                p = cnx.create_entity('Personne', nom=u'Doe%03d'%i, prenom=u'John', sexe=u'M')
+                personnes.append(p)
+            abraham = cnx.create_entity('Personne', nom=u'Abraham', prenom=u'John', sexe=u'M')
+            cnx.commit()
+            t0 = time.time()
+            add_relation = cnx.add_relation
+            for p in personnes:
+                add_relation(abraham.eid, 'personne_inlined', p.eid)
+            cnx.commit()
+            t1 = time.time()
+            self.info('add relation (inlined): %.2gs', t1-t0)
 
     def test_session_add_relations_inlined (self):
         """ to be compared with test_session_add_relation"""
-        req = self.request()
-        personnes = []
-        for i in xrange(2000):
-            p = req.create_entity('Personne', nom=u'Doe%03d'%i, prenom=u'John', sexe=u'M')
-            personnes.append(p)
-        abraham = req.create_entity('Personne', nom=u'Abraham', prenom=u'John', sexe=u'M')
-        req.cnx.commit()
-        t0 = time.time()
-        add_relations = self.session.add_relations
-        relations = [('personne_inlined', [(abraham.eid, p.eid) for p in personnes])]
-        add_relations(relations)
-        req.cnx.commit()
-        t1 = time.time()
-        self.info('add relations (inlined): %.2gs', t1-t0)
+        with self.admin_access.repo_cnx() as cnx:
+            personnes = []
+            for i in xrange(2000):
+                p = cnx.create_entity('Personne', nom=u'Doe%03d'%i, prenom=u'John', sexe=u'M')
+                personnes.append(p)
+            abraham = cnx.create_entity('Personne', nom=u'Abraham', prenom=u'John', sexe=u'M')
+            cnx.commit()
+            t0 = time.time()
+            add_relations = cnx.add_relations
+            relations = [('personne_inlined', [(abraham.eid, p.eid) for p in personnes])]
+            add_relations(relations)
+            cnx.commit()
+            t1 = time.time()
+            self.info('add relations (inlined): %.2gs', t1-t0)
 
     def test_optional_relation_reset_1(self):
-        req = self.request()
-        p1 = req.create_entity('Personne', nom=u'Vincent')
-        p2 = req.create_entity('Personne', nom=u'Florent')
-        w = req.create_entity('Affaire', ref=u'wc')
-        w.cw_set(todo_by=[p1,p2])
-        w.cw_clear_all_caches()
-        self.commit()
-        self.assertEqual(len(w.todo_by), 1)
-        self.assertEqual(w.todo_by[0].eid, p2.eid)
+        with self.admin_access.repo_cnx() as cnx:
+            p1 = cnx.create_entity('Personne', nom=u'Vincent')
+            p2 = cnx.create_entity('Personne', nom=u'Florent')
+            w = cnx.create_entity('Affaire', ref=u'wc')
+            w.cw_set(todo_by=[p1,p2])
+            w.cw_clear_all_caches()
+            cnx.commit()
+            self.assertEqual(len(w.todo_by), 1)
+            self.assertEqual(w.todo_by[0].eid, p2.eid)
 
     def test_optional_relation_reset_2(self):
-        req = self.request()
-        p1 = req.create_entity('Personne', nom=u'Vincent')
-        p2 = req.create_entity('Personne', nom=u'Florent')
-        w = req.create_entity('Affaire', ref=u'wc')
-        w.cw_set(todo_by=p1)
-        self.commit()
-        w.cw_set(todo_by=p2)
-        w.cw_clear_all_caches()
-        self.commit()
-        self.assertEqual(len(w.todo_by), 1)
-        self.assertEqual(w.todo_by[0].eid, p2.eid)
+        with self.admin_access.repo_cnx() as cnx:
+            p1 = cnx.create_entity('Personne', nom=u'Vincent')
+            p2 = cnx.create_entity('Personne', nom=u'Florent')
+            w = cnx.create_entity('Affaire', ref=u'wc')
+            w.cw_set(todo_by=p1)
+            cnx.commit()
+            w.cw_set(todo_by=p2)
+            w.cw_clear_all_caches()
+            cnx.commit()
+            self.assertEqual(len(w.todo_by), 1)
+            self.assertEqual(w.todo_by[0].eid, p2.eid)
 
 
 if __name__ == '__main__':
+    from logilab.common.testlib import unittest_main
     unittest_main()

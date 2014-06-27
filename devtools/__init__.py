@@ -1,4 +1,4 @@
-# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -293,8 +293,9 @@ class TestDataBaseHandler(object):
     db_cache = {}
     explored_glob = set()
 
-    def __init__(self, config):
+    def __init__(self, config, init_config=None):
         self.config = config
+        self.init_config = init_config
         self._repo = None
         # pure consistency check
         assert self.system_source['db-driver'] == self.DRIVER
@@ -382,6 +383,9 @@ class TestDataBaseHandler(object):
         """
         if self._repo is None:
             self._repo = self._new_repo(self.config)
+        # config has now been bootstrapped, call init_config if specified
+        if self.init_config is not None:
+            self.init_config(self.config)
         repo = self._repo
         repo.turn_repo_on()
         if startup and not repo._has_started:
@@ -490,15 +494,9 @@ class TestDataBaseHandler(object):
             self.restore_database(DEFAULT_EMPTY_DB_ID)
             repo = self.get_repo(startup=True)
             cnx = self.get_cnx()
-            session = repo._sessions[cnx.sessionid]
-            session.set_cnxset()
-            _commit = session.commit
-            def keep_cnxset_commit(free_cnxset=False):
-                _commit(free_cnxset=free_cnxset)
-            session.commit = keep_cnxset_commit
-            pre_setup_func(session, self.config)
-            session.commit()
-            cnx.close()
+            with cnx:
+                pre_setup_func(cnx._cnx, self.config)
+                cnx.commit()
         self.backup_database(test_db_id)
 
 
@@ -542,8 +540,8 @@ class PostgresTestDataBaseHandler(TestDataBaseHandler):
         for datadir in cls.__CTL:
             subprocess.call(['pg_ctl', 'stop', '-D', datadir, '-m', 'fast'])
 
-    def __init__(self, config):
-        super(PostgresTestDataBaseHandler, self).__init__(config)
+    def __init__(self, *args, **kwargs):
+        super(PostgresTestDataBaseHandler, self).__init__(*args, **kwargs)
         datadir = join(self.config.apphome, 'pgdb')
         if not exists(datadir):
             subprocess.check_call(['initdb', '-D', datadir, '-E', 'utf-8', '--locale=C'])
@@ -611,7 +609,8 @@ class PostgresTestDataBaseHandler(TestDataBaseHandler):
             finally:
                 templcursor.close()
                 cnx.close()
-            init_repository(self.config, interactive=False)
+            init_repository(self.config, interactive=False,
+                            init_config=self.init_config)
         except BaseException:
             if self.dbcnx is not None:
                 self.dbcnx.rollback()
@@ -687,7 +686,8 @@ class SQLServerTestDataBaseHandler(TestDataBaseHandler):
         """initialize a fresh sqlserver databse used for testing purpose"""
         if self.config.init_repository:
             from cubicweb.server import init_repository
-            init_repository(self.config, interactive=False, drop=True)
+            init_repository(self.config, interactive=False, drop=True,
+                            init_config=self.init_config)
 
 ### sqlite test database handling ##############################################
 
@@ -764,7 +764,8 @@ class SQLiteTestDataBaseHandler(TestDataBaseHandler):
         # initialize the database
         from cubicweb.server import init_repository
         self._cleanup_database(self.absolute_dbfile())
-        init_repository(self.config, interactive=False)
+        init_repository(self.config, interactive=False,
+                        init_config=self.init_config)
 
 import atexit
 atexit.register(SQLiteTestDataBaseHandler._cleanup_all_tmpdb)
@@ -858,7 +859,7 @@ HCACHE = HCache()
 # XXX a class method on Test ?
 
 _CONFIG = None
-def get_test_db_handler(config):
+def get_test_db_handler(config, init_config=None):
     global _CONFIG
     if _CONFIG is not None and config is not _CONFIG:
         from logilab.common.modutils import cleanup_sys_modules
@@ -879,7 +880,7 @@ def get_test_db_handler(config):
     key = (driver, config)
     handlerkls = HANDLERS.get(driver, None)
     if handlerkls is not None:
-        handler = handlerkls(config)
+        handler = handlerkls(config, init_config)
         if config.skip_db_create_and_restore:
             handler = NoCreateDropDatabaseHandler(handler)
         HCACHE.set(config, handler)

@@ -92,7 +92,7 @@ class LoginControllerForAuthed(Controller):
     def publish(self, rset=None):
         """log in the instance"""
         path = self._cw.form.get('postlogin_path', '')
-        # redirect expect an url, not a path. Also path may contains a query
+        # redirect expect a URL, not a path. Also path may contains a query
         # string, hence should not be given to _cw.build_url()
         raise Redirect(self._cw.base_url() + path)
 
@@ -110,7 +110,7 @@ class LogoutController(Controller):
         #   anonymous connection is allowed and the page will be displayed or
         #   we'll be redirected to the login form
         msg = self._cw._('you have been logged out')
-        # force base_url so on dual http/https configuration, we generate an url
+        # force base_url so on dual http/https configuration, we generate a URL
         # on the http version of the site
         return self._cw.build_url('view', vid='loggedout',
                                   base_url=self._cw.vreg.config['base-url'])

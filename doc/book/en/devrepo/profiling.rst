@@ -10,7 +10,7 @@ track down. Luckily, CubicWeb provides a configuration option to log RQL
 queries. In your ``all-in-one.conf`` file, set the **query-log-file** option::
 
     # web application query log file
-    query-log-file=~/myapp-rql.log
+    query-log-file=/home/user/myapp-rql.log
 
 Then restart your application, reload your page and stop your application.
 The file ``myapp-rql.log`` now contains the list of RQL queries that were
@@ -28,7 +28,7 @@ in such a file:
 
 .. sourcecode:: sh
 
-    $ cubicweb-ctl exlog ~/myapp-rql.log
+    $ cubicweb-ctl exlog /home/user/myapp-rql.log
     0.07 50 Any A WHERE X eid %(x)s, X firstname A {}
     0.05 50 Any A WHERE X eid %(x)s, X lastname A {}
     0.01 1 Any X,AA ORDERBY AA DESC WHERE E eid %(x)s, E employees X, X modification_date AA {}

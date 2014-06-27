@@ -17,7 +17,7 @@ The uicfg module
  The part of uicfg that deals with primary views is in the
  :ref:`primary_view_configuration` chapter.
 
-.. automodule:: cubicweb.web.uicfg
+.. automodule:: cubicweb.web.views.uicfg
 
 
 The uihelper module

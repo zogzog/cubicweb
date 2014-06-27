@@ -44,6 +44,18 @@ class EntityTC(CubicWebTC):
         for cls in self.vreg['etypes'].iter_classes():
             cls.fetch_attrs, cls.cw_fetch_order = self.backup_dict[cls]
 
+    def test_no_prefill_related_cache_bug(self):
+        session = self.session
+        usine = session.create_entity('Usine', lieu=u'Montbeliard')
+        produit = session.create_entity('Produit')
+        # usine was prefilled in glob_add_entity
+        # let's simulate produit creation without prefill
+        produit._cw_related_cache.clear()
+        # use add_relations
+        session.add_relations([('fabrique_par', [(produit.eid, usine.eid)])])
+        self.assertEqual(1, len(usine.reverse_fabrique_par))
+        self.assertEqual(1, len(produit.fabrique_par))
+
     def test_boolean_value(self):
         with self.admin_access.web_request() as req:
             e = self.vreg['etypes'].etype_class('CWUser')(req)
@@ -354,6 +366,7 @@ class EntityTC(CubicWebTC):
             self.assertEqual(rql, 'Any S,AA,AB,AC,AD ORDERBY AA '
                              'WHERE NOT S use_email O, O eid %(x)s, S is_instance_of CWUser, '
                              'S login AA, S firstname AB, S surname AC, S modification_date AD')
+            req.cnx.commit()
         rperms = self.schema['EmailAddress'].permissions['read']
         clear_cache(self.schema['EmailAddress'], 'get_groups')
         clear_cache(self.schema['EmailAddress'], 'get_rqlexprs')
@@ -688,7 +701,7 @@ du :eid:`1:*ReST*`'''
             e.cw_attr_cache['data_name'] = 'an html file'
             e.cw_attr_cache['data_format'] = 'text/html'
             e.cw_attr_cache['data_encoding'] = 'ascii'
-            e._cw.transaction_data = {} # XXX req should be a session
+            e._cw.transaction_data.clear()
             words = e.cw_adapt_to('IFTIndexable').get_words()
             words['C'].sort()
             self.assertEqual({'C': sorted(['an', 'html', 'file', 'du', 'html', 'some', 'data'])},

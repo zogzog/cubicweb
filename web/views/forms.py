@@ -189,7 +189,7 @@ class FieldsForm(form.Form):
     def render(self, formvalues=None, renderer=None, **kwargs):
         """Render this form, using the `renderer` given as argument or the
         default according to :attr:`form_renderer_id`. The rendered form is
-        returned as an unicode string.
+        returned as a unicode string.
 
         `formvalues` is an optional dictionary containing values that will be
         considered as field's value.

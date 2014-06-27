@@ -47,14 +47,6 @@ def start_task(interval, func):
     # to wait all tasks to be finished for the server to be actually started
     lc.start(interval, now=False)
 
-def host_prefixed_baseurl(baseurl, host):
-    scheme, netloc, url, query, fragment = urlsplit(baseurl)
-    netloc_domain = '.' + '.'.join(netloc.split('.')[-2:])
-    if host.endswith(netloc_domain):
-        netloc = host
-    baseurl = urlunsplit((scheme, netloc, url, query, fragment))
-    return baseurl
-
 
 class CubicWebRootResource(resource.Resource):
     def __init__(self, config, repo):

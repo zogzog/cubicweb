@@ -313,7 +313,7 @@ class Input(FieldWidget):
 # basic html widgets ###########################################################
 
 class TextInput(Input):
-    """Simple <input type='text'>, will return an unicode string."""
+    """Simple <input type='text'>, will return a unicode string."""
     type = 'text'
 
 
@@ -323,7 +323,7 @@ class EmailInput(Input):
 
 
 class PasswordSingleInput(Input):
-    """Simple <input type='password'>, will return an utf-8 encoded string.
+    """Simple <input type='password'>, will return a utf-8 encoded string.
 
     You may prefer using the :class:`~cubicweb.web.formwidgets.PasswordInput`
     widget which handles password confirmation.
@@ -340,7 +340,7 @@ class PasswordSingleInput(Input):
 class PasswordInput(Input):
     """<input type='password'> and a confirmation input. Form processing will
     fail if password and confirmation differs, else it will return the password
-    as an utf-8 encoded string.
+    as a utf-8 encoded string.
     """
     type = 'password'
 
@@ -381,7 +381,7 @@ class FileInput(Input):
 
 
 class HiddenInput(Input):
-    """Simple <input type='hidden'> for hidden value, will return an unicode
+    """Simple <input type='hidden'> for hidden value, will return a unicode
     string.
     """
     type = 'hidden'
@@ -390,7 +390,7 @@ class HiddenInput(Input):
 
 
 class ButtonInput(Input):
-    """Simple <input type='button'>, will return an unicode string.
+    """Simple <input type='button'>, will return a unicode string.
 
     If you want a global form button, look at the :class:`Button`,
     :class:`SubmitButton`, :class:`ResetButton` and :class:`ImgButton` below.
@@ -399,7 +399,7 @@ class ButtonInput(Input):
 
 
 class TextArea(FieldWidget):
-    """Simple <textarea>, will return an unicode string."""
+    """Simple <textarea>, will return a unicode string."""
 
     def _render(self, form, field, renderer):
         values, attrs = self.values_and_attributes(form, field)
@@ -421,7 +421,7 @@ class TextArea(FieldWidget):
 
 
 class FCKEditor(TextArea):
-    """FCKEditor enabled <textarea>, will return an unicode string containing
+    """FCKEditor enabled <textarea>, will return a unicode string containing
     HTML formated text.
     """
     def __init__(self, *args, **kwargs):
@@ -435,7 +435,7 @@ class FCKEditor(TextArea):
 
 class Select(FieldWidget):
     """Simple <select>, for field having a specific vocabulary. Will return
-    an unicode string, or a list of unicode strings.
+    a unicode string, or a list of unicode strings.
     """
     vocabulary_widget = True
     default_size = 10
@@ -631,7 +631,7 @@ class Radio(CheckBox):
 
 class DateTimePicker(TextInput):
     """<input type='text'> + javascript date/time picker for date or datetime
-    fields. Will return the date or datetime as an unicode string.
+    fields. Will return the date or datetime as a unicode string.
     """
     monthnames = ('january', 'february', 'march', 'april',
                   'may', 'june', 'july', 'august',
@@ -673,7 +673,7 @@ class DateTimePicker(TextInput):
 
 class JQueryDatePicker(FieldWidget):
     """Use jquery.ui.datepicker to define a date picker. Will return the date as
-    an unicode string.
+    a unicode string.
     """
     needs_js = ('jquery.ui.js', )
     needs_css = ('jquery.ui.css',)
@@ -933,7 +933,7 @@ class HorizontalLayoutWidget(FieldWidget):
 
 
 class EditableURLWidget(FieldWidget):
-    """Custom widget to edit separatly an url path / query string (used by
+    """Custom widget to edit separatly a URL path / query string (used by
     default for the `path` attribute of `Bookmark` entities).
 
     It deals with url quoting nicely so that the user edit the unquoted value.
