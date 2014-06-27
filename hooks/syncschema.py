@@ -985,7 +985,7 @@ class DelCWRTypeHook(SyncSchemaHook):
         MemSchemaCWRTypeDel(self._cw, rtype=name)
 
 
-class AfterAddCWRTypeHook(DelCWRTypeHook):
+class AfterAddCWRTypeHook(SyncSchemaHook):
     """after a CWRType entity has been added:
     * register an operation to add the relation type to the instance's
       schema on commit
@@ -993,6 +993,7 @@ class AfterAddCWRTypeHook(DelCWRTypeHook):
     We don't know yet this point if a table is necessary
     """
     __regid__ = 'syncaddcwrtype'
+    __select__ = SyncSchemaHook.__select__ & is_instance('CWRType')
     events = ('after_add_entity',)
 
     def __call__(self):
@@ -1005,9 +1006,10 @@ class AfterAddCWRTypeHook(DelCWRTypeHook):
         MemSchemaCWRTypeAdd(self._cw, rtypedef=rtypedef)
 
 
-class BeforeUpdateCWRTypeHook(DelCWRTypeHook):
+class BeforeUpdateCWRTypeHook(SyncSchemaHook):
     """check name change, handle final"""
     __regid__ = 'syncupdatecwrtype'
+    __select__ = SyncSchemaHook.__select__ & is_instance('CWRType')
     events = ('before_update_entity',)
 
     def __call__(self):
