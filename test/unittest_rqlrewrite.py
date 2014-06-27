@@ -697,7 +697,7 @@ class RQLRelationRewriterTC(TestCase):
                                 'WITH A, B BEING(Any X,Y WHERE X contributor Y)')
         rule_rewrite(rqlst, rules)
         self.assertEqual('Any A,B WHERE A contributor B WITH A,B BEING '
-                         '(Any X,Y WHERE X contributor Y)', 
+                         '(Any X,Y WHERE X contributor Y)',
                          rqlst.as_string())
 
     def test_rewrite_with4(self):
@@ -711,7 +711,7 @@ class RQLRelationRewriterTC(TestCase):
                          'D name "illustrator" WITH A,B BEING '
                          '(Any X,Y WHERE A is Contribution, A contributor X, '
                          'A manifestation Y, A role B, B name "illustrator")',
-                          rqlst.as_string()) 
+                          rqlst.as_string())
 
     # Tests for the union
     def test_rewrite_union(self):
@@ -779,6 +779,25 @@ class RQLRelationRewriterTC(TestCase):
         self.assertEqual('Any SUM(SA) GROUPBY S WHERE P manifestation SA, P contributor S',
                          rqlst.as_string())
 
+
+class RQLRelationRewriterTC(CubicWebTC):
+
+    appid = 'data/rewrite'
+
+    def test_base_rule(self):
+        with self.admin_access.client_cnx() as cnx:
+            art = cnx.create_entity('ArtWork', name=u'Les travailleurs de la Mer')
+            role = cnx.create_entity('Role', name=u'illustrator')
+            vic = cnx.create_entity('Person', name=u'Victor Hugo')
+            contrib = cnx.create_entity('Contribution', code=96, contributor=vic,
+                                        manifestation=art, role=role)
+            rset = cnx.execute('Any X WHERE X illustrator_of S')
+            self.assertEqual([u'Victor Hugo'],
+                             [result.name for result in rset.entities()])
+            rset = cnx.execute('Any S WHERE X illustrator_of S, X eid %(x)s',
+                               {'x': vic.eid})
+            self.assertEqual([u'Les travailleurs de la Mer'],
+                             [result.name for result in rset.entities()])
 
 
 def rule_rewrite(rqlst, kwargs=None):

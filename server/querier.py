@@ -594,6 +594,9 @@ class QuerierHelper(object):
             # bother modifying it. This is not necessary on write queries since
             # a new syntax tree is built from them.
             rqlst = rqlst.copy()
+            # Rewrite computed relations
+            rewriter = RQLRelationRewriter(cnx)
+            rewriter.rewrite(rqlst, args)
             self._annotate(rqlst)
             if args:
                 # different SQL generated when some argument is None or not (IS
