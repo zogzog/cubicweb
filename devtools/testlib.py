@@ -513,9 +513,9 @@ class CubicWebTC(TestCase):
         This method will be called by the database handler once the config has
         been properly bootstrapped.
         """
-        source = config.system_source_config
-        cls.admlogin = unicode(source['db-user'])
-        cls.admpassword = source['db-password']
+        admincfg = config.default_admin_config
+        cls.admlogin = unicode(admincfg['login'])
+        cls.admpassword = admincfg['password']
         # uncomment the line below if you want rql queries to be logged
         #config.global_set_option('query-log-file',
         #                         '/tmp/test_rql_log.' + `os.getpid()`)
