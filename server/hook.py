@@ -320,6 +320,7 @@ class HooksRegistry(CWRegistry):
                 eids_from_to = []
             pruned = self.get_pruned_hooks(cnx, event,
                                            entities, eids_from_to, kwargs)
+
             # by default, hooks are executed with security turned off
             with cnx.security_enabled(read=False):
                 for _kwargs in _iter_kwargs(entities, eids_from_to, kwargs):
@@ -327,10 +328,11 @@ class HooksRegistry(CWRegistry):
                                    key=lambda x: x.order)
                     debug = server.DEBUG & server.DBG_HOOKS
                     with cnx.security_enabled(write=False):
-                        for hook in hooks:
-                            if debug:
-                                print event, _kwargs, hook
-                            hook()
+                        with cnx.running_hooks_ops():
+                            for hook in hooks:
+                                if debug:
+                                    print event, _kwargs, hook
+                                hook()
 
     def get_pruned_hooks(self, cnx, event, entities, eids_from_to, kwargs):
         """return a set of hooks that should not be considered by filtered_possible objects
@@ -425,10 +427,13 @@ def enabled_category(cls, req, **kwargs):
     return req.is_hook_activated(cls)
 
 @objectify_predicate
-def from_dbapi_query(cls, req, **kwargs):
-    if req.running_dbapi_query:
-        return 1
-    return 0
+def issued_from_user_query(cls, req, **kwargs):
+    return 0 if req.hooks_in_progress else 1
+
+from_dbapi_query = class_renamed('from_dbapi_query',
+                                 issued_from_user_query,
+                                 message='[3.21] ')
+
 
 class rechain(object):
     def __init__(self, *iterators):

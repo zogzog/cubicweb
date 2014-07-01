@@ -1110,7 +1110,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         kwargs['tx_uuid'] = cnx.transaction_uuid()
         kwargs['txa_action'] = action
         kwargs['txa_order'] = cnx.transaction_inc_action_counter()
-        kwargs['txa_public'] = cnx.running_dbapi_query
+        kwargs['txa_public'] = not cnx.hooks_in_progress
         self.doexec(cnx, self.sqlgen.insert(table, kwargs), kwargs)
 
     def _tx_info(self, cnx, txuuid):

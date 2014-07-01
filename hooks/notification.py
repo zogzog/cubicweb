@@ -1,4 +1,4 @@
-# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2015 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -165,7 +165,7 @@ class EntityUpdatedNotificationOp(hook.SingleLastOperation):
 class EntityUpdateHook(NotificationHook):
     __regid__ = 'notifentityupdated'
     __abstract__ = True # do not register by default
-    __select__ = NotificationHook.__select__ & hook.from_dbapi_query()
+    __select__ = NotificationHook.__select__ & hook.issued_from_user_query()
     events = ('before_update_entity',)
     skip_attrs = set()
 
@@ -200,7 +200,7 @@ class EntityUpdateHook(NotificationHook):
 
 class SomethingChangedHook(NotificationHook):
     __regid__ = 'supervising'
-    __select__ = NotificationHook.__select__ & hook.from_dbapi_query()
+    __select__ = NotificationHook.__select__ & hook.issued_from_user_query()
     events = ('before_add_relation', 'before_delete_relation',
               'after_add_entity', 'before_update_entity')
 

@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2015 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -19,6 +19,8 @@
 """
 
 __docformat__ = "restructuredtext en"
+
+from contextlib import contextmanager
 
 from logilab.database import get_db_helper
 
@@ -158,6 +160,10 @@ class FakeSession(RequestSessionBase):
 
     # for use with enabled_security context manager
     read_security = write_security = True
+
+    @contextmanager
+    def running_hooks_ops(self):
+        yield
 
 class FakeRepo(object):
     querier = None

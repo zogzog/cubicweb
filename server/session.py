@@ -1,4 +1,4 @@
-# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2015 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -388,8 +388,9 @@ class Connection(RequestSessionBase):
 
     Database connection resources:
 
-      :attr:`running_dbapi_query`, boolean flag telling if the executing query
-      is coming from a dbapi connection or is a query from within the repository
+      :attr:`hooks_in_progress`, boolean flag telling if the executing
+      query is coming from a repoapi connection or is a query from
+      within the repository (e.g. started by hooks)
 
       :attr:`cnxset`, the connections set to use to execute queries on sources.
       If the transaction is read only, the connection set may be freed between
@@ -445,6 +446,7 @@ class Connection(RequestSessionBase):
     """
 
     is_request = False
+    hooks_in_progress = False
     mode = 'read'
 
     def __init__(self, session, cnxid=None, session_handled=False):
@@ -484,8 +486,6 @@ class Connection(RequestSessionBase):
         self._cnxset = None
         #: CnxSetTracker used to report cnxset usage
         self._cnxset_tracker = CnxSetTracker()
-        #: is this connection from a client or internal to the repo
-        self.running_dbapi_query = True
         # internal (root) session
         self.is_internal_session = isinstance(session.user, InternalManager)
 
@@ -526,7 +526,7 @@ class Connection(RequestSessionBase):
             self._set_user(session.user)
 
 
-    # live cycle handling ####################################################
+    # life cycle handling ####################################################
 
     def __enter__(self):
         assert self._open is None # first opening
@@ -539,7 +539,18 @@ class Connection(RequestSessionBase):
         self.rollback()
         self._open = False
 
+    @contextmanager
+    def running_hooks_ops(self):
+        """this context manager should be called whenever hooks or operations
+        are about to be run (but after hook selection)
 
+        It will help the undo logic record pertinent metadata or some
+        hooks to run (or not) depending on who/what issued the query.
+        """
+        prevmode = self.hooks_in_progress
+        self.hooks_in_progress = True
+        yield
+        self.hooks_in_progress = prevmode
 
     # shared data handling ###################################################
 
@@ -943,27 +954,7 @@ class Connection(RequestSessionBase):
     @read_security.setter
     @_open_only
     def read_security(self, activated):
-        oldmode = self._read_security
         self._read_security = activated
-        # running_dbapi_query used to detect hooks triggered by a 'dbapi' query
-        # (eg not issued on the session). This is tricky since we the execution
-        # model of a (write) user query is:
-        #
-        # repository.execute (security enabled)
-        #  \-> querier.execute
-        #       \-> repo.glob_xxx (add/update/delete entity/relation)
-        #            \-> deactivate security before calling hooks
-        #                 \-> WE WANT TO CHECK QUERY NATURE HERE
-        #                      \-> potentially, other calls to querier.execute
-        #
-        # so we can't rely on simply checking session.read_security, but
-        # recalling the first transition from DEFAULT_SECURITY to something
-        # else (False actually) is not perfect but should be enough
-        #
-        # also reset running_dbapi_query to true when we go back to
-        # DEFAULT_SECURITY
-        self.running_dbapi_query = (oldmode is DEFAULT_SECURITY
-                                    or activated is DEFAULT_SECURITY)
 
     # undo support ############################################################
 
@@ -1098,13 +1089,14 @@ class Connection(RequestSessionBase):
                 if debug:
                     print self.commit_state, '*' * 20
                 try:
-                    while self.pending_operations:
-                        operation = self.pending_operations.pop(0)
-                        operation.processed = 'precommit'
-                        processed.append(operation)
-                        if debug:
-                            print operation
-                        operation.handle_event('precommit_event')
+                    with self.running_hooks_ops():
+                        while self.pending_operations:
+                            operation = self.pending_operations.pop(0)
+                            operation.processed = 'precommit'
+                            processed.append(operation)
+                            if debug:
+                                print operation
+                            operation.handle_event('precommit_event')
                     self.pending_operations[:] = processed
                     self.debug('precommit transaction %s done', self.connectionid)
                 except BaseException:
@@ -1121,14 +1113,15 @@ class Connection(RequestSessionBase):
                     operation.failed = True
                     if debug:
                         print self.commit_state, '*' * 20
-                    for operation in reversed(processed):
-                        if debug:
-                            print operation
-                        try:
-                            operation.handle_event('revertprecommit_event')
-                        except BaseException:
-                            self.critical('error while reverting precommit',
-                                          exc_info=True)
+                    with self.running_hooks_ops():
+                        for operation in reversed(processed):
+                            if debug:
+                                print operation
+                            try:
+                                operation.handle_event('revertprecommit_event')
+                            except BaseException:
+                                self.critical('error while reverting precommit',
+                                              exc_info=True)
                     # XXX use slice notation since self.pending_operations is a
                     # read-only property.
                     self.pending_operations[:] = processed + self.pending_operations
@@ -1138,16 +1131,17 @@ class Connection(RequestSessionBase):
                 self.commit_state = 'postcommit'
                 if debug:
                     print self.commit_state, '*' * 20
-                while self.pending_operations:
-                    operation = self.pending_operations.pop(0)
-                    if debug:
-                        print operation
-                    operation.processed = 'postcommit'
-                    try:
-                        operation.handle_event('postcommit_event')
-                    except BaseException:
-                        self.critical('error while postcommit',
-                                      exc_info=sys.exc_info())
+                with self.running_hooks_ops():
+                    while self.pending_operations:
+                        operation = self.pending_operations.pop(0)
+                        if debug:
+                            print operation
+                        operation.processed = 'postcommit'
+                        try:
+                            operation.handle_event('postcommit_event')
+                        except BaseException:
+                            self.critical('error while postcommit',
+                                          exc_info=sys.exc_info())
                 self.debug('postcommit transaction %s done', self.connectionid)
                 return self.transaction_uuid(set=False)
         finally:

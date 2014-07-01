@@ -875,32 +875,33 @@ class Repository(object):
         # delete all its relations without security checking
         with cnx.security_enabled(read=False, write=False):
             in_eids = ','.join([str(_e.eid) for _e in entities])
-            for rschema, _, role in entities[0].e_schema.relation_definitions():
-                if rschema.rule:
-                    continue # computed relation
-                rtype = rschema.type
-                if rtype in schema.VIRTUAL_RTYPES or rtype in pendingrtypes:
-                    continue
-                if role == 'subject':
-                    # don't skip inlined relation so they are regularly
-                    # deleted and so hooks are correctly called
-                    rql = 'DELETE X %s Y WHERE X eid IN (%s)' % (rtype, in_eids)
-                else:
-                    rql = 'DELETE Y %s X WHERE X eid IN (%s)' % (rtype, in_eids)
-                try:
-                    cnx.execute(rql, build_descr=False)
-                except ValidationError:
-                    raise
-                except Unauthorized:
-                    self.exception('Unauthorized exception while cascading delete for entity %s. '
-                                   'RQL: %s.\nThis should not happen since security is disabled here.',
-                                   entities, rql)
-                    raise
-                except Exception:
-                    if self.config.mode == 'test':
+            with cnx.running_hooks_ops():
+                for rschema, _, role in entities[0].e_schema.relation_definitions():
+                    if rschema.rule:
+                        continue # computed relation
+                    rtype = rschema.type
+                    if rtype in schema.VIRTUAL_RTYPES or rtype in pendingrtypes:
+                        continue
+                    if role == 'subject':
+                        # don't skip inlined relation so they are regularly
+                        # deleted and so hooks are correctly called
+                        rql = 'DELETE X %s Y WHERE X eid IN (%s)' % (rtype, in_eids)
+                    else:
+                        rql = 'DELETE Y %s X WHERE X eid IN (%s)' % (rtype, in_eids)
+                    try:
+                        cnx.execute(rql, build_descr=False)
+                    except ValidationError:
                         raise
-                    self.exception('error while cascading delete for entity %s. RQL: %s',
-                                   entities, rql)
+                    except Unauthorized:
+                        self.exception('Unauthorized exception while cascading delete for entity %s. '
+                                       'RQL: %s.\nThis should not happen since security is disabled here.',
+                                       entities, rql)
+                        raise
+                    except Exception:
+                        if self.config.mode == 'test':
+                            raise
+                        self.exception('error while cascading delete for entity %s. RQL: %s',
+                                       entities, rql)
 
     def init_entity_caches(self, cnx, entity, source):
         """add entity to connection entities cache and repo's extid cache.
