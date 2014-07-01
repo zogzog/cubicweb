@@ -18,14 +18,12 @@
 """unit tests for cubicweb.web.application"""
 
 import base64, Cookie
-import sys
 import httplib
-from urllib import unquote
 
 from logilab.common.testlib import TestCase, unittest_main
 from logilab.common.decorators import clear_cache, classproperty
 
-from cubicweb import AuthenticationError, Unauthorized
+from cubicweb import AuthenticationError
 from cubicweb import view
 from cubicweb.devtools.testlib import CubicWebTC, real_error_handling
 from cubicweb.devtools.fake import FakeRequest
