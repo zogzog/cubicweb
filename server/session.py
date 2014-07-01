@@ -405,12 +405,18 @@ class Connection(RequestSessionBase):
       'transaction' (we want to keep the connections set during all the
       transaction, with or without writing)
 
-    Internal transaction data:
+    Shared data:
 
-      :attr:`data` is a dictionary containing some shared data
-      cleared at the end of the transaction. Hooks and operations may put
-      arbitrary data in there, and this may also be used as a communication
-      channel between the client and the repository.
+      :attr:`data` is a dictionary bound to the underlying session,
+      who will be present for the life time of the session. This may
+      be useful for web clients that rely on the server for managing
+      bits of session-scoped data.
+
+      :attr:`transaction_data` is a dictionary cleared at the end of
+      the transaction. Hooks and operations may put arbitrary data in
+      there.
+
+    Internal state:
 
       :attr:`pending_operations`, ordered list of operations to be processed on
       commit/rollback
