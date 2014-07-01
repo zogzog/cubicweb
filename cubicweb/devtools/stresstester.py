@@ -55,33 +55,32 @@ from time import clock
 from logilab.common.fileutils import lines
 from logilab.common.ureports import Table, TextWriter
 from cubicweb.server.repository import Repository
-from cubicweb.dbapi import Connection
 
 TB_LOCK = threading.Lock()
 
 class QueryExecutor:
-    def __init__(self, cursor, times, queries, reporter = None):
-        self._cursor = cursor
+    def __init__(self, session, times, queries, reporter = None):
+        self._session = session
         self._times = times
         self._queries = queries
         self._reporter = reporter
 
     def run(self):
-        cursor = self._cursor
-        times = self._times
-        while times:
-            for index, query in enumerate(self._queries):
-                start = clock()
-                try:
-                    cursor.execute(query)
-                except Exception:
-                    TB_LOCK.acquire()
-                    traceback.print_exc()
-                    TB_LOCK.release()
-                    return
-                if self._reporter is not None:
-                    self._reporter.add_proftime(clock() - start, index)
-            times -= 1
+        with self._session.new_cnx() as cnx:
+            times = self._times
+            while times:
+                for index, query in enumerate(self._queries):
+                    start = clock()
+                    try:
+                        cnx.execute(query)
+                    except Exception:
+                        TB_LOCK.acquire()
+                        traceback.print_exc()
+                        TB_LOCK.release()
+                        return
+                    if self._reporter is not None:
+                        self._reporter.add_proftime(clock() - start, index)
+                times -= 1
 
 def usage(status=0):
     """print usage string and exit"""
@@ -169,15 +168,12 @@ def run(args):
     # get local access to the repository
     print("Creating repo", prof_file)
     repo = Repository(config, prof_file)
-    cnxid = repo.connect(user, password=password)
-    # connection to the CubicWeb repository
-    repo_cnx = Connection(repo, cnxid)
-    repo_cursor = repo_cnx.cursor()
+    session = repo.new_session(user, password=password)
     reporter = ProfileReporter(queries)
     if threads > 1:
         executors = []
         while threads:
-            qe = QueryExecutor(repo_cursor, repeat, queries, reporter = reporter)
+            qe = QueryExecutor(session, repeat, queries, reporter = reporter)
             executors.append(qe)
             thread = threading.Thread(target=qe.run)
             qe.thread = thread
@@ -188,7 +184,7 @@ def run(args):
 ##         for qe in executors:
 ##             print qe.thread, repeat - qe._times, 'times'
     else:
-        QueryExecutor(repo_cursor, repeat, queries, reporter = reporter).run()
+        QueryExecutor(session, repeat, queries, reporter = reporter).run()
     reporter.dump_report(report_output)
 
 
