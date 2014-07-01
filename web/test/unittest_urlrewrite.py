@@ -123,10 +123,11 @@ class RgxActionRewriteTC(CubicWebTC):
 
     def setup_database(self):
         with self.admin_access.repo_cnx() as cnx:
-            self.p1 = self.create_user(cnx, u'user1')
-            self.p1.cw_set(firstname=u'joe', surname=u'Dalton')
-            self.p2 = self.create_user(cnx, u'user2')
-            self.p2.cw_set(firstname=u'jack', surname=u'Dalton')
+            p1 = self.create_user(cnx, u'user1')
+            p1.cw_set(firstname=u'joe', surname=u'Dalton')
+            p2 = self.create_user(cnx, u'user2')
+            p2.cw_set(firstname=u'jack', surname=u'Dalton')
+            self.p1eid = p1.eid
             cnx.commit()
 
     def test_rgx_action_with_transforms(self):
@@ -143,7 +144,7 @@ class RgxActionRewriteTC(CubicWebTC):
             rewriter = TestSchemaBasedRewriter(req)
             _pmid, rset = rewriter.rewrite(req, u'/DaLToN/JoE')
             self.assertEqual(len(rset), 1)
-            self.assertEqual(rset[0][0], self.p1.eid)
+            self.assertEqual(rset[0][0], self.p1eid)
 
     def test_inheritance_precedence(self):
         RQL1 = 'Any C WHERE C is CWEType'
