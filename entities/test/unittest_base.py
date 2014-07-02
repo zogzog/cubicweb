@@ -31,7 +31,7 @@ class BaseEntityTC(CubicWebTC):
 
     def setup_database(self):
         with self.admin_access.repo_cnx() as cnx:
-            self.member = self.create_user(cnx, 'member')
+            self.membereid = self.create_user(cnx, 'member').eid
             cnx.commit()
 
 
@@ -41,16 +41,20 @@ class MetadataTC(BaseEntityTC):
         with self.new_access('member').repo_cnx() as cnx:
             entity = cnx.create_entity('Bookmark', title=u"hello", path=u'project/cubicweb')
             cnx.commit()
-            self.assertEqual(entity.creator.eid, self.member.eid)
+            self.assertEqual(entity.creator.eid, self.membereid)
             self.assertEqual(entity.dc_creator(), u'member')
 
     def test_type(self):
         #dc_type may be translated
-        self.assertEqual(self.member.dc_type(), 'CWUser')
+        with self.admin_access.client_cnx() as cnx:
+            member = cnx.entity_from_eid(self.membereid)
+            self.assertEqual(member.dc_type(), 'CWUser')
 
     def test_cw_etype(self):
         #cw_etype is never translated
-        self.assertEqual(self.member.cw_etype, 'CWUser')
+        with self.admin_access.client_cnx() as cnx:
+            member = cnx.entity_from_eid(self.membereid)
+            self.assertEqual(member.cw_etype, 'CWUser')
 
     def test_entity_meta_attributes(self):
         # XXX move to yams
