@@ -19,6 +19,7 @@
 
 import base64, Cookie
 import httplib
+import tempfile
 
 from logilab.common.testlib import TestCase, unittest_main
 from logilab.common.decorators import clear_cache, classproperty
@@ -434,6 +435,14 @@ class ApplicationTC(CubicWebTC):
             # expect a rset with None in [0][0]
             req.form['rql'] = 'rql:Any OV1, X WHERE X custom_workflow OV1?'
             self.app_handle_request(req)
+
+    def test_log_queries(self):
+        logfile = tempfile.NamedTemporaryFile()
+        self.config.global_set_option('query-log-file', logfile.name)
+        with self.admin_access.web_request() as req:
+            self.app.handle_request(req, 'view')
+        self.assertTrue(logfile.read())
+        logfile.close()
 
 
 if __name__ == '__main__':

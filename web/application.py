@@ -299,6 +299,21 @@ class CubicWebPublisher(object):
         """wrapper around _publish to log all queries executed for a given
         accessed path
         """
+        def wrap_set_cnx(func):
+            def wrap_execute(cnx):
+                orig_execute = cnx.execute
+                def execute(rql, kwargs=None, build_descr=True):
+                    tstart, cstart = time(), clock()
+                    rset = orig_execute(rql, kwargs, build_descr=build_descr)
+                    cnx.executed_queries.append((rql, kwargs, time() - tstart, clock() - cstart))
+                    return rset
+                return execute
+            def set_cnx(cnx):
+                func(cnx)
+                cnx.execute = wrap_execute(cnx)
+                cnx.executed_queries = []
+            return set_cnx
+        req.set_cnx = wrap_set_cnx(req.set_cnx)
         try:
             return self.main_handle_request(req, path)
         finally:
