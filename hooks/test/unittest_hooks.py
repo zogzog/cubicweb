@@ -73,31 +73,31 @@ class CoreHooksTC(CubicWebTC):
                                              {'l1': l1, 'l2': l2}))
 
     def test_html_tidy_hook(self):
-        with self.admin_access.web_request() as req:
-            entity = req.create_entity('Workflow', name=u'wf1',
+        with self.admin_access.client_cnx() as cnx:
+            entity = cnx.create_entity('Workflow', name=u'wf1',
                                        description_format=u'text/html',
                                        description=u'yo')
             self.assertEqual(entity.description, u'yo')
-            entity = req.create_entity('Workflow', name=u'wf2',
+            entity = cnx.create_entity('Workflow', name=u'wf2',
                                        description_format=u'text/html',
                                        description=u'<b>yo')
             self.assertEqual(entity.description, u'<b>yo</b>')
-            entity = req.create_entity('Workflow', name=u'wf3',
+            entity = cnx.create_entity('Workflow', name=u'wf3',
                                        description_format=u'text/html',
                                        description=u'<b>yo</b>')
             self.assertEqual(entity.description, u'<b>yo</b>')
-            entity = req.create_entity('Workflow', name=u'wf4',
+            entity = cnx.create_entity('Workflow', name=u'wf4',
                                        description_format=u'text/html',
                                        description=u'<b>R&D</b>')
             self.assertEqual(entity.description, u'<b>R&amp;D</b>')
-            entity = req.create_entity('Workflow', name=u'wf5',
+            entity = cnx.create_entity('Workflow', name=u'wf5',
                                        description_format=u'text/html',
                                        description=u"<div>c&apos;est <b>l'ét&eacute;")
             self.assertEqual(entity.description, u"<div>c'est <b>l'été</b></div>")
 
     def test_nonregr_html_tidy_hook_no_update(self):
-        with self.admin_access.web_request() as req:
-            entity = req.create_entity('Workflow', name=u'wf1',
+        with self.admin_access.client_cnx() as cnx:
+            entity = cnx.create_entity('Workflow', name=u'wf1',
                                        description_format=u'text/html',
                                        description=u'yo')
             entity.cw_set(name=u'wf2')
