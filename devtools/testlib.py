@@ -823,12 +823,13 @@ class CubicWebTC(TestCase):
 
     def list_startup_views(self):
         """returns the list of startup views"""
-        req = self.request()
-        for view in self.vreg['views'].possible_views(req, None):
-            if view.category == 'startupview':
-                yield view.__regid__
-            else:
-                not_selected(self.vreg, view)
+        with self.admin_access.web_request() as req:
+            for view in self.vreg['views'].possible_views(req, None):
+                if view.category == 'startupview':
+                    yield view.__regid__
+                else:
+                    not_selected(self.vreg, view)
+
 
     # web ui testing utilities #################################################
 
@@ -1297,38 +1298,40 @@ class AutoPopulateTest(CubicWebTC):
 
     def iter_individual_rsets(self, etypes=None, limit=None):
         etypes = etypes or self.to_test_etypes()
-        for etype in etypes:
-            if limit:
-                rql = 'Any X LIMIT %s WHERE X is %s' % (limit, etype)
-            else:
-                rql = 'Any X WHERE X is %s' % etype
-            rset = self.execute(rql)
-            for row in xrange(len(rset)):
-                if limit and row > limit:
-                    break
-                # XXX iirk
-                rset2 = rset.limit(limit=1, offset=row)
-                yield rset2
+        with self.admin_access.web_request() as req:
+            for etype in etypes:
+                if limit:
+                    rql = 'Any X LIMIT %s WHERE X is %s' % (limit, etype)
+                else:
+                    rql = 'Any X WHERE X is %s' % etype
+                rset = req.execute(rql)
+                for row in xrange(len(rset)):
+                    if limit and row > limit:
+                        break
+                    # XXX iirk
+                    rset2 = rset.limit(limit=1, offset=row)
+                    yield rset2
 
     def iter_automatic_rsets(self, limit=10):
         """generates basic resultsets for each entity type"""
         etypes = self.to_test_etypes()
         if not etypes:
             return
-        for etype in etypes:
-            yield self.execute('Any X LIMIT %s WHERE X is %s' % (limit, etype))
-        etype1 = etypes.pop()
-        try:
-            etype2 = etypes.pop()
-        except KeyError:
-            etype2 = etype1
-        # test a mixed query (DISTINCT/GROUP to avoid getting duplicate
-        # X which make muledit view failing for instance (html validation fails
-        # because of some duplicate "id" attributes)
-        yield self.execute('DISTINCT Any X, MAX(Y) GROUPBY X WHERE X is %s, Y is %s' % (etype1, etype2))
-        # test some application-specific queries if defined
-        for rql in self.application_rql:
-            yield self.execute(rql)
+        with self.admin_access.web_request() as req:
+            for etype in etypes:
+                yield req.execute('Any X LIMIT %s WHERE X is %s' % (limit, etype))
+            etype1 = etypes.pop()
+            try:
+                etype2 = etypes.pop()
+            except KeyError:
+                etype2 = etype1
+            # test a mixed query (DISTINCT/GROUP to avoid getting duplicate
+            # X which make muledit view failing for instance (html validation fails
+            # because of some duplicate "id" attributes)
+            yield req.execute('DISTINCT Any X, MAX(Y) GROUPBY X WHERE X is %s, Y is %s' % (etype1, etype2))
+            # test some application-specific queries if defined
+            for rql in self.application_rql:
+                yield req.execute(rql)
 
     def _test_everything_for(self, rset):
         """this method tries to find everything that can be tested
@@ -1390,8 +1393,8 @@ class AutomaticWebTest(AutoPopulateTest):
     ## startup views
     def test_startup_views(self):
         for vid in self.list_startup_views():
-            req = self.request()
-            yield self.view, vid, None, req
+            with self.admin_access.web_request() as req:
+                yield self.view, vid, None, req
 
 
 # registry instrumentization ###################################################
