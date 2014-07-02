@@ -677,6 +677,7 @@ class StartRepositoryCommand(Command):
     def run(self, args):
         from logilab.common.daemon import daemonize, setugid
         from cubicweb.cwctl import init_cmdline_log_threshold
+        print 'WARNING: Standalone repository with pyro or zmq access is deprecated'
         appid = args[0]
         debug = self['debug']
         if sys.platform == 'win32' and not debug:
