@@ -1179,7 +1179,7 @@ from cubicweb.devtools.fill import insert_entity_queries, make_relations_queries
 
 # XXX cleanup unprotected_entities & all mess
 
-def how_many_dict(schema, cursor, how_many, skip):
+def how_many_dict(schema, cnx, how_many, skip):
     """given a schema, compute how many entities by type we need to be able to
     satisfy relations cardinality.
 
@@ -1213,7 +1213,7 @@ def how_many_dict(schema, cursor, how_many, skip):
     # step 1, compute a base number of each entity types: number of already
     # existing entities of this type + `how_many`
     for etype in unprotected_entities(schema, strict=True):
-        howmanydict[str(etype)] = cursor.execute('Any COUNT(X) WHERE X is %s' % etype)[0][0]
+        howmanydict[str(etype)] = cnx.execute('Any COUNT(X) WHERE X is %s' % etype)[0][0]
         if etype in unprotected:
             howmanydict[str(etype)] += how_many
     # step 2, augment nb entity per types to satisfy cardinality constraints,
@@ -1247,10 +1247,10 @@ class AutoPopulateTest(CubicWebTC):
     def to_test_etypes(self):
         return unprotected_entities(self.schema, strict=True)
 
-    def custom_populate(self, how_many, cursor):
+    def custom_populate(self, how_many, cnx):
         pass
 
-    def post_populate(self, cursor):
+    def post_populate(self, cnx):
         pass
 
 
@@ -1259,42 +1259,42 @@ class AutoPopulateTest(CubicWebTC):
         """this method populates the database with `how_many` entities
         of each possible type. It also inserts random relations between them
         """
-        with self.session.security_enabled(read=False, write=False):
-            self._auto_populate(how_many)
+        with self.admin_access.repo_cnx() as cnx:
+            with cnx.security_enabled(read=False, write=False):
+                self._auto_populate(cnx, how_many)
+                cnx.commit()
 
-    def _auto_populate(self, how_many):
-        cu = self.cursor()
-        self.custom_populate(how_many, cu)
+    def _auto_populate(self, cnx, how_many):
+        self.custom_populate(how_many, cnx)
         vreg = self.vreg
-        howmanydict = how_many_dict(self.schema, cu, how_many, self.no_auto_populate)
+        howmanydict = how_many_dict(self.schema, cnx, how_many, self.no_auto_populate)
         for etype in unprotected_entities(self.schema):
             if etype in self.no_auto_populate:
                 continue
             nb = howmanydict.get(etype, how_many)
             for rql, args in insert_entity_queries(etype, self.schema, vreg, nb):
-                cu.execute(rql, args)
+                cnx.execute(rql, args)
         edict = {}
         for etype in unprotected_entities(self.schema, strict=True):
-            rset = cu.execute('%s X' % etype)
+            rset = cnx.execute('%s X' % etype)
             edict[str(etype)] = set(row[0] for row in rset.rows)
         existingrels = {}
         ignored_relations = SYSTEM_RELATIONS | self.ignored_relations
         for rschema in self.schema.relations():
             if rschema.final or rschema in ignored_relations:
                 continue
-            rset = cu.execute('DISTINCT Any X,Y WHERE X %s Y' % rschema)
+            rset = cnx.execute('DISTINCT Any X,Y WHERE X %s Y' % rschema)
             existingrels.setdefault(rschema.type, set()).update((x, y) for x, y in rset)
-        q = make_relations_queries(self.schema, edict, cu, ignored_relations,
+        q = make_relations_queries(self.schema, edict, cnx, ignored_relations,
                                    existingrels=existingrels)
         for rql, args in q:
             try:
-                cu.execute(rql, args)
+                cnx.execute(rql, args)
             except ValidationError as ex:
                 # failed to satisfy some constraint
                 print 'error in automatic db population', ex
-                self.session.commit_state = None # reset uncommitable flag
-        self.post_populate(cu)
-        self.commit()
+                cnx.commit_state = None # reset uncommitable flag
+        self.post_populate(cnx)
 
     def iter_individual_rsets(self, etypes=None, limit=None):
         etypes = etypes or self.to_test_etypes()
