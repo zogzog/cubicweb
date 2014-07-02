@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -64,7 +64,8 @@ class FileUploadTC(CubicWebServerTC):
 
     @property
     def _post_url(self):
-        return self.request().build_url('ajax', fname='fileupload')
+        with self.admin_access.web_request() as req:
+            return req.build_url('ajax', fname='fileupload')
 
     def _fobject(self, fname):
         return open(join(self.datadir, fname), 'rb')
