@@ -2,6 +2,12 @@ cubicweb (3.19.1-1) unstable; urgency=low
 
   * new upstream release
 
+ -- Julien Cristau <julien.cristau@logilab.fr>  Thu, 03 Jul 2014 09:53:52 +0200
+
+cubicweb (3.19.1-1) unstable; urgency=low
+
+  * new upstream release
+
  -- Julien Cristau <julien.cristau@logilab.fr>  Tue, 03 Jun 2014 12:16:00 +0200
 
 cubicweb (3.19.0-1) unstable; urgency=low
