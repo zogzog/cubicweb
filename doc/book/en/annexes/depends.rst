@@ -6,7 +6,7 @@ Installation dependencies
 =========================
 
 When you run CubicWeb from source, either by downloading the tarball or
-cloning the mercurial forest, here is the list of tools and libraries you need
+cloning the mercurial tree, here is the list of tools and libraries you need
 to have installed in order for CubicWeb to work:
 
 * yapps - http://theory.stanford.edu/~amitp/yapps/ -

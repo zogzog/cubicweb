@@ -37,7 +37,7 @@ Create your new cube cube ::
    cubicweb-ctl newcube
 
 This will create a new cube in
-``/path/to/forest/cubicweb/cubes/<mycube>`` for a Mercurial forest
+``/path/to/grshell-cubicweb/cubes/<mycube>`` for a Mercurial
 installation, or in ``/usr/share/cubicweb/cubes`` for a debian
 packages installation.
 

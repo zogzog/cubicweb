@@ -124,14 +124,14 @@ Environment configuration
 Python
 ``````
 
-If you installed *CubicWeb* by cloning the Mercurial forest or from source
+If you installed *CubicWeb* by cloning the Mercurial shell repository or from source
 distribution, then you will need to update the environment variable PYTHONPATH by
-adding the path to the forest `cubicweb`:
+adding the path to `cubicweb`:
 
 Add the following lines to either :file:`.bashrc` or :file:`.bash_profile` to
 configure your development environment ::
 
-    export PYTHONPATH=/full/path/to/cubicweb-forest
+    export PYTHONPATH=/full/path/to/grshell-cubicweb
 
 If you installed *CubicWeb* with packages, no configuration is required and your
 new cubes will be placed in `/usr/share/cubicweb/cubes` and your instances will
