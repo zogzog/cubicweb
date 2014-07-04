@@ -23,12 +23,12 @@ Install the required elements
 |cubicweb| requires some base elements that must be installed to run
 correctly. So, first of all, you must install them :
 
-* python >= 2.5 and < 3
+* python >= 2.6 and < 3
   (`Download Python <http://www.python.org/download/>`_).
   You can also consider the Python(x,y) distribution
   (`Download Python(x,y) <http://code.google.com/p/pythonxy/wiki/Downloads>`_)
   as it makes things easier for Windows user by wrapping in a single installer
-  python 2.5 plus numerous useful third-party modules and
+  python 2.7 plus numerous useful third-party modules and
   applications (including Eclipse + pydev, which is an arguably good
   IDE for Python under Windows).
 
@@ -40,7 +40,7 @@ correctly. So, first of all, you must install them :
   (version >=2.2.1) allows working with XML and HTML
   (`Download lxml <http://pypi.python.org/pypi/lxml/2.2.1>`_)
 
-* `Postgresql 8.4 <http://www.postgresql.org/>`_,
+* `Postgresql <http://www.postgresql.org/>`_,
   an object-relational database system
   (`Download Postgresql <http://www.enterprisedb.com/products/pgdownload.do#windows>`_)
   and its python drivers
@@ -50,24 +50,13 @@ correctly. So, first of all, you must install them :
   (`Download gettext <http://download.logilab.org/pub/gettext/gettext-0.17-win32-setup.exe>`_).
 
 * `rql <http://www.logilab.org/project/rql>`_,
-  the recent version of the Relationship Query Language parser
-  (`Download rql <http://download.logilab.org/pub/rql/rql-0.26.3.win32-py2.5.exe>`_).
+  the recent version of the Relationship Query Language parser.
 
 Install optional elements
 -------------------------
 
 We recommend you to install the following elements. They are not
 mandatory but they activate very interesting features in |cubicweb|:
-
-* `Simplejson <http://pypi.python.org/pypi/simplejson/>`_
-  must be installed if you have python <= 2.5
-  (`Download simplejson <http://www.osuch.org/python-simplejson%3Awin32>`_).
-  It is included in the Standard library from Python >= 2.6.
-
-* `Pyro <http://www.xs4all.nl/~irmen/pyro3/>`_
-  enables remote access to cubicweb repository instances.
-  It also allows the client and the server not running on the same machine
-  (`Download Pyro <http://www.xs4all.nl/~irmen/pyro3/download/>`_).
 
 * `python-ldap <http://pypi.python.org/pypi/python-ldap>`_
   provides access to LDAP/Active directory directories
