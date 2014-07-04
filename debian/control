@@ -124,7 +124,6 @@ Depends:
  ${misc:Depends},
  ${python:Depends},
  cubicweb-common (= ${source:Version}),
- python-simplejson (>= 2.0.9)
 Recommends:
  python-docutils (>= 0.6),
  python-vobject,

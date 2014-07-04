@@ -44,8 +44,7 @@ __depends__ = {
     'rql': '>= 0.31.2',
     'yams': '>= 0.39.1',
     #gettext                    # for xgettext, msgcat, etc...
-    # web dependancies
-    'simplejson': '>= 2.0.9',
+    # web dependencies
     'lxml': '',
     'Twisted': '',
     # XXX graphviz
