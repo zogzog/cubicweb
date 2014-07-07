@@ -320,7 +320,6 @@ class ServerMigrationHelper(MigrationHelper):
         """cached group mapping"""
         return ss.group_mapping(self.cnx)
 
-    @cached
     def cstrtype_mapping(self):
         """cached constraint types mapping"""
         return ss.cstrtype_mapping(self.cnx)
