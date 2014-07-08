@@ -367,15 +367,3 @@ class IUserFriendlyUniqueTogether(IUserFriendlyError):
         globalmsg = _('some relations violate a unicity constraint')
         rtypes_msg['unicity constraint'] = globalmsg
         raise ValidationError(self.entity.eid, rtypes_msg)
-
-# deprecated ###################################################################
-
-
-class adapter_deprecated(view.auto_unwrap_bw_compat):
-    """metaclass to print a warning on instantiation of a deprecated class"""
-
-    def __call__(cls, *args, **kwargs):
-        msg = getattr(cls, "__deprecation_warning__",
-                      "%(cls)s is deprecated") % {'cls': cls.__name__}
-        warn(msg, DeprecationWarning, stacklevel=2)
-        return type.__call__(cls, *args, **kwargs)
