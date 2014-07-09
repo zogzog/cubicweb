@@ -1184,11 +1184,6 @@ the repository',
             print 'warning: ignoring specified sources, requires a repository '\
                   'configuration'
 
-    def migration_handler(self):
-        """return a migration handler instance"""
-        from cubicweb.migration import MigrationHelper
-        return MigrationHelper(self, verbosity=self.verbosity)
-
     def i18ncompile(self, langs=None):
         from cubicweb import i18n
         if langs is None:

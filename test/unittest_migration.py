@@ -1,4 +1,4 @@
-# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -76,8 +76,6 @@ class MigrationToolsTC(TestCase):
     def test_filter_scripts_for_mode(self):
         config = CubicWebConfiguration('data')
         config.verbosity = 0
-        self.assertNotIsInstance(config.migration_handler(), ServerMigrationHelper)
-        self.assertIsInstance(config.migration_handler(), MigrationHelper)
         config = self.config
         config.__class__.name = 'repository'
         self.assertListEqual(filter_scripts(config, TMIGRDIR, (0,0,4), (0,1,0)),
