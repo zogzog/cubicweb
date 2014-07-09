@@ -44,10 +44,8 @@ from logilab.common.deprecation import deprecated
 from logilab.common.logging_ext import set_log_methods
 from yams.constraints import BASE_CONVERTERS
 
-if os.environ.get('APYCOT_ROOT'):
-    logging.basicConfig(level=logging.CRITICAL)
-else:
-    logging.basicConfig()
+# pre python 2.7.2 safety
+logging.basicConfig()
 
 from cubicweb.__pkginfo__ import version as __version__
 

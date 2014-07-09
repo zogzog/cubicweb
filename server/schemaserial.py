@@ -309,19 +309,14 @@ def serialize_schema(cnx, schema):
     """synchronize schema and permissions in the database according to
     current schema
     """
-    quiet = os.environ.get('APYCOT_ROOT')
-    if not quiet:
-        _title = '-> storing the schema in the database '
-        print _title,
+    _title = '-> storing the schema in the database '
+    print _title,
     execute = cnx.execute
     eschemas = schema.entities()
-    if not quiet:
-        pb_size = (len(eschemas + schema.relations())
-                   + len(CONSTRAINTS)
-                   + len([x for x in eschemas if x.specializes()]))
-        pb = ProgressBar(pb_size, title=_title)
-    else:
-        pb = None
+    pb_size = (len(eschemas + schema.relations())
+               + len(CONSTRAINTS)
+               + len([x for x in eschemas if x.specializes()]))
+    pb = ProgressBar(pb_size, title=_title)
     groupmap = group_mapping(cnx, interactive=False)
     # serialize all entity types, assuring CWEType is serialized first for proper
     # is / is_instance_of insertion
@@ -366,8 +361,7 @@ def serialize_schema(cnx, schema):
         execute(rql, kwargs, build_descr=False)
         if pb is not None:
             pb.update()
-    if not quiet:
-        print
+    print
 
 
 # high level serialization functions

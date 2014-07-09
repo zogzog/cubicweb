@@ -827,13 +827,6 @@ class CubicWebConfiguration(CubicWebNoAppConfiguration):
     else:
         _INSTANCES_DIR = join(_INSTALL_PREFIX, 'etc', 'cubicweb.d')
 
-    if os.environ.get('APYCOT_ROOT'):
-        _cubes_init = join(CubicWebNoAppConfiguration.CUBES_DIR, '__init__.py')
-        if not exists(_cubes_init):
-            file(join(_cubes_init), 'w').close()
-        if not exists(_INSTANCES_DIR):
-            os.makedirs(_INSTANCES_DIR)
-
     # set to true during repair (shell, migration) to allow some things which
     # wouldn't be possible otherwise
     repairing = False

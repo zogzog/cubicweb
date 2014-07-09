@@ -47,7 +47,7 @@ def _run_command(cmd):
     return subprocess.call(cmd)
 
 
-def sqlexec(sqlstmts, cursor_or_execute, withpb=not os.environ.get('APYCOT_ROOT'),
+def sqlexec(sqlstmts, cursor_or_execute, withpb=True,
             pbtitle='', delimiter=';', cnx=None):
     """execute sql statements ignoring DROP/ CREATE GROUP or USER statements
     error.
