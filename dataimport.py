@@ -571,27 +571,16 @@ class ObjectStore(object):
         return relation
 
     def commit(self):
-        """this commit method do nothing by default
-
-        This is voluntary to use the frequent autocommit feature in CubicWeb
-        when you are using hooks or another
-
-        If you want override commit method, please set it by the
-        constructor
-        """
-        pass
+        """this commit method does nothing by default"""
+        return
 
     def flush(self):
         """The method is provided so that all stores share a common API.
         It just tries to call the commit method.
         """
         print 'starting flush'
-        try:
-            self.commit()
-        except:
-            print 'failed to flush'
-        else:
-            print 'flush done'
+        self.commit()
+        print 'flush done'
 
     @property
     def nb_inserted_entities(self):
