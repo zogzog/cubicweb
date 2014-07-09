@@ -994,6 +994,13 @@ the repository',
         rtdir = abspath(os.environ.get('CW_RUNTIME_DIR', default))
         return join(rtdir, '%s-%s.pid' % (self.appid, self.name))
 
+    # config -> repository
+
+    def repository(self, vreg=None):
+        from cubicweb.server.repository import Repository
+        from cubicweb.server.utils import TasksManager
+        return Repository(self, TasksManager(), vreg=vreg)
+
     # instance methods used to get instance specific resources #############
 
     def __init__(self, appid, debugmode=False, creating=False):

@@ -17,19 +17,12 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Official API to access the content of a repository
 """
+from warnings import warn
 from logilab.common.deprecation import class_deprecated
 
 from cubicweb.utils import parse_repo_uri
-from cubicweb import ConnectionError, AuthenticationError
+from cubicweb import AuthenticationError
 from cubicweb.server.session import Connection
-
-
-### private function for specific method ############################
-
-def _get_inmemory_repo(config, vreg=None):
-    from cubicweb.server.repository import Repository
-    from cubicweb.server.utils import TasksManager
-    return Repository(config, TasksManager(), vreg=vreg)
 
 
 ### public API ######################################################
@@ -41,16 +34,11 @@ def get_repository(uri=None, config=None, vreg=None):
     The returned repository may be an in-memory repository or a proxy object
     using a specific RPC method, depending on the given URI.
     """
-    if uri is None:
-        return _get_inmemory_repo(config, vreg)
+    if uri is not None:
+        warn('[3.22] get_repository only wants a config')
 
-    protocol, hostport, appid = parse_repo_uri(uri)
-
-    if protocol == 'inmemory':
-        # me may have been called with a dummy 'inmemory://' uri ...
-        return _get_inmemory_repo(config, vreg)
-
-    raise ConnectionError('unknown protocol: `%s`' % protocol)
+    assert config is not None, 'get_repository(config=config)'
+    return config.repository(vreg)
 
 def connect(repo, login, **kwargs):
     """Take credential and return associated Connection.

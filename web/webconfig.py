@@ -280,18 +280,6 @@ have the python imaging library installed to use captcha)',
                 continue
             yield key, pdef
 
-    # don't use @cached: we want to be able to disable it while this must still
-    # be cached
-    def repository(self, vreg=None):
-        """return the instance's repository object"""
-        try:
-            return self.__repo
-        except AttributeError:
-            from cubicweb.repoapi import get_repository
-            repo = get_repository(config=self, vreg=vreg)
-            self.__repo = repo
-            return repo
-
     def vc_config(self):
         return self.repository().get_versions()
 
