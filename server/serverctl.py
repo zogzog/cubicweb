@@ -696,7 +696,7 @@ def _local_restore(appid, backupfile, drop, format='native'):
     config.quick_start = True
     mih = config.migration_handler(connect=False, verbosity=1)
     mih.restore_database(backupfile, drop, askconfirm=False, format=format)
-    repo = mih.repo_connect()
+    repo = mih.repo
     # version of the database
     dbversions = repo.get_versions()
     mih.shutdown()

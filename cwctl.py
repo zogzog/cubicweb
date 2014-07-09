@@ -767,7 +767,7 @@ given, appropriate sources for migration will be automatically selected \
             set_sources_mode(self.config.ext_sources or ('migration',))
         # get instance and installed versions for the server and the componants
         mih = config.migration_handler()
-        repo = mih.repo_connect()
+        repo = mih.repo
         vcconf = repo.get_versions()
         helper = self.config_helper(config, required=False)
         if self.config.force_cube_version:
@@ -856,8 +856,7 @@ class ListVersionsInstanceCommand(InstanceCommand):
         config.quick_start = True
         if hasattr(config, 'set_sources_mode'):
             config.set_sources_mode(('migration',))
-        repo = config.migration_handler().repo_connect()
-        vcconf = repo.get_versions()
+        vcconf = config.repository().get_versions()
         for key in sorted(vcconf):
             print key+': %s.%s.%s' % vcconf[key]
 

@@ -96,7 +96,7 @@ class ServerMigrationHelper(MigrationHelper):
             self.repo = repo
             self.session = cnx.session
         elif connect:
-            self.repo_connect()
+            self.repo = config.repository()
             self.set_cnx()
         else:
             self.session = None
@@ -152,12 +152,6 @@ class ServerMigrationHelper(MigrationHelper):
                 sys.exit(0)
         self.session = self.repo._get_session(self.cnx.sessionid)
 
-
-    @cached
-    def repo_connect(self):
-        self.repo = repoapi.get_repository(config=self.config)
-        return self.repo
-
     def cube_upgraded(self, cube, version):
         self.cmd_set_property('system.version.%s' % cube.lower(),
                               unicode(version))
@@ -194,7 +188,7 @@ class ServerMigrationHelper(MigrationHelper):
 
     def backup_database(self, backupfile=None, askconfirm=True, format='native'):
         config = self.config
-        repo = self.repo_connect()
+        repo = self.repo
         # paths
         timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
         instbkdir = osp.join(config.appdatahome, 'backup')
@@ -271,7 +265,7 @@ class ServerMigrationHelper(MigrationHelper):
                 if written_format in ('portable', 'native'):
                     format = written_format
         self.config.init_cnxset_pool = False
-        repo = self.repo_connect()
+        repo = self.repo
         source = repo.system_source
         try:
             source.restore(osp.join(tmpdir, source.uri), self.confirm, drop, format)

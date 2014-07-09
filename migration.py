@@ -139,9 +139,6 @@ class MigrationHelper(object):
             raise
         raise AttributeError(name)
 
-    def repo_connect(self):
-        return self.config.repository()
-
     def migrate(self, vcconf, toupgrade, options):
         """upgrade the given set of cubes
 
