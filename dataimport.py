@@ -606,32 +606,29 @@ class ObjectStore(object):
 class RQLObjectStore(ObjectStore):
     """ObjectStore that works with an actual RQL repository (production mode)"""
 
-    def __init__(self, session, commit=None):
-        ObjectStore.__init__(self)
-        if not hasattr(session, 'set_cnxset'):
-            if hasattr(session, 'request'):
-                # connection object
-                cnx = session
-                session = session.request()
-            else: # object is already a request
-                cnx = session.cnx
-            session.set_cnxset = lambda : None
-            commit = commit or cnx.commit
-        else:
-            session.set_cnxset()
-        self.session = session
-        self._commit = commit or session.commit
+    def __init__(self, cnx, commit=None):
+        if commit is not None:
+            warnings.warn('[3.19] commit argument should not be specified '
+                          'as the cnx object already provides it.',
+                          DeprecationWarning, stacklevel=2)
+        super(RQLObjectStore, self).__init__()
+        self._cnx = cnx
+        self._commit = commit or cnx.commit
 
     def commit(self):
-        txuuid = self._commit()
-        self.session.set_cnxset()
-        return txuuid
+        return self._commit()
 
     def rql(self, *args):
-        return self.session.execute(*args)
+        return self._cnx.execute(*args)
+
+    @property
+    def session(self):
+        warnings.warn('[3.19] deprecated property.', DeprecationWarning,
+                      stacklevel=2)
+        return self._cnx.repo._get_session(self._cnx.sessionid)
 
     def create_entity(self, *args, **kwargs):
-        entity = self.session.create_entity(*args, **kwargs)
+        entity = self._cnx.create_entity(*args, **kwargs)
         self.eids[entity.eid] = entity
         self.types.setdefault(args[0], []).append(entity.eid)
         return entity
@@ -642,13 +639,13 @@ class RQLObjectStore(ObjectStore):
         self.rql('SET X %s Y WHERE X eid %%(x)s, Y eid %%(y)s' % rtype,
                  {'x': int(eid_from), 'y': int(eid_to)})
 
-    @deprecated("[3.19] use session.find(*args, **kwargs).entities() instead")
+    @deprecated("[3.19] use cnx.find(*args, **kwargs).entities() instead")
     def find_entities(self, *args, **kwargs):
-        return self.session.find(*args, **kwargs).entities()
+        return self._cnx.find(*args, **kwargs).entities()
 
-    @deprecated("[3.19] use session.find(*args, **kwargs).one() instead")
+    @deprecated("[3.19] use cnx.find(*args, **kwargs).one() instead")
     def find_one_entity(self, *args, **kwargs):
-        return self.session.find(*args, **kwargs).one()
+        return self._cnx.find(*args, **kwargs).one()
 
 # the import controller ########################################################
 
