@@ -1053,10 +1053,6 @@ class SQLGenSourceWrapper(object):
                                nb_threads=self.nb_threads_statement,
                                support_copy_from=self.support_copy_from,
                                encoding=self.dbencoding)
-        except:
-            print 'failed to flush'
-        else:
-            print 'flush done'
         finally:
             _entities_sql.clear()
             _relations_sql.clear()
