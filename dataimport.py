@@ -556,13 +556,10 @@ class ObjectStore(object):
         self._rql = None
         self._commit = None
 
-    def _put(self, type, item):
-        self.items.append(item)
-        return len(self.items) - 1
-
     def create_entity(self, etype, **data):
         data = attrdict(data)
-        data['eid'] = eid = self._put(etype, data)
+        data['eid'] = eid = len(self.items)
+        self.items.append(data)
         self.eids[eid] = data
         self.types.setdefault(etype, []).append(eid)
         return data
@@ -653,13 +650,6 @@ class RQLObjectStore(ObjectStore):
         self.eids[entity.eid] = entity
         self.types.setdefault(args[0], []).append(entity.eid)
         return entity
-
-    def _put(self, type, item):
-        query = 'INSERT %s X' % type
-        if item:
-            query += ': ' + ', '.join('X %s %%(%s)s' % (k, k)
-                                      for k in item)
-        return self.rql(query, item)[0][0]
 
     def relate(self, eid_from, rtype, eid_to, **kwargs):
         eid_from, rtype, eid_to = super(RQLObjectStore, self).relate(
@@ -865,9 +855,6 @@ class NoHookRQLObjectStore(RQLObjectStore):
     @property
     def nb_inserted_relations(self):
         return self._nb_inserted_relations
-
-    def _put(self, type, item):
-        raise RuntimeError('use create entity')
 
 
 class MetaGenerator(object):
