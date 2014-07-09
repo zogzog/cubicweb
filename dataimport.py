@@ -575,12 +575,8 @@ class ObjectStore(object):
         return
 
     def flush(self):
-        """The method is provided so that all stores share a common API.
-        It just tries to call the commit method.
-        """
-        print 'starting flush'
-        self.commit()
-        print 'flush done'
+        """The method is provided so that all stores share a common API"""
+        pass
 
     @property
     def nb_inserted_entities(self):
