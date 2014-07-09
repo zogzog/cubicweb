@@ -49,12 +49,7 @@ Example of use (run this with `cubicweb-ctl shell instance import-script.py`):
   GENERATORS.append( (gen_users, CHK) )
 
   # create controller
-  if 'cnx' in globals():
-      ctl = CWImportController(RQLObjectStore(cnx))
-  else:
-      print 'debug mode (not connected)'
-      print 'run through cubicweb-ctl shell to access an instance'
-      ctl = CWImportController(ObjectStore())
+  ctl = CWImportController(RQLObjectStore(cnx))
   ctl.askerror = 1
   ctl.generators = GENERATORS
   ctl.data['utilisateurs'] = lazytable(ucsvreader(open('users.csv')))
@@ -553,8 +548,6 @@ class ObjectStore(object):
         self.types = {}
         self.relations = set()
         self.indexes = {}
-        self._rql = None
-        self._commit = None
 
     def create_entity(self, etype, **data):
         data = attrdict(data)
@@ -600,11 +593,6 @@ class ObjectStore(object):
         else:
             print 'flush done'
 
-    def rql(self, *args):
-        if self._rql is not None:
-            return self._rql(*args)
-        return []
-
     @property
     def nb_inserted_entities(self):
         return len(self.eids)
@@ -617,7 +605,6 @@ class ObjectStore(object):
 
 class RQLObjectStore(ObjectStore):
     """ObjectStore that works with an actual RQL repository (production mode)"""
-    _rql = None # bw compat
 
     def __init__(self, session, commit=None):
         ObjectStore.__init__(self)
@@ -641,8 +628,6 @@ class RQLObjectStore(ObjectStore):
         return txuuid
 
     def rql(self, *args):
-        if self._rql is not None:
-            return self._rql(*args)
         return self.session.execute(*args)
 
     def create_entity(self, *args, **kwargs):
@@ -790,7 +775,6 @@ class CWImportController(object):
 
 class NoHookRQLObjectStore(RQLObjectStore):
     """ObjectStore that works with an actual RQL repository (production mode)"""
-    _rql = None # bw compat
 
     def __init__(self, session, metagen=None, baseurl=None):
         super(NoHookRQLObjectStore, self).__init__(session)
@@ -803,7 +787,6 @@ class NoHookRQLObjectStore(RQLObjectStore):
         self._nb_inserted_entities = 0
         self._nb_inserted_types = 0
         self._nb_inserted_relations = 0
-        self.rql = session.execute
         # deactivate security
         session.read_security = False
         session.write_security = False
