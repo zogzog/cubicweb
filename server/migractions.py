@@ -112,7 +112,7 @@ class ServerMigrationHelper(MigrationHelper):
             # notify we're starting maintenance (called instead of server_start
             # which is called on regular start
             repo.hm.call_hooks('server_maintenance', repo=repo)
-        if not schema and not getattr(config, 'quick_start', False):
+        if not schema and not config.quick_start:
             insert_lperms = self.repo.get_versions()['cubicweb'] < (3, 14, 0) and 'localperms' in config.available_cubes()
             if insert_lperms:
                 cubes = config._cubes

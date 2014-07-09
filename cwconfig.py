@@ -329,6 +329,8 @@ class CubicWebNoAppConfiguration(ConfigurationMixIn):
     # nor remove appobjects based on unused interface [???]
     cleanup_unused_appobjects = True
 
+    quick_start = False
+
     if (CWDEV and _forced_mode != 'system'):
         mode = 'user'
         _CUBES_DIR = join(CW_SOFTWARE_ROOT, '../cubes')
