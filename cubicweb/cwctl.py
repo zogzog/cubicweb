@@ -46,7 +46,7 @@ from logilab.common.configuration import merge_options
 from logilab.common.deprecation import deprecated
 
 from cubicweb import ConfigurationError, ExecutionError, BadCommandUsage
-from cubicweb.utils import support_args
+from cubicweb.utils import admincnx
 from cubicweb.cwconfig import CubicWebConfiguration as cwcfg, CWDEV, CONFIGURATIONS
 from cubicweb.toolsutils import Command, rm, create_dir, underline_title
 from cubicweb.__pkginfo__ import version
@@ -868,7 +868,7 @@ directly give URI as instance id instead',
           }),
         )
 
-    def _handle_inmemory(self, appid):
+    def _get_mih(self, appid):
         """ returns migration context handler & shutdown function """
         config = cwcfg.config_for(appid)
         if self.config.ext_sources:
@@ -880,33 +880,9 @@ directly give URI as instance id instead',
             sources = ('all',)
         config.set_sources_mode(sources)
         config.repairing = self.config.force
+        cnx = admincnx(appid)
         mih = config.migration_handler()
         return mih, lambda: mih.shutdown()
-
-    def _handle_networked(self, appuri):
-        """ returns migration context handler & shutdown function """
-        from cubicweb import AuthenticationError
-        from cubicweb.repoapi import connect, get_repository
-        from cubicweb.server.utils import manager_userpasswd
-        from cubicweb.server.migractions import ServerMigrationHelper
-        while True:
-            try:
-                login, pwd = manager_userpasswd(msg=None)
-                repo = get_repository(appuri)
-                cnx = connect(repo, login=login, password=pwd, mulcnx=False)
-            except AuthenticationError as ex:
-                print(ex)
-            except (KeyboardInterrupt, EOFError):
-                print()
-                sys.exit(0)
-            else:
-                break
-        cnx.load_appobjects()
-        repo = cnx._repo
-        mih = ServerMigrationHelper(None, repo=repo, cnx=cnx, verbosity=0,
-                                    # hack so it don't try to load fs schema
-                                    schema=1)
-        return mih, lambda: cnx.close()
 
     def run(self, args):
         appuri = args.pop(0)
@@ -916,12 +892,7 @@ directly give URI as instance id instead',
             if urlparse(self.config.repo_uri).scheme == 'inmemory':
                 appuri = '%s/%s' % (self.config.repo_uri.rstrip('/'), appuri)
 
-        from cubicweb.utils import parse_repo_uri
-        protocol, hostport, appid = parse_repo_uri(appuri)
-        if protocol == 'inmemory':
-            mih, shutdown_callback = self._handle_inmemory(appid)
-        else:
-            mih, shutdown_callback = self._handle_networked(appuri)
+        mih, shutdown_callback = self._get_mih(appuri)
         try:
             with mih.cnx:
                 with mih.cnx.security_enabled(False, False):
