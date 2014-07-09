@@ -1,6 +1,5 @@
 from cubicweb.web.request import CubicWebRequestBase
 from cubicweb.cwconfig import CubicWebConfiguration
-from cubicweb.web.application import CubicWebPublisher
 from cubicweb import repoapi
 
 import cubicweb
@@ -63,25 +62,6 @@ class CubicWebPyramidRequest(CubicWebRequestBase):
     status_out = property(_get_status_out, _set_status_out)
 
 
-class PyramidSessionHandler(object):
-    """A CW Session handler that rely on the pyramid API to fetch the needed
-    informations"""
-
-    def __init__(self, appli):
-        self.appli = appli
-
-    def get_session(self, req):
-        return req._request.cw_session
-
-    def logout(self, req, goto_url):
-        del req._request.session['cubicweb.sessionid']
-        if not req.session.closed:
-            req.session.repo.close(req.session.sessionid)
-        for name, value in security.forget(req._request):
-            req.headers_out.setHeader(name, value)
-        raise cubicweb.web.LogOut(url=goto_url)
-
-
 def render_view(request, vid, **kwargs):
     vreg = request.registry['cubicweb.registry']
     # XXX The select() function could, know how to handle a pyramid
@@ -126,22 +106,6 @@ def login(request):
 
     response.text = render_view(request, 'login')
     return response
-
-
-class CubicWebPyramidHandler(object):
-    def __init__(self, appli):
-        self.appli = appli
-
-    def __call__(self, request):
-        req = request.cw_request()
-        result = self.appli.handle_request(req, req.path)
-        if result is not None:
-            request.response.body = result
-        request.response.headers.clear()
-        for k, v in req.headers_out.getAllRawHeaders():
-            for item in v:
-                request.response.headers.add(k, item)
-        return request.response
 
 
 def _cw_cnx(request):
@@ -250,15 +214,4 @@ def includeme(config):
     config.add_route('hello', '/hello')
     config.add_view(hello_world, route_name='hello')
 
-    # Set up a defaut route to handle non-catched urls.
-    # This is to keep legacy compatibility for cubes that makes use of the
-    # cubicweb controllers.
-    cwappli = CubicWebPublisher(
-        cwconfig.repository(), cwconfig,
-        session_handler_fact=PyramidSessionHandler)
-    handler = CubicWebPyramidHandler(cwappli)
-
-    config.registry['cubicweb.appli'] = cwappli
-    config.registry['cubicweb.handler'] = handler
-
-    config.add_notfound_view(handler)
+    config.include('pyramid_cubicweb.handler')
