@@ -3,6 +3,26 @@ import datetime as DT
 from StringIO import StringIO
 from logilab.common.testlib import TestCase, unittest_main
 from cubicweb import dataimport
+from cubicweb.devtools.testlib import CubicWebTC
+
+
+class RQLObjectStoreTC(CubicWebTC):
+
+    def test_all(self):
+        with self.admin_access.repo_cnx() as cnx:
+            store = dataimport.RQLObjectStore(cnx)
+            group_eid = store.create_entity('CWGroup', name=u'grp').eid
+            user_eid = store.create_entity('CWUser', login=u'lgn', upassword=u'pwd').eid
+            store.relate(user_eid, 'in_group', group_eid)
+            cnx.commit()
+
+        with self.admin_access.repo_cnx() as cnx:
+            users = cnx.execute('CWUser X WHERE X login "lgn"')
+            self.assertEqual(1, len(users))
+            self.assertEqual(user_eid, users.one().eid)
+            groups = cnx.execute('CWGroup X WHERE U in_group X, U login "lgn"')
+            self.assertEqual(1, len(users))
+            self.assertEqual(group_eid, groups.one().eid)
 
 class CreateCopyFromBufferTC(TestCase):
 
