@@ -142,7 +142,7 @@ What's important in there:
 * `VISIBILITY_PERMISSIONS` provides read access to managers group, if
   `visibility` attribute's value is 'public', or if user (designed by the 'U'
   variable in the expression) is linked to the entity (the 'X' variable) through
-  the `may_read` permission
+  the `may_be_read_by` permission
 
 * we modify permissions of the entity types we use by importing them and
   modifying their `__permissions__` attribute
@@ -168,7 +168,7 @@ To fullfill the requirements, we have to implement::
   commented entity.
 
 This kind of `active` rule will be done using CubicWeb's hook
-system. Hooks are triggered on database event such as addition of new
+system. Hooks are triggered on database events such as addition of a new
 entity or relation.
 
 The tricky part of the requirement is in *unless explicitly specified*, notably
@@ -223,9 +223,9 @@ Notice:
   relation types to which the hook applies. To match a relation type, we use the
   hook specific `match_rtype` selector.
 
-* usage of `set_operation`: instead of adding an operation for each added entity,
-  set_operation allows to create a single one and to store entity's eids to be
-  processed in session's transaction data. This is a good pratice to avoid heavy
+* usage of `DataOperationMixIn`: instead of adding an operation for each added entity,
+  DataOperationMixIn allows to create a single one and to store entity's eids to be
+  processed in the transaction data. This is a good pratice to avoid heavy
   operations manipulation cost when creating a lot of entities in the same
   transaction.
 
@@ -357,7 +357,7 @@ model, in *test/unittest_sytweb.py*:
 	from logilab.common.testlib import unittest_main
 	unittest_main()
 
-It's not complete, but show most things you'll want to do in tests: adding some
+It's not complete, but shows most things you'll want to do in tests: adding some
 content, creating users and connecting as them in the test, etc...
 
 To run it type:
@@ -393,7 +393,7 @@ test instance. The second one will be much quicker:
 If you do some changes in your schema, you'll have to force regeneration of that
 database. You do that by removing the tmpdb files before running the test: ::
 
-    $ rm data/tmpdb*
+    $ rm data/database/tmpdb*
 
 
 .. Note::
@@ -406,12 +406,12 @@ database. You do that by removing the tmpdb files before running the test: ::
 Step 4: writing the migration script and migrating the instance
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Prior to those changes, I  created an instance, feeded it with some data, so I
+Prior to those changes, I created an instance, fed it with some data, so I
 don't want to create a new one, but to migrate the existing one. Let's see how to
 do that.
 
 Migration commands should be put in the cube's *migration* directory, in a
-file named file:`<X.Y.Z>_Any.py` ('Any' being there mostly for historical reason).
+file named file:`<X.Y.Z>_Any.py` ('Any' being there mostly for historical reasons).
 
 Here I'll create a *migration/0.2.0_Any.py* file containing the following
 instructions:
@@ -422,11 +422,11 @@ instructions:
   add_relation_type('visibility')
   sync_schema_props_perms()
 
-Then I update the version number in cube's *__pkginfo__.py* to 0.2.0. And
+Then I update the version number in the cube's *__pkginfo__.py* to 0.2.0. And
 that's it! Those instructions will:
 
 * update the instance's schema by adding our two new relations and update the
-  underlying database tables accordingly (the two first instructions)
+  underlying database tables accordingly (the first two instructions)
 
 * update schema's permissions definition (the last instruction)
 
