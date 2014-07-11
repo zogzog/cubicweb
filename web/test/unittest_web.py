@@ -18,6 +18,7 @@
 
 from json import loads
 from os.path import join
+import tempfile
 
 try:
     import requests
@@ -102,6 +103,21 @@ class LanguageTC(CubicWebServerTC):
         headers = {'Accept-Language': 'en'}
         webreq = self.web_request(headers=headers)
         self.assertIn('lang="en"', webreq.read())
+
+class LogQueriesTC(CubicWebServerTC):
+    @classmethod
+    def init_config(cls, config):
+        super(LogQueriesTC, cls).init_config(config)
+        cls.logfile = tempfile.NamedTemporaryFile()
+        config.global_set_option('query-log-file', cls.logfile.name)
+
+    def test_log_queries(self):
+        self.web_request()
+        self.assertTrue(self.logfile.read())
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.logfile.close()
 
 
 if __name__ == '__main__':
