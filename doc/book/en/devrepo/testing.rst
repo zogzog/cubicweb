@@ -25,8 +25,8 @@ by CubicWeb using automatically sqlite (bundled with Python, see
 http://docs.python.org/library/sqlite3.html) as a backend.
 
 The database is stored in the mycube/test/tmpdb,
-mycube/test/tmpdb-template files. If it does not (yet) exists, it will
-be built automatically when the test suit starts.
+mycube/test/tmpdb-template files. If it does not (yet) exist, it will
+be built automatically when the test suite starts.
 
 .. warning::
 
@@ -34,8 +34,8 @@ be built automatically when the test suit starts.
   one must delete these two files. Changes concerned only with entity
   or relation type properties (constraints, cardinalities,
   permissions) and generally dealt with using the
-  `sync_schema_props_perms()` fonction of the migration environment
-  need not a database regeneration step.
+  `sync_schema_props_perms()` function of the migration environment do
+  not need a database regeneration step.
 
 .. _hook_test:
 
@@ -85,7 +85,7 @@ The test case itself checks that an Operation does its job of
 preventing cycles amongst Keyword entities.
 
 The `create_entity` method of connection (or request) objects allows
-to create an entity. You can link this entity to others entities, by
+to create an entity. You can link this entity to other entities, by
 specifying as argument, the relation name, and the entity to link, as
 value. In the above example, the `Classification` entity is linked to
 a `CWEtype` via the relation `classifies`. Conversely, if you are
@@ -95,7 +95,7 @@ entity, by adding `reverse_classifies` as argument.
 .. note::
 
    the :meth:`commit` method is not called automatically. You have to
-   call it explicitely if needed (notably to test operations). It is a
+   call it explicitly if needed (notably to test operations). It is a
    good practice to regenerate entities with :meth:`entity_from_eid`
    after a commit to avoid request cache effects.
 
@@ -104,7 +104,7 @@ You can see an example of security tests in the
 
 It is possible to have these tests run continuously using `apycot`_.
 
-.. _apycot: http://www.logilab.org/project/apycot
+.. _apycot: http://www.cubicweb.org/project/apycot
 
 .. _securitytest:
 
@@ -115,9 +115,9 @@ Since unit tests are done with the SQLITE backend and this does not
 support multiple connections at a time, you must be careful when
 simulating security, changing users.
 
-By default, tests run with a user with admin privileges. This
-user/connection must never be closed. It is accessible through the
-`admin_access` object of the test classes.
+By default, tests run with a user with admin privileges. Connections
+using these credentials are accessible through the `admin_access` object
+of the test classes.
 
 The `repo_cnx()` method returns a connection object that can be used as a
 context manager:
@@ -138,27 +138,27 @@ context manager:
        req.cnx.commit()
 
 On exit of the context manager, a rollback is issued, which releases
-the connection. Don't forget to issue the `cnx.commit()` calls !
+the connection. Don't forget to issue the `cnx.commit()` calls!
 
 .. warning::
 
-   Do not use the references kept to the entities created with a
-   connection from another !
+   Do not use references kept to the entities created with a
+   connection from another one!
 
 Email notifications tests
 `````````````````````````
 
-When running tests potentially generated e-mails are not really sent
-but is found in the list `MAILBOX` of module
+When running tests, potentially generated e-mails are not really sent
+but are found in the list `MAILBOX` of module
 :mod:`cubicweb.devtools.testlib`.
 
 You can test your notifications by analyzing the contents of this list, which
 contains objects with two attributes:
 
 * `recipients`, the list of recipients
-* `msg`, object email.Message
+* `msg`, email.Message object
 
-Let us look at simple example from the ``blog`` cube.
+Let us look at a simple example from the ``blog`` cube.
 
 .. sourcecode:: python
 
@@ -189,7 +189,7 @@ Visible actions tests
 `````````````````````
 
 It is easy to write unit tests to test actions which are visible to
-user or to a category of users. Let's take an example in the
+a user or to a category of users. Let's take an example in the
 `conference cube`_.
 
 .. _`conference cube`: http://www.cubicweb.org/project/cubicweb-conference
@@ -199,14 +199,14 @@ user or to a category of users. Let's take an example in the
 
         def setup_database(self):
             with self.admin_access.repo_cnx() as cnx:
-                self.conf = cnx.create_entity('Conference',
-                                              title=u'my conf',
-                                              url_id=u'conf',
-                                              start_on=date(2010, 1, 27),
-                                              end_on = date(2010, 1, 29),
-                                              call_open=True,
-                                              reverse_is_chair_at=chair,
-                                              reverse_is_reviewer_at=reviewer)
+                self.confeid = cnx.create_entity('Conference',
+                                                 title=u'my conf',
+                                                 url_id=u'conf',
+                                                 start_on=date(2010, 1, 27),
+                                                 end_on = date(2010, 1, 29),
+                                                 call_open=True,
+                                                 reverse_is_chair_at=chair,
+                                                 reverse_is_reviewer_at=reviewer).eid
 
         def test_admin(self):
             with self.admin_access.web_request() as req:
@@ -225,7 +225,7 @@ user or to a category of users. Let's take an example in the
                                         u'http://testing.fr/cubicweb/add/Track'
                                         u'?__linkto=in_conf%%3A%(conf)s%%3Asubject&'
                                         u'__redirectpath=conference%%2Fconf&'
-                                        u'__redirectvid=' % {'conf': self.conf.eid}),
+                                        u'__redirectvid=' % {'conf': self.confeid}),
                                        ])
 
 You just have to execute a rql query corresponding to the view you want to test,
@@ -234,7 +234,7 @@ and to compare the result of
 that must be visible in the interface. This is a list of tuples. The first
 element is the action's `__regid__`, the second the action's class.
 
-To test actions in submenu, you just have to test the result of
+To test actions in a submenu, you just have to test the result of
 :meth:`~cubicweb.devtools.testlib.CubicWebTC.action_submenu` method. The last
 parameter of the method is the action's category. The result is a list of
 tuples. The first element is the action's title, and the second element the
@@ -277,14 +277,14 @@ mechanism. These are:
 Cache heavy database setup
 -------------------------------
 
-Some tests suite require a complex setup of the database that takes
-seconds (or event minutes) to complete. Doing the whole setup for all
-individual tests make the whole run very slow. The ``CubicWebTC``
-class offer a simple way to prepare specific database once for
+Some test suites require a complex setup of the database that takes
+seconds (or even minutes) to complete. Doing the whole setup for each
+individual test makes the whole run very slow. The ``CubicWebTC``
+class offer a simple way to prepare a specific database once for
 multiple tests. The `test_db_id` class attribute of your
-``CubicWebTC`` must be set a unique identifier and the
-:meth:`pre_setup_database` class method build the cached content. As
-the :meth:`pre_setup_database` method is not garantee to be called
+``CubicWebTC`` subclass must be set to a unique identifier and the
+:meth:`pre_setup_database` class method must build the cached content. As
+the :meth:`pre_setup_database` method is not garanteed to be called
 every time a test method is run, you must not set any class attribute
 to be used during test *there*. Databases for each `test_db_id` are
 automatically created if not already in cache. Clearing the cache is
@@ -294,8 +294,9 @@ subdirectory of your test directory.
 .. warning::
 
   Take care to always have the same :meth:`pre_setup_database`
-  function for all calls with a given `test_db_id` otherwise your test
-  will have unpredictable results depending on the first encountered one.
+  function for all classes with a given `test_db_id` otherwise your
+  tests will have unpredictable results depending on the first
+  encountered one.
 
 
 Testing on a real-life database
@@ -341,7 +342,7 @@ suite. This is handled by the ``bootstrap_cubes`` file located under
 The format is:
 
 * possibly several empy lines or lines starting with ``#`` (comment lines)
-* one line containing a coma separated list of cube names.
+* one line containing a comma-separated list of cube names.
 
 It is also possible to add a ``schema.py`` file in
 ``mycube/test/data``, which will be used by the testing framework,
@@ -352,12 +353,12 @@ Literate programming
 --------------------
 
 CubicWeb provides some literate programming capabilities. The :ref:`cubicweb-ctl`
-`shell` command accepts differents format files. If your file ends with `.txt`
-or `.rst`, the file will be parsed by :mod:`doctest.testfile` with CubicWeb
+`shell` command accepts different file formats. If your file ends with `.txt`
+or `.rst`, the file will be parsed by :mod:`doctest.testfile` with CubicWeb's
 :ref:`migration` API enabled in it.
 
-Create a `scenario.txt` file into `test/` directory and fill with some content.
-Please refer the :mod:`doctest.testfile` `documentation`_.
+Create a `scenario.txt` file in the `test/` directory and fill with some content.
+Refer to the :mod:`doctest.testfile` `documentation`_.
 
 .. _documentation: http://docs.python.org/library/doctest.html
 
@@ -394,7 +395,7 @@ way :mod:`doctest` module will catch all the exceptions internally.
 
 Passing paramaters
 ``````````````````
-Using extra arguments to parametrize your scenario is possible by prepend them
+Using extra arguments to parametrize your scenario is possible by prepending them
 by double dashes.
 
 Please refer to the `cubicweb-ctl shell --help` usage.
@@ -421,7 +422,7 @@ To use it, you may:
   discover them automatically)
 * launch `pytest unittest_foo.py` to execute one test file
 * launch `pytest unittest_foo.py bar` to execute all test methods and
-  all test cases whose name contain `bar`
+  all test cases whose name contains `bar`
 
 Additionally, the `-x` option tells pytest to exit at the first error
 or failure. The `-i` option tells pytest to drop into pdb whenever an
@@ -450,7 +451,6 @@ CubicWebTC API
 What you need to know about request and session
 -----------------------------------------------
 
-
 .. image:: ../images/request_session.png
 
 First, remember to think that some code run on a client side, some
@@ -466,12 +466,12 @@ The client interacts with the repository through a repoapi connection.
 
 .. note::
 
-   These distinction are going to disappear in cubicweb 3.21 (if not
+   These distinctions are going to disappear in cubicweb 3.21 (if not
    before).
 
 A repoapi connection is tied to a session in the repository. The connection and
-request objects are unaccessible from repository code / the session object is
-unaccessible from client code (theoretically at least).
+request objects are inaccessible from repository code / the session object is
+inaccessible from client code (theoretically at least).
 
 The web interface provides a request class.  That `request` object provides
 access to all cubicweb resources, eg:
@@ -487,7 +487,7 @@ access to all cubicweb resources, eg:
 
 
 A `session` provides an api similar to a request regarding RQL execution and
-access to global resources (registry and all), but also have the following
+access to global resources (registry and all), but also has the following
 responsibilities:
 
 * handle transaction data, that will live during the time of a single
@@ -537,12 +537,12 @@ Let's detail the process:
 
 3. the query is executed (through the repository connection)
 
-4. this query may trigger hooks. Hooks and operation may execute some rql queries
+4. this query may trigger hooks. Hooks and operations may execute some rql queries
    through `cnx.execute`.
 
 5. the repository gets the result of the query in 1. If it was a RQL read query,
    the database connection is released. If it was a write query, the connection
-   is then tied to the session until the transaction is commited or rollbacked.
+   is then tied to the session until the transaction is commited or rolled back.
 
 6. results are sent back to the client
 
@@ -554,6 +554,6 @@ This implies several things:
 * however, take care when writing tests: you are usually faking /
   testing both the server and the client side, so you have to decide
   when to use RepoAccess.client_cnx or RepoAccess.repo_cnx. Ask
-  yourself "where the code I want to test will be running, client or
-  repository side ?". The response is usually: use a repo (since the
+  yourself "where will the code I want to test be running, client or
+  repository side?". The response is usually: use a repo (since the
   "client connection" concept is going away in a couple of releases).
