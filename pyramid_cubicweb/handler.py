@@ -74,6 +74,9 @@ class CubicWebPyramidHandler(object):
                 # XXX The validation_error_handler implementation is light, we
                 # should redo it better in cw_to_pyramid, so it can be properly
                 # handled when raised from a cubicweb view.
+                # BUT the real handling of validation errors should be done
+                # earlier in the controllers, not here. In the end, the
+                # ValidationError should never by handled here.
                 content = self.appli.validation_error_handler(req, ex)
             except cubicweb.web.RemoteCallFailed as ex:
                 # XXX The default pyramid error handler (or one that we provide
@@ -84,8 +87,9 @@ class CubicWebPyramidHandler(object):
             if content is not None:
                 request.response.body = content
 
+            # XXX CubicWebPyramidRequest.headers_out should
+            # access directly the pyramid response headers.
             request.response.headers.clear()
-
             for k, v in req.headers_out.getAllRawHeaders():
                 for item in v:
                     request.response.headers.add(k, item)
