@@ -569,7 +569,7 @@ class _CubicWebRequestBase(RequestSessionBase):
         except KeyError:
             return SimpleCookie()
 
-    def set_cookie(self, name, value, maxage=300, expires=None, secure=False):
+    def set_cookie(self, name, value, maxage=300, expires=None, secure=False, httponly=False):
         """set / update a cookie
 
         by default, cookie will be available for the next 5 minutes.
@@ -595,7 +595,7 @@ class _CubicWebRequestBase(RequestSessionBase):
             expires = None
         # make sure cookie is set on the correct path
         cookie = Cookie(str(name), str(value), self.base_url_path(),
-                        expires=expires, secure=secure)
+                        expires=expires, secure=secure, httponly=httponly)
         self.headers_out.addHeader('Set-cookie', cookie)
 
     def remove_cookie(self, name, bwcompat=None):

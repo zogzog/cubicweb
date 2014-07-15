@@ -117,6 +117,10 @@ class LanguageTC(CubicWebServerTC):
         webreq = self.web_request('/%d' % admin_eid)
         self.assertEqual(webreq.status, 200)
 
+    def test_session_cookie_httponly(self):
+        webreq = self.web_request()
+        self.assertIn('HttpOnly', webreq.getheader('set-cookie'))
+
 
 class LogQueriesTC(CubicWebServerTC):
     @classmethod

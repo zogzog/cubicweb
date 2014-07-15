@@ -224,7 +224,7 @@ class CookieSessionHandler(object):
         sessioncookie = self.session_cookie(req)
         secure = req.https and req.base_url().startswith('https://')
         req.set_cookie(sessioncookie, session.sessionid,
-                       maxage=None, secure=secure)
+                       maxage=None, secure=secure, httponly=True)
         if not session.anonymous_session:
             self.session_manager.postlogin(req, session)
         return session

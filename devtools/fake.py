@@ -65,8 +65,8 @@ class FakeRequest(ConnectionCubicWebRequestBase):
         super(FakeRequest, self).__init__(*args, **kwargs)
         self._session_data = {}
 
-    def set_cookie(self, name, value, maxage=300, expires=None, secure=False):
-        super(FakeRequest, self).set_cookie(name, value, maxage, expires, secure)
+    def set_cookie(self, name, value, maxage=300, expires=None, secure=False, httponly=False):
+        super(FakeRequest, self).set_cookie(name, value, maxage, expires, secure, httponly)
         cookie = self.get_response_header('Set-Cookie')
         self._headers_in.setHeader('Cookie', cookie)
 
