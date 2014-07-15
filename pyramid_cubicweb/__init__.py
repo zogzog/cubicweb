@@ -175,7 +175,7 @@ def _cw_session(request):
 
     # XXX Ideally we store the cw session data in the pyramid session.
     # BUT some data in the cw session data dictionnary makes pyramid fail.
-    #session.data = request.session
+    session.data = request.session
 
     return session
 
