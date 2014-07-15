@@ -69,7 +69,7 @@ def render_view(request, vid, **kwargs):
     # On the other hand, we could refine the View concept and decide it works
     # with a cnx, and never with a WebRequest
 
-    view = vreg['views'].select(vid, request.cw_request(), **kwargs)
+    view = vreg['views'].select(vid, request.cw_request, **kwargs)
 
     view.set_stream()
     view.render()
@@ -80,27 +80,25 @@ def login(request):
     repo = request.registry['cubicweb.repository']
 
     response = request.response
-    userid = None
+    user_eid = None
 
     if '__login' in request.params:
         login = request.params['__login']
         password = request.params['__password']
 
         try:
-            sessionid = repo.connect(login, password=password)
-            request.session['cubicweb.sessionid'] = sessionid
-            session = repo._sessions[sessionid]
-            userid = session.user.eid
+            with repo.internal_cnx() as cnx:
+                user = repo.authenticate_user(cnx, login, password=password)
+                user_eid = user.eid
         except cubicweb.AuthenticationError:
             raise
 
-    if userid is not None:
-        headers = security.remember(request, userid)
+    if user_eid is not None:
+        headers = security.remember(request, user_eid)
 
-        if 'postlogin_path' in request.params:
-            raise HTTPSeeOther(
-                request.params['postlogin_path'],
-                headers=headers)
+        raise HTTPSeeOther(
+            request.params.get('postlogin_path', '/'),
+            headers=headers)
 
         response.headerlist.extend(headers)
 
@@ -109,8 +107,6 @@ def login(request):
 
 
 def _cw_cnx(request):
-    # XXX We should not need to use the session. A temporary one should be
-    # enough. (by using repoapi.connect())
     cnx = repoapi.ClientConnection(request.cw_session)
 
     def cleanup(request):
@@ -125,50 +121,50 @@ def _cw_cnx(request):
     return cnx
 
 
+def _cw_close_session(request):
+    request.cw_session.close()
+
+
 def _cw_session(request):
+    """Obtains a cw session from a pyramid request"""
     repo = request.registry['cubicweb.repository']
     config = request.registry['cubicweb.config']
 
-    sessionid = request.session.get('cubicweb.sessionid')
+    if not request.authenticated_userid:
+        login, password = config.anonymous_user()
+        sessionid = repo.connect(login, password=password)
+        session = repo._sessions[sessionid]
+        request.add_finished_callback(_cw_close_session)
+    else:
+        session = request._cw_cached_session
 
-    if sessionid not in repo._sessions:
-        if not request.authenticated_userid:
-            login, password = config.anonymous_user()
-            sessionid = repo.connect(login, password=password)
-            request.session['cubicweb.sessionid'] = sessionid
-        else:
-            sessionid = request.session.get('cubicweb.sessionid')
+    # XXX Ideally we store the cw session data in the pyramid session.
+    # BUT some data in the cw session data dictionnary makes pyramid fail.
+    #session.data = request.session
 
-    return repo._sessions[sessionid]
+    return session
 
 
 def _cw_request(request):
-    return weakref.ref(CubicWebPyramidRequest(request))
+    req = CubicWebPyramidRequest(request)
+    req.set_cnx(request.cw_cnx)
+    return req
 
 
-def get_principals(userid, request):
+def get_principals(login, request):
     repo = request.registry['cubicweb.repository']
 
-    sessionid = request.session.get('cubicweb.sessionid')
+    try:
+        sessionid = repo.connect(
+            str(login), __pyramid_directauth=authplugin.EXT_TOKEN)
+        session = repo._sessions[sessionid]
+        request._cw_cached_session = session
+        request.add_finished_callback(_cw_close_session)
+    except:
+        log.exception("Failed")
+        raise
 
-    if sessionid is None or sessionid not in repo._sessions:
-        try:
-            sessionid = repo.connect(
-                str(userid), __pyramid_directauth=authplugin.EXT_TOKEN)
-        except:
-            log.exception("Failed")
-            raise
-        request.session['cubicweb.sessionid'] = sessionid
-
-    #session = repo._session[sessionid]
-
-    with repo.internal_cnx() as cnx:
-        groupnames = [r[1] for r in cnx.execute(
-            'Any X, N WHERE X is CWGroup, X name N, '
-            'U in_group X, U eid %(userid)s',
-            {'userid': userid})]
-
-    return groupnames
+    return session.user.groups
 
 
 from pyramid.authentication import SessionAuthenticationPolicy

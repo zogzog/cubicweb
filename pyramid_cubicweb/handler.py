@@ -36,8 +36,7 @@ class CubicWebPyramidHandler(object):
         # core_handle and CubicWebPublisher altogether so that the various CW
         # exceptions are converted to their pyramid equivalent.
 
-        req = request.cw_request()
-        req.set_cnx(request.cw_cnx)
+        req = request.cw_request
 
         # XXX The main handler of CW forbid anonymous https connections
         # I guess we can drop this "feature" but in doubt I leave this comment
@@ -55,9 +54,6 @@ class CubicWebPyramidHandler(object):
         except LogOut as ex:
             # The actual 'logging out' logic should be in separated function
             # that is accessible by the pyramid views
-            del req._request.session['cubicweb.sessionid']
-            if not req.session.closed:
-                req.session.repo.close(req.session.sessionid)
             headers = security.forget(request)
             raise HTTPSeeOther(ex.url, headers=headers)
         except Redirect as ex:
