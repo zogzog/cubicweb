@@ -1,3 +1,8 @@
+from contextlib import contextmanager
+from warnings import warn
+
+import rql
+
 from cubicweb.web.request import CubicWebRequestBase
 from cubicweb.cwconfig import CubicWebConfiguration
 from cubicweb import repoapi
@@ -5,16 +10,46 @@ from cubicweb import repoapi
 import cubicweb
 import cubicweb.web
 
-from pyramid import security
+from pyramid import security, httpexceptions
 from pyramid.httpexceptions import HTTPSeeOther
 
 from pyramid_cubicweb import authplugin
 
-import weakref
-
 import logging
 
 log = logging.getLogger(__name__)
+
+
+@contextmanager
+def cw_to_pyramid(request):
+    """Wrap a call to the cubicweb API.
+
+    All CW exceptions will be transformed into their pyramid equivalent.
+    When needed, some CW reponse bits may be converted too (mainly headers)"""
+    try:
+        yield
+    except cubicweb.web.Redirect as ex:
+        assert 300 <= ex.status < 400
+        raise httpexceptions.status_map[ex.status](ex.location)
+    except cubicweb.web.StatusResponse as ex:
+        warn('[3.16] StatusResponse is deprecated use req.status_out',
+             DeprecationWarning, stacklevel=2)
+        request.body = ex.content
+        request.status_int = ex.status
+    except cubicweb.web.Unauthorized as ex:
+        raise httpexceptions.HTTPForbidden(
+            request.cw_request._(
+                'You\'re not authorized to access this page. '
+                'If you think you should, please contact the site '
+                'administrator.'))
+    except cubicweb.web.Forbidden:
+        raise httpexceptions.HTTPForbidden(
+            request.cw_request._(
+                'This action is forbidden. '
+                'If you think it should be allowed, please contact the site '
+                'administrator.'))
+    except (rql.BadRQLQuery, cubicweb.web.RequestError) as ex:
+        raise
 
 
 class CubicWebPyramidRequest(CubicWebRequestBase):
@@ -69,11 +104,11 @@ def render_view(request, vid, **kwargs):
     # On the other hand, we could refine the View concept and decide it works
     # with a cnx, and never with a WebRequest
 
-    view = vreg['views'].select(vid, request.cw_request, **kwargs)
-
-    view.set_stream()
-    view.render()
-    return view._stream.getvalue()
+    with cw_to_pyramid(request):
+        view = vreg['views'].select(vid, request.cw_request, **kwargs)
+        view.set_stream()
+        view.render()
+        return view._stream.getvalue()
 
 
 def login(request):

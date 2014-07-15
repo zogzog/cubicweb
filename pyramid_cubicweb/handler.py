@@ -1,11 +1,15 @@
 from pyramid import security
 from pyramid.httpexceptions import HTTPSeeOther
+from pyramid import httpexceptions
+
+import cubicweb
+import cubicweb.web
 
 from cubicweb.web.application import CubicWebPublisher
 
-from cubicweb.web import (
-    StatusResponse, DirectResponse, Redirect, NotFound, LogOut,
-    RemoteCallFailed, InvalidSession, RequestError, PublishException)
+from cubicweb.web import LogOut, cors
+
+from pyramid_cubicweb import cw_to_pyramid
 
 
 class PyramidSessionHandler(object):
@@ -28,36 +32,69 @@ class CubicWebPyramidHandler(object):
 
     def __call__(self, request):
         """
-        Handler that mimics what CubicWebPublisher.main_handle_request does and
-        call CubicWebPyramidHandler.core_handle.
-
+        Handler that mimics what CubicWebPublisher.main_handle_request and
+        CubicWebPublisher.core_handle do
         """
-        # XXX In a later version of this handler, we need to by-pass
-        # core_handle and CubicWebPublisher altogether so that the various CW
-        # exceptions are converted to their pyramid equivalent.
-
-        req = request.cw_request
 
         # XXX The main handler of CW forbid anonymous https connections
         # I guess we can drop this "feature" but in doubt I leave this comment
         # so we don't forget about it. (cdevienne)
 
+        req = request.cw_request
+        vreg = request.registry['cubicweb.registry']
+
         try:
-            content = self.appli.core_handle(req, req.path)
+            try:
+                with cw_to_pyramid(request):
+                    cors.process_request(req, vreg.config)
+                    ctrlid, rset = self.appli.url_resolver.process(req, req.path)
+
+                    try:
+                        controller = vreg['controllers'].select(
+                            ctrlid, req, appli=self.appli)
+                    except cubicweb.NoSelectableObject:
+                        raise httpexceptions.HTTPUnauthorized(
+                            req._('not authorized'))
+
+                    req.update_search_state()
+                    content = controller.publish(rset=rset)
+
+                    # XXX this auto-commit should be handled by the cw_request cleanup
+                    # or the pyramid transaction manager.
+                    # It is kept here to have the ValidationError handling bw
+                    # compatible
+                    if req.cnx:
+                        txuuid = req.cnx.commit()
+                        # commited = True
+                        if txuuid is not None:
+                            req.data['last_undoable_transaction'] = txuuid
+            except cors.CORSPreflight:
+                request.response.status_int = 200
+            except cubicweb.web.ValidationError as ex:
+                # XXX The validation_error_handler implementation is light, we
+                # should redo it better in cw_to_pyramid, so it can be properly
+                # handled when raised from a cubicweb view.
+                content = self.appli.validation_error_handler(req, ex)
+            except cubicweb.web.RemoteCallFailed as ex:
+                # XXX The default pyramid error handler (or one that we provide
+                # for this exception) should be enough
+                # content = self.appli.ajax_error_handler(req, ex)
+                raise
 
             if content is not None:
                 request.response.body = content
+
             request.response.headers.clear()
+
             for k, v in req.headers_out.getAllRawHeaders():
                 for item in v:
                     request.response.headers.add(k, item)
+
         except LogOut as ex:
             # The actual 'logging out' logic should be in separated function
             # that is accessible by the pyramid views
             headers = security.forget(request)
             raise HTTPSeeOther(ex.url, headers=headers)
-        except Redirect as ex:
-            raise HTTPSeeOther(ex.url)
         # except AuthenticationError:
         # XXX I don't think it makes sens to catch this ex here (cdevienne)
 
