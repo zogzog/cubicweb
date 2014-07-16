@@ -654,12 +654,6 @@ class Repository(object):
         """open a new session for a given user and return its sessionid """
         return self.new_session(login, **kwargs).sessionid
 
-    def check_session(self, sessionid):
-        """raise `BadConnectionId` if the connection is no more valid, else
-        return its latest activity timestamp.
-        """
-        return self._get_session(sessionid).timestamp
-
     def close(self, sessionid, txid=None, checkshuttingdown=True):
         """close the session with the given id"""
         session = self._get_session(sessionid, txid=txid,
