@@ -638,12 +638,11 @@ class Repository(object):
         raise `AuthenticationError` if the authentication failed
         raise `ConnectionError` if we can't open a connection
         """
-        cnxprops = kwargs.pop('cnxprops', None)
         # use an internal connection
         with self.internal_cnx() as cnx:
             # try to get a user object
             user = self.authenticate_user(cnx, login, **kwargs)
-        session = Session(user, self, cnxprops)
+        session = Session(user, self)
         user._cw = user.cw_rset.req = session
         user.cw_clear_relation_cache()
         self._sessions[session.sessionid] = session
