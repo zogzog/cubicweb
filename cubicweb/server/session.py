@@ -251,7 +251,6 @@ class Connection(RequestSessionBase):
     """
     is_request = False
     hooks_in_progress = False
-    is_repo_in_memory = True # bw compat
 
     def __init__(self, session):
         super(Connection, self).__init__(session.repo.vreg)

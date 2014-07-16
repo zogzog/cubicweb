@@ -105,7 +105,7 @@ class ProcessInformationView(StartupView):
                     for sname, sval in sorted(stats.items())]
         self.wview('pyvaltable', pyvalue=pyvalue, header_column_idx=0)
         # open repo sessions
-        if req.cnx.is_repo_in_memory and req.user.is_in_group('managers'):
+        if req.user.is_in_group('managers'):
             w(u'<h3>%s</h3>' % _('opened sessions'))
             sessions = repo._sessions.values()
             if sessions:
