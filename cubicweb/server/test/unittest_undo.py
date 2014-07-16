@@ -21,8 +21,7 @@ from six import text_type
 
 from cubicweb import ValidationError
 from cubicweb.devtools.testlib import CubicWebTC
-import cubicweb.server.session
-from cubicweb.server.session import Connection as OldConnection
+from cubicweb.server.session import Connection
 
 from cubicweb.server.sources.native import UndoTransactionException, _UndoException
 
@@ -42,15 +41,13 @@ class UndoableTransactionTC(CubicWebTC):
         return cnx.entity_from_eid(self.totoeid)
 
     def setUp(self):
-        class Connection(OldConnection):
-            """Force undo feature to be turned on in all case"""
-            undo_actions = property(lambda tx: True, lambda x, y:None)
-        cubicweb.server.session.Connection = Connection
+        # Force undo feature to be turned on
+        Connection.undo_actions = property(lambda self: True, lambda self, v:None)
         super(UndoableTransactionTC, self).setUp()
 
     def tearDown(self):
-        cubicweb.server.session.Connection = OldConnection
         super(UndoableTransactionTC, self).tearDown()
+        del Connection.undo_actions
 
     def check_transaction_deleted(self, cnx, txuuid):
         # also check transaction actions have been properly deleted

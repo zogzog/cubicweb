@@ -254,8 +254,7 @@ class Connection(RequestSessionBase):
     is_repo_in_memory = True # bw compat
 
     def __init__(self, session):
-        # using super(Connection, self) confuse some test hack
-        RequestSessionBase.__init__(self, session.vreg)
+        super(Connection, self).__init__(session.repo.vreg)
         #: connection unique id
         self._open = None
         self.connectionid = '%s-%s' % (session.sessionid, uuid4().hex)
