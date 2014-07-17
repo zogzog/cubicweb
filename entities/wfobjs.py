@@ -27,7 +27,6 @@ __docformat__ = "restructuredtext en"
 
 from logilab.common.decorators import cached, clear_cache
 from logilab.common.deprecation import deprecated
-from logilab.common.compat import any
 
 from cubicweb.entities import AnyEntity, fetch_config
 from cubicweb.view import EntityAdapter

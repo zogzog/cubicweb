@@ -19,7 +19,6 @@
 
 """
 from logilab.common.testlib import unittest_main, mock_object
-from logilab.common.compat import any
 
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.web.views import uicfg
