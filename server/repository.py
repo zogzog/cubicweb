@@ -651,8 +651,8 @@ class Repository(object):
                                    query_attrs)
             return rset.rows
 
-    def connect(self, login, **kwargs):
-        """open a session for a given user
+    def new_session(self, login, **kwargs):
+        """open a new session for a given user
 
         raise `AuthenticationError` if the authentication failed
         raise `ConnectionError` if we can't open a connection
@@ -678,7 +678,11 @@ class Repository(object):
             # commit connection at this point in case write operation has been
             # done during `session_open` hooks
             cnx.commit()
-        return session.sessionid
+        return session
+
+    def connect(self, login, **kwargs):
+        """open a new session for a given user and return its sessionid """
+        return self.new_session(login, **kwargs).sessionid
 
     def execute(self, sessionid, rqlstring, args=None, build_descr=True,
                 txid=None):
