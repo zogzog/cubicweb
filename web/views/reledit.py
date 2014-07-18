@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -329,13 +329,13 @@ class AutoClickAndEditFormView(EntityView):
         w = self.w
         w(u'<div id="%(id)s-reledit" onmouseout="%(out)s" onmouseover="%(over)s" class="%(css)s">' %
           {'id': divid, 'css': 'releditField',
-           'out': "jQuery('#%s').addClass('hidden')" % divid,
-           'over': "jQuery('#%s').removeClass('hidden')" % divid})
+           'out': "jQuery('#%s').addClass('invisible')" % divid,
+           'over': "jQuery('#%s').removeClass('invisible')" % divid})
         w(u'<div id="%s-value" class="editableFieldValue">' % divid)
         w(value)
         w(u'</div>')
         form.render(w=w, renderer=renderer)
-        w(u'<div id="%s" class="editableField hidden">' % divid)
+        w(u'<div id="%s" class="editableField invisible">' % divid)
 
     def _edit_action(self, divid, args, edit_related, add_related, _delete_related):
         # XXX disambiguate wrt edit_related
