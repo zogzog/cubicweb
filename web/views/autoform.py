@@ -504,15 +504,15 @@ class GenericRelationsWidget(fw.FieldWidget):
                 label = rschema.display_name(req, role, context=form.edited_entity.cw_etype)
                 w(u'<tr><th class="labelCol">%s</th>' % label)
                 w(u'<td>')
-                w(u'<ul>')
+                w(u'<ul class="list-unstyled">')
                 for viewparams in related:
-                    w(u'<li class="invisible">%s<span id="span%s" class="%s">%s</span></li>'
+                    w(u'<li>%s<span id="span%s" class="%s">%s</span></li>'
                       % (viewparams[1], viewparams[0], viewparams[2], viewparams[3]))
                 if not form.force_display and form.maxrelitems < len(related):
-                    link = (u'<span class="invisible">'
+                    link = (u'<span>'
                             '[<a href="javascript: window.location.href+=\'&amp;__force_display=1\'">%s</a>]'
                             '</span>' % _('view all'))
-                    w(u'<li class="invisible">%s</li>' % link)
+                    w(u'<li>%s</li>' % link)
                 w(u'</ul>')
                 w(u'</td>')
                 w(u'</tr>')

@@ -1,4 +1,4 @@
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -29,14 +29,19 @@ class BreadCrumbsTC(CubicWebTC):
                             {'f1' : f1.eid, 'f2' : f2.eid})
             req.cnx.commit()
             self.assertEqual(f2.view('breadcrumbs'),
-                             '<a href="http://testing.fr/cubicweb/folder/%s" title="">chi&amp;ld</a>' % f2.eid)
+                             '<a href="http://testing.fr/cubicweb/folder/%s" title="">'
+                             'chi&amp;ld</a>' % f2.eid)
             childrset = f2.as_rset()
             ibc = self.vreg['ctxcomponents'].select('breadcrumbs', req, rset=childrset)
             l = []
             ibc.render(l.append)
-            self.assertEqual(''.join(l),
-                             """<span id="breadcrumbs" class="pathbar">&#160;&gt;&#160;<a href="http://testing.fr/cubicweb/Folder">Folder_plural</a>&#160;&gt;&#160;<a href="http://testing.fr/cubicweb/folder/%s" title="">par&amp;ent</a>&#160;&gt;&#160;
-<a href="http://testing.fr/cubicweb/folder/%s" title="">chi&amp;ld</a></span>""" % (f1.eid, f2.eid))
+            self.assertMultiLineEqual('<span id="breadcrumbs" class="pathbar">&#160;&gt;&#160;'
+                                      '<a href="http://testing.fr/cubicweb/Folder">Folder_plural</a>'
+                                      '&#160;&gt;&#160;<a href="http://testing.fr/cubicweb/folder/%s" '
+                                      'title="">par&amp;ent</a>&#160;&gt;&#160;\n'
+                                      '<a href="http://testing.fr/cubicweb/folder/%s" title="">'
+                                      'chi&amp;ld</a></span>' % (f1.eid, f2.eid),
+                                      ''.join(l))
 
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main

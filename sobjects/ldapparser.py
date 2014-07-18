@@ -92,9 +92,9 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
         for groupdict in self.group_source_entities_by_extid.itervalues():
             self._process('CWGroup', groupdict)
 
-    def handle_deletion(self, config, session, myuris):
+    def handle_deletion(self, config, cnx, myuris):
         if config['delete-entities']:
-            super(DataFeedLDAPAdapter, self).handle_deletion(config, session, myuris)
+            super(DataFeedLDAPAdapter, self).handle_deletion(config, cnx, myuris)
             return
         if myuris:
             byetype = {}
@@ -107,9 +107,9 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
                     continue
                 self.info('deactivate %s %s entities', len(eids), etype)
                 for eid in eids:
-                    wf = session.entity_from_eid(eid).cw_adapt_to('IWorkflowable')
+                    wf = cnx.entity_from_eid(eid).cw_adapt_to('IWorkflowable')
                     wf.fire_transition_if_possible('deactivate')
-        session.commit(free_cnxset=False)
+        cnx.commit()
 
     def update_if_necessary(self, entity, attrs):
         # disable read security to allow password selection

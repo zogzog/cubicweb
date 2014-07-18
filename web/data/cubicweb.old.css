@@ -219,10 +219,15 @@ blockquote {
   visibility: hidden;
 }
 
-li.invisible {
+/* copied verbatim from bootstrap 3.0 */
+.invisible {
+  visibility: hidden;
+}
+
+/* copied verbatim from bootstrap 3.0 */
+.list-unstyled {
+  padding-left: 0;
   list-style: none;
-  background: none;
-  padding: 0px 0px 1px 1px;
 }
 
 .caption {

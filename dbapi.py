@@ -679,7 +679,16 @@ class Connection(object):
     @check_not_closed
     def entity_metas(self, eid):
         """return a tuple (type, sourceuri, extid) for the entity with id <eid>"""
-        return self._repo.entity_metas(self.sessionid, eid, **self._txid())
+        try:
+            return self._repo.entity_metas(self.sessionid, eid, **self._txid())
+        except AttributeError:
+            # talking to pre 3.19 repository
+            metas = self._repo.describe(self.sessionid, eid, **self._txid())
+            if len(metas) == 3: # even older backward compat
+                metas = list(metas)
+                metas.append(metas[1])
+            return dict(zip(('type', 'source', 'extid', 'asource'), metas))
+
 
     @deprecated('[3.19] use .entity_metas(eid) instead')
     @check_not_closed

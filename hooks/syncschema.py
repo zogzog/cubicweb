@@ -653,6 +653,9 @@ class CWConstraintDelOp(MemSchemaOperation):
         else:
             self.critical('constraint %s for rdef %s was missing or already removed',
                           self.oldcstr, rdef)
+        if cnx.deleted_in_transaction(rdef.eid):
+            # don't try to alter a table that's going away (or is already gone)
+            return
         # then update database: alter the physical schema on size/unique
         # constraint changes
         syssource = cnx.repo.system_source

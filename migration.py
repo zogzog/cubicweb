@@ -414,7 +414,9 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
             toremove = (cube,)
         origcubes = self.config._cubes
         basecubes = [c for c in origcubes if not c in toremove]
-        self.config._cubes = tuple(self.config.expand_cubes(basecubes))
+        # don't fake-add any new ones, or we won't be able to really-add them later
+        self.config._cubes = tuple(cube for cube in self.config.expand_cubes(basecubes)
+                                   if cube in origcubes)
         removed = [p for p in origcubes if not p in self.config._cubes]
         if not cube in removed and cube in origcubes:
             raise ConfigurationError("can't remove cube %s, "

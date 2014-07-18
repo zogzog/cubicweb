@@ -880,7 +880,7 @@ class Repository(object):
         """
         mintime = time() - self.cleanup_session_time
         self.debug('cleaning session unused since %s',
-                   strftime('%T', localtime(mintime)))
+                   strftime('%H:%M:%S', localtime(mintime)))
         nbclosed = 0
         for session in self._sessions.values():
             if session.timestamp < mintime:

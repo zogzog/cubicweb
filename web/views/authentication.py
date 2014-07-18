@@ -44,7 +44,7 @@ class WebAuthInfoRetriever(Component):
         """
         raise NotImplementedError()
 
-    def authenticated(self, retriever, req, cnx, login, authinfo):
+    def authenticated(self, retriever, req, session, login, authinfo):
         """callback when return authentication information have opened a
         repository connection successfully. Take care req has no session
         attached yet, hence req.execute isn't available.

@@ -328,7 +328,7 @@ function addInlineCreationForm(peid, petype, ttype, rtype, role, i18nctx, insert
         _postAjaxLoad(dom);
     });
     d.addErrback(function(xxx) {
-        log('xxx =', xxx);
+        cw.log('xxx =', xxx);
     });
 }
 

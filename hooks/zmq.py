@@ -71,6 +71,7 @@ class ZMQRepositoryServerStartHook(hook.Hook):
         address = config.get('zmq-repository-address')
         if not address:
             return
+        self.repo.warning('remote access to the repository via zmq/pickle is deprecated')
         from cubicweb.server import cwzmq
         self.repo.zmq_repo_server = server = cwzmq.ZMQRepositoryServer(self.repo)
         server.connect(address)

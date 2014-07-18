@@ -23,13 +23,13 @@ from datetime import datetime
 from logilab.common import tempattr
 from logilab.common.decorators import clear_cache
 
-from cubicweb import Binary, Unauthorized
+from cubicweb import Binary
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.mttransforms import HAS_TAL
 from cubicweb.entity import can_use_rest_path
 from cubicweb.entities import fetch_config
 from cubicweb.uilib import soup2xhtml
-from cubicweb.schema import RQLVocabularyConstraint, RRQLExpression
+from cubicweb.schema import  RRQLExpression
 
 class EntityTC(CubicWebTC):
 
@@ -45,16 +45,16 @@ class EntityTC(CubicWebTC):
             cls.fetch_attrs, cls.cw_fetch_order = self.backup_dict[cls]
 
     def test_no_prefill_related_cache_bug(self):
-        session = self.session
-        usine = session.create_entity('Usine', lieu=u'Montbeliard')
-        produit = session.create_entity('Produit')
-        # usine was prefilled in glob_add_entity
-        # let's simulate produit creation without prefill
-        produit._cw_related_cache.clear()
-        # use add_relations
-        session.add_relations([('fabrique_par', [(produit.eid, usine.eid)])])
-        self.assertEqual(1, len(usine.reverse_fabrique_par))
-        self.assertEqual(1, len(produit.fabrique_par))
+        with self.admin_access.repo_cnx() as cnx:
+            usine = cnx.create_entity('Usine', lieu=u'Montbeliard')
+            produit = cnx.create_entity('Produit')
+            # usine was prefilled in glob_add_entity
+            # let's simulate produit creation without prefill
+            produit._cw_related_cache.clear()
+            # use add_relations
+            cnx.add_relations([('fabrique_par', [(produit.eid, usine.eid)])])
+            self.assertEqual(1, len(usine.reverse_fabrique_par))
+            self.assertEqual(1, len(produit.fabrique_par))
 
     def test_boolean_value(self):
         with self.admin_access.web_request() as req:
@@ -717,11 +717,11 @@ du :eid:`1:*ReST*`'''
             self.assertFalse(p1.reverse_evaluee)
 
     def test_complete_relation(self):
-        with self.admin_access.repo_cnx() as session:
-            eid = session.execute(
+        with self.admin_access.repo_cnx() as cnx:
+            eid = cnx.execute(
                 'INSERT TrInfo X: X comment "zou", X wf_info_for U, X from_state S1, X to_state S2 '
                 'WHERE U login "admin", S1 name "activated", S2 name "deactivated"')[0][0]
-            trinfo = session.execute('Any X WHERE X eid %(x)s', {'x': eid}).get_entity(0, 0)
+            trinfo = cnx.execute('Any X WHERE X eid %(x)s', {'x': eid}).get_entity(0, 0)
             trinfo.complete()
             self.assertIsInstance(trinfo.cw_attr_cache['creation_date'], datetime)
             self.assertTrue(trinfo.cw_relation_cached('from_state', 'subject'))

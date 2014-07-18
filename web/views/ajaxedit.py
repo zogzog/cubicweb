@@ -53,9 +53,9 @@ class AddRelationView(component.EditRelationMixIn, View):
         self.w(u'<h1>%s</h1>' % self._cw._('relation %(relname)s of %(ent)s')
                % {'relname': rschema.display_name(self._cw, role(self)),
                   'ent': entity.view('incontext')})
-        self.w(u'<ul>')
+        self.w(u'<ul class="list-unstyled">')
         for boxitem in self.unrelated_boxitems(entity):
-            self.w('<li class="invisible">%s</li>' % boxitem)
+            self.w('<li>%s</li>' % boxitem)
         self.w(u'</ul></div>')
 
     def unrelated_entities(self, entity):

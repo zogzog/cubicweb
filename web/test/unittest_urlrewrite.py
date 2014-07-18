@@ -1,4 +1,4 @@
-# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -21,7 +21,8 @@ from logilab.common import tempattr
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.devtools.fake import FakeRequest
 
-from cubicweb.web.views.urlrewrite import SimpleReqRewriter, SchemaBasedRewriter, rgx, rgx_action
+from cubicweb.web.views.urlrewrite import (SimpleReqRewriter, SchemaBasedRewriter,
+                                           rgx, rgx_action)
 
 
 class UrlRewriteTC(CubicWebTC):
@@ -99,47 +100,51 @@ class UrlRewriteTC(CubicWebTC):
 
     def test_inheritance(self):
         BaseTransition = self.vreg['etypes'].etype_class('BaseTransition')
-        req = self.request()
-        x = req.create_entity('WorkflowTransition', name=u'test')
-        ctrlid, rset = self.app.url_resolver.process(req, 'basetransition/%s' % x.eid)
-        self.assertEqual(ctrlid, 'view')
-        self.assertEqual(x.eid, rset[0][0])
-        # cw_rest_attr_info is cached but clear_cache doesn't like cached class
-        # method
-        del BaseTransition._cw_rest_attr_info_cache_
-        try:
-            with tempattr(BaseTransition, 'rest_attr', 'name'):
-
-                ctrlid, rset = self.app.url_resolver.process(req, 'basetransition/%s' % x.name)
-                self.assertEqual(ctrlid, 'view')
-                self.assertEqual(x.eid, rset[0][0])
-        finally:
+        with self.admin_access.web_request() as req:
+            x = req.create_entity('WorkflowTransition', name=u'test')
+            ctrlid, rset = self.app.url_resolver.process(req, 'basetransition/%s' % x.eid)
+            self.assertEqual(ctrlid, 'view')
+            self.assertEqual(x.eid, rset[0][0])
+            # cw_rest_attr_info is cached but clear_cache doesn't like cached class
+            # method
             del BaseTransition._cw_rest_attr_info_cache_
+            try:
+                with tempattr(BaseTransition, 'rest_attr', 'name'):
+
+                    ctrlid, rset = self.app.url_resolver.process(req, 'basetransition/%s' % x.name)
+                    self.assertEqual(ctrlid, 'view')
+                    self.assertEqual(x.eid, rset[0][0])
+            finally:
+                del BaseTransition._cw_rest_attr_info_cache_
 
 
 
 class RgxActionRewriteTC(CubicWebTC):
 
     def setup_database(self):
-        req = self.request()
-        self.p1 = self.create_user(req, u'user1')
-        self.p1.cw_set(firstname=u'joe', surname=u'Dalton')
-        self.p2 = self.create_user(req, u'user2')
-        self.p2.cw_set(firstname=u'jack', surname=u'Dalton')
+        with self.admin_access.repo_cnx() as cnx:
+            p1 = self.create_user(cnx, u'user1')
+            p1.cw_set(firstname=u'joe', surname=u'Dalton')
+            p2 = self.create_user(cnx, u'user2')
+            p2.cw_set(firstname=u'jack', surname=u'Dalton')
+            self.p1eid = p1.eid
+            cnx.commit()
 
     def test_rgx_action_with_transforms(self):
         class TestSchemaBasedRewriter(SchemaBasedRewriter):
             rules = [
-                (rgx('/(?P<sn>\w+)/(?P<fn>\w+)'), rgx_action(r'Any X WHERE X surname %(sn)s, X firstname %(fn)s',
-                                                                             argsgroups=('sn', 'fn'),
-                                                                             transforms={'sn' : unicode.capitalize,
-                                                                                         'fn' : unicode.lower,})),
+                (rgx('/(?P<sn>\w+)/(?P<fn>\w+)'),
+                 rgx_action(r'Any X WHERE X surname %(sn)s, '
+                            'X firstname %(fn)s',
+                            argsgroups=('sn', 'fn'),
+                            transforms={'sn' : unicode.capitalize,
+                                        'fn' : unicode.lower,})),
                 ]
-        req = self.request()
-        rewriter = TestSchemaBasedRewriter(req)
-        pmid, rset = rewriter.rewrite(req, u'/DaLToN/JoE')
-        self.assertEqual(len(rset), 1)
-        self.assertEqual(rset[0][0], self.p1.eid)
+        with self.admin_access.web_request() as req:
+            rewriter = TestSchemaBasedRewriter(req)
+            _pmid, rset = rewriter.rewrite(req, u'/DaLToN/JoE')
+            self.assertEqual(len(rset), 1)
+            self.assertEqual(rset[0][0], self.p1eid)
 
     def test_inheritance_precedence(self):
         RQL1 = 'Any C WHERE C is CWEType'
@@ -160,20 +165,20 @@ class RgxActionRewriteTC(CubicWebTC):
                 ),
                 ]
 
-        req = self.request()
-        rewriter = Rewriter(req)
-        pmid, rset = rewriter.rewrite(req, '/collector')
-        self.assertEqual(rset.rql, RQL1)
-        self.assertEqual(req.form, {'vid' : "baseindex"})
-        pmid, rset = rewriter.rewrite(req, '/collector/something')
-        self.assertEqual(rset.rql, RQL2)
-        self.assertEqual(req.form, {'vid' : "index"})
-        pmid, rset = rewriter.rewrite(req, '/collector/something/')
-        self.assertEqual(req.form, {'vid' : "index"})
-        self.assertEqual(rset.rql, RQL2)
-        pmid, rset = rewriter.rewrite(req, '/collector/somethingelse/')
-        self.assertEqual(rset.rql, RQL1)
-        self.assertEqual(req.form, {'vid' : "baseindex"})
+        with self.admin_access.web_request() as req:
+            rewriter = Rewriter(req)
+            _pmid, rset = rewriter.rewrite(req, '/collector')
+            self.assertEqual(rset.rql, RQL1)
+            self.assertEqual(req.form, {'vid' : "baseindex"})
+            _pmid, rset = rewriter.rewrite(req, '/collector/something')
+            self.assertEqual(rset.rql, RQL2)
+            self.assertEqual(req.form, {'vid' : "index"})
+            _pmid, rset = rewriter.rewrite(req, '/collector/something/')
+            self.assertEqual(req.form, {'vid' : "index"})
+            self.assertEqual(rset.rql, RQL2)
+            _pmid, rset = rewriter.rewrite(req, '/collector/somethingelse/')
+            self.assertEqual(rset.rql, RQL1)
+            self.assertEqual(req.form, {'vid' : "baseindex"})
 
     def test_inheritance_precedence_same_rgx(self):
         RQL1 = 'Any C WHERE C is CWEType'
@@ -194,20 +199,20 @@ class RgxActionRewriteTC(CubicWebTC):
                 ),
                 ]
 
-        req = self.request()
-        rewriter = Rewriter(req)
-        pmid, rset = rewriter.rewrite(req, '/collector')
-        self.assertEqual(rset.rql, RQL2)
-        self.assertEqual(req.form, {'vid' : "index"})
-        pmid, rset = rewriter.rewrite(req, '/collector/something')
-        self.assertEqual(rset.rql, RQL2)
-        self.assertEqual(req.form, {'vid' : "index"})
-        pmid, rset = rewriter.rewrite(req, '/collector/something/')
-        self.assertEqual(req.form, {'vid' : "index"})
-        self.assertEqual(rset.rql, RQL2)
-        pmid, rset = rewriter.rewrite(req, '/collector/somethingelse/')
-        self.assertEqual(rset.rql, RQL2)
-        self.assertEqual(req.form, {'vid' : "index"})
+        with self.admin_access.web_request() as req:
+            rewriter = Rewriter(req)
+            _pmid, rset = rewriter.rewrite(req, '/collector')
+            self.assertEqual(rset.rql, RQL2)
+            self.assertEqual(req.form, {'vid' : "index"})
+            _pmid, rset = rewriter.rewrite(req, '/collector/something')
+            self.assertEqual(rset.rql, RQL2)
+            self.assertEqual(req.form, {'vid' : "index"})
+            _pmid, rset = rewriter.rewrite(req, '/collector/something/')
+            self.assertEqual(req.form, {'vid' : "index"})
+            self.assertEqual(rset.rql, RQL2)
+            _pmid, rset = rewriter.rewrite(req, '/collector/somethingelse/')
+            self.assertEqual(rset.rql, RQL2)
+            self.assertEqual(req.form, {'vid' : "index"})
 
 
 if __name__ == '__main__':

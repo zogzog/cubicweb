@@ -1114,7 +1114,6 @@ class SQLGenSourceWrapper(object):
     def _handle_insert_entity_sql(self, session, sql, attrs):
         # We have to overwrite the source given in parameters
         # as here, we directly use the system source
-        attrs['source'] = 'system'
         attrs['asource'] = self.system_source.uri
         self._append_to_entities(sql, attrs)
 
@@ -1137,7 +1136,7 @@ class SQLGenSourceWrapper(object):
             assert isinstance(extid, str)
             extid = b64encode(extid)
         attrs = {'type': entity.cw_etype, 'eid': entity.eid, 'extid': extid,
-                 'source': 'system', 'asource': source.uri}
+                 'asource': source.uri}
         self._handle_insert_entity_sql(session, self.sqlgen.insert('entities', attrs), attrs)
         # insert core relations: is, is_instance_of and cw_source
         try:

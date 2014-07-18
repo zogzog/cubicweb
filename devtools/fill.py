@@ -1,5 +1,5 @@
 # -*- coding: iso-8859-1 -*-
-# copyright 2003-2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -352,7 +352,7 @@ def make_entity(etype, schema, vreg, index=0, choice_func=_default_choice_func,
 
 
 
-def select(constraints, cursor, selectvar='O', objtype=None):
+def select(constraints, cnx, selectvar='O', objtype=None):
     """returns list of eids matching <constraints>
 
     <selectvar> should be either 'O' or 'S' to match schema definitions
@@ -361,7 +361,7 @@ def select(constraints, cursor, selectvar='O', objtype=None):
         rql = 'Any %s WHERE %s' % (selectvar, constraints)
         if objtype:
             rql += ', %s is %s' % (selectvar, objtype)
-        rset = cursor.execute(rql)
+        rset = cnx.execute(rql)
     except Exception:
         print "could restrict eid_list with given constraints (%r)" % constraints
         return []
@@ -369,7 +369,7 @@ def select(constraints, cursor, selectvar='O', objtype=None):
 
 
 
-def make_relations_queries(schema, edict, cursor, ignored_relations=(),
+def make_relations_queries(schema, edict, cnx, ignored_relations=(),
                            existingrels=None):
     """returns a list of generated RQL queries for relations
     :param schema: The instance schema
@@ -379,7 +379,7 @@ def make_relations_queries(schema, edict, cursor, ignored_relations=(),
     :param ignored_relations: list of relations to ignore (i.e. don't try
                               to generate insert queries for these relations)
     """
-    gen = RelationsQueriesGenerator(schema, cursor, existingrels)
+    gen = RelationsQueriesGenerator(schema, cnx, existingrels)
     return gen.compute_queries(edict, ignored_relations)
 
 def composite_relation(rschema):
@@ -393,9 +393,9 @@ def composite_relation(rschema):
 
 class RelationsQueriesGenerator(object):
     rql_tmpl = 'SET S %s O WHERE S eid %%(subjeid)s, O eid %%(objeid)s'
-    def __init__(self, schema, cursor, existing=None):
+    def __init__(self, schema, cnx, existing=None):
         self.schema = schema
-        self.cursor = cursor
+        self.cnx = cnx
         self.existingrels = existing or {}
 
     def compute_queries(self, edict, ignored_relations):
@@ -457,7 +457,7 @@ class RelationsQueriesGenerator(object):
             # restrict object eids if possible
             # XXX the attempt to restrict below in completely wrong
             # disabling it for now
-            objeids = select(restrictions, self.cursor, objtype=obj)
+            objeids = select(restrictions, self.cnx, objtype=obj)
         else:
             objeids = oedict.get(obj, frozenset())
         if subjcard in '?1' or objcard in '?1':

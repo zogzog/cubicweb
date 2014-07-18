@@ -69,6 +69,7 @@ class CubicWebRootResource(resource.Resource):
                 # if pyro is enabled, we have to register to the pyro name
                 # server, create a pyro daemon, and create a task to handle pyro
                 # requests
+                self.appli.repo.warning('remote repository access through pyro is deprecated')
                 self.pyro_daemon = self.appli.repo.pyro_register()
                 self.pyro_listen_timeout = 0.02
                 self.appli.repo.looping_task(1, self.pyro_loop_event)

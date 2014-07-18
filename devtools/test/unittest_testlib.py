@@ -1,4 +1,4 @@
-# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -39,11 +39,13 @@ class WebTestTC(TestCase):
         class MyWebTest(CubicWebTC):
 
             def test_error_view(self):
-                self.request().create_entity('Bug', title=u"bt")
-                self.view('raising', self.execute('Bug B'), template=None)
+                with self.admin_access.web_request() as req:
+                    req.create_entity('Bug', title=u"bt")
+                    self.view('raising', req.execute('Bug B'), template=None, req=req)
 
             def test_correct_view(self):
-                self.view('primary', self.execute('CWUser U'), template=None)
+                with self.admin_access.web_request() as req:
+                    self.view('primary', req.execute('CWUser U'), template=None, req=req)
 
         tests = [MyWebTest('test_error_view'), MyWebTest('test_correct_view')]
         result = self.runner.run(TestSuite(tests))
@@ -98,6 +100,7 @@ HTML_NON_STRICT = u"""<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "
 
 class HTMLPageInfoTC(TestCase):
     """test cases for PageInfo"""
+
     def setUp(self):
         parser = htmlparser.HTMLValidator()
         # disable cleanup that would remove doctype
@@ -112,7 +115,6 @@ class HTMLPageInfoTC(TestCase):
         """make sure source is stored correctly - raise exception"""
         parser = htmlparser.DTDValidator()
         self.assertRaises(AssertionError, parser.parse_string, HTML_PAGE_ERROR)
-
 
     def test_has_title_no_level(self):
         """tests h? tags information"""
@@ -160,6 +162,7 @@ class HTMLPageInfoTC(TestCase):
 
 
 class CWUtilitiesTC(CubicWebTC):
+
     def test_temporary_permissions_eschema(self):
         eschema = self.schema['CWUser']
         with self.temporary_permissions(CWUser={'read': ()}):
@@ -175,11 +178,13 @@ class CWUtilitiesTC(CubicWebTC):
         self.assertTrue(rdef.permissions['read'], ())
 
     def test_temporary_appobjects_registered(self):
+
         class AnAppobject(object):
             __registries__ = ('hip',)
             __regid__ = 'hop'
             __select__ = yes()
             registered = None
+
             @classmethod
             def __registered__(cls, reg):
                 cls.registered = reg
@@ -190,10 +195,11 @@ class CWUtilitiesTC(CubicWebTC):
         self.assertNotIn(AnAppobject, self.vreg['hip']['hop'])
 
     def test_login(self):
-        """Calling login should not break self.session hook control"""
-        self.hook_executed = False
-        babar = self.create_user(self.request(), 'babar')
-        self.commit()
+        """Calling login should not break hook control"""
+        with self.admin_access.repo_cnx() as cnx:
+            self.hook_executed = False
+            self.create_user(cnx, 'babar')
+            cnx.commit()
 
         from cubicweb.server import hook
         from cubicweb.predicates import is_instance
@@ -208,31 +214,31 @@ class CWUtilitiesTC(CubicWebTC):
             def __call__(self):
                 self.test.hook_executed = True
 
-        self.login('babar')
-        with self.temporary_appobjects(MyHook):
-            with self.session.allow_all_hooks_but('test-hook'):
-                req = self.request()
-                prop = req.create_entity('CWProperty', pkey=u'ui.language', value=u'en')
-                self.commit()
-                self.assertFalse(self.hook_executed)
+        with self.new_access('babar').repo_cnx() as cnx:
+            with self.temporary_appobjects(MyHook):
+                with cnx.allow_all_hooks_but('test-hook'):
+                    prop = cnx.create_entity('CWProperty', pkey=u'ui.language', value=u'en')
+                    cnx.commit()
+                    self.assertFalse(self.hook_executed)
 
 
 class RepoAccessTC(CubicWebTC):
+
     def test_repo_connection(self):
         acc = self.new_access('admin')
-        with  acc.repo_cnx() as cnx:
+        with acc.repo_cnx() as cnx:
             rset = cnx.execute('Any X WHERE X is CWUser')
             self.assertTrue(rset)
 
     def test_client_connection(self):
         acc = self.new_access('admin')
-        with  acc.client_cnx() as cnx:
+        with acc.client_cnx() as cnx:
             rset = cnx.execute('Any X WHERE X is CWUser')
             self.assertTrue(rset)
 
     def test_web_request(self):
         acc = self.new_access('admin')
-        with  acc.web_request(elephant='babar') as req:
+        with acc.web_request(elephant='babar') as req:
             rset = req.execute('Any X WHERE X is CWUser')
             self.assertTrue(rset)
             self.assertEqual('babar', req.form['elephant'])

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -21,7 +21,6 @@
 
 from logilab.common.testlib import unittest_main
 from logilab.common.decorators import clear_cache
-from logilab.common.interface import implements
 
 from cubicweb.devtools.testlib import CubicWebTC
 
@@ -31,114 +30,135 @@ from cubicweb.entities import AnyEntity
 class BaseEntityTC(CubicWebTC):
 
     def setup_database(self):
-        req = self.request()
-        self.member = self.create_user(req, 'member')
-
+        with self.admin_access.repo_cnx() as cnx:
+            self.membereid = self.create_user(cnx, 'member').eid
+            cnx.commit()
 
 
 class MetadataTC(BaseEntityTC):
 
     def test_creator(self):
-        self.login(u'member')
-        entity = self.request().create_entity('Bookmark', title=u"hello", path=u'project/cubicweb')
-        self.commit()
-        self.assertEqual(entity.creator.eid, self.member.eid)
-        self.assertEqual(entity.dc_creator(), u'member')
+        with self.new_access('member').repo_cnx() as cnx:
+            entity = cnx.create_entity('Bookmark', title=u"hello", path=u'project/cubicweb')
+            cnx.commit()
+            self.assertEqual(entity.creator.eid, self.membereid)
+            self.assertEqual(entity.dc_creator(), u'member')
 
     def test_type(self):
         #dc_type may be translated
-        self.assertEqual(self.member.dc_type(), 'CWUser')
+        with self.admin_access.client_cnx() as cnx:
+            member = cnx.entity_from_eid(self.membereid)
+            self.assertEqual(member.dc_type(), 'CWUser')
 
     def test_cw_etype(self):
         #cw_etype is never translated
-        self.assertEqual(self.member.cw_etype, 'CWUser')
+        with self.admin_access.client_cnx() as cnx:
+            member = cnx.entity_from_eid(self.membereid)
+            self.assertEqual(member.cw_etype, 'CWUser')
 
     def test_entity_meta_attributes(self):
         # XXX move to yams
         self.assertEqual(self.schema['CWUser'].meta_attributes(), {})
-        self.assertEqual(dict((str(k), v) for k, v in self.schema['State'].meta_attributes().iteritems()),
+        self.assertEqual(dict((str(k), v)
+                              for k, v in self.schema['State'].meta_attributes().iteritems()),
                           {'description_format': ('format', 'description')})
 
     def test_fti_rql_method(self):
-        eclass = self.vreg['etypes'].etype_class('EmailAddress')
-        self.assertEqual(['Any X, ALIAS, ADDRESS WHERE X is EmailAddress, '
-                          'X alias ALIAS, X address ADDRESS'],
-                         eclass.cw_fti_index_rql_queries(self.request()))
+        with self.admin_access.web_request() as req:
+            eclass = self.vreg['etypes'].etype_class('EmailAddress')
+            self.assertEqual(['Any X, ALIAS, ADDRESS WHERE X is EmailAddress, '
+                              'X alias ALIAS, X address ADDRESS'],
+                             eclass.cw_fti_index_rql_queries(req))
 
 
 class EmailAddressTC(BaseEntityTC):
+
     def test_canonical_form(self):
-        email1 = self.execute('INSERT EmailAddress X: X address "maarten.ter.huurne@philips.com"').get_entity(0, 0)
-        email2 = self.execute('INSERT EmailAddress X: X address "maarten@philips.com"').get_entity(0, 0)
-        email3 = self.execute('INSERT EmailAddress X: X address "toto@logilab.fr"').get_entity(0, 0)
-        email1.cw_set(prefered_form=email2)
-        self.assertEqual(email1.prefered.eid, email2.eid)
-        self.assertEqual(email2.prefered.eid, email2.eid)
-        self.assertEqual(email3.prefered.eid, email3.eid)
+        with self.admin_access.repo_cnx() as cnx:
+            email1 = cnx.execute('INSERT EmailAddress X: '
+                                 'X address "maarten.ter.huurne@philips.com"').get_entity(0, 0)
+            email2 = cnx.execute('INSERT EmailAddress X: '
+                                 'X address "maarten@philips.com"').get_entity(0, 0)
+            email3 = cnx.execute('INSERT EmailAddress X: '
+                                 'X address "toto@logilab.fr"').get_entity(0, 0)
+            email1.cw_set(prefered_form=email2)
+            self.assertEqual(email1.prefered.eid, email2.eid)
+            self.assertEqual(email2.prefered.eid, email2.eid)
+            self.assertEqual(email3.prefered.eid, email3.eid)
 
     def test_mangling(self):
-        email = self.execute('INSERT EmailAddress X: X address "maarten.ter.huurne@philips.com"').get_entity(0, 0)
-        self.assertEqual(email.display_address(), 'maarten.ter.huurne@philips.com')
-        self.assertEqual(email.printable_value('address'), 'maarten.ter.huurne@philips.com')
-        self.vreg.config.global_set_option('mangle-emails', True)
-        try:
-            self.assertEqual(email.display_address(), 'maarten.ter.huurne at philips dot com')
-            self.assertEqual(email.printable_value('address'), 'maarten.ter.huurne at philips dot com')
-            email = self.execute('INSERT EmailAddress X: X address "syt"').get_entity(0, 0)
-            self.assertEqual(email.display_address(), 'syt')
-            self.assertEqual(email.printable_value('address'), 'syt')
-        finally:
-            self.vreg.config.global_set_option('mangle-emails', False)
+        with self.admin_access.repo_cnx() as cnx:
+            email = cnx.execute('INSERT EmailAddress X: X address "maarten.ter.huurne@philips.com"').get_entity(0, 0)
+            self.assertEqual(email.display_address(), 'maarten.ter.huurne@philips.com')
+            self.assertEqual(email.printable_value('address'), 'maarten.ter.huurne@philips.com')
+            self.vreg.config.global_set_option('mangle-emails', True)
+            try:
+                self.assertEqual(email.display_address(), 'maarten.ter.huurne at philips dot com')
+                self.assertEqual(email.printable_value('address'), 'maarten.ter.huurne at philips dot com')
+                email = cnx.execute('INSERT EmailAddress X: X address "syt"').get_entity(0, 0)
+                self.assertEqual(email.display_address(), 'syt')
+                self.assertEqual(email.printable_value('address'), 'syt')
+            finally:
+                self.vreg.config.global_set_option('mangle-emails', False)
 
     def test_printable_value_escape(self):
-        email = self.execute('INSERT EmailAddress X: X address "maarten&ter@philips.com"').get_entity(0, 0)
-        self.assertEqual(email.printable_value('address'), 'maarten&amp;ter@philips.com')
-        self.assertEqual(email.printable_value('address', format='text/plain'), 'maarten&ter@philips.com')
+        with self.admin_access.repo_cnx() as cnx:
+            email = cnx.execute('INSERT EmailAddress X: '
+                                'X address "maarten&ter@philips.com"').get_entity(0, 0)
+            self.assertEqual(email.printable_value('address'),
+                             'maarten&amp;ter@philips.com')
+            self.assertEqual(email.printable_value('address', format='text/plain'),
+                             'maarten&ter@philips.com')
 
 class CWUserTC(BaseEntityTC):
 
     def test_complete(self):
-        e = self.execute('CWUser X WHERE X login "admin"').get_entity(0, 0)
-        e.complete()
+        with self.admin_access.repo_cnx() as cnx:
+            e = cnx.execute('CWUser X WHERE X login "admin"').get_entity(0, 0)
+            e.complete()
 
     def test_matching_groups(self):
-        e = self.execute('CWUser X WHERE X login "admin"').get_entity(0, 0)
-        self.assertTrue(e.matching_groups('managers'))
-        self.assertFalse(e.matching_groups('xyz'))
-        self.assertTrue(e.matching_groups(('xyz', 'managers')))
-        self.assertFalse(e.matching_groups(('xyz', 'abcd')))
+        with self.admin_access.repo_cnx() as cnx:
+            e = cnx.execute('CWUser X WHERE X login "admin"').get_entity(0, 0)
+            self.assertTrue(e.matching_groups('managers'))
+            self.assertFalse(e.matching_groups('xyz'))
+            self.assertTrue(e.matching_groups(('xyz', 'managers')))
+            self.assertFalse(e.matching_groups(('xyz', 'abcd')))
 
     def test_dc_title_and_name(self):
-        e = self.execute('CWUser U WHERE U login "member"').get_entity(0, 0)
-        self.assertEqual(e.dc_title(), 'member')
-        self.assertEqual(e.name(), 'member')
-        e.cw_set(firstname=u'bouah')
-        self.assertEqual(e.dc_title(), 'member')
-        self.assertEqual(e.name(), u'bouah')
-        e.cw_set(surname=u'lôt')
-        self.assertEqual(e.dc_title(), 'member')
-        self.assertEqual(e.name(), u'bouah lôt')
+        with self.admin_access.repo_cnx() as cnx:
+            e = cnx.execute('CWUser U WHERE U login "member"').get_entity(0, 0)
+            self.assertEqual(e.dc_title(), 'member')
+            self.assertEqual(e.name(), 'member')
+            e.cw_set(firstname=u'bouah')
+            self.assertEqual(e.dc_title(), 'member')
+            self.assertEqual(e.name(), u'bouah')
+            e.cw_set(surname=u'lôt')
+            self.assertEqual(e.dc_title(), 'member')
+            self.assertEqual(e.name(), u'bouah lôt')
 
     def test_allowed_massmail_keys(self):
-        e = self.execute('CWUser U WHERE U login "member"').get_entity(0, 0)
-        # Bytes/Password attributes should be omited
-        self.assertEqual(e.cw_adapt_to('IEmailable').allowed_massmail_keys(),
-                          set(('surname', 'firstname', 'login', 'last_login_time',
-                               'creation_date', 'modification_date', 'cwuri', 'eid'))
-                          )
+        with self.admin_access.repo_cnx() as cnx:
+            e = cnx.execute('CWUser U WHERE U login "member"').get_entity(0, 0)
+            # Bytes/Password attributes should be omited
+            self.assertEqual(e.cw_adapt_to('IEmailable').allowed_massmail_keys(),
+                              set(('surname', 'firstname', 'login', 'last_login_time',
+                                   'creation_date', 'modification_date', 'cwuri', 'eid'))
+                              )
 
     def test_cw_instantiate_object_relation(self):
         """ a weird non regression test """
-        e = self.execute('CWUser U WHERE U login "member"').get_entity(0, 0)
-        self.request().create_entity('CWGroup', name=u'logilab', reverse_in_group=e)
+        with self.admin_access.repo_cnx() as cnx:
+            e = cnx.execute('CWUser U WHERE U login "member"').get_entity(0, 0)
+            cnx.create_entity('CWGroup', name=u'logilab', reverse_in_group=e)
 
 
 class HTMLtransformTC(BaseEntityTC):
 
     def test_sanitized_html(self):
-        r = self.request()
-        c = r.create_entity('Company', name=u'Babar',
-                            description=u"""
+        with self.admin_access.repo_cnx() as cnx:
+            c = cnx.create_entity('Company', name=u'Babar',
+                                  description=u"""
 Title
 =====
 
@@ -148,10 +168,12 @@ Elephant management best practices.
 
    <script>alert("coucou")</script>
 """, description_format=u'text/rest')
-        self.commit()
-        c.cw_clear_all_caches()
-        self.assertIn('alert', c.printable_value('description', format='text/plain'))
-        self.assertNotIn('alert', c.printable_value('description', format='text/html'))
+            cnx.commit()
+            c.cw_clear_all_caches()
+            self.assertIn('alert',
+                          c.printable_value('description', format='text/plain'))
+            self.assertNotIn('alert',
+                             c.printable_value('description', format='text/html'))
 
 
 class SpecializedEntityClassesTC(CubicWebTC):

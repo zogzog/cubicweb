@@ -21,6 +21,7 @@ __docformat__ = "restructuredtext en"
 
 import os
 import sys
+import errno
 import logging
 import shutil
 import pickle
@@ -277,8 +278,9 @@ class RealDatabaseConfiguration(ApptestConfiguration):
                                               sourcefile='/path/to/sources')
 
           def test_something(self):
-              rset = self.execute('Any X WHERE X is CWUser')
-              self.view('foaf', rset)
+              with self.admin_access.web_request() as req:
+                  rset = req.execute('Any X WHERE X is CWUser')
+                  self.view('foaf', rset, req=req)
 
     """
     skip_db_create_and_restore = True
@@ -544,14 +546,29 @@ class PostgresTestDataBaseHandler(TestDataBaseHandler):
         super(PostgresTestDataBaseHandler, self).__init__(*args, **kwargs)
         datadir = join(self.config.apphome, 'pgdb')
         if not exists(datadir):
-            subprocess.check_call(['initdb', '-D', datadir, '-E', 'utf-8', '--locale=C'])
+            try:
+                subprocess.check_call(['initdb', '-D', datadir, '-E', 'utf-8', '--locale=C'])
+
+            except OSError, err:
+                if err.errno == errno.ENOENT:
+                    raise OSError('"initdb" could not be found. '
+                                  'You should add the postgresql bin folder to your PATH '
+                                  '(/usr/lib/postgresql/9.1/bin for example).')
+                raise
         port = self.system_source['db-port']
         directory = self.system_source['db-host']
         env = os.environ.copy()
         env['PGPORT'] = str(port)
         env['PGHOST'] = str(directory)
-        subprocess.check_call(['pg_ctl', 'start', '-w', '-D', datadir, '-o', '-h "" -k %s -p %s' % (directory, port)],
-                              env=env)
+        try:
+            subprocess.check_call(['pg_ctl', 'start', '-w', '-D', datadir, '-o', '-h "" -k %s -p %s' % (directory, port)],
+                                  env=env)
+        except OSError, err:
+            if err.errno == errno.ENOENT:
+                raise OSError('"pg_ctl" could not be found. '
+                              'You should add the postgresql bin folder to your PATH '
+                              '(/usr/lib/postgresql/9.1/bin for example).')
+            raise
         self.__CTL.add(datadir)
 
     @property

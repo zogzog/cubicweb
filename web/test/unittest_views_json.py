@@ -30,14 +30,14 @@ class JsonViewsTC(CubicWebTC):
     def test_json_rsetexport(self):
         with self.admin_access.web_request() as req:
             rset = req.execute('Any GN,COUNT(X) GROUPBY GN ORDERBY GN WHERE X in_group G, G name GN')
-            data = self.view('jsonexport', rset)
+            data = self.view('jsonexport', rset, req=req)
             self.assertEqual(req.headers_out.getRawHeaders('content-type'), ['application/json'])
             self.assertListEqual(data, [["guests", 1], ["managers", 1]])
 
     def test_json_rsetexport_empty_rset(self):
         with self.admin_access.web_request() as req:
             rset = req.execute('Any X WHERE X is CWUser, X login "foobarbaz"')
-            data = self.view('jsonexport', rset)
+            data = self.view('jsonexport', rset, req=req)
             self.assertEqual(req.headers_out.getRawHeaders('content-type'), ['application/json'])
             self.assertListEqual(data, [])
 
@@ -65,7 +65,7 @@ class JsonViewsTC(CubicWebTC):
     def test_json_ersetexport(self):
         with self.admin_access.web_request() as req:
             rset = req.execute('Any G ORDERBY GN WHERE G is CWGroup, G name GN')
-            data = self.view('ejsonexport', rset)
+            data = self.view('ejsonexport', rset, req=req)
             self.assertEqual(req.headers_out.getRawHeaders('content-type'), ['application/json'])
             self.assertEqual(data[0]['name'], 'guests')
             self.assertEqual(data[1]['name'], 'managers')

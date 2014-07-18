@@ -541,7 +541,8 @@ class ResultSet(object):
                 else:
                     attr_cols[attr] = i
             else:
-                rdef = eschema.rdef(attr, role)
+                # XXX takefirst=True to remove warning triggered by ambiguous relations
+                rdef = eschema.rdef(attr, role, takefirst=True)
                 # only keep value if it can't be multivalued
                 if rdef.role_cardinality(role) in '1?':
                     rel_cols[(attr, role)] = i

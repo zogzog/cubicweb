@@ -104,11 +104,11 @@ class DataFeedTC(CubicWebTC):
                 self.assertEqual(self.repo._extid_cache['http://www.cubicweb.org/'],
                                  entity.eid)
 
-        self.assertEqual(dfsource.source_cwuris(self.session),
-                         {'http://www.cubicweb.org/': (entity.eid, 'Card')}
-                         )
-        self.assertTrue(dfsource.latest_retrieval)
-        self.assertTrue(dfsource.fresh())
+                self.assertEqual(dfsource.source_cwuris(cnx),
+                                 {'http://www.cubicweb.org/': (entity.eid, 'Card')}
+                             )
+                self.assertTrue(dfsource.latest_retrieval)
+                self.assertTrue(dfsource.fresh())
 
         # test_rename_source
         with self.admin_access.repo_cnx() as cnx:

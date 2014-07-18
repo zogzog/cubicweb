@@ -823,12 +823,13 @@ class CubicWebTC(TestCase):
 
     def list_startup_views(self):
         """returns the list of startup views"""
-        req = self.request()
-        for view in self.vreg['views'].possible_views(req, None):
-            if view.category == 'startupview':
-                yield view.__regid__
-            else:
-                not_selected(self.vreg, view)
+        with self.admin_access.web_request() as req:
+            for view in self.vreg['views'].possible_views(req, None):
+                if view.category == 'startupview':
+                    yield view.__regid__
+                else:
+                    not_selected(self.vreg, view)
+
 
     # web ui testing utilities #################################################
 
@@ -842,6 +843,7 @@ class CubicWebTC(TestCase):
         publisher.error_handler = raise_error_handler
         return publisher
 
+    @deprecated('[3.19] use the .remote_calling method')
     def remote_call(self, fname, *args):
         """remote json call simulation"""
         dump = json.dumps
@@ -849,6 +851,14 @@ class CubicWebTC(TestCase):
         req = self.request(fname=fname, pageid='123', arg=args)
         ctrl = self.vreg['controllers'].select('ajax', req)
         return ctrl.publish(), req
+
+    @contextmanager
+    def remote_calling(self, fname, *args):
+        """remote json call simulation"""
+        args = [json.dumps(arg) for arg in args]
+        with self.admin_access.web_request(fname=fname, pageid='123', arg=args) as req:
+            ctrl = self.vreg['controllers'].select('ajax', req)
+            yield ctrl.publish(), req
 
     def app_handle_request(self, req, path='view'):
         return self.app.core_handle(req, path)
@@ -1178,7 +1188,7 @@ from cubicweb.devtools.fill import insert_entity_queries, make_relations_queries
 
 # XXX cleanup unprotected_entities & all mess
 
-def how_many_dict(schema, cursor, how_many, skip):
+def how_many_dict(schema, cnx, how_many, skip):
     """given a schema, compute how many entities by type we need to be able to
     satisfy relations cardinality.
 
@@ -1212,7 +1222,7 @@ def how_many_dict(schema, cursor, how_many, skip):
     # step 1, compute a base number of each entity types: number of already
     # existing entities of this type + `how_many`
     for etype in unprotected_entities(schema, strict=True):
-        howmanydict[str(etype)] = cursor.execute('Any COUNT(X) WHERE X is %s' % etype)[0][0]
+        howmanydict[str(etype)] = cnx.execute('Any COUNT(X) WHERE X is %s' % etype)[0][0]
         if etype in unprotected:
             howmanydict[str(etype)] += how_many
     # step 2, augment nb entity per types to satisfy cardinality constraints,
@@ -1246,10 +1256,10 @@ class AutoPopulateTest(CubicWebTC):
     def to_test_etypes(self):
         return unprotected_entities(self.schema, strict=True)
 
-    def custom_populate(self, how_many, cursor):
+    def custom_populate(self, how_many, cnx):
         pass
 
-    def post_populate(self, cursor):
+    def post_populate(self, cnx):
         pass
 
 
@@ -1258,77 +1268,79 @@ class AutoPopulateTest(CubicWebTC):
         """this method populates the database with `how_many` entities
         of each possible type. It also inserts random relations between them
         """
-        with self.session.security_enabled(read=False, write=False):
-            self._auto_populate(how_many)
+        with self.admin_access.repo_cnx() as cnx:
+            with cnx.security_enabled(read=False, write=False):
+                self._auto_populate(cnx, how_many)
+                cnx.commit()
 
-    def _auto_populate(self, how_many):
-        cu = self.cursor()
-        self.custom_populate(how_many, cu)
+    def _auto_populate(self, cnx, how_many):
+        self.custom_populate(how_many, cnx)
         vreg = self.vreg
-        howmanydict = how_many_dict(self.schema, cu, how_many, self.no_auto_populate)
+        howmanydict = how_many_dict(self.schema, cnx, how_many, self.no_auto_populate)
         for etype in unprotected_entities(self.schema):
             if etype in self.no_auto_populate:
                 continue
             nb = howmanydict.get(etype, how_many)
             for rql, args in insert_entity_queries(etype, self.schema, vreg, nb):
-                cu.execute(rql, args)
+                cnx.execute(rql, args)
         edict = {}
         for etype in unprotected_entities(self.schema, strict=True):
-            rset = cu.execute('%s X' % etype)
+            rset = cnx.execute('%s X' % etype)
             edict[str(etype)] = set(row[0] for row in rset.rows)
         existingrels = {}
         ignored_relations = SYSTEM_RELATIONS | self.ignored_relations
         for rschema in self.schema.relations():
             if rschema.final or rschema in ignored_relations:
                 continue
-            rset = cu.execute('DISTINCT Any X,Y WHERE X %s Y' % rschema)
+            rset = cnx.execute('DISTINCT Any X,Y WHERE X %s Y' % rschema)
             existingrels.setdefault(rschema.type, set()).update((x, y) for x, y in rset)
-        q = make_relations_queries(self.schema, edict, cu, ignored_relations,
+        q = make_relations_queries(self.schema, edict, cnx, ignored_relations,
                                    existingrels=existingrels)
         for rql, args in q:
             try:
-                cu.execute(rql, args)
+                cnx.execute(rql, args)
             except ValidationError as ex:
                 # failed to satisfy some constraint
                 print 'error in automatic db population', ex
-                self.session.commit_state = None # reset uncommitable flag
-        self.post_populate(cu)
-        self.commit()
+                cnx.commit_state = None # reset uncommitable flag
+        self.post_populate(cnx)
 
     def iter_individual_rsets(self, etypes=None, limit=None):
         etypes = etypes or self.to_test_etypes()
-        for etype in etypes:
-            if limit:
-                rql = 'Any X LIMIT %s WHERE X is %s' % (limit, etype)
-            else:
-                rql = 'Any X WHERE X is %s' % etype
-            rset = self.execute(rql)
-            for row in xrange(len(rset)):
-                if limit and row > limit:
-                    break
-                # XXX iirk
-                rset2 = rset.limit(limit=1, offset=row)
-                yield rset2
+        with self.admin_access.web_request() as req:
+            for etype in etypes:
+                if limit:
+                    rql = 'Any X LIMIT %s WHERE X is %s' % (limit, etype)
+                else:
+                    rql = 'Any X WHERE X is %s' % etype
+                rset = req.execute(rql)
+                for row in xrange(len(rset)):
+                    if limit and row > limit:
+                        break
+                    # XXX iirk
+                    rset2 = rset.limit(limit=1, offset=row)
+                    yield rset2
 
     def iter_automatic_rsets(self, limit=10):
         """generates basic resultsets for each entity type"""
         etypes = self.to_test_etypes()
         if not etypes:
             return
-        for etype in etypes:
-            yield self.execute('Any X LIMIT %s WHERE X is %s' % (limit, etype))
-        etype1 = etypes.pop()
-        try:
-            etype2 = etypes.pop()
-        except KeyError:
-            etype2 = etype1
-        # test a mixed query (DISTINCT/GROUP to avoid getting duplicate
-        # X which make muledit view failing for instance (html validation fails
-        # because of some duplicate "id" attributes)
-        yield self.execute('DISTINCT Any X, MAX(Y) GROUPBY X WHERE X is %s, Y is %s' % (etype1, etype2))
-        # test some application-specific queries if defined
-        for rql in self.application_rql:
-            yield self.execute(rql)
+        with self.admin_access.web_request() as req:
+            for etype in etypes:
+                yield req.execute('Any X LIMIT %s WHERE X is %s' % (limit, etype))
+            etype1 = etypes.pop()
+            try:
+                etype2 = etypes.pop()
+            except KeyError:
+                etype2 = etype1
+            # test a mixed query (DISTINCT/GROUP to avoid getting duplicate
+            # X which make muledit view failing for instance (html validation fails
+            # because of some duplicate "id" attributes)
+            yield req.execute('DISTINCT Any X, MAX(Y) GROUPBY X WHERE X is %s, Y is %s' % (etype1, etype2))
+            # test some application-specific queries if defined
+            for rql in self.application_rql:
+                yield req.execute(rql)
 
     def _test_everything_for(self, rset):
         """this method tries to find everything that can be tested
@@ -1390,8 +1402,8 @@ class AutomaticWebTest(AutoPopulateTest):
     ## startup views
     def test_startup_views(self):
         for vid in self.list_startup_views():
-            req = self.request()
-            yield self.view, vid, None, req
+            with self.admin_access.web_request() as req:
+                yield self.view, vid, None, req
 
 
 # registry instrumentization ###################################################

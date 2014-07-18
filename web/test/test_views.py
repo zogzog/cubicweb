@@ -1,4 +1,4 @@
-# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -16,8 +16,7 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """automatic tests"""
-from cubicweb.devtools import htmlparser
-from cubicweb.devtools.testlib import CubicWebTC, AutoPopulateTest, AutomaticWebTest
+from cubicweb.devtools.testlib import AutoPopulateTest, AutomaticWebTest
 from cubicweb.view import AnyRsetView
 
 class AutomaticWebTest(AutomaticWebTest):
@@ -28,8 +27,8 @@ class AutomaticWebTest(AutomaticWebTest):
         ]
 
     def to_test_etypes(self):
-        # We do not really want to test cube views here. So we can drop testing 
-        # some EntityType. The two Blog types below require the sioc cube that 
+        # We do not really want to test cube views here. So we can drop testing
+        # some EntityType. The two Blog types below require the sioc cube that
         # we do not want to add as a dependency.
         etypes = super(AutomaticWebTest, self).to_test_etypes()
         etypes -= set(('Blog', 'BlogEntry'))
@@ -50,29 +49,34 @@ class ManualCubicWebTCs(AutoPopulateTest):
         """regression test: make sure we can ask a copy of a
         composite entity
         """
-        rset = self.execute('CWUser X WHERE X login "admin"')
-        self.view('copy', rset)
+        with self.admin_access.web_request() as req:
+            rset = req.execute('CWUser X WHERE X login "admin"')
+            self.view('copy', rset, req=req)
 
     def test_sortable_js_added(self):
-        rset = self.execute('CWUser X')
-        # sortable.js should not be included by default
-        self.assertFalse('jquery.tablesorter.js' in self.view('oneline', rset))
-        # but should be included by the tableview
-        rset = self.execute('Any P,F,S LIMIT 1 WHERE P is CWUser, P firstname F, P surname S')
-        self.assertIn('jquery.tablesorter.js', self.view('table', rset).source)
+        with self.admin_access.web_request() as req:
+            rset = req.execute('CWUser X')
+            # sortable.js should not be included by default
+            self.assertFalse('jquery.tablesorter.js' in self.view('oneline', rset, req=req))
+            # but should be included by the tableview
+            rset = req.execute('Any P,F,S LIMIT 1 WHERE P is CWUser, P firstname F, P surname S')
+            self.assertIn('jquery.tablesorter.js', self.view('table', rset, req=req).source)
 
     def test_js_added_only_once(self):
-        self.vreg._loadedmods[__name__] = {}
-        self.vreg.register(SomeView)
-        rset = self.execute('CWUser X')
-        source = self.view('someview', rset).source
-        self.assertEqual(source.count('spam.js'), 1)
+        with self.admin_access.web_request() as req:
+            self.vreg._loadedmods[__name__] = {}
+            self.vreg.register(SomeView)
+            rset = req.execute('CWUser X')
+            source = self.view('someview', rset, req=req).source
+            self.assertEqual(source.count('spam.js'), 1)
 
     def test_unrelateddivs(self):
-        rset = self.execute('Any X WHERE X is CWUser, X login "admin"')
-        group = self.request().create_entity('CWGroup', name=u'R&D')
-        req = self.request(relation='in_group_subject')
-        self.view('unrelateddivs', rset, req)
+        with self.admin_access.client_cnx() as cnx:
+            group = cnx.create_entity('CWGroup', name=u'R&D')
+            cnx.commit()
+        with self.admin_access.web_request(relation='in_group_subject') as req:
+            rset = req.execute('Any X WHERE X is CWUser, X login "admin"')
+            self.view('unrelateddivs', rset, req=req)
 
 
 if __name__ == '__main__':

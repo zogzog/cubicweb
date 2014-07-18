@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -15,9 +15,6 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
-"""
-
-"""
 from logilab.common.testlib import unittest_main, mock_object
 
 from cubicweb.devtools.testlib import CubicWebTC
@@ -32,154 +29,171 @@ def rbc(entity, formtype, section):
         permission = 'update'
     else:
         permission = 'add'
-    return [(rschema.type, x) for rschema, tschemas, x in AFS.relations_by_section(entity, formtype, section, permission)]
+    return [(rschema.type, x)
+            for rschema, tschemas, x in AFS.relations_by_section(entity,
+                                                                 formtype,
+                                                                 section,
+                                                                 permission)]
 
 class AutomaticEntityFormTC(CubicWebTC):
 
     def test_custom_widget(self):
-        AFFK.tag_subject_of(('CWUser', 'login', '*'),
-                            {'widget': AutoCompletionWidget(autocomplete_initfunc='get_logins')})
-        form = self.vreg['forms'].select('edition', self.request(),
-                                         entity=self.user())
-        field = form.field_by_name('login', 'subject')
-        self.assertIsInstance(field.widget, AutoCompletionWidget)
-        AFFK.del_rtag('CWUser', 'login', '*', 'subject')
+        with self.admin_access.web_request() as req:
+            AFFK.tag_subject_of(('CWUser', 'login', '*'),
+                                {'widget': AutoCompletionWidget(autocomplete_initfunc='get_logins')})
+            form = self.vreg['forms'].select('edition', req, entity=self.user(req))
+            field = form.field_by_name('login', 'subject')
+            self.assertIsInstance(field.widget, AutoCompletionWidget)
+            AFFK.del_rtag('CWUser', 'login', '*', 'subject')
 
 
     def test_cwuser_relations_by_category(self):
-        e = self.vreg['etypes'].etype_class('CWUser')(self.request())
-        # see custom configuration in views.cwuser
-        self.assertEqual(rbc(e, 'main', 'attributes'),
-                          [('login', 'subject'),
-                           ('upassword', 'subject'),
-                           ('firstname', 'subject'),
-                           ('surname', 'subject'),
-                           ('in_group', 'subject'),
-                           ])
-        self.assertListEqual(rbc(e, 'muledit', 'attributes'),
+        with self.admin_access.web_request() as req:
+            e = self.vreg['etypes'].etype_class('CWUser')(req)
+            # see custom configuration in views.cwuser
+            self.assertEqual(rbc(e, 'main', 'attributes'),
                               [('login', 'subject'),
                                ('upassword', 'subject'),
+                               ('firstname', 'subject'),
+                               ('surname', 'subject'),
                                ('in_group', 'subject'),
                                ])
-        self.assertListEqual(rbc(e, 'main', 'metadata'),
-                              [('last_login_time', 'subject'),
-                               ('cw_source', 'subject'),
-                               ('creation_date', 'subject'),
-                               ('cwuri', 'subject'),
-                               ('modification_date', 'subject'),
-                               ('created_by', 'subject'),
-                               ('owned_by', 'subject'),
-                               ('bookmarked_by', 'object'),
-                               ])
-        # XXX skip 'tags' relation here and in the hidden category because
-        # of some test interdependancy when pytest is launched on whole cw
-        # (appears here while expected in hidden
-        self.assertListEqual([x for x in rbc(e, 'main', 'relations')
-                               if x != ('tags', 'object')],
-                              [('connait', 'subject'),
-                               ('custom_workflow', 'subject'),
-                               ('primary_email', 'subject'),
-                               ('checked_by', 'object'),
-                               ])
-        self.assertListEqual(rbc(e, 'main', 'inlined'),
-                              [('use_email', 'subject'),
-                               ])
-        # owned_by is defined both as subject and object relations on CWUser
-        self.assertListEqual(sorted(x for x in rbc(e, 'main', 'hidden')
-                                     if x != ('tags', 'object')),
-                              sorted([('for_user', 'object'),
-                                      ('created_by', 'object'),
-                                      ('wf_info_for', 'object'),
-                                      ('owned_by', 'object'),
-                                      ]))
+            self.assertListEqual(rbc(e, 'muledit', 'attributes'),
+                                  [('login', 'subject'),
+                                   ('upassword', 'subject'),
+                                   ('in_group', 'subject'),
+                                   ])
+            self.assertListEqual(rbc(e, 'main', 'metadata'),
+                                  [('last_login_time', 'subject'),
+                                   ('cw_source', 'subject'),
+                                   ('creation_date', 'subject'),
+                                   ('cwuri', 'subject'),
+                                   ('modification_date', 'subject'),
+                                   ('created_by', 'subject'),
+                                   ('owned_by', 'subject'),
+                                   ('bookmarked_by', 'object'),
+                                   ])
+            # XXX skip 'tags' relation here and in the hidden category because
+            # of some test interdependancy when pytest is launched on whole cw
+            # (appears here while expected in hidden
+            self.assertListEqual([x for x in rbc(e, 'main', 'relations')
+                                   if x != ('tags', 'object')],
+                                  [('connait', 'subject'),
+                                   ('custom_workflow', 'subject'),
+                                   ('primary_email', 'subject'),
+                                   ('checked_by', 'object'),
+                                   ])
+            self.assertListEqual(rbc(e, 'main', 'inlined'),
+                                  [('use_email', 'subject'),
+                                   ])
+            # owned_by is defined both as subject and object relations on CWUser
+            self.assertListEqual(sorted(x for x in rbc(e, 'main', 'hidden')
+                                         if x != ('tags', 'object')),
+                                  sorted([('for_user', 'object'),
+                                          ('created_by', 'object'),
+                                          ('wf_info_for', 'object'),
+                                          ('owned_by', 'object'),
+                                          ]))
 
     def test_inlined_view(self):
-        self.assertTrue('main_inlined' in AFS.etype_get('CWUser', 'use_email', 'subject', 'EmailAddress'))
-        self.assertFalse('main_inlined' in AFS.etype_get('CWUser', 'primary_email', 'subject', 'EmailAddress'))
-        self.assertTrue('main_relations' in AFS.etype_get('CWUser', 'primary_email', 'subject', 'EmailAddress'))
+        self.assertIn('main_inlined',
+                      AFS.etype_get('CWUser', 'use_email', 'subject', 'EmailAddress'))
+        self.assertNotIn('main_inlined',
+                         AFS.etype_get('CWUser', 'primary_email', 'subject', 'EmailAddress'))
+        self.assertIn('main_relations',
+                      AFS.etype_get('CWUser', 'primary_email', 'subject', 'EmailAddress'))
 
     def test_personne_relations_by_category(self):
-        e = self.vreg['etypes'].etype_class('Personne')(self.request())
-        self.assertListEqual(rbc(e, 'main', 'attributes'),
-                              [('nom', 'subject'),
-                               ('prenom', 'subject'),
-                               ('sexe', 'subject'),
-                               ('promo', 'subject'),
-                               ('titre', 'subject'),
-                               ('ass', 'subject'),
-                               ('web', 'subject'),
-                               ('tel', 'subject'),
-                               ('fax', 'subject'),
-                               ('datenaiss', 'subject'),
-                               ('test', 'subject'),
-                               ('description', 'subject'),
-                               ('salary', 'subject'),
-                               ])
-        self.assertListEqual(rbc(e, 'muledit', 'attributes'),
-                              [('nom', 'subject'),
-                               ])
-        self.assertListEqual(rbc(e, 'main', 'metadata'),
-                              [('cw_source', 'subject'),
-                               ('creation_date', 'subject'),
-                               ('cwuri', 'subject'),
-                               ('modification_date', 'subject'),
-                               ('created_by', 'subject'),
-                               ('owned_by', 'subject'),
-                               ])
-        self.assertListEqual(rbc(e, 'main', 'relations'),
-                              [('travaille', 'subject'),
-                               ('manager', 'object'),
-                               ('connait', 'object'),
-                               ])
-        self.assertListEqual(rbc(e, 'main', 'hidden'),
-                              [])
+        with self.admin_access.web_request() as req:
+            e = self.vreg['etypes'].etype_class('Personne')(req)
+            self.assertListEqual(rbc(e, 'main', 'attributes'),
+                                  [('nom', 'subject'),
+                                   ('prenom', 'subject'),
+                                   ('sexe', 'subject'),
+                                   ('promo', 'subject'),
+                                   ('titre', 'subject'),
+                                   ('ass', 'subject'),
+                                   ('web', 'subject'),
+                                   ('tel', 'subject'),
+                                   ('fax', 'subject'),
+                                   ('datenaiss', 'subject'),
+                                   ('test', 'subject'),
+                                   ('description', 'subject'),
+                                   ('salary', 'subject'),
+                                   ])
+            self.assertListEqual(rbc(e, 'muledit', 'attributes'),
+                                  [('nom', 'subject'),
+                                   ])
+            self.assertListEqual(rbc(e, 'main', 'metadata'),
+                                  [('cw_source', 'subject'),
+                                   ('creation_date', 'subject'),
+                                   ('cwuri', 'subject'),
+                                   ('modification_date', 'subject'),
+                                   ('created_by', 'subject'),
+                                   ('owned_by', 'subject'),
+                                   ])
+            self.assertListEqual(rbc(e, 'main', 'relations'),
+                                  [('travaille', 'subject'),
+                                   ('manager', 'object'),
+                                   ('connait', 'object'),
+                                   ])
+            self.assertListEqual(rbc(e, 'main', 'hidden'),
+                                  [])
 
     def test_edition_form(self):
-        rset = self.execute('CWUser X LIMIT 1')
-        form = self.vreg['forms'].select('edition', rset.req, rset=rset,
-                                row=0, col=0)
-        # should be also selectable by specifying entity
-        self.vreg['forms'].select('edition', rset.req,
-                         entity=rset.get_entity(0, 0))
-        self.assertFalse(any(f for f in form.fields if f is None))
+        with self.admin_access.web_request() as req:
+            rset = req.execute('CWUser X LIMIT 1')
+            form = self.vreg['forms'].select('edition', req, rset=rset, row=0, col=0)
+            # should be also selectable by specifying entity
+            self.vreg['forms'].select('edition', req, entity=rset.get_entity(0, 0))
+            self.assertFalse(any(f for f in form.fields if f is None))
 
 
 class FormViewsTC(CubicWebTC):
+
     def test_delete_conf_formview(self):
-        rset = self.execute('CWGroup X')
-        self.view('deleteconf', rset, template=None).source
+        with self.admin_access.web_request() as req:
+            rset = req.execute('CWGroup X')
+            self.view('deleteconf', rset, template=None, req=req).source
 
     def test_automatic_edition_formview(self):
-        rset = self.execute('CWUser X')
-        self.view('edition', rset, row=0, template=None).source
+        with self.admin_access.web_request() as req:
+            rset = req.execute('CWUser X')
+            self.view('edition', rset, row=0, template=None, req=req).source
 
-    def test_automatic_edition_formview(self):
-        rset = self.execute('CWUser X')
-        self.view('copy', rset, row=0, template=None).source
+    def test_automatic_edition_copyformview(self):
+        with self.admin_access.web_request() as req:
+            rset = req.execute('CWUser X')
+            self.view('copy', rset, row=0, template=None, req=req).source
 
     def test_automatic_creation_formview(self):
-        self.view('creation', None, etype='CWUser', template=None).source
+        with self.admin_access.web_request() as req:
+            self.view('creation', None, etype='CWUser', template=None, req=req).source
 
     def test_automatic_muledit_formview(self):
-        rset = self.execute('CWUser X')
-        self.view('muledit', rset, template=None).source
+        with self.admin_access.web_request() as req:
+            rset = req.execute('CWUser X')
+            self.view('muledit', rset, template=None, req=req).source
 
     def test_automatic_reledit_formview(self):
-        rset = self.execute('CWUser X')
-        self.view('reledit', rset, row=0, rtype='login', template=None).source
+        with self.admin_access.web_request() as req:
+            rset = req.execute('CWUser X')
+            self.view('reledit', rset, row=0, rtype='login', template=None, req=req).source
 
     def test_automatic_inline_edit_formview(self):
-        geid = self.execute('CWGroup X LIMIT 1')[0][0]
-        rset = self.execute('CWUser X LIMIT 1')
-        self.view('inline-edition', rset, row=0, col=0, rtype='in_group',
-                  peid=geid, role='object', i18nctx='', pform=MOCKPFORM,
-                  template=None).source
+        with self.admin_access.web_request() as req:
+            geid = req.execute('CWGroup X LIMIT 1')[0][0]
+            rset = req.execute('CWUser X LIMIT 1')
+            self.view('inline-edition', rset, row=0, col=0, rtype='in_group',
+                      peid=geid, role='object', i18nctx='', pform=MOCKPFORM,
+                      template=None, req=req).source
 
     def test_automatic_inline_creation_formview(self):
-        geid = self.execute('CWGroup X LIMIT 1')[0][0]
-        self.view('inline-creation', None, etype='CWUser', rtype='in_group',
-                  peid=geid, petype='CWGroup', i18nctx='', role='object', pform=MOCKPFORM,
-                  template=None)
+        with self.admin_access.web_request() as req:
+            geid = req.execute('CWGroup X LIMIT 1')[0][0]
+            self.view('inline-creation', None, etype='CWUser', rtype='in_group',
+                      peid=geid, petype='CWGroup', i18nctx='', role='object', pform=MOCKPFORM,
+                      template=None, req=req)
 
 MOCKPFORM = mock_object(form_previous_values={}, form_valerror=None)
 

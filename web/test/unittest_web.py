@@ -1,4 +1,4 @@
-# copyright 2003-2010 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -18,6 +18,7 @@
 
 from json import loads
 from os.path import join
+import tempfile
 
 try:
     import requests
@@ -64,7 +65,8 @@ class FileUploadTC(CubicWebServerTC):
 
     @property
     def _post_url(self):
-        return self.request().build_url('ajax', fname='fileupload')
+        with self.admin_access.web_request() as req:
+            return req.build_url('ajax', fname='fileupload')
 
     def _fobject(self, fname):
         return open(join(self.datadir, fname), 'rb')
@@ -92,6 +94,7 @@ class FileUploadTC(CubicWebServerTC):
         self.assertEqual(webreq.status_code, 200)
         self.assertDictEqual(expect, loads(webreq.content))
 
+
 class LanguageTC(CubicWebServerTC):
 
     def test_language_neg(self):
@@ -113,6 +116,22 @@ class LanguageTC(CubicWebServerTC):
         self.web_login()
         webreq = self.web_request('/%d' % admin_eid)
         self.assertEqual(webreq.status, 200)
+
+
+class LogQueriesTC(CubicWebServerTC):
+    @classmethod
+    def init_config(cls, config):
+        super(LogQueriesTC, cls).init_config(config)
+        cls.logfile = tempfile.NamedTemporaryFile()
+        config.global_set_option('query-log-file', cls.logfile.name)
+
+    def test_log_queries(self):
+        self.web_request()
+        self.assertTrue(self.logfile.read())
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.logfile.close()
 
 
 if __name__ == '__main__':

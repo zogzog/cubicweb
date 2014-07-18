@@ -350,9 +350,10 @@ Both queries aren't at all equivalent :
   matching state of or tagged by the expected tag,
 
 * the later will retrieve all versions, state and tags (cartesian product!),
-  compute join and then exclude each row which are in the matching state of or
-  tagged by the expected tag. This implies that : you won't get any result if the
-  in_state or tag
+  compute join and then exclude each row which are in the matching state or
+  tagged by the expected tag. This implies that you won't get any result if the
+  in_state or tag tables are empty (ie there is no such relation in the
+  application). This is usually NOT what you want.
 
 Another common case where you may want to use ``EXISTS`` is when you
 find yourself using ``DISTINCT`` at the beginning of your query to
@@ -562,19 +563,19 @@ nativly by the framework. Notice that cubes may define additional functions.
 
 Aggregate functions
 ```````````````````
-+--------------------+----------------------------------------------------------+
-| :func:`COUNT`      | return the number of rows                                |
-+--------------------+----------------------------------------------------------+
-| :func:`MIN`        | return the minimum value                                 |
-+--------------------+----------------------------------------------------------+
-| :func:`MAX`        | return the maximum value                                 |
-+--------------------+----------------------------------------------------------+
-| :func:`AVG`        | return the average value                                 |
-+--------------------+----------------------------------------------------------+
-| :func:`SUM`        | return the sum of values                                 |
-+--------------------+----------------------------------------------------------+
-| :func:`COMMA_JOIN` | return each value separated by a comma (for string only) |
-+--------------------+----------------------------------------------------------+
++------------------------+----------------------------------------------------------+
+| ``COUNT(Any)``         | return the number of rows                                |
++------------------------+----------------------------------------------------------+
+| ``MIN(Any)``           | return the minimum value                                 |
++------------------------+----------------------------------------------------------+
+| ``MAX(Any)``           | return the maximum value                                 |
++------------------------+----------------------------------------------------------+
+| ``AVG(Any)``           | return the average value                                 |
++------------------------+----------------------------------------------------------+
+| ``SUM(Any)``           | return the sum of values                                 |
++------------------------+----------------------------------------------------------+
+| ``COMMA_JOIN(String)`` | return each value separated by a comma (for string only) |
++------------------------+----------------------------------------------------------+
 
 All aggregate functions above take a single argument. Take care some aggregate
 functions (e.g. ``MAX``, ``MIN``) may return `None` if there is no
@@ -585,67 +586,67 @@ result row.
 String transformation functions
 ```````````````````````````````
 
-+---------------------------------------------------+-----------------------------------------------------------------+
-| :func:`UPPER(String)`                             | upper case the string                                           |
-+---------------------------------------------------+-----------------------------------------------------------------+
-| :func:`LOWER(String)`                             | lower case the string                                           |
-+---------------------------------------------------+-----------------------------------------------------------------+
-| :func:`LENGTH(String)`                            | return the length of the string                                 |
-+---------------------------------------------------+-----------------------------------------------------------------+
-| :func:`SUBSTRING(String, start, length)`          | extract from the string a string starting at given index and of |
-|                                                   | given length                                                    |
-+---------------------------------------------------+-----------------------------------------------------------------+
-| :func:`LIMIT_SIZE(String, max size)`              | if the length of the string is greater than given max size,     |
-|                                                   | strip it and add ellipsis ("..."). The resulting string will    |
-|                                                   | hence have max size + 3 characters                              |
-+---------------------------------------------------+-----------------------------------------------------------------+
-| :func:`TEXT_LIMIT_SIZE(String, format, max size)` | similar to the above, but allow to specify the MIME type of the |
-|                                                   | text contained by the string. Supported formats are text/html,  |
-|                                                   | text/xhtml and text/xml. All others will be considered as plain |
-|                                                   | text. For non plain text format, sgml tags will be first removed|
-|                                                   | before limiting the string.                                     |
-+---------------------------------------------------+-----------------------------------------------------------------+
++-----------------------------------------------+-----------------------------------------------------------------+
+| ``UPPER(String)``                             | upper case the string                                           |
++-----------------------------------------------+-----------------------------------------------------------------+
+| ``LOWER(String)``                             | lower case the string                                           |
++-----------------------------------------------+-----------------------------------------------------------------+
+| ``LENGTH(String)``                            | return the length of the string                                 |
++-----------------------------------------------+-----------------------------------------------------------------+
+| ``SUBSTRING(String, start, length)``          | extract from the string a string starting at given index and of |
+|                                               | given length                                                    |
++-----------------------------------------------+-----------------------------------------------------------------+
+| ``LIMIT_SIZE(String, max size)``              | if the length of the string is greater than given max size,     |
+|                                               | strip it and add ellipsis ("..."). The resulting string will    |
+|                                               | hence have max size + 3 characters                              |
++-----------------------------------------------+-----------------------------------------------------------------+
+| ``TEXT_LIMIT_SIZE(String, format, max size)`` | similar to the above, but allow to specify the MIME type of the |
+|                                               | text contained by the string. Supported formats are text/html,  |
+|                                               | text/xhtml and text/xml. All others will be considered as plain |
+|                                               | text. For non plain text format, sgml tags will be first removed|
+|                                               | before limiting the string.                                     |
++-----------------------------------------------+-----------------------------------------------------------------+
 
 .. _RQLDateFunctions:
 
 Date extraction functions
 `````````````````````````
 
-+--------------------------+----------------------------------------+
-| :func:`YEAR(Date)`       | return the year of a date or datetime  |
-+--------------------------+----------------------------------------+
-| :func:`MONTH(Date)`      | return the month of a date or datetime |
-+--------------------------+----------------------------------------+
-| :func:`DAY(Date)`        | return the day of a date or datetime   |
-+--------------------------+----------------------------------------+
-| :func:`HOUR(Datetime)`   | return the hours of a datetime         |
-+--------------------------+----------------------------------------+
-| :func:`MINUTE(Datetime)` | return the minutes of a datetime       |
-+--------------------------+----------------------------------------+
-| :func:`SECOND(Datetime)` | return the seconds of a datetime       |
-+--------------------------+----------------------------------------+
-| :func:`WEEKDAY(Date)`    | return the day of week of a date or    |
-|                          | datetime.  Sunday == 1, Saturday == 7. |
-+--------------------------+----------------------------------------+
++----------------------+----------------------------------------+
+| ``YEAR(Date)``       | return the year of a date or datetime  |
++----------------------+----------------------------------------+
+| ``MONTH(Date)``      | return the month of a date or datetime |
++----------------------+----------------------------------------+
+| ``DAY(Date)``        | return the day of a date or datetime   |
++----------------------+----------------------------------------+
+| ``HOUR(Datetime)``   | return the hours of a datetime         |
++----------------------+----------------------------------------+
+| ``MINUTE(Datetime)`` | return the minutes of a datetime       |
++----------------------+----------------------------------------+
+| ``SECOND(Datetime)`` | return the seconds of a datetime       |
++----------------------+----------------------------------------+
+| ``WEEKDAY(Date)``    | return the day of week of a date or    |
+|                      | datetime.  Sunday == 1, Saturday == 7. |
++----------------------+----------------------------------------+
 
 .. _RQLOtherFunctions:
 
 Other functions
 ```````````````
-+-----------------------+--------------------------------------------------------------------+
-| :func:`ABS(num)`      |  return the absolute value of a number                             |
-+-----------------------+--------------------------------------------------------------------+
-| :func:`RANDOM()`      | return a pseudo-random value from 0.0 to 1.0                       |
-+-----------------------+--------------------------------------------------------------------+
-| :func:`FSPATH(X)`     | expect X to be an attribute whose value is stored in a             |
-|                       | :class:`BFSStorage` and return its path on the file system         |
-+-----------------------+--------------------------------------------------------------------+
-| :func:`FTIRANK(X)`    | expect X to be an entity used in a has_text relation, and return a |
-|                       | number corresponding to the rank order of each resulting entity    |
-+-----------------------+--------------------------------------------------------------------+
-| :func:`CAST(Type, X)` | expect X to be an attribute and return it casted into the given    |
-|                       | final type                                                         |
-+-----------------------+--------------------------------------------------------------------+
++-------------------+--------------------------------------------------------------------+
+| ``ABS(num)``      |  return the absolute value of a number                             |
++-------------------+--------------------------------------------------------------------+
+| ``RANDOM()``      | return a pseudo-random value from 0.0 to 1.0                       |
++-------------------+--------------------------------------------------------------------+
+| ``FSPATH(X)``     | expect X to be an attribute whose value is stored in a             |
+|                   | :class:`BFSStorage` and return its path on the file system         |
++-------------------+--------------------------------------------------------------------+
+| ``FTIRANK(X)``    | expect X to be an entity used in a has_text relation, and return a |
+|                   | number corresponding to the rank order of each resulting entity    |
++-------------------+--------------------------------------------------------------------+
+| ``CAST(Type, X)`` | expect X to be an attribute and return it casted into the given    |
+|                   | final type                                                         |
++-------------------+--------------------------------------------------------------------+
 
 
 .. _RQLExamples:
@@ -657,7 +658,7 @@ Examples
 
   .. sourcecode:: sql
 
-        Any WHERE X eid 53
+        Any X WHERE X eid 53
 
 - *Search material such as comics, owned by syt and available*
 
@@ -686,7 +687,7 @@ Examples
 
   .. sourcecode:: sql
 
-        Any P WHERE P is Person, (P interested_by T, T name 'training') OR
+        Any P WHERE P is Person, EXISTS(P interested_by T, T name 'training') OR
                     (P city 'Paris')
 
 - *The surname and firstname of all people*
