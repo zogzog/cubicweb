@@ -34,7 +34,7 @@ from cubicweb import set_log_methods, cwvreg
 from cubicweb import (
     ValidationError, Unauthorized, Forbidden,
     AuthenticationError, NoSelectableObject,
-    BadConnectionId, CW_EVENT_MANAGER)
+    CW_EVENT_MANAGER)
 from cubicweb.repoapi import anonymous_cnx
 from cubicweb.web import LOGGER, component, cors
 from cubicweb.web import (
@@ -87,22 +87,15 @@ class AbstractSessionManager(component.Component):
         closed, total = 0, 0
         for session in self.current_sessions():
             total += 1
-            try:
-                last_usage_time = session.cnx.check()
-            except AttributeError:
-                last_usage_time = session.mtime
-            except BadConnectionId:
-                self.close_session(session)
-                closed += 1
-            else:
-                no_use_time = (time() - last_usage_time)
-                if session.anonymous_session:
-                    if no_use_time >= self.cleanup_anon_session_time:
-                        self.close_session(session)
-                        closed += 1
-                elif session_time is not None and no_use_time >= session_time:
+            last_usage_time = session.mtime
+            no_use_time = (time() - last_usage_time)
+            if session.anonymous_session:
+                if no_use_time >= self.cleanup_anon_session_time:
                     self.close_session(session)
                     closed += 1
+            elif session_time is not None and no_use_time >= session_time:
+                self.close_session(session)
+                closed += 1
         return closed, total - closed
 
     def current_sessions(self):
