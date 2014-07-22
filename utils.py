@@ -420,6 +420,8 @@ class HTMLStream(object):
         self.head = req.html_headers
         # main stream
         self.body = UStringIO()
+        # this method will be assigned to self.w in views
+        self.write = self.body.write
         self.doctype = u''
         self._htmlattrs = [('lang', req.lang)]
         # keep main_stream's reference on req for easier text/html demoting
@@ -444,11 +446,6 @@ class HTMLStream(object):
         if reset_xmldecl is not None:
             warn('[3.17] xhtml is no more supported',
                  DeprecationWarning, stacklevel=2)
-
-    def write(self, data):
-        """StringIO interface: this method will be assigned to self.w
-        """
-        self.body.write(data)
 
     @property
     def htmltag(self):
