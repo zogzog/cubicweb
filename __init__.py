@@ -125,7 +125,7 @@ class Binary(StringIO):
     def __eq__(self, other):
         if not isinstance(other, Binary):
             return False
-        return self.getvalue(), other.getvalue()
+        return self.getvalue() == other.getvalue()
 
 
     # Binary helpers to store/fetch python objects
