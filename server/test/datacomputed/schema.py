@@ -38,7 +38,7 @@ class Company(EntityType):
 
 class Note(EntityType):
     note = Int()
-
+    note20 = Int(formula='Any N*20 WHERE X note N')
 
 class concerns(RelationDefinition):
     subject = 'Note'

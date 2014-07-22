@@ -799,6 +799,31 @@ class MigrationCommandsComputedTC(MigrationTC):
             self.assertIn('score', self.schema)
             self.assert_score_initialized(mh)
 
+    def assert_computed_attribute_dropped(self):
+        self.assertNotIn('note20', self.schema)
+        # DROP COLUMN not supported by sqlite
+        #with self.mh() as (cnx, mh):
+        #    fields = self.table_schema(mh, '%sNote' % SQL_PREFIX)
+        #self.assertNotIn('%snote20' % SQL_PREFIX, fields)
+
+    def test_computed_attribute_drop_type(self):
+        self.assertIn('note20', self.schema)
+        with self.mh() as (cnx, mh):
+            mh.cmd_drop_relation_type('note20')
+        self.assert_computed_attribute_dropped()
+
+    def test_computed_attribute_drop_relation_definition(self):
+        self.assertIn('note20', self.schema)
+        with self.mh() as (cnx, mh):
+            mh.cmd_drop_relation_definition('Note', 'note20', 'Int')
+        self.assert_computed_attribute_dropped()
+
+    def test_computed_attribute_drop_attribute(self):
+        self.assertIn('note20', self.schema)
+        with self.mh() as (cnx, mh):
+            mh.cmd_drop_attribute('Note', 'note20')
+        self.assert_computed_attribute_dropped()
+
 
 if __name__ == '__main__':
     unittest_main()
