@@ -883,6 +883,7 @@ class CubicWebTC(TestCase):
             raise
         return result
 
+    @deprecated('[3.19] use .admin_request_from_url instead')
     def req_from_url(self, url):
         """parses `url` and builds the corresponding CW-web request
 
@@ -896,6 +897,20 @@ class CubicWebTC(TestCase):
         req.setup_params(params)
         return req
 
+    @contextmanager
+    def admin_request_from_url(self, url):
+        """parses `url` and builds the corresponding CW-web request
+
+        req.form will be setup using the url's query string
+        """
+        with self.admin_access.web_request(url=url) as req:
+            if isinstance(url, unicode):
+                url = url.encode(req.encoding) # req.setup_params() expects encoded strings
+            querystring = urlparse.urlparse(url)[-2]
+            params = urlparse.parse_qs(querystring)
+            req.setup_params(params)
+            yield req
+
     def url_publish(self, url, data=None):
         """takes `url`, uses application's app_resolver to find the appropriate
         controller and result set, then publishes the result.
@@ -906,22 +921,22 @@ class CubicWebTC(TestCase):
         This should pretty much correspond to what occurs in a real CW server
         except the apache-rewriter component is not called.
         """
-        req = self.req_from_url(url)
-        if data is not None:
-            req.form.update(data)
-        ctrlid, rset = self.app.url_resolver.process(req, req.relative_path(False))
-        return self.ctrl_publish(req, ctrlid, rset)
+        with self.admin_request_from_url(url) as req:
+            if data is not None:
+                req.form.update(data)
+            ctrlid, rset = self.app.url_resolver.process(req, req.relative_path(False))
+            return self.ctrl_publish(req, ctrlid, rset)
 
     def http_publish(self, url, data=None):
         """like `url_publish`, except this returns a http response, even in case
         of errors. You may give form parameters using the `data` argument.
         """
-        req = self.req_from_url(url)
-        if data is not None:
-            req.form.update(data)
-        with real_error_handling(self.app):
-            result = self.app_handle_request(req, req.relative_path(False))
-        return result, req
+        with self.admin_request_from_url(url) as req:
+            if data is not None:
+                req.form.update(data)
+            with real_error_handling(self.app):
+                result = self.app_handle_request(req, req.relative_path(False))
+            return result, req
 
     @staticmethod
     def _parse_location(req, location):
