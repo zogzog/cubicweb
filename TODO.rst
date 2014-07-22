@@ -1,6 +1,16 @@
 Next steps
 ----------
 
+- finish what was started :
+
+    - bypass publisher.
+    - tighten the error handling and get a well-behaved application
+    - provide sane default policies that match current cubicweb behavior.
+
+- identify what can be done without pushing the 'pyramid way' into cubicweb (as
+  a first step for future evolutions).
+
+
 Provide a ctl command
 ~~~~~~~~~~~~~~~~~~~~~
 
@@ -12,23 +22,6 @@ Transactions
 
 A common transaction handling mechanism should be used so that the connexion
 can be safely used in both pyramid and cubicweb.
-
-Authentication
-~~~~~~~~~~~~~~
-
-- Use cw as an authentication provider for the pyramid application.
-- allow the cw application to use pyramid for getting user identity.
-
-Cubicweb views
-~~~~~~~~~~~~~~
-
-Provide a simple api to call cubicweb views within pyramid views.
-
-Error handling
-~~~~~~~~~~~~~~
-
-Have pyramid handle errors (with cubicweb views if wanted) so that we can use
-the debuging tools.
 
 Reimplement the base controllers of cw
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
