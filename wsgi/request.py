@@ -59,6 +59,8 @@ class CubicWebWsgiRequest(CubicWebRequestBase):
 
         headers_in = dict((normalize_header(k[5:]), v) for k, v in self.environ.items()
                           if k.startswith('HTTP_'))
+        if 'CONTENT_TYPE' in environ:
+            headers_in['Content-Type'] = environ['CONTENT_TYPE']
         https = environ.get("HTTPS") in ('yes', 'on', '1')
         post, files = self.get_posted_data()
 
