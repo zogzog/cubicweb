@@ -66,6 +66,7 @@ class CubicWebWsgiRequest(CubicWebRequestBase):
 
         super(CubicWebWsgiRequest, self).__init__(vreg, https, post,
                                                   headers= headers_in)
+        self.content = environ['wsgi.input']
         if files is not None:
             for key, part in files.iteritems():
                 name = None
