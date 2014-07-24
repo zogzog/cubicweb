@@ -614,7 +614,7 @@ class CubicWebTC(TestCase):
         """add your database setup code by overriding this method"""
 
     @classmethod
-    def pre_setup_database(cls, session, config):
+    def pre_setup_database(cls, cnx, config):
         """add your pre database setup code by overriding this method
 
         Do not forget to set the cls.test_db_id value to enable caching of the
