@@ -16,7 +16,7 @@ jQuery.extend(cw, {
     detachEvent: function() {},
 
     log: function log() {
-        if (typeof(window) != "undefined" && window.console && window.console.log) {
+        if (typeof window !== "undefined" && window.console && window.console.log) {
             // NOTE console.log requires "console" to be the console to be "this"
             window.console.log.apply(console, arguments);
         }
@@ -33,7 +33,7 @@ jQuery.extend(cw, {
      * safe version of jQuery('#nodeid') because we use ':' in nodeids
      * which messes with jQuery selection mechanism
      */
-        if (typeof(node) == 'string') {
+        if (typeof node === 'string') {
             node = document.getElementById(node);
         }
         if (node) {
@@ -44,7 +44,7 @@ jQuery.extend(cw, {
 
     // escapes string selectors (e.g. "foo.[subject]:42" -> "foo\.\[subject\]\:42"
     escape: function(selector) {
-        if (typeof(selector) == 'string') {
+        if (typeof selector === 'string') {
             return  selector.replace( /(:|\.|\[|\])/g, "\\$1" );
         }
         // cw.log('non string selector', selector);
@@ -52,7 +52,7 @@ jQuery.extend(cw, {
     },
 
     getNode: function (node) {
-        if (typeof(node) == 'string') {
+        if (typeof node === 'string') {
             return document.getElementById(node);
         }
         return node;
@@ -69,7 +69,7 @@ jQuery.extend(cw, {
     },
 
     urlEncode: function (str) {
-        if (typeof(encodeURIComponent) != "undefined") {
+        if (typeof encodeURIComponent !== "undefined") {
             return encodeURIComponent(str).replace(/\'/g, '%27');
         } else {
             return escape(str).replace(/\+/g, '%2B').replace(/\"/g, '%22').
@@ -93,7 +93,7 @@ jQuery.extend(cw, {
         var $node = $(node);
         var sortvalue = $node.attr('cubicweb:sortvalue');
         // No metadata found, use cell content as sort key
-        if (sortvalue === undefined) {
+        if (typeof sortvalue === 'undefined') {
             return $node.text();
         }
         return cw.evalJSON(sortvalue);
@@ -117,9 +117,9 @@ jQuery.extend(cw.utils, {
             var node = document.createElement(tag);
             for (key in params) {
                 var value = params[key];
-                if (key.substring(0, 2) == 'on') {
+                if (key.substring(0, 2) === 'on') {
                     // this is an event handler definition
-                    if (typeof value == 'string') {
+                    if (typeof value === 'string') {
                         // litteral definition
                         value = new Function(value);
                     }
@@ -142,7 +142,7 @@ jQuery.extend(cw.utils, {
                 }
                 for (var i = 0; i < children.length; i++) {
                     var child = children[i];
-                    if (typeof child == "string" || typeof child == "number") {
+                    if (typeof child === "string" || typeof child === "number") {
                         child = document.createTextNode(child);
                     }
                     node.appendChild(child);
@@ -158,7 +158,7 @@ jQuery.extend(cw.utils, {
      *
      */
     toISOTimestamp: function (date) {
-        if (typeof(date) == "undefined" || date === null) {
+        if (date == null) {
             return null;
         }
 
@@ -188,11 +188,11 @@ jQuery.extend(cw.utils, {
     },
 
     isArray: function (it) { // taken from dojo
-        return it && (it instanceof Array || typeof it == "array");
+        return it && (it instanceof Array || typeof it === "array");
     },
 
     isString: function (it) { // taken from dojo
-        return !!arguments.length && it != null && (typeof it == "string" || it instanceof String);
+        return !!arguments.length && it != null && (typeof it === "string" || it instanceof String);
     },
 
     isArrayLike: function (it) { // taken from dojo
@@ -405,11 +405,11 @@ function IFRAME(params) {
         var node = document.createElement('iframe');
     }
     for (key in params) {
-        if (key != 'name') {
+        if (key !== 'name') {
             var value = params[key];
-            if (key.substring(0, 2) == 'on') {
+            if (key.substring(0, 2) === 'on') {
                 // this is an event handler definition
-                if (typeof value == 'string') {
+                if (typeof value === 'string') {
                     // litteral definition
                     value = new Function(value);
                 }
