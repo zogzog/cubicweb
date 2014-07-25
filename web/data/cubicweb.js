@@ -15,13 +15,10 @@ jQuery.extend(cw, {
     removeEventListener: function() {},
     detachEvent: function() {},
 
-    log: function () {
-        var args = [];
-        for (var i = 0; i < arguments.length; i++) {
-            args.push(arguments[i]);
-        }
+    log: function log() {
         if (typeof(window) != "undefined" && window.console && window.console.log) {
-            window.console.log(args.join(' '));
+            // NOTE console.log requires "console" to be the console to be "this"
+            window.console.log.apply(console, arguments);
         }
     },
 
