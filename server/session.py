@@ -532,8 +532,7 @@ class Connection(RequestSessionBase):
     def __exit__(self, exctype=None, excvalue=None, tb=None):
         assert self._open # actually already open
         assert self._cnxset_count == 0
-        self._free_cnxset(ignoremode=True)
-        self.clear()
+        self.rollback()
         self._open = False
 
 
