@@ -21,11 +21,14 @@ __docformat__ = "restructuredtext en"
 
 from warnings import warn
 
+from logilab.common import nullobject
 from logilab.common.decorators import cached, clear_cache, copy_cache
-
 from rql import nodes, stmts
 
 from cubicweb import NotAnEntity, NoResultError, MultipleResultsError
+
+
+_MARKER = nullobject()
 
 
 class ResultSet(object):
@@ -362,10 +365,12 @@ class ResultSet(object):
         rset.limited = (limit, offset)
         return rset
 
-    def printable_rql(self, encoded=False):
+    def printable_rql(self, encoded=_MARKER):
         """return the result set's origin rql as a string, with arguments
         substitued
         """
+        if encoded is not _MARKER:
+            warn('[3.21] the "encoded" argument is deprecated', DeprecationWarning)
         encoding = self.req.encoding
         rqlstr = self.syntax_tree().as_string(encoding, self.args)
         # sounds like we get encoded or unicode string due to a bug in as_string

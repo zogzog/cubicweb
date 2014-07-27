@@ -55,7 +55,7 @@ class RQLInputForm(component.Component):
         else:
             rset = self.cw_rset
         # display multilines query as one line
-        rql = rset is not None and rset.printable_rql(encoded=False) or req.form.get('rql', '')
+        rql = rset is not None and rset.printable_rql() or req.form.get('rql', '')
         rql = rql.replace(u"\n", u" ")
         rql_suggestion_comp = self._cw.vreg['components'].select_or_none('rql.suggestions', self._cw)
         if rql_suggestion_comp is not None:
