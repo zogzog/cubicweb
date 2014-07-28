@@ -122,14 +122,14 @@ class CoreHooksTC(CubicWebTC):
             entity = cnx.create_entity('Bookmark', title=u'wf1', path=u'/view')
             cnx.commit() # fire operations
             self.assertEqual(len(entity.created_by), 1) # make sure we have only one creator
-            self.assertEqual(entity.created_by[0].eid, self.session.user.eid)
+            self.assertEqual(entity.created_by[0].eid, cnx.user.eid)
 
     def test_metadata_owned_by(self):
         with self.admin_access.repo_cnx() as cnx:
             entity = cnx.create_entity('Bookmark', title=u'wf1', path=u'/view')
             cnx.commit() # fire operations
             self.assertEqual(len(entity.owned_by), 1) # make sure we have only one owner
-            self.assertEqual(entity.owned_by[0].eid, self.session.user.eid)
+            self.assertEqual(entity.owned_by[0].eid, cnx.user.eid)
 
     def test_user_login_stripped(self):
         with self.admin_access.repo_cnx() as cnx:
@@ -153,7 +153,7 @@ class UserGroupHooksTC(CubicWebTC):
                               self.repo.connect, u'toto', password='hop')
             cnx.commit()
             cnxid = self.repo.connect(u'toto', password='hop')
-            self.assertNotEqual(cnxid, self.session.id)
+            self.assertNotEqual(cnxid, cnx.sessionid)
             cnx.execute('DELETE CWUser X WHERE X login "toto"')
             self.repo.execute(cnxid, 'State X')
             cnx.commit()
