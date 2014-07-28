@@ -89,3 +89,8 @@ class evaluee(RelationDefinition):
 
 class StateFull(WorkflowableEntityType):
     name = String()
+
+
+class Reference(EntityType):
+    nom = String(unique=True)
+    ean = String(unique=True, required=True)

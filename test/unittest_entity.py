@@ -754,6 +754,11 @@ du :eid:`1:*ReST*`'''
             # unique attr with None value (nom in this case)
             friend = req.create_entity('Ami', prenom=u'bob')
             self.assertEqual(friend.rest_path(), unicode(friend.eid))
+            # 'ref' below is created without the unique but not required
+            # attribute, make sur that the unique _and_ required 'ean' is used
+            # as the rest attribute
+            ref = req.create_entity('Reference', ean=u'42-1337-42')
+            self.assertEqual(ref.rest_path(), 'reference/42-1337-42')
 
     def test_can_use_rest_path(self):
         self.assertTrue(can_use_rest_path(u'zobi'))
