@@ -2,8 +2,6 @@
 """
 Parser for Javascript comments.
 """
-from __future__ import with_statement
-
 import os.path as osp
 import sys, os, getopt, re
 

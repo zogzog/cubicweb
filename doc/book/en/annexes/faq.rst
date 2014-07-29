@@ -197,9 +197,6 @@ selection. One standard place for components is in cubicweb/vregistry.py:
                 except NoSelectableObject:
                     continue
 
-Don't forget the 'from __future__ import with_statement' at the module
-top-level if you're using python 2.5.
-
 This will yield additional WARNINGs, like this::
 
     2009-01-09 16:43:52 - (cubicweb.selectors) WARNING: selector one_line_rset returned 0 for <class 'cubicweb.web.views.basecomponents.WFHistoryVComponent'>

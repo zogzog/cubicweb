@@ -2,8 +2,6 @@
 # http://twistedmatrix.com/trac/wiki/TwistedWeb2
 
 
-from __future__ import generators
-
 import types, time
 from calendar import timegm
 import base64

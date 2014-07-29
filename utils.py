@@ -17,7 +17,7 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """Some utilities for CubicWeb server/clients."""
 
-from __future__ import division, with_statement
+from __future__ import division
 
 __docformat__ = "restructuredtext en"
 
