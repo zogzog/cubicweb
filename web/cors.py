@@ -109,6 +109,6 @@ def check_origin(req, config):
              '%s != %s' % (host, myhost))
         raise CORSFailed('Host header and hostname do not match')
     # include "Vary: Origin" header (see 6.4)
-    req.set_header('Vary', 'Origin')
+    req.headers_out.addHeader('Vary', 'Origin')
     return origin
 
