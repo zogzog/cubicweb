@@ -139,6 +139,11 @@ class _CubicWebRequestBase(RequestSessionBase):
         self.setup_params(form)
         #: received body
         self.content = StringIO()
+        # prepare output header
+        #: Header used for the final response
+        self.headers_out = Headers()
+        #: HTTP status use by the final response
+        self.status_out  = 200
         # set up language based on request headers or site default (we don't
         # have a user yet, and might not get one)
         self.set_user_language(None)
@@ -152,11 +157,6 @@ class _CubicWebRequestBase(RequestSessionBase):
         #: page id, set by htmlheader template
         self.pageid = None
         self._set_pageid()
-        # prepare output header
-        #: Header used for the final response
-        self.headers_out = Headers()
-        #: HTTP status use by the final response
-        self.status_out  = 200
 
     def _set_pageid(self):
         """initialize self.pageid
@@ -1001,6 +1001,7 @@ class _CubicWebRequestBase(RequestSessionBase):
                 pass
         if vreg.config.get('language-negociation', False):
             # 2. http accept-language
+            self.headers_out.addHeader('Vary', 'Accept-Language')
             for lang in self.header_accept_language():
                 if lang in self.translations:
                     self.set_language(lang)

@@ -101,9 +101,13 @@ class LanguageTC(CubicWebServerTC):
         headers = {'Accept-Language': 'fr'}
         webreq = self.web_request(headers=headers)
         self.assertIn('lang="fr"', webreq.read())
+        vary = [h.lower().strip() for h in webreq.getheader('Vary').split(',')]
+        self.assertIn('accept-language', vary)
         headers = {'Accept-Language': 'en'}
         webreq = self.web_request(headers=headers)
         self.assertIn('lang="en"', webreq.read())
+        vary = [h.lower().strip() for h in webreq.getheader('Vary').split(',')]
+        self.assertIn('accept-language', vary)
 
     def test_response_codes(self):
         with self.admin_access.client_cnx() as cnx:
