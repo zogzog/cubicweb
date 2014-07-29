@@ -241,7 +241,7 @@ def require_appobject(obj):
 
 class CWRegistry(Registry):
     def __init__(self, vreg):
-        super(CWRegistry, self).__init__(vreg.config.debugmode)
+        super(CWRegistry, self).__init__(True)
         self.vreg = vreg
 
     @property
