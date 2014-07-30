@@ -20,7 +20,7 @@
 __docformat__ = "restructuredtext en"
 _ = unicode
 
-from cStringIO import StringIO
+from io import BytesIO
 from warnings import warn
 from functools import partial
 
@@ -101,7 +101,7 @@ class View(AppObject):
             return
         if w is None:
             if self.binary:
-                self._stream = stream = StringIO()
+                self._stream = stream = BytesIO()
             else:
                 self._stream = stream = UStringIO()
             w = stream.write
@@ -471,7 +471,7 @@ class MainTemplate(View):
             return
         if w is None:
             if self.binary:
-                self._stream = stream = StringIO()
+                self._stream = stream = BytesIO()
             else:
                 self._stream = stream = HTMLStream(self._cw)
             w = stream.write
