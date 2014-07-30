@@ -188,7 +188,6 @@ import logging
 from warnings import warn
 from operator import eq
 
-from logilab.common.interface import implements as implements_iface
 from logilab.common.registry import Predicate, objectify_predicate, yes
 
 from yams.schema import BASE_TYPES, role_name

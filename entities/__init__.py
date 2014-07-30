@@ -31,7 +31,6 @@ class AnyEntity(Entity):
     instances have access to their issuing cursor
     """
     __regid__ = 'Any'
-    __implements__ = ()
 
     @classproperty
     def cw_etype(cls):
