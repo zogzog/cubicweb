@@ -20,7 +20,6 @@
 __docformat__ = "restructuredtext en"
 _ = unicode
 
-import types, new
 from cStringIO import StringIO
 from warnings import warn
 from functools import partial
