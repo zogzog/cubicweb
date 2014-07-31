@@ -9,7 +9,7 @@ from cubicweb.web.application import CubicWebPublisher
 
 from cubicweb.web import LogOut, cors
 
-from pyramid_cubicweb import cw_to_pyramid
+from pyramid_cubicweb.core import cw_to_pyramid
 
 
 class PyramidSessionHandler(object):
