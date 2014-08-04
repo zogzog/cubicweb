@@ -26,11 +26,12 @@ def login(request):
     if user_eid is not None:
         headers = security.remember(request, user_eid)
 
-        raise HTTPSeeOther(
-            request.params.get('postlogin_path', '/'),
-            headers=headers)
+        new_path = request.params.get('postlogin_path', '/')
 
-        response.headerlist.extend(headers)
+        if new_path == 'login':
+            new_path = '/'
+
+        raise HTTPSeeOther(new_path, headers=headers)
 
     response.text = render_view(request, 'login')
     return response
