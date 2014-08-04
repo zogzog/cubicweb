@@ -14,3 +14,5 @@ def includeme(config):
     config.set_authentication_policy(
         SessionAuthenticationPolicy(callback=get_principals))
     config.set_authorization_policy(ACLAuthorizationPolicy())
+
+    config.include('pyramid_cubicweb.login')

@@ -9,8 +9,7 @@ from cubicweb import repoapi
 import cubicweb
 import cubicweb.web
 
-from pyramid import security, httpexceptions
-from pyramid.httpexceptions import HTTPSeeOther
+from pyramid import httpexceptions
 
 from pyramid_cubicweb import authplugin
 
@@ -110,36 +109,6 @@ def render_view(request, vid, **kwargs):
         return view._stream.getvalue()
 
 
-def login(request):
-    repo = request.registry['cubicweb.repository']
-
-    response = request.response
-    user_eid = None
-
-    if '__login' in request.params:
-        login = request.params['__login']
-        password = request.params['__password']
-
-        try:
-            with repo.internal_cnx() as cnx:
-                user = repo.authenticate_user(cnx, login, password=password)
-                user_eid = user.eid
-        except cubicweb.AuthenticationError:
-            raise
-
-    if user_eid is not None:
-        headers = security.remember(request, user_eid)
-
-        raise HTTPSeeOther(
-            request.params.get('postlogin_path', '/'),
-            headers=headers)
-
-        response.headerlist.extend(headers)
-
-    response.text = render_view(request, 'login')
-    return response
-
-
 def _cw_cnx(request):
     cnx = repoapi.ClientConnection(request.cw_session)
 
@@ -218,6 +187,3 @@ def includeme(config):
         _cw_cnx, name='cw_cnx', property=True, reify=True)
     config.add_request_method(
         _cw_request, name='cw_request', property=True, reify=True)
-
-    config.add_route('login', '/login')
-    config.add_view(login, route_name='login')
