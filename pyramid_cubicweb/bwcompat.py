@@ -1,4 +1,5 @@
 from pyramid import security
+from pyramid import tweens
 from pyramid.httpexceptions import HTTPSeeOther
 from pyramid import httpexceptions
 
@@ -105,8 +106,22 @@ class CubicWebPyramidHandler(object):
         return request.response
 
 
+class TweenHandler(object):
+    def __init__(self, handler, registry):
+        self.handler = handler
+        self.cwhandler = registry['cubicweb.handler']
+
+    def __call__(self, request):
+        try:
+            response = self.handler(request)
+        except httpexceptions.HTTPNotFound:
+            response = self.cwhandler(request)
+        return response
+
+
 def includeme(config):
-    # Set up a defaut route to handle non-catched urls.
+    # Set up a tween app that will handle the request if the main application
+    # raises a HTTPNotFound exception.
     # This is to keep legacy compatibility for cubes that makes use of the
     # cubicweb controllers.
     cwconfig = config.registry['cubicweb.config']
@@ -114,10 +129,10 @@ def includeme(config):
     cwappli = CubicWebPublisher(
         repository, cwconfig,
         session_handler_fact=PyramidSessionHandler)
-    handler = CubicWebPyramidHandler(cwappli)
+    cwhandler = CubicWebPyramidHandler(cwappli)
 
     config.registry['cubicweb.appli'] = cwappli
-    config.registry['cubicweb.handler'] = handler
+    config.registry['cubicweb.handler'] = cwhandler
 
-    config.add_route('catchall', pattern='*path')
-    config.add_view(handler, route_name='catchall')
+    config.add_tween(
+        'pyramid_cubicweb.bwcompat.TweenHandler', under=tweens.EXCVIEW)
