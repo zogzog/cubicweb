@@ -56,7 +56,7 @@ class CubicWebPyramidRequest(CubicWebRequestBase):
 
         self.path = request.upath_info
 
-        vreg = request.registry['cubicweb.appli'].vreg
+        vreg = request.registry['cubicweb.registry']
         https = request.scheme == 'https'
 
         post = request.params
