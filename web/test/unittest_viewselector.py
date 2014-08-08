@@ -107,8 +107,11 @@ class VRegistryTC(ViewSelectorTC):
     def test_possible_views_noresult(self):
         with self.admin_access.web_request() as req:
             rset = req.execute('Any X WHERE X eid 999999')
-            self.assertListEqual([('jsonexport', json.JsonRsetView)],
-                                 self.pviews(req, rset))
+            self.assertListEqual(self.pviews(req, rset),
+                    [('csvexport', csvexport.CSVRsetView),
+                     ('ecsvexport', csvexport.CSVEntityView),
+                     ('jsonexport', json.JsonRsetView),
+                     ])
 
     def test_possible_views_one_egroup(self):
         with self.admin_access.web_request() as req:
@@ -214,6 +217,7 @@ class VRegistryTC(ViewSelectorTC):
             rset = req.execute('Any N, X WHERE X in_group Y, Y name N')
             self.assertListEqual(self.pviews(req, rset),
                                  [('csvexport', csvexport.CSVRsetView),
+                                  ('ecsvexport', csvexport.CSVEntityView),
                                   ('jsonexport', json.JsonRsetView),
                                   ('rsetxml', xmlrss.XMLRsetView),
                                   ('table', tableview.RsetTableView),
