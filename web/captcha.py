@@ -22,7 +22,7 @@ if you want something better...
 __docformat__ = "restructuredtext en"
 
 from random import randint, choice
-from cStringIO import StringIO
+from io import BytesIO
 
 from PIL import Image, ImageFont, ImageDraw, ImageFilter
 
@@ -67,7 +67,7 @@ def captcha(fontfile, fontsize, size=5, format='JPEG'):
     """
     text = u''.join(choice('QWERTYUOPASDFGHJKLZXCVBNM') for i in range(size))
     img = pil_captcha(text, fontfile, fontsize)
-    out = StringIO()
+    out = BytesIO()
     img.save(out, format)
     out.seek(0)
     return text, out
