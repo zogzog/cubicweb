@@ -125,7 +125,11 @@ def _cw_cnx(request):
 
 
 def _cw_close_session(request):
-    request.cw_session.close()
+    # XXX Closing the session will actually depend on the cubicweb version.
+    # The following code is correct for cw-3.19.
+    # Later versions will have the notion of detached sessions that should not
+    # need explicit closing, or at least not a repository-related one.
+    request.registry['cubicweb.repository'].close(request.cw_session.sessionid)
 
 
 def _cw_session(request):
