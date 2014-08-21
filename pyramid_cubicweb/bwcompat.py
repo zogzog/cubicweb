@@ -84,6 +84,8 @@ class CubicWebPyramidHandler(object):
                 # for this exception) should be enough
                 # content = self.appli.ajax_error_handler(req, ex)
                 raise
+            except cubicweb.web.NotFound as ex:
+                raise httpexceptions.HTTPNotFound(ex.message)
 
             if content is not None:
                 request.response.body = content
