@@ -1,42 +1,53 @@
 from pyramid import security
 from pyramid.httpexceptions import HTTPSeeOther
+from pyramid.view import view_config
 
 import cubicweb
 
 from pyramid_cubicweb.core import render_view
 
 
-def login(request):
+@view_config(route_name='login')
+def login_form(request):
+    request.response.text = render_view(request, 'login')
+    return request.response
+
+
+@view_config(route_name='login', request_param=('__login', '__password'))
+def login_password_login(request):
     repo = request.registry['cubicweb.repository']
 
-    response = request.response
     user_eid = None
 
-    if '__login' in request.params:
-        login = request.params['__login']
-        password = request.params['__password']
+    login = request.params['__login']
+    password = request.params['__password']
 
-        try:
-            with repo.internal_cnx() as cnx:
-                user = repo.authenticate_user(cnx, login, password=password)
-                user_eid = user.eid
-        except cubicweb.AuthenticationError:
-            raise
+    try:
+        with repo.internal_cnx() as cnx:
+            user = repo.authenticate_user(cnx, login, password=password)
+            user_eid = user.eid
+    except cubicweb.AuthenticationError:
+        request.cw_request.set_message(request.cw_request._(
+            "Authentication failed. Please check your credentials."))
+        request.cw_request.post = dict(request.params)
+        del request.cw_request.post['__password']
+        return login_form(request)
 
-    if user_eid is not None:
-        headers = security.remember(request, user_eid)
+    headers = security.remember(request, user_eid)
 
-        new_path = request.params.get('postlogin_path', '/')
+    new_path = request.params.get('postlogin_path', '/')
 
-        if new_path == 'login':
-            new_path = '/'
+    if new_path == 'login':
+        new_path = '/'
 
-        raise HTTPSeeOther(new_path, headers=headers)
+    raise HTTPSeeOther(new_path, headers=headers)
 
-    response.text = render_view(request, 'login')
-    return response
+
+@view_config(route_name='login', effective_principals=security.Authenticated)
+def login_already_loggedin(request):
+    raise HTTPSeeOther('/')
 
 
 def includeme(config):
     config.add_route('login', '/login')
-    config.add_view(login, route_name='login')
+    config.scan('pyramid_cubicweb.login')
