@@ -164,7 +164,7 @@ a.editionPending {
   font-weight: bold;
 }
  
-div.pendingDelete {
+.pendingDelete {
   text-decoration: line-through;
 }
 
