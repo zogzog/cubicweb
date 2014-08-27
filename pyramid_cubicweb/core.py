@@ -191,3 +191,11 @@ def includeme(config):
         _cw_cnx, name='cw_cnx', property=True, reify=True)
     config.add_request_method(
         _cw_request, name='cw_request', property=True, reify=True)
+
+    cwcfg = config.registry['cubicweb.config']
+    for cube in cwcfg.cubes():
+        pkgname = 'cubes.' + cube
+        mod = __import__(pkgname)
+        mod = getattr(mod, cube)
+        if hasattr(mod, 'includeme'):
+            config.include('cubes.' + cube)
