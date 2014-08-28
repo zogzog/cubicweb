@@ -54,7 +54,7 @@ execfile(path,{},cw)
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = [
   'sphinx.ext.autodoc', 
-#  'sphinx.ext.viewcode',
+  'sphinx.ext.viewcode',
   'logilab.common.sphinx_ext',
   ]
 
