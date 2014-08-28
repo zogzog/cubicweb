@@ -1086,6 +1086,9 @@ class ServerMigrationHelper(MigrationHelper):
         schema definition file
         """
         rschema = self.fs_schema.rschema(rtype)
+        if rschema.rule:
+            raise ExecutionError('Cannot add a relation definition for a '
+                                 'computed relation (%s)' % rschema)
         if not rtype in self.repo.schema:
             self.cmd_add_relation_type(rtype, addrdef=False, commit=True)
         if (subjtype, objtype) in self.repo.schema.rschema(rtype).rdefs:
@@ -1113,6 +1116,9 @@ class ServerMigrationHelper(MigrationHelper):
     def cmd_drop_relation_definition(self, subjtype, rtype, objtype, commit=True):
         """unregister an existing relation definition"""
         rschema = self.repo.schema.rschema(rtype)
+        if rschema.rule:
+            raise ExecutionError('Cannot drop a relation definition for a '
+                                 'computed relation (%s)' % rschema)
         # unregister the definition from CWAttribute or CWRelation
         if rschema.final:
             etype = 'CWAttribute'

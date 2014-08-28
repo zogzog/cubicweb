@@ -18,19 +18,22 @@
 """unit tests for module cubicweb.server.migractions"""
 
 from datetime import date
-from os.path import join
+import os.path as osp
 from contextlib import contextmanager
 
 from logilab.common.testlib import unittest_main, Tags, tag
 
 from yams.constraints import UniqueConstraint
 
-from cubicweb import ConfigurationError, ValidationError
+from cubicweb import ConfigurationError, ValidationError, ExecutionError
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.server.migractions import ServerMigrationHelper
 
 import cubicweb.devtools
+
+
+HERE = osp.dirname(osp.abspath(__file__))
 
 migrschema = None
 def tearDownModule(*args):
@@ -38,26 +41,27 @@ def tearDownModule(*args):
     del migrschema
     if hasattr(MigrationCommandsTC, 'origschema'):
         del MigrationCommandsTC.origschema
+    if hasattr(MigrationCommandsComputedTC, 'origschema'):
+        del MigrationCommandsComputedTC.origschema
 
-class MigrationCommandsTC(CubicWebTC):
+class MigrationTC(CubicWebTC):
 
     configcls = cubicweb.devtools.TestServerConfiguration
 
     tags = CubicWebTC.tags | Tags(('server', 'migration', 'migractions'))
 
     def _init_repo(self):
-        super(MigrationCommandsTC, self)._init_repo()
+        super(MigrationTC, self)._init_repo()
         # we have to read schema from the database to get eid for schema entities
         self.repo.set_schema(self.repo.deserialize_schema(), resetvreg=False)
         # hack to read the schema from data/migrschema
         config = self.config
-        config.appid = join('data', 'migratedapp')
-        config._apphome = self.datapath('migratedapp')
+        config.appid = osp.join(self.appid, 'migratedapp')
+        config._apphome = osp.join(HERE, config.appid)
         global migrschema
         migrschema = config.load_schema()
-        config.appid = 'data'
-        config._apphome = self.datadir
-        assert 'Folder' in migrschema
+        config.appid = self.appid
+        config._apphome = osp.join(HERE, self.appid)
 
     def setUp(self):
         CubicWebTC.setUp(self)
@@ -72,6 +76,13 @@ class MigrationCommandsTC(CubicWebTC):
             yield cnx, ServerMigrationHelper(self.repo.config, migrschema,
                                              repo=self.repo, cnx=cnx,
                                              interactive=False)
+
+
+class MigrationCommandsTC(MigrationTC):
+
+    def _init_repo(self):
+        super(MigrationCommandsTC, self)._init_repo()
+        assert 'Folder' in migrschema
 
     def test_add_attribute_bool(self):
         with self.mh() as (cnx, mh):
@@ -666,6 +677,32 @@ class MigrationCommandsTC(CubicWebTC):
             same_as_sql = mh.sqlexec("SELECT sql FROM sqlite_master WHERE type='table' "
                                      "and name='same_as_relation'")
             self.assertTrue(same_as_sql)
+
+
+class MigrationCommandsComputedTC(MigrationTC):
+    """ Unit tests for computed relations and attributes
+    """
+    appid = 'datacomputed'
+
+    def test_computed_relation_add_relation_definition(self):
+        self.assertNotIn('works_for', self.schema)
+        with self.mh() as (cnx, mh):
+            with self.assertRaises(ExecutionError) as exc:
+                mh.cmd_add_relation_definition('Employee', 'works_for',
+                                                    'Company')
+        self.assertEqual(str(exc.exception),
+                         'Cannot add a relation definition for a computed '
+                         'relation (works_for)')
+
+    def test_computed_relation_drop_relation_definition(self):
+        self.assertIn('notes', self.schema)
+        with self.mh() as (cnx, mh):
+            with self.assertRaises(ExecutionError) as exc:
+                mh.cmd_drop_relation_definition('Company', 'notes', 'Note')
+        self.assertEqual(str(exc.exception),
+                         'Cannot drop a relation definition for a computed '
+                         'relation (notes)')
+
 
 if __name__ == '__main__':
     unittest_main()
