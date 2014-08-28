@@ -173,11 +173,11 @@ class UtilsTC(BaseQuerierTC):
                                            'ET': 'CWEType', 'ETN': 'String'}])
             rql, solutions = partrqls[1]
             self.assertRQLEqual(rql,  'Any ETN,X WHERE X is ET, ET name ETN, ET is CWEType, '
-                                'X is IN(BaseTransition, Bookmark, CWAttribute, CWCache, CWConstraint, '
-                                '        CWConstraintType, CWEType, CWGroup, CWPermission, CWProperty, CWRType, '
-                                '        CWRelation, CWSource, CWUniqueTogetherConstraint, CWUser, Card, Comment, '
-                                '        Division, Email, EmailPart, EmailThread, ExternalUri, File, Folder, Note, '
-                                '        Old, Personne, RQLExpression, Societe, State, SubDivision, '
+                                'X is IN(BaseTransition, Bookmark, CWAttribute, CWCache, CWComputedRType, '
+                                '        CWConstraint, CWConstraintType, CWEType, CWGroup, CWPermission, CWProperty, '
+                                '        CWRType, CWRelation, CWSource, CWUniqueTogetherConstraint, CWUser, Card, '
+                                '        Comment, Division, Email, EmailPart, EmailThread, ExternalUri, File, '
+                                '        Folder, Note, Old, Personne, RQLExpression, Societe, State, SubDivision, '
                                 '        SubWorkflowExitPoint, Tag, TrInfo, Transition, Workflow, WorkflowTransition)')
             self.assertListEqual(sorted(solutions),
                                   sorted([{'X': 'BaseTransition', 'ETN': 'String', 'ET': 'CWEType'},
@@ -186,6 +186,7 @@ class UtilsTC(BaseQuerierTC):
                                           {'X': 'Comment', 'ETN': 'String', 'ET': 'CWEType'},
                                           {'X': 'Division', 'ETN': 'String', 'ET': 'CWEType'},
                                           {'X': 'CWCache', 'ETN': 'String', 'ET': 'CWEType'},
+                                          {'X': 'CWComputedRType', 'ETN': 'String', 'ET': 'CWEType'},
                                           {'X': 'CWConstraint', 'ETN': 'String', 'ET': 'CWEType'},
                                           {'X': 'CWConstraintType', 'ETN': 'String', 'ET': 'CWEType'},
                                           {'X': 'CWEType', 'ETN': 'String', 'ET': 'CWEType'},
@@ -602,18 +603,18 @@ class QuerierTC(BaseQuerierTC):
                             'WHERE RT name N, RDEF relation_type RT '
                             'HAVING COUNT(RDEF) > 10')
         self.assertListEqual(rset.rows,
-                              [[u'description_format', 12],
-                               [u'description', 13],
-                               [u'name', 17],
-                               [u'created_by', 43],
-                               [u'creation_date', 43],
-                               [u'cw_source', 43],
-                               [u'cwuri', 43],
-                               [u'in_basket', 43],
-                               [u'is', 43],
-                               [u'is_instance_of', 43],
-                               [u'modification_date', 43],
-                               [u'owned_by', 43]])
+                              [[u'description_format', 13],
+                               [u'description', 14],
+                               [u'name', 18],
+                               [u'created_by', 44],
+                               [u'creation_date', 44],
+                               [u'cw_source', 44],
+                               [u'cwuri', 44],
+                               [u'in_basket', 44],
+                               [u'is', 44],
+                               [u'is_instance_of', 44],
+                               [u'modification_date', 44],
+                               [u'owned_by', 44]])
 
     def test_select_aggregat_having_dumb(self):
         # dumb but should not raise an error

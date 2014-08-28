@@ -25,6 +25,7 @@ from logilab.common.testlib import TestCase, unittest_main
 from cubicweb import Binary
 from cubicweb.schema import CubicWebSchemaLoader
 from cubicweb.devtools import TestServerConfiguration
+from cubicweb.devtools.testlib import CubicWebTC
 
 from cubicweb.server.schemaserial import (updateeschema2rql, updaterschema2rql, rschema2rql,
                                           eschema2rql, rdef2rql, specialize2rql,
@@ -425,7 +426,17 @@ class Perms2RQLTC(TestCase):
     #    self.assertListEqual(perms2rql(schema, self.GROUP_MAPPING),
     #                         ['INSERT CWEType X: X name 'Societe', X final FALSE'])
 
+class ComputedAttributeAndRelationTC(CubicWebTC):
+    appid = 'data-cwep002'
 
+    def test(self):
+        # force to read schema from the database
+        self.repo.set_schema(self.repo.deserialize_schema(), resetvreg=False)
+        schema = self.repo.schema
+        self.assertEqual([('Company', 'Person')], list(schema['has_employee'].rdefs))
+        self.assertEqual('O works_for S',
+                         schema['has_employee'].rule)
+        self.assertEqual([('Company', 'Int')], list(schema['total_salary'].rdefs))
 
 if __name__ == '__main__':
     unittest_main()

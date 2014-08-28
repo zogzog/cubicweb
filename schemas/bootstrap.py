@@ -57,6 +57,16 @@ class CWRType(EntityType):
     final = Boolean(description=_('automatic'))
 
 
+class CWComputedRType(EntityType):
+    """define a virtual relation type, used to build the instance schema"""
+    __permissions__ = PUB_SYSTEM_ENTITY_PERMS
+    name = String(required=True, indexed=True, internationalizable=True,
+                  unique=True, maxsize=64)
+    description = RichString(internationalizable=True,
+                             description=_('semantic description of this relation type'))
+    rule = String(required=True)
+
+
 class CWAttribute(EntityType):
     """define a final relation: link a final relation type from a non final
     entity to a final entity type.

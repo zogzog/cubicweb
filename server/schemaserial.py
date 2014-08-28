@@ -87,6 +87,20 @@ def deserialize_schema(schema, cnx):
     """
     repo = cnx.repo
     dbhelper = repo.system_source.dbhelper
+
+    # Computed Rtype
+    with cnx.ensure_cnx_set:
+        tables = set(dbhelper.list_tables(cnx.cnxset.cu))
+        has_computed_relations = 'cw_CWComputedRType' in tables
+    if has_computed_relations:
+        rset = cnx.execute(
+            'Any X, N, R, D WHERE X is CWComputedRType, X name N, '
+            'X rule R, X description D')
+        for eid, rule_name, rule, description in rset.rows:
+            rtype = ybo.ComputedRelation(name=rule_name, rule=rule, eid=eid,
+                                         description=description)
+            schema.add_relation_type(rtype)
+
     # XXX bw compat (3.6 migration)
     with cnx.ensure_cnx_set:
         sqlcu = cnx.system_sql("SELECT * FROM cw_CWRType WHERE cw_name='symetric'")
@@ -252,6 +266,7 @@ def deserialize_schema(schema, cnx):
         eschema._unique_together.append(tuple(sorted(unique_together)))
     schema.infer_specialization_rules()
     cnx.commit()
+    schema.finalize()
     schema.reading_from_database = False
 
 
@@ -340,6 +355,9 @@ def serialize_schema(cnx, schema):
         if rschema in VIRTUAL_RTYPES:
             if pb is not None:
                 pb.update()
+            continue
+        if rschema.rule:
+            execschemarql(execute, rschema, crschema2rql(rschema))
             continue
         execschemarql(execute, rschema, rschema2rql(rschema, addrdef=False))
         if rschema.symmetric:
@@ -456,7 +474,7 @@ def _ervalues(erschema):
 # rtype serialization
 
 def rschema2rql(rschema, cstrtypemap=None, addrdef=True, groupmap=None):
-    """return a list of rql insert statements to enter a relation schema
+    """generate rql insert statements to enter a relation schema
     in the database as an CWRType entity
     """
     if rschema.type == 'has_text':
@@ -483,10 +501,22 @@ def rschema_relations_values(rschema):
     relations = ['X %s %%(%s)s' % (attr, attr) for attr in sorted(values)]
     return relations, values
 
+def crschema2rql(crschema):
+    relations, values = crschema_relations_values(crschema)
+    yield 'INSERT CWComputedRType X: %s' % ','.join(relations), values
+
+def crschema_relations_values(crschema):
+    values = _ervalues(crschema)
+    values['rule'] = crschema.rule
+    # XXX why oh why?
+    del values['final']
+    relations = ['X %s %%(%s)s' % (attr, attr) for attr in sorted(values)]
+    return relations, values
+
 # rdef serialization
 
 def rdef2rql(rdef, cstrtypemap, groupmap=None):
-    # don't serialize infered relations
+    # don't serialize inferred relations
     if rdef.infered:
         return
     relations, values = _rdef_values(rdef)

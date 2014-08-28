@@ -163,9 +163,10 @@ class SchemaReaderClassTest(TestCase):
         entities = sorted([str(e) for e in schema.entities()])
         expected_entities = ['Ami', 'BaseTransition', 'BigInt', 'Bookmark', 'Boolean', 'Bytes', 'Card',
                              'Date', 'Datetime', 'Decimal',
-                             'CWCache', 'CWConstraint', 'CWConstraintType', 'CWDataImport',
-                             'CWEType', 'CWAttribute', 'CWGroup', 'EmailAddress', 'CWRelation',
-                             'CWPermission', 'CWProperty', 'CWRType',
+                             'CWCache', 'CWComputedRType', 'CWConstraint',
+                             'CWConstraintType', 'CWDataImport', 'CWEType',
+                             'CWAttribute', 'CWGroup', 'EmailAddress',
+                             'CWRelation', 'CWPermission', 'CWProperty', 'CWRType',
                              'CWSource', 'CWSourceHostConfig', 'CWSourceSchemaConfig',
                              'CWUniqueTogetherConstraint', 'CWUser',
                              'ExternalUri', 'File', 'Float', 'Int', 'Interval', 'Note',
@@ -209,7 +210,7 @@ class SchemaReaderClassTest(TestCase):
 
                               'parser', 'path', 'pkey', 'prefered_form', 'prenom', 'primary_email',
 
-                              'read_permission', 'relation_type', 'relations', 'require_group',
+                              'read_permission', 'relation_type', 'relations', 'require_group', 'rule',
 
                               'specializes', 'start_timestamp', 'state_of', 'status', 'subworkflow', 'subworkflow_exit', 'subworkflow_state', 'surname', 'symmetric', 'synopsis',
 
@@ -452,6 +453,7 @@ class CompositeSchemaTC(CubicWebTC):
                      ('cw_source', 'Bookmark', 'CWSource', 'object'),
                      ('cw_source', 'CWAttribute', 'CWSource', 'object'),
                      ('cw_source', 'CWCache', 'CWSource', 'object'),
+                     ('cw_source', 'CWComputedRType', 'CWSource', 'object'),
                      ('cw_source', 'CWConstraint', 'CWSource', 'object'),
                      ('cw_source', 'CWConstraintType', 'CWSource', 'object'),
                      ('cw_source', 'CWDataImport', 'CWSource', 'object'),
