@@ -139,7 +139,7 @@ published on the `The Python Package Index`_.
 .. _`virtualenv`: http://virtualenv.openplans.org/
 
 A working compilation chain is needed to build the modules that include C
-extensions. If you really do not want to compile anything, installing `Lxml <http://lxml.de/>`_,
+extensions. If you really do not want to compile anything, installing `lxml <http://lxml.de/>`_,
 `Twisted Web <http://twistedmatrix.com/trac/wiki/Downloads/>`_ and `libgecode
 <http://www.gecode.org/>`_ will help.
 
@@ -152,13 +152,15 @@ or, if you prefer to get as much as possible from pip::
   apt-get install gcc python-pip python-dev libxslt1-dev libxml2-dev
 
 For Windows, you can install pre-built packages (possible `source
-<http://www.lfd.uci.edu/~gohlke/pythonlibs/>`_). For a minimal setup, install
-`pip <http://www.lfd.uci.edu/~gohlke/pythonlibs/#pip>`_, `setuptools
-<http://www.lfd.uci.edu/~gohlke/pythonlibs/#setuptools>`_, `libxml-python
-<http://www.lfd.uci.edu/~gohlke/pythonlibs/#libxml-python>`_, `lxml
-<http://www.lfd.uci.edu/~gohlke/pythonlibs/#lxml>`_ and `twisted
-<http://www.lfd.uci.edu/~gohlke/pythonlibs/#twisted>`_ from this source making
-sure to choose the correct architecture and version of Python.
+<http://www.lfd.uci.edu/~gohlke/pythonlibs/>`_). For a minimal setup, install:
+
+- pip http://www.lfd.uci.edu/~gohlke/pythonlibs/#pip
+- setuptools http://www.lfd.uci.edu/~gohlke/pythonlibs/#setuptools
+- libxml-python http://www.lfd.uci.edu/~gohlke/pythonlibs/#libxml-python>
+- lxml http://www.lfd.uci.edu/~gohlke/pythonlibs/#lxml and
+- twisted http://www.lfd.uci.edu/~gohlke/pythonlibs/#twisted
+
+Make sure to choose the correct architecture and version of Python.
 
 Finally, install |cubicweb| and its dependencies, by running::
 

@@ -22,7 +22,7 @@ Entity types used to manage users and permissions
 
 Entity types used to manage workflows
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-* _`Workflow`, workflow entity, linked to some entity types which may use this workflow
+* :ref:`Workflow <Workflow>`, workflow entity, linked to some entity types which may use this workflow
 * _`State`, workflow state
 * _`Transition`, workflow transition
 * _`TrInfo`, record of a transition trafic for an entity
