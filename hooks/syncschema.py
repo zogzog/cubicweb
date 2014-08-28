@@ -389,6 +389,21 @@ class CWRTypeUpdateOp(MemSchemaOperation):
         # XXX revert changes on database
 
 
+class CWComputedRTypeUpdateOp(MemSchemaOperation):
+    """actually update some properties of a computed relation definition"""
+    rschema = entity = rule = None # make pylint happy
+    old_rule = None
+
+    def precommit_event(self):
+        # update the in-memory schema first
+        self.old_rule = self.rschema.rule
+        self.rschema.rule = self.rule
+
+    def revertprecommit_event(self):
+        # revert changes on in memory schema
+        self.rschema.rule = self.old_rule
+
+
 class CWAttributeAddOp(MemSchemaOperation):
     """an attribute relation (CWAttribute) has been added:
     * add the necessary column
@@ -1044,6 +1059,23 @@ class BeforeUpdateCWRTypeHook(SyncSchemaHook):
             rschema = self._cw.vreg.schema.rschema(entity.name)
             CWRTypeUpdateOp(self._cw, rschema=rschema, entity=entity,
                             values=newvalues)
+
+
+class BeforeUpdateCWComputedRTypeHook(SyncSchemaHook):
+    """check name change, handle final"""
+    __regid__ = 'syncupdatecwcomputedrtype'
+    __select__ = SyncSchemaHook.__select__ & is_instance('CWComputedRType')
+    events = ('before_update_entity',)
+
+    def __call__(self):
+        entity = self.entity
+        check_valid_changes(self._cw, entity)
+        if 'rule' in entity.cw_edited:
+            old, new = entity.cw_edited.oldnewvalue('rule')
+            if old != new:
+                rschema = self._cw.vreg.schema.rschema(entity.name)
+                CWComputedRTypeUpdateOp(self._cw, rschema=rschema,
+                                        entity=entity, rule=new)
 
 
 class AfterDelRelationTypeHook(SyncSchemaHook):

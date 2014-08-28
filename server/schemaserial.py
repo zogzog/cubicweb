@@ -615,9 +615,13 @@ def updateeschema2rql(eschema, eid):
     yield 'SET %s WHERE X eid %%(x)s' % ','.join(relations), values
 
 def updaterschema2rql(rschema, eid):
-    relations, values = rschema_relations_values(rschema)
-    values['x'] = eid
-    yield 'SET %s WHERE X eid %%(x)s' % ','.join(relations), values
+    if rschema.rule:
+        yield ('SET X rule %(r)s WHERE X eid %(x)s',
+               {'x': eid, 'r': unicode(rschema.rule)})
+    else:
+        relations, values = rschema_relations_values(rschema)
+        values['x'] = eid
+        yield 'SET %s WHERE X eid %%(x)s' % ','.join(relations), values
 
 def updaterdef2rql(rdef, eid):
     relations, values = _rdef_values(rdef)

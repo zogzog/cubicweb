@@ -579,6 +579,9 @@ class ServerMigrationHelper(MigrationHelper):
         """
         subjtype, objtype = str(subjtype), str(objtype)
         rschema = self.fs_schema.rschema(rtype)
+        if rschema.rule:
+            raise ExecutionError('Cannot synchronize a relation definition for a '
+                                 'computed relation (%s)' % rschema)
         reporschema = self.repo.schema.rschema(rschema)
         if (subjtype, rschema, objtype) in self._synchronized:
             return

@@ -735,6 +735,26 @@ class MigrationCommandsComputedTC(MigrationTC):
             mh.cmd_drop_relation_type('notes')
         self.assertNotIn('notes', self.schema)
 
+    def test_computed_relation_sync_schema_props_perms(self):
+        self.assertIn('whatever', self.schema)
+        with self.mh() as (cnx, mh):
+            mh.cmd_sync_schema_props_perms('whatever')
+            self.assertEqual(self.schema['whatever'].rule,
+                             'S employees E, O associates E')
+            self.assertEqual(self.schema['whatever'].objects(), ('Company',))
+            self.assertEqual(self.schema['whatever'].subjects(), ('Company',))
+            self.assertFalse(self.table_sql(mh, 'whatever_relation'))
+
+    def test_computed_relation_sync_schema_props_perms_on_rdef(self):
+        self.assertIn('whatever', self.schema)
+        with self.mh() as (cnx, mh):
+            with self.assertRaises(ExecutionError) as exc:
+                mh.cmd_sync_schema_props_perms(
+                    ('Company', 'whatever', 'Person'))
+        self.assertEqual(str(exc.exception),
+                         'Cannot synchronize a relation definition for a computed '
+                         'relation (whatever)')
+
 
 if __name__ == '__main__':
     unittest_main()

@@ -48,3 +48,7 @@ class concerns(RelationDefinition):
 
 class notes(ComputedRelation):
     rule = 'S employees E, O concerns E'
+
+
+class whatever(ComputedRelation):
+    rule = 'S employees E, O concerns E'
