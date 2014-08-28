@@ -307,7 +307,7 @@ class CWETypeRenameOp(MemSchemaOperation):
 class CWRTypeUpdateOp(MemSchemaOperation):
     """actually update some properties of a relation definition"""
     rschema = entity = values = None # make pylint happy
-    oldvalus = None
+    oldvalues = None
 
     def precommit_event(self):
         rschema = self.rschema
