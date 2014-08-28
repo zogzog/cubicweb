@@ -27,7 +27,8 @@ __docformat__ = "restructuredtext en"
 _ = unicode
 
 from copy import copy
-from yams.schema import BASE_TYPES, RelationSchema, RelationDefinitionSchema
+from yams.schema import (BASE_TYPES, BadSchemaDefinition,
+                         RelationSchema, RelationDefinitionSchema)
 from yams import buildobjs as ybo, schema2sql as y2sql, convert_default_value
 
 from logilab.common.decorators import clear_cache
@@ -407,12 +408,19 @@ class CWAttributeAddOp(MemSchemaOperation):
             description=entity.description, cardinality=entity.cardinality,
             constraints=get_constraints(self.cnx, entity),
             order=entity.ordernum, eid=entity.eid, **kwargs)
-        self.cnx.vreg.schema.add_relation_def(rdefdef)
+        try:
+            self.cnx.vreg.schema.add_relation_def(rdefdef)
+        except BadSchemaDefinition:
+            # rdef has been infered then explicitly added (current consensus is
+            # not clear at all versus infered relation handling (and much
+            # probably buggy)
+            rdef = self.cnx.vreg.schema.rschema(rdefdef.name).rdefs[rdefdef.subject, rdefdef.object]
+            assert rdef.infered
         self.cnx.execute('SET X ordernum Y+1 '
-                             'WHERE X from_entity SE, SE eid %(se)s, X ordernum Y, '
-                             'X ordernum >= %(order)s, NOT X eid %(x)s',
-                             {'x': entity.eid, 'se': fromentity.eid,
-                              'order': entity.ordernum or 0})
+                         'WHERE X from_entity SE, SE eid %(se)s, X ordernum Y, '
+                         'X ordernum >= %(order)s, NOT X eid %(x)s',
+                         {'x': entity.eid, 'se': fromentity.eid,
+                          'order': entity.ordernum or 0})
         return rdefdef
 
     def precommit_event(self):
