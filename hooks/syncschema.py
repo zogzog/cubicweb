@@ -39,6 +39,7 @@ from cubicweb.schema import (SCHEMA_TYPES, META_RTYPES, VIRTUAL_RTYPES,
                              CONSTRAINTS, ETYPE_NAME_MAP, display_name)
 from cubicweb.server import hook, schemaserial as ss
 from cubicweb.server.sqlutils import SQL_PREFIX
+from cubicweb.hooks.synccomputed import RecomputeAttributeOperation
 
 # core entity and relation types which can't be removed
 CORE_TYPES = BASE_TYPES | SCHEMA_TYPES | META_RTYPES | set(
@@ -71,14 +72,14 @@ def add_inline_relation_column(cnx, etype, rtype):
     table = SQL_PREFIX + etype
     column = SQL_PREFIX + rtype
     try:
-        cnx.system_sql(str('ALTER TABLE %s ADD %s integer'
-                               % (table, column)), rollback_on_failure=False)
+        cnx.system_sql(str('ALTER TABLE %s ADD %s integer' % (table, column)),
+                       rollback_on_failure=False)
         cnx.info('added column %s to table %s', column, table)
     except Exception:
         # silent exception here, if this error has not been raised because the
         # column already exists, index creation will fail anyway
         cnx.exception('error while adding column %s to table %s',
-                          table, column)
+                      table, column)
     # create index before alter table which may expectingly fail during test
     # (sqlite) while index creation should never fail (test for index existence
     # is done by the dbhelper)
@@ -167,8 +168,8 @@ class DropColumn(hook.Operation):
         # drop index if any
         source.drop_index(cnx, table, column)
         if source.dbhelper.alter_column_support:
-            cnx.system_sql('ALTER TABLE %s DROP COLUMN %s'
-                               % (table, column), rollback_on_failure=False)
+            cnx.system_sql('ALTER TABLE %s DROP COLUMN %s' % (table, column),
+                           rollback_on_failure=False)
             self.info('dropped column %s from table %s', column, table)
         else:
             # not supported by sqlite for instance
@@ -471,8 +472,8 @@ class CWAttributeAddOp(MemSchemaOperation):
         column = SQL_PREFIX + rdefdef.name
         try:
             cnx.system_sql(str('ALTER TABLE %s ADD %s %s'
-                                   % (table, column, attrtype)),
-                               rollback_on_failure=False)
+                               % (table, column, attrtype)),
+                           rollback_on_failure=False)
             self.info('added column %s to table %s', table, column)
         except Exception as ex:
             # the column probably already exists. this occurs when
@@ -503,6 +504,12 @@ class CWAttributeAddOp(MemSchemaOperation):
             default = convert_default_value(self.rdefdef, default)
             cnx.system_sql('UPDATE %s SET %s=%%(default)s' % (table, column),
                                {'default': default})
+        # if attribute is computed, compute it
+        if entity.formula:
+            # add rtype attribute for RelationDefinitionSchema api compat, this
+            # is what RecomputeAttributeOperation expect
+            rdefdef.rtype = rdefdef.name
+            RecomputeAttributeOperation.get_instance(cnx).add_data(rdefdef)
 
     def revertprecommit_event(self):
         # revert changes on in memory schema

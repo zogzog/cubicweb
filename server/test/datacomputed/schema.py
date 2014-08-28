@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 
-from yams.buildobjs import EntityType, RelationDefinition, ComputedRelation
+from yams.buildobjs import EntityType, RelationDefinition, ComputedRelation, Int
 
 
 class Employee(EntityType):
@@ -36,9 +36,8 @@ class associates(RelationDefinition):
 class Company(EntityType):
     pass
 
-
 class Note(EntityType):
-    pass
+    note = Int()
 
 
 class concerns(RelationDefinition):

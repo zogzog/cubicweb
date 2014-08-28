@@ -691,6 +691,12 @@ class MigrationCommandsComputedTC(MigrationTC):
     """
     appid = 'datacomputed'
 
+    def setUp(self):
+        MigrationTC.setUp(self)
+        # ensure vregistry is reloaded, needed by generated hooks for computed
+        # attributes
+        self.repo.vreg.set_schema(self.repo.schema)
+
     def test_computed_relation_add_relation_definition(self):
         self.assertNotIn('works_for', self.schema)
         with self.mh() as (cnx, mh):
@@ -754,6 +760,44 @@ class MigrationCommandsComputedTC(MigrationTC):
         self.assertEqual(str(exc.exception),
                          'Cannot synchronize a relation definition for a computed '
                          'relation (whatever)')
+
+    # computed attributes migration ############################################
+
+    def setup_add_score(self):
+        with self.admin_access.client_cnx() as cnx:
+            assert not cnx.execute('Company X')
+            c = cnx.create_entity('Company')
+            e1 = cnx.create_entity('Employee', reverse_employees=c)
+            n1 = cnx.create_entity('Note', note=2, concerns=e1)
+            e2 = cnx.create_entity('Employee', reverse_employees=c)
+            n2 = cnx.create_entity('Note', note=4, concerns=e2)
+            cnx.commit()
+
+    def assert_score_initialized(self, mh):
+        self.assertEqual(self.schema['score'].rdefs['Company', 'Float'].formula,
+                         'Any AVG(NN) WHERE X employees E, N concerns E, N note NN')
+        fields = self.table_schema(mh, '%sCompany' % SQL_PREFIX)
+        self.assertEqual(fields['%sscore' % SQL_PREFIX], 'float')
+        self.assertEqual([[3.0]],
+                         mh.rqlexec('Any CS WHERE C score CS, C is Company').rows)
+
+    def test_computed_attribute_add_relation_type(self):
+        self.assertNotIn('score', self.schema)
+        self.setup_add_score()
+        with self.mh() as (cnx, mh):
+            mh.cmd_add_relation_type('score')
+            self.assertIn('score', self.schema)
+            self.assertEqual(self.schema['score'].objects(), ('Float',))
+            self.assertEqual(self.schema['score'].subjects(), ('Company',))
+            self.assert_score_initialized(mh)
+
+    def test_computed_attribute_add_attribute(self):
+        self.assertNotIn('score', self.schema)
+        self.setup_add_score()
+        with self.mh() as (cnx, mh):
+            mh.cmd_add_attribute('Company', 'score')
+            self.assertIn('score', self.schema)
+            self.assert_score_initialized(mh)
 
 
 if __name__ == '__main__':

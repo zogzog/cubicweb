@@ -16,7 +16,8 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 
-from yams.buildobjs import EntityType, RelationDefinition, ComputedRelation
+from yams.buildobjs import (EntityType, RelationDefinition, ComputedRelation,
+                            Int, Float)
 
 
 class Employee(EntityType):
@@ -38,11 +39,11 @@ class works_for(ComputedRelation):
 
 
 class Company(EntityType):
-    pass
+    score = Float(formula='Any AVG(NN) WHERE X employees E, N concerns E, N note NN')
 
 
 class Note(EntityType):
-    pass
+    note = Int()
 
 
 class concerns(RelationDefinition):
