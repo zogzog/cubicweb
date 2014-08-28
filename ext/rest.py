@@ -99,9 +99,9 @@ def eid_reference_role(role, rawtext, text, lineno, inliner,
                             **options)], []
 
 def rql_role(role, rawtext, text, lineno, inliner, options={}, content=[]):
-    """:rql:`<rql-expr>` or :rql:`<rql-expr>:<vid>`
+    """``:rql:`<rql-expr>``` or ``:rql:`<rql-expr>:<vid>```
 
-    Example: :rql:`Any X,Y WHERE X is CWUser, X login Y:table`
+    Example: ``:rql:`Any X,Y WHERE X is CWUser, X login Y:table```
 
     Replace the directive with the output of applying the view to the resultset
     returned by the query.
@@ -132,9 +132,9 @@ def rql_role(role, rawtext, text, lineno, inliner, options={}, content=[]):
     return [nodes.raw('', content, format='html')], []
 
 def bookmark_role(role, rawtext, text, lineno, inliner, options={}, content=[]):
-    """:bookmark:`<bookmark-eid>` or :bookmark:`<eid>:<vid>`
+    """``:bookmark:`<bookmark-eid>``` or ``:bookmark:`<eid>:<vid>```
 
-    Example: :bookmark:`1234:table`
+    Example: ``:bookmark:`1234:table```
 
     Replace the directive with the output of applying the view to the resultset
     returned by the query stored in the bookmark. By default, the view is the one
