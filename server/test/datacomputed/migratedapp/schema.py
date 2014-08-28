@@ -40,10 +40,12 @@ class works_for(ComputedRelation):
 
 class Company(EntityType):
     score = Float(formula='Any AVG(NN) WHERE X employees E, N concerns E, N note NN')
+    score100 = Float(formula='Any AVG(NN) WHERE X employees E, N concerns E, N note100 NN')
 
 
 class Note(EntityType):
     note = Int()
+    note100 = Int(formula='Any N*100 WHERE X note N')
 
 
 class concerns(RelationDefinition):

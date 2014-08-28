@@ -647,6 +647,8 @@ class RDefUpdateOp(MemSchemaOperation):
             self.null_allowed_changed = True
         if 'fulltextindexed' in self.values:
             UpdateFTIndexOp.get_instance(cnx).add_data(rdef.subject)
+        if 'formula' in self.values:
+            RecomputeAttributeOperation.get_instance(cnx).add_data(rdef)
 
     def revertprecommit_event(self):
         if self.rdef is None:

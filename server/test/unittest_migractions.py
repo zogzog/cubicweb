@@ -824,6 +824,22 @@ class MigrationCommandsComputedTC(MigrationTC):
             mh.cmd_drop_attribute('Note', 'note20')
         self.assert_computed_attribute_dropped()
 
+    def test_computed_attribute_sync_schema_props_perms_rtype(self):
+        self.assertIn('note100', self.schema)
+        with self.mh() as (cnx, mh):
+            mh.cmd_sync_schema_props_perms('note100')
+        self.assertEqual(self.schema['note100'].rdefs['Note', 'Int'].formula,
+                         'Any N*100 WHERE X note N')
+
+    def test_computed_attribute_sync_schema_props_perms_rdef(self):
+        self.setup_add_score()
+        with self.mh() as (cnx, mh):
+            mh.cmd_sync_schema_props_perms(('Note', 'note100', 'Int'))
+            self.assertEqual([[200], [400]],
+                             cnx.execute('Any N ORDERBY N WHERE X note100 N').rows)
+            self.assertEqual([[300]],
+                             cnx.execute('Any CS WHERE C score100 CS, C is Company').rows)
+
 
 if __name__ == '__main__':
     unittest_main()
