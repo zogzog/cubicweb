@@ -703,6 +703,12 @@ class MigrationCommandsComputedTC(MigrationTC):
                          'Cannot drop a relation definition for a computed '
                          'relation (notes)')
 
+    def test_computed_relation_drop_relation_type(self):
+        self.assertIn('notes', self.schema)
+        with self.mh() as (cnx, mh):
+            mh.cmd_drop_relation_type('notes')
+        self.assertNotIn('notes', self.schema)
+
 
 if __name__ == '__main__':
     unittest_main()

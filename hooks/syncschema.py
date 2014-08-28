@@ -1063,6 +1063,24 @@ class AfterDelRelationTypeHook(SyncSchemaHook):
         RDefDelOp(cnx, rdef=rdef)
 
 
+# CWComputedRType hooks #######################################################
+
+class DelCWComputedRTypeHook(SyncSchemaHook):
+    """before deleting a CWComputedRType entity:
+    * check that we don't remove a core relation type
+    * instantiate an operation to delete the relation type on commit
+    """
+    __regid__ = 'syncdelcwcomputedrtype'
+    __select__ = SyncSchemaHook.__select__ & is_instance('CWComputedRType')
+    events = ('before_delete_entity',)
+
+    def __call__(self):
+        name = self.entity.name
+        if name in CORE_TYPES:
+            raise validation_error(self.entity, {None: _("can't be deleted")})
+        MemSchemaCWRTypeDel(self._cw, rtype=name)
+
+
 # CWAttribute / CWRelation hooks ###############################################
 
 class AfterAddCWAttributeHook(SyncSchemaHook):

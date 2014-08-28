@@ -1057,8 +1057,12 @@ class ServerMigrationHelper(MigrationHelper):
 
     def cmd_drop_relation_type(self, rtype, commit=True):
         """unregister an existing relation type"""
-        # unregister the relation from CWRType
-        self.rqlexec('DELETE CWRType X WHERE X name %r' % rtype,
+        rschema = self.repo.schema[rtype]
+        if rschema.rule:
+            etype = 'CWComputedRType'
+        else:
+            etype = 'CWRType'
+        self.rqlexec('DELETE %s X WHERE X name %r' % (etype, rtype),
                      ask_confirm=self.verbosity>=2)
         if commit:
             self.commit()
