@@ -52,8 +52,14 @@ execfile(path,{},cw)
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'logilab.common.sphinx_ext']
+extensions = [
+  'sphinx.ext.autodoc', 
+#  'sphinx.ext.viewcode',
+  'logilab.common.sphinx_ext',
+  ]
+
 autoclass_content = 'both'
+
 # Add any paths that contain templates here, relative to this directory.
 #templates_path = []
 
@@ -117,8 +123,9 @@ pygments_style = 'sphinx'
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
 html_title = '%s %s' % (project, release)
-html_theme = 'standard_theme'
-html_theme_path = ['.']
+
+html_theme_path = ['_themes']
+html_theme = 'cubicweb'
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
 #html_short_title = None

@@ -1,0 +1,33 @@
+/*
+ * cubicweb.css_t
+ * ~~~~~~~~~~~~~~
+ *
+ * Sphinx stylesheet -- cubicweb theme.
+ *
+ * :copyright: Copyright 2014 by the Cubicweb team, see AUTHORS.
+ * :license: LGPL, see LICENSE for details.
+ *
+ */
+ 
+@import url("pyramid.css");
+
+div.header-small {
+  background-image: linear-gradient(white, #e2e2e2);
+  border-bottom: 1px solid #bbb;
+}
+
+div.logo-small {
+  padding: 10px;
+}
+
+img.logo {
+  width: 150px;
+}
+
+div.related a {
+  color: #e6820e;
+}
+
+a, a .pre {
+  color: #e6820e;
+}
