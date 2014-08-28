@@ -1018,11 +1018,13 @@ class ServerMigrationHelper(MigrationHelper):
         if rtype in reposchema:
             print 'warning: relation type %s is already known, skip addition' % (
                 rtype)
+        elif rschema.rule:
+            ss.execschemarql(execute, rschema, ss.crschema2rql(rschema))
         else:
             # register the relation into CWRType and insert necessary relation
             # definitions
             ss.execschemarql(execute, rschema, ss.rschema2rql(rschema, addrdef=False))
-        if addrdef:
+        if not rschema.rule and addrdef:
             self.commit()
             gmap = self.group_mapping()
             cmap = self.cstrtype_mapping()

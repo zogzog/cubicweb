@@ -1039,6 +1039,10 @@ class CubicWebSchema(Schema):
                 rdef.infered = True
                 self.add_relation_def(rdef)
 
+    def rebuild_infered_relations(self):
+        super(CubicWebSchema, self).rebuild_infered_relations()
+        self.finalize_computed_relations()
+
 
 # additional cw specific constraints ###########################################
 

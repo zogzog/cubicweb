@@ -77,6 +77,19 @@ class MigrationTC(CubicWebTC):
                                              repo=self.repo, cnx=cnx,
                                              interactive=False)
 
+    def table_sql(self, mh, tablename):
+        result = mh.sqlexec("SELECT sql FROM sqlite_master WHERE type='table' "
+                            "and name=%(table)s", {'table': tablename})
+        if result:
+            return result[0][0]
+        return None # no such table
+
+    def table_schema(self, mh, tablename):
+        sql = self.table_sql(mh, tablename)
+        assert sql, 'no table %s' % tablename
+        return dict(x.split()[:2]
+                    for x in sql.split('(', 1)[1].rsplit(')', 1)[0].split(','))
+
 
 class MigrationCommandsTC(MigrationTC):
 
@@ -146,8 +159,7 @@ class MigrationCommandsTC(MigrationTC):
             self.assertEqual(self.schema['shortpara'].subjects(), ('Note', ))
             self.assertEqual(self.schema['shortpara'].objects(), ('String', ))
             # test created column is actually a varchar(64)
-            notesql = mh.sqlexec("SELECT sql FROM sqlite_master WHERE type='table' and name='%sNote'" % SQL_PREFIX)[0][0]
-            fields = dict(x.strip().split()[:2] for x in notesql.split('(', 1)[1].rsplit(')', 1)[0].split(','))
+            fields = self.table_schema(mh, '%sNote' % SQL_PREFIX)
             self.assertEqual(fields['%sshortpara' % SQL_PREFIX], 'varchar(64)')
             # test default value set on existing entities
             self.assertEqual(cnx.execute('Note X').get_entity(0, 0).shortpara, 'hop')
@@ -667,16 +679,11 @@ class MigrationCommandsTC(MigrationTC):
             self.assertEqual(self.schema['Note'].specializes(), None)
             self.assertEqual(self.schema['Text'].specializes(), None)
 
-
     def test_add_symmetric_relation_type(self):
         with self.mh() as (cnx, mh):
-            same_as_sql = mh.sqlexec("SELECT sql FROM sqlite_master WHERE type='table' "
-                                     "and name='same_as_relation'")
-            self.assertFalse(same_as_sql)
+            self.assertFalse(self.table_sql(mh, 'same_as_relation'))
             mh.cmd_add_relation_type('same_as')
-            same_as_sql = mh.sqlexec("SELECT sql FROM sqlite_master WHERE type='table' "
-                                     "and name='same_as_relation'")
-            self.assertTrue(same_as_sql)
+            self.assertTrue(self.table_sql(mh, 'same_as_relation'))
 
 
 class MigrationCommandsComputedTC(MigrationTC):
@@ -702,6 +709,25 @@ class MigrationCommandsComputedTC(MigrationTC):
         self.assertEqual(str(exc.exception),
                          'Cannot drop a relation definition for a computed '
                          'relation (notes)')
+
+    def test_computed_relation_add_relation_type(self):
+        self.assertNotIn('works_for', self.schema)
+        with self.mh() as (cnx, mh):
+            mh.cmd_add_relation_type('works_for')
+            self.assertIn('works_for', self.schema)
+            self.assertEqual(self.schema['works_for'].rule,
+                             'O employees S, NOT EXISTS (O associates S)')
+            self.assertEqual(self.schema['works_for'].objects(), ('Company',))
+            self.assertEqual(self.schema['works_for'].subjects(), ('Employee',))
+            self.assertFalse(self.table_sql(mh, 'works_for_relation'))
+            e = cnx.create_entity('Employee')
+            a = cnx.create_entity('Employee')
+            cnx.create_entity('Company', employees=e, associates=a)
+            cnx.commit()
+            company = cnx.execute('Company X').get_entity(0, 0)
+            self.assertEqual([e.eid],
+                             [x.eid for x in company.reverse_works_for])
+            mh.rollback()
 
     def test_computed_relation_drop_relation_type(self):
         self.assertIn('notes', self.schema)

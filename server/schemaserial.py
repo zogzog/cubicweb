@@ -362,6 +362,8 @@ def serialize_schema(cnx, schema):
             continue
         if rschema.rule:
             execschemarql(execute, rschema, crschema2rql(rschema))
+            if pb is not None:
+                pb.update()
             continue
         execschemarql(execute, rschema, rschema2rql(rschema, addrdef=False))
         if rschema.symmetric:
@@ -511,7 +513,7 @@ def crschema2rql(crschema):
 
 def crschema_relations_values(crschema):
     values = _ervalues(crschema)
-    values['rule'] = crschema.rule
+    values['rule'] = unicode(crschema.rule)
     # XXX why oh why?
     del values['final']
     relations = ['X %s %%(%s)s' % (attr, attr) for attr in sorted(values)]

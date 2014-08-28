@@ -985,6 +985,25 @@ class DelCWRTypeHook(SyncSchemaHook):
         MemSchemaCWRTypeDel(self._cw, rtype=name)
 
 
+class AfterAddCWComputedRTypeHook(SyncSchemaHook):
+    """after a CWComputedRType entity has been added:
+    * register an operation to add the relation type to the instance's
+      schema on commit
+
+    We don't know yet this point if a table is necessary
+    """
+    __regid__ = 'syncaddcwcomputedrtype'
+    __select__ = SyncSchemaHook.__select__ & is_instance('CWComputedRType')
+    events = ('after_add_entity',)
+
+    def __call__(self):
+        entity = self.entity
+        rtypedef = ybo.ComputedRelation(name=entity.name,
+                                        eid=entity.eid,
+                                        rule=entity.rule)
+        MemSchemaCWRTypeAdd(self._cw, rtypedef=rtypedef)
+
+
 class AfterAddCWRTypeHook(SyncSchemaHook):
     """after a CWRType entity has been added:
     * register an operation to add the relation type to the instance's
