@@ -1,3 +1,6 @@
+import os
+
+from cubicweb.cwconfig import CubicWebConfiguration as cwcfg
 from pyramid.config import Configurator
 
 
@@ -26,3 +29,14 @@ def make_cubicweb_application(cwconfig):
     config.include('pyramid_cubicweb.core')
     config.include('pyramid_cubicweb.bwcompat')
     return config
+
+
+def wsgi_application(instance_name=None, debug=None):
+    if instance_name is None:
+        instance_name = os.environ.get('CW_INSTANCE')
+    if debug is None:
+        debug = 'CW_DEBUG' in os.environ
+
+    cwconfig = cwcfg.config_for(instance_name, debugmode=debug)
+    config = make_cubicweb_application(cwconfig)
+    return config.make_wsgi_app()
