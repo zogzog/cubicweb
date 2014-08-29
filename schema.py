@@ -125,7 +125,8 @@ def guess_rrqlexpr_mainvars(expression):
     if 'U' in defined:
         mainvars.add('U')
     if not mainvars:
-        raise Exception('unable to guess selection variables')
+        raise BadSchemaDefinition('unable to guess selection variables in %r'
+                                  % expression)
     return mainvars
 
 def split_expression(rqlstring):
