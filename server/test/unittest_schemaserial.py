@@ -17,9 +17,6 @@
 # with CubicWeb.  If not, see <http://www.gnu.org/licenses/>.
 """unit tests for schema rql (de)serialization"""
 
-import sys
-from cStringIO import StringIO
-
 from logilab.common.testlib import TestCase, unittest_main
 
 from cubicweb import Binary
