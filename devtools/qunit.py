@@ -280,8 +280,10 @@ def make_qunit_html(test_file, depends=(), base_url=None,
             'web_test': cw_path('devtools', 'data'),
         }
 
-    html = ['''<html>
+    html = ['''<!DOCTYPE html>
+<html>
   <head>
+    <meta http-equiv="content-type" content="application/html; charset=UTF-8"/>
     <!-- JS lib used as testing framework -->
     <link rel="stylesheet" type="text/css" media="all" href="%(web_test)s/qunit.css" />
     <script src="%(web_data)s/jquery.js" type="text/javascript"></script>
@@ -307,7 +309,7 @@ def make_qunit_html(test_file, depends=(), base_url=None,
     <h1 id="qunit-header">QUnit example</h1>
     <h2 id="qunit-banner"></h2>
     <h2 id="qunit-userAgent"></h2>
-    <ol id="qunit-tests">
+    <ol id="qunit-tests"></ol>
   </body>
 </html>''')
     return u'\n'.join(html)
