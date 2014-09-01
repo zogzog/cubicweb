@@ -84,7 +84,6 @@ class FirefoxHelper(object):
 
     def __del__(self):
         self.stop()
-        rmtree(self._profile_dir)
 
 
 class QUnitTestCase(CubicWebServerTC):
@@ -140,7 +139,7 @@ class QUnitTestCase(CubicWebServerTC):
 
         # generate html test file
         jquery_dir = 'file://' + self.config.locate_resource('jquery.js')[0]
-        html_test_file = NamedTemporaryFile(suffix='.html')
+        html_test_file = NamedTemporaryFile(suffix='.html', delete=False)
         html_test_file.write(make_qunit_html(test_file, depends,
                              base_url=self.config['base-url'],
                              web_data_path=jquery_dir))
