@@ -25,6 +25,8 @@ the code has been taken (or adapted) from Djanco source code :
 
 __docformat__ = "restructuredtext en"
 
+import tempfile
+
 from StringIO import StringIO
 from urllib import quote
 from urlparse import parse_qs

@@ -48,6 +48,17 @@ class WSGIAppTC(CubicWebTestTC):
 
         self.assertTrue(req.https)
 
+    def test_big_content(self):
+        content = 'x'*100001
+        r = webtest.app.TestRequest.blank('/', {
+            'CONTENT_LENGTH': len(content),
+            'CONTENT_TYPE': 'text/plain',
+            'wsgi.input': StringIO(content)})
+
+        req = CubicWebWsgiRequest(r.environ, self.vreg)
+
+        self.assertEqual(content, req.content.read())
+
     @classmethod
     def init_config(cls, config):
         super(WSGIAppTC, cls).init_config(config)
