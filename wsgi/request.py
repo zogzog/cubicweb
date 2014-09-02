@@ -41,6 +41,10 @@ class CubicWebWsgiRequest(CubicWebRequestBase):
     """
 
     def __init__(self, environ, vreg):
+        # self.vreg is used in get_posted_data, which is called before the
+        # parent constructor.
+        self.vreg = vreg
+
         self.environ = environ
         self.path = environ['PATH_INFO']
         self.method = environ['REQUEST_METHOD'].upper()

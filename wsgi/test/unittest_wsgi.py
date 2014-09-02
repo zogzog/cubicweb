@@ -59,6 +59,11 @@ class WSGIAppTC(CubicWebTestTC):
 
         self.assertEqual(content, req.content.read())
 
+    def test_post(self):
+        self.webapp.post(
+            '/',
+            params={'__login': self.admlogin, '__password': self.admpassword})
+
     @classmethod
     def init_config(cls, config):
         super(WSGIAppTC, cls).init_config(config)
