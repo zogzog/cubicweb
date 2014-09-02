@@ -59,7 +59,7 @@ class CubicWebPyramidRequest(CubicWebRequestBase):
         vreg = request.registry['cubicweb.registry']
         https = request.scheme == 'https'
 
-        post = request.params
+        post = request.params.mixed()
         headers_in = request.headers
 
         super(CubicWebPyramidRequest, self).__init__(vreg, https, post,
