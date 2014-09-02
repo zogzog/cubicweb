@@ -33,7 +33,6 @@ except ImportError:
         raise NotImplementedError
 
 from logilab.common.clcommands import Command as BaseCommand
-from logilab.common.compat import any
 from logilab.common.shellutils import ASK
 
 from cubicweb import warning # pylint: disable=E0611

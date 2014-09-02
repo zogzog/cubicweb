@@ -90,7 +90,6 @@ __docformat__ = "restructuredtext en"
 
 from itertools import imap, ifilterfalse
 
-from logilab.common.compat import any
 from logilab.common.decorators import cached
 from logilab.common.deprecation import deprecated
 

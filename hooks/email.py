@@ -21,8 +21,6 @@ __docformat__ = "restructuredtext en"
 
 from cubicweb.server import hook
 
-from logilab.common.compat import any
-
 
 class SetUseEmailRelationOp(hook.Operation):
     """delay this operation to commit to avoid conflict with a late rql query

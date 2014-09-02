@@ -21,8 +21,6 @@ code generation.
 
 __docformat__ = "restructuredtext en"
 
-from logilab.common.compat import any
-
 from rql import BadRQLQuery
 from rql.nodes import Relation, VariableRef, Constant, Variable, Or, Exists
 from rql.utils import common_parent

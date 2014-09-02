@@ -39,7 +39,6 @@ from time import time, localtime, strftime
 from warnings import warn
 
 from logilab.common.decorators import cached, clear_cache
-from logilab.common.compat import any
 from logilab.common import flatten
 
 from yams import BadSchemaDefinition

@@ -22,7 +22,6 @@ __docformat__ = "restructuredtext en"
 
 from itertools import repeat
 
-from logilab.common.compat import any
 from rql import RQLSyntaxError, CoercionError
 from rql.stmts import Union
 from rql.nodes import ETYPE_PYOBJ_MAP, etype_from_pyobj, Relation, Exists, Not
