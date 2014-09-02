@@ -61,7 +61,12 @@ class CubicWebWsgiRequest(CubicWebRequestBase):
                           if k.startswith('HTTP_'))
         if 'CONTENT_TYPE' in environ:
             headers_in['Content-Type'] = environ['CONTENT_TYPE']
-        https = environ.get("HTTPS") in ('yes', 'on', '1')
+        https = environ["wsgi.url_scheme"] == 'https'
+        if self.path.startswith('/https/'):
+            self.path = self.path[6:]
+            self.environ['PATH_INFO'] = self.path
+            https = True
+
         post, files = self.get_posted_data()
 
         super(CubicWebWsgiRequest, self).__init__(vreg, https, post,
