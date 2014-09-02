@@ -114,6 +114,10 @@ class TweenHandler(object):
         self.cwhandler = registry['cubicweb.handler']
 
     def __call__(self, request):
+        if request.path.startswith('/https/'):
+            request.environ['PATH_INFO'] = request.environ['PATH_INFO'][6:]
+            assert not request.path.startswith('/https/')
+            request.scheme = 'https'
         try:
             response = self.handler(request)
         except httpexceptions.HTTPNotFound:
