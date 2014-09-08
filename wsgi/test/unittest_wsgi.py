@@ -64,6 +64,18 @@ class WSGIAppTC(CubicWebTestTC):
             '/',
             params={'__login': self.admlogin, '__password': self.admpassword})
 
+    def test_get_multiple_variables(self):
+        r = webtest.app.TestRequest.blank('/?arg=1&arg=2')
+        req = CubicWebWsgiRequest(r.environ, self.vreg)
+
+        self.assertEqual([u'1', u'2'], req.form['arg'])
+
+    def test_post_multiple_variables(self):
+        r = webtest.app.TestRequest.blank('/', POST='arg=1&arg=2')
+        req = CubicWebWsgiRequest(r.environ, self.vreg)
+
+        self.assertEqual([u'1', u'2'], req.form['arg'])
+
     @classmethod
     def init_config(cls, config):
         super(WSGIAppTC, cls).init_config(config)

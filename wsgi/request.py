@@ -30,6 +30,7 @@ import tempfile
 from StringIO import StringIO
 from urllib import quote
 from urlparse import parse_qs
+from warnings import warn
 
 from cubicweb.multipart import copy_file, parse_form_data
 from cubicweb.web.request import CubicWebRequestBase
@@ -152,6 +153,38 @@ class CubicWebWsgiRequest(CubicWebRequestBase):
         if self.method == 'POST':
             forms, files = parse_form_data(self.environ, strict=True,
                                            mem_limit=self.vreg.config['max-post-length'])
-            post.update(forms)
+            post.update(forms.dict)
         self.content.seek(0, 0)
         return post, files
+
+    def setup_params(self, params):
+        # This is a copy of CubicWebRequestBase.setup_params, but without
+        # converting unicode strings because it is partially done by
+        # get_posted_data
+        self.form = {}
+        if params is None:
+            return
+        encoding = self.encoding
+        for param, val in params.iteritems():
+            if isinstance(val, (tuple, list)):
+                val = [
+                    unicode(x, encoding) if isinstance(x, str) else x
+                    for x in val]
+                if len(val) == 1:
+                    val = val[0]
+            elif isinstance(val, str):
+                val = unicode(val, encoding)
+            if param in self.no_script_form_params and val:
+                val = self.no_script_form_param(param, val)
+            if param == '_cwmsgid':
+                self.set_message_id(val)
+            elif param == '__message':
+                warn('[3.13] __message in request parameter is deprecated (may '
+                     'only be given to .build_url). Seeing this message usualy '
+                     'means your application hold some <form> where you should '
+                     'replace use of __message hidden input by form.set_message, '
+                     'so new _cwmsgid mechanism is properly used',
+                     DeprecationWarning)
+                self.set_message(val)
+            else:
+                self.form[param] = val
