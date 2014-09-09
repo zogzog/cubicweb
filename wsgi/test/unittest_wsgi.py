@@ -78,6 +78,17 @@ class WSGIAppTC(CubicWebTestTC):
 
         self.assertEqual([u'1', u'2'], req.form['arg'])
 
+    def test_post_files(self):
+        content_type, params = self.webapp.encode_multipart(
+            (), (('filefield', 'aname', 'acontent'),))
+        r = webtest.app.TestRequest.blank(
+            '/', POST=params, content_type=content_type)
+        req = CubicWebWsgiRequest(r.environ, self.vreg)
+        self.assertIn('filefield', req.form)
+        fieldvalue = req.form['filefield']
+        self.assertEqual(u'aname', fieldvalue[0])
+        self.assertEqual('acontent', fieldvalue[1].read())
+
     def test_post_unicode_urlencoded(self):
         params = 'arg=%C3%A9'
         r = webtest.app.TestRequest.blank(

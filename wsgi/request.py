@@ -81,10 +81,7 @@ class CubicWebWsgiRequest(CubicWebRequestBase):
         self.content = environ['wsgi.input']
         if files is not None:
             for key, part in files.iteritems():
-                name = None
-                if part.filename is not None:
-                    name = unicode(part.filename, self.encoding)
-                self.form[key] = (name, part.file)
+                self.form[key] = (part.filename, part.file)
 
     def __repr__(self):
         # Since this is called as part of error handling, we need to be very
