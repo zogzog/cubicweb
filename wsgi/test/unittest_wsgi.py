@@ -1,3 +1,5 @@
+# encoding=utf-8
+
 import webtest.app
 from StringIO import StringIO
 
@@ -75,6 +77,13 @@ class WSGIAppTC(CubicWebTestTC):
         req = CubicWebWsgiRequest(r.environ, self.vreg)
 
         self.assertEqual([u'1', u'2'], req.form['arg'])
+
+    def test_post_unicode_urlencoded(self):
+        params = 'arg=%C3%A9'
+        r = webtest.app.TestRequest.blank(
+            '/', POST=params, content_type='application/x-www-form-urlencoded')
+        req = CubicWebWsgiRequest(r.environ, self.vreg)
+        self.assertEqual(u"é", req.form['arg'])
 
     @classmethod
     def init_config(cls, config):
