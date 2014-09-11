@@ -27,10 +27,11 @@ import lxml
 from logilab.common.testlib import unittest_main
 from logilab.common.decorators import monkeypatch
 
-from cubicweb import Binary, NoSelectableObject, ValidationError
+from cubicweb import Binary, NoSelectableObject, ValidationError, AuthenticationError
 from cubicweb.schema import RRQLExpression
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.devtools.webtest import CubicWebTestTC
+from cubicweb.devtools.httptest import CubicWebServerTC
 from cubicweb.utils import json_dumps
 from cubicweb.uilib import rql_for_eid
 from cubicweb.web import Redirect, RemoteCallFailed, http_headers
@@ -1084,6 +1085,24 @@ class LoginControllerTC(CubicWebTC):
             with self.assertRaises(Redirect) as cm:
                 self.ctrl_publish(req, ctrl='login')
             self.assertEqual(req.base_url(), cm.exception.location)
+
+
+class LoginControllerHTTPTC(CubicWebServerTC):
+
+    anonymous_allowed = True
+    # this TC depends on the auth mode being 'cookie' and not 'http'
+    # (the former being the default, so everything works)
+
+    def test_http_error_codes_auth_fail(self):
+        url = 'login?__login=%s&__password=%s' % ('toto', 'pouetA')
+        response = self.web_request(url, 'POST')
+        self.assertEqual(response.status, 403)
+
+    def test_http_error_codes_auth_succeed(self):
+        url = 'login?__login=%s&__password=%s' % (self.admlogin, self.admpassword)
+        response = self.web_request(url, 'POST')
+        self.assertEqual(response.status, 303)
+
 
 if __name__ == '__main__':
     unittest_main()

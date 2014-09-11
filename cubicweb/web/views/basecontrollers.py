@@ -25,6 +25,7 @@ from cubicweb import _
 from warnings import warn
 
 from six import text_type
+from six.moves import http_client
 
 from logilab.common.deprecation import deprecated
 
@@ -85,6 +86,7 @@ class LoginController(Controller):
             raise AuthenticationError()
         else:
             # Cookie authentication
+            self._cw.status_out = http_client.FORBIDDEN
             return self.appli.need_login_content(self._cw)
 
 class LoginControllerForAuthed(Controller):
