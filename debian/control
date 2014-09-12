@@ -15,7 +15,7 @@ Build-Depends:
  python-unittest2 | python (>= 2.7),
  python-logilab-mtconverter,
  python-rql,
- python-yams (>= 0.39.1),
+ python-yams (>= 0.40.0),
  python-lxml,
 Standards-Version: 3.9.1
 Homepage: http://www.cubicweb.org
@@ -152,7 +152,7 @@ Depends:
  gettext,
  python-logilab-mtconverter (>= 0.8.0),
  python-logilab-common (>= 0.60.0),
- python-yams (>= 0.39.1),
+ python-yams (>= 0.40.0),
  python-rql (>= 0.31.2),
  python-lxml
 Recommends:

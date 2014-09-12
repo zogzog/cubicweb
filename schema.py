@@ -37,7 +37,8 @@ from yams.schema import Schema, ERSchema, EntitySchema, RelationSchema, \
      RelationDefinitionSchema, PermissionMixIn, role_name
 from yams.constraints import BaseConstraint, FormatConstraint
 from yams.reader import (CONSTRAINTS, PyFileReader, SchemaLoader,
-                         obsolete as yobsolete, cleanup_sys_modules)
+                         obsolete as yobsolete, cleanup_sys_modules,
+                         fill_schema_from_namespace)
 
 from rql import parse, nodes, RQLSyntaxError, TypeResolverException
 
@@ -105,6 +106,11 @@ _LOGGER = getLogger('cubicweb.schemaloader')
 # entity and relation schema created from serialized schema have an eid
 ybo.ETYPE_PROPERTIES += ('eid',)
 ybo.RTYPE_PROPERTIES += ('eid',)
+
+def build_schema_from_namespace(items):
+    schema = CubicWebSchema('noname')
+    fill_schema_from_namespace(schema, items, register_base_types=False)
+    return schema
 
 # Bases for manipulating RQL in schema #########################################
 
