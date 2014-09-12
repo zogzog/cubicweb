@@ -1,4 +1,4 @@
-[pyramid_cubicweb][] is one specific way of integrating [CubicWeb][] with a
+[pyramid\_cubicweb][] is one specific way of integrating [CubicWeb][] with a
 [Pyramid][] web application.
 
 ### Features
@@ -7,7 +7,7 @@
 
 ### Usage
 
-To use, install pyramid_cubicweb in your python environment, 
+To use, install pyramid\_cubicweb in your python environment,
 and then [include][] the package:
 
     config.include('pyramid_cubicweb')
@@ -19,7 +19,7 @@ Requires the following [INI setting / environment variable][]:
 * `cubicweb.instance` / `CUBICWEB_INSTANCE`
 
 
-[pyramid_cubicweb]: https://www.cubicweb.org/project/pyramid-cubicweb
+[pyramid\_cubicweb]: https://www.cubicweb.org/project/pyramid-cubicweb
 [CubicWeb]: http://www.cubicweb.com/
 [Pyramid]: http://pypi.python.org/pypi/pyramid
 [include]: http://docs.pylonsproject.org/projects/pyramid/en/latest/api/config.html#pyramid.config.Configurator.include
