@@ -41,6 +41,7 @@ from yams.reader import (CONSTRAINTS, PyFileReader, SchemaLoader,
                          fill_schema_from_namespace)
 
 from rql import parse, nodes, RQLSyntaxError, TypeResolverException
+from rql.analyze import ETypeResolver
 
 import cubicweb
 from cubicweb import ETYPE_NAME_MAP, ValidationError, Unauthorized
@@ -1006,6 +1007,35 @@ class CubicWebSchema(Schema):
 
     def schema_by_eid(self, eid):
         return self._eid_index[eid]
+
+    def iter_computed_relations(self):
+        for relation in self.relations():
+            if relation.rule:
+                yield relation
+
+    def finalize(self):
+        super(CubicWebSchema, self).finalize()
+        self.finalize_computed_relations()
+
+    def finalize_computed_relations(self):
+        """Build relation definitions for computed relations
+
+        The subject and object types are infered using rql analyzer.
+        """
+        analyzer = ETypeResolver(self)
+        for rschema in self.iter_computed_relations():
+            # XXX rule is valid if both S and O are defined and not in an exists
+            rqlexpr = RRQLExpression(rschema.rule)
+            rqlst = rqlexpr.snippet_rqlst
+            analyzer.visit(rqlst)
+            couples = set((sol['S'], sol['O']) for sol in rqlst.solutions)
+            for subjtype, objtype in couples:
+                if self[objtype].final:
+                    raise BadSchemaDefinition('computed relations cannot be final')
+                rdef = ybo.RelationDefinition(
+                    subjtype, rschema.type, objtype)
+                rdef.infered = True
+                self.add_relation_def(rdef)
 
 
 # additional cw specific constraints ###########################################

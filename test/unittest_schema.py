@@ -26,14 +26,16 @@ from rql import RQLSyntaxError
 
 from yams import ValidationError, BadSchemaDefinition
 from yams.constraints import SizeConstraint, StaticVocabularyConstraint
-from yams.buildobjs import RelationDefinition, EntityType, RelationType
+from yams.buildobjs import (RelationDefinition, EntityType, RelationType,
+                            String, SubjectRelation, ComputedRelation)
 from yams.reader import fill_schema
 
 from cubicweb.schema import (
     CubicWebSchema, CubicWebEntitySchema, CubicWebSchemaLoader,
     RQLConstraint, RQLUniqueConstraint, RQLVocabularyConstraint,
     RQLExpression, ERQLExpression, RRQLExpression,
-    normalize_expression, order_eschemas, guess_rrqlexpr_mainvars)
+    normalize_expression, order_eschemas, guess_rrqlexpr_mainvars,
+    build_schema_from_namespace)
 from cubicweb.devtools import TestServerConfiguration as TestConfiguration
 from cubicweb.devtools.testlib import CubicWebTC
 
@@ -280,6 +282,61 @@ class SchemaReaderClassTest(TestCase):
                          {'read': ('managers', 'users'),
                           'add': ('managers',),
                           'delete': ('managers',)})
+
+
+class SchemaReaderComputedRelationAndAttributesTest(TestCase):
+
+    def test_infer_computed_relation(self):
+        class Person(EntityType):
+            name = String()
+
+        class Company(EntityType):
+            name  = String()
+
+        class Service(EntityType):
+            name = String()
+
+        class works_for(RelationDefinition):
+            subject = 'Person'
+            object = 'Company'
+
+        class produce(RelationDefinition):
+            subject = ('Person', 'Company')
+            object = 'Service'
+
+        class achete(RelationDefinition):
+            subject = 'Person'
+            object = 'Service'
+
+        class produces_and_buys(ComputedRelation):
+            rule = 'S produce O, S achete O'
+
+        class produces_and_buys2(ComputedRelation):
+            rule = 'S works_for SO, SO produce O'
+
+        class reproduce(ComputedRelation):
+            rule = 'S produce O'
+
+        schema = build_schema_from_namespace(vars().items())
+
+        # check object/subject type
+        self.assertEqual([('Person','Service')],
+                         schema['produces_and_buys'].rdefs.keys())
+        self.assertEqual([('Person','Service')],
+                         schema['produces_and_buys2'].rdefs.keys())
+        self.assertEqual([('Company', 'Service'), ('Person', 'Service')],
+                         schema['reproduce'].rdefs.keys())
+        # check relations as marked infered
+        self.assertTrue(
+            schema['produces_and_buys'].rdefs[('Person','Service')].infered)
+
+        del schema
+        class autoname(ComputedRelation):
+            rule = 'S produce X, X name O'
+
+        with self.assertRaises(BadSchemaDefinition) as cm:
+            build_schema_from_namespace(vars().items())
+        self.assertEqual(str(cm.exception), 'computed relations cannot be final')
 
 
 class BadSchemaTC(TestCase):
