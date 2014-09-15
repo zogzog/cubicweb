@@ -6,6 +6,7 @@ from StringIO import StringIO
 from cubicweb.devtools.webtest import CubicWebTestTC
 
 from cubicweb.wsgi.request import CubicWebWsgiRequest
+from cubicweb.multipart import MultipartError
 
 
 class WSGIAppTC(CubicWebTestTC):
@@ -65,6 +66,19 @@ class WSGIAppTC(CubicWebTestTC):
         self.webapp.post(
             '/',
             params={'__login': self.admlogin, '__password': self.admpassword})
+
+    def test_post_bad_form(self):
+        with self.assertRaises(MultipartError):
+            self.webapp.post(
+                '/',
+                params='badcontent',
+                headers={'Content-Type': 'multipart/form-data'})
+
+    def test_post_non_form(self):
+        self.webapp.post(
+            '/',
+            params='{}',
+            headers={'Content-Type': 'application/json'})
 
     def test_get_multiple_variables(self):
         r = webtest.app.TestRequest.blank('/?arg=1&arg=2')
