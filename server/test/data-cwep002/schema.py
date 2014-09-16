@@ -27,7 +27,8 @@ class works_for(RelationDefinition):
     cardinality = '?*'
 
 class Company(EntityType):
-    total_salary = Int()
+    total_salary = Int(formula='Any SUM(SA) GROUPBY X WHERE '
+                       'P works_for X, P salary SA')
 
 class has_employee(ComputedRelation):
     rule = 'O works_for S'

@@ -100,6 +100,13 @@ def deserialize_schema(schema, cnx):
             rtype = ybo.ComputedRelation(name=rule_name, rule=rule, eid=eid,
                                          description=description)
             schema.add_relation_type(rtype)
+    # computed attribute
+    try:
+        cnx.system_sql("SELECT cw_formula FROM cw_CWAttribute")
+        has_computed_attributes = True
+    except Exception:
+        cnx.rollback()
+        has_computed_attributes = False
 
     # XXX bw compat (3.6 migration)
     with cnx.ensure_cnx_set:
@@ -216,24 +223,32 @@ def deserialize_schema(schema, cnx):
         cnx.critical('Previous CRITICAL notification about extra_props is not '
                      'a problem if you are migrating to cubicweb 3.17')
         extra_props = {} # not yet in the schema (introduced by 3.17 migration)
-    for values in cnx.execute(
-        'Any X,SE,RT,OE,CARD,ORD,DESC,IDX,FTIDX,I18N,DFLT WHERE X is CWAttribute,'
-        'X relation_type RT, X cardinality CARD, X ordernum ORD, X indexed IDX,'
-        'X description DESC, X internationalizable I18N, X defaultval DFLT,'
-        'X fulltextindexed FTIDX, X from_entity SE, X to_entity OE',
-        build_descr=False):
-        rdefeid, seid, reid, oeid, card, ord, desc, idx, ftidx, i18n, default = values
-        typeparams = extra_props.get(rdefeid)
-        typeparams = json.load(typeparams) if typeparams else {}
+
+    # load attributes
+    rql = ('Any X,SE,RT,OE,CARD,ORD,DESC,IDX,FTIDX,I18N,DFLT%(fm)s '
+           'WHERE X is CWAttribute, X relation_type RT, X cardinality CARD,'
+           '      X ordernum ORD, X indexed IDX, X description DESC, '
+           '      X internationalizable I18N, X defaultval DFLT,%(fmsnip)s'
+           '      X fulltextindexed FTIDX, X from_entity SE, X to_entity OE')
+    if has_computed_attributes:
+        rql = rql % {'fm': ',FM', 'fmsnip': 'X formula FM,'}
+    else:
+        rql = rql % {'fm': '', 'fmsnip': ''}
+    for values in cnx.execute(rql, build_descr=False):
+        attrs = dict(zip(
+            ('rdefeid', 'seid', 'reid', 'oeid', 'cardinality',
+             'order', 'description', 'indexed', 'fulltextindexed',
+             'internationalizable', 'default', 'formula'), values))
+        typeparams = extra_props.get(attrs['rdefeid'])
+        attrs.update(json.load(typeparams) if typeparams else {})
+        default = attrs['default']
         if default is not None:
             if isinstance(default, Binary):
                 # while migrating from 3.17 to 3.18, we still have to
                 # handle String defaults
-                default = default.unzpickle()
-        _add_rdef(rdefeid, seid, reid, oeid,
-                  cardinality=card, description=desc, order=ord,
-                  indexed=idx, fulltextindexed=ftidx, internationalizable=i18n,
-                  default=default, **typeparams)
+                attrs['default'] = default.unzpickle()
+        _add_rdef(**attrs)
+    # load relations
     for values in cnx.execute(
         'Any X,SE,RT,OE,CARD,ORD,DESC,C WHERE X is CWRelation, X relation_type RT,'
         'X cardinality CARD, X ordernum ORD, X description DESC, '

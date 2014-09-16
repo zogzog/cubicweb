@@ -441,6 +441,8 @@ class ComputedAttributeAndRelationTC(CubicWebTC):
         self.assertEqual('O works_for S',
                          schema['has_employee'].rule)
         self.assertEqual([('Company', 'Int')], list(schema['total_salary'].rdefs))
+        self.assertEqual('Any SUM(SA) GROUPBY X WHERE P works_for X, P salary SA',
+                         schema['total_salary'].rdefs['Company', 'Int'].formula)
 
 if __name__ == '__main__':
     unittest_main()
