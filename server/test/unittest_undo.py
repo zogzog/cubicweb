@@ -104,13 +104,20 @@ class UndoableTransactionTC(CubicWebTC):
             self.assertEqual(a4.eid_from, self.totoeid)
             self.assertEqual(a4.eid_to, self.toto(cnx).in_group[0].eid)
             self.assertEqual(a4.order, 4)
-            for i, rtype in ((1, 'owned_by'), (2, 'owned_by'),
-                             (4, 'in_state'), (5, 'created_by')):
+            for i, rtype in ((1, 'owned_by'), (2, 'owned_by')):
                 a = actions[i]
                 self.assertEqual(a.action, 'A')
                 self.assertEqual(a.eid_from, self.totoeid)
                 self.assertEqual(a.rtype, rtype)
                 self.assertEqual(a.order, i+1)
+            self.assertEqual(set((actions[4].rtype, actions[5].rtype)),
+                             set(('in_state', 'created_by')))
+            for i in (4, 5):
+                a = actions[i]
+                self.assertEqual(a.action, 'A')
+                self.assertEqual(a.eid_from, self.totoeid)
+                self.assertEqual(a.order, i+1)
+
             # test undoable_transactions
             txs = cnx.undoable_transactions()
             self.assertEqual(len(txs), 1)
