@@ -539,5 +539,6 @@ class CompositeSchemaTC(CubicWebTC):
                              sorted([(r.rtype.type, r.subject.type, r.object.type, role)
                                      for r, role in sorted(schema[etype].composite_rdef_roles)])
 
+
 if __name__ == '__main__':
     unittest_main()

@@ -144,6 +144,44 @@ def normalize_expression(rqlstring):
     return u', '.join(' '.join(expr.split()) for expr in rqlstring.split(','))
 
 
+def _check_valid_formula(rdef, formula_rqlst):
+    """Check the formula is a valid RQL query with some restriction (no union,
+    single selected node, etc.), raise BadSchemaDefinition if not
+    """
+    if len(formula_rqlst.children) != 1:
+        raise BadSchemaDefinition('computed attribute %(attr)s on %(etype)s: '
+                                  'can not use UNION in formula %(form)r' %
+                                  {'attr' : rdef.rtype,
+                                   'etype' : rdef.subject.type,
+                                   'form' : rdef.formula})
+    select = formula_rqlst.children[0]
+    if len(select.selection) != 1:
+        raise BadSchemaDefinition('computed attribute %(attr)s on %(etype)s: '
+                                  'can only select one term in formula %(form)r' %
+                                  {'attr' : rdef.rtype,
+                                   'etype' : rdef.subject.type,
+                                   'form' : rdef.formula})
+    term = select.selection[0]
+    types = set(term.get_type(sol) for sol in select.solutions)
+    if len(types) != 1:
+        raise BadSchemaDefinition('computed attribute %(attr)s on %(etype)s: '
+                                  'multiple possible types (%(types)s) for formula %(form)r' %
+                                  {'attr' : rdef.rtype,
+                                   'etype' : rdef.subject.type,
+                                   'types' : list(types),
+                                   'form' : rdef.formula})
+    computed_type = types.pop()
+    expected_type = rdef.object.type
+    if computed_type != expected_type:
+        raise BadSchemaDefinition('computed attribute %(attr)s on %(etype)s: '
+                                  'computed attribute type (%(comp_type)s) mismatch with '
+                                  'specified type (%(attr_type)s)' %
+                                  {'attr' : rdef.rtype,
+                                   'etype' : rdef.subject.type,
+                                   'comp_type' : computed_type,
+                                   'attr_type' : expected_type})
+
+
 class RQLExpression(object):
     """Base class for RQL expression used in schema (constraints and
     permissions)
@@ -1010,6 +1048,12 @@ class CubicWebSchema(Schema):
     def schema_by_eid(self, eid):
         return self._eid_index[eid]
 
+    def iter_computed_attributes(self):
+        for relation in self.relations():
+            for rdef in relation.rdefs.itervalues():
+                if rdef.final and rdef.formula is not None:
+                    yield rdef
+
     def iter_computed_relations(self):
         for relation in self.relations():
             if relation.rule:
@@ -1021,51 +1065,17 @@ class CubicWebSchema(Schema):
         self.finalize_computed_relations()
 
     def finalize_computed_attributes(self):
-        """Check consistency of computed attributes types"""
+        """Check computed attributes validity (if any), else raise
+        `BadSchemaDefinition`
+        """
         analyzer = ETypeResolver(self)
-        for relation in self.relations():
-            for rdef in relation.rdefs.itervalues():
-                if rdef.final and rdef.formula is not None:
-                    computed_etype = rdef.subject.type
-                    computed_attr = rdef.rtype
-                    rqlst = parse(rdef.formula)
-                    if len(rqlst.children) != 1:
-                        raise BadSchemaDefinition(
-                            'computed attribute %(attr)s on %(etype)s: '
-                            'can not use UNION in formula %(form)r' %
-                            dict(attr=computed_attr,
-                                 etype=computed_etype,
-                                 form=rdef.formula))
-                    select = rqlst.children[0]
-                    analyzer.visit(select)
-                    if len(select.selection) != 1:
-                        raise BadSchemaDefinition(
-                            'computed attribute %(attr)s on %(etype)s: '
-                            'can only select one term in formula %(form)r' %
-                            dict(attr=computed_attr,
-                                 etype=computed_etype,
-                                 form=rdef.formula))
-                    term = select.selection[0]
-                    types = set(term.get_type(sol) for sol in select.solutions)
-                    if len(types) != 1:
-                        raise BadSchemaDefinition(
-                            'computed attribute %(attr)s on %(etype)s: '
-                            'multiple possible types (%(types)s) for formula %(form)s' %
-                            dict(attr=computed_attr,
-                                 etype=computed_etype,
-                                 types=list(types),
-                                 form=rdef.formula))
-                    computed_type = types.pop()
-                    expected_type = rdef.object.type
-                    if computed_type != expected_type:
-                        raise BadSchemaDefinition(
-                            'computed attribute %(attr)s on %(etype)s: '
-                            'computed attribute type (%(comp_type)s) mismatch with '
-                            'specified type (%(attr_type)s)' %
-                            dict(attr=computed_attr,
-                                 etype=computed_etype,
-                                 comp_type=computed_type,
-                                 attr_type=expected_type))
+        for rdef in self.iter_computed_attributes():
+            rqlst = parse(rdef.formula)
+            select = rqlst.children[0]
+            analyzer.visit(select)
+            _check_valid_formula(rdef, rqlst)
+            rdef.formula_select = select # avoid later recomputation
+
 
     def finalize_computed_relations(self):
         """Build relation definitions for computed relations
@@ -1352,6 +1362,7 @@ class CubicWebSchemaLoader(BootstrapSchemaLoader):
     # these are overridden by set_log_methods below
     # only defining here to prevent pylint from complaining
     info = warning = error = critical = exception = debug = lambda msg,*a,**kw: None
+
 
 set_log_methods(CubicWebSchemaLoader, getLogger('cubicweb.schemaloader'))
 set_log_methods(BootstrapSchemaLoader, getLogger('cubicweb.bootstrapschemaloader'))
