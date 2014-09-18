@@ -28,7 +28,8 @@ def includeme(config):
 
     config.set_authentication_policy(
         AuthTktAuthenticationPolicy(
-            secret, callback=get_principals, hashalg='sha512'))
+            secret, callback=get_principals, hashalg='sha512',
+            reissue_time=3600))
     config.set_authorization_policy(ACLAuthorizationPolicy())
 
     config.include('pyramid_cubicweb.login')
