@@ -26,5 +26,9 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     zip_safe=False,
-    install_requires=[]
+    install_requires=[
+        'pyramid >= 1.5.0',
+        'waitress >= 0.8.9',
+        'cubicweb >= 3.19.3'
+    ]
 )
