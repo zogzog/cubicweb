@@ -5,6 +5,13 @@ import cubicweb.schema
 cubicweb.schema.INTERNAL_TYPES.add('CWSession')
 
 options = (
+    ('pyramid-auth-secret', {
+        'type': 'string',
+        'default': REQUIRED,
+        'help': 'Secret phrase to encrypt the authentication cookie',
+        'group': 'pyramid',
+        'level': 3
+    }),
     ('pyramid-session-secret', {
         'type': 'string',
         'default': REQUIRED,
