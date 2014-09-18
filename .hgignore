@@ -4,3 +4,5 @@ syntax: glob
 *.swp
 
 *.egg-info
+
+pyramid_cubicweb/tests/data/database
