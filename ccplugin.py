@@ -225,6 +225,15 @@ class PyramidStartHandler(InstanceCommand):
         mon_thread.daemon = True
         mon_thread.start()
 
+    def i18nfiles(self, cwconfig):
+        """Return instance i18n files"""
+        i18ndir = os.path.join(cwconfig.apphome, 'i18n')
+        if os.path.exists(i18ndir):
+            for lang in cwconfig.available_languages():
+                f = os.path.join(i18ndir, lang, 'LC_MESSAGES', 'cubicweb.mo')
+                if os.path.exists(f):
+                    yield f
+
     def pyramid_instance(self, appid):
         self._needreload = False
 
@@ -237,6 +246,7 @@ class PyramidStartHandler(InstanceCommand):
             _turn_sigterm_into_systemexit()
             self.debug('Running reloading file monitor')
             extra_files = [sys.argv[0], cwconfig.main_config_file()]
+            extra_files.extend(self.i18nfiles(cwconfig))
             self.install_reloader(
                 self['reload-interval'], extra_files,
                 filelist_path=os.environ.get(
