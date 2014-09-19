@@ -14,6 +14,8 @@ import time
 import threading
 import subprocess
 
+import wsgicors
+
 from cubicweb import BadCommandUsage, ExecutionError
 from cubicweb.cwconfig import CubicWebConfiguration as cwcfg
 from cubicweb.cwctl import CWCTL, InstanceCommand, init_cmdline_log_threshold
@@ -263,11 +265,21 @@ class PyramidStartHandler(InstanceCommand):
 
         pyramid_config = make_cubicweb_application(cwconfig)
 
+        app = pyramid_config.make_wsgi_app()
+
+        # This replaces completely web/cors.py, which is not used by
+        # pyramid_cubicweb anymore
+        app = wsgicors.CORS(
+            app,
+            origin=' '.join(cwconfig['access-control-allow-origin']),
+            headers=','.join(cwconfig['access-control-allow-headers']),
+            methods=','.join(cwconfig['access-control-allow-methods']),
+            credentials='true')
+
         repo = cwconfig.repository()
         try:
             repo.start_looping_tasks()
-            waitress.serve(
-                pyramid_config.make_wsgi_app(), host=host, port=port)
+            waitress.serve(app, host=host, port=port)
         finally:
             repo.shutdown()
         if self._needreload:
