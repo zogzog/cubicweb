@@ -9,6 +9,7 @@ import errno
 import os
 import signal
 import sys
+import tempfile
 import time
 import threading
 import subprocess
@@ -51,6 +52,7 @@ class PyramidStartHandler(InstanceCommand):
     )
 
     _reloader_environ_key = 'CW_RELOADER_SHOULD_RUN'
+    _reloader_filelist_environ_key = 'CW_RELOADER_FILELIST'
 
     def debug(self, msg):
         print('DEBUG - %s' % msg)
@@ -174,10 +176,14 @@ class PyramidStartHandler(InstanceCommand):
     def restart_with_reloader(self):
         self.debug('Starting subprocess with file monitor')
 
+        with tempfile.NamedTemporaryFile(delete=False) as f:
+            filelist_path = f.name
+
         while True:
             args = [self.quote_first_command_arg(sys.executable)] + sys.argv
             new_environ = os.environ.copy()
             new_environ[self._reloader_environ_key] = 'true'
+            new_environ[self._reloader_filelist_environ_key] = filelist_path
             proc = None
             try:
                 try:
@@ -196,17 +202,25 @@ class PyramidStartHandler(InstanceCommand):
                     exit_code = proc.wait()
 
             if exit_code != 3:
-                return exit_code
+                with open(filelist_path) as f:
+                    filelist = [line.strip() for line in f]
+                if filelist:
+                    self.info("Reloading failed. Waiting for a file to change")
+                    mon = Monitor(extra_files=filelist, nomodules=True)
+                    while mon.check_reload():
+                        time.sleep(1)
+                else:
+                    return exit_code
 
             self.info('%s %s %s' % ('-' * 20, 'Restarting', '-' * 20))
 
     def set_needreload(self):
         self._needreload = True
 
-    def install_reloader(self, poll_interval, extra_files):
+    def install_reloader(self, poll_interval, extra_files, filelist_path):
         mon = Monitor(
             poll_interval=poll_interval, extra_files=extra_files,
-            atexit=self.set_needreload)
+            atexit=self.set_needreload, filelist_path=filelist_path)
         mon_thread = threading.Thread(target=mon.periodic_reload)
         mon_thread.daemon = True
         mon_thread.start()
@@ -223,7 +237,10 @@ class PyramidStartHandler(InstanceCommand):
             _turn_sigterm_into_systemexit()
             self.debug('Running reloading file monitor')
             extra_files = [sys.argv[0], cwconfig.main_config_file()]
-            self.install_reloader(self['reload-interval'], extra_files)
+            self.install_reloader(
+                self['reload-interval'], extra_files,
+                filelist_path=os.environ.get(
+                    self._reloader_filelist_environ_key))
 
         if not self['reload'] and not self['debug']:
             self.daemonize(cwconfig['pid-file'])
@@ -299,15 +316,18 @@ class Monitor(object):
 
     It is a simplified version of pyramid pserve.Monitor, with little changes:
 
-    -   The constructor takes extra_files and atexit
+    -   The constructor takes extra_files, atexit, nomodules and filelist_path
     -   The process is stopped by auto-kill with signal SIGTERM
     """
-    def __init__(self, poll_interval, extra_files=[], atexit=None):
+    def __init__(self, poll_interval=1, extra_files=[], atexit=None,
+                 nomodules=False, filelist_path=None):
         self.module_mtimes = {}
         self.keep_running = True
         self.poll_interval = poll_interval
         self.extra_files = extra_files
         self.atexit = atexit
+        self.nomodules = nomodules
+        self.filelist_path = filelist_path
 
     def _exit(self):
         if self.atexit:
@@ -324,13 +344,14 @@ class Monitor(object):
     def check_reload(self):
         filenames = list(self.extra_files)
 
-        for module in list(sys.modules.values()):
-            try:
-                filename = module.__file__
-            except (AttributeError, ImportError):
-                continue
-            if filename is not None:
-                filenames.append(filename)
+        if not self.nomodules:
+            for module in list(sys.modules.values()):
+                try:
+                    filename = module.__file__
+                except (AttributeError, ImportError):
+                    continue
+                if filename is not None:
+                    filenames.append(filename)
 
         for filename in filenames:
             try:
@@ -348,5 +369,15 @@ class Monitor(object):
             elif self.module_mtimes[filename] < mtime:
                 print('%s changed; reloading...' % filename)
                 return False
+
+        if self.filelist_path:
+            with open(self.filelist_path) as f:
+                filelist = set((line.strip() for line in f))
+
+            filelist.update(filenames)
+
+            with open(self.filelist_path, 'w') as f:
+                for filename in filelist:
+                    f.write('%s\n' % filename)
 
         return True
