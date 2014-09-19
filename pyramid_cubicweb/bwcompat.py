@@ -45,9 +45,9 @@ class CubicWebPyramidHandler(object):
         vreg = request.registry['cubicweb.registry']
 
         try:
+            content = None
             try:
                 with cw_to_pyramid(request):
-                    cors.process_request(req, vreg.config)
                     ctrlid, rset = self.appli.url_resolver.process(req, req.path)
 
                     try:
@@ -69,8 +69,6 @@ class CubicWebPyramidHandler(object):
                         # commited = True
                         if txuuid is not None:
                             req.data['last_undoable_transaction'] = txuuid
-            except cors.CORSPreflight:
-                request.response.status_int = 200
             except cubicweb.web.ValidationError as ex:
                 # XXX The validation_error_handler implementation is light, we
                 # should redo it better in cw_to_pyramid, so it can be properly

@@ -29,6 +29,7 @@ setup(
     install_requires=[
         'pyramid >= 1.5.0',
         'waitress >= 0.8.9',
-        'cubicweb >= 3.19.3'
+        'cubicweb >= 3.19.3',
+        'wsgicors >= 0.3'
     ]
 )

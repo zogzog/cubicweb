@@ -1,4 +1,5 @@
 import os
+import wsgicors
 
 from cubicweb.cwconfig import CubicWebConfiguration as cwcfg
 from pyramid.config import Configurator
@@ -39,4 +40,13 @@ def wsgi_application(instance_name=None, debug=None):
 
     cwconfig = cwcfg.config_for(instance_name, debugmode=debug)
     config = make_cubicweb_application(cwconfig)
-    return config.make_wsgi_app()
+    app = config.make_wsgi_app()
+    # This replaces completely web/cors.py, which is not used by
+    # pyramid_cubicweb anymore
+    app = wsgicors.CORS(
+        app,
+        origin=cwconfig['access-control-allow-origin'],
+        headers=cwconfig['access-control-allow-headers'],
+        methods=cwconfig['access-control-allow-methods'],
+        credentials='true')
+    return app
