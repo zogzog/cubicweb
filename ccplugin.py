@@ -37,9 +37,13 @@ class PyramidStartHandler(InstanceCommand):
     name = 'pyramid'
 
     options = (
-        ("debug",
+        ('no-daemon',
+         {'action': 'store_true',
+          'help': 'Run the server in the foreground.'}),
+        ('debug',
          {'short': 'D', 'action': 'store_true',
-          'help': 'start server in the foreground.'}),
+          'help': 'Activate the debug tools and '
+                  'run the server in the foreground.'}),
         ('reload',
          {'action': 'store_true',
           'help': 'Restart the server if any source file is changed'}),
@@ -254,7 +258,7 @@ class PyramidStartHandler(InstanceCommand):
                 filelist_path=os.environ.get(
                     self._reloader_filelist_environ_key))
 
-        if not self['reload'] and not self['debug']:
+        if not (self['no-daemon'] or self['reload'] or self['debug']):
             self.daemonize(cwconfig['pid-file'])
             self.record_pid(cwconfig['pid-file'])
 
