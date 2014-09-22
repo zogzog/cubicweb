@@ -9,6 +9,7 @@ from cubicweb import repoapi
 
 import cubicweb
 import cubicweb.web
+from cubicweb.server.session import Session
 
 from pyramid import httpexceptions
 
@@ -148,12 +149,21 @@ def _cw_cnx(request):
     return cnx
 
 
-def _cw_close_session(request):
-    # XXX Closing the session will actually depend on the cubicweb version.
-    # The following code is correct for cw-3.19.
-    # Later versions will have the notion of detached sessions that should not
-    # need explicit closing, or at least not a repository-related one.
-    request.registry['cubicweb.repository'].close(request.cw_session.sessionid)
+def repo_connect(repo, login, **kw):
+    """A lightweight version of repo.connect that does not keep track of opened
+    sessions, removing the need of closing them"""
+    with repo.internal_cnx() as cnx:
+        user = repo.authenticate_user(cnx, login, **kw)
+    session = Session(user, repo, None)
+    user._cw = user.cw_rset.req = session
+    user.cw_clear_relation_cache()
+    # Calling the hooks should be done only once, disabling it completely for
+    # now
+    #with session.new_cnx() as cnx:
+        #repo.hm.call_hooks('session_open', cnx)
+        #cnx.commit()
+    # repo._sessions[session.sessionid] = session
+    return session
 
 
 def _cw_session(request):
@@ -163,9 +173,7 @@ def _cw_session(request):
 
     if not request.authenticated_userid:
         login, password = config.anonymous_user()
-        sessionid = repo.connect(login, password=password)
-        session = repo._sessions[sessionid]
-        request.add_finished_callback(_cw_close_session)
+        session = repo_connect(repo, login, password=password)
     else:
         session = request._cw_cached_session
 
@@ -186,11 +194,9 @@ def get_principals(login, request):
     repo = request.registry['cubicweb.repository']
 
     try:
-        sessionid = repo.connect(
-            str(login), __pyramid_directauth=authplugin.EXT_TOKEN)
-        session = repo._sessions[sessionid]
+        session = repo_connect(
+            repo, str(login), __pyramid_directauth=authplugin.EXT_TOKEN)
         request._cw_cached_session = session
-        request.add_finished_callback(_cw_close_session)
     except:
         log.exception("Failed")
         raise
