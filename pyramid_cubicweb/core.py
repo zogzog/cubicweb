@@ -149,11 +149,11 @@ def _cw_cnx(request):
     return cnx
 
 
-def repo_connect(repo, login, **kw):
+def repo_connect(repo, eid):
     """A lightweight version of repo.connect that does not keep track of opened
     sessions, removing the need of closing them"""
     with repo.internal_cnx() as cnx:
-        user = repo.authenticate_user(cnx, login, **kw)
+        user = repo._build_user(cnx, eid=eid)
     session = Session(user, repo, None)
     user._cw = user.cw_rset.req = session
     user.cw_clear_relation_cache()
@@ -169,11 +169,10 @@ def repo_connect(repo, login, **kw):
 def _cw_session(request):
     """Obtains a cw session from a pyramid request"""
     repo = request.registry['cubicweb.repository']
-    config = request.registry['cubicweb.config']
 
     if not request.authenticated_userid:
-        login, password = config.anonymous_user()
-        session = repo_connect(repo, login, password=password)
+        session = repo_connect(
+            repo, eid=request.registry['cubicweb.anonymous_eid'])
     else:
         session = request._cw_cached_session
 
@@ -194,8 +193,7 @@ def get_principals(login, request):
     repo = request.registry['cubicweb.repository']
 
     try:
-        session = repo_connect(
-            repo, str(login), __pyramid_directauth=authplugin.EXT_TOKEN)
+        session = repo_connect(repo, eid=login)
         request._cw_cached_session = session
     except:
         log.exception("Failed")
@@ -212,6 +210,11 @@ def hello_world(request):
 
 def includeme(config):
     repo = config.registry['cubicweb.repository']
+
+    with repo.internal_cnx() as cnx:
+        login = config.registry['cubicweb.config'].anonymous_user()[0]
+        config.registry['cubicweb.anonymous_eid'] = cnx.find(
+            'CWUser', login=login).one().eid
 
     repo.system_source.add_authentifier(authplugin.DirectAuthentifier())
 
