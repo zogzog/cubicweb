@@ -83,7 +83,7 @@ SKIP_COMPOSITE_RELS = [('cw_source', 'subject')]
 
 # set of entity and relation types used to build the schema
 SCHEMA_TYPES = set((
-    'CWEType', 'CWRType', 'CWAttribute', 'CWRelation',
+    'CWEType', 'CWRType', 'CWComputedRType', 'CWAttribute', 'CWRelation',
     'CWConstraint', 'CWConstraintType', 'CWUniqueTogetherConstraint',
     'RQLExpression',
     'specializes',
