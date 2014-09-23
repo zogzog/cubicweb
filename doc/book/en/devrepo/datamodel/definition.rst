@@ -504,8 +504,8 @@ See :mod:`cubicweb.hooks.security` for more details.
 .. _yams_example:
 
 
-Derived attributes and relation
--------------------------------
+Derived attributes and relations
+--------------------------------
 
 .. note:: **TODO** Check organisation of the whole chapter of the documentation
 
@@ -514,7 +514,7 @@ Cubicweb offers the possibility to *query* data using so called
 as normal attributes and relations but are actually derived from other
 attributes and relations. In a first section we'll informally review
 two typical use cases. Then we see how to use computed attributes and
-relation in you schema. Last we will consider various significant
+relations in your schema. Last we will consider various significant
 aspects of their implementation and the impact on their usage.
 
 Motivating use cases
@@ -527,7 +527,7 @@ It often arises that one must represent a ternary relation, or a
 family of relations. For example, in the context of an exhibition
 catalog you might want to link all *contributors* to the *work* they
 contributed to, but this contribution can be as *illustrator*,
-*author*, *interpret*, ...
+*author*, *performer*, ...
 
 The classical way to describe this kind of information within an
 entity-relationship schema is to *reify* the relation, that is turn
@@ -567,11 +567,11 @@ whereas we would like to be able to simply write::
 This is precisely what the computed relations allow.
 
 
-Computed (or synthesised) attribute
+Computed (or synthesized) attribute
 ```````````````````````````````````
 
 Assuming a trivial schema for describing employees in companies, one
-can be interested in the total of salaries payed by the companies for
+can be interested in the total of salaries payed by a company for
 all its employees. One has to write::
 
     Any C, SUM(SA) GROUPBY S WHERE E works_for C, E salary SA
@@ -600,15 +600,15 @@ In the above case we would define the *computed relation*
 
 You will note that:
 
-* the ``S`` and ``O`` RQL variable implicitly identify the subject and
+* the ``S`` and ``O`` RQL variables implicitly identify the subject and
   object of the defined computed relation, akin to what happens in
   RRQLExpression
 * the possible subject and object entity types are inferred from the rule;
 * computed relation definitions always have empty *add* and *delete* permissions
-* 'read' permissions can be defined, permissions from the relations used in the
+* *read* permissions can be defined, permissions from the relations used in the
   rewrite rule **are not considered** ;
 * nothing else may be defined on the `ComputedRelation` subclass beside
-  permissions and rule (e.g. no cardinality, composite, etc.,).
+  description, permissions and rule (e.g. no cardinality, composite, etc.,).
   `BadSchemaDefinition` is raised on attempt to specify other attributes;
 * computed relations can not be used in 'SET' and 'DELETE' rql queries
   (`BadQuery` exception raised).
@@ -618,14 +618,8 @@ NB: The fact that the *add* and *delete* permissions are *empty* even
 for managers is expected to make the automatic UI not attempt to edit
 them.
 
-.. note:: **TODO** Clarify read permissions
-
-          Are the permissions from the relations used in the rewrite
-          rule **never considered** or only when read permission are
-          explicitly defined ?
-
-Computed (or synthesised) attribute
-```````````````````````````````````
+Computed (or synthesized) attributes
+````````````````````````````````````
 
 In the above case we would define the *computed attribute*
 ``total_salary`` on the ``Company`` entity type in the schema by::
@@ -634,12 +628,12 @@ In the above case we would define the *computed attribute*
 
     class Company(EntityType):
         name = String()
-        total_salary = Int(formula=('Any SUM(SA) GROUPBY E WHERE P works_for X, E salary SA'))
+        total_salary = Int(formula='Any SUM(SA) GROUPBY E WHERE P works_for X, E salary SA')
 
-* the ``X`` RQL variable implicitly identify the entity holding the
+* the ``X`` RQL variable implicitly identifies the entity holding the
   computed attribute, akin to what happens in ERQLExpression;
-
-* the type inferred from the formula is checked against the type declared;
+* the type inferred from the formula is checked against the declared type, and
+  `BadSchemaDefinition` is raised if they don't match;
 * the computed attributes always have empty *update* permissions
 * `BadSchemaDefinition` is raised on attempt to set 'update' permissions;
 * 'read' permissions can be defined, permissions regarding the formula
@@ -648,25 +642,23 @@ In the above case we would define the *computed attribute*
 * Similarly to computed relation, computed attribute can't be used in 'SET' and
   'DELETE' rql queries (`BadQuery` exception raised).
 
-.. note:: **TODO** Precise the error raised if the type checking fails
-
 
 API and implementation
 ~~~~~~~~~~~~~~~~~~~~~~
 
-Representation in the data back-end
-```````````````````````````````````
+Representation in the data backend
+``````````````````````````````````
 
 Computed relations have no direct representation at the SQL table
 level.  Instead, each time a query is issued the query is rewritten to
 replace the computed relation by its equivalent definition and the
 resulting rewritten query is performed in the usual way.
 
-On the contrary, computed attribute are represented as a column in the
+On the contrary, computed attributes are represented as a column in the
 table for their host entity type, just like normal attributes. Their
 value is kept up-to-date with respect to their defintion by a system
 of hooks (also called triggers in most RDBMS) which recomputes them
-when the relations and attributes they depends on are modified.
+when the relations and attributes they depend on are modified.
 
 Yams API
 ````````
@@ -677,10 +669,10 @@ are represented as follows:
 
 relations
     The ``yams.RelationSchema`` class has a new ``rule`` attribute
-    holding the rule as a string. If this attribute is set all other
+    holding the rule as a string. If this attribute is set all others
     must not be set.
 attributes
-    An new property ``formula`` is added on class
+    A new property ``formula`` is added on class
     ``yams.RelationDefinitionSchema`` alomng with a new keyword
     argument ``formula`` on the initializer.
 
