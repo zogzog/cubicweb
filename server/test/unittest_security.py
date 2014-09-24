@@ -408,6 +408,21 @@ class SecurityTC(BaseSecurityTC):
             self.assertRaises(Unauthorized, cnx.commit)
             cnx.execute('SET X web "http://www.logilab.org" WHERE X eid %(x)s', {'x': eid})
             cnx.commit()
+        with self.new_access('iaminusersgrouponly').repo_cnx() as cnx:
+            cnx.execute('INSERT Frozable F: F name "Foo"')
+            cnx.commit()
+            cnx.execute('SET F name "Bar" WHERE F is Frozable')
+            cnx.commit()
+            cnx.execute('SET F name "BaBar" WHERE F is Frozable')
+            cnx.execute('SET F frozen True WHERE F is Frozable')
+            with self.assertRaises(Unauthorized):
+                cnx.commit()
+            cnx.rollback()
+            cnx.execute('SET F frozen True WHERE F is Frozable')
+            cnx.commit()
+            cnx.execute('SET F name "Bar" WHERE F is Frozable')
+            with self.assertRaises(Unauthorized):
+                cnx.commit()
 
     def test_attribute_security_rqlexpr(self):
         with self.admin_access.repo_cnx() as cnx:

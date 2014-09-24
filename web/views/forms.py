@@ -47,7 +47,6 @@ from warnings import warn
 
 from logilab.common import dictattr, tempattr
 from logilab.common.decorators import iclassmethod, cached
-from logilab.common.compat import any
 from logilab.common.textutils import splitstrip
 from logilab.common.deprecation import deprecated
 

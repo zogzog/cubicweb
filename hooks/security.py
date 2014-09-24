@@ -1,4 +1,4 @@
-# copyright 2003-2013 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -34,11 +34,15 @@ from cubicweb.server import BEFORE_ADD_RELATIONS, ON_COMMIT_ADD_RELATIONS, hook
 def check_entity_attributes(cnx, entity, action, editedattrs=None):
     eid = entity.eid
     eschema = entity.e_schema
+    if action == 'delete':
+        eschema.check_perm(session, action, eid=eid)
+        return
     # ._cw_skip_security_attributes is there to bypass security for attributes
     # set by hooks by modifying the entity's dictionary
     if editedattrs is None:
         editedattrs = entity.cw_edited
     dontcheck = editedattrs.skip_security
+    etypechecked = False
     for attr in editedattrs:
         if attr in dontcheck:
             continue
@@ -54,10 +58,10 @@ def check_entity_attributes(cnx, entity, action, editedattrs=None):
             # implements comparison by rql expression.
             if perms == buildobjs.DEFAULT_ATTRPERMS[action]:
                 # The default rule is to delegate to the entity
-                # rule. This is an historical artefact. Hence we take
-                # this object as a marker saying "no specific"
-                # permission rule for this attribute. Thus we just do
-                # nothing.
+                # rule. This needs to be checked only once.
+                if not etypechecked:
+                    entity.cw_check_perm(action)
+                    etypechecked = True
                 continue
             if perms == ():
                 # That means an immutable attribute; as an optimization, avoid
@@ -71,7 +75,6 @@ class CheckEntityPermissionOp(hook.DataOperationMixIn, hook.LateOperation):
         cnx = self.cnx
         for eid, action, edited in self.get_data():
             entity = cnx.entity_from_eid(eid)
-            entity.cw_check_perm(action)
             check_entity_attributes(cnx, entity, action, edited)
 
 

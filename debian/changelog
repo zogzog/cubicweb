@@ -22,6 +22,12 @@ cubicweb (3.19.0-1) unstable; urgency=low
 
  -- Julien Cristau <julien.cristau@logilab.fr>  Mon, 28 Apr 2014 18:35:27 +0200
 
+cubicweb (3.18.6-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Julien Cristau <julien.cristau@logilab.fr>  Wed, 24 Sep 2014 15:08:34 +0200
+
 cubicweb (3.18.5-1) unstable; urgency=low
 
   * new upstream release
@@ -58,9 +64,15 @@ cubicweb (3.18.0-1) unstable; urgency=low
 
  -- Julien Cristau <julien.cristau@logilab.fr>  Fri, 10 Jan 2014 17:14:18 +0100
 
+cubicweb (3.17.17-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Aurelien Campeas <aurelien.campeas@logilab.fr>  Tue, 16 Sep 2014 18:38:19 +0200
+
 cubicweb (3.17.16-1) unstable; urgency=low
 
-  * new upstream value
+  * new upstream release
 
  -- Aurelien Campeas <aurelien.campeas@logilab.fr>  Mon, 07 Jul 2014 19:26:12 +0200
 

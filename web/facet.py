@@ -61,7 +61,6 @@ from logilab.mtconverter import xml_escape
 from logilab.common.graph import has_path
 from logilab.common.decorators import cached, cachedproperty
 from logilab.common.date import datetime2ticks, ustrftime, ticks2datetime
-from logilab.common.compat import all
 from logilab.common.deprecation import deprecated
 from logilab.common.registry import yes
 
@@ -1621,8 +1620,10 @@ class FacetStringWidget(htmlwidgets.HTMLWidget):
             cssclass += ' hideFacetBody'
         w(u'<div class="%s" cubicweb:facetName="%s">%s</div>\n' %
                (cssclass, xml_escape(self.facet.__regid__), title))
+        w(u'<div class="facetBody">\n')
         w(u'<input name="%s" type="text" value="%s" />\n' % (
                 xml_escape(self.facet.__regid__), self.value or u''))
+        w(u'</div>\n')
         w(u'</div>\n')
 
 

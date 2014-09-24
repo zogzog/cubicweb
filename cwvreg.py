@@ -1,4 +1,4 @@
-# copyright 2003-2012 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# copyright 2003-2014 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This file is part of CubicWeb.
@@ -241,7 +241,7 @@ def require_appobject(obj):
 
 class CWRegistry(Registry):
     def __init__(self, vreg):
-        super(CWRegistry, self).__init__(vreg.config.debugmode)
+        super(CWRegistry, self).__init__(True)
         self.vreg = vreg
 
     @property
@@ -598,11 +598,33 @@ class CWRegistryStore(RegistryStore):
         if self.is_reload_needed(path):
             self.reload(path)
 
+    def _cleanup_sys_modules(self, path):
+        """Remove submodules of `directories` from `sys.modules` and cleanup
+        CW_EVENT_MANAGER accordingly.
+
+        We take care to properly remove obsolete registry callbacks.
+
+        """
+        caches = {}
+        callbackdata = CW_EVENT_MANAGER.callbacks.values()
+        for callbacklist in callbackdata:
+            for callback in callbacklist:
+                func = callback[0]
+                # for non-function callable, we do nothing interesting
+                module = getattr(func, '__module__', None)
+                caches[id(callback)] = module
+        deleted_modules = set(cleanup_sys_modules(path))
+        for callbacklist in callbackdata:
+            for callback in callbacklist[:]:
+                module = caches[id(callback)]
+                if module and module in deleted_modules:
+                    callbacklist.remove(callback)
+
     def reload(self, path, force_reload=True):
         """modification detected, reset and reload the vreg"""
         CW_EVENT_MANAGER.emit('before-registry-reload')
         if force_reload:
-            cleanup_sys_modules(path)
+            self._cleanup_sys_modules(path)
             cubes = self.config.cubes()
             # if the fs code use some cubes not yet registered into the instance
             # we should cleanup sys.modules for those as well to avoid potential
@@ -611,7 +633,7 @@ class CWRegistryStore(RegistryStore):
             for cube in cfg.expand_cubes(cubes, with_recommends=True):
                 if not cube in cubes:
                     cpath = cfg.build_appobjects_cube_path([cfg.cube_dir(cube)])
-                    cleanup_sys_modules(cpath)
+                    self._cleanup_sys_modules(cpath)
         self.register_objects(path)
         CW_EVENT_MANAGER.emit('after-registry-reload')
 

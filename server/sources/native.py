@@ -38,7 +38,6 @@ import zipfile
 import logging
 import sys
 
-from logilab.common.compat import any
 from logilab.common.decorators import cached, clear_cache
 from logilab.common.configuration import Method
 from logilab.common.shellutils import getlogin

@@ -19,7 +19,6 @@
 from xml.etree.ElementTree import fromstring
 
 from logilab.common.testlib import unittest_main, mock_object
-from logilab.common.compat import any
 
 from cubicweb import Binary, ValidationError
 from cubicweb.devtools.testlib import CubicWebTC

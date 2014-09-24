@@ -176,8 +176,8 @@ class UtilsTC(BaseQuerierTC):
                                 'X is IN(BaseTransition, Bookmark, CWAttribute, CWCache, CWConstraint, '
                                 '        CWConstraintType, CWEType, CWGroup, CWPermission, CWProperty, CWRType, '
                                 '        CWRelation, CWSource, CWUniqueTogetherConstraint, CWUser, Card, Comment, '
-                                '        Division, Email, EmailPart, EmailThread, ExternalUri, File, Folder, Note, '
-                                '        Old, Personne, RQLExpression, Societe, State, SubDivision, '
+                                '        Division, Email, EmailPart, EmailThread, ExternalUri, File, Folder, Frozable, '
+                                '        Note, Old, Personne, RQLExpression, Societe, State, SubDivision, '
                                 '        SubWorkflowExitPoint, Tag, TrInfo, Transition, Workflow, WorkflowTransition)')
             self.assertListEqual(sorted(solutions),
                                   sorted([{'X': 'BaseTransition', 'ETN': 'String', 'ET': 'CWEType'},
@@ -204,6 +204,7 @@ class UtilsTC(BaseQuerierTC):
                                           {'X': 'ExternalUri', 'ETN': 'String', 'ET': 'CWEType'},
                                           {'X': 'File', 'ETN': 'String', 'ET': 'CWEType'},
                                           {'X': 'Folder', 'ETN': 'String', 'ET': 'CWEType'},
+                                          {'X': 'Frozable', 'ETN': 'String', 'ET': 'CWEType'},
                                           {'X': 'Note', 'ETN': 'String', 'ET': 'CWEType'},
                                           {'X': 'Old', 'ETN': 'String', 'ET': 'CWEType'},
                                           {'X': 'Personne', 'ETN': 'String', 'ET': 'CWEType'},
@@ -604,16 +605,16 @@ class QuerierTC(BaseQuerierTC):
         self.assertListEqual(rset.rows,
                               [[u'description_format', 12],
                                [u'description', 13],
-                               [u'name', 17],
-                               [u'created_by', 43],
-                               [u'creation_date', 43],
-                               [u'cw_source', 43],
-                               [u'cwuri', 43],
-                               [u'in_basket', 43],
-                               [u'is', 43],
-                               [u'is_instance_of', 43],
-                               [u'modification_date', 43],
-                               [u'owned_by', 43]])
+                               [u'name', 18],
+                               [u'created_by', 44],
+                               [u'creation_date', 44],
+                               [u'cw_source', 44],
+                               [u'cwuri', 44],
+                               [u'in_basket', 44],
+                               [u'is', 44],
+                               [u'is_instance_of', 44],
+                               [u'modification_date', 44],
+                               [u'owned_by', 44]])
 
     def test_select_aggregat_having_dumb(self):
         # dumb but should not raise an error

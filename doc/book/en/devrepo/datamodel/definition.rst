@@ -300,7 +300,7 @@ The main principles are:
 
 * users and groups of users
 * a user belongs to at least one group of user
-* permissions (read, update, create, delete)
+* permissions (`read`, `update`, `create`, `delete`)
 * permissions are assigned to groups (and not to users)
 
 For *CubicWeb* in particular:
@@ -320,10 +320,10 @@ For *CubicWeb* in particular:
   * the permissions of this group are only checked on `update`/`delete` actions
     if all the other groups the user belongs to do not provide those permissions
 
-Setting permissions is done with the attribute `__permissions__` of entities and
-relation definition. The value of this attribute is a dictionary where the keys
-are the access types (action), and the values are the authorized groups or
-expressions.
+Setting permissions is done with the class attribute `__permissions__`
+of entity types and relation definitions. The value of this attribute
+is a dictionary where the keys are the access types (action), and the
+values are the authorized groups or rql expressions.
 
 For an entity type, the possible actions are `read`, `add`, `update` and
 `delete`.
@@ -332,6 +332,19 @@ For a relation, the possible actions are `read`, `add`, and `delete`.
 
 For an attribute, the possible actions are `read`, `add` and `update`,
 and they are a refinement of an entity type permission.
+
+.. note::
+
+   By default, the permissions of an entity type attributes are
+   equivalent to the permissions of the entity type itself.
+
+   It is possible to provide custom attribute permissions which are
+   stronger than, or are more lenient than the entity type
+   permissions.
+
+   In a situation where all attributes were given custom permissions,
+   the entity type permissions would not be checked, except for the
+   `delete` action.
 
 For each access type, a tuple indicates the name of the authorized groups and/or
 one or multiple RQL expressions to satisfy to grant access. The access is
@@ -367,6 +380,13 @@ The default permissions for attributes are:
    __permissions__ = {'read': ('managers', 'users', 'guests',),
                       'add': ('managers', ERQLExpression('U has_add_permission X'),
                       'update': ('managers', ERQLExpression('U has_update_permission X')),}
+
+.. note::
+
+   The default permissions for attributes are not syntactically
+   equivalent to the default permissions of the entity types, but the
+   rql expressions work by delegating to the entity type permissions.
+
 
 The standard user groups
 ````````````````````````
@@ -670,7 +690,7 @@ the entity type for the object of the relation.
   RelationType declaration which offers some advantages in the context
   of reusable cubes.
 
-  
+
 
 
 Handling schema changes

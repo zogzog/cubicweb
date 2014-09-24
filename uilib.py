@@ -444,12 +444,14 @@ import traceback
 
 def exc_message(ex, encoding):
     try:
-        return unicode(ex)
+        excmsg = unicode(ex)
     except Exception:
         try:
-            return unicode(str(ex), encoding, 'replace')
+            excmsg = unicode(str(ex), encoding, 'replace')
         except Exception:
-            return unicode(repr(ex), encoding, 'replace')
+            excmsg = unicode(repr(ex), encoding, 'replace')
+    exctype = unicode(ex.__class__.__name__)
+    return u'%s: %s' % (exctype, excmsg)
 
 
 def rest_traceback(info, exception):

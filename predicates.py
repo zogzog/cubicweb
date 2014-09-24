@@ -188,7 +188,6 @@ import logging
 from warnings import warn
 from operator import eq
 
-from logilab.common.compat import all, any
 from logilab.common.interface import implements as implements_iface
 from logilab.common.registry import Predicate, objectify_predicate, yes
 

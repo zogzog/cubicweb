@@ -323,7 +323,7 @@ class Schema2RQLTC(TestCase):
               'internationalizable': True,
               'fulltextindexed': False,
               'ordernum': 3,
-              'defaultval': Binary('text/plain'),
+              'defaultval': Binary.zpickle(u'text/plain'),
               'indexed': False,
               'cardinality': u'?1'}),
             ('INSERT CWConstraint X: X value %(value)s, X cstrtype CT, EDEF constrained_by X '
@@ -338,7 +338,6 @@ class Schema2RQLTC(TestCase):
               'ct': 'SizeConstraint_eid'})],
                              list(rdef2rql(schema['description_format'].rdefs[('CWRType', 'String')],
                                            cstrtypemap)))
-
 
     def test_updateeschema2rql1(self):
         self.assertListEqual([('SET X description %(description)s,X final %(final)s,'

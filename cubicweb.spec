@@ -20,7 +20,7 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 BuildArch:      noarch
 
 Requires:       %{python}
-Requires:       %{python}-logilab-common >= 0.60.0
+Requires:       %{python}-logilab-common >= 0.62.0
 Requires:       %{python}-logilab-mtconverter >= 0.8.0
 Requires:       %{python}-rql >= 0.31.2
 Requires:       %{python}-yams >= 0.39.1
