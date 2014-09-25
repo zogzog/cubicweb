@@ -25,9 +25,12 @@ the code has been taken (or adapted) from Djanco source code :
 
 __docformat__ = "restructuredtext en"
 
+import tempfile
+
 from StringIO import StringIO
 from urllib import quote
 from urlparse import parse_qs
+from warnings import warn
 
 from cubicweb.multipart import copy_file, parse_form_data
 from cubicweb.web.request import CubicWebRequestBase
@@ -39,6 +42,10 @@ class CubicWebWsgiRequest(CubicWebRequestBase):
     """
 
     def __init__(self, environ, vreg):
+        # self.vreg is used in get_posted_data, which is called before the
+        # parent constructor.
+        self.vreg = vreg
+
         self.environ = environ
         self.path = environ['PATH_INFO']
         self.method = environ['REQUEST_METHOD'].upper()
@@ -59,11 +66,19 @@ class CubicWebWsgiRequest(CubicWebRequestBase):
 
         headers_in = dict((normalize_header(k[5:]), v) for k, v in self.environ.items()
                           if k.startswith('HTTP_'))
+        if 'CONTENT_TYPE' in environ:
+            headers_in['Content-Type'] = environ['CONTENT_TYPE']
         https = self.is_secure()
+        if self.path.startswith('/https/'):
+            self.path = self.path[6:]
+            self.environ['PATH_INFO'] = self.path
+            https = True
+
         post, files = self.get_posted_data()
 
         super(CubicWebWsgiRequest, self).__init__(vreg, https, post,
                                                   headers= headers_in)
+        self.content = environ['wsgi.input']
         if files is not None:
             for key, part in files.iteritems():
                 name = None
@@ -114,6 +129,38 @@ class CubicWebWsgiRequest(CubicWebRequestBase):
         if self.method == 'POST':
             forms, files = parse_form_data(self.environ, strict=True,
                                            mem_limit=self.vreg.config['max-post-length'])
-            post.update(forms)
+            post.update(forms.dict)
         self.content.seek(0, 0)
         return post, files
+
+    def setup_params(self, params):
+        # This is a copy of CubicWebRequestBase.setup_params, but without
+        # converting unicode strings because it is partially done by
+        # get_posted_data
+        self.form = {}
+        if params is None:
+            return
+        encoding = self.encoding
+        for param, val in params.iteritems():
+            if isinstance(val, (tuple, list)):
+                val = [
+                    unicode(x, encoding) if isinstance(x, str) else x
+                    for x in val]
+                if len(val) == 1:
+                    val = val[0]
+            elif isinstance(val, str):
+                val = unicode(val, encoding)
+            if param in self.no_script_form_params and val:
+                val = self.no_script_form_param(param, val)
+            if param == '_cwmsgid':
+                self.set_message_id(val)
+            elif param == '__message':
+                warn('[3.13] __message in request parameter is deprecated (may '
+                     'only be given to .build_url). Seeing this message usualy '
+                     'means your application hold some <form> where you should '
+                     'replace use of __message hidden input by form.set_message, '
+                     'so new _cwmsgid mechanism is properly used',
+                     DeprecationWarning)
+                self.set_message(val)
+            else:
+                self.form[param] = val

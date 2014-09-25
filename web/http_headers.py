@@ -1567,7 +1567,7 @@ generator_response_headers = {
     'Server': (unique, str, singleHeader),
     'Set-Cookie': (generateSetCookie,),
     'Set-Cookie2': (generateSetCookie2,),
-    'Vary': (generateList, singleHeader),
+    'Vary': (set, generateList, singleHeader),
     'WWW-Authenticate': (generateWWWAuthenticate,)
 }
 

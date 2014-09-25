@@ -513,12 +513,12 @@ class EditRelationMixIn(ReloadableMixIn):
         """builds HTML link to edit relation between `entity` and `etarget`"""
         args = {role(self) : entity.eid, target(self): etarget.eid}
         # for each target, provide a link to edit the relation
-        jscall = unicode(js.cw.utils.callAddOrDeleteThenReload(fname,
-                                                               self.rtype,
-                                                               args['subject'],
-                                                               args['object']))
+        jscall = js.cw.utils.callAjaxFuncThenReload(fname,
+                                                    self.rtype,
+                                                    args['subject'],
+                                                    args['object'])
         return u'[<a href="javascript: %s" class="action">%s</a>] %s' % (
-            xml_escape(jscall), label, etarget.view('incontext'))
+            xml_escape(unicode(jscall)), label, etarget.view('incontext'))
 
     def related_boxitems(self, entity):
         return [self.box_item(entity, etarget, 'delete_relation', u'-')

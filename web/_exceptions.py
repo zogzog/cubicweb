@@ -101,7 +101,7 @@ class RemoteCallFailed(RequestError):
     """raised when a json remote call fails
     """
     def __init__(self, reason='', status=httplib.INTERNAL_SERVER_ERROR):
-        super(RemoteCallFailed, self).__init__(status=status)
+        super(RemoteCallFailed, self).__init__(reason, status=status)
         self.reason = reason
 
     def dumps(self):

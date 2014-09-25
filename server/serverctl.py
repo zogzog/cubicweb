@@ -423,7 +423,7 @@ class InitInstanceCommand(Command):
           'question.',
           }),
         ('config-level',
-         {'short': 'l', 'type': 'int', 'default': 1,
+         {'short': 'l', 'type': 'int', 'default': 0,
           'help': 'level threshold for questions asked when configuring '
           'another source'
           }),

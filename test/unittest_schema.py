@@ -171,7 +171,7 @@ class SchemaReaderClassTest(TestCase):
                              'CWUniqueTogetherConstraint', 'CWUser',
                              'ExternalUri', 'File', 'Float', 'Int', 'Interval', 'Note',
                              'Password', 'Personne', 'Produit',
-                             'RQLExpression',
+                             'RQLExpression', 'Reference',
                              'Service', 'Societe', 'State', 'StateFull', 'String', 'SubNote', 'SubWorkflowExitPoint',
                              'Tag', 'TZDatetime', 'TZTime', 'Time', 'Transition', 'TrInfo',
                              'Usine',
@@ -191,7 +191,7 @@ class SchemaReaderClassTest(TestCase):
                               'data', 'data_encoding', 'data_format', 'data_name', 'default_workflow', 'defaultval', 'delete_permission',
                               'description', 'description_format', 'destination_state', 'dirige',
 
-                              'ecrit_par', 'eid', 'end_timestamp', 'evaluee', 'expression', 'exprtype', 'extra_props',
+                              'ean', 'ecrit_par', 'eid', 'end_timestamp', 'evaluee', 'expression', 'exprtype', 'extra_props',
 
                               'fabrique_par', 'final', 'firstname', 'for_user', 'formula', 'fournit',
                               'from_entity', 'from_state', 'fulltext_container', 'fulltextindexed',
@@ -503,6 +503,7 @@ class CompositeSchemaTC(CubicWebTC):
                      ('cw_source', 'Personne', 'CWSource', 'object'),
                      ('cw_source', 'Produit', 'CWSource', 'object'),
                      ('cw_source', 'RQLExpression', 'CWSource', 'object'),
+                     ('cw_source', 'Reference', 'CWSource', 'object'),
                      ('cw_source', 'Service', 'CWSource', 'object'),
                      ('cw_source', 'Societe', 'CWSource', 'object'),
                      ('cw_source', 'State', 'CWSource', 'object'),

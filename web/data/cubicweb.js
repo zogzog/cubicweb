@@ -339,14 +339,14 @@ jQuery.extend(cw.utils, {
 		    );
     },
 
-    callAddOrDeleteThenReload: function (add_or_delete, rtype, subjeid, objeid) {
-        var d = asyncRemoteExec(add_or_delete, rtype, subjeid, objeid);
-        d.addCallback(function() {
+    callAjaxFuncThenReload: function callAjaxFuncThenReload (/*...*/) {
+        var d = asyncRemoteExec.apply(null, arguments);
+        d.addCallback(function(msg) {
             window.location.reload();
+            if (msg)
+                updateMessage(msg);
         });
     }
-
-
 });
 
 /** DOM factories ************************************************************/

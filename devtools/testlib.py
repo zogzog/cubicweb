@@ -297,6 +297,9 @@ class CubicWebTC(TestCase):
     _cnxs = set() # establised connection
                   # stay on connection for leak detection purpose
 
+    # anonymous is logged by default in cubicweb test cases
+    anonymous_allowed = True
+
     def __init__(self, *args, **kwargs):
         self._admin_session = None
         self._admin_clt_cnx = None
@@ -532,6 +535,7 @@ class CubicWebTC(TestCase):
             config.global_set_option('embed-allowed', re.compile('.*'))
         except Exception: # not in server only configuration
             pass
+        config.set_anonymous_allowed(cls.anonymous_allowed)
 
     @property
     def vreg(self):
@@ -610,7 +614,7 @@ class CubicWebTC(TestCase):
         """add your database setup code by overriding this method"""
 
     @classmethod
-    def pre_setup_database(cls, session, config):
+    def pre_setup_database(cls, cnx, config):
         """add your pre database setup code by overriding this method
 
         Do not forget to set the cls.test_db_id value to enable caching of the
@@ -879,6 +883,7 @@ class CubicWebTC(TestCase):
             raise
         return result
 
+    @deprecated('[3.19] use .admin_request_from_url instead')
     def req_from_url(self, url):
         """parses `url` and builds the corresponding CW-web request
 
@@ -892,6 +897,20 @@ class CubicWebTC(TestCase):
         req.setup_params(params)
         return req
 
+    @contextmanager
+    def admin_request_from_url(self, url):
+        """parses `url` and builds the corresponding CW-web request
+
+        req.form will be setup using the url's query string
+        """
+        with self.admin_access.web_request(url=url) as req:
+            if isinstance(url, unicode):
+                url = url.encode(req.encoding) # req.setup_params() expects encoded strings
+            querystring = urlparse.urlparse(url)[-2]
+            params = urlparse.parse_qs(querystring)
+            req.setup_params(params)
+            yield req
+
     def url_publish(self, url, data=None):
         """takes `url`, uses application's app_resolver to find the appropriate
         controller and result set, then publishes the result.
@@ -902,22 +921,22 @@ class CubicWebTC(TestCase):
         This should pretty much correspond to what occurs in a real CW server
         except the apache-rewriter component is not called.
         """
-        req = self.req_from_url(url)
-        if data is not None:
-            req.form.update(data)
-        ctrlid, rset = self.app.url_resolver.process(req, req.relative_path(False))
-        return self.ctrl_publish(req, ctrlid, rset)
+        with self.admin_request_from_url(url) as req:
+            if data is not None:
+                req.form.update(data)
+            ctrlid, rset = self.app.url_resolver.process(req, req.relative_path(False))
+            return self.ctrl_publish(req, ctrlid, rset)
 
     def http_publish(self, url, data=None):
         """like `url_publish`, except this returns a http response, even in case
         of errors. You may give form parameters using the `data` argument.
         """
-        req = self.req_from_url(url)
-        if data is not None:
-            req.form.update(data)
-        with real_error_handling(self.app):
-            result = self.app_handle_request(req, req.relative_path(False))
-        return result, req
+        with self.admin_request_from_url(url) as req:
+            if data is not None:
+                req.form.update(data)
+            with real_error_handling(self.app):
+                result = self.app_handle_request(req, req.relative_path(False))
+            return result, req
 
     @staticmethod
     def _parse_location(req, location):

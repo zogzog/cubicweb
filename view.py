@@ -536,14 +536,6 @@ class Adapter(AppObject):
     __registry__ = 'adapters'
 
 
-class auto_unwrap_bw_compat(type):
-    def __new__(mcs, name, bases, classdict):
-        cls = type.__new__(mcs, name, bases, classdict)
-        if not classdict.get('__needs_bw_compat__'):
-            unwrap_adapter_compat(cls)
-        return cls
-
-
 class EntityAdapter(Adapter):
     """base class for entity adapters (eg adapt an entity to an interface)"""
     def __init__(self, _cw, **kwargs):

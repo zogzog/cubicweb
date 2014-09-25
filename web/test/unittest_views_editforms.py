@@ -148,6 +148,26 @@ class AutomaticEntityFormTC(CubicWebTC):
             self.vreg['forms'].select('edition', req, entity=rset.get_entity(0, 0))
             self.assertFalse(any(f for f in form.fields if f is None))
 
+    def test_attribute_add_permissions(self):
+        # https://www.cubicweb.org/ticket/4342844
+        with self.admin_access.repo_cnx() as cnx:
+            self.create_user(cnx, 'toto')
+            cnx.commit()
+        with self.new_access('toto').web_request() as req:
+            e = self.vreg['etypes'].etype_class('Personne')(req)
+            cform = self.vreg['forms'].select('edition', req, entity=e)
+            self.assertIn('sexe',
+                          [rschema.type
+                           for rschema, _ in cform.editable_attributes()])
+            with self.new_access('toto').repo_cnx() as cnx:
+                person_eid = cnx.create_entity('Personne', nom=u'Robert').eid
+                cnx.commit()
+            person = req.entity_from_eid(person_eid)
+            mform = self.vreg['forms'].select('edition', req, entity=person)
+            self.assertNotIn('sexe',
+                             [rschema.type
+                              for rschema, _ in mform.editable_attributes()])
+
 
 class FormViewsTC(CubicWebTC):
 

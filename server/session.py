@@ -532,8 +532,7 @@ class Connection(RequestSessionBase):
     def __exit__(self, exctype=None, excvalue=None, tb=None):
         assert self._open # actually already open
         assert self._cnxset_count == 0
-        self._free_cnxset(ignoremode=True)
-        self.clear()
+        self.rollback()
         self._open = False
 
 
@@ -1712,10 +1711,13 @@ class Session(RequestSessionBase): # XXX repoapi: stop being a
 
     @property
     def anonymous_session(self):
-        # XXX for now, anonymous-user is a web side option.
+        # XXX for now, anonymous_user only exists in webconfig (and testconfig).
         # It will only be present inside all-in-one instance.
         # there is plan to move it down to global config.
-        return self.user.login == self.repo.config.get('anonymous-user')
+        if not hasattr(self.repo.config, 'anonymous_user'):
+            # not a web or test config, no anonymous user
+            return False
+        return self.user.login == self.repo.config.anonymous_user()[0]
 
     @deprecated('[3.13] use getattr(session.rtype_eids_rdef(rtype, eidfrom, eidto), prop)')
     def schema_rproperty(self, rtype, eidfrom, eidto, rprop):

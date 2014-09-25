@@ -43,7 +43,11 @@ class checked_by(RelationDefinition):
 class Personne(EntityType):
     nom    = String(fulltextindexed=True, required=True, maxsize=64)
     prenom = String(fulltextindexed=True, maxsize=64)
-    sexe   = String(maxsize=1, default='M')
+    sexe   = String(maxsize=1, default='M',
+                    __permissions__={
+                        'read': ('managers', 'users', 'guests',),
+                        'add': ('managers', 'users'),
+                        'update': ('managers', )})
     promo  = String(vocabulary=('bon','pasbon'))
     titre  = String(fulltextindexed=True, maxsize=128)
     ass    = String(maxsize=128)

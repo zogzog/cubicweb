@@ -330,7 +330,7 @@ class AutoformSectionRelationTags(RelationTagsSet):
             assert section in ('attributes', 'metadata', 'hidden')
             relpermission = 'add'
         else:
-            assert section not in ('attributes', 'metadata', 'hidden')
+            assert section not in ('metadata', 'hidden')
             relpermission = permission
         for rschema, targetschemas, role in eschema.relation_definitions(True):
             _targetschemas = []

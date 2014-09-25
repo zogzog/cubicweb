@@ -18,13 +18,13 @@ its own revisions from the local repository to another repository.
 
 .. _Mercurial: http://www.selenic.com/mercurial/
 
-In contrast to CVS/Subversion, we usually create a repository by
+In contrast to CVS/Subversion, we usually create a repository per
 project to manage.
 
 In a collaborative development, we usually create a central repository
 accessible to all developers of the project. These central repository is used
-as a reference. According to its needs, then everyone can have a local repository,
-that you will have to synchronize with the central repository from time to time.
+as a reference. According to their needs, everyone can have a local repository,
+that they will have to synchronize with the central repository from time to time.
 
 
 Major commands
@@ -33,7 +33,7 @@ Major commands
 
      hg clone ssh://myhost//home/src/repo
 
-* See the contents of the local repository (graphical tool in Tk)::
+* See the contents of the local repository (graphical tool in Qt)::
 
      hgview
 
@@ -111,17 +111,15 @@ Best Practices
    3. `hg ci`
    4. `hg push`
 
-Installation of the forest extension
-````````````````````````````````````
+Installation of the guestrepo extension
+```````````````````````````````````````
 
-Set up the forest extension by getting a copy of the sources
-from http://hg.akoha.org/hgforest/ and adding the following
+Set up the guestrepo extension by getting a copy of the sources
+from https://bitbucket.org/selinc/guestrepo and adding the following
 lines to your ``~/.hgrc``: ::
 
    [extensions]
-   hgext.forest=
-   # or, if forest.py is not in the hgext dir:
-   # forest=/path/to/forest.py
+   guestrepo=/path/to/guestrepo/guestrepo
 
 
 More information

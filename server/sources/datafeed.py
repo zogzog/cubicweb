@@ -421,7 +421,7 @@ class DataFeedParser(AppObject):
                 self.warning('delete %s %s entities', len(eids), etype)
                 cnx.execute('DELETE %s X WHERE X eid IN (%s)'
                             % (etype, ','.join(eids)))
-                cnx.commit()
+            cnx.commit()
 
     def update_if_necessary(self, entity, attrs):
         entity.complete(tuple(attrs))

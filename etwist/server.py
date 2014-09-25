@@ -178,7 +178,7 @@ def gotLength(self, length):
         path = self.channel._path.split('?', 1)[0].rstrip('/').rsplit('/', 1)[-1]
         self.clientproto = 'HTTP/1.1' # not yet initialized
         self.channel.persistent = 0   # force connection close on cleanup
-        self.setResponseCode(http.BAD_REQUEST)
+        self.setResponseCode(http.REQUEST_ENTITY_TOO_LARGE)
         if path in JSON_PATHS: # XXX better json path detection
             self.setHeader('content-type',"application/json")
             body = json_dumps({'reason': 'request max size exceeded'})

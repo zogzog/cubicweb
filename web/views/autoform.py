@@ -844,9 +844,9 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
             return [(schema[rtype], role) for rtype, role in self.display_fields]
         if self.edited_entity.has_eid() and not self.edited_entity.cw_has_perm('update'):
             return []
-        # XXX we should simply put eid in the generated section, no?
+        action = 'update' if self.edited_entity.has_eid() else 'add'
         return [(rtype, role) for rtype, _, role in self._relations_by_section(
-            'attributes', 'update', strict)]
+            'attributes', action, strict)]
 
     def editable_relations(self):
         """return a sorted list of (relation's label, relation'schema, role) for
@@ -988,7 +988,7 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
 
 _AFS = uicfg.autoform_section
 # use primary and not generated for eid since it has to be an hidden
-_AFS.tag_attribute(('*', 'eid'), 'main', 'attributes')
+_AFS.tag_attribute(('*', 'eid'), 'main', 'hidden')
 _AFS.tag_attribute(('*', 'eid'), 'muledit', 'attributes')
 _AFS.tag_attribute(('*', 'description'), 'main', 'attributes')
 _AFS.tag_attribute(('*', 'has_text'), 'main', 'hidden')

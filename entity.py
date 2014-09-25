@@ -425,8 +425,10 @@ class Entity(AppObject):
             needcheck = not cls.e_schema.has_unique_values(mainattr)
         else:
             for rschema in cls.e_schema.subject_relations():
-                if rschema.final and rschema != 'eid' \
-                        and cls.e_schema.has_unique_values(rschema):
+                if (rschema.final
+                    and rschema != 'eid'
+                    and cls.e_schema.has_unique_values(rschema)
+                    and cls.e_schema.rdef(rschema.type).cardinality[0] == '1'):
                     mainattr = str(rschema)
                     needcheck = False
                     break

@@ -26,7 +26,7 @@ cube::
 
   cubicweb-ctl newcube myblog
 
-This will create in the cubes directory (:file:`/path/to/forest/cubes` for source
+This will create in the cubes directory (:file:`/path/to/grshell/cubes` for source
 installation, :file:`/usr/share/cubicweb/cubes` for Debian packages installation)
 a directory named :file:`blog` reflecting the structure described in
 :ref:`cubelayout`.

@@ -396,13 +396,14 @@ class CreateInstanceCommand(Command):
         print
         helper.bootstrap(cubes, self.config.automatic, self.config.config_level)
         # input for cubes specific options
-        sections = set(sect.lower() for sect, opt, odict in config.all_options()
-                       if 'type' in odict
-                       and odict.get('level') <= self.config.config_level)
-        for section in sections:
-            if section not in ('main', 'email', 'pyro', 'web'):
-                print '\n' + underline_title('%s options' % section)
-                config.input_config(section, self.config.config_level)
+        if not self.config.automatic:
+            sections = set(sect.lower() for sect, opt, odict in config.all_options()
+                           if 'type' in odict
+                           and odict.get('level') <= self.config.config_level)
+            for section in sections:
+                if section not in ('main', 'email', 'pyro', 'web'):
+                    print '\n' + underline_title('%s options' % section)
+                    config.input_config(section, self.config.config_level)
         # write down configuration
         config.save()
         self._handle_win32(config, appid)
@@ -1050,12 +1051,16 @@ def wsgichoices():
         return ('stdlib',)
     return ('stdlib', 'werkzeug')
 
-class WSGIDebugStartHandler(InstanceCommand):
+class WSGIStartHandler(InstanceCommand):
     """Start an interactive wsgi server """
     name = 'wsgi'
     actionverb = 'started'
     arguments = '<instance>'
     options = (
+        ("debug",
+         {'short': 'D', 'action': 'store_true',
+          'default': False,
+          'help': 'start server in debug mode.'}),
         ('method',
          {'short': 'm',
           'type': 'choice',
@@ -1065,16 +1070,16 @@ class WSGIDebugStartHandler(InstanceCommand):
           'help': 'wsgi utility/method'}),
         ('loglevel',
          {'short': 'l',
-          'type' : 'choice',
+          'type': 'choice',
           'metavar': '<log level>',
-          'default': 'debug',
+          'default': None,
           'choices': ('debug', 'info', 'warning', 'error'),
           'help': 'debug if -D is set, error otherwise',
           }),
         )
 
     def wsgi_instance(self, appid):
-        config = cwcfg.config_for(appid, debugmode=1)
+        config = cwcfg.config_for(appid, debugmode=self['debug'])
         init_cmdline_log_threshold(config, self['loglevel'])
         assert config.name == 'all-in-one'
         meth = self['method']
@@ -1089,7 +1094,7 @@ class WSGIDebugStartHandler(InstanceCommand):
 for cmdcls in (ListCommand,
                CreateInstanceCommand, DeleteInstanceCommand,
                StartInstanceCommand, StopInstanceCommand, RestartInstanceCommand,
-               WSGIDebugStartHandler,
+               WSGIStartHandler,
                ReloadConfigurationCommand, StatusCommand,
                UpgradeInstanceCommand,
                ListVersionsInstanceCommand,
