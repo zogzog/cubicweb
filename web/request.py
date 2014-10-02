@@ -1075,6 +1075,10 @@ class ConnectionCubicWebRequestBase(_CubicWebRequestBase):
     set_shared_data = _cnx_func('set_shared_data')
     describe = _cnx_func('describe') # deprecated XXX
 
+    # security #################################################################
+
+    security_enabled = _cnx_func('security_enabled')
+
     # server-side service call #################################################
 
     def call_service(self, regid, **kwargs):
