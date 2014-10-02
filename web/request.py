@@ -237,7 +237,6 @@ class _CubicWebRequestBase(RequestSessionBase):
     no_script_form_params = set(('vid',
                                  'etype',
                                  'vtitle', 'title',
-                                 '__message',
                                  '__redirectvid', '__redirectrql'))
 
     def setup_params(self, params):
@@ -260,14 +259,6 @@ class _CubicWebRequestBase(RequestSessionBase):
                 val = self.no_script_form_param(param, val)
             if param == '_cwmsgid':
                 self.set_message_id(val)
-            elif param == '__message':
-                warn('[3.13] __message in request parameter is deprecated (may '
-                     'only be given to .build_url). Seeing this message usualy '
-                     'means your application hold some <form> where you should '
-                     'replace use of __message hidden input by form.set_message, '
-                     'so new _cwmsgid mechanism is properly used',
-                     DeprecationWarning)
-                self.set_message(val)
             else:
                 self.form[param] = val
 

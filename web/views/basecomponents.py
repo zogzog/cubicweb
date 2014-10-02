@@ -182,8 +182,8 @@ class AuthenticatedUserStatus(AnonUserStatusLink):
 
 
 class ApplicationMessage(component.Component):
-    """display messages given using the __message parameter into a special div
-    section
+    """display messages given using the __message/_cwmsgid parameter into a
+    special div section
     """
     __select__ = yes()
     __regid__ = 'applmessages'

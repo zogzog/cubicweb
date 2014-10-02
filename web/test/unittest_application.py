@@ -281,8 +281,7 @@ class ApplicationTC(CubicWebTC):
         """test against current script injection"""
         injected = '<i>toto</i>'
         cleaned = 'toto'
-        for kwargs in ({'__message': injected},
-                       {'vid': injected},
+        for kwargs in ({'vid': injected},
                        {'vtitle': injected},
                        ):
             yield self._test_cleaned, kwargs, injected, cleaned

@@ -83,7 +83,7 @@ class Form(AppObject):
     domid = 'form'
     copy_nav_params = False
     control_fields = set( ('__form_id', '__errorurl', '__domid',
-                           '__redirectpath', '_cwmsgid', '__message',
+                           '__redirectpath', '_cwmsgid',
                            ) )
 
     def __init__(self, req, rset=None, row=None, col=None,
