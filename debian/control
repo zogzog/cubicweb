@@ -1,0 +1,25 @@
+Source: pyramid-cubicweb
+Section: python
+Priority: optional
+Build-Depends:
+ python,
+ python-setuptools,
+ python-pyramid,
+ python-waitress,
+ debhelper (>= 9),
+Standards-Version: 3.9.6
+Maintainer: Julien Cristau <julien.cristau@logilab.fr>
+Homepage: https://www.cubicweb.org/project/pyramid_cubicweb
+Vcs-Browser: http://hg.logilab.org/master/pyramid_cubicweb
+Vcs-Hg: http://hg.logilab.org/master/pyramid_cubicweb
+
+Package: pyramid-cubicweb
+Architecture: all
+Depends:
+ ${misc:Depends},
+ ${python:Depends},
+ python-pyramid (>= 1.5.0),
+ python-waitress (>= 0.8.9),
+ cubicweb-common (>= 3.19.3),
+# XXX wsgicors?
+Description: Integrate CubicWeb with a Pyramid application

@@ -1,0 +1,1 @@
+modname = 'pyramid_cubicweb'
