@@ -230,9 +230,6 @@ msgstr "Información del Sistema"
 msgid "Added relation : %(entity_from)s %(rtype)s %(entity_to)s"
 msgstr "Relación agregada : %(entity_from)s %(rtype)s %(entity_to)s"
 
-msgid "Any"
-msgstr "Cualquiera"
-
 msgid "Attributes permissions:"
 msgstr "Permisos de atributos:"
 
@@ -1520,12 +1517,6 @@ msgstr "Formato"
 
 msgid "components"
 msgstr "Componentes"
-
-msgid "components_etypenavigation"
-msgstr "Filtar por tipo"
-
-msgid "components_etypenavigation_description"
-msgstr "Permite filtrar por tipo de entidad los resultados de una búsqueda"
 
 msgid "components_navigation"
 msgstr "Navigación por página"
@@ -4521,9 +4512,6 @@ msgstr "atención"
 msgid "we are not yet ready to handle this query"
 msgstr "Aún no podemos manejar este tipo de consulta Sparql"
 
-msgid "web sessions without CNX"
-msgstr "sesiones web sin conexión asociada"
-
 msgid "wednesday"
 msgstr "Miércoles"
 
@@ -4619,6 +4607,9 @@ msgstr "probablamente debería  suprimir esta propriedad"
 #~ msgid "%s relation should not be in mapped"
 #~ msgstr "la relación %s no debería estar mapeada"
 
+#~ msgid "Any"
+#~ msgstr "Cualquiera"
+
 #~ msgid "attribute/relation can't be mapped, only entity and relation types"
 #~ msgstr ""
 #~ "los atributos y las relaciones no pueden ser mapeados, solamente los "
@@ -4632,6 +4623,12 @@ msgstr "probablamente debería  suprimir esta propriedad"
 
 #~ msgid "can't mix dontcross and write options"
 #~ msgstr "no puede mezclar las opciones dontcross y write"
+
+#~ msgid "components_etypenavigation"
+#~ msgstr "Filtar por tipo"
+
+#~ msgid "components_etypenavigation_description"
+#~ msgstr "Permite filtrar por tipo de entidad los resultados de una búsqueda"
 
 #~ msgid "error while querying source %s, some data may be missing"
 #~ msgstr ""
@@ -4648,6 +4645,9 @@ msgstr "probablamente debería  suprimir esta propriedad"
 
 #~ msgid "unknown option(s): %s"
 #~ msgstr "opcion(es) desconocida(s): %s"
+
+#~ msgid "web sessions without CNX"
+#~ msgstr "sesiones web sin conexión asociada"
 
 #~ msgid "you may want to specify something for %s"
 #~ msgstr "usted desea quizás especificar algo para la relación %s"

@@ -222,9 +222,6 @@ msgstr "Über diese Seite"
 msgid "Added relation : %(entity_from)s %(rtype)s %(entity_to)s"
 msgstr ""
 
-msgid "Any"
-msgstr "irgendein"
-
 msgid "Attributes permissions:"
 msgstr "Rechte der Attribute"
 
@@ -1494,12 +1491,6 @@ msgstr "Format"
 
 msgid "components"
 msgstr "Komponenten"
-
-msgid "components_etypenavigation"
-msgstr "nach Typ filtern"
-
-msgid "components_etypenavigation_description"
-msgstr "Erlaubt die Sortierung von Suchergebnissen nach Entitätstyp"
 
 msgid "components_navigation"
 msgstr "Seitennavigation"
@@ -4459,9 +4450,6 @@ msgstr ""
 msgid "we are not yet ready to handle this query"
 msgstr "Momentan können wir diese sparql-Anfrage noch nicht ausführen."
 
-msgid "web sessions without CNX"
-msgstr ""
-
 msgid "wednesday"
 msgstr "Mittwoch"
 
@@ -4553,8 +4541,17 @@ msgstr "Sie sind jetzt abgemeldet."
 msgid "you should probably delete that property"
 msgstr "Sie sollten diese Eigenschaft wahrscheinlich löschen."
 
+#~ msgid "Any"
+#~ msgstr "irgendein"
+
 #~ msgid "can't connect to source %s, some data may be missing"
 #~ msgstr "Keine Verbindung zu der Quelle %s, einige Daten könnten fehlen"
+
+#~ msgid "components_etypenavigation"
+#~ msgstr "nach Typ filtern"
+
+#~ msgid "components_etypenavigation_description"
+#~ msgstr "Erlaubt die Sortierung von Suchergebnissen nach Entitätstyp"
 
 #~ msgid "error while querying source %s, some data may be missing"
 #~ msgstr ""

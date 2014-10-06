@@ -211,9 +211,6 @@ msgstr ""
 msgid "Added relation : %(entity_from)s %(rtype)s %(entity_to)s"
 msgstr ""
 
-msgid "Any"
-msgstr ""
-
 msgid "Attributes permissions:"
 msgstr ""
 
@@ -1450,12 +1447,6 @@ msgstr "format"
 
 msgid "components"
 msgstr ""
-
-msgid "components_etypenavigation"
-msgstr "filtering by type"
-
-msgid "components_etypenavigation_description"
-msgstr "permit to filter search results by entity type"
 
 msgid "components_navigation"
 msgstr "page navigation"
@@ -4350,9 +4341,6 @@ msgstr ""
 msgid "we are not yet ready to handle this query"
 msgstr ""
 
-msgid "web sessions without CNX"
-msgstr ""
-
 msgid "wednesday"
 msgstr ""
 
@@ -4441,3 +4429,9 @@ msgstr ""
 
 msgid "you should probably delete that property"
 msgstr ""
+
+#~ msgid "components_etypenavigation"
+#~ msgstr "filtering by type"
+
+#~ msgid "components_etypenavigation_description"
+#~ msgstr "permit to filter search results by entity type"
