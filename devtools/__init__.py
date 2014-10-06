@@ -560,8 +560,12 @@ class PostgresTestDataBaseHandler(TestDataBaseHandler):
         env = os.environ.copy()
         env['PGPORT'] = str(port)
         env['PGHOST'] = str(directory)
+        options = '-h "" -k %s -p %s' % (directory, port)
+        options += ' -c fsync=off -c full_page_writes=off'
+        options += ' -c synchronous_commit=off'
         try:
-            subprocess.check_call(['pg_ctl', 'start', '-w', '-D', datadir, '-o', '-h "" -k %s -p %s' % (directory, port)],
+            subprocess.check_call(['pg_ctl', 'start', '-w', '-D', datadir,
+                                   '-o', options],
                                   env=env)
         except OSError, err:
             if err.errno == errno.ENOENT:
