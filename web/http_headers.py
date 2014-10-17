@@ -445,6 +445,21 @@ def generateKeyValues(kvs):
             l.append('%s=%s' % (k, v))
     return ";".join(l)
 
+def generateTrueFalse(value):
+    """
+    Return 'true' or 'false' depending on the value.
+
+    *   'true' values are `True`, `1`, `"true"`
+    *   'false' values are `False`, `0`, `"false"`
+
+    """
+    if (value in (True, 1) or
+            isinstance(value, basestring) and value.lower() == 'true'):
+        return 'true'
+    if (value in (False, 0) or
+            isinstance(value, basestring) and value.lower() == 'false'):
+        return 'false'
+    raise ValueError("Invalid true/false header value: %s" % value)
 
 class MimeType(object):
     def fromString(klass, mimeTypeString):
@@ -1489,12 +1504,8 @@ parser_request_headers = {
     'Accept-Charset': (tokenize, listParser(parseAcceptQvalue), dict, addDefaultCharset),
     'Accept-Encoding': (tokenize, listParser(parseAcceptQvalue), dict, addDefaultEncoding),
     'Accept-Language': (tokenize, listParser(parseAcceptQvalue), dict),
-    'Access-Control-Allow-Origin': (last, parseAllowOrigin,),
-    'Access-Control-Allow-Credentials': (last, parseAllowCreds,),
-    'Access-Control-Allow-Methods': (tokenize, listParser(parseHTTPMethod), list),
     'Access-Control-Request-Method': (parseHTTPMethod, ),
     'Access-Control-Request-Headers': (filterTokens, ),
-    'Access-Control-Expose-Headers': (filterTokens, ),
     'Authorization': (last, parseAuthorization),
     'Cookie': (parseCookie,),
     'Expect': (tokenize, listParser(parseExpect), dict),
@@ -1521,8 +1532,6 @@ generator_request_headers = {
                         listGenerator(generateAcceptQvalue), singleHeader),
     'Accept-Language': (iteritems, listGenerator(generateAcceptQvalue), singleHeader),
     'Access-Control-Request-Method': (unique, str, singleHeader, ),
-    'Access-Control-Expose-Headers': (listGenerator(str), ),
-    'Access-Control-Allow-Headers': (listGenerator(str), ),
     'Authorization': (generateAuthorization,), # what is "credentials"
     'Cookie': (generateCookie, singleHeader),
     'Expect': (iteritems, listGenerator(generateExpect), singleHeader),
@@ -1544,6 +1553,11 @@ generator_request_headers = {
 
 parser_response_headers = {
     'Accept-Ranges': (tokenize, filterTokens),
+    'Access-Control-Allow-Origin': (last, parseAllowOrigin,),
+    'Access-Control-Allow-Credentials': (last, parseAllowCreds,),
+    'Access-Control-Allow-Methods': (tokenize, listParser(parseHTTPMethod), list),
+    'Access-Control-Allow-Headers': (listGenerator(str), ),
+    'Access-Control-Expose-Headers': (filterTokens, ),
     'Age': (last, int),
     'ETag': (tokenize, ETag.parse),
     'Location': (last,), # TODO: URI object?
@@ -1559,6 +1573,11 @@ parser_response_headers = {
 
 generator_response_headers = {
     'Accept-Ranges': (generateList, singleHeader),
+    'Access-Control-Allow-Origin': (unique, str, singleHeader),
+    'Access-Control-Allow-Credentials': (generateTrueFalse, singleHeader),
+    'Access-Control-Allow-Headers': (set, generateList, singleHeader),
+    'Access-Control-Allow-Methods': (set, generateList, singleHeader),
+    'Access-Control-Expose-Headers': (set, generateList, singleHeader),
     'Age': (unique, str, singleHeader),
     'ETag': (ETag.generate, singleHeader),
     'Location': (unique, str, singleHeader),

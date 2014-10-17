@@ -6,6 +6,7 @@ from StringIO import StringIO
 from cubicweb.devtools.webtest import CubicWebTestTC
 
 from cubicweb.wsgi.request import CubicWebWsgiRequest
+from cubicweb.multipart import MultipartError
 
 
 class WSGIAppTC(CubicWebTestTC):
@@ -66,6 +67,19 @@ class WSGIAppTC(CubicWebTestTC):
             '/',
             params={'__login': self.admlogin, '__password': self.admpassword})
 
+    def test_post_bad_form(self):
+        with self.assertRaises(MultipartError):
+            self.webapp.post(
+                '/',
+                params='badcontent',
+                headers={'Content-Type': 'multipart/form-data'})
+
+    def test_post_non_form(self):
+        self.webapp.post(
+            '/',
+            params='{}',
+            headers={'Content-Type': 'application/json'})
+
     def test_get_multiple_variables(self):
         r = webtest.app.TestRequest.blank('/?arg=1&arg=2')
         req = CubicWebWsgiRequest(r.environ, self.vreg)
@@ -77,6 +91,17 @@ class WSGIAppTC(CubicWebTestTC):
         req = CubicWebWsgiRequest(r.environ, self.vreg)
 
         self.assertEqual([u'1', u'2'], req.form['arg'])
+
+    def test_post_files(self):
+        content_type, params = self.webapp.encode_multipart(
+            (), (('filefield', 'aname', 'acontent'),))
+        r = webtest.app.TestRequest.blank(
+            '/', POST=params, content_type=content_type)
+        req = CubicWebWsgiRequest(r.environ, self.vreg)
+        self.assertIn('filefield', req.form)
+        fieldvalue = req.form['filefield']
+        self.assertEqual(u'aname', fieldvalue[0])
+        self.assertEqual('acontent', fieldvalue[1].read())
 
     def test_post_unicode_urlencoded(self):
         params = 'arg=%C3%A9'

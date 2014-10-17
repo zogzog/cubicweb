@@ -32,7 +32,9 @@ from urllib import quote
 from urlparse import parse_qs
 from warnings import warn
 
-from cubicweb.multipart import copy_file, parse_form_data
+from cubicweb.multipart import (
+    copy_file, parse_form_data, MultipartError, parse_options_header)
+from cubicweb.web import RequestError
 from cubicweb.web.request import CubicWebRequestBase
 from cubicweb.wsgi import pformat, normalize_header
 
@@ -81,10 +83,7 @@ class CubicWebWsgiRequest(CubicWebRequestBase):
         self.content = environ['wsgi.input']
         if files is not None:
             for key, part in files.iteritems():
-                name = None
-                if part.filename is not None:
-                    name = unicode(part.filename, self.encoding)
-                self.form[key] = (name, part.file)
+                self.form[key] = (part.filename, part.file)
 
     def __repr__(self):
         # Since this is called as part of error handling, we need to be very
@@ -127,9 +126,18 @@ class CubicWebWsgiRequest(CubicWebRequestBase):
         post = parse_qs(self.environ.get('QUERY_STRING', ''))
         files = None
         if self.method == 'POST':
-            forms, files = parse_form_data(self.environ, strict=True,
-                                           mem_limit=self.vreg.config['max-post-length'])
-            post.update(forms.dict)
+            content_type = self.environ.get('CONTENT_TYPE')
+            if not content_type:
+                raise RequestError("Missing Content-Type")
+            content_type, options = parse_options_header(content_type)
+            if content_type in (
+                    'multipart/form-data',
+                    'application/x-www-form-urlencoded',
+                    'application/x-url-encoded'):
+                forms, files = parse_form_data(
+                    self.environ, strict=True,
+                    mem_limit=self.vreg.config['max-post-length'])
+                post.update(forms.dict)
         self.content.seek(0, 0)
         return post, files
 

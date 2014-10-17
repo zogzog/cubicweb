@@ -62,34 +62,18 @@ class FirefoxHelper(object):
 
     def __init__(self, url=None):
         self._process = None
-        self._tmp_dir = mkdtemp(prefix='cwtest-ffxprof-')
-        self._profile_data = {'uid': uuid4()}
-        self._profile_name = self.profile_name_mask % self._profile_data
-        stdout = TemporaryFile()
-        stderr = TemporaryFile()
+        self._profile_dir = mkdtemp(prefix='cwtest-ffxprof-')
         self.firefox_cmd = ['firefox', '-no-remote']
         if os.name == 'posix':
             self.firefox_cmd = [osp.join(osp.dirname(__file__), 'data', 'xvfb-run.sh'),
                                 '-a', '-s', '-noreset -screen 0 640x480x8'] + self.firefox_cmd
-        try:
-            home = osp.expanduser('~')
-            user = getlogin()
-            assert os.access(home, os.W_OK), \
-                   'No write access to your home directory, Firefox will crash.'\
-                   ' Are you sure "%s" is a valid home  for user "%s"' % (home, user)
-            check_call(self.firefox_cmd + ['-CreateProfile',
-                        '%s %s' % (self._profile_name, self._tmp_dir)],
-                                   stdout=stdout, stderr=stderr)
-        except CalledProcessError as cpe:
-            stdout.seek(0)
-            stderr.seek(0)
-            raise VerboseCalledProcessError(cpe.returncode, cpe.cmd, stdout.read(), stderr.read())
 
     def start(self, url):
         self.stop()
-        fnull = open(os.devnull, 'w')
-        self._process = Popen(self.firefox_cmd + ['-P', self._profile_name, url],
-                              stdout=fnull, stderr=fnull)
+        cmd = self.firefox_cmd + ['-silent', '--profile', self._profile_dir,
+                                  '-url', url]
+        with open(os.devnull, 'w') as fnull:
+            self._process = Popen(cmd, stdout=fnull, stderr=fnull)
 
     def stop(self):
         if self._process is not None:
@@ -100,7 +84,6 @@ class FirefoxHelper(object):
 
     def __del__(self):
         self.stop()
-        rmtree(self._tmp_dir)
 
 
 class QUnitTestCase(CubicWebServerTC):
@@ -111,6 +94,7 @@ class QUnitTestCase(CubicWebServerTC):
     all_js_tests = ()
 
     def setUp(self):
+        self.config.global_set_option('access-control-allow-origin', '*')
         super(QUnitTestCase, self).setUp()
         self.test_queue = Queue()
         class MyQUnitResultController(QUnitResultController):
@@ -155,7 +139,7 @@ class QUnitTestCase(CubicWebServerTC):
 
         # generate html test file
         jquery_dir = 'file://' + self.config.locate_resource('jquery.js')[0]
-        html_test_file = NamedTemporaryFile(suffix='.html')
+        html_test_file = NamedTemporaryFile(suffix='.html', delete=False)
         html_test_file.write(make_qunit_html(test_file, depends,
                              base_url=self.config['base-url'],
                              web_data_path=jquery_dir))
@@ -168,6 +152,12 @@ class QUnitTestCase(CubicWebServerTC):
             self.test_queue.get(False)
 
         browser = FirefoxHelper()
+        # start firefox once to let it init the profile (and run system-wide
+        # add-ons post setup, blegh), and then kill it ...
+        browser.start('about:blank')
+        import time; time.sleep(5)
+        browser.stop()
+        # ... then actually run the test file
         browser.start(html_test_file.name)
         test_count = 0
         error = False
@@ -290,8 +280,10 @@ def make_qunit_html(test_file, depends=(), base_url=None,
             'web_test': cw_path('devtools', 'data'),
         }
 
-    html = ['''<html>
+    html = ['''<!DOCTYPE html>
+<html>
   <head>
+    <meta http-equiv="content-type" content="application/html; charset=UTF-8"/>
     <!-- JS lib used as testing framework -->
     <link rel="stylesheet" type="text/css" media="all" href="%(web_test)s/qunit.css" />
     <script src="%(web_data)s/jquery.js" type="text/javascript"></script>
@@ -317,7 +309,7 @@ def make_qunit_html(test_file, depends=(), base_url=None,
     <h1 id="qunit-header">QUnit example</h1>
     <h2 id="qunit-banner"></h2>
     <h2 id="qunit-userAgent"></h2>
-    <ol id="qunit-tests">
+    <ol id="qunit-tests"></ol>
   </body>
 </html>''')
     return u'\n'.join(html)

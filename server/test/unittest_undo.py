@@ -75,6 +75,8 @@ class UndoableTransactionTC(CubicWebTC):
         self.assertTrue(self.txuuid)
         # test transaction api
         with self.admin_access.client_cnx() as cnx:
+            tx_actions = cnx.transaction_actions(self.txuuid)
+            self.assertEqual(len(tx_actions), 2, tx_actions)
             self.assertRaises(NoSuchTransaction,
                               cnx.transaction_info, 'hop')
             self.assertRaises(NoSuchTransaction,
