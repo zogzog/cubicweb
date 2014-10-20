@@ -1620,7 +1620,10 @@ class FacetStringWidget(htmlwidgets.HTMLWidget):
             cssclass += ' hideFacetBody'
         w(u'<div class="%s" cubicweb:facetName="%s">%s</div>\n' %
                (cssclass, xml_escape(self.facet.__regid__), title))
-        w(u'<div class="facetBody">\n')
+        cssclass = 'facetBody'
+        if not self.facet.start_unfolded:
+            cssclass += ' hidden'
+        w(u'<div class="%s">\n' % cssclass)
         w(u'<input name="%s" type="text" value="%s" />\n' % (
                 xml_escape(self.facet.__regid__), self.value or u''))
         w(u'</div>\n')
