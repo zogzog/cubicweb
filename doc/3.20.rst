@@ -1,6 +1,21 @@
 What's new in CubicWeb 3.20
 ===========================
 
+New features
+------------
+
+* virtual relations: a new ComputedRelation class can be used in
+  schema.py; its `rule` attribute is an RQL snippet that defines the new
+  relation.
+* computed attributes: an attribute can now be defined with a `formula`
+  argument (also an RQL snippet); it will be read-only, and updated
+  automatically.
+
+  Both of these features are described in `CWEP-002`_, and the updated
+  "Data model" chapter of the CubicWeb book.
+
+.. _CWEP-002: http://hg.logilab.org/review/cwep/file/tip/CWEP-002.rst
+
 Deprecated Code Drops
 ----------------------
 
