@@ -218,6 +218,10 @@ class Link(object):
     def render(self, w):
         w(tags.a(self.label, href=self.href, **self.attrs))
 
+    def __repr__(self):
+        return '<%s: href=%r label=%r %r>' % (self.__class__.__name__,
+                                              self.href, self.label, self.attrs)
+
 
 class Separator(object):
     """a menu separator.
