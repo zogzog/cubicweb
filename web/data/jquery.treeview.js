@@ -76,10 +76,6 @@
             this.find("div." + CLASSES.hitarea).click(toggler);
         },
         treeview: function(settings) {
-            if (this.attr("cubicweb:type") == "prepared-treeview") {
-                return this;
-            }
-            this.attr("cubicweb:type", "prepared-treeview");
             settings = $.extend({
                 cookieId: "treeview"
             }, settings);
