@@ -145,7 +145,7 @@ class TreeView(EntityView):
         toplevel = toplevel_thru_ajax or (initial_load and not form.get('fname'))
         return subvid, treeid, toplevel_thru_ajax, toplevel
 
-    def _init_headers(self, treeid, toplevel_thru_ajax):
+    def _init_headers(self, treeid):
         self._cw.add_css('jquery.treeview.css')
         self._cw.add_js(('cubicweb.ajax.js', 'cubicweb.widgets.js', 'jquery.treeview.js'))
         self._cw.html_headers.add_onload(u"""
@@ -157,7 +157,7 @@ jQuery("#tree-%s").treeview({toggle: toggleTree, prerendered: true});""" % treei
             subvid, treeid, initial_load, initial_thru_ajax, morekwargs)
         ulid = ' '
         if toplevel:
-            self._init_headers(treeid, toplevel_thru_ajax)
+            self._init_headers(treeid)
             ulid = ' id="tree-%s"' % treeid
         self.w(u'<ul%s class="%s">' % (ulid, self.cssclass))
         # XXX force sorting on x.sortvalue() (which return dc_title by default)
