@@ -689,8 +689,8 @@ class ServerMigrationHelper(MigrationHelper):
                 self.cmd_exec_event_script('postcreate', cube)
                 self.commit()
 
-    def cmd_remove_cube(self, cube, removedeps=False):
-        removedcubes = super(ServerMigrationHelper, self).cmd_remove_cube(
+    def cmd_drop_cube(self, cube, removedeps=False):
+        removedcubes = super(ServerMigrationHelper, self).cmd_drop_cube(
             cube, removedeps)
         if not removedcubes:
             return

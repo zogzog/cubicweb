@@ -7,6 +7,7 @@ New features
 * virtual relations: a new ComputedRelation class can be used in
   schema.py; its `rule` attribute is an RQL snippet that defines the new
   relation.
+
 * computed attributes: an attribute can now be defined with a `formula`
   argument (also an RQL snippet); it will be read-only, and updated
   automatically.
@@ -25,6 +26,8 @@ API Changes
   ``separator`` and ``quote`` arguments respectively. This makes the API match
   that of Python's ``csv.reader()``.  The old arguments are still supported
   though deprecated.
+
+* the migration environment's ``remove_cube`` function is now called ``drop_cube``.
 
 
 Deprecated Code Drops

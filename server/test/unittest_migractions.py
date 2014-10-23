@@ -554,7 +554,7 @@ class MigrationCommandsTC(MigrationTC):
                 mh.cmd_set_size_constraint('CWEType', 'description', None)
 
     @tag('longrun')
-    def test_add_remove_cube_and_deps(self):
+    def test_add_drop_cube_and_deps(self):
         with self.mh() as (cnx, mh):
             schema = self.repo.schema
             self.assertEqual(sorted((str(s), str(o)) for s, o in schema['see_also'].rdefs.iterkeys()),
@@ -562,7 +562,7 @@ class MigrationCommandsTC(MigrationTC):
                                      ('Bookmark', 'Bookmark'), ('Bookmark', 'Note'),
                                      ('Note', 'Note'), ('Note', 'Bookmark')]))
             try:
-                mh.cmd_remove_cube('email', removedeps=True)
+                mh.cmd_drop_cube('email', removedeps=True)
                 # file was there because it's an email dependancy, should have been removed
                 self.assertNotIn('email', self.config.cubes())
                 self.assertNotIn(self.config.cube_dir('email'), self.config.cubes_path())
@@ -613,12 +613,12 @@ class MigrationCommandsTC(MigrationTC):
 
 
     @tag('longrun')
-    def test_add_remove_cube_no_deps(self):
+    def test_add_drop_cube_no_deps(self):
         with self.mh() as (cnx, mh):
             cubes = set(self.config.cubes())
             schema = self.repo.schema
             try:
-                mh.cmd_remove_cube('email')
+                mh.cmd_drop_cube('email')
                 cubes.remove('email')
                 self.assertNotIn('email', self.config.cubes())
                 self.assertIn('file', self.config.cubes())
@@ -635,10 +635,10 @@ class MigrationCommandsTC(MigrationTC):
                 # next test may fail complaining of missing tables
                 cnx.commit()
 
-    def test_remove_dep_cube(self):
+    def test_drop_dep_cube(self):
         with self.mh() as (cnx, mh):
             with self.assertRaises(ConfigurationError) as cm:
-                mh.cmd_remove_cube('file')
+                mh.cmd_drop_cube('file')
             self.assertEqual(str(cm.exception), "can't remove cube file, used as a dependency")
 
     @tag('longrun')
