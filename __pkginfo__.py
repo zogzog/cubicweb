@@ -8,8 +8,8 @@ numversion = (0, 1, 0)
 version = '.'.join(str(num) for num in numversion)
 
 license = 'LGPL'
-author = 'LOGILAB S.A. (Paris, FRANCE)'
-author_email = 'contact@logilab.fr'
+author = 'UNLISH S.A.S. (Montpellier, FRANCE)'
+author_email = 'contact@unlish.com'
 description = "Add the 'pyramid' command to cubicweb-ctl"
 web = 'http://www.cubicweb.org/project/%s' % distname
 

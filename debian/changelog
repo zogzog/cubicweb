@@ -1,6 +1,5 @@
-cubicweb-pyramid (0.1.0-1) unstable; urgency=low
+cubicweb-pyramid (0.1.0-1) unstable; urgency=medium
 
-  * initial release
+  * Initial release.
 
- -- 
-
+ -- Christophe de Vienne <christophe@unlish.com>  Thu, 23 Oct 2014 16:34:57 +0200
