@@ -23,3 +23,7 @@ Depends:
  cubicweb-common (>= 3.19.3),
 # XXX wsgicors?
 Description: Integrate CubicWeb with a Pyramid application
+ Provides pyramid extensions to load a CubicWeb instance and serve it through
+ the pyramid stack.
+ .
+ It prefigures what CubicWeb 4.0 will be.
