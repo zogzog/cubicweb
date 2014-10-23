@@ -146,8 +146,8 @@ class TreeView(EntityView):
         return subvid, treeid, toplevel_thru_ajax, toplevel
 
     def _init_headers(self, treeid):
-        self._cw.add_css(('jquery.treeview.css', 'cubicweb.treeview.css'))
-        self._cw.add_js(('cubicweb.ajax.js', 'cubicweb.widgets.js', 'jquery.treeview.js'))
+        self._cw.add_css(('jquery-treeview/jquery.treeview.css', 'cubicweb.treeview.css'))
+        self._cw.add_js(('cubicweb.ajax.js', 'cubicweb.widgets.js', 'jquery-treeview/jquery.treeview.js'))
         self._cw.html_headers.add_onload(u"""
 jQuery("#tree-%s").treeview({toggle: toggleTree, prerendered: true});""" % treeid)
 
