@@ -66,6 +66,3 @@
 .filetree span.folder { background: url(folder.gif) 0 0 no-repeat; }
 .filetree li.expandable span.folder { background: url(folder-closed.gif) 0 0 no-repeat; }
 .filetree span.file { background: url(file.gif) 0 0 no-repeat; }
-
-/* added by adim */
-ul.placeholder { display: none; }
