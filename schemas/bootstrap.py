@@ -38,7 +38,7 @@ class CWEType(EntityType):
     description = RichString(internationalizable=True,
                              description=_('semantic description of this entity type'))
     # necessary to filter using RQL
-    final = Boolean(description=_('automatic'))
+    final = Boolean(default=False, description=_('automatic'))
 
 
 class CWRType(EntityType):

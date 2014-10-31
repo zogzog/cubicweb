@@ -17,3 +17,5 @@ cu.executemany('INSERT INTO moved_entities (eid, extid) VALUES (%s, %s)',
 sql('DELETE FROM entities WHERE eid < 0')
 
 commit()
+
+sync_schema_props_perms('CWEType')
