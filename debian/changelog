@@ -1,4 +1,10 @@
-pyramid-cubicweb (0.1.0-1) UNRELEASED; urgency=low
+pyramid-cubicweb (0.1.1-1) unstable; urgency=medium
+
+  * upstream release
+
+ -- Christophe de Vienne <christophe@unlish.com>  Sun, 02 Nov 2014 23:33:46 +0100
+
+pyramid-cubicweb (0.1.0-1) unstable; urgency=low
 
   * Initial release.
 
