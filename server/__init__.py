@@ -329,6 +329,7 @@ def initialize_schema(config, schema, mhandler, event='create'):
         mhandler.cmd_exec_event_script('pre%s' % event, apphome=True)
         # enter instance'schema into the database
         serialize_schema(cnx, schema)
+        cnx.commit()
         # execute cubicweb's post<event> script
         mhandler.cmd_exec_event_script('post%s' % event)
         # execute cubes'post<event> script if any
