@@ -148,11 +148,13 @@ class RepositoryAuthenticationManager(AbstractAuthenticationManager):
         raise :exc:`cubicweb.AuthenticationError` if authentication failed
         (no authentication info found or wrong user/password)
         """
+        has_auth = False
         for retriever in self.authinforetrievers:
             try:
                 login, authinfo = retriever.authentication_information(req)
             except NoAuthInfo:
                 continue
+            has_auth = True
             try:
                 session = self._authenticate(login, authinfo)
             except AuthenticationError:
@@ -161,9 +163,9 @@ class RepositoryAuthenticationManager(AbstractAuthenticationManager):
             for retriever_ in self.authinforetrievers:
                 retriever_.authenticated(retriever, req, session, login, authinfo)
             return session, login
-        # false if no authentication info found, eg this is not an
+        # false if no authentication info found, i.e. this is not an
         # authentication failure
-        if 'login' in locals():
+        if has_auth:
             req.set_message(req._('authentication failure'))
         login, authinfo = self.anoninfo
         if login:
