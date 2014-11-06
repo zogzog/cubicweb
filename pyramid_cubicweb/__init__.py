@@ -32,13 +32,7 @@ def make_cubicweb_application(cwconfig):
     return config
 
 
-def wsgi_application(instance_name=None, debug=None):
-    if instance_name is None:
-        instance_name = os.environ.get('CW_INSTANCE')
-    if debug is None:
-        debug = 'CW_DEBUG' in os.environ
-
-    cwconfig = cwcfg.config_for(instance_name, debugmode=debug)
+def wsgi_application_from_cwconfig(cwconfig):
     config = make_cubicweb_application(cwconfig)
     app = config.make_wsgi_app()
     # This replaces completely web/cors.py, which is not used by
@@ -50,3 +44,14 @@ def wsgi_application(instance_name=None, debug=None):
         methods=cwconfig['access-control-allow-methods'],
         credentials='true')
     return app
+
+
+def wsgi_application(instance_name=None, debug=None):
+    if instance_name is None:
+        instance_name = os.environ.get('CW_INSTANCE')
+    if debug is None:
+        debug = 'CW_DEBUG' in os.environ
+
+    cwconfig = cwcfg.config_for(instance_name, debugmode=debug)
+
+    return wsgi_application_from_cwconfig(cwconfig)
