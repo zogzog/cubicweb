@@ -13,7 +13,11 @@ author_email = 'contact@unlish.com'
 description = "Add the 'pyramid' command to cubicweb-ctl"
 web = 'http://www.cubicweb.org/project/%s' % distname
 
-__depends__ = {'cubicweb': '>= 3.19.3', 'wsgicors': '>= 0.3'}
+__depends__ = {
+    'cubicweb': '>= 3.19.3',
+    'wsgicors': '>= 0.3',
+    'pyramid-cubicweb': '>= 0.1.2'
+}
 __recommends__ = {}
 
 classifiers = [

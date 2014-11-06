@@ -14,13 +14,11 @@ import time
 import threading
 import subprocess
 
-import wsgicors
-
 from cubicweb import BadCommandUsage, ExecutionError
 from cubicweb.cwconfig import CubicWebConfiguration as cwcfg
 from cubicweb.cwctl import CWCTL, InstanceCommand, init_cmdline_log_threshold
 
-from pyramid_cubicweb import make_cubicweb_application
+from pyramid_cubicweb import wsgi_application_from_cwconfig
 import waitress
 
 MAXFD = 1024
@@ -267,18 +265,7 @@ class PyramidStartHandler(InstanceCommand):
         host = cwconfig['interface']
         port = cwconfig['port'] or 8080
 
-        pyramid_config = make_cubicweb_application(cwconfig)
-
-        app = pyramid_config.make_wsgi_app()
-
-        # This replaces completely web/cors.py, which is not used by
-        # pyramid_cubicweb anymore
-        app = wsgicors.CORS(
-            app,
-            origin=' '.join(cwconfig['access-control-allow-origin']),
-            headers=','.join(cwconfig['access-control-allow-headers']),
-            methods=','.join(cwconfig['access-control-allow-methods']),
-            credentials='true')
+        app = wsgi_application_from_cwconfig(cwconfig)
 
         repo = cwconfig.repository()
         try:
