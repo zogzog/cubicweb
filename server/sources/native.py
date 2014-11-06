@@ -446,10 +446,10 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
 
     # XXX deprecates [un]map_attribute?
     def map_attribute(self, etype, attr, cb, sourcedb=True):
-        self._rql_sqlgen.attr_map['%s.%s' % (etype, attr)] = (cb, sourcedb)
+        self._rql_sqlgen.attr_map[u'%s.%s' % (etype, attr)] = (cb, sourcedb)
 
     def unmap_attribute(self, etype, attr):
-        self._rql_sqlgen.attr_map.pop('%s.%s' % (etype, attr), None)
+        self._rql_sqlgen.attr_map.pop(u'%s.%s' % (etype, attr), None)
 
     def set_storage(self, etype, attr, storage):
         storage_dict = self._storages.setdefault(etype, {})
@@ -894,8 +894,8 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         if extid is not None:
             assert isinstance(extid, str)
             extid = b64encode(extid)
-        attrs = {'type': entity.cw_etype, 'eid': entity.eid, 'extid': extid,
-                 'asource': source.uri}
+        attrs = {'type': entity.cw_etype, 'eid': entity.eid, 'extid': extid and unicode(extid),
+                 'asource': unicode(source.uri)}
         self._handle_insert_entity_sql(cnx, self.sqlgen.insert('entities', attrs), attrs)
         # insert core relations: is, is_instance_of and cw_source
         try:
@@ -1473,7 +1473,7 @@ class BaseAuthentifier(object):
 
 class LoginPasswordAuthentifier(BaseAuthentifier):
     passwd_rql = 'Any P WHERE X is CWUser, X login %(login)s, X upassword P'
-    auth_rql = ('Any X WHERE X is CWUser, X login %(login)s, X upassword %(pwd)s, '
+    auth_rql = (u'Any X WHERE X is CWUser, X login %(login)s, X upassword %(pwd)s, '
                 'X cw_source S, S name "system"')
     _sols = ({'X': 'CWUser', 'P': 'Password', 'S': 'CWSource'},)
 

@@ -81,7 +81,7 @@ def eschema_eid(cnx, eschema):
     if eschema.eid is None:
         eschema.eid = cnx.execute(
             'Any X WHERE X is CWEType, X name %(name)s',
-            {'name': str(eschema)})[0][0]
+            {'name': unicode(eschema)})[0][0]
     return eschema.eid
 
 

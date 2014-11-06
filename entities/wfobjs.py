@@ -87,7 +87,7 @@ class Workflow(AnyEntity):
     def transition_by_name(self, trname):
         rset = self._cw.execute('Any T, TN WHERE T name TN, T name %(n)s, '
                                 'T transition_of WF, WF eid %(wf)s',
-                                {'n': trname, 'wf': self.eid})
+                                {'n': unicode(trname), 'wf': self.eid})
         if rset:
             return rset.get_entity(0, 0)
         return None
@@ -231,7 +231,7 @@ class BaseTransition(AnyEntity):
         for gname in requiredgroups:
             rset = self._cw.execute('SET T require_group G '
                                     'WHERE T eid %(x)s, G name %(gn)s',
-                                    {'x': self.eid, 'gn': gname})
+                                    {'x': self.eid, 'gn': unicode(gname)})
             assert rset, '%s is not a known group' % gname
         if isinstance(conditions, basestring):
             conditions = (conditions,)
@@ -454,7 +454,7 @@ class IWorkflowableAdapter(EntityAdapter):
             'Any T,TT, TN WHERE S allowed_transition T, S eid %(x)s, '
             'T type TT, T type %(type)s, '
             'T name TN, T transition_of WF, WF eid %(wfeid)s',
-            {'x': self.current_state.eid, 'type': type,
+            {'x': self.current_state.eid, 'type': unicode(type),
              'wfeid': self.current_workflow.eid})
         for tr in rset.entities():
             if tr.may_be_fired(self.entity.eid):

@@ -196,7 +196,7 @@ def create_user(session, login, pwd, *groups):
     user = session.create_entity('CWUser', login=login, upassword=pwd)
     for group in groups:
         session.execute('SET U in_group G WHERE U eid %(u)s, G name %(group)s',
-                        {'u': user.eid, 'group': group})
+                        {'u': user.eid, 'group': unicode(group)})
     return user
 
 def init_repository(config, interactive=True, drop=False, vreg=None,

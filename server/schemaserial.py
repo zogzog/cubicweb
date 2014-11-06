@@ -474,7 +474,7 @@ def _uniquetogether2rql(eschema, unique_together):
     for i, name in enumerate(unique_together):
         rschema = eschema.schema.rschema(name)
         rtype = 'T%d' % i
-        substs[rtype] = rschema.type
+        substs[rtype] = unicode(rschema.type)
         relations.append('C relations %s' % rtype)
         restrictions.append('%(rtype)s name %%(%(rtype)s)s' % {'rtype': rtype})
     relations = ', '.join(relations)

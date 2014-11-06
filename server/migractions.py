@@ -1286,12 +1286,12 @@ class ServerMigrationHelper(MigrationHelper):
                 assert 'wf_info_for' in eschema.objrels, _missing_wf_rel(etype)
             rset = self.rqlexec(
                 'SET X workflow_of ET WHERE X eid %(x)s, ET name %(et)s',
-                {'x': wf.eid, 'et': etype}, ask_confirm=False)
+                {'x': wf.eid, 'et': unicode(etype)}, ask_confirm=False)
             assert rset, 'unexistant entity type %s' % etype
             if default:
                 self.rqlexec(
                     'SET ET default_workflow X WHERE X eid %(x)s, ET name %(et)s',
-                    {'x': wf.eid, 'et': etype}, ask_confirm=False)
+                    {'x': wf.eid, 'et': unicode(etype)}, ask_confirm=False)
         if commit:
             self.commit()
         return wf
@@ -1326,7 +1326,7 @@ class ServerMigrationHelper(MigrationHelper):
         try:
             prop = self.rqlexec(
                 'CWProperty X WHERE X pkey %(k)s, NOT X for_user U',
-                {'k': pkey}, ask_confirm=False).get_entity(0, 0)
+                {'k': unicode(pkey)}, ask_confirm=False).get_entity(0, 0)
         except Exception:
             self.cmd_create_entity('CWProperty', pkey=unicode(pkey), value=value)
         else:
