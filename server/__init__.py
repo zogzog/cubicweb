@@ -89,7 +89,7 @@ DBG_MORE = 128
 DBG_ALL  = DBG_RQL + DBG_SQL + DBG_REPO + DBG_MS + DBG_HOOKS + DBG_OPS + DBG_SEC + DBG_MORE
 
 _SECURITY_ITEMS = []
-_SECURITY_CAPS = ['read', 'add', 'update', 'delete']
+_SECURITY_CAPS = ['read', 'add', 'update', 'delete', 'transition']
 
 #: current debug mode
 DEBUG = 0
