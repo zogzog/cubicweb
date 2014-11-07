@@ -49,8 +49,9 @@ class CreateCopyFromBufferTC(TestCase):
         # unicode
         self.assertEqual('\xc3\xa9l\xc3\xa9phant', cnvt(u'éléphant'))
         self.assertEqual('\xe9l\xe9phant', cnvt(u'éléphant', encoding='latin1'))
-        self.assertEqual('babar#', cnvt('babar\t', replace_sep='#'))
-        self.assertRaises(ValueError, cnvt, 'babar\t')
+        # escaping
+        self.assertEqual('babar\\tceleste\\n', cnvt('babar\tceleste\n'))
+        self.assertEqual(r'C:\\new\tC:\\test', cnvt('C:\\new\tC:\\test'))
 
     def test_convert_date(self):
         cnvt = dataimport._copyfrom_buffer_convert_date

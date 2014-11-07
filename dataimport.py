@@ -449,22 +449,12 @@ def _copyfrom_buffer_convert_string(value, **opts):
 
     Recognized keywords:
     :encoding: resulting string encoding (default: utf-8)
-    :replace_sep: character used when input contains characters
-                  that conflict with the column separator.
     '''
     encoding = opts.get('encoding','utf-8')
-    replace_sep = opts.get('replace_sep', None)
-    # Remove separators used in string formatting
-    for _char in (u'\t', u'\r', u'\n'):
-        if _char in value:
-            # If a replace_sep is given, replace
-            # the separator
-            # (and thus avoid empty buffer)
-            if replace_sep is None:
-                raise ValueError('conflicting separator: '
-                                 'you must provide the replace_sep option')
-            value = value.replace(_char, replace_sep)
-        value = value.replace('\\', r'\\')
+    escape_chars = ((u'\\', ur'\\'), (u'\t', u'\\t'), (u'\r', u'\\r'),
+                    (u'\n', u'\\n'))
+    for char, replace in escape_chars:
+        value = value.replace(char, replace)
     if isinstance(value, unicode):
         value = value.encode(encoding)
     return value
