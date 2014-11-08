@@ -138,7 +138,10 @@ def _cw_cnx(request):
     cnx = repoapi.ClientConnection(request.cw_session)
 
     def cleanup(request):
-        if request.exception is not None:
+        if (request.exception is not None and not isinstance(
+            request.exception, (
+                httpexceptions.HTTPSuccessful,
+                httpexceptions.HTTPRedirection))):
             cnx.rollback()
         else:
             cnx.commit()
