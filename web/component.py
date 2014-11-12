@@ -701,3 +701,29 @@ class EntityVComponent(Component):
     def entity_call(self, entity, view=None):
         raise NotImplementedError()
 
+class RelatedObjectsVComponent(EntityVComponent):
+    """a section to display some related entities"""
+    __select__ = EntityVComponent.__select__ & partial_has_related_entities()
+
+    vid = 'list'
+    # to be defined in concrete classes
+    rtype = title = None
+
+    def rql(self):
+        """override this method if you want to use a custom rql query"""
+        return None
+
+    def cell_call(self, row, col, view=None):
+        rql = self.rql()
+        if rql is None:
+            entity = self.cw_rset.get_entity(row, col)
+            rset = entity.related(self.rtype, role(self))
+        else:
+            eid = self.cw_rset[row][col]
+            rset = self._cw.execute(self.rql(), {'x': eid})
+        if not rset.rowcount:
+            return
+        self.w(u'<div class="%s">' % self.cssclass)
+        self.w(u'<h4>%s</h4>\n' % self._cw._(self.title).capitalize())
+        self.wview(self.vid, rset)
+        self.w(u'</div>')
