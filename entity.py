@@ -519,7 +519,11 @@ class Entity(AppObject):
             rql = 'INSERT %s X: %s' % (cls.__regid__, rql)
         else:
             rql = 'INSERT %s X' % (cls.__regid__)
-        created = execute(rql, qargs).get_entity(0, 0)
+        try:
+            created = execute(rql, qargs).get_entity(0, 0)
+        except IndexError:
+            raise Exception('could not create a %r with %r (%r)' %
+                            (cls.__regid__, rql, qargs))
         created._cw_update_attr_cache(attrcache)
         cls._cw_handle_pending_relations(created.eid, pendingrels, execute)
         return created
