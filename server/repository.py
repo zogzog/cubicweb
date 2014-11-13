@@ -1165,7 +1165,7 @@ class Repository(object):
     def glob_add_entity(self, cnx, edited):
         """add an entity to the repository
 
-        the entity eid should originaly be None and a unique eid is assigned to
+        the entity eid should originally be None and a unique eid is assigned to
         the entity instance
         """
         entity = edited.entity
