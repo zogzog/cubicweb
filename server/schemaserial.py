@@ -556,12 +556,14 @@ def rdef2rql(rdef, cstrtypemap, groupmap=None):
         for rql, args in _erperms2rql(rdef, groupmap):
             yield rql, args
 
+_IGNORED_PROPS = ['eid', 'constraints', 'uid', 'infered', 'permissions']
+
 def _rdef_values(rdef):
     amap = {'order': 'ordernum', 'default': 'defaultval'}
     values = {}
     extra = {}
     for prop in rdef.rproperty_defs(rdef.object):
-        if prop in ('eid', 'constraints', 'uid', 'infered', 'permissions'):
+        if prop in _IGNORED_PROPS:
             continue
         value = getattr(rdef, prop)
         if prop not in KNOWN_RPROPERTIES:

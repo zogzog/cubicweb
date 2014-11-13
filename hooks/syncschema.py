@@ -449,9 +449,11 @@ class CWAttributeAddOp(MemSchemaOperation):
             default = default.unzpickle()
         props = {'default': default,
                  'indexed': entity.indexed,
-                 'formula': entity.formula,
                  'fulltextindexed': entity.fulltextindexed,
                  'internationalizable': entity.internationalizable}
+        # entity.formula may not exist yet if we're migrating to 3.20
+        if hasattr(entity, 'formula'):
+            props['formula'] = entity.formula
         # update the in-memory schema first
         rdefdef = self.init_rdef(**props)
         # then make necessary changes to the system source database
@@ -505,7 +507,7 @@ class CWAttributeAddOp(MemSchemaOperation):
             cnx.system_sql('UPDATE %s SET %s=%%(default)s' % (table, column),
                                {'default': default})
         # if attribute is computed, compute it
-        if entity.formula:
+        if getattr(entity, 'formula', None):
             # add rtype attribute for RelationDefinitionSchema api compat, this
             # is what RecomputeAttributeOperation expect
             rdefdef.rtype = rdefdef.name

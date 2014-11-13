@@ -57,6 +57,14 @@ if applcubicwebversion < (3, 19, 0) and cubicwebversion >= (3, 19, 0):
 
     replace_eid_sequence_with_eid_numrange(session)
 
+if applcubicwebversion < (3, 20, 0) and cubicwebversion >= (3, 20, 0):
+    ss._IGNORED_PROPS.append('formula')
+    add_attribute('CWAttribute', 'formula', commit=False)
+    ss._IGNORED_PROPS.remove('formula')
+    commit()
+    add_entity_type('CWComputedRType')
+    commit()
+
 if applcubicwebversion < (3, 17, 0) and cubicwebversion >= (3, 17, 0):
     try:
         add_cube('sioc', update_database=False)
