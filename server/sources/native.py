@@ -1499,11 +1499,12 @@ class LoginPasswordAuthentifier(BaseAuthentifier):
             args['pwd'] = Binary(crypt_password(password, pwd.getvalue()))
         # get eid from login and (crypted) password
         rset = self.source.syntax_tree_search(cnx, self._auth_rqlst, args)
+        pwd = args['pwd']
         try:
             user = rset[0][0]
             # If the stored hash uses a deprecated scheme (e.g. DES or MD5 used
             # before 3.14.7), update with a fresh one
-            if pwd.getvalue():
+            if pwd is not None and pwd.getvalue():
                 verify, newhash = verify_and_update(password, pwd.getvalue())
                 if not verify: # should not happen, but...
                     raise AuthenticationError('bad password')
