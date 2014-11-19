@@ -292,6 +292,7 @@ DEFAULT_EMPTY_DB_ID = '__default_empty_db__'
 
 class TestDataBaseHandler(object):
     DRIVER = None
+
     db_cache = {}
     explored_glob = set()
 
@@ -534,6 +535,10 @@ class NoCreateDropDatabaseHandler(TestDataBaseHandler):
 
 class PostgresTestDataBaseHandler(TestDataBaseHandler):
     DRIVER = 'postgres'
+
+    # Separate db_cache for PG databases, to avoid collisions with sqlite dbs
+    db_cache = {}
+    explored_glob = set()
 
     __CTL = set()
 
