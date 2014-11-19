@@ -195,7 +195,7 @@ class CWEntityXMLParser(datafeed.DataFeedXMLParser):
                 parser=self)
             yield builder.build_item()
 
-    def process_item(self, item, rels):
+    def process_item(self, item, rels, raise_on_error=False):
         """
         item and rels are what's returned by the item builder `build_item` method:
 
@@ -204,7 +204,8 @@ class CWEntityXMLParser(datafeed.DataFeedXMLParser):
            {role: {relation: [(related item, related rels)...]}
         """
         entity = self.extid2entity(str(item['cwuri']), item['cwtype'],
-                                   cwsource=item['cwsource'], item=item)
+                                   cwsource=item['cwsource'], item=item,
+                                   raise_on_error=raise_on_error)
         if entity is None:
             return None
         if entity.eid in self._processed_entities:

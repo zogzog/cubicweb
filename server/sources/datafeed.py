@@ -342,9 +342,13 @@ class DataFeedParser(AppObject):
         raise ValidationError(schemacfg.eid, {None: msg})
 
     def extid2entity(self, uri, etype, **sourceparams):
-        """return an entity for the given uri. May return None if it should be
-        skipped
+        """Return an entity for the given uri. May return None if it should be
+        skipped.
+
+        If a `raise_on_error` keyword parameter is passed, a ValidationError
+        exception may be raised.
         """
+        raise_on_error = sourceparams.pop('raise_on_error', False)
         cnx = self._cw
         # if cwsource is specified and repository has a source with the same
         # name, call extid2eid on that source so entity will be properly seen as
@@ -361,8 +365,8 @@ class DataFeedParser(AppObject):
             eid = cnx.repo.extid2eid(source, str(uri), etype, cnx,
                                          sourceparams=sourceparams)
         except ValidationError as ex:
-            # XXX use critical so they are seen during tests. Should consider
-            # raise_on_error instead?
+            if raise_on_error:
+                raise
             self.source.critical('error while creating %s: %s', etype, ex)
             self.import_log.record_error('error while creating %s: %s'
                                          % (etype, ex))
@@ -453,7 +457,7 @@ class DataFeedXMLParser(DataFeedParser):
         rollback = self._cw.rollback
         for args in parsed:
             try:
-                self.process_item(*args)
+                self.process_item(*args, raise_on_error=raise_on_error)
                 # commit+set_cnxset instead of commit(free_cnxset=False) to let
                 # other a chance to get our connections set
                 commit()
@@ -473,7 +477,7 @@ class DataFeedXMLParser(DataFeedParser):
     def parse_etree(self, document):
         return [(document,)]
 
-    def process_item(self, *args):
+    def process_item(self, *args, **kwargs):
         raise NotImplementedError
 
     def is_deleted(self, extid, etype, eid):

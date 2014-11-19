@@ -40,7 +40,8 @@ class DataFeedTC(CubicWebTC):
             def process(self, url, raise_on_error=False):
                 entity = self.extid2entity('http://www.cubicweb.org/', 'Card',
                                            item={'title': u'cubicweb.org',
-                                                 'content': u'the cw web site'})
+                                                 'content': u'the cw web site'},
+                                           raise_on_error=raise_on_error)
                 if not self.created_during_pull(entity):
                     self.notify_updated(entity)
             def before_entity_copy(self, entity, sourceparams):

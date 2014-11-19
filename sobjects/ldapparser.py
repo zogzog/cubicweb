@@ -70,10 +70,11 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
                                                         attrs))
         return {}
 
-    def _process(self, etype, sdict):
+    def _process(self, etype, sdict, raise_on_error=False):
         self.debug('fetched %s %s', etype, sdict)
         extid = sdict['dn']
-        entity = self.extid2entity(extid, etype, **sdict)
+        entity = self.extid2entity(extid, etype,
+                                   raise_on_error=raise_on_error, **sdict)
         if entity is not None and not self.created_during_pull(entity):
             self.notify_updated(entity)
             attrs = self.ldap2cwattrs(sdict, etype)
@@ -90,7 +91,7 @@ class DataFeedLDAPAdapter(datafeed.DataFeedParser):
             self._process('CWUser', userdict)
         self.debug('processing ldapfeed source %s %s', self.source, self.searchgroupfilterstr)
         for groupdict in self.group_source_entities_by_extid.itervalues():
-            self._process('CWGroup', groupdict)
+            self._process('CWGroup', groupdict, raise_on_error=raise_on_error)
 
     def handle_deletion(self, config, cnx, myuris):
         if config['delete-entities']:
