@@ -42,7 +42,7 @@ __depends__ = {
     'logilab-common': '>= 0.62.0',
     'logilab-mtconverter': '>= 0.8.0',
     'rql': '>= 0.31.2',
-    'yams': '>= 0.39.1',
+    'yams': '>= 0.39.1, < 0.39.99',  # CW 3.19 is not compatible with yams 0.40
     #gettext                    # for xgettext, msgcat, etc...
     # web dependencies
     'lxml': '',
