@@ -128,8 +128,12 @@ class _CubicWebRequestBase(RequestSessionBase):
             self.datadir_url = vreg.config.https_datadir_url
         else:
             self.datadir_url = vreg.config.datadir_url
+        #: enable UStringIO's write tracing
+        self.tracehtml = False
+        if vreg.config.debugmode:
+            self.tracehtml = bool(form.pop('_cwtracehtml', False))
         #: raw html headers that can be added from any view
-        self.html_headers = HTMLHead(self)
+        self.html_headers = HTMLHead(self, tracewrites=self.tracehtml)
         #: received headers
         self._headers_in = Headers()
         if headers is not None:

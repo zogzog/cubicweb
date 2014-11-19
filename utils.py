@@ -206,12 +206,23 @@ class UStringIO(list):
     specifed in the constructor
     """
 
+    def __init__(self, tracewrites=False, *args, **kwargs):
+        self.tracewrites = tracewrites
+        super(UStringIO, self).__init__(*args, **kwargs)
+
     def __nonzero__(self):
         return True
 
     def write(self, value):
         assert isinstance(value, unicode), u"unicode required not %s : %s"\
                                      % (type(value).__name__, repr(value))
+        if self.tracewrites:
+            from traceback import format_stack
+            stack = format_stack(None)[:-1]
+            escaped_stack = xml_escape(json_dumps(u'\n'.join(stack)))
+            escaped_html = xml_escape(value).replace('\n', '<br/>\n')
+            tpl = u'<span onclick="alert(%s)">%s</span>'
+            value = tpl % (escaped_stack, escaped_html)
         self.append(value)
 
     def getvalue(self):
@@ -234,8 +245,8 @@ class HTMLHead(UStringIO):
     script_opening = u'<script type="text/javascript">\n'
     script_closing = u'\n</script>'
 
-    def __init__(self, req):
-        super(HTMLHead, self).__init__()
+    def __init__(self, req, *args, **kwargs):
+        super(HTMLHead, self).__init__(*args, **kwargs)
         self.jsvars = []
         self.jsfiles = []
         self.cssfiles = []
@@ -399,10 +410,15 @@ class HTMLHead(UStringIO):
                 w(self.script_opening)
                 w(u'\n\n'.join(self.post_inlined_scripts))
                 w(self.script_closing)
-        header = super(HTMLHead, self).getvalue()
-        if skiphead:
-            return header
-        return u'<head>\n%s</head>\n' % header
+        # at the start of this function, the parent UStringIO may already have
+        # data in it, so we can't w(u'<head>\n') at the top. Instead, we create
+        # a temporary UStringIO to get the same debugging output formatting
+        # if debugging is enabled.
+        headtag = UStringIO(tracewrites=self.tracewrites)
+        if not skiphead:
+            headtag.write(u'<head>\n')
+            w(u'</head>\n')
+        return headtag.getvalue() + super(HTMLHead, self).getvalue()
 
 
 class HTMLStream(object):
@@ -416,10 +432,11 @@ class HTMLStream(object):
     """
 
     def __init__(self, req):
+        self.tracehtml = req.tracehtml
         # stream for <head>
         self.head = req.html_headers
         # main stream
-        self.body = UStringIO()
+        self.body = UStringIO(tracewrites=req.tracehtml)
         # this method will be assigned to self.w in views
         self.write = self.body.write
         self.doctype = u''
@@ -457,6 +474,26 @@ class HTMLStream(object):
 
     def getvalue(self):
         """writes HTML headers, closes </head> tag and writes HTML body"""
+        if self.tracehtml:
+            css = u'\n'.join((u'span {',
+                              u'  font-family: monospace;',
+                              u'  word-break: break-all;',
+                              u'  word-wrap: break-word;',
+                              u'}',
+                              u'span:hover {',
+                              u'  color: red;',
+                              u'  text-decoration: underline;',
+                              u'}'))
+            style = u'<style type="text/css">\n%s\n</style>\n' % css
+            return (u'<!DOCTYPE html>\n'
+                    + u'<html>\n<head>\n%s\n</head>\n' % style
+                    + u'<body>\n'
+                    + u'<span>' + xml_escape(self.doctype) + u'</span><br/>'
+                    + u'<span>' + xml_escape(self.htmltag) + u'</span><br/>'
+                    + self.head.getvalue()
+                    + self.body.getvalue()
+                    + u'<span>' + xml_escape(u'</html>') + u'</span>'
+                    + u'</body>\n</html>')
         return u'%s\n%s\n%s\n%s\n</html>' % (self.doctype,
                                              self.htmltag,
                                              self.head.getvalue(),
