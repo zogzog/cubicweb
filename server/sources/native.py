@@ -762,6 +762,9 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                         raise UniqueTogetherError(session, cstrname=mo.group(0))
                     # sqlite
                     mo = re.search('columns (.*) are not unique', arg)
+                    if mo is None:
+                        # sqlite > 3.7
+                        mo = re.search('UNIQUE constraint failed: (.*)', arg)
                     if mo is not None: # sqlite in use
                         # we left chop the 'cw_' prefix of attribute names
                         rtypes = [c.strip()[3:]
@@ -1698,6 +1701,8 @@ class DatabaseIndependentBackupRestore(object):
     Tables are saved in chunks in different files in order to prevent
     a too high memory consumption.
     """
+    blocksize = 100
+
     def __init__(self, source):
         """
         :param: source an instance of the system source
@@ -1782,10 +1787,7 @@ class DatabaseIndependentBackupRestore(object):
         sql = 'SELECT * FROM %s' % table
         columns, rows_iterator = self._get_cols_and_rows(sql)
         self.logger.info('number of rows: %d', rowcount)
-        if table.startswith('cw_'): # entities
-            blocksize = 2000
-        else: # relations and metadata
-            blocksize = 10000
+        blocksize = self.blocksize
         if rowcount > 0:
             for i, start in enumerate(xrange(0, rowcount, blocksize)):
                 rows = list(itertools.islice(rows_iterator, blocksize))
