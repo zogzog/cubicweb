@@ -50,8 +50,14 @@ def replace_eid_sequence_with_eid_numrange(session):
     session.commit()
 
 if applcubicwebversion < (3, 19, 0) and cubicwebversion >= (3, 19, 0):
-    sql('ALTER TABLE "entities" DROP COLUMN "mtime"')
-    sql('ALTER TABLE "entities" DROP COLUMN "source"')
+    try: 
+        # need explicit drop of the indexes on some database systems (sqlserver)
+        sql(repo.system_source.dbhelper.sql_drop_index('entities', 'mtime'))
+        sql('ALTER TABLE "entities" DROP COLUMN "mtime"')
+        sql('ALTER TABLE "entities" DROP COLUMN "source"')
+    except: # programming error, already migrated
+        print "Failed to drop mtime or source database columns"
+        print "'entities' table of the database has probably been already updated"
 
     commit()
 
