@@ -21,7 +21,7 @@ __docformat__ = "restructuredtext en"
 _ = unicode
 
 from cubicweb.schema import display_name
-from cubicweb.predicates import any_rset
+from cubicweb.predicates import any_rset, empty_rset
 from cubicweb.uilib import UnicodeCSVWriter
 from cubicweb.view import EntityView, AnyRsetView
 
@@ -80,7 +80,7 @@ class CSVEntityView(CSVMixIn, EntityView):
     contents)
     """
     __regid__ = 'ecsvexport'
-    __select__ = any_rset()
+    __select__ = EntityView.__select__ | empty_rset()
     title = _('csv export (entities)')
 
     def call(self):
