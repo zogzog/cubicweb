@@ -769,6 +769,9 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                         raise UniqueTogetherError(etype, rtypes)
                     # sqlite
                     mo = re.search('columns (.*) are not unique', arg)
+                    if mo is None:
+                        # sqlite > 3.7
+                        mo = re.search('UNIQUE constraint failed: (.*)', arg)
                     if mo is not None: # sqlite in use
                         # we left chop the 'cw_' prefix of attribute names
                         rtypes = [c.strip()[3:]
