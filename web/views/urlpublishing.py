@@ -209,7 +209,10 @@ class RestPathEvaluator(URLPathEvaluator):
         if rset.rowcount == 1:
             req.form.setdefault('vid', 'primary')
         else: # rset.rowcount >= 1
-            req.form.setdefault('vid', 'sameetypelist')
+            if len(rset.column_types(0)) > 1:
+                req.form.setdefault('vid', 'list')
+            else:
+                req.form.setdefault('vid', 'sameetypelist')
 
     def handle_etype(self, req, cls):
         rset = req.execute(cls.fetch_rql(req.user))
