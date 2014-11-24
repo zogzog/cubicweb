@@ -22,7 +22,7 @@ software
 
 modname = distname = "cubicweb"
 
-numversion = (3, 17, 17)
+numversion = (3, 17, 18)
 version = '.'.join(str(num) for num in numversion)
 
 description = "a repository of entities / relations for knowledge management"
