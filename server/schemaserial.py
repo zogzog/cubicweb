@@ -427,7 +427,14 @@ def eschemaspecialize2rql(eschema):
 
 def uniquetogether2rqls(eschema):
     rql_args = []
+    # robustness against duplicated CWUniqueTogetherConstraint (pre 3.18)
+    columnset = set()
     for columns in eschema._unique_together:
+        if columns in columnset:
+            print ('schemaserial: skipping duplicate unique together %r %r' %
+                   (eschema.type, columns))
+            continue
+        columnset.add(columns)
         rql, args = _uniquetogether2rql(eschema, columns)
         args['name'] = y2sql.unique_index_name(eschema, columns)
         rql_args.append((rql, args))
