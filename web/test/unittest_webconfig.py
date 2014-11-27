@@ -25,7 +25,9 @@ from cubicweb.devtools import ApptestConfiguration, fake
 
 class WebconfigTC(TestCase):
     def setUp(self):
-        self.config = ApptestConfiguration('data')
+        # need explicit None if dirname(__file__) is empty, see
+        # ApptestConfiguration.__init__
+        self.config = ApptestConfiguration('data', apphome=os.path.dirname(__file__) or None)
         self.config._cubes = ['file']
         self.config.load_configuration()
 
@@ -42,7 +44,11 @@ class WebconfigTC(TestCase):
         rname = self.config.uiprops['FILE_ICON'].replace(self.config.datadir_url, '')
         self.assertIn('file', self.config.locate_resource(rname)[0].split(os.sep))
         cubicwebcsspath = self.config.locate_resource('cubicweb.css')[0].split(os.sep)
-        self.assertTrue('web' in cubicwebcsspath or 'shared' in cubicwebcsspath) # 'shared' if tests under apycot
+
+        # 'shared' if tests under apycot
+        self.assertTrue('web' in cubicwebcsspath or 'shared' in cubicwebcsspath,
+                        'neither "web" nor "shared" found in cubicwebcsspath (%s)'
+                        % cubicwebcsspath)
 
     def test_sign_text(self):
         signature = self.config.sign_text(u'hôp')
