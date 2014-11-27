@@ -151,7 +151,7 @@ Depends:
  graphviz,
  gettext,
  python-logilab-mtconverter (>= 0.8.0),
- python-logilab-common (>= 0.62.0),
+ python-logilab-common (>= 0.63.1),
  python-markdown,
  python-yams (>= 0.40.0),
  python-rql (>= 0.31.2),
