@@ -46,7 +46,6 @@ __depends__ = {
     #gettext                    # for xgettext, msgcat, etc...
     # web dependencies
     'lxml': '',
-    'Twisted': '',
     # XXX graphviz
     # server dependencies
     'logilab-database': '>= 1.12.1',
@@ -63,6 +62,7 @@ __recommends__ = {
     'vobject': '>= 0.6.0',      # for ical view
     'rdflib': None,             #
     'pyzmq': None,
+    'Twisted': '',
     #'Products.FCKeditor':'',
     #'SimpleTAL':'>= 4.1.6',
     }

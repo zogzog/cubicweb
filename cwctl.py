@@ -524,6 +524,15 @@ running.'}),
 
     def start_instance(self, appid):
         """start the instance's server"""
+        try:
+            import twisted  # noqa
+        except ImportError:
+            msg = (
+                "Twisted is required by the 'start' command\n"
+                "Either install it, or use one of the alternative commands:\n"
+                "- '{ctl} wsgi {appid}'\n"
+                "- '{ctl} pyramid {appid}' (requires the pyramid cube)\n")
+            raise ExecutionError(msg.format(ctl='cubicweb-ctl', appid=appid))
         config = cwcfg.config_for(appid, debugmode=self['debug'])
         init_cmdline_log_threshold(config, self['loglevel'])
         if self['profile']:
