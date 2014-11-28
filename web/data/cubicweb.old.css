@@ -56,10 +56,10 @@ h6{
 }
 
 /* more specific selectors to override jQueryUI's braindamaged CSS rules */
-#pageContent .ui-widget-content a,
-#pageContent .ui-widget-content a:active,
-#pageContent .ui-widget-content a:visited,
-#pageContent .ui-widget-content a:link,
+#pageContent .ui-tabs-panel a,
+#pageContent .ui-tabs-panel a:active,
+#pageContent .ui-tabs-panel a:visited,
+#pageContent .ui-tabs-panel a:link,
 a, a:active, a:visited, a:link {
   color: %(aColor)s;
   text-decoration: none;
