@@ -12,23 +12,23 @@ browser. We will use a `all-in-one` configuration to simplify things ::
   cubicweb-ctl create -c all-in-one mycube myinstance
 
 .. note::
-  Please note that we created a new cube for a demo purpose but
-  you could have use an existing cube available in our standard library
+  Please note that we created a new cube for a demo purposes but
+  you could have used an existing cube available in our standard library
   such as blog or person for example.
 
-A serie of questions will be prompted to you, the default answer is usually
+A series of questions will be prompted to you, the default answer is usually
 sufficient. You can anyway modify the configuration later on by editing
-configuration files. When a user/psswd is requested to access the database
-please use the login you create at the time you configured the database
+configuration files. When a login/password are requested to access the database
+please use the credentials you created at the time you configured the database
 (:ref:`PostgresqlConfiguration`).
 
 It is important to distinguish here the user used to access the database and the
 user used to login to the cubicweb instance. When an instance starts, it uses
-the login/psswd for the database to get the schema and handle low level
+the login/password for the database to get the schema and handle low level
 transaction. But, when :command:`cubicweb-ctl create` asks for a manager
 login/psswd of *CubicWeb*, it refers to the user you will use during the
 development to administrate your web instance. It will be possible, later on,
-to use this user to create others users for your final web instance.
+to use this user to create other users for your final web instance.
 
 
 Instance administration
@@ -49,7 +49,7 @@ which simplifies debugging in case the instance is not properly
 launched. You can see how it looks by visiting the URL
 `http://localhost:8080` (the port number depends of your
 configuration). To login, please use the cubicweb administrator
-login/psswd you defined when you created the instance.
+login/password you defined when you created the instance.
 
 To shutdown the instance, Crtl-C in the terminal window is enough.
 If you did not use the option `-D`, then type ::
@@ -68,7 +68,9 @@ This is it! All is settled down to start developping your data model...
 upgrade
 ~~~~~~~
 
-The command is::
+A manual upgrade step is necessary whenever a new version of CubicWeb or
+a cube is installed, in order to synchronise the instance's
+configuration and schema with the new code.  The command is::
 
   cubicweb-ctl upgrade myinstance
 
@@ -93,6 +95,6 @@ incoherent state. You have two options here:
   from scratch (quite recommended in a production environement)
 
 * try to replay the migration up to the last successful commit, that
-  is answering NO to all question up to the step that failed, and
+  is answering NO to all questions up to the step that failed, and
   finish by answering YES to the remaining questions.
 
